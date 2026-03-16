@@ -1,28 +1,37 @@
 import { motion } from "framer-motion";
-import { ArrowRight, Video, TrendingUp, Users, Clipboard, MapPin, HelpCircle, ShoppingBag } from "lucide-react";
+import { ArrowRight, Video, TrendingUp, Users, Clipboard, MapPin, HelpCircle, ShoppingBag, Shield, Brain, Zap, Trophy, Clock, Heart } from "lucide-react";
 import { Link } from "react-router-dom";
 import m2Logo from "@/assets/m2-logo.jpg";
 import SectionHeader from "./SectionHeader";
 import AboutPhilosophy from "./AboutPhilosophy";
 import RealityCheck from "./RealityCheck";
+import ForCoaches from "./ForCoaches";
 
 const STATS = [
-  { value: "20+", label: "Years Same Age Group" },
-  { value: "50+", label: "College Athletes Made" },
-  { value: "Zero", label: "Injuries" },
-  { value: "100%", label: "Results" },
+  { value: "20+", label: "Years · Same Age Group" },
+  { value: "50+", label: "College Athletes Produced" },
+  { value: "Zero", label: "Career Injuries" },
+  { value: "100%", label: "Results Rate" },
+];
+
+const DIFFERENTIATORS = [
+  { icon: Brain, title: "CNS-Based Training", desc: "I understand the central nervous system at an intuitive level. After 20+ years, it's not a science — it's an art I live and breathe." },
+  { icon: Shield, title: "Zero Injuries. Ever.", desc: "Not one. Healthy joints and healthy minds come first. They all get strong — I promise. No need to rush." },
+  { icon: Clock, title: "72-Hour Recovery", desc: "The body needs real recovery. I build programs around science, not ego. Rushing makes you slower." },
+  { icon: Zap, title: "Old-School Methods", desc: "Russian mountain strength meets American power meets Eastern energy. No gimmicks. No trends. Just what works." },
+  { icon: Trophy, title: "College-Ready Athletes", desc: "My athletes don't just make the team — they exceed every expectation. Far beyond what even I predicted when I started." },
+  { icon: Heart, title: "I Stayed. That's Rare.", desc: "Most trainers move up to older clients as they age. I never left this age group. That's why I'm one of the very few left who does this." },
 ];
 
 const SERVICES = [
-  { route: "/shop", icon: Clipboard, label: "CUSTOM · $20", title: "Your Athlete's Program", sub: "Matt reads the intake, builds the program from scratch. No templates.", cta: "Get Started" },
-  { route: "/coach", icon: TrendingUp, label: "MONTHLY · $100+", title: "Online Coaching", sub: "Programming + weekly check-ins. Matt adjusts in real time.", cta: "Learn More" },
-  { route: "/coach", icon: Video, label: "REMOTE · $20", title: "Form Check", sub: "Send a video. Get cues back. Matt sees what others miss.", cta: "Submit Video" },
-  { route: "/coach", icon: Users, label: "TRAINERS ONLY", title: "Trainer Mentorship", sub: "Programming, coaching, business. 20+ years of doing it the right way.", cta: "Inquire" },
+  { route: "/shop", icon: Clipboard, label: "CUSTOM · $20", title: "Your Athlete's Custom Program", sub: "Matt reads the intake, builds the program from scratch around your athlete's body, sport, and goals. No templates ever." },
+  { route: "/coach", icon: TrendingUp, label: "MONTHLY · $100+", title: "Online Coaching", sub: "Full programming + weekly check-ins. Matt adjusts load, volume, and recovery in real time based on how your athlete responds." },
+  { route: "/coach", icon: Video, label: "REMOTE · $20", title: "Video Form Check", sub: "Send a video of any lift. Matt sees what other trainers miss and sends back precise cues that fix it immediately." },
+  { route: "/coach", icon: Users, label: "TRAINERS ONLY", title: "Trainer Mentorship", sub: "20+ years of programming, coaching, and business knowledge. If you train young athletes, Matt can show you how to do it right." },
 ];
 
 const HeroSection = () => (
   <div className="min-h-screen bg-background relative overflow-hidden">
-    {/* Grid pattern */}
     <div
       className="absolute inset-0 opacity-[0.025]"
       style={{
@@ -56,19 +65,23 @@ const HeroSection = () => (
           </div>
         </div>
 
-        <p className="text-sm md:text-base text-muted-foreground max-w-lg mb-6 text-balance">
+        <p className="text-sm md:text-base text-muted-foreground max-w-xl mb-4 text-balance leading-relaxed">
+          If your child is going to play college sports, this is the training that prepares their body for it.
+          <span className="text-foreground font-semibold"> Anything else is wearing them out.</span>
+        </p>
+        <p className="text-sm md:text-base text-muted-foreground max-w-xl mb-6 text-balance leading-relaxed">
           This isn't TikTok fitness. This isn't a franchise gym with a clipboard.
-          This is old-school Russian strength meets American power meets Eastern energy —
-          refined over 20+ years training the same age group. Most trainers move up. I stayed.
-          That's why my athletes go to college ready. Zero injuries. Every single time.
+          This is 20+ years of old-school Russian strength, American power, and Eastern energy —
+          all refined by training the <span className="text-foreground font-semibold">same age group, every single day</span>.
+          Most trainers move up. I stayed. That's why my athletes go to college ready.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3">
           <Link
-            to="/dashboard"
+            to="/auth"
             className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
           >
-            Client Portal
+            Start Training with Matt
             <ArrowRight size={14} />
           </Link>
           <Link
@@ -96,7 +109,28 @@ const HeroSection = () => (
         ))}
       </motion.div>
 
-      {/* PHILOSOPHY */}
+      {/* WHAT MAKES MATT DIFFERENT */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2, ease: [0.2, 0, 0, 1] }}
+        className="mb-12"
+      >
+        <SectionHeader title="Why M² Training" timestamp="What makes this different from every other trainer" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {DIFFERENTIATORS.map((d) => (
+            <div key={d.title} className="bg-card shadow-m2 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <d.icon size={16} className="text-primary" />
+                <h3 className="text-xs font-bold text-foreground">{d.title}</h3>
+              </div>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">{d.desc}</p>
+            </div>
+          ))}
+        </div>
+      </motion.div>
+
+      {/* PHILOSOPHY — Letter to Parents */}
       <div className="mb-12">
         <AboutPhilosophy />
       </div>
@@ -106,14 +140,19 @@ const HeroSection = () => (
         <RealityCheck />
       </div>
 
-      {/* WORK ONLINE */}
+      {/* FOR COACHES */}
+      <div className="mb-12">
+        <ForCoaches />
+      </div>
+
+      {/* SERVICES */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.35, ease: [0.2, 0, 0, 1] }}
         className="mb-12"
       >
-        <SectionHeader title="Work with Matt" timestamp="Online or in person" />
+        <SectionHeader title="Work with Matt" timestamp="Online or in person — wherever you are" />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {SERVICES.map((item) => (
             <Link
@@ -126,7 +165,7 @@ const HeroSection = () => (
                 <span className="text-[10px] font-bold uppercase tracking-widest text-primary">{item.label}</span>
               </div>
               <h3 className="text-sm font-bold text-foreground group-hover:text-primary transition-m2">{item.title}</h3>
-              <p className="text-xs text-muted-foreground mt-1">{item.sub}</p>
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{item.sub}</p>
             </Link>
           ))}
         </div>
@@ -152,7 +191,7 @@ const HeroSection = () => (
         </div>
       </motion.div>
 
-      {/* HELP */}
+      {/* I CAN FIX IT */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -162,10 +201,37 @@ const HeroSection = () => (
         <div className="bg-primary/10 border border-primary/20 shadow-m2 p-5">
           <div className="flex items-center gap-2 mb-2">
             <HelpCircle size={16} className="text-primary" />
-            <h3 className="text-sm font-bold text-primary">I Can Fix It</h3>
+            <h3 className="text-sm font-bold text-primary">Something's Off? I Can Fix It.</h3>
           </div>
-          <p className="text-xs text-muted-foreground mb-2">Your kid's not getting stronger? Something feels off in their training? I'll tell you what's wrong and how to fix it.</p>
+          <p className="text-xs text-muted-foreground mb-2 leading-relaxed">
+            Your kid's not getting stronger? They're always sore? Their coach has them doing things that don't look right?
+            Tell me what's going on. I'll tell you exactly what's wrong and exactly how to fix it.
+            20 years of fixing the same problems — I've seen it all.
+          </p>
           <span className="text-xs text-primary font-bold">Pay what you feel →</span>
+        </div>
+      </motion.div>
+
+      {/* THE PROMISE */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.48, ease: [0.2, 0, 0, 1] }}
+        className="mb-12"
+      >
+        <div className="bg-card shadow-m2 p-6 text-center">
+          <h3 className="text-lg font-bold text-foreground mb-3 tracking-display">MATT'S PROMISE</h3>
+          <p className="text-sm text-foreground max-w-md mx-auto text-balance leading-relaxed mb-4">
+            "They will get strong. I promise. No need to rush. Let me handle the strength protocol.
+            You handle the bedtime. <span className="text-primary font-bold">Problem solved.</span>"
+          </p>
+          <Link
+            to="/auth"
+            className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-8 py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
+          >
+            Get Your Athlete Started
+            <ArrowRight size={14} />
+          </Link>
         </div>
       </motion.div>
 
