@@ -1,5 +1,4 @@
 import AppNavbar from "@/components/AppNavbar";
-import ProtocolTable from "@/components/ProtocolTable";
 import ChallengeSystem from "@/components/ChallengeSystem";
 import MyPrograms from "@/components/MyPrograms";
 import { useAuth } from "@/hooks/useAuth";
@@ -9,8 +8,7 @@ import { ExternalLink, Loader2 } from "lucide-react";
 
 const TABS = [
   { key: "programs", label: "My Programs" },
-  { key: "protocol", label: "Today's Protocol" },
-  { key: "challenges", label: "Challenges" },
+  { key: "challenges", label: "Challenge & Focus" },
 ];
 
 const Dashboard = () => {
@@ -79,7 +77,6 @@ const Dashboard = () => {
         </div>
 
         {activeTab === "programs" && <MyPrograms />}
-        {activeTab === "protocol" && <ProtocolTable />}
         {activeTab === "challenges" && <ChallengeSystem />}
       </div>
     </div>

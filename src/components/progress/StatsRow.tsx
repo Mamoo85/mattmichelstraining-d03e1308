@@ -7,9 +7,9 @@ interface StatsRowProps {
 
 const StatsRow = ({ current, delta, max, repMax }: StatsRowProps) => {
   const stats = [
-    { label: `Current ${repMax === 1 ? "1RM" : `${repMax}RM`}`, val: `${current}`, unit: "lbs" },
-    { label: "Δ Last", val: `${delta >= 0 ? "+" : ""}${delta}`, unit: "lbs", color: delta >= 0 },
-    { label: "All-Time PR", val: `${max}`, unit: "lbs" },
+    { label: `Current ${repMax === 1 ? "1RM" : `${repMax}RM`}`, val: `${Math.round(current)}`, unit: "lbs" },
+    { label: "Δ Last", val: `${delta >= 0 ? "+" : ""}${Math.round(delta)}`, unit: "lbs", color: delta >= 0 },
+    { label: "All-Time PR", val: `${Math.round(max)}`, unit: "lbs" },
   ];
 
   return (

@@ -50,7 +50,7 @@ const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) =
       setData(
         rawLogs.map((l) => ({
           date: new Date(l.logged_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-          value: l.estimated_1rm ?? 0,
+          value: Math.round(l.weight),
         }))
       );
     }
@@ -64,7 +64,7 @@ const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) =
 
   const current = data.length > 0 ? data[data.length - 1].value : 0;
   const previous = data.length > 1 ? data[data.length - 2].value : current;
-  const delta = Math.round((current - previous) * 10) / 10;
+  const delta = Math.round(current - previous);
   const max = data.length > 0 ? Math.max(...data.map((d) => d.value)) : 0;
 
   return (

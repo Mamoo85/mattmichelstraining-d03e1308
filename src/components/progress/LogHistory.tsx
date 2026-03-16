@@ -78,7 +78,7 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
       return;
     }
     setSaving(true);
-    const estimated1rm = Math.round(weight * (1 + reps / 30) * 10) / 10;
+    const estimated1rm = Math.round(weight * (1 + reps / 30));
     const { error } = await supabase
       .from("progress_logs")
       .update({ weight, reps, estimated_1rm: estimated1rm, logged_at: editDate.toISOString() })
