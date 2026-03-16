@@ -98,7 +98,10 @@ const fade = (delay: number) => ({
 
 /* ---------- page ---------- */
 
-const ForParents = () => (
+const ForParents = () => {
+  const { content: cms } = useContentMap("for_parents");
+
+  return (
   <div className="min-h-screen bg-background">
     <AppNavbar />
 
