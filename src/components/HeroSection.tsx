@@ -6,6 +6,7 @@ import SectionHeader from "./SectionHeader";
 import AboutPhilosophy from "./AboutPhilosophy";
 import RealityCheck from "./RealityCheck";
 import ForCoaches from "./ForCoaches";
+import ValuePitch from "./ValuePitch";
 
 const STATS = [
   { value: "20+", label: "Years · Same Age Group" },
@@ -138,6 +139,11 @@ const HeroSection = () => (
       {/* REALITY CHECK */}
       <div className="mb-12">
         <RealityCheck />
+      </div>
+
+      {/* VALUE PITCH — Why $20, scarcity, knowledge transfer */}
+      <div className="mb-12">
+        <ValuePitch />
       </div>
 
       {/* FOR COACHES */}
