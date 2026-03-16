@@ -13,8 +13,9 @@ import {
 const SECTION_GROUPS = [
   { key: "all", label: "All" },
   { key: "landing", label: "Landing Page" },
-  { key: "shop", label: "Shop" },
   { key: "pricing", label: "Pricing" },
+  { key: "for_parents", label: "For Parents" },
+  { key: "shop", label: "Shop & Products" },
   { key: "other", label: "Other" },
 ];
 
