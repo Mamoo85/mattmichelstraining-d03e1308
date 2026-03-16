@@ -162,10 +162,10 @@ const HeroSection = () => {
           </motion.div>
         )}
 
-        {showTestimonial && <Testimonial />}
-        {showPress && <PressAuthority />}
         {showAudience && <AudienceSelector />}
         {showFreeBonus && <FreeBonusBanner />}
+        {showTestimonial && <Testimonial />}
+        {showPress && <PressAuthority />}
         {showClients && <div id="section-current-clients"><CurrentClients /></div>}
         {showGuides && <div id="section-guides"><GuidesGrid /></div>}
         {showPremium && <PremiumProgram />}
