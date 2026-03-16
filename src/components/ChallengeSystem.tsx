@@ -93,56 +93,37 @@ const ChallengeSystem = () => {
         </div>
       </div>
 
-      {/* ACTIVE CHALLENGES */}
+      {/* CURRENT CHALLENGE */}
       <div>
-        <SectionHeader title="Member Challenges" timestamp={`${ACTIVE_CHALLENGES.length} active challenges`} />
-        <div className="space-y-2">
-          {ACTIVE_CHALLENGES.map((c) => {
-            const isExpanded = expandedChallenge === c.id;
-            return (
-              <div
-                key={c.id}
-                className="bg-card shadow-m2 hover:bg-m2-surface-hover transition-m2 cursor-pointer"
-                onClick={() => setExpandedChallenge(isExpanded ? null : c.id)}
-              >
-                <div className="p-4 flex items-center justify-between">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      {typeIcon(c.type)}
-                      <span className="text-[11px] font-bold uppercase tracking-widest text-primary">{c.type}</span>
-                      <span className={`text-[11px] font-bold uppercase ${difficultyColor(c.difficulty)}`}>{c.difficulty}</span>
-                    </div>
-                    <h3 className="text-sm font-bold text-foreground">{c.title}</h3>
-                    <div className="flex items-center gap-3 mt-1">
-                      <span className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Clock size={11} /> {c.duration}
-                      </span>
-                      {c.participants && (
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Users size={11} /> {c.participants} joined
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  {isExpanded ? <ChevronUp size={16} className="text-muted-foreground flex-shrink-0" /> : <ChevronDown size={16} className="text-muted-foreground flex-shrink-0" />}
-                </div>
-
-                {isExpanded && (
-                  <div className="px-4 pb-4 border-t border-border pt-3 space-y-3">
-                    <p className="text-sm text-foreground leading-relaxed">{c.description}</p>
-                    <div className="bg-primary/10 border border-primary/20 p-3">
-                      <span className="text-[11px] font-bold uppercase tracking-widest text-primary block mb-1">Reward</span>
-                      <p className="text-sm text-foreground">{c.reward}</p>
-                    </div>
-                    <button className="bg-primary text-primary-foreground px-5 py-2.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2 flex items-center gap-2">
-                      <Trophy size={14} />
-                      Join Challenge
-                    </button>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+        <SectionHeader title="Member Challenge" timestamp="One challenge at a time — all in." />
+        <div className="bg-card shadow-m2">
+          <div className="p-5">
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              {typeIcon(CURRENT_CHALLENGE.type)}
+              <span className="text-[11px] font-bold uppercase tracking-widest text-primary">{CURRENT_CHALLENGE.type}</span>
+              <span className={`text-[11px] font-bold uppercase ${difficultyColor(CURRENT_CHALLENGE.difficulty)}`}>{CURRENT_CHALLENGE.difficulty}</span>
+            </div>
+            <h3 className="text-base font-bold text-foreground mb-2">{CURRENT_CHALLENGE.title}</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed mb-3">{CURRENT_CHALLENGE.description}</p>
+            <div className="flex items-center gap-4 mb-4">
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                <Clock size={11} /> {CURRENT_CHALLENGE.duration}
+              </span>
+              {CURRENT_CHALLENGE.participants && (
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Users size={11} /> {CURRENT_CHALLENGE.participants} joined
+                </span>
+              )}
+            </div>
+            <div className="bg-primary/10 border border-primary/20 p-3 mb-4">
+              <span className="text-[11px] font-bold uppercase tracking-widest text-primary block mb-1">Reward</span>
+              <p className="text-sm text-foreground">{CURRENT_CHALLENGE.reward}</p>
+            </div>
+            <button className="bg-primary text-primary-foreground px-5 py-2.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2 flex items-center gap-2">
+              <Trophy size={14} />
+              Join Challenge
+            </button>
+          </div>
         </div>
       </div>
 
