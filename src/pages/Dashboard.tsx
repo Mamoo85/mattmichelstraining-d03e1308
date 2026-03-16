@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ExternalLink, Loader2 } from "lucide-react";
 
 const TABS = [
+  { key: "log", label: "Log Workout" },
   { key: "programs", label: "My Programs" },
   { key: "challenges", label: "Challenge & Focus" },
 ];
