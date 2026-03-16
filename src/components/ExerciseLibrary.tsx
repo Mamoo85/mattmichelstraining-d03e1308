@@ -918,17 +918,57 @@ const CATEGORY_TABS = [
   { key: "fixit", label: "Fix It" },
 ];
 
+const FIXIT_SUB_TABS = [
+  { key: "all", label: "All Fix It" },
+  { key: "knee", label: "Knee" },
+  { key: "back", label: "Back Pain" },
+  { key: "shoulder", label: "Shoulder" },
+  { key: "rotator-cuff", label: "Rotator Cuff" },
+  { key: "groin", label: "Groin" },
+  { key: "hamstring", label: "Hamstring" },
+  { key: "shin", label: "Shin Splints" },
+  { key: "ankle", label: "Ankle" },
+  { key: "it-band", label: "IT Band" },
+  { key: "elbow", label: "Elbow" },
+  { key: "acl", label: "ACL Prevention" },
+  { key: "concussion", label: "Concussion" },
+  { key: "posture", label: "Posture / Desk" },
+];
+
+// Derive sub-category from exercise id for fixit exercises
+const getFixitSubCategory = (id: string): string => {
+  if (id.startsWith("acl-")) return "acl";
+  if (id.startsWith("rc-")) return "rotator-cuff";
+  if (id.startsWith("concussion-")) return "concussion";
+  if (id === "banded-tke") return "knee";
+  if (id === "nordic-curl" || id === "sl-rdl-eccentric") return "hamstring";
+  if (id === "copenhagen-adductor" || id === "side-lying-adduction") return "groin";
+  if (id === "tibialis-raise" || id === "toe-walks") return "shin";
+  if (id === "single-leg-balance" || id === "banded-ankle-dorsiflexion") return "ankle";
+  if (id === "clamshell" || id === "lateral-band-walk") return "it-band";
+  if (id === "wrist-flexor-ext" || id === "forearm-pronation-supination") return "elbow";
+  if (id === "mcgill-curl-up" || id === "side-plank" || id === "bird-dog-fixit" || id === "hip-flexor-release" || id === "couch-stretch") return "back";
+  if (id === "wall-slide" || id === "sleeper-stretch" || id === "prone-ytw" || id === "band-external-rotation") return "shoulder";
+  if (id === "eccentric-calf-raise") return "ankle";
+  if (id === "thoracic-extension" || id === "doorway-chest-stretch" || id === "cat-cow" || id === "wall-angel") return "posture";
+  if (id === "glute-bridge") return "back";
+  if (id === "dead-hang") return "posture";
+  return "all";
+};
+
 const ExerciseLibrary = () => {
   const [sport, setSport] = useState("all");
   const [category, setCategory] = useState("all");
+  const [fixitSub, setFixitSub] = useState("all");
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const filtered = EXERCISES.filter((ex) => {
     const matchesSport = sport === "all" || ex.sports.includes(sport);
     const matchesCategory = category === "all" || ex.category === category;
+    const matchesFixitSub = category !== "fixit" || fixitSub === "all" || getFixitSubCategory(ex.id) === fixitSub;
     const matchesSearch = !search || ex.name.toLowerCase().includes(search.toLowerCase()) || ex.why.toLowerCase().includes(search.toLowerCase());
-    return matchesSport && matchesCategory && matchesSearch;
+    return matchesSport && matchesCategory && matchesFixitSub && matchesSearch;
   });
 
   return (
