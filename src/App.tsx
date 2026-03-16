@@ -12,6 +12,7 @@ import Coach from "./pages/Coach";
 import Shop from "./pages/Shop";
 import Welcome from "./pages/Welcome";
 import Auth from "./pages/Auth";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
