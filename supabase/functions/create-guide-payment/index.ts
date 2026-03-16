@@ -52,6 +52,7 @@ serve(async (req) => {
       mode: "payment",
       success_url: `${origin}/shop?purchase=success`,
       cancel_url: `${origin}/shop`,
+      metadata: { priceId },
     });
 
     return new Response(JSON.stringify({ url: session.url }), {
