@@ -13,7 +13,9 @@ const Auth = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (!authLoading && user) {
-      navigate("/dashboard", { replace: true });
+      const params = new URLSearchParams(window.location.search);
+      const redirect = params.get("redirect") || "/dashboard";
+      navigate(redirect, { replace: true });
     }
   }, [user, authLoading, navigate]);
   const [isSignUp, setIsSignUp] = useState(false);
@@ -46,7 +48,10 @@ const Auth = () => {
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) setError(error.message);
-      else navigate("/dashboard");
+      else {
+        const params = new URLSearchParams(window.location.search);
+        navigate(params.get("redirect") || "/dashboard");
+      }
     }
     setLoading(false);
   };

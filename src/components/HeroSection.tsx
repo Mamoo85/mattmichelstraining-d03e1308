@@ -91,7 +91,7 @@ const HeroSection = () => (
 
         <div className="flex flex-wrap gap-3">
           <Link
-            to="/auth"
+            to="/auth?redirect=/shop"
             className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
           >
             Start training
