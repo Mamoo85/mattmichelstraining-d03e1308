@@ -141,6 +141,11 @@ const HeroSection = () => (
         <RealityCheck />
       </div>
 
+      {/* VALUE PITCH — Why $20, scarcity, knowledge transfer */}
+      <div className="mb-12">
+        <ValuePitch />
+      </div>
+
       {/* FOR COACHES */}
       <div className="mb-12">
         <ForCoaches />
