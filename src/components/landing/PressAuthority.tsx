@@ -80,7 +80,19 @@ const PressAuthority = () => (
       </a>
     ))}
 
-    {/* Social proof links */}
+    {/* Article highlights */}
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+      {ARTICLE_HIGHLIGHTS.map((h) => (
+        <div key={h.label} className="bg-card shadow-m2 p-4">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-1">
+            {h.label}
+          </span>
+          <p className="text-xs text-muted-foreground italic leading-relaxed">
+            "{h.quote}"
+          </p>
+        </div>
+      ))}
+    </div>
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       {SOCIAL_PROOF.map((s) => (
         <a
