@@ -19,7 +19,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       }}
     >
       <p className="text-muted-foreground text-[10px] mb-0.5">{label}</p>
-      <p className="font-bold text-primary" style={{ textShadow: "0 0 8px hsl(var(--primary) / 0.5)" }}>
+      <p className="font-bold text-primary">
         Est. {payload[0].value} lbs
       </p>
     </div>
