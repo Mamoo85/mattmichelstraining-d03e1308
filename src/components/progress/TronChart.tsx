@@ -19,7 +19,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       }}
     >
       <p className="text-muted-foreground text-[10px] mb-0.5">{label}</p>
-      <p className="font-bold text-primary" style={{ textShadow: "0 0 8px hsl(var(--primary) / 0.5)" }}>
+      <p className="font-bold text-primary">
         Est. {payload[0].value} lbs
       </p>
     </div>
@@ -48,16 +48,11 @@ const TronChart = ({ data, repMax }: TronChartProps) => {
   const maxVal = Math.max(...data.map((d) => d.value));
 
   return (
-    <div
-      className="p-4 bg-card border border-border"
-      style={{
-        boxShadow: "inset 0 0 30px hsl(var(--primary) / 0.03), 0 0 20px hsl(var(--primary) / 0.05)",
-      }}
-    >
+    <div className="p-4 bg-card border border-border">
+
       <div className="flex items-center justify-between mb-3">
         <span
           className="text-[10px] font-mono font-bold uppercase tracking-widest text-primary"
-          style={{ textShadow: "0 0 8px hsl(var(--primary) / 0.4)" }}
         >
           {repMax === 1 ? "1RM" : `${repMax}RM`} Progression
         </span>
@@ -70,17 +65,9 @@ const TronChart = ({ data, repMax }: TronChartProps) => {
         <AreaChart data={data}>
           <defs>
             <linearGradient id="tronGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="hsl(18, 82%, 50%)" stopOpacity={0.3} />
-              <stop offset="50%" stopColor="hsl(18, 82%, 50%)" stopOpacity={0.08} />
+              <stop offset="0%" stopColor="hsl(18, 82%, 50%)" stopOpacity={0.15} />
               <stop offset="100%" stopColor="hsl(18, 82%, 50%)" stopOpacity={0} />
             </linearGradient>
-            <filter id="chartGlow">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
           </defs>
           <CartesianGrid
             stroke="hsl(18, 82%, 50%, 0.06)"
@@ -115,17 +102,15 @@ const TronChart = ({ data, repMax }: TronChartProps) => {
             strokeWidth={2}
             fill="url(#tronGradient)"
             dot={{
-              fill: "hsl(18, 82%, 55%)",
+              fill: "hsl(18, 82%, 50%)",
               r: 3,
               strokeWidth: 0,
-              filter: "url(#chartGlow)",
             }}
             activeDot={{
-              r: 6,
-              fill: "hsl(18, 82%, 55%)",
+              r: 5,
+              fill: "hsl(18, 82%, 50%)",
               strokeWidth: 2,
-              stroke: "hsl(var(--card))",
-              filter: "url(#chartGlow)",
+              stroke: "hsl(0, 0%, 9%)",
             }}
           />
         </AreaChart>

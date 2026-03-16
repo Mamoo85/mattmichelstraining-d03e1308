@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&family=Oswald:wght@600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,64 +6,63 @@
 
 @layer base {
   :root {
-    --background: 40 5% 7%;
-    --foreground: 36 14% 90%;
-    --card: 40 6% 11%;
-    --card-foreground: 36 14% 90%;
-    --popover: 40 6% 11%;
-    --popover-foreground: 36 14% 90%;
+    --background: 0 0% 5%;
+    --foreground: 0 0% 95%;
+    --card: 0 0% 9%;
+    --card-foreground: 0 0% 95%;
+    --popover: 0 0% 9%;
+    --popover-foreground: 0 0% 95%;
     --primary: 18 82% 50%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 40 5% 14%;
-    --secondary-foreground: 36 14% 90%;
-    --muted: 40 4% 19%;
-    --muted-foreground: 36 8% 62%;
-    --accent: 36 14% 90%;
-    --accent-foreground: 40 5% 6.7%;
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 95%;
+    --muted: 0 0% 16%;
+    --muted-foreground: 0 0% 55%;
+    --accent: 0 0% 95%;
+    --accent-foreground: 0 0% 5%;
     --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 100%;
-    --border: 40 5% 18%;
-    --input: 40 5% 18%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
     --ring: 18 82% 50%;
     --radius: 0.125rem;
 
-    --sidebar-background: 40 5% 6.7%;
-    --sidebar-foreground: 36 12% 88%;
+    --sidebar-background: 0 0% 5%;
+    --sidebar-foreground: 0 0% 90%;
     --sidebar-primary: 18 82% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 40 5% 13%;
-    --sidebar-accent-foreground: 36 12% 88%;
-    --sidebar-border: 40 5% 18%;
+    --sidebar-accent: 0 0% 12%;
+    --sidebar-accent-foreground: 0 0% 90%;
+    --sidebar-border: 0 0% 15%;
     --sidebar-ring: 18 82% 50%;
 
     /* M² Custom tokens */
-    --m2-surface: 40 6% 10%;
-    --m2-surface-alt: 40 6% 13%;
-    --m2-surface-hover: 40 5% 15%;
-    --m2-dim: 36 4% 46%;
-    --m2-text-dim: 36 6% 72%;
-    --m2-green: 152 40% 49%;
+    --m2-surface: 0 0% 8%;
+    --m2-surface-alt: 0 0% 12%;
+    --m2-surface-hover: 0 0% 15%;
+    --m2-dim: 0 0% 40%;
+    --m2-text-dim: 0 0% 65%;
   }
 
   .dark {
-    --background: 40 5% 6.7%;
-    --foreground: 36 12% 88%;
-    --card: 40 6% 10%;
-    --card-foreground: 36 12% 88%;
-    --popover: 40 6% 10%;
-    --popover-foreground: 36 12% 88%;
+    --background: 0 0% 5%;
+    --foreground: 0 0% 93%;
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 93%;
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 93%;
     --primary: 18 82% 50%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 40 5% 13%;
-    --secondary-foreground: 36 12% 88%;
-    --muted: 40 4% 18%;
-    --muted-foreground: 36 6% 66%;
-    --accent: 36 12% 88%;
-    --accent-foreground: 40 5% 6.7%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 40 5% 18%;
-    --input: 40 5% 18%;
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 93%;
+    --muted: 0 0% 16%;
+    --muted-foreground: 0 0% 55%;
+    --accent: 0 0% 93%;
+    --accent-foreground: 0 0% 5%;
+    --destructive: 0 70% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
     --ring: 18 82% 50%;
   }
 }
@@ -84,6 +83,12 @@
   .font-mono {
     font-family: 'Geist Mono', 'SF Mono', 'Fira Code', monospace;
     font-feature-settings: "tnum";
+  }
+  .font-brand {
+    font-family: 'Oswald', Impact, 'Arial Black', sans-serif;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
   }
   .shadow-m2 {
     box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 2px 4px rgba(0,0,0,0.3);

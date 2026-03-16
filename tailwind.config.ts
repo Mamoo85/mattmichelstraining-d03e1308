@@ -63,7 +63,6 @@ export default {
           "surface-hover": "hsl(var(--m2-surface-hover))",
           dim: "hsl(var(--m2-dim))",
           "text-dim": "hsl(var(--m2-text-dim))",
-          green: "hsl(var(--m2-green))",
         },
       },
       borderRadius: {
@@ -74,6 +73,7 @@ export default {
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
         mono: ['"Geist Mono"', '"SF Mono"', '"Fira Code"', 'monospace'],
+        brand: ['Oswald', 'Impact', '"Arial Black"', 'sans-serif'],
       },
       keyframes: {
         "accordion-down": {
