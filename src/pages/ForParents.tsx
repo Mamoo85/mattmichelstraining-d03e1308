@@ -118,13 +118,13 @@ const ForParents = () => {
               </span>
             </div>
             <h1 className="text-2xl md:text-5xl lg:text-6xl font-bold tracking-display text-foreground leading-[1.1]">
-              <motion.span {...fade(0.2)} className="block">Your athlete's body</motion.span>
-              <motion.span {...fade(0.35)} className="block">is not a science experiment.</motion.span>
+              <motion.span {...fade(0.2)} className="block">{cms.hero_line_1 || "Your athlete's body"}</motion.span>
+              <motion.span {...fade(0.35)} className="block">{cms.hero_line_2 || "is not a science experiment."}</motion.span>
             </h1>
           </div>
         </div>
         <p className="text-sm md:text-base text-muted-foreground max-w-2xl mb-6 leading-relaxed">
-          Most youth strength training programs are built by people who learned from social media, not from 20 years of watching what actually breaks down in a young athlete's body. Matt Michels has trained thousands of kids through affordable, proven strength programs. 50+ went on to compete at the college level. Zero got injured. That's not a slogan — it's a record built on injury prevention, proper strength development, and patience.
+          {cms.hero_subtitle || "Most youth strength training programs are built by people who learned from social media, not from 20 years of watching what actually breaks down in a young athlete's body. Matt Michels has trained thousands of kids through affordable, proven strength programs. 50+ went on to compete at the college level. Zero got injured. That's not a slogan — it's a record built on injury prevention, proper strength development, and patience."}
         </p>
         <div className="flex flex-wrap gap-3">
           <Link
