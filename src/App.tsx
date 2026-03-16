@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Progress from "./pages/Progress";
 import Coach from "./pages/Coach";
 import Shop from "./pages/Shop";
+import ForParents from "./pages/ForParents";
 import Welcome from "./pages/Welcome";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
