@@ -5,9 +5,9 @@ const Newsletter = () => (
     <SectionHeader title="Words from Matt" />
     <div className="bg-card shadow-m2 p-5">
       <p className="text-sm text-foreground text-balance leading-relaxed">
-        "Most people don't need a new program. They need someone to look at what they're doing 
-        and fix the three things that are holding them back. That's what I do. I've been doing it 
-        for over twenty years. If you're stuck, reach out. I'll tell you what's wrong and how to fix it."
+        "I understand the power of the central nervous system and physics. After 20+ years with the same age group,
+        it's not a science for me anymore — it's an art I live and breathe. Old-school Russian mountain strength
+        mixed with American power mixed with Eastern energies. It's hard, but it works. Every single time."
       </p>
       <span className="text-[10px] font-mono text-primary mt-3 block">— Matt Michels, M² Training</span>
     </div>

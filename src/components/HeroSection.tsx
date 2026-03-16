@@ -5,17 +5,17 @@ import m2Logo from "@/assets/m2-logo.jpg";
 import SectionHeader from "./SectionHeader";
 
 const STATS = [
-  { value: "20+", label: "Years" },
-  { value: "50+", label: "College Athletes" },
-  { value: "1000s", label: "Clients Trained" },
+  { value: "20+", label: "Years Same Age Group" },
+  { value: "50+", label: "College Athletes Made" },
   { value: "Zero", label: "Injuries" },
+  { value: "100%", label: "Results" },
 ];
 
 const SERVICES = [
-  { route: "/shop", icon: Clipboard, label: "CUSTOM · $20", title: "Your Custom Workout", sub: "Matt reads your intake and builds it from scratch.", cta: "Get Started" },
+  { route: "/shop", icon: Clipboard, label: "CUSTOM · $20", title: "Your Athlete's Program", sub: "Matt reads the intake, builds the program from scratch. No templates.", cta: "Get Started" },
   { route: "/coach", icon: TrendingUp, label: "MONTHLY · $100+", title: "Online Coaching", sub: "Programming + weekly check-ins. Matt adjusts in real time.", cta: "Learn More" },
-  { route: "/coach", icon: Video, label: "REMOTE · $20", title: "Form Check", sub: "Send a video. Get cues back.", cta: "Submit Video" },
-  { route: "/coach", icon: Users, label: "TRAINERS ONLY", title: "Trainer Mentorship", sub: "Programming, coaching, business. Matt's been there.", cta: "Inquire" },
+  { route: "/coach", icon: Video, label: "REMOTE · $20", title: "Form Check", sub: "Send a video. Get cues back. Matt sees what others miss.", cta: "Submit Video" },
+  { route: "/coach", icon: Users, label: "TRAINERS ONLY", title: "Trainer Mentorship", sub: "Programming, coaching, business. 20+ years of doing it the right way.", cta: "Inquire" },
 ];
 
 const HeroSection = () => (
@@ -44,19 +44,21 @@ const HeroSection = () => (
             <div className="flex items-center gap-2 mb-1">
               <div className="w-0.5 h-4 bg-primary" />
               <span className="text-[10px] font-bold uppercase tracking-widest text-primary font-mono">
-                Personal Training · Grosse Pointe Park, MI
+                Youth Athlete Strength · Grosse Pointe Park, MI
               </span>
             </div>
             <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-display text-foreground leading-[0.95]">
-              TRAIN SMARTER.<br />
-              <span className="text-primary">GET STRONGER.</span>
+              YOUR ATHLETE'S<br />
+              <span className="text-primary">SECRET WEAPON.</span>
             </h1>
           </div>
         </div>
 
         <p className="text-sm md:text-base text-muted-foreground max-w-lg mb-6 text-balance">
-          Two decades of experience. Thousands of clients trained with zero injuries.
-          From middle school athletes to Division I competitors — real training, real results.
+          This isn't TikTok fitness. This isn't a franchise gym with a clipboard.
+          This is old-school Russian strength meets American power meets Eastern energy —
+          refined over 20+ years training the same age group. Most trainers move up. I stayed.
+          That's why my athletes go to college ready. Zero injuries. Every single time.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3">
@@ -79,7 +81,7 @@ const HeroSection = () => (
 
       {/* STATS */}
       <motion.div
-        className="grid grid-cols-4 gap-3 mb-12"
+        className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-12"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.15, ease: [0.2, 0, 0, 1] }}
@@ -99,18 +101,20 @@ const HeroSection = () => (
         transition={{ duration: 0.5, delay: 0.25, ease: [0.2, 0, 0, 1] }}
         className="mb-12"
       >
-        <SectionHeader title="Team & Youth Programs" timestamp="Any team · Any sport · Any age" />
+        <SectionHeader title="Youth & Team Strength" timestamp="The training college athletes wish they started sooner" />
         <div className="bg-card shadow-m2 p-5">
           <p className="text-sm text-foreground mb-3 text-balance">
-            Custom one-time programs built specifically for your team — from middle school all the way
-            through college. Matt builds the program for your coach to deliver, comes on-site to teach it,
-            or trains the team directly. A day, a week, a month — whatever you need.
+            If your kid is going to play college sports, this is the training that prepares their body for it.
+            Not a group class. Not a speed ladder. Real strength development — central nervous system work,
+            physics-based loading, and 20+ years of intuition from training this exact age group.
+            Anything else is just wearing them out.
           </p>
           <p className="text-xs text-muted-foreground mb-4">
-            20+ years developing athletes. 50+ college athletes produced. Zero injuries. Guaranteed results.
+            I don't do this like anyone else. Most trainers move up to older clients as they age.
+            I stayed with young athletes because this is what I'm built for. It's not a science anymore — it's an art I live and breathe.
           </p>
           <button className="bg-primary text-primary-foreground px-5 py-2 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2">
-            I Can Do That
+            Let's Talk About Your Athlete
           </button>
         </div>
       </motion.div>
@@ -173,7 +177,7 @@ const HeroSection = () => (
             <HelpCircle size={16} className="text-primary" />
             <h3 className="text-sm font-bold text-primary">I Can Fix It</h3>
           </div>
-          <p className="text-xs text-muted-foreground mb-2">Stuck? Something hurts? Need a workout?</p>
+          <p className="text-xs text-muted-foreground mb-2">Your kid's not getting stronger? Something feels off in their training? I'll tell you what's wrong and how to fix it.</p>
           <span className="text-xs text-primary font-bold">Pay what you feel →</span>
         </div>
       </motion.div>

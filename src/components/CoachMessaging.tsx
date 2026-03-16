@@ -3,9 +3,9 @@ import { Send } from "lucide-react";
 import SectionHeader from "./SectionHeader";
 
 const mockMessages = [
-  { from: "coach", text: "Good session yesterday. Squat depth was on point. Let's push the top set 2.5kg this week. You've earned it.", time: "14:32" },
-  { from: "athlete", text: "Feeling strong. Hip felt tight on the walkout though — any cues?", time: "14:45" },
-  { from: "coach", text: "Widen your stance by an inch. Brace harder before the unrack. Send me a video of your first working set and I'll take a look.", time: "15:02" },
+  { from: "coach", text: "Your son looked great yesterday. His CNS is adapting — the speed on that last set was real. We bump the load next week.", time: "14:32" },
+  { from: "athlete", text: "He said his legs felt heavy during basketball practice. Should we back off?", time: "14:45" },
+  { from: "coach", text: "That's normal adaptation, not fatigue. Trust the process. His body is building the foundation that'll carry him through college. Send me a video of his next squat set.", time: "15:02" },
 ];
 
 const CoachMessaging = () => {
