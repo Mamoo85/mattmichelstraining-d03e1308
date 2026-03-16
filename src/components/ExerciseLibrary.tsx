@@ -958,12 +958,21 @@ const getFixitSubCategory = (id: string): string => {
   return "all";
 };
 
+const TIER_LEVEL: Record<string, number> = { basic: 1, pro: 2, elite: 3, team: 4 };
+
 const ExerciseLibrary = () => {
   const [sport, setSport] = useState("all");
   const [category, setCategory] = useState("all");
   const [fixitSub, setFixitSub] = useState("all");
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const { subscriptionTier, user } = useAuth();
+
+  const userLevel = subscriptionTier ? (TIER_LEVEL[subscriptionTier] ?? 0) : 0;
+  const hasProAccess = userLevel >= 2;
+
+  // If user selects Fix It but doesn't have Pro, show paywall
+  const isFixitLocked = category === "fixit" && !hasProAccess;
 
   const filtered = EXERCISES.filter((ex) => {
     const matchesSport = sport === "all" || ex.sports.includes(sport);
