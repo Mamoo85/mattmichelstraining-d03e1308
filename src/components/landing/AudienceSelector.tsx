@@ -1,11 +1,12 @@
 import { motion } from "framer-motion";
 import { GraduationCap, Shield, Dumbbell, Users } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const AUDIENCES = [
   {
     label: "I'm a Parent",
     icon: Shield,
-    targetId: "section-guides",
+    route: "/for-parents",
     desc: "Protect & prepare your athlete",
   },
   {
