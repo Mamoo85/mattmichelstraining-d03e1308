@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Check, Star, Zap, Shield, Users, Crown, ArrowRight, Loader2 } from "lucide-react";
+import { Check, Star, Zap, Shield, Crown, ArrowRight, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import AppNavbar from "@/components/AppNavbar";
 import { useAuth, TIERS, TierKey } from "@/hooks/useAuth";
