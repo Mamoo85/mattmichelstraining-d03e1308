@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Lock } from "lucide-react";
 import { useAuth, TierKey } from "@/hooks/useAuth";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 const TIER_LEVEL: Record<string, number> = {
   basic: 1,
@@ -17,11 +18,12 @@ interface PaywallGateProps {
 
 const PaywallGate = ({ requiredTier, featureName, children }: PaywallGateProps) => {
   const { subscriptionTier, user } = useAuth();
+  const { isAdmin } = useIsAdmin();
 
   const userLevel = subscriptionTier ? (TIER_LEVEL[subscriptionTier] ?? 0) : 0;
   const requiredLevel = TIER_LEVEL[requiredTier] ?? 0;
 
-  if (userLevel >= requiredLevel) {
+  if (isAdmin || userLevel >= requiredLevel) {
     return <>{children}</>;
   }
 
