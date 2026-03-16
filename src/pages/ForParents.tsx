@@ -233,6 +233,9 @@ const ForParents = () => (
         </div>
       </motion.div>
 
+      {/* PORTAL SHOWCASE */}
+      <PortalShowcase />
+
       {/* CLEAR PATH: Guide → Custom → Train */}
       <motion.div {...fade(0.3)} className="mb-12">
         <div className="flex items-center gap-2 mb-4">
