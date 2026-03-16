@@ -48,7 +48,10 @@ const PortalShowcase = () => (
     <p className="text-sm text-muted-foreground mb-6 max-w-2xl leading-relaxed">
       Every program you purchase automatically loads into your training portal. Log weights, track progress over time, 
       and ask Matt questions directly on any lift — he gets notified instantly and replies right there. 
-      No other affordable online training program gives you this kind of direct access to your coach.
+      This is Matt. Not an AI. Not a chatbot. Not a template response. When your athlete has a question about form, 
+      loading, or why something hurts — Matt answers personally and walks them through it like he's standing right 
+      there. The only things they don't get are his equipment and his sense of humor (and he's hilarious). 
+      No other online training program at this price gives your kid direct access to a 20-year veteran coach.
     </p>
 
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
