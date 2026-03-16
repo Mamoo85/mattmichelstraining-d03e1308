@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
-import { Dumbbell, BarChart3, MessageSquare, ShoppingBag, Users, Home, Menu, X, Video, Building2, GraduationCap, HelpCircle } from "lucide-react";
+import { Dumbbell, BarChart3, MessageSquare, ShoppingBag, Home, Menu, X, LogIn, LogOut } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
 import m2Logo from "@/assets/m2-logo.jpg";
 
 const navItems = [
@@ -14,6 +15,7 @@ const navItems = [
 const AppNavbar = () => {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user, signOut } = useAuth();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm shadow-m2">
@@ -34,9 +36,7 @@ const AppNavbar = () => {
                 key={to}
                 to={to}
                 className={`flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-m2 ${
-                  active
-                    ? "text-primary bg-primary/10"
-                    : "text-muted-foreground hover:text-foreground"
+                  active ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <Icon size={14} />
@@ -44,12 +44,27 @@ const AppNavbar = () => {
               </Link>
             );
           })}
+
+          {user ? (
+            <button
+              onClick={signOut}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-m2"
+            >
+              <LogOut size={14} />
+              SIGN OUT
+            </button>
+          ) : (
+            <Link
+              to="/auth"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-primary hover:opacity-80 transition-m2"
+            >
+              <LogIn size={14} />
+              LOGIN
+            </Link>
+          )}
         </div>
 
-        <button
-          className="md:hidden p-2 text-muted-foreground"
-          onClick={() => setMobileOpen(!mobileOpen)}
-        >
+        <button className="md:hidden p-2 text-muted-foreground" onClick={() => setMobileOpen(!mobileOpen)}>
           {mobileOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
       </div>
@@ -64,9 +79,7 @@ const AppNavbar = () => {
                 to={to}
                 onClick={() => setMobileOpen(false)}
                 className={`flex items-center gap-2 px-4 py-3 text-xs font-bold uppercase tracking-widest transition-m2 ${
-                  active
-                    ? "text-primary bg-primary/10"
-                    : "text-muted-foreground hover:text-foreground"
+                  active ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <Icon size={14} />
@@ -74,6 +87,24 @@ const AppNavbar = () => {
               </Link>
             );
           })}
+          {user ? (
+            <button
+              onClick={() => { signOut(); setMobileOpen(false); }}
+              className="flex items-center gap-2 px-4 py-3 text-xs font-bold uppercase tracking-widest text-muted-foreground w-full"
+            >
+              <LogOut size={14} />
+              SIGN OUT
+            </button>
+          ) : (
+            <Link
+              to="/auth"
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center gap-2 px-4 py-3 text-xs font-bold uppercase tracking-widest text-primary"
+            >
+              <LogIn size={14} />
+              LOGIN
+            </Link>
+          )}
         </div>
       )}
     </nav>
