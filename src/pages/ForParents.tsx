@@ -276,7 +276,7 @@ const ForParents = () => {
       <motion.div {...fade(0.35)} className="mb-12">
         <div className="bg-card shadow-m2 p-5 md:p-6 border-l-4 border-primary">
           <p className="text-sm md:text-base italic text-muted-foreground leading-relaxed mb-3">
-            "My son trained with Matt for three years. He walked on at Michigan as a freshman and started by his junior year. Matt didn't just make him stronger — he made him durable. Three years of college ball, zero time missed to injury. The strength training foundation Matt built was the difference."
+            "{cms.testimonial_text || "My son trained with Matt for three years. He walked on at Michigan as a freshman and started by his junior year. Matt didn't just make him stronger — he made him durable. Three years of college ball, zero time missed to injury. The strength training foundation Matt built was the difference."}"
           </p>
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
