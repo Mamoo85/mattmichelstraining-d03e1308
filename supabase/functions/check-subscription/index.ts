@@ -7,6 +7,13 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const PRODUCT_TIER_MAP: Record<string, string> = {
+  "prod_U9ppSReG0j0RIr": "basic",
+  "prod_U9pqrtuc44EE4A": "pro",
+  "prod_U9pqNqVuxYD6kl": "elite",
+  "prod_U9pq1sVSh9nOQi": "team",
+};
+
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[CHECK-SUBSCRIPTION] ${step}${detailsStr}`);
@@ -45,7 +52,9 @@ serve(async (req) => {
 
     if (customers.data.length === 0) {
       logStep("No customer found");
-      return new Response(JSON.stringify({ subscribed: false }), {
+      // Sync free tier to profile
+      await supabaseClient.from("profiles").update({ subscription_tier: "free" }).eq("user_id", user.id);
+      return new Response(JSON.stringify({ subscribed: false, subscription_tier: "free" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       });
@@ -53,6 +62,9 @@ serve(async (req) => {
 
     const customerId = customers.data[0].id;
     logStep("Found Stripe customer", { customerId });
+
+    // Sync stripe_customer_id
+    await supabaseClient.from("profiles").update({ stripe_customer_id: customerId }).eq("user_id", user.id);
 
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
@@ -63,20 +75,26 @@ serve(async (req) => {
     const hasActiveSub = subscriptions.data.length > 0;
     let productId = null;
     let subscriptionEnd = null;
+    let tier = "free";
 
     if (hasActiveSub) {
       const subscription = subscriptions.data[0];
       subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
       productId = subscription.items.data[0].price.product;
-      logStep("Active subscription found", { productId, subscriptionEnd });
+      tier = PRODUCT_TIER_MAP[productId as string] || "basic";
+      logStep("Active subscription found", { productId, tier, subscriptionEnd });
     } else {
       logStep("No active subscription");
     }
+
+    // Sync tier to profile
+    await supabaseClient.from("profiles").update({ subscription_tier: tier }).eq("user_id", user.id);
 
     return new Response(JSON.stringify({
       subscribed: hasActiveSub,
       product_id: productId,
       subscription_end: subscriptionEnd,
+      subscription_tier: tier,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
