@@ -1,6 +1,7 @@
 import AppNavbar from "@/components/AppNavbar";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import PortalShowcase from "@/components/landing/PortalShowcase";
 import {
   ArrowRight,
   Shield,
@@ -231,6 +232,9 @@ const ForParents = () => (
           </div>
         </div>
       </motion.div>
+
+      {/* PORTAL SHOWCASE */}
+      <PortalShowcase />
 
       {/* CLEAR PATH: Guide → Custom → Train */}
       <motion.div {...fade(0.3)} className="mb-12">
