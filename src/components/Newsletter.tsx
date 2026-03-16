@@ -2,14 +2,24 @@ import SectionHeader from "./SectionHeader";
 
 const Newsletter = () => (
   <div>
-    <SectionHeader title="Words from Matt" />
-    <div className="bg-card shadow-m2 p-5">
+    <SectionHeader title="From Matt's Desk" timestamp="Preparing for College Sports? Read this first." />
+    <div className="bg-card shadow-m2 p-5 space-y-3">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-primary">To the parents of our young athletes:</p>
       <p className="text-sm text-foreground text-balance leading-relaxed">
-        "I understand the power of the central nervous system and physics. After 20+ years with the same age group,
-        it's not a science for me anymore — it's an art I live and breathe. Old-school Russian mountain strength
-        mixed with American power mixed with Eastern energies. It's hard, but it works. Every single time."
+        Is your child training to prepare, or are they just training to get worn out?
+        If they want to play at the next level, they need to perform without pain.
       </p>
-      <span className="text-[10px] font-mono text-primary mt-3 block">— Matt Michels, M² Training</span>
+      <p className="text-sm text-foreground text-balance leading-relaxed">
+        I prioritize longevity and healthy joints over a leaderboard. My program builds
+        <span className="font-bold"> WORK CAPACITY</span> so they don't get sidelined by injuries
+        in high school or college. But there's a catch: they need 72 hours to recover,
+        and they need to stay off their phones at night.
+      </p>
+      <div className="bg-muted p-3 space-y-1">
+        <p className="text-xs text-foreground"><span className="text-primary font-bold">The Goal:</span> Strong bodies, healthy minds, and zero pain.</p>
+        <p className="text-xs text-foreground"><span className="text-primary font-bold">The Strategy:</span> I'll train them; you get them to bed.</p>
+      </div>
+      <span className="text-[10px] font-mono text-primary block">Stay strong, Matt | M² Training</span>
     </div>
   </div>
 );
