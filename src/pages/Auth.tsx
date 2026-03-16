@@ -88,7 +88,7 @@ const Auth = () => {
                 <ul className="text-xs text-muted-foreground space-y-0.5">
                   <li>✓ Monthly focus plans</li>
                   <li>✓ Member challenges & leaderboard</li>
-                  <li>✓ Workout logging with Matt</li>
+                  <li>✓ Random awesome workouts that literally nobody could think of except Matt</li>
                 </ul>
               </div>
             </div>
