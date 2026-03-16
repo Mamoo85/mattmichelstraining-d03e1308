@@ -18,15 +18,9 @@ const STEPS = [
   },
   {
     num: "03",
-    title: "Subscribe for the Full Experience",
-    desc: "M² Basic ($12.99/mo) unlocks the Exercise Library. Pro ($25.99/mo) adds custom programming and the Fix It library. Elite ($42.99/mo) gets you 1-on-1 check-ins with Matt.",
+    title: "Subscribe, Train, & Connect",
+    desc: "Pick a plan and unlock Matt's full exercise library—20 years of hands-on coaching, zero filler. Filter by client type, age, sport, or target area (Mobility, Strength, Core, Flexibility). Log every workout, leave notes on exercises, and flag anything for Matt to personally review. This isn't generic internet programming—it's direct access to your coach, wherever you are.",
     ctaType: "pricing" as const,
-  },
-  {
-    num: "04",
-    title: "Train, Log, & Connect",
-    desc: "Access a one-of-a-kind exercise library built on 20 years of hands-on experience—zero filler, zero 'bad' exercises. The library is categorized perfectly for your needs: filter by client type (Athletes vs. Lifestyle Fitness), age, sport, or target area (Mobility, Strength, Core Stability, Flexibility). It's the ultimate toolkit for fixing injuries or aching backs from sitting all day.\n\nWith a subscription, you don't just get internet workouts. You get direct access to Matt. Log your workouts, leave personal notes on specific exercises, and flag any comment for Matt to personally review and help you with. It's in-person coaching, adapted for wherever you are.",
-    ctaType: "none" as const,
   },
 ];
 
