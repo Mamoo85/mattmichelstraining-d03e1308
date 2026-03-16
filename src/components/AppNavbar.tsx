@@ -1,7 +1,8 @@
 import { Link, useLocation } from "react-router-dom";
-import { Dumbbell, BarChart3, MessageSquare, ShoppingBag, Home, Menu, X, LogIn, LogOut } from "lucide-react";
+import { Dumbbell, BarChart3, MessageSquare, ShoppingBag, Home, Menu, X, LogIn, LogOut, Shield } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import m2Logo from "@/assets/m2-logo.jpg";
 
 const navItems = [
