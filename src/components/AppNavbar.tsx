@@ -58,6 +58,8 @@ const AppNavbar = () => {
             </Link>
           )}
 
+          {user && <NotificationBell />}
+
           {user ? (
             <button
               onClick={signOut}
