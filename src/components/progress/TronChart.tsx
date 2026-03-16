@@ -50,9 +50,7 @@ const TronChart = ({ data, repMax }: TronChartProps) => {
   return (
     <div
       className="p-4 bg-card border border-border"
-      style={{
-        boxShadow: "inset 0 0 30px hsl(var(--primary) / 0.03), 0 0 20px hsl(var(--primary) / 0.05)",
-      }}
+    >
     >
       <div className="flex items-center justify-between mb-3">
         <span
