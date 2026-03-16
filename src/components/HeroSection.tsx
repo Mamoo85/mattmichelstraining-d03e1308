@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ArrowRight, ShoppingBag, Shield, Trophy, Zap } from "lucide-react";
+import { ArrowRight, ShoppingBag, Shield, Trophy, Zap, Gift, Star, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import m2Logo from "@/assets/m2-logo.jpg";
 import SectionHeader from "./SectionHeader";
