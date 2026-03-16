@@ -54,7 +54,7 @@ const AudienceSelector = () => {
         {AUDIENCES.map((a) => (
           <button
             key={a.label}
-            onClick={() => scrollTo(a.targetId)}
+            onClick={() => handleClick(a)}
             className="bg-card shadow-m2 p-4 text-left hover:border-primary/50 border-2 border-transparent transition-m2 group"
           >
             <a.icon size={18} className="text-primary mb-2 group-hover:scale-110 transition-transform" />
