@@ -8,6 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import CoachNotesBadge from "./CoachNotesBadge";
+import LiftChat from "./LiftChat";
 
 interface ProgressLog {
   id: string;
