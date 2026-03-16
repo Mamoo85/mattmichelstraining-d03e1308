@@ -26,48 +26,16 @@ const MONTHLY_FOCUS = {
   ],
 };
 
-const ACTIVE_CHALLENGES: Challenge[] = [
-  {
-    id: "push-up-30",
-    title: "30-Day Push-Up Challenge",
-    description: "Start at 10 push-ups on day 1. Add 2 per day. By day 30, you're hitting 68 perfect push-ups. Strict form only — if the hips sag, the rep doesn't count.",
-    duration: "30 days",
-    type: "strength",
-    difficulty: "beginner",
-    reward: "Push-Up Warrior badge + logged on your profile",
-    participants: 47,
-  },
-  {
-    id: "consistency-21",
-    title: "21-Day Streak",
-    description: "Log a workout every day for 21 days straight. It doesn't have to be heavy — mobility, the monthly focus plan, a 20-minute session — it counts. The habit is the goal.",
-    duration: "21 days",
-    type: "consistency",
-    difficulty: "beginner",
-    reward: "Iron Streak badge + Matt's personal shout-out",
-    participants: 32,
-  },
-  {
-    id: "dead-hang-challenge",
-    title: "Dead Hang for 2 Minutes",
-    description: "Build to a 2-minute dead hang. Start wherever you are. Log your time daily. Grip strength, shoulder health, spinal decompression — all in one. Matt's favorite minimum standard.",
-    duration: "Ongoing",
-    type: "strength",
-    difficulty: "intermediate",
-    reward: "Grip King badge",
-    participants: 28,
-  },
-  {
-    id: "fix-it-week",
-    title: "Fix It Week",
-    description: "7 days, 7 Fix It exercises. One new rehab exercise per day from the Fix It library. Do them all correctly and you've built a prehab routine that'll keep you healthy for years.",
-    duration: "7 days",
-    type: "community",
-    difficulty: "beginner",
-    reward: "Fix It Certified badge",
-    participants: 19,
-  },
-];
+const CURRENT_CHALLENGE: Challenge = {
+  id: "push-up-30",
+  title: "30-Day Push-Up Challenge",
+  description: "Start at 10 push-ups on day 1. Add 2 per day. By day 30, you're hitting 68 perfect push-ups. Strict form only — if the hips sag, the rep doesn't count.",
+  duration: "30 days",
+  type: "strength",
+  difficulty: "beginner",
+  reward: "Push-Up Warrior badge + logged on your profile",
+  participants: 47,
+};
 
 const ChallengeSystem = () => {
   const [expandedChallenge, setExpandedChallenge] = useState<string | null>(null);
