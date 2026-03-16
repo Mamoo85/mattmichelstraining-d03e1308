@@ -13,7 +13,7 @@ interface DbExercise {
 }
 
 const CLIENT_TYPES = ["Athlete", "Lifestyle Fitness"] as const;
-const FOCUS_AREAS = ["Mobility", "Strength", "Core Stability", "Flexibility", "Rehab", "Stability"] as const;
+const FOCUS_AREAS = ["Mobility", "Strength", "Core Stability", "Flexibility", "Rehab", "Stability", "Posture"] as const;
 
 const ExerciseLibrary = () => {
   const [exercises, setExercises] = useState<DbExercise[]>([]);
