@@ -70,17 +70,9 @@ const TronChart = ({ data, repMax }: TronChartProps) => {
         <AreaChart data={data}>
           <defs>
             <linearGradient id="tronGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="hsl(18, 82%, 50%)" stopOpacity={0.3} />
-              <stop offset="50%" stopColor="hsl(18, 82%, 50%)" stopOpacity={0.08} />
+              <stop offset="0%" stopColor="hsl(18, 82%, 50%)" stopOpacity={0.15} />
               <stop offset="100%" stopColor="hsl(18, 82%, 50%)" stopOpacity={0} />
             </linearGradient>
-            <filter id="chartGlow">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
           </defs>
           <CartesianGrid
             stroke="hsl(18, 82%, 50%, 0.06)"
