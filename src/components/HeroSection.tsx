@@ -178,6 +178,9 @@ const HeroSection = () => (
       {/* WHY M² */}
       <WhyM2 />
 
+      {/* MATT'S STORY */}
+      <MattsStory />
+
       {/* MERCH */}
       <MerchSection />
 
