@@ -25,6 +25,13 @@ export const TIERS = {
     price: "$42.99",
     priceNum: 42.99,
   },
+  team: {
+    product_id: "prod_U9pq1sVSh9nOQi",
+    price_id: "price_1TBWBED52tPWee46Ejbp5b8h",
+    name: "M² Team",
+    price: "$84.99",
+    priceNum: 84.99,
+  },
 } as const;
 
 export type TierKey = keyof typeof TIERS;

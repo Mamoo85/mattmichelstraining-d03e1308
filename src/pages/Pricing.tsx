@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Check, Star, Zap, Shield, Crown, ArrowRight, Loader2 } from "lucide-react";
+import { Check, Star, Zap, Shield, Crown, Users, ArrowRight, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import AppNavbar from "@/components/AppNavbar";
 import { useAuth, TIERS, TierKey } from "@/hooks/useAuth";
@@ -49,6 +49,17 @@ const TIER_CARDS: {
       "Direct messaging support",
     ],
     cta: "Go Elite",
+  },
+  {
+    key: "team",
+    icon: Users,
+    features: [
+      "Everything in Elite",
+      "Bulk programming for full teams",
+      "Seasonal periodization plans",
+      "Multi-athlete management",
+    ],
+    cta: "Get Team",
   },
 ];
 
@@ -136,7 +147,7 @@ const Pricing = () => {
         </div>
 
         {/* Tier grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
           {TIER_CARDS.map((card, i) => {
             const tier = TIERS[card.key];
             const isCurrentPlan = subscriptionTier === card.key;
