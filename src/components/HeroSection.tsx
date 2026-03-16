@@ -44,19 +44,21 @@ const HeroSection = () => (
             <div className="flex items-center gap-2 mb-1">
               <div className="w-0.5 h-4 bg-primary" />
               <span className="text-[10px] font-bold uppercase tracking-widest text-primary font-mono">
-                Personal Training · Grosse Pointe Park, MI
+                Youth Athlete Strength · Grosse Pointe Park, MI
               </span>
             </div>
             <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-display text-foreground leading-[0.95]">
-              TRAIN SMARTER.<br />
-              <span className="text-primary">GET STRONGER.</span>
+              YOUR ATHLETE'S<br />
+              <span className="text-primary">SECRET WEAPON.</span>
             </h1>
           </div>
         </div>
 
         <p className="text-sm md:text-base text-muted-foreground max-w-lg mb-6 text-balance">
-          Two decades of experience. Thousands of clients trained with zero injuries.
-          From middle school athletes to Division I competitors — real training, real results.
+          This isn't TikTok fitness. This isn't a franchise gym with a clipboard.
+          This is old-school Russian strength meets American power meets Eastern energy —
+          refined over 20+ years training the same age group. Most trainers move up. I stayed.
+          That's why my athletes go to college ready. Zero injuries. Every single time.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3">
