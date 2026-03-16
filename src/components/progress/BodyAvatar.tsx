@@ -60,8 +60,8 @@ const BodyAvatar = ({ activeLift }: BodyAvatarProps) => {
       }}
     >
       <h3
-        className="text-[9px] font-bold uppercase tracking-[0.2em] mb-2 font-mono text-center"
-        style={{ color: "hsl(24, 80%, 55%)", textShadow: "0 0 6px hsl(24, 80%, 50%, 0.4)" }}
+        className="text-[9px] font-bold uppercase tracking-[0.2em] mb-2 font-mono text-center text-primary"
+      >
       >
         Target · {activeLift}
       </h3>
