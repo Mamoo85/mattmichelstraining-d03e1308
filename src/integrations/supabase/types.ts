@@ -82,6 +82,36 @@ export type Database = {
           },
         ]
       }
+      exercise_library: {
+        Row: {
+          client_type: string[]
+          created_at: string
+          equipment_needed: string
+          focus_area: string[]
+          id: string
+          the_why: string
+          title: string
+        }
+        Insert: {
+          client_type?: string[]
+          created_at?: string
+          equipment_needed?: string
+          focus_area?: string[]
+          id?: string
+          the_why?: string
+          title: string
+        }
+        Update: {
+          client_type?: string[]
+          created_at?: string
+          equipment_needed?: string
+          focus_area?: string[]
+          id?: string
+          the_why?: string
+          title?: string
+        }
+        Relationships: []
+      }
       lift_messages: {
         Row: {
           created_at: string
