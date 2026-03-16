@@ -203,6 +203,48 @@ serve(async (req) => {
         return new Response(JSON.stringify({ error: "No email" }), { status: 200 });
       }
 
+      // Auto-add purchased guide/program to user's portal
+      if (priceId && SUPABASE_URL && SUPABASE_SERVICE_KEY) {
+        const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+        
+        // Find user by email
+        const { data: profiles } = await sb
+          .from("profiles")
+          .select("user_id")
+          .eq("email", customerEmail)
+          .limit(1);
+
+        if (profiles && profiles.length > 0) {
+          const userId = profiles[0].user_id;
+          const guide = GUIDE_MAP[priceId];
+          
+          if (guide) {
+            // Parse exercises from guide content for the portal
+            const exercises = parseGuideExercises(guide.content);
+            
+            await sb.from("purchased_programs").insert({
+              user_id: userId,
+              program_title: guide.title,
+              program_type: guide.title.includes("Youth") ? "starter" : "sport_guide",
+              sport: extractSport(guide.title),
+              exercises: JSON.stringify(exercises),
+              stripe_session_id: session.id,
+            });
+
+            // Notify user their program is in the portal
+            await sb.from("notifications").insert({
+              user_id: userId,
+              type: "program_purchased",
+              title: "Program Added to Portal",
+              body: `Your "${guide.title}" is now in your portal. Log lifts and ask Matt questions on any exercise.`,
+              link: "/dashboard",
+            });
+
+            console.log("[WEBHOOK] Program added to portal for user:", userId);
+          }
+        }
+      }
+
       if (!priceId || !GUIDE_MAP[priceId]) {
         console.log("[WEBHOOK] No guide mapping for priceId:", priceId);
         return new Response(JSON.stringify({ received: true, note: "no guide for this price" }), { status: 200 });
@@ -227,6 +269,7 @@ serve(async (req) => {
             <p style="color:#ccc;font-size:14px;margin:0 0 12px;">Hey there,</p>
             <p style="color:#ccc;font-size:14px;margin:0 0 12px;">
               Thanks for your purchase. Here's your guide — <strong style="color:#e85d04;">${guide.title}</strong>.
+              It's also been added to your M² Portal — log in to track your lifts, see your progress, and ask me questions on any exercise.
             </p>
             <p style="color:#ccc;font-size:14px;margin:0;">
               I wrote every word of this from 20+ years of training athletes. Read the <em>WHY</em> behind each exercise — 
