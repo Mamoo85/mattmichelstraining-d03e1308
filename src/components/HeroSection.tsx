@@ -3,6 +3,8 @@ import { ArrowRight, Video, TrendingUp, Users, Clipboard, MapPin, HelpCircle, Sh
 import { Link } from "react-router-dom";
 import m2Logo from "@/assets/m2-logo.jpg";
 import SectionHeader from "./SectionHeader";
+import AboutPhilosophy from "./AboutPhilosophy";
+import RealityCheck from "./RealityCheck";
 
 const STATS = [
   { value: "20+", label: "Years Same Age Group" },
@@ -94,30 +96,15 @@ const HeroSection = () => (
         ))}
       </motion.div>
 
-      {/* TEAM & YOUTH */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.25, ease: [0.2, 0, 0, 1] }}
-        className="mb-12"
-      >
-        <SectionHeader title="Youth & Team Strength" timestamp="The training college athletes wish they started sooner" />
-        <div className="bg-card shadow-m2 p-5">
-          <p className="text-sm text-foreground mb-3 text-balance">
-            If your kid is going to play college sports, this is the training that prepares their body for it.
-            Not a group class. Not a speed ladder. Real strength development — central nervous system work,
-            physics-based loading, and 20+ years of intuition from training this exact age group.
-            Anything else is just wearing them out.
-          </p>
-          <p className="text-xs text-muted-foreground mb-4">
-            I don't do this like anyone else. Most trainers move up to older clients as they age.
-            I stayed with young athletes because this is what I'm built for. It's not a science anymore — it's an art I live and breathe.
-          </p>
-          <button className="bg-primary text-primary-foreground px-5 py-2 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2">
-            Let's Talk About Your Athlete
-          </button>
-        </div>
-      </motion.div>
+      {/* PHILOSOPHY */}
+      <div className="mb-12">
+        <AboutPhilosophy />
+      </div>
+
+      {/* REALITY CHECK */}
+      <div className="mb-12">
+        <RealityCheck />
+      </div>
 
       {/* WORK ONLINE */}
       <motion.div
