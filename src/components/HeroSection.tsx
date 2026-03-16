@@ -170,6 +170,7 @@ const HeroSection = () => {
         {showClients && <div id="section-current-clients"><CurrentClients /></div>}
         {showGuides && <div id="section-guides"><GuidesGrid /></div>}
         {showPremium && <PremiumProgram />}
+        {showPremium && <PortalShowcase />}
         {showOnline && <OnlineServices />}
         {showOnline && <OnlineSavings />}
         {showOnline && <SportOnlineTraining />}
