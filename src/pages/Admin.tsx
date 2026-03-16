@@ -6,8 +6,10 @@ import AdminSendHistory from "@/components/admin/AdminSendHistory";
 import AdminClientList from "@/components/admin/AdminClientList";
 import AdminProtocols from "@/components/admin/AdminProtocols";
 import AdminSiteEditor from "@/components/admin/AdminSiteEditor";
+import AdminCoachDashboard from "@/components/admin/AdminCoachDashboard";
 
 const TABS = [
+  { key: "coach", label: "Coach Review" },
   { key: "site", label: "Site Editor" },
   { key: "clients", label: "Clients" },
   { key: "protocols", label: "Protocols" },
