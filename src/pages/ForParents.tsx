@@ -350,6 +350,7 @@ const ForParents = () => {
       </div>
     </div>
   </div>
-);
+  );
+};
 
 export default ForParents;
