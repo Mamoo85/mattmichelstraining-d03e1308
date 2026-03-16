@@ -1160,6 +1160,8 @@ const ExerciseLibrary = () => {
           </div>
         )}
       </div>
+      </>
+      )}
     </div>
   );
 };
