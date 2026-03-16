@@ -24,8 +24,8 @@ const STEPS = [
   },
   {
     num: "04",
-    title: "Train, Log, Improve",
-    desc: "Use the Portal to log every workout. Track your progress over time. Matt's system is built on consistency — the app keeps you accountable.",
+    title: "Train, Log, & Connect",
+    desc: "Access a one-of-a-kind exercise library built on 20 years of hands-on experience—zero filler, zero 'bad' exercises. The library is categorized perfectly for your needs: filter by client type (Athletes vs. Lifestyle Fitness), age, sport, or target area (Mobility, Strength, Core Stability, Flexibility). It's the ultimate toolkit for fixing injuries or aching backs from sitting all day.\n\nWith a subscription, you don't just get internet workouts. You get direct access to Matt. Log your workouts, leave personal notes on specific exercises, and flag any comment for Matt to personally review and help you with. It's in-person coaching, adapted for wherever you are.",
     ctaType: "none" as const,
   },
 ];
@@ -85,7 +85,9 @@ const StoreGettingStarted = () => {
             <span className="text-2xl font-mono font-bold text-primary/30 flex-shrink-0">{step.num}</span>
             <div>
               <h3 className="text-sm font-bold text-foreground mb-1">{step.title}</h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">{step.desc}</p>
+              {step.desc.split("\n\n").map((paragraph, i) => (
+                <p key={i} className="text-xs text-muted-foreground leading-relaxed mb-2 last:mb-0">{paragraph}</p>
+              ))}
               {step.ctaType === "signup" && !user && (
                 <SignUpButton size="small" />
               )}
