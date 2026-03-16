@@ -63,7 +63,6 @@ export default {
           "surface-hover": "hsl(var(--m2-surface-hover))",
           dim: "hsl(var(--m2-dim))",
           "text-dim": "hsl(var(--m2-text-dim))",
-          green: "hsl(var(--m2-green))",
         },
       },
       borderRadius: {
