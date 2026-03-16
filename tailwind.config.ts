@@ -59,10 +59,11 @@ export default {
         },
         m2: {
           surface: "hsl(var(--m2-surface))",
+          "surface-alt": "hsl(var(--m2-surface-alt))",
           "surface-hover": "hsl(var(--m2-surface-hover))",
-          "zinc-500": "hsl(var(--m2-zinc-500))",
-          "zinc-700": "hsl(var(--m2-zinc-700))",
-          "zinc-800": "hsl(var(--m2-zinc-800))",
+          dim: "hsl(var(--m2-dim))",
+          "text-dim": "hsl(var(--m2-text-dim))",
+          green: "hsl(var(--m2-green))",
         },
       },
       borderRadius: {
@@ -71,7 +72,7 @@ export default {
         sm: "calc(var(--radius))",
       },
       fontFamily: {
-        sans: ['"Geist Sans"', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
         mono: ['"Geist Mono"', '"SF Mono"', '"Fira Code"', 'monospace'],
       },
       keyframes: {
