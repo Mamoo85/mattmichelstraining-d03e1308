@@ -1,7 +1,6 @@
 import AppNavbar from "@/components/AppNavbar";
 import ChallengeSystem from "@/components/ChallengeSystem";
 import MyPrograms from "@/components/MyPrograms";
-import MyPrograms from "@/components/MyPrograms";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
