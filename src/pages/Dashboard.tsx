@@ -9,8 +9,7 @@ import { ExternalLink, Loader2 } from "lucide-react";
 
 const TABS = [
   { key: "programs", label: "My Programs" },
-  { key: "protocol", label: "Today's Protocol" },
-  { key: "challenges", label: "Challenges" },
+  { key: "challenges", label: "Challenge & Focus" },
 ];
 
 const Dashboard = () => {
