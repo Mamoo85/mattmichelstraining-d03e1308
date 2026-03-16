@@ -15,14 +15,14 @@ const NewsletterSignup = () => {
 
   return (
     <div>
-      <SectionHeader title="The Real Deal" timestamp="Matt's free newsletter" />
+      <SectionHeader title="The Real Deal" timestamp="Matt's monthly newsletter" />
       <div className="bg-card shadow-m2 p-5">
         <p className="text-sm text-foreground text-balance leading-relaxed mb-1">
-          The training advice, injury prevention tips, and hard truths that Matt shares with his athletes —
-          delivered to your inbox. Free.
+          Once a month, Matt sends training insights, injury prevention tips, and the hard truths
+          he shares with his athletes — straight to your inbox.
         </p>
         <p className="text-xs text-muted-foreground mb-4">
-          No videos. No fluff. Just 20+ years of knowledge written in plain English.
+          No videos. No fluff. Just 20+ years of knowledge written in plain English, once a month.
         </p>
         <form onSubmit={handleSubmit} className="flex gap-2">
           <input
