@@ -7,7 +7,7 @@ export default {
   theme: {
     container: {
       center: true,
-      padding: "2rem",
+      padding: "1rem",
       screens: {
         "2xl": "1400px",
       },
@@ -57,28 +57,31 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        m2: {
+          surface: "hsl(var(--m2-surface))",
+          "surface-hover": "hsl(var(--m2-surface-hover))",
+          "zinc-500": "hsl(var(--m2-zinc-500))",
+          "zinc-700": "hsl(var(--m2-zinc-700))",
+          "zinc-800": "hsl(var(--m2-zinc-800))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        md: "calc(var(--radius))",
+        sm: "calc(var(--radius))",
+      },
+      fontFamily: {
+        sans: ['"Geist Sans"', 'system-ui', '-apple-system', 'sans-serif'],
+        mono: ['"Geist Mono"', '"SF Mono"', '"Fira Code"', 'monospace'],
       },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
         },
       },
       animation: {
