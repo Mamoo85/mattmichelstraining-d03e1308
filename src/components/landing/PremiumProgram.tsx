@@ -18,16 +18,17 @@ const PremiumProgram = () => (
       <div className="flex items-start gap-2 mb-2">
         <Star size={18} className="text-primary flex-shrink-0 mt-0.5" />
         <span className="text-[11px] font-bold uppercase tracking-widest text-primary">
-          Custom · Built by Matt · Not a Template
+          Custom Strength Program · Built by Matt · Not a Template
         </span>
       </div>
 
-      <h3 className="text-lg md:text-xl font-bold text-foreground mb-2">Your Custom Program</h3>
+      <h3 className="text-lg md:text-xl font-bold text-foreground mb-2">Your Custom Strength Training Program — $20</h3>
 
       <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-        You fill out the intake. Matt reads every word. Then he builds your program from scratch —
-        your goals, your equipment, your level. No templates. No AI. Just 20 years of experience
-        and a notebook. This is the one that changes everything.
+        You fill out the intake. Matt reads every word. Then he builds your athlete's strength program from scratch —
+        their sport, their goals, their equipment, their level. No templates. No AI-generated workouts. Just 20 years of experience
+        and a proven system for developing stronger, more durable young athletes. This is the affordable, personalized strength training program
+        that parents and coaches keep coming back for.
       </p>
 
       <div className="flex items-end justify-between gap-4">
@@ -35,7 +36,7 @@ const PremiumProgram = () => (
           to="/shop"
           className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
         >
-          Get Your Program
+          Get Your Strength Program
           <ArrowRight size={14} />
         </Link>
         <span className="text-2xl font-mono font-bold text-primary">$20</span>
