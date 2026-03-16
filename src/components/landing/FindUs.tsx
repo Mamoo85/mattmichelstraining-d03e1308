@@ -25,12 +25,20 @@ const FindUs = () => (
           Get Directions
         </a>
         <a
-          href="https://www.facebook.com/matt-michels-training"
+          href="https://www.facebook.com/mattmichelstraining"
           target="_blank"
           rel="noreferrer"
           className="text-sm text-primary font-bold hover:opacity-80 transition-m2"
         >
-          Follow on Facebook
+          Facebook
+        </a>
+        <a
+          href="https://www.instagram.com/mattmichelstraining/"
+          target="_blank"
+          rel="noreferrer"
+          className="text-sm text-primary font-bold hover:opacity-80 transition-m2"
+        >
+          Instagram
         </a>
         <a
           href="mailto:matthewmichels4@gmail.com"

@@ -130,6 +130,9 @@ const HeroSection = () => (
       {/* SOCIAL PROOF */}
       <Testimonial />
 
+      {/* PRESS & SOCIAL */}
+      <PressAuthority />
+
       {/* WHO ARE YOU? */}
       <AudienceSelector />
 

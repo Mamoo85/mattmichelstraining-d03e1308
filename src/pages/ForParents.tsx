@@ -25,6 +25,12 @@ const INJURY_STATS = [
   { stat: "#1 cause", label: "Overuse — not contact. Bad programming, not bad luck.", source: "Johns Hopkins Medicine" },
 ];
 
+const PRESS_QUOTE = {
+  outlet: "Grosse Pointe News",
+  quote: "His business, built entirely by word of mouth, is a testament to the impact he's had on his clients. Whether he's coaching middle schoolers, training college-bound athletes or helping everyday individuals move and feel better, Michels is, at his core, a teacher.",
+  url: "https://www.grossepointenews.com/articles/strength-in-motion-how-one-trainer-turned-passion-into-purpose/",
+};
+
 const TIMELINE = [
   {
     age: "11–13",
