@@ -11,6 +11,7 @@ const navItems = [
   { to: "/progress", label: "PROGRESS", icon: BarChart3 },
   { to: "/coach", label: "COACH", icon: MessageSquare },
   { to: "/shop", label: "STORE", icon: ShoppingBag },
+  { to: "/pricing", label: "PRICING", icon: CreditCard },
 ];
 
 const AppNavbar = () => {
