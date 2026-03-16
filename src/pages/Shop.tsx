@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AppNavbar from "@/components/AppNavbar";
 import StoreGettingStarted from "@/components/store/StoreGettingStarted";
 import StoreTab from "@/components/store/StoreTab";
