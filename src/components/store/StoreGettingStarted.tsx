@@ -8,25 +8,25 @@ const STEPS = [
     num: "01",
     title: "Create Your Free Account",
     desc: "Sign up in 30 seconds. No credit card needed. You'll get access to monthly focus plans, member challenges, and workout logging immediately.",
-    cta: true,
+    ctaType: "signup" as const,
   },
   {
     num: "02",
     title: "Grab a Guide or Custom Program",
     desc: "Browse the Store tab for sport-specific PDF guides ($9) or get a fully custom program built by Matt ($20). Every guide teaches the WHY behind each movement.",
-    cta: false,
+    ctaType: "store" as const,
   },
   {
     num: "03",
     title: "Subscribe for the Full Experience",
     desc: "M² Basic ($12.99/mo) unlocks the Exercise Library. Pro ($25.99/mo) adds custom programming and the Fix It library. Elite ($42.99/mo) gets you 1-on-1 check-ins with Matt.",
-    cta: false,
+    ctaType: "pricing" as const,
   },
   {
     num: "04",
     title: "Train, Log, Improve",
     desc: "Use the Portal to log every workout. Track your progress over time. Matt's system is built on consistency — the app keeps you accountable.",
-    cta: false,
+    ctaType: "none" as const,
   },
 ];
 
