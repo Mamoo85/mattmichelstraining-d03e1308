@@ -1,12 +1,14 @@
 import AppNavbar from "@/components/AppNavbar";
 import ChallengeSystem from "@/components/ChallengeSystem";
 import MyPrograms from "@/components/MyPrograms";
+import WorkoutLogger from "@/components/workout/WorkoutLogger";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ExternalLink, Loader2 } from "lucide-react";
 
 const TABS = [
+  { key: "log", label: "Log Workout" },
   { key: "programs", label: "My Programs" },
   { key: "challenges", label: "Challenge & Focus" },
 ];
@@ -14,7 +16,7 @@ const TABS = [
 const Dashboard = () => {
   const { user, subscribed } = useAuth();
   const [profile, setProfile] = useState<{ full_name: string | null; athlete_name: string | null } | null>(null);
-  const [activeTab, setActiveTab] = useState("programs");
+  const [activeTab, setActiveTab] = useState("log");
   const [portalLoading, setPortalLoading] = useState(false);
 
   useEffect(() => {
@@ -76,6 +78,7 @@ const Dashboard = () => {
           ))}
         </div>
 
+        {activeTab === "log" && <WorkoutLogger />}
         {activeTab === "programs" && <MyPrograms />}
         {activeTab === "challenges" && <ChallengeSystem />}
       </div>

@@ -6,8 +6,10 @@ import AdminSendHistory from "@/components/admin/AdminSendHistory";
 import AdminClientList from "@/components/admin/AdminClientList";
 import AdminProtocols from "@/components/admin/AdminProtocols";
 import AdminSiteEditor from "@/components/admin/AdminSiteEditor";
+import AdminCoachDashboard from "@/components/admin/AdminCoachDashboard";
 
 const TABS = [
+  { key: "coach", label: "Coach Review" },
   { key: "site", label: "Site Editor" },
   { key: "clients", label: "Clients" },
   { key: "protocols", label: "Protocols" },
@@ -17,7 +19,7 @@ const TABS = [
 ];
 
 const Admin = () => {
-  const [activeTab, setActiveTab] = useState("site");
+  const [activeTab, setActiveTab] = useState("coach");
 
   return (
     <div className="min-h-screen bg-background">
@@ -46,6 +48,7 @@ const Admin = () => {
           ))}
         </div>
 
+        {activeTab === "coach" && <AdminCoachDashboard />}
         {activeTab === "site" && <AdminSiteEditor />}
         {activeTab === "clients" && <AdminClientList />}
         {activeTab === "protocols" && <AdminProtocols />}
