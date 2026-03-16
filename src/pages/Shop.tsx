@@ -2,6 +2,7 @@ import { useState } from "react";
 import AppNavbar from "@/components/AppNavbar";
 import ShopGrid from "@/components/ShopGrid";
 import ExerciseLibrary from "@/components/ExerciseLibrary";
+import PaywallGate from "@/components/PaywallGate";
 
 const TABS = [
   { key: "shop", label: "Guides & Programs" },
@@ -33,7 +34,11 @@ const Shop = () => {
         </div>
 
         {activeTab === "shop" && <ShopGrid />}
-        {activeTab === "library" && <ExerciseLibrary />}
+        {activeTab === "library" && (
+          <PaywallGate requiredTier="basic" featureName="Exercise Library">
+            <ExerciseLibrary />
+          </PaywallGate>
+        )}
       </div>
     </div>
   );
