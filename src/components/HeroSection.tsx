@@ -8,6 +8,7 @@ import AudienceSelector from "./landing/AudienceSelector";
 import Testimonial from "./landing/Testimonial";
 import CurrentClients from "./landing/CurrentClients";
 import GuidesGrid from "./landing/GuidesGrid";
+import PressAuthority from "./landing/PressAuthority";
 import PremiumProgram from "./landing/PremiumProgram";
 import OnlineServices from "./landing/OnlineServices";
 import CustomProgram from "./landing/CustomProgram";
