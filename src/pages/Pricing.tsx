@@ -6,6 +6,7 @@ import AppNavbar from "@/components/AppNavbar";
 import { useAuth, TIERS, TierKey } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useContentMap } from "@/hooks/useSiteContent";
 
 const TIER_CARDS: {
   key: TierKey;
