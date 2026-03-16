@@ -246,11 +246,9 @@ const ShopGrid = () => {
 
       {/* Why $20 */}
       <div className="bg-muted p-4 mt-4 text-center">
-        <p className="text-xs text-foreground font-bold mb-1">Why are these so affordable?</p>
+        <p className="text-xs text-foreground font-bold mb-1">{cms.affordable_title || "Why are these so affordable?"}</p>
         <p className="text-[11px] text-muted-foreground leading-relaxed max-w-md mx-auto">
-          Matt charges $100+/hour in person and can only see so many athletes a week.
-          These guides are how he shares 20+ years of knowledge with the athletes he can't reach in person.
-          Same system. Same methodology. Written, not filmed — because results come from understanding, not watching.
+          {cms.affordable_text || "Matt charges $100+/hour in person and can only see so many athletes a week. These guides are how he shares 20+ years of knowledge with the athletes he can't reach in person. Same system. Same methodology. Written, not filmed — because results come from understanding, not watching."}
         </p>
       </div>
     </div>

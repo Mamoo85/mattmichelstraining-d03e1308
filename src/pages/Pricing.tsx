@@ -220,10 +220,10 @@ const Pricing = () => {
         {/* Free member banner */}
         <div className="mt-12 text-center border-2 border-dashed border-border p-8 max-w-2xl mx-auto">
           <h3 className="text-lg font-black uppercase tracking-tight text-foreground mb-2">
-            Free When You Sign Up
+            {cms.free_banner_title || "Free When You Sign Up"}
           </h3>
           <p className="text-muted-foreground text-sm mb-4">
-            Create an account and get Monthly Focus Plans, member challenges, and workout logging — no credit card required.
+            {cms.free_banner_text || "Create an account and get Monthly Focus Plans, member challenges, and workout logging — no credit card required."}
           </p>
           {!user && (
             <Link
