@@ -3,6 +3,8 @@ import { ArrowRight, Video, TrendingUp, Users, Clipboard, MapPin, HelpCircle, Sh
 import { Link } from "react-router-dom";
 import m2Logo from "@/assets/m2-logo.jpg";
 import SectionHeader from "./SectionHeader";
+import AboutPhilosophy from "./AboutPhilosophy";
+import RealityCheck from "./RealityCheck";
 
 const STATS = [
   { value: "20+", label: "Years Same Age Group" },
