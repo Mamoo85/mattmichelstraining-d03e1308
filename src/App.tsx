@@ -3,33 +3,39 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import Index from "./pages/Index.tsx";
-import Dashboard from "./pages/Dashboard.tsx";
-import Progress from "./pages/Progress.tsx";
-import Coach from "./pages/Coach.tsx";
-import Shop from "./pages/Shop.tsx";
-import Welcome from "./pages/Welcome.tsx";
-import NotFound from "./pages/NotFound.tsx";
+import { AuthProvider } from "@/hooks/useAuth";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import Index from "./pages/Index";
+import Dashboard from "./pages/Dashboard";
+import Progress from "./pages/Progress";
+import Coach from "./pages/Coach";
+import Shop from "./pages/Shop";
+import Welcome from "./pages/Welcome";
+import Auth from "./pages/Auth";
+import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/progress" element={<Progress />} />
-          <Route path="/coach" element={<Coach />} />
-          <Route path="/shop" element={<Shop />} />
-          <Route path="/welcome" element={<Welcome />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/welcome" element={<Welcome />} />
+            <Route path="/shop" element={<Shop />} />
+            <Route path="/coach" element={<Coach />} />
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

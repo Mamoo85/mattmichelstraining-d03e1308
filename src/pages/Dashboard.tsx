@@ -1,31 +1,34 @@
 import AppNavbar from "@/components/AppNavbar";
 import ProtocolTable from "@/components/ProtocolTable";
+import { useAuth } from "@/hooks/useAuth";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Activity, TrendingUp, Target } from "lucide-react";
 
-const stats = [
-  { label: "TOTAL VOLUME", value: "12,450", unit: "kg", icon: Activity },
-  { label: "SESSIONS THIS WEEK", value: "4", unit: "/5", icon: Target },
-  { label: "STREAK", value: "23", unit: "days", icon: TrendingUp },
-];
+const Dashboard = () => {
+  const { user } = useAuth();
+  const [profile, setProfile] = useState<{ full_name: string | null; athlete_name: string | null } | null>(null);
 
-const Dashboard = () => (
-  <div className="min-h-screen bg-background">
-    <AppNavbar />
-    <div className="container pt-20 pb-12">
-      <div className="grid grid-cols-3 gap-3 mb-6">
-        {stats.map(({ label, value, unit, icon: Icon }) => (
-          <div key={label} className="bg-card shadow-m2 p-3">
-            <div className="flex items-center gap-1.5 mb-1">
-              <Icon size={12} className="text-primary" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{label}</span>
-            </div>
-            <span className="text-xl font-mono font-bold text-foreground">{value}<span className="text-xs text-muted-foreground">{unit}</span></span>
-          </div>
-        ))}
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("profiles").select("full_name, athlete_name").eq("user_id", user.id).single()
+      .then(({ data }) => { if (data) setProfile(data); });
+  }, [user]);
+
+  const athleteDisplay = profile?.athlete_name || profile?.full_name || "Athlete";
+
+  return (
+    <div className="min-h-screen bg-background">
+      <AppNavbar />
+      <div className="container pt-20 pb-12">
+        <div className="mb-6">
+          <h2 className="text-lg font-bold text-foreground">Welcome back, {athleteDisplay}</h2>
+          <p className="text-xs text-muted-foreground">Your training portal · Real training, real results</p>
+        </div>
+        <ProtocolTable />
       </div>
-      <ProtocolTable />
     </div>
-  </div>
-);
+  );
+};
 
 export default Dashboard;
