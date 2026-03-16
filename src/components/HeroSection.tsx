@@ -1,27 +1,29 @@
 import { motion } from "framer-motion";
-import { ArrowRight, ShoppingBag, Shield, Trophy, Zap, Star, Gift, Users } from "lucide-react";
+import { ArrowRight, ShoppingBag, Shield, Trophy, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import m2Logo from "@/assets/m2-logo.jpg";
 import SectionHeader from "./SectionHeader";
 import NewsletterSignup from "./NewsletterSignup";
 import MerchSection from "./MerchSection";
+import CurrentClients from "./landing/CurrentClients";
+import TeamYouthPrograms from "./landing/TeamYouthPrograms";
+import MattQuote from "./landing/MattQuote";
+import WordsFromMatt from "./landing/WordsFromMatt";
+import MonthlyFocus from "./landing/MonthlyFocus";
+import CustomProgram from "./landing/CustomProgram";
+import WeekendYouth from "./landing/WeekendYouth";
+import OnlineServices from "./landing/OnlineServices";
+import ForTrainers from "./landing/ForTrainers";
+import CanFixIt from "./landing/CanFixIt";
 
 const STATS = [
-  { value: "20+", label: "Years · Same Age Group" },
-  { value: "50+", label: "College Athletes Produced" },
-  { value: "Zero", label: "Career Injuries" },
-  { value: "100%", label: "Results Rate" },
+  { value: "20+", label: "Years" },
+  { value: "50+", label: "College Athletes" },
+  { value: "1000s", label: "Clients Trained" },
+  { value: "Zero", label: "Injuries" },
 ];
 
-const PRODUCTS_PREVIEW = [
-  { title: "Top 5 Exercises for Baseball", price: "$9", tag: "PDF GUIDE" },
-  { title: "Hockey Strength Essentials", price: "$9", tag: "PDF GUIDE" },
-  { title: "Pre & Post Pregnancy Top 10", price: "$12", tag: "PDF GUIDE" },
-  { title: "Your Custom Program", price: "$20", tag: "CUSTOM · BUILT BY MATT" },
-];
-
-
-const TITLE_WORDS = ["YOUR", "ATHLETE'S", "SECRET", "WEAPON."];
+const TITLE_LINES = ["Train smarter.", "Fix what's broken.", "Get stronger."];
 
 const HeroSection = () => (
   <div className="min-h-screen bg-background relative overflow-hidden">
@@ -43,32 +45,24 @@ const HeroSection = () => (
         className="py-10 md:py-20"
       >
         <div className="flex items-start gap-4 mb-6">
-          <img
-            src={m2Logo}
-            alt="M² Training"
-            className="w-14 h-14 md:w-20 md:h-20 object-contain rounded-md flex-shrink-0"
-          />
+          <img src={m2Logo} alt="M² Training" className="w-14 h-14 md:w-20 md:h-20 object-contain rounded-md flex-shrink-0" />
           <div className="min-w-0">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-0.5 h-4 bg-primary" />
               <span className="text-[11px] md:text-xs font-bold uppercase tracking-widest text-primary font-mono">
-                Youth Athlete Strength · Grosse Pointe Park, MI
+                Personal Training
               </span>
             </div>
-            <h1 className="text-2xl md:text-5xl lg:text-6xl font-bold tracking-display text-foreground leading-[1.05]">
-              {TITLE_WORDS.map((word, i) => (
+            <h1 className="text-2xl md:text-5xl lg:text-6xl font-bold tracking-display text-foreground leading-[1.1]">
+              {TITLE_LINES.map((line, i) => (
                 <motion.span
-                  key={word}
+                  key={line}
                   initial={{ opacity: 0, y: 20, filter: "blur(8px)" }}
                   animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                  transition={{
-                    delay: 0.15 * i + 0.3,
-                    duration: 0.5,
-                    ease: [0.23, 1, 0.32, 1],
-                  }}
-                  className={`inline-block mr-2 md:mr-3 ${word === "WEAPON." ? "text-primary" : ""}`}
+                  transition={{ delay: 0.15 * i + 0.3, duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
+                  className="block"
                 >
-                  {word}
+                  {line}
                 </motion.span>
               ))}
             </h1>
@@ -76,68 +70,16 @@ const HeroSection = () => (
         </div>
 
         <p className="text-sm md:text-base text-muted-foreground max-w-xl mb-6 leading-relaxed">
-          20+ years training young athletes for college sports. Zero injuries. 50+ college athletes produced.
-          I can only train so many in person — so I put my system into guides anyone can use.
-          <span className="text-foreground font-semibold"> Not just what to do. The WHY.</span>
+          Two decades of experience. Thousands of clients trained with zero injuries. From middle school athletes to Division I competitors — real training, real results.
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Link
-            to="/shop"
-            className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
-          >
-            <ShoppingBag size={15} />
-            Browse Guides & Programs
-          </Link>
-          <Link
-            to="/dashboard"
-            className="inline-flex items-center justify-center gap-2 bg-card text-foreground px-6 py-3.5 text-xs font-bold uppercase tracking-widest shadow-m2 hover:bg-m2-surface-hover transition-m2"
-          >
-            Client Portal
-            <ArrowRight size={15} />
-          </Link>
-        </div>
-      </motion.div>
-
-      {/* FREE MEMBER BONUS BANNER */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.6 }}
-        className="mb-10"
-      >
-        <div className="bg-primary/10 border-2 border-primary/30 p-5 md:p-6">
-          <div className="flex items-start gap-3 mb-3">
-            <Gift size={22} className="text-primary flex-shrink-0 mt-0.5" />
-            <div>
-              <h3 className="text-base md:text-lg font-bold text-foreground mb-1">Free When You Sign Up</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Create a free account, log your workouts with Matt, and get access to <span className="text-foreground font-semibold">monthly focus plans</span> and <span className="text-foreground font-semibold">member challenges</span> — no subscription needed. It's Matt's way of keeping you accountable.
-              </p>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
-            <div className="flex items-center gap-2">
-              <Star size={14} className="text-primary flex-shrink-0" />
-              <span className="text-xs text-foreground">Monthly Focus Plans</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Trophy size={14} className="text-primary flex-shrink-0" />
-              <span className="text-xs text-foreground">Member Challenges</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Users size={14} className="text-primary flex-shrink-0" />
-              <span className="text-xs text-foreground">Challenge Suggestions</span>
-            </div>
-          </div>
-          <Link
-            to="/auth"
-            className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2 mt-4"
-          >
-            Create Free Account
-            <ArrowRight size={14} />
-          </Link>
-        </div>
+        <Link
+          to="/shop"
+          className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
+        >
+          Get started
+          <ArrowRight size={15} />
+        </Link>
       </motion.div>
 
       {/* STATS */}
@@ -154,6 +96,36 @@ const HeroSection = () => (
           </div>
         ))}
       </motion.div>
+
+      {/* CURRENT CLIENTS */}
+      <CurrentClients />
+
+      {/* TEAM & YOUTH */}
+      <TeamYouthPrograms />
+
+      {/* QUOTE */}
+      <MattQuote />
+
+      {/* WORDS FROM MATT */}
+      <WordsFromMatt />
+
+      {/* MONTHLY FOCUS */}
+      <MonthlyFocus />
+
+      {/* CUSTOM PROGRAM */}
+      <CustomProgram />
+
+      {/* WEEKEND & YOUTH */}
+      <WeekendYouth />
+
+      {/* ONLINE SERVICES */}
+      <OnlineServices />
+
+      {/* FOR TRAINERS */}
+      <ForTrainers />
+
+      {/* I CAN FIX IT */}
+      <CanFixIt />
 
       {/* WHY M² */}
       <motion.div
@@ -196,12 +168,13 @@ const HeroSection = () => (
       >
         <SectionHeader title="Guides & Programs" timestamp="20+ years of knowledge — starting at $9" />
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {PRODUCTS_PREVIEW.map((p) => (
-            <Link
-              key={p.title}
-              to="/shop"
-              className="bg-card shadow-m2 p-4 hover:bg-m2-surface-hover transition-m2 group block"
-            >
+          {[
+            { title: "Top 5 Exercises for Baseball", price: "$9", tag: "PDF GUIDE" },
+            { title: "Hockey Strength Essentials", price: "$9", tag: "PDF GUIDE" },
+            { title: "Pre & Post Pregnancy Top 10", price: "$12", tag: "PDF GUIDE" },
+            { title: "Your Custom Program", price: "$20", tag: "CUSTOM · BUILT BY MATT" },
+          ].map((p) => (
+            <Link key={p.title} to="/shop" className="bg-card shadow-m2 p-4 hover:bg-m2-surface-hover transition-m2 group block">
               <span className="text-[11px] font-bold uppercase tracking-widest text-primary block mb-2">{p.tag}</span>
               <h3 className="text-xs font-bold text-foreground group-hover:text-primary transition-m2 mb-2">{p.title}</h3>
               <span className="text-lg font-mono font-bold text-primary">{p.price}</span>
@@ -209,18 +182,16 @@ const HeroSection = () => (
           ))}
         </div>
         <div className="mt-3 text-center">
-          <Link to="/shop" className="text-sm text-primary font-bold hover:opacity-80 transition-m2">
-            View All Guides →
-          </Link>
+          <Link to="/shop" className="text-sm text-primary font-bold hover:opacity-80 transition-m2">View All Guides →</Link>
         </div>
       </motion.div>
 
-      {/* NEWSLETTER SIGNUP */}
+      {/* NEWSLETTER */}
       <div className="mb-10">
         <NewsletterSignup />
       </div>
 
-      {/* MERCHANDISE SHOP */}
+      {/* MERCH */}
       <MerchSection />
 
       {/* FIND US */}
