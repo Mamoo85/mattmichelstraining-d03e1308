@@ -143,9 +143,8 @@ const BodyAvatar = ({ activeLift }: BodyAvatarProps) => {
             className="text-[8px] font-mono font-bold uppercase tracking-widest px-1.5 py-px"
             style={{
               color: "hsl(24, 80%, 58%)",
-              background: "hsl(24, 80%, 50%, 0.07)",
-              border: "1px solid hsl(24, 80%, 50%, 0.2)",
-              textShadow: "0 0 5px hsl(24, 80%, 50%, 0.4)",
+              background: "hsl(var(--primary) / 0.07)",
+              border: "1px solid hsl(var(--primary) / 0.2)",
             }}
           >
             {MUSCLE_PATHS[key]?.label ?? key}

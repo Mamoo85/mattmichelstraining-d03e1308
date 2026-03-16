@@ -87,7 +87,7 @@ const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) =
                 onClick={() => setActiveLift(lift.name)}
                 className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-all duration-300 ${
                   activeLift === lift.name
-                    ? "bg-primary text-primary-foreground shadow-[0_0_12px_hsl(var(--primary)/0.3)]"
+                    ? "bg-primary text-primary-foreground"
                     : "bg-muted text-muted-foreground hover:text-foreground"
                 }`}
               >

@@ -35,9 +35,6 @@ const TronChart = ({ data, repMax }: TronChartProps) => {
     return (
       <div
         className="p-8 text-center bg-card border border-border"
-        style={{
-          boxShadow: "inset 0 0 30px hsl(var(--primary) / 0.03)",
-        }}
       >
         <p className="text-sm text-muted-foreground">No data yet. Log your first session.</p>
       </div>
