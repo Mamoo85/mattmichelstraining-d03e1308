@@ -6,6 +6,7 @@ import SectionHeader from "./SectionHeader";
 import AboutPhilosophy from "./AboutPhilosophy";
 import RealityCheck from "./RealityCheck";
 import ForCoaches from "./ForCoaches";
+import ValuePitch from "./ValuePitch";
 
 const STATS = [
   { value: "20+", label: "Years · Same Age Group" },
