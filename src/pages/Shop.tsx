@@ -1,16 +1,18 @@
 import { useState } from "react";
 import AppNavbar from "@/components/AppNavbar";
-import ShopGrid from "@/components/ShopGrid";
+import StoreGettingStarted from "@/components/store/StoreGettingStarted";
+import StoreTab from "@/components/store/StoreTab";
 import ExerciseLibrary from "@/components/ExerciseLibrary";
 import PaywallGate from "@/components/PaywallGate";
 
 const TABS = [
-  { key: "shop", label: "Guides & Programs" },
+  { key: "start", label: "Getting Started" },
+  { key: "store", label: "Store" },
   { key: "library", label: "Exercise Library" },
 ];
 
 const Shop = () => {
-  const [activeTab, setActiveTab] = useState("shop");
+  const [activeTab, setActiveTab] = useState("start");
 
   return (
     <div className="min-h-screen bg-background">
@@ -33,7 +35,8 @@ const Shop = () => {
           ))}
         </div>
 
-        {activeTab === "shop" && <ShopGrid />}
+        {activeTab === "start" && <StoreGettingStarted />}
+        {activeTab === "store" && <StoreTab />}
         {activeTab === "library" && (
           <PaywallGate requiredTier="basic" featureName="Exercise Library">
             <ExerciseLibrary />
