@@ -284,10 +284,7 @@ const HeroSection = () => (
         </div>
       </motion.div>
 
-      {/* NEWSLETTER */}
-      <div className="mb-10">
-        <NewsletterSignup />
-      </div>
+
 
       {/* MERCH */}
       <MerchSection />
