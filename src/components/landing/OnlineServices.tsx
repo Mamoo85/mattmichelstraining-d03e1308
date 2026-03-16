@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Wifi } from "lucide-react";
 import SectionHeader from "../SectionHeader";
 
 const OnlineServices = () => (
@@ -10,13 +10,14 @@ const OnlineServices = () => (
     transition={{ duration: 0.5, delay: 0.3 }}
     className="mb-10"
   >
-    <SectionHeader title="Online Strength Training Plans" timestamp="Affordable programs — 15% below every competitor" />
+    <SectionHeader title="Online Strength Training Plans" timestamp="Available anywhere · 15% below every competitor" />
 
     <div className="bg-primary/5 border border-primary/15 p-4 mb-4">
       <p className="text-xs text-muted-foreground leading-relaxed">
         <span className="text-foreground font-bold">Why is Matt's online strength training more affordable?</span> No fancy office, no marketing team, no overhead.
-        Just 20 years of experience coaching youth athletes delivered direct to your phone. You get better strength programming for less — and Matt still makes a living.
-        Month-to-month. Cancel anytime. No contracts. Whether your athlete is in middle school or preparing for college, these plans are built to develop real, lasting strength.
+        Just 20 years of experience coaching youth athletes delivered direct to your phone — whether you're in Grosse Pointe or across the country.
+        You get better strength programming for less — and Matt still makes a living.
+        Month-to-month. Cancel anytime. No contracts.
       </p>
     </div>
 
@@ -40,15 +41,23 @@ const OnlineServices = () => (
       <div className="bg-card shadow-m2 p-4">
         <span className="text-[11px] font-bold uppercase tracking-widest text-primary block mb-1">Team</span>
         <span className="text-lg font-mono font-bold text-foreground block">$84.99<span className="text-xs text-muted-foreground font-normal">/mo</span></span>
-        <p className="text-[11px] text-muted-foreground mt-1">Bulk youth strength programming for coaches & organizations</p>
+        <p className="text-[11px] text-muted-foreground mt-1">Full-roster strength programming for coaches & organizations</p>
       </div>
+    </div>
+
+    <div className="flex items-center gap-2 bg-secondary/50 p-3 mb-3">
+      <Wifi size={14} className="text-primary flex-shrink-0" />
+      <span className="text-[10px] text-muted-foreground">
+        <span className="text-foreground font-bold">100% online.</span> Every plan works from home, a school gym, or any facility. 
+        No geographic limits — parents and coaches in any state get the same proven programming.
+      </span>
     </div>
 
     <Link
       to="/pricing"
       className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2 w-full justify-center"
     >
-      Compare All Strength Training Plans
+      Compare All Online Strength Plans
       <ArrowRight size={14} />
     </Link>
   </motion.div>
