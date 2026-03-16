@@ -78,6 +78,7 @@ const Dashboard = () => {
           ))}
         </div>
 
+        {activeTab === "programs" && <MyPrograms />}
         {activeTab === "protocol" && <ProtocolTable />}
         {activeTab === "challenges" && <ChallengeSystem />}
       </div>
