@@ -17,6 +17,24 @@ const FindUs = () => (
       </p>
       <div className="flex flex-wrap gap-3 mt-3">
         <a
+          href="tel:3138064952"
+          className="text-sm text-primary font-bold hover:opacity-80 transition-m2"
+        >
+          (313) 806-4952
+        </a>
+        <a
+          href="mailto:matthew.michels4@gmail.com"
+          className="text-sm text-primary font-bold hover:opacity-80 transition-m2"
+        >
+          Email Matt
+        </a>
+        <a
+          href="sms:3138064952"
+          className="text-sm text-primary font-bold hover:opacity-80 transition-m2"
+        >
+          Text Matt
+        </a>
+        <a
           href="https://maps.google.com/?q=15121+Kercheval+Ave,+Grosse+Pointe+Park,+MI+48230"
           target="_blank"
           rel="noreferrer"
@@ -39,12 +57,6 @@ const FindUs = () => (
           className="text-sm text-primary font-bold hover:opacity-80 transition-m2"
         >
           Instagram
-        </a>
-        <a
-          href="mailto:matthewmichels4@gmail.com"
-          className="text-sm text-primary font-bold hover:opacity-80 transition-m2"
-        >
-          Email Matt
         </a>
       </div>
     </div>
