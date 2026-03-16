@@ -54,6 +54,7 @@ const TIER_CARDS: {
 
 const Pricing = () => {
   const { user, subscribed, subscriptionTier, subscriptionEnd } = useAuth();
+  const { content: cms } = useContentMap("pricing");
   const navigate = useNavigate();
   const [loadingTier, setLoadingTier] = useState<TierKey | null>(null);
 
