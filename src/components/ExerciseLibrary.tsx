@@ -894,6 +894,8 @@ const EXERCISES: Exercise[] = [
     bestFor: "Post-concussion balance assessment, vestibular screening, return-to-sport readiness testing.",
   },
 ];
+
+const SPORT_TABS = [
   { key: "all", label: "All" },
   { key: "hockey", label: "Hockey" },
   { key: "baseball", label: "Baseball" },
