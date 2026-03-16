@@ -49,17 +49,6 @@ const TIER_CARDS: {
     ],
     cta: "Go Elite",
   },
-  {
-    key: "team",
-    icon: Users,
-    features: [
-      "Everything in Elite",
-      "Bulk programming for full teams",
-      "Coach dashboard & athlete tracking",
-      "Seasonal periodization plans",
-    ],
-    cta: "Get Team",
-  },
 ];
 
 const Pricing = () => {
