@@ -81,6 +81,7 @@ const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) =
       weight,
       reps,
       estimated_1rm: estimated1rm,
+      logged_at: logDate.toISOString(),
     });
 
     if (error) {
