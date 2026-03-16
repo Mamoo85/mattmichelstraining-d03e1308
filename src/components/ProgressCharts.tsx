@@ -77,7 +77,7 @@ const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) =
       {/* Lift category selector */}
       {LIFT_CATEGORIES.map((cat) => (
         <div key={cat.label} className="mb-3">
-          <span className="text-[9px] font-mono font-bold uppercase tracking-widest mb-1.5 block text-primary" style={{ textShadow: "0 0 6px hsl(var(--primary) / 0.3)" }}>
+          <span className="text-[9px] font-mono font-bold uppercase tracking-widest mb-1.5 block text-primary">
             {cat.label}
           </span>
           <div className="flex gap-1 flex-wrap">
