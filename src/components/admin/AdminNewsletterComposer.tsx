@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Send, FileText } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
 
 const TEMPLATES = [
   {
@@ -29,7 +28,6 @@ const TEMPLATES = [
 ];
 
 const AdminNewsletterComposer = () => {
-  const { user } = useAuth();
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
@@ -60,19 +58,22 @@ const AdminNewsletterComposer = () => {
 
     setSending(true);
     try {
-      // Log the send in newsletter_sends
-      const { error } = await supabase.from("newsletter_sends").insert({
-        subject,
-        body,
-        template_name: selectedTemplate,
-        sent_by: user?.id,
-        recipient_count: activeCount,
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      if (!token) throw new Error("Not authenticated");
+
+      const res = await supabase.functions.invoke("send-newsletter", {
+        body: { subject, body, template_name: selectedTemplate },
       });
-      if (error) throw error;
+
+      if (res.error) throw new Error(res.error.message || "Failed to send");
+
+      const result = res.data;
+      if (!result.success) throw new Error(result.error || "Send failed");
 
       toast({
-        title: "Newsletter queued!",
-        description: `Will be sent to ${activeCount} active subscribers. Check Send History for details.`,
+        title: `Newsletter sent to ${result.sent} subscribers!`,
+        description: result.errors ? `${result.errors.length} batch(es) had issues` : "All emails delivered successfully.",
       });
       setSubject("");
       setBody("");
