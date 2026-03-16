@@ -153,6 +153,57 @@ export type Database = {
           },
         ]
       }
+      logged_exercises: {
+        Row: {
+          client_notes: string | null
+          coach_reply: string | null
+          created_at: string
+          exercise_id: string
+          flag_for_coach: boolean
+          id: string
+          log_id: string
+          sets_reps_weight: Json
+          video_url: string | null
+        }
+        Insert: {
+          client_notes?: string | null
+          coach_reply?: string | null
+          created_at?: string
+          exercise_id: string
+          flag_for_coach?: boolean
+          id?: string
+          log_id: string
+          sets_reps_weight?: Json
+          video_url?: string | null
+        }
+        Update: {
+          client_notes?: string | null
+          coach_reply?: string | null
+          created_at?: string
+          exercise_id?: string
+          flag_for_coach?: boolean
+          id?: string
+          log_id?: string
+          sets_reps_weight?: Json
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "logged_exercises_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "exercise_library"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "logged_exercises_log_id_fkey"
+            columns: ["log_id"]
+            isOneToOne: false
+            referencedRelation: "workout_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       newsletter_sends: {
         Row: {
           body: string
@@ -549,6 +600,30 @@ export type Database = {
         Relationships: []
       }
       workout_logs: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          session_notes: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          id?: string
+          session_notes?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          session_notes?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      workout_logs_legacy: {
         Row: {
           created_at: string
           date: string
