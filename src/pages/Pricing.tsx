@@ -106,6 +106,20 @@ const Pricing = () => {
     <div className="min-h-screen bg-background">
       <AppNavbar />
       <div className="container pt-24 pb-16">
+        {/* Value comparison banner */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-primary/5 border border-primary/15 p-4 md:p-5 mb-8 max-w-3xl mx-auto"
+        >
+          <p className="text-xs text-muted-foreground leading-relaxed text-center">
+            <span className="text-foreground font-bold">Why parents & coaches are switching to online strength training:</span>{" "}
+            The average family spends $200–$600/month on in-person youth training. Matt's online programs start at{" "}
+            <span className="text-primary font-bold">$12.99/month</span> — same 20 years of experience, delivered to your phone, 
+            available in any state. No travel, no scheduling conflicts, no contracts.
+          </p>
+        </motion.div>
+
         {/* Header */}
         <div className="text-center mb-12">
           <motion.h1
@@ -113,10 +127,10 @@ const Pricing = () => {
             animate={{ opacity: 1, y: 0 }}
             className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-foreground mb-4"
           >
-            Pick Your Program
+            Online Strength Training Plans
           </motion.h1>
           <p className="text-muted-foreground max-w-xl mx-auto">
-            Every tier is month-to-month. Cancel anytime. No contracts, no BS — just results.
+            Every tier is month-to-month. Cancel anytime. No contracts — just affordable, proven strength programming for athletes in any sport, any state.
           </p>
 
           {subscribed && subscriptionTier && (
