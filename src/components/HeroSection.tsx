@@ -3,7 +3,7 @@ import { ArrowRight, ShoppingBag, Shield, Trophy, Zap, Gift, Star, Users } from 
 import { Link } from "react-router-dom";
 import m2Logo from "@/assets/m2-logo.jpg";
 import SectionHeader from "./SectionHeader";
-import NewsletterSignup from "./NewsletterSignup";
+
 import MerchSection from "./MerchSection";
 import CurrentClients from "./landing/CurrentClients";
 import TeamYouthPrograms from "./landing/TeamYouthPrograms";
@@ -284,10 +284,7 @@ const HeroSection = () => (
         </div>
       </motion.div>
 
-      {/* NEWSLETTER */}
-      <div className="mb-10">
-        <NewsletterSignup />
-      </div>
+
 
       {/* MERCH */}
       <MerchSection />
