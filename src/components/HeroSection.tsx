@@ -188,7 +188,7 @@ const HeroSection = () => {
         {/* FOOTER */}
         <div className="mt-10 pt-6 border-t border-border text-center">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} M² Training · Grosse Pointe Park, MI · Real training, real results.
+            © {new Date().getFullYear()} <span className="font-brand text-sm text-foreground">M² Training</span> · Grosse Pointe Park, MI · Real training, real results.
           </p>
         </div>
       </div>

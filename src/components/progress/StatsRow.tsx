@@ -34,10 +34,6 @@ const StatsRow = ({ current, delta, max, repMax }: StatsRowProps) => {
                   : s.color === true
                   ? "hsl(var(--primary))"
                   : "hsl(var(--foreground))",
-              textShadow:
-                s.color !== undefined
-                  ? `0 0 10px ${s.color ? "hsl(var(--primary) / 0.4)" : "hsl(var(--destructive) / 0.4)"}`
-                  : "none",
             }}
           >
             {s.val}

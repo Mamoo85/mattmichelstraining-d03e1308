@@ -107,17 +107,15 @@ const TronChart = ({ data, repMax }: TronChartProps) => {
             strokeWidth={2}
             fill="url(#tronGradient)"
             dot={{
-              fill: "hsl(18, 82%, 55%)",
+              fill: "hsl(18, 82%, 50%)",
               r: 3,
               strokeWidth: 0,
-              filter: "url(#chartGlow)",
             }}
             activeDot={{
-              r: 6,
-              fill: "hsl(18, 82%, 55%)",
+              r: 5,
+              fill: "hsl(18, 82%, 50%)",
               strokeWidth: 2,
-              stroke: "hsl(var(--card))",
-              filter: "url(#chartGlow)",
+              stroke: "hsl(0, 0%, 9%)",
             }}
           />
         </AreaChart>

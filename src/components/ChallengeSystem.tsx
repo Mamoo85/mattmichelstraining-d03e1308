@@ -167,9 +167,9 @@ const ChallengeSystem = () => {
 
   const difficultyColor = (d: string) => {
     switch (d) {
-      case "beginner": return "text-emerald-400";
-      case "intermediate": return "text-amber-400";
-      case "advanced": return "text-red-400";
+      case "beginner": return "text-muted-foreground";
+      case "intermediate": return "text-foreground";
+      case "advanced": return "text-primary";
       default: return "text-muted-foreground";
     }
   };

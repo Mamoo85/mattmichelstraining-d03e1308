@@ -84,6 +84,12 @@
     font-family: 'Geist Mono', 'SF Mono', 'Fira Code', monospace;
     font-feature-settings: "tnum";
   }
+  .font-brand {
+    font-family: 'Oswald', Impact, 'Arial Black', sans-serif;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
   .shadow-m2 {
     box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 2px 4px rgba(0,0,0,0.3);
   }

@@ -73,6 +73,7 @@ export default {
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
         mono: ['"Geist Mono"', '"SF Mono"', '"Fira Code"', 'monospace'],
+        brand: ['Oswald', 'Impact', '"Arial Black"', 'sans-serif'],
       },
       keyframes: {
         "accordion-down": {

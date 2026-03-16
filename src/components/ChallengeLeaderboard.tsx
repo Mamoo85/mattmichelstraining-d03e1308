@@ -86,9 +86,9 @@ const ChallengeLeaderboard = ({ challengeId, currentUserId }: ChallengeLeaderboa
   }
 
   const rankIcon = (rank: number) => {
-    if (rank === 0) return <Trophy size={14} className="text-yellow-400" />;
-    if (rank === 1) return <Medal size={14} className="text-gray-300" />;
-    if (rank === 2) return <Award size={14} className="text-amber-600" />;
+    if (rank === 0) return <Trophy size={14} className="text-primary" />;
+    if (rank === 1) return <Medal size={14} className="text-foreground" />;
+    if (rank === 2) return <Award size={14} className="text-muted-foreground" />;
     return <span className="text-[10px] font-mono font-bold text-muted-foreground w-3.5 text-center">{rank + 1}</span>;
   };
 
