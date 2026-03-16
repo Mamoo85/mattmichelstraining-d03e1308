@@ -1,11 +1,12 @@
 import { motion } from "framer-motion";
 import { GraduationCap, Shield, Dumbbell, Users } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const AUDIENCES = [
   {
     label: "I'm a Parent",
     icon: Shield,
-    targetId: "section-guides",
+    route: "/for-parents",
     desc: "Protect & prepare your athlete",
   },
   {
@@ -29,8 +30,14 @@ const AUDIENCES = [
 ];
 
 const AudienceSelector = () => {
-  const scrollTo = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const navigate = useNavigate();
+
+  const handleClick = (a: typeof AUDIENCES[number]) => {
+    if ("route" in a && a.route) {
+      navigate(a.route);
+    } else if ("targetId" in a && a.targetId) {
+      document.getElementById(a.targetId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   };
 
   return (
@@ -47,7 +54,7 @@ const AudienceSelector = () => {
         {AUDIENCES.map((a) => (
           <button
             key={a.label}
-            onClick={() => scrollTo(a.targetId)}
+            onClick={() => handleClick(a)}
             className="bg-card shadow-m2 p-4 text-left hover:border-primary/50 border-2 border-transparent transition-m2 group"
           >
             <a.icon size={18} className="text-primary mb-2 group-hover:scale-110 transition-transform" />

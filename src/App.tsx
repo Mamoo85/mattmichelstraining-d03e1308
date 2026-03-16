@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Progress from "./pages/Progress";
 import Coach from "./pages/Coach";
 import Shop from "./pages/Shop";
+import ForParents from "./pages/ForParents";
 import Welcome from "./pages/Welcome";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/welcome" element={<Welcome />} />
             <Route path="/shop" element={<Shop />} />
+            <Route path="/for-parents" element={<ForParents />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/coach" element={<Coach />} />
             <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
