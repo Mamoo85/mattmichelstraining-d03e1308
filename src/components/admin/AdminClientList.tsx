@@ -127,12 +127,14 @@ const AdminClientList = () => {
                           {logs.map((log) => (
                             <div key={log.id} className="flex items-center justify-between text-xs bg-card p-2 shadow-m2">
                               <div>
-                                <span className="text-foreground font-bold">{log.exercise_name}</span>
-                                <span className="text-muted-foreground ml-2">
-                                  {log.sets}×{log.reps} @ {log.weight_lifted}lbs
-                                </span>
+                                <span className="text-foreground font-bold">Workout Session</span>
+                                {log.session_notes && (
+                                  <span className="text-muted-foreground ml-2">{log.session_notes}</span>
+                                )}
                               </div>
-                              <span className="text-[10px] text-muted-foreground">{log.date}</span>
+                              <span className="text-[10px] text-muted-foreground">
+                                {new Date(log.date).toLocaleDateString()}
+                              </span>
                             </div>
                           ))}
                         </div>
