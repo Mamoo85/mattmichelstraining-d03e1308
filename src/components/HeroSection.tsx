@@ -33,16 +33,46 @@ const GUIDES = [
     desc: "I've trained baseball players for two decades. These are the five movements that actually translate to the field — rotational power, arm health, hip mobility. Not the stuff you see on Instagram. The stuff that works.",
   },
   {
+    title: "Top 5 Exercises for Football",
+    price: "$9",
+    tag: "PDF GUIDE",
+    desc: "Football is about power off the line and a body that can take contact without breaking. These five exercises build explosive hips, a bulletproof core, and the kind of durability that keeps them on the field all season. Twenty years of training football athletes — this is what actually transfers.",
+  },
+  {
+    title: "Top 5 Exercises for Basketball",
+    price: "$9",
+    tag: "PDF GUIDE",
+    desc: "Every basketball parent asks me about vertical. Here's the truth — you can't jump higher if your knees can't handle the landing. This guide builds elastic power AND protects the joints. Five exercises that make them faster, more explosive, and way harder to guard.",
+  },
+  {
     title: "Hockey Strength Essentials",
     price: "$9",
     tag: "PDF GUIDE",
     desc: "Hockey is the most physically demanding youth sport, period. This guide covers the posterior chain work, single-leg stability, and core bracing that turns skaters into forces. I explain the physics behind every movement so your athlete knows WHY they're doing it.",
   },
   {
+    title: "Top 5 Exercises for Soccer",
+    price: "$9",
+    tag: "PDF GUIDE",
+    desc: "Soccer kids run for 90 minutes on one leg at a time — that's the reality. This guide is built around single-leg strength, hip mobility, and the endurance base that keeps them sharp in the 80th minute. No fluff. Just the movements that matter.",
+  },
+  {
+    title: "Top 5 Exercises for Lacrosse",
+    price: "$9",
+    tag: "PDF GUIDE",
+    desc: "Lacrosse beats up shoulders and demands sprint speed in transition. These five exercises build shoulder durability for stick work, explosive change of direction, and a frame that handles contact. I've watched this sport grow for 15 years — I know what breaks down first.",
+  },
+  {
     title: "Pre & Post Pregnancy Top 10",
     price: "$12",
     tag: "PDF GUIDE",
     desc: "This one's personal. I wrote it for the moms who trained with me and asked 'what can I do now?' Ten exercises that are safe, effective, and backed by the kinesiology. Pelvic floor, core reconnection, rebuilding strength the right way.",
+  },
+  {
+    title: "Youth Athlete Starter Guide",
+    price: "$12",
+    tag: "PDF GUIDE",
+    desc: "This is the exact program I give every new young athlete who walks through my door. Movement quality first, then work capacity, then strength. Four weeks of building the foundation that prevents injuries for life. Parents — this is where it starts.",
   },
   {
     title: "Your Custom Program",
