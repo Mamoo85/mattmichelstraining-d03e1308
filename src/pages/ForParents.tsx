@@ -25,6 +25,12 @@ const INJURY_STATS = [
   { stat: "#1 cause", label: "Overuse — not contact. Bad programming, not bad luck.", source: "Johns Hopkins Medicine" },
 ];
 
+const PRESS_QUOTE = {
+  outlet: "Grosse Pointe News",
+  quote: "His business, built entirely by word of mouth, is a testament to the impact he's had on his clients. Whether he's coaching middle schoolers, training college-bound athletes or helping everyday individuals move and feel better, Michels is, at his core, a teacher.",
+  url: "https://www.grossepointenews.com/articles/strength-in-motion-how-one-trainer-turned-passion-into-purpose/",
+};
+
 const TIMELINE = [
   {
     age: "11–13",
@@ -268,6 +274,24 @@ const ForParents = () => (
             </div>
           </div>
         </div>
+      </motion.div>
+
+      {/* PRESS */}
+      <motion.div {...fade(0.38)} className="mb-12">
+        <a
+          href={PRESS_QUOTE.url}
+          target="_blank"
+          rel="noreferrer"
+          className="block bg-card shadow-m2 p-5 md:p-6 border-l-4 border-primary hover:bg-m2-surface-hover transition-m2"
+        >
+          <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-2">
+            {PRESS_QUOTE.outlet}
+          </span>
+          <p className="text-xs text-muted-foreground italic leading-relaxed">
+            "{PRESS_QUOTE.quote}"
+          </p>
+          <span className="text-[10px] text-primary font-bold mt-2 block">Read full article →</span>
+        </a>
       </motion.div>
 
       {/* FINAL CTA */}
