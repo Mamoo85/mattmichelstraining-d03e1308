@@ -55,7 +55,6 @@ const TronChart = ({ data, repMax }: TronChartProps) => {
       <div className="flex items-center justify-between mb-3">
         <span
           className="text-[10px] font-mono font-bold uppercase tracking-widest text-primary"
-          style={{ textShadow: "0 0 8px hsl(var(--primary) / 0.4)" }}
         >
           {repMax === 1 ? "1RM" : `${repMax}RM`} Progression
         </span>
