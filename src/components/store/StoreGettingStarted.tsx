@@ -86,13 +86,35 @@ const StoreGettingStarted = () => {
             <div>
               <h3 className="text-sm font-bold text-foreground mb-1">{step.title}</h3>
               <p className="text-xs text-muted-foreground leading-relaxed">{step.desc}</p>
-              {step.cta && !user && (
+              {step.ctaType === "signup" && !user && (
                 <SignUpButton size="small" />
               )}
-              {step.cta && user && (
+              {step.ctaType === "signup" && user && (
                 <div className="mt-2 flex items-center gap-2 text-xs text-primary font-bold">
                   <span>✓</span> Account created
                 </div>
+              )}
+              {step.ctaType === "store" && (
+                <Link
+                  to="/shop"
+                  onClick={() => {
+                    const storeTab = document.querySelector('[data-tab="store"]');
+                    if (storeTab) (storeTab as HTMLElement).click();
+                  }}
+                  className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-m2 mt-2"
+                >
+                  Shop Guides & Programs
+                  <ArrowRight size={12} />
+                </Link>
+              )}
+              {step.ctaType === "pricing" && (
+                <Link
+                  to="/pricing"
+                  className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-m2 mt-2"
+                >
+                  View Subscription Plans
+                  <ArrowRight size={12} />
+                </Link>
               )}
             </div>
           </div>
