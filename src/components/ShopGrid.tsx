@@ -4,6 +4,7 @@ import SectionHeader from "./SectionHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useContentMap } from "@/hooks/useSiteContent";
 
 interface Product {
   id: string;
