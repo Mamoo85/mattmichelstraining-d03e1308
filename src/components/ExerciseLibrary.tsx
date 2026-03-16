@@ -351,6 +351,7 @@ const SPORT_TABS = [
   { key: "soccer", label: "Soccer" },
   { key: "lacrosse", label: "Lacrosse" },
   { key: "youth", label: "Youth" },
+  { key: "parents", label: "Parents" },
 ];
 
 const CATEGORY_TABS = [
