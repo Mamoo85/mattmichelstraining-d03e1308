@@ -283,8 +283,8 @@ const ForParents = () => {
               <span className="text-xs font-bold text-primary">KR</span>
             </div>
             <div>
-              <span className="text-xs font-bold text-foreground block">Parent of D1 Athlete</span>
-              <span className="text-[10px] text-muted-foreground">Grosse Pointe, MI</span>
+              <span className="text-xs font-bold text-foreground block">{cms.testimonial_name || "Parent of D1 Athlete"}</span>
+              <span className="text-[10px] text-muted-foreground">{cms.testimonial_location || "Grosse Pointe, MI"}</span>
             </div>
           </div>
         </div>
