@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      challenge_participants: {
+        Row: {
+          challenge_id: string
+          current_value: number
+          id: string
+          is_public: boolean
+          joined_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          challenge_id: string
+          current_value?: number
+          id?: string
+          is_public?: boolean
+          joined_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string
+          current_value?: number
+          id?: string
+          is_public?: boolean
+          joined_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       coach_notes: {
         Row: {
           coach_id: string
