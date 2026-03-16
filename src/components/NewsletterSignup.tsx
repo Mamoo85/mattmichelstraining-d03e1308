@@ -1,16 +1,29 @@
 import { useState } from "react";
 import { Mail } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import SectionHeader from "./SectionHeader";
 
 const NewsletterSignup = () => {
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
-    toast({ title: "You're in.", description: "Matt's newsletter is on its way." });
-    setEmail("");
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from("newsletter_subscribers")
+        .upsert({ email: email.trim().toLowerCase(), source: "website" }, { onConflict: "email" });
+      if (error) throw error;
+      toast({ title: "You're in.", description: "Matt's newsletter is on its way." });
+      setEmail("");
+    } catch (err: any) {
+      toast({ title: "Something went wrong", description: err.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -35,10 +48,11 @@ const NewsletterSignup = () => {
           />
           <button
             type="submit"
-            className="bg-primary text-primary-foreground px-5 py-2.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2 flex items-center gap-2"
+            disabled={loading}
+            className="bg-primary text-primary-foreground px-5 py-2.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2 flex items-center gap-2 disabled:opacity-50"
           >
             <Mail size={14} />
-            Subscribe
+            {loading ? "..." : "Subscribe"}
           </button>
         </form>
         <p className="text-[10px] text-muted-foreground mt-2">
