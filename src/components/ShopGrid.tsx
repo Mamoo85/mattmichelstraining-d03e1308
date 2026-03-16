@@ -134,6 +134,7 @@ const ShopGrid = () => {
   const [buyingId, setBuyingId] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
+  const { content: cms } = useContentMap("shop_products");
 
   const filtered = selectedCategory === "all"
     ? PRODUCTS
