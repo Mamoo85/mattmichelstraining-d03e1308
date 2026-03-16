@@ -231,13 +231,16 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
 
                 {/* Coach Notes — always visible, no toggle */}
                 {!isEditing && (
-                  <CoachNotesBadge
-                    logId={log.id}
-                    userId={effectiveUserId}
-                    notes={logNotes}
-                    isAdmin={isAdmin}
-                    onRefresh={fetchNotes}
-                  />
+                  <>
+                    <CoachNotesBadge
+                      logId={log.id}
+                      userId={effectiveUserId}
+                      notes={logNotes}
+                      isAdmin={isAdmin}
+                      onRefresh={fetchNotes}
+                    />
+                    <LiftChat logId={log.id} userId={effectiveUserId} />
+                  </>
                 )}
               </div>
             );
