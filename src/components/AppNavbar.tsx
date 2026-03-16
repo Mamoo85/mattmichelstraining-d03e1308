@@ -3,6 +3,7 @@ import { Dumbbell, BarChart3, MessageSquare, ShoppingBag, Home, Menu, X, LogIn, 
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { TetrisLogo, SloganTicker } from "@/components/LogoAnimations";
 import m2Logo from "@/assets/m2-logo.jpg";
 
 const navItems = [
