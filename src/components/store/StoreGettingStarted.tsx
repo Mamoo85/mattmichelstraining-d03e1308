@@ -85,7 +85,9 @@ const StoreGettingStarted = () => {
             <span className="text-2xl font-mono font-bold text-primary/30 flex-shrink-0">{step.num}</span>
             <div>
               <h3 className="text-sm font-bold text-foreground mb-1">{step.title}</h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">{step.desc}</p>
+              {step.desc.split("\n\n").map((paragraph, i) => (
+                <p key={i} className="text-xs text-muted-foreground leading-relaxed mb-2 last:mb-0">{paragraph}</p>
+              ))}
               {step.ctaType === "signup" && !user && (
                 <SignUpButton size="small" />
               )}
