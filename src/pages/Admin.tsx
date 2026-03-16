@@ -3,15 +3,19 @@ import AppNavbar from "@/components/AppNavbar";
 import AdminSubscriberList from "@/components/admin/AdminSubscriberList";
 import AdminNewsletterComposer from "@/components/admin/AdminNewsletterComposer";
 import AdminSendHistory from "@/components/admin/AdminSendHistory";
+import AdminClientList from "@/components/admin/AdminClientList";
+import AdminProtocols from "@/components/admin/AdminProtocols";
 
 const TABS = [
-  { key: "subscribers", label: "Subscribers" },
-  { key: "compose", label: "Compose Newsletter" },
+  { key: "clients", label: "Clients" },
+  { key: "protocols", label: "Protocols" },
+  { key: "subscribers", label: "Newsletter" },
+  { key: "compose", label: "Compose" },
   { key: "history", label: "Send History" },
 ];
 
 const Admin = () => {
-  const [activeTab, setActiveTab] = useState("subscribers");
+  const [activeTab, setActiveTab] = useState("clients");
 
   return (
     <div className="min-h-screen bg-background">
@@ -20,7 +24,7 @@ const Admin = () => {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-lg font-bold text-foreground tracking-display">Admin Dashboard</h1>
-            <p className="text-xs text-muted-foreground">Manage subscribers, compose & send newsletters</p>
+            <p className="text-xs text-muted-foreground">Manage clients, protocols & newsletters</p>
           </div>
         </div>
 
@@ -40,6 +44,8 @@ const Admin = () => {
           ))}
         </div>
 
+        {activeTab === "clients" && <AdminClientList />}
+        {activeTab === "protocols" && <AdminProtocols />}
         {activeTab === "subscribers" && <AdminSubscriberList />}
         {activeTab === "compose" && <AdminNewsletterComposer />}
         {activeTab === "history" && <AdminSendHistory />}
