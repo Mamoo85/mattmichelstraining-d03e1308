@@ -26,8 +26,8 @@ const AppNavbar = () => {
         <Link to="/" className="flex items-center gap-2">
           <img src={m2Logo} alt="M² Training" className="w-8 h-8 object-cover" />
           <div className="hidden sm:flex flex-col leading-none">
-            <span className="text-primary font-bold text-sm tracking-display">M² TRAINING</span>
-            <span className="text-[9px] text-muted-foreground tracking-wider">REAL TRAINING, REAL RESULTS</span>
+            <TetrisLogo />
+            <SloganTicker />
           </div>
         </Link>
 
