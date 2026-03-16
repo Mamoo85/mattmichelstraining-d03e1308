@@ -14,7 +14,188 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          athlete_name: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          is_pro: boolean
+          stripe_customer_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          athlete_name?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          is_pro?: boolean
+          stripe_customer_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          athlete_name?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          is_pro?: boolean
+          stripe_customer_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      progress_logs: {
+        Row: {
+          estimated_1rm: number | null
+          exercise_name: string
+          id: string
+          logged_at: string
+          reps: number
+          user_id: string
+          weight: number
+        }
+        Insert: {
+          estimated_1rm?: number | null
+          exercise_name: string
+          id?: string
+          logged_at?: string
+          reps?: number
+          user_id: string
+          weight: number
+        }
+        Update: {
+          estimated_1rm?: number | null
+          exercise_name?: string
+          id?: string
+          logged_at?: string
+          reps?: number
+          user_id?: string
+          weight?: number
+        }
+        Relationships: []
+      }
+      protocol_exercises: {
+        Row: {
+          created_at: string
+          exercise_name: string
+          id: string
+          notes: string | null
+          protocol_id: string
+          reps: string | null
+          rpe: number | null
+          sets: number | null
+          sort_order: number
+          weight: number | null
+        }
+        Insert: {
+          created_at?: string
+          exercise_name: string
+          id?: string
+          notes?: string | null
+          protocol_id: string
+          reps?: string | null
+          rpe?: number | null
+          sets?: number | null
+          sort_order?: number
+          weight?: number | null
+        }
+        Update: {
+          created_at?: string
+          exercise_name?: string
+          id?: string
+          notes?: string | null
+          protocol_id?: string
+          reps?: string | null
+          rpe?: number | null
+          sets?: number | null
+          sort_order?: number
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "protocol_exercises_protocol_id_fkey"
+            columns: ["protocol_id"]
+            isOneToOne: false
+            referencedRelation: "protocols"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      protocols: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_default: boolean
+          is_template: boolean
+          title: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_default?: boolean
+          is_template?: boolean
+          title: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_default?: boolean
+          is_template?: boolean
+          title?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          plan: string
+          status: string
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          plan?: string
+          status?: string
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          plan?: string
+          status?: string
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
