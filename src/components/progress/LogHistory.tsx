@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { Pencil, Trash2, X, Check, Loader2, CalendarIcon } from "lucide-react";
+import { Pencil, Trash2, X, Check, Loader2, CalendarIcon, ChevronDown, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -32,7 +32,8 @@ interface LogHistoryProps {
 }
 
 const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryProps) => {
-  const [showHistory, setShowHistory] = useState(false);
+  // Default open so athletes always see their history + coach notes
+  const [showHistory, setShowHistory] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editWeight, setEditWeight] = useState("");
   const [editReps, setEditReps] = useState("");
@@ -53,9 +54,9 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
   };
 
   useEffect(() => {
-    if (showHistory) fetchNotes();
+    fetchNotes();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showHistory, logs]);
+  }, [logs]);
 
   const startEdit = (log: ProgressLog) => {
     setEditingId(log.id);
@@ -106,26 +107,33 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
   if (logs.length === 0) return null;
 
   const notesForLog = (logId: string) => coachNotes.filter((n) => n.progress_log_id === logId);
+  const totalNotes = coachNotes.length;
 
   return (
     <div className="mt-6">
       <button
         onClick={() => setShowHistory(!showHistory)}
-        className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-all mb-3"
+        className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-all mb-3"
       >
-        {showHistory ? "▾ Hide" : "▸ Show"} Log History ({logs.length} entries)
+        {showHistory ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+        Log History ({logs.length} entries)
+        {totalNotes > 0 && (
+          <span className="text-primary ml-1">· {totalNotes} coach note{totalNotes !== 1 ? "s" : ""}</span>
+        )}
       </button>
 
       {showHistory && (
         <div className="bg-card border border-border divide-y divide-border">
-          {[...logs].reverse().map((log) => {
+          {[...logs].reverse().map((log, idx) => {
             const isEditing = editingId === log.id;
             const isDeleting = deletingId === log.id;
             const logNotes = notesForLog(log.id);
+            const prevLog = idx < logs.length - 1 ? [...logs].reverse()[idx + 1] : null;
+            const weightDiff = prevLog ? log.weight - prevLog.weight : 0;
 
             return (
-              <div key={log.id} className="p-3 space-y-1.5">
-                <div className="flex items-center gap-3 flex-wrap">
+              <div key={log.id} className="p-3 space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
                   {isEditing ? (
                     <>
                       <Popover>
@@ -188,6 +196,17 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
                       <span className="text-[10px] text-primary font-mono ml-1">
                         est. {log.estimated_1rm} 1RM
                       </span>
+                      {/* Show session-over-session change */}
+                      {prevLog && weightDiff !== 0 && (
+                        <span
+                          className="text-[9px] font-mono font-bold"
+                          style={{
+                            color: weightDiff > 0 ? "hsl(var(--primary))" : "hsl(var(--destructive))",
+                          }}
+                        >
+                          {weightDiff > 0 ? "↑" : "↓"}{Math.abs(weightDiff)}
+                        </span>
+                      )}
                       <div className="flex gap-1 ml-auto">
                         <button
                           onClick={() => startEdit(log)}
@@ -209,7 +228,7 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
                   )}
                 </div>
 
-                {/* Coach Notes */}
+                {/* Coach Notes — always visible, no toggle */}
                 {!isEditing && (
                   <CoachNotesBadge
                     logId={log.id}

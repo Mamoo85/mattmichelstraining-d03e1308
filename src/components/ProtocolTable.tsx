@@ -94,27 +94,30 @@ const ProtocolTable = () => {
     <div>
       <SectionHeader title={protocolTitle || "Today's Program"} timestamp="Log your weights — Matt reviews every session" />
 
-      <div className="grid grid-cols-[1fr_auto_auto_80px] md:grid-cols-[1fr_100px_60px_80px] gap-2 px-3 py-2 bg-muted">
+      {/* Header row */}
+      <div className="grid grid-cols-[1fr_80px_80px] md:grid-cols-[1fr_100px_1fr_80px] gap-2 px-3 py-2 bg-muted">
         <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Exercise</span>
         <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Sets × Reps</span>
-        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hidden md:block">Notes</span>
-        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-right">Log</span>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hidden md:block">Coach Notes</span>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-right">Weight</span>
       </div>
 
       {exercises.map((ex) => (
         <div
           key={ex.id}
-          className="grid grid-cols-[1fr_auto_auto_80px] md:grid-cols-[1fr_100px_60px_80px] gap-2 px-3 py-3 bg-card hover:bg-m2-surface-hover transition-m2 border-b border-border"
+          className="grid grid-cols-[1fr_80px_80px] md:grid-cols-[1fr_100px_1fr_80px] gap-2 px-3 py-3 bg-card hover:bg-secondary/50 transition-m2 border-b border-border items-center"
         >
           <div>
             <span className="text-sm font-semibold text-foreground">{ex.exercise_name}</span>
-            {ex.notes && <p className="text-[10px] text-muted-foreground mt-0.5">{ex.notes}</p>}
+            {/* Show notes inline on mobile only */}
+            {ex.notes && <p className="text-[10px] text-muted-foreground mt-0.5 md:hidden">{ex.notes}</p>}
           </div>
           <span className="text-sm font-mono text-primary">{ex.sets}×{ex.reps}</span>
-          <span className="text-[10px] text-muted-foreground hidden md:block truncate">{ex.notes || "—"}</span>
+          {/* Notes column — desktop only */}
+          <span className="text-[11px] text-muted-foreground hidden md:block leading-snug">{ex.notes || "—"}</span>
           <input
             type="number"
-            placeholder="0"
+            placeholder="lbs"
             value={weights[ex.id] || ""}
             onChange={(e) => setWeights({ ...weights, [ex.id]: e.target.value })}
             className="bg-background border border-border text-right pr-2 font-mono text-primary text-sm focus:ring-1 focus:ring-primary outline-none h-8 w-full"
@@ -125,7 +128,7 @@ const ProtocolTable = () => {
       <div className="flex justify-end mt-4">
         <button
           onClick={logSession}
-          className="bg-primary text-primary-foreground px-6 py-2 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
+          className="bg-primary text-primary-foreground px-6 py-2.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
         >
           Log Session
         </button>
