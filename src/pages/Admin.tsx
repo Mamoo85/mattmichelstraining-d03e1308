@@ -5,8 +5,10 @@ import AdminNewsletterComposer from "@/components/admin/AdminNewsletterComposer"
 import AdminSendHistory from "@/components/admin/AdminSendHistory";
 import AdminClientList from "@/components/admin/AdminClientList";
 import AdminProtocols from "@/components/admin/AdminProtocols";
+import AdminSiteEditor from "@/components/admin/AdminSiteEditor";
 
 const TABS = [
+  { key: "site", label: "Site Editor" },
   { key: "clients", label: "Clients" },
   { key: "protocols", label: "Protocols" },
   { key: "subscribers", label: "Newsletter" },
@@ -15,7 +17,7 @@ const TABS = [
 ];
 
 const Admin = () => {
-  const [activeTab, setActiveTab] = useState("clients");
+  const [activeTab, setActiveTab] = useState("site");
 
   return (
     <div className="min-h-screen bg-background">
@@ -24,7 +26,7 @@ const Admin = () => {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-lg font-bold text-foreground tracking-display">Admin Dashboard</h1>
-            <p className="text-xs text-muted-foreground">Manage clients, protocols & newsletters</p>
+            <p className="text-xs text-muted-foreground">Manage site content, clients, protocols & newsletters</p>
           </div>
         </div>
 
@@ -44,6 +46,7 @@ const Admin = () => {
           ))}
         </div>
 
+        {activeTab === "site" && <AdminSiteEditor />}
         {activeTab === "clients" && <AdminClientList />}
         {activeTab === "protocols" && <AdminProtocols />}
         {activeTab === "subscribers" && <AdminSubscriberList />}
