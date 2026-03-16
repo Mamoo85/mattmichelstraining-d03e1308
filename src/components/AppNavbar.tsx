@@ -3,7 +3,6 @@ import { Dumbbell, BarChart3, MessageSquare, ShoppingBag, Home, Menu, X, LogIn, 
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import { TetrisLogo, SloganTicker } from "@/components/LogoAnimations";
 import m2Logo from "@/assets/m2-logo.jpg";
 
 const navItems = [
@@ -24,11 +23,8 @@ const AppNavbar = () => {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm shadow-m2">
       <div className="container flex items-center justify-between h-14">
         <Link to="/" className="flex items-center gap-2">
-          <img src={m2Logo} alt="M² Training" className="w-8 h-8 object-cover" />
-          <div className="hidden sm:flex flex-col leading-none">
-            <TetrisLogo />
-            <SloganTicker />
-          </div>
+          <img src={m2Logo} alt="M² Training" className="w-9 h-9 object-contain rounded" />
+          <span className="text-primary font-bold text-sm tracking-display hidden sm:block">M² TRAINING</span>
         </Link>
 
         <div className="hidden md:flex items-center gap-1">
@@ -38,7 +34,7 @@ const AppNavbar = () => {
               <Link
                 key={to}
                 to={to}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-m2 ${
+                className={`flex items-center gap-1.5 px-3 py-2 text-[11px] font-bold uppercase tracking-widest transition-m2 ${
                   active ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -51,7 +47,7 @@ const AppNavbar = () => {
           {isAdmin && (
             <Link
               to="/admin"
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-m2 ${
+              className={`flex items-center gap-1.5 px-3 py-2 text-[11px] font-bold uppercase tracking-widest transition-m2 ${
                 location.pathname === "/admin" ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -63,7 +59,7 @@ const AppNavbar = () => {
           {user ? (
             <button
               onClick={signOut}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-m2"
+              className="flex items-center gap-1.5 px-3 py-2 text-[11px] font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-m2"
             >
               <LogOut size={14} />
               SIGN OUT
@@ -71,7 +67,7 @@ const AppNavbar = () => {
           ) : (
             <Link
               to="/auth"
-              className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-primary hover:opacity-80 transition-m2"
+              className="flex items-center gap-1.5 px-3 py-2 text-[11px] font-bold uppercase tracking-widest text-primary hover:opacity-80 transition-m2"
             >
               <LogIn size={14} />
               LOGIN
@@ -80,7 +76,7 @@ const AppNavbar = () => {
         </div>
 
         <button className="md:hidden p-2 text-muted-foreground" onClick={() => setMobileOpen(!mobileOpen)}>
-          {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+          {mobileOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
       </div>
 
@@ -93,11 +89,11 @@ const AppNavbar = () => {
                 key={to}
                 to={to}
                 onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-2 px-4 py-3 text-xs font-bold uppercase tracking-widest transition-m2 ${
+                className={`flex items-center gap-2 px-4 py-3.5 text-sm font-bold uppercase tracking-widest transition-m2 ${
                   active ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <Icon size={14} />
+                <Icon size={16} />
                 {label}
               </Link>
             );
@@ -106,29 +102,29 @@ const AppNavbar = () => {
             <Link
               to="/admin"
               onClick={() => setMobileOpen(false)}
-              className={`flex items-center gap-2 px-4 py-3 text-xs font-bold uppercase tracking-widest transition-m2 ${
+              className={`flex items-center gap-2 px-4 py-3.5 text-sm font-bold uppercase tracking-widest transition-m2 ${
                 location.pathname === "/admin" ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <Shield size={14} />
+              <Shield size={16} />
               ADMIN
             </Link>
           )}
           {user ? (
             <button
               onClick={() => { signOut(); setMobileOpen(false); }}
-              className="flex items-center gap-2 px-4 py-3 text-xs font-bold uppercase tracking-widest text-muted-foreground w-full"
+              className="flex items-center gap-2 px-4 py-3.5 text-sm font-bold uppercase tracking-widest text-muted-foreground w-full"
             >
-              <LogOut size={14} />
+              <LogOut size={16} />
               SIGN OUT
             </button>
           ) : (
             <Link
               to="/auth"
               onClick={() => setMobileOpen(false)}
-              className="flex items-center gap-2 px-4 py-3 text-xs font-bold uppercase tracking-widest text-primary"
+              className="flex items-center gap-2 px-4 py-3.5 text-sm font-bold uppercase tracking-widest text-primary"
             >
-              <LogIn size={14} />
+              <LogIn size={16} />
               LOGIN
             </Link>
           )}
