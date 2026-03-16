@@ -6,12 +6,26 @@ import { Loader2 } from "lucide-react";
 import { LIFT_CATEGORIES, ALL_LIFTS, getLiftConfig } from "./progress/liftConfig";
 import TronChart from "./progress/TronChart";
 import BodyAvatar from "./progress/BodyAvatar";
+import { toast } from "@/hooks/use-toast";
 
-const ProgressCharts = () => {
+interface ProgressChartsProps {
+  /** When set (admin mode), view/log for this user instead of self */
+  targetUserId?: string;
+  targetUserName?: string;
+}
+
+const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) => {
   const { user } = useAuth();
   const [activeLift, setActiveLift] = useState(ALL_LIFTS[0].name);
   const [data, setData] = useState<{ date: string; value: number }[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Logging state
+  const [logWeight, setLogWeight] = useState("");
+  const [logReps, setLogReps] = useState("");
+  const [logging, setLogging] = useState(false);
+
+  const effectiveUserId = targetUserId || user?.id;
 
   const config = getLiftConfig(activeLift);
   const repMax = config?.repMax ?? 3;
@@ -21,26 +35,58 @@ const ProgressCharts = () => {
     setLoading(false);
   }, [user]);
 
+  const fetchData = async () => {
+    if (!effectiveUserId) return;
+    const { data: logs } = await supabase
+      .from("progress_logs")
+      .select("estimated_1rm, logged_at")
+      .eq("user_id", effectiveUserId)
+      .eq("exercise_name", activeLift)
+      .order("logged_at");
+    if (logs) {
+      setData(
+        logs.map((l) => ({
+          date: new Date(l.logged_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+          value: l.estimated_1rm ?? 0,
+        }))
+      );
+    }
+  };
+
   useEffect(() => {
-    if (!user) return;
-    const fetchData = async () => {
-      const { data: logs } = await supabase
-        .from("progress_logs")
-        .select("estimated_1rm, logged_at")
-        .eq("user_id", user.id)
-        .eq("exercise_name", activeLift)
-        .order("logged_at");
-      if (logs) {
-        setData(
-          logs.map((l) => ({
-            date: new Date(l.logged_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-            value: l.estimated_1rm ?? 0,
-          }))
-        );
-      }
-    };
     fetchData();
-  }, [user, activeLift]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [effectiveUserId, activeLift]);
+
+  const handleLog = async () => {
+    if (!effectiveUserId || !user) return;
+    const weight = parseFloat(logWeight);
+    const reps = parseInt(logReps) || repMax;
+    if (!weight || weight <= 0) {
+      toast({ title: "Enter a valid weight", variant: "destructive" });
+      return;
+    }
+    setLogging(true);
+    const estimated1rm = Math.round(weight * (1 + reps / 30) * 10) / 10;
+
+    const { error } = await supabase.from("progress_logs").insert({
+      user_id: effectiveUserId,
+      exercise_name: activeLift,
+      weight,
+      reps,
+      estimated_1rm: estimated1rm,
+    });
+
+    if (error) {
+      toast({ title: "Failed to log", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Logged", description: `${activeLift}: ${weight} lbs × ${reps}` });
+      setLogWeight("");
+      setLogReps("");
+      await fetchData();
+    }
+    setLogging(false);
+  };
 
   if (loading) {
     return (
@@ -58,8 +104,8 @@ const ProgressCharts = () => {
   return (
     <div>
       <SectionHeader
-        title="Lift Tracker"
-        timestamp="Matt tracks your maxes and adjusts load"
+        title={targetUserName ? `${targetUserName} — Lift Tracker` : "Lift Tracker"}
+        timestamp={targetUserId ? "Admin view — logging for this client" : "Track your maxes and watch them climb"}
       />
 
       {/* Lift category selector */}
@@ -100,8 +146,38 @@ const ProgressCharts = () => {
         </div>
       ))}
 
+      {/* Log weight inline */}
+      <div className="mt-4 mb-4 p-4 bg-card border border-border">
+        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-2">
+          Log {activeLift}
+        </span>
+        <div className="flex items-center gap-2">
+          <input
+            type="number"
+            placeholder="Weight (lbs)"
+            value={logWeight}
+            onChange={(e) => setLogWeight(e.target.value)}
+            className="bg-background border border-border text-right pr-2 font-mono text-primary text-sm focus:ring-1 focus:ring-primary outline-none h-9 w-28"
+          />
+          <input
+            type="number"
+            placeholder={`Reps (${repMax})`}
+            value={logReps}
+            onChange={(e) => setLogReps(e.target.value)}
+            className="bg-background border border-border text-right pr-2 font-mono text-primary text-sm focus:ring-1 focus:ring-primary outline-none h-9 w-20"
+          />
+          <button
+            onClick={handleLog}
+            disabled={logging}
+            className="bg-primary text-primary-foreground px-5 h-9 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-50"
+          >
+            {logging ? "…" : "Log"}
+          </button>
+        </div>
+      </div>
+
       {/* Stats row */}
-      <div className="grid grid-cols-3 gap-3 mt-5 mb-4">
+      <div className="grid grid-cols-3 gap-3 mb-4">
         {[
           { label: `Current ${repMax === 1 ? "1RM" : `${repMax}RM`}`, val: `${current}`, unit: "lbs" },
           { label: "Δ Last", val: `${delta >= 0 ? "+" : ""}${delta}`, unit: "lbs", color: delta >= 0 },
