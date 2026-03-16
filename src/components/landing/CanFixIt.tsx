@@ -12,15 +12,17 @@ const CanFixIt = () => (
       <div className="flex items-start gap-3">
         <Wrench size={22} className="text-primary flex-shrink-0 mt-0.5" />
         <div>
-          <h3 className="text-base md:text-lg font-bold text-foreground mb-1">I Can Fix It</h3>
-          <p className="text-sm text-muted-foreground mb-3">
-            Stuck? Something hurts? Need a workout?
+          <h3 className="text-base md:text-lg font-bold text-foreground mb-1">I Can Fix It — Injury Prevention & Recovery</h3>
+          <p className="text-sm text-muted-foreground mb-2 leading-relaxed">
+            Something hurts? Stuck in a plateau? Need a one-off workout to keep your athlete moving safely?
+            Matt's "I Can Fix It" service is affordable, direct support for youth athletes dealing with pain, overuse, or bad programming from somewhere else.
+            From youth soccer knee issues to baseball shoulder strain — 20 years of injury prevention experience, one email away.
           </p>
           <a
             href="mailto:matthewmichels4@gmail.com?subject=I%20Can%20Fix%20It"
             className="text-sm text-primary font-bold hover:opacity-80 transition-m2"
           >
-            Pay what you feel →
+            Pay what you feel — email Matt →
           </a>
         </div>
       </div>
