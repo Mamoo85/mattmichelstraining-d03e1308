@@ -231,7 +231,7 @@ const ForParents = () => {
           </div>
           <div className="bg-card border-2 border-primary/30 p-4">
             <p className="text-xs text-muted-foreground leading-relaxed">
-              <span className="text-foreground font-bold">When you buy a program, Matt is on the other end.</span> This is not an AI. Not a chatbot. Not a pre-written FAQ. When your athlete logs a workout and something doesn't feel right — they tap "Ask Matt" and <span className="text-foreground font-semibold">Matt personally reads it, responds, and walks them through it</span> like he's standing right there. The only things they don't get are his equipment and his sense of humor — and he's freaking hilarious. For $9–$20, your kid gets a 20-year veteran coach guiding them through every rep, at a fraction of the cost of in-person training.
+              <span className="text-foreground font-bold">When you buy a program, Matt is on the other end.</span> {cms.matt_coaching_text || "This is not an AI. Not a chatbot. Not a pre-written FAQ. When your athlete logs a workout and something doesn't feel right — they tap \"Ask Matt\" and Matt personally reads it, responds, and walks them through it like he's standing right there. For $9–$20, your kid gets a 20-year veteran coach guiding them through every rep, at a fraction of the cost of in-person training."}
             </p>
           </div>
         </div>
