@@ -1,6 +1,6 @@
 import AppNavbar from "@/components/AppNavbar";
-import ProtocolTable from "@/components/ProtocolTable";
 import ChallengeSystem from "@/components/ChallengeSystem";
+import MyPrograms from "@/components/MyPrograms";
 import MyPrograms from "@/components/MyPrograms";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";

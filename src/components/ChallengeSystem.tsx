@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { Trophy, Flame, Target, Send, ChevronDown, ChevronUp, Clock, Users, Star } from "lucide-react";
+import { Trophy, Flame, Target, Send, Clock, Users, Star, Eye, EyeOff } from "lucide-react";
 import SectionHeader from "./SectionHeader";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { Switch } from "@/components/ui/switch";
 
 interface Challenge {
   id: string;
@@ -38,19 +40,35 @@ const CURRENT_CHALLENGE: Challenge = {
 };
 
 const ChallengeSystem = () => {
-  const [expandedChallenge, setExpandedChallenge] = useState<string | null>(null);
+  const { subscribed } = useAuth();
   const [suggestion, setSuggestion] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [optedIn, setOptedIn] = useState(false);
+  const [publicVisible, setPublicVisible] = useState(false);
 
   const handleSuggest = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!suggestion.trim()) return;
     setSubmitting(true);
-    // In a real implementation, this would save to a challenge_suggestions table
     await new Promise((r) => setTimeout(r, 500));
     toast({ title: "Suggestion sent!", description: "Matt reviews every suggestion personally." });
     setSuggestion("");
     setSubmitting(false);
+  };
+
+  const handleOptIn = () => {
+    if (!subscribed) {
+      toast({ title: "Members only", description: "Subscribe to join challenges.", variant: "destructive" });
+      return;
+    }
+    setOptedIn(true);
+    toast({ title: "You're in!", description: "Challenge accepted. Let's go." });
+  };
+
+  const handleOptOut = () => {
+    setOptedIn(false);
+    setPublicVisible(false);
+    toast({ title: "Opted out", description: "You can rejoin anytime." });
   };
 
   const typeIcon = (type: string) => {
@@ -119,10 +137,57 @@ const ChallengeSystem = () => {
               <span className="text-[11px] font-bold uppercase tracking-widest text-primary block mb-1">Reward</span>
               <p className="text-sm text-foreground">{CURRENT_CHALLENGE.reward}</p>
             </div>
-            <button className="bg-primary text-primary-foreground px-5 py-2.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2 flex items-center gap-2">
-              <Trophy size={14} />
-              Join Challenge
-            </button>
+
+            {/* Opt-in / Opt-out */}
+            {optedIn ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between bg-primary/5 border border-primary/20 p-3">
+                  <div className="flex items-center gap-2">
+                    <Trophy size={14} className="text-primary" />
+                    <span className="text-xs font-bold text-primary uppercase tracking-widest">You're in!</span>
+                  </div>
+                  <button
+                    onClick={handleOptOut}
+                    className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-destructive transition-all"
+                  >
+                    Opt Out
+                  </button>
+                </div>
+
+                {/* Visibility toggle */}
+                <div className="flex items-center justify-between bg-muted p-3">
+                  <div className="flex items-center gap-2">
+                    {publicVisible ? <Eye size={14} className="text-primary" /> : <EyeOff size={14} className="text-muted-foreground" />}
+                    <div>
+                      <span className="text-xs font-bold text-foreground block">
+                        {publicVisible ? "Numbers visible to everyone" : "Numbers visible to coach only"}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">
+                        {publicVisible ? "Other members can see your progress" : "Only Matt can see your challenge numbers"}
+                      </span>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={publicVisible}
+                    onCheckedChange={setPublicVisible}
+                  />
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={handleOptIn}
+                className="bg-primary text-primary-foreground px-5 py-2.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2 flex items-center gap-2"
+              >
+                <Trophy size={14} />
+                Join Challenge
+              </button>
+            )}
+
+            {!subscribed && !optedIn && (
+              <p className="text-[10px] text-muted-foreground mt-2">
+                Challenges are available to M² members only.
+              </p>
+            )}
           </div>
         </div>
       </div>
