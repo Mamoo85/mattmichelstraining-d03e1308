@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Check, Star, Zap, Shield, Users, Crown, ArrowRight, Loader2 } from "lucide-react";
+import { Check, Star, Zap, Shield, Crown, ArrowRight, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import AppNavbar from "@/components/AppNavbar";
 import { useAuth, TIERS, TierKey } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useContentMap } from "@/hooks/useSiteContent";
 
 const TIER_CARDS: {
   key: TierKey;
@@ -49,21 +50,11 @@ const TIER_CARDS: {
     ],
     cta: "Go Elite",
   },
-  {
-    key: "team",
-    icon: Users,
-    features: [
-      "Everything in Elite",
-      "Bulk programming for full teams",
-      "Coach dashboard & athlete tracking",
-      "Seasonal periodization plans",
-    ],
-    cta: "Get Team",
-  },
 ];
 
 const Pricing = () => {
   const { user, subscribed, subscriptionTier, subscriptionEnd } = useAuth();
+  const { content: cms } = useContentMap("pricing_page");
   const navigate = useNavigate();
   const [loadingTier, setLoadingTier] = useState<TierKey | null>(null);
 
@@ -114,9 +105,7 @@ const Pricing = () => {
         >
           <p className="text-xs text-muted-foreground leading-relaxed text-center">
             <span className="text-foreground font-bold">Why parents & coaches are switching to online strength training:</span>{" "}
-            The average family spends $200–$600/month on in-person youth training. Matt's online programs start at{" "}
-            <span className="text-primary font-bold">$12.99/month</span> — same 20 years of experience, delivered to your phone, 
-            available in any state. No travel, no scheduling conflicts, no contracts.
+            {cms.value_banner || "The average family spends $200–$600/month on in-person youth training. Matt's online programs start at $12.99/month — same 20 years of experience, delivered to your phone, available in any state. No travel, no scheduling conflicts, no contracts."}
           </p>
         </motion.div>
 
@@ -127,10 +116,10 @@ const Pricing = () => {
             animate={{ opacity: 1, y: 0 }}
             className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-foreground mb-4"
           >
-            Online Strength Training Plans
+            {cms.page_heading || cms.page_title || "Online Strength Training Plans"}
           </motion.h1>
           <p className="text-muted-foreground max-w-xl mx-auto">
-            Every tier is month-to-month. Cancel anytime. No contracts — just affordable, proven strength programming for athletes in any sport, any state.
+            {cms.page_subtitle || "Every tier is month-to-month. Cancel anytime. No contracts — just affordable, proven strength programming for athletes in any sport, any state."}
           </p>
 
           {subscribed && subscriptionTier && (
@@ -147,11 +136,14 @@ const Pricing = () => {
         </div>
 
         {/* Tier grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto">
           {TIER_CARDS.map((card, i) => {
             const tier = TIERS[card.key];
             const isCurrentPlan = subscriptionTier === card.key;
             const Icon = card.icon;
+            // Override features from CMS if available (pipe-separated)
+            const cmsFeatures = cms[`${card.key}_features`];
+            const features = cmsFeatures ? cmsFeatures.split("|").map(f => f.trim()) : card.features;
 
             return (
               <motion.div
@@ -186,7 +178,7 @@ const Pricing = () => {
                 </div>
 
                 <ul className="flex-1 space-y-2 mb-6">
-                  {card.features.map((f, j) => (
+                  {features.map((f, j) => (
                     <li key={j} className="flex items-start gap-2 text-sm text-muted-foreground">
                       <Check className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                       {f}
@@ -228,10 +220,10 @@ const Pricing = () => {
         {/* Free member banner */}
         <div className="mt-12 text-center border-2 border-dashed border-border p-8 max-w-2xl mx-auto">
           <h3 className="text-lg font-black uppercase tracking-tight text-foreground mb-2">
-            Free When You Sign Up
+            {cms.free_banner_title || "Free When You Sign Up"}
           </h3>
           <p className="text-muted-foreground text-sm mb-4">
-            Create an account and get Monthly Focus Plans, member challenges, and workout logging — no credit card required.
+            {cms.free_banner_text || "Create an account and get Monthly Focus Plans, member challenges, and workout logging — no credit card required."}
           </p>
           {!user && (
             <Link

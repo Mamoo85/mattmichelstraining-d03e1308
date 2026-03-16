@@ -15,7 +15,7 @@ import PortalShowcase from "./landing/PortalShowcase";
 import OnlineServices from "./landing/OnlineServices";
 import OnlineSavings from "./landing/OnlineSavings";
 import SportOnlineTraining from "./landing/SportOnlineTraining";
-import CoachOnlineTools from "./landing/CoachOnlineTools";
+
 import TeamYouthPrograms from "./landing/TeamYouthPrograms";
 import MonthlyFocus from "./landing/MonthlyFocus";
 import WeekendYouth from "./landing/WeekendYouth";
@@ -175,7 +175,6 @@ const HeroSection = () => {
         {showOnline && <OnlineSavings />}
         {showOnline && <SportOnlineTraining />}
         {showTeamYouth && <div id="section-teams"><TeamYouthPrograms /></div>}
-        {showTeamYouth && <CoachOnlineTools />}
         {showMonthly && <MonthlyFocus />}
         {showWeekend && <WeekendYouth />}
         {showTrainers && <div id="section-trainers"><ForTrainers /></div>}

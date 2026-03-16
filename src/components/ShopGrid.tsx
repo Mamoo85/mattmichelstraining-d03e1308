@@ -4,6 +4,7 @@ import SectionHeader from "./SectionHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useContentMap } from "@/hooks/useSiteContent";
 
 interface Product {
   id: string;
@@ -133,6 +134,7 @@ const ShopGrid = () => {
   const [buyingId, setBuyingId] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
+  const { content: cms } = useContentMap("shop_products");
 
   const filtered = selectedCategory === "all"
     ? PRODUCTS
@@ -166,9 +168,7 @@ const ShopGrid = () => {
       {/* Value hook */}
       <div className="bg-primary/10 border border-primary/20 shadow-m2 p-4 mb-6">
         <p className="text-sm text-foreground text-balance leading-relaxed">
-          <span className="font-bold">"I can only train so many athletes in person.</span> But I can share what I know.
-          Every guide teaches the <span className="text-primary font-bold">WHY</span> — not just what to do.
-          When they understand why, they do it better. 100% of the time."
+          <span className="font-bold">"</span>{cms.value_hook || "I can only train so many athletes in person. But I can share what I know. Every guide teaches the WHY — not just what to do. When they understand why, they do it better. 100% of the time."}<span className="font-bold">"</span>
         </p>
         <span className="text-[10px] font-mono text-primary mt-2 block">— Matt Michels, M² Training</span>
       </div>
@@ -246,11 +246,9 @@ const ShopGrid = () => {
 
       {/* Why $20 */}
       <div className="bg-muted p-4 mt-4 text-center">
-        <p className="text-xs text-foreground font-bold mb-1">Why are these so affordable?</p>
+        <p className="text-xs text-foreground font-bold mb-1">{cms.affordable_title || "Why are these so affordable?"}</p>
         <p className="text-[11px] text-muted-foreground leading-relaxed max-w-md mx-auto">
-          Matt charges $100+/hour in person and can only see so many athletes a week.
-          These guides are how he shares 20+ years of knowledge with the athletes he can't reach in person.
-          Same system. Same methodology. Written, not filmed — because results come from understanding, not watching.
+          {cms.affordable_text || "Matt charges $100+/hour in person and can only see so many athletes a week. These guides are how he shares 20+ years of knowledge with the athletes he can't reach in person. Same system. Same methodology. Written, not filmed — because results come from understanding, not watching."}
         </p>
       </div>
     </div>

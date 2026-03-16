@@ -2,6 +2,7 @@ import AppNavbar from "@/components/AppNavbar";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import PortalShowcase from "@/components/landing/PortalShowcase";
+import { useContentMap } from "@/hooks/useSiteContent";
 import {
   ArrowRight,
   Shield,
@@ -97,7 +98,10 @@ const fade = (delay: number) => ({
 
 /* ---------- page ---------- */
 
-const ForParents = () => (
+const ForParents = () => {
+  const { content: cms } = useContentMap("for_parents");
+
+  return (
   <div className="min-h-screen bg-background">
     <AppNavbar />
 
@@ -114,27 +118,27 @@ const ForParents = () => (
               </span>
             </div>
             <h1 className="text-2xl md:text-5xl lg:text-6xl font-bold tracking-display text-foreground leading-[1.1]">
-              <motion.span {...fade(0.2)} className="block">Your athlete's body</motion.span>
-              <motion.span {...fade(0.35)} className="block">is not a science experiment.</motion.span>
+              <motion.span {...fade(0.2)} className="block">{cms.hero_line_1 || "Your athlete's body"}</motion.span>
+              <motion.span {...fade(0.35)} className="block">{cms.hero_line_2 || "is not a science experiment."}</motion.span>
             </h1>
           </div>
         </div>
         <p className="text-sm md:text-base text-muted-foreground max-w-2xl mb-6 leading-relaxed">
-          Most youth strength training programs are built by people who learned from social media, not from 20 years of watching what actually breaks down in a young athlete's body. Matt Michels has trained thousands of kids through affordable, proven strength programs. 50+ went on to compete at the college level. Zero got injured. That's not a slogan — it's a record built on injury prevention, proper strength development, and patience.
+          {cms.hero_subtitle || "Most youth strength training programs are built by people who learned from social media, not from 20 years of watching what actually breaks down in a young athlete's body. Matt Michels has trained thousands of kids through affordable, proven strength programs. 50+ went on to compete at the college level. Zero got injured. That's not a slogan — it's a record built on injury prevention, proper strength development, and patience."}
         </p>
         <div className="flex flex-wrap gap-3">
           <Link
             to="/shop"
             className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
           >
-            Start with a $9 strength guide
+            {cms.hero_cta_primary || "Start with a $9 strength guide"}
             <ArrowRight size={15} />
           </Link>
           <Link
             to="/pricing"
             className="inline-flex items-center gap-2 border-2 border-primary/40 text-primary px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:bg-primary/10 transition-m2"
           >
-            See strength training plans
+            {cms.hero_cta_secondary || "See strength training plans"}
           </Link>
         </div>
       </motion.div>
@@ -227,7 +231,7 @@ const ForParents = () => (
           </div>
           <div className="bg-card border-2 border-primary/30 p-4">
             <p className="text-xs text-muted-foreground leading-relaxed">
-              <span className="text-foreground font-bold">When you buy a program, Matt is on the other end.</span> This is not an AI. Not a chatbot. Not a pre-written FAQ. When your athlete logs a workout and something doesn't feel right — they tap "Ask Matt" and <span className="text-foreground font-semibold">Matt personally reads it, responds, and walks them through it</span> like he's standing right there. The only things they don't get are his equipment and his sense of humor — and he's freaking hilarious. For $9–$20, your kid gets a 20-year veteran coach guiding them through every rep, at a fraction of the cost of in-person training.
+              <span className="text-foreground font-bold">When you buy a program, Matt is on the other end.</span> {cms.matt_coaching_text || "This is not an AI. Not a chatbot. Not a pre-written FAQ. When your athlete logs a workout and something doesn't feel right — they tap \"Ask Matt\" and Matt personally reads it, responds, and walks them through it like he's standing right there. For $9–$20, your kid gets a 20-year veteran coach guiding them through every rep, at a fraction of the cost of in-person training."}
             </p>
           </div>
         </div>
@@ -272,15 +276,15 @@ const ForParents = () => (
       <motion.div {...fade(0.35)} className="mb-12">
         <div className="bg-card shadow-m2 p-5 md:p-6 border-l-4 border-primary">
           <p className="text-sm md:text-base italic text-muted-foreground leading-relaxed mb-3">
-            "My son trained with Matt for three years. He walked on at Michigan as a freshman and started by his junior year. Matt didn't just make him stronger — he made him durable. Three years of college ball, zero time missed to injury. The strength training foundation Matt built was the difference."
+            "{cms.testimonial_text || "My son trained with Matt for three years. He walked on at Michigan as a freshman and started by his junior year. Matt didn't just make him stronger — he made him durable. Three years of college ball, zero time missed to injury. The strength training foundation Matt built was the difference."}"
           </p>
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
               <span className="text-xs font-bold text-primary">KR</span>
             </div>
             <div>
-              <span className="text-xs font-bold text-foreground block">Parent of D1 Athlete</span>
-              <span className="text-[10px] text-muted-foreground">Grosse Pointe, MI</span>
+              <span className="text-xs font-bold text-foreground block">{cms.testimonial_name || "Parent of D1 Athlete"}</span>
+              <span className="text-[10px] text-muted-foreground">{cms.testimonial_location || "Grosse Pointe, MI"}</span>
             </div>
           </div>
         </div>
@@ -308,10 +312,10 @@ const ForParents = () => (
       <motion.div {...fade(0.4)} className="mb-12">
         <div className="bg-primary/10 border-2 border-primary/40 p-6 md:p-8 text-center">
           <h2 className="text-lg md:text-2xl font-bold text-foreground mb-2">
-            Ready to invest in your athlete's strength and safety?
+            {cms.final_cta_title || "Ready to invest in your athlete's strength and safety?"}
           </h2>
           <p className="text-sm text-muted-foreground mb-6 max-w-lg mx-auto">
-            Start with an affordable $9 sport-specific strength guide. See how Matt approaches youth strength training. Then decide if you want the full experience — online or in-person in Grosse Pointe.
+            {cms.final_cta_text || "Start with an affordable $9 sport-specific strength guide. See how Matt approaches youth strength training. Then decide if you want the full experience — online or in-person in Grosse Pointe."}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
@@ -346,6 +350,7 @@ const ForParents = () => (
       </div>
     </div>
   </div>
-);
+  );
+};
 
 export default ForParents;
