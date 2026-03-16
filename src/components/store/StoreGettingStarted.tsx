@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Gift, Star, Trophy, Users, CheckCircle } from "lucide-react";
+import { ArrowRight, Gift, Star, Trophy, Users, LogIn } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import SectionHeader from "../SectionHeader";
 
@@ -8,23 +8,49 @@ const STEPS = [
     num: "01",
     title: "Create Your Free Account",
     desc: "Sign up in 30 seconds. No credit card needed. You'll get access to monthly focus plans, member challenges, and workout logging immediately.",
+    cta: true,
   },
   {
     num: "02",
     title: "Grab a Guide or Custom Program",
     desc: "Browse the Store tab for sport-specific PDF guides ($9) or get a fully custom program built by Matt ($20). Every guide teaches the WHY behind each movement.",
+    cta: false,
   },
   {
     num: "03",
     title: "Subscribe for the Full Experience",
-    desc: "M² Basic ($14.99/mo) unlocks the Exercise Library. Pro ($29.99/mo) adds custom programming and the Fix It library. Elite ($49.99/mo) gets you 1-on-1 check-ins with Matt.",
+    desc: "M² Basic ($12.99/mo) unlocks the Exercise Library. Pro ($25.99/mo) adds custom programming and the Fix It library. Elite ($42.99/mo) gets you 1-on-1 check-ins with Matt.",
+    cta: false,
   },
   {
     num: "04",
     title: "Train, Log, Improve",
     desc: "Use the Portal to log every workout. Track your progress over time. Matt's system is built on consistency — the app keeps you accountable.",
+    cta: false,
   },
 ];
+
+const SignUpButton = ({ size = "default" }: { size?: "default" | "small" }) => (
+  <Link
+    to="/auth"
+    className={`inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold uppercase tracking-widest hover:opacity-90 transition-m2 ${
+      size === "small" ? "px-4 py-2 text-[10px] mt-2" : "px-6 py-3 text-xs"
+    }`}
+  >
+    Create Free Account
+    <ArrowRight size={size === "small" ? 12 : 14} />
+  </Link>
+);
+
+const GoToPortalButton = () => (
+  <Link
+    to="/progress"
+    className="inline-flex items-center justify-center gap-2 border-2 border-primary/40 text-primary px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-primary/10 transition-m2 mt-2"
+  >
+    <LogIn size={12} />
+    Go to Client Portal
+  </Link>
+);
 
 const StoreGettingStarted = () => {
   const { user } = useAuth();
@@ -41,6 +67,17 @@ const StoreGettingStarted = () => {
         <span className="text-[10px] font-mono text-primary mt-2 block">— Matt Michels, M² Training</span>
       </div>
 
+      {/* Logged-in user quick access */}
+      {user && (
+        <div className="bg-primary/5 border border-primary/20 shadow-m2 p-4 mb-6 flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <p className="text-sm font-bold text-foreground">You're in! 👊</p>
+            <p className="text-xs text-muted-foreground">Jump into your client portal to log workouts and track progress.</p>
+          </div>
+          <GoToPortalButton />
+        </div>
+      )}
+
       {/* Steps */}
       <div className="space-y-3 mb-8">
         {STEPS.map((step) => (
@@ -49,6 +86,14 @@ const StoreGettingStarted = () => {
             <div>
               <h3 className="text-sm font-bold text-foreground mb-1">{step.title}</h3>
               <p className="text-xs text-muted-foreground leading-relaxed">{step.desc}</p>
+              {step.cta && !user && (
+                <SignUpButton size="small" />
+              )}
+              {step.cta && user && (
+                <div className="mt-2 flex items-center gap-2 text-xs text-primary font-bold">
+                  <span>✓</span> Account created
+                </div>
+              )}
             </div>
           </div>
         ))}
@@ -74,21 +119,37 @@ const StoreGettingStarted = () => {
           </div>
           <div className="flex items-center gap-2">
             <Users size={14} className="text-primary flex-shrink-0" />
-            <span className="text-xs text-foreground">Random awesome workouts that literally nobody could think of except Matt</span>
+            <span className="text-xs text-foreground">Workout Logging & Progress Tracking</span>
           </div>
         </div>
+        {!user && (
+          <div className="mt-4 pt-3 border-t border-border">
+            <SignUpButton />
+          </div>
+        )}
       </div>
 
-      {/* CTA */}
+      {/* Subscription CTA */}
+      <div className="bg-card shadow-m2 p-5 mb-6">
+        <h3 className="text-sm font-bold text-foreground mb-2">Ready for More?</h3>
+        <p className="text-xs text-muted-foreground leading-relaxed mb-3">
+          Subscriptions unlock the full Exercise Library, custom programming, the Fix It rehab library, and 1-on-1 check-ins with Matt.
+        </p>
+        <Link
+          to="/pricing"
+          className="inline-flex items-center justify-center gap-2 border-2 border-primary/40 text-primary px-5 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:bg-primary/10 transition-m2"
+        >
+          View Plans & Pricing
+          <ArrowRight size={12} />
+        </Link>
+      </div>
+
+      {/* Bottom CTA */}
       {!user && (
-        <div className="text-center">
-          <Link
-            to="/auth"
-            className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
-          >
-            Create Free Account
-            <ArrowRight size={14} />
-          </Link>
+        <div className="text-center py-6 bg-primary/5 border border-primary/20 shadow-m2">
+          <p className="text-sm font-bold text-foreground mb-1">Don't overthink it.</p>
+          <p className="text-xs text-muted-foreground mb-4">Create a free account, start logging, and let the work speak for itself.</p>
+          <SignUpButton />
         </div>
       )}
     </div>
