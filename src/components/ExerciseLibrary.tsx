@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Search, ChevronDown, ChevronUp } from "lucide-react";
+import { Search, ChevronDown, ChevronUp, Lock } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import SectionHeader from "./SectionHeader";
 
 interface Exercise {
