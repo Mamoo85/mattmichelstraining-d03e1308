@@ -323,3 +323,39 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: msg }), { status: 400 });
   }
 });
+
+// Helper: extract exercises from guide HTML content
+function parseGuideExercises(html: string): { name: string; sets: string; reps: string; notes: string }[] {
+  const exercises: { name: string; sets: string; reps: string; notes: string }[] = [];
+  const h3Regex = /<h3>(.*?)<\/h3>/g;
+  const setsRepsRegex = /Sets\/Reps:<\/strong>\s*([\d]+)[×x]([\d]+)/;
+  const whyRegex = /WHY:<\/strong>\s*(.*?)<\/p>/;
+  
+  let match;
+  while ((match = h3Regex.exec(html)) !== null) {
+    const exerciseName = match[1].replace(/^\d+\.\s*/, "").trim();
+    const afterH3 = html.substring(match.index, match.index + 500);
+    
+    const setsMatch = afterH3.match(setsRepsRegex);
+    const whyMatch = afterH3.match(whyRegex);
+    
+    exercises.push({
+      name: exerciseName,
+      sets: setsMatch ? setsMatch[1] : "3",
+      reps: setsMatch ? setsMatch[2] : "10",
+      notes: whyMatch ? whyMatch[1].trim() : "",
+    });
+  }
+  
+  return exercises;
+}
+
+// Helper: extract sport from guide title
+function extractSport(title: string): string | null {
+  const sports = ["Baseball", "Football", "Basketball", "Hockey", "Soccer", "Lacrosse"];
+  for (const sport of sports) {
+    if (title.toLowerCase().includes(sport.toLowerCase())) return sport;
+  }
+  if (title.toLowerCase().includes("youth")) return "General";
+  return null;
+}
