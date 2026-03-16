@@ -141,6 +141,9 @@ const Pricing = () => {
             const tier = TIERS[card.key];
             const isCurrentPlan = subscriptionTier === card.key;
             const Icon = card.icon;
+            // Override features from CMS if available (pipe-separated)
+            const cmsFeatures = cms[`${card.key}_features`];
+            const features = cmsFeatures ? cmsFeatures.split("|").map(f => f.trim()) : card.features;
 
             return (
               <motion.div
@@ -175,7 +178,7 @@ const Pricing = () => {
                 </div>
 
                 <ul className="flex-1 space-y-2 mb-6">
-                  {card.features.map((f, j) => (
+                  {features.map((f, j) => (
                     <li key={j} className="flex items-start gap-2 text-sm text-muted-foreground">
                       <Check className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                       {f}
