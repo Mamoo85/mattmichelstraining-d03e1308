@@ -1,13 +1,90 @@
+import { useState, useEffect } from "react";
 import AppNavbar from "@/components/AppNavbar";
 import ProgressCharts from "@/components/ProgressCharts";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { supabase } from "@/integrations/supabase/client";
+import { Loader2 } from "lucide-react";
 
-const Progress = () => (
-  <div className="min-h-screen bg-background">
-    <AppNavbar />
-    <div className="container pt-20 pb-12">
-      <ProgressCharts />
+interface ClientOption {
+  user_id: string;
+  label: string;
+}
+
+const Progress = () => {
+  const { isAdmin, isLoading: adminLoading } = useIsAdmin();
+  const [clients, setClients] = useState<ClientOption[]>([]);
+  const [selectedClient, setSelectedClient] = useState<string>("");
+  const [loadingClients, setLoadingClients] = useState(false);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    const fetchClients = async () => {
+      setLoadingClients(true);
+      const { data } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, athlete_name, email")
+        .order("created_at", { ascending: false });
+      if (data) {
+        setClients(
+          data.map((p) => ({
+            user_id: p.user_id,
+            label: p.athlete_name || p.full_name || p.email || p.user_id.slice(0, 8),
+          }))
+        );
+      }
+      setLoadingClients(false);
+    };
+    fetchClients();
+  }, [isAdmin]);
+
+  const selected = clients.find((c) => c.user_id === selectedClient);
+
+  return (
+    <div className="min-h-screen bg-background">
+      <AppNavbar />
+      <div className="container pt-20 pb-12">
+        {/* Admin client selector */}
+        {isAdmin && !adminLoading && (
+          <div className="mb-6 p-4 bg-card border border-border">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-2">
+              Admin — Select Client
+            </span>
+            {loadingClients ? (
+              <Loader2 size={16} className="text-primary animate-spin" />
+            ) : (
+              <div className="flex items-center gap-3">
+                <select
+                  value={selectedClient}
+                  onChange={(e) => setSelectedClient(e.target.value)}
+                  className="bg-background border border-border text-foreground text-sm px-3 h-9 font-mono focus:ring-1 focus:ring-primary outline-none flex-1 max-w-xs"
+                >
+                  <option value="">My Progress</option>
+                  {clients.map((c) => (
+                    <option key={c.user_id} value={c.user_id}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+                {selectedClient && (
+                  <button
+                    onClick={() => setSelectedClient("")}
+                    className="text-[10px] text-muted-foreground hover:text-foreground uppercase tracking-widest"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        <ProgressCharts
+          targetUserId={selectedClient || undefined}
+          targetUserName={selected?.label}
+        />
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default Progress;
