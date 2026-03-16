@@ -221,51 +221,7 @@ const HeroSection = () => (
       </div>
 
       {/* MERCHANDISE SHOP */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.3 }}
-        className="mb-10"
-      >
-        <SectionHeader title="M² Merch" timestamp="Rep the brand. Earn the shirt." />
-        <div className="bg-primary/5 border border-primary/15 p-4 mb-4">
-          <p className="text-sm text-foreground leading-relaxed">
-            <span className="font-bold">Gear for the athletes and parents who put in the work.</span>{" "}
-            Every piece is designed to be worn in the gym, at the field, or on the sidelines. 
-            If you train with Matt — you've earned it.
-          </p>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {MERCH_ITEMS.map((item) => (
-            <div
-              key={item.id}
-              className="bg-card shadow-m2 p-4 hover:bg-m2-surface-hover transition-m2 group flex flex-col"
-            >
-              <div className="w-full aspect-square bg-secondary/50 mb-3 flex items-center justify-center">
-                <img
-                  src={m2Logo}
-                  alt={item.name}
-                  className="w-12 h-12 object-contain opacity-40 group-hover:opacity-60 transition-m2"
-                />
-              </div>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-primary mb-1">{item.tag}</span>
-              <h3 className="text-xs font-bold text-foreground mb-1 leading-snug">{item.name}</h3>
-              <p className="text-[11px] text-muted-foreground leading-relaxed mb-2 flex-1">{item.description}</p>
-              <div className="flex items-center justify-between mt-auto pt-2">
-                <span className="text-base font-mono font-bold text-primary">{item.price}</span>
-                <button className="bg-primary text-primary-foreground px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-m2">
-                  Add
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="mt-4 text-center">
-          <p className="text-xs text-muted-foreground">
-            All merch ships from Grosse Pointe Park, MI · Secure checkout via Stripe
-          </p>
-        </div>
-      </motion.div>
+      <MerchSection />
 
       {/* FIND US */}
       <motion.div
