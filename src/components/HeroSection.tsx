@@ -11,6 +11,7 @@ import CurrentClients from "./landing/CurrentClients";
 import GuidesGrid from "./landing/GuidesGrid";
 import PressAuthority from "./landing/PressAuthority";
 import PremiumProgram from "./landing/PremiumProgram";
+import PortalShowcase from "./landing/PortalShowcase";
 import OnlineServices from "./landing/OnlineServices";
 import OnlineSavings from "./landing/OnlineSavings";
 import SportOnlineTraining from "./landing/SportOnlineTraining";
@@ -169,6 +170,7 @@ const HeroSection = () => {
         {showClients && <div id="section-current-clients"><CurrentClients /></div>}
         {showGuides && <div id="section-guides"><GuidesGrid /></div>}
         {showPremium && <PremiumProgram />}
+        {showPremium && <PortalShowcase />}
         {showOnline && <OnlineServices />}
         {showOnline && <OnlineSavings />}
         {showOnline && <SportOnlineTraining />}

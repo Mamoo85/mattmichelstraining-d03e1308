@@ -1,11 +1,14 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
   apiVersion: "2025-08-27.basil",
 });
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
+const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
 // Map Stripe price IDs to guide info
 const GUIDE_MAP: Record<string, { title: string; filename: string; content: string }> = {
@@ -200,6 +203,48 @@ serve(async (req) => {
         return new Response(JSON.stringify({ error: "No email" }), { status: 200 });
       }
 
+      // Auto-add purchased guide/program to user's portal
+      if (priceId && SUPABASE_URL && SUPABASE_SERVICE_KEY) {
+        const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+        
+        // Find user by email
+        const { data: profiles } = await sb
+          .from("profiles")
+          .select("user_id")
+          .eq("email", customerEmail)
+          .limit(1);
+
+        if (profiles && profiles.length > 0) {
+          const userId = profiles[0].user_id;
+          const guide = GUIDE_MAP[priceId];
+          
+          if (guide) {
+            // Parse exercises from guide content for the portal
+            const exercises = parseGuideExercises(guide.content);
+            
+            await sb.from("purchased_programs").insert({
+              user_id: userId,
+              program_title: guide.title,
+              program_type: guide.title.includes("Youth") ? "starter" : "sport_guide",
+              sport: extractSport(guide.title),
+              exercises: JSON.stringify(exercises),
+              stripe_session_id: session.id,
+            });
+
+            // Notify user their program is in the portal
+            await sb.from("notifications").insert({
+              user_id: userId,
+              type: "program_purchased",
+              title: "Program Added to Portal",
+              body: `Your "${guide.title}" is now in your portal. Log lifts and ask Matt questions on any exercise.`,
+              link: "/dashboard",
+            });
+
+            console.log("[WEBHOOK] Program added to portal for user:", userId);
+          }
+        }
+      }
+
       if (!priceId || !GUIDE_MAP[priceId]) {
         console.log("[WEBHOOK] No guide mapping for priceId:", priceId);
         return new Response(JSON.stringify({ received: true, note: "no guide for this price" }), { status: 200 });
@@ -224,6 +269,7 @@ serve(async (req) => {
             <p style="color:#ccc;font-size:14px;margin:0 0 12px;">Hey there,</p>
             <p style="color:#ccc;font-size:14px;margin:0 0 12px;">
               Thanks for your purchase. Here's your guide — <strong style="color:#e85d04;">${guide.title}</strong>.
+              It's also been added to your M² Portal — log in to track your lifts, see your progress, and ask me questions on any exercise.
             </p>
             <p style="color:#ccc;font-size:14px;margin:0;">
               I wrote every word of this from 20+ years of training athletes. Read the <em>WHY</em> behind each exercise — 
@@ -277,3 +323,39 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: msg }), { status: 400 });
   }
 });
+
+// Helper: extract exercises from guide HTML content
+function parseGuideExercises(html: string): { name: string; sets: string; reps: string; notes: string }[] {
+  const exercises: { name: string; sets: string; reps: string; notes: string }[] = [];
+  const h3Regex = /<h3>(.*?)<\/h3>/g;
+  const setsRepsRegex = /Sets\/Reps:<\/strong>\s*([\d]+)[×x]([\d]+)/;
+  const whyRegex = /WHY:<\/strong>\s*(.*?)<\/p>/;
+  
+  let match;
+  while ((match = h3Regex.exec(html)) !== null) {
+    const exerciseName = match[1].replace(/^\d+\.\s*/, "").trim();
+    const afterH3 = html.substring(match.index, match.index + 500);
+    
+    const setsMatch = afterH3.match(setsRepsRegex);
+    const whyMatch = afterH3.match(whyRegex);
+    
+    exercises.push({
+      name: exerciseName,
+      sets: setsMatch ? setsMatch[1] : "3",
+      reps: setsMatch ? setsMatch[2] : "10",
+      notes: whyMatch ? whyMatch[1].trim() : "",
+    });
+  }
+  
+  return exercises;
+}
+
+// Helper: extract sport from guide title
+function extractSport(title: string): string | null {
+  const sports = ["Baseball", "Football", "Basketball", "Hockey", "Soccer", "Lacrosse"];
+  for (const sport of sports) {
+    if (title.toLowerCase().includes(sport.toLowerCase())) return sport;
+  }
+  if (title.toLowerCase().includes("youth")) return "General";
+  return null;
+}

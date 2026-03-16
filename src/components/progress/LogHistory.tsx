@@ -8,6 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import CoachNotesBadge from "./CoachNotesBadge";
+import LiftChat from "./LiftChat";
 
 interface ProgressLog {
   id: string;
@@ -230,13 +231,16 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
 
                 {/* Coach Notes — always visible, no toggle */}
                 {!isEditing && (
-                  <CoachNotesBadge
-                    logId={log.id}
-                    userId={effectiveUserId}
-                    notes={logNotes}
-                    isAdmin={isAdmin}
-                    onRefresh={fetchNotes}
-                  />
+                  <>
+                    <CoachNotesBadge
+                      logId={log.id}
+                      userId={effectiveUserId}
+                      notes={logNotes}
+                      isAdmin={isAdmin}
+                      onRefresh={fetchNotes}
+                    />
+                    <LiftChat logId={log.id} userId={effectiveUserId} />
+                  </>
                 )}
               </div>
             );
