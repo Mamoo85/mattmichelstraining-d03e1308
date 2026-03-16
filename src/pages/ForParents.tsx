@@ -312,10 +312,10 @@ const ForParents = () => {
       <motion.div {...fade(0.4)} className="mb-12">
         <div className="bg-primary/10 border-2 border-primary/40 p-6 md:p-8 text-center">
           <h2 className="text-lg md:text-2xl font-bold text-foreground mb-2">
-            Ready to invest in your athlete's strength and safety?
+            {cms.final_cta_title || "Ready to invest in your athlete's strength and safety?"}
           </h2>
           <p className="text-sm text-muted-foreground mb-6 max-w-lg mx-auto">
-            Start with an affordable $9 sport-specific strength guide. See how Matt approaches youth strength training. Then decide if you want the full experience — online or in-person in Grosse Pointe.
+            {cms.final_cta_text || "Start with an affordable $9 sport-specific strength guide. See how Matt approaches youth strength training. Then decide if you want the full experience — online or in-person in Grosse Pointe."}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
