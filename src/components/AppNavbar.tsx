@@ -1,7 +1,8 @@
 import { Link, useLocation } from "react-router-dom";
-import { Dumbbell, BarChart3, MessageSquare, ShoppingBag, Home, Menu, X, LogIn, LogOut } from "lucide-react";
+import { Dumbbell, BarChart3, MessageSquare, ShoppingBag, Home, Menu, X, LogIn, LogOut, Shield } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import m2Logo from "@/assets/m2-logo.jpg";
 
 const navItems = [
@@ -16,6 +17,7 @@ const AppNavbar = () => {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, signOut } = useAuth();
+  const { isAdmin } = useIsAdmin();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm shadow-m2">
@@ -44,6 +46,18 @@ const AppNavbar = () => {
               </Link>
             );
           })}
+
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-m2 ${
+                location.pathname === "/admin" ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Shield size={14} />
+              ADMIN
+            </Link>
+          )}
 
           {user ? (
             <button
@@ -87,6 +101,18 @@ const AppNavbar = () => {
               </Link>
             );
           })}
+          {isAdmin && (
+            <Link
+              to="/admin"
+              onClick={() => setMobileOpen(false)}
+              className={`flex items-center gap-2 px-4 py-3 text-xs font-bold uppercase tracking-widest transition-m2 ${
+                location.pathname === "/admin" ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Shield size={14} />
+              ADMIN
+            </Link>
+          )}
           {user ? (
             <button
               onClick={() => { signOut(); setMobileOpen(false); }}

@@ -12,6 +12,7 @@ import Coach from "./pages/Coach";
 import Shop from "./pages/Shop";
 import Welcome from "./pages/Welcome";
 import Auth from "./pages/Auth";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/welcome" element={<Welcome />} />
             <Route path="/shop" element={<Shop />} />
             <Route path="/coach" element={<Coach />} />
+            <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />

@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      newsletter_sends: {
+        Row: {
+          body: string
+          id: string
+          recipient_count: number
+          sent_at: string
+          sent_by: string | null
+          subject: string
+          template_name: string | null
+        }
+        Insert: {
+          body: string
+          id?: string
+          recipient_count?: number
+          sent_at?: string
+          sent_by?: string | null
+          subject: string
+          template_name?: string | null
+        }
+        Update: {
+          body?: string
+          id?: string
+          recipient_count?: number
+          sent_at?: string
+          sent_by?: string | null
+          subject?: string
+          template_name?: string | null
+        }
+        Relationships: []
+      }
+      newsletter_subscribers: {
+        Row: {
+          email: string
+          id: string
+          is_active: boolean
+          source: string
+          subscribed_at: string
+          unsubscribed_at: string | null
+        }
+        Insert: {
+          email: string
+          id?: string
+          is_active?: boolean
+          source?: string
+          subscribed_at?: string
+          unsubscribed_at?: string | null
+        }
+        Update: {
+          email?: string
+          id?: string
+          is_active?: boolean
+          source?: string
+          subscribed_at?: string
+          unsubscribed_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           athlete_name: string | null
