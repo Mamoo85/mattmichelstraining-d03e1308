@@ -25,6 +25,33 @@ const STATS = [
 
 const TITLE_LINES = ["Train smarter.", "Fix what's broken.", "Get stronger."];
 
+const GUIDES = [
+  {
+    title: "Top 5 Exercises for Baseball",
+    price: "$9",
+    tag: "PDF GUIDE",
+    desc: "I've trained baseball players for two decades. These are the five movements that actually translate to the field — rotational power, arm health, hip mobility. Not the stuff you see on Instagram. The stuff that works.",
+  },
+  {
+    title: "Hockey Strength Essentials",
+    price: "$9",
+    tag: "PDF GUIDE",
+    desc: "Hockey is the most physically demanding youth sport, period. This guide covers the posterior chain work, single-leg stability, and core bracing that turns skaters into forces. I explain the physics behind every movement so your athlete knows WHY they're doing it.",
+  },
+  {
+    title: "Pre & Post Pregnancy Top 10",
+    price: "$12",
+    tag: "PDF GUIDE",
+    desc: "This one's personal. I wrote it for the moms who trained with me and asked 'what can I do now?' Ten exercises that are safe, effective, and backed by the kinesiology. Pelvic floor, core reconnection, rebuilding strength the right way.",
+  },
+  {
+    title: "Your Custom Program",
+    price: "$20",
+    tag: "CUSTOM · BUILT BY MATT",
+    desc: "You fill out the intake. I read every word. Then I build your program from scratch — your goals, your equipment, your level. No templates. No AI. Just me, a notebook, and 20 years of doing this. This is the one that changes everything.",
+  },
+];
+
 const HeroSection = () => (
   <div className="min-h-screen bg-background relative overflow-hidden">
     <div
@@ -141,6 +168,39 @@ const HeroSection = () => (
       {/* CURRENT CLIENTS */}
       <CurrentClients />
 
+      {/* GUIDES & PROGRAMS */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.25 }}
+        className="mb-10"
+      >
+        <SectionHeader title="Guides & Programs" timestamp="20+ years of knowledge — starting at $9" />
+        <div className="space-y-3">
+          {GUIDES.map((p) => (
+            <Link key={p.title} to="/shop" className="bg-card shadow-m2 p-5 hover:bg-m2-surface-hover transition-m2 group block">
+              <div className="flex items-start justify-between gap-3 mb-2">
+                <div>
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-primary block mb-1">{p.tag}</span>
+                  <h3 className="text-sm font-bold text-foreground group-hover:text-primary transition-m2">{p.title}</h3>
+                </div>
+                <span className="text-lg font-mono font-bold text-primary flex-shrink-0">{p.price}</span>
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed">{p.desc}</p>
+            </Link>
+          ))}
+        </div>
+        <div className="mt-3 text-center">
+          <Link to="/shop" className="text-sm text-primary font-bold hover:opacity-80 transition-m2">View All Guides →</Link>
+        </div>
+      </motion.div>
+
+      {/* ONLINE SERVICES */}
+      <OnlineServices />
+
+      {/* CUSTOM PROGRAM */}
+      <CustomProgram />
+
       {/* TEAM & YOUTH */}
       <TeamYouthPrograms />
 
@@ -153,14 +213,8 @@ const HeroSection = () => (
       {/* MONTHLY FOCUS */}
       <MonthlyFocus />
 
-      {/* CUSTOM PROGRAM */}
-      <CustomProgram />
-
       {/* WEEKEND & YOUTH */}
       <WeekendYouth />
-
-      {/* ONLINE SERVICES */}
-      <OnlineServices />
 
       {/* FOR TRAINERS */}
       <ForTrainers />
@@ -197,33 +251,6 @@ const HeroSection = () => (
               Every guide teaches the reasoning. When they understand why, they do it better. 100% of the time.
             </p>
           </div>
-        </div>
-      </motion.div>
-
-      {/* PRODUCT PREVIEW */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.25 }}
-        className="mb-10"
-      >
-        <SectionHeader title="Guides & Programs" timestamp="20+ years of knowledge — starting at $9" />
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[
-            { title: "Top 5 Exercises for Baseball", price: "$9", tag: "PDF GUIDE" },
-            { title: "Hockey Strength Essentials", price: "$9", tag: "PDF GUIDE" },
-            { title: "Pre & Post Pregnancy Top 10", price: "$12", tag: "PDF GUIDE" },
-            { title: "Your Custom Program", price: "$20", tag: "CUSTOM · BUILT BY MATT" },
-          ].map((p) => (
-            <Link key={p.title} to="/shop" className="bg-card shadow-m2 p-4 hover:bg-m2-surface-hover transition-m2 group block">
-              <span className="text-[11px] font-bold uppercase tracking-widest text-primary block mb-2">{p.tag}</span>
-              <h3 className="text-xs font-bold text-foreground group-hover:text-primary transition-m2 mb-2">{p.title}</h3>
-              <span className="text-lg font-mono font-bold text-primary">{p.price}</span>
-            </Link>
-          ))}
-        </div>
-        <div className="mt-3 text-center">
-          <Link to="/shop" className="text-sm text-primary font-bold hover:opacity-80 transition-m2">View All Guides →</Link>
         </div>
       </motion.div>
 
