@@ -5,17 +5,17 @@ import m2Logo from "@/assets/m2-logo.jpg";
 import SectionHeader from "./SectionHeader";
 
 const STATS = [
-  { value: "20+", label: "Years" },
-  { value: "50+", label: "College Athletes" },
-  { value: "1000s", label: "Clients Trained" },
+  { value: "20+", label: "Years Same Age Group" },
+  { value: "50+", label: "College Athletes Made" },
   { value: "Zero", label: "Injuries" },
+  { value: "100%", label: "Results" },
 ];
 
 const SERVICES = [
-  { route: "/shop", icon: Clipboard, label: "CUSTOM · $20", title: "Your Custom Workout", sub: "Matt reads your intake and builds it from scratch.", cta: "Get Started" },
+  { route: "/shop", icon: Clipboard, label: "CUSTOM · $20", title: "Your Athlete's Program", sub: "Matt reads the intake, builds the program from scratch. No templates.", cta: "Get Started" },
   { route: "/coach", icon: TrendingUp, label: "MONTHLY · $100+", title: "Online Coaching", sub: "Programming + weekly check-ins. Matt adjusts in real time.", cta: "Learn More" },
-  { route: "/coach", icon: Video, label: "REMOTE · $20", title: "Form Check", sub: "Send a video. Get cues back.", cta: "Submit Video" },
-  { route: "/coach", icon: Users, label: "TRAINERS ONLY", title: "Trainer Mentorship", sub: "Programming, coaching, business. Matt's been there.", cta: "Inquire" },
+  { route: "/coach", icon: Video, label: "REMOTE · $20", title: "Form Check", sub: "Send a video. Get cues back. Matt sees what others miss.", cta: "Submit Video" },
+  { route: "/coach", icon: Users, label: "TRAINERS ONLY", title: "Trainer Mentorship", sub: "Programming, coaching, business. 20+ years of doing it the right way.", cta: "Inquire" },
 ];
 
 const HeroSection = () => (
