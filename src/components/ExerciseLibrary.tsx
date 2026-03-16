@@ -1022,7 +1022,7 @@ const ExerciseLibrary = () => {
           {CATEGORY_TABS.map((t) => (
             <button
               key={t.key}
-              onClick={() => setCategory(t.key)}
+              onClick={() => { setCategory(t.key); setFixitSub("all"); }}
               className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-m2 ${
                 category === t.key
                   ? "bg-primary text-primary-foreground"
@@ -1034,6 +1034,28 @@ const ExerciseLibrary = () => {
           ))}
         </div>
       </div>
+
+      {/* Fix It sub-filter */}
+      {category === "fixit" && (
+        <div className="mb-4">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1.5">By Body Part / Protocol</span>
+          <div className="flex gap-1 flex-wrap">
+            {FIXIT_SUB_TABS.map((t) => (
+              <button
+                key={t.key}
+                onClick={() => setFixitSub(t.key)}
+                className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-m2 ${
+                  fixitSub === t.key
+                    ? "bg-primary/80 text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Results count */}
       <p className="text-[10px] font-mono text-muted-foreground mb-3">
