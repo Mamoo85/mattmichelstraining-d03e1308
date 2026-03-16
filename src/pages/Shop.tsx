@@ -14,6 +14,14 @@ const TABS = [
 const Shop = () => {
   const [activeTab, setActiveTab] = useState("start");
 
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail) setActiveTab(detail);
+    };
+    window.addEventListener("switch-shop-tab", handler);
+    return () => window.removeEventListener("switch-shop-tab", handler);
+  }, []);
   return (
     <div className="min-h-screen bg-background">
       <AppNavbar />
