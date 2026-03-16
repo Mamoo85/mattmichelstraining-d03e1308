@@ -19,7 +19,7 @@ const TABS = [
 ];
 
 const Admin = () => {
-  const [activeTab, setActiveTab] = useState("site");
+  const [activeTab, setActiveTab] = useState("coach");
 
   return (
     <div className="min-h-screen bg-background">
