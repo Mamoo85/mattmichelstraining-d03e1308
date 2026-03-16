@@ -1,13 +1,15 @@
 import AppNavbar from "@/components/AppNavbar";
 import ProtocolTable from "@/components/ProtocolTable";
 import ChallengeSystem from "@/components/ChallengeSystem";
+import MyPrograms from "@/components/MyPrograms";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ExternalLink, Loader2 } from "lucide-react";
 
 const TABS = [
-  { key: "protocol", label: "My Program" },
+  { key: "programs", label: "My Programs" },
+  { key: "protocol", label: "Today's Protocol" },
   { key: "challenges", label: "Challenges" },
 ];
 
