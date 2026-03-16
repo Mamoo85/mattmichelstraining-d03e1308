@@ -1,9 +1,10 @@
 import { motion } from "framer-motion";
-import { ArrowRight, ShoppingBag, MapPin, Shield, Trophy, Zap, Star, Gift, Users } from "lucide-react";
+import { ArrowRight, ShoppingBag, Shield, Trophy, Zap, Star, Gift, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import m2Logo from "@/assets/m2-logo.jpg";
 import SectionHeader from "./SectionHeader";
 import NewsletterSignup from "./NewsletterSignup";
+import MerchSection from "./MerchSection";
 
 const STATS = [
   { value: "20+", label: "Years · Same Age Group" },
@@ -19,16 +20,6 @@ const PRODUCTS_PREVIEW = [
   { title: "Your Custom Program", price: "$20", tag: "CUSTOM · BUILT BY MATT" },
 ];
 
-const MERCH_ITEMS = [
-  { id: "tee-black", name: "M² Training Tee — Black", price: "$32", tag: "APPAREL", description: "Premium cotton. The logo your athlete earned." },
-  { id: "tee-orange", name: "M² Training Tee — Orange", price: "$32", tag: "APPAREL", description: "Stand out. Same quality, louder statement." },
-  { id: "hoodie-black", name: "M² Heavyweight Hoodie", price: "$58", tag: "APPAREL", description: "Built like the athletes who wear it. Heavyweight fleece." },
-  { id: "stringer", name: "M² Stringer Tank", price: "$28", tag: "APPAREL", description: "For the gym. Lightweight, breathable, earned." },
-  { id: "hat-snapback", name: "M² Snapback Cap", price: "$30", tag: "ACCESSORY", description: "Structured crown, flat brim. The M² mark." },
-  { id: "shaker", name: "M² Shaker Bottle", price: "$18", tag: "GEAR", description: "28oz. Leak-proof. Matt's logo on the side." },
-  { id: "band-set", name: "M² Resistance Band Set", price: "$24", tag: "GEAR", description: "3 bands — light, medium, heavy. Used in every Fix It protocol." },
-  { id: "towel", name: "M² Gym Towel", price: "$16", tag: "GEAR", description: "Microfiber. Fast-dry. Branded and built to last." },
-];
 
 const TITLE_WORDS = ["YOUR", "ATHLETE'S", "SECRET", "WEAPON."];
 
@@ -230,51 +221,7 @@ const HeroSection = () => (
       </div>
 
       {/* MERCHANDISE SHOP */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.3 }}
-        className="mb-10"
-      >
-        <SectionHeader title="M² Merch" timestamp="Rep the brand. Earn the shirt." />
-        <div className="bg-primary/5 border border-primary/15 p-4 mb-4">
-          <p className="text-sm text-foreground leading-relaxed">
-            <span className="font-bold">Gear for the athletes and parents who put in the work.</span>{" "}
-            Every piece is designed to be worn in the gym, at the field, or on the sidelines. 
-            If you train with Matt — you've earned it.
-          </p>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {MERCH_ITEMS.map((item) => (
-            <div
-              key={item.id}
-              className="bg-card shadow-m2 p-4 hover:bg-m2-surface-hover transition-m2 group flex flex-col"
-            >
-              <div className="w-full aspect-square bg-secondary/50 mb-3 flex items-center justify-center">
-                <img
-                  src={m2Logo}
-                  alt={item.name}
-                  className="w-12 h-12 object-contain opacity-40 group-hover:opacity-60 transition-m2"
-                />
-              </div>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-primary mb-1">{item.tag}</span>
-              <h3 className="text-xs font-bold text-foreground mb-1 leading-snug">{item.name}</h3>
-              <p className="text-[11px] text-muted-foreground leading-relaxed mb-2 flex-1">{item.description}</p>
-              <div className="flex items-center justify-between mt-auto pt-2">
-                <span className="text-base font-mono font-bold text-primary">{item.price}</span>
-                <button className="bg-primary text-primary-foreground px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-m2">
-                  Add
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="mt-4 text-center">
-          <p className="text-xs text-muted-foreground">
-            All merch ships from Grosse Pointe Park, MI · Secure checkout via Stripe
-          </p>
-        </div>
-      </motion.div>
+      <MerchSection />
 
       {/* FIND US */}
       <motion.div
