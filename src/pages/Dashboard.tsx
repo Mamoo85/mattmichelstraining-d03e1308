@@ -4,6 +4,7 @@ import ChallengeSystem from "@/components/ChallengeSystem";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { ExternalLink, Loader2 } from "lucide-react";
 
 const TABS = [
   { key: "protocol", label: "My Program" },
@@ -11,9 +12,10 @@ const TABS = [
 ];
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, subscribed } = useAuth();
   const [profile, setProfile] = useState<{ full_name: string | null; athlete_name: string | null } | null>(null);
   const [activeTab, setActiveTab] = useState("protocol");
+  const [portalLoading, setPortalLoading] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -21,15 +23,40 @@ const Dashboard = () => {
       .then(({ data }) => { if (data) setProfile(data); });
   }, [user]);
 
+  const handleManageSubscription = async () => {
+    setPortalLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("customer-portal");
+      if (error) throw error;
+      if (data?.url) window.open(data.url, "_blank");
+    } catch (e) {
+      console.error("Portal error:", e);
+    } finally {
+      setPortalLoading(false);
+    }
+  };
+
   const athleteDisplay = profile?.athlete_name || profile?.full_name || "Athlete";
 
   return (
     <div className="min-h-screen bg-background">
       <AppNavbar />
       <div className="container pt-20 pb-12">
-        <div className="mb-6">
-          <h2 className="text-lg font-bold text-foreground">Welcome back, {athleteDisplay}</h2>
-          <p className="text-sm text-muted-foreground">Your training portal · Real training, real results</p>
+        <div className="flex items-start justify-between mb-6">
+          <div>
+            <h2 className="text-lg font-bold text-foreground">Welcome back, {athleteDisplay}</h2>
+            <p className="text-sm text-muted-foreground">Your training portal · Real training, real results</p>
+          </div>
+          {subscribed && (
+            <button
+              onClick={handleManageSubscription}
+              disabled={portalLoading}
+              className="flex items-center gap-1.5 bg-primary text-primary-foreground px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-m2 disabled:opacity-50 flex-shrink-0"
+            >
+              {portalLoading ? <Loader2 size={12} className="animate-spin" /> : <ExternalLink size={12} />}
+              Manage Plan
+            </button>
+          )}
         </div>
 
         {/* Tab switcher */}

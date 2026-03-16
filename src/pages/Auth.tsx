@@ -13,7 +13,9 @@ const Auth = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (!authLoading && user) {
-      navigate("/dashboard", { replace: true });
+      const params = new URLSearchParams(window.location.search);
+      const redirect = params.get("redirect") || "/dashboard";
+      navigate(redirect, { replace: true });
     }
   }, [user, authLoading, navigate]);
   const [isSignUp, setIsSignUp] = useState(false);
