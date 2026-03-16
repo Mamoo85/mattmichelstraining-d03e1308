@@ -64,7 +64,7 @@ const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) =
 
   const current = data.length > 0 ? data[data.length - 1].value : 0;
   const previous = data.length > 1 ? data[data.length - 2].value : current;
-  const delta = Math.round((current - previous) * 10) / 10;
+  const delta = Math.round(current - previous);
   const max = data.length > 0 ? Math.max(...data.map((d) => d.value)) : 0;
 
   return (

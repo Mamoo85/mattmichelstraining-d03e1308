@@ -29,7 +29,7 @@ const LogForm = ({ activeLift, repMax, effectiveUserId, onLogged }: LogFormProps
       return;
     }
     setLogging(true);
-    const estimated1rm = Math.round(weight * (1 + reps / 30) * 10) / 10;
+    const estimated1rm = Math.round(weight * (1 + reps / 30));
 
     const { error } = await supabase.from("progress_logs").insert({
       user_id: effectiveUserId,

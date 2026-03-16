@@ -75,7 +75,7 @@ const MyPrograms = () => {
       if (!ex) continue;
       const weight = parseFloat(w);
       const reps = parseInt(ex.reps) || 1;
-      const estimated1rm = Math.round(weight * (1 + reps / 30) * 10) / 10;
+      const estimated1rm = Math.round(weight * (1 + reps / 30));
 
       await supabase.from("progress_logs").insert({
         user_id: user.id,
