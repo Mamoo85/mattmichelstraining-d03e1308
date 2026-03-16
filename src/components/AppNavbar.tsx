@@ -101,6 +101,18 @@ const AppNavbar = () => {
               </Link>
             );
           })}
+          {isAdmin && (
+            <Link
+              to="/admin"
+              onClick={() => setMobileOpen(false)}
+              className={`flex items-center gap-2 px-4 py-3 text-xs font-bold uppercase tracking-widest transition-m2 ${
+                location.pathname === "/admin" ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Shield size={14} />
+              ADMIN
+            </Link>
+          )}
           {user ? (
             <button
               onClick={() => { signOut(); setMobileOpen(false); }}
