@@ -48,10 +48,8 @@ const TronChart = ({ data, repMax }: TronChartProps) => {
   const maxVal = Math.max(...data.map((d) => d.value));
 
   return (
-    <div
-      className="p-4 bg-card border border-border"
-    >
-    >
+    <div className="p-4 bg-card border border-border">
+
       <div className="flex items-center justify-between mb-3">
         <span
           className="text-[10px] font-mono font-bold uppercase tracking-widest text-primary"
