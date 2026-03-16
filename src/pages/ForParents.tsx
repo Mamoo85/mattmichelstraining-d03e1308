@@ -1,6 +1,7 @@
 import AppNavbar from "@/components/AppNavbar";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import PortalShowcase from "@/components/landing/PortalShowcase";
 import {
   ArrowRight,
   Shield,
