@@ -18,9 +18,6 @@ const StatsRow = ({ current, delta, max, repMax }: StatsRowProps) => {
         <div
           key={s.label}
           className="p-3 bg-card border border-border"
-          style={{
-            boxShadow: "inset 0 0 15px hsl(var(--primary) / 0.02)",
-          }}
         >
           <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold block mb-1">
             {s.label}

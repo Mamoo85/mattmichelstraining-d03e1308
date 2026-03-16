@@ -15,7 +15,6 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       style={{
         background: "hsl(var(--card))",
         border: "1px solid hsl(var(--primary) / 0.4)",
-        boxShadow: "0 0 15px hsl(var(--primary) / 0.15), inset 0 0 10px hsl(var(--primary) / 0.05)",
       }}
     >
       <p className="text-muted-foreground text-[10px] mb-0.5">{label}</p>
@@ -36,9 +35,6 @@ const TronChart = ({ data, repMax }: TronChartProps) => {
     return (
       <div
         className="p-8 text-center bg-card border border-border"
-        style={{
-          boxShadow: "inset 0 0 30px hsl(var(--primary) / 0.03)",
-        }}
       >
         <p className="text-sm text-muted-foreground">No data yet. Log your first session.</p>
       </div>

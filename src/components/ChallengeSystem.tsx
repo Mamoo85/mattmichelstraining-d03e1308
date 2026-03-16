@@ -244,7 +244,7 @@ const ChallengeSystem = () => {
                 <div className="bg-muted p-3">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-2">Your Progress</span>
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl font-mono font-bold text-primary" style={{ textShadow: "0 0 10px hsl(var(--primary) / 0.3)" }}>
+                    <span className="text-2xl font-mono font-bold text-primary">
                       {currentValue}
                     </span>
                     <span className="text-xs text-muted-foreground">total push-ups</span>

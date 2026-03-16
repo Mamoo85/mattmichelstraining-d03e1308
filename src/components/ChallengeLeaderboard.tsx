@@ -117,7 +117,6 @@ const ChallengeLeaderboard = ({ challengeId, currentUserId }: ChallengeLeaderboa
               </span>
               <span
                 className="text-lg font-mono font-bold text-primary"
-                style={{ textShadow: idx === 0 ? "0 0 8px hsl(var(--primary) / 0.4)" : "none" }}
               >
                 {entry.current_value}
               </span>

@@ -77,7 +77,7 @@ const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) =
       {/* Lift category selector */}
       {LIFT_CATEGORIES.map((cat) => (
         <div key={cat.label} className="mb-3">
-          <span className="text-[9px] font-mono font-bold uppercase tracking-widest mb-1.5 block text-primary" style={{ textShadow: "0 0 6px hsl(var(--primary) / 0.3)" }}>
+          <span className="text-[9px] font-mono font-bold uppercase tracking-widest mb-1.5 block text-primary">
             {cat.label}
           </span>
           <div className="flex gap-1 flex-wrap">
@@ -87,7 +87,7 @@ const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) =
                 onClick={() => setActiveLift(lift.name)}
                 className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-all duration-300 ${
                   activeLift === lift.name
-                    ? "bg-primary text-primary-foreground shadow-[0_0_12px_hsl(var(--primary)/0.3)]"
+                    ? "bg-primary text-primary-foreground"
                     : "bg-muted text-muted-foreground hover:text-foreground"
                 }`}
               >
