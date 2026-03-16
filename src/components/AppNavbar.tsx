@@ -29,6 +29,7 @@ const AppNavbar = () => {
           <span className="text-primary font-bold text-sm tracking-display hidden sm:block">M² TRAINING</span>
         </Link>
 
+        {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-1">
           {navItems.map(({ to, label, icon: Icon }) => {
             const active = location.pathname === to;
@@ -79,9 +80,13 @@ const AppNavbar = () => {
           )}
         </div>
 
-        <button className="md:hidden p-2 text-muted-foreground" onClick={() => setMobileOpen(!mobileOpen)}>
-          {mobileOpen ? <X size={22} /> : <Menu size={22} />}
-        </button>
+        {/* Mobile: bell + hamburger */}
+        <div className="md:hidden flex items-center gap-1">
+          {user && <NotificationBell />}
+          <button className="p-2 text-muted-foreground" onClick={() => setMobileOpen(!mobileOpen)}>
+            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        </div>
       </div>
 
       {mobileOpen && (

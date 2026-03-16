@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import SectionHeader from "./SectionHeader";
-import { Loader2 } from "lucide-react";
+import { Loader2, TrendingUp } from "lucide-react";
 import { LIFT_CATEGORIES, ALL_LIFTS, getLiftConfig } from "./progress/liftConfig";
 import TronChart from "./progress/TronChart";
 import BodyAvatar from "./progress/BodyAvatar";
@@ -36,13 +36,9 @@ const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) =
   const config = getLiftConfig(activeLift);
   const repMax = config?.repMax ?? 3;
 
-  useEffect(() => {
-    if (!user) { setLoading(false); return; }
-    setLoading(false);
-  }, [user]);
-
   const fetchData = async () => {
-    if (!effectiveUserId) return;
+    if (!effectiveUserId) { setLoading(false); return; }
+    setLoading(true);
     const { data: rawLogs } = await supabase
       .from("progress_logs")
       .select("id, weight, reps, estimated_1rm, logged_at")
@@ -58,20 +54,13 @@ const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) =
         }))
       );
     }
+    setLoading(false);
   };
 
   useEffect(() => {
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effectiveUserId, activeLift]);
-
-  if (loading) {
-    return (
-      <div className="flex justify-center py-12">
-        <Loader2 size={20} className="text-primary animate-spin" />
-      </div>
-    );
-  }
 
   const current = data.length > 0 ? data[data.length - 1].value : 0;
   const previous = data.length > 1 ? data[data.length - 2].value : current;
@@ -122,20 +111,37 @@ const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) =
         />
       )}
 
-      {/* Stats */}
-      <StatsRow current={current} delta={delta} max={max} repMax={repMax} />
-
-      {/* Chart + Avatar */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div className="md:col-span-2">
-          <TronChart data={data} repMax={repMax} />
+      {loading ? (
+        <div className="flex justify-center py-12">
+          <Loader2 size={20} className="text-primary animate-spin" />
         </div>
-        <div>
-          <BodyAvatar activeLift={activeLift} />
+      ) : data.length === 0 ? (
+        /* Empty state for new lifts */
+        <div className="bg-card border border-border p-8 text-center mb-4">
+          <TrendingUp size={32} className="mx-auto text-muted-foreground/30 mb-3" />
+          <p className="text-sm font-bold text-foreground mb-1">No {activeLift} data yet</p>
+          <p className="text-xs text-muted-foreground">
+            Log your first set above and watch your progression chart build over time.
+          </p>
         </div>
-      </div>
+      ) : (
+        <>
+          {/* Stats */}
+          <StatsRow current={current} delta={delta} max={max} repMax={repMax} />
 
-      {/* Log History with Coach Notes */}
+          {/* Chart + Avatar */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="md:col-span-2">
+              <TronChart data={data} repMax={repMax} />
+            </div>
+            <div>
+              <BodyAvatar activeLift={activeLift} />
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Log History with Coach Notes — always available */}
       {effectiveUserId && (
         <LogHistory
           logs={logs}
