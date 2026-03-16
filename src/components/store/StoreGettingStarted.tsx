@@ -95,17 +95,15 @@ const StoreGettingStarted = () => {
                 </div>
               )}
               {step.ctaType === "store" && (
-                <Link
-                  to="/shop"
+                <button
                   onClick={() => {
-                    const storeTab = document.querySelector('[data-tab="store"]');
-                    if (storeTab) (storeTab as HTMLElement).click();
+                    window.dispatchEvent(new CustomEvent("switch-shop-tab", { detail: "store" }));
                   }}
                   className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-m2 mt-2"
                 >
                   Shop Guides & Programs
                   <ArrowRight size={12} />
-                </Link>
+                </button>
               )}
               {step.ctaType === "pricing" && (
                 <Link
