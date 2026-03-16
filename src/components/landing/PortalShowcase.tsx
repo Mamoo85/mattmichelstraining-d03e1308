@@ -78,10 +78,11 @@ const PortalShowcase = () => (
 
     <div className="bg-primary/10 border border-primary/20 p-4 mb-4">
       <p className="text-xs text-muted-foreground leading-relaxed">
-        <span className="text-foreground font-bold">This is what $9–$20 gets you:</span> Not just a PDF — a full training system. 
-        Your program loads into the portal, you log every session, Matt sees your progress and leaves coaching notes, 
-        and you can ask questions on any lift. No other online strength training platform offers this level of coaching 
-        for this price. Period.
+        <span className="text-foreground font-bold">This is what $9–$20 gets you:</span> Not just a PDF — a full training system 
+        with a real coach on the other end. Your program loads into the portal, you log every session, Matt personally 
+        reviews your progress and leaves coaching notes, and your athlete can ask questions on any lift. Matt runs this. 
+        He reads every message. He guides your kid through every issue they hit — almost like he's right there with them, 
+        at a fraction of the cost of in-person training. No other platform does this. Period.
       </p>
     </div>
 
