@@ -50,7 +50,7 @@ const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) =
       setData(
         rawLogs.map((l) => ({
           date: new Date(l.logged_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-          value: l.estimated_1rm ?? 0,
+          value: Math.round(l.weight),
         }))
       );
     }
