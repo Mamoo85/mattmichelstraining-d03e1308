@@ -47,6 +47,18 @@ const AppNavbar = () => {
             );
           })}
 
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-m2 ${
+                location.pathname === "/admin" ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Shield size={14} />
+              ADMIN
+            </Link>
+          )}
+
           {user ? (
             <button
               onClick={signOut}
