@@ -39,9 +39,10 @@ const AdminSiteEditor = () => {
   const filteredSections = sections?.filter((s) => {
     if (activeGroup === "all") return true;
     if (activeGroup === "landing") return LANDING_SECTIONS.includes(s.section_key);
-    if (activeGroup === "pricing") return s.section_key === "pricing" || s.section_key === "stats";
-    if (activeGroup === "shop") return s.section_key === "guides" || s.section_key === "merch";
-    return !LANDING_SECTIONS.includes(s.section_key);
+    if (activeGroup === "pricing") return s.section_key === "pricing" || s.section_key === "pricing_page";
+    if (activeGroup === "for_parents") return s.section_key === "for_parents";
+    if (activeGroup === "shop") return ["guides", "merch", "shop_products"].includes(s.section_key);
+    return !LANDING_SECTIONS.includes(s.section_key) && !["pricing", "pricing_page", "for_parents", "shop_products"].includes(s.section_key);
   });
 
   const contentBySection = (sectionKey: string) =>
