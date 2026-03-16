@@ -48,7 +48,10 @@ const PortalShowcase = () => (
     <p className="text-sm text-muted-foreground mb-6 max-w-2xl leading-relaxed">
       Every program you purchase automatically loads into your training portal. Log weights, track progress over time, 
       and ask Matt questions directly on any lift — he gets notified instantly and replies right there. 
-      No other affordable online training program gives you this kind of direct access to your coach.
+      This is Matt. Not an AI. Not a chatbot. Not a template response. When your athlete has a question about form, 
+      loading, or why something hurts — Matt answers personally and walks them through it like he's standing right 
+      there. The only things they don't get are his equipment and his sense of humor (and he's hilarious). 
+      No other online training program at this price gives your kid direct access to a 20-year veteran coach.
     </p>
 
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -75,10 +78,11 @@ const PortalShowcase = () => (
 
     <div className="bg-primary/10 border border-primary/20 p-4 mb-4">
       <p className="text-xs text-muted-foreground leading-relaxed">
-        <span className="text-foreground font-bold">This is what $9–$20 gets you:</span> Not just a PDF — a full training system. 
-        Your program loads into the portal, you log every session, Matt sees your progress and leaves coaching notes, 
-        and you can ask questions on any lift. No other online strength training platform offers this level of coaching 
-        for this price. Period.
+        <span className="text-foreground font-bold">This is what $9–$20 gets you:</span> Not just a PDF — a full training system 
+        with a real coach on the other end. Your program loads into the portal, you log every session, Matt personally 
+        reviews your progress and leaves coaching notes, and your athlete can ask questions on any lift. Matt runs this. 
+        He reads every message. He guides your kid through every issue they hit — almost like he's right there with them, 
+        at a fraction of the cost of in-person training. No other platform does this. Period.
       </p>
     </div>
 

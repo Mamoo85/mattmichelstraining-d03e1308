@@ -219,9 +219,14 @@ const ForParents = () => (
           <p className="text-xs text-muted-foreground leading-relaxed mb-3">
             So let Matt handle the strength training, and you tell them to go to bed. Problem solved. Young athletes' bodies need 72 hours minimum to really recover from proper strength work — more so now because they sit in front of their phones all night and don't get enough sleep. Matt prioritizes healthy joints and a healthy mind over numbers on a board. They all get strong. No need to rush.
           </p>
-          <div className="bg-primary/10 border border-primary/20 p-4">
+          <div className="bg-primary/10 border border-primary/20 p-4 mb-3">
             <p className="text-xs text-muted-foreground leading-relaxed">
               <span className="text-foreground font-bold">Why Matt is different:</span> Most trainers move up to older, higher-paying clients as they build their career. Matt never did. He's delivered affordable youth strength training to the same age group for over 20 years — middle school through college prep. That makes him a unicorn in this profession. It's not a science for him anymore — it's an art he lives and breathes.
+            </p>
+          </div>
+          <div className="bg-card border-2 border-primary/30 p-4">
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              <span className="text-foreground font-bold">When you buy a program, Matt is on the other end.</span> This is not an AI. Not a chatbot. Not a pre-written FAQ. When your athlete logs a workout and something doesn't feel right — they tap "Ask Matt" and <span className="text-foreground font-semibold">Matt personally reads it, responds, and walks them through it</span> like he's standing right there. The only things they don't get are his equipment and his sense of humor — and he's freaking hilarious. For $9–$20, your kid gets a 20-year veteran coach guiding them through every rep, at a fraction of the cost of in-person training.
             </p>
           </div>
         </div>
