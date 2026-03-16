@@ -158,7 +158,31 @@ const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) =
         <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-2">
           Log {activeLift}
         </span>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "h-9 w-[130px] justify-start text-left font-mono text-sm px-2",
+                  !logDate && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-1.5 h-3.5 w-3.5 text-primary" />
+                {format(logDate, "MMM d, yyyy")}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={logDate}
+                onSelect={(d) => d && setLogDate(d)}
+                disabled={(d) => d > new Date()}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
           <input
             type="number"
             placeholder="Weight (lbs)"
