@@ -30,8 +30,14 @@ const AUDIENCES = [
 ];
 
 const AudienceSelector = () => {
-  const scrollTo = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const navigate = useNavigate();
+
+  const handleClick = (a: typeof AUDIENCES[number]) => {
+    if ("route" in a && a.route) {
+      navigate(a.route);
+    } else if ("targetId" in a && a.targetId) {
+      document.getElementById(a.targetId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   };
 
   return (
