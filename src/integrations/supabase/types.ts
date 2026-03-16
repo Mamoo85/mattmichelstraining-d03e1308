@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      coach_notes: {
+        Row: {
+          coach_id: string
+          created_at: string
+          id: string
+          note: string
+          progress_log_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          coach_id: string
+          created_at?: string
+          id?: string
+          note: string
+          progress_log_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          coach_id?: string
+          created_at?: string
+          id?: string
+          note?: string
+          progress_log_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_notes_progress_log_id_fkey"
+            columns: ["progress_log_id"]
+            isOneToOne: false
+            referencedRelation: "progress_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       newsletter_sends: {
         Row: {
           body: string
