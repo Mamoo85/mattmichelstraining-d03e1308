@@ -105,9 +105,7 @@ const Pricing = () => {
         >
           <p className="text-xs text-muted-foreground leading-relaxed text-center">
             <span className="text-foreground font-bold">Why parents & coaches are switching to online strength training:</span>{" "}
-            The average family spends $200–$600/month on in-person youth training. Matt's online programs start at{" "}
-            <span className="text-primary font-bold">$12.99/month</span> — same 20 years of experience, delivered to your phone, 
-            available in any state. No travel, no scheduling conflicts, no contracts.
+            {cms.value_banner || "The average family spends $200–$600/month on in-person youth training. Matt's online programs start at $12.99/month — same 20 years of experience, delivered to your phone, available in any state. No travel, no scheduling conflicts, no contracts."}
           </p>
         </motion.div>
 
