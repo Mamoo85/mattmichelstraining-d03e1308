@@ -52,6 +52,47 @@ export type Database = {
           },
         ]
       }
+      lift_messages: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          progress_log_id: string
+          sender_id: string
+          sender_role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          progress_log_id: string
+          sender_id: string
+          sender_role?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          progress_log_id?: string
+          sender_id?: string
+          sender_role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lift_messages_progress_log_id_fkey"
+            columns: ["progress_log_id"]
+            isOneToOne: false
+            referencedRelation: "progress_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       newsletter_sends: {
         Row: {
           body: string
@@ -285,6 +326,45 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      purchased_programs: {
+        Row: {
+          exercises: Json
+          id: string
+          is_active: boolean
+          notes_from_matt: string | null
+          program_title: string
+          program_type: string
+          purchased_at: string
+          sport: string | null
+          stripe_session_id: string | null
+          user_id: string
+        }
+        Insert: {
+          exercises?: Json
+          id?: string
+          is_active?: boolean
+          notes_from_matt?: string | null
+          program_title: string
+          program_type?: string
+          purchased_at?: string
+          sport?: string | null
+          stripe_session_id?: string | null
+          user_id: string
+        }
+        Update: {
+          exercises?: Json
+          id?: string
+          is_active?: boolean
+          notes_from_matt?: string | null
+          program_title?: string
+          program_type?: string
+          purchased_at?: string
+          sport?: string | null
+          stripe_session_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
