@@ -1,12 +1,9 @@
 import { motion } from "framer-motion";
-import { ArrowRight, Video, TrendingUp, Users, Clipboard, MapPin, HelpCircle, ShoppingBag, Shield, Brain, Zap, Trophy, Clock, Heart } from "lucide-react";
+import { ArrowRight, ShoppingBag, MapPin, Shield, Trophy, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import m2Logo from "@/assets/m2-logo.jpg";
 import SectionHeader from "./SectionHeader";
-import AboutPhilosophy from "./AboutPhilosophy";
-import RealityCheck from "./RealityCheck";
-import ForCoaches from "./ForCoaches";
-import ValuePitch from "./ValuePitch";
+import NewsletterSignup from "./NewsletterSignup";
 
 const STATS = [
   { value: "20+", label: "Years · Same Age Group" },
@@ -15,20 +12,11 @@ const STATS = [
   { value: "100%", label: "Results Rate" },
 ];
 
-const DIFFERENTIATORS = [
-  { icon: Brain, title: "CNS-Based Training", desc: "I understand the central nervous system at an intuitive level. After 20+ years, it's not a science — it's an art I live and breathe." },
-  { icon: Shield, title: "Zero Injuries. Ever.", desc: "Not one. Healthy joints and healthy minds come first. They all get strong — I promise. No need to rush." },
-  { icon: Clock, title: "72-Hour Recovery", desc: "The body needs real recovery. I build programs around science, not ego. Rushing makes you slower." },
-  { icon: Zap, title: "Old-School Methods", desc: "Russian mountain strength meets American power meets Eastern energy. No gimmicks. No trends. Just what works." },
-  { icon: Trophy, title: "College-Ready Athletes", desc: "My athletes don't just make the team — they exceed every expectation. Far beyond what even I predicted when I started." },
-  { icon: Heart, title: "I Stayed. That's Rare.", desc: "Most trainers move up to older clients as they age. I never left this age group. That's why I'm one of the very few left who does this." },
-];
-
-const SERVICES = [
-  { route: "/shop", icon: Clipboard, label: "CUSTOM · $20", title: "Your Athlete's Custom Program", sub: "Matt reads the intake, builds the program from scratch around your athlete's body, sport, and goals. No templates ever." },
-  { route: "/coach", icon: TrendingUp, label: "MONTHLY · $100+", title: "Online Coaching", sub: "Full programming + weekly check-ins. Matt adjusts load, volume, and recovery in real time based on how your athlete responds." },
-  { route: "/coach", icon: Video, label: "REMOTE · $20", title: "Video Form Check", sub: "Send a video of any lift. Matt sees what other trainers miss and sends back precise cues that fix it immediately." },
-  { route: "/coach", icon: Users, label: "TRAINERS ONLY", title: "Trainer Mentorship", sub: "20+ years of programming, coaching, and business knowledge. If you train young athletes, Matt can show you how to do it right." },
+const PRODUCTS_PREVIEW = [
+  { title: "Top 5 Exercises for Baseball", price: "$9", tag: "PDF GUIDE" },
+  { title: "Hockey Strength Essentials", price: "$9", tag: "PDF GUIDE" },
+  { title: "Pre & Post Pregnancy Top 10", price: "$12", tag: "PDF GUIDE" },
+  { title: "Your Custom Program", price: "$20", tag: "CUSTOM · BUILT BY MATT" },
 ];
 
 const HeroSection = () => (
@@ -66,31 +54,26 @@ const HeroSection = () => (
           </div>
         </div>
 
-        <p className="text-sm md:text-base text-muted-foreground max-w-xl mb-4 text-balance leading-relaxed">
-          If your child is going to play college sports, this is the training that prepares their body for it.
-          <span className="text-foreground font-semibold"> Anything else is wearing them out.</span>
-        </p>
         <p className="text-sm md:text-base text-muted-foreground max-w-xl mb-6 text-balance leading-relaxed">
-          This isn't TikTok fitness. This isn't a franchise gym with a clipboard.
-          This is 20+ years of old-school Russian strength, American power, and Eastern energy —
-          all refined by training the <span className="text-foreground font-semibold">same age group, every single day</span>.
-          Most trainers move up. I stayed. That's why my athletes go to college ready.
+          20+ years training young athletes for college sports. Zero injuries. 50+ college athletes produced.
+          I can only train so many in person — so I put my system into guides anyone can use.
+          <span className="text-foreground font-semibold"> Not just what to do. The WHY.</span>
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3">
           <Link
-            to="/auth"
+            to="/shop"
             className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
           >
-            Start Training with Matt
-            <ArrowRight size={14} />
+            <ShoppingBag size={14} />
+            Browse Guides & Programs
           </Link>
           <Link
-            to="/shop"
+            to="/dashboard"
             className="inline-flex items-center gap-2 bg-card text-foreground px-6 py-3 text-xs font-bold uppercase tracking-widest shadow-m2 hover:bg-m2-surface-hover transition-m2"
           >
-            <ShoppingBag size={14} />
-            Get a Custom Program · $20
+            Client Portal
+            <ArrowRight size={14} />
           </Link>
         </div>
       </motion.div>
@@ -110,142 +93,76 @@ const HeroSection = () => (
         ))}
       </motion.div>
 
-      {/* WHAT MAKES MATT DIFFERENT */}
+      {/* WHY M² — short version */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.2, ease: [0.2, 0, 0, 1] }}
         className="mb-12"
       >
-        <SectionHeader title="Why M² Training" timestamp="What makes this different from every other trainer" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {DIFFERENTIATORS.map((d) => (
-            <div key={d.title} className="bg-card shadow-m2 p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <d.icon size={16} className="text-primary" />
-                <h3 className="text-xs font-bold text-foreground">{d.title}</h3>
-              </div>
-              <p className="text-[11px] text-muted-foreground leading-relaxed">{d.desc}</p>
-            </div>
-          ))}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="bg-card shadow-m2 p-4">
+            <Shield size={18} className="text-primary mb-2" />
+            <h3 className="text-xs font-bold text-foreground mb-1">Zero Injuries. Ever.</h3>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              Healthy joints and healthy minds first. They all get strong — I promise.
+            </p>
+          </div>
+          <div className="bg-card shadow-m2 p-4">
+            <Trophy size={18} className="text-primary mb-2" />
+            <h3 className="text-xs font-bold text-foreground mb-1">50+ College Athletes</h3>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              Most trainers move up. I stayed with young athletes for 20+ years. That's why it works.
+            </p>
+          </div>
+          <div className="bg-card shadow-m2 p-4">
+            <Zap size={18} className="text-primary mb-2" />
+            <h3 className="text-xs font-bold text-foreground mb-1">The WHY, Not Just The What</h3>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              Every guide teaches the reasoning. When they understand why, they do it better. 100% of the time.
+            </p>
+          </div>
         </div>
       </motion.div>
 
-      {/* PHILOSOPHY — Letter to Parents */}
-      <div className="mb-12">
-        <AboutPhilosophy />
-      </div>
-
-      {/* REALITY CHECK */}
-      <div className="mb-12">
-        <RealityCheck />
-      </div>
-
-      {/* VALUE PITCH — Why $20, scarcity, knowledge transfer */}
-      <div className="mb-12">
-        <ValuePitch />
-      </div>
-
-      {/* FOR COACHES */}
-      <div className="mb-12">
-        <ForCoaches />
-      </div>
-
-      {/* SERVICES */}
+      {/* PRODUCT PREVIEW */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.35, ease: [0.2, 0, 0, 1] }}
+        transition={{ duration: 0.5, delay: 0.25, ease: [0.2, 0, 0, 1] }}
         className="mb-12"
       >
-        <SectionHeader title="Work with Matt" timestamp="Online or in person — wherever you are" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {SERVICES.map((item) => (
+        <SectionHeader title="Guides & Programs" timestamp="20+ years of knowledge — starting at $9" />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {PRODUCTS_PREVIEW.map((p) => (
             <Link
-              key={item.title}
-              to={item.route}
+              key={p.title}
+              to="/shop"
               className="bg-card shadow-m2 p-4 hover:bg-m2-surface-hover transition-m2 group block"
             >
-              <div className="flex items-center gap-2 mb-2">
-                <item.icon size={14} className="text-primary" />
-                <span className="text-[10px] font-bold uppercase tracking-widest text-primary">{item.label}</span>
-              </div>
-              <h3 className="text-sm font-bold text-foreground group-hover:text-primary transition-m2">{item.title}</h3>
-              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{item.sub}</p>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-2">{p.tag}</span>
+              <h3 className="text-xs font-bold text-foreground group-hover:text-primary transition-m2 mb-2">{p.title}</h3>
+              <span className="text-lg font-mono font-bold text-primary">{p.price}</span>
             </Link>
           ))}
         </div>
-      </motion.div>
-
-      {/* STUDIO RENTAL */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.4, ease: [0.2, 0, 0, 1] }}
-        className="mb-12"
-      >
-        <div className="bg-card shadow-m2 p-5">
-          <div className="flex items-center gap-2 mb-2">
-            <MapPin size={14} className="text-primary" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-primary">For Trainers</span>
-          </div>
-          <h3 className="text-sm font-bold text-foreground mb-1">Lease Studio Time</h3>
-          <p className="text-xs text-muted-foreground mb-3">
-            Certified trainers — rent the M² gym by the hour or block. Private, fully equipped, no overhead.
-          </p>
-          <span className="text-xs text-primary font-bold">Inquire about availability →</span>
-        </div>
-      </motion.div>
-
-      {/* I CAN FIX IT */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.45, ease: [0.2, 0, 0, 1] }}
-        className="mb-12"
-      >
-        <div className="bg-primary/10 border border-primary/20 shadow-m2 p-5">
-          <div className="flex items-center gap-2 mb-2">
-            <HelpCircle size={16} className="text-primary" />
-            <h3 className="text-sm font-bold text-primary">Something's Off? I Can Fix It.</h3>
-          </div>
-          <p className="text-xs text-muted-foreground mb-2 leading-relaxed">
-            Your kid's not getting stronger? They're always sore? Their coach has them doing things that don't look right?
-            Tell me what's going on. I'll tell you exactly what's wrong and exactly how to fix it.
-            20 years of fixing the same problems — I've seen it all.
-          </p>
-          <span className="text-xs text-primary font-bold">Pay what you feel →</span>
-        </div>
-      </motion.div>
-
-      {/* THE PROMISE */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.48, ease: [0.2, 0, 0, 1] }}
-        className="mb-12"
-      >
-        <div className="bg-card shadow-m2 p-6 text-center">
-          <h3 className="text-lg font-bold text-foreground mb-3 tracking-display">MATT'S PROMISE</h3>
-          <p className="text-sm text-foreground max-w-md mx-auto text-balance leading-relaxed mb-4">
-            "They will get strong. I promise. No need to rush. Let me handle the strength protocol.
-            You handle the bedtime. <span className="text-primary font-bold">Problem solved.</span>"
-          </p>
-          <Link
-            to="/auth"
-            className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-8 py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
-          >
-            Get Your Athlete Started
-            <ArrowRight size={14} />
+        <div className="mt-3 text-center">
+          <Link to="/shop" className="text-xs text-primary font-bold hover:opacity-80 transition-m2">
+            View All Guides →
           </Link>
         </div>
       </motion.div>
+
+      {/* NEWSLETTER SIGNUP */}
+      <div className="mb-12">
+        <NewsletterSignup />
+      </div>
 
       {/* FIND US */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.5, ease: [0.2, 0, 0, 1] }}
+        transition={{ duration: 0.5, delay: 0.35, ease: [0.2, 0, 0, 1] }}
       >
         <SectionHeader title="Find Us" />
         <div className="bg-card shadow-m2 p-5">
