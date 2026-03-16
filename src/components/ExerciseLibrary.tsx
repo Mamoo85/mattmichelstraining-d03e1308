@@ -1069,6 +1069,22 @@ const ExerciseLibrary = () => {
       )}
 
       {/* Results count */}
+      {isFixitLocked ? (
+        <div className="bg-card shadow-m2 p-8 text-center">
+          <Lock size={32} className="text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-base font-bold text-foreground mb-2">Fix It Library</h3>
+          <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
+            The Fix It library — ACL prevention, rotator cuff protocols, back pain rehab, and concussion return-to-play — requires M² Pro ($29.99/mo) or higher.
+          </p>
+          <Link
+            to="/pricing"
+            className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
+          >
+            Upgrade to Pro
+          </Link>
+        </div>
+      ) : (
+      <>
       <p className="text-[10px] font-mono text-muted-foreground mb-3">
         {filtered.length} exercise{filtered.length !== 1 ? "s" : ""} found
       </p>
