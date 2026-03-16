@@ -177,7 +177,7 @@ const HeroSection = () => (
             <HelpCircle size={16} className="text-primary" />
             <h3 className="text-sm font-bold text-primary">I Can Fix It</h3>
           </div>
-          <p className="text-xs text-muted-foreground mb-2">Stuck? Something hurts? Need a workout?</p>
+          <p className="text-xs text-muted-foreground mb-2">Your kid's not getting stronger? Something feels off in their training? I'll tell you what's wrong and how to fix it.</p>
           <span className="text-xs text-primary font-bold">Pay what you feel →</span>
         </div>
       </motion.div>
