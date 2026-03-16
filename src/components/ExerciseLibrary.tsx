@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Search, ChevronDown, ChevronUp } from "lucide-react";
+import { Search, ChevronDown, ChevronUp, Lock } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import SectionHeader from "./SectionHeader";
 
 interface Exercise {
@@ -956,12 +958,21 @@ const getFixitSubCategory = (id: string): string => {
   return "all";
 };
 
+const TIER_LEVEL: Record<string, number> = { basic: 1, pro: 2, elite: 3, team: 4 };
+
 const ExerciseLibrary = () => {
   const [sport, setSport] = useState("all");
   const [category, setCategory] = useState("all");
   const [fixitSub, setFixitSub] = useState("all");
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const { subscriptionTier, user } = useAuth();
+
+  const userLevel = subscriptionTier ? (TIER_LEVEL[subscriptionTier] ?? 0) : 0;
+  const hasProAccess = userLevel >= 2;
+
+  // If user selects Fix It but doesn't have Pro, show paywall
+  const isFixitLocked = category === "fixit" && !hasProAccess;
 
   const filtered = EXERCISES.filter((ex) => {
     const matchesSport = sport === "all" || ex.sports.includes(sport);
@@ -1058,6 +1069,22 @@ const ExerciseLibrary = () => {
       )}
 
       {/* Results count */}
+      {isFixitLocked ? (
+        <div className="bg-card shadow-m2 p-8 text-center">
+          <Lock size={32} className="text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-base font-bold text-foreground mb-2">Fix It Library</h3>
+          <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
+            The Fix It library — ACL prevention, rotator cuff protocols, back pain rehab, and concussion return-to-play — requires M² Pro ($29.99/mo) or higher.
+          </p>
+          <Link
+            to="/pricing"
+            className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
+          >
+            Upgrade to Pro
+          </Link>
+        </div>
+      ) : (
+      <>
       <p className="text-[10px] font-mono text-muted-foreground mb-3">
         {filtered.length} exercise{filtered.length !== 1 ? "s" : ""} found
       </p>
@@ -1133,6 +1160,8 @@ const ExerciseLibrary = () => {
           </div>
         )}
       </div>
+      </>
+      )}
     </div>
   );
 };
