@@ -21,18 +21,8 @@ const PRODUCTS: Product[] = [
     price: "$9",
     tag: "PDF GUIDE",
     category: "sport",
-    description: "The exact exercises Matt uses to build rotational power and protect throwing arms. Every exercise includes the WHY — so your athlete does it right.",
+    description: "I've trained baseball players for two decades. These are the five movements that actually translate to the field — rotational power, arm health, hip mobility. Not the stuff you see on Instagram. The stuff that works.",
     includes: ["5 exercises with full breakdowns", "Sets, reps, and rest periods", "The WHY behind each movement", "Warm-up protocol included"],
-  },
-  {
-    id: "hockey-5",
-    title: "Hockey Strength Essentials",
-    subtitle: "Edge work, hip power, and durability",
-    price: "$9",
-    tag: "PDF GUIDE",
-    category: "sport",
-    description: "Built for the demands of hockey — lateral power, hip stability, and the kind of durability that keeps them on the ice all season.",
-    includes: ["Sport-specific exercises", "In-season vs off-season guidance", "The WHY behind each movement", "Recovery protocol"],
   },
   {
     id: "football-5",
@@ -41,7 +31,7 @@ const PRODUCTS: Product[] = [
     price: "$9",
     tag: "PDF GUIDE",
     category: "sport",
-    description: "Explosive power, speed off the line, and a body that can absorb contact without breaking down. Built from 20+ years of training football athletes.",
+    description: "Football is about power off the line and a body that can take contact without breaking. These five exercises build explosive hips, a bulletproof core, and the kind of durability that keeps them on the field all season. Twenty years of training football athletes — this is what actually transfers.",
     includes: ["Position-relevant exercises", "Power development focus", "The WHY behind each movement", "Injury prevention notes"],
   },
   {
@@ -51,8 +41,18 @@ const PRODUCTS: Product[] = [
     price: "$9",
     tag: "PDF GUIDE",
     category: "sport",
-    description: "Jump higher, land safer, and move faster. Every exercise chosen to protect the knees and build the elastic power basketball demands.",
+    description: "Every basketball parent asks me about vertical. Here's the truth — you can't jump higher if your knees can't handle the landing. This guide builds elastic power AND protects the joints. Five exercises that make them faster, more explosive, and way harder to guard.",
     includes: ["Vertical power exercises", "Knee health protocols", "The WHY behind each movement", "In-season maintenance plan"],
+  },
+  {
+    id: "hockey-5",
+    title: "Hockey Strength Essentials",
+    subtitle: "Edge work, hip power, and durability",
+    price: "$9",
+    tag: "PDF GUIDE",
+    category: "sport",
+    description: "Hockey is the most physically demanding youth sport, period. This guide covers the posterior chain work, single-leg stability, and core bracing that turns skaters into forces. I explain the physics behind every movement so your athlete knows WHY they're doing it.",
+    includes: ["Sport-specific exercises", "In-season vs off-season guidance", "The WHY behind each movement", "Recovery protocol"],
   },
   {
     id: "soccer-5",
@@ -61,7 +61,7 @@ const PRODUCTS: Product[] = [
     price: "$9",
     tag: "PDF GUIDE",
     category: "sport",
-    description: "Built for the unique demands of soccer — 90 minutes of running, cutting, and kicking. Single-leg strength and hip health are everything.",
+    description: "Soccer kids run for 90 minutes on one leg at a time — that's the reality. This guide is built around single-leg strength, hip mobility, and the endurance base that keeps them sharp in the 80th minute. No fluff. Just the movements that matter.",
     includes: ["Single-leg focused exercises", "Hip mobility work", "The WHY behind each movement", "Game-day prep protocol"],
   },
   {
@@ -71,7 +71,7 @@ const PRODUCTS: Product[] = [
     price: "$9",
     tag: "PDF GUIDE",
     category: "sport",
-    description: "Shoulder durability for stick work, explosive speed for transitions, and a body that handles contact. The lacrosse-specific guide.",
+    description: "Lacrosse beats up shoulders and demands sprint speed in transition. These five exercises build shoulder durability for stick work, explosive change of direction, and a frame that handles contact. I've watched this sport grow for 15 years — I know what breaks down first.",
     includes: ["Shoulder stability work", "Sprint mechanics", "The WHY behind each movement", "Contact preparation"],
   },
   {
@@ -81,7 +81,7 @@ const PRODUCTS: Product[] = [
     price: "$12",
     tag: "PDF GUIDE",
     category: "wellness",
-    description: "Safe, effective strength training for before and after pregnancy. Core stability, pelvic floor awareness, and building back strength the right way.",
+    description: "This one's personal. I wrote it for the moms who trained with me and asked 'what can I do now?' Ten exercises that are safe, effective, and backed by the kinesiology. Pelvic floor, core reconnection, rebuilding strength the right way.",
     includes: ["10 exercises with trimester guidance", "Post-partum rebuilding protocol", "The WHY behind each movement", "What to avoid and when"],
   },
   {
@@ -91,7 +91,7 @@ const PRODUCTS: Product[] = [
     price: "$12",
     tag: "PDF GUIDE",
     category: "foundation",
-    description: "The exact starting program Matt gives every new young athlete. Movement quality, work capacity, and building the habits that prevent injuries for life.",
+    description: "This is the exact program I give every new young athlete who walks through my door. Movement quality first, then work capacity, then strength. Four weeks of building the foundation that prevents injuries for life. Parents — this is where it starts.",
     includes: ["Full 4-week starter program", "Movement quality checklist", "The WHY behind the system", "Parent guide included"],
   },
   {
@@ -101,7 +101,7 @@ const PRODUCTS: Product[] = [
     price: "$20",
     tag: "CUSTOM · BUILT BY MATT",
     category: "custom",
-    description: "Fill out the intake. Matt reads every word, then builds a program specifically for your athlete. Not a template. Not AI-generated. 20+ years of knowledge, custom-built.",
+    description: "You fill out the intake. I read every word. Then I build your program from scratch — your goals, your equipment, your level. No templates. No AI. Just me, a notebook, and 20 years of doing this. This is the one that changes everything.",
     includes: ["Fully custom program", "Coaching cues on every movement", "The WHY behind every choice", "Matt's guarantee: fix it or refund"],
   },
 ];
