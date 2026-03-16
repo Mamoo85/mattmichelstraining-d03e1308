@@ -12,10 +12,9 @@ const Dashboard = () => (
   <div className="min-h-screen bg-background">
     <AppNavbar />
     <div className="container pt-20 pb-12">
-      {/* Quick stats */}
       <div className="grid grid-cols-3 gap-3 mb-6">
         {stats.map(({ label, value, unit, icon: Icon }) => (
-          <div key={label} className="bg-m2-surface shadow-m2 p-3">
+          <div key={label} className="bg-card shadow-m2 p-3">
             <div className="flex items-center gap-1.5 mb-1">
               <Icon size={12} className="text-primary" />
               <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{label}</span>
@@ -24,7 +23,6 @@ const Dashboard = () => (
           </div>
         ))}
       </div>
-
       <ProtocolTable />
     </div>
   </div>
