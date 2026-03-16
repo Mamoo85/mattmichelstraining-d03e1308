@@ -81,7 +81,7 @@ const HeroSection = () => (
 
       {/* STATS */}
       <motion.div
-        className="grid grid-cols-4 gap-3 mb-12"
+        className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-12"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.15, ease: [0.2, 0, 0, 1] }}
