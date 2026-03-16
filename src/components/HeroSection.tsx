@@ -175,7 +175,6 @@ const HeroSection = () => {
         {showOnline && <OnlineSavings />}
         {showOnline && <SportOnlineTraining />}
         {showTeamYouth && <div id="section-teams"><TeamYouthPrograms /></div>}
-        {showTeamYouth && <CoachOnlineTools />}
         {showMonthly && <MonthlyFocus />}
         {showWeekend && <WeekendYouth />}
         {showTrainers && <div id="section-trainers"><ForTrainers /></div>}
