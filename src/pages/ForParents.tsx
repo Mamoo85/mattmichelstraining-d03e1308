@@ -131,14 +131,14 @@ const ForParents = () => {
             to="/shop"
             className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
           >
-            Start with a $9 strength guide
+            {cms.hero_cta_primary || "Start with a $9 strength guide"}
             <ArrowRight size={15} />
           </Link>
           <Link
             to="/pricing"
             className="inline-flex items-center gap-2 border-2 border-primary/40 text-primary px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:bg-primary/10 transition-m2"
           >
-            See strength training plans
+            {cms.hero_cta_secondary || "See strength training plans"}
           </Link>
         </div>
       </motion.div>
