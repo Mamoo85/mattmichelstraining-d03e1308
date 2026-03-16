@@ -20,16 +20,6 @@ const PRODUCTS_PREVIEW = [
   { title: "Your Custom Program", price: "$20", tag: "CUSTOM · BUILT BY MATT" },
 ];
 
-const MERCH_ITEMS = [
-  { id: "tee-black", name: "M² Training Tee — Black", price: "$32", tag: "APPAREL", description: "Premium cotton. The logo your athlete earned." },
-  { id: "tee-orange", name: "M² Training Tee — Orange", price: "$32", tag: "APPAREL", description: "Stand out. Same quality, louder statement." },
-  { id: "hoodie-black", name: "M² Heavyweight Hoodie", price: "$58", tag: "APPAREL", description: "Built like the athletes who wear it. Heavyweight fleece." },
-  { id: "stringer", name: "M² Stringer Tank", price: "$28", tag: "APPAREL", description: "For the gym. Lightweight, breathable, earned." },
-  { id: "hat-snapback", name: "M² Snapback Cap", price: "$30", tag: "ACCESSORY", description: "Structured crown, flat brim. The M² mark." },
-  { id: "shaker", name: "M² Shaker Bottle", price: "$18", tag: "GEAR", description: "28oz. Leak-proof. Matt's logo on the side." },
-  { id: "band-set", name: "M² Resistance Band Set", price: "$24", tag: "GEAR", description: "3 bands — light, medium, heavy. Used in every Fix It protocol." },
-  { id: "towel", name: "M² Gym Towel", price: "$16", tag: "GEAR", description: "Microfiber. Fast-dry. Branded and built to last." },
-];
 
 const TITLE_WORDS = ["YOUR", "ATHLETE'S", "SECRET", "WEAPON."];
 
