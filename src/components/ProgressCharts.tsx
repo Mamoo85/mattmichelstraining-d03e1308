@@ -28,6 +28,7 @@ const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) =
   // Logging state
   const [logWeight, setLogWeight] = useState("");
   const [logReps, setLogReps] = useState("");
+  const [logDate, setLogDate] = useState<Date>(new Date());
   const [logging, setLogging] = useState(false);
 
   const effectiveUserId = targetUserId || user?.id;
