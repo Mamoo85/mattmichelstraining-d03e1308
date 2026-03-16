@@ -15,7 +15,6 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       style={{
         background: "hsl(var(--card))",
         border: "1px solid hsl(var(--primary) / 0.4)",
-        boxShadow: "0 0 15px hsl(var(--primary) / 0.15), inset 0 0 10px hsl(var(--primary) / 0.05)",
       }}
     >
       <p className="text-muted-foreground text-[10px] mb-0.5">{label}</p>
