@@ -55,7 +55,14 @@ const Admin = () => {
           ))}
         </div>
 
-        {activeTab === "coach" && <AdminCoachDashboard />}
+        {activeTab === "coach" && (
+          <div className="space-y-8">
+            <AdminCoachInbox />
+            <div className="border-t border-border pt-6">
+              <AdminCoachDashboard />
+            </div>
+          </div>
+        )}
         {activeTab === "programs" && <AdminPrograms />}
         {activeTab === "exercises" && <AdminExerciseLibrary />}
         {activeTab === "promotions" && <AdminPromotions />}
