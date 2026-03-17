@@ -95,6 +95,20 @@ const Dashboard = () => {
         {activeTab === "programs" && <MyPrograms />}
         {activeTab === "challenges" && <ChallengeSystem />}
       </div>
+
+      {/* Floating timer button */}
+      {!showTimer && (
+        <button
+          onClick={() => setShowTimer(true)}
+          className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:opacity-90 transition-all rounded-full"
+          aria-label="Open interval timer"
+        >
+          <Timer size={24} />
+        </button>
+      )}
+
+      {/* Timer overlay */}
+      {showTimer && <IntervalTimer onClose={() => setShowTimer(false)} />}
     </div>
   );
 };
