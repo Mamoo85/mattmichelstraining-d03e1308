@@ -172,6 +172,41 @@ const ExerciseLibrary = () => {
         </div>
       </div>
 
+      {/* Sport filter */}
+      {allSports.length > 0 && (
+        <div className="mb-4">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1.5">
+            <Filter size={10} className="inline mr-1" />
+            Sport
+          </span>
+          <div className="flex gap-1 flex-wrap">
+            <button
+              onClick={() => setActiveSport(null)}
+              className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-all ${
+                !activeSport
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              All Sports
+            </button>
+            {allSports.map((s) => (
+              <button
+                key={s}
+                onClick={() => setActiveSport(activeSport === s ? null : s)}
+                className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-all ${
+                  activeSport === s
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Results count */}
       <div className="flex items-center justify-between mb-3">
         <p className="text-[10px] font-mono text-muted-foreground">
