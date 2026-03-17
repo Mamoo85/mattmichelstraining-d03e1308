@@ -158,6 +158,48 @@ export type Database = {
         }
         Relationships: []
       }
+      gift_cards: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          is_active: boolean
+          original_amount: number
+          purchaser_id: string
+          recipient_email: string | null
+          redeemed_at: string | null
+          redeemed_by: string | null
+          remaining_balance: number
+          stripe_session_id: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          original_amount: number
+          purchaser_id: string
+          recipient_email?: string | null
+          redeemed_at?: string | null
+          redeemed_by?: string | null
+          remaining_balance: number
+          stripe_session_id?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          original_amount?: number
+          purchaser_id?: string
+          recipient_email?: string | null
+          redeemed_at?: string | null
+          redeemed_by?: string | null
+          remaining_balance?: number
+          stripe_session_id?: string | null
+        }
+        Relationships: []
+      }
       gifted_products: {
         Row: {
           gift_type: string
