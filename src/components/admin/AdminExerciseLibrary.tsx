@@ -212,14 +212,26 @@ const AdminExerciseLibrary = () => {
               <button onClick={() => setModalOpen(false)}><X size={16} className="text-muted-foreground" /></button>
             </div>
 
-            {/* Title */}
-            <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Title *</label>
-            <input
-              type="text"
-              value={editing.title}
-              onChange={(e) => setEditing({ ...editing, title: e.target.value })}
-              className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground mb-3 outline-none focus:ring-1 focus:ring-primary"
-            />
+            {/* Title + AI */}
+            <div className="flex items-end gap-2 mb-3">
+              <div className="flex-1">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Title *</label>
+                <input
+                  type="text"
+                  value={editing.title}
+                  onChange={(e) => setEditing({ ...editing, title: e.target.value })}
+                  className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+              {editing.title.trim() && (
+                <AiAssistButton
+                  type="exercise"
+                  context={{ exerciseName: editing.title }}
+                  onResult={handleAiGenerate}
+                  label="AI Fill"
+                />
+              )}
+            </div>
 
             {/* Equipment */}
             <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Equipment Needed</label>
