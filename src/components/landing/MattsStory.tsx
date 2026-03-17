@@ -19,6 +19,11 @@ const STORY_BEATS = [
     text: "Before esports went mainstream, Matt was a professional gamer competing in world championships. He's also a history buff with deep knowledge of WWII battles and generals. That competitive edge and strategic mind carry into every program he designs.",
   },
   {
+    icon: ShieldOff,
+    title: "The Anti-Influencer",
+    text: "Matt never wanted to be the social media trainer guy. He's an old-school strength trainer trying to spread real knowledge before the AI bots completely take over everyone's feed with fake abs and skinny girls. Remember what's real — what's real is you and your longevity. Getting strong is hard. It's an achievement nobody can ever take away from you, and very few ever get.",
+  },
+  {
     icon: Users,
     title: "The Family",
     text: "When asked what he's most proud of, Matt doesn't mention championships or accolades. His first thought is his wife Janelle and their young son Harrison. \"My family and the M2 family I've built over the years are the most significant parts of my life.\"",
