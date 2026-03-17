@@ -27,6 +27,7 @@ const Profile = lazy(() => import("./pages/Profile"));
 const Schedule = lazy(() => import("./pages/Schedule"));
 const Progress = lazy(() => import("./pages/Progress"));
 const Merch = lazy(() => import("./pages/Merch"));
+const TrialWelcome = lazy(() => import("./pages/TrialWelcome"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
