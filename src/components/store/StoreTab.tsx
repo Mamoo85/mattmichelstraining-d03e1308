@@ -14,10 +14,10 @@ import {
 const SUB_TABS = [
   { key: "foundation", label: "Youth Foundation" },
   { key: "sessions", label: "Sessions" },
-  { key: "programs", label: "Interactive Programs" },
-  { key: "custom", label: "Custom Program" },
+  { key: "programs", label: "Training Plans" },
+  { key: "custom", label: "Custom Programs" },
   { key: "giftcards", label: "Gift Cards" },
-  { key: "merchandise", label: "Merchandise" },
+  { key: "merchandise", label: "Merch" },
 ];
 
 const CUSTOM_TIERS = [

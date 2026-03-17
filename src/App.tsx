@@ -27,6 +27,7 @@ const Profile = lazy(() => import("./pages/Profile"));
 const Schedule = lazy(() => import("./pages/Schedule"));
 const Progress = lazy(() => import("./pages/Progress"));
 const Merch = lazy(() => import("./pages/Merch"));
+const Learn = lazy(() => import("./pages/Learn"));
 const TrialWelcome = lazy(() => import("./pages/TrialWelcome"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -78,6 +79,7 @@ const App = () => (
                 <Route path="/about" element={<About />} />
                 <Route path="/schedule" element={<Schedule />} />
                 <Route path="/merch" element={<Merch />} />
+                <Route path="/learn" element={<Learn />} />
                 <Route path="/coach" element={<Coach />} />
                 <Route path="/trial-welcome" element={<ProtectedRoute><TrialWelcome /></ProtectedRoute>} />
                 <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />

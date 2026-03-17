@@ -115,7 +115,7 @@ const PortalEntrance = () => {
 
         <div className="absolute bottom-2 inset-x-0 z-30 text-center">
           <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-            Your portal awaits
+            Already a member? Access your portal
           </span>
         </div>
       </div>
