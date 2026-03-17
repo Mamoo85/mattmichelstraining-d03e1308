@@ -8,8 +8,7 @@ interface TrainingProgram {
   title: string;
   description: string;
   category: string;
-  age_range: string;
-  sex: string;
+  level: string;
   sport: string | null;
   price: number;
   is_active: boolean;
@@ -33,13 +32,11 @@ interface ExerciseOption {
 }
 
 const CATEGORIES = ["Athlete", "Lifestyle Fitness"];
-const ATHLETE_AGE_RANGES = ["12-13", "14-15", "16-17", "18+"];
-const LIFESTYLE_AGE_RANGES = ["18-29", "30-39", "40-49", "50+"];
-const SEX_OPTIONS = ["Any", "Male", "Female"];
+const LEVELS = ["Beginner", "Intermediate", "Advanced"];
 const SPORTS = ["Baseball", "Football", "Basketball", "Hockey", "Soccer", "Lacrosse", "Track & Field", "Swimming", "Tennis", "Volleyball"];
 
 const emptyProgram: Omit<TrainingProgram, "id"> = {
-  title: "", description: "", category: "Athlete", age_range: "14-15", sex: "Any", sport: null, price: 49, is_active: true,
+  title: "", description: "", category: "Athlete", level: "Beginner", sport: null, price: 49, is_active: true,
 };
 
 const AdminPrograms = () => {
