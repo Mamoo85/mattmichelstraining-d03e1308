@@ -1,7 +1,6 @@
 import AppNavbar from "@/components/AppNavbar";
 import MattsStory from "@/components/landing/MattsStory";
 import WhyM2 from "@/components/landing/WhyM2";
-import CanFixIt from "@/components/landing/CanFixIt";
 import AboutPhilosophy from "@/components/AboutPhilosophy";
 import Testimonial from "@/components/landing/Testimonial";
 import CurrentClients from "@/components/landing/CurrentClients";
