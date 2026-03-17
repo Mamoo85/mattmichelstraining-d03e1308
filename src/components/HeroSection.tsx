@@ -77,7 +77,7 @@ const HeroSection = () => {
       toast({ title: "You're in! 🔥", description: "Check your inbox — your free training kickstart is on the way." });
       setHeroEmail("");
       // Redirect to signup after brief delay
-      setTimeout(() => navigate("/auth?redirect=/dashboard"), 1500);
+      setTimeout(() => navigate("/auth?redirect=/welcome"), 1500);
     } catch (err: any) {
       toast({ title: "Something went wrong", description: err.message, variant: "destructive" });
     } finally {
