@@ -348,7 +348,7 @@ const AdminProgramCreator = () => {
           </button>
 
           <button onClick={handleBatchGenerate} disabled={batchGenerating}
-            className="bg-accent text-foreground px-6 py-2.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2 flex items-center gap-2 disabled:opacity-50">
+            className="bg-accent text-accent-foreground px-6 py-2.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2 flex items-center gap-2 disabled:opacity-50">
             {batchGenerating ? <Loader2 size={14} className="animate-spin" /> : <Package size={14} />}
             {batchGenerating ? "Generating All…" : "Batch Generate All Empty"}
           </button>
