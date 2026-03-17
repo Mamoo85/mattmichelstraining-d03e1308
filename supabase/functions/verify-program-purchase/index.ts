@@ -113,6 +113,20 @@ serve(async (req) => {
       throw new Error("Failed to activate program");
     }
 
+    // Award M² Points for program purchase
+    try {
+      await supabaseClient.rpc("award_points", {
+        _user_id: user.id,
+        _action: "program_purchase",
+        _points: 100,
+        _description: `Purchased program`,
+        _reference_id: sessionId,
+      });
+      logStep("Points awarded for program purchase");
+    } catch (pErr) {
+      logStep("Points award failed (non-fatal)", { error: String(pErr) });
+    }
+
     // Get program title and user email
     const { data: program } = await supabaseClient
       .from("training_programs")
