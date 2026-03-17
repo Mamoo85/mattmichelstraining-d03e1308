@@ -7,35 +7,34 @@ import athleteLacrosse from "@/assets/athlete-lacrosse.jpg";
 
 const STORIES = [
   {
-    name: "Jake M.",
+    name: "GP South Athlete",
     sport: "Football",
     image: athleteFootball,
-    quote: "Added 35 lbs to my squat in 8 weeks. Matt's programming is on another level.",
-    result: "+35 lb Squat",
+    quote: "Matt's programming took my squat from 225 to 315 in one off-season. Movement and mechanics first — that's the M² difference.",
+    result: "+90 lb Squat",
   },
   {
-    name: "Ava R.",
+    name: "M² Client",
     sport: "Soccer",
     image: athleteSoccer,
-    quote: "First time I feel fast AND strong. Went from JV to starting varsity.",
+    quote: "First time I feel fast AND strong. Went from JV to starting varsity after one summer with Coach Matt.",
     result: "JV → Varsity",
   },
   {
-    name: "Dylan T.",
+    name: "College Commit",
     sport: "Baseball",
     image: athleteBaseball,
-    quote: "My arm velo jumped 4 mph. Coach Matt fixed issues no one else even noticed.",
-    result: "+4 mph Velo",
+    quote: "Matt fixed mechanics no one else even noticed. One of 50+ college athletes developed at M² Training.",
+    result: "College Commit",
   },
   {
-    name: "Mia K.",
-    sport: "Lacrosse",
+    name: "Comeback Story",
+    sport: "Strength",
     image: athleteLacrosse,
-    quote: "Tore my ACL sophomore year. Matt got me back stronger than before.",
+    quote: "Tore my ACL sophomore year. Matt got me back stronger than before — movement, mechanics, mindset.",
     result: "Full Recovery",
   },
 ];
-
 const SuccessStories = () => (
   <motion.div
     initial={{ opacity: 0, y: 16 }}
