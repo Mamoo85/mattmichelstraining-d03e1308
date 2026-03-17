@@ -52,6 +52,11 @@ const GlobalTimer = () => {
   return <IntervalTimer onClose={closeTimer} />;
 };
 
+const ReferralCaptureWrapper = () => {
+  useReferralCapture();
+  return null;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
