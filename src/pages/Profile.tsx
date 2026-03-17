@@ -126,6 +126,27 @@ const Profile = () => {
     setSaving(false);
   };
 
+  const handleLookup = async () => {
+    if (!lookupCode.trim()) return;
+    setLookupLoading(true);
+    setLookupResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("redeem-gift-card", {
+        body: { code: lookupCode.trim(), action: "check" },
+      });
+      if (error) throw error;
+      if (data?.error) {
+        toast({ title: "Not found", description: data.error, variant: "destructive" });
+      } else {
+        setLookupResult(data);
+      }
+    } catch (e: any) {
+      toast({ title: "Lookup failed", description: e.message, variant: "destructive" });
+    } finally {
+      setLookupLoading(false);
+    }
+  };
+
   const getMedalIcon = (rank: number) => {
     if (rank === 1) return <Trophy size={16} className="text-primary" />;
     if (rank === 2) return <Medal size={16} className="text-muted-foreground" />;
