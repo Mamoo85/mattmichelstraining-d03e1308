@@ -328,14 +328,17 @@ const AdminProgramCreator = () => {
       </div>
 
       {/* Batch Results */}
-      {batchResults && (
+      {batchResults && batchResults.length > 0 && (
         <div className="bg-card shadow-m2 p-5">
-          <h2 className="text-sm font-bold text-foreground mb-3">Batch Results</h2>
+          <h2 className="text-sm font-bold text-foreground mb-3">
+            Batch Results ({batchResults.filter((r: any) => r.status === "success").length}/{batchResults.length} complete)
+            {batchGenerating && <Loader2 size={12} className="inline ml-2 animate-spin text-primary" />}
+          </h2>
           <div className="space-y-1 max-h-[300px] overflow-y-auto">
             {batchResults.map((r: any, i: number) => (
               <div key={i} className="flex items-center gap-2 text-xs">
-                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${r.status === "success" ? "bg-emerald-400" : r.status === "skipped" ? "bg-muted-foreground" : "bg-destructive"}`} />
-                <span className="font-bold text-foreground truncate">{r.title}</span>
+                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${r.status === "success" ? "bg-emerald-400" : r.status === "failed" ? "bg-destructive" : "bg-muted-foreground"}`} />
+                <span className="font-bold text-foreground truncate">{r.program}</span>
                 <span className="text-muted-foreground">{r.status}{r.workouts ? ` (${r.workouts} exercises)` : ""}{r.reason ? ` — ${r.reason}` : ""}</span>
               </div>
             ))}
