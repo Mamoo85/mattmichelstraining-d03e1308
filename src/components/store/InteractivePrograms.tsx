@@ -35,7 +35,8 @@ const InteractivePrograms = () => {
   const [loading, setLoading] = useState(true);
   const [buyingId, setBuyingId] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
-  const { user } = useAuth();
+  const { user, subscriptionTier } = useAuth();
+  const discountPct = subscriptionTier ? (TIER_DISCOUNTS[subscriptionTier] || 0) : 0;
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
 
