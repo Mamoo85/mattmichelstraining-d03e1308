@@ -45,7 +45,9 @@ const InteractivePrograms = () => {
   const [level, setLevel] = useState<string>("");
   const [sport, setSport] = useState<string>("");
   const [programPromo, setProgramPromo] = useState("");
-
+  const [giftCode, setGiftCode] = useState("");
+  const [giftBalance, setGiftBalance] = useState<number | null>(null);
+  const [checkingGift, setCheckingGift] = useState(false);
   useEffect(() => {
     const fetchData = async () => {
       const { data } = await supabase
