@@ -641,6 +641,7 @@ export type Database = {
           is_pro: boolean
           stripe_customer_id: string | null
           subscription_tier: string
+          trial_started_at: string | null
           updated_at: string
           user_id: string
         }
@@ -654,6 +655,7 @@ export type Database = {
           is_pro?: boolean
           stripe_customer_id?: string | null
           subscription_tier?: string
+          trial_started_at?: string | null
           updated_at?: string
           user_id: string
         }
@@ -667,6 +669,7 @@ export type Database = {
           is_pro?: boolean
           stripe_customer_id?: string | null
           subscription_tier?: string
+          trial_started_at?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -1277,6 +1280,7 @@ export type Database = {
           description: string
           id: string
           is_active: boolean
+          is_trial: boolean
           level: string
           price: number
           sport: string | null
@@ -1292,6 +1296,7 @@ export type Database = {
           description?: string
           id?: string
           is_active?: boolean
+          is_trial?: boolean
           level?: string
           price?: number
           sport?: string | null
@@ -1307,6 +1312,7 @@ export type Database = {
           description?: string
           id?: string
           is_active?: boolean
+          is_trial?: boolean
           level?: string
           price?: number
           sport?: string | null
