@@ -85,7 +85,7 @@ const AdminClientList = () => {
 
   // Stats
   const activeUsers7d = new Set(workoutLogs.filter((l) => new Date(l.date) > new Date(Date.now() - 7 * 86400000)).map((l) => l.user_id)).size;
-  const inPersonCount = profiles.filter((p) => p.is_in_person).length;
+  const legendCount = profiles.filter((p) => p.is_in_person).length;
 
   return (
     <div className="space-y-4">
