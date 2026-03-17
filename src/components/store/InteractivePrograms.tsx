@@ -11,7 +11,7 @@ const LEVEL_COLORS: Record<string, { bg: string; text: string; icon: typeof Zap 
   Intermediate: { bg: "bg-amber-500/15", text: "text-amber-400", icon: Target },
   Advanced: { bg: "bg-red-500/15", text: "text-red-400", icon: Zap },
 };
-const SPORT_OPTIONS = ["Baseball", "Football", "Basketball", "Hockey", "Soccer", "Lacrosse", "Track & Field", "Swimming", "Tennis", "Volleyball"];
+const SPORT_OPTIONS = ["Baseball", "Football", "Basketball", "Volleyball", "Golf"];
 
 const PROGRAM_INCLUDES = [
   "Custom Warmup", "Corrective Exercises", "Strength", "Balance",
@@ -101,7 +101,12 @@ const InteractivePrograms = () => {
     return programs.filter((p) => {
       if (p.category !== category) return false;
       if (level && p.level !== level) return false;
-      if (sport && p.sport !== sport) return false;
+      if (sport && p.sport) {
+        const programSports = p.sport.split(",").map(s => s.trim());
+        if (!programSports.includes(sport)) return false;
+      } else if (sport && !p.sport) {
+        return false;
+      }
       return true;
     });
   }, [programs, category, level, sport]);
@@ -265,11 +270,11 @@ const InteractivePrograms = () => {
                 <p className="text-[11px] text-muted-foreground mb-2 line-clamp-3">{program.description}</p>
                 <div className="flex flex-wrap gap-1 pt-2">
                   <LevelBadge levelName={program.level} />
-                  {program.sport && (
-                    <span className="text-[9px] bg-primary/10 text-primary px-2 py-0.5 font-bold uppercase tracking-widest">
-                      {program.sport}
+                  {program.sport && program.sport.split(",").map(s => s.trim()).map((sportName) => (
+                    <span key={sportName} className="text-[9px] bg-primary/10 text-primary px-2 py-0.5 font-bold uppercase tracking-widest">
+                      {sportName}
                     </span>
-                  )}
+                  ))}
                 </div>
 
                 <div className="mt-auto pt-3">

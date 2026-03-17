@@ -8,7 +8,7 @@ import {
 
 const CATEGORIES = ["Athlete", "Lifestyle Fitness"];
 const LEVELS = ["Beginner", "Intermediate", "Advanced"];
-const SPORTS = ["Baseball", "Football", "Basketball", "Hockey", "Soccer", "Lacrosse", "Track & Field", "Swimming", "Tennis", "Volleyball"];
+const SPORTS = ["Baseball", "Football", "Basketball", "Volleyball", "Golf"];
 
 interface DraftWorkout {
   week_number: number;
@@ -53,6 +53,8 @@ const AdminProgramCreator = () => {
   const [daysPerWeek, setDaysPerWeek] = useState(3);
   const [generating, setGenerating] = useState(false);
   const [draft, setDraft] = useState<DraftProgram | null>(null);
+  const [batchGenerating, setBatchGenerating] = useState(false);
+  const [batchResults, setBatchResults] = useState<any[] | null>(null);
 
   // --- Approval ---
   const [price, setPrice] = useState(49);
@@ -108,6 +110,24 @@ const AdminProgramCreator = () => {
       toast({ title: "Generation failed", description: e.message, variant: "destructive" });
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleBatchGenerate = async () => {
+    setBatchGenerating(true);
+    setBatchResults(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("batch-generate-programs");
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setBatchResults(data.results || []);
+      const successes = (data.results || []).filter((r: any) => r.status === "success").length;
+      toast({ title: "Batch complete", description: `${successes} programs generated successfully.` });
+      fetchInventory();
+    } catch (e: any) {
+      toast({ title: "Batch failed", description: e.message, variant: "destructive" });
+    } finally {
+      setBatchGenerating(false);
     }
   };
 
@@ -278,7 +298,29 @@ const AdminProgramCreator = () => {
           {generating ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
           {generating ? "Generating…" : "Generate Program"}
         </button>
+
+        <button onClick={handleBatchGenerate} disabled={batchGenerating}
+          className="bg-accent text-foreground px-6 py-2.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2 flex items-center gap-2 disabled:opacity-50 ml-2">
+          {batchGenerating ? <Loader2 size={14} className="animate-spin" /> : <Package size={14} />}
+          {batchGenerating ? "Generating All…" : "Batch Generate All Empty"}
+        </button>
       </div>
+
+      {/* Batch Results */}
+      {batchResults && (
+        <div className="bg-card shadow-m2 p-5">
+          <h2 className="text-sm font-bold text-foreground mb-3">Batch Results</h2>
+          <div className="space-y-1 max-h-[300px] overflow-y-auto">
+            {batchResults.map((r: any, i: number) => (
+              <div key={i} className="flex items-center gap-2 text-xs">
+                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${r.status === "success" ? "bg-emerald-400" : r.status === "skipped" ? "bg-muted-foreground" : "bg-destructive"}`} />
+                <span className="font-bold text-foreground truncate">{r.title}</span>
+                <span className="text-muted-foreground">{r.status}{r.workouts ? ` (${r.workouts} exercises)` : ""}{r.reason ? ` — ${r.reason}` : ""}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Draft Preview */}
       {draft && (
