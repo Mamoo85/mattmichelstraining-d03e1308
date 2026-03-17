@@ -27,42 +27,106 @@ serve(async (req) => {
 
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { global: { headers: { Authorization: authHeader } } }
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
     );
 
-    const { data: claimsData, error: claimsError } = await supabaseClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
-      throw new Error(`Authentication error: ${claimsError?.message || "Invalid token"}`);
-    }
+    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+    if (userError || !userData.user?.email) throw new Error("Auth failed");
+    const user = userData.user;
+    logStep("User authenticated", { email: user.email });
 
-    const email = claimsData.claims.email as string;
-    if (!email) throw new Error("User email not available in token");
-    logStep("User authenticated", { email });
-
-    const { priceId } = await req.json();
+    const { priceId, promoCode } = await req.json();
     if (!priceId) throw new Error("No priceId provided");
-    logStep("Price ID received", { priceId });
+    logStep("Price ID received", { priceId, promoCode: promoCode || "none" });
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { apiVersion: "2025-08-27.basil" });
 
-    const customers = await stripe.customers.list({ email, limit: 1 });
+    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     let customerId;
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
     }
     logStep("Customer lookup", { customerId: customerId || "new" });
 
-    const session = await stripe.checkout.sessions.create({
+    // Validate promo code if provided
+    let stripeCouponId: string | undefined;
+    let promoId: string | undefined;
+
+    if (promoCode) {
+      const { data: promo, error: promoError } = await supabaseClient
+        .from("promotions")
+        .select("*")
+        .eq("code", promoCode.toUpperCase().trim())
+        .eq("is_active", true)
+        .single();
+
+      if (promoError || !promo) {
+        throw new Error("Invalid or expired promo code");
+      }
+
+      // Check expiry
+      if (promo.expires_at && new Date(promo.expires_at) < new Date()) {
+        throw new Error("This promo code has expired");
+      }
+
+      // Check max uses
+      if (promo.max_uses && promo.current_uses >= promo.max_uses) {
+        throw new Error("This promo code has reached its usage limit");
+      }
+
+      // Check applies_to scope
+      if (promo.applies_to !== "all" && promo.applies_to !== "subscriptions") {
+        throw new Error("This promo code is not valid for subscriptions");
+      }
+
+      logStep("Promo validated", { code: promo.code, type: promo.discount_type, value: promo.discount_value });
+
+      // Create a Stripe coupon for this discount
+      const couponParams: any = {
+        name: `Promo: ${promo.code}`,
+      };
+
+      if (promo.discount_type === "percent") {
+        couponParams.percent_off = promo.discount_value;
+        // For subscriptions, apply once
+        couponParams.duration = "once";
+      } else {
+        couponParams.amount_off = Math.round(promo.discount_value * 100);
+        couponParams.currency = "usd";
+        couponParams.duration = "once";
+      }
+
+      const coupon = await stripe.coupons.create(couponParams);
+      stripeCouponId = coupon.id;
+      promoId = promo.id;
+      logStep("Stripe coupon created", { couponId: coupon.id });
+    }
+
+    const sessionParams: any = {
       customer: customerId,
-      customer_email: customerId ? undefined : email,
+      customer_email: customerId ? undefined : user.email,
       line_items: [{ price: priceId, quantity: 1 }],
       mode: "subscription",
       success_url: `${req.headers.get("origin")}/dashboard?checkout=success`,
       cancel_url: `${req.headers.get("origin")}/pricing?checkout=canceled`,
-    });
+    };
 
+    if (stripeCouponId) {
+      sessionParams.discounts = [{ coupon: stripeCouponId }];
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
     logStep("Checkout session created", { sessionId: session.id });
+
+    // Increment promo usage
+    if (promoId) {
+      await supabaseClient
+        .from("promotions")
+        .update({ current_uses: (await supabaseClient.from("promotions").select("current_uses").eq("id", promoId).single()).data?.current_uses + 1 })
+        .eq("id", promoId);
+      logStep("Promo usage incremented");
+    }
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
