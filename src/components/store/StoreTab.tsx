@@ -7,7 +7,7 @@ import { useAuth, TIER_DISCOUNTS } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import {
   Loader2, ShoppingBag, Upload, Video, Check,
-  Dumbbell, Calendar, Gift
+  Dumbbell, Calendar, Gift, X
 } from "lucide-react";
 
 const SUB_TABS = [
