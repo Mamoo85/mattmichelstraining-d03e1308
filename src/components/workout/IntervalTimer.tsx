@@ -3,6 +3,10 @@ import { X, Timer, Minus, Plus, Play, Pause, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { countdownBeep, workBeep, restBeep, completeChime } from "./useTimerAudio";
 
+function vibrate(pattern: number | number[]) {
+  if (navigator.vibrate) navigator.vibrate(pattern);
+}
+
 type Phase = "idle" | "prep" | "work" | "rest" | "done";
 
 interface TimerConfig {
@@ -75,10 +79,11 @@ const IntervalTimer = ({ onClose }: { onClose: () => void }) => {
     phaseRef.current = nextPhase;
     roundRef.current = round;
 
-    if (nextPhase === "work") workBeep();
-    else if (nextPhase === "rest") restBeep();
+    if (nextPhase === "work") { workBeep(); vibrate(300); }
+    else if (nextPhase === "rest") { restBeep(); vibrate([100, 80, 100]); }
     else if (nextPhase === "done") {
       completeChime();
+      vibrate([100, 60, 100, 60, 300]);
       stopInterval();
       setRunning(false);
     }
@@ -113,7 +118,7 @@ const IntervalTimer = ({ onClose }: { onClose: () => void }) => {
     }
 
     // Countdown beeps for last 3 seconds
-    if (s <= 3 && s > 0) countdownBeep();
+    if (s <= 3 && s > 0) { countdownBeep(); vibrate(50); }
 
     const next = s - 1;
     secondsRef.current = next;
