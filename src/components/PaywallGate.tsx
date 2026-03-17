@@ -20,13 +20,14 @@ interface PaywallGateProps {
 }
 
 const PaywallGate = ({ requiredTier, featureName, children }: PaywallGateProps) => {
-  const { subscriptionTier, user } = useAuth();
+  const { subscriptionTier, user, isLegend } = useAuth();
   const { isAdmin } = useIsAdmin();
 
   const userLevel = subscriptionTier ? (TIER_LEVEL[subscriptionTier] ?? 0) : 0;
   const requiredLevel = TIER_LEVEL[requiredTier] ?? 0;
 
-  if (isAdmin || userLevel >= requiredLevel) {
+  // Admins and Legend members bypass all paywalls
+  if (isAdmin || isLegend || userLevel >= requiredLevel) {
     return <>{children}</>;
   }
 

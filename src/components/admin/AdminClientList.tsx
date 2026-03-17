@@ -190,7 +190,7 @@ const AdminClientList = () => {
                               : "bg-muted text-muted-foreground hover:bg-green-600/20 hover:text-green-400"
                           }`}
                         >
-                          {profile.is_in_person ? "Remove" : "Mark In-Person"}
+                          {profile.is_in_person ? "Remove Legend" : "Make Legend"}
                         </button>
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
