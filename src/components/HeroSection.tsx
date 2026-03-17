@@ -14,7 +14,7 @@ import AuthorityBar from "./landing/AuthorityBar";
 import PremiumProgram from "./landing/PremiumProgram";
 import PortalShowcase from "./landing/PortalShowcase";
 import PortalEntrance from "./landing/PortalEntrance";
-import SuccessStories from "./landing/SuccessStories";
+
 import OnlineServices from "./landing/OnlineServices";
 import OnlineSavings from "./landing/OnlineSavings";
 import SportOnlineTraining from "./landing/SportOnlineTraining";
@@ -174,7 +174,7 @@ const HeroSection = () => {
 
         <PortalEntrance />
 
-        <SuccessStories />
+        
 
         {showFreeBonus && <FreeBonusBanner />}
 
