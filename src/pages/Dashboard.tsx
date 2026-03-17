@@ -20,6 +20,7 @@ const Dashboard = () => {
   const [profile, setProfile] = useState<{ full_name: string | null; athlete_name: string | null } | null>(null);
   const [activeTab, setActiveTab] = useState("log");
   const [portalLoading, setPortalLoading] = useState(false);
+  const [showTimer, setShowTimer] = useState(false);
 
   useEffect(() => {
     if (!user) return;
