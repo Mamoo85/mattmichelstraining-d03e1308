@@ -434,9 +434,16 @@ const AdminProgramCreator = () => {
 
       {/* Program Inventory */}
       <div>
-        <h2 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
-          <Package size={16} className="text-primary" /> Program Inventory ({inventory.length})
-        </h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
+            <Package size={16} className="text-primary" /> Program Inventory ({inventory.length})
+          </h2>
+          <button onClick={handleSyncStripe} disabled={syncing}
+            className="bg-primary text-primary-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 flex items-center gap-1.5 disabled:opacity-50">
+            {syncing ? <Loader2 size={12} className="animate-spin" /> : <DollarSign size={12} />}
+            {syncing ? "Syncing…" : "Sync All to Stripe"}
+          </button>
+        </div>
 
         {loadingInv ? (
           <div className="flex justify-center py-8"><Loader2 size={20} className="animate-spin text-primary" /></div>
