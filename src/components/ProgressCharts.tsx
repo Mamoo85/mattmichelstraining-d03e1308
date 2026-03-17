@@ -151,6 +151,9 @@ const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) =
           onRefresh={fetchData}
         />
       )}
+
+      {/* Recovery trends — only renders if data exists */}
+      {effectiveUserId && <RecoveryChart userId={effectiveUserId} />}
     </div>
   );
 };
