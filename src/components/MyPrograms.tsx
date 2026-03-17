@@ -1,12 +1,12 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Loader2, Dumbbell, MessageSquare, ShoppingBag, ChevronLeft, ChevronRight, Play } from "lucide-react";
+import { Loader2, Dumbbell, MessageSquare, ShoppingBag, ChevronLeft, ChevronRight, Printer } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import LiftChat from "./progress/LiftChat";
 import ActiveProgramView from "./programs/ActiveProgramView";
+import { printWorkoutLog } from "./programs/printWorkoutLog";
 
 interface ProgramExercise {
   name: string;
@@ -48,16 +48,16 @@ const MyPrograms = () => {
   const [weights, setWeights] = useState<Record<string, string>>({});
   const [loggingProgram, setLoggingProgram] = useState<string | null>(null);
   const [viewingProgram, setViewingProgram] = useState<ActiveProgram | null>(null);
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     if (!user) return;
     const fetchAll = async () => {
-      // Fetch purchased (custom) programs
+      // Fetch ALL purchased programs (not just active)
       const { data: purchased } = await supabase
         .from("purchased_programs" as any)
         .select("*")
         .eq("user_id", user.id)
-        .eq("is_active", true)
         .order("purchased_at", { ascending: false });
 
       if (purchased) {
@@ -69,12 +69,12 @@ const MyPrograms = () => {
         );
       }
 
-      // Fetch interactive (active) programs
+      // Fetch ALL interactive programs (active + completed)
       const { data: active } = await supabase
         .from("user_active_programs")
         .select("id, program_id, start_date, status, training_programs(id, title, description, category, sport)")
         .eq("user_id", user.id)
-        .eq("status", "active");
+        .order("created_at", { ascending: false });
 
       if (active) {
         setActivePrograms(
@@ -126,6 +126,75 @@ const MyPrograms = () => {
     setLoggingProgram(null);
   };
 
+  const handlePrintCustom = (program: PurchasedProgram) => {
+    printWorkoutLog({
+      title: program.program_title,
+      sport: program.sport,
+      category: program.program_type === "custom" ? "Custom Program" : "Sport Guide",
+      weeks: [
+        {
+          week: 1,
+          days: [
+            {
+              day: 1,
+              exercises: program.exercises.map((ex) => ({
+                name: ex.name,
+                setsReps: `${ex.sets} × ${ex.reps}`,
+                instructions: ex.notes,
+              })),
+            },
+          ],
+        },
+      ],
+    });
+  };
+
+  const handlePrintInteractive = async (ap: ActiveProgram) => {
+    // Fetch workouts for this program
+    const { data } = await supabase
+      .from("program_workouts")
+      .select("week_number, day_number, prescribed_sets_reps, coach_instructions, sort_order, exercise_library(title)")
+      .eq("program_id", ap.program_id)
+      .order("week_number")
+      .order("day_number")
+      .order("sort_order");
+
+    if (!data || data.length === 0) {
+      toast({ title: "No workouts to print", description: "This program doesn't have exercises yet.", variant: "destructive" });
+      return;
+    }
+
+    // Group into weeks and days
+    const weekMap = new Map<number, Map<number, Array<{ name: string; setsReps: string; instructions?: string }>>>();
+    for (const row of data as any[]) {
+      const w = row.week_number;
+      const d = row.day_number;
+      if (!weekMap.has(w)) weekMap.set(w, new Map());
+      const dayMap = weekMap.get(w)!;
+      if (!dayMap.has(d)) dayMap.set(d, []);
+      dayMap.get(d)!.push({
+        name: row.exercise_library?.title || "Unknown",
+        setsReps: row.prescribed_sets_reps,
+        instructions: row.coach_instructions || undefined,
+      });
+    }
+
+    const weeks = [...weekMap.entries()].sort((a, b) => a[0] - b[0]).map(([weekNum, dayMap]) => ({
+      week: weekNum,
+      days: [...dayMap.entries()].sort((a, b) => a[0] - b[0]).map(([dayNum, exercises]) => ({
+        day: dayNum,
+        exercises,
+      })),
+    }));
+
+    printWorkoutLog({
+      title: ap.program.title,
+      sport: ap.program.sport,
+      category: ap.program.category,
+      weeks,
+    });
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center py-12">
@@ -134,7 +203,6 @@ const MyPrograms = () => {
     );
   }
 
-  // If viewing a specific interactive program
   if (viewingProgram) {
     return (
       <div>
@@ -151,13 +219,20 @@ const MyPrograms = () => {
 
   const hasAny = purchasedPrograms.length > 0 || activePrograms.length > 0;
 
+  // Split into current and past
+  const currentInteractive = activePrograms.filter((a) => a.status === "active");
+  const pastInteractive = activePrograms.filter((a) => a.status !== "active");
+  const currentCustom = purchasedPrograms.filter((p) => p.is_active);
+  const pastCustom = purchasedPrograms.filter((p) => !p.is_active);
+  const hasPast = pastInteractive.length > 0 || pastCustom.length > 0;
+
   if (!hasAny) {
     return (
       <div className="bg-card shadow-m2 p-6 text-center">
         <ShoppingBag size={32} className="text-muted-foreground mx-auto mb-3" />
         <h3 className="text-sm font-bold text-foreground mb-1">No programs yet</h3>
         <p className="text-xs text-muted-foreground mb-4 max-w-sm mx-auto">
-          When you purchase a custom program or interactive training system from Matt, it automatically appears here — 
+          When you purchase a custom program or interactive training system from Matt, it automatically appears here —
           ready to log, track, and get coaching feedback on every lift.
         </p>
         <Link
@@ -173,31 +248,38 @@ const MyPrograms = () => {
 
   return (
     <div className="space-y-6">
-      {/* Interactive Programs */}
-      {activePrograms.length > 0 && (
+      {/* Active Interactive Programs */}
+      {currentInteractive.length > 0 && (
         <div>
-          <h3 className="text-[10px] font-bold uppercase tracking-widest text-primary mb-3">Interactive Programs</h3>
+          <h3 className="text-[10px] font-bold uppercase tracking-widest text-primary mb-3">Active Programs</h3>
           <div className="grid gap-3">
-            {activePrograms.map((ap) => (
-              <div
-                key={ap.id}
-                onClick={() => setViewingProgram(ap)}
-                className="bg-card shadow-m2 p-4 cursor-pointer hover:bg-accent/50 transition-m2"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-0.5">
-                      {ap.program.category}{ap.program.sport ? ` · ${ap.program.sport}` : ""}
-                    </span>
-                    <h3 className="text-sm font-bold text-foreground">{ap.program.title}</h3>
-                    <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">{ap.program.description}</p>
+            {currentInteractive.map((ap) => (
+              <div key={ap.id} className="bg-card shadow-m2">
+                <div
+                  onClick={() => setViewingProgram(ap)}
+                  className="p-4 cursor-pointer hover:bg-accent/50 transition-m2"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-0.5">
+                        {ap.program.category}{ap.program.sport ? ` · ${ap.program.sport}` : ""}
+                      </span>
+                      <h3 className="text-sm font-bold text-foreground">{ap.program.title}</h3>
+                      <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">{ap.program.description}</p>
+                    </div>
+                    <ChevronRight size={16} className="text-muted-foreground flex-shrink-0" />
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className="text-[10px] text-muted-foreground font-mono">
-                      Started {format(new Date(ap.start_date), "MMM d")}
-                    </span>
-                    <ChevronRight size={16} className="text-muted-foreground" />
-                  </div>
+                </div>
+                <div className="border-t border-border px-4 py-2 flex items-center justify-between">
+                  <span className="text-[10px] text-muted-foreground font-mono">
+                    Started {format(new Date(ap.start_date), "MMM d, yyyy")}
+                  </span>
+                  <button
+                    onClick={() => handlePrintInteractive(ap)}
+                    className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-primary transition-m2"
+                  >
+                    <Printer size={12} /> Print Log
+                  </button>
                 </div>
               </div>
             ))}
@@ -205,13 +287,13 @@ const MyPrograms = () => {
         </div>
       )}
 
-      {/* Purchased (custom) Programs */}
-      {purchasedPrograms.length > 0 && (
+      {/* Active Custom Programs */}
+      {currentCustom.length > 0 && (
         <div>
-          {activePrograms.length > 0 && (
+          {currentInteractive.length > 0 && (
             <h3 className="text-[10px] font-bold uppercase tracking-widest text-primary mb-3">Custom Programs</h3>
           )}
-          {purchasedPrograms.map((program) => (
+          {currentCustom.map((program) => (
             <div key={program.id} className="bg-card shadow-m2 overflow-hidden mb-4">
               <div className="p-4 border-b border-border">
                 <div className="flex items-center justify-between">
@@ -221,9 +303,17 @@ const MyPrograms = () => {
                     </span>
                     <h3 className="text-sm font-bold text-foreground">{program.program_title}</h3>
                   </div>
-                  <span className="text-[10px] text-muted-foreground font-mono">
-                    {format(new Date(program.purchased_at), "MMM d, yyyy")}
-                  </span>
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    <button
+                      onClick={() => handlePrintCustom(program)}
+                      className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-primary transition-m2"
+                    >
+                      <Printer size={12} /> Print
+                    </button>
+                    <span className="text-[10px] text-muted-foreground font-mono">
+                      {format(new Date(program.purchased_at), "MMM d, yyyy")}
+                    </span>
+                  </div>
                 </div>
                 {program.notes_from_matt && (
                   <div className="mt-2 bg-primary/5 border-l-2 border-primary/40 p-2.5">
@@ -284,6 +374,68 @@ const MyPrograms = () => {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Past Programs toggle */}
+      {hasPast && (
+        <div>
+          <button
+            onClick={() => setShowAll(!showAll)}
+            className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-m2 flex items-center gap-1.5"
+          >
+            {showAll ? "▾" : "▸"} Previous Programs ({pastInteractive.length + pastCustom.length})
+          </button>
+
+          {showAll && (
+            <div className="mt-3 space-y-3 opacity-80">
+              {pastInteractive.map((ap) => (
+                <div key={ap.id} className="bg-card shadow-m2">
+                  <div
+                    onClick={() => setViewingProgram(ap)}
+                    className="p-4 cursor-pointer hover:bg-accent/50 transition-m2"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-0.5">
+                          {ap.program.category}{ap.program.sport ? ` · ${ap.program.sport}` : ""} · Completed
+                        </span>
+                        <h3 className="text-sm font-bold text-foreground">{ap.program.title}</h3>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handlePrintInteractive(ap); }}
+                          className="text-muted-foreground hover:text-primary transition-m2"
+                        >
+                          <Printer size={14} />
+                        </button>
+                        <ChevronRight size={16} className="text-muted-foreground" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {pastCustom.map((program) => (
+                <div key={program.id} className="bg-card shadow-m2 p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-0.5">
+                        {program.program_type === "custom" ? "Custom" : "Guide"}{program.sport ? ` · ${program.sport}` : ""} · Completed
+                      </span>
+                      <h3 className="text-sm font-bold text-foreground">{program.program_title}</h3>
+                    </div>
+                    <button
+                      onClick={() => handlePrintCustom(program)}
+                      className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-primary transition-m2"
+                    >
+                      <Printer size={12} /> Print
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
