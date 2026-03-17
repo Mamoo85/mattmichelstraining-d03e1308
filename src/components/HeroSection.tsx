@@ -171,6 +171,8 @@ const HeroSection = () => {
           </motion.div>
         )}
 
+        <PortalEntrance />
+
         {showFreeBonus && <FreeBonusBanner />}
 
         {showPremium && <div id="section-portal"><PortalShowcase /></div>}
