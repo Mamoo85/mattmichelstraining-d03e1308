@@ -114,6 +114,21 @@ serve(async (req) => {
       promoId = promo.id;
     }
 
+    // Apply tier-based member discount
+    const { data: profile } = await supabaseClient
+      .from("profiles")
+      .select("subscription_tier")
+      .eq("user_id", user.id)
+      .single();
+
+    const tier = profile?.subscription_tier || "free";
+    const tierDiscountPct = TIER_DISCOUNTS[tier] || 0;
+    if (tierDiscountPct > 0 && discountAmount === 0) {
+      // Only apply tier discount if no promo code (don't stack)
+      discountAmount = (program.price * tierDiscountPct) / 100;
+      logStep("Tier discount applied", { tier, pct: tierDiscountPct, amount: discountAmount });
+    }
+
     const finalPrice = Math.max(0, program.price - discountAmount);
     logStep("Final price calculated", { original: program.price, discount: discountAmount, final: finalPrice });
 
