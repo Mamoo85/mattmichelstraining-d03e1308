@@ -32,7 +32,7 @@ const TABS = [
 ];
 
 const Admin = () => {
-  const [activeTab, setActiveTab] = useState("monthly");
+  const [activeTab, setActiveTab] = useState("schedule");
 
   return (
     <div className="min-h-screen bg-background">
