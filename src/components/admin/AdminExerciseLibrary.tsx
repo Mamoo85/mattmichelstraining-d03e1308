@@ -65,6 +65,25 @@ const AdminExerciseLibrary = () => {
   const openCreate = () => { setEditing(EMPTY); setModalOpen(true); setSportInput(""); };
   const openEdit = (ex: Exercise) => { setEditing({ ...ex }); setModalOpen(true); setSportInput(""); };
 
+  const handleAiGenerate = (result: string) => {
+    try {
+      // Strip markdown code fences if present
+      const cleaned = result.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+      const parsed = JSON.parse(cleaned);
+      setEditing((prev) => ({
+        ...prev,
+        title: parsed.title || prev.title,
+        equipment_needed: parsed.equipment_needed || "",
+        the_why: parsed.the_why || "",
+        client_type: parsed.client_type || [],
+        focus_area: parsed.focus_area || [],
+        sport: parsed.sport || [],
+      }));
+    } catch {
+      toast.error("Failed to parse AI result — fill in manually");
+    }
+  };
+
   const handleSave = async () => {
     if (!editing.title.trim()) { toast.error("Title is required"); return; }
     setSaving(true);
