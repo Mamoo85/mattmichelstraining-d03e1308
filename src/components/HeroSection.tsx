@@ -6,9 +6,11 @@ import { useContentMap, useSectionVisible } from "@/hooks/useSiteContent";
 import AuthorityBar from "./landing/AuthorityBar";
 import AudienceSelector from "./landing/AudienceSelector";
 import ForParentsCTA from "./landing/ForParentsCTA";
+import Testimonials from "./landing/Testimonials";
 import M2Difference from "./landing/M2Difference";
 import FindUs from "./landing/FindUs";
 import PortalEntrance from "./landing/PortalEntrance";
+import EmailCapture from "./landing/EmailCapture";
 
 const HeroSection = () => {
   const { content: hero } = useContentMap("hero");
