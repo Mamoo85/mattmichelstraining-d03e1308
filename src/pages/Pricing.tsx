@@ -112,6 +112,11 @@ const Pricing = () => {
       if (promoCode.trim()) {
         body.promoCode = promoCode.trim();
       }
+      // Include referral code from URL if present
+      const referralCode = getStoredReferralCode();
+      if (referralCode && !promoCode.trim()) {
+        body.referralCode = referralCode;
+      }
 
       const { data, error } = await supabase.functions.invoke("create-checkout", { body });
 
