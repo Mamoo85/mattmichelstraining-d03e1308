@@ -89,9 +89,23 @@ serve(async (req) => {
     const program = programsToGenerate[0];
     console.log(`Generating workouts for: ${program.title}`);
 
-    const systemPrompt = `You are Matt Michels' AI assistant. Draft a 4-week, 3-day/week training program using ONLY exercise IDs from the library. Each day should have 5-6 exercises. Be specific with sets/reps (e.g. "3x12", "4x8"). Include brief coach instructions. Use ONLY the exercise IDs provided.`;
+    const isFoundation = (program.category || "").toLowerCase() === "foundation";
 
-    const userPrompt = `Program: "${program.title}" (${program.category}, ${program.level}${program.sport ? `, ${program.sport}` : ""})
+    const systemPrompt = isFoundation
+      ? `You are Matt Michels' AI assistant for M² Performance Training youth foundation programs. These are AGE-APPROPRIATE programs for young athletes. RULES:
+- ONLY use exercise IDs from the provided library
+- Structure as 4 weeks, 3 days/week with 5-7 exercises per day
+- Be specific with sets/reps (e.g. "2x10", "3x8")
+- Include coach instructions in Matt's voice — encouraging, safety-first, technique-focused
+- Progressive overload across weeks but NEVER heavy loading for younger ages
+- Every day: warmup/mobility, core stability, strength, coordination/balance, cooldown
+- For ages 11-13: focus on movement quality, bodyweight, coordination, NO heavy loads
+- For ages 14-15: joint/tendon strengthening, connective tissue, moderate loads
+- For ages 16-17: progressive overload, sport-specific power, advanced mobility
+- For ages 18+: college-prep conditioning, peak performance, durability under volume`
+      : `You are Matt Michels' AI assistant. Draft a 4-week, 3-day/week training program using ONLY exercise IDs from the library. Each day should have 5-6 exercises. Be specific with sets/reps (e.g. "3x12", "4x8"). Include brief coach instructions. Use ONLY the exercise IDs provided.`;
+
+    const userPrompt = `Program: "${program.title}" (${program.category}, ${program.level}${program.sport ? `, ${program.sport}` : ""}${program.description ? `\nDescription: ${program.description}` : ""})
 Available exercises (ID: Name):
 ${exerciseList}`;
 
