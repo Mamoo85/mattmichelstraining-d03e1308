@@ -369,6 +369,9 @@ serve(async (req) => {
               stripe_session_id: session.id,
             });
 
+            // Award program purchase points
+            await awardPts(sb, userId, "program_purchase", 100, `Purchased: ${guide.title}`, session.id);
+
             await sb.from("notifications").insert({
               user_id: userId,
               type: "program_purchased",
