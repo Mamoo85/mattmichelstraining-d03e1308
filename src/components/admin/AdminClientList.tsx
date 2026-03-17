@@ -58,6 +58,18 @@ const AdminClientList = () => {
     },
   });
 
+  const toggleInPerson = useMutation({
+    mutationFn: async ({ profileId, value }: { profileId: string; value: boolean }) => {
+      const { error } = await supabase.from("profiles").update({ is_in_person: value }).eq("id", profileId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-clients"] });
+      toast.success("Client status updated");
+    },
+    onError: () => toast.error("Failed to update client status"),
+  });
+
   const filtered = profiles.filter(
     (p) =>
       (p.email ?? "").toLowerCase().includes(search.toLowerCase()) ||
@@ -72,6 +84,7 @@ const AdminClientList = () => {
 
   // Stats
   const activeUsers7d = new Set(workoutLogs.filter((l) => new Date(l.date) > new Date(Date.now() - 7 * 86400000)).map((l) => l.user_id)).size;
+  const inPersonCount = profiles.filter((p) => p.is_in_person).length;
 
   return (
     <div className="space-y-4">
