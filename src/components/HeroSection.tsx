@@ -174,6 +174,8 @@ const HeroSection = () => {
 
         <PortalEntrance />
 
+        <SuccessStories />
+
         {showFreeBonus && <FreeBonusBanner />}
 
         {showPremium && <div id="section-portal"><PortalShowcase /></div>}
