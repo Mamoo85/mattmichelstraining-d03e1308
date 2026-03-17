@@ -92,7 +92,7 @@ const About = () => {
 
         {showWhyM2 && <div className="mt-10"><WhyM2 /></div>}
         {showStory && <div className="mt-6"><MattsStory /></div>}
-        {showFixIt && <div className="mt-6"><CanFixIt /></div>}
+        
         {showClients && <div className="mt-6"><CurrentClients /></div>}
 
         {/* FOOTER */}
