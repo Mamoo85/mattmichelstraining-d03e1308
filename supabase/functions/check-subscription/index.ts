@@ -31,7 +31,13 @@ serve(async (req) => {
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) throw new Error("No authorization header provided");
+    if (!authHeader?.startsWith("Bearer ")) {
+      logStep("No auth header, returning unsubscribed");
+      return new Response(JSON.stringify({ subscribed: false, subscription_tier: "free" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
 
     const token = authHeader.replace("Bearer ", "");
 
@@ -42,9 +48,15 @@ serve(async (req) => {
     );
 
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
+    if (userError || !userData.user?.email) {
+      logStep("Auth failed, returning unsubscribed", { error: userError?.message });
+      return new Response(JSON.stringify({ subscribed: false, subscription_tier: "free" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
     const user = userData.user;
-    if (!user?.email) throw new Error("User not authenticated or email not available");
+    logStep("User authenticated", { userId: user.id, email: user.email });
     logStep("User authenticated", { userId: user.id, email: user.email });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
