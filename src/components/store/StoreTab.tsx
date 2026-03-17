@@ -76,7 +76,7 @@ const SessionsTab = () => {
 };
 
 const StoreTab = () => {
-  const [subTab, setSubTab] = useState("sessions");
+  const [subTab, setSubTab] = useState("foundation");
 
   return (
     <div>
