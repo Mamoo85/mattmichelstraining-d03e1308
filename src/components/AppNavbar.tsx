@@ -26,7 +26,9 @@ const AppNavbar = () => {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm shadow-m2">
       <div className="container flex items-center justify-between h-14">
         <Link to="/" className="flex items-center gap-2">
-          <img src={m2Logo} alt="M² Training" className="w-9 h-9 object-contain rounded" />
+          <div className="w-9 h-9 bg-primary/10 border border-primary/20 rounded flex items-center justify-center">
+            <span className="font-brand text-primary text-lg leading-none">M²</span>
+          </div>
           <span className="text-primary font-brand text-base hidden sm:block">M² TRAINING</span>
         </Link>
 
