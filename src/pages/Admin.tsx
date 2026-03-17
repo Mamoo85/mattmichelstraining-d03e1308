@@ -28,6 +28,7 @@ const TABS = [
   { key: "programs", label: "Programs" },
   { key: "exercises", label: "Exercises" },
   { key: "promotions", label: "Promotions" },
+  { key: "points", label: "Points" },
   { key: "clients", label: "Clients" },
   { key: "site", label: "Site Editor" },
   { key: "protocols", label: "Protocols" },
