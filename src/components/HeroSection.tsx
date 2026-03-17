@@ -144,6 +144,7 @@ const HeroSection = () => {
         {showOnline && <OnlineSavings />}
         {showOnline && <SportOnlineTraining />}
         {showTeamYouth && <div id="section-teams"><TeamYouthPrograms /></div>}
+        <ForParentsCTA />
         {showMonthly && <MonthlyFocus />}
         {showWeekend && <WeekendYouth />}
         {showTrainers && <div id="section-trainers"><ForTrainers /></div>}
