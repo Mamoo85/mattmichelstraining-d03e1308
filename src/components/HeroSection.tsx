@@ -35,7 +35,7 @@ const HeroSection = () => {
   const showPress = useSectionVisible("press");
   const showAudience = useSectionVisible("audience_selector");
   const showFreeBonus = useSectionVisible("free_bonus");
-  const showClients = useSectionVisible("current_clients");
+  
   const showGuides = useSectionVisible("guides");
   const showPremium = useSectionVisible("premium_program");
   const showOnline = useSectionVisible("online_services");
