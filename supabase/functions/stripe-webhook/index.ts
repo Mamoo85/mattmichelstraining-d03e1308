@@ -216,24 +216,31 @@ serve(async (req) => {
       }
 
       // Deduct gift card balance for guide/custom program purchases
-      if (meta.gift_card_id && meta.gift_card_applied_cents) {
-        const appliedCents = parseInt(meta.gift_card_applied_cents);
-        if (appliedCents > 0) {
-          const { data: currentCard } = await sb
-            .from("gift_cards")
-            .select("remaining_balance")
-            .eq("id", meta.gift_card_id)
-            .single();
-          if (currentCard) {
-            const deduction = appliedCents / 100;
-            const newBalance = Math.max(0, currentCard.remaining_balance - deduction);
-            await sb.from("gift_cards").update({
-              remaining_balance: newBalance,
-              is_active: newBalance > 0,
-              redeemed_at: new Date().toISOString(),
-            }).eq("id", meta.gift_card_id);
-            console.log(`[WEBHOOK] Gift card deducted: $${deduction}, remaining: $${newBalance}`);
-          }
+      // create-guide-payment passes gift_card_applied_cents (cents)
+      // create-program-checkout passes gift_card_applied (dollars)
+      const giftCardId = meta.gift_card_id;
+      let giftDeductionDollars = 0;
+
+      if (giftCardId && meta.gift_card_applied_cents) {
+        giftDeductionDollars = parseInt(meta.gift_card_applied_cents) / 100;
+      } else if (giftCardId && meta.gift_card_applied) {
+        giftDeductionDollars = parseFloat(meta.gift_card_applied);
+      }
+
+      if (giftCardId && giftDeductionDollars > 0) {
+        const { data: currentCard } = await sb
+          .from("gift_cards")
+          .select("remaining_balance")
+          .eq("id", giftCardId)
+          .single();
+        if (currentCard) {
+          const newBalance = Math.max(0, currentCard.remaining_balance - giftDeductionDollars);
+          await sb.from("gift_cards").update({
+            remaining_balance: newBalance,
+            is_active: newBalance > 0,
+            redeemed_at: new Date().toISOString(),
+          }).eq("id", giftCardId);
+          console.log(`[WEBHOOK] Gift card deducted: $${giftDeductionDollars}, remaining: $${newBalance}`);
         }
       }
 
