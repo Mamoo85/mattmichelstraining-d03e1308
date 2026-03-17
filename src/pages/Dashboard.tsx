@@ -15,7 +15,7 @@ const TABS = [
 ];
 
 const Dashboard = () => {
-  const { user, subscribed } = useAuth();
+  const { user, subscribed, subscriptionTier } = useAuth();
   const [profile, setProfile] = useState<{ full_name: string | null; athlete_name: string | null } | null>(null);
   const [activeTab, setActiveTab] = useState("log");
   const [portalLoading, setPortalLoading] = useState(false);
