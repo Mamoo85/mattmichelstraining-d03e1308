@@ -37,14 +37,14 @@ const TIMELINE = [
     age: "11–13",
     title: "Foundation Phase — Youth Strength Basics",
     desc: "Movement quality, body awareness, and coordination through age-appropriate strength training. No heavy loading — ever. This is about building the operating system their body will run on for the next decade. Middle school athletes learn proper form, develop connective tissue strength, and build the habits that prevent injury later.",
-    action: "Youth Starter Strength Guide — $12",
+    action: "Youth Starter Program — $20",
     link: "/shop",
   },
   {
     age: "14–15",
     title: "Work Capacity Phase — Building Durability",
     desc: "Introduce structured resistance training focused on joints, tendons, and connective tissue BEFORE adding load. This is the phase most youth programs skip — and where injuries start. Affordable online strength training programs at this age set the foundation for everything that follows.",
-    action: "Sport-specific strength guide — $9",
+    action: "Sport-specific program — from $20",
     link: "/shop",
   },
   {
@@ -66,10 +66,10 @@ const TIMELINE = [
 const FUNNEL_STEPS = [
   {
     step: "1",
-    title: "Start with a Strength Guide",
-    desc: "Pick your athlete's sport. Get Matt's top strength exercises with the science behind each one. Affordable at just $9–$12 — real programming from a 20-year veteran.",
+    title: "Start with a Program",
+    desc: "Pick your athlete's sport and level. Get a 4-week or 8-week program built by Matt — loaded into your portal or downloadable as a PDF to keep forever. From $20.",
     icon: BookOpen,
-    cta: "Browse Strength Guides",
+    cta: "Browse Programs",
     link: "/shop",
   },
   {
@@ -249,7 +249,7 @@ const ForParents = () => {
           </h2>
         </div>
         <p className="text-sm text-muted-foreground mb-6 max-w-2xl leading-relaxed">
-          You don't have to commit to anything big. Start small with an affordable strength training guide, see results, then decide how far you want to take it. Every step is designed for youth athletes — from middle school beginners to college-bound competitors.
+          You don't have to commit to anything big. Start with a single program, see results, then decide how far you want to take it. Every program is designed for youth athletes — from middle school beginners to college-bound competitors.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {FUNNEL_STEPS.map((f) => (
@@ -322,7 +322,7 @@ const ForParents = () => {
               to="/shop"
               className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
             >
-              Browse Strength Guides
+              Browse Programs
               <ArrowRight size={15} />
             </Link>
             <Link

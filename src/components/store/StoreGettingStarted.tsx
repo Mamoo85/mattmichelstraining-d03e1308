@@ -12,8 +12,8 @@ const STEPS = [
   },
   {
     num: "02",
-    title: "Buy a Program or Guide",
-    desc: "Pick what fits your athlete:\n\n• PDF Guides ($15) — Top-10 exercise blueprints by age group. Standalone. Keep forever.\n• 8-Week Interactive Programs ($20–$40) — Full training systems loaded into your portal. Log every set, message Matt on any exercise, get form feedback.\n• Custom 4-Week Program ($20) — Fill out an intake form. Matt builds it from scratch for your sport, equipment, and level.",
+    title: "Buy a Program",
+    desc: "Pick what fits your athlete:\n\n• 4-Week Programs ($20–$30) — Focused training blocks for specific goals or in-season work.\n• 8-Week Programs ($30–$40) — Full training systems loaded into your portal. Log every set, message Matt on any exercise, get form feedback.\n• Custom Programs ($20–$40) — Fill out an intake form. Matt builds it from scratch for your sport, equipment, and level.\n\nEvery program can be downloaded and printed as a PDF to keep forever.",
     ctaType: "store" as const,
   },
   {
@@ -97,7 +97,7 @@ const StoreGettingStarted = () => {
                   }}
                   className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-m2 mt-2"
                 >
-                  Browse Programs & Guides
+                  Browse Programs
                   <ArrowRight size={12} />
                 </button>
               )}

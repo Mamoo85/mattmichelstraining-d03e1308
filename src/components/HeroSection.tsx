@@ -6,7 +6,7 @@ import { useContentMap, useSectionVisible } from "@/hooks/useSiteContent";
 import { SmartSlogan } from "./LogoAnimations";
 
 import AuthorityBar from "./landing/AuthorityBar";
-import GuidesGrid from "./landing/GuidesGrid";
+// GuidesGrid removed
 
 import PremiumProgram from "./landing/PremiumProgram";
 import PortalShowcase from "./landing/PortalShowcase";
@@ -138,7 +138,7 @@ const HeroSection = () => {
 
         {showPremium && <div id="section-portal"><PortalShowcase /></div>}
         {showPremium && <PremiumProgram />}
-        {showGuides && <div id="section-guides"><GuidesGrid /></div>}
+        {/* GuidesGrid removed — programs only */}
         {showOnline && <OnlineServices />}
         {showOnline && <OnlineSavings />}
         {showOnline && <SportOnlineTraining />}

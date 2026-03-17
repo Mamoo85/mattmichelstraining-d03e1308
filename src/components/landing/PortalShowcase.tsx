@@ -95,7 +95,7 @@ const PortalShowcase = () => (
         <span className="text-foreground font-bold">Most online training is a template dressed up as coaching.</span> M² 
         is different because Matt actually coaches. He builds your program around your athlete's sport, body, and goals. 
         He watches their numbers. He answers their questions — personally. Everything you'd get training in his gym, 
-        you get here — starting at <span className="text-primary font-bold">$15</span> for a guide or <span className="text-primary font-bold">$20</span> for a custom program.
+        you get here — starting at <span className="text-primary font-bold">$20</span> for a custom program.
       </p>
     </div>
 
@@ -105,7 +105,7 @@ const PortalShowcase = () => (
         to="/shop"
         className="inline-flex items-center justify-center gap-2 flex-1 bg-primary text-primary-foreground px-5 py-3.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
       >
-        Browse Programs & Guides
+        Browse Programs
         <ArrowRight size={14} />
       </Link>
       <Link

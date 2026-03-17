@@ -64,7 +64,7 @@ const ValuePitch = () => (
           "I can't train everyone in person. But I can give you exactly what I'd give them."
         </p>
         <p className="text-xs text-muted-foreground mb-3">
-          Same system. Same coaching. Starting at $9.
+          Same system. Same coaching. Programs starting at $20.
         </p>
         <Link
           to="/shop"
