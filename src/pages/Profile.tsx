@@ -1,8 +1,13 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, TIERS, TierKey, TIER_DISCOUNTS } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import AppNavbar from "@/components/AppNavbar";
-import { User, Trophy, Medal, Award, Save, Loader2, Eye, EyeOff, Gift, Search } from "lucide-react";
+import { Link } from "react-router-dom";
+import {
+  User, Trophy, Medal, Award, Save, Loader2, Gift, Search,
+  Crown, ExternalLink, ShoppingBag, Dumbbell, Calendar, Shield,
+  ArrowRight, ChevronDown, ChevronUp, Zap, Clock, FileText
+} from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -11,51 +16,54 @@ interface ProfileData {
   full_name: string | null;
   athlete_name: string | null;
   email: string | null;
-}
-
-interface ChallengeResult {
-  challenge_id: string;
-  current_value: number;
-  is_public: boolean;
-  monthly_challenge_id: string | null;
+  subscription_tier: string;
 }
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { user, subscribed, subscriptionTier, subscriptionEnd, checkSubscription } = useAuth();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [fullName, setFullName] = useState("");
   const [athleteName, setAthleteName] = useState("");
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [portalLoading, setPortalLoading] = useState(false);
   const [challenges, setChallenges] = useState<any[]>([]);
   const [liftStats, setLiftStats] = useState<{ exercise_name: string; max_weight: number; count: number }[]>([]);
   const [giftCards, setGiftCards] = useState<any[]>([]);
+  const [purchasedPrograms, setPurchasedPrograms] = useState<any[]>([]);
+  const [activePrograms, setActivePrograms] = useState<any[]>([]);
+  const [bookings, setBookings] = useState<any[]>([]);
   const [lookupCode, setLookupCode] = useState("");
   const [lookupResult, setLookupResult] = useState<{ valid: boolean; remaining_balance: number; original_amount: number } | null>(null);
   const [lookupLoading, setLookupLoading] = useState(false);
+  const [showAllLifts, setShowAllLifts] = useState(false);
 
   useEffect(() => {
     if (!user) return;
     const load = async () => {
       setLoading(true);
-      // Profile
-      const { data: p } = await supabase.from("profiles").select("full_name, athlete_name, email").eq("user_id", user.id).single();
-      if (p) {
-        setProfile(p);
-        setFullName(p.full_name || "");
-        setAthleteName(p.athlete_name || "");
+
+      // Parallel data fetching for performance
+      const [profileRes, partsRes, logsRes, cardsRes, purchasedRes, activeRes, bookingsRes] = await Promise.all([
+        supabase.from("profiles").select("full_name, athlete_name, email, subscription_tier").eq("user_id", user.id).single(),
+        supabase.from("challenge_participants").select("challenge_id, current_value, is_public, monthly_challenge_id").eq("user_id", user.id),
+        supabase.from("progress_logs").select("exercise_name, weight").eq("user_id", user.id),
+        supabase.from("gift_cards" as any).select("*").or(`purchaser_id.eq.${user.id},redeemed_by.eq.${user.id}`).order("created_at", { ascending: false }),
+        supabase.from("purchased_programs").select("*").eq("user_id", user.id).order("purchased_at", { ascending: false }),
+        supabase.from("user_active_programs").select("*, training_programs(title, category, level, sport)").eq("user_id", user.id).order("created_at", { ascending: false }),
+        supabase.from("session_bookings").select("*").eq("user_id", user.id).order("slot_date", { ascending: false }).limit(10),
+      ]);
+
+      if (profileRes.data) {
+        setProfile(profileRes.data as ProfileData);
+        setFullName(profileRes.data.full_name || "");
+        setAthleteName(profileRes.data.athlete_name || "");
       }
 
-      // Challenge participation with rankings
-      const { data: parts } = await supabase
-        .from("challenge_participants")
-        .select("challenge_id, current_value, is_public, monthly_challenge_id")
-        .eq("user_id", user.id);
-      
-      if (parts && parts.length > 0) {
-        // For each challenge, get all participants to determine rank
+      // Challenge enrichment
+      if (partsRes.data && partsRes.data.length > 0) {
         const enriched = await Promise.all(
-          (parts as any[]).map(async (p: any) => {
+          (partsRes.data as any[]).map(async (p: any) => {
             const { data: allParts } = await supabase
               .from("challenge_participants")
               .select("user_id, current_value")
@@ -63,14 +71,9 @@ const Profile = () => {
               .order("current_value", { ascending: false });
             const rank = allParts ? allParts.findIndex((a: any) => a.user_id === user.id) + 1 : 0;
             const total = allParts?.length || 0;
-            // Get challenge title if monthly
             let title = p.challenge_id;
             if (p.monthly_challenge_id) {
-              const { data: mc } = await supabase
-                .from("monthly_challenges")
-                .select("title")
-                .eq("id", p.monthly_challenge_id)
-                .single();
+              const { data: mc } = await supabase.from("monthly_challenges").select("title").eq("id", p.monthly_challenge_id).single();
               if (mc) title = mc.title;
             }
             return { ...p, rank, total, title };
@@ -79,32 +82,25 @@ const Profile = () => {
         setChallenges(enriched);
       }
 
-      // Lift stats - top lifts
-      const { data: logs } = await supabase
-        .from("progress_logs")
-        .select("exercise_name, weight")
-        .eq("user_id", user.id);
-      if (logs && logs.length > 0) {
+      // Lift stats
+      if (logsRes.data && logsRes.data.length > 0) {
         const grouped: Record<string, { max: number; count: number }> = {};
-        logs.forEach((l: any) => {
+        logsRes.data.forEach((l: any) => {
           if (!grouped[l.exercise_name]) grouped[l.exercise_name] = { max: 0, count: 0 };
           grouped[l.exercise_name].count++;
           if (l.weight > grouped[l.exercise_name].max) grouped[l.exercise_name].max = l.weight;
         });
-        const stats = Object.entries(grouped)
-          .map(([name, s]) => ({ exercise_name: name, max_weight: s.max, count: s.count }))
-          .sort((a, b) => b.count - a.count)
-          .slice(0, 6);
-        setLiftStats(stats);
+        setLiftStats(
+          Object.entries(grouped)
+            .map(([name, s]) => ({ exercise_name: name, max_weight: s.max, count: s.count }))
+            .sort((a, b) => b.count - a.count)
+        );
       }
 
-      // Gift cards
-      const { data: cards } = await supabase
-        .from("gift_cards" as any)
-        .select("*")
-        .or(`purchaser_id.eq.${user.id},redeemed_by.eq.${user.id}`)
-        .order("created_at", { ascending: false });
-      if (cards) setGiftCards(cards);
+      if (cardsRes.data) setGiftCards(cardsRes.data);
+      if (purchasedRes.data) setPurchasedPrograms(purchasedRes.data as any[]);
+      if (activeRes.data) setActivePrograms(activeRes.data as any[]);
+      if (bookingsRes.data) setBookings(bookingsRes.data as any[]);
 
       setLoading(false);
     };
@@ -124,6 +120,19 @@ const Profile = () => {
       toast({ title: "Profile updated" });
     }
     setSaving(false);
+  };
+
+  const handleManageSubscription = async () => {
+    setPortalLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("customer-portal");
+      if (error) throw error;
+      if (data?.url) window.open(data.url, "_blank");
+    } catch (e: any) {
+      toast({ title: "Portal error", description: e.message, variant: "destructive" });
+    } finally {
+      setPortalLoading(false);
+    }
   };
 
   const handleLookup = async () => {
@@ -172,22 +181,197 @@ const Profile = () => {
     );
   }
 
+  const displayName = athleteName || fullName || "Athlete";
+  const visibleLifts = showAllLifts ? liftStats : liftStats.slice(0, 6);
+
   return (
     <div className="min-h-screen bg-background">
       <AppNavbar />
-      <div className="container pt-20 pb-12 max-w-2xl">
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-8">
-          <div className="w-14 h-14 bg-primary/10 border border-primary/20 flex items-center justify-center">
-            <User size={24} className="text-primary" />
-          </div>
-          <div>
-            <h1 className="text-xl font-black uppercase tracking-tight text-foreground">
-              {athleteName || fullName || "Your Profile"}
-            </h1>
-            <p className="text-xs text-muted-foreground">{profile?.email}</p>
+      <div className="container pt-20 pb-12 max-w-3xl">
+
+        {/* Profile Header Card */}
+        <div className="bg-card border border-border p-6 mb-6">
+          <div className="flex items-start gap-4">
+            <div className="w-16 h-16 bg-primary/10 border-2 border-primary/30 flex items-center justify-center shrink-0">
+              <User size={28} className="text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl font-black uppercase tracking-tight text-foreground truncate">
+                {displayName}
+              </h1>
+              <p className="text-xs text-muted-foreground">{profile?.email}</p>
+              <div className="flex items-center gap-2 mt-2 flex-wrap">
+                {subscriptionTier ? (
+                  <Badge className="flex items-center gap-1 text-[10px] uppercase tracking-widest">
+                    <Crown size={10} />
+                    {TIERS[subscriptionTier].name}
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="text-[10px] uppercase tracking-widest">Free Account</Badge>
+                )}
+                {subscriptionEnd && (
+                  <span className="text-[10px] text-muted-foreground">
+                    Renews {new Date(subscriptionEnd).toLocaleDateString()}
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="flex flex-col gap-2 shrink-0">
+              {subscribed ? (
+                <button
+                  onClick={handleManageSubscription}
+                  disabled={portalLoading}
+                  className="flex items-center gap-1.5 bg-primary text-primary-foreground px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-50"
+                >
+                  {portalLoading ? <Loader2 size={12} className="animate-spin" /> : <ExternalLink size={12} />}
+                  Manage Plan
+                </button>
+              ) : (
+                <Link
+                  to="/pricing"
+                  className="flex items-center gap-1.5 bg-primary text-primary-foreground px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all"
+                >
+                  <Zap size={12} />
+                  Upgrade
+                </Link>
+              )}
+            </div>
           </div>
         </div>
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6">
+          <Link to="/dashboard" className="bg-card border border-border p-3 flex flex-col items-center gap-1.5 hover:border-primary/40 transition-all">
+            <Dumbbell size={18} className="text-primary" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Dashboard</span>
+          </Link>
+          <Link to="/shop" className="bg-card border border-border p-3 flex flex-col items-center gap-1.5 hover:border-primary/40 transition-all">
+            <ShoppingBag size={18} className="text-primary" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Shop</span>
+          </Link>
+          <Link to="/schedule" className="bg-card border border-border p-3 flex flex-col items-center gap-1.5 hover:border-primary/40 transition-all">
+            <Calendar size={18} className="text-primary" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Schedule</span>
+          </Link>
+          <Link to="/pricing" className="bg-card border border-border p-3 flex flex-col items-center gap-1.5 hover:border-primary/40 transition-all">
+            <Shield size={18} className="text-primary" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Plans</span>
+          </Link>
+        </div>
+
+        {/* Subscription Details */}
+        {subscribed && subscriptionTier && (
+          <div className="bg-primary/5 border border-primary/20 p-5 mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <Crown size={14} className="text-primary" />
+              <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Your Subscription</span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Plan</p>
+                <p className="text-sm font-bold text-foreground">{TIERS[subscriptionTier].name}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Price</p>
+                <p className="text-sm font-bold text-foreground">{TIERS[subscriptionTier].price}/mo</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Store Discount</p>
+                <p className="text-sm font-bold text-primary">{TIER_DISCOUNTS[subscriptionTier]}% off</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Renews</p>
+                <p className="text-sm font-bold text-foreground">
+                  {subscriptionEnd ? new Date(subscriptionEnd).toLocaleDateString() : "—"}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleManageSubscription}
+              disabled={portalLoading}
+              className="mt-4 flex items-center gap-1.5 border border-primary/30 text-primary px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-primary/10 transition-all disabled:opacity-50"
+            >
+              {portalLoading ? <Loader2 size={12} className="animate-spin" /> : <ExternalLink size={12} />}
+              Update Payment · Cancel · Change Plan
+            </button>
+          </div>
+        )}
+
+        {/* My Programs */}
+        {(activePrograms.length > 0 || purchasedPrograms.length > 0) && (
+          <div className="bg-card border border-border p-5 mb-6">
+            <h2 className="text-[10px] font-bold uppercase tracking-widest text-primary mb-4 flex items-center gap-1.5">
+              <Dumbbell size={12} /> My Programs
+            </h2>
+            <div className="space-y-2">
+              {activePrograms.map((ap: any) => (
+                <div key={ap.id} className="flex items-center justify-between bg-muted p-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-foreground truncate">
+                      {(ap.training_programs as any)?.title || "Training Program"}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {(ap.training_programs as any)?.category} · {(ap.training_programs as any)?.level}
+                      {(ap.training_programs as any)?.sport && ` · ${(ap.training_programs as any).sport}`}
+                    </p>
+                  </div>
+                  <Badge variant={ap.status === "active" ? "default" : "outline"} className="text-[9px] uppercase tracking-widest shrink-0">
+                    {ap.status}
+                  </Badge>
+                </div>
+              ))}
+              {purchasedPrograms.map((pp: any) => (
+                <div key={pp.id} className="flex items-center justify-between bg-muted p-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-foreground truncate">{pp.program_title}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {pp.program_type === "custom" ? "Custom Program" : pp.program_type}
+                      {pp.sport && ` · ${pp.sport}`}
+                      {" · "}Purchased {new Date(pp.purchased_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <FileText size={14} className="text-primary shrink-0" />
+                </div>
+              ))}
+            </div>
+            <Link
+              to="/dashboard"
+              className="mt-3 flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary/80 transition-all"
+            >
+              Go to Dashboard <ArrowRight size={12} />
+            </Link>
+          </div>
+        )}
+
+        {/* Recent Bookings */}
+        {bookings.length > 0 && (
+          <div className="bg-card border border-border p-5 mb-6">
+            <h2 className="text-[10px] font-bold uppercase tracking-widest text-primary mb-4 flex items-center gap-1.5">
+              <Calendar size={12} /> Session History
+            </h2>
+            <div className="space-y-2">
+              {bookings.slice(0, 5).map((b: any) => (
+                <div key={b.id} className="flex items-center justify-between bg-muted p-3">
+                  <div>
+                    <p className="text-sm font-bold text-foreground">
+                      {new Date(b.slot_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                      {" at "}{b.start_time?.slice(0, 5)}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {b.duration_minutes} min · ${(b.amount_cents / 100).toFixed(0)}
+                    </p>
+                  </div>
+                  <Badge
+                    variant={b.status === "confirmed" ? "default" : "outline"}
+                    className={`text-[9px] uppercase tracking-widest ${b.status === "cancelled" ? "text-destructive" : ""}`}
+                  >
+                    {b.status}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Edit Profile */}
         <div className="bg-card border border-border p-5 mb-6">
@@ -220,7 +404,9 @@ const Profile = () => {
         {/* Challenge Medals */}
         {challenges.length > 0 && (
           <div className="bg-card border border-border p-5 mb-6">
-            <h2 className="text-[10px] font-bold uppercase tracking-widest text-primary mb-4">Challenge Results</h2>
+            <h2 className="text-[10px] font-bold uppercase tracking-widest text-primary mb-4 flex items-center gap-1.5">
+              <Trophy size={12} /> Challenge Results
+            </h2>
             <div className="space-y-3">
               {challenges.map((c: any, i: number) => (
                 <div key={i} className="flex items-center gap-3 bg-muted p-3">
@@ -241,6 +427,32 @@ const Profile = () => {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Lift Stats */}
+        {liftStats.length > 0 && (
+          <div className="bg-card border border-border p-5 mb-6">
+            <h2 className="text-[10px] font-bold uppercase tracking-widest text-primary mb-4 flex items-center gap-1.5">
+              <Dumbbell size={12} /> Top Lifts
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {visibleLifts.map((s, i) => (
+                <div key={i} className="bg-muted p-3">
+                  <p className="text-xs font-bold text-foreground truncate">{s.exercise_name}</p>
+                  <p className="text-lg font-mono font-bold text-primary">{Math.round(s.max_weight)} lbs</p>
+                  <p className="text-[10px] text-muted-foreground">{s.count} sessions logged</p>
+                </div>
+              ))}
+            </div>
+            {liftStats.length > 6 && (
+              <button
+                onClick={() => setShowAllLifts(!showAllLifts)}
+                className="mt-3 flex items-center gap-1 text-xs font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-all"
+              >
+                {showAllLifts ? <><ChevronUp size={12} /> Show Less</> : <><ChevronDown size={12} /> Show All {liftStats.length} Lifts</>}
+              </button>
+            )}
           </div>
         )}
 
@@ -278,7 +490,6 @@ const Profile = () => {
             </div>
           )}
 
-          {/* Owned cards */}
           {giftCards.length > 0 ? (
             <div className="space-y-2">
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Your Cards</p>
@@ -303,26 +514,10 @@ const Profile = () => {
             </div>
           ) : (
             <p className="text-xs text-muted-foreground text-center py-2">
-              No gift cards yet. <a href="/shop" className="text-primary hover:underline">Buy one in the store</a>.
+              No gift cards yet. <Link to="/shop" className="text-primary hover:underline">Buy one in the store</Link>.
             </p>
           )}
         </div>
-
-        {/* Lift Stats */}
-        {liftStats.length > 0 && (
-          <div className="bg-card border border-border p-5">
-            <h2 className="text-[10px] font-bold uppercase tracking-widest text-primary mb-4">Top Lifts</h2>
-            <div className="grid grid-cols-2 gap-3">
-              {liftStats.map((s, i) => (
-                <div key={i} className="bg-muted p-3">
-                  <p className="text-xs font-bold text-foreground truncate">{s.exercise_name}</p>
-                  <p className="text-lg font-mono font-bold text-primary">{Math.round(s.max_weight)} lbs</p>
-                  <p className="text-[10px] text-muted-foreground">{s.count} sessions logged</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
