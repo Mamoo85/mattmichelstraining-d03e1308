@@ -227,6 +227,9 @@ const Dashboard = () => {
 
   const renderHome = () => (
     <div className="space-y-6">
+      {/* Upcoming Sessions */}
+      <UpcomingSessions />
+
       {/* Monthly Focus Section */}
       {focus ? (
         <div>
