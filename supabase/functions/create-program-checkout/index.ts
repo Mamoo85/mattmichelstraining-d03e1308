@@ -197,6 +197,7 @@ serve(async (req) => {
         program_id: programId,
         user_id: user.id,
         type: "interactive_program",
+        promo_id: promoId || "",
         promo_code: promoCode || "",
         gift_card_code: giftCardCode || "",
         gift_card_id: giftCardId || "",
@@ -206,17 +207,8 @@ serve(async (req) => {
 
     logStep("Checkout session created", { sessionId: session.id, finalPrice: finalPriceCents / 100 });
 
-    // Increment promo usage
-    if (promoId) {
-      const { data: currentPromo } = await supabaseClient
-        .from("promotions")
-        .select("current_uses")
-        .eq("id", promoId)
-        .single();
-      await supabaseClient.from("promotions")
-        .update({ current_uses: (currentPromo?.current_uses || 0) + 1 })
-        .eq("id", promoId);
-    }
+    // NOTE: Promo usage increment moved to webhook (checkout.session.completed)
+    // to avoid incrementing before payment is confirmed
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
