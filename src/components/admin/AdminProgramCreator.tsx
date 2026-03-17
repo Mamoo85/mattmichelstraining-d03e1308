@@ -131,6 +131,7 @@ const AdminProgramCreator = () => {
     }
   };
 
+  const handleApproveAndSave = async () => {
     if (!draft) return;
     setSaving(true);
     try {
