@@ -433,11 +433,11 @@ const Dashboard = () => {
                 Manage Plan
               </button>
             )}
+          </div>
         </div>
 
         {/* Studio Check-In */}
         <StudioCheckIn />
-        </div>
 
         {/* Tab switcher */}
         <div className="flex gap-1 mb-6">
