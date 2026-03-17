@@ -139,6 +139,7 @@ const AdminClientList = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="text-sm font-bold text-foreground truncate">{profile.full_name || "No name"}</p>
+                        {profile.is_in_person && <span className="text-[9px] font-bold uppercase tracking-widest bg-green-600/20 text-green-400 px-1.5 py-0.5 flex items-center gap-0.5"><MapPin size={8} />IN-PERSON</span>}
                         {profile.is_pro && <span className="text-[9px] font-bold uppercase tracking-widest bg-primary/10 text-primary px-1.5 py-0.5">PRO</span>}
                         {profile.subscription_tier && profile.subscription_tier !== "free" && (
                           <span className="text-[9px] font-bold uppercase tracking-widest bg-accent text-accent-foreground px-1.5 py-0.5">{profile.subscription_tier}</span>
