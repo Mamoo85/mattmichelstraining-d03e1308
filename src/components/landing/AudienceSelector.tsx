@@ -7,7 +7,7 @@ const AUDIENCES = [
     label: "I'm a Parent",
     icon: Shield,
     route: "/for-parents",
-    desc: "Protect & prepare your athlete",
+    desc: "Protect & develop your athlete",
   },
   {
     label: "I'm a Coach",
@@ -18,14 +18,14 @@ const AUDIENCES = [
   {
     label: "I'm an Athlete",
     icon: Dumbbell,
-    targetId: "section-current-clients",
-    desc: "Log lifts & track progress",
+    route: "/shop",
+    desc: "Programs & training plans",
   },
   {
-    label: "I'm a Trainer",
+    label: "Current Client",
     icon: GraduationCap,
-    targetId: "section-trainers",
-    desc: "Mentorship & studio lease",
+    route: "/auth?redirect=/dashboard",
+    desc: "Log in & track your training",
   },
 ];
 
