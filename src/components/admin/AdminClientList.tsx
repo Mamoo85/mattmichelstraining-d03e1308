@@ -158,7 +158,23 @@ const AdminClientList = () => {
 
                   {expanded && (
                     <div className="px-4 pb-4 bg-muted/20 space-y-4">
-                      {/* User Info Summary */}
+                      {/* In-Person Toggle */}
+                      <div className="mt-2 flex items-center justify-between bg-card p-3 shadow-m2">
+                        <div className="flex items-center gap-2">
+                          <MapPin size={14} className="text-muted-foreground" />
+                          <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">In-Person Client</span>
+                        </div>
+                        <button
+                          onClick={() => toggleInPerson.mutate({ profileId: profile.id, value: !profile.is_in_person })}
+                          className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-colors ${
+                            profile.is_in_person
+                              ? "bg-green-600/20 text-green-400 hover:bg-red-600/20 hover:text-red-400"
+                              : "bg-muted text-muted-foreground hover:bg-green-600/20 hover:text-green-400"
+                          }`}
+                        >
+                          {profile.is_in_person ? "Remove" : "Mark In-Person"}
+                        </button>
+                      </div>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
                         <div className="bg-card p-2.5 shadow-m2">
                           <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Joined</p>
