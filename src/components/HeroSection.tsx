@@ -21,7 +21,6 @@ import MonthlyFocus from "./landing/MonthlyFocus";
 import WeekendYouth from "./landing/WeekendYouth";
 import ForTrainers from "./landing/ForTrainers";
 import CanFixIt from "./landing/CanFixIt";
-import MattsStory from "./landing/MattsStory";
 import FreeBonusBanner from "./landing/FreeBonusBanner";
 import WhyM2 from "./landing/WhyM2";
 import MerchSection from "./MerchSection";
