@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import InteractivePrograms from "./InteractivePrograms";
+import FoundationPrograms from "./FoundationPrograms";
 import MerchSection from "../MerchSection";
 import GiftCardSection from "./GiftCardSection";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +12,7 @@ import {
 } from "lucide-react";
 
 const SUB_TABS = [
+  { key: "foundation", label: "Youth Foundation" },
   { key: "sessions", label: "Sessions" },
   { key: "programs", label: "Interactive Programs" },
   { key: "custom", label: "Custom Program" },
