@@ -213,7 +213,8 @@ const ExerciseLibrary = () => {
                            {s}
                          </span>
                        ))}
-                    <h3 className="text-sm font-bold text-foreground leading-tight">
+                     </div>
+                     <h3 className="text-sm font-bold text-foreground leading-tight">
                       {ex.title}
                     </h3>
                     <p className="text-[11px] text-muted-foreground mt-1">
