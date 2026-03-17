@@ -76,7 +76,29 @@ serve(async (req) => {
 
     logStep("Payment verified, activating program");
 
-    // Insert into user_active_programs (using service role)
+    // Deduct gift card if used
+    const giftCardId = session.metadata?.gift_card_id;
+    const giftCardApplied = parseFloat(session.metadata?.gift_card_applied || "0");
+    if (giftCardId && giftCardApplied > 0) {
+      const { data: currentCard } = await supabaseClient
+        .from("gift_cards")
+        .select("remaining_balance")
+        .eq("id", giftCardId)
+        .single();
+
+      if (currentCard) {
+        const newBalance = Math.max(0, currentCard.remaining_balance - giftCardApplied);
+        await supabaseClient.from("gift_cards").update({
+          remaining_balance: newBalance,
+          is_active: newBalance > 0,
+          redeemed_by: user.id,
+          redeemed_at: new Date().toISOString(),
+        }).eq("id", giftCardId);
+        logStep("Gift card deducted", { applied: giftCardApplied, newBalance });
+      }
+    }
+
+    // Insert into user_active_programs
     const { error: insertError } = await supabaseClient
       .from("user_active_programs")
       .insert({

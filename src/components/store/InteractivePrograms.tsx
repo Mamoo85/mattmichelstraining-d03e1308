@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, TIER_DISCOUNTS } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Monitor, Filter, ShoppingBag, Check, Tag, Zap, Shield, Target } from "lucide-react";
+import { Loader2, Monitor, Filter, ShoppingBag, Check, Tag, Zap, Shield, Target, Gift, X } from "lucide-react";
 
 const LEVELS = ["Beginner", "Intermediate", "Advanced"] as const;
 const LEVEL_COLORS: Record<string, { bg: string; text: string; icon: typeof Zap }> = {
@@ -45,7 +45,9 @@ const InteractivePrograms = () => {
   const [level, setLevel] = useState<string>("");
   const [sport, setSport] = useState<string>("");
   const [programPromo, setProgramPromo] = useState("");
-
+  const [giftCode, setGiftCode] = useState("");
+  const [giftBalance, setGiftBalance] = useState<number | null>(null);
+  const [checkingGift, setCheckingGift] = useState(false);
   useEffect(() => {
     const fetchData = async () => {
       const { data } = await supabase
@@ -112,6 +114,33 @@ const InteractivePrograms = () => {
     });
   }, [programs, category, level, sport]);
 
+  const checkGiftCard = async () => {
+    if (!giftCode.trim() || !user) return;
+    setCheckingGift(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("redeem-gift-card", {
+        body: { code: giftCode.trim(), action: "check" },
+      });
+      if (error || data?.error) {
+        toast({ title: "Invalid code", description: data?.error || error?.message, variant: "destructive" });
+        setGiftBalance(null);
+      } else {
+        setGiftBalance(data.remaining_balance);
+        toast({ title: "Gift card applied!", description: `$${data.remaining_balance.toFixed(2)} available balance` });
+      }
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+      setGiftBalance(null);
+    } finally {
+      setCheckingGift(false);
+    }
+  };
+
+  const clearGiftCard = () => {
+    setGiftCode("");
+    setGiftBalance(null);
+  };
+
   const handleBuy = async (program: TrainingProgram) => {
     if (!user) {
       window.location.href = `/auth?redirect=/shop`;
@@ -124,12 +153,22 @@ const InteractivePrograms = () => {
       if (programPromo.trim()) {
         body.promoCode = programPromo.trim();
       }
+      if (giftCode.trim() && giftBalance !== null && giftBalance > 0) {
+        body.giftCardCode = giftCode.trim();
+      }
       const { data, error } = await supabase.functions.invoke("create-program-checkout", {
         body,
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      if (data?.url) window.location.href = data.url;
+      if (data?.activated) {
+        // Gift card covered full amount - program already activated
+        toast({ title: "🎉 Program activated!", description: "Gift card applied. Head to your Dashboard → My Programs." });
+        setOwnedProgramIds(prev => new Set([...prev, program.id]));
+        clearGiftCard();
+      } else if (data?.url) {
+        window.location.href = data.url;
+      }
     } catch (e: any) {
       const msg = e.message || "Something went wrong";
       if (msg.includes("already own")) {
@@ -231,7 +270,7 @@ const InteractivePrograms = () => {
       </div>
 
       {/* Promo code input */}
-      <div className="flex gap-2 mb-4 max-w-xs">
+      <div className="flex gap-2 mb-2 max-w-xs">
         <div className="flex-1 relative">
           <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
           <input
@@ -243,6 +282,38 @@ const InteractivePrograms = () => {
           />
         </div>
       </div>
+
+      {/* Gift card input */}
+      <div className="flex gap-2 mb-4 max-w-sm">
+        <div className="flex-1 relative">
+          <Gift className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+          <input
+            type="text"
+            value={giftCode}
+            onChange={(e) => { setGiftCode(e.target.value.toUpperCase()); setGiftBalance(null); }}
+            placeholder="GIFT CARD CODE"
+            className="w-full bg-card border border-border pl-9 pr-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-primary outline-none font-mono uppercase tracking-widest"
+          />
+        </div>
+        {giftBalance !== null ? (
+          <button onClick={clearGiftCard} className="px-3 py-2 bg-muted text-muted-foreground hover:text-foreground text-xs transition-m2">
+            <X size={14} />
+          </button>
+        ) : (
+          <button
+            onClick={checkGiftCard}
+            disabled={!giftCode.trim() || checkingGift || !user}
+            className="px-3 py-2 bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-widest disabled:opacity-50 transition-m2"
+          >
+            {checkingGift ? <Loader2 size={12} className="animate-spin" /> : "Apply"}
+          </button>
+        )}
+      </div>
+      {giftBalance !== null && (
+        <div className="mb-4 text-xs text-primary font-bold flex items-center gap-1.5">
+          <Gift size={12} /> Gift card: ${giftBalance.toFixed(2)} available — will be applied at checkout
+        </div>
+      )}
 
       {/* Results */}
       {loading ? (
