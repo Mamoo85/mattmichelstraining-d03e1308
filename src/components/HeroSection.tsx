@@ -90,15 +90,21 @@ const HeroSection = () => {
 
             <div className="flex flex-wrap gap-3 justify-center">
               <Link
-                to="/auth?redirect=/shop"
+                to="/schedule"
                 className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
               >
-                Start training
+                Schedule Now
                 <ArrowRight size={15} />
+              </Link>
+              <Link
+                to="/auth?redirect=/shop"
+                className="inline-flex items-center justify-center gap-2 border-2 border-primary/40 text-primary px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:bg-primary/10 transition-m2"
+              >
+                Start training
               </Link>
               <button
                 onClick={scrollToPortal}
-                className="inline-flex items-center justify-center gap-2 border-2 border-primary/40 text-primary px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:bg-primary/10 transition-m2"
+                className="inline-flex items-center justify-center gap-2 border-2 border-border text-muted-foreground px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:text-foreground hover:border-foreground/30 transition-m2"
               >
                 See what's included
               </button>
