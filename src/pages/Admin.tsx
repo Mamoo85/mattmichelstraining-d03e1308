@@ -7,6 +7,7 @@ import AdminClientList from "@/components/admin/AdminClientList";
 import AdminProtocols from "@/components/admin/AdminProtocols";
 import AdminSiteEditor from "@/components/admin/AdminSiteEditor";
 import AdminCoachDashboard from "@/components/admin/AdminCoachDashboard";
+import AdminCoachInbox from "@/components/admin/AdminCoachInbox";
 import AdminPrograms from "@/components/admin/AdminPrograms";
 import AdminExerciseLibrary from "@/components/admin/AdminExerciseLibrary";
 import AdminPromotions from "@/components/admin/AdminPromotions";
