@@ -1,16 +1,19 @@
 import { useState } from "react";
-import ShopGrid from "../ShopGrid";
+import PdfGuides from "./PdfGuides";
+import InteractivePrograms from "./InteractivePrograms";
 import OnlineServices from "../landing/OnlineServices";
 import MerchSection from "../MerchSection";
+import ShopGrid from "../ShopGrid";
 
 const SUB_TABS = [
-  { key: "guides", label: "Guides & Programs" },
-  { key: "training", label: "Training" },
+  { key: "pdf-guides", label: "PDF Guides" },
+  { key: "programs", label: "Interactive Programs" },
+  { key: "custom", label: "Custom Program" },
   { key: "merchandise", label: "Merchandise" },
 ];
 
 const StoreTab = () => {
-  const [subTab, setSubTab] = useState("guides");
+  const [subTab, setSubTab] = useState("pdf-guides");
 
   return (
     <div>
@@ -31,9 +34,24 @@ const StoreTab = () => {
         ))}
       </div>
 
-      {subTab === "guides" && <ShopGrid />}
-      {subTab === "training" && <OnlineServices />}
+      {subTab === "pdf-guides" && <PdfGuides />}
+      {subTab === "programs" && <InteractivePrograms />}
+      {subTab === "custom" && <CustomProgramSection />}
       {subTab === "merchandise" && <MerchSection />}
+    </div>
+  );
+};
+
+/** Custom program intake — extracted from old ShopGrid */
+const CustomProgramSection = () => {
+  return (
+    <div>
+      <div className="bg-primary/10 border border-primary/20 p-4 mb-6">
+        <p className="text-sm text-foreground leading-relaxed">
+          Matt reads your intake and builds a fully custom program from scratch — your goals, your equipment, your level. No templates. No AI. Just 20 years of doing this.
+        </p>
+      </div>
+      <ShopGrid showCustomOnly />
     </div>
   );
 };
