@@ -193,6 +193,14 @@ serve(async (req) => {
         const productId = subscription.items.data[0]?.price?.product as string;
         const tier = PRODUCT_TIER_MAP[productId] || "basic";
         await syncTierToProfile(sb, email, tier, customerId);
+
+        // Award membership points (only on created, not every update)
+        if (event.type === "customer.subscription.created") {
+          const uid = await getUserIdByEmail(sb, email);
+          if (uid) {
+            await awardPts(sb, uid, "membership_monthly", 50, `Subscribed to ${tier} membership`, subscription.id);
+          }
+        }
       }
     }
 
