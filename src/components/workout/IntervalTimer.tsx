@@ -45,7 +45,7 @@ function formatTime(s: number): string {
 }
 
 const IntervalTimer = ({ onClose }: { onClose: () => void }) => {
-  const [config, setConfig] = useState<TimerConfig>({ prep: 10, work: 45, rest: 15, rounds: 5 });
+  const [config, setConfig] = useState<TimerConfig>({ prep: 5, work: 45, rest: 15, rounds: 5 });
   const [phase, setPhase] = useState<Phase>("idle");
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [currentRound, setCurrentRound] = useState(0);
