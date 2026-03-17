@@ -93,7 +93,47 @@ const AdminSiteEditor = () => {
     }
   };
 
-  if (sectionsLoading || contentLoading) {
+  const handleBatchRewrite = async (sectionKey: string, sectionLabel: string) => {
+    const items = contentBySection(sectionKey).filter((item) => item.content_value.trim());
+    if (items.length === 0) {
+      toast({ title: "No content to rewrite in this section" });
+      return;
+    }
+    setBatchRewriting(sectionKey);
+    try {
+      const fields: Record<string, { label: string; text: string }> = {};
+      items.forEach((item) => {
+        fields[item.id] = {
+          label: item.label || item.content_key,
+          text: editedContent[item.id] ?? item.content_value,
+        };
+      });
+
+      const { data, error } = await supabase.functions.invoke("ai-admin-assist", {
+        body: { type: "batch_site_content", context: { sectionLabel, fields } },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      const result = data?.result || "";
+      const cleaned = result.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+      const rewrites: Record<string, string> = JSON.parse(cleaned);
+
+      let count = 0;
+      for (const [id, newText] of Object.entries(rewrites)) {
+        if (typeof newText === "string" && newText.trim()) {
+          handleContentChange(id, newText);
+          count++;
+        }
+      }
+      toast({ title: `${count} field${count !== 1 ? "s" : ""} rewritten`, description: "Review changes and save when ready." });
+    } catch (e: any) {
+      toast({ title: "Batch rewrite failed", description: e.message, variant: "destructive" });
+    } finally {
+      setBatchRewriting(null);
+    }
+  };
+
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="w-6 h-6 animate-spin text-primary" />
