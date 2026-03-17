@@ -60,6 +60,7 @@ interface AuthContextType {
   subscribed: boolean;
   subscriptionTier: TierKey | null;
   subscriptionEnd: string | null;
+  isLegend: boolean;
   checkSubscription: () => Promise<void>;
 }
 
@@ -71,6 +72,7 @@ const AuthContext = createContext<AuthContextType>({
   subscribed: false,
   subscriptionTier: null,
   subscriptionEnd: null,
+  isLegend: false,
   checkSubscription: async () => {},
 });
 
