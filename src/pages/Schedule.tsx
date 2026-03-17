@@ -1,11 +1,13 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import AppNavbar from "@/components/AppNavbar";
+import PaywallGate from "@/components/PaywallGate";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { format, addDays, startOfDay, isBefore, isToday } from "date-fns";
 import { Loader2, Clock, DollarSign, Info, Calendar, CheckCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Button } from "@/components/ui/button";
 
 const formatTime12 = (t: string) => {

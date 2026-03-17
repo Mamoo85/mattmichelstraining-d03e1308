@@ -138,9 +138,18 @@ const AdminCoachDashboard = () => {
           <div key={item.id} className="bg-card border border-border border-l-4 border-l-primary p-4 space-y-3">
             {/* Header */}
             <div className="flex items-start justify-between">
-              <div>
+              <div className="flex items-center gap-2">
                 <span className="text-sm font-bold text-foreground">{item.clientName}</span>
-                <span className="text-xs text-muted-foreground ml-2 font-mono">
+                {(item as any).clientTier && (item as any).clientTier !== "free" && (
+                  <span className={`text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 ${
+                    (item as any).clientTier === "elite" || (item as any).clientTier === "team"
+                      ? "bg-primary/20 text-primary"
+                      : "bg-muted text-muted-foreground"
+                  }`}>
+                    {(item as any).clientTier}
+                  </span>
+                )}
+                <span className="text-xs text-muted-foreground font-mono">
                   {item.workout_logs?.date ? format(new Date(item.workout_logs.date), "MMM d, yyyy") : "—"}
                 </span>
               </div>
