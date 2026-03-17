@@ -80,11 +80,19 @@ const HeroSection = () => {
             className="py-10 md:py-20"
           >
             <div className="flex items-start gap-4 mb-6">
-              <img
-                src={m2Logo}
-                alt="M² Training"
-                className="w-14 h-14 md:w-20 md:h-20 object-contain rounded-md flex-shrink-0"
-              />
+              <div className="relative w-14 h-14 md:w-20 md:h-20 flex-shrink-0 rounded-md overflow-hidden">
+                <img
+                  src={m2Logo}
+                  alt="M² Training"
+                  className="w-full h-full object-contain rounded-md"
+                  style={{ filter: "brightness(0) saturate(100%)", opacity: 0.15 }}
+                />
+                <div
+                  className="absolute inset-0 flex items-center justify-center font-brand text-primary text-xl md:text-3xl"
+                >
+                  M²
+                </div>
+              </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-0.5 h-4 bg-primary" />
