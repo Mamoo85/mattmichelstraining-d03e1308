@@ -74,13 +74,14 @@ const AdminSiteEditor = () => {
     }
     setSaving(true);
     try {
-      for (const [id, value] of entries) {
-        const { error } = await supabase
-          .from("site_content")
-          .update({ content_value: value, updated_at: new Date().toISOString() })
-          .eq("id", id);
-        if (error) throw error;
-      }
+      // Batch all updates in parallel
+      const results = await Promise.all(
+        entries.map(([id, value]) =>
+          supabase.from("site_content").update({ content_value: value, updated_at: new Date().toISOString() }).eq("id", id)
+        )
+      );
+      const errors = results.filter((r) => r.error);
+      if (errors.length > 0) throw new Error(`${errors.length} update(s) failed`);
       setEditedContent({});
       invalidate();
       toast({ title: `Saved ${entries.length} change${entries.length > 1 ? "s" : ""}` });
