@@ -13,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { priceId } = await req.json();
+    const { priceId, metadata: extraMetadata } = await req.json();
     if (!priceId) throw new Error("priceId is required");
 
     const supabaseClient = createClient(
