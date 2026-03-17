@@ -67,6 +67,7 @@ const AdminProgramCreator = () => {
   const [linkingId, setLinkingId] = useState<string | null>(null);
   const [stripeProductInput, setStripeProductInput] = useState("");
   const [stripePriceInput, setStripePriceInput] = useState("");
+  const [syncing, setSyncing] = useState(false);
 
   // --- Exercise map for names ---
   const [exerciseMap, setExerciseMap] = useState<Record<string, string>>({});
