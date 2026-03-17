@@ -79,10 +79,11 @@ const IntervalTimer = ({ onClose }: { onClose: () => void }) => {
     phaseRef.current = nextPhase;
     roundRef.current = round;
 
-    if (nextPhase === "work") workBeep();
-    else if (nextPhase === "rest") restBeep();
+    if (nextPhase === "work") { workBeep(); vibrate(300); }
+    else if (nextPhase === "rest") { restBeep(); vibrate([100, 80, 100]); }
     else if (nextPhase === "done") {
       completeChime();
+      vibrate([100, 60, 100, 60, 300]);
       stopInterval();
       setRunning(false);
     }
