@@ -6,8 +6,6 @@ import { useContentMap, useSectionVisible } from "@/hooks/useSiteContent";
 
 import AuthorityBar from "./landing/AuthorityBar";
 import AudienceSelector from "./landing/AudienceSelector";
-import Testimonial from "./landing/Testimonial";
-import CurrentClients from "./landing/CurrentClients";
 import GuidesGrid from "./landing/GuidesGrid";
 import PressAuthority from "./landing/PressAuthority";
 import PremiumProgram from "./landing/PremiumProgram";
@@ -33,11 +31,11 @@ const HeroSection = () => {
   const showHero = useSectionVisible("hero");
   const showAuthority = useSectionVisible("authority_bar");
   const showStats = useSectionVisible("stats");
-  const showTestimonial = useSectionVisible("testimonial");
+  
   const showPress = useSectionVisible("press");
   const showAudience = useSectionVisible("audience_selector");
   const showFreeBonus = useSectionVisible("free_bonus");
-  const showClients = useSectionVisible("current_clients");
+  
   const showGuides = useSectionVisible("guides");
   const showPremium = useSectionVisible("premium_program");
   const showOnline = useSectionVisible("online_services");
@@ -160,12 +158,11 @@ const HeroSection = () => {
 
         {showAudience && <AudienceSelector />}
         {showFreeBonus && <FreeBonusBanner />}
-        {showTestimonial && <Testimonial />}
+        
         {showPress && <PressAuthority />}
-        {showClients && <div id="section-current-clients"><CurrentClients /></div>}
-        {showGuides && <div id="section-guides"><GuidesGrid /></div>}
         {showPremium && <PremiumProgram />}
         {showPremium && <PortalShowcase />}
+        {showGuides && <div id="section-guides"><GuidesGrid /></div>}
         {showOnline && <OnlineServices />}
         {showOnline && <OnlineSavings />}
         {showOnline && <SportOnlineTraining />}
