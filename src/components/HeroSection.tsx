@@ -42,7 +42,7 @@ const HeroSection = () => {
   const showAuthority = useSectionVisible("authority_bar");
   const showStats = useSectionVisible("stats");
   
-  const showFreeBonus = useSectionVisible("free_bonus");
+  const showAudience = useSectionVisible("free_bonus");
   
   const showGuides = useSectionVisible("guides");
   const showPremium = useSectionVisible("premium_program");
