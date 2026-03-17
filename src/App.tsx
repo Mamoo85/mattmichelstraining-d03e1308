@@ -20,6 +20,7 @@ import Admin from "./pages/Admin";
 import Pricing from "./pages/Pricing";
 import About from "./pages/About";
 import Profile from "./pages/Profile";
+import Schedule from "./pages/Schedule";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
