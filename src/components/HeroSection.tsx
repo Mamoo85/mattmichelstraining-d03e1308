@@ -85,7 +85,7 @@ const HeroSection = () => {
             </div>
 
             <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto mb-6 leading-relaxed text-center">
-              {hero.subtitle || "Matt Michels has spent two decades doing one thing — developing young athletes the right way. No shortcuts, no burnout, no injuries. Just results that speak for themselves."}
+              {hero.subtitle || "20+ years developing athletes the right way. Custom programs, real coaching, zero injuries. In-person in Grosse Pointe or online anywhere."}
             </p>
 
             <div className="flex flex-wrap gap-3 justify-center">
