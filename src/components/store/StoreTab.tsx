@@ -377,8 +377,14 @@ const CustomProgramSection = () => {
             </p>
           </div>
           <div className="text-right">
-            <div className="text-2xl font-mono font-bold text-primary">${tier.price}</div>
+            {discountPct > 0 && <div className="text-sm text-muted-foreground line-through">${tier.price}</div>}
+            <div className="text-2xl font-mono font-bold text-primary">
+              ${discountPct > 0 ? (tier.price * (1 - discountPct / 100)).toFixed(2) : tier.price}
+            </div>
             <div className="text-[9px] text-muted-foreground">{tier.label} custom program</div>
+            {discountPct > 0 && (
+              <div className="text-[8px] text-primary font-bold uppercase tracking-widest">{discountPct}% member discount</div>
+            )}
           </div>
         </div>
 
@@ -388,7 +394,7 @@ const CustomProgramSection = () => {
           className="bg-primary text-primary-foreground px-6 py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2 flex items-center gap-2 w-full justify-center disabled:opacity-50"
         >
           {buying ? <Loader2 size={14} className="animate-spin" /> : <ShoppingBag size={14} />}
-          Get Your Custom {tier.label} Program · ${tier.price}
+          Get Your Custom {tier.label} Program · ${discountPct > 0 ? (tier.price * (1 - discountPct / 100)).toFixed(2) : tier.price}
         </button>
       </div>
 
