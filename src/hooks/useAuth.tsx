@@ -121,6 +121,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSubscribed(false);
         setSubscriptionTier(null);
         setSubscriptionEnd(null);
+        setIsLegend(false);
       }
     });
 
