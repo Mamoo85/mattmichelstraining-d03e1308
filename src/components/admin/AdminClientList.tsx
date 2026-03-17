@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, ChevronDown, ChevronUp, Dumbbell, ShoppingBag, Calendar, MapPin } from "lucide-react";
 import { toast } from "sonner";
+import AiAssistButton from "./AiAssistButton";
 
 const AdminClientList = () => {
   const [search, setSearch] = useState("");
