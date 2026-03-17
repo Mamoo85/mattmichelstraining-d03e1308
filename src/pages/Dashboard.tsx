@@ -2,10 +2,11 @@ import AppNavbar from "@/components/AppNavbar";
 import ChallengeSystem from "@/components/ChallengeSystem";
 import MyPrograms from "@/components/MyPrograms";
 import WorkoutLogger from "@/components/workout/WorkoutLogger";
+import IntervalTimer from "@/components/workout/IntervalTimer";
 import { useAuth, TIERS } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ExternalLink, Loader2, Crown } from "lucide-react";
+import { ExternalLink, Loader2, Crown, Timer } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const TABS = [
@@ -19,6 +20,7 @@ const Dashboard = () => {
   const [profile, setProfile] = useState<{ full_name: string | null; athlete_name: string | null } | null>(null);
   const [activeTab, setActiveTab] = useState("log");
   const [portalLoading, setPortalLoading] = useState(false);
+  const [showTimer, setShowTimer] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -93,6 +95,20 @@ const Dashboard = () => {
         {activeTab === "programs" && <MyPrograms />}
         {activeTab === "challenges" && <ChallengeSystem />}
       </div>
+
+      {/* Floating timer button */}
+      {!showTimer && (
+        <button
+          onClick={() => setShowTimer(true)}
+          className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:opacity-90 transition-all rounded-full"
+          aria-label="Open interval timer"
+        >
+          <Timer size={24} />
+        </button>
+      )}
+
+      {/* Timer overlay */}
+      {showTimer && <IntervalTimer onClose={() => setShowTimer(false)} />}
     </div>
   );
 };
