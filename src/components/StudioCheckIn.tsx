@@ -3,6 +3,7 @@ import { MapPin, Share2, Flame, CalendarCheck, Trophy, Loader2, Check } from "lu
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import { usePoints } from "@/hooks/usePoints";
 
 interface CheckIn {
   id: string;
