@@ -190,17 +190,33 @@ const AdminSiteEditor = () => {
           <div key={section.id} className="bg-card shadow-m2 p-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-bold text-foreground">{section.label}</h3>
-              <button
-                onClick={() => handleToggleVisibility(section)}
-                className={`flex items-center gap-1.5 px-3 py-1 text-[10px] font-bold uppercase tracking-widest transition-m2 ${
-                  section.is_visible
-                    ? "bg-primary/10 text-primary"
-                    : "bg-destructive/10 text-destructive"
-                }`}
-              >
-                {section.is_visible ? <Eye size={12} /> : <EyeOff size={12} />}
-                {section.is_visible ? "Visible" : "Hidden"}
-              </button>
+              <div className="flex items-center gap-1.5">
+                {items.filter((i) => i.content_value.trim()).length > 1 && (
+                  <button
+                    onClick={() => handleBatchRewrite(section.section_key, section.label)}
+                    disabled={batchRewriting === section.section_key}
+                    className="flex items-center gap-1 px-3 py-1 text-[10px] font-bold uppercase tracking-widest bg-accent text-accent-foreground hover:bg-accent/80 transition-m2 disabled:opacity-50"
+                  >
+                    {batchRewriting === section.section_key ? (
+                      <Loader2 size={12} className="animate-spin" />
+                    ) : (
+                      <Sparkles size={12} />
+                    )}
+                    {batchRewriting === section.section_key ? "Rewriting…" : "AI Rewrite All"}
+                  </button>
+                )}
+                <button
+                  onClick={() => handleToggleVisibility(section)}
+                  className={`flex items-center gap-1.5 px-3 py-1 text-[10px] font-bold uppercase tracking-widest transition-m2 ${
+                    section.is_visible
+                      ? "bg-primary/10 text-primary"
+                      : "bg-destructive/10 text-destructive"
+                  }`}
+                >
+                  {section.is_visible ? <Eye size={12} /> : <EyeOff size={12} />}
+                  {section.is_visible ? "Visible" : "Hidden"}
+                </button>
+              </div>
             </div>
 
             {items.length > 0 ? (
