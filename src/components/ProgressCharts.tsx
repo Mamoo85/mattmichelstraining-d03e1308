@@ -10,6 +10,7 @@ import BodyAvatar from "./progress/BodyAvatar";
 import LogForm from "./progress/LogForm";
 import StatsRow from "./progress/StatsRow";
 import LogHistory from "./progress/LogHistory";
+import RecoveryChart from "./progress/RecoveryChart";
 
 interface ProgressLog {
   id: string;
