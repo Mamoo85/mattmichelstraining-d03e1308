@@ -14,7 +14,7 @@ interface DbExercise {
 }
 
 const CLIENT_TYPES = ["Athlete", "Lifestyle Fitness"] as const;
-const FOCUS_AREAS = ["Mobility", "Strength", "Core Stability", "Flexibility", "Rehab", "Stability", "Posture"] as const;
+const FOCUS_AREAS = ["Mobility", "Strength", "Core Stability", "Power", "Rehab", "Stability", "Posture", "Flexibility", "Speed", "Core", "Injury Prevention"] as const;
 
 const ExerciseLibrary = () => {
   const [exercises, setExercises] = useState<DbExercise[]>([]);
@@ -22,6 +22,7 @@ const ExerciseLibrary = () => {
   const [search, setSearch] = useState("");
   const [activeClientType, setActiveClientType] = useState<string | null>(null);
   const [activeFocusArea, setActiveFocusArea] = useState<string | null>(null);
+  const [activeSport, setActiveSport] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
