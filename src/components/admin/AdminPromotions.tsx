@@ -2,8 +2,9 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Plus, Trash2, Gift, Tag, Loader2, X, Search, Copy } from "lucide-react";
+import { Plus, Trash2, Gift, Tag, Loader2, X, Search, Copy, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import AiAssistButton from "./AiAssistButton";
 
 const AdminPromotions = () => {
   const { user } = useAuth();
