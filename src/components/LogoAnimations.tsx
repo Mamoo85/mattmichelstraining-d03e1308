@@ -120,10 +120,10 @@ const SmartSlogan = () => {
   const [started, setStarted] = useState(false);
 
   useEffect(() => {
-    // Wait 3 seconds before starting to cycle
+    // Wait 6 seconds before starting to cycle
     const startTimer = setTimeout(() => {
       setStarted(true);
-    }, 3000);
+    }, 6000);
     return () => clearTimeout(startTimer);
   }, []);
 
@@ -131,7 +131,7 @@ const SmartSlogan = () => {
     if (!started) return;
     const interval = setInterval(() => {
       setIndex((prev) => (prev + 1) % 2);
-    }, 4000);
+    }, 8000);
     return () => clearInterval(interval);
   }, [started]);
 
