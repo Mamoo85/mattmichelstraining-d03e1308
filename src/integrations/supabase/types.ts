@@ -115,6 +115,47 @@ export type Database = {
         }
         Relationships: []
       }
+      gifted_products: {
+        Row: {
+          gift_type: string
+          gifted_at: string
+          gifted_by: string
+          id: string
+          notes: string | null
+          product_id: string | null
+          promotion_id: string | null
+          user_id: string
+        }
+        Insert: {
+          gift_type?: string
+          gifted_at?: string
+          gifted_by: string
+          id?: string
+          notes?: string | null
+          product_id?: string | null
+          promotion_id?: string | null
+          user_id: string
+        }
+        Update: {
+          gift_type?: string
+          gifted_at?: string
+          gifted_by?: string
+          id?: string
+          notes?: string | null
+          product_id?: string | null
+          promotion_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gifted_products_promotion_id_fkey"
+            columns: ["promotion_id"]
+            isOneToOne: false
+            referencedRelation: "promotions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lift_messages: {
         Row: {
           created_at: string
@@ -464,6 +505,51 @@ export type Database = {
           reps?: number
           user_id?: string
           weight?: number
+        }
+        Relationships: []
+      }
+      promotions: {
+        Row: {
+          applies_to: string
+          code: string
+          created_at: string
+          current_uses: number
+          description: string
+          discount_type: string
+          discount_value: number
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          max_uses: number | null
+          specific_product_id: string | null
+        }
+        Insert: {
+          applies_to?: string
+          code: string
+          created_at?: string
+          current_uses?: number
+          description?: string
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          specific_product_id?: string | null
+        }
+        Update: {
+          applies_to?: string
+          code?: string
+          created_at?: string
+          current_uses?: number
+          description?: string
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          specific_product_id?: string | null
         }
         Relationships: []
       }
