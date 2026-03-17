@@ -80,6 +80,7 @@ const Admin = () => {
             </div>
           </div>
         )}
+        {activeTab === "videos" && <AdminVideoReview />}
         {activeTab === "dms" && <AdminDirectMessages />}
         {activeTab === "ai-programs" && <AdminProgramCreator />}
         {activeTab === "programs" && <AdminPrograms />}
