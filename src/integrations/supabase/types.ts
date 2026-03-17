@@ -345,6 +345,7 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          is_in_person: boolean
           is_pro: boolean
           stripe_customer_id: string | null
           subscription_tier: string
@@ -357,6 +358,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          is_in_person?: boolean
           is_pro?: boolean
           stripe_customer_id?: string | null
           subscription_tier?: string
@@ -369,6 +371,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          is_in_person?: boolean
           is_pro?: boolean
           stripe_customer_id?: string | null
           subscription_tier?: string

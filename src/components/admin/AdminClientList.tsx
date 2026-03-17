@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, ChevronDown, ChevronUp, Dumbbell, ShoppingBag, Calendar, Mail, User } from "lucide-react";
+import { Search, ChevronDown, ChevronUp, Dumbbell, ShoppingBag, Calendar, MapPin } from "lucide-react";
+import { toast } from "sonner";
 
 const AdminClientList = () => {
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const { data: profiles = [], isLoading } = useQuery({
     queryKey: ["admin-clients"],
@@ -56,6 +58,18 @@ const AdminClientList = () => {
     },
   });
 
+  const toggleInPerson = useMutation({
+    mutationFn: async ({ profileId, value }: { profileId: string; value: boolean }) => {
+      const { error } = await supabase.from("profiles").update({ is_in_person: value }).eq("id", profileId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-clients"] });
+      toast.success("Client status updated");
+    },
+    onError: () => toast.error("Failed to update client status"),
+  });
+
   const filtered = profiles.filter(
     (p) =>
       (p.email ?? "").toLowerCase().includes(search.toLowerCase()) ||
@@ -70,6 +84,7 @@ const AdminClientList = () => {
 
   // Stats
   const activeUsers7d = new Set(workoutLogs.filter((l) => new Date(l.date) > new Date(Date.now() - 7 * 86400000)).map((l) => l.user_id)).size;
+  const inPersonCount = profiles.filter((p) => p.is_in_person).length;
 
   return (
     <div className="space-y-4">
@@ -90,6 +105,10 @@ const AdminClientList = () => {
         <div className="bg-card shadow-m2 p-4">
           <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Total Workouts</p>
           <p className="text-2xl font-mono font-bold text-foreground">{workoutLogs.length}</p>
+        </div>
+        <div className="bg-card shadow-m2 p-4">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">In-Person</p>
+          <p className="text-2xl font-mono font-bold text-primary">{inPersonCount}</p>
         </div>
       </div>
 
@@ -120,6 +139,7 @@ const AdminClientList = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="text-sm font-bold text-foreground truncate">{profile.full_name || "No name"}</p>
+                        {profile.is_in_person && <span className="text-[9px] font-bold uppercase tracking-widest bg-green-600/20 text-green-400 px-1.5 py-0.5 flex items-center gap-0.5"><MapPin size={8} />IN-PERSON</span>}
                         {profile.is_pro && <span className="text-[9px] font-bold uppercase tracking-widest bg-primary/10 text-primary px-1.5 py-0.5">PRO</span>}
                         {profile.subscription_tier && profile.subscription_tier !== "free" && (
                           <span className="text-[9px] font-bold uppercase tracking-widest bg-accent text-accent-foreground px-1.5 py-0.5">{profile.subscription_tier}</span>
@@ -138,7 +158,23 @@ const AdminClientList = () => {
 
                   {expanded && (
                     <div className="px-4 pb-4 bg-muted/20 space-y-4">
-                      {/* User Info Summary */}
+                      {/* In-Person Toggle */}
+                      <div className="mt-2 flex items-center justify-between bg-card p-3 shadow-m2">
+                        <div className="flex items-center gap-2">
+                          <MapPin size={14} className="text-muted-foreground" />
+                          <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">In-Person Client</span>
+                        </div>
+                        <button
+                          onClick={() => toggleInPerson.mutate({ profileId: profile.id, value: !profile.is_in_person })}
+                          className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-colors ${
+                            profile.is_in_person
+                              ? "bg-green-600/20 text-green-400 hover:bg-red-600/20 hover:text-red-400"
+                              : "bg-muted text-muted-foreground hover:bg-green-600/20 hover:text-green-400"
+                          }`}
+                        >
+                          {profile.is_in_person ? "Remove" : "Mark In-Person"}
+                        </button>
+                      </div>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
                         <div className="bg-card p-2.5 shadow-m2">
                           <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Joined</p>
