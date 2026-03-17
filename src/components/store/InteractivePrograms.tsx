@@ -11,7 +11,7 @@ const LEVEL_COLORS: Record<string, { bg: string; text: string; icon: typeof Zap 
   Intermediate: { bg: "bg-amber-500/15", text: "text-amber-400", icon: Target },
   Advanced: { bg: "bg-red-500/15", text: "text-red-400", icon: Zap },
 };
-const SPORT_OPTIONS = ["Baseball", "Football", "Basketball", "Hockey", "Soccer", "Lacrosse", "Track & Field", "Swimming", "Tennis", "Volleyball"];
+const SPORT_OPTIONS = ["Baseball", "Football", "Basketball", "Volleyball", "Golf"];
 
 const PROGRAM_INCLUDES = [
   "Custom Warmup", "Corrective Exercises", "Strength", "Balance",
