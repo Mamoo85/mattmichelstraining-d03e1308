@@ -96,6 +96,7 @@ const StoreTab = () => {
         ))}
       </div>
 
+      {subTab === "foundation" && <FoundationPrograms />}
       {subTab === "sessions" && <SessionsTab />}
       {subTab === "programs" && <InteractivePrograms />}
       {subTab === "custom" && <CustomProgramSection />}
