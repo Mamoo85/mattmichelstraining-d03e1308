@@ -296,9 +296,7 @@ const AdminPrograms = () => {
               <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5">
                 <span>{p.category}</span>
                 <span>·</span>
-                <span>{p.age_range}</span>
-                <span>·</span>
-                <span>{p.sex}</span>
+                <span>{p.level}</span>
                 {p.sport && <><span>·</span><span>{p.sport}</span></>}
                 <span>·</span>
                 <span className="font-mono text-primary">${p.price}</span>
