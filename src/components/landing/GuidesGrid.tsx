@@ -17,9 +17,9 @@ const GUIDES = [
 const GuidesGrid = () => {
   const { content: c } = useContentMap("guides");
 
-  const sectionTitle = c.section_title || "Sport-Specific Strength Guides";
-  const sectionSubtitle = c.section_subtitle || "PDF · Written by Matt · Affordable · Instant download";
-  const sectionDesc = c.section_description || "Each guide gives your athlete Matt's top strength training exercises for their sport — with the reasoning behind every movement. Built for youth athletes from middle school through college prep. No fluff, no filler — just the exercises that matter for injury prevention and real performance gains.";
+  const sectionTitle = c.section_title || "Sport-Specific Guides";
+  const sectionSubtitle = c.section_subtitle || "PDF · Written by Matt · Instant download · Keep forever";
+  const sectionDesc = c.section_description || "Each guide gives your athlete Matt's top exercises for their sport — with the WHY behind every movement. Built for youth athletes from middle school through college prep. No filler.";
 
   return (
     <motion.div
@@ -46,7 +46,7 @@ const GuidesGrid = () => {
       </div>
       <div className="mt-2 text-center">
         <Link to="/shop" className="text-xs text-primary font-bold hover:opacity-80 transition-m2">
-          View all strength training guides →
+          View all guides & programs →
         </Link>
       </div>
     </motion.div>

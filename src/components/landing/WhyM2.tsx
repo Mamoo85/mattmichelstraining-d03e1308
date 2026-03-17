@@ -13,21 +13,21 @@ const WhyM2 = () => (
         <Shield size={20} className="text-primary mb-2" />
         <h3 className="text-sm font-bold text-foreground mb-1">Injury Prevention First</h3>
         <p className="text-xs text-muted-foreground leading-relaxed">
-          Every youth strength training program starts with healthy joints and healthy minds. I build work capacity and connective tissue strength before we ever chase numbers. That's why my athletes stay on the field — not on the bench.
+          Every program starts with joint health and connective tissue strength before chasing numbers. That's why my athletes stay on the field — not on the bench.
         </p>
       </div>
       <div className="bg-card shadow-m2 p-5">
         <Trophy size={20} className="text-primary mb-2" />
-        <h3 className="text-sm font-bold text-foreground mb-1">50+ College Athletes Produced</h3>
+        <h3 className="text-sm font-bold text-foreground mb-1">50+ College Athletes. Zero Injuries.</h3>
         <p className="text-xs text-muted-foreground leading-relaxed">
-          Most trainers move up to older, higher-paying clients. I stayed with young athletes for 20+ years. That's why my online strength training programs for middle school and high school athletes actually work — they're built on experience, not trends.
+          Most trainers move on to higher-paying clients. I stayed with young athletes for 20+ years. These programs are built on experience — not trends.
         </p>
       </div>
       <div className="bg-card shadow-m2 p-5">
         <Zap size={20} className="text-primary mb-2" />
         <h3 className="text-sm font-bold text-foreground mb-1">Strength Is the Foundation</h3>
         <p className="text-xs text-muted-foreground leading-relaxed">
-          Speed and agility come from strength — not ladder drills. When a young athlete gets stronger safely, everything else improves: first-step quickness, change of direction, and durability under game-day volume.
+          Speed and agility come from strength — not ladder drills. When an athlete gets stronger safely, everything improves: first-step quickness, change of direction, durability.
         </p>
       </div>
     </div>

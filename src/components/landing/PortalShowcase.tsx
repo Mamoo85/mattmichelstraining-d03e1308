@@ -8,30 +8,30 @@ import portalProgress from "@/assets/portal-progress.png";
 const FEATURES = [
   {
     icon: Monitor,
-    title: "Your program, ready to go",
-    desc: "Purchase a program and it loads into your portal instantly — exercises, sets, reps, all ready to log.",
+    title: "Your program loads instantly",
+    desc: "Buy a program → it appears in your portal with every exercise, set, and rep ready to log. No PDFs to manage.",
     image: portalPrograms,
     alt: "M2 Training portal showing purchased program with exercise logging",
   },
   {
     icon: MessageSquare,
-    title: "Direct line to Matt",
-    desc: "Tap 'Ask Matt' on any lift. He sees it, replies personally, and you get notified. Not a bot — Matt.",
+    title: "Message Matt on any exercise",
+    desc: "Tap 'Ask Matt' on any lift. Upload a video. He sees it, replies personally. Not a chatbot — Matt.",
     image: portalChat,
     alt: "M2 Training lift chat showing conversation between athlete and Coach Matt",
   },
   {
     icon: TrendingUp,
-    title: "Watch the gains stack up",
-    desc: "Every session tracked. PR markers, estimated 1RMs, and trend lines that prove it's working.",
+    title: "Track every session",
+    desc: "PR markers, estimated 1RMs, trend lines. See the progress in real numbers — not guesswork.",
     image: portalProgress,
     alt: "M2 Training progress chart showing strength gains over 8 weeks",
   },
 ];
 
 const VALUE_POINTS = [
-  { icon: User, text: "Matt personally reviews every athlete's progress" },
-  { icon: Shield, text: "20 years of injury-free training methodology" },
+  { icon: User, text: "Matt personally reviews every athlete's logs" },
+  { icon: Shield, text: "20 years. 50+ college athletes. Zero injuries." },
   { icon: Zap, text: "Programs built for your sport, level, and equipment" },
 ];
 
@@ -45,16 +45,14 @@ const PortalShowcase = () => (
     {/* Header */}
     <div className="mb-6">
       <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-2">
-        What makes M² different
+        What you actually get
       </span>
       <h3 className="text-xl md:text-2xl font-bold text-foreground leading-tight mb-2">
-        A real coach. In your corner.<br className="hidden sm:block" /> For less than a gym membership.
+        A real coach in your corner.<br className="hidden sm:block" /> Not a PDF and a "good luck."
       </h3>
       <p className="text-sm text-muted-foreground max-w-2xl leading-relaxed">
-        Other online programs hand you a PDF and disappear. At M², every program comes with a training portal 
-        and a direct line to Matt Michels — a coach who's spent 20 years developing 50+ college athletes 
-        without a single injury. He reads every message, reviews every log, and coaches your athlete 
-        like they're standing in his gym.
+        Every program comes with a training portal and direct access to Matt. He reads every message, 
+        reviews every log, and coaches your athlete like they're in his gym. The only difference is location.
       </p>
     </div>
 
@@ -94,11 +92,10 @@ const PortalShowcase = () => (
     {/* The pitch */}
     <div className="bg-card shadow-m2 border-l-4 border-primary p-5 mb-5">
       <p className="text-sm text-muted-foreground leading-relaxed">
-        <span className="text-foreground font-bold">Here's the truth:</span> Most online training is a template 
-        dressed up as coaching. M² is different because Matt actually coaches. He builds your program around 
-        your athlete's sport, body, and goals. He watches their numbers. He answers their questions — personally. 
-        The only things missing are his squat rack and his jokes. Everything else you'd get training in his gym, 
-        you get here — starting at <span className="text-primary font-bold">$9</span>.
+        <span className="text-foreground font-bold">Most online training is a template dressed up as coaching.</span> M² 
+        is different because Matt actually coaches. He builds your program around your athlete's sport, body, and goals. 
+        He watches their numbers. He answers their questions — personally. Everything you'd get training in his gym, 
+        you get here — starting at <span className="text-primary font-bold">$15</span> for a guide or <span className="text-primary font-bold">$20</span> for a custom program.
       </p>
     </div>
 
@@ -108,14 +105,14 @@ const PortalShowcase = () => (
         to="/shop"
         className="inline-flex items-center justify-center gap-2 flex-1 bg-primary text-primary-foreground px-5 py-3.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
       >
-        Get a Custom Program — $20
+        Browse Programs & Guides
         <ArrowRight size={14} />
       </Link>
       <Link
         to="/pricing"
         className="inline-flex items-center justify-center gap-2 flex-1 border-2 border-primary/40 text-primary px-5 py-3.5 text-xs font-bold uppercase tracking-widest hover:bg-primary/10 transition-m2"
       >
-        Subscribe from $12.99/mo
+        Monthly Plans from $12.99
         <ArrowRight size={14} />
       </Link>
     </div>

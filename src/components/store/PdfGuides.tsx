@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileText, Loader2, ShoppingBag, Send } from "lucide-react";
+import { FileText, Loader2, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -18,28 +18,28 @@ const GUIDES: Guide[] = [
   {
     id: "middle-school-foundation",
     title: "The Middle School Foundation (Top 10)",
-    subtitle: "Build the base before the game gets serious",
+    subtitle: "The 10 exercises every middle schooler needs before competitive sports",
     price: "$15",
     priceId: "price_middle_school_foundation",
-    description: "The 10 exercises every middle schooler needs before they step into competitive sports. Movement quality, injury-proofing, and the foundation that lasts a lifetime.",
+    description: "Movement quality, joint integrity, and the base that prevents injuries for years. Not a workout plan — a foundation your athlete keeps forever.",
     includes: ["10 exercises with full breakdowns", "Age-appropriate progressions", "The WHY behind each movement", "Parent guide included"],
   },
   {
     id: "high-school-armor",
     title: "High School Armor (Top 10)",
-    subtitle: "Bulletproof your body for varsity",
+    subtitle: "Build the structural integrity that keeps varsity athletes on the field",
     price: "$15",
     priceId: "price_high_school_armor",
-    description: "High school is where injuries happen — because kids skip the armor. These 10 exercises build durability, explosive power, and the structural integrity coaches can't teach.",
+    description: "High school is where injuries spike — because kids skip the armor. These 10 exercises build durability, explosive power, and connective tissue strength.",
     includes: ["10 exercises with sets & reps", "In-season vs off-season guidance", "The WHY behind each movement", "Injury prevention protocols"],
   },
   {
     id: "road-warrior",
     title: "The Road Warrior (Top 10 Travel Fixes)",
-    subtitle: "Stay sharp when you can't get to the gym",
+    subtitle: "Stay right when you can't get to the gym",
     price: "$15",
     priceId: "price_road_warrior",
-    description: "Hotel room. Airport layover. Tournament weekend. These 10 movements keep your body right when life takes you away from the gym. No equipment needed.",
+    description: "Hotel room. Tournament weekend. No equipment. These 10 movements keep your body functioning when travel takes you away from training.",
     includes: ["10 no-equipment exercises", "Rolling & mobility sequences", "The WHY behind each movement", "Travel-day warmup protocol"],
   },
 ];
@@ -85,7 +85,7 @@ const PdfGuides = () => {
         },
       });
       if (error) throw error;
-      toast({ title: "Request sent! 🙌", description: "Matt will review your request. Thanks for the input." });
+      toast({ title: "Request sent! 🙌", description: "Matt will review your request." });
       setGuideRequest("");
     } catch (e: any) {
       toast({ title: "Error sending request", description: e.message || "Something went wrong", variant: "destructive" });
@@ -99,7 +99,7 @@ const PdfGuides = () => {
       {/* Description */}
       <div className="bg-primary/10 border border-primary/20 p-4 mb-6">
         <p className="text-sm text-foreground leading-relaxed">
-          Foundational top-10 blueprints at <strong>$15 each</strong>. These are static PDF guides designed to teach you the WHY behind specific movements and give you a standalone arsenal of exercises.
+          <strong>Top-10 exercise blueprints — $15 each.</strong> Standalone PDF guides. Each one teaches you the WHY behind every movement so your athlete understands what they're doing and why it matters. Buy once, keep forever.
         </p>
       </div>
 
@@ -152,9 +152,9 @@ const PdfGuides = () => {
 
       {/* Request a Guide section */}
       <div className="mt-8 bg-card shadow-m2 p-5">
-        <h3 className="text-sm font-bold text-foreground mb-1">Don't see your sport?</h3>
+        <h3 className="text-sm font-bold text-foreground mb-1">Need something specific?</h3>
         <p className="text-[11px] text-muted-foreground mb-4">
-          Tell Matt what guide you need. He tracks every request and builds guides based on real demand.
+          Tell Matt what you're looking for. He builds new guides based on real demand — not trends.
         </p>
         <div className="flex gap-2">
           <input
@@ -175,7 +175,7 @@ const PdfGuides = () => {
             ) : (
               <Send size={12} />
             )}
-            Request Guide
+            Request
           </button>
         </div>
       </div>
