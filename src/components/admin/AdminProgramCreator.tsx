@@ -8,7 +8,7 @@ import {
 
 const CATEGORIES = ["Athlete", "Lifestyle Fitness"];
 const LEVELS = ["Beginner", "Intermediate", "Advanced"];
-const SPORTS = ["Baseball", "Football", "Basketball", "Hockey", "Soccer", "Lacrosse", "Track & Field", "Swimming", "Tennis", "Volleyball"];
+const SPORTS = ["Baseball", "Football", "Basketball", "Volleyball", "Golf"];
 
 interface DraftWorkout {
   week_number: number;
