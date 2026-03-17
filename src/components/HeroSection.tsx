@@ -45,9 +45,6 @@ const HeroSection = () => {
   const showMonthly = useSectionVisible("monthly_focus");
   const showWeekend = useSectionVisible("weekend_youth");
   const showTrainers = useSectionVisible("for_trainers");
-  const showFixIt = useSectionVisible("can_fix_it");
-  const showWhyM2 = useSectionVisible("why_m2");
-  const showStory = useSectionVisible("matts_story");
   const showMerch = useSectionVisible("merch");
   const showFindUs = useSectionVisible("find_us");
 
