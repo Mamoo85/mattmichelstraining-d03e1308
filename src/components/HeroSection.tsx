@@ -138,7 +138,7 @@ const HeroSection = () => {
 
         {showPremium && <div id="section-portal"><PortalShowcase /></div>}
         {showPremium && <PremiumProgram />}
-        {showGuides && <div id="section-guides"><GuidesGrid /></div>}
+        {/* GuidesGrid removed — programs only */}
         {showOnline && <OnlineServices />}
         {showOnline && <OnlineSavings />}
         {showOnline && <SportOnlineTraining />}
