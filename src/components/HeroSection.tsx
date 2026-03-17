@@ -178,9 +178,6 @@ const HeroSection = () => {
         {showMonthly && <MonthlyFocus />}
         {showWeekend && <WeekendYouth />}
         {showTrainers && <div id="section-trainers"><ForTrainers /></div>}
-        {showFixIt && <CanFixIt />}
-        {showWhyM2 && <WhyM2 />}
-        {showStory && <MattsStory />}
         {showMerch && <MerchSection />}
         {showFindUs && <FindUs />}
 
