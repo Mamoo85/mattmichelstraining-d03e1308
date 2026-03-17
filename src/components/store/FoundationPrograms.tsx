@@ -121,16 +121,9 @@ const FoundationPrograms = () => {
     }
     setBuying(program.priceId);
     try {
-      const { data, error } = await supabase.functions.invoke("create-program-checkout", {
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
         body: {
           priceId: program.priceId,
-          metadata: {
-            type: "foundation_program",
-            program_title: program.title,
-            age_range: program.age,
-            postural_video: videoUrl || "included_free",
-            includes_postural_assessment: "true",
-          },
         },
       });
       if (error) throw error;
