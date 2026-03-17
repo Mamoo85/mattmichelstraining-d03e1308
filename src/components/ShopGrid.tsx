@@ -239,7 +239,7 @@ const ShopGrid = ({ showCustomOnly = false }: { showCustomOnly?: boolean }) => {
                   ) : (
                     <FileText size={12} />
                   )}
-                  Buy Guide · {product.price}
+                  Buy Program · {product.price}
                 </button>
               )}
             </div>
