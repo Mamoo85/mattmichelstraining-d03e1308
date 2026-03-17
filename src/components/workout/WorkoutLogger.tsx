@@ -82,9 +82,16 @@ const WorkoutLogger = () => {
     }
     setSaving(true);
 
+    const recoveryPayload: Record<string, any> = {};
+    if (recovery.sleepHours) recoveryPayload.sleep_hours = parseFloat(recovery.sleepHours);
+    if (recovery.sleepQuality && recovery.sleepQuality > 0) recoveryPayload.sleep_quality = recovery.sleepQuality;
+    if (recovery.soreness && recovery.soreness > 0) recoveryPayload.soreness = recovery.soreness;
+    if (recovery.energy && recovery.energy > 0) recoveryPayload.energy = recovery.energy;
+    if (recovery.recoveryNotes) recoveryPayload.recovery_notes = recovery.recoveryNotes;
+
     const { data: log, error: logErr } = await supabase
       .from("workout_logs")
-      .insert({ user_id: user.id, date: date.toISOString(), session_notes: sessionNotes || null })
+      .insert({ user_id: user.id, date: date.toISOString(), session_notes: sessionNotes || null, ...recoveryPayload } as any)
       .select("id")
       .single();
 
