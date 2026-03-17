@@ -4,6 +4,7 @@ import { Loader2, Send, CheckCircle, ExternalLink, MessageSquare, ChevronDown, C
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import AiAssistButton from "./AiAssistButton";
 
 interface ProgramMessage {
   id: string;
