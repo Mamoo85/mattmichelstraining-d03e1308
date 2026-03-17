@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ArrowRight, Zap } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import m2Logo from "@/assets/m2-logo-official.jpg";
 import { useContentMap, useSectionVisible } from "@/hooks/useSiteContent";
 import { SmartSlogan } from "./LogoAnimations";
