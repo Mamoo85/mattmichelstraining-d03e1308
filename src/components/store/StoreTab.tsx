@@ -121,6 +121,9 @@ const CustomProgramSection = () => {
   const [uploading, setUploading] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [buying, setBuying] = useState(false);
+  const [giftCode, setGiftCode] = useState("");
+  const [giftBalance, setGiftBalance] = useState<number | null>(null);
+  const [checkingGift, setCheckingGift] = useState(false);
 
   const tier = CUSTOM_TIERS[selectedTier];
 
