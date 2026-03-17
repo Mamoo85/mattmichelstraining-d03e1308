@@ -333,6 +333,57 @@ export type Database = {
         }
         Relationships: []
       }
+      program_workouts: {
+        Row: {
+          coach_instructions: string
+          created_at: string
+          day_number: number
+          exercise_id: string
+          id: string
+          prescribed_sets_reps: string
+          program_id: string
+          sort_order: number
+          week_number: number
+        }
+        Insert: {
+          coach_instructions?: string
+          created_at?: string
+          day_number?: number
+          exercise_id: string
+          id?: string
+          prescribed_sets_reps?: string
+          program_id: string
+          sort_order?: number
+          week_number?: number
+        }
+        Update: {
+          coach_instructions?: string
+          created_at?: string
+          day_number?: number
+          exercise_id?: string
+          id?: string
+          prescribed_sets_reps?: string
+          program_id?: string
+          sort_order?: number
+          week_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "program_workouts_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "exercise_library"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "program_workouts_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "training_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       progress_logs: {
         Row: {
           estimated_1rm: number | null
@@ -583,6 +634,86 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      training_programs: {
+        Row: {
+          age_range: string
+          category: string
+          created_at: string
+          description: string
+          id: string
+          is_active: boolean
+          price: number
+          sex: string
+          sport: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          age_range?: string
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          is_active?: boolean
+          price?: number
+          sex?: string
+          sport?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          age_range?: string
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          is_active?: boolean
+          price?: number
+          sex?: string
+          sport?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_active_programs: {
+        Row: {
+          created_at: string
+          id: string
+          program_id: string
+          start_date: string
+          status: string
+          stripe_session_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          program_id: string
+          start_date?: string
+          status?: string
+          stripe_session_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          program_id?: string
+          start_date?: string
+          status?: string
+          stripe_session_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_active_programs_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "training_programs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
