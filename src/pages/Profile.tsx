@@ -115,9 +115,9 @@ const Profile = () => {
   };
 
   const getMedalIcon = (rank: number) => {
-    if (rank === 1) return <Trophy size={16} className="text-yellow-500" />;
-    if (rank === 2) return <Medal size={16} className="text-foreground/70" />;
-    if (rank === 3) return <Award size={16} className="text-amber-700" />;
+    if (rank === 1) return <Trophy size={16} className="text-primary" />;
+    if (rank === 2) return <Medal size={16} className="text-muted-foreground" />;
+    if (rank === 3) return <Award size={16} className="text-primary/70" />;
     return null;
   };
 
