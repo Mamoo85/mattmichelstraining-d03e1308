@@ -21,9 +21,7 @@ import MonthlyFocus from "./landing/MonthlyFocus";
 import WeekendYouth from "./landing/WeekendYouth";
 import ForTrainers from "./landing/ForTrainers";
 import CanFixIt from "./landing/CanFixIt";
-import MattsStory from "./landing/MattsStory";
 import FreeBonusBanner from "./landing/FreeBonusBanner";
-import WhyM2 from "./landing/WhyM2";
 import MerchSection from "./MerchSection";
 import FindUs from "./landing/FindUs";
 
@@ -47,9 +45,6 @@ const HeroSection = () => {
   const showMonthly = useSectionVisible("monthly_focus");
   const showWeekend = useSectionVisible("weekend_youth");
   const showTrainers = useSectionVisible("for_trainers");
-  const showFixIt = useSectionVisible("can_fix_it");
-  const showWhyM2 = useSectionVisible("why_m2");
-  const showStory = useSectionVisible("matts_story");
   const showMerch = useSectionVisible("merch");
   const showFindUs = useSectionVisible("find_us");
 
@@ -178,9 +173,6 @@ const HeroSection = () => {
         {showMonthly && <MonthlyFocus />}
         {showWeekend && <WeekendYouth />}
         {showTrainers && <div id="section-trainers"><ForTrainers /></div>}
-        {showFixIt && <CanFixIt />}
-        {showWhyM2 && <WhyM2 />}
-        {showStory && <MattsStory />}
         {showMerch && <MerchSection />}
         {showFindUs && <FindUs />}
 

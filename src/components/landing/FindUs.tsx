@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import SectionHeader from "../SectionHeader";
 
 const FindUs = () => (
@@ -58,6 +59,14 @@ const FindUs = () => (
         >
           Instagram
         </a>
+      </div>
+      <div className="mt-4 pt-4 border-t border-border">
+        <Link
+          to="/about"
+          className="text-sm text-primary font-bold hover:opacity-80 transition-m2"
+        >
+          About Matt & M² Training →
+        </Link>
       </div>
     </div>
   </motion.div>
