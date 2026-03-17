@@ -158,7 +158,7 @@ const HeroSection = () => {
 
         {showAudience && <AudienceSelector />}
         {showFreeBonus && <FreeBonusBanner />}
-        {showTestimonial && <Testimonial />}
+        
         {showPress && <PressAuthority />}
         {showPremium && <PremiumProgram />}
         {showPremium && <PortalShowcase />}

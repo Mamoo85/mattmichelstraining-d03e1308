@@ -13,6 +13,7 @@ const navItems = [
   { to: "/coach", label: "COACH", icon: MessageSquare },
   { to: "/shop", label: "STORE", icon: ShoppingBag },
   { to: "/pricing", label: "PRICING", icon: CreditCard },
+  { to: "/about", label: "ABOUT", icon: User },
 ];
 
 const AppNavbar = () => {
