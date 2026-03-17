@@ -115,20 +115,41 @@ const AdminProgramCreator = () => {
 
   const handleBatchGenerate = async () => {
     setBatchGenerating(true);
-    setBatchResults(null);
-    try {
-      const { data, error } = await supabase.functions.invoke("batch-generate-programs");
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      setBatchResults(data.results || []);
-      const successes = (data.results || []).filter((r: any) => r.status === "success").length;
-      toast({ title: "Batch complete", description: `${successes} programs generated successfully.` });
-      fetchInventory();
-    } catch (e: any) {
-      toast({ title: "Batch failed", description: e.message, variant: "destructive" });
-    } finally {
-      setBatchGenerating(false);
+    setBatchResults([]);
+    const results: any[] = [];
+    let remaining = 999;
+
+    while (remaining > 0) {
+      try {
+        const { data, error } = await supabase.functions.invoke("batch-generate-programs", { body: {} });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+
+        results.push(data);
+        setBatchResults([...results]);
+        remaining = data.remaining ?? 0;
+
+        if (data.status === "failed") {
+          // Skip this one, but there might be more
+          if (remaining === 0) break;
+          continue;
+        }
+
+        toast({ title: `✓ ${data.program}`, description: `${data.workouts} exercises generated. ${remaining} remaining.` });
+
+        // Small delay between calls
+        if (remaining > 0) {
+          await new Promise(r => setTimeout(r, 1000));
+        }
+      } catch (e: any) {
+        toast({ title: "Generation error", description: e.message, variant: "destructive" });
+        break;
+      }
     }
+
+    toast({ title: "Batch complete!", description: `${results.filter(r => r.status === "success").length} programs generated.` });
+    fetchInventory();
+    setBatchGenerating(false);
   };
 
   const handleApproveAndSave = async () => {
