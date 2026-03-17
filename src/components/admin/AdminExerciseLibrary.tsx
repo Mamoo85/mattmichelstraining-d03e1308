@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Plus, Pencil, Trash2, X, Dumbbell, Loader2 } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, X, Dumbbell, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import AiAssistButton from "./AiAssistButton";
 
 interface Exercise {
   id: string;
@@ -63,6 +64,25 @@ const AdminExerciseLibrary = () => {
 
   const openCreate = () => { setEditing(EMPTY); setModalOpen(true); setSportInput(""); };
   const openEdit = (ex: Exercise) => { setEditing({ ...ex }); setModalOpen(true); setSportInput(""); };
+
+  const handleAiGenerate = (result: string) => {
+    try {
+      // Strip markdown code fences if present
+      const cleaned = result.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+      const parsed = JSON.parse(cleaned);
+      setEditing((prev) => ({
+        ...prev,
+        title: parsed.title || prev.title,
+        equipment_needed: parsed.equipment_needed || "",
+        the_why: parsed.the_why || "",
+        client_type: parsed.client_type || [],
+        focus_area: parsed.focus_area || [],
+        sport: parsed.sport || [],
+      }));
+    } catch {
+      toast.error("Failed to parse AI result — fill in manually");
+    }
+  };
 
   const handleSave = async () => {
     if (!editing.title.trim()) { toast.error("Title is required"); return; }
@@ -192,14 +212,26 @@ const AdminExerciseLibrary = () => {
               <button onClick={() => setModalOpen(false)}><X size={16} className="text-muted-foreground" /></button>
             </div>
 
-            {/* Title */}
-            <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Title *</label>
-            <input
-              type="text"
-              value={editing.title}
-              onChange={(e) => setEditing({ ...editing, title: e.target.value })}
-              className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground mb-3 outline-none focus:ring-1 focus:ring-primary"
-            />
+            {/* Title + AI */}
+            <div className="flex items-end gap-2 mb-3">
+              <div className="flex-1">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Title *</label>
+                <input
+                  type="text"
+                  value={editing.title}
+                  onChange={(e) => setEditing({ ...editing, title: e.target.value })}
+                  className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+              {editing.title.trim() && (
+                <AiAssistButton
+                  type="exercise"
+                  context={{ exerciseName: editing.title }}
+                  onResult={handleAiGenerate}
+                  label="AI Fill"
+                />
+              )}
+            </div>
 
             {/* Equipment */}
             <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Equipment Needed</label>

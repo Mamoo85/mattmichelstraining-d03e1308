@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Send, FileText } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import AiAssistButton from "./AiAssistButton";
 
 const TEMPLATES = [
   {
@@ -123,7 +124,19 @@ const AdminNewsletterComposer = () => {
           />
         </div>
         <div>
-          <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Newsletter Body</label>
+          <div className="flex items-center justify-between mb-1">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Newsletter Body</label>
+            <AiAssistButton
+              type="newsletter"
+              context={{
+                topic: subject || "general training insight",
+                templateName: selectedTemplate || "Monthly Training Insight",
+                audience: "athletes and parents",
+              }}
+              onResult={(text) => setBody(text)}
+              label="AI Write"
+            />
+          </div>
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}

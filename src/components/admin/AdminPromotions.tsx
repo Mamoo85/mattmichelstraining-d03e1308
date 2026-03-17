@@ -2,8 +2,9 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Plus, Trash2, Gift, Tag, Loader2, X, Search, Copy } from "lucide-react";
+import { Plus, Trash2, Gift, Tag, Loader2, X, Search, Copy, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import AiAssistButton from "./AiAssistButton";
 
 const AdminPromotions = () => {
   const { user } = useAuth();
@@ -170,6 +171,37 @@ const AdminPromotions = () => {
         <button onClick={() => setShowGiftModal(true)} className="flex items-center gap-1.5 px-4 py-2 bg-foreground text-background text-[10px] font-bold uppercase tracking-widest hover:bg-foreground/90 transition-m2">
           <Gift size={12} /> Gift a Product
         </button>
+        <AiAssistButton
+          type="promo_suggest"
+          context={{
+            month: new Date().toLocaleString("default", { month: "long", year: "numeric" }),
+            existingCodes: promotions.map((p: any) => p.code).join(", "),
+          }}
+          onResult={(text) => {
+            try {
+              const cleaned = text.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+              const ideas = JSON.parse(cleaned);
+              if (Array.isArray(ideas) && ideas.length > 0) {
+                const first = ideas[0];
+                setPromoForm({
+                  code: first.code || "",
+                  description: first.description || "",
+                  discount_type: first.discount_type || "percent",
+                  discount_value: first.discount_value || 0,
+                  applies_to: first.applies_to || "all",
+                  max_uses: "",
+                  expires_at: "",
+                });
+                setShowPromoModal(true);
+                toast.success(`${ideas.length} ideas generated — first one loaded. Check console for all.`);
+                console.log("AI Promo Ideas:", ideas);
+              }
+            } catch {
+              toast.error("Couldn't parse AI suggestions");
+            }
+          }}
+          label="AI Suggest"
+        />
       </div>
 
       {/* Active Promotions */}
