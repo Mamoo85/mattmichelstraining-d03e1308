@@ -162,7 +162,6 @@ const AdminPrograms = () => {
     return <div className="flex justify-center py-12"><Loader2 size={20} className="text-primary animate-spin" /></div>;
   }
 
-  const ageRanges = editingProgram?.category === "Athlete" ? ATHLETE_AGE_RANGES : LIFESTYLE_AGE_RANGES;
 
   return (
     <div className="space-y-4">
