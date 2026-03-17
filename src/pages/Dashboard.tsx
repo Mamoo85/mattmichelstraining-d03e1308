@@ -44,7 +44,7 @@ interface LeaderboardEntry {
 }
 
 const Dashboard = () => {
-  const { user, subscribed, subscriptionTier } = useAuth();
+  const { user, subscribed, subscriptionTier, isLegend } = useAuth();
   const [profile, setProfile] = useState<{ full_name: string | null; athlete_name: string | null } | null>(null);
   const [activeTab, setActiveTab] = useState("home");
   const [portalLoading, setPortalLoading] = useState(false);
@@ -404,7 +404,12 @@ const Dashboard = () => {
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-lg font-bold text-foreground">Welcome back, {athleteDisplay}</h2>
-              {subscriptionTier ? (
+              {isLegend ? (
+                <Badge className="flex items-center gap-1 text-[10px] uppercase tracking-widest bg-primary text-primary-foreground">
+                  <Crown size={10} />
+                  M² Legend
+                </Badge>
+              ) : subscriptionTier ? (
                 <Badge className="flex items-center gap-1 text-[10px] uppercase tracking-widest">
                   <Crown size={10} />
                   {TIERS[subscriptionTier].name}

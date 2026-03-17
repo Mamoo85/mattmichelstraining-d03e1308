@@ -60,6 +60,7 @@ interface AuthContextType {
   subscribed: boolean;
   subscriptionTier: TierKey | null;
   subscriptionEnd: string | null;
+  isLegend: boolean;
   checkSubscription: () => Promise<void>;
 }
 
@@ -71,6 +72,7 @@ const AuthContext = createContext<AuthContextType>({
   subscribed: false,
   subscriptionTier: null,
   subscriptionEnd: null,
+  isLegend: false,
   checkSubscription: async () => {},
 });
 
@@ -80,6 +82,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [subscribed, setSubscribed] = useState(false);
   const [subscriptionTier, setSubscriptionTier] = useState<TierKey | null>(null);
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
+  const [isLegend, setIsLegend] = useState(false);
 
   const checkSubscription = useCallback(async () => {
     const { data: { session: currentSession } } = await supabase.auth.getSession();
@@ -87,17 +90,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSubscribed(false);
       setSubscriptionTier(null);
       setSubscriptionEnd(null);
+      setIsLegend(false);
       return;
     }
     try {
-      const { data, error } = await supabase.functions.invoke("check-subscription");
-      if (error) {
-        console.error("check-subscription error:", error);
-        return;
+      // Check subscription + legend status in parallel
+      const [subResult, profileResult] = await Promise.all([
+        supabase.functions.invoke("check-subscription"),
+        supabase.from("profiles").select("is_in_person").eq("user_id", currentSession.user.id).single(),
+      ]);
+      if (!subResult.error) {
+        setSubscribed(subResult.data?.subscribed ?? false);
+        setSubscriptionTier(getTierByProductId(subResult.data?.product_id ?? null));
+        setSubscriptionEnd(subResult.data?.subscription_end ?? null);
       }
-      setSubscribed(data?.subscribed ?? false);
-      setSubscriptionTier(getTierByProductId(data?.product_id ?? null));
-      setSubscriptionEnd(data?.subscription_end ?? null);
+      setIsLegend(profileResult.data?.is_in_person ?? false);
     } catch (e) {
       console.error("check-subscription exception:", e);
     }
@@ -114,6 +121,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSubscribed(false);
         setSubscriptionTier(null);
         setSubscriptionEnd(null);
+        setIsLegend(false);
       }
     });
 
@@ -146,6 +154,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       subscribed,
       subscriptionTier,
       subscriptionEnd,
+      isLegend,
       checkSubscription,
     }}>
       {children}
