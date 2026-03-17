@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import AppNavbar from "@/components/AppNavbar";
-import { User, Trophy, Medal, Award, Save, Loader2, Eye, EyeOff } from "lucide-react";
+import { User, Trophy, Medal, Award, Save, Loader2, Eye, EyeOff, Gift, Search } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +29,10 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [challenges, setChallenges] = useState<any[]>([]);
   const [liftStats, setLiftStats] = useState<{ exercise_name: string; max_weight: number; count: number }[]>([]);
+  const [giftCards, setGiftCards] = useState<any[]>([]);
+  const [lookupCode, setLookupCode] = useState("");
+  const [lookupResult, setLookupResult] = useState<{ valid: boolean; remaining_balance: number; original_amount: number } | null>(null);
+  const [lookupLoading, setLookupLoading] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -94,6 +98,14 @@ const Profile = () => {
         setLiftStats(stats);
       }
 
+      // Gift cards
+      const { data: cards } = await supabase
+        .from("gift_cards" as any)
+        .select("*")
+        .or(`purchaser_id.eq.${user.id},redeemed_by.eq.${user.id}`)
+        .order("created_at", { ascending: false });
+      if (cards) setGiftCards(cards);
+
       setLoading(false);
     };
     load();
@@ -112,6 +124,27 @@ const Profile = () => {
       toast({ title: "Profile updated" });
     }
     setSaving(false);
+  };
+
+  const handleLookup = async () => {
+    if (!lookupCode.trim()) return;
+    setLookupLoading(true);
+    setLookupResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("redeem-gift-card", {
+        body: { code: lookupCode.trim(), action: "check" },
+      });
+      if (error) throw error;
+      if (data?.error) {
+        toast({ title: "Not found", description: data.error, variant: "destructive" });
+      } else {
+        setLookupResult(data);
+      }
+    } catch (e: any) {
+      toast({ title: "Lookup failed", description: e.message, variant: "destructive" });
+    } finally {
+      setLookupLoading(false);
+    }
   };
 
   const getMedalIcon = (rank: number) => {
@@ -210,6 +243,70 @@ const Profile = () => {
             </div>
           </div>
         )}
+
+        {/* Gift Cards */}
+        <div className="bg-card border border-border p-5 mb-6">
+          <h2 className="text-[10px] font-bold uppercase tracking-widest text-primary mb-4 flex items-center gap-1.5">
+            <Gift size={12} /> Gift Cards
+          </h2>
+
+          {/* Lookup */}
+          <div className="flex gap-2 mb-4">
+            <Input
+              value={lookupCode}
+              onChange={(e) => { setLookupCode(e.target.value.toUpperCase()); setLookupResult(null); }}
+              placeholder="Enter gift card code"
+              className="font-mono uppercase tracking-widest"
+            />
+            <button
+              onClick={handleLookup}
+              disabled={lookupLoading || !lookupCode.trim()}
+              className="bg-primary text-primary-foreground px-4 py-2 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all flex items-center gap-1.5 disabled:opacity-50 shrink-0"
+            >
+              {lookupLoading ? <Loader2 size={12} className="animate-spin" /> : <Search size={12} />}
+              Check
+            </button>
+          </div>
+
+          {lookupResult && (
+            <div className="bg-primary/10 border border-primary/20 p-4 mb-4">
+              <p className="text-xs text-muted-foreground mb-1">Remaining Balance</p>
+              <p className="text-2xl font-mono font-bold text-primary">${lookupResult.remaining_balance.toFixed(2)}</p>
+              <p className="text-[10px] text-muted-foreground mt-1">
+                Original value: ${lookupResult.original_amount.toFixed(2)}
+              </p>
+            </div>
+          )}
+
+          {/* Owned cards */}
+          {giftCards.length > 0 ? (
+            <div className="space-y-2">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Your Cards</p>
+              {giftCards.map((gc: any) => (
+                <div key={gc.id} className="flex items-center justify-between bg-muted p-3">
+                  <div>
+                    <p className="text-sm font-mono font-bold text-foreground tracking-widest">{gc.code}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {gc.purchaser_id === user?.id ? "Purchased" : "Redeemed"} · {new Date(gc.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className={`text-lg font-mono font-bold ${gc.remaining_balance > 0 ? "text-primary" : "text-muted-foreground"}`}>
+                      ${gc.remaining_balance.toFixed(2)}
+                    </p>
+                    <p className="text-[9px] text-muted-foreground">
+                      of ${gc.original_amount.toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground text-center py-2">
+              No gift cards yet. <a href="/shop" className="text-primary hover:underline">Buy one in the store</a>.
+            </p>
+          )}
+        </div>
 
         {/* Lift Stats */}
         {liftStats.length > 0 && (
