@@ -600,6 +600,36 @@ export type Database = {
         }
         Relationships: []
       }
+      point_transactions: {
+        Row: {
+          action: string
+          created_at: string
+          description: string
+          id: string
+          points: number
+          reference_id: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          description?: string
+          id?: string
+          points: number
+          reference_id?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          description?: string
+          id?: string
+          points?: number
+          reference_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           athlete_name: string | null
@@ -1326,6 +1356,42 @@ export type Database = {
           },
         ]
       }
+      user_points: {
+        Row: {
+          created_at: string
+          id: string
+          is_public: boolean
+          last_streak_week: string | null
+          level: string
+          total_points: number
+          updated_at: string
+          user_id: string
+          weekly_streak: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_public?: boolean
+          last_streak_week?: string | null
+          level?: string
+          total_points?: number
+          updated_at?: string
+          user_id: string
+          weekly_streak?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_public?: boolean
+          last_streak_week?: string | null
+          level?: string
+          total_points?: number
+          updated_at?: string
+          user_id?: string
+          weekly_streak?: number
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -1409,6 +1475,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      award_points: {
+        Args: {
+          _action: string
+          _description?: string
+          _points: number
+          _reference_id?: string
+          _user_id: string
+        }
+        Returns: number
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
