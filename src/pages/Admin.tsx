@@ -14,6 +14,7 @@ import AdminPromotions from "@/components/admin/AdminPromotions";
 import AdminMonthlyFocus from "@/components/admin/AdminMonthlyFocus";
 
 const TABS = [
+  { key: "monthly", label: "Monthly Focus" },
   { key: "coach", label: "Coach Review" },
   { key: "programs", label: "Programs" },
   { key: "exercises", label: "Exercises" },
