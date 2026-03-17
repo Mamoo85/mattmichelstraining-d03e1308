@@ -7,9 +7,11 @@ import AdminClientList from "@/components/admin/AdminClientList";
 import AdminProtocols from "@/components/admin/AdminProtocols";
 import AdminSiteEditor from "@/components/admin/AdminSiteEditor";
 import AdminCoachDashboard from "@/components/admin/AdminCoachDashboard";
+import AdminPrograms from "@/components/admin/AdminPrograms";
 
 const TABS = [
   { key: "coach", label: "Coach Review" },
+  { key: "programs", label: "Programs" },
   { key: "site", label: "Site Editor" },
   { key: "clients", label: "Clients" },
   { key: "protocols", label: "Protocols" },
@@ -49,6 +51,7 @@ const Admin = () => {
         </div>
 
         {activeTab === "coach" && <AdminCoachDashboard />}
+        {activeTab === "programs" && <AdminPrograms />}
         {activeTab === "site" && <AdminSiteEditor />}
         {activeTab === "clients" && <AdminClientList />}
         {activeTab === "protocols" && <AdminProtocols />}
