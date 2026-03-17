@@ -189,13 +189,60 @@ serve(async (req) => {
     // Handle guide purchases (existing logic)
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
+      const meta = session.metadata || {};
+
+      // Activate gift card if this was a gift card purchase
+      if (meta.type === "gift_card" && meta.gift_code) {
+        await sb.from("gift_cards")
+          .update({ is_active: true })
+          .eq("code", meta.gift_code)
+          .eq("stripe_session_id", session.id);
+        console.log(`[WEBHOOK] Gift card activated: ${meta.gift_code}`);
+      }
+
+      // Increment promo usage after successful subscription checkout
+      if (meta.promo_id) {
+        const { data: currentPromo } = await sb
+          .from("promotions")
+          .select("current_uses")
+          .eq("id", meta.promo_id)
+          .single();
+        if (currentPromo) {
+          await sb.from("promotions")
+            .update({ current_uses: (currentPromo.current_uses || 0) + 1 })
+            .eq("id", meta.promo_id);
+          console.log(`[WEBHOOK] Promo usage incremented: ${meta.promo_id}`);
+        }
+      }
+
+      // Deduct gift card balance for guide/custom program purchases
+      if (meta.gift_card_id && meta.gift_card_applied_cents) {
+        const appliedCents = parseInt(meta.gift_card_applied_cents);
+        if (appliedCents > 0) {
+          const { data: currentCard } = await sb
+            .from("gift_cards")
+            .select("remaining_balance")
+            .eq("id", meta.gift_card_id)
+            .single();
+          if (currentCard) {
+            const deduction = appliedCents / 100;
+            const newBalance = Math.max(0, currentCard.remaining_balance - deduction);
+            await sb.from("gift_cards").update({
+              remaining_balance: newBalance,
+              is_active: newBalance > 0,
+              redeemed_at: new Date().toISOString(),
+            }).eq("id", meta.gift_card_id);
+            console.log(`[WEBHOOK] Gift card deducted: $${deduction}, remaining: $${newBalance}`);
+          }
+        }
+      }
 
       if (session.mode !== "payment") {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       const customerEmail = session.customer_details?.email || session.customer_email;
-      const priceId = session.metadata?.priceId;
+      const priceId = meta.priceId;
 
       if (!customerEmail) {
         console.error("[WEBHOOK] No customer email found on session", session.id);
