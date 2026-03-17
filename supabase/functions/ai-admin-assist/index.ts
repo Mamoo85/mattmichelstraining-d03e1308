@@ -89,6 +89,18 @@ Write a helpful coaching reply.`;
         break;
       }
 
+      case "batch_site_content": {
+        systemPrompt = `You are a copywriter for M² Training, a premium strength & conditioning brand led by Coach Matt Michels. Write compelling, concise website copy. Voice: confident, direct, athlete-focused. No fluff. Keep the same general meaning but make everything sharper, more engaging, and on-brand.`;
+        userPrompt = `Rewrite/improve ALL of the following website content fields for the "${context.sectionLabel}" section. Keep each field's purpose intact but make the copy better.
+
+Return ONLY valid JSON (no markdown, no code fences) as an object where keys are the field IDs and values are the improved text:
+
+${JSON.stringify(context.fields, null, 2)}
+
+Return: { "field_id": "improved text", ... }`;
+        break;
+      }
+
       case "site_content": {
         systemPrompt = `You are a copywriter for M² Training, a premium strength & conditioning brand led by Coach Matt Michels. Write compelling, concise website copy. Voice: confident, direct, athlete-focused. No fluff.`;
         userPrompt = `Rewrite/improve this website content field:
