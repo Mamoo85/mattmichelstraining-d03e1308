@@ -9,6 +9,7 @@ import {
   SiteSection,
   SiteContentItem,
 } from "@/hooks/useSiteContent";
+import AiAssistButton from "./AiAssistButton";
 
 const SECTION_GROUPS = [
   { key: "all", label: "All" },
