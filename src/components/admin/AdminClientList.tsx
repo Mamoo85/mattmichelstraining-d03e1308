@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, ChevronDown, ChevronUp, Dumbbell, ShoppingBag, Calendar, MapPin } from "lucide-react";
 import { toast } from "sonner";
+import AiAssistButton from "./AiAssistButton";
 
 const AdminClientList = () => {
   const [search, setSearch] = useState("");
@@ -158,7 +159,24 @@ const AdminClientList = () => {
 
                   {expanded && (
                     <div className="px-4 pb-4 bg-muted/20 space-y-4">
-                      {/* In-Person Toggle */}
+                      {/* AI Summary */}
+                      <div className="mt-2 flex items-center justify-between bg-card p-3 shadow-m2">
+                        <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">AI Engagement Summary</span>
+                        <AiAssistButton
+                          type="client_summary"
+                          context={{
+                            name: profile.full_name || profile.athlete_name || "Unknown",
+                            joined: new Date(profile.created_at).toLocaleDateString(),
+                            tier: profile.subscription_tier || "free",
+                            totalWorkouts: workoutLogs.filter((l) => l.user_id === profile.user_id).length,
+                            recentlyActive: workoutLogs.some((l) => l.user_id === profile.user_id && new Date(l.date) > new Date(Date.now() - 7 * 86400000)),
+                            programCount: getClientPrograms(profile.user_id).length,
+                            recentLifts: getClientProgress(profile.user_id).map((l) => `${l.exercise_name} ${l.weight}lbs×${l.reps}`).join(", "),
+                          }}
+                          onResult={(text) => toast.success(text, { duration: 15000 })}
+                          label="AI Summary"
+                        />
+                      </div>
                       <div className="mt-2 flex items-center justify-between bg-card p-3 shadow-m2">
                         <div className="flex items-center gap-2">
                           <MapPin size={14} className="text-muted-foreground" />

@@ -89,6 +89,52 @@ Write a helpful coaching reply.`;
         break;
       }
 
+      case "site_content": {
+        systemPrompt = `You are a copywriter for M² Training, a premium strength & conditioning brand led by Coach Matt Michels. Write compelling, concise website copy. Voice: confident, direct, athlete-focused. No fluff.`;
+        userPrompt = `Rewrite/improve this website content field:
+
+Section: ${context.section}
+Field: ${context.label}
+Current text: "${context.currentValue}"
+
+Write improved copy that's more engaging and on-brand. Return ONLY the new text, nothing else.`;
+        break;
+      }
+
+      case "protocol": {
+        systemPrompt = `You are an expert strength & conditioning coach. Generate a training protocol with specific exercises, sets, reps, and coaching notes. Be precise and practical.`;
+        userPrompt = `Generate a training protocol titled "${context.title}".
+${context.description ? `Description: ${context.description}` : ""}
+
+Return ONLY valid JSON (no markdown, no code fences) as an array of exercises:
+[{
+  "exercise_name": "exercise name",
+  "sets": number,
+  "reps": "rep scheme (e.g. 8-10)",
+  "weight": null,
+  "rpe": number (1-10),
+  "notes": "coaching cue or note"
+}]
+Include 6-10 exercises in a logical training order.`;
+        break;
+      }
+
+      case "client_summary": {
+        systemPrompt = `You are a sports performance analyst. Generate a brief client engagement summary based on their training data. Be concise, actionable, and highlight trends or concerns.`;
+        userPrompt = `Generate a brief engagement summary for this client:
+
+Name: ${context.name}
+Joined: ${context.joined}
+Subscription: ${context.tier}
+Total Workouts: ${context.totalWorkouts}
+Last 7 Days Active: ${context.recentlyActive ? "Yes" : "No"}
+Active Programs: ${context.programCount}
+Recent Lifts: ${context.recentLifts || "None logged"}
+
+Write 2-3 sentences: engagement level, any concerns, and one recommendation. Keep it under 80 words.`;
+        break;
+      }
+
       default:
         throw new Error(`Unknown assist type: ${type}`);
     }

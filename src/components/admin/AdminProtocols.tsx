@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Plus, Trash2, GripVertical, Save } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import AiAssistButton from "./AiAssistButton";
 
 const AdminProtocols = () => {
   const queryClient = useQueryClient();
@@ -131,13 +132,55 @@ const AdminProtocols = () => {
               placeholder="Optional description..."
             />
           </div>
-          <button
-            onClick={() => createProtocol.mutate()}
-            disabled={!newTitle.trim()}
-            className="bg-primary text-primary-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-m2 disabled:opacity-50"
-          >
-            Create Template
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => createProtocol.mutate()}
+              disabled={!newTitle.trim()}
+              className="bg-primary text-primary-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-m2 disabled:opacity-50"
+            >
+              Create Template
+            </button>
+            {newTitle.trim() && (
+              <AiAssistButton
+                type="protocol"
+                context={{ title: newTitle, description: newDesc }}
+                onResult={(text) => {
+                  try {
+                    const cleaned = text.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+                    const exercises = JSON.parse(cleaned);
+                    if (Array.isArray(exercises)) {
+                      // First create the protocol, then add exercises
+                      (async () => {
+                        const { data: proto, error } = await supabase.from("protocols").insert({
+                          title: newTitle,
+                          description: newDesc || null,
+                          is_template: true,
+                          is_default: false,
+                        }).select("id").single();
+                        if (error || !proto) { toast({ title: "Error creating protocol", variant: "destructive" }); return; }
+                        const rows = exercises.map((ex: any, i: number) => ({
+                          protocol_id: proto.id,
+                          exercise_name: ex.exercise_name,
+                          sets: ex.sets || null,
+                          reps: ex.reps || null,
+                          weight: ex.weight || null,
+                          rpe: ex.rpe || null,
+                          notes: ex.notes || null,
+                          sort_order: i + 1,
+                        }));
+                        await supabase.from("protocol_exercises").insert(rows);
+                        toast({ title: "Protocol created with AI exercises!" });
+                        setNewTitle(""); setNewDesc(""); setShowCreate(false);
+                        queryClient.invalidateQueries({ queryKey: ["admin-protocols"] });
+                        queryClient.invalidateQueries({ queryKey: ["admin-protocol-exercises"] });
+                      })();
+                    }
+                  } catch { toast({ title: "Failed to parse AI result", variant: "destructive" }); }
+                }}
+                label="AI Generate"
+              />
+            )}
+          </div>
         </div>
       )}
 

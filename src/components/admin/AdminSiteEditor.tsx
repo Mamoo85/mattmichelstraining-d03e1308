@@ -9,6 +9,7 @@ import {
   SiteSection,
   SiteContentItem,
 } from "@/hooks/useSiteContent";
+import AiAssistButton from "./AiAssistButton";
 
 const SECTION_GROUPS = [
   { key: "all", label: "All" },
@@ -73,13 +74,14 @@ const AdminSiteEditor = () => {
     }
     setSaving(true);
     try {
-      for (const [id, value] of entries) {
-        const { error } = await supabase
-          .from("site_content")
-          .update({ content_value: value, updated_at: new Date().toISOString() })
-          .eq("id", id);
-        if (error) throw error;
-      }
+      // Batch all updates in parallel
+      const results = await Promise.all(
+        entries.map(([id, value]) =>
+          supabase.from("site_content").update({ content_value: value, updated_at: new Date().toISOString() }).eq("id", id)
+        )
+      );
+      const errors = results.filter((r) => r.error);
+      if (errors.length > 0) throw new Error(`${errors.length} update(s) failed`);
       setEditedContent({});
       invalidate();
       toast({ title: `Saved ${entries.length} change${entries.length > 1 ? "s" : ""}` });
@@ -166,10 +168,24 @@ const AdminSiteEditor = () => {
                   const isEdited = editedContent[item.id] !== undefined;
                   return (
                     <div key={item.id}>
-                      <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">
-                        {item.label || item.content_key}
-                        {isEdited && <span className="text-primary ml-1">· edited</span>}
-                      </label>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                          {item.label || item.content_key}
+                          {isEdited && <span className="text-primary ml-1">· edited</span>}
+                        </label>
+                        {currentValue && (
+                          <AiAssistButton
+                            type="site_content"
+                            context={{
+                              section: item.section,
+                              label: item.label || item.content_key,
+                              currentValue,
+                            }}
+                            onResult={(text) => handleContentChange(item.id, text)}
+                            label="AI Rewrite"
+                          />
+                        )}
+                      </div>
                       {item.content_type === "textarea" ? (
                         <textarea
                           value={currentValue}
