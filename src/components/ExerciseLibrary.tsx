@@ -10,6 +10,7 @@ interface DbExercise {
   focus_area: string[];
   equipment_needed: string;
   the_why: string;
+  sport: string[];
 }
 
 const CLIENT_TYPES = ["Athlete", "Lifestyle Fitness"] as const;
@@ -203,9 +204,17 @@ const ExerciseLibrary = () => {
                         >
                           {fa}
                         </span>
-                      ))}
-                    </div>
-                    <h3 className="text-sm font-bold text-foreground leading-tight">
+                       ))}
+                       {ex.sport?.filter(Boolean).map((s) => (
+                         <span
+                           key={s}
+                           className="text-[9px] font-bold uppercase tracking-widest bg-accent text-accent-foreground px-2 py-0.5"
+                         >
+                           {s}
+                         </span>
+                       ))}
+                     </div>
+                     <h3 className="text-sm font-bold text-foreground leading-tight">
                       {ex.title}
                     </h3>
                     <p className="text-[11px] text-muted-foreground mt-1">
