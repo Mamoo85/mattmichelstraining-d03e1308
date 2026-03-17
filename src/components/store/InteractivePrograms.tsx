@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Monitor, Filter, ShoppingBag, Check } from "lucide-react";
+import { Loader2, Monitor, Filter, ShoppingBag, Check, Tag } from "lucide-react";
 
 const ATHLETE_AGE_RANGES = ["12-13", "14-15", "16-17", "18+"];
 const LIFESTYLE_AGE_RANGES = ["18-29", "30-39", "40-49", "50+"];
@@ -36,6 +36,7 @@ const InteractivePrograms = () => {
   const [ageRange, setAgeRange] = useState<string>("");
   const [sex, setSex] = useState<string>("");
   const [sport, setSport] = useState<string>("");
+  const [programPromo, setProgramPromo] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -114,8 +115,12 @@ const InteractivePrograms = () => {
 
     setBuyingId(program.id);
     try {
+      const body: any = { programId: program.id };
+      if (programPromo.trim()) {
+        body.promoCode = programPromo.trim();
+      }
       const { data, error } = await supabase.functions.invoke("create-program-checkout", {
-        body: { programId: program.id },
+        body,
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -205,6 +210,20 @@ const InteractivePrograms = () => {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Promo code input */}
+      <div className="flex gap-2 mb-4 max-w-xs">
+        <div className="flex-1 relative">
+          <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+          <input
+            type="text"
+            value={programPromo}
+            onChange={(e) => setProgramPromo(e.target.value.toUpperCase())}
+            placeholder="PROMO CODE"
+            className="w-full bg-card border border-border pl-9 pr-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-primary outline-none font-mono uppercase tracking-widest"
+          />
+        </div>
       </div>
 
       {/* Results */}

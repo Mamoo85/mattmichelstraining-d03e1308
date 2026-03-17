@@ -29,7 +29,6 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Auth
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       throw new Error("Not authenticated");
@@ -42,7 +41,7 @@ serve(async (req) => {
     const user = userData.user;
     logStep("User authenticated", { email: user.email });
 
-    const { programId } = await req.json();
+    const { programId, promoCode } = await req.json();
     if (!programId) throw new Error("programId required");
 
     // Fetch program details
@@ -69,9 +68,53 @@ serve(async (req) => {
       throw new Error("You already own this program");
     }
 
+    // Validate promo code if provided
+    let discountAmount = 0;
+    let promoId: string | undefined;
+
+    if (promoCode) {
+      const { data: promo, error: promoError } = await supabaseClient
+        .from("promotions")
+        .select("*")
+        .eq("code", promoCode.toUpperCase().trim())
+        .eq("is_active", true)
+        .single();
+
+      if (promoError || !promo) {
+        throw new Error("Invalid or expired promo code");
+      }
+
+      if (promo.expires_at && new Date(promo.expires_at) < new Date()) {
+        throw new Error("This promo code has expired");
+      }
+
+      if (promo.max_uses && promo.current_uses >= promo.max_uses) {
+        throw new Error("This promo code has reached its usage limit");
+      }
+
+      if (promo.applies_to !== "all" && promo.applies_to !== "programs") {
+        // Check specific product
+        if (promo.specific_product_id && promo.specific_product_id !== programId) {
+          throw new Error("This promo code is not valid for this program");
+        }
+      }
+
+      logStep("Promo validated", { code: promo.code, type: promo.discount_type, value: promo.discount_value });
+
+      if (promo.discount_type === "percent") {
+        discountAmount = (program.price * promo.discount_value) / 100;
+      } else {
+        discountAmount = promo.discount_value;
+      }
+
+      promoId = promo.id;
+    }
+
+    const finalPrice = Math.max(0, program.price - discountAmount);
+    logStep("Final price calculated", { original: program.price, discount: discountAmount, final: finalPrice });
+
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
-    // Find or reference Stripe customer
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     let customerId: string | undefined;
     if (customers.data.length > 0) {
@@ -80,7 +123,6 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "https://m2training.lovable.app";
 
-    // Create checkout session with price_data for dynamic pricing
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
@@ -90,9 +132,11 @@ serve(async (req) => {
             currency: "usd",
             product_data: {
               name: program.title,
-              description: "M² Interactive Training Program",
+              description: discountAmount > 0
+                ? `M² Interactive Training Program (Promo applied: -$${discountAmount.toFixed(2)})`
+                : "M² Interactive Training Program",
             },
-            unit_amount: Math.round(program.price * 100),
+            unit_amount: Math.round(finalPrice * 100),
           },
           quantity: 1,
         },
@@ -104,10 +148,26 @@ serve(async (req) => {
         program_id: programId,
         user_id: user.id,
         type: "interactive_program",
+        promo_code: promoCode || "",
       },
     });
 
     logStep("Checkout session created", { sessionId: session.id });
+
+    // Increment promo usage
+    if (promoId) {
+      const { data: currentPromo } = await supabaseClient
+        .from("promotions")
+        .select("current_uses")
+        .eq("id", promoId)
+        .single();
+
+      await supabaseClient
+        .from("promotions")
+        .update({ current_uses: (currentPromo?.current_uses || 0) + 1 })
+        .eq("id", promoId);
+      logStep("Promo usage incremented");
+    }
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
