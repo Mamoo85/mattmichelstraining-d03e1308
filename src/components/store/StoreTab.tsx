@@ -161,6 +161,33 @@ const CustomProgramSection = () => {
     }
   };
 
+  const checkGiftCard = async () => {
+    if (!giftCode.trim() || !user) return;
+    setCheckingGift(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("redeem-gift-card", {
+        body: { code: giftCode.trim(), action: "check" },
+      });
+      if (error || data?.error) {
+        toast({ title: "Invalid code", description: data?.error || error?.message, variant: "destructive" });
+        setGiftBalance(null);
+      } else {
+        setGiftBalance(data.remaining_balance);
+        toast({ title: "Gift card applied!", description: `$${data.remaining_balance.toFixed(2)} available balance` });
+      }
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+      setGiftBalance(null);
+    } finally {
+      setCheckingGift(false);
+    }
+  };
+
+  const clearGiftCard = () => {
+    setGiftCode("");
+    setGiftBalance(null);
+  };
+
   const handleBuy = async () => {
     if (!parentName.trim() || !email.trim() || !athleteName.trim() || !ageSport.trim() || !goals.trim()) {
       toast({ title: "Fill out the required fields", description: "Matt needs this info to build your program.", variant: "destructive" });
@@ -174,21 +201,25 @@ const CustomProgramSection = () => {
 
     setBuying(true);
     try {
-      const { data, error } = await supabase.functions.invoke("create-guide-payment", {
-        body: {
-          priceId: tier.priceId,
-          metadata: {
-            type: "custom_program",
-            weeks: tier.weeks,
-            parent_name: parentName,
-            athlete_name: athleteName,
-            age_sport: ageSport,
-            goals: goals.substring(0, 500),
-            equipment: equipment.substring(0, 500),
-            injuries: injuries.substring(0, 500),
-            postural_video: videoUrl || "none",
-          },
+      const body: any = {
+        priceId: tier.priceId,
+        metadata: {
+          type: "custom_program",
+          weeks: tier.weeks,
+          parent_name: parentName,
+          athlete_name: athleteName,
+          age_sport: ageSport,
+          goals: goals.substring(0, 500),
+          equipment: equipment.substring(0, 500),
+          injuries: injuries.substring(0, 500),
+          postural_video: videoUrl || "none",
         },
+      };
+      if (giftCode.trim() && giftBalance !== null && giftBalance > 0) {
+        body.giftCardCode = giftCode.trim();
+      }
+      const { data, error } = await supabase.functions.invoke("create-guide-payment", {
+        body,
       });
       if (error) throw error;
       if (data?.url) window.open(data.url, "_blank");
