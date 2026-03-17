@@ -7,6 +7,7 @@ import { toast } from "sonner";
 const AdminClientList = () => {
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const { data: profiles = [], isLoading } = useQuery({
     queryKey: ["admin-clients"],
