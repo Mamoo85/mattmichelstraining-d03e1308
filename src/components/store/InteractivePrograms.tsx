@@ -114,6 +114,33 @@ const InteractivePrograms = () => {
     });
   }, [programs, category, level, sport]);
 
+  const checkGiftCard = async () => {
+    if (!giftCode.trim() || !user) return;
+    setCheckingGift(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("redeem-gift-card", {
+        body: { code: giftCode.trim(), action: "check" },
+      });
+      if (error || data?.error) {
+        toast({ title: "Invalid code", description: data?.error || error?.message, variant: "destructive" });
+        setGiftBalance(null);
+      } else {
+        setGiftBalance(data.remaining_balance);
+        toast({ title: "Gift card applied!", description: `$${data.remaining_balance.toFixed(2)} available balance` });
+      }
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+      setGiftBalance(null);
+    } finally {
+      setCheckingGift(false);
+    }
+  };
+
+  const clearGiftCard = () => {
+    setGiftCode("");
+    setGiftBalance(null);
+  };
+
   const handleBuy = async (program: TrainingProgram) => {
     if (!user) {
       window.location.href = `/auth?redirect=/shop`;
@@ -126,12 +153,22 @@ const InteractivePrograms = () => {
       if (programPromo.trim()) {
         body.promoCode = programPromo.trim();
       }
+      if (giftCode.trim() && giftBalance !== null && giftBalance > 0) {
+        body.giftCardCode = giftCode.trim();
+      }
       const { data, error } = await supabase.functions.invoke("create-program-checkout", {
         body,
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      if (data?.url) window.location.href = data.url;
+      if (data?.activated) {
+        // Gift card covered full amount - program already activated
+        toast({ title: "🎉 Program activated!", description: "Gift card applied. Head to your Dashboard → My Programs." });
+        setOwnedProgramIds(prev => new Set([...prev, program.id]));
+        clearGiftCard();
+      } else if (data?.url) {
+        window.location.href = data.url;
+      }
     } catch (e: any) {
       const msg = e.message || "Something went wrong";
       if (msg.includes("already own")) {
