@@ -136,7 +136,7 @@ const SmartSlogan = () => {
   }, [started]);
 
   return (
-    <div className="min-h-[5rem] md:min-h-[6rem] flex items-center justify-center overflow-hidden relative">
+    <div className="min-h-[5rem] md:min-h-[6rem] flex items-center justify-center overflow-hidden relative mb-2">
       <AnimatePresence mode="wait">
         <motion.h1
           key={index}
