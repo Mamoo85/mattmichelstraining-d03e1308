@@ -340,17 +340,19 @@ const AdminProgramCreator = () => {
             className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary h-20 resize-none" />
         </div>
 
-        <button onClick={handleGenerate} disabled={generating}
-          className="bg-primary text-primary-foreground px-6 py-2.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2 flex items-center gap-2 disabled:opacity-50">
-          {generating ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-          {generating ? "Generating…" : "Generate Program"}
-        </button>
+        <div className="flex flex-wrap gap-3">
+          <button onClick={handleGenerate} disabled={generating}
+            className="bg-primary text-primary-foreground px-6 py-2.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2 flex items-center gap-2 disabled:opacity-50">
+            {generating ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+            {generating ? "Generating…" : "Generate Program"}
+          </button>
 
-        <button onClick={handleBatchGenerate} disabled={batchGenerating}
-          className="bg-accent text-foreground px-6 py-2.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2 flex items-center gap-2 disabled:opacity-50 ml-2">
-          {batchGenerating ? <Loader2 size={14} className="animate-spin" /> : <Package size={14} />}
-          {batchGenerating ? "Generating All…" : "Batch Generate All Empty"}
-        </button>
+          <button onClick={handleBatchGenerate} disabled={batchGenerating}
+            className="bg-accent text-foreground px-6 py-2.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2 flex items-center gap-2 disabled:opacity-50">
+            {batchGenerating ? <Loader2 size={14} className="animate-spin" /> : <Package size={14} />}
+            {batchGenerating ? "Generating All…" : "Batch Generate All Empty"}
+          </button>
+        </div>
       </div>
 
       {/* Batch Results */}
