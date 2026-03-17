@@ -75,6 +75,7 @@ const StoreTab = () => {
 
       {subTab === "programs" && <InteractivePrograms />}
       {subTab === "custom" && <CustomProgramSection />}
+      {subTab === "giftcards" && <GiftCardSection />}
       {subTab === "merchandise" && <MerchSection />}
     </div>
   );
