@@ -14,7 +14,7 @@ interface DbExercise {
 }
 
 const CLIENT_TYPES = ["Athlete", "Lifestyle Fitness"] as const;
-const FOCUS_AREAS = ["Mobility", "Strength", "Core Stability", "Flexibility", "Rehab", "Stability", "Posture"] as const;
+const FOCUS_AREAS = ["Mobility", "Strength", "Core Stability", "Power", "Rehab", "Stability", "Posture", "Flexibility", "Speed", "Core", "Injury Prevention"] as const;
 
 const ExerciseLibrary = () => {
   const [exercises, setExercises] = useState<DbExercise[]>([]);
@@ -22,6 +22,7 @@ const ExerciseLibrary = () => {
   const [search, setSearch] = useState("");
   const [activeClientType, setActiveClientType] = useState<string | null>(null);
   const [activeFocusArea, setActiveFocusArea] = useState<string | null>(null);
+  const [activeSport, setActiveSport] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -36,6 +37,13 @@ const ExerciseLibrary = () => {
     fetchExercises();
   }, []);
 
+  // Collect unique sports dynamically
+  const allSports = useMemo(() => {
+    const set = new Set<string>();
+    exercises.forEach((e) => e.sport?.forEach((s) => { if (s && s !== "All") set.add(s); }));
+    return [...set].sort();
+  }, [exercises]);
+
   const filtered = useMemo(() => {
     return exercises.filter((ex) => {
       const matchesSearch =
@@ -46,17 +54,20 @@ const ExerciseLibrary = () => {
         !activeClientType || ex.client_type.includes(activeClientType);
       const matchesFocus =
         !activeFocusArea || ex.focus_area.includes(activeFocusArea);
-      return matchesSearch && matchesClient && matchesFocus;
+      const matchesSport =
+        !activeSport || ex.sport?.includes(activeSport) || ex.sport?.includes("All");
+      return matchesSearch && matchesClient && matchesFocus && matchesSport;
     });
-  }, [exercises, search, activeClientType, activeFocusArea]);
+  }, [exercises, search, activeClientType, activeFocusArea, activeSport]);
 
   const clearFilters = () => {
     setActiveClientType(null);
     setActiveFocusArea(null);
+    setActiveSport(null);
     setSearch("");
   };
 
-  const hasActiveFilters = !!activeClientType || !!activeFocusArea || !!search;
+  const hasActiveFilters = !!activeClientType || !!activeFocusArea || !!activeSport || !!search;
 
   return (
     <div>
@@ -160,6 +171,41 @@ const ExerciseLibrary = () => {
           ))}
         </div>
       </div>
+
+      {/* Sport filter */}
+      {allSports.length > 0 && (
+        <div className="mb-4">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1.5">
+            <Filter size={10} className="inline mr-1" />
+            Sport
+          </span>
+          <div className="flex gap-1 flex-wrap">
+            <button
+              onClick={() => setActiveSport(null)}
+              className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-all ${
+                !activeSport
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              All Sports
+            </button>
+            {allSports.map((s) => (
+              <button
+                key={s}
+                onClick={() => setActiveSport(activeSport === s ? null : s)}
+                className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-all ${
+                  activeSport === s
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Results count */}
       <div className="flex items-center justify-between mb-3">
