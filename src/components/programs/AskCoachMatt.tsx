@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
-import { MessageSquare, Video, Send, Loader2, X } from "lucide-react";
+import { MessageSquare, Video, Send, Loader2, X, AlertTriangle } from "lucide-react";
 
 interface AskCoachMattProps {
   programId: string;
@@ -12,8 +12,8 @@ interface AskCoachMattProps {
   exercises: string[];
 }
 
-const ACCEPTED_VIDEO = ".mp4,.mov";
-const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
+const ACCEPTED_VIDEO = "video/mp4,video/quicktime,video/webm";
+const MAX_VIDEO_SIZE = 25 * 1024 * 1024; // 25MB
 
 const AskCoachMatt = ({ programId, programTitle, weekNumber, dayNumber, exercises }: AskCoachMattProps) => {
   const { user } = useAuth();
@@ -21,13 +21,21 @@ const AskCoachMatt = ({ programId, programTitle, weekNumber, dayNumber, exercise
   const [selectedExercise, setSelectedExercise] = useState(exercises[0] || "");
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [sending, setSending] = useState(false);
+  const [sizeWarning, setSizeWarning] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setSizeWarning(false);
+
     if (file.size > MAX_VIDEO_SIZE) {
-      toast({ title: "File too large", description: "Max video size is 100MB", variant: "destructive" });
+      setSizeWarning(true);
+      toast({
+        title: "Video too large",
+        description: "Max 25MB. Try trimming your clip to 15-30 seconds or recording at a lower resolution.",
+        variant: "destructive",
+      });
       return;
     }
     setVideoFile(file);
@@ -48,13 +56,13 @@ const AskCoachMatt = ({ programId, programTitle, weekNumber, dayNumber, exercise
         const ext = videoFile.name.split(".").pop();
         const path = `${user.id}/${Date.now()}.${ext}`;
         const { error: uploadError } = await supabase.storage
-          .from("form-check-videos")
+          .from("form_checks")
           .upload(path, videoFile, { contentType: videoFile.type });
 
         if (uploadError) throw uploadError;
 
         const { data: urlData } = supabase.storage
-          .from("form-check-videos")
+          .from("form_checks")
           .getPublicUrl(path);
         videoUrl = urlData.publicUrl;
       }
@@ -85,6 +93,7 @@ const AskCoachMatt = ({ programId, programTitle, weekNumber, dayNumber, exercise
       toast({ title: "Sent to Coach Matt", description: "He'll review and get back to you." });
       setMessage("");
       setVideoFile(null);
+      setSizeWarning(false);
     } catch (e: any) {
       toast({ title: "Error sending", description: e.message, variant: "destructive" });
     } finally {
@@ -129,11 +138,12 @@ const AskCoachMatt = ({ programId, programTitle, weekNumber, dayNumber, exercise
       />
 
       {/* Video upload */}
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex items-center gap-2 mb-2">
         <input
           ref={fileRef}
           type="file"
           accept={ACCEPTED_VIDEO}
+          capture="environment"
           onChange={handleVideoSelect}
           className="hidden"
         />
@@ -142,18 +152,33 @@ const AskCoachMatt = ({ programId, programTitle, weekNumber, dayNumber, exercise
           className="flex items-center gap-1.5 bg-muted text-muted-foreground px-3 py-2 text-[10px] font-bold uppercase tracking-widest hover:text-foreground transition-m2"
         >
           <Video size={12} />
-          {videoFile ? "Change Video" : "Upload Form Check Video"}
+          {videoFile ? "Change Video" : "Upload Form Check"}
         </button>
         {videoFile && (
           <div className="flex items-center gap-1 text-[11px] text-foreground">
-            <span className="truncate max-w-[150px]">{videoFile.name}</span>
-            <button onClick={() => setVideoFile(null)} className="text-muted-foreground hover:text-foreground">
+            <span className="truncate max-w-[140px]">{videoFile.name}</span>
+            <span className="text-[9px] text-muted-foreground">({(videoFile.size / 1024 / 1024).toFixed(1)}MB)</span>
+            <button onClick={() => { setVideoFile(null); setSizeWarning(false); }} className="text-muted-foreground hover:text-foreground">
               <X size={12} />
             </button>
           </div>
         )}
       </div>
-      <p className="text-[9px] text-muted-foreground mb-3">Accepted: MP4, MOV · Max 100MB</p>
+
+      {/* Size warning */}
+      {sizeWarning && (
+        <div className="flex items-start gap-2 bg-destructive/10 border border-destructive/20 p-2.5 mb-3">
+          <AlertTriangle size={14} className="text-destructive flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-[11px] text-destructive font-bold">Video exceeds 25MB limit</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              Trim your clip to 15–30 seconds, or record at a lower resolution. On iPhone, go to Settings → Camera → Record Video → choose 1080p or 720p.
+            </p>
+          </div>
+        </div>
+      )}
+
+      <p className="text-[9px] text-muted-foreground mb-3">MP4, MOV, or WebM · Max 25MB · Keep clips to 15–30 sec · Videos auto-delete after 30 days</p>
 
       {/* Send */}
       <button
