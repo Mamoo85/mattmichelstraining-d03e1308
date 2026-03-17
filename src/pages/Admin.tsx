@@ -12,10 +12,12 @@ import AdminPrograms from "@/components/admin/AdminPrograms";
 import AdminExerciseLibrary from "@/components/admin/AdminExerciseLibrary";
 import AdminPromotions from "@/components/admin/AdminPromotions";
 import AdminMonthlyFocus from "@/components/admin/AdminMonthlyFocus";
+import AdminProgramCreator from "@/components/admin/AdminProgramCreator";
 
 const TABS = [
   { key: "monthly", label: "Monthly Focus" },
   { key: "coach", label: "Coach Review" },
+  { key: "ai-programs", label: "AI Programs" },
   { key: "programs", label: "Programs" },
   { key: "exercises", label: "Exercises" },
   { key: "promotions", label: "Promotions" },
@@ -66,6 +68,7 @@ const Admin = () => {
             </div>
           </div>
         )}
+        {activeTab === "ai-programs" && <AdminProgramCreator />}
         {activeTab === "programs" && <AdminPrograms />}
         {activeTab === "exercises" && <AdminExerciseLibrary />}
         {activeTab === "promotions" && <AdminPromotions />}
