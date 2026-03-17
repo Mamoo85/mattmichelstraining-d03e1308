@@ -71,6 +71,8 @@ const Pricing = () => {
   const { content: cms } = useContentMap("pricing_page");
   const navigate = useNavigate();
   const [loadingTier, setLoadingTier] = useState<TierKey | null>(null);
+  const [promoCode, setPromoCode] = useState("");
+  const [promoApplied, setPromoApplied] = useState(false);
 
   const handleCheckout = async (tierKey: TierKey) => {
     if (!user) {
@@ -80,11 +82,15 @@ const Pricing = () => {
 
     setLoadingTier(tierKey);
     try {
-      const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: { priceId: TIERS[tierKey].price_id },
-      });
+      const body: any = { priceId: TIERS[tierKey].price_id };
+      if (promoCode.trim()) {
+        body.promoCode = promoCode.trim();
+      }
+
+      const { data, error } = await supabase.functions.invoke("create-checkout", { body });
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       if (data?.url) {
         window.open(data.url, "_blank");
       }
