@@ -79,7 +79,7 @@ const HeroSection = () => {
               <img
                 src={m2Logo}
                 alt="M² Training"
-                className="w-28 h-28 md:w-40 md:h-40 object-contain mb-6"
+                className="w-36 h-36 md:w-48 md:h-48 lg:w-56 lg:h-56 object-contain mb-6"
               />
               
               <div className="mb-4">

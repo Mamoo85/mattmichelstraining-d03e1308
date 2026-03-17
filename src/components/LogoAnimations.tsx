@@ -136,7 +136,7 @@ const SmartSlogan = () => {
   }, [started]);
 
   return (
-    <div className="h-[4.5rem] md:h-[5rem] flex items-center justify-center overflow-hidden relative">
+    <div className="min-h-[5rem] md:min-h-[6rem] flex items-center justify-center overflow-hidden relative">
       <AnimatePresence mode="wait">
         <motion.h1
           key={index}
@@ -147,7 +147,7 @@ const SmartSlogan = () => {
             duration: 0.5,
             ease: [0.23, 1, 0.32, 1],
           }}
-          className="text-2xl md:text-4xl lg:text-5xl font-bold tracking-display text-foreground leading-tight absolute whitespace-pre-line"
+          className="text-xl md:text-4xl lg:text-5xl font-bold tracking-display text-foreground leading-snug text-center whitespace-pre-line"
         >
           {slogans[index]}
         </motion.h1>
