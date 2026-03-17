@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Monitor, Filter, ShoppingBag, Check } from "lucide-react";
+import { Loader2, Monitor, Filter, ShoppingBag, Check, Tag } from "lucide-react";
 
 const ATHLETE_AGE_RANGES = ["12-13", "14-15", "16-17", "18+"];
 const LIFESTYLE_AGE_RANGES = ["18-29", "30-39", "40-49", "50+"];
