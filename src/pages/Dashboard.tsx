@@ -2,10 +2,11 @@ import AppNavbar from "@/components/AppNavbar";
 import ChallengeSystem from "@/components/ChallengeSystem";
 import MyPrograms from "@/components/MyPrograms";
 import WorkoutLogger from "@/components/workout/WorkoutLogger";
+import IntervalTimer from "@/components/workout/IntervalTimer";
 import { useAuth, TIERS } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ExternalLink, Loader2, Crown } from "lucide-react";
+import { ExternalLink, Loader2, Crown, Timer } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const TABS = [
