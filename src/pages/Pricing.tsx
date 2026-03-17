@@ -20,7 +20,8 @@ const TIER_CARDS: {
     icon: Zap,
     features: [
       "Monthly 'Real Deal' newsletter",
-      "Full text-based exercise library",
+      "85+ exercise library with sport-specific filters",
+      "Filter by YOUR sport — find the best exercises for Golf, Volleyball, Football & more",
       "Monthly Focus Plan access",
       "Member challenges",
     ],
@@ -33,6 +34,7 @@ const TIER_CARDS: {
     features: [
       "Everything in Basic",
       "Custom program from intake form",
+      "🖐️ Flag Coach Matt — raise your hand and get personal coaching feedback on any exercise",
       "Optional postural video assessment",
       "Monthly program updates",
       "Full 'Fix It' rehab library",
@@ -47,6 +49,7 @@ const TIER_CARDS: {
       "1-on-1 monthly check-ins with Matt",
       "Priority postural assessments",
       "Direct messaging support",
+      "Priority Flag Coach Matt responses",
     ],
     cta: "Go Elite",
   },
