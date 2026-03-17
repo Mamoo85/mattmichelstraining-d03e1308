@@ -265,7 +265,19 @@ const InteractivePrograms = () => {
               <div key={program.id} className="bg-card shadow-m2 p-4 flex flex-col hover:bg-accent/50 transition-m2">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-primary">8-Week Program</span>
-                  <span className="text-lg font-mono font-bold text-primary">${program.price}</span>
+                  <div className="text-right">
+                    {discountPct > 0 && (
+                      <span className="text-[9px] text-muted-foreground line-through mr-1.5">${program.price}</span>
+                    )}
+                    <span className="text-lg font-mono font-bold text-primary">
+                      ${discountPct > 0 ? (program.price * (1 - discountPct / 100)).toFixed(0) : program.price}
+                    </span>
+                    {discountPct > 0 && (
+                      <span className="block text-[8px] font-bold text-primary uppercase tracking-widest">
+                        {discountPct}% member discount
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <h3 className="text-sm font-bold text-foreground mb-1">{program.title}</h3>
                 <p className="text-[11px] text-muted-foreground mb-2 line-clamp-3">{program.description}</p>
