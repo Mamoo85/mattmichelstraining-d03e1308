@@ -16,12 +16,15 @@ import { useIsAdmin } from "@/hooks/useIsAdmin";
 import WorkoutBuilder from "@/components/workout/WorkoutBuilder";
 import CommunityWorkoutBank from "@/components/workout/CommunityWorkoutBank";
 import ReferralDashboard from "@/components/ReferralDashboard";
+import PointsWidget from "@/components/PointsWidget";
+import PointsLeaderboard from "@/components/PointsLeaderboard";
 
 const TABS = [
   { key: "home", label: "Home" },
   { key: "progress", label: "Progress" },
   { key: "programs", label: "My Programs" },
   { key: "workouts", label: "Workouts" },
+  { key: "points", label: "Points" },
   { key: "referrals", label: "Refer" },
 ];
 
