@@ -489,6 +489,7 @@ const Dashboard = () => {
         {activeTab === "progress" && <ProgressCharts />}
         {activeTab === "programs" && <MyPrograms />}
         {activeTab === "workouts" && <WorkoutsTab />}
+        {activeTab === "points" && <PointsLeaderboard />}
         {activeTab === "referrals" && <ReferralDashboard />}
       </div>
 
