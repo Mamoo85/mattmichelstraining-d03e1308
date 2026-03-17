@@ -1,7 +1,6 @@
 import AppNavbar from "@/components/AppNavbar";
 import MattsStory from "@/components/landing/MattsStory";
 import WhyM2 from "@/components/landing/WhyM2";
-import CanFixIt from "@/components/landing/CanFixIt";
 import AboutPhilosophy from "@/components/AboutPhilosophy";
 import Testimonial from "@/components/landing/Testimonial";
 import CurrentClients from "@/components/landing/CurrentClients";
@@ -41,7 +40,7 @@ const SOCIAL_PROOF = [
 const About = () => {
   const showWhyM2 = useSectionVisible("why_m2");
   const showStory = useSectionVisible("matts_story");
-  const showFixIt = useSectionVisible("can_fix_it");
+  
   const showTestimonial = useSectionVisible("testimonial");
   const showClients = useSectionVisible("current_clients");
   const showPress = useSectionVisible("press");
@@ -93,7 +92,7 @@ const About = () => {
 
         {showWhyM2 && <div className="mt-10"><WhyM2 /></div>}
         {showStory && <div className="mt-6"><MattsStory /></div>}
-        {showFixIt && <div className="mt-6"><CanFixIt /></div>}
+        
         {showClients && <div className="mt-6"><CurrentClients /></div>}
 
         {/* FOOTER */}
