@@ -5,8 +5,29 @@ import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
   apiVersion: "2025-08-27.basil",
 });
-
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+
+// Helper: award M² Points via the award_points RPC
+async function awardPts(sb: any, userId: string, action: string, points: number, description: string, referenceId?: string) {
+  try {
+    await sb.rpc("award_points", {
+      _user_id: userId,
+      _action: action,
+      _points: points,
+      _description: description,
+      _reference_id: referenceId || null,
+    });
+    console.log(`[WEBHOOK] Awarded ${points} pts to ${userId} for ${action}`);
+  } catch (e) {
+    console.error(`[WEBHOOK] Points award failed: ${e}`);
+  }
+}
+
+// Helper: resolve email to user_id
+async function getUserIdByEmail(sb: any, email: string): Promise<string | null> {
+  const { data } = await sb.from("profiles").select("user_id").eq("email", email).limit(1).single();
+  return data?.user_id || null;
+}
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
@@ -172,6 +193,14 @@ serve(async (req) => {
         const productId = subscription.items.data[0]?.price?.product as string;
         const tier = PRODUCT_TIER_MAP[productId] || "basic";
         await syncTierToProfile(sb, email, tier, customerId);
+
+        // Award membership points (only on created, not every update)
+        if (event.type === "customer.subscription.created") {
+          const uid = await getUserIdByEmail(sb, email);
+          if (uid) {
+            await awardPts(sb, uid, "membership_monthly", 50, `Subscribed to ${tier} membership`, subscription.id);
+          }
+        }
       }
     }
 
@@ -269,6 +298,9 @@ serve(async (req) => {
           });
 
           console.log(`[WEBHOOK] Referral conversion recorded: ${refCode} → ${referredProfile.user_id}`);
+
+          // Award referral points to the referrer
+          await awardPts(sb, refRow.user_id, "referral", 200, `Referral: ${referredEmail} subscribed`, refCode);
         }
       }
 
@@ -336,6 +368,9 @@ serve(async (req) => {
               exercises: JSON.stringify(exercises),
               stripe_session_id: session.id,
             });
+
+            // Award program purchase points
+            await awardPts(sb, userId, "program_purchase", 100, `Purchased: ${guide.title}`, session.id);
 
             await sb.from("notifications").insert({
               user_id: userId,
