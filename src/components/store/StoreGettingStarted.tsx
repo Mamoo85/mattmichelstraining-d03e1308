@@ -6,20 +6,20 @@ import SectionHeader from "../SectionHeader";
 const STEPS = [
   {
     num: "01",
-    title: "Create Your Free Account",
-    desc: "Sign up in 30 seconds. No credit card needed. You'll get access to monthly focus plans, member challenges, and workout logging immediately.",
+    title: "Create a Free Account",
+    desc: "Takes 30 seconds. No credit card. You immediately get workout logging, monthly focus plans, and member challenges.",
     ctaType: "signup" as const,
   },
   {
     num: "02",
-    title: "Grab a Guide or Custom Program",
-    desc: "Browse the Store tab for sport-specific PDF guides ($9) or get a fully custom program built by Matt ($20). Every guide teaches the WHY behind each movement.",
+    title: "Buy a Program or Guide",
+    desc: "Pick what fits your athlete:\n\n• PDF Guides ($15) — Top-10 exercise blueprints by age group. Standalone. Keep forever.\n• 8-Week Interactive Programs ($20–$40) — Full training systems loaded into your portal. Log every set, message Matt on any exercise, get form feedback.\n• Custom 4-Week Program ($20) — Fill out an intake form. Matt builds it from scratch for your sport, equipment, and level.",
     ctaType: "store" as const,
   },
   {
     num: "03",
-    title: "Subscribe, Train, & Connect",
-    desc: "Pick a plan and unlock Matt's full exercise library—20 years of hands-on coaching, zero filler. Filter by client type, age, sport, or target area (Mobility, Strength, Core, Flexibility). Log every workout, leave notes on exercises, and flag anything for Matt to personally review. This isn't generic internet programming—it's direct access to your coach, wherever you are.",
+    title: "Subscribe for Ongoing Coaching",
+    desc: "Monthly plans unlock Matt's full exercise library (85+ exercises with video and WHY), the Fix It rehab library, custom programming updates, and direct coaching access. Cancel anytime.\n\n• Basic ($12.99/mo) — Exercise library + monthly newsletter\n• Pro ($25.99/mo) — Custom programs + Fix It library + flag Matt for form review\n• Elite ($42.99/mo) — Everything + 1-on-1 check-ins + direct messaging\n• Team ($84.99/mo) — Full-roster programming for coaches & organizations",
     ctaType: "pricing" as const,
   },
 ];
@@ -51,12 +51,12 @@ const StoreGettingStarted = () => {
 
   return (
     <div>
-      <SectionHeader title="Getting Started" timestamp="Everything you need to know" />
+      <SectionHeader title="How It Works" timestamp="Three steps. No contracts. No filler." />
 
       {/* Welcome message */}
       <div className="bg-primary/10 border border-primary/20 shadow-m2 p-5 mb-6">
         <p className="text-sm text-foreground leading-relaxed">
-          <span className="font-bold">"Whether you're a parent looking for your kid's first real program, an athlete trying to get to the next level, or someone who just wants to stop hurting —</span> you're in the right place. Here's how this works."
+          <span className="font-bold">"Parent, athlete, coach, or just someone who wants to move better —</span> here's exactly what you get and how to get started."
         </p>
         <span className="text-[10px] font-mono text-primary mt-2 block">— Matt Michels, M² Training</span>
       </div>
@@ -65,8 +65,8 @@ const StoreGettingStarted = () => {
       {user && (
         <div className="bg-primary/5 border border-primary/20 shadow-m2 p-4 mb-6 flex items-center justify-between flex-wrap gap-3">
           <div>
-            <p className="text-sm font-bold text-foreground">You're in! 👊</p>
-            <p className="text-xs text-muted-foreground">Jump into your client portal to log workouts and track progress.</p>
+            <p className="text-sm font-bold text-foreground">You're in. 👊</p>
+            <p className="text-xs text-muted-foreground">Your portal is ready — log workouts, track progress, access your programs.</p>
           </div>
           <GoToPortalButton />
         </div>
@@ -80,7 +80,7 @@ const StoreGettingStarted = () => {
             <div>
               <h3 className="text-sm font-bold text-foreground mb-1">{step.title}</h3>
               {step.desc.split("\n\n").map((paragraph, i) => (
-                <p key={i} className="text-xs text-muted-foreground leading-relaxed mb-2 last:mb-0">{paragraph}</p>
+                <p key={i} className="text-xs text-muted-foreground leading-relaxed mb-2 last:mb-0 whitespace-pre-line">{paragraph}</p>
               ))}
               {step.ctaType === "signup" && !user && (
                 <SignUpButton size="small" />
@@ -97,7 +97,7 @@ const StoreGettingStarted = () => {
                   }}
                   className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-m2 mt-2"
                 >
-                  Shop Guides & Programs
+                  Browse Programs & Guides
                   <ArrowRight size={12} />
                 </button>
               )}
@@ -106,7 +106,7 @@ const StoreGettingStarted = () => {
                   to="/pricing"
                   className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-m2 mt-2"
                 >
-                  View Subscription Plans
+                  Compare Plans
                   <ArrowRight size={12} />
                 </Link>
               )}
@@ -121,7 +121,7 @@ const StoreGettingStarted = () => {
           <Gift size={20} className="text-primary flex-shrink-0 mt-0.5" />
           <div>
             <h3 className="text-sm font-bold text-foreground mb-1">Free With Every Account</h3>
-            <p className="text-xs text-muted-foreground leading-relaxed">No subscription required. Just sign up.</p>
+            <p className="text-xs text-muted-foreground leading-relaxed">No subscription needed. Create an account and these are yours.</p>
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-3">
@@ -135,7 +135,7 @@ const StoreGettingStarted = () => {
           </div>
           <div className="flex items-center gap-2">
             <Users size={14} className="text-primary flex-shrink-0" />
-            <span className="text-xs text-foreground">Workout Logging & Progress Tracking</span>
+            <span className="text-xs text-foreground">Workout Logging & Tracking</span>
           </div>
         </div>
         {!user && (
@@ -147,9 +147,9 @@ const StoreGettingStarted = () => {
 
       {/* Subscription CTA */}
       <div className="bg-card shadow-m2 p-5 mb-6">
-        <h3 className="text-sm font-bold text-foreground mb-2">Ready for More?</h3>
+        <h3 className="text-sm font-bold text-foreground mb-2">Want Ongoing Coaching?</h3>
         <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-          Subscriptions unlock the full Exercise Library, custom programming, the Fix It rehab library, and 1-on-1 check-ins with Matt.
+          Subscriptions give you the full exercise library, Fix It rehab protocols, custom programming, and direct access to Matt. Plans start at $12.99/mo. Cancel anytime.
         </p>
         <Link
           to="/pricing"
@@ -164,7 +164,7 @@ const StoreGettingStarted = () => {
       {!user && (
         <div className="text-center py-6 bg-primary/5 border border-primary/20 shadow-m2">
           <p className="text-sm font-bold text-foreground mb-1">Don't overthink it.</p>
-          <p className="text-xs text-muted-foreground mb-4">Create a free account, start logging, and let the work speak for itself.</p>
+          <p className="text-xs text-muted-foreground mb-4">Create a free account and see for yourself.</p>
           <SignUpButton />
         </div>
       )}

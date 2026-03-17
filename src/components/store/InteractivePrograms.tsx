@@ -48,6 +48,7 @@ const InteractivePrograms = () => {
   const [giftCode, setGiftCode] = useState("");
   const [giftBalance, setGiftBalance] = useState<number | null>(null);
   const [checkingGift, setCheckingGift] = useState(false);
+
   useEffect(() => {
     const fetchData = async () => {
       const { data } = await supabase
@@ -88,7 +89,7 @@ const InteractivePrograms = () => {
         if (error) {
           toast({ title: "Verification error", description: error.message, variant: "destructive" });
         } else {
-          toast({ title: "🎉 Program activated!", description: "Head to your Dashboard → My Programs to start training." });
+          toast({ title: "🎉 Program activated!", description: "Go to Dashboard → My Programs to start." });
           setOwnedProgramIds(prev => new Set([...prev, programPurchased]));
         }
         setVerifying(false);
@@ -126,7 +127,7 @@ const InteractivePrograms = () => {
         setGiftBalance(null);
       } else {
         setGiftBalance(data.remaining_balance);
-        toast({ title: "Gift card applied!", description: `$${data.remaining_balance.toFixed(2)} available balance` });
+        toast({ title: "Gift card applied!", description: `$${data.remaining_balance.toFixed(2)} available` });
       }
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
@@ -162,8 +163,7 @@ const InteractivePrograms = () => {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       if (data?.activated) {
-        // Gift card covered full amount - program already activated
-        toast({ title: "🎉 Program activated!", description: "Gift card applied. Head to your Dashboard → My Programs." });
+        toast({ title: "🎉 Program activated!", description: "Gift card applied. Go to Dashboard → My Programs." });
         setOwnedProgramIds(prev => new Set([...prev, program.id]));
         clearGiftCard();
       } else if (data?.url) {
@@ -211,16 +211,19 @@ const InteractivePrograms = () => {
       {verifying && (
         <div className="bg-primary/10 border border-primary/20 p-4 mb-4 flex items-center gap-3">
           <Loader2 size={16} className="animate-spin text-primary" />
-          <p className="text-sm text-foreground font-bold">Verifying your purchase and activating your program...</p>
+          <p className="text-sm text-foreground font-bold">Verifying your purchase…</p>
         </div>
       )}
 
       {/* Description */}
       <div className="bg-primary/10 border border-primary/20 p-4 mb-4">
-        <p className="text-sm text-foreground leading-relaxed mb-3">
-          Comprehensive <strong>8-week</strong> training systems loaded directly into your M² Client Portal. Every program includes direct form-checks and messaging with Coach Matt.
+        <p className="text-sm text-foreground leading-relaxed mb-1">
+          <strong>8-week training systems — loaded directly into your portal.</strong> Every program includes warmup, corrective work, strength training, and mobility. Log every set. Message Matt on any exercise. Get real feedback.
         </p>
-        <div className="flex flex-wrap gap-1.5">
+        <p className="text-xs text-muted-foreground">
+          Subscribers get a discount on all programs. Each program includes:
+        </p>
+        <div className="flex flex-wrap gap-1.5 mt-2">
           {PROGRAM_INCLUDES.map((item) => (
             <span key={item} className="text-[9px] bg-primary/10 text-primary px-2 py-0.5 font-bold uppercase tracking-widest">
               {item}
@@ -231,7 +234,7 @@ const InteractivePrograms = () => {
 
       {/* Custom program callout */}
       <div className="bg-accent/30 border border-border p-3 mb-6 text-xs text-muted-foreground">
-        <strong className="text-foreground">Custom Programs</strong> are personalized <strong>4-week</strong> plans built around your specific intake. Check the Custom Program tab for details.
+        <strong className="text-foreground">Looking for something custom?</strong> The Custom Program tab lets you fill out an intake form. Matt builds a personalized 4-week plan around your sport, equipment, and goals — $20.
       </div>
 
       {/* Filters */}
@@ -311,7 +314,7 @@ const InteractivePrograms = () => {
       </div>
       {giftBalance !== null && (
         <div className="mb-4 text-xs text-primary font-bold flex items-center gap-1.5">
-          <Gift size={12} /> Gift card: ${giftBalance.toFixed(2)} available — will be applied at checkout
+          <Gift size={12} /> Gift card: ${giftBalance.toFixed(2)} available — applied at checkout
         </div>
       )}
 
@@ -323,9 +326,9 @@ const InteractivePrograms = () => {
       ) : filtered.length === 0 ? (
         <div className="bg-card border border-border p-8 text-center">
           <Monitor size={28} className="mx-auto text-muted-foreground mb-3" />
-          <h3 className="text-sm font-bold text-foreground mb-1">No programs yet for this filter</h3>
+          <h3 className="text-sm font-bold text-foreground mb-1">No programs for this filter yet</h3>
           <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-            Matt is building new interactive programs regularly. Check back soon or grab a PDF guide in the meantime.
+            Matt adds new programs regularly. Try a different filter or grab a PDF guide.
           </p>
         </div>
       ) : (
@@ -345,7 +348,7 @@ const InteractivePrograms = () => {
                     </span>
                     {discountPct > 0 && (
                       <span className="block text-[8px] font-bold text-primary uppercase tracking-widest">
-                        {discountPct}% member discount
+                        {discountPct}% subscriber discount
                       </span>
                     )}
                   </div>
@@ -377,7 +380,7 @@ const InteractivePrograms = () => {
                       ) : (
                         <ShoppingBag size={12} />
                       )}
-                      {buyingId === program.id ? "Loading…" : `Buy Program · $${discountPct > 0 ? (program.price * (1 - discountPct / 100)).toFixed(0) : program.price}`}
+                      {buyingId === program.id ? "Loading…" : `Buy · $${discountPct > 0 ? (program.price * (1 - discountPct / 100)).toFixed(0) : program.price}`}
                     </button>
                   )}
                 </div>

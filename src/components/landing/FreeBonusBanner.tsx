@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowRight, Gift, Star, Trophy, Users } from "lucide-react";
+import { ArrowRight, Gift, Star, Trophy, Dumbbell } from "lucide-react";
 
 const FreeBonusBanner = () => (
   <motion.div
@@ -13,26 +13,24 @@ const FreeBonusBanner = () => (
       <div className="flex items-start gap-3 mb-3">
         <Gift size={22} className="text-primary flex-shrink-0 mt-0.5" />
         <div>
-          <h3 className="text-base md:text-lg font-bold text-foreground mb-1">Free When You Sign Up</h3>
+          <h3 className="text-base md:text-lg font-bold text-foreground mb-1">Free With Every Account</h3>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Create a free account, log your workouts with Matt, and get access to{" "}
-            <span className="text-foreground font-semibold">monthly focus plans</span> and{" "}
-            <span className="text-foreground font-semibold">member challenges</span> — no subscription needed.
+            No subscription needed. Create a free account and you immediately get:
           </p>
         </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
         <div className="flex items-center gap-2">
           <Star size={14} className="text-primary flex-shrink-0" />
-          <span className="text-xs text-foreground">Monthly Focus Plans</span>
+          <span className="text-xs text-foreground">Monthly Focus Plans from Matt</span>
         </div>
         <div className="flex items-center gap-2">
           <Trophy size={14} className="text-primary flex-shrink-0" />
-          <span className="text-xs text-foreground">Member Challenges</span>
+          <span className="text-xs text-foreground">Member Challenges & Leaderboard</span>
         </div>
         <div className="flex items-center gap-2">
-          <Users size={14} className="text-primary flex-shrink-0" />
-          <span className="text-xs text-foreground">Challenge Suggestions</span>
+          <Dumbbell size={14} className="text-primary flex-shrink-0" />
+          <span className="text-xs text-foreground">Full Workout Logging & Progress Tracking</span>
         </div>
       </div>
       <Link
