@@ -20,7 +20,7 @@ interface ProfileData {
 }
 
 const Profile = () => {
-  const { user, subscribed, subscriptionTier, subscriptionEnd, checkSubscription } = useAuth();
+  const { user, subscribed, subscriptionTier, subscriptionEnd, isLegend, checkSubscription } = useAuth();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [fullName, setFullName] = useState("");
   const [athleteName, setAthleteName] = useState("");
