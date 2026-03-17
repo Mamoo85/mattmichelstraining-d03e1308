@@ -147,6 +147,25 @@ Write 2-3 sentences: engagement level, any concerns, and one recommendation. Kee
         break;
       }
 
+      case "schedule_suggest": {
+        systemPrompt = `You are a scheduling strategist for Coach Matt Michels' in-person training studio. Analyze booking patterns and suggest optimal time slots to open for maximum bookings. Be concise, specific, and data-driven. Under 150 words.`;
+        userPrompt = `Analyze this day's schedule and suggest which time slots to open:
+
+Date: ${context.date} (${context.dayOfWeek})
+Total bookings today: ${context.totalBookings}
+Booked times: ${context.bookedTimes}
+Currently available (open but unbooked): ${context.currentAvailable}
+Total possible slots: ${context.totalSlots}
+
+Based on typical training studio patterns (early morning 5-7am for pre-work athletes, after school 3-5pm for youth, evening 5-7pm for adults), suggest:
+1. Which additional time slots to open
+2. Which open but unbooked slots to consider closing
+3. Any pattern observations
+
+Be specific with times and reasoning.`;
+        break;
+      }
+
       default:
         throw new Error(`Unknown assist type: ${type}`);
     }
