@@ -32,7 +32,7 @@ const HeroSection = () => {
   const showAuthority = useSectionVisible("authority_bar");
   const showStats = useSectionVisible("stats");
   
-  const showPress = useSectionVisible("press");
+  
   const showAudience = useSectionVisible("audience_selector");
   const showFreeBonus = useSectionVisible("free_bonus");
   
