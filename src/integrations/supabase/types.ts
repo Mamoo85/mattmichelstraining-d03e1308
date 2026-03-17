@@ -1324,6 +1324,27 @@ export type Database = {
         }
         Relationships: []
       }
+      trial_emails_sent: {
+        Row: {
+          email_type: string
+          id: string
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          email_type?: string
+          id?: string
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          email_type?: string
+          id?: string
+          sent_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_active_programs: {
         Row: {
           created_at: string
