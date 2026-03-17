@@ -155,6 +155,45 @@ export type Database = {
           },
         ]
       }
+      community_workouts: {
+        Row: {
+          created_at: string
+          creator_name: string
+          description: string | null
+          exercises: Json
+          id: string
+          is_public: boolean
+          likes_count: number
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          creator_name?: string
+          description?: string | null
+          exercises?: Json
+          id?: string
+          is_public?: boolean
+          likes_count?: number
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          creator_name?: string
+          description?: string | null
+          exercises?: Json
+          id?: string
+          is_public?: boolean
+          likes_count?: number
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       exercise_library: {
         Row: {
           client_type: string[]
