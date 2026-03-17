@@ -66,10 +66,10 @@ const TIMELINE = [
 const FUNNEL_STEPS = [
   {
     step: "1",
-    title: "Start with a Strength Guide",
-    desc: "Pick your athlete's sport. Get Matt's top strength exercises with the science behind each one. Affordable at just $9–$12 — real programming from a 20-year veteran.",
+    title: "Start with a Program",
+    desc: "Pick your athlete's sport and level. Get a 4-week or 8-week program built by Matt — loaded into your portal or downloadable as a PDF to keep forever. From $20.",
     icon: BookOpen,
-    cta: "Browse Strength Guides",
+    cta: "Browse Programs",
     link: "/shop",
   },
   {
