@@ -11,6 +11,7 @@ import AdminCoachInbox from "@/components/admin/AdminCoachInbox";
 import AdminPrograms from "@/components/admin/AdminPrograms";
 import AdminExerciseLibrary from "@/components/admin/AdminExerciseLibrary";
 import AdminPromotions from "@/components/admin/AdminPromotions";
+import AdminMonthlyFocus from "@/components/admin/AdminMonthlyFocus";
 
 const TABS = [
   { key: "coach", label: "Coach Review" },
