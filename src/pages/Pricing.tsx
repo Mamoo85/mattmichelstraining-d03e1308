@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Check, Star, Zap, Shield, Crown, Users, ArrowRight, Loader2, Tag, ChevronDown, ChevronUp } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import AppNavbar from "@/components/AppNavbar";
-import { useAuth, TIERS, TierKey } from "@/hooks/useAuth";
+import { useAuth, TIERS, TierKey, TIER_DISCOUNTS } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useContentMap } from "@/hooks/useSiteContent";
