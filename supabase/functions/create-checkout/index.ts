@@ -103,6 +103,31 @@ serve(async (req) => {
       logStep("Stripe coupon created", { couponId: coupon.id });
     }
 
+    // Handle referral code — gives friend 10% off first month
+    let referralCouponId: string | undefined;
+    let referralCodeValue: string | undefined;
+
+    if (referralCode && !stripeCouponId) {
+      // Validate referral code exists
+      const { data: refRow } = await supabaseClient
+        .from("referral_codes")
+        .select("user_id, code")
+        .eq("code", referralCode.toUpperCase().trim())
+        .single();
+
+      if (refRow && refRow.user_id !== user.id) {
+        // Don't let users refer themselves
+        const referralCoupon = await stripe.coupons.create({
+          name: `Referral: ${refRow.code}`,
+          percent_off: 10,
+          duration: "once",
+        });
+        referralCouponId = referralCoupon.id;
+        referralCodeValue = refRow.code;
+        logStep("Referral coupon created", { couponId: referralCoupon.id, referrerUserId: refRow.user_id });
+      }
+    }
+
     const sessionParams: any = {
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
@@ -114,11 +139,16 @@ serve(async (req) => {
 
     if (stripeCouponId) {
       sessionParams.discounts = [{ coupon: stripeCouponId }];
+    } else if (referralCouponId) {
+      sessionParams.discounts = [{ coupon: referralCouponId }];
     }
 
-    // Store promo ID in metadata so webhook can increment usage after payment
-    if (promoId) {
-      sessionParams.metadata = { promo_id: promoId };
+    // Store promo ID and referral code in metadata
+    const metadata: any = {};
+    if (promoId) metadata.promo_id = promoId;
+    if (referralCodeValue) metadata.referral_code = referralCodeValue;
+    if (Object.keys(metadata).length > 0) {
+      sessionParams.metadata = metadata;
     }
 
     const session = await stripe.checkout.sessions.create(sessionParams);
