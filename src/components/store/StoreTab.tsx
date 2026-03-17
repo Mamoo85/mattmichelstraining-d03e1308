@@ -207,7 +207,8 @@ const CustomProgramSection = () => {
                   Best Value
                 </span>
               )}
-              <div className="text-xl font-mono font-bold text-primary">${t.price}</div>
+              {discountPct > 0 && <div className="text-[9px] text-muted-foreground line-through">${t.price}</div>}
+              <div className="text-xl font-mono font-bold text-primary">${discountPct > 0 ? (t.price * (1 - discountPct / 100)).toFixed(2) : t.price}</div>
               <div className="text-sm font-bold text-foreground mt-1">{t.label}</div>
               <div className="text-[10px] text-muted-foreground mt-0.5">{t.description}</div>
               {t.weeks > 1 && (
