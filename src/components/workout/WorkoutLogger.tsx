@@ -170,6 +170,11 @@ const WorkoutLogger = () => {
         </button>
       )}
 
+      {/* Recovery check-in */}
+      {exercises.length > 0 && (
+        <RecoveryInput value={recovery} onChange={setRecovery} />
+      )}
+
       {/* Session notes */}
       {exercises.length > 0 && (
         <textarea
