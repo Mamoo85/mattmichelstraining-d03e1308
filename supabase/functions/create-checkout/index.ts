@@ -116,17 +116,13 @@ serve(async (req) => {
       sessionParams.discounts = [{ coupon: stripeCouponId }];
     }
 
+    // Store promo ID in metadata so webhook can increment usage after payment
+    if (promoId) {
+      sessionParams.metadata = { promo_id: promoId };
+    }
+
     const session = await stripe.checkout.sessions.create(sessionParams);
     logStep("Checkout session created", { sessionId: session.id });
-
-    // Increment promo usage
-    if (promoId) {
-      await supabaseClient
-        .from("promotions")
-        .update({ current_uses: (await supabaseClient.from("promotions").select("current_uses").eq("id", promoId).single()).data?.current_uses + 1 })
-        .eq("id", promoId);
-      logStep("Promo usage incremented");
-    }
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

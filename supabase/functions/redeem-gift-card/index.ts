@@ -25,7 +25,8 @@ serve(async (req) => {
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
     if (userError || !userData.user) throw new Error("Auth failed");
 
-    const { code, action } = await req.json();
+    const body = await req.json();
+    const { code, action, amount } = body;
     if (!code) throw new Error("Gift card code required");
 
     // action: "check" just returns balance, "apply" with amount deducts
@@ -62,7 +63,6 @@ serve(async (req) => {
     }
 
     // For "apply" action — deduct amount
-    const { amount } = await req.json().catch(() => ({ amount: 0 }));
     const deduction = Math.min(amount || card.remaining_balance, card.remaining_balance);
     const newBalance = card.remaining_balance - deduction;
 

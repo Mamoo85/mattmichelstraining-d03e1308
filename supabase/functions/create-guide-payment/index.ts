@@ -130,25 +130,8 @@ serve(async (req) => {
 
     const session = await stripe.checkout.sessions.create(sessionParams);
 
-    // Deduct gift card balance after creating session (will be charged)
-    if (giftCardId && giftCardAppliedCents > 0 && userId) {
-      const { data: currentCard } = await supabaseClient
-        .from("gift_cards")
-        .select("remaining_balance")
-        .eq("id", giftCardId)
-        .single();
-
-      if (currentCard) {
-        const deduction = giftCardAppliedCents / 100;
-        const newBalance = Math.max(0, currentCard.remaining_balance - deduction);
-        await supabaseClient.from("gift_cards").update({
-          remaining_balance: newBalance,
-          is_active: newBalance > 0,
-          redeemed_by: userId,
-          redeemed_at: new Date().toISOString(),
-        }).eq("id", giftCardId);
-      }
-    }
+    // NOTE: Gift card deduction now happens in verify step / webhook after payment confirms
+    // Store gift card info in metadata so it can be deducted after payment
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
