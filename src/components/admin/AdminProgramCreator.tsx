@@ -67,6 +67,7 @@ const AdminProgramCreator = () => {
   const [linkingId, setLinkingId] = useState<string | null>(null);
   const [stripeProductInput, setStripeProductInput] = useState("");
   const [stripePriceInput, setStripePriceInput] = useState("");
+  const [syncing, setSyncing] = useState(false);
 
   // --- Exercise map for names ---
   const [exerciseMap, setExerciseMap] = useState<Record<string, string>>({});
@@ -200,12 +201,37 @@ const AdminProgramCreator = () => {
     }
   };
 
+  const handleSyncStripe = async () => {
+    setSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("sync-stripe-products", { body: {} });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast({
+        title: `Stripe sync complete!`,
+        description: `${data.synced} products created. ${data.errors} errors.`,
+      });
+      fetchInventory();
+    } catch (e: any) {
+      toast({ title: "Sync failed", description: e.message, variant: "destructive" });
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   const handlePublish = async (id: string) => {
     const prog = inventory.find((p) => p.id === id);
     if (!prog) return;
+    // If no Stripe IDs, sync first
     if (!prog.stripe_product_id || !prog.stripe_price_id) {
-      toast({ title: "Link Stripe first", description: "Connect a Stripe product & price before publishing.", variant: "destructive" });
-      return;
+      toast({ title: "Syncing to Stripe first...", description: "Creating product automatically." });
+      await handleSyncStripe();
+      // Re-fetch and check
+      const { data: updated } = await supabase.from("training_programs").select("stripe_product_id, stripe_price_id").eq("id", id).single();
+      if (!updated?.stripe_product_id) {
+        toast({ title: "Stripe sync failed for this program", variant: "destructive" });
+        return;
+      }
     }
     await supabase.from("training_programs").update({ status: "published", is_active: true }).eq("id", id);
     toast({ title: "Published!" });
@@ -408,9 +434,16 @@ const AdminProgramCreator = () => {
 
       {/* Program Inventory */}
       <div>
-        <h2 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
-          <Package size={16} className="text-primary" /> Program Inventory ({inventory.length})
-        </h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
+            <Package size={16} className="text-primary" /> Program Inventory ({inventory.length})
+          </h2>
+          <button onClick={handleSyncStripe} disabled={syncing}
+            className="bg-primary text-primary-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 flex items-center gap-1.5 disabled:opacity-50">
+            {syncing ? <Loader2 size={12} className="animate-spin" /> : <DollarSign size={12} />}
+            {syncing ? "Syncing…" : "Sync All to Stripe"}
+          </button>
+        </div>
 
         {loadingInv ? (
           <div className="flex justify-center py-8"><Loader2 size={20} className="animate-spin text-primary" /></div>

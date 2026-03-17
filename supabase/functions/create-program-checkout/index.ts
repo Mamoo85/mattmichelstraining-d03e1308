@@ -47,7 +47,7 @@ serve(async (req) => {
     // Fetch program details
     const { data: program, error: programError } = await supabaseClient
       .from("training_programs")
-      .select("id, title, price, is_active")
+      .select("id, title, price, is_active, stripe_price_id, stripe_product_id")
       .eq("id", programId)
       .single();
 
@@ -123,11 +123,13 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "https://m2training.lovable.app";
 
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      customer_email: customerId ? undefined : user.email,
-      line_items: [
-        {
+    // Use proper Stripe price ID if available, otherwise use price_data
+    const lineItems = program.stripe_price_id
+      ? [{
+          price: program.stripe_price_id,
+          quantity: 1,
+        }]
+      : [{
           price_data: {
             currency: "usd",
             product_data: {
@@ -139,8 +141,24 @@ serve(async (req) => {
             unit_amount: Math.round(finalPrice * 100),
           },
           quantity: 1,
-        },
-      ],
+        }];
+
+    // If using a Stripe price but there's a discount, create a coupon
+    let discounts: any[] | undefined;
+    if (program.stripe_price_id && discountAmount > 0) {
+      const coupon = await stripe.coupons.create({
+        amount_off: Math.round(discountAmount * 100),
+        currency: "usd",
+        duration: "once",
+      });
+      discounts = [{ coupon: coupon.id }];
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      customer: customerId,
+      customer_email: customerId ? undefined : user.email,
+      line_items: lineItems,
+      ...(discounts ? { discounts } : {}),
       mode: "payment",
       success_url: `${origin}/shop?program_purchased=${programId}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/shop`,
