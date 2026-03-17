@@ -10,7 +10,6 @@ import NotificationBell from "./NotificationBell";
 const navItems = [
   { to: "/", label: "HOME", icon: Home },
   { to: "/dashboard", label: "PORTAL", icon: Dumbbell },
-  { to: "/progress", label: "PROGRESS", icon: BarChart3 },
   { to: "/coach", label: "COACH", icon: MessageSquare },
   { to: "/shop", label: "STORE", icon: ShoppingBag },
   { to: "/pricing", label: "PRICING", icon: CreditCard },

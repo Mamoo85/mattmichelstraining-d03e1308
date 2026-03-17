@@ -33,7 +33,6 @@ const StoreTab = () => {
         ))}
       </div>
 
-      {subTab === "pdf-guides" && <PdfGuides />}
       {subTab === "programs" && <InteractivePrograms />}
       {subTab === "custom" && <CustomProgramSection />}
       {subTab === "merchandise" && <MerchSection />}

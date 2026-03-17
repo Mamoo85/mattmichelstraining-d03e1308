@@ -9,7 +9,7 @@ const TABS = [
   { key: "start", label: "Getting Started" },
   { key: "store", label: "Store" },
   { key: "library", label: "Exercise Library" },
-];
+] as const;
 
 const Shop = () => {
   const [activeTab, setActiveTab] = useState("start");
