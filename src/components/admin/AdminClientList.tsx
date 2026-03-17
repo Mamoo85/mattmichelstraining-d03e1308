@@ -108,8 +108,8 @@ const AdminClientList = () => {
           <p className="text-2xl font-mono font-bold text-foreground">{workoutLogs.length}</p>
         </div>
         <div className="bg-card shadow-m2 p-4">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">In-Person</p>
-          <p className="text-2xl font-mono font-bold text-primary">{inPersonCount}</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Legend Members</p>
+          <p className="text-2xl font-mono font-bold text-primary">{legendCount}</p>
         </div>
       </div>
 
