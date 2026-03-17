@@ -197,12 +197,27 @@ const AdminCoachInbox = () => {
       {/* Reply input (only for unreplied) */}
       {!msg.coach_reply && (
         <>
-          <textarea
-            placeholder="Type your reply…"
-            value={replies[msg.id] || ""}
-            onChange={(e) => setReplies((prev) => ({ ...prev, [msg.id]: e.target.value }))}
-            className="w-full bg-background border border-border p-3 text-sm text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-primary outline-none min-h-[70px] resize-none"
-          />
+          <div className="flex gap-2 items-end">
+            <textarea
+              placeholder="Type your reply…"
+              value={replies[msg.id] || ""}
+              onChange={(e) => setReplies((prev) => ({ ...prev, [msg.id]: e.target.value }))}
+              className="flex-1 bg-background border border-border p-3 text-sm text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-primary outline-none min-h-[70px] resize-none"
+            />
+            <AiAssistButton
+              type="program_reply"
+              context={{
+                programTitle: msg.programTitle || "Training Program",
+                exerciseName: msg.exercise_name,
+                weekNumber: msg.week_number,
+                dayNumber: msg.day_number,
+                message: msg.message,
+                videoUrl: msg.video_url,
+              }}
+              onResult={(text) => setReplies((prev) => ({ ...prev, [msg.id]: text }))}
+              label="AI Draft"
+            />
+          </div>
           <button
             onClick={() => handleReply(msg.id)}
             disabled={sending === msg.id}
