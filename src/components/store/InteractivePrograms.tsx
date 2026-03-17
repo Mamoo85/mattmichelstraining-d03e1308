@@ -328,7 +328,7 @@ const InteractivePrograms = () => {
           <Monitor size={28} className="mx-auto text-muted-foreground mb-3" />
           <h3 className="text-sm font-bold text-foreground mb-1">No programs for this filter yet</h3>
           <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-            Matt adds new programs regularly. Try a different filter or grab a PDF guide.
+            Matt adds new programs regularly. Try a different filter or check back soon.
           </p>
         </div>
       ) : (

@@ -6,7 +6,7 @@ import { useContentMap, useSectionVisible } from "@/hooks/useSiteContent";
 import { SmartSlogan } from "./LogoAnimations";
 
 import AuthorityBar from "./landing/AuthorityBar";
-import GuidesGrid from "./landing/GuidesGrid";
+// GuidesGrid removed
 
 import PremiumProgram from "./landing/PremiumProgram";
 import PortalShowcase from "./landing/PortalShowcase";
