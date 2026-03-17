@@ -841,6 +841,84 @@ export type Database = {
         }
         Relationships: []
       }
+      schedule_slots: {
+        Row: {
+          booked_by: string | null
+          booking_id: string | null
+          created_at: string
+          id: string
+          is_available: boolean
+          slot_date: string
+          start_time: string
+        }
+        Insert: {
+          booked_by?: string | null
+          booking_id?: string | null
+          created_at?: string
+          id?: string
+          is_available?: boolean
+          slot_date: string
+          start_time: string
+        }
+        Update: {
+          booked_by?: string | null
+          booking_id?: string | null
+          created_at?: string
+          id?: string
+          is_available?: boolean
+          slot_date?: string
+          start_time?: string
+        }
+        Relationships: []
+      }
+      session_bookings: {
+        Row: {
+          amount_cents: number
+          cancelled_at: string | null
+          created_at: string
+          duration_minutes: number
+          id: string
+          slot_date: string
+          start_time: string
+          status: string
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
+          user_email: string | null
+          user_id: string
+          user_name: string | null
+        }
+        Insert: {
+          amount_cents: number
+          cancelled_at?: string | null
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          slot_date: string
+          start_time: string
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          user_email?: string | null
+          user_id: string
+          user_name?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          cancelled_at?: string | null
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          slot_date?: string
+          start_time?: string
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          user_email?: string | null
+          user_id?: string
+          user_name?: string | null
+        }
+        Relationships: []
+      }
       site_content: {
         Row: {
           content_key: string
