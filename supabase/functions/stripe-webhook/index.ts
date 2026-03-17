@@ -5,8 +5,29 @@ import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
   apiVersion: "2025-08-27.basil",
 });
-
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+
+// Helper: award M² Points via the award_points RPC
+async function awardPts(sb: any, userId: string, action: string, points: number, description: string, referenceId?: string) {
+  try {
+    await sb.rpc("award_points", {
+      _user_id: userId,
+      _action: action,
+      _points: points,
+      _description: description,
+      _reference_id: referenceId || null,
+    });
+    console.log(`[WEBHOOK] Awarded ${points} pts to ${userId} for ${action}`);
+  } catch (e) {
+    console.error(`[WEBHOOK] Points award failed: ${e}`);
+  }
+}
+
+// Helper: resolve email to user_id
+async function getUserIdByEmail(sb: any, email: string): Promise<string | null> {
+  const { data } = await sb.from("profiles").select("user_id").eq("email", email).limit(1).single();
+  return data?.user_id || null;
+}
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
