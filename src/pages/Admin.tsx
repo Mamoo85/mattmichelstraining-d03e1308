@@ -16,6 +16,7 @@ import AdminProgramCreator from "@/components/admin/AdminProgramCreator";
 import AdminSchedule from "@/components/admin/AdminSchedule";
 import AdminTierManager from "@/components/admin/AdminTierManager";
 import AdminDirectMessages from "@/components/admin/AdminDirectMessages";
+import AdminPointsManager from "@/components/admin/AdminPointsManager";
 
 const TABS = [
   { key: "tiers", label: "Tier Access" },
@@ -27,6 +28,7 @@ const TABS = [
   { key: "programs", label: "Programs" },
   { key: "exercises", label: "Exercises" },
   { key: "promotions", label: "Promotions" },
+  { key: "points", label: "Points" },
   { key: "clients", label: "Clients" },
   { key: "site", label: "Site Editor" },
   { key: "protocols", label: "Protocols" },
@@ -81,6 +83,7 @@ const Admin = () => {
         {activeTab === "programs" && <AdminPrograms />}
         {activeTab === "exercises" && <AdminExerciseLibrary />}
         {activeTab === "promotions" && <AdminPromotions />}
+        {activeTab === "points" && <AdminPointsManager />}
         {activeTab === "clients" && <AdminClientList />}
         {activeTab === "site" && <AdminSiteEditor />}
         {activeTab === "protocols" && <AdminProtocols />}

@@ -16,12 +16,15 @@ import { useIsAdmin } from "@/hooks/useIsAdmin";
 import WorkoutBuilder from "@/components/workout/WorkoutBuilder";
 import CommunityWorkoutBank from "@/components/workout/CommunityWorkoutBank";
 import ReferralDashboard from "@/components/ReferralDashboard";
+import PointsWidget from "@/components/PointsWidget";
+import PointsLeaderboard from "@/components/PointsLeaderboard";
 
 const TABS = [
   { key: "home", label: "Home" },
   { key: "progress", label: "Progress" },
   { key: "programs", label: "My Programs" },
   { key: "workouts", label: "Workouts" },
+  { key: "points", label: "Points" },
   { key: "referrals", label: "Refer" },
 ];
 
@@ -211,7 +214,17 @@ const Dashboard = () => {
     }
     setCurrentValue(newVal);
     setProgressInput("");
-    toast({ title: `+${val} logged!`, description: `Total: ${newVal}` });
+    toast({ title: `+${val} logged!`, description: `Total: ${newVal} · +10 M² Points` });
+    // Award points for challenge entry
+    try {
+      await supabase.rpc("award_points", {
+        _user_id: user.id,
+        _action: "challenge_entry",
+        _points: 10,
+        _description: "Monthly challenge entry",
+        _reference_id: challenge.id,
+      });
+    } catch (e) { console.error("Points award failed:", e); }
     loadLeaderboard();
     loadEntries();
     setActionLoading(false);
@@ -247,6 +260,9 @@ const Dashboard = () => {
     <div className="space-y-6">
       {/* Upcoming Sessions */}
       <UpcomingSessions />
+
+      {/* Points Widget */}
+      <PointsWidget onViewLeaderboard={() => setActiveTab("points")} />
 
       {/* Monthly Focus Section */}
       {focus ? (
@@ -483,6 +499,7 @@ const Dashboard = () => {
         {activeTab === "progress" && <ProgressCharts />}
         {activeTab === "programs" && <MyPrograms />}
         {activeTab === "workouts" && <WorkoutsTab />}
+        {activeTab === "points" && <PointsLeaderboard />}
         {activeTab === "referrals" && <ReferralDashboard />}
       </div>
 
