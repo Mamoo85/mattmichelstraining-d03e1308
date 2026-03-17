@@ -98,6 +98,14 @@ const Profile = () => {
         setLiftStats(stats);
       }
 
+      // Gift cards
+      const { data: cards } = await supabase
+        .from("gift_cards" as any)
+        .select("*")
+        .or(`purchaser_id.eq.${user.id},redeemed_by.eq.${user.id}`)
+        .order("created_at", { ascending: false });
+      if (cards) setGiftCards(cards);
+
       setLoading(false);
     };
     load();
