@@ -105,7 +105,7 @@ const PortalShowcase = () => (
         to="/shop"
         className="inline-flex items-center justify-center gap-2 flex-1 bg-primary text-primary-foreground px-5 py-3.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
       >
-        Browse Programs & Guides
+        Browse Programs
         <ArrowRight size={14} />
       </Link>
       <Link
