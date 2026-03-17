@@ -333,6 +333,56 @@ export type Database = {
         }
         Relationships: []
       }
+      program_messages: {
+        Row: {
+          coach_reply: string | null
+          created_at: string
+          day_number: number
+          exercise_name: string
+          id: string
+          is_read: boolean
+          message: string
+          program_id: string
+          user_id: string
+          video_url: string | null
+          week_number: number
+        }
+        Insert: {
+          coach_reply?: string | null
+          created_at?: string
+          day_number?: number
+          exercise_name?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          program_id: string
+          user_id: string
+          video_url?: string | null
+          week_number?: number
+        }
+        Update: {
+          coach_reply?: string | null
+          created_at?: string
+          day_number?: number
+          exercise_name?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          program_id?: string
+          user_id?: string
+          video_url?: string | null
+          week_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "program_messages_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "training_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       program_workouts: {
         Row: {
           coach_instructions: string
