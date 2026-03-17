@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { X, Timer, Minus, Plus, Play, Pause, RotateCcw } from "lucide-react";
+import { X, Minus, Plus, Play, Pause, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { countdownBeep, workBeep, restBeep, completeChime } from "./useTimerAudio";
 
@@ -41,7 +41,66 @@ const phaseLabels: Record<Phase, string> = {
 function formatTime(s: number): string {
   const m = Math.floor(s / 60);
   const sec = s % 60;
-  return `${m}:${sec.toString().padStart(2, "0")}`;
+  return `${m.toString().padStart(2, "0")}:${sec.toString().padStart(2, "0")}`;
+}
+
+/* ── Editable number field: tap to type ── */
+function EditableValue({
+  value,
+  onChange,
+  isTime,
+  disabled,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  isTime?: boolean;
+  disabled?: boolean;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const startEdit = () => {
+    if (disabled) return;
+    setDraft(isTime ? String(value) : String(value));
+    setEditing(true);
+  };
+
+  useEffect(() => {
+    if (editing) inputRef.current?.focus();
+  }, [editing]);
+
+  const commit = () => {
+    setEditing(false);
+    const n = parseInt(draft, 10);
+    if (!isNaN(n) && n >= 0) {
+      onChange(isTime ? Math.min(n, 3600) : Math.max(1, Math.min(n, 999)));
+    }
+  };
+
+  if (editing) {
+    return (
+      <input
+        ref={inputRef}
+        type="number"
+        inputMode="numeric"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => e.key === "Enter" && commit()}
+        className="font-mono text-lg font-bold text-foreground w-16 text-center tabular-nums bg-background border border-primary outline-none px-1 py-0.5"
+      />
+    );
+  }
+
+  return (
+    <button
+      onClick={startEdit}
+      className="font-mono text-lg font-bold text-foreground w-16 text-center tabular-nums hover:text-primary transition-colors cursor-text"
+    >
+      {isTime ? formatTime(value) : value}
+    </button>
+  );
 }
 
 const IntervalTimer = ({ onClose }: { onClose: () => void }) => {
@@ -51,7 +110,6 @@ const IntervalTimer = ({ onClose }: { onClose: () => void }) => {
   const [currentRound, setCurrentRound] = useState(0);
   const [running, setRunning] = useState(false);
 
-  // Robust interval using target timestamps instead of naive decrement
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const targetTimeRef = useRef(0);
   const phaseRef = useRef<Phase>("idle");
@@ -96,7 +154,6 @@ const IntervalTimer = ({ onClose }: { onClose: () => void }) => {
     const c = configRef.current;
 
     if (s <= 0) {
-      // Transition to next phase
       if (p === "prep") {
         transitionPhase("work", c.work, 1);
       } else if (p === "work") {
@@ -117,7 +174,6 @@ const IntervalTimer = ({ onClose }: { onClose: () => void }) => {
       return;
     }
 
-    // Countdown beeps for last 3 seconds
     if (s <= 3 && s > 0) { countdownBeep(); vibrate(50); }
 
     const next = s - 1;
@@ -126,7 +182,6 @@ const IntervalTimer = ({ onClose }: { onClose: () => void }) => {
   }, [transitionPhase]);
 
   const startTimer = useCallback(() => {
-    // Unlock audio context on first user gesture
     if (phase === "idle" || phase === "done") {
       transitionPhase("prep", config.prep, 0);
     }
@@ -135,14 +190,13 @@ const IntervalTimer = ({ onClose }: { onClose: () => void }) => {
     targetTimeRef.current = Date.now();
 
     intervalRef.current = setInterval(() => {
-      // Drift-corrected: measure real elapsed time
       const now = Date.now();
       const elapsed = now - targetTimeRef.current;
       if (elapsed >= 1000) {
         targetTimeRef.current += 1000;
         tick();
       }
-    }, 100); // Check every 100ms for accuracy even when throttled
+    }, 100);
   }, [phase, config, tick, transitionPhase, stopInterval]);
 
   const pauseTimer = useCallback(() => {
@@ -158,31 +212,19 @@ const IntervalTimer = ({ onClose }: { onClose: () => void }) => {
     setCurrentRound(0);
   }, [stopInterval]);
 
-  // Wake Lock: keep screen on while timer is running
+  // Wake Lock
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
-
   useEffect(() => {
-    const acquireWakeLock = async () => {
+    const acquire = async () => {
       if (running && "wakeLock" in navigator) {
-        try {
-          wakeLockRef.current = await navigator.wakeLock.request("screen");
-        } catch { /* user denied or not supported */ }
+        try { wakeLockRef.current = await navigator.wakeLock.request("screen"); } catch {}
       }
     };
-    const releaseWakeLock = () => {
-      wakeLockRef.current?.release();
-      wakeLockRef.current = null;
-    };
-
-    if (running) {
-      acquireWakeLock();
-    } else {
-      releaseWakeLock();
-    }
-    return releaseWakeLock;
+    const release = () => { wakeLockRef.current?.release(); wakeLockRef.current = null; };
+    if (running) acquire(); else release();
+    return release;
   }, [running]);
 
-  // Cleanup on unmount
   useEffect(() => () => stopInterval(), [stopInterval]);
 
   const adjust = (field: keyof TimerConfig, delta: number) => {
@@ -193,28 +235,85 @@ const IntervalTimer = ({ onClose }: { onClose: () => void }) => {
     }));
   };
 
+  const setField = (field: keyof TimerConfig, value: number) => {
+    if (running) return;
+    setConfig((c) => ({ ...c, [field]: value }));
+  };
+
   const isSetup = phase === "idle" || phase === "done";
   const displayTime = isSetup ? formatTime(config.work) : formatTime(secondsLeft);
 
+  // Progress calculations
+  const totalWorkoutSeconds = config.rounds * (config.work + config.rest) + config.prep;
+  const elapsedSeconds = (() => {
+    if (phase === "idle") return 0;
+    if (phase === "done") return totalWorkoutSeconds;
+    const completedRounds = Math.max(0, currentRound - 1);
+    const roundTime = config.work + config.rest;
+    let elapsed = config.prep - (phase === "prep" ? secondsLeft : 0);
+    if (phase !== "prep") {
+      elapsed = config.prep + completedRounds * roundTime;
+      if (phase === "work") elapsed += config.work - secondsLeft;
+      if (phase === "rest") elapsed += config.work + (config.rest - secondsLeft);
+    }
+    return elapsed;
+  })();
+  const totalProgress = totalWorkoutSeconds > 0 ? (elapsedSeconds / totalWorkoutSeconds) * 100 : 0;
+
+  const roundProgress = (() => {
+    if (phase === "prep" || phase === "idle" || phase === "done") return 0;
+    const roundTotal = config.work + config.rest;
+    if (roundTotal === 0) return 0;
+    const inRound = phase === "work" ? (config.work - secondsLeft) : (config.work + config.rest - secondsLeft);
+    return (inRound / roundTotal) * 100;
+  })();
+
   return (
     <div className="fixed inset-0 z-[60] flex flex-col animate-slide-in-right" style={{ animationDuration: "0.25s" }}>
-      {/* Timer display — top half */}
-      <div className={cn("flex-1 flex flex-col items-center justify-center relative transition-colors duration-300", phaseColors[phase])}>
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 bg-black/30 text-white hover:bg-black/50 transition-colors"
-        >
-          <X size={24} />
-        </button>
-
-        <span className="text-sm font-bold uppercase tracking-[0.3em] text-white/80 mb-2">
-          {phaseLabels[phase]}
-          {(phase === "prep" || phase === "work" || phase === "rest") && ` · Round ${currentRound}/${config.rounds}`}
+      {/* ── HEADER BAR — thick tap target ── */}
+      <button
+        onClick={onClose}
+        className="flex items-center justify-between px-4 bg-card border-b border-border shrink-0"
+        style={{ minHeight: 56 }}
+      >
+        <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground">Interval Timer</span>
+        <span className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+          <span className="text-xs font-bold uppercase tracking-widest">Exit</span>
+          <X size={22} />
         </span>
+      </button>
+
+      {/* ── Timer display ── */}
+      <div className={cn("flex-1 flex flex-col items-center justify-center relative transition-colors duration-300", phaseColors[phase])}>
+        <span className="text-sm font-bold uppercase tracking-[0.3em] text-white/80 mb-1">
+          {phaseLabels[phase]}
+        </span>
+        {(phase === "prep" || phase === "work" || phase === "rest") && (
+          <span className="text-xs font-mono text-white/60 mb-2">
+            Round {String(currentRound).padStart(3, "0")} / {String(config.rounds).padStart(3, "0")}
+          </span>
+        )}
 
         <span className="font-mono text-[min(30vw,160px)] leading-none font-black text-white tabular-nums drop-shadow-lg">
           {displayTime}
         </span>
+
+        {!isSetup && (
+          <div className="w-full px-6 mt-4 space-y-2">
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-white/60">Round Progress</span>
+              <div className="w-full h-2 bg-black/30 mt-1 overflow-hidden">
+                <div className="h-full bg-white/70 transition-all duration-300" style={{ width: `${roundProgress}%` }} />
+              </div>
+            </div>
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-white/60">Total Workout</span>
+              <div className="w-full h-2 bg-black/30 mt-1 overflow-hidden">
+                <div className="h-full bg-primary transition-all duration-300" style={{ width: `${totalProgress}%` }} />
+              </div>
+            </div>
+          </div>
+        )}
 
         {phase === "done" && (
           <span className="mt-4 text-lg font-bold text-white/90 uppercase tracking-widest">
@@ -223,44 +322,43 @@ const IntervalTimer = ({ onClose }: { onClose: () => void }) => {
         )}
       </div>
 
-      {/* Controls — bottom half */}
-      <div className="bg-background p-4 space-y-4 overflow-y-auto max-h-[55vh]">
-        {/* Setup fields */}
+      {/* ── Controls ── */}
+      <div className="bg-background p-4 space-y-3 overflow-y-auto max-h-[55vh]">
         {isSetup && (
           <>
             <div className="grid grid-cols-2 gap-3">
               {([
-                { key: "prep" as const, label: "Prep", unit: "s" },
-                { key: "work" as const, label: "Work", unit: "s" },
-                { key: "rest" as const, label: "Rest", unit: "s" },
-                { key: "rounds" as const, label: "Rounds", unit: "" },
-              ]).map(({ key, label, unit }) => (
+                { key: "prep" as const, label: "Prep", isTime: true },
+                { key: "work" as const, label: "Work", isTime: true },
+                { key: "rest" as const, label: "Rest", isTime: true },
+                { key: "rounds" as const, label: "Rounds", isTime: false },
+              ]).map(({ key, label, isTime }) => (
                 <div key={key} className="bg-card border border-border p-3 flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{label}</span>
-                  <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{label}</span>
+                  <div className="flex items-center gap-1">
                     <button
-                      onClick={() => adjust(key, key === "work" && config[key] >= 30 ? -5 : key === "rest" && config[key] >= 10 ? -5 : -1)}
-                      className="w-9 h-9 flex items-center justify-center bg-muted text-foreground hover:bg-muted-foreground/20 transition-colors"
+                      onClick={() => adjust(key, isTime && config[key] >= 30 ? -5 : -1)}
+                      className="w-10 h-10 flex items-center justify-center bg-muted text-foreground hover:bg-muted-foreground/20 transition-colors active:scale-95"
                     >
-                      <Minus size={16} />
+                      <Minus size={18} />
                     </button>
-                    <span className="font-mono text-lg font-bold text-foreground w-12 text-center tabular-nums">
-                      {key === "work" || key === "rest" || key === "prep"
-                        ? formatTime(config[key])
-                        : config[key]}
-                    </span>
+                    <EditableValue
+                      value={config[key]}
+                      onChange={(v) => setField(key, v)}
+                      isTime={isTime}
+                      disabled={running}
+                    />
                     <button
-                      onClick={() => adjust(key, key === "work" && config[key] >= 25 ? 5 : key === "rest" && config[key] >= 5 ? 5 : 1)}
-                      className="w-9 h-9 flex items-center justify-center bg-muted text-foreground hover:bg-muted-foreground/20 transition-colors"
+                      onClick={() => adjust(key, isTime && config[key] >= 25 ? 5 : 1)}
+                      className="w-10 h-10 flex items-center justify-center bg-muted text-foreground hover:bg-muted-foreground/20 transition-colors active:scale-95"
                     >
-                      <Plus size={16} />
+                      <Plus size={18} />
                     </button>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Presets */}
             <div className="flex gap-2">
               {PRESETS.map((p) => (
                 <button
@@ -275,12 +373,11 @@ const IntervalTimer = ({ onClose }: { onClose: () => void }) => {
           </>
         )}
 
-        {/* Control buttons */}
         <div className="flex gap-2">
           {!running ? (
             <button
               onClick={startTimer}
-              className="flex-1 h-16 bg-green-700 text-white text-sm font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-green-600 transition-colors"
+              className="flex-1 h-16 bg-green-700 text-white text-sm font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-green-600 transition-colors active:scale-[0.98]"
             >
               <Play size={22} fill="white" />
               {phase === "done" ? "RESTART" : "START"}
@@ -288,7 +385,7 @@ const IntervalTimer = ({ onClose }: { onClose: () => void }) => {
           ) : (
             <button
               onClick={pauseTimer}
-              className="flex-1 h-16 bg-yellow-600 text-white text-sm font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-yellow-500 transition-colors"
+              className="flex-1 h-16 bg-yellow-600 text-white text-sm font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-yellow-500 transition-colors active:scale-[0.98]"
             >
               <Pause size={22} fill="white" />
               PAUSE
