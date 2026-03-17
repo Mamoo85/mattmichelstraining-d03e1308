@@ -87,6 +87,36 @@ export type Database = {
           },
         ]
       }
+      coach_direct_messages: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          sender_id: string
+          sender_role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          sender_id: string
+          sender_role?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          sender_id?: string
+          sender_role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       coach_notes: {
         Row: {
           coach_id: string
@@ -130,8 +160,10 @@ export type Database = {
           client_type: string[]
           created_at: string
           equipment_needed: string
+          fix_it_protocol: string[]
           focus_area: string[]
           id: string
+          is_fix_it: boolean
           sport: string[]
           the_why: string
           title: string
@@ -140,8 +172,10 @@ export type Database = {
           client_type?: string[]
           created_at?: string
           equipment_needed?: string
+          fix_it_protocol?: string[]
           focus_area?: string[]
           id?: string
+          is_fix_it?: boolean
           sport?: string[]
           the_why?: string
           title: string
@@ -150,8 +184,10 @@ export type Database = {
           client_type?: string[]
           created_at?: string
           equipment_needed?: string
+          fix_it_protocol?: string[]
           focus_area?: string[]
           id?: string
+          is_fix_it?: boolean
           sport?: string[]
           the_why?: string
           title?: string

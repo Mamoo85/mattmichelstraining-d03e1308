@@ -43,22 +43,34 @@ const AdminCoachDashboard = () => {
     }
 
     if (data && data.length > 0) {
-      // Fetch client names
+      // Fetch client names + subscription tiers for priority sorting
       const userIds = [...new Set(data.map((d: any) => d.workout_logs?.user_id).filter(Boolean))];
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("user_id, full_name, athlete_name")
+        .select("user_id, full_name, athlete_name, subscription_tier")
         .in("user_id", userIds);
 
       const nameMap: Record<string, string> = {};
+      const tierMap: Record<string, string> = {};
       profiles?.forEach((p) => {
         nameMap[p.user_id] = p.athlete_name || p.full_name || "Unknown";
+        tierMap[p.user_id] = p.subscription_tier || "free";
       });
 
-      const enriched = data.map((item: any) => ({
-        ...item,
-        clientName: nameMap[item.workout_logs?.user_id] || "Unknown",
-      }));
+      const TIER_PRIORITY: Record<string, number> = { team: 4, elite: 3, pro: 2, basic: 1, free: 0 };
+
+      const enriched = data
+        .map((item: any) => ({
+          ...item,
+          clientName: nameMap[item.workout_logs?.user_id] || "Unknown",
+          clientTier: tierMap[item.workout_logs?.user_id] || "free",
+        }))
+        .sort((a: any, b: any) => {
+          const pa = TIER_PRIORITY[a.clientTier] ?? 0;
+          const pb = TIER_PRIORITY[b.clientTier] ?? 0;
+          if (pb !== pa) return pb - pa; // higher tier first
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        });
       setItems(enriched);
     } else {
       setItems([]);
@@ -126,9 +138,18 @@ const AdminCoachDashboard = () => {
           <div key={item.id} className="bg-card border border-border border-l-4 border-l-primary p-4 space-y-3">
             {/* Header */}
             <div className="flex items-start justify-between">
-              <div>
+              <div className="flex items-center gap-2">
                 <span className="text-sm font-bold text-foreground">{item.clientName}</span>
-                <span className="text-xs text-muted-foreground ml-2 font-mono">
+                {(item as any).clientTier && (item as any).clientTier !== "free" && (
+                  <span className={`text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 ${
+                    (item as any).clientTier === "elite" || (item as any).clientTier === "team"
+                      ? "bg-primary/20 text-primary"
+                      : "bg-muted text-muted-foreground"
+                  }`}>
+                    {(item as any).clientTier}
+                  </span>
+                )}
+                <span className="text-xs text-muted-foreground font-mono">
                   {item.workout_logs?.date ? format(new Date(item.workout_logs.date), "MMM d, yyyy") : "—"}
                 </span>
               </div>
