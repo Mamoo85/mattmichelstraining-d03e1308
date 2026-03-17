@@ -36,6 +36,13 @@ const WorkoutLogger = () => {
   const [showPicker, setShowPicker] = useState(false);
   const [pastLogs, setPastLogs] = useState<any[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [recovery, setRecovery] = useState<RecoveryData>({
+    sleepHours: "",
+    sleepQuality: null,
+    soreness: null,
+    energy: null,
+    recoveryNotes: "",
+  });
 
   useEffect(() => {
     if (user) fetchPastLogs();
