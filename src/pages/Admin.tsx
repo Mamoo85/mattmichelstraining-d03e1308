@@ -24,6 +24,7 @@ const TABS = [
   { key: "schedule", label: "Schedule" },
   { key: "monthly", label: "Monthly Focus" },
   { key: "coach", label: "Coach Review" },
+  { key: "videos", label: "Videos" },
   { key: "dms", label: "Direct Messages" },
   { key: "ai-programs", label: "AI Programs" },
   { key: "programs", label: "Programs" },
