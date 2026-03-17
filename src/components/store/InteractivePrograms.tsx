@@ -270,7 +270,7 @@ const InteractivePrograms = () => {
       </div>
 
       {/* Promo code input */}
-      <div className="flex gap-2 mb-4 max-w-xs">
+      <div className="flex gap-2 mb-2 max-w-xs">
         <div className="flex-1 relative">
           <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
           <input
@@ -282,6 +282,38 @@ const InteractivePrograms = () => {
           />
         </div>
       </div>
+
+      {/* Gift card input */}
+      <div className="flex gap-2 mb-4 max-w-sm">
+        <div className="flex-1 relative">
+          <Gift className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+          <input
+            type="text"
+            value={giftCode}
+            onChange={(e) => { setGiftCode(e.target.value.toUpperCase()); setGiftBalance(null); }}
+            placeholder="GIFT CARD CODE"
+            className="w-full bg-card border border-border pl-9 pr-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-primary outline-none font-mono uppercase tracking-widest"
+          />
+        </div>
+        {giftBalance !== null ? (
+          <button onClick={clearGiftCard} className="px-3 py-2 bg-muted text-muted-foreground hover:text-foreground text-xs transition-m2">
+            <X size={14} />
+          </button>
+        ) : (
+          <button
+            onClick={checkGiftCard}
+            disabled={!giftCode.trim() || checkingGift || !user}
+            className="px-3 py-2 bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-widest disabled:opacity-50 transition-m2"
+          >
+            {checkingGift ? <Loader2 size={12} className="animate-spin" /> : "Apply"}
+          </button>
+        )}
+      </div>
+      {giftBalance !== null && (
+        <div className="mb-4 text-xs text-primary font-bold flex items-center gap-1.5">
+          <Gift size={12} /> Gift card: ${giftBalance.toFixed(2)} available — will be applied at checkout
+        </div>
+      )}
 
       {/* Results */}
       {loading ? (
