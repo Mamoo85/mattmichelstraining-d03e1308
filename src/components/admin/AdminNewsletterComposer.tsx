@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Send, FileText } from "lucide-react";
+import { Send, FileText, Bot, Sparkles, RotateCcw } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import AiAssistButton from "./AiAssistButton";
 
@@ -34,6 +34,11 @@ const AdminNewsletterComposer = () => {
   const [sending, setSending] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
 
+  // AI Bot state
+  const [aiTopic, setAiTopic] = useState("");
+  const [generating, setGenerating] = useState(false);
+  const [aiGenerated, setAiGenerated] = useState(false);
+
   const { data: activeCount = 0 } = useQuery({
     queryKey: ["admin-subscriber-count"],
     queryFn: async () => {
@@ -50,6 +55,43 @@ const AdminNewsletterComposer = () => {
     setSubject(template.subject);
     setBody(template.body);
     setSelectedTemplate(template.name);
+    setAiGenerated(false);
+  };
+
+  const handleGenerate = async () => {
+    if (!aiTopic.trim()) {
+      return toast({ title: "Enter a topic first", variant: "destructive" });
+    }
+    setGenerating(true);
+    try {
+      const res = await supabase.functions.invoke("generate-newsletter", {
+        body: { topic: aiTopic.trim() },
+      });
+
+      if (res.error) throw new Error(res.error.message || "Generation failed");
+      const data = res.data;
+      if (data.error) throw new Error(data.error);
+
+      setSubject(data.subject);
+      setBody(data.body);
+      setSelectedTemplate(null);
+      setAiGenerated(true);
+
+      const parts = [];
+      if (data.focus_title) parts.push(`Focus: ${data.focus_title}`);
+      if (data.challenge_title) parts.push(`Challenge: ${data.challenge_title}`);
+
+      toast({
+        title: "Newsletter generated! 🔥",
+        description: parts.length > 0
+          ? `Pulled in: ${parts.join(" · ")}`
+          : "Generated from your topic (no focus/challenge active this month).",
+      });
+    } catch (err: any) {
+      toast({ title: "Generation failed", description: err.message, variant: "destructive" });
+    } finally {
+      setGenerating(false);
+    }
   };
 
   const handleSend = async () => {
@@ -59,16 +101,11 @@ const AdminNewsletterComposer = () => {
 
     setSending(true);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token;
-      if (!token) throw new Error("Not authenticated");
-
       const res = await supabase.functions.invoke("send-newsletter", {
-        body: { subject, body, template_name: selectedTemplate },
+        body: { subject, body, template_name: aiGenerated ? "AI Monthly Bot" : selectedTemplate },
       });
 
       if (res.error) throw new Error(res.error.message || "Failed to send");
-
       const result = res.data;
       if (!result.success) throw new Error(result.error || "Send failed");
 
@@ -79,6 +116,8 @@ const AdminNewsletterComposer = () => {
       setSubject("");
       setBody("");
       setSelectedTemplate(null);
+      setAiTopic("");
+      setAiGenerated(false);
     } catch (err: any) {
       toast({ title: "Failed to send", description: err.message, variant: "destructive" });
     } finally {
@@ -88,9 +127,50 @@ const AdminNewsletterComposer = () => {
 
   return (
     <div className="space-y-4">
+      {/* AI Newsletter Bot */}
+      <div className="bg-card shadow-m2 p-4 border-l-4 border-primary">
+        <div className="flex items-center gap-2 mb-3">
+          <Bot size={16} className="text-primary" />
+          <p className="text-xs font-bold text-foreground uppercase tracking-widest">AI Newsletter Bot</p>
+        </div>
+        <p className="text-[11px] text-muted-foreground mb-3">
+          Give the bot a topic — it'll pull your monthly focus & challenge, then write a short, punchy newsletter in your voice.
+        </p>
+        <div className="flex gap-2">
+          <input
+            value={aiTopic}
+            onChange={(e) => setAiTopic(e.target.value)}
+            placeholder="e.g. Why most athletes skip single-leg work"
+            className="flex-1 bg-background border border-border px-3 py-2.5 text-sm text-foreground focus:ring-1 focus:ring-primary outline-none placeholder:text-muted-foreground"
+            onKeyDown={(e) => e.key === "Enter" && !generating && handleGenerate()}
+          />
+          <button
+            onClick={handleGenerate}
+            disabled={generating || !aiTopic.trim()}
+            className="bg-primary text-primary-foreground px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-m2 flex items-center gap-2 disabled:opacity-50 whitespace-nowrap"
+          >
+            <Sparkles size={12} />
+            {generating ? "Writing..." : "Generate"}
+          </button>
+        </div>
+        {aiGenerated && (
+          <div className="mt-2 flex items-center gap-2">
+            <span className="text-[10px] text-primary font-bold">✓ AI draft ready — review below, edit if needed, then send.</span>
+            <button
+              onClick={handleGenerate}
+              disabled={generating}
+              className="text-[10px] text-muted-foreground hover:text-primary transition-m2 flex items-center gap-1"
+            >
+              <RotateCcw size={10} />
+              Regenerate
+            </button>
+          </div>
+        )}
+      </div>
+
       {/* Template picker */}
       <div className="bg-card shadow-m2 p-4">
-        <p className="text-xs font-bold text-foreground mb-3">Quick Templates</p>
+        <p className="text-xs font-bold text-foreground mb-3">Or Use a Manual Template</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {TEMPLATES.map((t) => (
             <button
@@ -126,16 +206,18 @@ const AdminNewsletterComposer = () => {
         <div>
           <div className="flex items-center justify-between mb-1">
             <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Newsletter Body</label>
-            <AiAssistButton
-              type="newsletter"
-              context={{
-                topic: subject || "general training insight",
-                templateName: selectedTemplate || "Monthly Training Insight",
-                audience: "athletes and parents",
-              }}
-              onResult={(text) => setBody(text)}
-              label="AI Write"
-            />
+            {!aiGenerated && (
+              <AiAssistButton
+                type="newsletter"
+                context={{
+                  topic: subject || "general training insight",
+                  templateName: selectedTemplate || "Monthly Training Insight",
+                  audience: "athletes and parents",
+                }}
+                onResult={(text) => setBody(text)}
+                label="AI Write"
+              />
+            )}
           </div>
           <textarea
             value={body}
