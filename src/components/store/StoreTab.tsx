@@ -82,7 +82,8 @@ const StoreTab = () => {
 };
 
 const CustomProgramSection = () => {
-  const { user } = useAuth();
+  const { user, subscriptionTier } = useAuth();
+  const discountPct = subscriptionTier ? (TIER_DISCOUNTS[subscriptionTier] || 0) : 0;
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
