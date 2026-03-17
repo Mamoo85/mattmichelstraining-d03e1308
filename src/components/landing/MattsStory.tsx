@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Heart, Gamepad2, GraduationCap, Users } from "lucide-react";
+import { Heart, Gamepad2, GraduationCap, Users, ShieldOff } from "lucide-react";
 import SectionHeader from "../SectionHeader";
 
 const STORY_BEATS = [
@@ -17,6 +17,11 @@ const STORY_BEATS = [
     icon: Gamepad2,
     title: "The Competitor",
     text: "Before esports went mainstream, Matt was a professional gamer competing in world championships. He's also a history buff with deep knowledge of WWII battles and generals. That competitive edge and strategic mind carry into every program he designs.",
+  },
+  {
+    icon: ShieldOff,
+    title: "The Anti-Influencer",
+    text: "Matt never wanted to be the social media trainer guy. He's an old-school strength trainer trying to spread real knowledge before the AI bots completely take over everyone's feed with fake abs and skinny girls. Remember what's real — what's real is you and your longevity. Getting strong is hard. It's an achievement nobody can ever take away from you, and very few ever get.",
   },
   {
     icon: Users,
