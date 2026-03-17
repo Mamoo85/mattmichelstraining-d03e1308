@@ -6,7 +6,7 @@ import {
   Package, DollarSign, AlertTriangle
 } from "lucide-react";
 
-const CATEGORIES = ["Athlete", "Lifestyle Fitness"];
+const CATEGORIES = ["Athlete", "Lifestyle Fitness", "Foundation"];
 const LEVELS = ["Beginner", "Intermediate", "Advanced"];
 const SPORTS = ["Baseball", "Football", "Basketball", "Volleyball", "Golf"];
 
