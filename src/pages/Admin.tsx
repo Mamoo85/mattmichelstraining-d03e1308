@@ -14,8 +14,10 @@ import AdminPromotions from "@/components/admin/AdminPromotions";
 import AdminMonthlyFocus from "@/components/admin/AdminMonthlyFocus";
 import AdminProgramCreator from "@/components/admin/AdminProgramCreator";
 import AdminSchedule from "@/components/admin/AdminSchedule";
+import AdminTierManager from "@/components/admin/AdminTierManager";
 
 const TABS = [
+  { key: "tiers", label: "Tier Access" },
   { key: "schedule", label: "Schedule" },
   { key: "monthly", label: "Monthly Focus" },
   { key: "coach", label: "Coach Review" },
