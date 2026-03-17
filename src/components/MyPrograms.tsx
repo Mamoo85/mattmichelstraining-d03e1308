@@ -299,7 +299,7 @@ const MyPrograms = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-0.5">
-                      {program.program_type === "custom" ? "Custom Program" : "Sport Guide"}{program.sport ? ` · ${program.sport}` : ""}
+                      {program.program_type === "custom" ? "Custom Program" : "Program"}{program.sport ? ` · ${program.sport}` : ""}
                     </span>
                     <h3 className="text-sm font-bold text-foreground">{program.program_title}</h3>
                   </div>
