@@ -28,6 +28,10 @@ import MerchSection from "./MerchSection";
 import FindUs from "./landing/FindUs";
 
 const HeroSection = () => {
+  const navigate = useNavigate();
+  const [heroEmail, setHeroEmail] = useState("");
+  const [heroLoading, setHeroLoading] = useState(false);
+
   const { content: hero } = useContentMap("hero");
   const { content: stats } = useContentMap("stats");
 
@@ -57,6 +61,26 @@ const HeroSection = () => {
 
   const scrollToPortal = () => {
     document.getElementById("section-portal")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const handleHeroSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!heroEmail) return;
+    setHeroLoading(true);
+    try {
+      const { error } = await supabase
+        .from("newsletter_subscribers")
+        .upsert({ email: heroEmail.trim().toLowerCase(), source: "hero_cta" }, { onConflict: "email" });
+      if (error) throw error;
+      toast({ title: "You're in! 🔥", description: "Check your inbox — your free training kickstart is on the way." });
+      setHeroEmail("");
+      // Redirect to signup after brief delay
+      setTimeout(() => navigate("/auth?redirect=/dashboard"), 1500);
+    } catch (err: any) {
+      toast({ title: "Something went wrong", description: err.message, variant: "destructive" });
+    } finally {
+      setHeroLoading(false);
+    }
   };
 
   return (
