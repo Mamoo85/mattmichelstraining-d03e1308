@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN is_in_person boolean NOT NULL DEFAULT false;
