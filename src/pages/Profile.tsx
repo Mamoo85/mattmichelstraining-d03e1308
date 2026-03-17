@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import AppNavbar from "@/components/AppNavbar";
-import { User, Trophy, Medal, Award, Save, Loader2, Eye, EyeOff } from "lucide-react";
+import { User, Trophy, Medal, Award, Save, Loader2, Eye, EyeOff, Gift, Search } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
