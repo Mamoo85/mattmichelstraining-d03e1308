@@ -114,8 +114,12 @@ const InteractivePrograms = () => {
 
     setBuyingId(program.id);
     try {
+      const body: any = { programId: program.id };
+      if (programPromo.trim()) {
+        body.promoCode = programPromo.trim();
+      }
       const { data, error } = await supabase.functions.invoke("create-program-checkout", {
-        body: { programId: program.id },
+        body,
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
