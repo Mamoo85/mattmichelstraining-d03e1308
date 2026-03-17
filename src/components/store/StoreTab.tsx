@@ -53,11 +53,6 @@ const CUSTOM_TIERS = [
   },
 ];
 
-const SessionsRedirect = () => {
-  const navigate = (await import("react-router-dom")).useNavigate;
-  return null;
-};
-
 const SessionsTab = () => {
   return (
     <div className="bg-card shadow-m2 p-6 text-center space-y-4">
