@@ -154,6 +154,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       subscribed,
       subscriptionTier,
       subscriptionEnd,
+      isLegend,
       checkSubscription,
     }}>
       {children}
