@@ -113,7 +113,24 @@ const AdminProgramCreator = () => {
     }
   };
 
-  const handleApproveAndSave = async () => {
+  const handleBatchGenerate = async () => {
+    setBatchGenerating(true);
+    setBatchResults(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("batch-generate-programs");
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setBatchResults(data.results || []);
+      const successes = (data.results || []).filter((r: any) => r.status === "success").length;
+      toast({ title: "Batch complete", description: `${successes} programs generated successfully.` });
+      fetchInventory();
+    } catch (e: any) {
+      toast({ title: "Batch failed", description: e.message, variant: "destructive" });
+    } finally {
+      setBatchGenerating(false);
+    }
+  };
+
     if (!draft) return;
     setSaving(true);
     try {
