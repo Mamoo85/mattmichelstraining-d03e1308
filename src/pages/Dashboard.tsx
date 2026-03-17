@@ -8,12 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 import IntervalTimer from "@/components/workout/IntervalTimer";
-import WorkoutLogger from "@/components/workout/WorkoutLogger";
 import MyPrograms from "@/components/MyPrograms";
+import ProgressCharts from "@/components/ProgressCharts";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 const TABS = [
   { key: "home", label: "Home" },
-  { key: "log", label: "Log Workout" },
+  { key: "progress", label: "Progress" },
   { key: "programs", label: "My Programs" },
 ];
 
