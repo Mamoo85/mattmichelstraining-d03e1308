@@ -10,6 +10,7 @@ import { toast } from "@/hooks/use-toast";
 import IntervalTimer from "@/components/workout/IntervalTimer";
 import MyPrograms from "@/components/MyPrograms";
 import ProgressCharts from "@/components/ProgressCharts";
+import StudioCheckIn from "@/components/StudioCheckIn";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 const TABS = [
