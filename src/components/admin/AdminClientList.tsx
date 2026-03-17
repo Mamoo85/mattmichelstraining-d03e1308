@@ -179,7 +179,7 @@ const AdminClientList = () => {
                       </div>
                       <div className="mt-2 flex items-center justify-between bg-card p-3 shadow-m2">
                         <div className="flex items-center gap-2">
-                          <MapPin size={14} className="text-muted-foreground" />
+                          <Crown size={14} className="text-primary" />
                           <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Legend Member</span>
                         </div>
                         <button
