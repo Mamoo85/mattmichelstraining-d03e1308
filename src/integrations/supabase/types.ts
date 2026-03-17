@@ -937,6 +937,66 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_codes: {
+        Row: {
+          code: string
+          created_at: string
+          credits_earned: number
+          credits_redeemed: number
+          id: string
+          total_referrals: number
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          credits_earned?: number
+          credits_redeemed?: number
+          id?: string
+          total_referrals?: number
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          credits_earned?: number
+          credits_redeemed?: number
+          id?: string
+          total_referrals?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      referral_conversions: {
+        Row: {
+          created_at: string
+          credited: boolean
+          id: string
+          referral_code: string
+          referred_user_id: string
+          referrer_user_id: string
+          subscription_tier: string | null
+        }
+        Insert: {
+          created_at?: string
+          credited?: boolean
+          id?: string
+          referral_code: string
+          referred_user_id: string
+          referrer_user_id: string
+          subscription_tier?: string | null
+        }
+        Update: {
+          created_at?: string
+          credited?: boolean
+          id?: string
+          referral_code?: string
+          referred_user_id?: string
+          referrer_user_id?: string
+          subscription_tier?: string | null
+        }
+        Relationships: []
+      }
       schedule_slots: {
         Row: {
           booked_by: string | null
