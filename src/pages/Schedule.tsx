@@ -177,6 +177,7 @@ const Schedule = () => {
     <div className="min-h-screen bg-background">
       <AppNavbar />
       <div className="container pt-20 pb-12 max-w-2xl">
+        <PaywallGate featureKey="priority_scheduling" featureName="1-on-1 Session Booking">
         <div className="mb-6">
           <h1 className="text-lg font-bold text-foreground tracking-display">Schedule a Session</h1>
           <p className="text-xs text-muted-foreground mt-1">
@@ -271,6 +272,7 @@ const Schedule = () => {
             </Button>
           </div>
         )}
+        </PaywallGate>
       </div>
     </div>
   );
