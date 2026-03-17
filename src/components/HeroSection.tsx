@@ -6,8 +6,6 @@ import { useContentMap, useSectionVisible } from "@/hooks/useSiteContent";
 
 import AuthorityBar from "./landing/AuthorityBar";
 import AudienceSelector from "./landing/AudienceSelector";
-import Testimonial from "./landing/Testimonial";
-import CurrentClients from "./landing/CurrentClients";
 import GuidesGrid from "./landing/GuidesGrid";
 import PressAuthority from "./landing/PressAuthority";
 import PremiumProgram from "./landing/PremiumProgram";
