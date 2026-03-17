@@ -60,7 +60,13 @@ const FindUs = () => (
           Instagram
         </a>
       </div>
-      <div className="mt-4 pt-4 border-t border-border">
+      <div className="mt-4 pt-4 border-t border-border flex flex-wrap gap-3">
+        <Link
+          to="/schedule"
+          className="text-sm text-primary font-bold hover:opacity-80 transition-m2"
+        >
+          Schedule a Session →
+        </Link>
         <Link
           to="/about"
           className="text-sm text-primary font-bold hover:opacity-80 transition-m2"

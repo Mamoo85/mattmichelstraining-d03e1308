@@ -1,0 +1,130 @@
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import Stripe from "https://esm.sh/stripe@18.5.0";
+import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const ADMIN_EMAIL = "matthew.michels4@gmail.com";
+
+async function sendEmail(to: string, subject: string, html: string) {
+  if (!RESEND_API_KEY) return;
+  try {
+    await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ from: "M² Training <onboarding@resend.dev>", to: [to], subject, html }),
+    });
+  } catch (e) { console.error("Email error:", e); }
+}
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  const supabaseAdmin = createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+  );
+
+  try {
+    const { session_id } = await req.json();
+    if (!session_id) throw new Error("Missing session_id");
+
+    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { apiVersion: "2025-08-27.basil" });
+    const session = await stripe.checkout.sessions.retrieve(session_id);
+
+    if (session.payment_status !== "paid") throw new Error("Payment not completed");
+
+    const meta = session.metadata!;
+    if (meta.type !== "training_session") throw new Error("Invalid session type");
+
+    // Check if already verified
+    const { data: existing } = await supabaseAdmin
+      .from("session_bookings")
+      .select("id")
+      .eq("stripe_session_id", session_id)
+      .single();
+
+    if (existing) {
+      return new Response(JSON.stringify({ success: true, already_verified: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const slotIds: string[] = JSON.parse(meta.slot_ids);
+    const durationMinutes = parseInt(meta.duration_minutes);
+    const amountCents = durationMinutes === 60 ? 9000 : 5000;
+
+    // Create booking
+    const { data: booking, error: bookingError } = await supabaseAdmin
+      .from("session_bookings")
+      .insert({
+        user_id: meta.user_id,
+        slot_date: meta.slot_date,
+        start_time: meta.start_time,
+        duration_minutes: durationMinutes,
+        amount_cents: amountCents,
+        stripe_session_id: session_id,
+        stripe_payment_intent_id: session.payment_intent as string,
+        user_email: meta.user_email,
+        user_name: meta.user_name,
+        status: "confirmed",
+      })
+      .select()
+      .single();
+
+    if (bookingError) throw bookingError;
+
+    // Mark slots as booked
+    for (const slotId of slotIds) {
+      await supabaseAdmin
+        .from("schedule_slots")
+        .update({ booked_by: meta.user_id, booking_id: booking.id })
+        .eq("id", slotId);
+    }
+
+    // Format for emails
+    const [h, m] = meta.start_time.split(":");
+    const hour = parseInt(h);
+    const ampm = hour >= 12 ? "PM" : "AM";
+    const h12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    const timeStr = `${h12}:${m} ${ampm}`;
+    const dateObj = new Date(meta.slot_date + "T12:00:00");
+    const dateStr = dateObj.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+    const durationStr = durationMinutes === 60 ? "1 Hour" : "30 Minutes";
+    const priceStr = `$${(amountCents / 100).toFixed(0)}`;
+
+    const emailHtml = `
+      <div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;padding:20px;">
+        <h2 style="color:#000;">M² Training Session Confirmed</h2>
+        <div style="background:#f5f5f5;padding:15px;margin:15px 0;">
+          <p><strong>Date:</strong> ${dateStr}</p>
+          <p><strong>Time:</strong> ${timeStr}</p>
+          <p><strong>Duration:</strong> ${durationStr}</p>
+          <p><strong>Price:</strong> ${priceStr}</p>
+        </div>
+        <p><strong>Client:</strong> ${meta.user_name || meta.user_email}</p>
+        <p><strong>Email:</strong> ${meta.user_email}</p>
+        <p style="color:#666;font-size:12px;margin-top:20px;">
+          15121 Kercheval Ave, Grosse Pointe Park, MI 48230 · (313) 806-4952
+        </p>
+      </div>`;
+
+    // Send confirmation to client
+    await sendEmail(meta.user_email, `Session Confirmed — ${dateStr} at ${timeStr}`, emailHtml);
+    // Send notification to Matt
+    await sendEmail(ADMIN_EMAIL, `NEW SESSION BOOKED — ${meta.user_name || meta.user_email} · ${dateStr} ${timeStr}`, emailHtml);
+
+    return new Response(JSON.stringify({ success: true }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (error: any) {
+    return new Response(JSON.stringify({ error: error.message }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 400,
+    });
+  }
+});

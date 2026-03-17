@@ -13,8 +13,10 @@ import AdminExerciseLibrary from "@/components/admin/AdminExerciseLibrary";
 import AdminPromotions from "@/components/admin/AdminPromotions";
 import AdminMonthlyFocus from "@/components/admin/AdminMonthlyFocus";
 import AdminProgramCreator from "@/components/admin/AdminProgramCreator";
+import AdminSchedule from "@/components/admin/AdminSchedule";
 
 const TABS = [
+  { key: "schedule", label: "Schedule" },
   { key: "monthly", label: "Monthly Focus" },
   { key: "coach", label: "Coach Review" },
   { key: "ai-programs", label: "AI Programs" },
@@ -30,7 +32,7 @@ const TABS = [
 ];
 
 const Admin = () => {
-  const [activeTab, setActiveTab] = useState("monthly");
+  const [activeTab, setActiveTab] = useState("schedule");
 
   return (
     <div className="min-h-screen bg-background">
@@ -59,6 +61,7 @@ const Admin = () => {
           ))}
         </div>
 
+        {activeTab === "schedule" && <AdminSchedule />}
         {activeTab === "monthly" && <AdminMonthlyFocus />}
         {activeTab === "coach" && (
           <div className="space-y-8">

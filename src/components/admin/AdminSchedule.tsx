@@ -1,0 +1,214 @@
+import { useState, useEffect, useMemo } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { format, addDays, startOfDay, subDays } from "date-fns";
+import { ChevronLeft, ChevronRight, Loader2, X, Ban } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+const SLOT_TIMES: string[] = [];
+for (let h = 5; h <= 21; h++) {
+  SLOT_TIMES.push(`${h.toString().padStart(2, "0")}:00:00`);
+  if (h < 21) SLOT_TIMES.push(`${h.toString().padStart(2, "0")}:30:00`);
+}
+
+const formatTime12 = (t: string) => {
+  const [hStr, mStr] = t.split(":");
+  const h = parseInt(hStr);
+  const ampm = h >= 12 ? "PM" : "AM";
+  const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  return `${h12}:${mStr} ${ampm}`;
+};
+
+type Slot = {
+  id: string;
+  slot_date: string;
+  start_time: string;
+  is_available: boolean;
+  booked_by: string | null;
+  booking_id: string | null;
+};
+
+type Booking = {
+  id: string;
+  user_email: string | null;
+  user_name: string | null;
+  slot_date: string;
+  start_time: string;
+  duration_minutes: number;
+  amount_cents: number;
+  status: string;
+  created_at: string;
+};
+
+const AdminSchedule = () => {
+  const [selectedDate, setSelectedDate] = useState(startOfDay(new Date()));
+  const [slots, setSlots] = useState<Slot[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [toggling, setToggling] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const dateStr = format(selectedDate, "yyyy-MM-dd");
+
+  const fetchData = async () => {
+    setLoading(true);
+    const [slotsRes, bookingsRes] = await Promise.all([
+      supabase.from("schedule_slots").select("*").eq("slot_date", dateStr),
+      supabase.from("session_bookings").select("*").eq("slot_date", dateStr).neq("status", "cancelled"),
+    ]);
+    setSlots((slotsRes.data as any[]) || []);
+    setBookings((bookingsRes.data as any[]) || []);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchData(); }, [dateStr]);
+
+  const slotMap = useMemo(() => {
+    const m: Record<string, Slot> = {};
+    slots.forEach(s => { m[s.start_time] = s; });
+    return m;
+  }, [slots]);
+
+  const bookingMap = useMemo(() => {
+    const m: Record<string, Booking> = {};
+    bookings.forEach(b => { m[b.start_time] = b; });
+    return m;
+  }, [bookings]);
+
+  const toggleSlot = async (time: string) => {
+    setToggling(time);
+    const existing = slotMap[time];
+    if (existing) {
+      if (existing.booked_by) {
+        toast({ title: "Slot is booked", description: "Cancel the booking first.", variant: "destructive" });
+        setToggling(null);
+        return;
+      }
+      const { error } = await supabase.from("schedule_slots").update({ is_available: !existing.is_available }).eq("id", existing.id);
+      if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      const { error } = await supabase.from("schedule_slots").insert({ slot_date: dateStr, start_time: time, is_available: true });
+      if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+    await fetchData();
+    setToggling(null);
+  };
+
+  const cancelBooking = async (booking: Booking) => {
+    if (!confirm(`Cancel this booking and refund $${(booking.amount_cents / 100).toFixed(2)} to ${booking.user_email}?`)) return;
+    setCancelling(booking.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("cancel-session", {
+        body: { booking_id: booking.id },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast({ title: "Booking cancelled", description: "Refund issued and user notified." });
+      await fetchData();
+    } catch (err: any) {
+      toast({ title: "Cancel failed", description: err.message, variant: "destructive" });
+    } finally {
+      setCancelling(null);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Date navigation */}
+      <div className="flex items-center justify-between bg-card shadow-m2 p-3">
+        <Button variant="ghost" size="sm" onClick={() => setSelectedDate(d => subDays(d, 1))}>
+          <ChevronLeft size={16} />
+        </Button>
+        <div className="text-center">
+          <div className="text-sm font-bold text-foreground">{format(selectedDate, "EEEE, MMMM d, yyyy")}</div>
+          <div className="text-[10px] text-muted-foreground">Click a time slot to toggle availability</div>
+        </div>
+        <Button variant="ghost" size="sm" onClick={() => setSelectedDate(d => addDays(d, 1))}>
+          <ChevronRight size={16} />
+        </Button>
+      </div>
+
+      {/* Legend */}
+      <div className="flex gap-4 text-[10px] font-bold uppercase tracking-widest">
+        <div className="flex items-center gap-1.5"><div className="w-3 h-3 bg-muted border border-border" /> Closed</div>
+        <div className="flex items-center gap-1.5"><div className="w-3 h-3 bg-primary/20 border border-primary" /> Open</div>
+        <div className="flex items-center gap-1.5"><div className="w-3 h-3 bg-green-600" /> Booked</div>
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-12"><Loader2 className="animate-spin text-primary" size={24} /></div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1">
+          {SLOT_TIMES.map(time => {
+            const slot = slotMap[time];
+            const booking = bookingMap[time];
+            const isAvailable = slot?.is_available && !slot?.booked_by;
+            const isBooked = !!slot?.booked_by || !!booking;
+
+            return (
+              <button
+                key={time}
+                onClick={() => !isBooked && toggleSlot(time)}
+                disabled={toggling === time}
+                className={`relative p-3 text-left transition-m2 border ${
+                  isBooked
+                    ? "bg-green-600/20 border-green-600/40 cursor-default"
+                    : isAvailable
+                    ? "bg-primary/15 border-primary/40 hover:bg-primary/25"
+                    : "bg-muted border-border hover:bg-muted/80"
+                }`}
+              >
+                <div className="text-sm font-mono font-bold text-foreground">
+                  {formatTime12(time)}
+                </div>
+                {isBooked && booking && (
+                  <div className="mt-1">
+                    <div className="text-[9px] text-green-400 font-bold uppercase">Booked</div>
+                    <div className="text-[10px] text-muted-foreground truncate">{booking.user_name || booking.user_email}</div>
+                    <div className="text-[9px] text-muted-foreground">{booking.duration_minutes}min · ${(booking.amount_cents / 100).toFixed(0)}</div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); cancelBooking(booking); }}
+                      disabled={cancelling === booking.id}
+                      className="mt-1 text-[8px] text-red-400 hover:text-red-300 font-bold uppercase tracking-widest flex items-center gap-1"
+                    >
+                      {cancelling === booking.id ? <Loader2 size={8} className="animate-spin" /> : <Ban size={8} />}
+                      Cancel & Refund
+                    </button>
+                  </div>
+                )}
+                {isAvailable && !isBooked && (
+                  <div className="text-[9px] text-primary font-bold uppercase mt-1">Available</div>
+                )}
+                {toggling === time && <Loader2 size={12} className="absolute top-2 right-2 animate-spin text-primary" />}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Upcoming bookings summary */}
+      {bookings.length > 0 && (
+        <div className="bg-card shadow-m2 p-4">
+          <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">
+            Bookings for {format(selectedDate, "MMM d")}
+          </h3>
+          <div className="space-y-2">
+            {bookings.map(b => (
+              <div key={b.id} className="flex items-center justify-between bg-muted p-3">
+                <div>
+                  <span className="text-sm font-bold text-foreground">{formatTime12(b.start_time)}</span>
+                  <span className="text-xs text-muted-foreground ml-2">{b.duration_minutes}min</span>
+                  <span className="text-xs text-muted-foreground ml-2">{b.user_name || b.user_email}</span>
+                </div>
+                <span className="text-xs font-mono text-primary">${(b.amount_cents / 100).toFixed(0)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default AdminSchedule;
