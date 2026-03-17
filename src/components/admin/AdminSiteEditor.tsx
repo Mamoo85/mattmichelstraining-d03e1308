@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Save, Eye, EyeOff, Loader2, RefreshCw } from "lucide-react";
+import { useState } from "react";
+import { Save, Eye, EyeOff, Loader2, RefreshCw, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -36,6 +36,7 @@ const AdminSiteEditor = () => {
   const [activeGroup, setActiveGroup] = useState("all");
   const [editedContent, setEditedContent] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [batchRewriting, setBatchRewriting] = useState<string | null>(null);
 
   const filteredSections = sections?.filter((s) => {
     if (activeGroup === "all") return true;
@@ -89,6 +90,47 @@ const AdminSiteEditor = () => {
       toast({ title: "Save failed", description: e.message, variant: "destructive" });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleBatchRewrite = async (sectionKey: string, sectionLabel: string) => {
+    const items = contentBySection(sectionKey).filter((item) => item.content_value.trim());
+    if (items.length === 0) {
+      toast({ title: "No content to rewrite in this section" });
+      return;
+    }
+    setBatchRewriting(sectionKey);
+    try {
+      const fields: Record<string, { label: string; text: string }> = {};
+      items.forEach((item) => {
+        fields[item.id] = {
+          label: item.label || item.content_key,
+          text: editedContent[item.id] ?? item.content_value,
+        };
+      });
+
+      const { data, error } = await supabase.functions.invoke("ai-admin-assist", {
+        body: { type: "batch_site_content", context: { sectionLabel, fields } },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      const result = data?.result || "";
+      const cleaned = result.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+      const rewrites: Record<string, string> = JSON.parse(cleaned);
+
+      let count = 0;
+      for (const [id, newText] of Object.entries(rewrites)) {
+        if (typeof newText === "string" && newText.trim()) {
+          handleContentChange(id, newText);
+          count++;
+        }
+      }
+      toast({ title: `${count} field${count !== 1 ? "s" : ""} rewritten`, description: "Review changes and save when ready." });
+    } catch (e: any) {
+      toast({ title: "Batch rewrite failed", description: e.message, variant: "destructive" });
+    } finally {
+      setBatchRewriting(null);
     }
   };
 
@@ -148,17 +190,33 @@ const AdminSiteEditor = () => {
           <div key={section.id} className="bg-card shadow-m2 p-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-bold text-foreground">{section.label}</h3>
-              <button
-                onClick={() => handleToggleVisibility(section)}
-                className={`flex items-center gap-1.5 px-3 py-1 text-[10px] font-bold uppercase tracking-widest transition-m2 ${
-                  section.is_visible
-                    ? "bg-primary/10 text-primary"
-                    : "bg-destructive/10 text-destructive"
-                }`}
-              >
-                {section.is_visible ? <Eye size={12} /> : <EyeOff size={12} />}
-                {section.is_visible ? "Visible" : "Hidden"}
-              </button>
+              <div className="flex items-center gap-1.5">
+                {items.filter((i) => i.content_value.trim()).length > 1 && (
+                  <button
+                    onClick={() => handleBatchRewrite(section.section_key, section.label)}
+                    disabled={batchRewriting === section.section_key}
+                    className="flex items-center gap-1 px-3 py-1 text-[10px] font-bold uppercase tracking-widest bg-accent text-accent-foreground hover:bg-accent/80 transition-m2 disabled:opacity-50"
+                  >
+                    {batchRewriting === section.section_key ? (
+                      <Loader2 size={12} className="animate-spin" />
+                    ) : (
+                      <Sparkles size={12} />
+                    )}
+                    {batchRewriting === section.section_key ? "Rewriting…" : "AI Rewrite All"}
+                  </button>
+                )}
+                <button
+                  onClick={() => handleToggleVisibility(section)}
+                  className={`flex items-center gap-1.5 px-3 py-1 text-[10px] font-bold uppercase tracking-widest transition-m2 ${
+                    section.is_visible
+                      ? "bg-primary/10 text-primary"
+                      : "bg-destructive/10 text-destructive"
+                  }`}
+                >
+                  {section.is_visible ? <Eye size={12} /> : <EyeOff size={12} />}
+                  {section.is_visible ? "Visible" : "Hidden"}
+                </button>
+              </div>
             </div>
 
             {items.length > 0 ? (
