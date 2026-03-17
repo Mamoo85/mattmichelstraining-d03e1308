@@ -911,6 +911,9 @@ export type Database = {
           level: string
           price: number
           sport: string | null
+          status: string
+          stripe_price_id: string | null
+          stripe_product_id: string | null
           title: string
           updated_at: string
         }
@@ -923,6 +926,9 @@ export type Database = {
           level?: string
           price?: number
           sport?: string | null
+          status?: string
+          stripe_price_id?: string | null
+          stripe_product_id?: string | null
           title: string
           updated_at?: string
         }
@@ -935,6 +941,9 @@ export type Database = {
           level?: string
           price?: number
           sport?: string | null
+          status?: string
+          stripe_price_id?: string | null
+          stripe_product_id?: string | null
           title?: string
           updated_at?: string
         }
