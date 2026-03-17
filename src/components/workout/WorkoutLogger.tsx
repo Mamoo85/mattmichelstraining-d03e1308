@@ -117,6 +117,7 @@ const WorkoutLogger = () => {
       toast({ title: "Workout saved! 💪", description: `${exercises.length} exercise${exercises.length > 1 ? "s" : ""} logged` });
       setExercises([]);
       setSessionNotes("");
+      setRecovery({ sleepHours: "", sleepQuality: null, soreness: null, energy: null, recoveryNotes: "" });
       fetchPastLogs();
     }
     setSaving(false);
