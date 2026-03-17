@@ -13,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { priceId } = await req.json();
+    const { priceId, metadata: extraMetadata } = await req.json();
     if (!priceId) throw new Error("priceId is required");
 
     const supabaseClient = createClient(
@@ -45,6 +45,13 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "https://m2training.lovable.app";
 
+    const sessionMetadata: Record<string, string> = { priceId };
+    if (extraMetadata && typeof extraMetadata === "object") {
+      for (const [k, v] of Object.entries(extraMetadata)) {
+        sessionMetadata[k] = String(v).substring(0, 500);
+      }
+    }
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : customerEmail,
@@ -52,7 +59,7 @@ serve(async (req) => {
       mode: "payment",
       success_url: `${origin}/shop?purchase=success`,
       cancel_url: `${origin}/shop`,
-      metadata: { priceId },
+      metadata: sessionMetadata,
     });
 
     return new Response(JSON.stringify({ url: session.url }), {
