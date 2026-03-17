@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowRight, Monitor, MessageSquare, TrendingUp, Bell } from "lucide-react";
+import { ArrowRight, Monitor, MessageSquare, TrendingUp, Shield, Zap, User } from "lucide-react";
 import portalPrograms from "@/assets/portal-programs.png";
 import portalChat from "@/assets/portal-chat.png";
 import portalProgress from "@/assets/portal-progress.png";
@@ -8,25 +8,31 @@ import portalProgress from "@/assets/portal-progress.png";
 const FEATURES = [
   {
     icon: Monitor,
-    title: "Your program loads automatically",
-    desc: "Buy a guide or custom program — it appears in your portal instantly. Every exercise, set, and rep is ready to log.",
+    title: "Your program, ready to go",
+    desc: "Purchase a program and it loads into your portal instantly — exercises, sets, reps, all ready to log.",
     image: portalPrograms,
     alt: "M2 Training portal showing purchased program with exercise logging",
   },
   {
     icon: MessageSquare,
-    title: "Ask Matt about any lift",
-    desc: "Confused about form? Not sure if you should add weight? Tap 'Ask Matt' on any lift. He gets notified, replies, and you get notified back.",
+    title: "Direct line to Matt",
+    desc: "Tap 'Ask Matt' on any lift. He sees it, replies personally, and you get notified. Not a bot — Matt.",
     image: portalChat,
     alt: "M2 Training lift chat showing conversation between athlete and Coach Matt",
   },
   {
     icon: TrendingUp,
-    title: "Watch your athlete get stronger",
-    desc: "Progress charts show every lift trending over time. PR markers, session-over-session changes, and estimated 1RMs — all automatic.",
+    title: "Watch the gains stack up",
+    desc: "Every session tracked. PR markers, estimated 1RMs, and trend lines that prove it's working.",
     image: portalProgress,
     alt: "M2 Training progress chart showing strength gains over 8 weeks",
   },
+];
+
+const VALUE_POINTS = [
+  { icon: User, text: "Matt personally reviews every athlete's progress" },
+  { icon: Shield, text: "20 years of injury-free training methodology" },
+  { icon: Zap, text: "Programs built for your sport, level, and equipment" },
 ];
 
 const PortalShowcase = () => (
@@ -36,28 +42,27 @@ const PortalShowcase = () => (
     transition={{ duration: 0.5, delay: 0.32 }}
     className="mb-10"
   >
-    <div className="flex items-center gap-2 mb-2">
-      <Bell size={18} className="text-primary" />
-      <span className="text-[11px] font-bold uppercase tracking-widest text-primary">
-        What You Get — The M² Athlete Portal
+    {/* Header */}
+    <div className="mb-6">
+      <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-2">
+        What makes M² different
       </span>
+      <h3 className="text-xl md:text-2xl font-bold text-foreground leading-tight mb-2">
+        A real coach. In your corner.<br className="hidden sm:block" /> For less than a gym membership.
+      </h3>
+      <p className="text-sm text-muted-foreground max-w-2xl leading-relaxed">
+        Other online programs hand you a PDF and disappear. At M², every program comes with a training portal 
+        and a direct line to Matt Michels — a coach who's spent 20 years developing 50+ college athletes 
+        without a single injury. He reads every message, reviews every log, and coaches your athlete 
+        like they're standing in his gym.
+      </p>
     </div>
-    <h3 className="text-lg md:text-xl font-bold text-foreground mb-1">
-      Buy a program. It's in your portal. Log it. Matt watches.
-    </h3>
-    <p className="text-sm text-muted-foreground mb-6 max-w-2xl leading-relaxed">
-      Every program you purchase automatically loads into your training portal. Log weights, track progress over time, 
-      and ask Matt questions directly on any lift — he gets notified instantly and replies right there. 
-      This is Matt. Not an AI. Not a chatbot. Not a template response. When your athlete has a question about form, 
-      loading, or why something hurts — Matt answers personally and walks them through it like he's standing right 
-      there. The only things they don't get are his equipment and his sense of humor (and he's hilarious). 
-      No other online training program at this price gives your kid direct access to a 20-year veteran coach.
-    </p>
 
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+    {/* Feature cards with screenshots */}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
       {FEATURES.map((f) => (
         <div key={f.title} className="bg-card shadow-m2 overflow-hidden">
-          <div className="aspect-[9/16] max-h-[320px] overflow-hidden bg-background">
+          <div className="aspect-[9/16] max-h-[280px] overflow-hidden bg-background">
             <img
               src={f.image}
               alt={f.alt}
@@ -76,29 +81,42 @@ const PortalShowcase = () => (
       ))}
     </div>
 
-    <div className="bg-primary/10 border border-primary/20 p-4 mb-4">
-      <p className="text-xs text-muted-foreground leading-relaxed">
-        <span className="text-foreground font-bold">This is what $9–$20 gets you:</span> Not just a PDF — a full training system 
-        with a real coach on the other end. Your program loads into the portal, you log every session, Matt personally 
-        reviews your progress and leaves coaching notes, and your athlete can ask questions on any lift. Matt runs this. 
-        He reads every message. He guides your kid through every issue they hit — almost like he's right there with them, 
-        at a fraction of the cost of in-person training. No other platform does this. Period.
+    {/* Value points */}
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-5">
+      {VALUE_POINTS.map((v) => (
+        <div key={v.text} className="flex items-center gap-2 bg-primary/5 border border-primary/10 p-3">
+          <v.icon size={14} className="text-primary flex-shrink-0" />
+          <span className="text-[11px] text-foreground font-medium">{v.text}</span>
+        </div>
+      ))}
+    </div>
+
+    {/* The pitch */}
+    <div className="bg-card shadow-m2 border-l-4 border-primary p-5 mb-5">
+      <p className="text-sm text-muted-foreground leading-relaxed">
+        <span className="text-foreground font-bold">Here's the truth:</span> Most online training is a template 
+        dressed up as coaching. M² is different because Matt actually coaches. He builds your program around 
+        your athlete's sport, body, and goals. He watches their numbers. He answers their questions — personally. 
+        The only things missing are his squat rack and his jokes. Everything else you'd get training in his gym, 
+        you get here — starting at <span className="text-primary font-bold">$9</span>.
       </p>
     </div>
 
+    {/* Dual CTAs */}
     <div className="flex flex-col sm:flex-row gap-3">
       <Link
         to="/shop"
-        className="inline-flex items-center justify-center gap-2 flex-1 bg-primary text-primary-foreground px-5 py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
+        className="inline-flex items-center justify-center gap-2 flex-1 bg-primary text-primary-foreground px-5 py-3.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
       >
-        Get a Program — Starts at $9
+        Get a Custom Program — $20
         <ArrowRight size={14} />
       </Link>
       <Link
-        to="/auth"
-        className="inline-flex items-center justify-center gap-2 flex-1 border-2 border-primary/40 text-primary px-5 py-3 text-xs font-bold uppercase tracking-widest hover:bg-primary/10 transition-m2"
+        to="/pricing"
+        className="inline-flex items-center justify-center gap-2 flex-1 border-2 border-primary/40 text-primary px-5 py-3.5 text-xs font-bold uppercase tracking-widest hover:bg-primary/10 transition-m2"
       >
-        Create Free Account
+        Subscribe from $12.99/mo
+        <ArrowRight size={14} />
       </Link>
     </div>
   </motion.div>
