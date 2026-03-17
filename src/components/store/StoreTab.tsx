@@ -12,7 +12,7 @@ const SUB_TABS = [
 ];
 
 const StoreTab = () => {
-  const [subTab, setSubTab] = useState("pdf-guides");
+  const [subTab, setSubTab] = useState("programs");
 
   return (
     <div>
