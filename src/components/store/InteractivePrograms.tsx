@@ -36,6 +36,7 @@ const InteractivePrograms = () => {
   const [ageRange, setAgeRange] = useState<string>("");
   const [sex, setSex] = useState<string>("");
   const [sport, setSport] = useState<string>("");
+  const [programPromo, setProgramPromo] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
