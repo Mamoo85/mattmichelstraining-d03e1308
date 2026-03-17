@@ -47,7 +47,7 @@ serve(async (req) => {
     // Fetch program details
     const { data: program, error: programError } = await supabaseClient
       .from("training_programs")
-      .select("id, title, price, is_active")
+      .select("id, title, price, is_active, stripe_price_id, stripe_product_id")
       .eq("id", programId)
       .single();
 
