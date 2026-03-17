@@ -176,7 +176,7 @@ const HeroSection = () => {
 
         
 
-        {showFreeBonus && <FreeBonusBanner />}
+        {showAudience && <AudienceSelector />}
 
         {showPremium && <div id="section-portal"><PortalShowcase /></div>}
         {showPremium && <PremiumProgram />}
