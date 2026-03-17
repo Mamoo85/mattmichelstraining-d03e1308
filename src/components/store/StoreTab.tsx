@@ -1,17 +1,19 @@
 import { useState, useRef } from "react";
 import InteractivePrograms from "./InteractivePrograms";
 import MerchSection from "../MerchSection";
+import GiftCardSection from "./GiftCardSection";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import {
   Loader2, ShoppingBag, Upload, Video, Check,
-  Dumbbell, Calendar
+  Dumbbell, Calendar, Gift
 } from "lucide-react";
 
 const SUB_TABS = [
   { key: "programs", label: "Interactive Programs" },
   { key: "custom", label: "Custom Program" },
+  { key: "giftcards", label: "Gift Cards" },
   { key: "merchandise", label: "Merchandise" },
 ];
 
