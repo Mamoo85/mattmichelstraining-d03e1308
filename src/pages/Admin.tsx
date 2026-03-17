@@ -57,6 +57,7 @@ const Admin = () => {
           ))}
         </div>
 
+        {activeTab === "monthly" && <AdminMonthlyFocus />}
         {activeTab === "coach" && (
           <div className="space-y-8">
             <AdminCoachInbox />
