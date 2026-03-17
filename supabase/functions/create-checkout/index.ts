@@ -36,7 +36,7 @@ serve(async (req) => {
     const user = userData.user;
     logStep("User authenticated", { email: user.email });
 
-    const { priceId, promoCode } = await req.json();
+    const { priceId, promoCode, referralCode } = await req.json();
     if (!priceId) throw new Error("No priceId provided");
     logStep("Price ID received", { priceId, promoCode: promoCode || "none" });
 
