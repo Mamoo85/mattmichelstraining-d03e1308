@@ -483,6 +483,7 @@ const Dashboard = () => {
         {activeTab === "progress" && <ProgressCharts />}
         {activeTab === "programs" && <MyPrograms />}
         {activeTab === "workouts" && <WorkoutsTab />}
+        {activeTab === "referrals" && <ReferralDashboard />}
       </div>
 
       {/* Floating timer button */}
