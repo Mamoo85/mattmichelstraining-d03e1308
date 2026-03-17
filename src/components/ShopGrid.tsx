@@ -165,32 +165,36 @@ const ShopGrid = ({ showCustomOnly = false }: { showCustomOnly?: boolean }) => {
 
   return (
     <div>
-      <SectionHeader title="M² Guides & Programs" timestamp="20+ years of knowledge · No camera required" />
+      {!showCustomOnly && (
+        <>
+          <SectionHeader title="M² Guides & Programs" timestamp="20+ years of knowledge · No camera required" />
 
-      {/* Value hook */}
-      <div className="bg-primary/10 border border-primary/20 shadow-m2 p-4 mb-6">
-        <p className="text-sm text-foreground text-balance leading-relaxed">
-          <span className="font-bold">"</span>{cms.value_hook || "I can only train so many athletes in person. But I can share what I know. Every guide teaches the WHY — not just what to do. When they understand why, they do it better. 100% of the time."}<span className="font-bold">"</span>
-        </p>
-        <span className="text-[10px] font-mono text-primary mt-2 block">— Matt Michels, M² Training</span>
-      </div>
+          {/* Value hook */}
+          <div className="bg-primary/10 border border-primary/20 shadow-m2 p-4 mb-6">
+            <p className="text-sm text-foreground text-balance leading-relaxed">
+              <span className="font-bold">"</span>{cms.value_hook || "I can only train so many athletes in person. But I can share what I know. Every guide teaches the WHY — not just what to do. When they understand why, they do it better. 100% of the time."}<span className="font-bold">"</span>
+            </p>
+            <span className="text-[10px] font-mono text-primary mt-2 block">— Matt Michels, M² Training</span>
+          </div>
 
-      {/* Category filter */}
-      <div className="flex gap-1 mb-4 flex-wrap">
-        {CATEGORIES.map((c) => (
-          <button
-            key={c.key}
-            onClick={() => setSelectedCategory(c.key)}
-            className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-m2 ${
-              selectedCategory === c.key
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {c.label}
-          </button>
-        ))}
-      </div>
+          {/* Category filter */}
+          <div className="flex gap-1 mb-4 flex-wrap">
+            {CATEGORIES.map((c) => (
+              <button
+                key={c.key}
+                onClick={() => setSelectedCategory(c.key)}
+                className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-m2 ${
+                  selectedCategory === c.key
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
 
       {/* Product grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-8">
