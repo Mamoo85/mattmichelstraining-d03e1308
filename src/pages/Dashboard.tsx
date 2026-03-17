@@ -46,6 +46,19 @@ interface LeaderboardEntry {
   is_public: boolean;
 }
 
+const WorkoutsTab = () => {
+  const [showBuilder, setShowBuilder] = useState(false);
+
+  return showBuilder ? (
+    <WorkoutBuilder
+      onSaved={() => setShowBuilder(false)}
+      onClose={() => setShowBuilder(false)}
+    />
+  ) : (
+    <CommunityWorkoutBank onCreateNew={() => setShowBuilder(true)} />
+  );
+};
+
 const Dashboard = () => {
   const { user, subscribed, subscriptionTier, isLegend } = useAuth();
   const [profile, setProfile] = useState<{ full_name: string | null; athlete_name: string | null } | null>(null);
