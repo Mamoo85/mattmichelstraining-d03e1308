@@ -25,7 +25,7 @@ import MonthlyFocus from "./landing/MonthlyFocus";
 import WeekendYouth from "./landing/WeekendYouth";
 import ForTrainers from "./landing/ForTrainers";
 
-import FreeBonusBanner from "./landing/FreeBonusBanner";
+import AudienceSelector from "./landing/AudienceSelector";
 import MerchSection from "./MerchSection";
 import FindUs from "./landing/FindUs";
 
