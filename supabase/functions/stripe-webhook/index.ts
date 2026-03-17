@@ -215,6 +215,63 @@ serve(async (req) => {
         }
       }
 
+      // Process referral conversion — credit the referrer with a free month
+      if (meta.referral_code && session.customer_details?.email) {
+        const refCode = meta.referral_code;
+        const referredEmail = session.customer_details.email;
+
+        // Look up referrer
+        const { data: refRow } = await sb
+          .from("referral_codes")
+          .select("user_id, total_referrals, credits_earned")
+          .eq("code", refCode)
+          .single();
+
+        // Look up referred user
+        const { data: referredProfile } = await sb
+          .from("profiles")
+          .select("user_id")
+          .eq("email", referredEmail)
+          .limit(1)
+          .single();
+
+        if (refRow && referredProfile) {
+          // Determine subscription tier from price
+          const lineItems = session.line_items?.data || [];
+          let tier = "unknown";
+          if (lineItems.length > 0) {
+            const productId = (lineItems[0] as any)?.price?.product;
+            tier = PRODUCT_TIER_MAP[productId] || "unknown";
+          }
+
+          // Record conversion
+          await sb.from("referral_conversions").insert({
+            referrer_user_id: refRow.user_id,
+            referred_user_id: referredProfile.user_id,
+            referral_code: refCode,
+            subscription_tier: tier,
+            credited: true,
+          });
+
+          // Update referrer stats
+          await sb.from("referral_codes").update({
+            total_referrals: (refRow.total_referrals || 0) + 1,
+            credits_earned: (refRow.credits_earned || 0) + 1,
+          }).eq("code", refCode);
+
+          // Notify referrer
+          await sb.from("notifications").insert({
+            user_id: refRow.user_id,
+            type: "referral",
+            title: "Referral Earned! 🎉",
+            body: "Someone subscribed with your code! You earned a free month credit.",
+            link: "/dashboard",
+          });
+
+          console.log(`[WEBHOOK] Referral conversion recorded: ${refCode} → ${referredProfile.user_id}`);
+        }
+      }
+
       // Deduct gift card balance for guide/custom program purchases
       // create-guide-payment passes gift_card_applied_cents (cents)
       // create-program-checkout passes gift_card_applied (dollars)

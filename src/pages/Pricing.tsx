@@ -7,6 +7,7 @@ import { useAuth, TIERS, TierKey, TIER_DISCOUNTS } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useContentMap } from "@/hooks/useSiteContent";
+import { getStoredReferralCode, clearStoredReferralCode } from "@/hooks/useReferral";
 
 const TIER_CARDS: {
   key: TierKey;
@@ -110,6 +111,11 @@ const Pricing = () => {
       const body: any = { priceId: TIERS[tierKey].price_id };
       if (promoCode.trim()) {
         body.promoCode = promoCode.trim();
+      }
+      // Include referral code from URL if present
+      const referralCode = getStoredReferralCode();
+      if (referralCode && !promoCode.trim()) {
+        body.referralCode = referralCode;
       }
 
       const { data, error } = await supabase.functions.invoke("create-checkout", { body });

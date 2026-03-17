@@ -9,6 +9,7 @@ import { TimerProvider } from "@/hooks/useTimer";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import IntervalTimer from "@/components/workout/IntervalTimer";
 import { useTimer } from "@/hooks/useTimer";
+import { useReferralCapture } from "@/hooks/useReferral";
 import { Loader2 } from "lucide-react";
 
 // Lazy-load all pages for code-splitting
@@ -51,6 +52,11 @@ const GlobalTimer = () => {
   return <IntervalTimer onClose={closeTimer} />;
 };
 
+const ReferralCaptureWrapper = () => {
+  useReferralCapture();
+  return null;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -59,6 +65,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <ReferralCaptureWrapper />
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={<Index />} />
