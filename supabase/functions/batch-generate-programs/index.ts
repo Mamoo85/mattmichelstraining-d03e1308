@@ -89,7 +89,7 @@ serve(async (req) => {
     const program = programsToGenerate[0];
     console.log(`Generating workouts for: ${program.title}`);
 
-    const systemPrompt = `You are Matt Michels' AI assistant for M² Performance Training. Draft an 8-week, 3-day/week training program using ONLY exercise IDs from the library below. Every day should have 6-10 exercises. Include progressive overload across weeks. Be specific with sets/reps (e.g., "3x12", "4x8 @RPE 7"). Include coach instructions in Matt's voice — direct, knowledgeable, encouraging.`;
+    const systemPrompt = `You are Matt Michels' AI assistant. Draft a 4-week, 3-day/week training program using ONLY exercise IDs from the library. Each day should have 5-6 exercises. Be specific with sets/reps (e.g. "3x12", "4x8"). Include brief coach instructions. Use ONLY the exercise IDs provided.`;
 
     const userPrompt = `Create workouts for: "${program.title}"
 Category: ${program.category}
