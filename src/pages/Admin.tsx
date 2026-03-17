@@ -15,6 +15,7 @@ import AdminMonthlyFocus from "@/components/admin/AdminMonthlyFocus";
 import AdminProgramCreator from "@/components/admin/AdminProgramCreator";
 import AdminSchedule from "@/components/admin/AdminSchedule";
 import AdminTierManager from "@/components/admin/AdminTierManager";
+import AdminDirectMessages from "@/components/admin/AdminDirectMessages";
 
 const TABS = [
   { key: "tiers", label: "Tier Access" },
