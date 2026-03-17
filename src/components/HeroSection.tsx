@@ -18,7 +18,7 @@ import TeamYouthPrograms from "./landing/TeamYouthPrograms";
 import MonthlyFocus from "./landing/MonthlyFocus";
 import WeekendYouth from "./landing/WeekendYouth";
 import ForTrainers from "./landing/ForTrainers";
-import CanFixIt from "./landing/CanFixIt";
+
 import FreeBonusBanner from "./landing/FreeBonusBanner";
 import MerchSection from "./MerchSection";
 import FindUs from "./landing/FindUs";
