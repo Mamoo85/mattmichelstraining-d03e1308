@@ -61,6 +61,7 @@ const Admin = () => {
           ))}
         </div>
 
+        {activeTab === "schedule" && <AdminSchedule />}
         {activeTab === "monthly" && <AdminMonthlyFocus />}
         {activeTab === "coach" && (
           <div className="space-y-8">

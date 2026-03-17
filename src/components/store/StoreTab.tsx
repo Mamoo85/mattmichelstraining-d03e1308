@@ -53,8 +53,33 @@ const CUSTOM_TIERS = [
   },
 ];
 
+const SessionsRedirect = () => {
+  const navigate = (await import("react-router-dom")).useNavigate;
+  return null;
+};
+
+const SessionsTab = () => {
+  return (
+    <div className="bg-card shadow-m2 p-6 text-center space-y-4">
+      <Calendar size={32} className="mx-auto text-primary" />
+      <h2 className="text-base font-bold text-foreground">Book a Training Session</h2>
+      <p className="text-sm text-muted-foreground max-w-md mx-auto">
+        Train with Matt in person. 30-minute sessions are <strong className="text-foreground">$50</strong> and 
+        1-hour sessions are <strong className="text-foreground">$90</strong>. View available times and book instantly.
+      </p>
+      <a
+        href="/schedule"
+        className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
+      >
+        <Calendar size={14} />
+        View Schedule & Book
+      </a>
+    </div>
+  );
+};
+
 const StoreTab = () => {
-  const [subTab, setSubTab] = useState("programs");
+  const [subTab, setSubTab] = useState("sessions");
 
   return (
     <div>
@@ -74,6 +99,7 @@ const StoreTab = () => {
         ))}
       </div>
 
+      {subTab === "sessions" && <SessionsTab />}
       {subTab === "programs" && <InteractivePrograms />}
       {subTab === "custom" && <CustomProgramSection />}
       {subTab === "giftcards" && <GiftCardSection />}
