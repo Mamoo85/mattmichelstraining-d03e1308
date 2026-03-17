@@ -167,10 +167,24 @@ const AdminSiteEditor = () => {
                   const isEdited = editedContent[item.id] !== undefined;
                   return (
                     <div key={item.id}>
-                      <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">
-                        {item.label || item.content_key}
-                        {isEdited && <span className="text-primary ml-1">· edited</span>}
-                      </label>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                          {item.label || item.content_key}
+                          {isEdited && <span className="text-primary ml-1">· edited</span>}
+                        </label>
+                        {currentValue && (
+                          <AiAssistButton
+                            type="site_content"
+                            context={{
+                              section: item.section,
+                              label: item.label || item.content_key,
+                              currentValue,
+                            }}
+                            onResult={(text) => handleContentChange(item.id, text)}
+                            label="AI Rewrite"
+                          />
+                        )}
+                      </div>
                       {item.content_type === "textarea" ? (
                         <textarea
                           value={currentValue}

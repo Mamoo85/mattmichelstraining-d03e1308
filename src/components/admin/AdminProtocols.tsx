@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Plus, Trash2, GripVertical, Save } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import AiAssistButton from "./AiAssistButton";
 
 const AdminProtocols = () => {
   const queryClient = useQueryClient();
