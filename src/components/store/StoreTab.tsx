@@ -2,8 +2,6 @@ import { useState } from "react";
 import InteractivePrograms from "./InteractivePrograms";
 import MerchSection from "../MerchSection";
 import ShopGrid from "../ShopGrid";
-import MerchSection from "../MerchSection";
-import ShopGrid from "../ShopGrid";
 
 const SUB_TABS = [
   { key: "programs", label: "Interactive Programs" },
