@@ -37,7 +37,7 @@ const TIMELINE = [
     age: "11–13",
     title: "Foundation Phase — Youth Strength Basics",
     desc: "Movement quality, body awareness, and coordination through age-appropriate strength training. No heavy loading — ever. This is about building the operating system their body will run on for the next decade. Middle school athletes learn proper form, develop connective tissue strength, and build the habits that prevent injury later.",
-    action: "Youth Starter Strength Guide — $12",
+    action: "Youth Starter Program — $20",
     link: "/shop",
   },
   {
