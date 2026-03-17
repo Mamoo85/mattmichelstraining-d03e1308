@@ -101,7 +101,12 @@ const InteractivePrograms = () => {
     return programs.filter((p) => {
       if (p.category !== category) return false;
       if (level && p.level !== level) return false;
-      if (sport && p.sport !== sport) return false;
+      if (sport && p.sport) {
+        const programSports = p.sport.split(",").map(s => s.trim());
+        if (!programSports.includes(sport)) return false;
+      } else if (sport && !p.sport) {
+        return false;
+      }
       return true;
     });
   }, [programs, category, level, sport]);
