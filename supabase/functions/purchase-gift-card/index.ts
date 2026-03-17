@@ -106,7 +106,7 @@ serve(async (req) => {
     const session = await stripe.checkout.sessions.create(sessionParams);
     logStep("Checkout session created", { sessionId: session.id });
 
-    // Pre-create the gift card (will be activated by webhook or success verification)
+    // Pre-create the gift card
     await supabaseClient.from("gift_cards").insert({
       code: giftCode,
       original_amount: amount,
@@ -118,6 +118,74 @@ serve(async (req) => {
     });
 
     logStep("Gift card pre-created", { code: giftCode, amount });
+
+    // Send email notifications
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    if (resendApiKey) {
+      const storeUrl = `${origin}/shop`;
+      const emailHtml = `
+        <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;background:#ffffff;">
+          <div style="text-align:center;margin-bottom:24px;">
+            <h1 style="font-size:24px;font-weight:900;letter-spacing:-0.5px;color:#1a1a1a;margin:0;">M² TRAINING</h1>
+            <p style="font-size:11px;letter-spacing:3px;color:#888;margin:4px 0 0;text-transform:uppercase;">Gift Card</p>
+          </div>
+          <div style="background:#f5f5f5;border:2px solid #e5e5e5;padding:24px;text-align:center;margin-bottom:24px;">
+            <p style="font-size:13px;color:#666;margin:0 0 8px;">Your gift card code</p>
+            <div style="font-size:28px;font-weight:900;font-family:monospace;letter-spacing:4px;color:#1a1a1a;padding:12px;background:#fff;border:2px dashed #ccc;display:inline-block;">${giftCode}</div>
+            <p style="font-size:32px;font-weight:900;color:#1a1a1a;margin:16px 0 4px;">$${amount}.00</p>
+            <p style="font-size:12px;color:#888;margin:0;">Use toward any program, custom workout, or product</p>
+          </div>
+          <div style="text-align:center;margin-bottom:24px;">
+            <a href="${storeUrl}" style="display:inline-block;background:#1a1a1a;color:#ffffff;padding:14px 32px;text-decoration:none;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;">Shop Now →</a>
+          </div>
+          <div style="background:#fafafa;padding:16px;border:1px solid #eee;">
+            <p style="font-size:11px;color:#888;margin:0;line-height:1.6;">
+              <strong style="color:#555;">How to use:</strong> Enter your code at checkout when purchasing any product in the M² Training store. Your balance will be applied automatically.
+            </p>
+          </div>
+          <p style="font-size:10px;color:#bbb;text-align:center;margin-top:24px;">M² Training · Matt Michels Performance</p>
+        </div>
+      `;
+
+      const emailsToSend: { to: string; subject: string }[] = [];
+
+      // Send to recipient if provided
+      if (recipientEmail) {
+        emailsToSend.push({
+          to: recipientEmail,
+          subject: `You've received a $${amount} M² Training Gift Card! 🎁`,
+        });
+      }
+
+      // Always send a copy to the purchaser
+      emailsToSend.push({
+        to: user.email!,
+        subject: recipientEmail
+          ? `Gift card sent to ${recipientEmail} — $${amount} M² Gift Card`
+          : `Your $${amount} M² Training Gift Card`,
+      });
+
+      for (const email of emailsToSend) {
+        try {
+          await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${resendApiKey}`,
+            },
+            body: JSON.stringify({
+              from: "M² Training <noreply@m2training.lovable.app>",
+              to: [email.to],
+              subject: email.subject,
+              html: emailHtml,
+            }),
+          });
+          logStep("Email sent", { to: email.to });
+        } catch (emailErr) {
+          logStep("Email send failed (non-blocking)", { to: email.to, error: String(emailErr) });
+        }
+      }
+    }
 
     return new Response(JSON.stringify({ url: session.url, code: giftCode }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
