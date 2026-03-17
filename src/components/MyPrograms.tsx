@@ -130,7 +130,7 @@ const MyPrograms = () => {
     printWorkoutLog({
       title: program.program_title,
       sport: program.sport,
-      category: program.program_type === "custom" ? "Custom Program" : "Sport Guide",
+      category: program.program_type === "custom" ? "Custom Program" : "Program",
       weeks: [
         {
           week: 1,
