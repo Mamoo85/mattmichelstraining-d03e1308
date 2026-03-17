@@ -32,7 +32,11 @@ const TIER_CARDS: {
     icon: Star,
     highlight: true,
     features: [
-      "Everything in Basic",
+      "Monthly 'Real Deal' newsletter",
+      "85+ exercise library with sport-specific filters",
+      "Filter by YOUR sport — find the best exercises for Golf, Volleyball, Football & more",
+      "Monthly Focus Plan access",
+      "Member challenges",
       "Custom program from intake form",
       "🖐️ Flag Coach Matt — raise your hand and get personal coaching feedback on any exercise",
       "Optional postural video assessment",
@@ -45,7 +49,16 @@ const TIER_CARDS: {
     key: "elite",
     icon: Crown,
     features: [
-      "Everything in Pro",
+      "Monthly 'Real Deal' newsletter",
+      "85+ exercise library with sport-specific filters",
+      "Filter by YOUR sport — find the best exercises for Golf, Volleyball, Football & more",
+      "Monthly Focus Plan access",
+      "Member challenges",
+      "Custom program from intake form",
+      "🖐️ Flag Coach Matt — raise your hand and get personal coaching feedback on any exercise",
+      "Optional postural video assessment",
+      "Monthly program updates",
+      "Full 'Fix It' rehab library",
       "1-on-1 monthly check-ins with Matt",
       "Priority postural assessments",
       "Direct messaging support",
@@ -57,7 +70,20 @@ const TIER_CARDS: {
     key: "team",
     icon: Users,
     features: [
-      "Everything in Elite",
+      "Monthly 'Real Deal' newsletter",
+      "85+ exercise library with sport-specific filters",
+      "Filter by YOUR sport — find the best exercises for Golf, Volleyball, Football & more",
+      "Monthly Focus Plan access",
+      "Member challenges",
+      "Custom program from intake form",
+      "🖐️ Flag Coach Matt — raise your hand and get personal coaching feedback on any exercise",
+      "Optional postural video assessment",
+      "Monthly program updates",
+      "Full 'Fix It' rehab library",
+      "1-on-1 monthly check-ins with Matt",
+      "Priority postural assessments",
+      "Direct messaging support",
+      "Priority Flag Coach Matt responses",
       "Bulk programming for full teams",
       "Seasonal periodization plans",
       "Multi-athlete management",
@@ -65,6 +91,8 @@ const TIER_CARDS: {
     cta: "Get Team",
   },
 ];
+
+const INITIAL_SHOW = 4;
 
 const Pricing = () => {
   const { user, subscribed, subscriptionTier, subscriptionEnd } = useAuth();
