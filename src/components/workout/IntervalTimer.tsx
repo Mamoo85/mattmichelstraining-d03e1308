@@ -118,7 +118,7 @@ const IntervalTimer = ({ onClose }: { onClose: () => void }) => {
     }
 
     // Countdown beeps for last 3 seconds
-    if (s <= 3 && s > 0) countdownBeep();
+    if (s <= 3 && s > 0) { countdownBeep(); vibrate(50); }
 
     const next = s - 1;
     secondsRef.current = next;
