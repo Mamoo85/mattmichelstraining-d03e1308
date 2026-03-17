@@ -201,12 +201,37 @@ const AdminProgramCreator = () => {
     }
   };
 
+  const handleSyncStripe = async () => {
+    setSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("sync-stripe-products", { body: {} });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast({
+        title: `Stripe sync complete!`,
+        description: `${data.synced} products created. ${data.errors} errors.`,
+      });
+      fetchInventory();
+    } catch (e: any) {
+      toast({ title: "Sync failed", description: e.message, variant: "destructive" });
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   const handlePublish = async (id: string) => {
     const prog = inventory.find((p) => p.id === id);
     if (!prog) return;
+    // If no Stripe IDs, sync first
     if (!prog.stripe_product_id || !prog.stripe_price_id) {
-      toast({ title: "Link Stripe first", description: "Connect a Stripe product & price before publishing.", variant: "destructive" });
-      return;
+      toast({ title: "Syncing to Stripe first...", description: "Creating product automatically." });
+      await handleSyncStripe();
+      // Re-fetch and check
+      const { data: updated } = await supabase.from("training_programs").select("stripe_product_id, stripe_price_id").eq("id", id).single();
+      if (!updated?.stripe_product_id) {
+        toast({ title: "Stripe sync failed for this program", variant: "destructive" });
+        return;
+      }
     }
     await supabase.from("training_programs").update({ status: "published", is_active: true }).eq("id", id);
     toast({ title: "Published!" });
