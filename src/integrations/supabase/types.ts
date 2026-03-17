@@ -89,6 +89,7 @@ export type Database = {
           equipment_needed: string
           focus_area: string[]
           id: string
+          sport: string[]
           the_why: string
           title: string
         }
@@ -98,6 +99,7 @@ export type Database = {
           equipment_needed?: string
           focus_area?: string[]
           id?: string
+          sport?: string[]
           the_why?: string
           title: string
         }
@@ -107,6 +109,7 @@ export type Database = {
           equipment_needed?: string
           focus_area?: string[]
           id?: string
+          sport?: string[]
           the_why?: string
           title?: string
         }
