@@ -47,11 +47,10 @@ const TIER_CARDS: {
     key: "elite",
     icon: Crown,
     features: [
-      "Monthly 'Real Deal' newsletter",
+      "Monthly Focus Plan — Matt's training focus changes monthly to build balanced gym skills",
       "85+ exercise library with sport-specific filters",
       "Filter by YOUR sport — find the best exercises for Golf, Volleyball, Football & more",
-      "Monthly Focus Plan access",
-      "Member challenges",
+      "Member challenges & leaderboard",
       "Custom program from intake form",
       "🖐️ Flag Coach Matt — raise your hand and get personal coaching feedback on any exercise",
       "Optional postural video assessment",
