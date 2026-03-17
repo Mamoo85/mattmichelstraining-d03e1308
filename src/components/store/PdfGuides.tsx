@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileText, Loader2, ShoppingBag } from "lucide-react";
+import { FileText, Loader2, ShoppingBag, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -16,82 +16,39 @@ interface Guide {
 
 const GUIDES: Guide[] = [
   {
-    id: "baseball-5",
-    title: "Top 5 Exercises for Baseball Players",
-    subtitle: "Rotational power, arm health, and explosiveness",
-    price: "$9",
-    priceId: "price_1TBWRjD52tPWee464JrSieCi",
-    description: "I've trained baseball players for two decades. These are the five movements that actually translate to the field — rotational power, arm health, hip mobility.",
-    includes: ["5 exercises with full breakdowns", "Sets, reps, and rest periods", "The WHY behind each movement", "Warm-up protocol included"],
+    id: "middle-school-foundation",
+    title: "The Middle School Foundation (Top 10)",
+    subtitle: "Build the base before the game gets serious",
+    price: "$15",
+    priceId: "price_middle_school_foundation",
+    description: "The 10 exercises every middle schooler needs before they step into competitive sports. Movement quality, injury-proofing, and the foundation that lasts a lifetime.",
+    includes: ["10 exercises with full breakdowns", "Age-appropriate progressions", "The WHY behind each movement", "Parent guide included"],
   },
   {
-    id: "football-5",
-    title: "Top 5 Exercises for Football",
-    subtitle: "Power, speed, and collision prep",
-    price: "$9",
-    priceId: "price_1TBWRzD52tPWee46IQxgPosm",
-    description: "Football is about power off the line and a body that can take contact without breaking. These five exercises build explosive hips, a bulletproof core, and durability.",
-    includes: ["Position-relevant exercises", "Power development focus", "The WHY behind each movement", "Injury prevention notes"],
+    id: "high-school-armor",
+    title: "High School Armor (Top 10)",
+    subtitle: "Bulletproof your body for varsity",
+    price: "$15",
+    priceId: "price_high_school_armor",
+    description: "High school is where injuries happen — because kids skip the armor. These 10 exercises build durability, explosive power, and the structural integrity coaches can't teach.",
+    includes: ["10 exercises with sets & reps", "In-season vs off-season guidance", "The WHY behind each movement", "Injury prevention protocols"],
   },
   {
-    id: "basketball-5",
-    title: "Top 5 Exercises for Basketball",
-    subtitle: "Vertical power, knee health, and agility",
-    price: "$9",
-    priceId: "price_1TBWSgD52tPWee46vmwnXiHe",
-    description: "Every basketball parent asks about vertical. Here's the truth — you can't jump higher if your knees can't handle the landing. This guide builds elastic power AND protects the joints.",
-    includes: ["Vertical power exercises", "Knee health protocols", "The WHY behind each movement", "In-season maintenance plan"],
-  },
-  {
-    id: "hockey-5",
-    title: "Hockey Strength Essentials",
-    subtitle: "Edge work, hip power, and durability",
-    price: "$9",
-    priceId: "price_1TBWSxD52tPWee465QPmHaTK",
-    description: "Hockey is the most demanding youth sport. This guide covers posterior chain work, single-leg stability, and core bracing that turns skaters into forces.",
-    includes: ["Sport-specific exercises", "In-season vs off-season guidance", "The WHY behind each movement", "Recovery protocol"],
-  },
-  {
-    id: "soccer-5",
-    title: "Top 5 Exercises for Soccer",
-    subtitle: "Endurance, hip mobility, and single-leg power",
-    price: "$9",
-    priceId: "price_1TBWTFD52tPWee46fh1GttaO",
-    description: "Soccer kids run for 90 minutes on one leg at a time. This guide is built around single-leg strength, hip mobility, and the endurance base for the 80th minute.",
-    includes: ["Single-leg focused exercises", "Hip mobility work", "The WHY behind each movement", "Game-day prep protocol"],
-  },
-  {
-    id: "lacrosse-5",
-    title: "Top 5 Exercises for Lacrosse",
-    subtitle: "Shoulder stability, speed, and contact prep",
-    price: "$9",
-    priceId: "price_1TBWTVD52tPWee46MSdo6gXX",
-    description: "Lacrosse beats up shoulders and demands sprint speed. These exercises build shoulder durability, explosive change of direction, and a frame that handles contact.",
-    includes: ["Shoulder stability work", "Sprint mechanics", "The WHY behind each movement", "Contact preparation"],
-  },
-  {
-    id: "pregnancy-10",
-    title: "Top 10 Exercises: Pre & Post Pregnancy",
-    subtitle: "Safe strength for every stage",
-    price: "$12",
-    priceId: "price_1TBWTmD52tPWee46FaB1wcFz",
-    description: "Ten exercises that are safe, effective, and backed by the kinesiology — for every trimester and beyond.",
-    includes: ["10 exercises with trimester guidance", "Post-partum rebuilding protocol", "The WHY behind each movement", "What to avoid and when"],
-  },
-  {
-    id: "youth-starter",
-    title: "Youth Athlete Starter Guide",
-    subtitle: "The foundation every young athlete needs",
-    price: "$12",
-    priceId: "price_1TBWU1D52tPWee46qnvE9Zrv",
-    description: "Movement quality first, then work capacity, then strength. Four weeks of building the foundation that prevents injuries for life.",
-    includes: ["Full 4-week starter program", "Movement quality checklist", "The WHY behind the system", "Parent guide included"],
+    id: "road-warrior",
+    title: "The Road Warrior (Top 10 Travel Fixes)",
+    subtitle: "Stay sharp when you can't get to the gym",
+    price: "$15",
+    priceId: "price_road_warrior",
+    description: "Hotel room. Airport layover. Tournament weekend. These 10 movements keep your body right when life takes you away from the gym. No equipment needed.",
+    includes: ["10 no-equipment exercises", "Rolling & mobility sequences", "The WHY behind each movement", "Travel-day warmup protocol"],
   },
 ];
 
 const PdfGuides = () => {
   const [expandedGuide, setExpandedGuide] = useState<string | null>(null);
   const [buyingId, setBuyingId] = useState<string | null>(null);
+  const [guideRequest, setGuideRequest] = useState("");
+  const [requestSending, setRequestSending] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -114,12 +71,35 @@ const PdfGuides = () => {
     }
   };
 
+  const handleRequestGuide = async () => {
+    if (!guideRequest.trim()) {
+      toast({ title: "Enter a request", description: "Tell us what guide you're looking for.", variant: "destructive" });
+      return;
+    }
+    setRequestSending(true);
+    try {
+      const { error } = await supabase.functions.invoke("request-guide", {
+        body: {
+          request: guideRequest.trim(),
+          email: user?.email || "anonymous",
+        },
+      });
+      if (error) throw error;
+      toast({ title: "Request sent! 🙌", description: "Matt will review your request. Thanks for the input." });
+      setGuideRequest("");
+    } catch (e: any) {
+      toast({ title: "Error sending request", description: e.message || "Something went wrong", variant: "destructive" });
+    } finally {
+      setRequestSending(false);
+    }
+  };
+
   return (
     <div>
       {/* Description */}
       <div className="bg-primary/10 border border-primary/20 p-4 mb-6">
         <p className="text-sm text-foreground leading-relaxed">
-          Quick-hit, $9 foundational blueprints. These are static PDF guides designed to teach you the WHY behind specific movements and give you a standalone arsenal of exercises.
+          Foundational top-10 blueprints at <strong>$15 each</strong>. These are static PDF guides designed to teach you the WHY behind specific movements and give you a standalone arsenal of exercises.
         </p>
       </div>
 
@@ -168,6 +148,36 @@ const PdfGuides = () => {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Request a Guide section */}
+      <div className="mt-8 bg-card shadow-m2 p-5">
+        <h3 className="text-sm font-bold text-foreground mb-1">Don't see your sport?</h3>
+        <p className="text-[11px] text-muted-foreground mb-4">
+          Tell Matt what guide you need. He tracks every request and builds guides based on real demand.
+        </p>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={guideRequest}
+            onChange={(e) => setGuideRequest(e.target.value)}
+            placeholder="What guide do you need?"
+            maxLength={200}
+            className="flex-1 bg-background border border-border px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-primary outline-none"
+          />
+          <button
+            onClick={handleRequestGuide}
+            disabled={requestSending}
+            className="bg-primary text-primary-foreground px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-m2 flex items-center gap-1.5 disabled:opacity-50 flex-shrink-0"
+          >
+            {requestSending ? (
+              <Loader2 size={12} className="animate-spin" />
+            ) : (
+              <Send size={12} />
+            )}
+            Request Guide
+          </button>
+        </div>
       </div>
     </div>
   );
