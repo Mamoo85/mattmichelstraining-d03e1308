@@ -43,10 +43,7 @@ serve(async (req) => {
         customerEmail = userData.user.email;
         userId = userData.user.id;
         const customers = await stripe.customers.list({ email: customerEmail, limit: 1 });
-        if (customers.data.length > 0) {
-          customerId = customers.data[0].id;
-        }
-        // Get subscription tier for discount
+        if (customers.data.length > 0) customerId = customers.data[0].id;
         const { data: profile } = await supabaseClient
           .from("profiles")
           .select("subscription_tier")
@@ -65,28 +62,23 @@ serve(async (req) => {
       }
     }
 
-    const sessionParams: any = {
-      customer: customerId,
-      customer_email: customerId ? undefined : customerEmail,
-      line_items: [{ price: priceId, quantity: 1 }],
-      mode: "payment",
-      success_url: `${origin}/shop?purchase=success`,
-      cancel_url: `${origin}/shop`,
-      metadata: sessionMetadata,
-    };
+    // Get the price amount from Stripe to calculate gift card discount
+    const stripePrice = await stripe.prices.retrieve(priceId);
+    let originalAmountCents = stripePrice.unit_amount || 0;
 
     // Apply tier discount
     const discountPct = TIER_DISCOUNTS[tier] || 0;
+    let tierDiscountCents = 0;
     if (discountPct > 0) {
-      const coupon = await stripe.coupons.create({
-        percent_off: discountPct,
-        duration: "once",
-        name: `Member ${discountPct}% discount`,
-      });
-      sessionParams.discounts = [{ coupon: coupon.id }];
+      tierDiscountCents = Math.round(originalAmountCents * discountPct / 100);
     }
 
-    // Apply gift card as credit if provided
+    let amountAfterTierCents = originalAmountCents - tierDiscountCents;
+
+    // Apply gift card
+    let giftCardAppliedCents = 0;
+    let giftCardId: string | undefined;
+
     if (giftCardCode && userId) {
       const { data: card } = await supabaseClient
         .from("gift_cards")
@@ -96,16 +88,70 @@ serve(async (req) => {
         .single();
 
       if (card && card.remaining_balance > 0) {
+        const cardBalanceCents = Math.round(card.remaining_balance * 100);
+        giftCardAppliedCents = Math.min(cardBalanceCents, amountAfterTierCents);
+        giftCardId = card.id;
         sessionMetadata.gift_card_code = giftCardCode;
         sessionMetadata.gift_card_id = card.id;
+        sessionMetadata.gift_card_applied_cents = String(giftCardAppliedCents);
       }
     }
 
+    const finalAmountCents = Math.max(0, amountAfterTierCents - giftCardAppliedCents);
+
+    // Build line items with calculated final price
+    const lineItemName = extraMetadata?.type === "custom_program"
+      ? `M² Custom Program — ${extraMetadata.weeks || 4} Week`
+      : "M² Training Product";
+
+    let description = "";
+    if (tierDiscountCents > 0) description += `Member discount: -$${(tierDiscountCents / 100).toFixed(2)}`;
+    if (giftCardAppliedCents > 0) description += `${description ? " · " : ""}Gift card: -$${(giftCardAppliedCents / 100).toFixed(2)}`;
+
+    const sessionParams: any = {
+      customer: customerId,
+      customer_email: customerId ? undefined : customerEmail,
+      line_items: [{
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: lineItemName,
+            ...(description ? { description } : {}),
+          },
+          unit_amount: finalAmountCents,
+        },
+        quantity: 1,
+      }],
+      mode: "payment",
+      success_url: `${origin}/shop?purchase=success`,
+      cancel_url: `${origin}/shop`,
+      metadata: sessionMetadata,
+    };
+
     const session = await stripe.checkout.sessions.create(sessionParams);
+
+    // Deduct gift card balance after creating session (will be charged)
+    if (giftCardId && giftCardAppliedCents > 0 && userId) {
+      const { data: currentCard } = await supabaseClient
+        .from("gift_cards")
+        .select("remaining_balance")
+        .eq("id", giftCardId)
+        .single();
+
+      if (currentCard) {
+        const deduction = giftCardAppliedCents / 100;
+        const newBalance = Math.max(0, currentCard.remaining_balance - deduction);
+        await supabaseClient.from("gift_cards").update({
+          remaining_balance: newBalance,
+          is_active: newBalance > 0,
+          redeemed_by: userId,
+          redeemed_at: new Date().toISOString(),
+        }).eq("id", giftCardId);
+      }
+    }
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
     });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);

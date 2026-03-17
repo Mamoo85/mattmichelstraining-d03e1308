@@ -34,9 +34,7 @@ serve(async (req) => {
     );
 
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      throw new Error("Not authenticated");
-    }
+    if (!authHeader?.startsWith("Bearer ")) throw new Error("Not authenticated");
 
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
@@ -45,10 +43,9 @@ serve(async (req) => {
     const user = userData.user;
     logStep("User authenticated", { email: user.email });
 
-    const { programId, promoCode } = await req.json();
+    const { programId, promoCode, giftCardCode } = await req.json();
     if (!programId) throw new Error("programId required");
 
-    // Fetch program details
     const { data: program, error: programError } = await supabaseClient
       .from("training_programs")
       .select("id, title, price, is_active, stripe_price_id, stripe_product_id")
@@ -58,9 +55,6 @@ serve(async (req) => {
     if (programError || !program) throw new Error("Program not found");
     if (!program.is_active) throw new Error("Program is not available");
 
-    logStep("Program found", { title: program.title, price: program.price });
-
-    // Check if user already owns this program
     const { data: existing } = await supabaseClient
       .from("user_active_programs")
       .select("id")
@@ -68,11 +62,9 @@ serve(async (req) => {
       .eq("program_id", programId)
       .limit(1);
 
-    if (existing && existing.length > 0) {
-      throw new Error("You already own this program");
-    }
+    if (existing && existing.length > 0) throw new Error("You already own this program");
 
-    // Validate promo code if provided
+    // Promo code discount
     let discountAmount = 0;
     let promoId: string | undefined;
 
@@ -84,37 +76,22 @@ serve(async (req) => {
         .eq("is_active", true)
         .single();
 
-      if (promoError || !promo) {
-        throw new Error("Invalid or expired promo code");
-      }
-
-      if (promo.expires_at && new Date(promo.expires_at) < new Date()) {
-        throw new Error("This promo code has expired");
-      }
-
-      if (promo.max_uses && promo.current_uses >= promo.max_uses) {
-        throw new Error("This promo code has reached its usage limit");
-      }
-
+      if (promoError || !promo) throw new Error("Invalid or expired promo code");
+      if (promo.expires_at && new Date(promo.expires_at) < new Date()) throw new Error("This promo code has expired");
+      if (promo.max_uses && promo.current_uses >= promo.max_uses) throw new Error("This promo code has reached its usage limit");
       if (promo.applies_to !== "all" && promo.applies_to !== "programs") {
-        // Check specific product
-        if (promo.specific_product_id && promo.specific_product_id !== programId) {
-          throw new Error("This promo code is not valid for this program");
-        }
+        if (promo.specific_product_id && promo.specific_product_id !== programId) throw new Error("This promo code is not valid for this program");
       }
-
-      logStep("Promo validated", { code: promo.code, type: promo.discount_type, value: promo.discount_value });
 
       if (promo.discount_type === "percent") {
         discountAmount = (program.price * promo.discount_value) / 100;
       } else {
         discountAmount = promo.discount_value;
       }
-
       promoId = promo.id;
     }
 
-    // Apply tier-based member discount
+    // Tier discount (don't stack with promo)
     const { data: profile } = await supabaseClient
       .from("profiles")
       .select("subscription_tier")
@@ -124,60 +101,95 @@ serve(async (req) => {
     const tier = profile?.subscription_tier || "free";
     const tierDiscountPct = TIER_DISCOUNTS[tier] || 0;
     if (tierDiscountPct > 0 && discountAmount === 0) {
-      // Only apply tier discount if no promo code (don't stack)
       discountAmount = (program.price * tierDiscountPct) / 100;
-      logStep("Tier discount applied", { tier, pct: tierDiscountPct, amount: discountAmount });
     }
 
-    const finalPrice = Math.max(0, program.price - discountAmount);
-    logStep("Final price calculated", { original: program.price, discount: discountAmount, final: finalPrice });
+    let priceAfterDiscount = Math.max(0, program.price - discountAmount);
 
+    // Gift card
+    let giftCardApplied = 0;
+    let giftCardId: string | undefined;
+
+    if (giftCardCode) {
+      const { data: card } = await supabaseClient
+        .from("gift_cards")
+        .select("*")
+        .eq("code", giftCardCode.toUpperCase().trim())
+        .eq("is_active", true)
+        .single();
+
+      if (card && card.remaining_balance > 0) {
+        giftCardApplied = Math.min(card.remaining_balance, priceAfterDiscount);
+        giftCardId = card.id;
+        priceAfterDiscount = Math.max(0, priceAfterDiscount - giftCardApplied);
+        logStep("Gift card applied", { code: giftCardCode, applied: giftCardApplied, remaining: priceAfterDiscount });
+      }
+    }
+
+    const finalPriceCents = Math.round(priceAfterDiscount * 100);
+
+    // If gift card covers full amount, activate directly without Stripe
+    if (finalPriceCents === 0 && giftCardId) {
+      // Deduct gift card
+      const { data: currentCard } = await supabaseClient
+        .from("gift_cards")
+        .select("remaining_balance")
+        .eq("id", giftCardId)
+        .single();
+
+      if (currentCard) {
+        const newBalance = Math.max(0, currentCard.remaining_balance - giftCardApplied);
+        await supabaseClient.from("gift_cards").update({
+          remaining_balance: newBalance,
+          is_active: newBalance > 0,
+          redeemed_by: user.id,
+          redeemed_at: new Date().toISOString(),
+        }).eq("id", giftCardId);
+      }
+
+      // Activate program
+      await supabaseClient.from("user_active_programs").insert({
+        user_id: user.id,
+        program_id: programId,
+        status: "active",
+      });
+
+      logStep("Program activated via gift card (no Stripe needed)");
+      return new Response(JSON.stringify({ activated: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Create Stripe checkout
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     let customerId: string | undefined;
-    if (customers.data.length > 0) {
-      customerId = customers.data[0].id;
-    }
+    if (customers.data.length > 0) customerId = customers.data[0].id;
 
     const origin = req.headers.get("origin") || "https://m2training.lovable.app";
 
-    // Use proper Stripe price ID if available, otherwise use price_data
-    const lineItems = program.stripe_price_id
-      ? [{
-          price: program.stripe_price_id,
-          quantity: 1,
-        }]
-      : [{
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: program.title,
-              description: discountAmount > 0
-                ? `M² Interactive Training Program (Promo applied: -$${discountAmount.toFixed(2)})`
-                : "M² Interactive Training Program",
-            },
-            unit_amount: Math.round(finalPrice * 100),
-          },
-          quantity: 1,
-        }];
-
-    // If using a Stripe price but there's a discount, create a coupon
-    let discounts: any[] | undefined;
-    if (program.stripe_price_id && discountAmount > 0) {
-      const coupon = await stripe.coupons.create({
-        amount_off: Math.round(discountAmount * 100),
+    // Always use price_data with the calculated final price for consistency
+    const lineItems = [{
+      price_data: {
         currency: "usd",
-        duration: "once",
-      });
-      discounts = [{ coupon: coupon.id }];
-    }
+        product_data: {
+          name: program.title,
+          description: giftCardApplied > 0
+            ? `M² Interactive Program (Gift card: -$${giftCardApplied.toFixed(2)}${discountAmount > 0 ? `, Discount: -$${discountAmount.toFixed(2)}` : ""})`
+            : discountAmount > 0
+            ? `M² Interactive Program (Discount: -$${discountAmount.toFixed(2)})`
+            : "M² Interactive Training Program",
+        },
+        unit_amount: finalPriceCents,
+      },
+      quantity: 1,
+    }];
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       line_items: lineItems,
-      ...(discounts ? { discounts } : {}),
       mode: "payment",
       success_url: `${origin}/shop?program_purchased=${programId}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/shop`,
@@ -186,10 +198,13 @@ serve(async (req) => {
         user_id: user.id,
         type: "interactive_program",
         promo_code: promoCode || "",
+        gift_card_code: giftCardCode || "",
+        gift_card_id: giftCardId || "",
+        gift_card_applied: String(giftCardApplied),
       },
     });
 
-    logStep("Checkout session created", { sessionId: session.id });
+    logStep("Checkout session created", { sessionId: session.id, finalPrice: finalPriceCents / 100 });
 
     // Increment promo usage
     if (promoId) {
@@ -198,17 +213,13 @@ serve(async (req) => {
         .select("current_uses")
         .eq("id", promoId)
         .single();
-
-      await supabaseClient
-        .from("promotions")
+      await supabaseClient.from("promotions")
         .update({ current_uses: (currentPromo?.current_uses || 0) + 1 })
         .eq("id", promoId);
-      logStep("Promo usage incremented");
     }
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
     });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
