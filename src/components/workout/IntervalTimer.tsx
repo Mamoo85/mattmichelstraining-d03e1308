@@ -180,7 +180,7 @@ const IntervalTimer = ({ onClose }: { onClose: () => void }) => {
 
         <span className="text-sm font-bold uppercase tracking-[0.3em] text-white/80 mb-2">
           {phaseLabels[phase]}
-          {!isSetup && phase !== "done" && ` · Round ${currentRound}/${config.rounds}`}
+          {(phase === "prep" || phase === "work" || phase === "rest") && ` · Round ${currentRound}/${config.rounds}`}
         </span>
 
         <span className="font-mono text-[min(30vw,160px)] leading-none font-black text-white tabular-nums drop-shadow-lg">
