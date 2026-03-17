@@ -250,12 +250,33 @@ const Pricing = () => {
                 </div>
 
                 <ul className="flex-1 space-y-2 mb-6">
-                  {features.map((f, j) => (
-                    <li key={j} className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <Check className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                      {f}
-                    </li>
-                  ))}
+                  {(() => {
+                    const isExpanded = expandedTiers[card.key];
+                    const visibleFeatures = isExpanded ? features : features.slice(0, INITIAL_SHOW);
+                    const hasMore = features.length > INITIAL_SHOW;
+                    return (
+                      <>
+                        {visibleFeatures.map((f, j) => (
+                          <li key={j} className="flex items-start gap-2 text-sm text-muted-foreground">
+                            <Check className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                            {f}
+                          </li>
+                        ))}
+                        {hasMore && (
+                          <button
+                            onClick={() => setExpandedTiers(prev => ({ ...prev, [card.key]: !prev[card.key] }))}
+                            className="flex items-center gap-1 text-xs font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-colors mt-1"
+                          >
+                            {isExpanded ? (
+                              <><ChevronUp className="w-3.5 h-3.5" /> Show Less</>
+                            ) : (
+                              <><ChevronDown className="w-3.5 h-3.5" /> +{features.length - INITIAL_SHOW} More</>
+                            )}
+                          </button>
+                        )}
+                      </>
+                    );
+                  })()}
                 </ul>
 
                 {isCurrentPlan ? (
