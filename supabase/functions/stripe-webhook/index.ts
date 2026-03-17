@@ -298,6 +298,9 @@ serve(async (req) => {
           });
 
           console.log(`[WEBHOOK] Referral conversion recorded: ${refCode} → ${referredProfile.user_id}`);
+
+          // Award referral points to the referrer
+          await awardPts(sb, refRow.user_id, "referral", 200, `Referral: ${referredEmail} subscribed`, refCode);
         }
       }
 
