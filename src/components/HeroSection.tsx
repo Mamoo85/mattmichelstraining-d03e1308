@@ -174,7 +174,7 @@ const HeroSection = () => {
 
         <PortalEntrance />
 
-        <SuccessStories />
+        
 
         {showFreeBonus && <FreeBonusBanner />}
 
