@@ -6,29 +6,22 @@ const LETTERS = ["M", "²", " ", "T", "R", "A", "I", "N", "I", "N", "G"];
 // Each letter drops from a random direction like a Tetris piece
 const getRandomStart = (index: number) => {
   const patterns = [
-    { x: -30, y: -40, rotate: -90 },   // from top-left
-    { x: 0, y: -50, rotate: 0 },       // straight down
-    { x: 20, y: -35, rotate: 45 },     // from top-right
-    { x: -15, y: -45, rotate: -45 },   // angled left
-    { x: 10, y: -40, rotate: 90 },     // rotated right
-    { x: 0, y: -55, rotate: 180 },     // flipped
-    { x: -25, y: -30, rotate: -135 },  // steep left
-    { x: 15, y: -50, rotate: 60 },     // angled
-    { x: -10, y: -45, rotate: -60 },   // counter
-    { x: 5, y: -40, rotate: 120 },     // wide spin
-    { x: 0, y: -35, rotate: -180 },    // full flip
+    { x: -30, y: -40, rotate: -90 },
+    { x: 0, y: -50, rotate: 0 },
+    { x: 20, y: -35, rotate: 45 },
+    { x: -15, y: -45, rotate: -45 },
+    { x: 10, y: -40, rotate: 90 },
+    { x: 0, y: -55, rotate: 180 },
+    { x: -25, y: -30, rotate: -135 },
+    { x: 15, y: -50, rotate: 60 },
+    { x: -10, y: -45, rotate: -60 },
+    { x: 5, y: -40, rotate: 120 },
+    { x: 0, y: -35, rotate: -180 },
   ];
   return patterns[index % patterns.length];
 };
 
 const TetrisLogo = () => {
-  const [assembled, setAssembled] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setAssembled(true), 1800);
-    return () => clearTimeout(timer);
-  }, []);
-
   return (
     <span className="text-primary font-bold text-sm tracking-display inline-flex">
       {LETTERS.map((letter, i) => {
@@ -52,7 +45,7 @@ const TetrisLogo = () => {
             transition={{
               delay: 0.08 * i + 0.2,
               duration: 0.5,
-              ease: [0.23, 1, 0.32, 1], // custom cubic for that "lock in" feel
+              ease: [0.23, 1, 0.32, 1],
             }}
             className="inline-block"
           >
@@ -102,4 +95,65 @@ const SloganTicker = () => {
   );
 };
 
-export { TetrisLogo, SloganTicker };
+/* ── Smart Slogan for Hero ── */
+
+const PARENT_SLOGAN = "50+ college athletes. Zero injuries.\nYour kid could be next.";
+const ATHLETE_SLOGAN = "Train Smarter. Get Strong. Bet.";
+
+const isLikelyParent = (): boolean => {
+  const now = new Date();
+  const hour = now.getHours();
+  const day = now.getDay(); // 0=Sun, 6=Sat
+  // Evenings (6pm-6am) & weekends → parent
+  if (day === 0 || day === 6) return true;
+  if (hour >= 18 || hour < 6) return true;
+  return false;
+};
+
+const SmartSlogan = () => {
+  const parentFirst = isLikelyParent();
+  const slogans = parentFirst
+    ? [PARENT_SLOGAN, ATHLETE_SLOGAN]
+    : [ATHLETE_SLOGAN, PARENT_SLOGAN];
+
+  const [index, setIndex] = useState(0);
+  const [started, setStarted] = useState(false);
+
+  useEffect(() => {
+    // Wait 3 seconds before starting to cycle
+    const startTimer = setTimeout(() => {
+      setStarted(true);
+    }, 3000);
+    return () => clearTimeout(startTimer);
+  }, []);
+
+  useEffect(() => {
+    if (!started) return;
+    const interval = setInterval(() => {
+      setIndex((prev) => (prev + 1) % 2);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [started]);
+
+  return (
+    <div className="h-[4.5rem] md:h-[5rem] flex items-center justify-center overflow-hidden relative">
+      <AnimatePresence mode="wait">
+        <motion.h1
+          key={index}
+          initial={{ opacity: 0, y: 30, filter: "blur(6px)" }}
+          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          exit={{ opacity: 0, y: -30, filter: "blur(6px)" }}
+          transition={{
+            duration: 0.5,
+            ease: [0.23, 1, 0.32, 1],
+          }}
+          className="text-2xl md:text-4xl lg:text-5xl font-bold tracking-display text-foreground leading-tight absolute whitespace-pre-line"
+        >
+          {slogans[index]}
+        </motion.h1>
+      </AnimatePresence>
+    </div>
+  );
+};
+
+export { TetrisLogo, SloganTicker, SmartSlogan };
