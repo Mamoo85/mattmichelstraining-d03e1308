@@ -27,6 +27,7 @@ const Profile = lazy(() => import("./pages/Profile"));
 const Schedule = lazy(() => import("./pages/Schedule"));
 const Progress = lazy(() => import("./pages/Progress"));
 const Merch = lazy(() => import("./pages/Merch"));
+const TrialWelcome = lazy(() => import("./pages/TrialWelcome"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -78,6 +79,7 @@ const App = () => (
                 <Route path="/schedule" element={<Schedule />} />
                 <Route path="/merch" element={<Merch />} />
                 <Route path="/coach" element={<Coach />} />
+                <Route path="/trial-welcome" element={<ProtectedRoute><TrialWelcome /></ProtectedRoute>} />
                 <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />

@@ -1,5 +1,7 @@
 import AppNavbar from "@/components/AppNavbar";
 import { useAuth, TIERS } from "@/hooks/useAuth";
+import { useTrialStatus } from "@/hooks/useTrialStatus";
+import TrialPaywallModal from "@/components/TrialPaywallModal";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
@@ -66,6 +68,8 @@ const WorkoutsTab = () => {
 
 const Dashboard = () => {
   const { user, subscribed, subscriptionTier, isLegend } = useAuth();
+  const { trialExpired, isOnTrial, trialDaysLeft } = useTrialStatus();
+  const { isAdmin } = useIsAdmin();
   const [profile, setProfile] = useState<{ full_name: string | null; athlete_name: string | null } | null>(null);
   const [activeTab, setActiveTab] = useState("home");
   const [portalLoading, setPortalLoading] = useState(false);
@@ -514,6 +518,18 @@ const Dashboard = () => {
         </button>
       )}
       {showTimer && <IntervalTimer onClose={() => setShowTimer(false)} />}
+
+      {/* Trial banner */}
+      {isOnTrial && !subscribed && !isAdmin && !isLegend && (
+        <div className="fixed top-16 left-0 right-0 z-40 bg-primary text-primary-foreground text-center py-2 text-xs font-bold uppercase tracking-widest">
+          🔥 Trial: {trialDaysLeft} day{trialDaysLeft !== 1 ? "s" : ""} remaining
+        </div>
+      )}
+
+      {/* Hard paywall when trial expires */}
+      {trialExpired && !subscribed && !isAdmin && !isLegend && (
+        <TrialPaywallModal open={true} hardLock />
+      )}
     </div>
   );
 };
