@@ -128,15 +128,17 @@ const CATEGORIES = [
   { key: "custom", label: "Custom" },
 ];
 
-const ShopGrid = () => {
-  const [selectedCategory, setSelectedCategory] = useState("all");
+const ShopGrid = ({ showCustomOnly = false }: { showCustomOnly?: boolean }) => {
+  const [selectedCategory, setSelectedCategory] = useState(showCustomOnly ? "custom" : "all");
   const [expandedProduct, setExpandedProduct] = useState<string | null>(null);
   const [buyingId, setBuyingId] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   const { content: cms } = useContentMap("shop_products");
 
-  const filtered = selectedCategory === "all"
+  const filtered = showCustomOnly
+    ? PRODUCTS.filter((p) => p.category === "custom")
+    : selectedCategory === "all"
     ? PRODUCTS
     : PRODUCTS.filter((p) => p.category === selectedCategory);
 
