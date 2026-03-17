@@ -65,6 +65,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <ReferralCaptureWrapper />
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={<Index />} />
