@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 const SUB_TABS = [
+  { key: "sessions", label: "Sessions" },
   { key: "programs", label: "Interactive Programs" },
   { key: "custom", label: "Custom Program" },
   { key: "giftcards", label: "Gift Cards" },
