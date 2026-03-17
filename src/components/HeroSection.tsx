@@ -73,18 +73,15 @@ const HeroSection = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4 }}
-            className="py-10 md:py-20"
+            className="py-8 md:py-16"
           >
-            <div className="flex flex-col items-center text-center mb-8">
+            <div className="flex flex-col items-center text-center mb-6">
               <img
                 src={m2Logo}
                 alt="M² Training"
-                className="w-36 h-36 md:w-48 md:h-48 lg:w-56 lg:h-56 object-contain mb-6"
+                className="w-36 h-36 md:w-48 md:h-48 lg:w-56 lg:h-56 object-contain mb-2"
               />
-              
-              <div className="mb-4">
-                <SmartSlogan />
-              </div>
+              <SmartSlogan />
             </div>
 
             <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto mb-8 leading-relaxed text-center">
