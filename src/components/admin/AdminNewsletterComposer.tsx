@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Send, FileText } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import AiAssistButton from "./AiAssistButton";
 
 const TEMPLATES = [
   {
