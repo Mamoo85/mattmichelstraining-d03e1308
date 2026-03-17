@@ -306,7 +306,7 @@ const InteractivePrograms = () => {
                       ) : (
                         <ShoppingBag size={12} />
                       )}
-                      {buyingId === program.id ? "Loading…" : `Buy Program · $${program.price}`}
+                      {buyingId === program.id ? "Loading…" : `Buy Program · $${discountPct > 0 ? (program.price * (1 - discountPct / 100)).toFixed(0) : program.price}`}
                     </button>
                   )}
                 </div>
