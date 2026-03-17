@@ -97,19 +97,25 @@ const HeroSection = () => {
         {/* ─── 3. FOR PARENTS — Injury Prevention Hook ─── */}
         <ForParentsCTA />
 
-        {/* ─── 4. THE M² DIFFERENCE ─── */}
+        {/* ─── 4. SOCIAL PROOF ─── */}
+        <Testimonials />
+
+        {/* ─── 5. THE M² DIFFERENCE ─── */}
         <M2Difference />
 
-        {/* ─── 5. MEMBER PORTAL (for returning users) ─── */}
+        {/* ─── 6. MEMBER PORTAL (for returning users) ─── */}
         <PortalEntrance />
 
-        {/* ─── 6. FIND US ─── */}
+        {/* ─── 7. FIND US ─── */}
         {showFindUs && <FindUs />}
+
+        {/* ─── 8. EMAIL CAPTURE ─── */}
+        <EmailCapture />
 
         {/* FOOTER */}
         <div className="mt-10 pt-6 border-t border-border text-center">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} <span className="font-brand text-sm text-foreground">M² Training</span> · Grosse Pointe Park, MI · Real training, real results.
+            © {new Date().getFullYear()} <span className="font-brand text-sm text-foreground">M² Training</span> · Grosse Pointe Park, MI · Strength done right since 2004.
           </p>
         </div>
       </div>
