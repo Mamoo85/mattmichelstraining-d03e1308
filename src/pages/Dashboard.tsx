@@ -214,7 +214,17 @@ const Dashboard = () => {
     }
     setCurrentValue(newVal);
     setProgressInput("");
-    toast({ title: `+${val} logged!`, description: `Total: ${newVal}` });
+    toast({ title: `+${val} logged!`, description: `Total: ${newVal} · +10 M² Points` });
+    // Award points for challenge entry
+    try {
+      await supabase.rpc("award_points", {
+        _user_id: user.id,
+        _action: "challenge_entry",
+        _points: 10,
+        _description: "Monthly challenge entry",
+        _reference_id: challenge.id,
+      });
+    } catch (e) { console.error("Points award failed:", e); }
     loadLeaderboard();
     loadEntries();
     setActionLoading(false);
