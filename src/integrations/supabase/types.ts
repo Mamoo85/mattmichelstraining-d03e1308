@@ -14,6 +14,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      challenge_entries: {
+        Row: {
+          id: string
+          logged_at: string
+          participant_id: string
+          user_id: string
+          value: number
+        }
+        Insert: {
+          id?: string
+          logged_at?: string
+          participant_id: string
+          user_id: string
+          value?: number
+        }
+        Update: {
+          id?: string
+          logged_at?: string
+          participant_id?: string
+          user_id?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_entries_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "challenge_participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       challenge_participants: {
         Row: {
           challenge_id: string
@@ -21,6 +53,7 @@ export type Database = {
           id: string
           is_public: boolean
           joined_at: string
+          monthly_challenge_id: string | null
           updated_at: string
           user_id: string
         }
@@ -30,6 +63,7 @@ export type Database = {
           id?: string
           is_public?: boolean
           joined_at?: string
+          monthly_challenge_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -39,10 +73,19 @@ export type Database = {
           id?: string
           is_public?: boolean
           joined_at?: string
+          monthly_challenge_id?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "challenge_participants_monthly_challenge_id_fkey"
+            columns: ["monthly_challenge_id"]
+            isOneToOne: false
+            referencedRelation: "monthly_challenges"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       coach_notes: {
         Row: {
@@ -247,6 +290,87 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      monthly_challenges: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string
+          id: string
+          is_active: boolean
+          metric_label: string
+          month: number
+          title: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          is_active?: boolean
+          metric_label?: string
+          month: number
+          title: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          is_active?: boolean
+          metric_label?: string
+          month?: number
+          title?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      monthly_focus: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          exercises: string[]
+          id: string
+          matt_quote: string
+          month: number
+          reasoning: string
+          status: string
+          title: string
+          topic: string
+          year: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          exercises?: string[]
+          id?: string
+          matt_quote?: string
+          month: number
+          reasoning?: string
+          status?: string
+          title: string
+          topic?: string
+          year: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          exercises?: string[]
+          id?: string
+          matt_quote?: string
+          month?: number
+          reasoning?: string
+          status?: string
+          title?: string
+          topic?: string
+          year?: number
+        }
+        Relationships: []
       }
       newsletter_sends: {
         Row: {
