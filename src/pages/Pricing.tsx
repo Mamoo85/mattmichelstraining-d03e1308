@@ -19,11 +19,10 @@ const TIER_CARDS: {
     key: "basic",
     icon: Zap,
     features: [
-      "Monthly 'Real Deal' newsletter",
+      "Monthly Focus Plan — Matt's training focus changes monthly to build balanced gym skills",
       "85+ exercise library with sport-specific filters",
       "Filter by YOUR sport — find the best exercises for Golf, Volleyball, Football & more",
-      "Monthly Focus Plan access",
-      "Member challenges",
+      "Member challenges & leaderboard",
     ],
     cta: "Start Basic",
   },
