@@ -155,6 +155,29 @@ const Pricing = () => {
           )}
         </div>
 
+        {/* Promo code input */}
+        {!subscribed && (
+          <div className="max-w-md mx-auto mb-8">
+            <div className="flex gap-2">
+              <div className="flex-1 relative">
+                <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  value={promoCode}
+                  onChange={(e) => { setPromoCode(e.target.value.toUpperCase()); setPromoApplied(false); }}
+                  placeholder="PROMO CODE"
+                  className="w-full bg-card border border-border pl-10 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-primary outline-none font-mono uppercase tracking-widest"
+                />
+              </div>
+            </div>
+            {promoCode.trim() && (
+              <p className="text-[10px] text-muted-foreground mt-1.5 text-center">
+                Code will be validated at checkout
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Tier grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
           {TIER_CARDS.map((card, i) => {
