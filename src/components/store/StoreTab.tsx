@@ -6,7 +6,6 @@ import MerchSection from "../MerchSection";
 import ShopGrid from "../ShopGrid";
 
 const SUB_TABS = [
-  { key: "pdf-guides", label: "PDF Guides" },
   { key: "programs", label: "Interactive Programs" },
   { key: "custom", label: "Custom Program" },
   { key: "merchandise", label: "Merchandise" },
