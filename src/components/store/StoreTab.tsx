@@ -1,7 +1,7 @@
 import { useState } from "react";
-import PdfGuides from "./PdfGuides";
 import InteractivePrograms from "./InteractivePrograms";
-import OnlineServices from "../landing/OnlineServices";
+import MerchSection from "../MerchSection";
+import ShopGrid from "../ShopGrid";
 import MerchSection from "../MerchSection";
 import ShopGrid from "../ShopGrid";
 
