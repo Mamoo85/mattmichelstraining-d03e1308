@@ -467,6 +467,7 @@ const Dashboard = () => {
         {activeTab === "home" && renderHome()}
         {activeTab === "progress" && <ProgressCharts />}
         {activeTab === "programs" && <MyPrograms />}
+        {activeTab === "workouts" && <WorkoutsTab />}
       </div>
 
       {/* Floating timer button */}
