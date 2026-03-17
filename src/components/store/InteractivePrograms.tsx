@@ -212,6 +212,20 @@ const InteractivePrograms = () => {
         )}
       </div>
 
+      {/* Promo code input */}
+      <div className="flex gap-2 mb-4 max-w-xs">
+        <div className="flex-1 relative">
+          <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+          <input
+            type="text"
+            value={programPromo}
+            onChange={(e) => setProgramPromo(e.target.value.toUpperCase())}
+            placeholder="PROMO CODE"
+            className="w-full bg-card border border-border pl-9 pr-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-primary outline-none font-mono uppercase tracking-widest"
+          />
+        </div>
+      </div>
+
       {/* Results */}
       {loading ? (
         <div className="flex justify-center py-12">
