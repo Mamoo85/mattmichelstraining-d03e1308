@@ -249,7 +249,7 @@ const ForParents = () => {
           </h2>
         </div>
         <p className="text-sm text-muted-foreground mb-6 max-w-2xl leading-relaxed">
-          You don't have to commit to anything big. Start small with an affordable strength training guide, see results, then decide how far you want to take it. Every step is designed for youth athletes — from middle school beginners to college-bound competitors.
+          You don't have to commit to anything big. Start with a single program, see results, then decide how far you want to take it. Every program is designed for youth athletes — from middle school beginners to college-bound competitors.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {FUNNEL_STEPS.map((f) => (
