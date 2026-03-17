@@ -115,20 +115,41 @@ const AdminProgramCreator = () => {
 
   const handleBatchGenerate = async () => {
     setBatchGenerating(true);
-    setBatchResults(null);
-    try {
-      const { data, error } = await supabase.functions.invoke("batch-generate-programs");
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      setBatchResults(data.results || []);
-      const successes = (data.results || []).filter((r: any) => r.status === "success").length;
-      toast({ title: "Batch complete", description: `${successes} programs generated successfully.` });
-      fetchInventory();
-    } catch (e: any) {
-      toast({ title: "Batch failed", description: e.message, variant: "destructive" });
-    } finally {
-      setBatchGenerating(false);
+    setBatchResults([]);
+    const results: any[] = [];
+    let remaining = 999;
+
+    while (remaining > 0) {
+      try {
+        const { data, error } = await supabase.functions.invoke("batch-generate-programs", { body: {} });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+
+        results.push(data);
+        setBatchResults([...results]);
+        remaining = data.remaining ?? 0;
+
+        if (data.status === "failed") {
+          // Skip this one, but there might be more
+          if (remaining === 0) break;
+          continue;
+        }
+
+        toast({ title: `✓ ${data.program}`, description: `${data.workouts} exercises generated. ${remaining} remaining.` });
+
+        // Small delay between calls
+        if (remaining > 0) {
+          await new Promise(r => setTimeout(r, 1000));
+        }
+      } catch (e: any) {
+        toast({ title: "Generation error", description: e.message, variant: "destructive" });
+        break;
+      }
     }
+
+    toast({ title: "Batch complete!", description: `${results.filter(r => r.status === "success").length} programs generated.` });
+    fetchInventory();
+    setBatchGenerating(false);
   };
 
   const handleApproveAndSave = async () => {
@@ -307,14 +328,17 @@ const AdminProgramCreator = () => {
       </div>
 
       {/* Batch Results */}
-      {batchResults && (
+      {batchResults && batchResults.length > 0 && (
         <div className="bg-card shadow-m2 p-5">
-          <h2 className="text-sm font-bold text-foreground mb-3">Batch Results</h2>
+          <h2 className="text-sm font-bold text-foreground mb-3">
+            Batch Results ({batchResults.filter((r: any) => r.status === "success").length}/{batchResults.length} complete)
+            {batchGenerating && <Loader2 size={12} className="inline ml-2 animate-spin text-primary" />}
+          </h2>
           <div className="space-y-1 max-h-[300px] overflow-y-auto">
             {batchResults.map((r: any, i: number) => (
               <div key={i} className="flex items-center gap-2 text-xs">
-                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${r.status === "success" ? "bg-emerald-400" : r.status === "skipped" ? "bg-muted-foreground" : "bg-destructive"}`} />
-                <span className="font-bold text-foreground truncate">{r.title}</span>
+                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${r.status === "success" ? "bg-emerald-400" : r.status === "failed" ? "bg-destructive" : "bg-muted-foreground"}`} />
+                <span className="font-bold text-foreground truncate">{r.program}</span>
                 <span className="text-muted-foreground">{r.status}{r.workouts ? ` (${r.workouts} exercises)` : ""}{r.reason ? ` — ${r.reason}` : ""}</span>
               </div>
             ))}
