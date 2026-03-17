@@ -14,8 +14,10 @@ import AdminPromotions from "@/components/admin/AdminPromotions";
 import AdminMonthlyFocus from "@/components/admin/AdminMonthlyFocus";
 import AdminProgramCreator from "@/components/admin/AdminProgramCreator";
 import AdminSchedule from "@/components/admin/AdminSchedule";
+import AdminTierManager from "@/components/admin/AdminTierManager";
 
 const TABS = [
+  { key: "tiers", label: "Tier Access" },
   { key: "schedule", label: "Schedule" },
   { key: "monthly", label: "Monthly Focus" },
   { key: "coach", label: "Coach Review" },
@@ -32,7 +34,7 @@ const TABS = [
 ];
 
 const Admin = () => {
-  const [activeTab, setActiveTab] = useState("schedule");
+  const [activeTab, setActiveTab] = useState("tiers");
 
   return (
     <div className="min-h-screen bg-background">
@@ -61,6 +63,7 @@ const Admin = () => {
           ))}
         </div>
 
+        {activeTab === "tiers" && <AdminTierManager />}
         {activeTab === "schedule" && <AdminSchedule />}
         {activeTab === "monthly" && <AdminMonthlyFocus />}
         {activeTab === "coach" && (

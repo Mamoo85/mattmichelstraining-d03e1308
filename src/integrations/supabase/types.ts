@@ -1039,6 +1039,51 @@ export type Database = {
         }
         Relationships: []
       }
+      tier_features: {
+        Row: {
+          created_at: string
+          description: string
+          feature_key: string
+          feature_label: string
+          id: string
+          sort_order: number
+          tier_basic: boolean
+          tier_elite: boolean
+          tier_legend: boolean
+          tier_pro: boolean
+          tier_team: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          feature_key: string
+          feature_label?: string
+          id?: string
+          sort_order?: number
+          tier_basic?: boolean
+          tier_elite?: boolean
+          tier_legend?: boolean
+          tier_pro?: boolean
+          tier_team?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          feature_key?: string
+          feature_label?: string
+          id?: string
+          sort_order?: number
+          tier_basic?: boolean
+          tier_elite?: boolean
+          tier_legend?: boolean
+          tier_pro?: boolean
+          tier_team?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       training_programs: {
         Row: {
           category: string
