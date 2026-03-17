@@ -7,7 +7,7 @@ import { useContentMap, useSectionVisible } from "@/hooks/useSiteContent";
 import AuthorityBar from "./landing/AuthorityBar";
 import AudienceSelector from "./landing/AudienceSelector";
 import GuidesGrid from "./landing/GuidesGrid";
-import PressAuthority from "./landing/PressAuthority";
+
 import PremiumProgram from "./landing/PremiumProgram";
 import PortalShowcase from "./landing/PortalShowcase";
 import OnlineServices from "./landing/OnlineServices";
@@ -32,7 +32,7 @@ const HeroSection = () => {
   const showAuthority = useSectionVisible("authority_bar");
   const showStats = useSectionVisible("stats");
   
-  const showPress = useSectionVisible("press");
+  
   const showAudience = useSectionVisible("audience_selector");
   const showFreeBonus = useSectionVisible("free_bonus");
   
@@ -159,7 +159,6 @@ const HeroSection = () => {
         {showAudience && <AudienceSelector />}
         {showFreeBonus && <FreeBonusBanner />}
         
-        {showPress && <PressAuthority />}
         {showPremium && <PremiumProgram />}
         {showPremium && <PortalShowcase />}
         {showGuides && <div id="section-guides"><GuidesGrid /></div>}

@@ -5,6 +5,7 @@ import CanFixIt from "@/components/landing/CanFixIt";
 import AboutPhilosophy from "@/components/AboutPhilosophy";
 import Testimonial from "@/components/landing/Testimonial";
 import CurrentClients from "@/components/landing/CurrentClients";
+import PressAuthority from "@/components/landing/PressAuthority";
 import { useSectionVisible } from "@/hooks/useSiteContent";
 
 const ARTICLE_HIGHLIGHTS = [
@@ -43,12 +44,15 @@ const About = () => {
   const showFixIt = useSectionVisible("can_fix_it");
   const showTestimonial = useSectionVisible("testimonial");
   const showClients = useSectionVisible("current_clients");
+  const showPress = useSectionVisible("press");
 
   return (
     <div className="min-h-screen bg-background">
       <AppNavbar />
       <div className="container pt-20 pb-12">
         <AboutPhilosophy />
+
+        {showPress && <div className="mt-6"><PressAuthority /></div>}
 
         {showTestimonial && <div className="mt-6"><Testimonial /></div>}
 
