@@ -251,6 +251,9 @@ const Dashboard = () => {
       {/* Upcoming Sessions */}
       <UpcomingSessions />
 
+      {/* Points Widget */}
+      <PointsWidget onViewLeaderboard={() => setActiveTab("points")} />
+
       {/* Monthly Focus Section */}
       {focus ? (
         <div>
