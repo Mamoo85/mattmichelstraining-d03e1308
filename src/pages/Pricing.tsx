@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Check, Star, Zap, Shield, Crown, Users, ArrowRight, Loader2, Tag } from "lucide-react";
+import { Check, Star, Zap, Shield, Crown, Users, ArrowRight, Loader2, Tag, ChevronDown, ChevronUp } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import AppNavbar from "@/components/AppNavbar";
 import { useAuth, TIERS, TierKey } from "@/hooks/useAuth";
@@ -32,7 +32,11 @@ const TIER_CARDS: {
     icon: Star,
     highlight: true,
     features: [
-      "Everything in Basic",
+      "Monthly 'Real Deal' newsletter",
+      "85+ exercise library with sport-specific filters",
+      "Filter by YOUR sport — find the best exercises for Golf, Volleyball, Football & more",
+      "Monthly Focus Plan access",
+      "Member challenges",
       "Custom program from intake form",
       "🖐️ Flag Coach Matt — raise your hand and get personal coaching feedback on any exercise",
       "Optional postural video assessment",
@@ -45,7 +49,16 @@ const TIER_CARDS: {
     key: "elite",
     icon: Crown,
     features: [
-      "Everything in Pro",
+      "Monthly 'Real Deal' newsletter",
+      "85+ exercise library with sport-specific filters",
+      "Filter by YOUR sport — find the best exercises for Golf, Volleyball, Football & more",
+      "Monthly Focus Plan access",
+      "Member challenges",
+      "Custom program from intake form",
+      "🖐️ Flag Coach Matt — raise your hand and get personal coaching feedback on any exercise",
+      "Optional postural video assessment",
+      "Monthly program updates",
+      "Full 'Fix It' rehab library",
       "1-on-1 monthly check-ins with Matt",
       "Priority postural assessments",
       "Direct messaging support",
@@ -57,7 +70,20 @@ const TIER_CARDS: {
     key: "team",
     icon: Users,
     features: [
-      "Everything in Elite",
+      "Monthly 'Real Deal' newsletter",
+      "85+ exercise library with sport-specific filters",
+      "Filter by YOUR sport — find the best exercises for Golf, Volleyball, Football & more",
+      "Monthly Focus Plan access",
+      "Member challenges",
+      "Custom program from intake form",
+      "🖐️ Flag Coach Matt — raise your hand and get personal coaching feedback on any exercise",
+      "Optional postural video assessment",
+      "Monthly program updates",
+      "Full 'Fix It' rehab library",
+      "1-on-1 monthly check-ins with Matt",
+      "Priority postural assessments",
+      "Direct messaging support",
+      "Priority Flag Coach Matt responses",
       "Bulk programming for full teams",
       "Seasonal periodization plans",
       "Multi-athlete management",
@@ -66,6 +92,8 @@ const TIER_CARDS: {
   },
 ];
 
+const INITIAL_SHOW = 4;
+
 const Pricing = () => {
   const { user, subscribed, subscriptionTier, subscriptionEnd } = useAuth();
   const { content: cms } = useContentMap("pricing_page");
@@ -73,6 +101,7 @@ const Pricing = () => {
   const [loadingTier, setLoadingTier] = useState<TierKey | null>(null);
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
+  const [expandedTiers, setExpandedTiers] = useState<Record<string, boolean>>({});
 
   const handleCheckout = async (tierKey: TierKey) => {
     if (!user) {
@@ -221,12 +250,33 @@ const Pricing = () => {
                 </div>
 
                 <ul className="flex-1 space-y-2 mb-6">
-                  {features.map((f, j) => (
-                    <li key={j} className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <Check className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                      {f}
-                    </li>
-                  ))}
+                  {(() => {
+                    const isExpanded = expandedTiers[card.key];
+                    const visibleFeatures = isExpanded ? features : features.slice(0, INITIAL_SHOW);
+                    const hasMore = features.length > INITIAL_SHOW;
+                    return (
+                      <>
+                        {visibleFeatures.map((f, j) => (
+                          <li key={j} className="flex items-start gap-2 text-sm text-muted-foreground">
+                            <Check className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                            {f}
+                          </li>
+                        ))}
+                        {hasMore && (
+                          <button
+                            onClick={() => setExpandedTiers(prev => ({ ...prev, [card.key]: !prev[card.key] }))}
+                            className="flex items-center gap-1 text-xs font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-colors mt-1"
+                          >
+                            {isExpanded ? (
+                              <><ChevronUp className="w-3.5 h-3.5" /> Show Less</>
+                            ) : (
+                              <><ChevronDown className="w-3.5 h-3.5" /> +{features.length - INITIAL_SHOW} More</>
+                            )}
+                          </button>
+                        )}
+                      </>
+                    );
+                  })()}
                 </ul>
 
                 {isCurrentPlan ? (
