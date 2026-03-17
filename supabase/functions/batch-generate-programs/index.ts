@@ -46,7 +46,7 @@ serve(async (req) => {
 
     const exerciseIds = new Set(exercises.map((e: any) => e.id));
     const exerciseList = exercises
-      .map((e: any) => `- ${e.title} (ID: ${e.id}) | Focus: ${e.focus_area?.join(", ")} | Sport: ${e.sport?.join(", ")} | Equipment: ${e.equipment_needed}`)
+      .map((e: any) => `${e.id}: ${e.title}`)
       .join("\n");
 
     // Get target program(s)
