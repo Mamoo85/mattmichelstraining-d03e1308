@@ -3,7 +3,7 @@ import InteractivePrograms from "./InteractivePrograms";
 import MerchSection from "../MerchSection";
 import GiftCardSection from "./GiftCardSection";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, TIER_DISCOUNTS } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import {
   Loader2, ShoppingBag, Upload, Video, Check,
