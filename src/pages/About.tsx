@@ -40,7 +40,7 @@ const SOCIAL_PROOF = [
 const About = () => {
   const showWhyM2 = useSectionVisible("why_m2");
   const showStory = useSectionVisible("matts_story");
-  const showFixIt = useSectionVisible("can_fix_it");
+  
   const showTestimonial = useSectionVisible("testimonial");
   const showClients = useSectionVisible("current_clients");
   const showPress = useSectionVisible("press");
