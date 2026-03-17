@@ -2,10 +2,11 @@ import AppNavbar from "@/components/AppNavbar";
 import ChallengeSystem from "@/components/ChallengeSystem";
 import MyPrograms from "@/components/MyPrograms";
 import WorkoutLogger from "@/components/workout/WorkoutLogger";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, TIERS } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ExternalLink, Loader2 } from "lucide-react";
+import { ExternalLink, Loader2, Crown } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 const TABS = [
   { key: "log", label: "Log Workout" },
@@ -14,7 +15,7 @@ const TABS = [
 ];
 
 const Dashboard = () => {
-  const { user, subscribed } = useAuth();
+  const { user, subscribed, subscriptionTier } = useAuth();
   const [profile, setProfile] = useState<{ full_name: string | null; athlete_name: string | null } | null>(null);
   const [activeTab, setActiveTab] = useState("log");
   const [portalLoading, setPortalLoading] = useState(false);
@@ -46,7 +47,17 @@ const Dashboard = () => {
       <div className="container pt-20 pb-12">
         <div className="flex items-start justify-between mb-6">
           <div>
-            <h2 className="text-lg font-bold text-foreground">Welcome back, {athleteDisplay}</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-bold text-foreground">Welcome back, {athleteDisplay}</h2>
+              {subscriptionTier ? (
+                <Badge className="flex items-center gap-1 text-[10px] uppercase tracking-widest">
+                  <Crown size={10} />
+                  {TIERS[subscriptionTier].name}
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="text-[10px] uppercase tracking-widest">Free</Badge>
+              )}
+            </div>
             <p className="text-sm text-muted-foreground">Your training portal · Real training, real results</p>
           </div>
           {subscribed && (
