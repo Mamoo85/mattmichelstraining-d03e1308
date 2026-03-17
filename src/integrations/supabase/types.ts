@@ -903,40 +903,37 @@ export type Database = {
       }
       training_programs: {
         Row: {
-          age_range: string
           category: string
           created_at: string
           description: string
           id: string
           is_active: boolean
+          level: string
           price: number
-          sex: string
           sport: string | null
           title: string
           updated_at: string
         }
         Insert: {
-          age_range?: string
           category?: string
           created_at?: string
           description?: string
           id?: string
           is_active?: boolean
+          level?: string
           price?: number
-          sex?: string
           sport?: string | null
           title: string
           updated_at?: string
         }
         Update: {
-          age_range?: string
           category?: string
           created_at?: string
           description?: string
           id?: string
           is_active?: boolean
+          level?: string
           price?: number
-          sex?: string
           sport?: string | null
           title?: string
           updated_at?: string

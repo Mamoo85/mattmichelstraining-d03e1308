@@ -3,20 +3,28 @@ import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Monitor, Filter, ShoppingBag, Check, Tag } from "lucide-react";
+import { Loader2, Monitor, Filter, ShoppingBag, Check, Tag, Zap, Shield, Target } from "lucide-react";
 
-const ATHLETE_AGE_RANGES = ["12-13", "14-15", "16-17", "18+"];
-const LIFESTYLE_AGE_RANGES = ["18-29", "30-39", "40-49", "50+"];
-const SEX_OPTIONS = ["Any", "Male", "Female"];
+const LEVELS = ["Beginner", "Intermediate", "Advanced"] as const;
+const LEVEL_COLORS: Record<string, { bg: string; text: string; icon: typeof Zap }> = {
+  Beginner: { bg: "bg-emerald-500/15", text: "text-emerald-400", icon: Shield },
+  Intermediate: { bg: "bg-amber-500/15", text: "text-amber-400", icon: Target },
+  Advanced: { bg: "bg-red-500/15", text: "text-red-400", icon: Zap },
+};
 const SPORT_OPTIONS = ["Baseball", "Football", "Basketball", "Hockey", "Soccer", "Lacrosse", "Track & Field", "Swimming", "Tennis", "Volleyball"];
+
+const PROGRAM_INCLUDES = [
+  "Custom Warmup", "Corrective Exercises", "Strength", "Balance",
+  "Coordination", "Core Stability", "Integrity", "Endurance",
+  "Targeted Rolling & Mobility"
+];
 
 interface TrainingProgram {
   id: string;
   title: string;
   description: string;
   category: string;
-  age_range: string;
-  sex: string;
+  level: string;
   sport: string | null;
   price: number;
 }
@@ -33,8 +41,7 @@ const InteractivePrograms = () => {
 
   // Filters
   const [category, setCategory] = useState<"Athlete" | "Lifestyle Fitness">("Athlete");
-  const [ageRange, setAgeRange] = useState<string>("");
-  const [sex, setSex] = useState<string>("");
+  const [level, setLevel] = useState<string>("");
   const [sport, setSport] = useState<string>("");
   const [programPromo, setProgramPromo] = useState("");
 
@@ -42,11 +49,10 @@ const InteractivePrograms = () => {
     const fetchData = async () => {
       const { data } = await supabase
         .from("training_programs")
-        .select("id, title, description, category, age_range, sex, sport, price")
+        .select("id, title, description, category, level, sport, price")
         .eq("is_active", true);
       setPrograms((data as TrainingProgram[]) || []);
 
-      // Fetch owned programs
       if (user) {
         const { data: owned } = await supabase
           .from("user_active_programs")
@@ -69,12 +75,10 @@ const InteractivePrograms = () => {
 
     if (programPurchased && sessionId && user) {
       setVerifying(true);
-      // Clean URL
       searchParams.delete("program_purchased");
       searchParams.delete("session_id");
       setSearchParams(searchParams, { replace: true });
 
-      // Verify and activate
       supabase.functions.invoke("verify-program-purchase", {
         body: { sessionId, programId: programPurchased },
       }).then(({ data, error }) => {
@@ -89,23 +93,18 @@ const InteractivePrograms = () => {
     }
   }, [searchParams, user]);
 
-  // Reset dependent filters when category changes
   useEffect(() => {
-    setAgeRange("");
     setSport("");
   }, [category]);
-
-  const ageRanges = category === "Athlete" ? ATHLETE_AGE_RANGES : LIFESTYLE_AGE_RANGES;
 
   const filtered = useMemo(() => {
     return programs.filter((p) => {
       if (p.category !== category) return false;
-      if (ageRange && p.age_range !== ageRange) return false;
-      if (sex && p.sex !== sex && p.sex !== "Any") return false;
+      if (level && p.level !== level) return false;
       if (sport && p.sport !== sport) return false;
       return true;
     });
-  }, [programs, category, ageRange, sex, sport]);
+  }, [programs, category, level, sport]);
 
   const handleBuy = async (program: TrainingProgram) => {
     if (!user) {
@@ -150,6 +149,17 @@ const InteractivePrograms = () => {
     </button>
   );
 
+  const LevelBadge = ({ levelName }: { levelName: string }) => {
+    const config = LEVEL_COLORS[levelName] || LEVEL_COLORS.Beginner;
+    const Icon = config.icon;
+    return (
+      <span className={`inline-flex items-center gap-1 text-[9px] ${config.bg} ${config.text} px-2 py-0.5 font-bold uppercase tracking-widest`}>
+        <Icon size={9} />
+        {levelName}
+      </span>
+    );
+  };
+
   return (
     <div>
       {/* Verifying banner */}
@@ -161,10 +171,22 @@ const InteractivePrograms = () => {
       )}
 
       {/* Description */}
-      <div className="bg-primary/10 border border-primary/20 p-4 mb-6">
-        <p className="text-sm text-foreground leading-relaxed">
-          Comprehensive, multi-week training systems loaded directly into your M² Client Portal. These connect to our full exercise library and include direct form-checks and messaging with Coach Matt. It's exactly like having me on the floor with you, just delivered to your phone.
+      <div className="bg-primary/10 border border-primary/20 p-4 mb-4">
+        <p className="text-sm text-foreground leading-relaxed mb-3">
+          Comprehensive <strong>8-week</strong> training systems loaded directly into your M² Client Portal. Every program includes direct form-checks and messaging with Coach Matt.
         </p>
+        <div className="flex flex-wrap gap-1.5">
+          {PROGRAM_INCLUDES.map((item) => (
+            <span key={item} className="text-[9px] bg-primary/10 text-primary px-2 py-0.5 font-bold uppercase tracking-widest">
+              {item}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Custom program callout */}
+      <div className="bg-accent/30 border border-border p-3 mb-6 text-xs text-muted-foreground">
+        <strong className="text-foreground">Custom Programs</strong> are personalized <strong>4-week</strong> plans built around your specific intake. Check the Custom Program tab for details.
       </div>
 
       {/* Filters */}
@@ -180,21 +202,11 @@ const InteractivePrograms = () => {
         </div>
 
         <div>
-          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1.5">Age Range</span>
+          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1.5">Level</span>
           <div className="flex gap-1 flex-wrap">
-            <FilterButton active={ageRange === ""} label="All Ages" onClick={() => setAgeRange("")} />
-            {ageRanges.map((a) => (
-              <FilterButton key={a} active={ageRange === a} label={a} onClick={() => setAgeRange(a)} />
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1.5">Sex</span>
-          <div className="flex gap-1 flex-wrap">
-            <FilterButton active={sex === ""} label="All" onClick={() => setSex("")} />
-            {SEX_OPTIONS.map((s) => (
-              <FilterButton key={s} active={sex === s} label={s} onClick={() => setSex(s)} />
+            <FilterButton active={level === ""} label="All Levels" onClick={() => setLevel("")} />
+            {LEVELS.map((l) => (
+              <FilterButton key={l} active={level === l} label={l} onClick={() => setLevel(l)} />
             ))}
           </div>
         </div>
@@ -246,23 +258,18 @@ const InteractivePrograms = () => {
             return (
               <div key={program.id} className="bg-card shadow-m2 p-4 flex flex-col hover:bg-accent/50 transition-m2">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Interactive Program</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary">8-Week Program</span>
                   <span className="text-lg font-mono font-bold text-primary">${program.price}</span>
                 </div>
                 <h3 className="text-sm font-bold text-foreground mb-1">{program.title}</h3>
                 <p className="text-[11px] text-muted-foreground mb-2 line-clamp-3">{program.description}</p>
                 <div className="flex flex-wrap gap-1 pt-2">
+                  <LevelBadge levelName={program.level} />
                   {program.sport && (
                     <span className="text-[9px] bg-primary/10 text-primary px-2 py-0.5 font-bold uppercase tracking-widest">
                       {program.sport}
                     </span>
                   )}
-                  <span className="text-[9px] bg-muted text-muted-foreground px-2 py-0.5 font-bold uppercase tracking-widest">
-                    {program.age_range}
-                  </span>
-                  <span className="text-[9px] bg-muted text-muted-foreground px-2 py-0.5 font-bold uppercase tracking-widest">
-                    {program.sex}
-                  </span>
                 </div>
 
                 <div className="mt-auto pt-3">

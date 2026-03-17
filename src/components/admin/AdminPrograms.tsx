@@ -8,8 +8,7 @@ interface TrainingProgram {
   title: string;
   description: string;
   category: string;
-  age_range: string;
-  sex: string;
+  level: string;
   sport: string | null;
   price: number;
   is_active: boolean;
@@ -33,13 +32,11 @@ interface ExerciseOption {
 }
 
 const CATEGORIES = ["Athlete", "Lifestyle Fitness"];
-const ATHLETE_AGE_RANGES = ["12-13", "14-15", "16-17", "18+"];
-const LIFESTYLE_AGE_RANGES = ["18-29", "30-39", "40-49", "50+"];
-const SEX_OPTIONS = ["Any", "Male", "Female"];
+const LEVELS = ["Beginner", "Intermediate", "Advanced"];
 const SPORTS = ["Baseball", "Football", "Basketball", "Hockey", "Soccer", "Lacrosse", "Track & Field", "Swimming", "Tennis", "Volleyball"];
 
 const emptyProgram: Omit<TrainingProgram, "id"> = {
-  title: "", description: "", category: "Athlete", age_range: "14-15", sex: "Any", sport: null, price: 49, is_active: true,
+  title: "", description: "", category: "Athlete", level: "Beginner", sport: null, price: 49, is_active: true,
 };
 
 const AdminPrograms = () => {
@@ -165,7 +162,6 @@ const AdminPrograms = () => {
     return <div className="flex justify-center py-12"><Loader2 size={20} className="text-primary animate-spin" /></div>;
   }
 
-  const ageRanges = editingProgram?.category === "Athlete" ? ATHLETE_AGE_RANGES : LIFESTYLE_AGE_RANGES;
 
   return (
     <div className="space-y-4">
@@ -223,29 +219,18 @@ const AdminPrograms = () => {
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Age Range</label>
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Level</label>
                   <select
-                    value={editingProgram.age_range}
-                    onChange={e => setEditingProgram({ ...editingProgram, age_range: e.target.value })}
+                    value={editingProgram.level}
+                    onChange={e => setEditingProgram({ ...editingProgram, level: e.target.value })}
                     className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground focus:ring-1 focus:ring-primary outline-none"
                   >
-                    {ageRanges.map(a => <option key={a} value={a}>{a}</option>)}
+                    {LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
                   </select>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Sex</label>
-                  <select
-                    value={editingProgram.sex}
-                    onChange={e => setEditingProgram({ ...editingProgram, sex: e.target.value })}
-                    className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground focus:ring-1 focus:ring-primary outline-none"
-                  >
-                    {SEX_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </div>
-
                 <div>
                   <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Price ($)</label>
                   <input
@@ -311,9 +296,7 @@ const AdminPrograms = () => {
               <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5">
                 <span>{p.category}</span>
                 <span>·</span>
-                <span>{p.age_range}</span>
-                <span>·</span>
-                <span>{p.sex}</span>
+                <span>{p.level}</span>
                 {p.sport && <><span>·</span><span>{p.sport}</span></>}
                 <span>·</span>
                 <span className="font-mono text-primary">${p.price}</span>
