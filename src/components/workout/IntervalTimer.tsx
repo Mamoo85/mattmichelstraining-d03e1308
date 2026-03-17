@@ -158,6 +158,30 @@ const IntervalTimer = ({ onClose }: { onClose: () => void }) => {
     setCurrentRound(0);
   }, [stopInterval]);
 
+  // Wake Lock: keep screen on while timer is running
+  const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+
+  useEffect(() => {
+    const acquireWakeLock = async () => {
+      if (running && "wakeLock" in navigator) {
+        try {
+          wakeLockRef.current = await navigator.wakeLock.request("screen");
+        } catch { /* user denied or not supported */ }
+      }
+    };
+    const releaseWakeLock = () => {
+      wakeLockRef.current?.release();
+      wakeLockRef.current = null;
+    };
+
+    if (running) {
+      acquireWakeLock();
+    } else {
+      releaseWakeLock();
+    }
+    return releaseWakeLock;
+  }, [running]);
+
   // Cleanup on unmount
   useEffect(() => () => stopInterval(), [stopInterval]);
 
