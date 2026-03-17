@@ -91,13 +91,8 @@ serve(async (req) => {
 
     const systemPrompt = `You are Matt Michels' AI assistant. Draft a 4-week, 3-day/week training program using ONLY exercise IDs from the library. Each day should have 5-6 exercises. Be specific with sets/reps (e.g. "3x12", "4x8"). Include brief coach instructions. Use ONLY the exercise IDs provided.`;
 
-    const userPrompt = `Create workouts for: "${program.title}"
-Category: ${program.category}
-Level: ${program.level}
-${program.sport ? `Sports: ${program.sport}` : "General fitness"}
-Description: ${program.description}
-
-EXERCISE LIBRARY:
+    const userPrompt = `Program: "${program.title}" (${program.category}, ${program.level}${program.sport ? `, ${program.sport}` : ""})
+Available exercises (ID: Name):
 ${exerciseList}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
