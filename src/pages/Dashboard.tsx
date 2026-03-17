@@ -3,7 +3,7 @@ import { useAuth, TIERS } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
-import { ExternalLink, Loader2, Crown, Timer, User, Trophy, Medal, Award, Plus, Eye, EyeOff, Send, Flame } from "lucide-react";
+import { ExternalLink, Loader2, Crown, Timer, User, Trophy, Medal, Award, Plus, Eye, EyeOff, Send, Flame, Dumbbell } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
@@ -13,6 +13,8 @@ import ProgressCharts from "@/components/ProgressCharts";
 import UpcomingSessions from "@/components/UpcomingSessions";
 import StudioCheckIn from "@/components/StudioCheckIn";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import WorkoutBuilder from "@/components/workout/WorkoutBuilder";
+import CommunityWorkoutBank from "@/components/workout/CommunityWorkoutBank";
 
 const TABS = [
   { key: "home", label: "Home" },
