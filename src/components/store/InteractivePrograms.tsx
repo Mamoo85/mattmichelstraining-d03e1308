@@ -270,11 +270,11 @@ const InteractivePrograms = () => {
                 <p className="text-[11px] text-muted-foreground mb-2 line-clamp-3">{program.description}</p>
                 <div className="flex flex-wrap gap-1 pt-2">
                   <LevelBadge levelName={program.level} />
-                  {program.sport && (
-                    <span className="text-[9px] bg-primary/10 text-primary px-2 py-0.5 font-bold uppercase tracking-widest">
-                      {program.sport}
+                  {program.sport && program.sport.split(",").map(s => s.trim()).map((sportName) => (
+                    <span key={sportName} className="text-[9px] bg-primary/10 text-primary px-2 py-0.5 font-bold uppercase tracking-widest">
+                      {sportName}
                     </span>
-                  )}
+                  ))}
                 </div>
 
                 <div className="mt-auto pt-3">
