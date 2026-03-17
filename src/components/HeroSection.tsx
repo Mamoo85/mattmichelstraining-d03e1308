@@ -80,11 +80,9 @@ const HeroSection = () => {
             className="py-10 md:py-20"
           >
             <div className="flex items-start gap-4 mb-6">
-              <img
-                src={m2Logo}
-                alt="M² Training"
-                className="w-14 h-14 md:w-20 md:h-20 object-contain rounded-md flex-shrink-0"
-              />
+              <div className="w-14 h-14 md:w-20 md:h-20 flex-shrink-0 bg-primary/10 border border-primary/20 rounded-md flex items-center justify-center">
+                <span className="font-brand text-primary text-2xl md:text-4xl leading-none">M²</span>
+              </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-0.5 h-4 bg-primary" />
