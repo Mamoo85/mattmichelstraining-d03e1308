@@ -38,7 +38,7 @@ serve(async (req) => {
 
     const { priceId, promoCode, referralCode } = await req.json();
     if (!priceId) throw new Error("No priceId provided");
-    logStep("Price ID received", { priceId, promoCode: promoCode || "none" });
+    logStep("Price ID received", { priceId, promoCode: promoCode || "none", referralCode: referralCode || "none" });
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { apiVersion: "2025-08-27.basil" });
 
