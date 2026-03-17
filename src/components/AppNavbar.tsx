@@ -3,7 +3,7 @@ import { Dumbbell, BarChart3, MessageSquare, ShoppingBag, Home, Menu, X, LogIn, 
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import m2Logo from "@/assets/m2-logo.jpg";
+import m2Logo from "@/assets/m2-logo-official.jpg";
 import NotificationBell from "./NotificationBell";
 
 const navItems = [
@@ -26,9 +26,7 @@ const AppNavbar = () => {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm shadow-m2">
       <div className="container flex items-center justify-between h-14">
         <Link to="/" className="flex items-center gap-2">
-          <div className="w-9 h-9 bg-primary/10 border border-primary/20 rounded flex items-center justify-center">
-            <span className="font-brand text-primary text-lg leading-none">M²</span>
-          </div>
+          <img src={m2Logo} alt="M² Training" className="w-9 h-9 object-contain" />
           <span className="text-primary font-brand text-base hidden sm:block">M² TRAINING</span>
         </Link>
 

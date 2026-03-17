@@ -1,11 +1,11 @@
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import m2Logo from "@/assets/m2-logo.jpg";
+import m2Logo from "@/assets/m2-logo-official.jpg";
 import { useContentMap, useSectionVisible } from "@/hooks/useSiteContent";
+import { SmartSlogan } from "./LogoAnimations";
 
 import AuthorityBar from "./landing/AuthorityBar";
-import AudienceSelector from "./landing/AudienceSelector";
 import GuidesGrid from "./landing/GuidesGrid";
 
 import PremiumProgram from "./landing/PremiumProgram";
@@ -32,8 +32,6 @@ const HeroSection = () => {
   const showAuthority = useSectionVisible("authority_bar");
   const showStats = useSectionVisible("stats");
   
-  
-  const showAudience = useSectionVisible("audience_selector");
   const showFreeBonus = useSectionVisible("free_bonus");
   
   const showGuides = useSectionVisible("guides");
@@ -46,18 +44,16 @@ const HeroSection = () => {
   const showMerch = useSectionVisible("merch");
   const showFindUs = useSectionVisible("find_us");
 
-  const HERO_LINES = [
-    hero.headline_1 || "50+ college athletes.",
-    hero.headline_2 || "Zero injuries.",
-    hero.headline_3 || "Your kid could be next.",
-  ];
-
   const STATS = [
     { value: stats.stat_1_value || "20+", label: stats.stat_1_label || "Years" },
     { value: stats.stat_2_value || "50+", label: stats.stat_2_label || "College Athletes" },
     { value: stats.stat_3_value || "1000s", label: stats.stat_3_label || "Clients Trained" },
     { value: stats.stat_4_value || "Zero", label: stats.stat_4_label || "Injuries" },
   ];
+
+  const scrollToPortal = () => {
+    document.getElementById("section-portal")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
@@ -79,55 +75,36 @@ const HeroSection = () => {
             transition={{ duration: 0.4 }}
             className="py-10 md:py-20"
           >
-            <div className="flex items-start gap-4 mb-6">
-              <div className="w-14 h-14 md:w-20 md:h-20 flex-shrink-0 bg-primary/10 border border-primary/20 rounded-md flex items-center justify-center">
-                <span className="font-brand text-primary text-2xl md:text-4xl leading-none">M²</span>
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-0.5 h-4 bg-primary" />
-                  <span className="text-[11px] md:text-xs font-bold uppercase tracking-widest text-primary font-mono">
-                    {hero.location || "Grosse Pointe Park, MI"}
-                  </span>
-                </div>
-                <h1 className="text-2xl md:text-5xl lg:text-6xl font-bold tracking-display text-foreground leading-[1.1]">
-                  {HERO_LINES.map((line, i) => (
-                    <motion.span
-                      key={line}
-                      initial={{ opacity: 0, y: 20, filter: "blur(8px)" }}
-                      animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                      transition={{
-                        delay: 0.15 * i + 0.3,
-                        duration: 0.5,
-                        ease: [0.23, 1, 0.32, 1],
-                      }}
-                      className="block"
-                    >
-                      {line}
-                    </motion.span>
-                  ))}
-                </h1>
+            <div className="flex flex-col items-center text-center mb-8">
+              <img
+                src={m2Logo}
+                alt="M² Training"
+                className="w-28 h-28 md:w-40 md:h-40 object-contain mb-6"
+              />
+              
+              <div className="mb-4">
+                <SmartSlogan />
               </div>
             </div>
 
-            <p className="text-sm md:text-base text-muted-foreground max-w-xl mb-6 leading-relaxed">
+            <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto mb-8 leading-relaxed text-center">
               {hero.subtitle || "Matt Michels has spent two decades doing one thing — developing young athletes the right way. No shortcuts, no burnout, no injuries. Just results that speak for themselves."}
             </p>
 
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-3 justify-center">
               <Link
                 to="/auth?redirect=/shop"
                 className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
               >
-                {hero.cta_primary || "Start training"}
+                Start training
                 <ArrowRight size={15} />
               </Link>
-              <Link
-                to="/pricing"
+              <button
+                onClick={scrollToPortal}
                 className="inline-flex items-center justify-center gap-2 border-2 border-primary/40 text-primary px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:bg-primary/10 transition-m2"
               >
-                {hero.cta_secondary || "View plans"}
-              </Link>
+                See what's included
+              </button>
             </div>
           </motion.div>
         )}
@@ -154,11 +131,10 @@ const HeroSection = () => {
           </motion.div>
         )}
 
-        {showAudience && <AudienceSelector />}
         {showFreeBonus && <FreeBonusBanner />}
-        
+
+        {showPremium && <div id="section-portal"><PortalShowcase /></div>}
         {showPremium && <PremiumProgram />}
-        {showPremium && <PortalShowcase />}
         {showGuides && <div id="section-guides"><GuidesGrid /></div>}
         {showOnline && <OnlineServices />}
         {showOnline && <OnlineSavings />}
