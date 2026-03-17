@@ -73,7 +73,7 @@ const HeroSection = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4 }}
-            className="py-10 md:py-20"
+            className="py-8 md:py-16"
           >
             <div className="flex flex-col items-center text-center mb-6">
               <img
