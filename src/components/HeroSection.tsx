@@ -84,7 +84,7 @@ const HeroSection = () => {
               <SmartSlogan />
             </div>
 
-            <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto mb-8 leading-relaxed text-center">
+            <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto mb-6 leading-relaxed text-center">
               {hero.subtitle || "Matt Michels has spent two decades doing one thing — developing young athletes the right way. No shortcuts, no burnout, no injuries. Just results that speak for themselves."}
             </p>
 
