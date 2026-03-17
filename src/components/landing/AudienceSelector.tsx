@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { GraduationCap, Shield, Dumbbell, Users } from "lucide-react";
+import { Shield, Users, Dumbbell, GraduationCap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const AUDIENCES = [
@@ -7,44 +7,36 @@ const AUDIENCES = [
     label: "I'm a Parent",
     icon: Shield,
     route: "/for-parents",
-    desc: "Protect & develop your athlete",
-  },
-  {
-    label: "I'm a Coach",
-    icon: Users,
-    targetId: "section-teams",
-    desc: "Team programs & bulk pricing",
+    desc: "Injury-proof your athlete",
   },
   {
     label: "I'm an Athlete",
     icon: Dumbbell,
     route: "/shop",
-    desc: "Programs & training plans",
+    desc: "Get a real program",
   },
   {
-    label: "Current Client",
+    label: "I'm a Coach",
+    icon: Users,
+    route: "/pricing",
+    desc: "Team & roster programs",
+  },
+  {
+    label: "Current Member",
     icon: GraduationCap,
-    route: "/auth?redirect=/dashboard",
-    desc: "Log in & track your training",
+    route: "/dashboard",
+    desc: "Log in to your portal",
   },
 ];
 
 const AudienceSelector = () => {
   const navigate = useNavigate();
 
-  const handleClick = (a: typeof AUDIENCES[number]) => {
-    if ("route" in a && a.route) {
-      navigate(a.route);
-    } else if ("targetId" in a && a.targetId) {
-      document.getElementById(a.targetId)?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.35 }}
+      transition={{ duration: 0.5, delay: 0.25 }}
       className="mb-10"
     >
       <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-3 text-center">
@@ -54,7 +46,7 @@ const AudienceSelector = () => {
         {AUDIENCES.map((a) => (
           <button
             key={a.label}
-            onClick={() => handleClick(a)}
+            onClick={() => navigate(a.route)}
             className="bg-card shadow-m2 p-4 text-left hover:border-primary/50 border-2 border-transparent transition-m2 group"
           >
             <a.icon size={18} className="text-primary mb-2 group-hover:scale-110 transition-transform" />
