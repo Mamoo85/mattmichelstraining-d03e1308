@@ -47,7 +47,17 @@ const Dashboard = () => {
       <div className="container pt-20 pb-12">
         <div className="flex items-start justify-between mb-6">
           <div>
-            <h2 className="text-lg font-bold text-foreground">Welcome back, {athleteDisplay}</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-bold text-foreground">Welcome back, {athleteDisplay}</h2>
+              {subscriptionTier ? (
+                <Badge className="flex items-center gap-1 text-[10px] uppercase tracking-widest">
+                  <Crown size={10} />
+                  {TIERS[subscriptionTier].name}
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="text-[10px] uppercase tracking-widest">Free</Badge>
+              )}
+            </div>
             <p className="text-sm text-muted-foreground">Your training portal · Real training, real results</p>
           </div>
           {subscribed && (
