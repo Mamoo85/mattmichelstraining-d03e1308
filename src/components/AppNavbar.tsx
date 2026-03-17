@@ -3,7 +3,7 @@ import { Dumbbell, BarChart3, MessageSquare, ShoppingBag, Home, Menu, X, LogIn, 
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import m2Logo from "@/assets/m2-logo.jpg";
+import m2Logo from "@/assets/m2-logo-official.jpg";
 import NotificationBell from "./NotificationBell";
 
 const navItems = [
