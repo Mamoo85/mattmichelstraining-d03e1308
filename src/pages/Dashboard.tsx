@@ -44,7 +44,7 @@ interface LeaderboardEntry {
 }
 
 const Dashboard = () => {
-  const { user, subscribed, subscriptionTier } = useAuth();
+  const { user, subscribed, subscriptionTier, isLegend } = useAuth();
   const [profile, setProfile] = useState<{ full_name: string | null; athlete_name: string | null } | null>(null);
   const [activeTab, setActiveTab] = useState("home");
   const [portalLoading, setPortalLoading] = useState(false);
