@@ -68,6 +68,8 @@ const WorkoutsTab = () => {
 
 const Dashboard = () => {
   const { user, subscribed, subscriptionTier, isLegend } = useAuth();
+  const { trialExpired, isOnTrial, trialDaysLeft } = useTrialStatus();
+  const { isAdmin } = useIsAdmin();
   const [profile, setProfile] = useState<{ full_name: string | null; athlete_name: string | null } | null>(null);
   const [activeTab, setActiveTab] = useState("home");
   const [portalLoading, setPortalLoading] = useState(false);
