@@ -1,5 +1,7 @@
 import AppNavbar from "@/components/AppNavbar";
 import { useAuth, TIERS } from "@/hooks/useAuth";
+import { useTrialStatus } from "@/hooks/useTrialStatus";
+import TrialPaywallModal from "@/components/TrialPaywallModal";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
