@@ -13,8 +13,10 @@ import AdminExerciseLibrary from "@/components/admin/AdminExerciseLibrary";
 import AdminPromotions from "@/components/admin/AdminPromotions";
 import AdminMonthlyFocus from "@/components/admin/AdminMonthlyFocus";
 import AdminProgramCreator from "@/components/admin/AdminProgramCreator";
+import AdminSchedule from "@/components/admin/AdminSchedule";
 
 const TABS = [
+  { key: "schedule", label: "Schedule" },
   { key: "monthly", label: "Monthly Focus" },
   { key: "coach", label: "Coach Review" },
   { key: "ai-programs", label: "AI Programs" },
