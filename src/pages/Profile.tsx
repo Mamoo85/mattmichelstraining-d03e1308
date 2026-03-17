@@ -29,6 +29,10 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [challenges, setChallenges] = useState<any[]>([]);
   const [liftStats, setLiftStats] = useState<{ exercise_name: string; max_weight: number; count: number }[]>([]);
+  const [giftCards, setGiftCards] = useState<any[]>([]);
+  const [lookupCode, setLookupCode] = useState("");
+  const [lookupResult, setLookupResult] = useState<{ valid: boolean; remaining_balance: number; original_amount: number } | null>(null);
+  const [lookupLoading, setLookupLoading] = useState(false);
 
   useEffect(() => {
     if (!user) return;
