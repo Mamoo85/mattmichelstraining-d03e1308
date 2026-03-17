@@ -43,22 +43,34 @@ const AdminCoachDashboard = () => {
     }
 
     if (data && data.length > 0) {
-      // Fetch client names
+      // Fetch client names + subscription tiers for priority sorting
       const userIds = [...new Set(data.map((d: any) => d.workout_logs?.user_id).filter(Boolean))];
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("user_id, full_name, athlete_name")
+        .select("user_id, full_name, athlete_name, subscription_tier")
         .in("user_id", userIds);
 
       const nameMap: Record<string, string> = {};
+      const tierMap: Record<string, string> = {};
       profiles?.forEach((p) => {
         nameMap[p.user_id] = p.athlete_name || p.full_name || "Unknown";
+        tierMap[p.user_id] = p.subscription_tier || "free";
       });
 
-      const enriched = data.map((item: any) => ({
-        ...item,
-        clientName: nameMap[item.workout_logs?.user_id] || "Unknown",
-      }));
+      const TIER_PRIORITY: Record<string, number> = { team: 4, elite: 3, pro: 2, basic: 1, free: 0 };
+
+      const enriched = data
+        .map((item: any) => ({
+          ...item,
+          clientName: nameMap[item.workout_logs?.user_id] || "Unknown",
+          clientTier: tierMap[item.workout_logs?.user_id] || "free",
+        }))
+        .sort((a: any, b: any) => {
+          const pa = TIER_PRIORITY[a.clientTier] ?? 0;
+          const pb = TIER_PRIORITY[b.clientTier] ?? 0;
+          if (pb !== pa) return pb - pa; // higher tier first
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        });
       setItems(enriched);
     } else {
       setItems([]);
