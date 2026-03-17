@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Heart, Gamepad2, GraduationCap, Users } from "lucide-react";
+import { Heart, Gamepad2, GraduationCap, Users, ShieldOff } from "lucide-react";
 import SectionHeader from "../SectionHeader";
 
 const STORY_BEATS = [
