@@ -13,6 +13,7 @@ import PortalShowcase from "./landing/PortalShowcase";
 import OnlineServices from "./landing/OnlineServices";
 import OnlineSavings from "./landing/OnlineSavings";
 import SportOnlineTraining from "./landing/SportOnlineTraining";
+import ForParentsCTA from "./landing/ForParentsCTA";
 
 import TeamYouthPrograms from "./landing/TeamYouthPrograms";
 import MonthlyFocus from "./landing/MonthlyFocus";
