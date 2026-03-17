@@ -36,6 +36,7 @@ const AdminSiteEditor = () => {
   const [activeGroup, setActiveGroup] = useState("all");
   const [editedContent, setEditedContent] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [batchRewriting, setBatchRewriting] = useState<string | null>(null);
 
   const filteredSections = sections?.filter((s) => {
     if (activeGroup === "all") return true;
