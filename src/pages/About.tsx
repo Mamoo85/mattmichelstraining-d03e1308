@@ -5,6 +5,7 @@ import AboutPhilosophy from "@/components/AboutPhilosophy";
 import Testimonial from "@/components/landing/Testimonial";
 import CurrentClients from "@/components/landing/CurrentClients";
 import PressAuthority from "@/components/landing/PressAuthority";
+import SuccessStories from "@/components/landing/SuccessStories";
 import { useSectionVisible } from "@/hooks/useSiteContent";
 
 const ARTICLE_HIGHLIGHTS = [
