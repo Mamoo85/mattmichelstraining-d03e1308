@@ -1552,22 +1552,37 @@ export type Database = {
         Row: {
           created_at: string
           date: string
+          energy: number | null
           id: string
+          recovery_notes: string | null
           session_notes: string | null
+          sleep_hours: number | null
+          sleep_quality: number | null
+          soreness: number | null
           user_id: string
         }
         Insert: {
           created_at?: string
           date?: string
+          energy?: number | null
           id?: string
+          recovery_notes?: string | null
           session_notes?: string | null
+          sleep_hours?: number | null
+          sleep_quality?: number | null
+          soreness?: number | null
           user_id: string
         }
         Update: {
           created_at?: string
           date?: string
+          energy?: number | null
           id?: string
+          recovery_notes?: string | null
           session_notes?: string | null
+          sleep_hours?: number | null
+          sleep_quality?: number | null
+          soreness?: number | null
           user_id?: string
         }
         Relationships: []

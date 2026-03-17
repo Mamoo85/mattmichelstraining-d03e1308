@@ -10,6 +10,7 @@ import BodyAvatar from "./progress/BodyAvatar";
 import LogForm from "./progress/LogForm";
 import StatsRow from "./progress/StatsRow";
 import LogHistory from "./progress/LogHistory";
+import RecoveryChart from "./progress/RecoveryChart";
 
 interface ProgressLog {
   id: string;
@@ -150,6 +151,9 @@ const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) =
           onRefresh={fetchData}
         />
       )}
+
+      {/* Recovery trends — only renders if data exists */}
+      {effectiveUserId && <RecoveryChart userId={effectiveUserId} />}
     </div>
   );
 };

@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import ExercisePicker from "./ExercisePicker";
 import ExerciseCard from "./ExerciseCard";
+import RecoveryInput, { type RecoveryData } from "./RecoveryInput";
 
 interface SetData {
   set: number;
@@ -35,6 +36,13 @@ const WorkoutLogger = () => {
   const [showPicker, setShowPicker] = useState(false);
   const [pastLogs, setPastLogs] = useState<any[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [recovery, setRecovery] = useState<RecoveryData>({
+    sleepHours: "",
+    sleepQuality: null,
+    soreness: null,
+    energy: null,
+    recoveryNotes: "",
+  });
 
   useEffect(() => {
     if (user) fetchPastLogs();
@@ -74,9 +82,16 @@ const WorkoutLogger = () => {
     }
     setSaving(true);
 
+    const recoveryPayload: Record<string, any> = {};
+    if (recovery.sleepHours) recoveryPayload.sleep_hours = parseFloat(recovery.sleepHours);
+    if (recovery.sleepQuality && recovery.sleepQuality > 0) recoveryPayload.sleep_quality = recovery.sleepQuality;
+    if (recovery.soreness && recovery.soreness > 0) recoveryPayload.soreness = recovery.soreness;
+    if (recovery.energy && recovery.energy > 0) recoveryPayload.energy = recovery.energy;
+    if (recovery.recoveryNotes) recoveryPayload.recovery_notes = recovery.recoveryNotes;
+
     const { data: log, error: logErr } = await supabase
       .from("workout_logs")
-      .insert({ user_id: user.id, date: date.toISOString(), session_notes: sessionNotes || null })
+      .insert({ user_id: user.id, date: date.toISOString(), session_notes: sessionNotes || null, ...recoveryPayload } as any)
       .select("id")
       .single();
 
@@ -102,6 +117,7 @@ const WorkoutLogger = () => {
       toast({ title: "Workout saved! 💪", description: `${exercises.length} exercise${exercises.length > 1 ? "s" : ""} logged` });
       setExercises([]);
       setSessionNotes("");
+      setRecovery({ sleepHours: "", sleepQuality: null, soreness: null, energy: null, recoveryNotes: "" });
       fetchPastLogs();
     }
     setSaving(false);
@@ -152,6 +168,11 @@ const WorkoutLogger = () => {
         >
           <Plus size={18} /> Add Exercise
         </button>
+      )}
+
+      {/* Recovery check-in */}
+      {exercises.length > 0 && (
+        <RecoveryInput value={recovery} onChange={setRecovery} />
       )}
 
       {/* Session notes */}
