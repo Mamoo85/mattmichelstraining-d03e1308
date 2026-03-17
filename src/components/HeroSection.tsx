@@ -116,25 +116,33 @@ const HeroSection = () => {
               {hero.subtitle || "20+ years developing athletes the right way. Custom programs, real coaching, zero injuries. In-person in Grosse Pointe or online anywhere."}
             </p>
 
-            <div className="flex flex-wrap gap-3 justify-center">
-              <Link
-                to="/schedule"
-                className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
-              >
-                Schedule Now
-                <ArrowRight size={15} />
-              </Link>
-              <Link
-                to="/auth?redirect=/shop"
-                className="inline-flex items-center justify-center gap-2 border-2 border-primary/40 text-primary px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:bg-primary/10 transition-m2"
-              >
-                Start training
-              </Link>
+            <div className="max-w-md mx-auto w-full">
+              <form onSubmit={handleHeroSignup} className="flex gap-2 mb-3">
+                <input
+                  type="email"
+                  value={heroEmail}
+                  onChange={(e) => setHeroEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  className="flex-1 bg-card border-2 border-primary/30 px-4 py-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-m2"
+                  required
+                />
+                <button
+                  type="submit"
+                  disabled={heroLoading}
+                  className="bg-primary text-primary-foreground px-5 py-3.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2 flex items-center gap-2 disabled:opacity-50 whitespace-nowrap"
+                >
+                  <Zap size={14} />
+                  {heroLoading ? "..." : "Start Free"}
+                </button>
+              </form>
+              <p className="text-[10px] text-muted-foreground text-center mb-4">
+                Free 7-day training kickstart. No credit card. Unsubscribe anytime.
+              </p>
               <button
                 onClick={scrollToPortal}
-                className="inline-flex items-center justify-center gap-2 border-2 border-border text-muted-foreground px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:text-foreground hover:border-foreground/30 transition-m2"
+                className="text-xs text-muted-foreground hover:text-primary transition-m2 underline underline-offset-4 block mx-auto"
               >
-                See what's included
+                See what's included first →
               </button>
             </div>
           </motion.div>
