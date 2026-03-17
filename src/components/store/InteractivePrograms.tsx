@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, TIER_DISCOUNTS } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Monitor, Filter, ShoppingBag, Check, Tag, Zap, Shield, Target } from "lucide-react";
+import { Loader2, Monitor, Filter, ShoppingBag, Check, Tag, Zap, Shield, Target, Gift, X } from "lucide-react";
 
 const LEVELS = ["Beginner", "Intermediate", "Advanced"] as const;
 const LEVEL_COLORS: Record<string, { bg: string; text: string; icon: typeof Zap }> = {
