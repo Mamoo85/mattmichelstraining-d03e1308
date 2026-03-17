@@ -1,17 +1,19 @@
 import { useState, useRef } from "react";
 import InteractivePrograms from "./InteractivePrograms";
 import MerchSection from "../MerchSection";
+import GiftCardSection from "./GiftCardSection";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, TIER_DISCOUNTS } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import {
   Loader2, ShoppingBag, Upload, Video, Check,
-  Dumbbell, Calendar
+  Dumbbell, Calendar, Gift
 } from "lucide-react";
 
 const SUB_TABS = [
   { key: "programs", label: "Interactive Programs" },
   { key: "custom", label: "Custom Program" },
+  { key: "giftcards", label: "Gift Cards" },
   { key: "merchandise", label: "Merchandise" },
 ];
 
@@ -73,13 +75,15 @@ const StoreTab = () => {
 
       {subTab === "programs" && <InteractivePrograms />}
       {subTab === "custom" && <CustomProgramSection />}
+      {subTab === "giftcards" && <GiftCardSection />}
       {subTab === "merchandise" && <MerchSection />}
     </div>
   );
 };
 
 const CustomProgramSection = () => {
-  const { user } = useAuth();
+  const { user, subscriptionTier } = useAuth();
+  const discountPct = subscriptionTier ? (TIER_DISCOUNTS[subscriptionTier] || 0) : 0;
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -203,7 +207,8 @@ const CustomProgramSection = () => {
                   Best Value
                 </span>
               )}
-              <div className="text-xl font-mono font-bold text-primary">${t.price}</div>
+              {discountPct > 0 && <div className="text-[9px] text-muted-foreground line-through">${t.price}</div>}
+              <div className="text-xl font-mono font-bold text-primary">${discountPct > 0 ? (t.price * (1 - discountPct / 100)).toFixed(2) : t.price}</div>
               <div className="text-sm font-bold text-foreground mt-1">{t.label}</div>
               <div className="text-[10px] text-muted-foreground mt-0.5">{t.description}</div>
               {t.weeks > 1 && (
@@ -372,8 +377,14 @@ const CustomProgramSection = () => {
             </p>
           </div>
           <div className="text-right">
-            <div className="text-2xl font-mono font-bold text-primary">${tier.price}</div>
+            {discountPct > 0 && <div className="text-sm text-muted-foreground line-through">${tier.price}</div>}
+            <div className="text-2xl font-mono font-bold text-primary">
+              ${discountPct > 0 ? (tier.price * (1 - discountPct / 100)).toFixed(2) : tier.price}
+            </div>
             <div className="text-[9px] text-muted-foreground">{tier.label} custom program</div>
+            {discountPct > 0 && (
+              <div className="text-[8px] text-primary font-bold uppercase tracking-widest">{discountPct}% member discount</div>
+            )}
           </div>
         </div>
 
@@ -383,7 +394,7 @@ const CustomProgramSection = () => {
           className="bg-primary text-primary-foreground px-6 py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2 flex items-center gap-2 w-full justify-center disabled:opacity-50"
         >
           {buying ? <Loader2 size={14} className="animate-spin" /> : <ShoppingBag size={14} />}
-          Get Your Custom {tier.label} Program · ${tier.price}
+          Get Your Custom {tier.label} Program · ${discountPct > 0 ? (tier.price * (1 - discountPct / 100)).toFixed(2) : tier.price}
         </button>
       </div>
 

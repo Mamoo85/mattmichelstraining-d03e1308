@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, TIER_DISCOUNTS } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Monitor, Filter, ShoppingBag, Check, Tag, Zap, Shield, Target } from "lucide-react";
 
@@ -35,7 +35,8 @@ const InteractivePrograms = () => {
   const [loading, setLoading] = useState(true);
   const [buyingId, setBuyingId] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
-  const { user } = useAuth();
+  const { user, subscriptionTier } = useAuth();
+  const discountPct = subscriptionTier ? (TIER_DISCOUNTS[subscriptionTier] || 0) : 0;
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -264,7 +265,19 @@ const InteractivePrograms = () => {
               <div key={program.id} className="bg-card shadow-m2 p-4 flex flex-col hover:bg-accent/50 transition-m2">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-primary">8-Week Program</span>
-                  <span className="text-lg font-mono font-bold text-primary">${program.price}</span>
+                  <div className="text-right">
+                    {discountPct > 0 && (
+                      <span className="text-[9px] text-muted-foreground line-through mr-1.5">${program.price}</span>
+                    )}
+                    <span className="text-lg font-mono font-bold text-primary">
+                      ${discountPct > 0 ? (program.price * (1 - discountPct / 100)).toFixed(0) : program.price}
+                    </span>
+                    {discountPct > 0 && (
+                      <span className="block text-[8px] font-bold text-primary uppercase tracking-widest">
+                        {discountPct}% member discount
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <h3 className="text-sm font-bold text-foreground mb-1">{program.title}</h3>
                 <p className="text-[11px] text-muted-foreground mb-2 line-clamp-3">{program.description}</p>
@@ -293,7 +306,7 @@ const InteractivePrograms = () => {
                       ) : (
                         <ShoppingBag size={12} />
                       )}
-                      {buyingId === program.id ? "Loading…" : `Buy Program · $${program.price}`}
+                      {buyingId === program.id ? "Loading…" : `Buy Program · $${discountPct > 0 ? (program.price * (1 - discountPct / 100)).toFixed(0) : program.price}`}
                     </button>
                   )}
                 </div>

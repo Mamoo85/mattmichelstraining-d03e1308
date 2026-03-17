@@ -7,6 +7,10 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const TIER_DISCOUNTS: Record<string, number> = {
+  basic: 10, pro: 15, elite: 20, team: 25,
+};
+
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[PROGRAM-CHECKOUT] ${step}${detailsStr}`);
@@ -108,6 +112,21 @@ serve(async (req) => {
       }
 
       promoId = promo.id;
+    }
+
+    // Apply tier-based member discount
+    const { data: profile } = await supabaseClient
+      .from("profiles")
+      .select("subscription_tier")
+      .eq("user_id", user.id)
+      .single();
+
+    const tier = profile?.subscription_tier || "free";
+    const tierDiscountPct = TIER_DISCOUNTS[tier] || 0;
+    if (tierDiscountPct > 0 && discountAmount === 0) {
+      // Only apply tier discount if no promo code (don't stack)
+      discountAmount = (program.price * tierDiscountPct) / 100;
+      logStep("Tier discount applied", { tier, pct: tierDiscountPct, amount: discountAmount });
     }
 
     const finalPrice = Math.max(0, program.price - discountAmount);

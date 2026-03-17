@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Check, Star, Zap, Shield, Crown, Users, ArrowRight, Loader2, Tag, ChevronDown, ChevronUp } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import AppNavbar from "@/components/AppNavbar";
-import { useAuth, TIERS, TierKey } from "@/hooks/useAuth";
+import { useAuth, TIERS, TierKey, TIER_DISCOUNTS } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useContentMap } from "@/hooks/useSiteContent";
@@ -240,9 +240,13 @@ const Pricing = () => {
 
                 <Icon className="w-8 h-8 text-primary mb-3" />
                 <h3 className="text-lg font-black uppercase tracking-tight text-foreground">{tier.name}</h3>
-                <div className="flex items-baseline gap-1 mt-1 mb-4">
+                <div className="flex items-baseline gap-1 mt-1 mb-2">
                   <span className="text-3xl font-black text-foreground">{tier.price}</span>
                   <span className="text-muted-foreground text-sm">/mo</span>
+                </div>
+                <div className="flex items-center gap-1.5 mb-4 text-[10px] font-bold uppercase tracking-widest text-primary">
+                  <Tag className="w-3 h-3" />
+                  {TIER_DISCOUNTS[card.key]}% off all store purchases
                 </div>
 
                 <ul className="flex-1 space-y-2 mb-6">
