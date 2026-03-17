@@ -167,7 +167,7 @@ const ShopGrid = ({ showCustomOnly = false }: { showCustomOnly?: boolean }) => {
     <div>
       {!showCustomOnly && (
         <>
-          <SectionHeader title="M² Guides & Programs" timestamp="20+ years of knowledge · No camera required" />
+          <SectionHeader title="M² Programs" timestamp="20+ years of knowledge · Download & print as PDF" />
 
           {/* Value hook */}
           <div className="bg-primary/10 border border-primary/20 shadow-m2 p-4 mb-6">
