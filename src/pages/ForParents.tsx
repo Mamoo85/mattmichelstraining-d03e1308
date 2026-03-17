@@ -44,7 +44,7 @@ const TIMELINE = [
     age: "14–15",
     title: "Work Capacity Phase — Building Durability",
     desc: "Introduce structured resistance training focused on joints, tendons, and connective tissue BEFORE adding load. This is the phase most youth programs skip — and where injuries start. Affordable online strength training programs at this age set the foundation for everything that follows.",
-    action: "Sport-specific strength guide — $9",
+    action: "Sport-specific program — from $20",
     link: "/shop",
   },
   {
