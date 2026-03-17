@@ -429,7 +429,10 @@ const Dashboard = () => {
                 Manage Plan
               </button>
             )}
-          </div>
+        </div>
+
+        {/* Studio Check-In */}
+        <StudioCheckIn />
         </div>
 
         {/* Tab switcher */}
