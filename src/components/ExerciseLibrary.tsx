@@ -10,6 +10,7 @@ interface DbExercise {
   focus_area: string[];
   equipment_needed: string;
   the_why: string;
+  sport: string[];
 }
 
 const CLIENT_TYPES = ["Athlete", "Lifestyle Fitness"] as const;
