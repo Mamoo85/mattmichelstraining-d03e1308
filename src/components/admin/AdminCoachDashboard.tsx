@@ -170,12 +170,23 @@ const AdminCoachDashboard = () => {
             )}
 
             {/* Reply input */}
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-end">
               <textarea
                 placeholder="Your feedback…"
                 value={replies[item.id] || ""}
                 onChange={(e) => setReplies((prev) => ({ ...prev, [item.id]: e.target.value }))}
                 className="flex-1 bg-background border border-border p-3 text-sm text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-primary outline-none min-h-[60px] resize-none"
+              />
+              <AiAssistButton
+                type="coach_reply"
+                context={{
+                  exerciseName: item.exercise_library?.title || "Unknown",
+                  setsRepsWeight: JSON.stringify(item.sets_reps_weight),
+                  clientNotes: item.client_notes,
+                  hasVideo: !!item.video_url,
+                }}
+                onResult={(text) => setReplies((prev) => ({ ...prev, [item.id]: text }))}
+                label="AI Draft"
               />
             </div>
             <button
