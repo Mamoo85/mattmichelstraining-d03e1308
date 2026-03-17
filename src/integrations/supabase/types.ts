@@ -985,6 +985,24 @@ export type Database = {
         }
         Relationships: []
       }
+      studio_checkins: {
+        Row: {
+          checked_in_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          checked_in_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          checked_in_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           created_at: string
