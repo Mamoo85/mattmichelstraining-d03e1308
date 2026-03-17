@@ -212,6 +212,7 @@ const ActiveProgramView = ({ activeProgram }: ActiveProgramProps) => {
                     weekNumber={selectedWeek}
                     dayNumber={selectedDay}
                     exercises={dayExercises.map((w) => w.exercise.title)}
+                    isPurchasedProgram={true}
                   />
                 </>
               )}
