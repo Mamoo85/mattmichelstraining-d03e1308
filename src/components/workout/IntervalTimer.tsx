@@ -3,6 +3,10 @@ import { X, Timer, Minus, Plus, Play, Pause, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { countdownBeep, workBeep, restBeep, completeChime } from "./useTimerAudio";
 
+function vibrate(pattern: number | number[]) {
+  if (navigator.vibrate) navigator.vibrate(pattern);
+}
+
 type Phase = "idle" | "prep" | "work" | "rest" | "done";
 
 interface TimerConfig {
