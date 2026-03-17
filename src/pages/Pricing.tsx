@@ -101,6 +101,7 @@ const Pricing = () => {
   const [loadingTier, setLoadingTier] = useState<TierKey | null>(null);
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
+  const [expandedTiers, setExpandedTiers] = useState<Record<string, boolean>>({});
 
   const handleCheckout = async (tierKey: TierKey) => {
     if (!user) {
