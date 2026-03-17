@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Plus, Pencil, Trash2, X, Dumbbell, Loader2 } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, X, Dumbbell, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import AiAssistButton from "./AiAssistButton";
 
 interface Exercise {
   id: string;
