@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import ExercisePicker from "./ExercisePicker";
 import ExerciseCard from "./ExerciseCard";
+import RecoveryInput, { type RecoveryData } from "./RecoveryInput";
 
 interface SetData {
   set: number;
