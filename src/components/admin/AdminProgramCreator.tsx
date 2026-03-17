@@ -53,6 +53,8 @@ const AdminProgramCreator = () => {
   const [daysPerWeek, setDaysPerWeek] = useState(3);
   const [generating, setGenerating] = useState(false);
   const [draft, setDraft] = useState<DraftProgram | null>(null);
+  const [batchGenerating, setBatchGenerating] = useState(false);
+  const [batchResults, setBatchResults] = useState<any[] | null>(null);
 
   // --- Approval ---
   const [price, setPrice] = useState(49);
