@@ -3,6 +3,7 @@ import { Dumbbell, BarChart3, MessageSquare, ShoppingBag, Home, Menu, X, LogIn, 
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { useTimer } from "@/hooks/useTimer";
 import m2Logo from "@/assets/m2-logo-official.jpg";
 import NotificationBell from "./NotificationBell";
 
@@ -21,14 +22,21 @@ const AppNavbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, signOut } = useAuth();
   const { isAdmin } = useIsAdmin();
+  const { timerOpen, toggleTimer } = useTimer();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm shadow-m2">
       <div className="container flex items-center justify-between h-14">
-        <Link to="/" className="flex items-center gap-2">
-          <img src={m2Logo} alt="M² Training" className="w-9 h-9 object-contain" />
-          <span className="text-primary font-brand text-base hidden sm:block">M² TRAINING</span>
-        </Link>
+        <button
+          onClick={toggleTimer}
+          className={`flex items-center gap-1.5 group transition-m2 ${timerOpen ? "opacity-80" : ""}`}
+          title={timerOpen ? "Close Timer" : "Open Timer"}
+        >
+          <img src={m2Logo} alt="M² Timer" className="w-9 h-9 object-contain" />
+          <span className={`text-[10px] font-bold uppercase tracking-widest ${timerOpen ? "text-primary" : "text-muted-foreground group-hover:text-primary"} transition-m2`}>
+            {timerOpen ? "✕ Close" : "Timer"}
+          </span>
+        </button>
 
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-1">
