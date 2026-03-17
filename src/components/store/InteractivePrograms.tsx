@@ -1,6 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Monitor, Filter } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2, Monitor, Filter, ShoppingBag, Check } from "lucide-react";
 
 const ATHLETE_AGE_RANGES = ["12-13", "14-15", "16-17", "18+"];
 const LIFESTYLE_AGE_RANGES = ["18-29", "30-39", "40-49", "50+"];
@@ -20,7 +23,13 @@ interface TrainingProgram {
 
 const InteractivePrograms = () => {
   const [programs, setPrograms] = useState<TrainingProgram[]>([]);
+  const [ownedProgramIds, setOwnedProgramIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [buyingId, setBuyingId] = useState<string | null>(null);
+  const [verifying, setVerifying] = useState(false);
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Filters
   const [category, setCategory] = useState<"Athlete" | "Lifestyle Fitness">("Athlete");
@@ -29,15 +38,55 @@ const InteractivePrograms = () => {
   const [sport, setSport] = useState<string>("");
 
   useEffect(() => {
-    supabase
-      .from("training_programs")
-      .select("id, title, description, category, age_range, sex, sport, price")
-      .eq("is_active", true)
-      .then(({ data }) => {
-        setPrograms((data as TrainingProgram[]) || []);
-        setLoading(false);
+    const fetchData = async () => {
+      const { data } = await supabase
+        .from("training_programs")
+        .select("id, title, description, category, age_range, sex, sport, price")
+        .eq("is_active", true);
+      setPrograms((data as TrainingProgram[]) || []);
+
+      // Fetch owned programs
+      if (user) {
+        const { data: owned } = await supabase
+          .from("user_active_programs")
+          .select("program_id")
+          .eq("user_id", user.id);
+        if (owned) {
+          setOwnedProgramIds(new Set(owned.map((o: any) => o.program_id)));
+        }
+      }
+
+      setLoading(false);
+    };
+    fetchData();
+  }, [user]);
+
+  // Handle return from Stripe checkout
+  useEffect(() => {
+    const programPurchased = searchParams.get("program_purchased");
+    const sessionId = searchParams.get("session_id");
+
+    if (programPurchased && sessionId && user) {
+      setVerifying(true);
+      // Clean URL
+      searchParams.delete("program_purchased");
+      searchParams.delete("session_id");
+      setSearchParams(searchParams, { replace: true });
+
+      // Verify and activate
+      supabase.functions.invoke("verify-program-purchase", {
+        body: { sessionId, programId: programPurchased },
+      }).then(({ data, error }) => {
+        if (error) {
+          toast({ title: "Verification error", description: error.message, variant: "destructive" });
+        } else {
+          toast({ title: "🎉 Program activated!", description: "Head to your Dashboard → My Programs to start training." });
+          setOwnedProgramIds(prev => new Set([...prev, programPurchased]));
+        }
+        setVerifying(false);
       });
-  }, []);
+    }
+  }, [searchParams, user]);
 
   // Reset dependent filters when category changes
   useEffect(() => {
@@ -57,6 +106,32 @@ const InteractivePrograms = () => {
     });
   }, [programs, category, ageRange, sex, sport]);
 
+  const handleBuy = async (program: TrainingProgram) => {
+    if (!user) {
+      window.location.href = `/auth?redirect=/shop`;
+      return;
+    }
+
+    setBuyingId(program.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-program-checkout", {
+        body: { programId: program.id },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (data?.url) window.location.href = data.url;
+    } catch (e: any) {
+      const msg = e.message || "Something went wrong";
+      if (msg.includes("already own")) {
+        toast({ title: "Already owned", description: "This program is in your portal." });
+      } else {
+        toast({ title: "Checkout error", description: msg, variant: "destructive" });
+      }
+    } finally {
+      setBuyingId(null);
+    }
+  };
+
   const FilterButton = ({ active, label, onClick }: { active: boolean; label: string; onClick: () => void }) => (
     <button
       onClick={onClick}
@@ -72,6 +147,14 @@ const InteractivePrograms = () => {
 
   return (
     <div>
+      {/* Verifying banner */}
+      {verifying && (
+        <div className="bg-primary/10 border border-primary/20 p-4 mb-4 flex items-center gap-3">
+          <Loader2 size={16} className="animate-spin text-primary" />
+          <p className="text-sm text-foreground font-bold">Verifying your purchase and activating your program...</p>
+        </div>
+      )}
+
       {/* Description */}
       <div className="bg-primary/10 border border-primary/20 p-4 mb-6">
         <p className="text-sm text-foreground leading-relaxed">
@@ -81,7 +164,6 @@ const InteractivePrograms = () => {
 
       {/* Filters */}
       <div className="space-y-3 mb-6">
-        {/* Category */}
         <div>
           <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1.5">
             <Filter size={10} className="inline mr-1" />Category
@@ -92,7 +174,6 @@ const InteractivePrograms = () => {
           </div>
         </div>
 
-        {/* Age Range */}
         <div>
           <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1.5">Age Range</span>
           <div className="flex gap-1 flex-wrap">
@@ -103,7 +184,6 @@ const InteractivePrograms = () => {
           </div>
         </div>
 
-        {/* Sex */}
         <div>
           <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1.5">Sex</span>
           <div className="flex gap-1 flex-wrap">
@@ -114,7 +194,6 @@ const InteractivePrograms = () => {
           </div>
         </div>
 
-        {/* Sport (Athlete only) */}
         {category === "Athlete" && (
           <div>
             <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1.5">Sport</span>
@@ -143,29 +222,53 @@ const InteractivePrograms = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {filtered.map((program) => (
-            <div key={program.id} className="bg-card shadow-m2 p-4 flex flex-col hover:bg-accent/50 transition-m2">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Interactive Program</span>
-                <span className="text-lg font-mono font-bold text-primary">${program.price}</span>
-              </div>
-              <h3 className="text-sm font-bold text-foreground mb-1">{program.title}</h3>
-              <p className="text-[11px] text-muted-foreground mb-2 line-clamp-3">{program.description}</p>
-              <div className="flex flex-wrap gap-1 mt-auto pt-2">
-                {program.sport && (
-                  <span className="text-[9px] bg-primary/10 text-primary px-2 py-0.5 font-bold uppercase tracking-widest">
-                    {program.sport}
+          {filtered.map((program) => {
+            const owned = ownedProgramIds.has(program.id);
+            return (
+              <div key={program.id} className="bg-card shadow-m2 p-4 flex flex-col hover:bg-accent/50 transition-m2">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Interactive Program</span>
+                  <span className="text-lg font-mono font-bold text-primary">${program.price}</span>
+                </div>
+                <h3 className="text-sm font-bold text-foreground mb-1">{program.title}</h3>
+                <p className="text-[11px] text-muted-foreground mb-2 line-clamp-3">{program.description}</p>
+                <div className="flex flex-wrap gap-1 pt-2">
+                  {program.sport && (
+                    <span className="text-[9px] bg-primary/10 text-primary px-2 py-0.5 font-bold uppercase tracking-widest">
+                      {program.sport}
+                    </span>
+                  )}
+                  <span className="text-[9px] bg-muted text-muted-foreground px-2 py-0.5 font-bold uppercase tracking-widest">
+                    {program.age_range}
                   </span>
-                )}
-                <span className="text-[9px] bg-muted text-muted-foreground px-2 py-0.5 font-bold uppercase tracking-widest">
-                  {program.age_range}
-                </span>
-                <span className="text-[9px] bg-muted text-muted-foreground px-2 py-0.5 font-bold uppercase tracking-widest">
-                  {program.sex}
-                </span>
+                  <span className="text-[9px] bg-muted text-muted-foreground px-2 py-0.5 font-bold uppercase tracking-widest">
+                    {program.sex}
+                  </span>
+                </div>
+
+                <div className="mt-auto pt-3">
+                  {owned ? (
+                    <div className="flex items-center justify-center gap-1.5 bg-primary/10 text-primary px-4 py-2 text-[10px] font-bold uppercase tracking-widest">
+                      <Check size={12} /> In Your Portal
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handleBuy(program)}
+                      disabled={buyingId === program.id}
+                      className="bg-primary text-primary-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-m2 flex items-center gap-1.5 w-full justify-center disabled:opacity-50"
+                    >
+                      {buyingId === program.id ? (
+                        <Loader2 size={12} className="animate-spin" />
+                      ) : (
+                        <ShoppingBag size={12} />
+                      )}
+                      {buyingId === program.id ? "Loading…" : `Buy Program · $${program.price}`}
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
