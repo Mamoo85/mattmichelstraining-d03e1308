@@ -114,6 +114,24 @@ const AdminSchedule = () => {
     }
   };
 
+  const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
+
+  const aiContext = useMemo(() => {
+    const bookedTimes = bookings.map(b => `${b.start_time} (${b.duration_minutes}min, ${b.user_name || b.user_email})`);
+    const availableTimes = SLOT_TIMES.filter(t => {
+      const s = slotMap[t];
+      return s?.is_available && !s?.booked_by && !bookingMap[t];
+    }).map(t => formatTime12(t));
+    return {
+      date: dateStr,
+      dayOfWeek: format(selectedDate, "EEEE"),
+      totalBookings: bookings.length,
+      bookedTimes: bookedTimes.join(", ") || "None",
+      currentAvailable: availableTimes.join(", ") || "None",
+      totalSlots: SLOT_TIMES.length,
+    };
+  }, [dateStr, selectedDate, bookings, slotMap, bookingMap]);
+
   return (
     <div className="space-y-4">
       {/* Date navigation */}
@@ -129,6 +147,27 @@ const AdminSchedule = () => {
           <ChevronRight size={16} />
         </Button>
       </div>
+
+      {/* AI Suggest */}
+      <div className="flex items-center gap-2">
+        <AiAssistButton
+          type="schedule_suggest"
+          context={aiContext}
+          onResult={(text) => setAiSuggestion(text)}
+          label="AI Suggest Slots"
+        />
+        {aiSuggestion && (
+          <button onClick={() => setAiSuggestion(null)} className="text-muted-foreground hover:text-foreground">
+            <X size={14} />
+          </button>
+        )}
+      </div>
+      {aiSuggestion && (
+        <div className="bg-accent/20 border border-accent p-3 text-xs text-foreground whitespace-pre-wrap">
+          <div className="text-[9px] font-bold uppercase tracking-widest text-accent-foreground mb-1">AI Recommendation</div>
+          {aiSuggestion}
+        </div>
+      )}
 
       {/* Legend */}
       <div className="flex gap-4 text-[10px] font-bold uppercase tracking-widest">
