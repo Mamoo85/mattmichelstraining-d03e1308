@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Dumbbell, MessageSquare, ShoppingBag, Home, Menu, X, LogIn, LogOut, Shield, CreditCard, User } from "lucide-react";
+import { Dumbbell, MessageSquare, ShoppingBag, Home, Menu, X, LogIn, LogOut, Shield, CreditCard, User, Shirt } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -12,6 +12,7 @@ const navItems = [
   { to: "/dashboard", label: "PORTAL", icon: Dumbbell },
   { to: "/coach", label: "COACH", icon: MessageSquare },
   { to: "/shop", label: "STORE", icon: ShoppingBag },
+  { to: "/merch", label: "MERCH", icon: Shirt },
   { to: "/pricing", label: "PRICING", icon: CreditCard },
   { to: "/about", label: "ABOUT", icon: User },
 ];
