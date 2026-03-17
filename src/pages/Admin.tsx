@@ -9,13 +9,15 @@ import AdminSiteEditor from "@/components/admin/AdminSiteEditor";
 import AdminCoachDashboard from "@/components/admin/AdminCoachDashboard";
 import AdminPrograms from "@/components/admin/AdminPrograms";
 import AdminExerciseLibrary from "@/components/admin/AdminExerciseLibrary";
+import AdminPromotions from "@/components/admin/AdminPromotions";
 
 const TABS = [
   { key: "coach", label: "Coach Review" },
   { key: "programs", label: "Programs" },
   { key: "exercises", label: "Exercises" },
-  { key: "site", label: "Site Editor" },
+  { key: "promotions", label: "Promotions" },
   { key: "clients", label: "Clients" },
+  { key: "site", label: "Site Editor" },
   { key: "protocols", label: "Protocols" },
   { key: "subscribers", label: "Newsletter" },
   { key: "compose", label: "Compose" },
