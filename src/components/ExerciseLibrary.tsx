@@ -204,8 +204,15 @@ const ExerciseLibrary = () => {
                         >
                           {fa}
                         </span>
-                      ))}
-                    </div>
+                       ))}
+                       {ex.sport?.filter(Boolean).map((s) => (
+                         <span
+                           key={s}
+                           className="text-[9px] font-bold uppercase tracking-widest bg-accent text-accent-foreground px-2 py-0.5"
+                         >
+                           {s}
+                         </span>
+                       ))}
                     <h3 className="text-sm font-bold text-foreground leading-tight">
                       {ex.title}
                     </h3>
