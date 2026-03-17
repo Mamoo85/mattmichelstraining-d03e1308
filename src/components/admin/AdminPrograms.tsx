@@ -219,29 +219,18 @@ const AdminPrograms = () => {
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Age Range</label>
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Level</label>
                   <select
-                    value={editingProgram.age_range}
-                    onChange={e => setEditingProgram({ ...editingProgram, age_range: e.target.value })}
+                    value={editingProgram.level}
+                    onChange={e => setEditingProgram({ ...editingProgram, level: e.target.value })}
                     className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground focus:ring-1 focus:ring-primary outline-none"
                   >
-                    {ageRanges.map(a => <option key={a} value={a}>{a}</option>)}
+                    {LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
                   </select>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Sex</label>
-                  <select
-                    value={editingProgram.sex}
-                    onChange={e => setEditingProgram({ ...editingProgram, sex: e.target.value })}
-                    className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground focus:ring-1 focus:ring-primary outline-none"
-                  >
-                    {SEX_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </div>
-
                 <div>
                   <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Price ($)</label>
                   <input
