@@ -37,6 +37,13 @@ const ExerciseLibrary = () => {
     fetchExercises();
   }, []);
 
+  // Collect unique sports dynamically
+  const allSports = useMemo(() => {
+    const set = new Set<string>();
+    exercises.forEach((e) => e.sport?.forEach((s) => { if (s && s !== "All") set.add(s); }));
+    return [...set].sort();
+  }, [exercises]);
+
   const filtered = useMemo(() => {
     return exercises.filter((ex) => {
       const matchesSearch =
@@ -47,17 +54,20 @@ const ExerciseLibrary = () => {
         !activeClientType || ex.client_type.includes(activeClientType);
       const matchesFocus =
         !activeFocusArea || ex.focus_area.includes(activeFocusArea);
-      return matchesSearch && matchesClient && matchesFocus;
+      const matchesSport =
+        !activeSport || ex.sport?.includes(activeSport) || ex.sport?.includes("All");
+      return matchesSearch && matchesClient && matchesFocus && matchesSport;
     });
-  }, [exercises, search, activeClientType, activeFocusArea]);
+  }, [exercises, search, activeClientType, activeFocusArea, activeSport]);
 
   const clearFilters = () => {
     setActiveClientType(null);
     setActiveFocusArea(null);
+    setActiveSport(null);
     setSearch("");
   };
 
-  const hasActiveFilters = !!activeClientType || !!activeFocusArea || !!search;
+  const hasActiveFilters = !!activeClientType || !!activeFocusArea || !!activeSport || !!search;
 
   return (
     <div>
