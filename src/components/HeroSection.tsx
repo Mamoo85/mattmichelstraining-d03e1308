@@ -162,10 +162,9 @@ const HeroSection = () => {
         {showFreeBonus && <FreeBonusBanner />}
         {showTestimonial && <Testimonial />}
         {showPress && <PressAuthority />}
-        {showClients && <div id="section-current-clients"><CurrentClients /></div>}
-        {showGuides && <div id="section-guides"><GuidesGrid /></div>}
         {showPremium && <PremiumProgram />}
         {showPremium && <PortalShowcase />}
+        {showGuides && <div id="section-guides"><GuidesGrid /></div>}
         {showOnline && <OnlineServices />}
         {showOnline && <OnlineSavings />}
         {showOnline && <SportOnlineTraining />}
