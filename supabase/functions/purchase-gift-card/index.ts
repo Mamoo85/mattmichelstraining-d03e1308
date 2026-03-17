@@ -106,7 +106,7 @@ serve(async (req) => {
     const session = await stripe.checkout.sessions.create(sessionParams);
     logStep("Checkout session created", { sessionId: session.id });
 
-    // Pre-create the gift card
+    // Pre-create the gift card as inactive — activated after payment via webhook/verify
     await supabaseClient.from("gift_cards").insert({
       code: giftCode,
       original_amount: amount,
@@ -114,7 +114,7 @@ serve(async (req) => {
       purchaser_id: user.id,
       recipient_email: recipientEmail || null,
       stripe_session_id: session.id,
-      is_active: true,
+      is_active: false,
     });
 
     logStep("Gift card pre-created", { code: giftCode, amount });
