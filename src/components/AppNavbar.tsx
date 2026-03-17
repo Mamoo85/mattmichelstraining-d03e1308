@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Dumbbell, BarChart3, MessageSquare, ShoppingBag, Home, Menu, X, LogIn, LogOut, Shield, CreditCard, User } from "lucide-react";
+import { Dumbbell, MessageSquare, ShoppingBag, Home, Menu, X, LogIn, LogOut, Shield, CreditCard, User } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -10,7 +10,6 @@ import NotificationBell from "./NotificationBell";
 const navItems = [
   { to: "/", label: "HOME", icon: Home },
   { to: "/dashboard", label: "PORTAL", icon: Dumbbell },
-  { to: "/progress", label: "PROGRESS", icon: BarChart3 },
   { to: "/coach", label: "COACH", icon: MessageSquare },
   { to: "/shop", label: "STORE", icon: ShoppingBag },
   { to: "/pricing", label: "PRICING", icon: CreditCard },

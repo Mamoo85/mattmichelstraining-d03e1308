@@ -1,19 +1,16 @@
 import { useState } from "react";
-import PdfGuides from "./PdfGuides";
 import InteractivePrograms from "./InteractivePrograms";
-import OnlineServices from "../landing/OnlineServices";
 import MerchSection from "../MerchSection";
 import ShopGrid from "../ShopGrid";
 
 const SUB_TABS = [
-  { key: "pdf-guides", label: "PDF Guides" },
   { key: "programs", label: "Interactive Programs" },
   { key: "custom", label: "Custom Program" },
   { key: "merchandise", label: "Merchandise" },
 ];
 
 const StoreTab = () => {
-  const [subTab, setSubTab] = useState("pdf-guides");
+  const [subTab, setSubTab] = useState("programs");
 
   return (
     <div>
@@ -34,7 +31,6 @@ const StoreTab = () => {
         ))}
       </div>
 
-      {subTab === "pdf-guides" && <PdfGuides />}
       {subTab === "programs" && <InteractivePrograms />}
       {subTab === "custom" && <CustomProgramSection />}
       {subTab === "merchandise" && <MerchSection />}
