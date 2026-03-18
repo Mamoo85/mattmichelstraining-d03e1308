@@ -158,6 +158,7 @@ const Admin = () => {
             { key: "athletes", label: "Athletes & Trials", content: <AdminClientList /> },
             { key: "family", label: "Family Accounts", content: <AdminFamilyManager /> },
             { key: "parent-reports", label: "Parent Reports", content: <AdminParentReports /> },
+            { key: "parent-inbox", label: "Parent Inbox", content: <AdminParentInbox /> },
             { key: "trial", label: "Trial Settings", content: <AdminTrialSettings /> },
           ]} />
         )}
