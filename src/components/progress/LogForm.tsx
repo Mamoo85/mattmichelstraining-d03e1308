@@ -128,15 +128,6 @@ const LogForm = ({ activeLift, repMax, effectiveUserId, onLogged }: LogFormProps
       toast({ title: "Failed to log", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Logged +25 pts", description: `${activeLift}: ${weight} lbs × ${reps}` });
-      try {
-        await supabase.rpc("award_points", {
-          _user_id: effectiveUserId,
-          _action: "workout_log",
-          _points: 25,
-          _description: `Logged ${activeLift}`,
-          _reference_id: null,
-        });
-      } catch { /* silent */ }
       setLogWeight("");
       setLogReps("");
       await onLogged();
