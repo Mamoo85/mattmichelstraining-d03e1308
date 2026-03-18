@@ -52,7 +52,30 @@ const HeroSection = () => {
               </p>
             </div>
 
-            {/* Audience Router — right under hero subtitle */}
+            {/* Quick-action CTA buttons */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
+              <Link
+                to="/shop"
+                className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2 w-full sm:w-auto justify-center"
+              >
+                Start Training
+                <ArrowRight size={14} />
+              </Link>
+              <Link
+                to="/pricing"
+                className="inline-flex items-center gap-2 border-2 border-primary text-primary px-6 py-3 text-xs font-bold uppercase tracking-widest hover:bg-primary/10 transition-m2 w-full sm:w-auto justify-center"
+              >
+                Browse Programs
+              </Link>
+              <Link
+                to="/schedule"
+                className="inline-flex items-center gap-2 border-2 border-border text-foreground px-6 py-3 text-xs font-bold uppercase tracking-widest hover:border-primary/40 hover:text-primary transition-m2 w-full sm:w-auto justify-center"
+              >
+                Schedule
+              </Link>
+            </div>
+
+            {/* Audience Router */}
             <AudienceSelector />
           </motion.div>
         )}
