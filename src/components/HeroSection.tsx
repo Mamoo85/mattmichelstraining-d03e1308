@@ -11,7 +11,7 @@ import ParentTestimonialCard from "./landing/ParentTestimonialCard";
 import M2Difference from "./landing/M2Difference";
 import FindUs from "./landing/FindUs";
 import PortalEntrance from "./landing/PortalEntrance";
-import EmailCapture from "./landing/EmailCapture";
+
 import TrialCTA from "./TrialCTA";
 
 const HeroSection = () => {
@@ -108,8 +108,6 @@ const HeroSection = () => {
           <TrialCTA variant="banner" />
         </div>
 
-        {/* ─── 9. EMAIL CAPTURE ─── */}
-        <EmailCapture />
 
         {/* FOOTER */}
         <div className="mt-10 pt-6 border-t border-border text-center">
