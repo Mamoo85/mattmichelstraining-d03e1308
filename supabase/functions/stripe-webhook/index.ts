@@ -179,6 +179,36 @@ serve(async (req) => {
 
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
+    // Helper: log transaction to the transactions table
+    async function logTransaction(opts: {
+      userId?: string | null;
+      stripeChargeId?: string | null;
+      stripeSubscriptionId?: string | null;
+      amount: number;
+      itemName: string;
+      itemType: string;
+      status: string;
+      customerEmail?: string | null;
+      customerName?: string | null;
+    }) {
+      try {
+        await sb.from("transactions").insert({
+          user_id: opts.userId || null,
+          stripe_charge_id: opts.stripeChargeId || null,
+          stripe_subscription_id: opts.stripeSubscriptionId || null,
+          amount: opts.amount,
+          item_name: opts.itemName,
+          item_type: opts.itemType,
+          status: opts.status,
+          customer_email: opts.customerEmail || null,
+          customer_name: opts.customerName || null,
+        });
+        console.log(`[WEBHOOK] Transaction logged: ${opts.itemName} - $${(opts.amount / 100).toFixed(2)}`);
+      } catch (e) {
+        console.error(`[WEBHOOK] Transaction log failed:`, e);
+      }
+    }
+
     // Handle subscription lifecycle events
     if (
       event.type === "customer.subscription.created" ||
