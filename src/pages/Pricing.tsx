@@ -320,13 +320,20 @@ const Pricing = () => {
         {/* Dynamic Feature Comparison Table */}
         <TierComparisonTable />
 
+        {/* Trial CTA */}
+        {!subscribed && (
+          <div className="mt-12 max-w-2xl mx-auto">
+            <TrialCTA variant="comparison" />
+          </div>
+        )}
+
         {/* Free member banner */}
-        <div className="mt-12 text-center border-2 border-dashed border-border p-8 max-w-2xl mx-auto">
+        <div className="mt-8 text-center border-2 border-dashed border-border p-8 max-w-2xl mx-auto">
           <h3 className="text-lg font-black uppercase tracking-tight text-foreground mb-2">
             {cms.free_banner_title || "Free When You Sign Up"}
           </h3>
           <p className="text-muted-foreground text-sm mb-4">
-            {cms.free_banner_text || "Create an account and get Monthly Focus Plans, member challenges, and workout logging — no credit card required."}
+            {cms.free_banner_text || "Monthly Focus Plans, member challenges, and workout logging — no credit card."}
           </p>
           {!user && (
             <Link
