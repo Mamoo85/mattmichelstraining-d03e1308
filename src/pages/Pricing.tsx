@@ -271,6 +271,10 @@ const Pricing = () => {
                 {card.subtitle && (
                   <p className="text-[10px] text-muted-foreground mb-1">{card.subtitle}</p>
                 )}
+                <div className="flex items-baseline gap-1 mt-1 mb-2">
+                  <span className="text-3xl font-black text-foreground">{tier.price}</span>
+                  <span className="text-muted-foreground text-sm">/mo</span>
+                </div>
                 <div className="flex items-center gap-1.5 mb-4 text-[10px] font-bold uppercase tracking-widest text-primary">
                   <Tag className="w-3 h-3" />
                   {TIER_DISCOUNTS[card.key]}% off all store purchases
