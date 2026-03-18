@@ -10,6 +10,7 @@ import { toast } from "@/hooks/use-toast";
 import { useContentMap } from "@/hooks/useSiteContent";
 import TrialCTA from "@/components/TrialCTA";
 import { getStoredReferralCode, clearStoredReferralCode } from "@/hooks/useReferral";
+import CheckoutConfirmationModal, { type CheckoutProductType } from "@/components/CheckoutConfirmationModal";
 
 const TIER_CARDS: {
   key: TierKey;
