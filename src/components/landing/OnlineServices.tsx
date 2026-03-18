@@ -23,7 +23,7 @@ const OnlineServices = () => (
       <div className="bg-card shadow-m2 p-4">
         <span className="text-[11px] font-bold uppercase tracking-widest text-primary block mb-1">Basic</span>
         <span className="text-lg font-mono font-bold text-foreground block">$12.99<span className="text-xs text-muted-foreground font-normal">/mo</span></span>
-        <p className="text-[11px] text-muted-foreground mt-1">85+ exercise library with coaching cues + monthly newsletter</p>
+        <p className="text-[11px] text-muted-foreground mt-1">Monthly Focus Plan + 85+ exercise library with sport-specific filters + challenges</p>
       </div>
       <div className="bg-card shadow-m2 p-4 border-2 border-primary/30 relative">
         <div className="absolute -top-2 right-2 bg-primary text-primary-foreground text-[8px] font-bold uppercase px-2 py-0.5">Popular</div>
@@ -34,7 +34,7 @@ const OnlineServices = () => (
       <div className="bg-card shadow-m2 p-4">
         <span className="text-[11px] font-bold uppercase tracking-widest text-primary block mb-1">Elite</span>
         <span className="text-lg font-mono font-bold text-foreground block">$42.99<span className="text-xs text-muted-foreground font-normal">/mo</span></span>
-        <p className="text-[11px] text-muted-foreground mt-1">1-on-1 monthly check-ins + direct messaging with Matt</p>
+        <p className="text-[11px] text-muted-foreground mt-1">1-on-1 monthly check-ins + priority coaching + direct messaging</p>
       </div>
       <div className="bg-card shadow-m2 p-4">
         <span className="text-[11px] font-bold uppercase tracking-widest text-primary block mb-1">Team</span>

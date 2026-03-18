@@ -19,7 +19,7 @@ const STEPS = [
   {
     num: "03",
     title: "Subscribe for Ongoing Coaching",
-    desc: "Monthly plans unlock Matt's full exercise library (85+ exercises with video and WHY), the Fix It rehab library, custom programming updates, and direct coaching access. Cancel anytime.\n\n• Basic ($12.99/mo) — Exercise library + monthly newsletter\n• Pro ($25.99/mo) — Custom programs + Fix It library + flag Matt for form review\n• Elite ($42.99/mo) — Everything + 1-on-1 check-ins + direct messaging\n• Team ($84.99/mo) — Full-roster programming for coaches & organizations",
+    desc: "Monthly plans unlock Matt's full exercise library (85+ exercises with sport-specific filters), the Fix It rehab library, custom programming updates, and direct coaching access. Cancel anytime.\n\n• Basic ($12.99/mo) — Monthly Focus Plan + 85+ exercise library + challenges\n• Pro ($25.99/mo) — Custom programs + Fix It library + flag Matt for form review\n• Elite ($42.99/mo) — 1-on-1 check-ins + priority coaching + direct messaging\n• Team ($84.99/mo) — Full-roster programming for coaches & organizations",
     ctaType: "pricing" as const,
   },
 ];
