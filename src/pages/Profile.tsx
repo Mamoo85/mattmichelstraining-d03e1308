@@ -8,8 +8,9 @@ import { Link } from "react-router-dom";
 import {
   User, Trophy, Medal, Award, Save, Loader2, Gift, Search,
   Crown, ExternalLink, ShoppingBag, Dumbbell, Calendar, Shield,
-  ArrowRight, ChevronDown, ChevronUp, Zap, Clock, FileText
+  ArrowRight, ChevronDown, ChevronUp, Zap, Clock, FileText, Send
 } from "lucide-react";
+import GiftSessionModal from "@/components/GiftSessionModal";
 import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
