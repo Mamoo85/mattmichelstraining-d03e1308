@@ -31,6 +31,9 @@ export interface UserPointsData {
   is_public: boolean;
 }
 
+// Track previous level to detect level-ups
+let previousLevelKey: string | null = null;
+
 export interface PointTransaction {
   id: string;
   action: string;
