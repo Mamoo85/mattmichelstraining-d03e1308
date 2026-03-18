@@ -21,6 +21,7 @@ import ReferralDashboard from "@/components/ReferralDashboard";
 import PointsWidget from "@/components/PointsWidget";
 import PointsLeaderboard from "@/components/PointsLeaderboard";
 import PwaInstallBanner from "@/components/PwaInstallBanner";
+import WorkoutScanner from "@/components/workout/WorkoutScanner";
 
 const TABS = [
   { key: "home", label: "Home" },
@@ -321,6 +322,17 @@ const Dashboard = () => {
 
   const renderHome = () => (
     <div className="space-y-6">
+      {/* Scan Workout Card */}
+      <div className="bg-card border border-border p-5 space-y-3">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Quick Log</span>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Snap a photo of your school workout card or gym whiteboard — AI reads it and logs your session instantly.
+        </p>
+        <WorkoutScanner />
+      </div>
+
       {/* Upcoming Sessions */}
       <UpcomingSessions />
 
