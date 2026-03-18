@@ -33,6 +33,8 @@ interface Focus {
   common_mistakes: string[];
   exercises: string[];
   challenge_metric: string;
+  metric_label: string;
+  target_goal: number;
   matt_quote: string;
   status: string;
 }
