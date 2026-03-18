@@ -62,8 +62,11 @@ const MonthlyFocusWidget = () => {
 
   // Focus
   const [focus, setFocus] = useState<FocusData | null>(null);
+  const [focusLogs, setFocusLogs] = useState<{ metric_value: number; logged_date: string }[]>([]);
+  const [focusLogTotal, setFocusLogTotal] = useState(0);
+  const [focusLogInput, setFocusLogInput] = useState("");
 
-  // Challenge
+  // Challenge (legacy leaderboard system)
   const [challenge, setChallenge] = useState<ChallengeData | null>(null);
   const [optedIn, setOptedIn] = useState(false);
   const [publicVisible, setPublicVisible] = useState(false);
