@@ -317,6 +317,13 @@ const Pricing = () => {
                   >
                     Manage Plan
                   </button>
+                ) : card.label === "Youth Development" ? (
+                  <Link
+                    to={user ? "/trial-welcome?path=parent" : "/auth?redirect=/trial-welcome?path=parent"}
+                    className="w-full py-3 text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-colors border-2 border-foreground text-foreground hover:bg-foreground hover:text-background"
+                  >
+                    {card.cta} <ArrowRight className="w-4 h-4" />
+                  </Link>
                 ) : (
                   <button
                     onClick={() => handleCheckout(card.key)}
