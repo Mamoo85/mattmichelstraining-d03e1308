@@ -14,10 +14,18 @@ interface DbExercise {
   the_why: string;
   sport: string[];
   video_url: string | null;
+  level: string;
 }
 
 const CLIENT_TYPES = ["Athlete", "Lifestyle Fitness"] as const;
 const FOCUS_AREAS = ["Mobility", "Strength", "Core Stability", "Power", "Rehab", "Stability", "Posture", "Flexibility", "Speed", "Core", "Injury Prevention"] as const;
+const LEVELS = ["beginner", "intermediate", "advanced"] as const;
+
+const LEVEL_COLORS: Record<string, string> = {
+  beginner: "bg-green-500/15 text-green-600 dark:text-green-400",
+  intermediate: "bg-yellow-500/15 text-yellow-600 dark:text-yellow-400",
+  advanced: "bg-red-500/15 text-red-600 dark:text-red-400",
+};
 
 const ExerciseLibrary = () => {
   const [exercises, setExercises] = useState<DbExercise[]>([]);
@@ -28,6 +36,7 @@ const ExerciseLibrary = () => {
   const [activeSport, setActiveSport] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [substitutionExercise, setSubstitutionExercise] = useState<string | null>(null);
+  const [activeLevel, setActiveLevel] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchExercises = async () => {
@@ -60,18 +69,20 @@ const ExerciseLibrary = () => {
         !activeFocusArea || ex.focus_area.includes(activeFocusArea);
       const matchesSport =
         !activeSport || ex.sport?.includes(activeSport) || ex.sport?.includes("All");
-      return matchesSearch && matchesClient && matchesFocus && matchesSport;
+      const matchesLevel = !activeLevel || ex.level === activeLevel;
+      return matchesSearch && matchesClient && matchesFocus && matchesSport && matchesLevel;
     });
-  }, [exercises, search, activeClientType, activeFocusArea, activeSport]);
+  }, [exercises, search, activeClientType, activeFocusArea, activeSport, activeLevel]);
 
   const clearFilters = () => {
     setActiveClientType(null);
     setActiveFocusArea(null);
     setActiveSport(null);
+    setActiveLevel(null);
     setSearch("");
   };
 
-  const hasActiveFilters = !!activeClientType || !!activeFocusArea || !!activeSport || !!search;
+  const hasActiveFilters = !!activeClientType || !!activeFocusArea || !!activeSport || !!activeLevel || !!search;
 
   return (
     <div>
@@ -176,6 +187,38 @@ const ExerciseLibrary = () => {
         </div>
       </div>
 
+      {/* Level filter */}
+      <div className="mb-4">
+        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1.5">
+          <Filter size={10} className="inline mr-1" />
+          Level
+        </span>
+        <div className="flex gap-1 flex-wrap">
+          <button
+            onClick={() => setActiveLevel(null)}
+            className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-all ${
+              !activeLevel
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            All Levels
+          </button>
+          {LEVELS.map((lv) => (
+            <button
+              key={lv}
+              onClick={() => setActiveLevel(activeLevel === lv ? null : lv)}
+              className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-all ${
+                activeLevel === lv
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {lv}
+            </button>
+          ))}
+        </div>
+      </div>
       {/* Sport filter */}
       {allSports.length > 0 && (
         <div className="mb-4">
@@ -247,6 +290,11 @@ const ExerciseLibrary = () => {
                   <div className="flex-1 min-w-0">
                     {/* Tags row */}
                     <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+                      {ex.level && (
+                        <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 ${LEVEL_COLORS[ex.level] || LEVEL_COLORS.intermediate}`}>
+                          {ex.level}
+                        </span>
+                      )}
                       {ex.focus_area.map((fa) => (
                         <span
                           key={fa}

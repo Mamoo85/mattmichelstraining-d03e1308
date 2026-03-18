@@ -290,6 +290,7 @@ export type Database = {
           focus_area: string[]
           id: string
           is_fix_it: boolean
+          level: string
           sport: string[]
           the_why: string
           title: string
@@ -303,6 +304,7 @@ export type Database = {
           focus_area?: string[]
           id?: string
           is_fix_it?: boolean
+          level?: string
           sport?: string[]
           the_why?: string
           title: string
@@ -316,6 +318,7 @@ export type Database = {
           focus_area?: string[]
           id?: string
           is_fix_it?: boolean
+          level?: string
           sport?: string[]
           the_why?: string
           title?: string

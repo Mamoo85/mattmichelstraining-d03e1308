@@ -13,10 +13,12 @@ interface Exercise {
   focus_area: string[];
   sport: string[];
   video_url: string;
+  level: string;
 }
 
 const PRESET_CLIENT_TYPES = ["Athlete", "Lifestyle Fitness"];
 const PRESET_FOCUS_AREAS = ["Mobility", "Strength", "Core Stability", "Flexibility", "Rehab", "Stability", "Posture", "Power", "Speed", "Injury Prevention", "Core"];
+const PRESET_LEVELS = ["beginner", "intermediate", "advanced"];
 
 const EMPTY: Exercise = {
   id: "",
@@ -27,6 +29,7 @@ const EMPTY: Exercise = {
   focus_area: [],
   sport: [],
   video_url: "",
+  level: "intermediate",
 };
 
 const AdminExerciseLibrary = () => {
@@ -48,7 +51,7 @@ const AdminExerciseLibrary = () => {
   const fetchExercises = async () => {
     const { data } = await supabase
       .from("exercise_library")
-      .select("id, title, equipment_needed, the_why, client_type, focus_area, sport, video_url")
+      .select("id, title, equipment_needed, the_why, client_type, focus_area, sport, video_url, level")
       .order("title");
     if (data) setExercises(data as Exercise[]);
     setLoading(false);
@@ -98,6 +101,7 @@ const AdminExerciseLibrary = () => {
       focus_area: editing.focus_area,
       sport: editing.sport,
       video_url: editing.video_url.trim() || null,
+      level: editing.level,
     };
 
     if (editing.id) {
@@ -255,6 +259,23 @@ const AdminExerciseLibrary = () => {
               placeholder="https://youtube.com/watch?v=..."
               className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground mb-3 outline-none focus:ring-1 focus:ring-primary"
             />
+
+            {/* Level */}
+            <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Level</label>
+            <div className="flex gap-1 flex-wrap mb-3">
+              {PRESET_LEVELS.map((lv) => (
+                <button
+                  key={lv}
+                  type="button"
+                  onClick={() => setEditing({ ...editing, level: lv })}
+                  className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest transition-m2 ${
+                    editing.level === lv ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {lv}
+                </button>
+              ))}
+            </div>
 
             {/* The Why */}
             <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">The Why</label>
