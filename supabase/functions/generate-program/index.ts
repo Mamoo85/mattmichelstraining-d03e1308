@@ -113,7 +113,7 @@ ${sport ? `Sport: ${sport}` : ""}
 ${description ? `Additional notes: ${description}` : ""}
 Target exercises per day: ${exerciseCount}
 
-EXERCISE LIBRARY (${(exercises || []).length} exercises available):
+EXERCISE LIBRARY (${allExercises.length} total — ${mainExercises.length} main, ${rollingExercises.length} rolling/soft tissue, ${rehabExercises.length} fix it/rehab):
 ${exerciseList}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
