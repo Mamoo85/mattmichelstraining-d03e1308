@@ -194,7 +194,8 @@ const Auth = () => {
             </svg>
           )}
           Continue with Apple
-        </button>
+
+        {/* Magic Link */}
         {mode !== "magic" && (
           <button
             onClick={() => { setMode("magic"); setError(""); setSuccess(""); }}
