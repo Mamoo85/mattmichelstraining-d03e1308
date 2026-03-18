@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { X, Minus, Plus, Play, Pause, RotateCcw } from "lucide-react";
+import { X, Minus, Plus, Play, Pause, RotateCcw, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { countdownBeep, workBeep, restBeep, completeChime } from "./useTimerAudio";
+import { countdownBeep, workBeep, restBeep, completeChime, setMasterVolume, getMasterVolume, testBeep } from "./useTimerAudio";
 
 function vibrate(pattern: number | number[]) {
   if (navigator.vibrate) navigator.vibrate(pattern);
