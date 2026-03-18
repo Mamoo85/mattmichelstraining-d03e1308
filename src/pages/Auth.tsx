@@ -5,7 +5,7 @@ import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import m2Logo from "@/assets/m2-logo.jpg";
-import { ArrowRight, Loader2, Gift, Users } from "lucide-react";
+import { ArrowRight, Loader2, Gift, Users, Mail } from "lucide-react";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -14,7 +14,6 @@ const Auth = () => {
   const { toast } = useToast();
   const inviteToken = searchParams.get("invite");
 
-  // Redeem invite after login/signup
   useEffect(() => {
     if (!authLoading && user && inviteToken) {
       redeemInvite(inviteToken);
@@ -34,12 +33,11 @@ const Auth = () => {
       toast({ title: "Account linked!", description: "You're now connected to your parent's account." });
     } catch (err: any) {
       console.error("Invite redeem error:", err);
-      // Don't block navigation on error
     }
     navigate(searchParams.get("redirect") || "/dashboard", { replace: true });
   };
 
-  const [isSignUp, setIsSignUp] = useState(!!inviteToken);
+  const [mode, setMode] = useState<"login" | "signup" | "magic">(inviteToken ? "signup" : "login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -55,7 +53,18 @@ const Auth = () => {
     setError("");
     setSuccess("");
 
-    if (isSignUp) {
+    if (mode === "magic") {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: window.location.origin },
+      });
+      if (error) setError(error.message);
+      else setSuccess("Check your inbox — tap the link to log in instantly.");
+      setLoading(false);
+      return;
+    }
+
+    if (mode === "signup") {
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -69,9 +78,7 @@ const Auth = () => {
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) setError(error.message);
-      else if (inviteToken) {
-        // Will be handled by the useEffect above
-      } else {
+      else if (!inviteToken) {
         navigate(searchParams.get("redirect") || "/dashboard");
       }
     }
@@ -101,7 +108,7 @@ const Auth = () => {
         <div className="text-center mb-8">
           <img src={m2Logo} alt="M² Training" className="w-20 h-20 object-contain rounded-md mx-auto mb-4" />
           <h1 className="text-xl font-bold tracking-display text-foreground">
-            {isSignUp ? "JOIN M² TRAINING" : "ATHLETE LOGIN"}
+            {mode === "signup" ? "JOIN M² TRAINING" : "ATHLETE LOGIN"}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">Real training. Real results.</p>
         </div>
@@ -120,7 +127,7 @@ const Auth = () => {
           </div>
         )}
 
-        {isSignUp && !inviteToken && (
+        {mode === "signup" && !inviteToken && (
           <div className="bg-primary/10 border border-primary/20 p-4 mb-5">
             <div className="flex items-start gap-2">
               <Gift size={16} className="text-primary flex-shrink-0 mt-0.5" />
@@ -140,7 +147,7 @@ const Auth = () => {
         <button
           onClick={handleGoogleSignIn}
           disabled={googleLoading}
-          className="w-full flex items-center justify-center gap-3 bg-card border-2 border-border px-4 py-3 text-sm font-bold text-foreground hover:bg-muted transition-colors mb-4 disabled:opacity-50"
+          className="w-full flex items-center justify-center gap-3 bg-card border-2 border-border px-4 py-3 text-sm font-bold text-foreground hover:bg-muted transition-colors mb-3 disabled:opacity-50"
         >
           {googleLoading ? (
             <Loader2 size={18} className="animate-spin" />
@@ -155,14 +162,27 @@ const Auth = () => {
           Continue with Google
         </button>
 
+        {/* Magic Link */}
+        {mode !== "magic" && (
+          <button
+            onClick={() => { setMode("magic"); setError(""); setSuccess(""); }}
+            className="w-full flex items-center justify-center gap-3 bg-card border-2 border-border px-4 py-3 text-sm font-bold text-foreground hover:bg-muted transition-colors mb-4"
+          >
+            <Mail size={18} />
+            Sign in with Email Link
+          </button>
+        )}
+
         <div className="flex items-center gap-3 mb-4">
           <div className="flex-1 h-px bg-border" />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">or</span>
+          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            {mode === "magic" ? "magic link" : "or use password"}
+          </span>
           <div className="flex-1 h-px bg-border" />
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3">
-          {isSignUp && (
+          {mode === "signup" && (
             <>
               <div>
                 <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Parent / Guardian Name</label>
@@ -195,17 +215,20 @@ const Auth = () => {
               required
             />
           </div>
-          <div>
-            <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-card border border-border px-3 py-3 text-sm text-foreground focus:ring-1 focus:ring-primary outline-none"
-              required
-              minLength={6}
-            />
-          </div>
+
+          {mode !== "magic" && (
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-card border border-border px-3 py-3 text-sm text-foreground focus:ring-1 focus:ring-primary outline-none"
+                required
+                minLength={6}
+              />
+            </div>
+          )}
 
           {error && <p className="text-sm text-destructive">{error}</p>}
           {success && <p className="text-sm text-primary">{success}</p>}
@@ -215,17 +238,28 @@ const Auth = () => {
             disabled={loading}
             className="w-full bg-primary text-primary-foreground px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2 flex items-center justify-center gap-2 disabled:opacity-50"
           >
-            {loading ? <Loader2 size={15} className="animate-spin" /> : <ArrowRight size={15} />}
-            {isSignUp ? "Create Free Account" : "Sign In"}
+            {loading ? <Loader2 size={15} className="animate-spin" /> : mode === "magic" ? <Mail size={15} /> : <ArrowRight size={15} />}
+            {mode === "magic" ? "Send Login Link" : mode === "signup" ? "Create Free Account" : "Sign In"}
           </button>
         </form>
 
-        <button
-          onClick={() => { setIsSignUp(!isSignUp); setError(""); setSuccess(""); }}
-          className="w-full text-center text-sm text-muted-foreground mt-4 hover:text-primary transition-m2"
-        >
-          {isSignUp ? "Already have an account? Sign in" : "New athlete? Create a free account"}
-        </button>
+        <div className="flex flex-col items-center gap-2 mt-4">
+          {mode === "magic" ? (
+            <button
+              onClick={() => { setMode("login"); setError(""); setSuccess(""); }}
+              className="text-sm text-muted-foreground hover:text-primary transition-m2"
+            >
+              Use password instead
+            </button>
+          ) : (
+            <button
+              onClick={() => { setMode(mode === "signup" ? "login" : "signup"); setError(""); setSuccess(""); }}
+              className="text-sm text-muted-foreground hover:text-primary transition-m2"
+            >
+              {mode === "signup" ? "Already have an account? Sign in" : "New athlete? Create a free account"}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
