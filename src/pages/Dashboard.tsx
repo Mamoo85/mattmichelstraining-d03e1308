@@ -115,18 +115,6 @@ const Dashboard = () => {
   const [portalLoading, setPortalLoading] = useState(false);
   const [showTimer, setShowTimer] = useState(false);
 
-  // Monthly Focus
-  const [focus, setFocus] = useState<MonthlyFocusData | null>(null);
-
-  // Challenge
-  const [challenge, setChallenge] = useState<MonthlyChallenge | null>(null);
-  const [optedIn, setOptedIn] = useState(false);
-  const [publicVisible, setPublicVisible] = useState(false);
-  const [currentValue, setCurrentValue] = useState(0);
-  const [progressInput, setProgressInput] = useState("");
-  const [actionLoading, setActionLoading] = useState(false);
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [entries, setEntries] = useState<{ value: number; logged_at: string }[]>([]);
 
   useEffect(() => {
     if (!user) return;
