@@ -30,9 +30,11 @@ import AdminProductManager from "@/components/admin/AdminProductManager";
 import AdminTestimonials from "@/components/admin/AdminTestimonials";
 import AdminFrontPage from "@/components/admin/AdminFrontPage";
 import AdminAiCopilot from "@/components/admin/AdminAiCopilot";
+import AdminBroadcasts from "@/components/admin/AdminBroadcasts";
 
 const TABS = [
   { key: "ai-copilot", label: "AI Copilot" },
+  { key: "broadcasts", label: "Broadcasts" },
   { key: "clients", label: "Athletes & Trials" },
   { key: "front-page", label: "Front Page" },
   { key: "products", label: "Storefront" },
