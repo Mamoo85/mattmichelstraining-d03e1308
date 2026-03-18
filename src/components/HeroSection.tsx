@@ -64,10 +64,10 @@ const HeroSection = () => {
                 <ArrowRight size={14} />
               </Link>
               <Link
-                to="/pricing"
+                to="/about"
                 className="inline-flex items-center gap-2 border-2 border-primary text-primary px-6 py-3 text-xs font-bold uppercase tracking-widest hover:bg-primary/10 transition-m2 w-full sm:w-auto justify-center"
               >
-                Browse Programs
+                Meet Matt
               </Link>
               <Link
                 to="/schedule"
