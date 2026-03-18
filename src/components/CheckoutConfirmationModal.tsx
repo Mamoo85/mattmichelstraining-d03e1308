@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ShieldCheck, FileText, Rocket, Video, Loader2 } from "lucide-react";
 
-export type CheckoutProductType = "pdf" | "basic" | "pro" | "elite" | "team" | "program" | "session" | "custom";
+export type CheckoutProductType = "pdf" | "basic" | "foundation" | "custom" | "team_elite" | "program" | "session";
 
 interface CheckoutConfirmationModalProps {
   open: boolean;
