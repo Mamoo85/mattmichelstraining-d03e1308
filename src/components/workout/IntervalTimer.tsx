@@ -360,6 +360,41 @@ const IntervalTimer = ({ onClose }: { onClose: () => void }) => {
               ))}
             </div>
 
+            {/* Volume Control */}
+            <div className="bg-card border border-border p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <Volume2 size={14} className="text-primary" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Volume</span>
+                </div>
+                <span className="font-mono text-sm font-bold text-foreground tabular-nums">{Math.round(volume)}%</span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={200}
+                step={5}
+                value={volume}
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  setVolume(v);
+                  setMasterVolume(v / 100);
+                }}
+                className="w-full h-3 accent-primary cursor-pointer"
+              />
+              <div className="flex items-center justify-between text-[9px] font-mono text-muted-foreground">
+                <span>MUTE</span>
+                <span>100%</span>
+                <span>200% BOOST</span>
+              </div>
+              <button
+                onClick={testBeep}
+                className="w-full py-2 bg-muted text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground hover:bg-muted-foreground/20 transition-colors border border-border"
+              >
+                🔊 Test Beep
+              </button>
+            </div>
+
             <div className="flex gap-2">
               {PRESETS.map((p) => (
                 <button
