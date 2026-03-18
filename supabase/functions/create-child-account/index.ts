@@ -89,12 +89,19 @@ serve(async (req) => {
       .insert({ parent_user_id: parentId, child_user_id: childId });
     if (linkError) throw new Error(`Failed to link accounts: ${linkError.message}`);
 
-    // Update child profile with athlete name
+    // Update child profile with athlete name and account_role
     const { error: profileError } = await adminClient
       .from("profiles")
-      .update({ athlete_name: childName })
+      .update({ athlete_name: childName, account_role: "athlete" })
       .eq("user_id", childId);
     if (profileError) console.error("Profile update error:", profileError);
+
+    // Update parent profile account_role
+    const { error: parentProfileError } = await adminClient
+      .from("profiles")
+      .update({ account_role: "parent" })
+      .eq("user_id", parentId);
+    if (parentProfileError) console.error("Parent profile update error:", parentProfileError);
 
     return new Response(
       JSON.stringify({ success: true, childId }),

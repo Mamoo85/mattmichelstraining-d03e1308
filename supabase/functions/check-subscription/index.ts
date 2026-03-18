@@ -63,12 +63,37 @@ serve(async (req) => {
     const user = userData.user;
     logStep("User authenticated", { userId: user.id, email: user.email });
 
+    // Check if this user is a child linked to a parent — if so, inherit parent's subscription
+    const { data: childLink } = await supabaseClient
+      .from("parent_child_links")
+      .select("parent_user_id")
+      .eq("child_user_id", user.id)
+      .limit(1)
+      .maybeSingle();
+
+    let targetEmail = user.email;
+    let targetUserId = user.id;
+
+    if (childLink) {
+      // Get parent's email for Stripe lookup
+      const { data: parentProfile } = await supabaseClient
+        .from("profiles")
+        .select("email, user_id")
+        .eq("user_id", childLink.parent_user_id)
+        .single();
+
+      if (parentProfile?.email) {
+        targetEmail = parentProfile.email;
+        targetUserId = parentProfile.user_id;
+        logStep("Child account — inheriting parent subscription", { parentUserId: targetUserId });
+      }
+    }
+
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    const customers = await stripe.customers.list({ email: targetEmail, limit: 1 });
 
     if (customers.data.length === 0) {
       logStep("No customer found");
-      // Sync free tier to profile
       await supabaseClient.from("profiles").update({ subscription_tier: "free" }).eq("user_id", user.id);
       return new Response(JSON.stringify({ subscribed: false, subscription_tier: "free" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -79,8 +104,8 @@ serve(async (req) => {
     const customerId = customers.data[0].id;
     logStep("Found Stripe customer", { customerId });
 
-    // Sync stripe_customer_id
-    await supabaseClient.from("profiles").update({ stripe_customer_id: customerId }).eq("user_id", user.id);
+    // Sync stripe_customer_id to the billing owner (parent or self)
+    await supabaseClient.from("profiles").update({ stripe_customer_id: customerId }).eq("user_id", targetUserId);
 
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
@@ -103,8 +128,22 @@ serve(async (req) => {
       logStep("No active subscription");
     }
 
-    // Sync tier to profile
+    // Sync tier to the requesting user's profile (child or self)
     await supabaseClient.from("profiles").update({ subscription_tier: tier }).eq("user_id", user.id);
+
+    // If this is a parent, also sync tier to all linked children
+    if (!childLink) {
+      const { data: children } = await supabaseClient
+        .from("parent_child_links")
+        .select("child_user_id")
+        .eq("parent_user_id", user.id);
+
+      if (children && children.length > 0) {
+        const childIds = children.map((c: any) => c.child_user_id);
+        await supabaseClient.from("profiles").update({ subscription_tier: tier }).in("user_id", childIds);
+        logStep("Synced tier to children", { childCount: childIds.length, tier });
+      }
+    }
 
     return new Response(JSON.stringify({
       subscribed: hasActiveSub,
