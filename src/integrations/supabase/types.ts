@@ -2322,6 +2322,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      log_challenge_progress: {
+        Args: { _challenge_id: string; _user_id: string; _value: number }
+        Returns: number
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
