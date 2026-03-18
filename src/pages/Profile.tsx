@@ -534,6 +534,7 @@ const Profile = () => {
           )}
         </div>
       </div>
+      <TechSupportButton />
     </div>
   );
 };
