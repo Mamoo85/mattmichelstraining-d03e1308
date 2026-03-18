@@ -53,8 +53,13 @@ interface LeaderboardEntry {
   is_public: boolean;
 }
 
+const PRO_AND_ABOVE: (string | null)[] = ["pro", "elite", "team"];
+
 const WorkoutsTab = () => {
   const [showBuilder, setShowBuilder] = useState(false);
+  const { subscriptionTier, isLegend } = useAuth();
+  const { isAdmin } = useIsAdmin();
+  const canCreate = isAdmin || isLegend || PRO_AND_ABOVE.includes(subscriptionTier);
 
   return showBuilder ? (
     <WorkoutBuilder
@@ -62,7 +67,7 @@ const WorkoutsTab = () => {
       onClose={() => setShowBuilder(false)}
     />
   ) : (
-    <CommunityWorkoutBank onCreateNew={() => setShowBuilder(true)} />
+    <CommunityWorkoutBank onCreateNew={canCreate ? () => setShowBuilder(true) : undefined} />
   );
 };
 
