@@ -127,7 +127,7 @@ const AdminMonthlyFocus = () => {
     setGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke("generate-monthly-focus", {
-        body: { month: selMonth, year: selYear },
+        body: { month: selMonth, year: selYear, topic: topicInput.trim() || undefined },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
