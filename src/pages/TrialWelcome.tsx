@@ -236,7 +236,7 @@ const TrialWelcome = () => {
                     <div className="space-y-2.5">
                       {[
                         { icon: CreditCard, text: "Enter your card below. You won't be charged for 14 days." },
-                        { icon: BookOpen, text: "Pick a 2-week intro program (or get a custom one built for you)." },
+                        { icon: BookOpen, text: "Your free 2-week starter program is loaded instantly — warmup, workout, rolling, and mobility every session. Pick an additional trial program if you want more." },
                         { icon: Dumbbell, text: "Log every set and rep in the portal." },
                         { icon: Flag, text: "Flag Coach Matt for personal form review on any exercise." },
                       ].map((step, i) => (

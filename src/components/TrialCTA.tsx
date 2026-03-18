@@ -74,7 +74,7 @@ const TrialCTA = ({ variant = "banner", className = "" }: TrialCTAProps) => {
         <h3 className="text-sm font-bold text-foreground">14 Days Free. No Card Required.</h3>
       </div>
       <p className="text-xs text-muted-foreground mb-4 max-w-md mx-auto">
-        Full access to everything — programs, exercise library, progress tracking, and direct coaching from Matt.
+        Full access to everything — plus a free 2-week starter program loaded on Day 1 with warmup, workout, rolling, and mobility every session.
       </p>
       <Link
         to={user ? "/trial-welcome" : "/auth?redirect=/trial-welcome"}
