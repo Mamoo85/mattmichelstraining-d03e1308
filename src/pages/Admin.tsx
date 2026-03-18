@@ -74,6 +74,7 @@ const Admin = () => {
           ))}
         </div>
 
+        {activeTab === "trial" && <AdminTrialSettings />}
         {activeTab === "tiers" && <AdminTierManager />}
         {activeTab === "schedule" && <AdminSchedule />}
         {activeTab === "monthly" && <AdminMonthlyFocus />}
