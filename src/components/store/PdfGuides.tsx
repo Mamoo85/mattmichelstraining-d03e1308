@@ -154,7 +154,7 @@ const PdfGuides = () => {
       <div className="mt-8 bg-card shadow-m2 p-5">
         <h3 className="text-sm font-bold text-foreground mb-1">Need something specific?</h3>
         <p className="text-[11px] text-muted-foreground mb-4">
-          Tell Matt what you're looking for. He builds new guides based on real demand — not trends.
+          Tell Matt what you're looking for. He builds new plans based on real demand — not trends.
         </p>
         <div className="flex gap-2">
           <input
