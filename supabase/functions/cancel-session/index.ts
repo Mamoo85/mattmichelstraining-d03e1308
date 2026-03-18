@@ -67,6 +67,29 @@ serve(async (req) => {
       .update({ status: "cancelled", cancelled_at: new Date().toISOString() })
       .eq("id", booking_id);
 
+    // If booking used a credit, restore it
+    if (booking.credit_id) {
+      await supabaseAdmin
+        .from("session_credits")
+        .update({ is_used: false, used_at: null, booking_id: null })
+        .eq("id", booking.credit_id);
+    }
+
+    // Remove Google Calendar event (fire-and-forget)
+    if (booking.google_calendar_event_id) {
+      try {
+        const gcalUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/google-calendar-sync`;
+        await fetch(gcalUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          },
+          body: JSON.stringify({ action: "delete_event", booking_id }),
+        });
+      } catch (e) { console.error("GCal delete error:", e); }
+    }
+
     // Free up slots
     await supabaseAdmin
       .from("schedule_slots")

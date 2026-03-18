@@ -119,6 +119,19 @@ serve(async (req) => {
     // Send notification to Matt
     await sendEmail(ADMIN_EMAIL, `NEW SESSION BOOKED — ${meta.user_name || meta.user_email} · ${dateStr} ${timeStr}`, emailHtml);
 
+    // Sync to Google Calendar (fire-and-forget)
+    try {
+      const gcalUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/google-calendar-sync`;
+      await fetch(gcalUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+        },
+        body: JSON.stringify({ action: "create_event", booking_id: booking.id }),
+      });
+    } catch (e) { console.error("GCal sync error:", e); }
+
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
