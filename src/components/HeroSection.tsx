@@ -11,7 +11,7 @@ import ParentTestimonialCard from "./landing/ParentTestimonialCard";
 import M2Difference from "./landing/M2Difference";
 import FindUs from "./landing/FindUs";
 import PortalEntrance from "./landing/PortalEntrance";
-import EmailCapture from "./landing/EmailCapture";
+
 import TrialCTA from "./TrialCTA";
 
 const HeroSection = () => {
