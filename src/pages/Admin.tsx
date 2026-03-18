@@ -114,6 +114,8 @@ const Admin = () => {
         {activeTab === "promotions" && <AdminPromotions />}
         {activeTab === "points" && <AdminPointsManager />}
         {activeTab === "clients" && <AdminClientList />}
+        {activeTab === "learn" && <AdminLearnEditor />}
+        {activeTab === "system" && <AdminSystemSettings />}
         {activeTab === "site" && <AdminSiteEditor />}
         {activeTab === "protocols" && <AdminProtocols />}
         {activeTab === "subscribers" && <AdminSubscriberList />}
