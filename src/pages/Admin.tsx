@@ -26,7 +26,7 @@ import AdminParentReports from "@/components/admin/AdminParentReports";
 import AdminFamilyManager from "@/components/admin/AdminFamilyManager";
 import AdminLearnEditor from "@/components/admin/AdminLearnEditor";
 import AdminSystemSettings from "@/components/admin/AdminSystemSettings";
-import AdminProductManager from "@/components/admin/AdminProductManager";
+
 import AdminTestimonials from "@/components/admin/AdminTestimonials";
 import AdminFrontPage from "@/components/admin/AdminFrontPage";
 import AdminAiCopilot from "@/components/admin/AdminAiCopilot";
@@ -37,7 +37,7 @@ const TABS = [
   { key: "broadcasts", label: "Broadcasts" },
   { key: "clients", label: "Athletes & Trials" },
   { key: "front-page", label: "Front Page" },
-  { key: "products", label: "Storefront" },
+  
   { key: "testimonials", label: "Testimonials" },
   { key: "learn", label: "Learn Hub" },
   { key: "system", label: "System & Referrals" },
@@ -130,7 +130,7 @@ const Admin = () => {
         {activeTab === "learn" && <AdminLearnEditor />}
         {activeTab === "system" && <AdminSystemSettings />}
         {activeTab === "front-page" && <AdminFrontPage />}
-        {activeTab === "products" && <AdminProductManager />}
+        
         {activeTab === "testimonials" && <AdminTestimonials />}
         {activeTab === "site" && <AdminSiteEditor />}
         {activeTab === "protocols" && <AdminProtocols />}
