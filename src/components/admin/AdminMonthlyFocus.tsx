@@ -167,6 +167,8 @@ const AdminMonthlyFocus = () => {
       common_mistakes: focus.common_mistakes || [],
       exercises: focus.exercises,
       challenge_metric: focus.challenge_metric || "",
+      metric_label: (focus as any).metric_label || "reps",
+      target_goal: (focus as any).target_goal || 0,
       matt_quote: focus.matt_quote,
     });
     setEditingFocus(true);
