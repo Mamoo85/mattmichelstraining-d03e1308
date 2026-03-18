@@ -65,7 +65,48 @@ const Welcome = () => (
         ))}
       </motion.div>
 
+      {/* FREE 2-WEEK STARTER PROGRAM */}
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.12, duration: 0.4 }}
+        className="bg-card shadow-m2 p-6 mb-10 border-l-4 border-primary"
+      >
+        <div className="flex items-start gap-3">
+          <Dumbbell size={18} className="text-primary flex-shrink-0 mt-1" />
+          <div>
+            <h2 className="text-base font-bold text-foreground mb-1">
+              Your Free 2-Week Starter Program
+            </h2>
+            <p className="text-sm text-foreground-soft leading-relaxed mb-3">
+              We already loaded a <strong className="text-foreground">complete 2-week training program</strong> into
+              your dashboard — <strong className="text-foreground">totally free, no subscription needed.</strong> It's
+              the same structure every M² client follows: warmup, workout, rolling, and mobility — every session.
+            </p>
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              {[
+                "6 full sessions over 2 weeks",
+                "Warmup → Strength → Rolling → Mobility",
+                "Week 2 adds progressive overload",
+                "Log weights — Matt sees every session",
+              ].map((item) => (
+                <div key={item} className="flex items-start gap-1.5">
+                  <CheckCircle2 size={11} className="text-primary flex-shrink-0 mt-0.5" />
+                  <span className="text-[11px] text-foreground leading-snug">{item}</span>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              <strong className="text-foreground">How to start:</strong> Head to your Dashboard → find "Today's Program" →
+              follow the exercises, log your weights. This is a real sample of what a full membership delivers —
+              fresh programs monthly, sport-specific training, and direct access to Coach Matt.
+            </p>
+          </div>
+        </div>
+      </motion.div>
+
       {/* PARENT TRUST TESTIMONIAL */}
+
       <motion.div
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
