@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Video, Play, MessageSquare, Dumbbell, User, Calendar, Filter, Loader2, ExternalLink, ChevronDown } from "lucide-react";
+import AiAssistButton from "./AiAssistButton";
 
 interface VideoEntry {
   id: string;
