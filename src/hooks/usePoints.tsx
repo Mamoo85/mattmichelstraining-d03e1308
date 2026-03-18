@@ -173,5 +173,7 @@ export const usePoints = () => {
     loadPoints,
     loadTransactions,
     loadLeaderboard,
+    levelUp,
+    dismissLevelUp,
   };
 };
