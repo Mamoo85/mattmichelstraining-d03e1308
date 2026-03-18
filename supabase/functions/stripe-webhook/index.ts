@@ -224,9 +224,21 @@ serve(async (req) => {
         const tier = PRODUCT_TIER_MAP[productId] || "basic";
         await syncTierToProfile(sb, email, tier, customerId);
 
-        // Award membership points (only on created, not every update)
+        // Log subscription transaction
         if (event.type === "customer.subscription.created") {
           const uid = await getUserIdByEmail(sb, email);
+          const priceAmount = subscription.items.data[0]?.price?.unit_amount || 0;
+          await logTransaction({
+            userId: uid,
+            stripeSubscriptionId: subscription.id,
+            amount: priceAmount,
+            itemName: `${tier.charAt(0).toUpperCase() + tier.slice(1)} Membership`,
+            itemType: "subscription",
+            status: "completed",
+            customerEmail: email,
+            customerName: (customer as any).name || null,
+          });
+
           if (uid) {
             await awardPts(sb, uid, "membership_monthly", 50, `Subscribed to ${tier} membership`, subscription.id);
           }
