@@ -26,7 +26,7 @@ serve(async (req) => {
     const user = userData.user;
     if (!user?.email) throw new Error("Not authenticated");
 
-    const { slot_date, start_time, duration_minutes } = await req.json();
+    const { slot_date, start_time, duration_minutes, session_type = "in_person" } = await req.json();
     if (!slot_date || !start_time || ![30, 60].includes(duration_minutes)) {
       throw new Error("Invalid request");
     }
@@ -97,6 +97,7 @@ serve(async (req) => {
         slot_date,
         start_time,
         duration_minutes: String(duration_minutes),
+        session_type,
         slot_ids: JSON.stringify(slotsData.map((s: any) => s.id)),
       },
     });

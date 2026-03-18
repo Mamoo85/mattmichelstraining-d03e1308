@@ -5,8 +5,8 @@ import PaywallGate from "@/components/PaywallGate";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { format, addDays, startOfDay, isBefore, isToday } from "date-fns";
-import { Loader2, Clock, DollarSign, Info, Calendar, CheckCircle } from "lucide-react";
+import { format, addDays, startOfDay } from "date-fns";
+import { Loader2, Clock, DollarSign, Info, Calendar, CheckCircle, Video, MapPin, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const formatTime12 = (t: string) => {
@@ -34,7 +34,7 @@ type Slot = {
 const Schedule = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, subscriptionTier } = useAuth();
   const { toast } = useToast();
 
   const [selectedDay, setSelectedDay] = useState(0);
@@ -44,11 +44,48 @@ const Schedule = () => {
   const [purchasing, setPurchasing] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [verified, setVerified] = useState(false);
+  const [sessionType, setSessionType] = useState<"in_person" | "video">("in_person");
+  const [hasCredit, setHasCredit] = useState(false);
+  const [useCredit, setUseCredit] = useState(false);
+  const [loadingCredit, setLoadingCredit] = useState(false);
+
+  const isElite = subscriptionTier === "elite";
 
   const today = startOfDay(new Date());
   const days = Array.from({ length: 14 }, (_, i) => addDays(today, i));
   const currentDate = days[selectedDay];
   const dateStr = format(currentDate, "yyyy-MM-dd");
+
+  // Check for available session credits (Elite only)
+  useEffect(() => {
+    if (!user || !isElite) { setHasCredit(false); return; }
+    const checkCredit = async () => {
+      setLoadingCredit(true);
+      const now = new Date();
+      const month = now.getMonth() + 1;
+      const year = now.getFullYear();
+      const { data } = await supabase
+        .from("session_credits")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("month", month)
+        .eq("year", year)
+        .eq("is_used", false);
+      // If no credit row exists yet, they still have one (will be auto-created on redeem)
+      setHasCredit(!data || data.length === 0 || data.length > 0);
+      // Actually check if they already used it
+      const { data: usedData } = await supabase
+        .from("session_credits")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("month", month)
+        .eq("year", year)
+        .eq("is_used", true);
+      setHasCredit(!usedData || usedData.length === 0);
+      setLoadingCredit(false);
+    };
+    checkCredit();
+  }, [user, isElite]);
 
   // Verify session on return from Stripe
   useEffect(() => {
@@ -83,7 +120,7 @@ const Schedule = () => {
   useEffect(() => { fetchSlots(); }, [dateStr]);
 
   const now = new Date();
-  const cutoffMs = 2.5 * 60 * 60 * 1000; // 2.5 hours
+  const cutoffMs = 2.5 * 60 * 60 * 1000;
 
   const availableSlots = useMemo(() => {
     return slots
@@ -100,6 +137,7 @@ const Schedule = () => {
   const toggleSlot = (time: string) => {
     setSelectedSlots(prev => {
       if (prev.includes(time)) return prev.filter(t => t !== time);
+      if (useCredit) return [time]; // credits = single slot only
       if (prev.length === 0) return [time];
       if (prev.length === 1) {
         const existing = prev[0];
@@ -107,16 +145,16 @@ const Schedule = () => {
         const prev30 = addMinutes(existing, -30);
         if (time === next && availableTimeSet.has(time)) return [existing, time].sort();
         if (time === prev30 && availableTimeSet.has(time)) return [time, existing].sort();
-        return [time]; // not consecutive, replace
+        return [time];
       }
-      return [time]; // already 2 selected, start over
+      return [time];
     });
   };
 
   const isConsecutive = selectedSlots.length === 2 &&
     addMinutes(selectedSlots[0], 30) === selectedSlots[1];
-  const duration = isConsecutive ? 60 : 30;
-  const price = isConsecutive ? 90 : 50;
+  const duration = useCredit ? 30 : (isConsecutive ? 60 : 30);
+  const price = useCredit ? 0 : (isConsecutive ? 90 : 50);
 
   const handlePurchase = async () => {
     if (!user) {
@@ -127,18 +165,36 @@ const Schedule = () => {
 
     setPurchasing(true);
     try {
-      const { data, error } = await supabase.functions.invoke("create-session-checkout", {
-        body: {
-          slot_date: dateStr,
-          start_time: selectedSlots[0],
-          duration_minutes: duration,
-        },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      if (data?.url) window.location.href = data.url;
+      if (useCredit) {
+        // Redeem credit directly
+        const { data, error } = await supabase.functions.invoke("redeem-session-credit", {
+          body: {
+            slot_date: dateStr,
+            start_time: selectedSlots[0],
+            session_type: sessionType,
+          },
+        });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+        setVerified(true);
+        setHasCredit(false);
+        toast({ title: "Session booked!", description: "Your Elite session credit has been redeemed. Confirmation emails sent!" });
+      } else {
+        // Stripe checkout
+        const { data, error } = await supabase.functions.invoke("create-session-checkout", {
+          body: {
+            slot_date: dateStr,
+            start_time: selectedSlots[0],
+            duration_minutes: duration,
+            session_type: sessionType,
+          },
+        });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+        if (data?.url) window.location.href = data.url;
+      }
     } catch (err: any) {
-      toast({ title: "Checkout error", description: err.message, variant: "destructive" });
+      toast({ title: "Booking error", description: err.message, variant: "destructive" });
     } finally {
       setPurchasing(false);
     }
@@ -167,7 +223,7 @@ const Schedule = () => {
             Your training session is confirmed. Check your email for details.
             Matt has been notified and is ready for you.
           </p>
-          <Button onClick={() => navigate("/schedule")} className="mt-4">Book Another Session</Button>
+          <Button onClick={() => { setVerified(false); navigate("/schedule"); }} className="mt-4">Book Another Session</Button>
         </div>
       </div>
     );
@@ -185,13 +241,71 @@ const Schedule = () => {
           </p>
         </div>
 
+        {/* Session Type Toggle */}
+        <div className="flex gap-2 mb-4">
+          <button
+            onClick={() => setSessionType("in_person")}
+            className={`flex-1 flex items-center justify-center gap-2 p-3 border transition-m2 text-sm font-bold ${
+              sessionType === "in_person"
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-card border-border text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <MapPin size={14} /> In-Person
+          </button>
+          <button
+            onClick={() => setSessionType("video")}
+            className={`flex-1 flex items-center justify-center gap-2 p-3 border transition-m2 text-sm font-bold ${
+              sessionType === "video"
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-card border-border text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Video size={14} /> Video Call
+          </button>
+        </div>
+
+        {/* Elite Credit Banner */}
+        {isElite && hasCredit && !loadingCredit && (
+          <div className="bg-accent/20 border border-accent p-3 mb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Ticket size={14} className="text-accent-foreground" />
+                <div>
+                  <div className="text-xs font-bold text-foreground">Elite Session Credit Available</div>
+                  <div className="text-[10px] text-muted-foreground">1× free 30-min session included with your Elite membership this month</div>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setUseCredit(!useCredit);
+                  if (!useCredit) setSelectedSlots(prev => prev.slice(0, 1));
+                }}
+                className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest border transition-m2 ${
+                  useCredit
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-card border-border text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {useCredit ? "Using Credit" : "Use Credit"}
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Info box */}
         <div className="bg-primary/10 border border-primary/20 p-4 mb-6 space-y-1">
           <div className="flex items-start gap-2">
             <Info size={14} className="text-primary flex-shrink-0 mt-0.5" />
             <div className="text-xs text-muted-foreground space-y-1">
-              <p><strong className="text-foreground">30-minute session: $50</strong> — Select one time slot.</p>
-              <p><strong className="text-foreground">1-hour session: $90</strong> — Select two consecutive slots to automatically combine into an hour.</p>
+              {useCredit ? (
+                <p><strong className="text-foreground">Free 30-min session</strong> — Select one time slot to redeem your Elite credit.</p>
+              ) : (
+                <>
+                  <p><strong className="text-foreground">30-minute session: $50</strong> — Select one time slot.</p>
+                  <p><strong className="text-foreground">1-hour session: $90</strong> — Select two consecutive slots to automatically combine into an hour.</p>
+                </>
+              )}
               <p>Slots close 2.5 hours before start time. Sessions available up to 2 weeks out.</p>
             </div>
           </div>
@@ -252,23 +366,37 @@ const Schedule = () => {
           <div className="bg-card shadow-m2 p-5 sticky bottom-4">
             <div className="flex items-center justify-between mb-3">
               <div>
-                <div className="text-sm font-bold text-foreground">
-                  {isConsecutive ? "1-Hour Session" : "30-Minute Session"}
+                <div className="text-sm font-bold text-foreground flex items-center gap-2">
+                  {sessionType === "video" ? <Video size={14} /> : <MapPin size={14} />}
+                  {isConsecutive && !useCredit ? "1-Hour Session" : "30-Minute Session"}
+                  <span className="text-[10px] px-1.5 py-0.5 bg-muted text-muted-foreground font-bold uppercase">
+                    {sessionType === "video" ? "Video" : "In-Person"}
+                  </span>
                 </div>
                 <div className="text-xs text-muted-foreground">
                   {format(currentDate, "EEEE, MMM d")} at {formatTime12(selectedSlots[0])}
-                  {isConsecutive && ` – ${formatTime12(addMinutes(selectedSlots[1], 30))}`}
+                  {isConsecutive && !useCredit && ` – ${formatTime12(addMinutes(selectedSlots[1], 30))}`}
                 </div>
               </div>
-              <div className="text-2xl font-mono font-bold text-primary">${price}</div>
+              <div className="text-right">
+                {useCredit ? (
+                  <div>
+                    <div className="text-xs line-through text-muted-foreground">$50</div>
+                    <div className="text-lg font-mono font-bold text-primary">FREE</div>
+                  </div>
+                ) : (
+                  <div className="text-2xl font-mono font-bold text-primary">${price}</div>
+                )}
+              </div>
             </div>
             <Button
               onClick={handlePurchase}
               disabled={purchasing}
               className="w-full text-xs font-bold uppercase tracking-widest"
             >
-              {purchasing ? <Loader2 size={14} className="animate-spin mr-2" /> : <DollarSign size={14} className="mr-2" />}
-              {user ? `Book Session · $${price}` : "Sign In to Book"}
+              {purchasing ? <Loader2 size={14} className="animate-spin mr-2" /> : 
+                useCredit ? <Ticket size={14} className="mr-2" /> : <DollarSign size={14} className="mr-2" />}
+              {!user ? "Sign In to Book" : useCredit ? "Redeem Credit" : `Book Session · $${price}`}
             </Button>
           </div>
         )}

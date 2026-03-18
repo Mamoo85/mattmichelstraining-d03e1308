@@ -67,6 +67,7 @@ serve(async (req) => {
         start_time: meta.start_time,
         duration_minutes: durationMinutes,
         amount_cents: amountCents,
+        session_type: meta.session_type || "in_person",
         stripe_session_id: session_id,
         stripe_payment_intent_id: session.payment_intent as string,
         user_email: meta.user_email,
@@ -117,6 +118,19 @@ serve(async (req) => {
     await sendEmail(meta.user_email, `Session Confirmed — ${dateStr} at ${timeStr}`, emailHtml);
     // Send notification to Matt
     await sendEmail(ADMIN_EMAIL, `NEW SESSION BOOKED — ${meta.user_name || meta.user_email} · ${dateStr} ${timeStr}`, emailHtml);
+
+    // Sync to Google Calendar (fire-and-forget)
+    try {
+      const gcalUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/google-calendar-sync`;
+      await fetch(gcalUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+        },
+        body: JSON.stringify({ action: "create_event", booking_id: booking.id }),
+      });
+    } catch (e) { console.error("GCal sync error:", e); }
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
