@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Headset, Send, X, Loader2, Bot } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
