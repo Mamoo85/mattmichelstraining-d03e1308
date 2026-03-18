@@ -5,7 +5,9 @@ import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import m2Logo from "@/assets/m2-logo.jpg";
-import { ArrowRight, Loader2, Gift, Users, Mail } from "lucide-react";
+import { ArrowRight, Loader2, Gift, Users, Mail, User, UserPlus } from "lucide-react";
+
+type SignupRole = "self" | "parent";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -38,10 +40,15 @@ const Auth = () => {
   };
 
   const [mode, setMode] = useState<"login" | "signup" | "magic">(inviteToken ? "signup" : "login");
+  const [signupRole, setSignupRole] = useState<SignupRole>("self");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [athleteName, setAthleteName] = useState("");
+  // Parent flow: child fields
+  const [childEmail, setChildEmail] = useState("");
+  const [childPassword, setChildPassword] = useState("");
+  const [childName, setChildName] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [appleLoading, setAppleLoading] = useState(false);
@@ -67,16 +74,40 @@ const Auth = () => {
     }
 
     if (mode === "signup") {
-      const { error } = await supabase.auth.signUp({
+      // Parent flow: create parent first, then child via edge function
+      const accountRole = signupRole === "parent" ? "parent" : "independent_adult";
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: window.location.origin,
-          data: { full_name: fullName, athlete_name: athleteName },
+          data: { full_name: fullName, athlete_name: signupRole === "self" ? athleteName : "", account_role: accountRole },
         },
       });
-      if (error) setError(error.message);
-      else setSuccess("Check your email to confirm your account.");
+      if (signUpError) {
+        setError(signUpError.message);
+        setLoading(false);
+        return;
+      }
+
+      // If parent flow and child details provided, create child account
+      if (signupRole === "parent" && childEmail && childPassword && childName) {
+        setSuccess("Parent account created! Now setting up your athlete's account…");
+        try {
+          const { error: childError } = await supabase.functions.invoke("create-child-account", {
+            body: { childEmail, childPassword, childName },
+          });
+          if (childError) {
+            setSuccess("Parent account created! Check your email to confirm. You can invite your athlete later from your profile.");
+          } else {
+            setSuccess("Both accounts created! Check both email inboxes to confirm, then sign in.");
+          }
+        } catch {
+          setSuccess("Parent account created! Check your email to confirm. You can invite your athlete later from your profile.");
+        }
+      } else {
+        setSuccess("Check your email to confirm your account.");
+      }
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) setError(error.message);
@@ -146,20 +177,61 @@ const Auth = () => {
           </div>
         )}
 
+        {/* Signup Role Toggle — only on signup, not invite flow */}
         {mode === "signup" && !inviteToken && (
-          <div className="bg-primary/10 border border-primary/20 p-4 mb-5">
-            <div className="flex items-start gap-2">
-              <Gift size={16} className="text-primary flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-xs font-bold text-foreground mb-1">Free with your account:</p>
-                <ul className="text-xs text-muted-foreground space-y-0.5">
-                  <li>✓ Monthly focus plans</li>
-                  <li>✓ Member challenges & leaderboard</li>
-                  <li>✓ Random awesome workouts that literally nobody could think of except Matt</li>
-                </ul>
+          <>
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              <button
+                type="button"
+                onClick={() => setSignupRole("self")}
+                className={`flex items-center justify-center gap-2 py-3 text-xs font-bold uppercase tracking-widest border-2 transition-all ${
+                  signupRole === "self"
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border bg-card text-muted-foreground hover:border-muted-foreground"
+                }`}
+              >
+                <User size={14} />
+                For Myself
+              </button>
+              <button
+                type="button"
+                onClick={() => setSignupRole("parent")}
+                className={`flex items-center justify-center gap-2 py-3 text-xs font-bold uppercase tracking-widest border-2 transition-all ${
+                  signupRole === "parent"
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border bg-card text-muted-foreground hover:border-muted-foreground"
+                }`}
+              >
+                <UserPlus size={14} />
+                Parent + Athlete
+              </button>
+            </div>
+
+            <div className="bg-primary/10 border border-primary/20 p-4 mb-5">
+              <div className="flex items-start gap-2">
+                <Gift size={16} className="text-primary flex-shrink-0 mt-0.5" />
+                <div>
+                  {signupRole === "parent" ? (
+                    <>
+                      <p className="text-xs font-bold text-foreground mb-1">Parent + Athlete Account</p>
+                      <p className="text-xs text-muted-foreground">
+                        Create your parent account and your athlete's account together. One subscription covers both. After trial, defaults to Foundation ($39.99/mo).
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-xs font-bold text-foreground mb-1">Free with your account:</p>
+                      <ul className="text-xs text-muted-foreground space-y-0.5">
+                        <li>✓ Monthly focus plans</li>
+                        <li>✓ Member challenges & leaderboard</li>
+                        <li>✓ Random awesome workouts that literally nobody could think of except Matt</li>
+                      </ul>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          </>
         )}
 
         {/* Google Sign In */}
@@ -220,7 +292,9 @@ const Auth = () => {
           {mode === "signup" && (
             <>
               <div>
-                <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Parent / Guardian Name</label>
+                <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">
+                  {signupRole === "parent" ? "Parent / Guardian Name" : "Your Name"}
+                </label>
                 <input
                   type="text"
                   value={fullName}
@@ -229,19 +303,23 @@ const Auth = () => {
                   required
                 />
               </div>
-              <div>
-                <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Athlete's Name</label>
-                <input
-                  type="text"
-                  value={athleteName}
-                  onChange={(e) => setAthleteName(e.target.value)}
-                  className="w-full bg-card border border-border px-3 py-3 text-sm text-foreground focus:ring-1 focus:ring-primary outline-none"
-                />
-              </div>
+              {signupRole === "self" && (
+                <div>
+                  <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Athlete Name (optional)</label>
+                  <input
+                    type="text"
+                    value={athleteName}
+                    onChange={(e) => setAthleteName(e.target.value)}
+                    className="w-full bg-card border border-border px-3 py-3 text-sm text-foreground focus:ring-1 focus:ring-primary outline-none"
+                  />
+                </div>
+              )}
             </>
           )}
           <div>
-            <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Email</label>
+            <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">
+              {mode === "signup" && signupRole === "parent" ? "Parent Email" : "Email"}
+            </label>
             <input
               type="email"
               value={email}
@@ -253,7 +331,9 @@ const Auth = () => {
 
           {mode !== "magic" && (
             <div>
-              <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Password</label>
+              <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">
+                {mode === "signup" && signupRole === "parent" ? "Parent Password" : "Password"}
+              </label>
               <input
                 type="password"
                 value={password}
@@ -262,6 +342,44 @@ const Auth = () => {
                 required
                 minLength={6}
               />
+            </div>
+          )}
+
+          {/* Child account fields for parent signup */}
+          {mode === "signup" && signupRole === "parent" && (
+            <div className="border-t border-border pt-3 mt-3 space-y-3">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-primary font-mono">Athlete's Account</p>
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Athlete's Name</label>
+                <input
+                  type="text"
+                  value={childName}
+                  onChange={(e) => setChildName(e.target.value)}
+                  className="w-full bg-card border border-border px-3 py-3 text-sm text-foreground focus:ring-1 focus:ring-primary outline-none"
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Athlete's Email</label>
+                <input
+                  type="email"
+                  value={childEmail}
+                  onChange={(e) => setChildEmail(e.target.value)}
+                  className="w-full bg-card border border-border px-3 py-3 text-sm text-foreground focus:ring-1 focus:ring-primary outline-none"
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Athlete's Password</label>
+                <input
+                  type="password"
+                  value={childPassword}
+                  onChange={(e) => setChildPassword(e.target.value)}
+                  className="w-full bg-card border border-border px-3 py-3 text-sm text-foreground focus:ring-1 focus:ring-primary outline-none"
+                  required
+                  minLength={6}
+                />
+              </div>
             </div>
           )}
 
@@ -291,7 +409,7 @@ const Auth = () => {
             className="w-full bg-primary text-primary-foreground px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2 flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {loading ? <Loader2 size={15} className="animate-spin" /> : mode === "magic" ? <Mail size={15} /> : <ArrowRight size={15} />}
-            {mode === "magic" ? "Send Login Link" : mode === "signup" ? "Create Free Account" : "Sign In"}
+            {mode === "magic" ? "Send Login Link" : mode === "signup" ? (signupRole === "parent" ? "Create Both Accounts" : "Create Free Account") : "Sign In"}
           </button>
         </form>
 

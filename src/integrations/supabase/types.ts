@@ -1001,6 +1001,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_role: string
           athlete_name: string | null
           created_at: string
           email: string | null
@@ -1016,6 +1017,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          account_role?: string
           athlete_name?: string | null
           created_at?: string
           email?: string | null
@@ -1031,6 +1033,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          account_role?: string
           athlete_name?: string | null
           created_at?: string
           email?: string | null

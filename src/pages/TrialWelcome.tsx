@@ -75,8 +75,8 @@ const TrialWelcome = () => {
   const canSelectProgram = checkoutDone;
 
   const autoChargeLabel = selectedPath === "basic"
-    ? "Basic membership at $15.99/mo"
-    : "Pro membership at $49.99/mo";
+    ? "Basic membership at $14.99/mo"
+    : "Foundation membership at $39.99/mo";
 
   const handleStartTrial = async () => {
     if (!user) {
@@ -191,7 +191,7 @@ const TrialWelcome = () => {
                 onClick={() => setSelectedPath("basic")}
                 icon={User}
                 title="Basic Trial"
-                charge="$15.99/mo after trial"
+                charge="$14.99/mo after trial"
                 desc="Exercise library, monthly focus, challenges, and workout logging."
                 badge={null}
                 warning="No child invite · No custom program"
