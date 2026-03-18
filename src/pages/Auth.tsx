@@ -106,7 +106,21 @@ const Auth = () => {
           <p className="text-sm text-muted-foreground mt-1">Real training. Real results.</p>
         </div>
 
-        {isSignUp && (
+        {inviteToken && (
+          <div className="bg-accent/20 border border-accent/40 p-4 mb-5">
+            <div className="flex items-start gap-2">
+              <Users size={16} className="text-primary flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-xs font-bold text-foreground mb-1">You've been invited!</p>
+                <p className="text-xs text-muted-foreground">
+                  Create an account or sign in to link with your parent's M² Training account.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isSignUp && !inviteToken && (
           <div className="bg-primary/10 border border-primary/20 p-4 mb-5">
             <div className="flex items-start gap-2">
               <Gift size={16} className="text-primary flex-shrink-0 mt-0.5" />
