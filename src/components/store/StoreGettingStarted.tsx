@@ -109,7 +109,7 @@ const StoreGettingStarted = () => {
         <div>
           <h4 className="text-xs font-bold text-foreground mb-1">The Math</h4>
           <p className="text-[11px] text-muted-foreground">
-            In-person training: <span className="text-foreground font-bold">$40–$150/session</span>. Online coaching: <span className="text-foreground font-bold">$100–$300/mo</span>. M² subscription: <span className="text-primary font-bold">$12.99/mo</span>. Same 20 years of expertise.
+            In-person training: <span className="text-foreground font-bold">$40–$150/session</span>. Online coaching: <span className="text-foreground font-bold">$100–$300/mo</span>. M² subscription: <span className="text-primary font-bold">$15.99/mo</span>. Same 20 years of expertise.
           </p>
         </div>
       </div>
