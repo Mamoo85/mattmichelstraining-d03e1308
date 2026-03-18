@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Save, Eye, EyeOff, Loader2, RefreshCw, Sparkles } from "lucide-react";
+import { Save, Eye, EyeOff, Loader2, RefreshCw, Sparkles, Undo2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -163,7 +163,7 @@ const AdminSiteEditor = () => {
             </button>
           ))}
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 shrink-0">
           <button
             onClick={() => invalidate()}
             className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest bg-muted text-muted-foreground hover:text-foreground transition-m2 flex items-center gap-1"
@@ -171,14 +171,25 @@ const AdminSiteEditor = () => {
             <RefreshCw size={10} /> Refresh
           </button>
           {hasChanges && (
-            <button
-              onClick={handleSaveAll}
-              disabled={saving}
-              className="px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest bg-primary text-primary-foreground hover:opacity-90 transition-m2 flex items-center gap-1"
-            >
-              {saving ? <Loader2 size={10} className="animate-spin" /> : <Save size={10} />}
-              Save {Object.keys(editedContent).length} Change{Object.keys(editedContent).length > 1 ? "s" : ""}
-            </button>
+            <>
+              <button
+                onClick={() => {
+                  setEditedContent({});
+                  toast({ title: "All changes reverted" });
+                }}
+                className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest bg-muted text-destructive hover:bg-destructive/10 transition-m2 flex items-center gap-1"
+              >
+                <Undo2 size={10} /> Undo All
+              </button>
+              <button
+                onClick={handleSaveAll}
+                disabled={saving}
+                className="px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest bg-primary text-primary-foreground hover:opacity-90 transition-m2 flex items-center gap-1"
+              >
+                {saving ? <Loader2 size={10} className="animate-spin" /> : <Save size={10} />}
+                Save {Object.keys(editedContent).length}
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -231,18 +242,34 @@ const AdminSiteEditor = () => {
                           {item.label || item.content_key}
                           {isEdited && <span className="text-primary ml-1">· edited</span>}
                         </label>
-                        {currentValue && (
-                          <AiAssistButton
-                            type="site_content"
-                            context={{
-                              section: item.section,
-                              label: item.label || item.content_key,
-                              currentValue,
-                            }}
-                            onResult={(text) => handleContentChange(item.id, text)}
-                            label="AI Rewrite"
-                          />
-                        )}
+                        <div className="flex items-center gap-1.5">
+                          {isEdited && (
+                            <button
+                              onClick={() => setEditedContent((prev) => {
+                                const next = { ...prev };
+                                delete next[item.id];
+                                return next;
+                              })}
+                              className="flex items-center gap-0.5 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-destructive bg-destructive/10 hover:bg-destructive/20 transition-m2"
+                              title="Undo this change"
+                            >
+                              <Undo2 size={9} />
+                              Undo
+                            </button>
+                          )}
+                          {currentValue && (
+                            <AiAssistButton
+                              type="site_content"
+                              context={{
+                                section: item.section,
+                                label: item.label || item.content_key,
+                                currentValue,
+                              }}
+                              onResult={(text) => handleContentChange(item.id, text)}
+                              label="AI Rewrite"
+                            />
+                          )}
+                        </div>
                       </div>
                       {item.content_type === "textarea" ? (
                         <textarea
