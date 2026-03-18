@@ -9,10 +9,7 @@ import { toast } from "sonner";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import ConfirmActionModal from "@/components/ConfirmActionModal";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import AiAssistButton from "./AiAssistButton";
