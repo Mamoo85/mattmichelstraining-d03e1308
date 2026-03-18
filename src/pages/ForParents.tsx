@@ -114,31 +114,13 @@ const ForParents = () => {
                   <p className="text-xs opacity-80">Grosse Pointe Park, MI — 1-on-1, small group & team sessions</p>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                <Link
-                  to="/schedule"
-                  className="inline-flex items-center gap-1.5 bg-background text-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
-                >
-                  <Calendar size={12} />
-                  Book a Session
-                </Link>
-                <a
-                  href="https://calendly.com/m2training"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 border-2 border-primary-foreground/40 px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-primary-foreground/10 transition-m2"
-                >
-                  <Calendar size={12} />
-                  Book with Matt
-                </a>
-                <a
-                  href="tel:+13135551234"
-                  className="inline-flex items-center gap-1.5 border-2 border-primary-foreground/40 px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-primary-foreground/10 transition-m2 hidden sm:flex"
-                >
-                  <Phone size={12} />
-                  Call
-                </a>
-              </div>
+              <Link
+                to="/schedule"
+                className="inline-flex items-center gap-1.5 bg-background text-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
+              >
+                <Calendar size={12} />
+                Book a Session
+              </Link>
             </div>
           </div>
         </motion.div>
