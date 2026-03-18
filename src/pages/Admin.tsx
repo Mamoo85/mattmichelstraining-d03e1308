@@ -28,6 +28,7 @@ import AdminVideoReview from "@/components/admin/AdminVideoReview";
 import AdminParentReports from "@/components/admin/AdminParentReports";
 import AdminParentInbox from "@/components/admin/AdminParentInbox";
 import AdminFamilyManager from "@/components/admin/AdminFamilyManager";
+import AdminTeamRosters from "@/components/admin/AdminTeamRosters";
 import AdminLearnEditor from "@/components/admin/AdminLearnEditor";
 import AdminFinancials from "@/components/admin/AdminFinancials";
 import AdminSystemSettings from "@/components/admin/AdminSystemSettings";
@@ -156,6 +157,7 @@ const Admin = () => {
         {activeSection === "users" && (
           <SubTabs tabs={[
             { key: "athletes", label: "Athletes & Trials", content: <AdminClientList /> },
+            { key: "teams", label: "Team Rosters", content: <AdminTeamRosters /> },
             { key: "family", label: "Family Accounts", content: <AdminFamilyManager /> },
             { key: "parent-reports", label: "Parent Reports", content: <AdminParentReports /> },
             { key: "parent-inbox", label: "Parent Inbox", content: <AdminParentInbox /> },

@@ -23,8 +23,9 @@ import PointsLeaderboard from "@/components/PointsLeaderboard";
 import PwaInstallBanner from "@/components/PwaInstallBanner";
 import WorkoutScanner from "@/components/workout/WorkoutScanner";
 import EmptyStateCard from "@/components/EmptyStateCard";
+import TeamManager from "@/components/TeamManager";
 
-const TABS = [
+const BASE_TABS = [
   { key: "home", label: "Home" },
   { key: "progress", label: "Progress" },
   { key: "programs", label: "My Programs" },
@@ -587,21 +588,28 @@ const Dashboard = () => {
         <StudioCheckIn />
 
         {/* Tab switcher — horizontal scroll on mobile */}
-        <div className="flex gap-1 mb-6 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap scrollbar-hide">
-          {TABS.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setActiveTab(t.key)}
-              className={`px-3 sm:px-4 py-2 sm:py-2.5 text-[10px] sm:text-xs font-bold uppercase tracking-widest transition-all whitespace-nowrap shrink-0 ${
-                activeTab === t.key
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+        {(() => {
+          const TABS = subscriptionTier === "team" || isAdmin
+            ? [...BASE_TABS, { key: "team", label: "Team" }]
+            : BASE_TABS;
+          return (
+            <div className="flex gap-1 mb-6 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap scrollbar-hide">
+              {TABS.map((t) => (
+                <button
+                  key={t.key}
+                  onClick={() => setActiveTab(t.key)}
+                  className={`px-3 sm:px-4 py-2 sm:py-2.5 text-[10px] sm:text-xs font-bold uppercase tracking-widest transition-all whitespace-nowrap shrink-0 ${
+                    activeTab === t.key
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          );
+        })()}
 
         {activeTab === "home" && renderHome()}
         {activeTab === "progress" && <ProgressCharts />}
@@ -609,6 +617,7 @@ const Dashboard = () => {
         {activeTab === "workouts" && <WorkoutsTab />}
         {activeTab === "points" && <PointsLeaderboard />}
         {activeTab === "referrals" && <ReferralDashboard />}
+        {activeTab === "team" && <TeamManager />}
       </div>
 
       {/* Floating timer button */}

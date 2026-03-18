@@ -1614,6 +1614,77 @@ export type Database = {
         }
         Relationships: []
       }
+      team_members: {
+        Row: {
+          athlete_email: string
+          athlete_name: string | null
+          athlete_user_id: string | null
+          id: string
+          invited_at: string
+          joined_at: string | null
+          role: string
+          roster_id: string
+          status: string
+        }
+        Insert: {
+          athlete_email: string
+          athlete_name?: string | null
+          athlete_user_id?: string | null
+          id?: string
+          invited_at?: string
+          joined_at?: string | null
+          role?: string
+          roster_id: string
+          status?: string
+        }
+        Update: {
+          athlete_email?: string
+          athlete_name?: string | null
+          athlete_user_id?: string | null
+          id?: string
+          invited_at?: string
+          joined_at?: string | null
+          role?: string
+          roster_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_roster_id_fkey"
+            columns: ["roster_id"]
+            isOneToOne: false
+            referencedRelation: "team_rosters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_rosters: {
+        Row: {
+          created_at: string
+          id: string
+          owner_id: string
+          sport: string | null
+          team_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          owner_id: string
+          sport?: string | null
+          team_name?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          owner_id?: string
+          sport?: string | null
+          team_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       testimonials: {
         Row: {
           author_initials: string
