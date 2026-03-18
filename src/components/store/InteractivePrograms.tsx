@@ -58,13 +58,14 @@ const InteractivePrograms = () => {
       setPrograms((data as TrainingProgram[]) || []);
 
       if (user) {
-        const { data: owned } = await supabase
-          .from("user_active_programs")
-          .select("program_id")
-          .eq("user_id", user.id);
-        if (owned) {
-          setOwnedProgramIds(new Set(owned.map((o: any) => o.program_id)));
-        }
+        // Check both user_active_programs AND user_content_access for gifted content
+        const [activeRes, giftedRes] = await Promise.all([
+          supabase.from("user_active_programs").select("program_id").eq("user_id", user.id),
+          supabase.from("user_content_access").select("program_id").eq("user_id", user.id).not("program_id", "is", null),
+        ]);
+        const activeIds = (activeRes.data || []).map((o: any) => o.program_id);
+        const giftedIds = (giftedRes.data || []).map((o: any) => o.program_id);
+        setOwnedProgramIds(new Set([...activeIds, ...giftedIds]));
       }
 
       setLoading(false);
