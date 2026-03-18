@@ -42,6 +42,7 @@
     --m2-surface-hover: 0 0% 15%;
     --m2-dim: 0 0% 40%;
     --m2-text-dim: 0 0% 65%;
+    --foreground-soft: 0 0% 82%;
   }
 
   .dark {

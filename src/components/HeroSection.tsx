@@ -7,6 +7,7 @@ import { useSectionVisible } from "@/hooks/useSiteContent";
 import AudienceSelector from "./landing/AudienceSelector";
 import ForParentsCTA from "./landing/ForParentsCTA";
 import Testimonials from "./landing/Testimonials";
+import ParentTestimonialCard from "./landing/ParentTestimonialCard";
 import M2Difference from "./landing/M2Difference";
 import FindUs from "./landing/FindUs";
 import PortalEntrance from "./landing/PortalEntrance";
@@ -44,11 +45,11 @@ const HeroSection = () => {
                 className="w-36 h-36 md:w-48 md:h-48 lg:w-56 lg:h-56 object-contain mb-4"
               />
               <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold tracking-display text-foreground leading-snug mb-3">
-                Train smarter. Get stronger.
+                Real strength. Zero gimmicks.
                 <br />
                 <span className="text-primary">Real coaching. Real results.</span>
               </h1>
-              <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto leading-relaxed">
+              <p className="text-sm md:text-base text-foreground-soft max-w-xl mx-auto leading-relaxed">
                 In-person training in Grosse Pointe. Online programs anywhere.
                 The same coach either way.
               </p>
@@ -84,6 +85,11 @@ const HeroSection = () => {
 
         {/* ─── 3. FOR PARENTS — Injury Prevention Hook ─── */}
         <ForParentsCTA />
+
+        {/* ─── PARENT TRUST TESTIMONIAL ─── */}
+        <div className="mb-8">
+          <ParentTestimonialCard />
+        </div>
 
         {/* ─── 4. MEMBER PORTAL (sneak peek) ─── */}
         <PortalEntrance />

@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import AppNavbar from "@/components/AppNavbar";
 import m2Logo from "@/assets/m2-logo-official.jpg";
+import ParentTestimonialCard from "@/components/landing/ParentTestimonialCard";
 
 const SELL_POINTS = [
   "20+ years of one-on-one training experience",
@@ -43,7 +44,7 @@ const Welcome = () => (
         <h1 className="text-2xl md:text-3xl font-bold tracking-display text-foreground mb-3">
           Welcome to <span className="text-primary">M² Training</span>
         </h1>
-        <p className="text-sm text-muted-foreground max-w-lg mx-auto leading-relaxed">
+        <p className="text-sm text-foreground-soft max-w-lg mx-auto leading-relaxed">
           Your free account is ready. Now let's talk about how we can take your
           training — or your athlete's training — to the next level.
         </p>
@@ -64,6 +65,16 @@ const Welcome = () => (
         ))}
       </motion.div>
 
+      {/* PARENT TRUST TESTIMONIAL */}
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.4 }}
+        className="mb-10"
+      >
+        <ParentTestimonialCard />
+      </motion.div>
+
       {/* STRENGTH > CARDIO — MATT'S PHILOSOPHY */}
       <motion.div
         initial={{ opacity: 0, y: 15 }}
@@ -74,14 +85,14 @@ const Welcome = () => (
         <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-2 font-mono">
           The Real Deal
         </p>
-        <p className="text-sm text-foreground leading-relaxed mb-3">
-          This isn't purple hypothesis. This is <strong>strength training</strong>.
+        <p className="text-sm text-foreground-soft leading-relaxed mb-3">
+          This isn't purple hypothesis. This is <strong className="text-foreground">strength training</strong>.
           If you want cardio, go somewhere else — cardio eats your muscle mass and
           runs you into an early grave. It's been proven: strength training releases
           the confidence and resilience that you and your children need to succeed in
           this crazy world.
         </p>
-        <p className="text-sm text-muted-foreground leading-relaxed">
+        <p className="text-sm text-foreground-soft leading-relaxed">
           Strength lasts a lifetime. Cardio only lasts while you're doing it.
           Matt has spent 20 years proving it — 50+ college athletes, zero injuries,
           real results every single time.
@@ -101,8 +112,8 @@ const Welcome = () => (
             Parents: Stay in the Loop
           </h2>
         </div>
-        <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-          Create a <strong>linked child account</strong> and monitor every workout,
+        <p className="text-sm text-foreground-soft leading-relaxed mb-4">
+          Create a <strong className="text-foreground">linked child account</strong> and monitor every workout,
           every rep, every progress milestone. Ask Coach Matt questions on behalf of
           your athlete. On Pro membership and above, request video chats and form
           checks so Matt can coach your kid directly — no matter where you are.
@@ -234,9 +245,9 @@ const Welcome = () => (
             One-Time Programs — No Subscription Needed
           </h2>
         </div>
-        <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+        <p className="text-sm text-foreground-soft leading-relaxed mb-3">
           Older athlete? Parent on the road for work? Grab a one-time custom
-          program built by Matt personally. Starting at <strong>$20</strong>.
+          program built by Matt personally. Starting at <strong className="text-foreground">$20</strong>.
           Sport-specific, foundation, or fully custom — real workouts from a real
           trainer, not an algorithm.
         </p>
