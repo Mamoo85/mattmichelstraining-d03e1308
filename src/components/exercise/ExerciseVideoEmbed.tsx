@@ -42,8 +42,8 @@ const ExerciseVideoEmbed = ({ videoUrl, exerciseTitle }: ExerciseVideoEmbedProps
     : null;
 
   const embedUrl = youtubeId
-    ? `https://www.youtube-nocookie.com/embed/${youtubeId}?rel=0&modestbranding=1`
-    : `https://player.vimeo.com/video/${vimeoId}?byline=0&portrait=0`;
+    ? `https://www.youtube-nocookie.com/embed/${youtubeId}?rel=0&modestbranding=1&showinfo=0&iv_load_policy=3`
+    : `https://player.vimeo.com/video/${vimeoId}?byline=0&portrait=0&title=0`;
 
   return (
     <motion.div
