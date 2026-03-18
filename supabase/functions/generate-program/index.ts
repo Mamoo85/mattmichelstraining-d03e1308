@@ -191,7 +191,7 @@ ${exerciseList}`;
     const program = JSON.parse(toolCall.function.arguments);
 
     // Validate exercise IDs exist
-    const exerciseIds = new Set((exercises || []).map((e: any) => e.id));
+    const exerciseIds = new Set(allExercises.map((e: any) => e.id));
     const validWorkouts = program.workouts.filter((w: any) => exerciseIds.has(w.exercise_id));
     const invalidCount = program.workouts.length - validWorkouts.length;
 
