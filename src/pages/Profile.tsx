@@ -291,14 +291,23 @@ const Profile = () => {
                 </p>
               </div>
             </div>
-            <button
-              onClick={handleManageSubscription}
-              disabled={portalLoading}
-              className="mt-4 flex items-center gap-1.5 border border-primary/30 text-primary px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-primary/10 transition-all disabled:opacity-50"
-            >
-              {portalLoading ? <Loader2 size={12} className="animate-spin" /> : <ExternalLink size={12} />}
-              Update Payment · Cancel · Change Plan
-            </button>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button
+                onClick={handleManageSubscription}
+                disabled={portalLoading}
+                className="flex items-center gap-1.5 border border-primary/30 text-primary px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-primary/10 transition-all disabled:opacity-50"
+              >
+                {portalLoading ? <Loader2 size={12} className="animate-spin" /> : <ExternalLink size={12} />}
+                Change Plan · Update Payment
+              </button>
+              <button
+                onClick={handleManageSubscription}
+                disabled={portalLoading}
+                className="flex items-center gap-1.5 border border-destructive/40 text-destructive px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-destructive/10 transition-all disabled:opacity-50"
+              >
+                Cancel Subscription
+              </button>
+            </div>
           </div>
         )}
 
