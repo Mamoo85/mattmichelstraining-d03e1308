@@ -215,6 +215,61 @@ Address the parent directly. Sign off as Coach Matt.`;
         break;
       }
 
+      case "ai_copilot": {
+        systemPrompt = `You are an AI performance analyst for M² Training, Coach Matt Michels' strength & conditioning business. Analyze athlete data to flag actionable insights. Be concise, specific, and data-driven. Use a professional but direct tone. Format output as JSON.`;
+        userPrompt = `Analyze this athlete roster data and generate actionable coaching insights.
+
+ATHLETE DATA:
+${JSON.stringify(context.athletes, null, 2)}
+
+TRIAL USERS:
+${JSON.stringify(context.trialUsers, null, 2)}
+
+Today's date: ${context.today}
+
+Generate insights in these categories:
+1. "stagnation" — athletes who haven't increased weight on core lifts (Squat, Bench, Deadlift, or similar compound movements) in 3+ weeks. Include their name, the exercise, and a suggested coach message.
+2. "ghost_trials" — trial users who signed up 4+ days ago but have zero workout logs. Include their name, email, days since signup, and a draft check-in message.
+
+Return ONLY valid JSON (no markdown, no code fences):
+{
+  "stagnation": [{ "name": "...", "exercise": "...", "lastWeight": number, "weeksSince": number, "suggestedMessage": "..." }],
+  "ghost_trials": [{ "name": "...", "email": "...", "daysSinceSignup": number, "draftMessage": "..." }]
+}`;
+        break;
+      }
+
+      case "blog_draft": {
+        systemPrompt = `You are Coach Matt Michels — the "Anti-Influencer" strength coach. You've trained athletes for 20+ years. Your writing style is:
+- Direct, no-BS, conversational
+- Backed by real experience, not internet trends
+- You call out bad fitness advice openly
+- You explain the WHY behind everything (biomechanics, kinesiology)
+- You care deeply about youth athletes and parent education
+- No clickbait, no hype — just real talk
+
+Write SEO-optimized blog posts that sound like Matt talking to a parent or athlete over coffee. Use short paragraphs, bold key points, and end with a clear takeaway.`;
+        userPrompt = `Matt typed this raw thought: "${context.rawIdea}"
+
+Turn this into a professional, ~300-word SEO-optimized blog post in Matt's "Anti-Influencer" voice.
+
+Requirements:
+- Catchy, SEO-friendly title (include relevant keywords)
+- Opening hook that grabs parents or athletes
+- 3-4 short paragraphs with **bold** key phrases
+- Practical takeaway at the end
+- Tone: confident, educational, no fluff
+
+Return ONLY valid JSON (no markdown, no code fences):
+{
+  "title": "...",
+  "body": "... (markdown formatted)",
+  "category": "one of: general, injury-prevention, youth-development, training-fundamentals, recovery, nutrition, parent-guide",
+  "slug": "url-friendly-slug"
+}`;
+        break;
+      }
+
       default:
         throw new Error(`Unknown assist type: ${type}`);
     }
