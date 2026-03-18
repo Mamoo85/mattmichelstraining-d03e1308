@@ -3,6 +3,7 @@ import { usePoints, getLevelInfo, getNextLevel, LEVELS } from "@/hooks/usePoints
 import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/useAuth";
+import LevelUpCelebration from "@/components/LevelUpCelebration";
 
 interface PointsWidgetProps {
   onViewLeaderboard?: () => void;
@@ -10,7 +11,7 @@ interface PointsWidgetProps {
 
 const PointsWidget = ({ onViewLeaderboard }: PointsWidgetProps) => {
   const { user } = useAuth();
-  const { points, transactions, toggleVisibility, loading } = usePoints();
+  const { points, transactions, toggleVisibility, loading, levelUp, dismissLevelUp } = usePoints();
 
   if (loading || !points) return null;
 
