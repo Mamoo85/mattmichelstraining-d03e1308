@@ -65,8 +65,6 @@ const AdminProgramCreator = () => {
   const [draft, setDraft] = useState<DraftProgram | null>(null);
   const [batchGenerating, setBatchGenerating] = useState(false);
   const [batchResults, setBatchResults] = useState<any[] | null>(null);
-  const [batchGenerating, setBatchGenerating] = useState(false);
-  const [batchResults, setBatchResults] = useState<any[] | null>(null);
 
   // --- Approval ---
   const [price, setPrice] = useState(49);
