@@ -21,7 +21,7 @@ const EMAIL_HTML = `
 
   <p>You know by now that we don't do fake influencer workouts or high-intensity circus acts. We do the unsexy, foundational work that builds absolute strength, fixes aching joints, and prevents injuries. Getting strong is hard, but it's an achievement nobody can ever take away from you.</p>
 
-  <p><strong>Tomorrow, your 7-day free access expires.</strong> If you want to keep your logs, keep progressing, and keep my eyes on your training, you need to choose your path:</p>
+  <p><strong>Tomorrow, your 14-day free access expires.</strong> If you want to keep your logs, keep progressing, and keep my eyes on your training, you need to choose your path:</p>
 
   <ol style="padding-left: 20px;">
     <li style="margin-bottom: 8px;"><strong>M² Basic ($12.99/mo)</strong> — Unlocks the full Exercise Library and workout logging so you can keep building your foundation.</li>
