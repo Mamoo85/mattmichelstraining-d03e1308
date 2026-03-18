@@ -391,6 +391,21 @@ const Pricing = () => {
             </Link>
           )}
         </div>
+
+        {/* Checkout confirmation modal */}
+        <CheckoutConfirmationModal
+          open={!!modalTier}
+          onClose={() => setModalTier(null)}
+          onConfirm={async () => {
+            if (!modalTier) return;
+            await handleCheckout(modalTier.key);
+            setModalTier(null);
+          }}
+          loading={!!loadingTier}
+          productName={modalTier ? (TIERS[modalTier.key].name + " Subscription") : ""}
+          productPrice={modalTier ? (TIERS[modalTier.key].price + "/mo") : ""}
+          productType={modalTier?.key as CheckoutProductType || "pro"}
+        />
       </div>
     </div>
   );
