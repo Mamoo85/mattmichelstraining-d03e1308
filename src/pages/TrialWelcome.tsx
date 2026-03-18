@@ -75,8 +75,8 @@ const TrialWelcome = () => {
   const canSelectProgram = checkoutDone;
 
   const autoChargeLabel = selectedPath === "basic"
-    ? "Basic membership at $15.99/mo"
-    : "Pro membership at $49.99/mo";
+    ? "Basic membership at $14.99/mo"
+    : "Foundation membership at $39.99/mo";
 
   const handleStartTrial = async () => {
     if (!user) {
