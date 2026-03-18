@@ -51,8 +51,9 @@ serve(async (req) => {
       .eq("user_id", user.id)
       .single();
 
-    if (!profile || profile.subscription_tier !== "elite") {
-      throw new Error("Session credits are only available for Elite subscribers");
+    const eliteTiers = ["custom", "team_elite"];
+    if (!profile || !eliteTiers.includes(profile.subscription_tier)) {
+      throw new Error("Session credits are only available for Custom and Team/Elite subscribers");
     }
 
     // Check for available credit this month

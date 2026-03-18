@@ -60,35 +60,55 @@ const Schedule = () => {
   const currentDate = days[selectedDay];
   const dateStr = format(currentDate, "yyyy-MM-dd");
 
-  // Check for available session credits (Elite only)
+  // Check for available session credits (Elite only) and gifted sessions
   useEffect(() => {
-    if (!user || !isElite) { setHasCredit(false); return; }
-    const checkCredit = async () => {
+    if (!user) { setHasCredit(false); setHasGift(false); return; }
+
+    const checkEntitlements = async () => {
       setLoadingCredit(true);
-      const now = new Date();
-      const month = now.getMonth() + 1;
-      const year = now.getFullYear();
-      const { data } = await supabase
-        .from("session_credits")
+
+      // Check gifted sessions for ANY tier
+      const { data: giftData } = await supabase
+        .from("gifted_sessions")
         .select("id")
-        .eq("user_id", user.id)
-        .eq("month", month)
-        .eq("year", year)
-        .eq("is_used", false);
-      // If no credit row exists yet, they still have one (will be auto-created on redeem)
-      setHasCredit(!data || data.length === 0 || data.length > 0);
-      // Actually check if they already used it
-      const { data: usedData } = await supabase
-        .from("session_credits")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("month", month)
-        .eq("year", year)
-        .eq("is_used", true);
-      setHasCredit(!usedData || usedData.length === 0);
+        .eq("status", "pending")
+        .eq("claimed_by", user.id)
+        .limit(1);
+
+      // Also check by receiver_email if not claimed yet
+      const userEmail = user.email;
+      let pendingGift = giftData && giftData.length > 0 ? giftData[0] : null;
+      if (!pendingGift && userEmail) {
+        const { data: emailGifts } = await supabase
+          .from("gifted_sessions")
+          .select("id")
+          .eq("status", "pending")
+          .eq("receiver_email", userEmail)
+          .limit(1);
+        pendingGift = emailGifts && emailGifts.length > 0 ? emailGifts[0] : null;
+      }
+      setHasGift(!!pendingGift);
+      setGiftId(pendingGift?.id || null);
+
+      // Check Elite credits
+      if (isElite) {
+        const now = new Date();
+        const month = now.getMonth() + 1;
+        const year = now.getFullYear();
+        const { data: usedData } = await supabase
+          .from("session_credits")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("month", month)
+          .eq("year", year)
+          .eq("is_used", true);
+        setHasCredit(!usedData || usedData.length === 0);
+      } else {
+        setHasCredit(false);
+      }
       setLoadingCredit(false);
     };
-    checkCredit();
+    checkEntitlements();
   }, [user, isElite]);
 
   // Verify session on return from Stripe
