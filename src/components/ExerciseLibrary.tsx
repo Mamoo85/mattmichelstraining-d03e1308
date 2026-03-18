@@ -290,6 +290,11 @@ const ExerciseLibrary = () => {
                   <div className="flex-1 min-w-0">
                     {/* Tags row */}
                     <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+                      {ex.level && (
+                        <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 ${LEVEL_COLORS[ex.level] || LEVEL_COLORS.intermediate}`}>
+                          {ex.level}
+                        </span>
+                      )}
                       {ex.focus_area.map((fa) => (
                         <span
                           key={fa}
