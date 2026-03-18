@@ -332,26 +332,26 @@ const Dashboard = () => {
                 {/* Progress + Log */}
                 <div className="bg-muted p-3">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-2">Your Progress</span>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 mb-2">
                     <span className="text-2xl font-mono font-bold text-primary">{currentValue}</span>
                     <span className="text-xs text-muted-foreground">{challenge.metric_label}</span>
-                    <div className="ml-auto flex items-center gap-1.5">
-                      <input
-                        type="number"
-                        placeholder={`+${challenge.metric_label}`}
-                        value={progressInput}
-                        onChange={(e) => setProgressInput(e.target.value)}
-                        className="bg-background border border-border text-right pr-2 font-mono text-primary text-sm focus:ring-1 focus:ring-primary outline-none h-8 w-20"
-                      />
-                      <button
-                        onClick={handleLogProgress}
-                        disabled={actionLoading}
-                        className="bg-primary text-primary-foreground h-8 px-3 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-1"
-                      >
-                        {actionLoading ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
-                        Log
-                      </button>
-                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="number"
+                      placeholder={`+${challenge.metric_label}`}
+                      value={progressInput}
+                      onChange={(e) => setProgressInput(e.target.value)}
+                      className="bg-background border border-border text-right pr-2 font-mono text-primary text-sm focus:ring-1 focus:ring-primary outline-none h-8 w-20 flex-shrink-0"
+                    />
+                    <button
+                      onClick={handleLogProgress}
+                      disabled={actionLoading}
+                      className="bg-primary text-primary-foreground h-8 px-3 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-1 shrink-0"
+                    >
+                      {actionLoading ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
+                      Log
+                    </button>
                   </div>
                 </div>
 
