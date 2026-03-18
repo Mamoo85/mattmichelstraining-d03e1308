@@ -27,6 +27,9 @@ import AdminFamilyManager from "@/components/admin/AdminFamilyManager";
 import AdminLearnEditor from "@/components/admin/AdminLearnEditor";
 import AdminSystemSettings from "@/components/admin/AdminSystemSettings";
 const TABS = [
+  { key: "clients", label: "Athletes & Trials" },
+  { key: "learn", label: "Learn Hub" },
+  { key: "system", label: "System & Referrals" },
   { key: "trial", label: "Free Trial" },
   { key: "tiers", label: "Tier Access" },
   { key: "schedule", label: "Schedule" },
@@ -41,7 +44,6 @@ const TABS = [
   { key: "exercises", label: "Exercises" },
   { key: "promotions", label: "Promotions" },
   { key: "points", label: "Points" },
-  { key: "clients", label: "Clients" },
   { key: "site", label: "Site Editor" },
   { key: "protocols", label: "Protocols" },
   { key: "subscribers", label: "Newsletter" },
