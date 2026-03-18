@@ -293,6 +293,7 @@ export type Database = {
           sport: string[]
           the_why: string
           title: string
+          video_url: string | null
         }
         Insert: {
           client_type?: string[]
@@ -305,6 +306,7 @@ export type Database = {
           sport?: string[]
           the_why?: string
           title: string
+          video_url?: string | null
         }
         Update: {
           client_type?: string[]
@@ -317,6 +319,7 @@ export type Database = {
           sport?: string[]
           the_why?: string
           title?: string
+          video_url?: string | null
         }
         Relationships: []
       }
