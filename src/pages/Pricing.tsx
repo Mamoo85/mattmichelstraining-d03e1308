@@ -156,8 +156,8 @@ const Pricing = () => {
           className="bg-primary/5 border border-primary/15 p-4 md:p-5 mb-8 max-w-3xl mx-auto"
         >
           <p className="text-xs text-muted-foreground leading-relaxed text-center">
-            <span className="text-foreground font-bold">Why parents & coaches are switching to online strength training:</span>{" "}
-            {cms.value_banner || "The average family spends $200–$600/month on in-person youth training. Matt's online programs start at $12.99/month — same 20 years of experience, delivered to your phone, available in any state. No travel, no scheduling conflicts, no contracts."}
+            <span className="text-foreground font-bold">1-on-1 training without the 1-on-1 price.</span>{" "}
+            {cms.value_banner || "In-gym personal training averages $40–$150/session. Online coaching packages run $100–$300/mo. Matt's subscriptions start at $12.99/mo — same 20 years of expertise, same personalized approach, for athletes of every age. No contracts, no middleman, available in any state."}
           </p>
         </motion.div>
 
@@ -168,10 +168,10 @@ const Pricing = () => {
             animate={{ opacity: 1, y: 0 }}
             className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-foreground mb-4"
           >
-            {cms.page_heading || cms.page_title || "Online Strength Training Plans"}
+            {cms.page_heading || cms.page_title || "Your Coach. Your Corner. Any Age."}
           </motion.h1>
           <p className="text-muted-foreground max-w-xl mx-auto">
-            {cms.page_subtitle || "Every tier is month-to-month. Cancel anytime. No contracts — just affordable, proven strength programming for athletes in any sport, any state."}
+            {cms.page_subtitle || "I train everyone — youth athletes, parents, adults, coaches. Every tier is month-to-month. Cancel anytime. No contracts. Just 20 years of proven strength programming delivered to your phone."}
           </p>
 
           {subscribed && subscriptionTier && (
