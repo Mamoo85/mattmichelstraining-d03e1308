@@ -121,10 +121,18 @@ const Welcome = () => (
             <span className="text-xs text-foreground">Video form checks (Pro)</span>
           </div>
         </div>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-muted-foreground mb-4">
           All of this for less than a gym membership. Develop your athlete the
           right way without breaking the bank.
         </p>
+        <Link
+          to="/for-parents"
+          className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-3 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
+        >
+          <Users size={14} />
+          Create Child Account
+          <ArrowRight size={14} />
+        </Link>
       </motion.div>
 
       {/* MONTHLY MEMBERSHIPS */}
