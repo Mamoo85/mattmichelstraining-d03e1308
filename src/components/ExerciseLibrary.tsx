@@ -69,7 +69,8 @@ const ExerciseLibrary = () => {
         !activeFocusArea || ex.focus_area.includes(activeFocusArea);
       const matchesSport =
         !activeSport || ex.sport?.includes(activeSport) || ex.sport?.includes("All");
-      return matchesSearch && matchesClient && matchesFocus && matchesSport;
+      const matchesLevel = !activeLevel || ex.level === activeLevel;
+      return matchesSearch && matchesClient && matchesFocus && matchesSport && matchesLevel;
     });
   }, [exercises, search, activeClientType, activeFocusArea, activeSport]);
 
