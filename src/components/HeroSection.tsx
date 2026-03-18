@@ -16,8 +16,6 @@ const HeroSection = () => {
   const { content: stats } = useContentMap("stats");
 
   const showHero = useSectionVisible("hero");
-  const showAuthority = useSectionVisible("authority_bar");
-  const showStats = useSectionVisible("stats");
   const showFindUs = useSectionVisible("find_us");
 
   const STATS = [
