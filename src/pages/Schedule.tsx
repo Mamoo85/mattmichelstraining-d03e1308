@@ -345,8 +345,8 @@ const Schedule = () => {
           <div className="flex items-start gap-2">
             <Info size={14} className="text-primary flex-shrink-0 mt-0.5" />
             <div className="text-xs text-muted-foreground space-y-1">
-              {useCredit ? (
-                <p><strong className="text-foreground">Free 30-min session</strong> — Select one time slot to redeem your Elite credit.</p>
+              {useCredit || useGift ? (
+                <p><strong className="text-foreground">Free 30-min session</strong> — Select one time slot to redeem your {useCredit ? "Elite credit" : "gifted session"}.</p>
               ) : (
                 <>
                   <p><strong className="text-foreground">30-minute session: $50</strong> — Select one time slot.</p>
