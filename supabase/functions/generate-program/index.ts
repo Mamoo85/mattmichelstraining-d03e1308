@@ -45,27 +45,30 @@ serve(async (req) => {
       focusAreas,
     } = await req.json();
 
-    // Fetch exercise library — include Fix It exercises if requested
-    let query = supabaseClient
+    // Fetch exercise library — ALWAYS include all exercises for full context
+    const { data: exercises } = await supabaseClient
       .from("exercise_library")
-      .select("id, title, focus_area, sport, client_type, equipment_needed, the_why, is_fix_it, fix_it_protocol")
+      .select("id, title, focus_area, sport, client_type, equipment_needed, the_why, is_fix_it, fix_it_protocol, level")
       .order("title");
 
-    // If not including Fix It, only fetch non-fix-it exercises
-    if (!includeFixIt) {
-      query = query.eq("is_fix_it", false);
-    }
+    // Separate into categories for structured AI context
+    const allExercises = exercises || [];
+    const mainExercises = allExercises.filter((e: any) => !e.is_fix_it);
+    const rollingExercises = allExercises.filter((e: any) =>
+      e.is_fix_it && (e.fix_it_protocol || []).some((p: string) => p === "Soft Tissue & Recovery")
+    );
+    const rehabExercises = allExercises.filter((e: any) =>
+      e.is_fix_it && !(e.fix_it_protocol || []).some((p: string) => p === "Soft Tissue & Recovery")
+    );
 
-    const { data: exercises } = await query;
+    const formatEx = (e: any) => {
+      let line = `- ${e.title} (ID: ${e.id}) [${e.level}] | Focus: ${e.focus_area?.join(", ")} | Sport: ${e.sport?.join(", ")} | Equipment: ${e.equipment_needed}`;
+      if (e.is_fix_it) line += ` | Protocol: ${e.fix_it_protocol?.join(", ")}`;
+      line += ` | Why: ${e.the_why}`;
+      return line;
+    };
 
-    const exerciseList = (exercises || [])
-      .map((e: any) => {
-        let line = `- ${e.title} (ID: ${e.id}) | Focus: ${e.focus_area?.join(", ")} | Sport: ${e.sport?.join(", ")} | Equipment: ${e.equipment_needed}`;
-        if (e.is_fix_it) line += ` | FIX IT: ${e.fix_it_protocol?.join(", ")}`;
-        line += ` | Why: ${e.the_why}`;
-        return line;
-      })
-      .join("\n");
+    const exerciseList = `=== MAIN EXERCISES (${mainExercises.length}) ===\n${mainExercises.map(formatEx).join("\n")}\n\n=== ROLLING & SOFT TISSUE TECHNIQUES (${rollingExercises.length}) ===\n${rollingExercises.map(formatEx).join("\n")}\n\n=== FIX IT / REHAB EXERCISES (${rehabExercises.length}) ===\n${rehabExercises.map(formatEx).join("\n")}`;
 
     // Build detail instructions based on explanationDetail setting
     const detailMap: Record<string, string> = {
@@ -84,12 +87,14 @@ serve(async (req) => {
     // Fix It / rehab instructions
     let fixItInstruction = "";
     if (includeFixIt) {
-      fixItInstruction = `\n- Include Fix It / rehab exercises (marked with "FIX IT") as part of warm-up, cooldown, or corrective blocks. These are mobility, prehab, and core stability exercises.`;
+      fixItInstruction = `\n- Include Fix It / rehab exercises from the FIX IT section as corrective blocks, warm-up, or cooldown — especially exercises matching the program's sport (e.g. ACL Prevention for hockey/soccer, Rotator Cuff for baseball, Knee Pain for jumping sports)`;
     }
+
+    const rollingInstruction = `\n- ALWAYS include 1-2 rolling/soft tissue techniques from the ROLLING & SOFT TISSUE section at the start or end of each training day. Match them to the muscles being trained (e.g. hip flexor release on squat days, posterior shoulder smash on pressing days)`;
 
     const exerciseCount = exercisesPerDay || 8;
 
-    const systemPrompt = `You are Matt Michels' AI assistant for M² Performance Training. You draft training programs using ONLY exercises from Matt's exercise library. Matt is a master of movement science — every program must include: custom warmup, corrective exercises, strength, balance, coordination, core stability, integrity, endurance, and targeted rolling/mobility.
+    const systemPrompt = `You are Matt Michels' AI assistant for M² Performance Training. You draft training programs using ONLY exercises from Matt's exercise library. The library has THREE sections: Main Exercises, Rolling & Soft Tissue Techniques, and Fix It / Rehab Exercises. Matt is a master of movement science — every program must include: custom warmup, corrective exercises, strength, balance, coordination, core stability, integrity, endurance, and targeted rolling/mobility.
 
 RULES:
 - ONLY use exercise IDs from the provided library
@@ -97,7 +102,7 @@ RULES:
 - Be specific with sets/reps (e.g., "3x12", "4x8 @RPE 7")
 - ${detailInstruction}
 - Progressive overload across weeks
-- Every day should have ${exerciseCount} exercises covering the full spectrum${fixItInstruction}${focusInstruction}
+- Every day should have ${exerciseCount} exercises covering the full spectrum${rollingInstruction}${fixItInstruction}${focusInstruction}
 
 Return a JSON object using this tool.`;
 
@@ -108,7 +113,7 @@ ${sport ? `Sport: ${sport}` : ""}
 ${description ? `Additional notes: ${description}` : ""}
 Target exercises per day: ${exerciseCount}
 
-EXERCISE LIBRARY (${(exercises || []).length} exercises available):
+EXERCISE LIBRARY (${allExercises.length} total — ${mainExercises.length} main, ${rollingExercises.length} rolling/soft tissue, ${rehabExercises.length} fix it/rehab):
 ${exerciseList}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -186,7 +191,7 @@ ${exerciseList}`;
     const program = JSON.parse(toolCall.function.arguments);
 
     // Validate exercise IDs exist
-    const exerciseIds = new Set((exercises || []).map((e: any) => e.id));
+    const exerciseIds = new Set(allExercises.map((e: any) => e.id));
     const validWorkouts = program.workouts.filter((w: any) => exerciseIds.has(w.exercise_id));
     const invalidCount = program.workouts.length - validWorkouts.length;
 
