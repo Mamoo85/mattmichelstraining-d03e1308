@@ -437,6 +437,41 @@ export type Database = {
         }
         Relationships: []
       }
+      focus_logs: {
+        Row: {
+          created_at: string
+          focus_id: string
+          id: string
+          logged_date: string
+          metric_value: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          focus_id: string
+          id?: string
+          logged_date?: string
+          metric_value?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          focus_id?: string
+          id?: string
+          logged_date?: string
+          metric_value?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "focus_logs_focus_id_fkey"
+            columns: ["focus_id"]
+            isOneToOne: false
+            referencedRelation: "monthly_focus"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gift_cards: {
         Row: {
           code: string
@@ -731,9 +766,11 @@ export type Database = {
           exercises: string[]
           id: string
           matt_quote: string
+          metric_label: string
           month: number
           reasoning: string
           status: string
+          target_goal: number
           title: string
           topic: string
           year: number
@@ -748,9 +785,11 @@ export type Database = {
           exercises?: string[]
           id?: string
           matt_quote?: string
+          metric_label?: string
           month: number
           reasoning?: string
           status?: string
+          target_goal?: number
           title: string
           topic?: string
           year: number
@@ -765,9 +804,11 @@ export type Database = {
           exercises?: string[]
           id?: string
           matt_quote?: string
+          metric_label?: string
           month?: number
           reasoning?: string
           status?: string
+          target_goal?: number
           title?: string
           topic?: string
           year?: number
