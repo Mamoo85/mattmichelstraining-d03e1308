@@ -61,8 +61,8 @@ const TIMELINE = [
 const FUNNEL_STEPS = [
   {
     step: "1",
-    title: "Start Your Free 7-Day Trial",
-    desc: "Create a free parent account. You get full portal access for 7 days — programs, progress tracking, and direct access to Matt. No card required.",
+    title: "Start Your Free 14-Day Trial",
+    desc: "Create a free parent account. You get full portal access for 14 days — programs, progress tracking, and direct access to Matt. No card required.",
     icon: Shield,
     cta: "Start Free Trial",
     link: "/auth?redirect=/trial-welcome",
