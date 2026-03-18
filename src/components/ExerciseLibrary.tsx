@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
-import { Search, ChevronDown, ChevronUp, Dumbbell, Filter } from "lucide-react";
+import { Search, ChevronDown, ChevronUp, Dumbbell, Filter, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import SectionHeader from "./SectionHeader";
+import AiExerciseSubstitution from "./workout/AiExerciseSubstitution";
 
 interface DbExercise {
   id: string;
