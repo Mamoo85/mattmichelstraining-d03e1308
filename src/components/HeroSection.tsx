@@ -86,27 +86,25 @@ const HeroSection = () => {
         {/* ─── 3. FOR PARENTS — Injury Prevention Hook ─── */}
         <ForParentsCTA />
 
-        {/* ─── PARENT TRUST TESTIMONIAL ─── */}
-        <div className="mb-8">
-          <ParentTestimonialCard />
-        </div>
-
         {/* ─── 4. MEMBER PORTAL (sneak peek) ─── */}
         <PortalEntrance />
 
-        {/* ─── 5. SOCIAL PROOF ─── */}
-        <Testimonials />
-
-        {/* ─── 6. THE M² DIFFERENCE ─── */}
+        {/* ─── 5. THE M² DIFFERENCE ─── */}
         <M2Difference />
 
-        {/* ─── 7. FIND US ─── */}
+        {/* ─── 6. FIND US ─── */}
         {showFindUs && <FindUs />}
 
-        {/* ─── 8. TRIAL CTA ─── */}
+        {/* ─── 7. TRIAL CTA ─── */}
         <div className="mb-8">
           <TrialCTA variant="banner" />
         </div>
+
+        {/* ─── 8. SOCIAL PROOF ─── */}
+        <div className="mb-8">
+          <ParentTestimonialCard />
+        </div>
+        <Testimonials />
 
 
         {/* FOOTER */}
