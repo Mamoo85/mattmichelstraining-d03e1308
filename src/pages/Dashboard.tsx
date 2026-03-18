@@ -57,7 +57,7 @@ interface LeaderboardEntry {
   is_public: boolean;
 }
 
-const PRO_AND_ABOVE: (string | null)[] = ["pro", "elite", "team"];
+const PRO_AND_ABOVE: (string | null)[] = ["foundation", "custom", "team_elite"];
 
 /* Compact referral card for the Home tab */
 const ReferEarnCard = ({ onViewAll }: { onViewAll: () => void }) => {
