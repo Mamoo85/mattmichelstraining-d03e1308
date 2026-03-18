@@ -1,16 +1,14 @@
 import { motion } from "framer-motion";
-import { useIsMichigan } from "@/hooks/useGeoState";
+
 
 const ALL_CREDS = [
-  "B.S. Kinesiology",
   "20+ Years Training Athletes",
   "50+ College Athletes Produced",
   "Zero Injuries — Ever",
 ];
 
 const AuthorityBar = () => {
-  const isMI = useIsMichigan();
-  const creds = isMI ? ALL_CREDS.filter((c) => c !== "B.S. Kinesiology") : ALL_CREDS;
+  const creds = ALL_CREDS;
 
   return (
     <motion.div

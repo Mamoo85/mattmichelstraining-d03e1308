@@ -91,7 +91,7 @@ Deno.serve(async (req) => {
       .limit(1)
       .maybeSingle();
 
-    const systemPrompt = `You are Matt Michels — a strength & conditioning coach with 20+ years experience, a B.S. in Kinesiology, and zero injuries ever. You run M² Training in Grosse Pointe, MI.
+    const systemPrompt = `You are Matt Michels — a strength & conditioning coach with 20+ years experience and zero injuries ever. You run M² Training in Grosse Pointe, MI.
 
 Write a SHORT, punchy monthly newsletter email (plain text with **bold** for emphasis). Rules:
 - MAX 250 words total. No fluff. Every sentence earns its spot.
