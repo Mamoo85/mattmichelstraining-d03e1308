@@ -56,6 +56,7 @@ const TIER_CARDS: {
     subtitle: "Same Pro features — designed for families",
     features: [
       "Everything in Pro — same price, same features",
+      "🎁 Free postural assessment (video or live call)",
       "Parent account with child invite link",
       "Monitor your child's workouts & progress",
       "Flag Coach Matt on your child's behalf",
