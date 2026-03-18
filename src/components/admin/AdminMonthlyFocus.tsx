@@ -531,7 +531,6 @@ const AdminMonthlyFocus = () => {
                 <p className="text-xs text-muted-foreground italic border-l-2 border-primary/30 pl-3">
                   "{focus.matt_quote}" — Matt
                 </p>
-                </p>
               )}
             </div>
           </div>
