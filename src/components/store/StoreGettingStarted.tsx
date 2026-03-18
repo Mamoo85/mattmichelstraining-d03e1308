@@ -171,6 +171,9 @@ const StoreGettingStarted = () => {
         </div>
       </div>
 
+      {/* Trial CTA — strategic placement after tier info */}
+      <TrialCTA variant="banner" />
+
       {/* AI Program Finder */}
       {user && (
         <div>

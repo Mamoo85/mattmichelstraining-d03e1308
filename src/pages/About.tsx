@@ -122,6 +122,11 @@ const About = () => {
         
         {showClients && <div className="mt-6"><CurrentClients /></div>}
 
+        {/* Trial CTA */}
+        <div className="mt-8">
+          <TrialCTA variant="inline" className="w-full justify-center py-3" />
+        </div>
+
         {/* FOOTER */}
         <div className="mt-10 pt-6 border-t border-border text-center">
           <p className="text-xs text-muted-foreground">

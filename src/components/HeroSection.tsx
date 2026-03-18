@@ -72,7 +72,12 @@ const HeroSection = () => {
         {/* ─── 7. FIND US ─── */}
         {showFindUs && <FindUs />}
 
-        {/* ─── 8. EMAIL CAPTURE ─── */}
+        {/* ─── 8. TRIAL CTA ─── */}
+        <div className="mb-8">
+          <TrialCTA variant="banner" />
+        </div>
+
+        {/* ─── 9. EMAIL CAPTURE ─── */}
         <EmailCapture />
 
         {/* FOOTER */}
