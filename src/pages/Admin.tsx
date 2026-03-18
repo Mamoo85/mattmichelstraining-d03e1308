@@ -1,5 +1,8 @@
 import { useState } from "react";
+import { Navigate } from "react-router-dom";
 import AppNavbar from "@/components/AppNavbar";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { Loader2 } from "lucide-react";
 import AdminTrialSettings from "@/components/admin/AdminTrialSettings";
 import AdminSubscriberList from "@/components/admin/AdminSubscriberList";
 import AdminNewsletterComposer from "@/components/admin/AdminNewsletterComposer";
@@ -46,6 +49,17 @@ const TABS = [
 
 const Admin = () => {
   const [activeTab, setActiveTab] = useState("trial");
+  const { isAdmin, isLoading } = useIsAdmin();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="animate-spin text-primary" size={24} />
+      </div>
+    );
+  }
+
+  if (!isAdmin) return <Navigate to="/dashboard" replace />;
 
   return (
     <div className="min-h-screen bg-background">

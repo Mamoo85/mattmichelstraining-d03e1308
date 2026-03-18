@@ -2,17 +2,22 @@ import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useTrialStatus } from "@/hooks/useTrialStatus";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
 const SubscriptionGuard = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading: authLoading, subscribed } = useAuth();
+  const { user, loading: authLoading, subscribed, isLegend } = useAuth();
   const { trialExpired, loading: trialLoading } = useTrialStatus();
+  const { isAdmin, isLoading: adminLoading } = useIsAdmin();
   const navigate = useNavigate();
   const toasted = useRef(false);
 
-  const loading = authLoading || trialLoading;
-  const lockedOut = !subscribed && trialExpired;
+  const loading = authLoading || trialLoading || adminLoading;
+
+  // Admins and Legend members always pass through
+  const bypassed = isAdmin || isLegend;
+  const lockedOut = !bypassed && !subscribed && trialExpired;
 
   useEffect(() => {
     if (loading || !user) return;
