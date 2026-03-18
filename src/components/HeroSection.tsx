@@ -11,8 +11,7 @@ import PortalEntrance from "./landing/PortalEntrance";
 import EmailCapture from "./landing/EmailCapture";
 
 const HeroSection = () => {
-  const { content: hero } = useContentMap("hero");
-  const { content: stats } = useContentMap("stats");
+  const showHero = useSectionVisible("hero");
 
   const showHero = useSectionVisible("hero");
   const showFindUs = useSectionVisible("find_us");
