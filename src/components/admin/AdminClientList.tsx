@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, ChevronDown, ChevronUp, Dumbbell, ShoppingBag, Calendar, MapPin, Crown, Shield } from "lucide-react";
+import { Search, ChevronDown, ChevronUp, Dumbbell, ShoppingBag, Calendar, MapPin, Crown, Shield, Clock } from "lucide-react";
 import { toast } from "sonner";
 import AiAssistButton from "./AiAssistButton";
 
