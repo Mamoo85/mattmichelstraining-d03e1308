@@ -20,7 +20,7 @@ import m2Logo from "@/assets/m2-logo-official.jpg";
 const SELL_POINTS = [
   "20+ years of one-on-one training experience",
   "50+ college athletes developed — zero injuries",
-  "Tested, proven workouts backed by Kinesiology",
+  "Tested, proven workouts backed by 20+ years of experience",
   "One app for everything you'll ever need",
 ];
 

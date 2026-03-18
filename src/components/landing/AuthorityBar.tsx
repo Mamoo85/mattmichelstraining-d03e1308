@@ -8,8 +8,7 @@ const ALL_CREDS = [
 ];
 
 const AuthorityBar = () => {
-  const isMI = useIsMichigan();
-  const creds = isMI ? ALL_CREDS.filter((c) => c !== "B.S. Kinesiology") : ALL_CREDS;
+  const creds = ALL_CREDS;
 
   return (
     <motion.div

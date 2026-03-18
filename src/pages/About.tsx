@@ -341,37 +341,7 @@ const About = () => (
         </div>
       </motion.div>
 
-      {/* ═══════════════════════════════════════════
-          7. SUCCESS STORIES — Athlete results
-      ═══════════════════════════════════════════ */}
-      <motion.div {...fade(0.35)} className="mb-12">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-1">
-          Real Athletes, Real Results
-        </span>
-        <h2 className="text-lg font-bold text-foreground mb-4">
-          Success Stories
-        </h2>
-        <div className="grid grid-cols-2 gap-3">
-          {SUCCESS_STORIES.map((s) => (
-            <div key={s.name} className="bg-card border border-border overflow-hidden shadow-m2">
-              <div className="aspect-square overflow-hidden relative">
-                <img src={s.image} alt={`${s.name} — ${s.sport}`} className="w-full h-full object-cover" loading="lazy" />
-                <span className="absolute top-2 left-2 bg-primary/90 text-primary-foreground text-[9px] font-bold uppercase tracking-widest px-2 py-0.5">
-                  {s.sport}
-                </span>
-                <span className="absolute bottom-2 right-2 bg-background/90 text-primary text-[10px] font-bold font-mono px-2 py-0.5 border border-primary/30">
-                  {s.result}
-                </span>
-              </div>
-              <div className="p-3">
-                <Quote size={10} className="text-primary mb-1" />
-                <p className="text-[11px] text-muted-foreground leading-relaxed mb-2 line-clamp-3">{s.quote}</p>
-                <span className="text-[10px] font-bold text-foreground uppercase tracking-widest">{s.name}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </motion.div>
+      {/* SUCCESS STORIES — REMOVED: Do not re-add until real athlete stories are collected */}
 
       {/* ═══════════════════════════════════════════
           8. SOCIAL + CONTACT
