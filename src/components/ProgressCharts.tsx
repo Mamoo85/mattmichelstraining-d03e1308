@@ -12,6 +12,7 @@ import StatsRow from "./progress/StatsRow";
 import LogHistory from "./progress/LogHistory";
 import RecoveryChart from "./progress/RecoveryChart";
 import AiRecoveryAdvisor from "./progress/AiRecoveryAdvisor";
+import EmptyStateCard from "./EmptyStateCard";
 
 interface ProgressLog {
   id: string;
@@ -119,13 +120,13 @@ const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) =
         </div>
       ) : data.length === 0 ? (
         /* Empty state for new lifts */
-        <div className="bg-card border border-border p-8 text-center mb-4">
-          <TrendingUp size={32} className="mx-auto text-muted-foreground/30 mb-3" />
-          <p className="text-sm font-bold text-foreground mb-1">No {activeLift} data yet</p>
-          <p className="text-xs text-muted-foreground">
-            Log your first set above and watch your progression chart build over time.
-          </p>
-        </div>
+        <EmptyStateCard
+          icon={<TrendingUp size={28} className="text-primary" />}
+          title={`No ${activeLift} Data Yet`}
+          description="Log your first set above and watch your progression chart build over time. Every rep gets tracked — Matt reviews your numbers weekly."
+          ctaLabel="Log Your First Set ↑"
+          ctaTo="/dashboard"
+        />
       ) : (
         <>
           {/* Stats */}
