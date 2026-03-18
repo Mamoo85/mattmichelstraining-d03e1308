@@ -203,16 +203,6 @@ const StudioCheckIn = () => {
       setJustCheckedIn(true);
       setShowMilestones(true);
       toast({ title: "🏋️ Checked in!", description: "Great work showing up today. +50 M² Points!" });
-      // Award points for studio check-in
-      try {
-        await supabase.rpc("award_points", {
-          _user_id: user.id,
-          _action: "studio_checkin",
-          _points: 50,
-          _description: "Studio check-in",
-          _reference_id: data.id,
-        });
-      } catch { /* silent */ }
       setTimeout(() => setJustCheckedIn(false), 3000);
     }
     setChecking(false);

@@ -186,15 +186,7 @@ const WorkoutScanner = ({ onSaved }: { onSaved?: () => void }) => {
         description: `${matched} exercise${matched !== 1 ? "s" : ""} logged.${unmatched > 0 ? ` ${unmatched} unmatched exercise${unmatched !== 1 ? "s" : ""} skipped.` : ""}`,
       });
 
-      // Award points
-      try {
-        await supabase.rpc("award_points", {
-          _user_id: user.id,
-          _action: "workout_scan",
-          _points: 15,
-          _description: "Scanned workout card",
-        });
-      } catch {}
+      // Points awarded automatically via server-side trigger
 
       setResult(null);
       setPreview(null);

@@ -93,18 +93,6 @@ const WorkoutBuilder = ({ onSaved, onClose }: WorkoutBuilderProps) => {
       toast({ title: "Failed to save", description: error.message, variant: "destructive" });
     } else {
       toast({ title: shareToBank ? "Workout shared! 🎉 +30 M² Points" : "Workout saved! 💪" });
-      // Award points for sharing a community workout
-      if (shareToBank) {
-        try {
-          await supabase.rpc("award_points", {
-            _user_id: user.id,
-            _action: "community_workout",
-            _points: 30,
-            _description: "Shared a community workout",
-            _reference_id: null,
-          });
-        } catch { /* silent */ }
-      }
       onSaved?.();
     }
     setSaving(false);
