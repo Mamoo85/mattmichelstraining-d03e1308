@@ -473,7 +473,40 @@ const AdminMonthlyFocus = () => {
             <div className="p-5 space-y-4">
               <h3 className="text-lg font-black uppercase tracking-tight text-foreground">{focus.title}</h3>
               <p className="text-[10px] font-bold uppercase tracking-widest text-primary">{focus.topic}</p>
-              <div className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{focus.reasoning}</div>
+
+              {/* The Why */}
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-1">The Why</span>
+                <div className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{focus.reasoning}</div>
+              </div>
+
+              {/* Biomechanics */}
+              {(focus.biomechanics?.length ?? 0) > 0 && (
+                <div className="bg-muted p-4 space-y-1.5">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary block">Perfect Form</span>
+                  {focus.biomechanics.map((b, i) => (
+                    <div key={i} className="flex items-start gap-2 text-sm text-foreground">
+                      <span className="text-primary mt-0.5">•</span>
+                      <span>{b}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Common Mistakes */}
+              {(focus.common_mistakes?.length ?? 0) > 0 && (
+                <div className="bg-destructive/5 border border-destructive/10 p-4 space-y-1.5">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-destructive block">What to Avoid</span>
+                  {focus.common_mistakes.map((m, i) => (
+                    <div key={i} className="flex items-start gap-2 text-sm text-foreground">
+                      <span className="text-destructive mt-0.5">✗</span>
+                      <span>{m}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Exercises */}
               {focus.exercises.length > 0 && (
                 <div className="bg-muted p-4 space-y-2">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-primary block">Exercises</span>
@@ -485,9 +518,19 @@ const AdminMonthlyFocus = () => {
                   ))}
                 </div>
               )}
+
+              {/* Challenge Metric */}
+              {focus.challenge_metric && (
+                <div className="bg-primary/5 border border-primary/10 p-4">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-1">Challenge Goal</span>
+                  <p className="text-sm font-semibold text-foreground">{focus.challenge_metric}</p>
+                </div>
+              )}
+
               {focus.matt_quote && (
                 <p className="text-xs text-muted-foreground italic border-l-2 border-primary/30 pl-3">
                   "{focus.matt_quote}" — Matt
+                </p>
                 </p>
               )}
             </div>
