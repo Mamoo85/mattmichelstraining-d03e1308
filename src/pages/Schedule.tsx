@@ -426,7 +426,7 @@ const Schedule = () => {
                 </div>
               </div>
               <div className="text-right">
-                {useCredit ? (
+                {isFreeSession ? (
                   <div>
                     <div className="text-xs line-through text-muted-foreground">$50</div>
                     <div className="text-lg font-mono font-bold text-primary">FREE</div>
@@ -442,8 +442,8 @@ const Schedule = () => {
               className="w-full text-xs font-bold uppercase tracking-widest"
             >
               {purchasing ? <Loader2 size={14} className="animate-spin mr-2" /> : 
-                useCredit ? <Ticket size={14} className="mr-2" /> : <DollarSign size={14} className="mr-2" />}
-              {!user ? "Sign In to Book" : useCredit ? "Redeem Credit" : `Book Session · $${price}`}
+                isFreeSession ? (useGift ? <Gift size={14} className="mr-2" /> : <Ticket size={14} className="mr-2" />) : <DollarSign size={14} className="mr-2" />}
+              {!user ? "Sign In to Book" : useCredit ? "Redeem Credit" : useGift ? "Redeem Gift" : `Book Session · $${price}`}
             </Button>
           </div>
         )}
