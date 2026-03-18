@@ -143,21 +143,21 @@ const ForParents = () => {
             </div>
           </div>
           <p className="text-sm md:text-base text-muted-foreground max-w-2xl mb-6 leading-relaxed">
-            {cms.hero_subtitle || "Most youth strength programs are built by people who learned from social media. Matt Michels has trained thousands of kids through proven strength programs. 50+ went on to compete at the college level. Zero got injured. Every foundation program includes a FREE postural assessment and parent monitoring tools."}
+            {cms.hero_subtitle || "Most youth training programs are built by people who learned from social media — not from 20 years of watching what actually breaks down in a young athlete's body. Matt has trained thousands of kids. 50+ went on to compete at the college level. Zero got injured. That's not a slogan — it's a track record."}
           </p>
           <div className="flex flex-wrap gap-3">
             <Link
-              to="/shop"
+              to="/auth?redirect=/trial-welcome"
               className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
             >
-              {cms.hero_cta_primary || "Get a $20 foundation program"}
+              Start Your 7-Day Free Trial
               <ArrowRight size={15} />
             </Link>
             <Link
-              to="/pricing"
+              to="/shop"
               className="inline-flex items-center gap-2 border-2 border-primary/40 text-primary px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:bg-primary/10 transition-m2"
             >
-              {cms.hero_cta_secondary || "See training plans"}
+              {cms.hero_cta_secondary || "Browse $20 Programs"}
             </Link>
           </div>
         </motion.div>
