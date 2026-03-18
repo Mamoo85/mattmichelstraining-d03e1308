@@ -178,7 +178,7 @@ const Pricing = () => {
         >
           <p className="text-xs text-muted-foreground leading-relaxed text-center">
             <span className="text-foreground font-bold">1-on-1 training without the 1-on-1 price.</span>{" "}
-            {cms.value_banner || "In-gym personal training averages $40–$150/session. Online coaching packages run $100–$300/mo. Matt's subscriptions start at $15.99/mo — same 20 years of expertise, same personalized approach, for athletes of every age. No contracts, no middleman, available in any state."}
+            {cms.value_banner || "In-gym personal training averages $40–$150/session. Online coaching packages run $100–$300/mo. Matt's subscriptions start at $14.99/mo — same 20 years of expertise, same personalized approach, for athletes of every age. No contracts, no middleman, available in any state."}
           </p>
         </motion.div>
 
