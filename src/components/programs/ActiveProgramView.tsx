@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Loader2, ChevronDown, ChevronRight, Dumbbell, Info } from "lucide-react";
+import { Loader2, ChevronDown, ChevronRight, Dumbbell, Info, Printer } from "lucide-react";
 import ExerciseVideoEmbed from "../exercise/ExerciseVideoEmbed";
 import AskCoachMatt from "./AskCoachMatt";
+import { printWorkoutLog } from "./printWorkoutLog";
 
 interface WorkoutExercise {
   id: string;
