@@ -52,7 +52,7 @@ const TABS = [
 ];
 
 const Admin = () => {
-  const [activeTab, setActiveTab] = useState("trial");
+  const [activeTab, setActiveTab] = useState("clients");
   const { isAdmin, isLoading } = useIsAdmin();
 
   if (isLoading) {
