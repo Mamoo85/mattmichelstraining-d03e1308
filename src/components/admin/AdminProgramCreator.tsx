@@ -341,12 +341,54 @@ const AdminProgramCreator = () => {
             <input type="number" min={1} max={7} value={daysPerWeek} onChange={(e) => setDaysPerWeek(parseInt(e.target.value) || 3)}
               className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary" />
           </div>
+          <div>
+            <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Exercises/Day</label>
+            <input type="number" min={3} max={15} value={exercisesPerDay} onChange={(e) => setExercisesPerDay(parseInt(e.target.value) || 8)}
+              className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary" />
+          </div>
+          <div>
+            <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Explanation Detail</label>
+            <select value={explanationDetail} onChange={(e) => setExplanationDetail(e.target.value)}
+              className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary">
+              {EXPLANATION_LEVELS.map((el) => <option key={el.value} value={el.value}>{el.label} — {el.desc}</option>)}
+            </select>
+          </div>
+        </div>
+
+        {/* Fix It toggle & Focus Areas */}
+        <div className="mb-4 space-y-3">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" checked={includeFixIt} onChange={(e) => setIncludeFixIt(e.target.checked)}
+              className="accent-primary w-4 h-4" />
+            <span className="text-xs font-bold text-foreground">Include Fix It / Rehab exercises</span>
+            <span className="text-[10px] text-muted-foreground">(mobility, prehab, core stability)</span>
+          </label>
+
+          <div>
+            <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1.5">Focus Areas (optional)</label>
+            <div className="flex gap-1.5 flex-wrap">
+              {FOCUS_AREAS.map((fa) => (
+                <button
+                  key={fa}
+                  type="button"
+                  onClick={() => setSelectedFocusAreas(prev => prev.includes(fa) ? prev.filter(f => f !== fa) : [...prev, fa])}
+                  className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest transition-all ${
+                    selectedFocusAreas.includes(fa)
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {fa}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         <div className="mb-4">
           <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Special Instructions (optional)</label>
           <textarea value={description} onChange={(e) => setDescription(e.target.value)}
-            placeholder="e.g., Focus on rotational power for pitchers, include extra hip mobility..."
+            placeholder="e.g., Focus on rotational power for pitchers, include extra hip mobility, ACL prevention protocol..."
             className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary h-20 resize-none" />
         </div>
 
