@@ -23,37 +23,34 @@ serve(async (req) => {
     const { data: roleData } = await supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
     if (!roleData) throw new Error("Admin only");
 
-    const { month, year } = await req.json();
+    const { month, year, topic } = await req.json();
     if (!month || !year) throw new Error("month and year required");
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
+    const focusTopic = topic?.trim() || `a gym skill appropriate for ${getMonthName(month)}`;
+
     const systemPrompt = `You are Coach Matt Michels, a strength and conditioning coach with 20+ years of experience. You write in a direct, no-BS, passionate coaching voice. You're creating a Monthly Focus plan for your M² Training members.
 
 The Monthly Focus is about teaching GYM SKILLS — not just exercises. Examples of focus areas:
-- Bracing technique (how to properly brace your core every rep)
-- Rolling out the psoas (Matt's favorite — the muscle everyone ignores)
-- Rolling out calves
-- Balance work: toes, heels, inside/outside foot, backwards
-- Breathing patterns during lifts
-- Grip strength and wrist positioning
-- Hip hinge mechanics
-- Shoulder mobility and scapular control
-- Eccentric control (slow negatives)
-- Mind-muscle connection
-- Recovery protocols and listening to your body
+- Bracing technique, rolling out the psoas, balance work, breathing patterns during lifts
+- Grip strength, hip hinge mechanics, shoulder mobility, eccentric control
+- Recovery protocols, mind-muscle connection
 
 Write in Matt's voice: passionate, direct, uses "we" and "our", occasionally uses caps for emphasis, references real training scenarios.`;
 
-    const userPrompt = `Generate a Monthly Focus plan for ${getMonthName(month)} ${year}. Return a JSON object with these fields:
-- title: A short catchy title (e.g., "Posterior Chain Month", "The Brace Reset")
-- topic: The skill/area of focus in 2-3 words
-- reasoning: 2-3 paragraphs explaining WHY this matters, written in Matt's coaching voice. Be specific about what we'll focus on and why it matters for longevity and performance.
-- exercises: An array of 4-6 specific exercises or drills with sets/reps (e.g., "Dead Bug — 3×8 each side, hold 3 sec")
-- matt_quote: A one-liner motivational quote from Matt about this focus area
+    const userPrompt = `Generate a Monthly Focus plan for ${getMonthName(month)} ${year} on the topic: "${focusTopic}".
 
-Return ONLY valid JSON, no markdown.`;
+Return a structured response using the tool provided. Fields:
+- title: Short catchy title (e.g., "Posterior Chain Month", "The Brace Reset")
+- topic: The skill/area of focus in 2-3 words
+- the_why: A punchy, 3-sentence explanation of why this matters for longevity and performance. Written in Matt's voice.
+- biomechanics: An array of 3-5 bullet points on perfect form for this focus area
+- common_mistakes: An array of 3-5 bullet points on what to avoid
+- exercises: An array of 4-6 specific exercises or drills with sets/reps (e.g., "Dead Bug — 3×8 each side, hold 3 sec")
+- challenge_metric: The monthly challenge goal (e.g., "Accumulate 10 minutes total over 30 days" or "Hit a 2-minute max hold")
+- matt_quote: A one-liner motivational quote from Matt about this focus area`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -77,11 +74,14 @@ Return ONLY valid JSON, no markdown.`;
               properties: {
                 title: { type: "string" },
                 topic: { type: "string" },
-                reasoning: { type: "string" },
+                the_why: { type: "string" },
+                biomechanics: { type: "array", items: { type: "string" } },
+                common_mistakes: { type: "array", items: { type: "string" } },
                 exercises: { type: "array", items: { type: "string" } },
+                challenge_metric: { type: "string" },
                 matt_quote: { type: "string" },
               },
-              required: ["title", "topic", "reasoning", "exercises", "matt_quote"],
+              required: ["title", "topic", "the_why", "biomechanics", "common_mistakes", "exercises", "challenge_metric", "matt_quote"],
               additionalProperties: false,
             },
           },
@@ -110,7 +110,7 @@ Return ONLY valid JSON, no markdown.`;
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
     if (!toolCall) throw new Error("No tool call response from AI");
 
-    const focusContent = JSON.parse(toolCall.function.arguments);
+    const fc = JSON.parse(toolCall.function.arguments);
 
     // Upsert into monthly_focus table as draft
     const { data: inserted, error: insertErr } = await supabase
@@ -118,11 +118,14 @@ Return ONLY valid JSON, no markdown.`;
       .upsert({
         month,
         year,
-        title: focusContent.title,
-        topic: focusContent.topic,
-        reasoning: focusContent.reasoning,
-        exercises: focusContent.exercises,
-        matt_quote: focusContent.matt_quote,
+        title: fc.title,
+        topic: fc.topic,
+        reasoning: fc.the_why,
+        biomechanics: fc.biomechanics || [],
+        common_mistakes: fc.common_mistakes || [],
+        exercises: fc.exercises,
+        challenge_metric: fc.challenge_metric || "",
+        matt_quote: fc.matt_quote,
         status: "draft",
       }, { onConflict: "month,year" })
       .select()
