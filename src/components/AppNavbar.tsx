@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useTimer } from "@/hooks/useTimer";
-import m2Logo from "@/assets/m2-logo-official.jpg";
+import m2Logo from "@/assets/m2-logo-official.png";
 import NotificationBell from "./NotificationBell";
 
 const navItems = [
