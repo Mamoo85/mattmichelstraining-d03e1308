@@ -25,6 +25,8 @@ export interface LoggedExerciseData {
   clientNotes: string;
   videoUrl: string;
   flagForCoach: boolean;
+  exerciseVideoUrl?: string | null;
+  exerciseTheWhy?: string | null;
 }
 
 const WorkoutLogger = () => {
@@ -59,10 +61,26 @@ const WorkoutLogger = () => {
     if (data) setPastLogs(data);
   };
 
-  const addExercise = (id: string, title: string) => {
+  const addExercise = async (id: string, title: string) => {
+    // Fetch video_url and the_why for the exercise
+    const { data: exData } = await supabase
+      .from("exercise_library")
+      .select("video_url, the_why")
+      .eq("id", id)
+      .single();
+
     setExercises((prev) => [
       ...prev,
-      { exerciseId: id, exerciseTitle: title, sets: [{ set: 1, reps: 0, weight: 0 }], clientNotes: "", videoUrl: "", flagForCoach: false },
+      {
+        exerciseId: id,
+        exerciseTitle: title,
+        sets: [{ set: 1, reps: 0, weight: 0 }],
+        clientNotes: "",
+        videoUrl: "",
+        flagForCoach: false,
+        exerciseVideoUrl: exData?.video_url || null,
+        exerciseTheWhy: exData?.the_why || null,
+      },
     ]);
     setShowPicker(false);
   };

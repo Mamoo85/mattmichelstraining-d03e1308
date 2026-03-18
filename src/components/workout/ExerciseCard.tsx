@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Trash2, ChevronDown, ChevronUp, Plus, Minus, Link, MessageSquare, Lock } from "lucide-react";
+import { Trash2, ChevronDown, ChevronUp, Plus, Minus, Link, MessageSquare, Lock, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useTierAccess } from "@/hooks/useTierAccess";
 import { EliteUpsellModal } from "@/components/PaywallGate";
+import ExerciseVideoEmbed from "@/components/exercise/ExerciseVideoEmbed";
 import type { LoggedExerciseData } from "./WorkoutLogger";
 
 interface ExerciseCardProps {
@@ -16,6 +17,7 @@ interface ExerciseCardProps {
 
 const ExerciseCard = ({ exercise, index, onUpdate, onRemove }: ExerciseCardProps) => {
   const [showExtras, setShowExtras] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
   const [showUpsell, setShowUpsell] = useState(false);
   const { isAdmin } = useIsAdmin();
   const { hasAccess: canFlag } = useTierAccess("flag_coach");
@@ -104,6 +106,39 @@ const ExerciseCard = ({ exercise, index, onUpdate, onRemove }: ExerciseCardProps
             )}
           </div>
         </div>
+
+        {/* Form Video & The Why toggle */}
+        {(exercise.exerciseVideoUrl || exercise.exerciseTheWhy) && (
+          <div className="px-3 pb-2">
+            <button
+              onClick={() => setShowInfo(!showInfo)}
+              className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-all"
+            >
+              {showInfo ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+              <Info size={11} /> Form Video & The Why
+            </button>
+            {showInfo && (
+              <div className="mt-2 space-y-3">
+                {/* Video embed at the top */}
+                <ExerciseVideoEmbed
+                  videoUrl={exercise.exerciseVideoUrl || null}
+                  exerciseTitle={exercise.exerciseTitle}
+                />
+
+                {/* The Why */}
+                {exercise.exerciseTheWhy && (
+                  <div className="bg-primary/5 border-l-2 border-primary/40 p-3">
+                    <div className="flex items-center gap-1 mb-1">
+                      <Info size={10} className="text-primary" />
+                      <span className="text-[9px] font-bold uppercase tracking-widest text-primary">The Why</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{exercise.exerciseTheWhy}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Notes & Video toggle */}
         <div className="px-3 pb-2">
