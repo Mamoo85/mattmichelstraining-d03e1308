@@ -2,12 +2,10 @@ import { useState } from "react";
 import { Trash2, ChevronDown, ChevronUp, Plus, Minus, Link, MessageSquare, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
-import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { useTierAccess } from "@/hooks/useTierAccess";
 import { EliteUpsellModal } from "@/components/PaywallGate";
 import type { LoggedExerciseData } from "./WorkoutLogger";
-
-const TIER_LEVEL: Record<string, number> = { basic: 1, pro: 2, elite: 3, team: 4 };
 
 interface ExerciseCardProps {
   exercise: LoggedExerciseData;
@@ -19,11 +17,8 @@ interface ExerciseCardProps {
 const ExerciseCard = ({ exercise, index, onUpdate, onRemove }: ExerciseCardProps) => {
   const [showExtras, setShowExtras] = useState(false);
   const [showUpsell, setShowUpsell] = useState(false);
-  const { subscriptionTier } = useAuth();
   const { isAdmin } = useIsAdmin();
-
-  const userLevel = subscriptionTier ? (TIER_LEVEL[subscriptionTier] ?? 0) : 0;
-  const canFlag = isAdmin || userLevel >= 3; // elite or team
+  const { hasAccess: canFlag } = useTierAccess("flag_coach");
 
   const updateSet = (setIndex: number, field: "reps" | "weight", value: number) => {
     const newSets = [...exercise.sets];
