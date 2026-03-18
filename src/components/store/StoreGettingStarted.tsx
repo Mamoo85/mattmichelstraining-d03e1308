@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Gift, Star, Trophy, Users, LogIn } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import SectionHeader from "../SectionHeader";
+import AiIntakeAnalyzer from "../programs/AiIntakeAnalyzer";
 
 const STEPS = [
   {
