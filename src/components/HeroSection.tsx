@@ -12,10 +12,7 @@ import EmailCapture from "./landing/EmailCapture";
 
 const HeroSection = () => {
   const showHero = useSectionVisible("hero");
-
-  const showHero = useSectionVisible("hero");
   const showFindUs = useSectionVisible("find_us");
-
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
