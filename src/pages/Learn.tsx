@@ -8,6 +8,7 @@ import {
 import AppNavbar from "@/components/AppNavbar";
 import MonthlyFocus from "@/components/landing/MonthlyFocus";
 import NewsletterSignup from "@/components/NewsletterSignup";
+import TrialCTA from "@/components/TrialCTA";
 
 /* ── Featured Videos ── */
 const VIDEOS = [
