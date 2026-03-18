@@ -14,6 +14,7 @@ import {
 /* ─── Types ────────────────────────────────── */
 
 interface FocusData {
+  id: string;
   title: string;
   topic: string;
   reasoning: string;
@@ -22,6 +23,8 @@ interface FocusData {
   exercises: string[];
   challenge_metric: string;
   matt_quote: string;
+  metric_label: string;
+  target_goal: number;
 }
 
 interface ChallengeData {
