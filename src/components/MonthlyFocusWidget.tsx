@@ -203,8 +203,21 @@ const MonthlyFocusWidget = () => {
     if (data) setEntries(data as any[]);
   };
 
-  // Build cumulative chart data
-  const chartData = useMemo(() => {
+  // Build cumulative chart data from focus_logs (preferred) or challenge_entries (fallback)
+  const focusChartData = useMemo(() => {
+    if (!focusLogs.length) return [];
+    let cumulative = 0;
+    return focusLogs.map((e) => {
+      cumulative += Number(e.metric_value);
+      const d = new Date(e.logged_date + "T00:00:00");
+      return {
+        date: d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+        value: cumulative,
+      };
+    });
+  }, [focusLogs]);
+
+  const challengeChartData = useMemo(() => {
     if (!entries.length) return [];
     let cumulative = 0;
     return entries.map((e) => {
@@ -217,12 +230,15 @@ const MonthlyFocusWidget = () => {
     });
   }, [entries]);
 
-  // Parse target from challenge_metric (try to extract a number)
+  const chartData = focusChartData.length > 0 ? focusChartData : challengeChartData;
+
+  // Use target_goal from focus table (preferred), fallback to parsing challenge_metric text
   const targetValue = useMemo(() => {
+    if (focus?.target_goal && focus.target_goal > 0) return focus.target_goal;
     if (!focus?.challenge_metric) return null;
     const match = focus.challenge_metric.match(/(\d+)/);
     return match ? parseInt(match[1]) : null;
-  }, [focus?.challenge_metric]);
+  }, [focus?.target_goal, focus?.challenge_metric]);
 
   const handleOptIn = async () => {
     if (!subscribed) { toast({ title: "Members only", description: "Subscribe to join challenges.", variant: "destructive" }); return; }
