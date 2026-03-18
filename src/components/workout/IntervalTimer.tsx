@@ -109,6 +109,7 @@ const IntervalTimer = ({ onClose }: { onClose: () => void }) => {
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [currentRound, setCurrentRound] = useState(0);
   const [running, setRunning] = useState(false);
+  const [volume, setVolume] = useState(() => getMasterVolume() * 100);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const targetTimeRef = useRef(0);
