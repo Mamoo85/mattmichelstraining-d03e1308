@@ -26,8 +26,15 @@ import AdminParentReports from "@/components/admin/AdminParentReports";
 import AdminFamilyManager from "@/components/admin/AdminFamilyManager";
 import AdminLearnEditor from "@/components/admin/AdminLearnEditor";
 import AdminSystemSettings from "@/components/admin/AdminSystemSettings";
+import AdminProductManager from "@/components/admin/AdminProductManager";
+import AdminTestimonials from "@/components/admin/AdminTestimonials";
+import AdminFrontPage from "@/components/admin/AdminFrontPage";
+
 const TABS = [
   { key: "clients", label: "Athletes & Trials" },
+  { key: "front-page", label: "Front Page" },
+  { key: "products", label: "Storefront" },
+  { key: "testimonials", label: "Testimonials" },
   { key: "learn", label: "Learn Hub" },
   { key: "system", label: "System & Referrals" },
   { key: "trial", label: "Free Trial" },
@@ -72,7 +79,7 @@ const Admin = () => {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-lg font-bold text-foreground tracking-display">Admin Dashboard</h1>
-            <p className="text-xs text-muted-foreground">Manage site content, clients, protocols & newsletters</p>
+            <p className="text-xs text-muted-foreground">Full CMS — manage content, clients, products & more</p>
           </div>
         </div>
 
@@ -116,6 +123,9 @@ const Admin = () => {
         {activeTab === "clients" && <AdminClientList />}
         {activeTab === "learn" && <AdminLearnEditor />}
         {activeTab === "system" && <AdminSystemSettings />}
+        {activeTab === "front-page" && <AdminFrontPage />}
+        {activeTab === "products" && <AdminProductManager />}
+        {activeTab === "testimonials" && <AdminTestimonials />}
         {activeTab === "site" && <AdminSiteEditor />}
         {activeTab === "protocols" && <AdminProtocols />}
         {activeTab === "subscribers" && <AdminSubscriberList />}
