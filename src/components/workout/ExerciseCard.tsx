@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Trash2, ChevronDown, ChevronUp, Plus, Minus, Link, MessageSquare, Lock } from "lucide-react";
+import { Trash2, ChevronDown, ChevronUp, Plus, Minus, Link, MessageSquare, Lock, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useTierAccess } from "@/hooks/useTierAccess";
 import { EliteUpsellModal } from "@/components/PaywallGate";
+import ExerciseVideoEmbed from "@/components/exercise/ExerciseVideoEmbed";
 import type { LoggedExerciseData } from "./WorkoutLogger";
 
 interface ExerciseCardProps {
