@@ -17,11 +17,8 @@ interface ExerciseCardProps {
 const ExerciseCard = ({ exercise, index, onUpdate, onRemove }: ExerciseCardProps) => {
   const [showExtras, setShowExtras] = useState(false);
   const [showUpsell, setShowUpsell] = useState(false);
-  const { subscriptionTier } = useAuth();
   const { isAdmin } = useIsAdmin();
-
-  const userLevel = subscriptionTier ? (TIER_LEVEL[subscriptionTier] ?? 0) : 0;
-  const canFlag = isAdmin || userLevel >= 3; // elite or team
+  const { hasAccess: canFlag } = useTierAccess("flag_for_coach");
 
   const updateSet = (setIndex: number, field: "reps" | "weight", value: number) => {
     const newSets = [...exercise.sets];

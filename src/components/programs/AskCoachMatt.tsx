@@ -20,11 +20,10 @@ interface AskCoachMattProps {
 const ACCEPTED_VIDEO = "video/mp4,video/quicktime,video/webm";
 const MAX_VIDEO_SIZE = 25 * 1024 * 1024;
 
-const TIER_LEVEL: Record<string, number> = { basic: 1, pro: 2, elite: 3, team: 4 };
-
 const AskCoachMatt = ({ programId, programTitle, weekNumber, dayNumber, exercises, isPurchasedProgram = false }: AskCoachMattProps) => {
-  const { user, subscriptionTier } = useAuth();
+  const { user } = useAuth();
   const { isAdmin } = useIsAdmin();
+  const { hasAccess: tierAccess } = useTierAccess("ask_coach_matt");
   const [message, setMessage] = useState("");
   const [selectedExercise, setSelectedExercise] = useState(exercises[0] || "");
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -32,9 +31,8 @@ const AskCoachMatt = ({ programId, programTitle, weekNumber, dayNumber, exercise
   const [sizeWarning, setSizeWarning] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // Access logic: admin always, purchased programs always, Pro+ subscription always
-  const userLevel = subscriptionTier ? (TIER_LEVEL[subscriptionTier] ?? 0) : 0;
-  const hasAccess = isAdmin || isPurchasedProgram || userLevel >= 2; // Pro = level 2
+  // Access: admin always, purchased programs always, or dynamic tier check
+  const hasAccess = isAdmin || isPurchasedProgram || tierAccess;
 
   const handleVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
