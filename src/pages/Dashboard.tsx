@@ -193,8 +193,9 @@ const Dashboard = () => {
 
       {/* Monthly Focus & Challenge Widget */}
       <MonthlyFocusWidget />
+    </div>
+  );
 
-  return (
     <div className="min-h-screen bg-background">
       <AppNavbar />
       <PwaInstallBanner />
