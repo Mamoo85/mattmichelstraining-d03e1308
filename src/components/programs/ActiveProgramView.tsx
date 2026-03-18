@@ -49,7 +49,7 @@ const ActiveProgramView = ({ activeProgram }: ActiveProgramProps) => {
     const fetchWorkouts = async () => {
       const { data, error } = await supabase
         .from("program_workouts")
-        .select("id, exercise_id, week_number, day_number, prescribed_sets_reps, coach_instructions, sort_order, exercise_library(id, title, the_why, equipment_needed, focus_area)")
+        .select("id, exercise_id, week_number, day_number, prescribed_sets_reps, coach_instructions, sort_order, exercise_library(id, title, the_why, equipment_needed, focus_area, video_url)")
         .eq("program_id", activeProgram.program_id)
         .order("week_number")
         .order("day_number")
