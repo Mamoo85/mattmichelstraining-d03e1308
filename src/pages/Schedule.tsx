@@ -422,7 +422,7 @@ const Schedule = () => {
                 </div>
                 <div className="text-xs text-muted-foreground">
                   {format(currentDate, "EEEE, MMM d")} at {formatTime12(selectedSlots[0])}
-                  {isConsecutive && !useCredit && ` – ${formatTime12(addMinutes(selectedSlots[1], 30))}`}
+                  {isConsecutive && !isFreeSession && ` – ${formatTime12(addMinutes(selectedSlots[1], 30))}`}
                 </div>
               </div>
               <div className="text-right">
