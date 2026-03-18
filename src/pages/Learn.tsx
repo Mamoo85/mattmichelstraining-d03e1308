@@ -5,6 +5,9 @@ import {
   BookOpen, Shield, Dumbbell, ArrowRight, Target, Heart, Brain,
   Play, ChevronDown, ChevronUp, Flame, Clock, Users,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import ReactMarkdown from "react-markdown";
 import AppNavbar from "@/components/AppNavbar";
 import MonthlyFocus from "@/components/landing/MonthlyFocus";
 import NewsletterSignup from "@/components/NewsletterSignup";
