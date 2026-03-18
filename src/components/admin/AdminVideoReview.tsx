@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Video, Play, MessageSquare, Dumbbell, User, Calendar, Filter, Loader2, ExternalLink, ChevronDown } from "lucide-react";
+import AiAssistButton from "./AiAssistButton";
 
 interface VideoEntry {
   id: string;
@@ -272,16 +273,31 @@ const AdminVideoReview = () => {
                       </div>
                     )}
 
-                    {/* Open in new tab */}
-                    <a
-                      href={v.videoUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:opacity-80 transition-m2"
-                    >
-                      <ExternalLink size={12} />
-                      Open full-size video
-                    </a>
+                    {/* AI Form Check + Open in new tab */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <AiAssistButton
+                        type="form_check"
+                        context={{
+                          exerciseName: v.exerciseName,
+                          athleteName: v.userName,
+                          clientNotes: v.message,
+                          hasVideo: true,
+                        }}
+                        onResult={(text) => {
+                          navigator.clipboard.writeText(text);
+                        }}
+                        label="AI Form Check"
+                      />
+                      <a
+                        href={v.videoUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:opacity-80 transition-m2"
+                      >
+                        <ExternalLink size={12} />
+                        Open full-size video
+                      </a>
+                    </div>
                   </div>
                 )}
               </div>

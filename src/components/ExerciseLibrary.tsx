@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
-import { Search, ChevronDown, ChevronUp, Dumbbell, Filter } from "lucide-react";
+import { Search, ChevronDown, ChevronUp, Dumbbell, Filter, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import SectionHeader from "./SectionHeader";
+import AiExerciseSubstitution from "./workout/AiExerciseSubstitution";
 
 interface DbExercise {
   id: string;
@@ -24,6 +25,7 @@ const ExerciseLibrary = () => {
   const [activeFocusArea, setActiveFocusArea] = useState<string | null>(null);
   const [activeSport, setActiveSport] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [substitutionExercise, setSubstitutionExercise] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchExercises = async () => {
@@ -291,9 +293,23 @@ const ExerciseLibrary = () => {
                     <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-1">
                       The WHY
                     </span>
-                    <p className="text-xs text-foreground leading-relaxed">
+                    <p className="text-xs text-foreground leading-relaxed mb-2">
                       {ex.the_why}
                     </p>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setSubstitutionExercise(substitutionExercise === ex.title ? null : ex.title); }}
+                      className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-m2"
+                    >
+                      <RefreshCw size={10} /> Find a Substitute
+                    </button>
+                    {substitutionExercise === ex.title && (
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <AiExerciseSubstitution
+                          exerciseName={ex.title}
+                          onClose={() => setSubstitutionExercise(null)}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

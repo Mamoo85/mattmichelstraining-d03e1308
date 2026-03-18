@@ -11,6 +11,7 @@ import LogForm from "./progress/LogForm";
 import StatsRow from "./progress/StatsRow";
 import LogHistory from "./progress/LogHistory";
 import RecoveryChart from "./progress/RecoveryChart";
+import AiRecoveryAdvisor from "./progress/AiRecoveryAdvisor";
 
 interface ProgressLog {
   id: string;
@@ -154,6 +155,9 @@ const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) =
 
       {/* Recovery trends — only renders if data exists */}
       {effectiveUserId && <RecoveryChart userId={effectiveUserId} />}
+
+      {/* AI Recovery Advisor */}
+      {effectiveUserId && <AiRecoveryAdvisor userId={effectiveUserId} />}
     </div>
   );
 };

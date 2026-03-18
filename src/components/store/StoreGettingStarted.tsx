@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Gift, Star, Trophy, Users, LogIn } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import SectionHeader from "../SectionHeader";
+import AiIntakeAnalyzer from "../programs/AiIntakeAnalyzer";
 
 const STEPS = [
   {
@@ -114,6 +115,13 @@ const StoreGettingStarted = () => {
           </div>
         ))}
       </div>
+
+      {/* AI Program Finder */}
+      {user && (
+        <div className="mb-6">
+          <AiIntakeAnalyzer />
+        </div>
+      )}
 
       {/* Free member banner */}
       <div className="bg-card shadow-m2 p-5 mb-6">
