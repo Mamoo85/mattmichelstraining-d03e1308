@@ -11,7 +11,7 @@ import {
   ChevronRight, GraduationCap, Heart, Zap, BookOpen,
   Calendar, Mail, Phone, MapPin, Users
 } from "lucide-react";
-import m2Logo from "@/assets/m2-logo.jpg";
+import m2Logo from "@/assets/m2-logo-official.png";
 
 /* ---------- data ---------- */
 

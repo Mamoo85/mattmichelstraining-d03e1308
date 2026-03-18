@@ -11,7 +11,7 @@ import { useAuth, TIERS } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import m2Logo from "@/assets/m2-logo-official.jpg";
+import m2Logo from "@/assets/m2-logo-official.png";
 
 type TrialPath = "parent" | "basic" | "pro" | null;
 
