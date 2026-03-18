@@ -86,6 +86,11 @@ const HeroSection = () => {
         {/* ─── 3. FOR PARENTS — Injury Prevention Hook ─── */}
         <ForParentsCTA />
 
+        {/* ─── PARENT TRUST TESTIMONIAL ─── */}
+        <div className="mb-8">
+          <ParentTestimonialCard />
+        </div>
+
         {/* ─── 4. MEMBER PORTAL (sneak peek) ─── */}
         <PortalEntrance />
 
