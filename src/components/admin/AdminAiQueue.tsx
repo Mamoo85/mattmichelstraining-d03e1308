@@ -323,7 +323,7 @@ const AdminAiQueue = () => {
                         />
                       ) : (
                         <div className="prose prose-sm prose-invert max-w-none text-foreground">
-                          <ReactMarkdown>{item.ai_result}</ReactMarkdown>
+                          <ReactMarkdown>{formatAiResult(item.ai_result)}</ReactMarkdown>
                         </div>
                       )}
                     </div>
