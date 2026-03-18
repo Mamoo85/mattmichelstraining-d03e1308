@@ -136,7 +136,7 @@ const TrialWelcome = () => {
           </div>
           <div className="mt-4 bg-primary/5 border border-primary/20 p-3">
             <p className="text-xs text-muted-foreground leading-relaxed">
-              When your 7 days are up, you decide: <strong className="text-foreground">walk away</strong>, or subscribe to keep your
+              When your 14 days are up, you decide: <strong className="text-foreground">walk away</strong>, or subscribe to keep your
               progress, unlock the full library, and keep my eyes on your training.{" "}
               <span className="text-primary font-bold">Let's get to work.</span>
             </p>
