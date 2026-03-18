@@ -1,5 +1,8 @@
 import { useState } from "react";
+import { Navigate } from "react-router-dom";
 import AppNavbar from "@/components/AppNavbar";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { Loader2 } from "lucide-react";
 import AdminTrialSettings from "@/components/admin/AdminTrialSettings";
 import AdminSubscriberList from "@/components/admin/AdminSubscriberList";
 import AdminNewsletterComposer from "@/components/admin/AdminNewsletterComposer";
