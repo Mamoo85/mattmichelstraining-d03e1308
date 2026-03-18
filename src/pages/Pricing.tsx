@@ -10,6 +10,7 @@ import { toast } from "@/hooks/use-toast";
 import { useContentMap } from "@/hooks/useSiteContent";
 import TrialCTA from "@/components/TrialCTA";
 import { getStoredReferralCode, clearStoredReferralCode } from "@/hooks/useReferral";
+import CheckoutConfirmationModal, { type CheckoutProductType } from "@/components/CheckoutConfirmationModal";
 
 const TIER_CARDS: {
   key: TierKey;
@@ -120,6 +121,7 @@ const Pricing = () => {
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
   const [expandedTiers, setExpandedTiers] = useState<Record<string, boolean>>({});
+  const [modalTier, setModalTier] = useState<{ key: TierKey; label: string } | null>(null);
 
   const handleCheckout = async (tierKey: TierKey) => {
     if (!user) {
@@ -328,7 +330,10 @@ const Pricing = () => {
                 ) : (
                   <div className="space-y-2">
                     <button
-                      onClick={() => handleCheckout(card.key)}
+                      onClick={() => {
+                        if (!user) { navigate("/auth"); return; }
+                        setModalTier({ key: card.key, label: card.label || tier.name });
+                      }}
                       disabled={loadingTier === card.key}
                       className={`w-full py-3 text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-colors ${
                         card.highlight
@@ -386,6 +391,21 @@ const Pricing = () => {
             </Link>
           )}
         </div>
+
+        {/* Checkout confirmation modal */}
+        <CheckoutConfirmationModal
+          open={!!modalTier}
+          onClose={() => setModalTier(null)}
+          onConfirm={async () => {
+            if (!modalTier) return;
+            await handleCheckout(modalTier.key);
+            setModalTier(null);
+          }}
+          loading={!!loadingTier}
+          productName={modalTier ? (TIERS[modalTier.key].name + " Subscription") : ""}
+          productPrice={modalTier ? (TIERS[modalTier.key].price + "/mo") : ""}
+          productType={modalTier?.key as CheckoutProductType || "pro"}
+        />
       </div>
     </div>
   );
