@@ -161,7 +161,7 @@ const Schedule = () => {
   const toggleSlot = (time: string) => {
     setSelectedSlots(prev => {
       if (prev.includes(time)) return prev.filter(t => t !== time);
-      if (useCredit) return [time]; // credits = single slot only
+      if (useCredit || useGift) return [time]; // credits/gifts = single slot only
       if (prev.length === 0) return [time];
       if (prev.length === 1) {
         const existing = prev[0];
