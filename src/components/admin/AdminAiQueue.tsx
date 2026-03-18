@@ -55,6 +55,62 @@ const STATUS_COLORS: Record<string, string> = {
   rejected: "text-destructive",
 };
 
+/** Convert raw AI result (which may be JSON) into readable markdown */
+function formatAiResult(raw: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed.startsWith("{") && !trimmed.startsWith("[")) return raw;
+  try {
+    const parsed = JSON.parse(trimmed);
+    return jsonToMarkdown(parsed);
+  } catch {
+    return raw;
+  }
+}
+
+function jsonToMarkdown(data: any, _depth = 0): string {
+  if (data === null || data === undefined) return "";
+  if (typeof data === "string") return data;
+  if (typeof data === "number" || typeof data === "boolean") return String(data);
+
+  if (Array.isArray(data)) {
+    return data.map((item) => {
+      if (typeof item === "object" && item !== null) return jsonToMarkdown(item, _depth);
+      return `- ${item}`;
+    }).join("\n\n");
+  }
+
+  const lines: string[] = [];
+  for (const [key, value] of Object.entries(data)) {
+    const label = key.replace(/([A-Z])/g, " $1").replace(/_/g, " ").replace(/^\w/, c => c.toUpperCase());
+
+    if (Array.isArray(value) && value.length > 0 && typeof value[0] === "object") {
+      lines.push(`### ${label}`);
+      value.forEach((item: any, i: number) => {
+        const name = item.name || item.title || item.exercise || `Item ${i + 1}`;
+        lines.push(`**${name}**`);
+        const subLines: string[] = [];
+        for (const [k, v] of Object.entries(item)) {
+          if (["name", "title"].includes(k)) continue;
+          const subLabel = k.replace(/([A-Z])/g, " $1").replace(/_/g, " ").replace(/^\w/, c => c.toUpperCase());
+          subLines.push(`- **${subLabel}:** ${v}`);
+        }
+        lines.push(subLines.join("\n"));
+      });
+    } else if (Array.isArray(value)) {
+      if (value.length === 0) continue;
+      lines.push(`**${label}:** ${value.join(", ")}`);
+    } else if (typeof value === "object" && value !== null) {
+      lines.push(`### ${label}`);
+      lines.push(jsonToMarkdown(value, _depth + 1));
+    } else if (typeof value === "string" && value.length > 0) {
+      lines.push(`**${label}:** ${value}`);
+    } else if (typeof value === "number") {
+      lines.push(`**${label}:** ${value}`);
+    }
+  }
+  return lines.join("\n\n");
+}
+
 const AdminAiQueue = () => {
   const { user } = useAuth();
   const [items, setItems] = useState<QueueItem[]>([]);
