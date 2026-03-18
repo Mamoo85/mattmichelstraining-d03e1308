@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
-import { ArrowRight, Play } from "lucide-react";
 import m2Logo from "@/assets/m2-logo-official.jpg";
 import { useContentMap, useSectionVisible } from "@/hooks/useSiteContent";
 
@@ -41,7 +39,7 @@ const HeroSection = () => {
         }}
       />
 
-      <div className="container relative z-10 pt-20 pb-12 px-4 sm:px-6">
+      <div className="container relative z-10 pt-20 pb-12">
         {/* ─── 1. HERO — Identity & Proof ─── */}
         {showHero && (
           <motion.div
@@ -61,42 +59,11 @@ const HeroSection = () => {
                 <br />
                 <span className="text-primary">20 years. Zero injuries.</span>
               </h1>
-              <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto leading-relaxed mb-6">
+              <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto leading-relaxed">
                 In-person training in Grosse Pointe. Online programs anywhere.
                 The same coach either way.
               </p>
-
-              {/* CTA Buttons */}
-              <motion.div
-                className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-              >
-                <Link
-                  to="/pricing"
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all group"
-                >
-                  Start Training
-                  <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                </Link>
-                <Link
-                  to="/shop"
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 border-2 border-primary text-primary px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:bg-primary/10 transition-all group"
-                >
-                  <Play size={14} />
-                  Browse Programs
-                </Link>
-              </motion.div>
             </div>
-
-            {/* Orange accent bar */}
-            <motion.div
-              className="w-16 h-1 bg-primary mx-auto mt-4"
-              initial={{ scaleX: 0 }}
-              animate={{ scaleX: 1 }}
-              transition={{ duration: 0.6, delay: 0.5 }}
-            />
           </motion.div>
         )}
 
