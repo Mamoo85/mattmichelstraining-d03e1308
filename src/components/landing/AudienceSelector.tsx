@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Users, Dumbbell, GraduationCap, ArrowRight, X, Sparkles } from "lucide-react";
+import { Shield, Users, Dumbbell, GraduationCap, ArrowRight, X, Sparkles, HeartPulse } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import sneakAthlete from "@/assets/sneak-athlete.jpg";
 import sneakCoach from "@/assets/sneak-coach.jpg";
