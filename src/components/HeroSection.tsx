@@ -18,12 +18,6 @@ const HeroSection = () => {
   const showHero = useSectionVisible("hero");
   const showFindUs = useSectionVisible("find_us");
 
-  const STATS = [
-    { value: stats.stat_1_value || "20+", label: stats.stat_1_label || "Years" },
-    { value: stats.stat_2_value || "50+", label: stats.stat_2_label || "College Athletes" },
-    { value: stats.stat_3_value || "1000s", label: stats.stat_3_label || "Clients Trained" },
-    { value: stats.stat_4_value || "Zero", label: stats.stat_4_label || "Injuries" },
-  ];
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
