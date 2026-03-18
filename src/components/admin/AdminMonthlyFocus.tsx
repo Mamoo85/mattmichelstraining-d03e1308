@@ -161,7 +161,10 @@ const AdminMonthlyFocus = () => {
       title: focus.title,
       topic: focus.topic,
       reasoning: focus.reasoning,
+      biomechanics: focus.biomechanics || [],
+      common_mistakes: focus.common_mistakes || [],
       exercises: focus.exercises,
+      challenge_metric: focus.challenge_metric || "",
       matt_quote: focus.matt_quote,
     });
     setEditingFocus(true);
