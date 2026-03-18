@@ -35,6 +35,7 @@ import AdminBroadcasts from "@/components/admin/AdminBroadcasts";
 
 const TABS = [
   { key: "ai-copilot", label: "AI Copilot" },
+  { key: "financials", label: "Financials" },
   { key: "broadcasts", label: "Broadcasts" },
   { key: "clients", label: "Athletes & Trials" },
   { key: "front-page", label: "Front Page" },
