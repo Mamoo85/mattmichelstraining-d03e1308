@@ -8,8 +8,9 @@ import { Link } from "react-router-dom";
 import {
   User, Trophy, Medal, Award, Save, Loader2, Gift, Search,
   Crown, ExternalLink, ShoppingBag, Dumbbell, Calendar, Shield,
-  ArrowRight, ChevronDown, ChevronUp, Zap, Clock, FileText
+  ArrowRight, ChevronDown, ChevronUp, Zap, Clock, FileText, Send
 } from "lucide-react";
+import GiftSessionModal from "@/components/GiftSessionModal";
 import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +41,8 @@ const Profile = () => {
   const [lookupResult, setLookupResult] = useState<{ valid: boolean; remaining_balance: number; original_amount: number } | null>(null);
   const [lookupLoading, setLookupLoading] = useState(false);
   const [showAllLifts, setShowAllLifts] = useState(false);
+  const [giftModalOpen, setGiftModalOpen] = useState(false);
+  const canGiftSession = subscriptionTier === "custom" || subscriptionTier === "team_elite";
 
   useEffect(() => {
     if (!user) return;
@@ -248,7 +251,7 @@ const Profile = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6">
+        <div className={`grid ${canGiftSession ? "grid-cols-2 sm:grid-cols-5" : "grid-cols-2 sm:grid-cols-4"} gap-2 mb-6`}>
           <Link to="/dashboard" className="bg-card border border-border p-3 flex flex-col items-center gap-1.5 hover:border-primary/40 transition-all">
             <Dumbbell size={18} className="text-primary" />
             <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Dashboard</span>
@@ -265,6 +268,15 @@ const Profile = () => {
             <Shield size={18} className="text-primary" />
             <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Plans</span>
           </Link>
+          {canGiftSession && (
+            <button
+              onClick={() => setGiftModalOpen(true)}
+              className="bg-primary/10 border border-primary/30 p-3 flex flex-col items-center gap-1.5 hover:border-primary/60 transition-all"
+            >
+              <Gift size={18} className="text-primary" />
+              <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Gift Session</span>
+            </button>
+          )}
         </div>
 
         {/* Subscription Details */}
@@ -552,6 +564,7 @@ const Profile = () => {
         </div>
       </div>
       <TechSupportButton />
+      <GiftSessionModal open={giftModalOpen} onClose={() => setGiftModalOpen(false)} />
     </div>
   );
 };

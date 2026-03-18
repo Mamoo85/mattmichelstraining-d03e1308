@@ -21,6 +21,7 @@ const TIER_CARDS: {
   cta: string;
   label?: string;
   subtitle?: string;
+  badge?: string;
 }[] = [
   {
     key: "basic",
@@ -30,6 +31,7 @@ const TIER_CARDS: {
       "10 pre-loaded daily workouts",
       "Member challenges & leaderboard",
       "Monthly Focus Plan access",
+      "Full workout logging & tracking",
     ],
     cta: "Start Basic",
     subtitle: "The cost of a Netflix subscription — get in the ecosystem.",
@@ -37,7 +39,6 @@ const TIER_CARDS: {
   {
     key: "foundation",
     icon: Star,
-    highlight: true,
     features: [
       "Everything in Basic",
       "8-week periodized training block",
@@ -50,36 +51,20 @@ const TIER_CARDS: {
     subtitle: "Your core program. Real structure. Real results.",
   },
   {
-    key: "foundation",
-    icon: Shield,
-    label: "Youth Development",
-    subtitle: "Same Foundation features — designed for families",
-    features: [
-      "Everything in Foundation — same price, same features",
-      "🎁 Free postural assessment (video or live call)",
-      "Parent account with child invite link",
-      "Monitor your child's workouts & progress",
-      "Flag Coach Matt on your child's behalf",
-      "Age-appropriate programming from intake",
-      "Parent trial auto-charges Foundation when it ends",
-    ],
-    cta: "Start Parent Trial",
-  },
-  {
     key: "custom",
     icon: Crown,
+    highlight: true,
     features: [
       "Everything in Foundation",
       "Fully custom programming + AI builder",
       "1-on-1 video assessment ($50 value included)",
       "🎁 Gift a session to a friend",
-      "Monthly program updates",
-      "Full 'Fix It' rehab library",
       "Direct messaging support",
       "Priority Flag Coach Matt responses",
     ],
     cta: "Go Custom",
     subtitle: "Custom protocol from a 20-year vet for less than the session alone.",
+    badge: "Includes a $50 1-on-1 Video Assessment",
   },
   {
     key: "team_elite",
@@ -88,14 +73,13 @@ const TIER_CARDS: {
       "Everything in Custom",
       "Comprehensive on/off-season periodization",
       "Highest level of custom programming",
-      "1-on-1 video session included",
-      "🎁 Gift session included",
       "Bulk programming for full teams",
       "Multi-athlete management",
       "Seasonal periodization plans",
     ],
     cta: "Go Team/Elite",
     subtitle: "For serious athletes making a college roster.",
+    badge: "Includes a $50 1-on-1 Video Assessment",
   },
 ];
 
@@ -231,25 +215,24 @@ const Pricing = () => {
           </div>
         )}
 
-        {/* Tier grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-6xl mx-auto">
+        {/* Tier grid — 4 columns on desktop */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-7xl mx-auto">
           {TIER_CARDS.map((card, i) => {
             const tier = TIERS[card.key];
             const isCurrentPlan = subscriptionTier === card.key;
             const Icon = card.icon;
-            // Override features from CMS if available (pipe-separated)
             const cmsFeatures = cms[`${card.key}_features`];
             const features = cmsFeatures ? cmsFeatures.split("|").map(f => f.trim()) : card.features;
 
             return (
               <motion.div
-                key={card.key}
+                key={`${card.key}-${i}`}
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className={`relative flex flex-col border-2 p-6 ${
+                className={`relative flex flex-col border-2 p-5 ${
                   card.highlight
-                    ? "border-primary bg-primary/5"
+                    ? "border-primary bg-primary/5 ring-1 ring-primary/20"
                     : isCurrentPlan
                     ? "border-primary/60 bg-primary/5"
                     : "border-border bg-card"
@@ -266,44 +249,52 @@ const Pricing = () => {
                   </div>
                 )}
 
-                <Icon className="w-8 h-8 text-primary mb-3" />
-                <h3 className="text-lg font-black uppercase tracking-tight text-foreground">
+                <Icon className="w-7 h-7 text-primary mb-2" />
+                <h3 className="text-base font-black uppercase tracking-tight text-foreground">
                   {card.label || tier.name}
                 </h3>
                 {card.subtitle && (
-                  <p className="text-[10px] text-muted-foreground mb-1">{card.subtitle}</p>
+                  <p className="text-[10px] text-muted-foreground mb-1 leading-tight">{card.subtitle}</p>
                 )}
-                <div className="flex items-baseline gap-1 mt-1 mb-2">
-                  <span className="text-3xl font-black text-foreground">{tier.price}</span>
-                  <span className="text-muted-foreground text-sm">/mo</span>
+                <div className="flex items-baseline gap-1 mt-1 mb-1.5">
+                  <span className="text-2xl font-black text-foreground">{tier.price}</span>
+                  <span className="text-muted-foreground text-xs">/mo</span>
                 </div>
-                <div className="flex items-center gap-1.5 mb-4 text-[10px] font-bold uppercase tracking-widest text-primary">
+                <div className="flex items-center gap-1.5 mb-2 text-[10px] font-bold uppercase tracking-widest text-primary">
                   <Tag className="w-3 h-3" />
-                  {TIER_DISCOUNTS[card.key]}% off all store purchases
+                  {TIER_DISCOUNTS[card.key]}% off store
                 </div>
 
-                <ul className="flex-1 space-y-2 mb-6">
+                {/* Assessment badge for Custom & Team */}
+                {card.badge && (
+                  <div className="bg-primary/10 border border-primary/20 px-2.5 py-1.5 mb-3 flex items-center gap-1.5">
+                    <Shield className="w-3.5 h-3.5 text-primary shrink-0" />
+                    <span className="text-[10px] font-bold text-primary leading-tight">{card.badge}</span>
+                  </div>
+                )}
+
+                <ul className="flex-1 space-y-1.5 mb-4">
                   {(() => {
-                    const isExpanded = expandedTiers[card.key];
+                    const isExpanded = expandedTiers[`${card.key}-${i}`];
                     const visibleFeatures = isExpanded ? features : features.slice(0, INITIAL_SHOW);
                     const hasMore = features.length > INITIAL_SHOW;
                     return (
                       <>
                         {visibleFeatures.map((f, j) => (
-                          <li key={j} className="flex items-start gap-2 text-sm text-muted-foreground">
-                            <Check className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                          <li key={j} className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                            <Check className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
                             {f}
                           </li>
                         ))}
                         {hasMore && (
                           <button
-                            onClick={() => setExpandedTiers(prev => ({ ...prev, [card.key]: !prev[card.key] }))}
-                            className="flex items-center gap-1 text-xs font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-colors mt-1"
+                            onClick={() => setExpandedTiers(prev => ({ ...prev, [`${card.key}-${i}`]: !prev[`${card.key}-${i}`] }))}
+                            className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-colors mt-1"
                           >
                             {isExpanded ? (
-                              <><ChevronUp className="w-3.5 h-3.5" /> Show Less</>
+                              <><ChevronUp className="w-3 h-3" /> Less</>
                             ) : (
-                              <><ChevronDown className="w-3.5 h-3.5" /> +{features.length - INITIAL_SHOW} More</>
+                              <><ChevronDown className="w-3 h-3" /> +{features.length - INITIAL_SHOW} More</>
                             )}
                           </button>
                         )}
@@ -315,17 +306,10 @@ const Pricing = () => {
                 {isCurrentPlan ? (
                   <button
                     onClick={handleManage}
-                    className="w-full py-3 text-xs font-bold uppercase tracking-widest border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
+                    className="w-full py-2.5 text-[10px] font-bold uppercase tracking-widest border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
                   >
                     Manage Plan
                   </button>
-                ) : card.label === "Youth Development" ? (
-                  <Link
-                    to={user ? "/trial-welcome?path=parent" : "/auth?redirect=/trial-welcome?path=parent"}
-                    className="w-full py-3 text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-colors border-2 border-foreground text-foreground hover:bg-foreground hover:text-background"
-                  >
-                    {card.cta} <ArrowRight className="w-4 h-4" />
-                  </Link>
                 ) : (
                   <div className="space-y-2">
                     <button
@@ -334,7 +318,7 @@ const Pricing = () => {
                         setModalTier({ key: card.key, label: card.label || tier.name });
                       }}
                       disabled={loadingTier === card.key}
-                      className={`w-full py-3 text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-colors ${
+                      className={`w-full py-2.5 text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-colors ${
                         card.highlight
                           ? "bg-primary text-primary-foreground hover:bg-primary/90"
                           : "border-2 border-foreground text-foreground hover:bg-foreground hover:text-background"
@@ -344,14 +328,14 @@ const Pricing = () => {
                         <Loader2 className="w-4 h-4 animate-spin" />
                       ) : (
                         <>
-                          {card.cta} <ArrowRight className="w-4 h-4" />
+                          {card.cta} <ArrowRight className="w-3.5 h-3.5" />
                         </>
                       )}
                     </button>
-                    {card.highlight && !subscribed && (
+                    {card.key === "foundation" && !subscribed && (
                       <Link
                         to={user ? "/trial-welcome?path=foundation" : "/auth?redirect=/trial-welcome?path=foundation"}
-                        className="w-full py-2 text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-1.5 text-primary hover:underline"
+                        className="w-full py-1.5 text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-1.5 text-primary hover:underline"
                       >
                         Or try 14 days free <ArrowRight className="w-3 h-3" />
                       </Link>
@@ -362,6 +346,30 @@ const Pricing = () => {
             );
           })}
         </div>
+
+        {/* Youth Development callout — sits below the 4-column grid */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="mt-6 max-w-7xl mx-auto bg-card border-2 border-border p-6 flex flex-col md:flex-row items-start md:items-center gap-4"
+        >
+          <Shield className="w-8 h-8 text-primary shrink-0" />
+          <div className="flex-1 min-w-0">
+            <h3 className="text-base font-black uppercase tracking-tight text-foreground mb-1">
+              Youth Development — Parents Start Here
+            </h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Same Foundation features at the same price — designed for families. Free postural assessment, parent account with child invite link, monitor workouts & progress, age-appropriate programming.
+            </p>
+          </div>
+          <Link
+            to={user ? "/trial-welcome?path=parent" : "/auth?redirect=/trial-welcome?path=parent"}
+            className="shrink-0 bg-foreground text-background px-5 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:bg-foreground/90 transition-colors flex items-center gap-2"
+          >
+            Start Parent Trial <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </motion.div>
 
         {/* Dynamic Feature Comparison Table */}
         <TierComparisonTable />
