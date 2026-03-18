@@ -9,7 +9,7 @@ import { TimerProvider } from "@/hooks/useTimer";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import SubscriptionGuard from "@/components/SubscriptionGuard";
 import IntervalTimer from "@/components/workout/IntervalTimer";
-import TechSupportButton from "@/components/TechSupportButton";
+
 import { useTimer } from "@/hooks/useTimer";
 import { useReferralCapture } from "@/hooks/useReferral";
 import { Loader2 } from "lucide-react";
