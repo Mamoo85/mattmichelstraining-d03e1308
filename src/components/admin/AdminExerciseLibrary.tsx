@@ -18,6 +18,7 @@ interface Exercise {
 
 const PRESET_CLIENT_TYPES = ["Athlete", "Lifestyle Fitness"];
 const PRESET_FOCUS_AREAS = ["Mobility", "Strength", "Core Stability", "Flexibility", "Rehab", "Stability", "Posture", "Power", "Speed", "Injury Prevention", "Core"];
+const PRESET_LEVELS = ["beginner", "intermediate", "advanced"];
 
 const EMPTY: Exercise = {
   id: "",
