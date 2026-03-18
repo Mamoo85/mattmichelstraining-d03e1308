@@ -19,6 +19,13 @@ interface DbExercise {
 
 const CLIENT_TYPES = ["Athlete", "Lifestyle Fitness"] as const;
 const FOCUS_AREAS = ["Mobility", "Strength", "Core Stability", "Power", "Rehab", "Stability", "Posture", "Flexibility", "Speed", "Core", "Injury Prevention"] as const;
+const LEVELS = ["beginner", "intermediate", "advanced"] as const;
+
+const LEVEL_COLORS: Record<string, string> = {
+  beginner: "bg-green-500/15 text-green-600 dark:text-green-400",
+  intermediate: "bg-yellow-500/15 text-yellow-600 dark:text-yellow-400",
+  advanced: "bg-red-500/15 text-red-600 dark:text-red-400",
+};
 
 const ExerciseLibrary = () => {
   const [exercises, setExercises] = useState<DbExercise[]>([]);
