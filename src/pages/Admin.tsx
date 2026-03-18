@@ -32,6 +32,7 @@ import AdminFrontPage from "@/components/admin/AdminFrontPage";
 import AdminAiCopilot from "@/components/admin/AdminAiCopilot";
 
 const TABS = [
+  { key: "ai-copilot", label: "AI Copilot" },
   { key: "clients", label: "Athletes & Trials" },
   { key: "front-page", label: "Front Page" },
   { key: "products", label: "Storefront" },
