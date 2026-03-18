@@ -6,8 +6,8 @@ import { useContentMap } from "@/hooks/useSiteContent";
    Matt updates via Admin → System & Referrals.
    ───────────────────────────────────────────── */
 const DEFAULT_QUOTE =
-  "Coach Matt didn't just make my son stronger for hockey season; he completely fixed the knee pain we'd been dealing with for two years. This isn't just a workout app; it's an insurance policy for your kid's athletic career.";
-const DEFAULT_AUTHOR = "Sarah M., Grosse Pointe Parent";
+  "My son trained with Matt for three years. He walked on at Michigan as a freshman and started by his junior year. Matt didn't just make him stronger — he made him durable.";
+const DEFAULT_AUTHOR = "Parent of D1 Athlete, Grosse Pointe";
 
 const ParentTestimonialCard = () => {
   const { content: cms } = useContentMap("welcome_page");

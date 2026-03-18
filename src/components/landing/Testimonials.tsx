@@ -14,14 +14,6 @@ interface Testimonial {
 
 const FALLBACK = [
   {
-    id: "f1",
-    quote: "My son started with Matt at 13. Two years later he's the strongest kid on his baseball team and hasn't missed a game to injury. Matt teaches him how to take care of his body — not just lift weights.",
-    author_name: "Sarah M.",
-    author_role: "Parent · Grosse Pointe",
-    author_initials: "SM",
-    sport: "Baseball",
-  },
-  {
     id: "f2",
     quote: "I've worked with online coaches before and they send you a PDF and disappear. Matt actually watches my videos, replies the same day, and adjusts my program. It's not even close to the same thing.",
     author_name: "Jake R.",

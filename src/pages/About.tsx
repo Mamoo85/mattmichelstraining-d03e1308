@@ -73,13 +73,6 @@ const FALLBACK_TESTIMONIALS = [
     author_initials: "KR",
   },
   {
-    id: "ft2",
-    quote: "My son started with Matt at 13. Two years later he's the strongest kid on his baseball team and hasn't missed a game to injury.",
-    author_name: "Sarah M.",
-    author_role: "Parent · Grosse Pointe",
-    author_initials: "SM",
-  },
-  {
     id: "ft3",
     quote: "I've worked with online coaches before and they send you a PDF and disappear. Matt actually watches my videos, replies the same day, and adjusts my program.",
     author_name: "Jake R.",
