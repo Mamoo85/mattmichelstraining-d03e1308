@@ -90,7 +90,7 @@ const TrialWelcome = () => {
 
     setCheckingOut(true);
     try {
-      const priceId = selectedPath === "basic" ? TIERS.basic.price_id : TIERS.pro.price_id;
+      const priceId = selectedPath === "basic" ? TIERS.basic.price_id : TIERS.foundation.price_id;
 
       const { data, error } = await supabase.functions.invoke("create-checkout", {
         body: {

@@ -22,7 +22,7 @@ const NEXT_STEPS: Record<CheckoutProductType, { icon: typeof FileText; text: str
     icon: FileText,
     text: "Your program will be instantly unlocked in your Profile to download.",
   },
-  custom: {
+  custom_program: {
     icon: FileText,
     text: "Matt reads your intake and builds a custom program from scratch. You'll receive it in your Profile once it's ready.",
   },

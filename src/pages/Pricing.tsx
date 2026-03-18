@@ -458,7 +458,7 @@ const TierComparisonTable = () => {
                 <th
                   key={col.key}
                   className={`text-center py-3 px-2 text-[10px] font-bold uppercase tracking-widest ${
-                    col.key === "tier_pro" ? "text-primary" : "text-muted-foreground"
+                    col.key === "tier_foundation" ? "text-primary" : "text-muted-foreground"
                   }`}
                 >
                   {col.label}
