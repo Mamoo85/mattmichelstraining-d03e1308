@@ -104,7 +104,7 @@ const AdminFinancials = () => {
   });
 
   const formatAmount = (cents: number) => `$${(cents / 100).toFixed(2)}`;
-  const displayName = (t: Transaction) => t.customer_name || t.customer_email || "Unknown";
+  const displayName = (t: Transaction | null) => t?.customer_name || t?.customer_email || "Unknown";
 
   const statusColor = (s: string) => {
     if (s === "completed") return "text-green-500";
