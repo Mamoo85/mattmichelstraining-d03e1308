@@ -11,36 +11,36 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-const PRICING_URL = "https://m2training.lovable.app/pricing";
+const PROFILE_URL = "https://m2training.lovable.app/profile";
 
-const EMAIL_HTML = `
+const logStep = (step: string, details?: any) => {
+  const d = details ? ` - ${JSON.stringify(details)}` : "";
+  console.log(`[TRIAL-72H-WARNING] ${step}${d}`);
+};
+
+function buildEmailHtml(name: string, tierName: string, tierPrice: string): string {
+  return `
 <div style="font-family: Georgia, 'Times New Roman', serif; max-width: 580px; margin: 0 auto; padding: 20px; color: #1a1a1a; line-height: 1.7;">
-  <p>Hey —</p>
+  <p>Hey ${name || "there"} —</p>
 
-  <p>You've had almost two weeks to see how the M² system works.</p>
+  <p>Quick heads-up: your <strong>14-day free trial ends in 3 days</strong>.</p>
 
-  <p>You know by now that we don't do fake influencer workouts or high-intensity circus acts. We do the unsexy, foundational work that builds absolute strength, fixes aching joints, and prevents injuries. Getting strong is hard, but it's an achievement nobody can ever take away from you.</p>
+  <p>When it does, you'll automatically start the <strong>${tierName} membership at ${tierPrice}/month</strong>. That's the plan you selected when you started your trial. Your card on file will be charged on day 15.</p>
 
-  <p><strong>Tomorrow, your 14-day free trial expires and your selected plan begins.</strong> If you want to change your tier or review what you're getting, here are your options:</p>
-
-  <ol style="padding-left: 20px;">
-    <li style="margin-bottom: 8px;"><strong>M² Basic ($14.99/mo)</strong> — Exercise library, daily workouts, workout logging, challenges & leaderboard.</li>
-    <li style="margin-bottom: 8px;"><strong>M² Foundation ($39.99/mo)</strong> — Everything in Basic + 8-week periodized training, Fix It recovery library, and Flag Coach Matt.</li>
-    <li style="margin-bottom: 8px;"><strong>M² Custom ($99.99/mo)</strong> — Everything in Foundation + custom programming, AI builder, 1-on-1 video assessment, and a gifted session.</li>
-    <li style="margin-bottom: 8px;"><strong>M² Team/Elite ($149.99/mo)</strong> — Full team performance periodization with roster management.</li>
-  </ol>
-
-  <p>Don't lose the momentum you built this week.</p>
+  <p><strong>Want to change plans or cancel?</strong> No hard feelings. You can switch tiers or cancel anytime from your profile — just click the link below before your trial ends.</p>
 
   <p style="text-align: center; margin: 30px 0;">
-    <a href="${PRICING_URL}" style="display: inline-block; background-color: #1a1a1a; color: #ffffff; padding: 14px 28px; text-decoration: none; font-size: 14px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase;">Review Your Plan</a>
+    <a href="${PROFILE_URL}" style="display: inline-block; background-color: #1a1a1a; color: #ffffff; padding: 14px 28px; text-decoration: none; font-size: 14px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase;">Manage My Subscription</a>
   </p>
+
+  <p>If you do nothing, your membership starts automatically and you keep everything — your logs, your programs, and Coach Matt's eyes on your training.</p>
 
   <p>See you in the portal,</p>
   <p style="margin-bottom: 0;"><strong>Matt Michels</strong></p>
   <p style="margin-top: 4px; color: #666; font-size: 14px;">M² Training</p>
 </div>
 `;
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -50,32 +50,33 @@ serve(async (req) => {
   try {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Find users whose trial started exactly 13 days ago (day before 14-day trial expires)
+    // Find users whose trial started exactly 11 days ago (3 days before 14-day expiry)
     const now = new Date();
-    const thirteenDaysAgo = new Date(now);
-    thirteenDaysAgo.setDate(thirteenDaysAgo.getDate() - 13);
-    const fourteenDaysAgo = new Date(now);
-    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+    const elevenDaysAgo = new Date(now);
+    elevenDaysAgo.setDate(elevenDaysAgo.getDate() - 11);
+    const twelveDaysAgo = new Date(now);
+    twelveDaysAgo.setDate(twelveDaysAgo.getDate() - 12);
 
     const { data: trialUsers, error: queryErr } = await supabase
       .from("profiles")
-      .select("user_id, email, full_name, athlete_name")
-      .gte("trial_started_at", fourteenDaysAgo.toISOString())
-      .lt("trial_started_at", thirteenDaysAgo.toISOString())
+      .select("user_id, email, full_name, athlete_name, trial_path, account_role")
+      .gte("trial_started_at", twelveDaysAgo.toISOString())
+      .lt("trial_started_at", elevenDaysAgo.toISOString())
       .not("email", "is", null);
 
     if (queryErr) throw queryErr;
 
     if (!trialUsers || trialUsers.length === 0) {
-      console.log("No Day 13 trial users found.");
+      logStep("No 72h warning users found");
       return new Response(JSON.stringify({ sent: 0 }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Filter out already subscribed users and dedup
-    const userIds = trialUsers.map((u: any) => u.user_id);
+    logStep("Found trial users", { count: trialUsers.length });
 
+    // Filter out already subscribed users
+    const userIds = trialUsers.map((u: any) => u.user_id);
     const { data: subscribers } = await supabase
       .from("subscriptions")
       .select("user_id")
@@ -84,10 +85,11 @@ serve(async (req) => {
 
     const subSet = new Set((subscribers || []).map((r: any) => r.user_id));
 
+    // Check dedup via email_send_log
     const { data: alreadySent } = await supabase
       .from("email_send_log")
       .select("recipient_email")
-      .eq("template_name", "day13_conversion")
+      .eq("template_name", "trial_72h_warning")
       .in("recipient_email", trialUsers.filter((u: any) => u.email).map((u: any) => u.email));
 
     const sentSet = new Set((alreadySent || []).map((r: any) => r.recipient_email));
@@ -96,11 +98,17 @@ serve(async (req) => {
       (u: any) => !subSet.has(u.user_id) && u.email && !sentSet.has(u.email)
     );
 
-    console.log(`Found ${eligibleUsers.length} eligible Day 13 users out of ${trialUsers.length} total.`);
+    logStep("Eligible users after filtering", { count: eligibleUsers.length });
 
     let sentCount = 0;
 
     for (const user of eligibleUsers) {
+      // Determine default tier based on account_role / trial_path
+      const isParent = user.account_role === "parent" || user.trial_path === "parent";
+      const tierName = isParent ? "M² Foundation" : "M² Basic";
+      const tierPrice = isParent ? "$39.99" : "$14.99";
+      const displayName = user.full_name || user.athlete_name || "";
+
       try {
         const res = await fetch("https://api.resend.com/emails", {
           method: "POST",
@@ -111,28 +119,28 @@ serve(async (req) => {
           body: JSON.stringify({
             from: "Matt Michels <matt@notify.m2training.com>",
             to: [user.email],
-            subject: "Your trial ends tomorrow. What's the plan?",
-            html: EMAIL_HTML,
+            subject: `Your M² trial ends in 3 days — here's what happens next`,
+            html: buildEmailHtml(displayName, tierName, tierPrice),
           }),
         });
 
         if (!res.ok) {
           const errText = await res.text();
-          console.error(`Failed to send to ${user.email}: ${errText}`);
+          logStep("Send failed", { email: user.email, error: errText });
           continue;
         }
 
         // Log for dedup
         await supabase.from("email_send_log").insert({
           recipient_email: user.email,
-          template_name: "day13_conversion",
+          template_name: "trial_72h_warning",
           status: "sent",
         });
 
         sentCount++;
-        console.log(`Day 13 email sent to ${user.email}`);
+        logStep("Email sent", { email: user.email, tier: tierName });
       } catch (emailErr) {
-        console.error(`Error sending to ${user.email}:`, emailErr);
+        logStep("Error sending", { email: user.email, error: String(emailErr) });
       }
     }
 
@@ -140,8 +148,9 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
-    console.error("Day 13 email function error:", err);
-    return new Response(JSON.stringify({ error: (err as Error).message }), {
+    const msg = err instanceof Error ? err.message : String(err);
+    logStep("ERROR", { message: msg });
+    return new Response(JSON.stringify({ error: msg }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
