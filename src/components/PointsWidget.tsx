@@ -101,8 +101,8 @@ const PointsWidget = ({ onViewLeaderboard }: PointsWidgetProps) => {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </>
   );
-};
 
 export default PointsWidget;
