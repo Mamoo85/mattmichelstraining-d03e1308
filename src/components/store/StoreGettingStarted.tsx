@@ -56,7 +56,7 @@ const StoreGettingStarted = () => {
             <h3 className="text-sm font-bold text-foreground">Free Account</h3>
           </div>
           <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-            30 seconds. No card. Instant access to workout logging, monthly challenges, and focus plans.
+            30 seconds. Instant access to workout logging, monthly challenges, and focus plans.
           </p>
           {!user ? (
             <SignUpButton size="small" />
