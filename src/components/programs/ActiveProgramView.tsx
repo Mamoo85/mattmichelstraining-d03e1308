@@ -19,6 +19,7 @@ interface WorkoutExercise {
     the_why: string;
     equipment_needed: string;
     focus_area: string[];
+    video_url: string | null;
   };
 }
 
