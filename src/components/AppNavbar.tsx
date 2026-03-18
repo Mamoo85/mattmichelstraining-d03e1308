@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
-import { Dumbbell, ShoppingBag, Home, Menu, X, LogIn, LogOut, Shield, CreditCard, BookOpen, Users, User, Smartphone } from "lucide-react";
-import { useState } from "react";
+import { Dumbbell, ShoppingBag, Home, Menu, X, LogIn, LogOut, Shield, CreditCard, BookOpen, Users, User, Smartphone, Download } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useTimer } from "@/hooks/useTimer";
@@ -24,6 +24,11 @@ const AppNavbar = () => {
   const { user, signOut } = useAuth();
   const { isAdmin } = useIsAdmin();
   const { timerOpen, toggleTimer } = useTimer();
+  const [isStandalone, setIsStandalone] = useState(false);
+
+  useEffect(() => {
+    setIsStandalone(window.matchMedia("(display-mode: standalone)").matches);
+  }, []);
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm shadow-m2">
@@ -69,6 +74,17 @@ const AppNavbar = () => {
             </Link>
           )}
 
+          {!isStandalone && (
+            <Link
+              to="/install"
+              className="flex items-center gap-1 px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest rounded-sm bg-primary/10 text-primary hover:bg-primary/20 transition-m2"
+              title="Install the M² App"
+            >
+              <Download size={13} />
+              App
+            </Link>
+          )}
+
           {user && <NotificationBell />}
 
           {user ? (
@@ -92,6 +108,16 @@ const AppNavbar = () => {
 
         {/* Mobile: bell + hamburger */}
         <div className="md:hidden flex items-center gap-1">
+          {!isStandalone && (
+            <Link
+              to="/install"
+              className="flex items-center gap-1 px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest rounded-sm bg-primary/10 text-primary"
+              title="Install the M² App"
+            >
+              <Download size={13} />
+              App
+            </Link>
+          )}
           {user && <NotificationBell />}
           <button className="p-2 text-muted-foreground" onClick={() => setMobileOpen(!mobileOpen)}>
             {mobileOpen ? <X size={22} /> : <Menu size={22} />}
