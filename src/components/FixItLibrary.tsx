@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Search, ChevronDown, ChevronUp, Heart, Filter } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import SectionHeader from "./SectionHeader";
+import ExerciseVideoEmbed from "./exercise/ExerciseVideoEmbed";
 
 interface FixItExercise {
   id: string;
@@ -10,6 +11,7 @@ interface FixItExercise {
   equipment_needed: string;
   focus_area: string[];
   fix_it_protocol: string[];
+  video_url: string | null;
 }
 
 const PROTOCOLS = ["ACL Prevention", "Rotator Cuff", "Back Pain / McGill Big 3", "Concussion Return-to-Play", "Ankle Stability", "Hip Mobility"] as const;
@@ -25,7 +27,7 @@ const FixItLibrary = () => {
     const fetch = async () => {
       const { data, error } = await supabase
         .from("exercise_library")
-        .select("id, title, the_why, equipment_needed, focus_area, fix_it_protocol")
+        .select("id, title, the_why, equipment_needed, focus_area, fix_it_protocol, video_url")
         .eq("is_fix_it", true)
         .order("title");
       if (!error && data) setExercises(data as FixItExercise[]);
@@ -120,9 +122,15 @@ const FixItLibrary = () => {
                   {isExpanded ? <ChevronUp size={16} className="text-muted-foreground flex-shrink-0 mt-1" /> : <ChevronDown size={16} className="text-muted-foreground flex-shrink-0 mt-1" />}
                 </div>
                 {isExpanded && (
-                  <div className="px-4 pb-4 border-t border-border pt-3">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-1">The WHY</span>
-                    <p className="text-xs text-foreground leading-relaxed">{ex.the_why}</p>
+                  <div className="px-4 pb-4 border-t border-border pt-3 space-y-3">
+                    <ExerciseVideoEmbed
+                      videoUrl={ex.video_url}
+                      exerciseTitle={ex.title}
+                    />
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-1">The WHY</span>
+                      <p className="text-xs text-foreground leading-relaxed">{ex.the_why}</p>
+                    </div>
                   </div>
                 )}
               </div>
