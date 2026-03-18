@@ -36,6 +36,8 @@ const AdminLearnEditor = () => {
   const queryClient = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Partial<Article> | null>(null);
+  const [aiDraftLoading, setAiDraftLoading] = useState(false);
+  const [rawIdea, setRawIdea] = useState("");
 
   const { data: articles = [], isLoading } = useQuery({
     queryKey: ["admin-learn-articles"],
