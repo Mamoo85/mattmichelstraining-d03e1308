@@ -41,6 +41,8 @@ const Profile = () => {
   const [lookupResult, setLookupResult] = useState<{ valid: boolean; remaining_balance: number; original_amount: number } | null>(null);
   const [lookupLoading, setLookupLoading] = useState(false);
   const [showAllLifts, setShowAllLifts] = useState(false);
+  const [giftModalOpen, setGiftModalOpen] = useState(false);
+  const canGiftSession = subscriptionTier === "custom" || subscriptionTier === "team_elite";
 
   useEffect(() => {
     if (!user) return;
