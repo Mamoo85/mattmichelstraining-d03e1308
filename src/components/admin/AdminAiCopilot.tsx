@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Brain, Loader2, AlertTriangle, Ghost, Send, RefreshCw, CheckCircle } from "lucide-react";
+import { Brain, Loader2, AlertTriangle, Ghost, Send, RefreshCw, CheckCircle, Trash2 } from "lucide-react";
 
 interface StagnationInsight {
   name: string;
@@ -158,14 +158,25 @@ const AdminAiCopilot = () => {
             <p className="text-[10px] text-muted-foreground">Automated athlete monitoring & engagement checks</p>
           </div>
         </div>
-        <button
-          onClick={runAnalysis}
-          disabled={loading}
-          className="flex items-center gap-1.5 bg-primary text-primary-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 disabled:opacity-50 transition-all"
-        >
-          {loading ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
-          {loading ? "Analyzing…" : "Run Analysis"}
-        </button>
+        <div className="flex items-center gap-2">
+          {insights && (
+            <button
+              onClick={() => { setInsights(null); setSentMessages(new Set()); }}
+              className="flex items-center gap-1.5 border border-border text-muted-foreground px-3 py-2 text-[10px] font-bold uppercase tracking-widest hover:text-foreground hover:border-primary/40 transition-all"
+            >
+              <Trash2 size={12} />
+              Clear
+            </button>
+          )}
+          <button
+            onClick={runAnalysis}
+            disabled={loading}
+            className="flex items-center gap-1.5 bg-primary text-primary-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 disabled:opacity-50 transition-all"
+          >
+            {loading ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
+            {loading ? "Analyzing…" : "Run Analysis"}
+          </button>
+        </div>
       </div>
 
       {!insights && !loading && (
