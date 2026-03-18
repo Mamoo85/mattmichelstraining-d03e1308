@@ -11,6 +11,7 @@ import {
   ArrowRight, ChevronDown, ChevronUp, Zap, Clock, FileText, Send
 } from "lucide-react";
 import GiftSessionModal from "@/components/GiftSessionModal";
+import FamilyBilling from "@/components/FamilyBilling";
 import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
