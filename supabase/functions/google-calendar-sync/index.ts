@@ -9,29 +9,42 @@ const corsHeaders = {
 const GOOGLE_CALENDAR_ID = Deno.env.get("GOOGLE_CALENDAR_ID") || "primary";
 const GOOGLE_SERVICE_ACCOUNT_KEY = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_KEY");
 
+// Known service account details (non-sensitive)
+const SERVICE_ACCOUNT_EMAIL = "m2-872@subtle-seer-490106-v4.iam.gserviceaccount.com";
+
 // Get access token from service account
 async function getGoogleAccessToken(): Promise<string> {
   if (!GOOGLE_SERVICE_ACCOUNT_KEY) throw new Error("Google service account not configured");
   
-  // Handle potential double-encoding or escaped JSON
-  let rawKey = GOOGLE_SERVICE_ACCOUNT_KEY.trim();
-  // If the value starts with a quote, it may be double-encoded
-  if (rawKey.startsWith('"') && rawKey.endsWith('"')) {
-    rawKey = JSON.parse(rawKey);
+  // Try parsing as full JSON first, fall back to treating as just the private key
+  let clientEmail = SERVICE_ACCOUNT_EMAIL;
+  let privateKey = "";
+  
+  try {
+    const key = JSON.parse(GOOGLE_SERVICE_ACCOUNT_KEY);
+    clientEmail = key.client_email || SERVICE_ACCOUNT_EMAIL;
+    privateKey = key.private_key;
+  } catch {
+    // Secret is stored as just the private key value
+    privateKey = GOOGLE_SERVICE_ACCOUNT_KEY;
+    // Fix potential escaping issues
+    if (!privateKey.includes("-----BEGIN")) {
+      privateKey = "-----BEGIN PRIVATE KEY-----\n" + privateKey + "\n-----END PRIVATE KEY-----\n";
+    }
   }
-  console.log("Key starts with:", rawKey.substring(0, 20));
-  const key = JSON.parse(rawKey);
+  
+  if (!privateKey) throw new Error("Private key not found in service account config");
   
   // Create JWT
   const header = btoa(JSON.stringify({ alg: "RS256", typ: "JWT" }));
   const now = Math.floor(Date.now() / 1000);
   const claim = btoa(JSON.stringify({
-    iss: key.client_email,
+    iss: clientEmail,
     scope: "https://www.googleapis.com/auth/calendar",
     aud: "https://oauth2.googleapis.com/token",
     exp: now + 3600,
     iat: now,
-    sub: key.client_email,
+    sub: clientEmail,
   }));
 
   // Import private key and sign
