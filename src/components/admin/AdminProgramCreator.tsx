@@ -6,9 +6,15 @@ import {
   Package, DollarSign, AlertTriangle
 } from "lucide-react";
 
-const CATEGORIES = ["Athlete", "Lifestyle Fitness", "Foundation"];
+const CATEGORIES = ["Athlete", "Lifestyle Fitness", "Foundation", "Fix It / Rehab", "Mobility", "Core Stability"];
 const LEVELS = ["Beginner", "Intermediate", "Advanced"];
-const SPORTS = ["Baseball", "Football", "Basketball", "Volleyball", "Golf"];
+const SPORTS = ["Baseball", "Football", "Basketball", "Volleyball", "Golf", "Soccer", "Hockey", "Lacrosse", "Swimming"];
+const FOCUS_AREAS = ["Injury Prevention", "Mobility", "Core Stability", "Strength", "Power", "Speed", "Balance", "Hip Stability", "Shoulder Stability", "Conditioning"];
+const EXPLANATION_LEVELS = [
+  { value: "brief", label: "Brief", desc: "1 sentence per exercise" },
+  { value: "standard", label: "Standard", desc: "1-2 sentences with cues" },
+  { value: "detailed", label: "Detailed", desc: "2-3 sentences with cues, mistakes & tips" },
+];
 
 interface DraftWorkout {
   week_number: number;

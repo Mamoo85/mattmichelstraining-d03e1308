@@ -32,27 +32,72 @@ serve(async (req) => {
     });
     if (!roleCheck) throw new Error("Admin access required");
 
-    const { category, level, sport, weeks, daysPerWeek, description } = await req.json();
+    const {
+      category,
+      level,
+      sport,
+      weeks,
+      daysPerWeek,
+      description,
+      exercisesPerDay,
+      explanationDetail,
+      includeFixIt,
+      focusAreas,
+    } = await req.json();
 
-    // Fetch exercise library
-    const { data: exercises } = await supabaseClient
+    // Fetch exercise library — include Fix It exercises if requested
+    let query = supabaseClient
       .from("exercise_library")
-      .select("id, title, focus_area, sport, client_type, equipment_needed, the_why")
+      .select("id, title, focus_area, sport, client_type, equipment_needed, the_why, is_fix_it, fix_it_protocol")
       .order("title");
 
+    // If not including Fix It, only fetch non-fix-it exercises
+    if (!includeFixIt) {
+      query = query.eq("is_fix_it", false);
+    }
+
+    const { data: exercises } = await query;
+
     const exerciseList = (exercises || [])
-      .map((e: any) => `- ${e.title} (ID: ${e.id}) | Focus: ${e.focus_area?.join(", ")} | Sport: ${e.sport?.join(", ")} | Equipment: ${e.equipment_needed} | Why: ${e.the_why}`)
+      .map((e: any) => {
+        let line = `- ${e.title} (ID: ${e.id}) | Focus: ${e.focus_area?.join(", ")} | Sport: ${e.sport?.join(", ")} | Equipment: ${e.equipment_needed}`;
+        if (e.is_fix_it) line += ` | FIX IT: ${e.fix_it_protocol?.join(", ")}`;
+        line += ` | Why: ${e.the_why}`;
+        return line;
+      })
       .join("\n");
 
-    const systemPrompt = `You are Matt Michels' AI assistant for M² Performance Training. You draft 8-week training programs using ONLY exercises from Matt's exercise library. Matt is a master of movement science — every program must include: custom warmup, corrective exercises, strength, balance, coordination, core stability, integrity, endurance, and targeted rolling/mobility.
+    // Build detail instructions based on explanationDetail setting
+    const detailMap: Record<string, string> = {
+      brief: "Keep coach instructions to 1 short sentence each — just the key cue.",
+      standard: "Write 1-2 sentence coach instructions with the main coaching cue and one technique tip.",
+      detailed: "Write 2-3 sentence coach instructions covering the coaching cue, common mistakes to avoid, and a progression tip. Sound like Matt — direct, knowledgeable, encouraging.",
+    };
+    const detailInstruction = detailMap[explanationDetail] || detailMap.standard;
+
+    // Build focus area instructions
+    let focusInstruction = "";
+    if (focusAreas && focusAreas.length > 0) {
+      focusInstruction = `\n- Prioritize exercises tagged with these focus areas: ${focusAreas.join(", ")}`;
+    }
+
+    // Fix It / rehab instructions
+    let fixItInstruction = "";
+    if (includeFixIt) {
+      fixItInstruction = `\n- Include Fix It / rehab exercises (marked with "FIX IT") as part of warm-up, cooldown, or corrective blocks. These are mobility, prehab, and core stability exercises.`;
+    }
+
+    const exerciseCount = exercisesPerDay || 8;
+
+    const systemPrompt = `You are Matt Michels' AI assistant for M² Performance Training. You draft training programs using ONLY exercises from Matt's exercise library. Matt is a master of movement science — every program must include: custom warmup, corrective exercises, strength, balance, coordination, core stability, integrity, endurance, and targeted rolling/mobility.
 
 RULES:
 - ONLY use exercise IDs from the provided library
 - Structure as weeks and days with specific exercises, sets, reps, and coach instructions
 - Be specific with sets/reps (e.g., "3x12", "4x8 @RPE 7")
-- Include coach instructions that sound like Matt — direct, knowledgeable, encouraging
+- ${detailInstruction}
 - Progressive overload across weeks
-- Every day should have 6-10 exercises covering the full spectrum
+- Every day should have ${exerciseCount} exercises covering the full spectrum${fixItInstruction}${focusInstruction}
 
 Return a JSON object using this tool.`;
 
@@ -61,8 +106,9 @@ Category: ${category}
 Level: ${level}
 ${sport ? `Sport: ${sport}` : ""}
 ${description ? `Additional notes: ${description}` : ""}
+Target exercises per day: ${exerciseCount}
 
-EXERCISE LIBRARY:
+EXERCISE LIBRARY (${(exercises || []).length} exercises available):
 ${exerciseList}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
