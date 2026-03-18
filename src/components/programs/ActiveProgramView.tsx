@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2, ChevronDown, ChevronRight, Dumbbell, Info } from "lucide-react";
+import ExerciseVideoEmbed from "../exercise/ExerciseVideoEmbed";
 import AskCoachMatt from "./AskCoachMatt";
 
 interface WorkoutExercise {
@@ -18,6 +19,7 @@ interface WorkoutExercise {
     the_why: string;
     equipment_needed: string;
     focus_area: string[];
+    video_url: string | null;
   };
 }
 
@@ -47,7 +49,7 @@ const ActiveProgramView = ({ activeProgram }: ActiveProgramProps) => {
     const fetchWorkouts = async () => {
       const { data, error } = await supabase
         .from("program_workouts")
-        .select("id, exercise_id, week_number, day_number, prescribed_sets_reps, coach_instructions, sort_order, exercise_library(id, title, the_why, equipment_needed, focus_area)")
+        .select("id, exercise_id, week_number, day_number, prescribed_sets_reps, coach_instructions, sort_order, exercise_library(id, title, the_why, equipment_needed, focus_area, video_url)")
         .eq("program_id", activeProgram.program_id)
         .order("week_number")
         .order("day_number")
@@ -189,6 +191,12 @@ const ActiveProgramView = ({ activeProgram }: ActiveProgramProps) => {
                                 <p className="text-xs text-muted-foreground leading-relaxed">{workout.exercise.the_why}</p>
                               </div>
                             )}
+
+                            {/* Form Video */}
+                            <ExerciseVideoEmbed
+                              videoUrl={workout.exercise.video_url}
+                              exerciseTitle={workout.exercise.title}
+                            />
 
                             {/* Coach Instructions */}
                             {workout.coach_instructions && (
