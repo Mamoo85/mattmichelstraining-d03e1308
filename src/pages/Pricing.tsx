@@ -326,23 +326,33 @@ const Pricing = () => {
                     {card.cta} <ArrowRight className="w-4 h-4" />
                   </Link>
                 ) : (
-                  <button
-                    onClick={() => handleCheckout(card.key)}
-                    disabled={loadingTier === card.key}
-                    className={`w-full py-3 text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-colors ${
-                      card.highlight
-                        ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                        : "border-2 border-foreground text-foreground hover:bg-foreground hover:text-background"
-                    }`}
-                  >
-                    {loadingTier === card.key ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <>
-                        {card.cta} <ArrowRight className="w-4 h-4" />
-                      </>
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => handleCheckout(card.key)}
+                      disabled={loadingTier === card.key}
+                      className={`w-full py-3 text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-colors ${
+                        card.highlight
+                          ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                          : "border-2 border-foreground text-foreground hover:bg-foreground hover:text-background"
+                      }`}
+                    >
+                      {loadingTier === card.key ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <>
+                          {card.cta} <ArrowRight className="w-4 h-4" />
+                        </>
+                      )}
+                    </button>
+                    {card.highlight && !subscribed && (
+                      <Link
+                        to={user ? "/trial-welcome?path=pro" : "/auth?redirect=/trial-welcome?path=pro"}
+                        className="w-full py-2 text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-1.5 text-primary hover:underline"
+                      >
+                        Or try 14 days free <ArrowRight className="w-3 h-3" />
+                      </Link>
                     )}
-                  </button>
+                  </div>
                 )}
               </motion.div>
             );
