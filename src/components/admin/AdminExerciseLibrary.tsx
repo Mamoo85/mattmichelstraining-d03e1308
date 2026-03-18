@@ -96,6 +96,7 @@ const AdminExerciseLibrary = () => {
       client_type: editing.client_type,
       focus_area: editing.focus_area,
       sport: editing.sport,
+      video_url: editing.video_url.trim() || null,
     };
 
     if (editing.id) {
