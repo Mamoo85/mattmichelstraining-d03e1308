@@ -75,7 +75,7 @@ const StoreGettingStarted = () => {
           <p className="text-xs text-muted-foreground leading-relaxed mb-1">
             Direct access to Matt — his library, coaching, and programming.
           </p>
-          <p className="text-xs text-primary font-bold mb-3">Starting at $12.99/mo</p>
+          <p className="text-xs text-primary font-bold mb-3">Starting at $15.99/mo</p>
           <Link
             to="/pricing"
             className="inline-flex items-center gap-1 bg-primary text-primary-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
