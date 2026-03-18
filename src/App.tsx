@@ -92,6 +92,7 @@ const App = () => (
               </Routes>
             </Suspense>
             <GlobalTimer />
+            <TechSupportButton />
           </BrowserRouter>
         </TooltipProvider>
       </TimerProvider>
