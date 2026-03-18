@@ -234,7 +234,7 @@ const AdminRecoveryHeatmap = () => {
                   <span className="text-xs font-bold text-foreground truncate">{a.name}</span>
                   {a.tier !== "free" && (
                     <span className={`text-[8px] font-bold uppercase tracking-widest px-1 py-0.5 shrink-0 ${
-                      a.tier === "elite" || a.tier === "team"
+                      a.tier === "custom" || a.tier === "team_elite"
                         ? "bg-primary/20 text-primary"
                         : "bg-muted text-muted-foreground"
                     }`}>
