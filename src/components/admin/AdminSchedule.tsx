@@ -224,6 +224,93 @@ const AdminSchedule = () => {
         </div>
       )}
 
+      {/* Bulk Populate */}
+      <div className="bg-card shadow-m2 p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Bulk Open Slots</h3>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Populate availability for multiple weeks at once</p>
+          </div>
+          <CalendarPlus size={16} className="text-primary" />
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {WEEK_OPTIONS.map(w => (
+            <Button
+              key={w}
+              size="sm"
+              variant={bulkWeeks === w ? "default" : "outline"}
+              onClick={() => setBulkWeeks(bulkWeeks === w ? null : w)}
+              className="text-[10px] font-bold uppercase tracking-widest"
+            >
+              {w} Weeks
+            </Button>
+          ))}
+        </div>
+
+        {bulkWeeks && (
+          <div className="space-y-3 border-t border-border pt-3">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={skipWeekends}
+                onChange={e => setSkipWeekends(e.target.checked)}
+                className="accent-primary"
+                id="skip-weekends"
+              />
+              <label htmlFor="skip-weekends" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground cursor-pointer">
+                Skip Weekends
+              </label>
+            </div>
+
+            <div>
+              <div className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-2">
+                Time slots to open ({bulkTimes.length} selected)
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {SLOT_TIMES.map(time => {
+                  const selected = bulkTimes.includes(time);
+                  return (
+                    <button
+                      key={time}
+                      onClick={() =>
+                        setBulkTimes(prev =>
+                          selected ? prev.filter(t => t !== time) : [...prev, time].sort()
+                        )
+                      }
+                      className={`px-2 py-1 text-[9px] font-mono transition-m2 border ${
+                        selected
+                          ? "bg-primary/20 border-primary/40 text-primary font-bold"
+                          : "bg-muted border-border text-muted-foreground hover:border-primary/30"
+                      }`}
+                    >
+                      {formatTime12(time)}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Button
+                onClick={() => bulkPopulate(bulkWeeks)}
+                disabled={bulkLoading || bulkTimes.length === 0}
+                className="text-[10px] font-bold uppercase tracking-widest"
+              >
+                {bulkLoading ? <Loader2 size={12} className="animate-spin mr-1" /> : <CalendarPlus size={12} className="mr-1" />}
+                Open {bulkTimes.length} slots/day for {bulkWeeks} weeks
+              </Button>
+              <button
+                onClick={() => setBulkWeeks(null)}
+                className="text-[10px] text-muted-foreground hover:text-foreground"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Legend */}
       <div className="flex gap-4 text-[10px] font-bold uppercase tracking-widest">
         <div className="flex items-center gap-1.5"><div className="w-3 h-3 bg-muted border border-border" /> Closed</div>
