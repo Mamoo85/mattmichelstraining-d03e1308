@@ -233,6 +233,42 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_workouts: {
+        Row: {
+          created_at: string
+          description: string
+          exercises: Json
+          id: string
+          is_active: boolean
+          sort_order: number
+          target_audience: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          exercises?: Json
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          target_audience?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          exercises?: Json
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          target_audience?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -447,6 +483,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      gifted_sessions: {
+        Row: {
+          claimed_at: string | null
+          claimed_by: string | null
+          created_at: string
+          giver_user_id: string
+          id: string
+          receiver_email: string
+          status: string
+        }
+        Insert: {
+          claimed_at?: string | null
+          claimed_by?: string | null
+          created_at?: string
+          giver_user_id: string
+          id?: string
+          receiver_email: string
+          status?: string
+        }
+        Update: {
+          claimed_at?: string | null
+          claimed_by?: string | null
+          created_at?: string
+          giver_user_id?: string
+          id?: string
+          receiver_email?: string
+          status?: string
+        }
+        Relationships: []
       }
       learn_articles: {
         Row: {
@@ -1774,6 +1840,7 @@ export type Database = {
       }
       training_programs: {
         Row: {
+          block_type: string
           category: string
           created_at: string
           description: string
@@ -1781,15 +1848,18 @@ export type Database = {
           is_active: boolean
           is_trial: boolean
           level: string
+          periodization_config: Json | null
           price: number
           sport: string | null
           status: string
           stripe_price_id: string | null
           stripe_product_id: string | null
           title: string
+          total_weeks: number
           updated_at: string
         }
         Insert: {
+          block_type?: string
           category?: string
           created_at?: string
           description?: string
@@ -1797,15 +1867,18 @@ export type Database = {
           is_active?: boolean
           is_trial?: boolean
           level?: string
+          periodization_config?: Json | null
           price?: number
           sport?: string | null
           status?: string
           stripe_price_id?: string | null
           stripe_product_id?: string | null
           title: string
+          total_weeks?: number
           updated_at?: string
         }
         Update: {
+          block_type?: string
           category?: string
           created_at?: string
           description?: string
@@ -1813,12 +1886,14 @@ export type Database = {
           is_active?: boolean
           is_trial?: boolean
           level?: string
+          periodization_config?: Json | null
           price?: number
           sport?: string | null
           status?: string
           stripe_price_id?: string | null
           stripe_product_id?: string | null
           title?: string
+          total_weeks?: number
           updated_at?: string
         }
         Relationships: []
