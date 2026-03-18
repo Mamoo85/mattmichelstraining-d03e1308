@@ -137,7 +137,7 @@ const AdminVideoReview = () => {
       entries.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setVideos(entries);
     } catch (err) {
-      console.error("Error fetching videos:", err);
+      // silent in production
     } finally {
       setLoading(false);
     }

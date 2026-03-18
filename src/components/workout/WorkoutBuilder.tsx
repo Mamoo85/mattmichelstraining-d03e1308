@@ -103,7 +103,7 @@ const WorkoutBuilder = ({ onSaved, onClose }: WorkoutBuilderProps) => {
             _description: "Shared a community workout",
             _reference_id: null,
           });
-        } catch (e) { console.error("Points award failed:", e); }
+        } catch { /* silent */ }
       }
       onSaved?.();
     }

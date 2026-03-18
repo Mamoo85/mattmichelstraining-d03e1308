@@ -32,7 +32,7 @@ const Auth = () => {
       if (data?.error) throw new Error(data.error);
       toast({ title: "Account linked!", description: "You're now connected to your parent's account." });
     } catch (err: any) {
-      console.error("Invite redeem error:", err);
+      // silent in production
     }
     navigate(searchParams.get("redirect") || "/dashboard", { replace: true });
   };

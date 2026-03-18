@@ -8,9 +8,7 @@ const NotFound = () => {
   const location = useLocation();
   const { user } = useAuth();
 
-  useEffect(() => {
-    console.error("404 Error: User attempted to access non-existent route:", location.pathname);
-  }, [location.pathname]);
+  // 404 tracking could be added here via analytics
 
   const destination = user ? "/dashboard" : "/";
   const destinationLabel = user ? "Back to Dashboard" : "Back to Home";

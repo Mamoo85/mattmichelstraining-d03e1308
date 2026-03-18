@@ -212,7 +212,7 @@ const StudioCheckIn = () => {
           _description: "Studio check-in",
           _reference_id: data.id,
         });
-      } catch (e) { console.error("Points award failed:", e); }
+      } catch { /* silent */ }
       setTimeout(() => setJustCheckedIn(false), 3000);
     }
     setChecking(false);

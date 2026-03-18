@@ -106,7 +106,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       setIsLegend(profileResult.data?.is_in_person ?? false);
     } catch (e) {
-      console.error("check-subscription exception:", e);
+      // subscription check failed silently
     }
   }, []);
 

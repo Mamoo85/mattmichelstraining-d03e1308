@@ -78,7 +78,7 @@ export const OfflineSyncProvider = ({ children }: { children: ReactNode }) => {
         try {
           const { error } = await (supabase.from(action.table as any) as any).insert(action.payload);
           if (error) {
-            console.error("Offline sync error:", error);
+            // offline sync retry
             failed.push(action);
           }
         } catch {
