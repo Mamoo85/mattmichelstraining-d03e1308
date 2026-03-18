@@ -206,9 +206,21 @@ const AdminSchedule = () => {
                 </div>
                 {isBooked && booking && (
                   <div className="mt-1">
-                    <div className="text-[9px] text-green-400 font-bold uppercase">Booked</div>
+                    <div className="flex items-center gap-1">
+                      <div className="text-[9px] text-green-400 font-bold uppercase">Booked</div>
+                      <div className={`text-[8px] px-1 py-0.5 font-bold uppercase ${
+                        booking.session_type === "video" ? "bg-blue-500/20 text-blue-400" : "bg-primary/20 text-primary"
+                      }`}>
+                        {booking.session_type === "video" ? "Video" : "In-Person"}
+                      </div>
+                      {booking.credit_id && (
+                        <div className="text-[8px] px-1 py-0.5 bg-accent/20 text-accent-foreground font-bold uppercase">Credit</div>
+                      )}
+                    </div>
                     <div className="text-[10px] text-muted-foreground truncate">{booking.user_name || booking.user_email}</div>
-                    <div className="text-[9px] text-muted-foreground">{booking.duration_minutes}min · ${(booking.amount_cents / 100).toFixed(0)}</div>
+                    <div className="text-[9px] text-muted-foreground">
+                      {booking.duration_minutes}min · {booking.credit_id ? "Free (Credit)" : `$${(booking.amount_cents / 100).toFixed(0)}`}
+                    </div>
                     <button
                       onClick={(e) => { e.stopPropagation(); cancelBooking(booking); }}
                       disabled={cancelling === booking.id}
