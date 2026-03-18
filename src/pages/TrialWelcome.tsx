@@ -84,7 +84,7 @@ const TrialWelcome = () => {
 
       queryClient.invalidateQueries({ queryKey: ["trial-status"] });
 
-      toast({ title: "You're in! 🎯", description: "Your 7-day trial has started. Let's get to work." });
+      toast({ title: "You're in! 🎯", description: "Your 14-day trial has started. Let's get to work." });
       navigate("/dashboard");
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
