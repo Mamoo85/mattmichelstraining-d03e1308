@@ -21,6 +21,7 @@ import ReferralDashboard from "@/components/ReferralDashboard";
 import PointsWidget from "@/components/PointsWidget";
 import PointsLeaderboard from "@/components/PointsLeaderboard";
 import PwaInstallBanner from "@/components/PwaInstallBanner";
+import WorkoutScanner from "@/components/workout/WorkoutScanner";
 
 const TABS = [
   { key: "home", label: "Home" },
