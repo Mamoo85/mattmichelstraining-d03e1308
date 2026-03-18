@@ -21,7 +21,7 @@ const EMAIL_HTML = `
 
   <p>You know by now that we don't do fake influencer workouts or high-intensity circus acts. We do the unsexy, foundational work that builds absolute strength, fixes aching joints, and prevents injuries. Getting strong is hard, but it's an achievement nobody can ever take away from you.</p>
 
-  <p><strong>Tomorrow, your 7-day free access expires.</strong> If you want to keep your logs, keep progressing, and keep my eyes on your training, you need to choose your path:</p>
+  <p><strong>Tomorrow, your 14-day free access expires.</strong> If you want to keep your logs, keep progressing, and keep my eyes on your training, you need to choose your path:</p>
 
   <ol style="padding-left: 20px;">
     <li style="margin-bottom: 8px;"><strong>M² Basic ($12.99/mo)</strong> — Unlocks the full Exercise Library and workout logging so you can keep building your foundation.</li>
@@ -49,19 +49,19 @@ serve(async (req) => {
   try {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Find users whose trial started exactly 6 days ago (between 6 and 7 days)
+    // Find users whose trial started exactly 13 days ago (day before 14-day trial expires)
     const now = new Date();
-    const sixDaysAgo = new Date(now);
-    sixDaysAgo.setDate(sixDaysAgo.getDate() - 6);
-    const sevenDaysAgo = new Date(now);
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const thirteenDaysAgo = new Date(now);
+    thirteenDaysAgo.setDate(thirteenDaysAgo.getDate() - 13);
+    const fourteenDaysAgo = new Date(now);
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
 
     // Get profiles with trial_started_at between 7 and 6 days ago
     const { data: trialUsers, error: queryErr } = await supabase
       .from("profiles")
       .select("user_id, email, full_name, athlete_name")
-      .gte("trial_started_at", sevenDaysAgo.toISOString())
-      .lt("trial_started_at", sixDaysAgo.toISOString())
+      .gte("trial_started_at", fourteenDaysAgo.toISOString())
+      .lt("trial_started_at", thirteenDaysAgo.toISOString())
       .not("email", "is", null);
 
     if (queryErr) throw queryErr;

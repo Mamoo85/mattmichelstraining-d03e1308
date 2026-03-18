@@ -61,8 +61,8 @@ const TIMELINE = [
 const FUNNEL_STEPS = [
   {
     step: "1",
-    title: "Start Your Free 7-Day Trial",
-    desc: "Create a free parent account. You get full portal access for 7 days — programs, progress tracking, and direct access to Matt. No card required.",
+    title: "Start Your Free 14-Day Trial",
+    desc: "Create a free parent account. You get full portal access for 14 days — programs, progress tracking, and direct access to Matt. No card required.",
     icon: Shield,
     cta: "Start Free Trial",
     link: "/auth?redirect=/trial-welcome",
@@ -150,7 +150,7 @@ const ForParents = () => {
               to="/auth?redirect=/trial-welcome"
               className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
             >
-              Start Your 7-Day Free Trial
+              Start Your 14-Day Free Trial
               <ArrowRight size={15} />
             </Link>
             <Link
@@ -372,14 +372,14 @@ const ForParents = () => {
               {cms.final_cta_title || "Ready to invest in your athlete's strength and safety?"}
             </h2>
             <p className="text-sm text-muted-foreground mb-6 max-w-lg mx-auto">
-              {cms.final_cta_text || "Start a free 7-day trial. Get your athlete set up with real programming from a 20-year veteran coach. No credit card. No commitment. Just results."}
+              {cms.final_cta_text || "Start a free 14-day trial. Get your athlete set up with real programming from a 20-year veteran coach. No credit card. No commitment. Just results."}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link
                 to="/auth?redirect=/trial-welcome"
                 className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
               >
-                Start Free 7-Day Trial
+                Start Free 14-Day Trial
                 <ArrowRight size={15} />
               </Link>
               <Link

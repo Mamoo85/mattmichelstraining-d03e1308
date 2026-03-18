@@ -1,5 +1,6 @@
 import { useState } from "react";
 import AppNavbar from "@/components/AppNavbar";
+import AdminTrialSettings from "@/components/admin/AdminTrialSettings";
 import AdminSubscriberList from "@/components/admin/AdminSubscriberList";
 import AdminNewsletterComposer from "@/components/admin/AdminNewsletterComposer";
 import AdminSendHistory from "@/components/admin/AdminSendHistory";
@@ -21,6 +22,7 @@ import AdminVideoReview from "@/components/admin/AdminVideoReview";
 import AdminParentReports from "@/components/admin/AdminParentReports";
 import AdminFamilyManager from "@/components/admin/AdminFamilyManager";
 const TABS = [
+  { key: "trial", label: "Free Trial" },
   { key: "tiers", label: "Tier Access" },
   { key: "schedule", label: "Schedule" },
   { key: "monthly", label: "Monthly Focus" },
@@ -43,7 +45,7 @@ const TABS = [
 ];
 
 const Admin = () => {
-  const [activeTab, setActiveTab] = useState("tiers");
+  const [activeTab, setActiveTab] = useState("trial");
 
   return (
     <div className="min-h-screen bg-background">
@@ -72,6 +74,7 @@ const Admin = () => {
           ))}
         </div>
 
+        {activeTab === "trial" && <AdminTrialSettings />}
         {activeTab === "tiers" && <AdminTierManager />}
         {activeTab === "schedule" && <AdminSchedule />}
         {activeTab === "monthly" && <AdminMonthlyFocus />}

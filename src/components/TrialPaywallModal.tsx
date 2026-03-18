@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { X, ArrowRight, Loader2, Lock, Star, Trophy, Zap } from "lucide-react";
+import { X, ArrowRight, Loader2, Lock, Star, Trophy, Zap, Percent } from "lucide-react";
 import { useAuth, TIERS } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -62,6 +62,16 @@ const TrialPaywallModal = ({ open, onClose, hardLock }: TrialPaywallModalProps) 
     }
   };
 
+  const handleManageCancel = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke("customer-portal");
+      if (error) throw error;
+      if (data?.url) window.open(data.url, "_blank");
+    } catch (e: any) {
+      toast({ title: "Portal error", description: e.message, variant: "destructive" });
+    }
+  };
+
   if (!open) return null;
 
   return (
@@ -76,7 +86,7 @@ const TrialPaywallModal = ({ open, onClose, hardLock }: TrialPaywallModalProps) 
         <div className="text-center mb-6">
           <Lock size={28} className="text-primary mx-auto mb-3" />
           <h2 className="text-xl font-black uppercase tracking-tight text-foreground mb-2">
-            Your 7-Day Trial Has Ended
+            Your 14-Day Trial Has Ended
           </h2>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
             You've seen how we do things. Now subscribe to keep your progress, unlock the full exercise library,
@@ -84,50 +94,78 @@ const TrialPaywallModal = ({ open, onClose, hardLock }: TrialPaywallModalProps) 
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-          {TIER_OPTIONS.map((tier) => (
-            <div
-              key={tier.key}
-              className={`bg-background p-4 flex flex-col ${
-                tier.highlight ? "border-2 border-primary ring-2 ring-primary/20" : "border border-border"
-              }`}
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <tier.icon size={14} className={tier.highlight ? "text-primary" : "text-muted-foreground"} />
-                <span className="text-xs font-bold text-foreground">{tier.name}</span>
-              </div>
-              {tier.highlight && (
-                <span className="text-[8px] bg-primary text-primary-foreground px-2 py-0.5 font-bold uppercase tracking-widest w-fit mb-2">
-                  Most Popular
-                </span>
-              )}
-              <p className="text-lg font-bold text-primary font-mono mb-3">{tier.price}</p>
-              <ul className="space-y-1 mb-4 flex-1">
-                {tier.perks.map((p) => (
-                  <li key={p} className="text-[10px] text-muted-foreground flex items-start gap-1.5">
-                    <span className="text-primary mt-0.5">✓</span> {p}
-                  </li>
-                ))}
-              </ul>
-              <button
-                onClick={() => handleCheckout(tier.key)}
-                disabled={loading !== null}
-                className={`w-full py-2.5 text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all disabled:opacity-50 ${
-                  tier.highlight
-                    ? "bg-primary text-primary-foreground hover:opacity-90"
-                    : "border border-primary text-primary hover:bg-primary/10"
-                }`}
-              >
-                {loading === tier.key ? <Loader2 size={12} className="animate-spin" /> : <ArrowRight size={12} />}
-                {loading === tier.key ? "Loading…" : "Subscribe"}
-              </button>
-            </div>
-          ))}
+        {/* 50% discount banner */}
+        <div className="bg-primary/10 border border-primary/30 p-3 mb-6 flex items-center gap-3">
+          <Percent size={20} className="text-primary shrink-0" />
+          <div>
+            <p className="text-sm font-bold text-foreground">50% Off Your First Month</p>
+            <p className="text-[10px] text-muted-foreground">
+              Subscribe now and get 50% off your first month. All plans auto-renew monthly — cancel anytime.
+            </p>
+          </div>
         </div>
 
-        <p className="text-center text-[10px] text-muted-foreground">
-          Cancel anytime. Your progress is saved. Real coaching, real results.
-        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+          {TIER_OPTIONS.map((tier) => {
+            const originalPrice = parseFloat(tier.price.replace("$", "").replace("/mo", ""));
+            const discountedPrice = (originalPrice * 0.5).toFixed(2);
+            return (
+              <div
+                key={tier.key}
+                className={`bg-background p-4 flex flex-col ${
+                  tier.highlight ? "border-2 border-primary ring-2 ring-primary/20" : "border border-border"
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <tier.icon size={14} className={tier.highlight ? "text-primary" : "text-muted-foreground"} />
+                  <span className="text-xs font-bold text-foreground">{tier.name}</span>
+                </div>
+                {tier.highlight && (
+                  <span className="text-[8px] bg-primary text-primary-foreground px-2 py-0.5 font-bold uppercase tracking-widest w-fit mb-2">
+                    Most Popular
+                  </span>
+                )}
+                <div className="mb-3">
+                  <span className="text-lg font-bold text-primary font-mono">${discountedPrice}</span>
+                  <span className="text-xs text-muted-foreground line-through ml-2">{tier.price}</span>
+                  <p className="text-[9px] text-muted-foreground">first month · then {tier.price}</p>
+                </div>
+                <ul className="space-y-1 mb-4 flex-1">
+                  {tier.perks.map((p) => (
+                    <li key={p} className="text-[10px] text-muted-foreground flex items-start gap-1.5">
+                      <span className="text-primary mt-0.5">✓</span> {p}
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  onClick={() => handleCheckout(tier.key)}
+                  disabled={loading !== null}
+                  className={`w-full py-2.5 text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all disabled:opacity-50 ${
+                    tier.highlight
+                      ? "bg-primary text-primary-foreground hover:opacity-90"
+                      : "border border-primary text-primary hover:bg-primary/10"
+                  }`}
+                >
+                  {loading === tier.key ? <Loader2 size={12} className="animate-spin" /> : <ArrowRight size={12} />}
+                  {loading === tier.key ? "Loading…" : "Subscribe"}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Cancel / Manage button */}
+        <div className="flex flex-col items-center gap-2">
+          <button
+            onClick={handleManageCancel}
+            className="text-xs text-muted-foreground hover:text-foreground underline transition-all"
+          >
+            Manage or Cancel Subscription
+          </button>
+          <p className="text-center text-[10px] text-muted-foreground">
+            Cancel anytime. Your progress is saved. All subscriptions auto-renew monthly.
+          </p>
+        </div>
       </div>
     </div>
   );

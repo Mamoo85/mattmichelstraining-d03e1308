@@ -84,7 +84,7 @@ const TrialWelcome = () => {
 
       queryClient.invalidateQueries({ queryKey: ["trial-status"] });
 
-      toast({ title: "You're in! 🎯", description: "Your 7-day trial has started. Let's get to work." });
+      toast({ title: "You're in! 🎯", description: "Your 14-day trial has started. Let's get to work." });
       navigate("/dashboard");
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
@@ -109,7 +109,7 @@ const TrialWelcome = () => {
             Real Strength. No Shortcuts.
           </h1>
           <p className="text-sm text-muted-foreground max-w-lg mx-auto leading-relaxed">
-            Welcome to the M² Training system. You have <strong className="text-foreground">7 days</strong> to see how
+            Welcome to the M² Training system. You have <strong className="text-foreground">14 days</strong> to see how
             we do things the right way. No fake influencer workouts, just proven mechanics.
           </p>
         </motion.div>
@@ -136,7 +136,7 @@ const TrialWelcome = () => {
           </div>
           <div className="mt-4 bg-primary/5 border border-primary/20 p-3">
             <p className="text-xs text-muted-foreground leading-relaxed">
-              When your 7 days are up, you decide: <strong className="text-foreground">walk away</strong>, or subscribe to keep your
+              When your 14 days are up, you decide: <strong className="text-foreground">walk away</strong>, or subscribe to keep your
               progress, unlock the full library, and keep my eyes on your training.{" "}
               <span className="text-primary font-bold">Let's get to work.</span>
             </p>
@@ -208,7 +208,7 @@ const TrialWelcome = () => {
           className="text-center"
         >
           <p className="text-[10px] text-muted-foreground mb-2">
-            No credit card required. 7 days of real training, on us.
+            No credit card required. 14 days of real training, on us.
           </p>
           <p className="text-[10px] text-muted-foreground">
             © {new Date().getFullYear()} M² Training · Grosse Pointe Park, MI

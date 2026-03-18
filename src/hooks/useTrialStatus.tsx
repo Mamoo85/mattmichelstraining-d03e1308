@@ -43,9 +43,10 @@ export const useTrialStatus = (): TrialStatus => {
 
   const startDate = new Date(trialStart);
   const now = new Date();
+  const TRIAL_DAYS = 14;
   const daysSinceStart = Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-  const daysLeft = Math.max(0, 7 - daysSinceStart);
-  const expired = daysSinceStart >= 7;
+  const daysLeft = Math.max(0, TRIAL_DAYS - daysSinceStart);
+  const expired = daysSinceStart >= TRIAL_DAYS;
 
   return {
     isOnTrial: !expired,

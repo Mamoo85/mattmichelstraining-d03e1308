@@ -18,7 +18,7 @@ const SubscriptionGuard = ({ children }: { children: React.ReactNode }) => {
     if (loading || !user) return;
     if (lockedOut && !toasted.current) {
       toasted.current = true;
-      toast.error("Your 7-day trial has expired. Choose a plan to keep your logs and continue training.");
+      toast.error("Your 14-day trial has expired. Choose a plan to keep your logs and continue training.");
       navigate("/pricing", { replace: true });
     }
   }, [loading, user, lockedOut, navigate]);
