@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useIsMichigan } from "@/hooks/useGeoState";
+
 
 const ALL_CREDS = [
   "20+ Years Training Athletes",
