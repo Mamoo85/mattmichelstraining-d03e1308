@@ -100,6 +100,53 @@ const MonthlyFocusWidget = () => {
       .then(({ data }) => { if (data) setChallenge(data as any); });
   }, []);
 
+  // Load focus_logs for the user
+  useEffect(() => {
+    if (!focus || !user) return;
+    supabase
+      .from("focus_logs")
+      .select("metric_value, logged_date")
+      .eq("user_id", user.id)
+      .eq("focus_id", focus.id)
+      .order("logged_date", { ascending: true })
+      .then(({ data }) => {
+        if (data) {
+          setFocusLogs(data as any[]);
+          const total = (data as any[]).reduce((s, r) => s + Number(r.metric_value), 0);
+          setFocusLogTotal(total);
+        }
+      });
+  }, [focus, user]);
+
+  const handleFocusLog = async () => {
+    if (!user || !focus) return;
+    const val = parseFloat(focusLogInput);
+    if (!val || val <= 0) { toast({ title: "Enter a number", variant: "destructive" }); return; }
+    setActionLoading(true);
+    const today = new Date().toISOString().slice(0, 10);
+    const { error } = await supabase.from("focus_logs").upsert(
+      { user_id: user.id, focus_id: focus.id, metric_value: val, logged_date: today } as any,
+      { onConflict: "user_id,focus_id,logged_date" }
+    );
+    if (error) { toast({ title: "Log failed", description: error.message, variant: "destructive" }); }
+    else {
+      toast({ title: `${val} ${focus.metric_label} logged!` });
+      setFocusLogInput("");
+      // Refresh
+      const { data } = await supabase
+        .from("focus_logs")
+        .select("metric_value, logged_date")
+        .eq("user_id", user.id)
+        .eq("focus_id", focus.id)
+        .order("logged_date", { ascending: true });
+      if (data) {
+        setFocusLogs(data as any[]);
+        setFocusLogTotal((data as any[]).reduce((s, r) => s + Number(r.metric_value), 0));
+      }
+    }
+    setActionLoading(false);
+  };
+
   // Load participation
   useEffect(() => {
     if (!challenge || !user) return;
