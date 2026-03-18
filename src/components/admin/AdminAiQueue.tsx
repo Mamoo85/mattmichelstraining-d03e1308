@@ -82,7 +82,7 @@ const AdminAiQueue = () => {
 
     const { data, error } = await query;
     if (error) {
-      console.error("Error fetching AI queue:", error);
+      // silent in production
     }
     setItems((data as QueueItem[]) || []);
     setLoading(false);

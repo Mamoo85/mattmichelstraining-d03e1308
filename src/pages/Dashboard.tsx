@@ -290,7 +290,7 @@ const Dashboard = () => {
         _description: "Monthly challenge entry",
         _reference_id: challenge.id,
       });
-    } catch (e) { console.error("Points award failed:", e); }
+    } catch { /* silent */ }
     loadLeaderboard();
     loadEntries();
     setActionLoading(false);
@@ -309,7 +309,7 @@ const Dashboard = () => {
       const { data, error } = await supabase.functions.invoke("customer-portal");
       if (error) throw error;
       if (data?.url) window.open(data.url, "_blank");
-    } catch (e) { console.error("Portal error:", e); }
+    } catch { /* silent */ }
     finally { setPortalLoading(false); }
   };
 

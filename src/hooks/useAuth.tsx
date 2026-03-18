@@ -106,7 +106,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       setIsLegend(profileResult.data?.is_in_person ?? false);
     } catch (e) {
-      console.error("check-subscription exception:", e);
+      // subscription check failed silently
     }
   }, []);
 
@@ -142,6 +142,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [session, checkSubscription]);
 
   const signOut = async () => {
+    // Clear React Query cache + persisted cache to prevent data bleed between users
+    const { queryClient } = await import("@/App");
+    queryClient.clear();
+    localStorage.removeItem("m2-query-cache");
+    localStorage.removeItem("m2_offline_queue");
     await supabase.auth.signOut();
   };
 

@@ -136,7 +136,7 @@ const LogForm = ({ activeLift, repMax, effectiveUserId, onLogged }: LogFormProps
           _description: `Logged ${activeLift}`,
           _reference_id: null,
         });
-      } catch (e) { console.error("Points award failed:", e); }
+      } catch { /* silent */ }
       setLogWeight("");
       setLogReps("");
       await onLogged();
