@@ -3,6 +3,7 @@ import { useAuth, TIERS, TierKey, TIER_DISCOUNTS } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import AppNavbar from "@/components/AppNavbar";
 import TechSupportButton from "@/components/TechSupportButton";
+import SupportTicketForm from "@/components/SupportTicketForm";
 import ReferralDashboard from "@/components/ReferralDashboard";
 import { Link } from "react-router-dom";
 import {
@@ -567,6 +568,7 @@ const Profile = () => {
           )}
         </div>
       </div>
+      <SupportTicketForm />
       <TechSupportButton />
       <GiftSessionModal open={giftModalOpen} onClose={() => setGiftModalOpen(false)} />
     </div>

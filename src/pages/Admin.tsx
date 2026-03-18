@@ -36,6 +36,7 @@ import AdminTestimonials from "@/components/admin/AdminTestimonials";
 import AdminFrontPage from "@/components/admin/AdminFrontPage";
 import AdminAiQueue from "@/components/admin/AdminAiQueue";
 import AdminAiCopilot from "@/components/admin/AdminAiCopilot";
+import AdminSupportCopilot from "@/components/admin/AdminSupportCopilot";
 import AdminBroadcasts from "@/components/admin/AdminBroadcasts";
 import AdminBatchGenerator from "@/components/admin/AdminBatchGenerator";
 
@@ -118,6 +119,7 @@ const Admin = () => {
           <SubTabs tabs={[
             { key: "queue", label: "AI Queue", content: <AdminAiQueue /> },
             { key: "copilot", label: "AI Copilot", content: <AdminAiCopilot /> },
+            { key: "support", label: "Support Copilot", content: <AdminSupportCopilot /> },
             { key: "batch", label: "Batch Generator", content: <AdminBatchGenerator /> },
             { key: "ai-programs", label: "AI Programs", content: <AdminProgramCreator /> },
           ]} />
