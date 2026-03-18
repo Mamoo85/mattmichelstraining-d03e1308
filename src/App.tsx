@@ -9,6 +9,8 @@ import { TimerProvider } from "@/hooks/useTimer";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import SubscriptionGuard from "@/components/SubscriptionGuard";
 import IntervalTimer from "@/components/workout/IntervalTimer";
+import ScrollToTop from "@/components/ScrollToTop";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 import { useTimer } from "@/hooks/useTimer";
 import { useReferralCapture } from "@/hooks/useReferral";
