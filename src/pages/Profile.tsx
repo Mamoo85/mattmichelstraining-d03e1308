@@ -251,7 +251,7 @@ const Profile = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6">
+        <div className={`grid ${canGiftSession ? "grid-cols-2 sm:grid-cols-5" : "grid-cols-2 sm:grid-cols-4"} gap-2 mb-6`}>
           <Link to="/dashboard" className="bg-card border border-border p-3 flex flex-col items-center gap-1.5 hover:border-primary/40 transition-all">
             <Dumbbell size={18} className="text-primary" />
             <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Dashboard</span>
@@ -268,6 +268,15 @@ const Profile = () => {
             <Shield size={18} className="text-primary" />
             <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Plans</span>
           </Link>
+          {canGiftSession && (
+            <button
+              onClick={() => setGiftModalOpen(true)}
+              className="bg-primary/10 border border-primary/30 p-3 flex flex-col items-center gap-1.5 hover:border-primary/60 transition-all"
+            >
+              <Gift size={18} className="text-primary" />
+              <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Gift Session</span>
+            </button>
+          )}
         </div>
 
         {/* Subscription Details */}
