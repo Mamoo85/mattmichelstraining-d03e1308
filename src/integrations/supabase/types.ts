@@ -1551,6 +1551,36 @@ export type Database = {
         }
         Relationships: []
       }
+      trial_settings: {
+        Row: {
+          auto_charge_tier: string
+          auto_renew_default: boolean
+          early_cancel_discount_pct: number
+          id: number
+          tech_support_auto_reply: string
+          trial_days: number
+          updated_at: string
+        }
+        Insert: {
+          auto_charge_tier?: string
+          auto_renew_default?: boolean
+          early_cancel_discount_pct?: number
+          id?: number
+          tech_support_auto_reply?: string
+          trial_days?: number
+          updated_at?: string
+        }
+        Update: {
+          auto_charge_tier?: string
+          auto_renew_default?: boolean
+          early_cancel_discount_pct?: number
+          id?: number
+          tech_support_auto_reply?: string
+          trial_days?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_active_programs: {
         Row: {
           created_at: string
