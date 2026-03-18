@@ -191,7 +191,7 @@ const Schedule = () => {
     setPurchasing(true);
     try {
       if (useCredit) {
-        // Redeem credit directly
+        // Redeem Elite credit directly
         const { data, error } = await supabase.functions.invoke("redeem-session-credit", {
           body: {
             slot_date: dateStr,
@@ -204,6 +204,23 @@ const Schedule = () => {
         setVerified(true);
         setHasCredit(false);
         toast({ title: "Session booked!", description: "Your Elite session credit has been redeemed. Confirmation emails sent!" });
+      } else if (useGift && giftId) {
+        // Redeem gifted session — book free via edge function
+        const { data, error } = await supabase.functions.invoke("redeem-session-credit", {
+          body: {
+            slot_date: dateStr,
+            start_time: selectedSlots[0],
+            session_type: sessionType,
+            gift_id: giftId,
+          },
+        });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+        setVerified(true);
+        setHasGift(false);
+        setGiftId(null);
+        setUseGift(false);
+        toast({ title: "Session booked!", description: "Your gifted session has been redeemed. Confirmation emails sent!" });
       } else {
         // Stripe checkout
         const { data, error } = await supabase.functions.invoke("create-session-checkout", {
