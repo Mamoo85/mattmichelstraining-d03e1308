@@ -33,10 +33,10 @@ const ForParentsCTA = () => (
           </p>
           <div className="flex flex-wrap gap-3">
             <Link
-              to="/for-parents"
+              to="/for-parents#youth-timeline"
               className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-3 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
             >
-              Learn More — For Parents
+              Youth Strength Timeline
               <ArrowRight size={14} />
             </Link>
             <Link
