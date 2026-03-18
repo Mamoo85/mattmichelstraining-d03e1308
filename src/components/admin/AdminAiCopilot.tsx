@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Brain, Loader2, AlertTriangle, Ghost, Send, RefreshCw, CheckCircle } from "lucide-react";
+import { Brain, Loader2, AlertTriangle, Ghost, Send, RefreshCw, CheckCircle, Trash2 } from "lucide-react";
 
 interface StagnationInsight {
   name: string;
