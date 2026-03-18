@@ -242,18 +242,34 @@ const AdminSiteEditor = () => {
                           {item.label || item.content_key}
                           {isEdited && <span className="text-primary ml-1">· edited</span>}
                         </label>
-                        {currentValue && (
-                          <AiAssistButton
-                            type="site_content"
-                            context={{
-                              section: item.section,
-                              label: item.label || item.content_key,
-                              currentValue,
-                            }}
-                            onResult={(text) => handleContentChange(item.id, text)}
-                            label="AI Rewrite"
-                          />
-                        )}
+                        <div className="flex items-center gap-1.5">
+                          {isEdited && (
+                            <button
+                              onClick={() => setEditedContent((prev) => {
+                                const next = { ...prev };
+                                delete next[item.id];
+                                return next;
+                              })}
+                              className="flex items-center gap-0.5 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-destructive bg-destructive/10 hover:bg-destructive/20 transition-m2"
+                              title="Undo this change"
+                            >
+                              <Undo2 size={9} />
+                              Undo
+                            </button>
+                          )}
+                          {currentValue && (
+                            <AiAssistButton
+                              type="site_content"
+                              context={{
+                                section: item.section,
+                                label: item.label || item.content_key,
+                                currentValue,
+                              }}
+                              onResult={(text) => handleContentChange(item.id, text)}
+                              label="AI Rewrite"
+                            />
+                          )}
+                        </div>
                       </div>
                       {item.content_type === "textarea" ? (
                         <textarea
