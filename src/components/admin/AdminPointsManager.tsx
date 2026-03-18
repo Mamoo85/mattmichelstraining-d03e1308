@@ -121,12 +121,11 @@ const AdminPointsManager = () => {
               className="flex-1 font-mono"
             />
           </div>
-          <input
+          <Input
             type="text"
             placeholder="Reason (required)"
             value={adjustReason}
             onChange={e => setAdjustReason(e.target.value)}
-            className="w-full bg-background border border-border px-3 py-2 text-sm focus:ring-1 focus:ring-primary outline-none"
           />
           <div className="flex gap-2">
             <button
