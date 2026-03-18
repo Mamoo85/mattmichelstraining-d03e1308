@@ -693,6 +693,39 @@ export type Database = {
         }
         Relationships: []
       }
+      parent_invite_tokens: {
+        Row: {
+          child_name: string | null
+          created_at: string
+          id: string
+          is_used: boolean
+          parent_user_id: string
+          token: string
+          used_at: string | null
+          used_by: string | null
+        }
+        Insert: {
+          child_name?: string | null
+          created_at?: string
+          id?: string
+          is_used?: boolean
+          parent_user_id: string
+          token: string
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Update: {
+          child_name?: string | null
+          created_at?: string
+          id?: string
+          is_used?: boolean
+          parent_user_id?: string
+          token?: string
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Relationships: []
+      }
       point_transactions: {
         Row: {
           action: string
