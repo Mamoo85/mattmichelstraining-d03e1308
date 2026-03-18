@@ -31,6 +31,9 @@ export interface UserPointsData {
   is_public: boolean;
 }
 
+// Track previous level to detect level-ups
+let previousLevelKey: string | null = null;
+
 export interface PointTransaction {
   id: string;
   action: string;
@@ -67,6 +70,9 @@ export const usePoints = () => {
   const [transactions, setTransactions] = useState<PointTransaction[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [levelUp, setLevelUp] = useState<string | null>(null);
+
+  const dismissLevelUp = useCallback(() => setLevelUp(null), []);
 
   const loadPoints = useCallback(async () => {
     if (!user) return;
@@ -76,8 +82,19 @@ export const usePoints = () => {
       .eq("user_id", user.id)
       .maybeSingle();
     if (data) {
+      const newLevel = getLevelInfo((data as any).total_points);
+      // Detect level-up: compare against previous known level
+      if (previousLevelKey && newLevel.key !== previousLevelKey) {
+        const prevIdx = LEVELS.findIndex(l => l.key === previousLevelKey);
+        const newIdx = LEVELS.findIndex(l => l.key === newLevel.key);
+        if (newIdx > prevIdx) {
+          setLevelUp(newLevel.key);
+        }
+      }
+      previousLevelKey = newLevel.key;
       setPoints(data as any);
     } else {
+      previousLevelKey = "rookie";
       setPoints({ total_points: 0, level: "rookie", weekly_streak: 0, is_public: true });
     }
     setLoading(false);
@@ -156,5 +173,7 @@ export const usePoints = () => {
     loadPoints,
     loadTransactions,
     loadLeaderboard,
+    levelUp,
+    dismissLevelUp,
   };
 };
