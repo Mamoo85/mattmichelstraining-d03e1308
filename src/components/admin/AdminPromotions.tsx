@@ -193,8 +193,7 @@ const AdminPromotions = () => {
                   expires_at: "",
                 });
                 setShowPromoModal(true);
-                toast.success(`${ideas.length} ideas generated — first one loaded. Check console for all.`);
-                console.log("AI Promo Ideas:", ideas);
+                toast.success(`${ideas.length} ideas generated — first one loaded.`);
               }
             } catch {
               toast.error("Couldn't parse AI suggestions");
