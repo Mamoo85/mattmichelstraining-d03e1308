@@ -29,7 +29,10 @@ interface Focus {
   title: string;
   topic: string;
   reasoning: string;
+  biomechanics: string[];
+  common_mistakes: string[];
   exercises: string[];
+  challenge_metric: string;
   matt_quote: string;
   status: string;
 }
