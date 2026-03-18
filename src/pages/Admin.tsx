@@ -29,6 +29,7 @@ import AdminSystemSettings from "@/components/admin/AdminSystemSettings";
 import AdminProductManager from "@/components/admin/AdminProductManager";
 import AdminTestimonials from "@/components/admin/AdminTestimonials";
 import AdminFrontPage from "@/components/admin/AdminFrontPage";
+import AdminAiCopilot from "@/components/admin/AdminAiCopilot";
 
 const TABS = [
   { key: "clients", label: "Athletes & Trials" },
