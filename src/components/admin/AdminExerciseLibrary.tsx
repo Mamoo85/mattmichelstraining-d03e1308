@@ -26,6 +26,7 @@ const EMPTY: Exercise = {
   client_type: [],
   focus_area: [],
   sport: [],
+  video_url: "",
 };
 
 const AdminExerciseLibrary = () => {
