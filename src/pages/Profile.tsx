@@ -13,6 +13,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import EmptyStateCard from "@/components/EmptyStateCard";
 
 interface ProfileData {
   full_name: string | null;

@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2, Dumbbell, MessageSquare, ShoppingBag, ChevronLeft, ChevronRight, Printer } from "lucide-react";
+import EmptyStateCard from "./EmptyStateCard";
 import { Link } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";

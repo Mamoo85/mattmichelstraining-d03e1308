@@ -22,6 +22,7 @@ import PointsWidget from "@/components/PointsWidget";
 import PointsLeaderboard from "@/components/PointsLeaderboard";
 import PwaInstallBanner from "@/components/PwaInstallBanner";
 import WorkoutScanner from "@/components/workout/WorkoutScanner";
+import EmptyStateCard from "@/components/EmptyStateCard";
 
 const TABS = [
   { key: "home", label: "Home" },

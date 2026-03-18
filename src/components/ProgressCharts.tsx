@@ -12,6 +12,7 @@ import StatsRow from "./progress/StatsRow";
 import LogHistory from "./progress/LogHistory";
 import RecoveryChart from "./progress/RecoveryChart";
 import AiRecoveryAdvisor from "./progress/AiRecoveryAdvisor";
+import EmptyStateCard from "./EmptyStateCard";
 
 interface ProgressLog {
   id: string;
