@@ -1,24 +1,45 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 import m2Logo from "@/assets/m2-logo.jpg";
-import { ArrowRight, Loader2, Gift } from "lucide-react";
+import { ArrowRight, Loader2, Gift, Users } from "lucide-react";
 
 const Auth = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, loading: authLoading } = useAuth();
+  const { toast } = useToast();
+  const inviteToken = searchParams.get("invite");
 
-  // Redirect if already logged in
+  // Redeem invite after login/signup
   useEffect(() => {
-    if (!authLoading && user) {
-      const params = new URLSearchParams(window.location.search);
-      const redirect = params.get("redirect") || "/dashboard";
+    if (!authLoading && user && inviteToken) {
+      redeemInvite(inviteToken);
+    } else if (!authLoading && user) {
+      const redirect = searchParams.get("redirect") || "/dashboard";
       navigate(redirect, { replace: true });
     }
-  }, [user, authLoading, navigate]);
-  const [isSignUp, setIsSignUp] = useState(false);
+  }, [user, authLoading]);
+
+  const redeemInvite = async (token: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke("redeem-parent-invite", {
+        body: { token },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast({ title: "Account linked!", description: "You're now connected to your parent's account." });
+    } catch (err: any) {
+      console.error("Invite redeem error:", err);
+      // Don't block navigation on error
+    }
+    navigate(searchParams.get("redirect") || "/dashboard", { replace: true });
+  };
+
+  const [isSignUp, setIsSignUp] = useState(!!inviteToken);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -48,9 +69,10 @@ const Auth = () => {
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) setError(error.message);
-      else {
-        const params = new URLSearchParams(window.location.search);
-        navigate(params.get("redirect") || "/dashboard");
+      else if (inviteToken) {
+        // Will be handled by the useEffect above
+      } else {
+        navigate(searchParams.get("redirect") || "/dashboard");
       }
     }
     setLoading(false);
@@ -84,7 +106,21 @@ const Auth = () => {
           <p className="text-sm text-muted-foreground mt-1">Real training. Real results.</p>
         </div>
 
-        {isSignUp && (
+        {inviteToken && (
+          <div className="bg-accent/20 border border-accent/40 p-4 mb-5">
+            <div className="flex items-start gap-2">
+              <Users size={16} className="text-primary flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-xs font-bold text-foreground mb-1">You've been invited!</p>
+                <p className="text-xs text-muted-foreground">
+                  Create an account or sign in to link with your parent's M² Training account.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isSignUp && !inviteToken && (
           <div className="bg-primary/10 border border-primary/20 p-4 mb-5">
             <div className="flex items-start gap-2">
               <Gift size={16} className="text-primary flex-shrink-0 mt-0.5" />

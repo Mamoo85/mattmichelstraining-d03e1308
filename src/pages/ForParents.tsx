@@ -61,26 +61,26 @@ const TIMELINE = [
 const FUNNEL_STEPS = [
   {
     step: "1",
-    title: "Start with a Foundation Program",
-    desc: "Pick your athlete's age range. Get a program built by Matt — loaded into the portal or printable as a PDF. Includes FREE postural assessment. $20.",
-    icon: BookOpen,
-    cta: "Browse Foundation Programs",
-    link: "/shop",
+    title: "Start Your Free 7-Day Trial",
+    desc: "Create a free parent account. You get full portal access for 7 days — programs, progress tracking, and direct access to Matt. No card required.",
+    icon: Shield,
+    cta: "Start Free Trial",
+    link: "/auth?redirect=/trial-welcome",
   },
   {
     step: "2",
-    title: "Create a Child Account",
-    desc: "Link your child's account to yours. They access programs on their phone. You monitor progress alongside Matt. Flag questions anytime.",
+    title: "Invite Your Athlete",
+    desc: "Send your kid an invite link. They create their own login, and their account is automatically linked to yours. You see everything they log.",
     icon: Users,
     cta: "Set Up Below",
     link: "#parent-portal",
   },
   {
     step: "3",
-    title: "Train with Matt",
-    desc: "In-person youth strength training in Grosse Pointe or online. 1-on-1, small group, or team programs. This is where injury prevention and performance meet.",
+    title: "Pick a Plan That Fits",
+    desc: "After the trial, choose a membership tier or grab a one-time $20 program. In-person sessions available in Grosse Pointe for local families.",
     icon: GraduationCap,
-    cta: "View Training Plans",
+    cta: "View Plans",
     link: "/pricing",
   },
 ];
@@ -114,31 +114,13 @@ const ForParents = () => {
                   <p className="text-xs opacity-80">Grosse Pointe Park, MI — 1-on-1, small group & team sessions</p>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                <Link
-                  to="/schedule"
-                  className="inline-flex items-center gap-1.5 bg-background text-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
-                >
-                  <Calendar size={12} />
-                  Book a Session
-                </Link>
-                <a
-                  href="https://calendly.com/m2training"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 border-2 border-primary-foreground/40 px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-primary-foreground/10 transition-m2"
-                >
-                  <Calendar size={12} />
-                  Book with Matt
-                </a>
-                <a
-                  href="tel:+13135551234"
-                  className="inline-flex items-center gap-1.5 border-2 border-primary-foreground/40 px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-primary-foreground/10 transition-m2 hidden sm:flex"
-                >
-                  <Phone size={12} />
-                  Call
-                </a>
-              </div>
+              <Link
+                to="/schedule"
+                className="inline-flex items-center gap-1.5 bg-background text-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
+              >
+                <Calendar size={12} />
+                Book a Session
+              </Link>
             </div>
           </div>
         </motion.div>
@@ -161,21 +143,21 @@ const ForParents = () => {
             </div>
           </div>
           <p className="text-sm md:text-base text-muted-foreground max-w-2xl mb-6 leading-relaxed">
-            {cms.hero_subtitle || "Most youth strength programs are built by people who learned from social media. Matt Michels has trained thousands of kids through proven strength programs. 50+ went on to compete at the college level. Zero got injured. Every foundation program includes a FREE postural assessment and parent monitoring tools."}
+            {cms.hero_subtitle || "Most youth training programs are built by people who learned from social media — not from 20 years of watching what actually breaks down in a young athlete's body. Matt has trained thousands of kids. 50+ went on to compete at the college level. Zero got injured. That's not a slogan — it's a track record."}
           </p>
           <div className="flex flex-wrap gap-3">
             <Link
-              to="/shop"
+              to="/auth?redirect=/trial-welcome"
               className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
             >
-              {cms.hero_cta_primary || "Get a $20 foundation program"}
+              Start Your 7-Day Free Trial
               <ArrowRight size={15} />
             </Link>
             <Link
-              to="/pricing"
+              to="/shop"
               className="inline-flex items-center gap-2 border-2 border-primary/40 text-primary px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:bg-primary/10 transition-m2"
             >
-              {cms.hero_cta_secondary || "See training plans"}
+              {cms.hero_cta_secondary || "Browse $20 Programs"}
             </Link>
           </div>
         </motion.div>
@@ -390,28 +372,22 @@ const ForParents = () => {
               {cms.final_cta_title || "Ready to invest in your athlete's strength and safety?"}
             </h2>
             <p className="text-sm text-muted-foreground mb-6 max-w-lg mx-auto">
-              {cms.final_cta_text || "Start with a $20 foundation program. See how Matt approaches youth strength training. Then decide if you want the full experience — online or in-person in Grosse Pointe."}
+              {cms.final_cta_text || "Start a free 7-day trial. Get your athlete set up with real programming from a 20-year veteran coach. No credit card. No commitment. Just results."}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link
-                to="/shop"
+                to="/auth?redirect=/trial-welcome"
                 className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
               >
-                Browse Foundation Programs
+                Start Free 7-Day Trial
                 <ArrowRight size={15} />
               </Link>
               <Link
-                to="/auth"
+                to="/shop"
                 className="inline-flex items-center gap-2 border-2 border-primary/40 text-primary px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:bg-primary/10 transition-m2"
               >
-                Create Free Account
+                Browse $20 Programs
               </Link>
-              <a
-                href="mailto:matthewmichels4@gmail.com?subject=Parent%20Inquiry%20-%20Youth%20Strength%20Training"
-                className="text-xs font-bold text-primary hover:opacity-80 transition-m2"
-              >
-                Email Matt directly →
-              </a>
             </div>
           </div>
         </motion.div>
