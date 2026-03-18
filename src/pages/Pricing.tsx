@@ -317,6 +317,9 @@ const Pricing = () => {
           })}
         </div>
 
+        {/* Dynamic Feature Comparison Table */}
+        <TierComparisonTable />
+
         {/* Free member banner */}
         <div className="mt-12 text-center border-2 border-dashed border-border p-8 max-w-2xl mx-auto">
           <h3 className="text-lg font-black uppercase tracking-tight text-foreground mb-2">
