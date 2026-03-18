@@ -57,8 +57,14 @@ const AdminProgramCreator = () => {
   const [description, setDescription] = useState("");
   const [weeks, setWeeks] = useState(8);
   const [daysPerWeek, setDaysPerWeek] = useState(3);
+  const [exercisesPerDay, setExercisesPerDay] = useState(8);
+  const [explanationDetail, setExplanationDetail] = useState("standard");
+  const [includeFixIt, setIncludeFixIt] = useState(false);
+  const [selectedFocusAreas, setSelectedFocusAreas] = useState<string[]>([]);
   const [generating, setGenerating] = useState(false);
   const [draft, setDraft] = useState<DraftProgram | null>(null);
+  const [batchGenerating, setBatchGenerating] = useState(false);
+  const [batchResults, setBatchResults] = useState<any[] | null>(null);
   const [batchGenerating, setBatchGenerating] = useState(false);
   const [batchResults, setBatchResults] = useState<any[] | null>(null);
 
