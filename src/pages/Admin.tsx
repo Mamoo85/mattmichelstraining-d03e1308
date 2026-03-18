@@ -24,6 +24,8 @@ import AdminPointsManager from "@/components/admin/AdminPointsManager";
 import AdminVideoReview from "@/components/admin/AdminVideoReview";
 import AdminParentReports from "@/components/admin/AdminParentReports";
 import AdminFamilyManager from "@/components/admin/AdminFamilyManager";
+import AdminLearnEditor from "@/components/admin/AdminLearnEditor";
+import AdminSystemSettings from "@/components/admin/AdminSystemSettings";
 const TABS = [
   { key: "trial", label: "Free Trial" },
   { key: "tiers", label: "Tier Access" },
