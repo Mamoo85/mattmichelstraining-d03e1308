@@ -12,6 +12,8 @@ interface PrintCommunityWorkoutData {
   exercises: PrintExerciseData[];
 }
 
+const esc = (s: string) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+
 export const printCommunityWorkout = (data: PrintCommunityWorkoutData) => {
   const win = window.open("", "_blank");
   if (!win) return;
