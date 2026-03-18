@@ -26,6 +26,7 @@ serve(async (req) => {
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
     if (userError || !userData.user) throw new Error("Auth failed");
 
+    const userId = userData.user.id;
     const { type, context } = await req.json();
 
     let systemPrompt = "";
@@ -33,7 +34,6 @@ serve(async (req) => {
 
     switch (type) {
       case "intake_analyzer": {
-        // Fetch available programs
         const { data: programs } = await supabaseClient
           .from("training_programs")
           .select("id, title, category, level, sport, description, price")
@@ -46,33 +46,11 @@ serve(async (req) => {
           .join("\n");
 
         systemPrompt = `You are Coach Matt Michels' AI intake assistant. You analyze an athlete's questionnaire answers and recommend the best training program from the available catalog. Be direct, knowledgeable, and practical. Explain WHY each recommendation fits their specific needs. If their goals involve injury prevention, mention the Fix It library (available with Pro+ subscriptions).`;
-
-        userPrompt = `Analyze this athlete's intake and recommend the best program(s):
-
-Age: ${context.age}
-Sport: ${context.sport || "General fitness"}
-Experience Level: ${context.experience}
-Goals: ${context.goals}
-Available Equipment: ${context.equipment}
-Injury History: ${context.injuries || "None reported"}
-Training Days Available: ${context.daysPerWeek || "3-4"}
-${context.additionalNotes ? `Additional Notes: ${context.additionalNotes}` : ""}
-
-AVAILABLE PROGRAMS:
-${programList}
-
-Provide:
-1. Your #1 recommendation with a clear explanation
-2. An alternative option
-3. Any important considerations for their injury history or goals
-4. Whether they should consider a subscription tier for ongoing coaching
-
-Keep it under 250 words. Be specific about which program and why.`;
+        userPrompt = `Analyze this athlete's intake and recommend the best program(s):\n\nAge: ${context.age}\nSport: ${context.sport || "General fitness"}\nExperience Level: ${context.experience}\nGoals: ${context.goals}\nAvailable Equipment: ${context.equipment}\nInjury History: ${context.injuries || "None reported"}\nTraining Days Available: ${context.daysPerWeek || "3-4"}\n${context.additionalNotes ? `Additional Notes: ${context.additionalNotes}` : ""}\n\nAVAILABLE PROGRAMS:\n${programList}\n\nProvide:\n1. Your #1 recommendation with a clear explanation\n2. An alternative option\n3. Any important considerations for their injury history or goals\n4. Whether they should consider a subscription tier for ongoing coaching\n\nKeep it under 250 words. Be specific about which program and why.`;
         break;
       }
 
       case "exercise_substitution": {
-        // Fetch exercise library
         const { data: exercises } = await supabaseClient
           .from("exercise_library")
           .select("id, title, focus_area, sport, equipment_needed, the_why")
@@ -83,32 +61,15 @@ Keep it under 250 words. Be specific about which program and why.`;
           .join("\n");
 
         systemPrompt = `You are Coach Matt Michels' exercise substitution assistant. When an athlete can't do an exercise (missing equipment, injury limitation, etc.), you suggest the best alternatives from the M² exercise library. Always explain WHY the substitution works — what movement pattern, muscle group, or training effect is preserved. Be direct and practical.`;
-
-        userPrompt = `The athlete needs a substitution:
-
-Original Exercise: ${context.exerciseName}
-Reason: ${context.reason}
-Available Equipment: ${context.availableEquipment || "Bodyweight only"}
-${context.injuryNotes ? `Injury/Limitation: ${context.injuryNotes}` : ""}
-
-EXERCISE LIBRARY:
-${exerciseList}
-
-Suggest 2-3 alternatives ranked by best fit. For each:
-- Exercise name (must be from the library above)
-- Why it's a good substitute (what movement pattern/muscle group it preserves)
-- Any modifications needed
-
-Keep it under 200 words.`;
+        userPrompt = `The athlete needs a substitution:\n\nOriginal Exercise: ${context.exerciseName}\nReason: ${context.reason}\nAvailable Equipment: ${context.availableEquipment || "Bodyweight only"}\n${context.injuryNotes ? `Injury/Limitation: ${context.injuryNotes}` : ""}\n\nEXERCISE LIBRARY:\n${exerciseList}\n\nSuggest 2-3 alternatives ranked by best fit. For each:\n- Exercise name (must be from the library above)\n- Why it's a good substitute (what movement pattern/muscle group it preserves)\n- Any modifications needed\n\nKeep it under 200 words.`;
         break;
       }
 
       case "recovery_advisor": {
-        // Fetch recent recovery data
         const { data: recentLogs } = await supabaseClient
           .from("workout_logs")
           .select("date, sleep_hours, sleep_quality, soreness, energy, session_notes")
-          .eq("user_id", userData.user.id)
+          .eq("user_id", userId)
           .order("date", { ascending: false })
           .limit(14);
 
@@ -117,18 +78,7 @@ Keep it under 200 words.`;
           .join("\n");
 
         systemPrompt = `You are Coach Matt Michels' AI recovery advisor. Analyze an athlete's recent sleep, soreness, and energy data to provide actionable recovery recommendations. Be direct, science-backed, and practical. Reference trends you see in the data. Never recommend skipping training entirely — instead suggest modifications. Include hydration, nutrition, and sleep hygiene tips when relevant.`;
-
-        userPrompt = `Analyze this athlete's last 14 sessions of recovery data and provide recommendations:
-
-${logSummary || "No recovery data logged yet."}
-
-Provide:
-1. Key trends you notice (improving, declining, inconsistent?)
-2. Top 2-3 actionable recommendations
-3. Whether they should modify their training intensity this week
-4. One recovery habit to focus on
-
-Keep it under 200 words. Be specific about what the data shows.`;
+        userPrompt = `Analyze this athlete's last 14 sessions of recovery data and provide recommendations:\n\n${logSummary || "No recovery data logged yet."}\n\nProvide:\n1. Key trends you notice (improving, declining, inconsistent?)\n2. Top 2-3 actionable recommendations\n3. Whether they should modify their training intensity this week\n4. One recovery habit to focus on\n\nKeep it under 200 words. Be specific about what the data shows.`;
         break;
       }
 
@@ -172,7 +122,26 @@ Keep it under 200 words. Be specific about what the data shows.`;
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || "";
 
-    return new Response(JSON.stringify({ result: content }), {
+    // Queue the result for admin approval instead of returning directly
+    const { error: queueError } = await supabaseClient
+      .from("ai_action_queue")
+      .insert({
+        action_type: type,
+        target_user_id: userId,
+        context: { ...context, _targetUserId: userId },
+        ai_result: content,
+        status: "pending",
+      });
+
+    if (queueError) {
+      console.error("Failed to queue AI action:", queueError);
+      // Fall through and return result anyway if queue fails
+      return new Response(JSON.stringify({ result: content }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    return new Response(JSON.stringify({ queued: true, message: "Your request has been submitted for Coach Matt's review. You'll get a notification when it's ready." }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
