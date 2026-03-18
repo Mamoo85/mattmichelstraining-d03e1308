@@ -25,6 +25,7 @@ const ExerciseLibrary = () => {
   const [activeFocusArea, setActiveFocusArea] = useState<string | null>(null);
   const [activeSport, setActiveSport] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [substitutionExercise, setSubstitutionExercise] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchExercises = async () => {
