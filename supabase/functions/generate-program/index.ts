@@ -45,27 +45,30 @@ serve(async (req) => {
       focusAreas,
     } = await req.json();
 
-    // Fetch exercise library — include Fix It exercises if requested
-    let query = supabaseClient
+    // Fetch exercise library — ALWAYS include all exercises for full context
+    const { data: exercises } = await supabaseClient
       .from("exercise_library")
-      .select("id, title, focus_area, sport, client_type, equipment_needed, the_why, is_fix_it, fix_it_protocol")
+      .select("id, title, focus_area, sport, client_type, equipment_needed, the_why, is_fix_it, fix_it_protocol, level")
       .order("title");
 
-    // If not including Fix It, only fetch non-fix-it exercises
-    if (!includeFixIt) {
-      query = query.eq("is_fix_it", false);
-    }
+    // Separate into categories for structured AI context
+    const allExercises = exercises || [];
+    const mainExercises = allExercises.filter((e: any) => !e.is_fix_it);
+    const rollingExercises = allExercises.filter((e: any) =>
+      e.is_fix_it && (e.fix_it_protocol || []).some((p: string) => p === "Soft Tissue & Recovery")
+    );
+    const rehabExercises = allExercises.filter((e: any) =>
+      e.is_fix_it && !(e.fix_it_protocol || []).some((p: string) => p === "Soft Tissue & Recovery")
+    );
 
-    const { data: exercises } = await query;
+    const formatEx = (e: any) => {
+      let line = `- ${e.title} (ID: ${e.id}) [${e.level}] | Focus: ${e.focus_area?.join(", ")} | Sport: ${e.sport?.join(", ")} | Equipment: ${e.equipment_needed}`;
+      if (e.is_fix_it) line += ` | Protocol: ${e.fix_it_protocol?.join(", ")}`;
+      line += ` | Why: ${e.the_why}`;
+      return line;
+    };
 
-    const exerciseList = (exercises || [])
-      .map((e: any) => {
-        let line = `- ${e.title} (ID: ${e.id}) | Focus: ${e.focus_area?.join(", ")} | Sport: ${e.sport?.join(", ")} | Equipment: ${e.equipment_needed}`;
-        if (e.is_fix_it) line += ` | FIX IT: ${e.fix_it_protocol?.join(", ")}`;
-        line += ` | Why: ${e.the_why}`;
-        return line;
-      })
-      .join("\n");
+    const exerciseList = `=== MAIN EXERCISES (${mainExercises.length}) ===\n${mainExercises.map(formatEx).join("\n")}\n\n=== ROLLING & SOFT TISSUE TECHNIQUES (${rollingExercises.length}) ===\n${rollingExercises.map(formatEx).join("\n")}\n\n=== FIX IT / REHAB EXERCISES (${rehabExercises.length}) ===\n${rehabExercises.map(formatEx).join("\n")}`;
 
     // Build detail instructions based on explanationDetail setting
     const detailMap: Record<string, string> = {
