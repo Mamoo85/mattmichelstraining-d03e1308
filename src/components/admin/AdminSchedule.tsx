@@ -39,6 +39,8 @@ type Booking = {
   amount_cents: number;
   status: string;
   created_at: string;
+  session_type: string;
+  credit_id: string | null;
 };
 
 const AdminSchedule = () => {
