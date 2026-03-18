@@ -174,6 +174,7 @@ const Admin = () => {
             { key: "points", label: "Points", content: <AdminPointsManager /> },
             { key: "tiers", label: "Tier Access", content: <AdminTierManager /> },
             { key: "system", label: "System & Referrals", content: <AdminSystemSettings /> },
+            { key: "stripe-products", label: "Stripe Products", content: <AdminStripeProducts /> },
           ]} />
         )}
 
