@@ -767,6 +767,7 @@ export type Database = {
           is_pro: boolean
           stripe_customer_id: string | null
           subscription_tier: string
+          trial_path: string | null
           trial_started_at: string | null
           updated_at: string
           user_id: string
@@ -781,6 +782,7 @@ export type Database = {
           is_pro?: boolean
           stripe_customer_id?: string | null
           subscription_tier?: string
+          trial_path?: string | null
           trial_started_at?: string | null
           updated_at?: string
           user_id: string
@@ -795,6 +797,7 @@ export type Database = {
           is_pro?: boolean
           stripe_customer_id?: string | null
           subscription_tier?: string
+          trial_path?: string | null
           trial_started_at?: string | null
           updated_at?: string
           user_id?: string
