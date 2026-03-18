@@ -80,7 +80,7 @@ const MonthlyFocusWidget = () => {
   useEffect(() => {
     supabase
       .from("monthly_focus")
-      .select("title, topic, reasoning, exercises, matt_quote, biomechanics, common_mistakes, challenge_metric")
+      .select("id, title, topic, reasoning, exercises, matt_quote, biomechanics, common_mistakes, challenge_metric, metric_label, target_goal")
       .eq("month", now.getMonth() + 1)
       .eq("year", now.getFullYear())
       .eq("status", "published")
