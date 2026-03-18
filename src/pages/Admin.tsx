@@ -49,6 +49,17 @@ const TABS = [
 
 const Admin = () => {
   const [activeTab, setActiveTab] = useState("trial");
+  const { isAdmin, isLoading } = useIsAdmin();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="animate-spin text-primary" size={24} />
+      </div>
+    );
+  }
+
+  if (!isAdmin) return <Navigate to="/dashboard" replace />;
 
   return (
     <div className="min-h-screen bg-background">
