@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, memo } from "react";
 import { Search, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -7,7 +7,7 @@ interface ExercisePickerProps {
   onCancel: () => void;
 }
 
-const ExercisePicker = ({ onSelect, onCancel }: ExercisePickerProps) => {
+const ExercisePicker = memo(({ onSelect, onCancel }: ExercisePickerProps) => {
   const [query, setQuery] = useState("");
   const [exercises, setExercises] = useState<{ id: string; title: string }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,9 +25,9 @@ const ExercisePicker = ({ onSelect, onCancel }: ExercisePickerProps) => {
     load();
   }, []);
 
-  const filtered = exercises.filter((e) =>
+  const filtered = useMemo(() => exercises.filter((e) =>
     e.title.toLowerCase().includes(query.toLowerCase())
-  );
+  ), [exercises, query]);
 
   return (
     <div className="bg-card border border-border p-3 space-y-2">
@@ -57,7 +57,7 @@ const ExercisePicker = ({ onSelect, onCancel }: ExercisePickerProps) => {
             <button
               key={ex.id}
               onClick={() => onSelect(ex.id, ex.title)}
-              className="w-full text-left p-3 text-sm text-foreground hover:bg-muted transition-colors"
+              className="w-full text-left p-3 text-sm text-foreground hover:bg-muted transition-colors min-h-[44px]"
             >
               {ex.title}
             </button>
@@ -66,6 +66,8 @@ const ExercisePicker = ({ onSelect, onCancel }: ExercisePickerProps) => {
       </div>
     </div>
   );
-};
+});
+
+ExercisePicker.displayName = "ExercisePicker";
 
 export default ExercisePicker;
