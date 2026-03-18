@@ -177,8 +177,9 @@ const Schedule = () => {
 
   const isConsecutive = selectedSlots.length === 2 &&
     addMinutes(selectedSlots[0], 30) === selectedSlots[1];
-  const duration = useCredit ? 30 : (isConsecutive ? 60 : 30);
-  const price = useCredit ? 0 : (isConsecutive ? 90 : 50);
+  const isFreeSession = useCredit || useGift;
+  const duration = isFreeSession ? 30 : (isConsecutive ? 60 : 30);
+  const price = isFreeSession ? 0 : (isConsecutive ? 90 : 50);
 
   const handlePurchase = async () => {
     if (!user) {
