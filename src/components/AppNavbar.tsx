@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Dumbbell, ShoppingBag, Home, Menu, X, LogIn, LogOut, Shield, CreditCard, BookOpen, Users, User } from "lucide-react";
+import { Dumbbell, ShoppingBag, Home, Menu, X, LogIn, LogOut, Shield, CreditCard, BookOpen, Users, User, Smartphone } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -15,6 +15,7 @@ const navItems = [
   { to: "/for-parents", label: "PARENTS", icon: Users },
   { to: "/learn", label: "LEARN", icon: BookOpen },
   { to: "/pricing", label: "PRICING", icon: CreditCard },
+  { to: "/install", label: "GET APP", icon: Smartphone },
 ];
 
 const AppNavbar = () => {
