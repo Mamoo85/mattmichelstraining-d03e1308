@@ -23,8 +23,9 @@ import PointsLeaderboard from "@/components/PointsLeaderboard";
 import PwaInstallBanner from "@/components/PwaInstallBanner";
 import WorkoutScanner from "@/components/workout/WorkoutScanner";
 import EmptyStateCard from "@/components/EmptyStateCard";
+import TeamManager from "@/components/TeamManager";
 
-const TABS = [
+const BASE_TABS = [
   { key: "home", label: "Home" },
   { key: "progress", label: "Progress" },
   { key: "programs", label: "My Programs" },
