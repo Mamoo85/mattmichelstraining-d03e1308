@@ -37,7 +37,7 @@ const TABS = [
   { key: "broadcasts", label: "Broadcasts" },
   { key: "clients", label: "Athletes & Trials" },
   { key: "front-page", label: "Front Page" },
-  { key: "products", label: "Storefront" },
+  
   { key: "testimonials", label: "Testimonials" },
   { key: "learn", label: "Learn Hub" },
   { key: "system", label: "System & Referrals" },
