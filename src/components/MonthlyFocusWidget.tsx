@@ -257,34 +257,27 @@ const MonthlyFocusWidget = () => {
     const val = parseInt(progressInput);
     if (!val || val <= 0) { toast({ title: "Enter a number", variant: "destructive" }); return; }
     setActionLoading(true);
-    const newVal = currentValue + val;
-    await supabase
-      .from("challenge_participants")
-      .update({ current_value: newVal, updated_at: new Date().toISOString() } as any)
-      .eq("user_id", user.id)
-      .eq("challenge_id", challenge.id);
-    const { data: part } = await supabase
-      .from("challenge_participants")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("challenge_id", challenge.id)
-      .maybeSingle();
-    if (part) {
-      await supabase.from("challenge_entries").insert({
-        participant_id: (part as any).id, user_id: user.id, value: val,
-      } as any);
-    }
-    setCurrentValue(newVal);
-    setProgressInput("");
-    toast({ title: `+${val} logged!`, description: `Total: ${newVal} · +10 M² Points` });
     try {
-      await supabase.rpc("award_points", {
-        _user_id: user.id, _action: "challenge_entry", _points: 10,
-        _description: "Monthly challenge entry", _reference_id: challenge.id,
+      const { data: newVal, error } = await supabase.rpc("log_challenge_progress", {
+        _user_id: user.id,
+        _challenge_id: challenge.id,
+        _value: val,
       });
-    } catch { /* silent */ }
-    loadLeaderboard();
-    loadEntries();
+      if (error) throw error;
+      setCurrentValue(newVal as number);
+      setProgressInput("");
+      toast({ title: `+${val} logged!`, description: `Total: ${newVal} · +10 M² Points` });
+      try {
+        await supabase.rpc("award_points", {
+          _user_id: user.id, _action: "challenge_entry", _points: 10,
+          _description: "Monthly challenge entry", _reference_id: challenge.id,
+        });
+      } catch { /* silent */ }
+      loadLeaderboard();
+      loadEntries();
+    } catch (e: any) {
+      toast({ title: "Log failed", description: e.message, variant: "destructive" });
+    }
     setActionLoading(false);
   };
 
