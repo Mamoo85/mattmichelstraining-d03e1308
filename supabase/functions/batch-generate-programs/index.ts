@@ -36,18 +36,30 @@ serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const targetProgramId = body.programId || null;
 
-    // Fetch exercise library
+    // Fetch exercise library — include ALL fields for context
     const { data: exercises } = await supabaseClient
       .from("exercise_library")
-      .select("id, title, focus_area, sport, client_type, equipment_needed")
+      .select("id, title, focus_area, sport, client_type, equipment_needed, level, is_fix_it, fix_it_protocol, the_why")
       .order("title");
 
     if (!exercises || exercises.length === 0) throw new Error("No exercises in library");
 
     const exerciseIds = new Set(exercises.map((e: any) => e.id));
-    const exerciseList = exercises
-      .map((e: any) => `${e.id}: ${e.title}`)
-      .join("\n");
+
+    // Separate exercises into categories for richer AI context
+    const mainExercises = exercises.filter((e: any) => !e.is_fix_it);
+    const fixItExercises = exercises.filter((e: any) => e.is_fix_it);
+    const rollingExercises = fixItExercises.filter((e: any) =>
+      (e.fix_it_protocol || []).some((p: string) => p === "Soft Tissue & Recovery")
+    );
+    const rehabExercises = fixItExercises.filter((e: any) =>
+      !(e.fix_it_protocol || []).some((p: string) => p === "Soft Tissue & Recovery")
+    );
+
+    const formatEx = (e: any) =>
+      `${e.id}: ${e.title} [${e.level}] (${(e.focus_area || []).join(", ")})${e.fix_it_protocol?.length ? ` — Protocol: ${e.fix_it_protocol.join(", ")}` : ""}`;
+
+    const exerciseList = `=== MAIN EXERCISES ===\n${mainExercises.map(formatEx).join("\n")}\n\n=== ROLLING & SOFT TISSUE TECHNIQUES ===\n${rollingExercises.map(formatEx).join("\n")}\n\n=== FIX IT / REHAB EXERCISES ===\n${rehabExercises.map(formatEx).join("\n")}`;
 
     // Get target program(s)
     let query = supabaseClient
