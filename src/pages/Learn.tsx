@@ -146,6 +146,21 @@ const ArticleCard = ({ article, isExpanded, onToggle }: {
   isExpanded: boolean;
   onToggle: () => void;
 }) => (
+  <>
+    {isExpanded && (
+      <SEOHead
+        title={article.title}
+        description={article.body.replace(/[#*_`>\-]/g, "").slice(0, 155)}
+        path={`/learn#${article.slug}`}
+        type="article"
+        ogImage={article.cover_image_url}
+        article={{
+          author: article.author || "Coach Matt",
+          publishedTime: article.published_at,
+          category: article.category,
+        }}
+      />
+    )}
   <motion.div
     layout
     className="bg-card shadow-m2 overflow-hidden"
