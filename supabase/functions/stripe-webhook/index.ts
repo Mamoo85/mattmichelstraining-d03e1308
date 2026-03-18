@@ -257,6 +257,35 @@ serve(async (req) => {
       }
     }
 
+    // Handle charge refunds
+    if (event.type === "charge.refunded") {
+      const charge = event.data.object as Stripe.Charge;
+      const refundedAmount = charge.amount_refunded || 0;
+      // Update existing transaction to refunded
+      const { data: existing } = await sb
+        .from("transactions")
+        .select("id")
+        .eq("stripe_charge_id", charge.id)
+        .limit(1);
+      if (existing && existing.length > 0) {
+        await sb.from("transactions").update({ status: "refunded" }).eq("id", existing[0].id);
+      } else {
+        // Log it as a new refund entry
+        await logTransaction({
+          userId: null,
+          stripeChargeId: charge.id,
+          amount: refundedAmount,
+          itemName: "Refund",
+          itemType: "refund",
+          status: "refunded",
+          customerEmail: charge.billing_details?.email || null,
+          customerName: charge.billing_details?.name || null,
+        });
+      }
+      console.log(`[WEBHOOK] Charge refunded: ${charge.id} — $${(refundedAmount / 100).toFixed(2)}`);
+    }
+
+
     // Handle guide purchases (existing logic)
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
