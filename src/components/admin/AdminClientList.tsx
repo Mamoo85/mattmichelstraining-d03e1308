@@ -83,6 +83,33 @@ const AdminClientList = () => {
     onError: () => toast.error("Failed to update tier"),
   });
 
+  const extendTrialMutation = useMutation({
+    mutationFn: async ({ profileId, days }: { profileId: string; days: number }) => {
+      // Get current trial_started_at and push it forward by `days`
+      const profile = profiles.find((p) => p.id === profileId);
+      let newStart: string;
+      if (profile?.trial_started_at) {
+        // Extend by pushing start date forward (effectively extends expiration)
+        const current = new Date(profile.trial_started_at);
+        current.setDate(current.getDate() + days);
+        newStart = current.toISOString();
+      } else {
+        // Start a fresh trial from now
+        newStart = new Date().toISOString();
+      }
+      const { error } = await supabase.from("profiles").update({
+        trial_started_at: newStart,
+        updated_at: new Date().toISOString(),
+      }).eq("id", profileId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-clients"] });
+      toast.success("Trial extended");
+    },
+    onError: () => toast.error("Failed to extend trial"),
+  });
+
   const filtered = profiles.filter(
     (p) =>
       (p.email ?? "").toLowerCase().includes(search.toLowerCase()) ||
