@@ -3,6 +3,7 @@ import { FileText, Loader2, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import CheckoutConfirmationModal from "@/components/CheckoutConfirmationModal";
 
 interface Guide {
   id: string;
@@ -52,15 +53,23 @@ const PdfGuides = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const handleBuy = async (guide: Guide) => {
+  // Modal state
+  const [modalGuide, setModalGuide] = useState<Guide | null>(null);
+
+  const openModal = (guide: Guide) => {
     if (!user) {
       window.location.href = `/auth?redirect=/shop`;
       return;
     }
-    setBuyingId(guide.id);
+    setModalGuide(guide);
+  };
+
+  const handleConfirmedBuy = async () => {
+    if (!modalGuide) return;
+    setBuyingId(modalGuide.id);
     try {
       const { data, error } = await supabase.functions.invoke("create-guide-payment", {
-        body: { priceId: guide.priceId },
+        body: { priceId: modalGuide.priceId },
       });
       if (error) throw error;
       if (data?.url) window.open(data.url, "_blank");
@@ -68,6 +77,7 @@ const PdfGuides = () => {
       toast({ title: "Payment error", description: e.message || "Something went wrong", variant: "destructive" });
     } finally {
       setBuyingId(null);
+      setModalGuide(null);
     }
   };
 
@@ -96,14 +106,12 @@ const PdfGuides = () => {
 
   return (
     <div>
-      {/* Description */}
       <div className="bg-primary/10 border border-primary/20 p-4 mb-6">
         <p className="text-sm text-foreground leading-relaxed">
           <strong>Top-10 exercise blueprints — $15 each.</strong> Standalone PDF plans. Each one teaches you the WHY behind every movement so your athlete understands what they're doing and why it matters. Buy once, keep forever.
         </p>
       </div>
 
-      {/* Guide grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {GUIDES.map((guide) => (
           <div
@@ -134,7 +142,7 @@ const PdfGuides = () => {
 
             <div className="mt-auto pt-3">
               <button
-                onClick={(e) => { e.stopPropagation(); handleBuy(guide); }}
+                onClick={(e) => { e.stopPropagation(); openModal(guide); }}
                 disabled={buyingId === guide.id}
                 className="bg-primary text-primary-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-m2 flex items-center gap-1.5 w-full justify-center disabled:opacity-50"
               >
@@ -150,7 +158,6 @@ const PdfGuides = () => {
         ))}
       </div>
 
-      {/* Request a Guide section */}
       <div className="mt-8 bg-card shadow-m2 p-5">
         <h3 className="text-sm font-bold text-foreground mb-1">Need something specific?</h3>
         <p className="text-[11px] text-muted-foreground mb-4">
@@ -179,6 +186,17 @@ const PdfGuides = () => {
           </button>
         </div>
       </div>
+
+      {/* Checkout confirmation modal */}
+      <CheckoutConfirmationModal
+        open={!!modalGuide}
+        onClose={() => setModalGuide(null)}
+        onConfirm={handleConfirmedBuy}
+        loading={!!buyingId}
+        productName={modalGuide?.title || ""}
+        productPrice={modalGuide?.price || ""}
+        productType="pdf"
+      />
     </div>
   );
 };

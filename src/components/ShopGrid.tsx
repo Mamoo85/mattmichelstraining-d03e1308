@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useContentMap } from "@/hooks/useSiteContent";
+import CheckoutConfirmationModal, { type CheckoutProductType } from "./CheckoutConfirmationModal";
 
 interface Product {
   id: string;
@@ -136,21 +137,29 @@ const ShopGrid = ({ showCustomOnly = false }: { showCustomOnly?: boolean }) => {
   const { toast } = useToast();
   const { content: cms } = useContentMap("shop_products");
 
+  // Modal state
+  const [modalProduct, setModalProduct] = useState<Product | null>(null);
+
   const filtered = showCustomOnly
     ? PRODUCTS.filter((p) => p.category === "custom")
     : selectedCategory === "all"
     ? PRODUCTS
     : PRODUCTS.filter((p) => p.category === selectedCategory);
 
-  const handleBuy = async (product: Product) => {
+  const openModal = (product: Product) => {
     if (!user) {
       window.location.href = `/auth?redirect=/shop`;
       return;
     }
-    setBuyingId(product.id);
+    setModalProduct(product);
+  };
+
+  const handleConfirmedBuy = async () => {
+    if (!modalProduct) return;
+    setBuyingId(modalProduct.id);
     try {
       const { data, error } = await supabase.functions.invoke("create-guide-payment", {
-        body: { priceId: product.priceId },
+        body: { priceId: modalProduct.priceId },
       });
       if (error) throw error;
       if (data?.url) {
@@ -160,7 +169,13 @@ const ShopGrid = ({ showCustomOnly = false }: { showCustomOnly?: boolean }) => {
       toast({ title: "Payment error", description: e.message || "Something went wrong", variant: "destructive" });
     } finally {
       setBuyingId(null);
+      setModalProduct(null);
     }
+  };
+
+  const getProductType = (product: Product): CheckoutProductType => {
+    if (product.category === "custom") return "custom";
+    return "program";
   };
 
   return (
@@ -169,7 +184,6 @@ const ShopGrid = ({ showCustomOnly = false }: { showCustomOnly?: boolean }) => {
         <>
           <SectionHeader title="M² Programs" timestamp="20+ years of knowledge · Download & print as PDF" />
 
-          {/* Value hook */}
           <div className="bg-primary/10 border border-primary/20 shadow-m2 p-4 mb-6">
             <p className="text-sm text-foreground text-balance leading-relaxed">
               <span className="font-bold">"</span>{cms.value_hook || "I can only train so many athletes in person. But I can share what I know. Every plan teaches the WHY — not just what to do. When they understand why, they do it better. 100% of the time."}<span className="font-bold">"</span>
@@ -177,7 +191,6 @@ const ShopGrid = ({ showCustomOnly = false }: { showCustomOnly?: boolean }) => {
             <span className="text-[10px] font-mono text-primary mt-2 block">— Matt Michels, M² Training</span>
           </div>
 
-          {/* Category filter */}
           <div className="flex gap-1 mb-4 flex-wrap">
             {CATEGORIES.map((c) => (
               <button
@@ -196,7 +209,6 @@ const ShopGrid = ({ showCustomOnly = false }: { showCustomOnly?: boolean }) => {
         </>
       )}
 
-      {/* Product grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-8">
         {filtered.map((product) => (
           <div
@@ -230,7 +242,7 @@ const ShopGrid = ({ showCustomOnly = false }: { showCustomOnly?: boolean }) => {
                 <span className="text-[10px] text-primary font-bold">Fill out intake below ↓</span>
               ) : (
                 <button
-                  onClick={(e) => { e.stopPropagation(); handleBuy(product); }}
+                  onClick={(e) => { e.stopPropagation(); openModal(product); }}
                   disabled={buyingId === product.id}
                   className="bg-primary text-primary-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-m2 flex items-center gap-1.5 w-full justify-center disabled:opacity-50"
                 >
@@ -247,16 +259,25 @@ const ShopGrid = ({ showCustomOnly = false }: { showCustomOnly?: boolean }) => {
         ))}
       </div>
 
-      {/* Custom program intake */}
-      <CustomProgramIntake onBuy={handleBuy} buying={buyingId === "custom-program"} />
+      <CustomProgramIntake onBuy={openModal} buying={buyingId === "custom-program"} />
 
-      {/* Why $20 */}
       <div className="bg-muted p-4 mt-4 text-center">
         <p className="text-xs text-foreground font-bold mb-1">{cms.affordable_title || "Why are these so affordable?"}</p>
         <p className="text-[11px] text-muted-foreground leading-relaxed max-w-md mx-auto">
           {cms.affordable_text || "Matt charges $100+/hour in person and can only see so many athletes a week. These programs are how he shares 20+ years of knowledge with athletes he can't reach in person. Same system. Same coaching. No overhead markup."}
         </p>
       </div>
+
+      {/* Checkout confirmation modal */}
+      <CheckoutConfirmationModal
+        open={!!modalProduct}
+        onClose={() => setModalProduct(null)}
+        onConfirm={handleConfirmedBuy}
+        loading={!!buyingId}
+        productName={modalProduct?.title || ""}
+        productPrice={modalProduct?.price || ""}
+        productType={modalProduct ? getProductType(modalProduct) : "program"}
+      />
     </div>
   );
 };
