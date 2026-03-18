@@ -45,7 +45,7 @@ const TABS = [
 ];
 
 const Admin = () => {
-  const [activeTab, setActiveTab] = useState("tiers");
+  const [activeTab, setActiveTab] = useState("trial");
 
   return (
     <div className="min-h-screen bg-background">
