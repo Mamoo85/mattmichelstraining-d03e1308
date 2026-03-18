@@ -170,7 +170,7 @@ const ForParents = () => {
 
 
         {/* COLLEGE PREP TIMELINE */}
-        <motion.div {...fade(0.15)} className="mb-12">
+        <motion.div {...fade(0.15)} className="mb-12" id="youth-timeline">
           <div className="flex items-center gap-2 mb-4">
             <Clock size={18} className="text-primary" />
             <h2 className="text-sm font-bold uppercase tracking-widest text-foreground">
