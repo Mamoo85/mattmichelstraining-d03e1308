@@ -88,7 +88,7 @@ function EditableValue({
         onChange={(e) => setDraft(e.target.value)}
         onBlur={commit}
         onKeyDown={(e) => e.key === "Enter" && commit()}
-        className="font-mono text-lg font-bold text-foreground w-16 text-center tabular-nums bg-background border border-primary outline-none px-1 py-0.5"
+        className="font-mono text-lg font-bold text-foreground w-16 text-center tabular-nums bg-background border border-primary outline-none px-1 py-0.5 min-h-[44px]"
       />
     );
   }
