@@ -327,6 +327,9 @@ const Profile = () => {
           </div>
         )}
 
+        {/* Family Billing */}
+        <FamilyBilling />
+
         {/* My Programs — show empty state or list */}
         {activePrograms.length === 0 && purchasedPrograms.length === 0 && liftStats.length === 0 && (
           <div className="mb-6">
