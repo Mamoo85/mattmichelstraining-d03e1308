@@ -253,9 +253,16 @@ const AdminSchedule = () => {
                 <div>
                   <span className="text-sm font-bold text-foreground">{formatTime12(b.start_time)}</span>
                   <span className="text-xs text-muted-foreground ml-2">{b.duration_minutes}min</span>
+                  <span className={`text-[9px] ml-2 px-1.5 py-0.5 font-bold uppercase ${
+                    b.session_type === "video" ? "bg-blue-500/20 text-blue-400" : "bg-primary/20 text-primary"
+                  }`}>
+                    {b.session_type === "video" ? "Video" : "In-Person"}
+                  </span>
                   <span className="text-xs text-muted-foreground ml-2">{b.user_name || b.user_email}</span>
                 </div>
-                <span className="text-xs font-mono text-primary">${(b.amount_cents / 100).toFixed(0)}</span>
+                <span className="text-xs font-mono text-primary">
+                  {b.credit_id ? "Credit" : `$${(b.amount_cents / 100).toFixed(0)}`}
+                </span>
               </div>
             ))}
           </div>
