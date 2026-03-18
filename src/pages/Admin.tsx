@@ -31,6 +31,7 @@ import AdminSystemSettings from "@/components/admin/AdminSystemSettings";
 
 import AdminTestimonials from "@/components/admin/AdminTestimonials";
 import AdminFrontPage from "@/components/admin/AdminFrontPage";
+import AdminAiQueue from "@/components/admin/AdminAiQueue";
 import AdminAiCopilot from "@/components/admin/AdminAiCopilot";
 import AdminBroadcasts from "@/components/admin/AdminBroadcasts";
 
