@@ -60,8 +60,8 @@ serve(async (req) => {
     const { data: trialUsers, error: queryErr } = await supabase
       .from("profiles")
       .select("user_id, email, full_name, athlete_name")
-      .gte("trial_started_at", sevenDaysAgo.toISOString())
-      .lt("trial_started_at", sixDaysAgo.toISOString())
+      .gte("trial_started_at", fourteenDaysAgo.toISOString())
+      .lt("trial_started_at", thirteenDaysAgo.toISOString())
       .not("email", "is", null);
 
     if (queryErr) throw queryErr;
