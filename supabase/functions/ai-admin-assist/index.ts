@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,6 +13,12 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
+    );
+
     const { type, context } = await req.json();
 
     let systemPrompt = "";
@@ -20,253 +27,85 @@ serve(async (req) => {
     switch (type) {
       case "coach_reply": {
         systemPrompt = `You are Coach Matt Michels, a strength & conditioning coach with 20+ years of experience training athletes of all ages. You give direct, knowledgeable, encouraging feedback on exercise form and performance. Keep replies conversational, under 100 words. Reference the specific exercise data provided. Use your signature style: practical, real, no-BS coaching.`;
-        userPrompt = `Write coaching feedback for this flagged exercise:
-
-Exercise: ${context.exerciseName}
-Sets/Reps/Weight: ${context.setsRepsWeight}
-Client Notes: ${context.clientNotes || "None"}
-Has Video: ${context.hasVideo ? "Yes" : "No"}
-
-Write a helpful, specific coaching reply.`;
+        userPrompt = `Write coaching feedback for this flagged exercise:\n\nExercise: ${context.exerciseName}\nSets/Reps/Weight: ${context.setsRepsWeight}\nClient Notes: ${context.clientNotes || "None"}\nHas Video: ${context.hasVideo ? "Yes" : "No"}\n\nWrite a helpful, specific coaching reply.`;
         break;
       }
 
       case "newsletter": {
         systemPrompt = `You are Matt Michels writing his monthly "The Real Deal" newsletter for athletes, parents, and coaches. Your voice is direct, educational, passionate about the WHY behind training. You reference kinesiology, biomechanics, and 20+ years of real-world experience. Format with **bold** for emphasis. Keep it 300-500 words.`;
-        userPrompt = `Write a newsletter about: ${context.topic}
-Template style: ${context.templateName || "General"}
-Target audience: ${context.audience || "Athletes and parents"}
-
-Write the full newsletter body (not the subject line).`;
+        userPrompt = `Write a newsletter about: ${context.topic}\nTemplate style: ${context.templateName || "General"}\nTarget audience: ${context.audience || "Athletes and parents"}\n\nWrite the full newsletter body (not the subject line).`;
         break;
       }
 
       case "exercise": {
         systemPrompt = `You are an expert exercise scientist and strength coach. Generate detailed exercise entries for a training library. Be precise about equipment, focus areas, and the biomechanical "why" behind each exercise.`;
-        userPrompt = `Create an exercise library entry for: "${context.exerciseName}"
-
-Return ONLY valid JSON (no markdown, no code fences) with these fields:
-{
-  "title": "proper exercise name",
-  "equipment_needed": "specific equipment",
-  "the_why": "2-3 sentences explaining the biomechanical purpose and benefit",
-  "client_type": ["Athlete" and/or "Lifestyle Fitness"],
-  "focus_area": [pick from: "Mobility", "Strength", "Core Stability", "Flexibility", "Rehab", "Stability", "Posture", "Power", "Speed", "Injury Prevention", "Core"],
-  "sport": [relevant sports or empty array]
-}`;
+        userPrompt = `Create an exercise library entry for: "${context.exerciseName}"\n\nReturn ONLY valid JSON (no markdown, no code fences) with these fields:\n{\n  "title": "proper exercise name",\n  "equipment_needed": "specific equipment",\n  "the_why": "2-3 sentences explaining the biomechanical purpose and benefit",\n  "client_type": ["Athlete" and/or "Lifestyle Fitness"],\n  "focus_area": [pick from: "Mobility", "Strength", "Core Stability", "Flexibility", "Rehab", "Stability", "Posture", "Power", "Speed", "Injury Prevention", "Core"],\n  "sport": [relevant sports or empty array]\n}`;
         break;
       }
 
       case "promo_suggest": {
         systemPrompt = `You are a fitness business marketing expert. Suggest creative, effective promotional campaigns for an online strength training platform (M² Training). Be specific with codes, percentages, and timing.`;
-        userPrompt = `Suggest 3 promotional ideas for an online training platform.
-Current season/month: ${context.month}
-Existing promos: ${context.existingCodes || "None"}
-
-Return ONLY valid JSON (no markdown, no code fences) as an array:
-[{
-  "code": "PROMO_CODE",
-  "description": "what it does",
-  "discount_type": "percent" or "fixed",
-  "discount_value": number,
-  "applies_to": "all" or "programs" or "subscriptions",
-  "reasoning": "why this works"
-}]`;
+        userPrompt = `Suggest 3 promotional ideas for an online training platform.\nCurrent season/month: ${context.month}\nExisting promos: ${context.existingCodes || "None"}\n\nReturn ONLY valid JSON (no markdown, no code fences) as an array:\n[{\n  "code": "PROMO_CODE",\n  "description": "what it does",\n  "discount_type": "percent" or "fixed",\n  "discount_value": number,\n  "applies_to": "all" or "programs" or "subscriptions",\n  "reasoning": "why this works"\n}]`;
         break;
       }
 
       case "program_reply": {
         systemPrompt = `You are Coach Matt Michels responding to an athlete's question about their training program. Be specific, encouraging, and practical. Under 100 words. Reference the exercise and context provided.`;
-        userPrompt = `An athlete asked about their program:
-
-Program: ${context.programTitle}
-Exercise: ${context.exerciseName}
-Week ${context.weekNumber}, Day ${context.dayNumber}
-Their question: "${context.message}"
-${context.videoUrl ? "They attached a form check video." : ""}
-
-Write a helpful coaching reply.`;
+        userPrompt = `An athlete asked about their program:\n\nProgram: ${context.programTitle}\nExercise: ${context.exerciseName}\nWeek ${context.weekNumber}, Day ${context.dayNumber}\nTheir question: "${context.message}"\n${context.videoUrl ? "They attached a form check video." : ""}\n\nWrite a helpful coaching reply.`;
         break;
       }
 
       case "batch_site_content": {
         systemPrompt = `You are a copywriter for M² Training, a premium strength & conditioning brand led by Coach Matt Michels. Write compelling, concise website copy. Voice: confident, direct, athlete-focused. No fluff. Keep the same general meaning but make everything sharper, more engaging, and on-brand.`;
-        userPrompt = `Rewrite/improve ALL of the following website content fields for the "${context.sectionLabel}" section. Keep each field's purpose intact but make the copy better.
-
-Return ONLY valid JSON (no markdown, no code fences) as an object where keys are the field IDs and values are the improved text:
-
-${JSON.stringify(context.fields, null, 2)}
-
-Return: { "field_id": "improved text", ... }`;
+        userPrompt = `Rewrite/improve ALL of the following website content fields for the "${context.sectionLabel}" section. Keep each field's purpose intact but make the copy better.\n\nReturn ONLY valid JSON (no markdown, no code fences) as an object where keys are the field IDs and values are the improved text:\n\n${JSON.stringify(context.fields, null, 2)}\n\nReturn: { "field_id": "improved text", ... }`;
         break;
       }
 
       case "site_content": {
         systemPrompt = `You are a copywriter for M² Training, a premium strength & conditioning brand led by Coach Matt Michels. Write compelling, concise website copy. Voice: confident, direct, athlete-focused. No fluff.`;
-        userPrompt = `Rewrite/improve this website content field:
-
-Section: ${context.section}
-Field: ${context.label}
-Current text: "${context.currentValue}"
-
-Write improved copy that's more engaging and on-brand. Return ONLY the new text, nothing else.`;
+        userPrompt = `Rewrite/improve this website content field:\n\nSection: ${context.section}\nField: ${context.label}\nCurrent text: "${context.currentValue}"\n\nWrite improved copy that's more engaging and on-brand. Return ONLY the new text, nothing else.`;
         break;
       }
 
       case "protocol": {
         systemPrompt = `You are an expert strength & conditioning coach. Generate a training protocol with specific exercises, sets, reps, and coaching notes. Be precise and practical.`;
-        userPrompt = `Generate a training protocol titled "${context.title}".
-${context.description ? `Description: ${context.description}` : ""}
-
-Return ONLY valid JSON (no markdown, no code fences) as an array of exercises:
-[{
-  "exercise_name": "exercise name",
-  "sets": number,
-  "reps": "rep scheme (e.g. 8-10)",
-  "weight": null,
-  "rpe": number (1-10),
-  "notes": "coaching cue or note"
-}]
-Include 6-10 exercises in a logical training order.`;
+        userPrompt = `Generate a training protocol titled "${context.title}".\n${context.description ? `Description: ${context.description}` : ""}\n\nReturn ONLY valid JSON (no markdown, no code fences) as an array of exercises:\n[{\n  "exercise_name": "exercise name",\n  "sets": number,\n  "reps": "rep scheme (e.g. 8-10)",\n  "weight": null,\n  "rpe": number (1-10),\n  "notes": "coaching cue or note"\n}]\nInclude 6-10 exercises in a logical training order.`;
         break;
       }
 
       case "client_summary": {
         systemPrompt = `You are a sports performance analyst. Generate a brief client engagement summary based on their training data. Be concise, actionable, and highlight trends or concerns.`;
-        userPrompt = `Generate a brief engagement summary for this client:
-
-Name: ${context.name}
-Joined: ${context.joined}
-Subscription: ${context.tier}
-Total Workouts: ${context.totalWorkouts}
-Last 7 Days Active: ${context.recentlyActive ? "Yes" : "No"}
-Active Programs: ${context.programCount}
-Recent Lifts: ${context.recentLifts || "None logged"}
-
-Write 2-3 sentences: engagement level, any concerns, and one recommendation. Keep it under 80 words.`;
+        userPrompt = `Generate a brief engagement summary for this client:\n\nName: ${context.name}\nJoined: ${context.joined}\nSubscription: ${context.tier}\nTotal Workouts: ${context.totalWorkouts}\nLast 7 Days Active: ${context.recentlyActive ? "Yes" : "No"}\nActive Programs: ${context.programCount}\nRecent Lifts: ${context.recentLifts || "None logged"}\n\nWrite 2-3 sentences: engagement level, any concerns, and one recommendation. Keep it under 80 words.`;
         break;
       }
 
       case "schedule_suggest": {
         systemPrompt = `You are a scheduling strategist for Coach Matt Michels' in-person training studio. Analyze booking patterns and suggest optimal time slots to open for maximum bookings. Be concise, specific, and data-driven. Under 150 words.`;
-        userPrompt = `Analyze this day's schedule and suggest which time slots to open:
-
-Date: ${context.date} (${context.dayOfWeek})
-Total bookings today: ${context.totalBookings}
-Booked times: ${context.bookedTimes}
-Currently available (open but unbooked): ${context.currentAvailable}
-Total possible slots: ${context.totalSlots}
-
-Based on typical training studio patterns (early morning 5-7am for pre-work athletes, after school 3-5pm for youth, evening 5-7pm for adults), suggest:
-1. Which additional time slots to open
-2. Which open but unbooked slots to consider closing
-3. Any pattern observations
-
-Be specific with times and reasoning.`;
+        userPrompt = `Analyze this day's schedule and suggest which time slots to open:\n\nDate: ${context.date} (${context.dayOfWeek})\nTotal bookings today: ${context.totalBookings}\nBooked times: ${context.bookedTimes}\nCurrently available (open but unbooked): ${context.currentAvailable}\nTotal possible slots: ${context.totalSlots}\n\nBased on typical training studio patterns (early morning 5-7am for pre-work athletes, after school 3-5pm for youth, evening 5-7pm for adults), suggest:\n1. Which additional time slots to open\n2. Which open but unbooked slots to consider closing\n3. Any pattern observations\n\nBe specific with times and reasoning.`;
         break;
       }
 
       case "form_check": {
         systemPrompt = `You are Coach Matt Michels reviewing an athlete's exercise form. Based on the exercise and any notes/context provided, write detailed form coaching feedback. Be specific about common mistakes, cues to fix them, and what to look for. Reference biomechanics and the WHY behind each cue. Be encouraging but direct. Under 200 words.`;
-        userPrompt = `Write form check feedback for this athlete:
-
-Exercise: ${context.exerciseName}
-Athlete: ${context.athleteName || "Unknown"}
-Sets/Reps Prescribed: ${context.setsReps || "Not specified"}
-Client Notes: ${context.clientNotes || "None"}
-Has Video: ${context.hasVideo ? "Yes — reference that you reviewed their video" : "No video submitted"}
-Tier: ${context.tier || "Unknown"}
-
-Write detailed coaching feedback covering:
-1. Key form cues for this specific exercise
-2. Common mistakes to watch for
-3. A specific correction based on their notes (if any)
-4. Encouragement and what to focus on next session
-
-Sound like Matt — direct, knowledgeable, no-BS coaching.`;
+        userPrompt = `Write form check feedback for this athlete:\n\nExercise: ${context.exerciseName}\nAthlete: ${context.athleteName || "Unknown"}\nSets/Reps Prescribed: ${context.setsReps || "Not specified"}\nClient Notes: ${context.clientNotes || "None"}\nHas Video: ${context.hasVideo ? "Yes — reference that you reviewed their video" : "No video submitted"}\nTier: ${context.tier || "Unknown"}\n\nWrite detailed coaching feedback covering:\n1. Key form cues for this specific exercise\n2. Common mistakes to watch for\n3. A specific correction based on their notes (if any)\n4. Encouragement and what to focus on next session\n\nSound like Matt — direct, knowledgeable, no-BS coaching.`;
         break;
       }
 
       case "parent_report": {
         systemPrompt = `You are Coach Matt Michels writing a progress report for a parent about their child's training. Be professional, encouraging, and specific about what the athlete is doing well and where they can improve. Parents want to know their money is well spent and their kid is making progress. Include specific data points when available. Keep it under 250 words.`;
-        userPrompt = `Write a progress report for this athlete's parent:
-
-Athlete Name: ${context.athleteName}
-Subscription: ${context.tier}
-Member Since: ${context.joinDate}
-Total Workouts Logged: ${context.totalWorkouts}
-Recent Activity (last 14 days): ${context.recentWorkouts} workouts
-Active Programs: ${context.activePrograms || "None"}
-Avg Sleep: ${context.avgSleep || "Not tracked"}
-Avg Energy: ${context.avgEnergy || "Not tracked"}
-Avg Soreness: ${context.avgSoreness || "Not tracked"}
-Recent Lifts: ${context.recentLifts || "No lifts logged"}
-Flagged Exercises: ${context.flaggedCount || 0}
-${context.coachNotes ? `Coach's Recent Notes: ${context.coachNotes}` : ""}
-
-Write a parent-friendly progress report covering:
-1. What their athlete has been doing (be specific)
-2. Strengths and improvements observed
-3. Areas to focus on
-4. Encouragement and next steps
-5. Any concerns (if soreness is high, workouts are low, etc.)
-
-Address the parent directly. Sign off as Coach Matt.`;
+        userPrompt = `Write a progress report for this athlete's parent:\n\nAthlete Name: ${context.athleteName}\nSubscription: ${context.tier}\nMember Since: ${context.joinDate}\nTotal Workouts Logged: ${context.totalWorkouts}\nRecent Activity (last 14 days): ${context.recentWorkouts} workouts\nActive Programs: ${context.activePrograms || "None"}\nAvg Sleep: ${context.avgSleep || "Not tracked"}\nAvg Energy: ${context.avgEnergy || "Not tracked"}\nAvg Soreness: ${context.avgSoreness || "Not tracked"}\nRecent Lifts: ${context.recentLifts || "No lifts logged"}\nFlagged Exercises: ${context.flaggedCount || 0}\n${context.coachNotes ? `Coach's Recent Notes: ${context.coachNotes}` : ""}\n\nWrite a parent-friendly progress report covering:\n1. What their athlete has been doing (be specific)\n2. Strengths and improvements observed\n3. Areas to focus on\n4. Encouragement and next steps\n5. Any concerns (if soreness is high, workouts are low, etc.)\n\nAddress the parent directly. Sign off as Coach Matt.`;
         break;
       }
 
       case "ai_copilot": {
         systemPrompt = `You are an AI performance analyst for M² Training, Coach Matt Michels' strength & conditioning business. Analyze athlete data to flag actionable insights. Be concise, specific, and data-driven. Use a professional but direct tone. Format output as JSON.`;
-        userPrompt = `Analyze this athlete roster data and generate actionable coaching insights.
-
-ATHLETE DATA:
-${JSON.stringify(context.athletes, null, 2)}
-
-TRIAL USERS:
-${JSON.stringify(context.trialUsers, null, 2)}
-
-Today's date: ${context.today}
-
-Generate insights in these categories:
-1. "stagnation" — athletes who haven't increased weight on core lifts (Squat, Bench, Deadlift, or similar compound movements) in 3+ weeks. Include their name, the exercise, and a suggested coach message.
-2. "ghost_trials" — trial users who signed up 4+ days ago but have zero workout logs. Include their name, email, days since signup, and a draft check-in message.
-
-Return ONLY valid JSON (no markdown, no code fences):
-{
-  "stagnation": [{ "name": "...", "exercise": "...", "lastWeight": number, "weeksSince": number, "suggestedMessage": "..." }],
-  "ghost_trials": [{ "name": "...", "email": "...", "daysSinceSignup": number, "draftMessage": "..." }]
-}`;
+        userPrompt = `Analyze this athlete roster data and generate actionable coaching insights.\n\nATHLETE DATA:\n${JSON.stringify(context.athletes, null, 2)}\n\nTRIAL USERS:\n${JSON.stringify(context.trialUsers, null, 2)}\n\nToday's date: ${context.today}\n\nGenerate insights in these categories:\n1. "stagnation" — athletes who haven't increased weight on core lifts (Squat, Bench, Deadlift, or similar compound movements) in 3+ weeks. Include their name, the exercise, and a suggested coach message.\n2. "ghost_trials" — trial users who signed up 4+ days ago but have zero workout logs. Include their name, email, days since signup, and a draft check-in message.\n\nReturn ONLY valid JSON (no markdown, no code fences):\n{\n  "stagnation": [{ "name": "...", "exercise": "...", "lastWeight": number, "weeksSince": number, "suggestedMessage": "..." }],\n  "ghost_trials": [{ "name": "...", "email": "...", "daysSinceSignup": number, "draftMessage": "..." }]\n}`;
         break;
       }
 
       case "blog_draft": {
-        systemPrompt = `You are Coach Matt Michels — the "Anti-Influencer" strength coach. You've trained athletes for 20+ years. Your writing style is:
-- Direct, no-BS, conversational
-- Backed by real experience, not internet trends
-- You call out bad fitness advice openly
-- You explain the WHY behind everything (biomechanics, kinesiology)
-- You care deeply about youth athletes and parent education
-- No clickbait, no hype — just real talk
-
-Write SEO-optimized blog posts that sound like Matt talking to a parent or athlete over coffee. Use short paragraphs, bold key points, and end with a clear takeaway.`;
-        userPrompt = `Matt typed this raw thought: "${context.rawIdea}"
-
-Turn this into a professional, ~300-word SEO-optimized blog post in Matt's "Anti-Influencer" voice.
-
-Requirements:
-- Catchy, SEO-friendly title (include relevant keywords)
-- Opening hook that grabs parents or athletes
-- 3-4 short paragraphs with **bold** key phrases
-- Practical takeaway at the end
-- Tone: confident, educational, no fluff
-
-Return ONLY valid JSON (no markdown, no code fences):
-{
-  "title": "...",
-  "body": "... (markdown formatted)",
-  "category": "one of: general, injury-prevention, youth-development, training-fundamentals, recovery, nutrition, parent-guide",
-  "slug": "url-friendly-slug"
-}`;
+        systemPrompt = `You are Coach Matt Michels — the "Anti-Influencer" strength coach. You've trained athletes for 20+ years. Your writing style is:\n- Direct, no-BS, conversational\n- Backed by real experience, not internet trends\n- You call out bad fitness advice openly\n- You explain the WHY behind everything (biomechanics, kinesiology)\n- You care deeply about youth athletes and parent education\n- No clickbait, no hype — just real talk\n\nWrite SEO-optimized blog posts that sound like Matt talking to a parent or athlete over coffee. Use short paragraphs, bold key points, and end with a clear takeaway.`;
+        userPrompt = `Matt typed this raw thought: "${context.rawIdea}"\n\nTurn this into a professional, ~300-word SEO-optimized blog post in Matt's "Anti-Influencer" voice.\n\nRequirements:\n- Catchy, SEO-friendly title (include relevant keywords)\n- Opening hook that grabs parents or athletes\n- 3-4 short paragraphs with **bold** key phrases\n- Practical takeaway at the end\n- Tone: confident, educational, no fluff\n\nReturn ONLY valid JSON (no markdown, no code fences):\n{\n  "title": "...",\n  "body": "... (markdown formatted)",\n  "category": "one of: general, injury-prevention, youth-development, training-fundamentals, recovery, nutrition, parent-guide",\n  "slug": "url-friendly-slug"\n}`;
         break;
       }
 
@@ -310,7 +149,26 @@ Return ONLY valid JSON (no markdown, no code fences):
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || "";
 
-    return new Response(JSON.stringify({ result: content }), {
+    // Queue the result for admin approval instead of returning directly
+    const { error: queueError } = await supabaseClient
+      .from("ai_action_queue")
+      .insert({
+        action_type: type,
+        target_user_id: context._targetUserId || null,
+        context: context,
+        ai_result: content,
+        status: "pending",
+      });
+
+    if (queueError) {
+      console.error("Failed to queue AI action:", queueError);
+      // Fall through and return result anyway if queue fails
+      return new Response(JSON.stringify({ result: content }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    return new Response(JSON.stringify({ queued: true, message: "AI response queued for admin approval" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_action_queue: {
+        Row: {
+          action_type: string
+          admin_notes: string | null
+          ai_result: string
+          context: Json
+          created_at: string
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          target_user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          admin_notes?: string | null
+          ai_result?: string
+          context?: Json
+          created_at?: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          target_user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          admin_notes?: string | null
+          ai_result?: string
+          context?: Json
+          created_at?: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          target_user_id?: string | null
+        }
+        Relationships: []
+      }
       challenge_entries: {
         Row: {
           id: string

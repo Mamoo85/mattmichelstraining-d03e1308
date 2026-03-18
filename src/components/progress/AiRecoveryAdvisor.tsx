@@ -21,7 +21,11 @@ const AiRecoveryAdvisor = ({ userId }: AiRecoveryAdvisorProps) => {
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      setAdvice(data.result);
+      if (data?.queued) {
+        setAdvice("✅ Your recovery analysis has been submitted for Coach Matt's review. You'll get a notification when it's ready.");
+      } else {
+        setAdvice(data.result);
+      }
     } catch (e: any) {
       toast({ title: "Recovery analysis failed", description: e.message, variant: "destructive" });
     } finally {

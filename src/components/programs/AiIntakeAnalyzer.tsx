@@ -38,7 +38,11 @@ const AiIntakeAnalyzer = () => {
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      setResult(data.result);
+      if (data?.queued) {
+        setResult("✅ Your intake analysis has been submitted for Coach Matt's review. You'll get a notification when your personalized recommendation is ready.");
+      } else {
+        setResult(data.result);
+      }
     } catch (e: any) {
       toast({ title: "Analysis failed", description: e.message, variant: "destructive" });
     } finally {

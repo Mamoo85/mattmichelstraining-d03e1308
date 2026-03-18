@@ -31,10 +31,12 @@ import AdminSystemSettings from "@/components/admin/AdminSystemSettings";
 
 import AdminTestimonials from "@/components/admin/AdminTestimonials";
 import AdminFrontPage from "@/components/admin/AdminFrontPage";
+import AdminAiQueue from "@/components/admin/AdminAiQueue";
 import AdminAiCopilot from "@/components/admin/AdminAiCopilot";
 import AdminBroadcasts from "@/components/admin/AdminBroadcasts";
 
 const TABS = [
+  { key: "ai-queue", label: "AI Queue" },
   { key: "ai-copilot", label: "AI Copilot" },
   { key: "financials", label: "Financials" },
   { key: "broadcasts", label: "Broadcasts" },
@@ -66,7 +68,7 @@ const TABS = [
 ];
 
 const Admin = () => {
-  const [activeTab, setActiveTab] = useState("ai-copilot");
+  const [activeTab, setActiveTab] = useState("ai-queue");
   const { isAdmin, isLoading } = useIsAdmin();
 
   if (isLoading) {
@@ -106,6 +108,7 @@ const Admin = () => {
           ))}
         </div>
 
+        {activeTab === "ai-queue" && <AdminAiQueue />}
         {activeTab === "ai-copilot" && <AdminAiCopilot />}
         {activeTab === "financials" && <AdminFinancials />}
         {activeTab === "broadcasts" && <AdminBroadcasts />}
