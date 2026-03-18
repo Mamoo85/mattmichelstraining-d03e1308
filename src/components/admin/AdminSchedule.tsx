@@ -129,6 +129,46 @@ const AdminSchedule = () => {
     }
   };
 
+  const bulkPopulate = async (weeks: number) => {
+    if (!confirm(`Open slots for the next ${weeks} weeks (${bulkTimes.length} time slots/day, ${skipWeekends ? "weekdays only" : "all days"})? This won't overwrite existing booked slots.`)) return;
+    setBulkLoading(true);
+    try {
+      const startDate = startOfDay(new Date());
+      const endDate = addDays(startDate, weeks * 7 - 1);
+      const allDays = eachDayOfInterval({ start: startDate, end: endDate });
+      const days = skipWeekends
+        ? allDays.filter(d => d.getDay() !== 0 && d.getDay() !== 6)
+        : allDays;
+
+      const rows = days.flatMap(day =>
+        bulkTimes.map(time => ({
+          slot_date: format(day, "yyyy-MM-dd"),
+          start_time: time,
+          is_available: true,
+        }))
+      );
+
+      // Batch insert in chunks of 500
+      let inserted = 0;
+      for (let i = 0; i < rows.length; i += 500) {
+        const chunk = rows.slice(i, i + 500);
+        const { error } = await supabase
+          .from("schedule_slots")
+          .upsert(chunk, { onConflict: "slot_date,start_time", ignoreDuplicates: false });
+        if (error) throw error;
+        inserted += chunk.length;
+      }
+
+      toast({ title: "Slots populated", description: `Opened ${inserted} slots across ${days.length} days.` });
+      setBulkWeeks(null);
+      await fetchData();
+    } catch (err: any) {
+      toast({ title: "Bulk populate failed", description: err.message, variant: "destructive" });
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
   const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
 
   const aiContext = useMemo(() => {
