@@ -84,6 +84,7 @@ const Admin = () => {
         )}
         {activeTab === "videos" && <AdminVideoReview />}
         {activeTab === "dms" && <AdminDirectMessages />}
+        {activeTab === "parent-reports" && <AdminParentReports />}
         {activeTab === "ai-programs" && <AdminProgramCreator />}
         {activeTab === "programs" && <AdminPrograms />}
         {activeTab === "exercises" && <AdminExerciseLibrary />}
