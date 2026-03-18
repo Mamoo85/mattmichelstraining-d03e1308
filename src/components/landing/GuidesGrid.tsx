@@ -17,9 +17,9 @@ const GUIDES = [
 const GuidesGrid = () => {
   const { content: c } = useContentMap("guides");
 
-  const sectionTitle = c.section_title || "Sport-Specific Guides";
+  const sectionTitle = c.section_title || "Sport-Specific Training Plans";
   const sectionSubtitle = c.section_subtitle || "PDF · Written by Matt · Instant download · Keep forever";
-  const sectionDesc = c.section_description || "Each guide gives your athlete Matt's top exercises for their sport — with the WHY behind every movement. Built for youth athletes from middle school through college prep. No filler.";
+  const sectionDesc = c.section_description || "Each plan gives your athlete Matt's top exercises for their sport — with the WHY behind every movement. Built for youth athletes from middle school through college prep. No filler.";
 
   return (
     <motion.div
