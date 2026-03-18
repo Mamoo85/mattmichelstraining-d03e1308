@@ -350,7 +350,7 @@ const Pricing = () => {
                     </button>
                     {card.highlight && !subscribed && (
                       <Link
-                        to={user ? "/trial-welcome?path=pro" : "/auth?redirect=/trial-welcome?path=pro"}
+                        to={user ? "/trial-welcome?path=foundation" : "/auth?redirect=/trial-welcome?path=foundation"}
                         className="w-full py-2 text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-1.5 text-primary hover:underline"
                       >
                         Or try 14 days free <ArrowRight className="w-3 h-3" />
