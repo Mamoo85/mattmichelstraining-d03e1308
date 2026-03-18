@@ -85,14 +85,14 @@ const Welcome = () => (
         <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-2 font-mono">
           The Real Deal
         </p>
-        <p className="text-sm text-foreground leading-relaxed mb-3">
-          This isn't purple hypothesis. This is <strong>strength training</strong>.
+        <p className="text-sm text-foreground-soft leading-relaxed mb-3">
+          This isn't purple hypothesis. This is <strong className="text-foreground">strength training</strong>.
           If you want cardio, go somewhere else — cardio eats your muscle mass and
           runs you into an early grave. It's been proven: strength training releases
           the confidence and resilience that you and your children need to succeed in
           this crazy world.
         </p>
-        <p className="text-sm text-muted-foreground leading-relaxed">
+        <p className="text-sm text-foreground-soft leading-relaxed">
           Strength lasts a lifetime. Cardio only lasts while you're doing it.
           Matt has spent 20 years proving it — 50+ college athletes, zero injuries,
           real results every single time.
