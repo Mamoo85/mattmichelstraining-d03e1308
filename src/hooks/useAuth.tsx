@@ -39,9 +39,9 @@ export type TierKey = keyof typeof TIERS;
 // Tier-based store discounts (more aggressive)
 export const TIER_DISCOUNTS: Record<TierKey, number> = {
   basic: 10,
-  pro: 15,
-  elite: 20,
-  team: 25,
+  foundation: 15,
+  custom: 20,
+  team_elite: 25,
 };
 
 export const getTierByProductId = (productId: string | null): TierKey | null => {

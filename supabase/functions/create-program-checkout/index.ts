@@ -8,7 +8,7 @@ const corsHeaders = {
 };
 
 const TIER_DISCOUNTS: Record<string, number> = {
-  basic: 10, pro: 15, elite: 20, team: 25,
+  basic: 10, foundation: 15, custom: 20, team_elite: 25,
 };
 
 const logStep = (step: string, details?: any) => {

@@ -5,9 +5,9 @@ import { useIsAdmin } from "./useIsAdmin";
 
 const TIER_COLUMN_MAP: Record<string, string> = {
   basic: "tier_basic",
-  pro: "tier_pro",
-  elite: "tier_elite",
-  team: "tier_team",
+  foundation: "tier_foundation",
+  custom: "tier_custom",
+  team_elite: "tier_team_elite",
 };
 
 export const useTierAccess = (featureKey: string) => {

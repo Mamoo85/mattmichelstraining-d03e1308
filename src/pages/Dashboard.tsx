@@ -589,7 +589,7 @@ const Dashboard = () => {
 
         {/* Tab switcher — horizontal scroll on mobile */}
         {(() => {
-          const TABS = subscriptionTier === "team" || isAdmin
+          const TABS = subscriptionTier === "team_elite" || isAdmin
             ? [...BASE_TABS, { key: "team", label: "Team" }]
             : BASE_TABS;
           return (

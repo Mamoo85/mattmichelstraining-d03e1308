@@ -28,19 +28,19 @@ const NEXT_STEPS: Record<CheckoutProductType, { icon: typeof FileText; text: str
   },
   basic: {
     icon: Rocket,
-    text: "You will get instant access to the portal. Your first task is to select your track and log your baseline numbers.",
+    text: "You will get instant access to the exercise library and 10 pre-loaded daily workouts. Start training today.",
   },
-  pro: {
+  foundation: {
     icon: Rocket,
-    text: "You will get instant access to the portal. Your first task is to select your track and log your baseline numbers.",
+    text: "You will get instant access to the portal with your 8-week periodized training block. Your first task is to log your baseline numbers.",
   },
-  elite: {
+  custom: {
     icon: Video,
-    text: "After checkout, you will be prompted to schedule your mandatory 1-on-1 video assessment with Coach Matt so we can build your custom protocol.",
+    text: "After checkout, you will complete your intake form and schedule your mandatory 1-on-1 video assessment with Coach Matt to build your custom protocol.",
   },
-  team: {
+  team_elite: {
     icon: Video,
-    text: "After checkout, you will be prompted to schedule your mandatory 1-on-1 video assessment with Coach Matt so we can build your custom protocol.",
+    text: "After checkout, you will be prompted to schedule your mandatory 1-on-1 video assessment with Coach Matt so we can build your comprehensive periodization plan.",
   },
   session: {
     icon: Rocket,
