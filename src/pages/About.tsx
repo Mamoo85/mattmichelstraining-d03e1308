@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import AppNavbar from "@/components/AppNavbar";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -6,6 +7,7 @@ import {
   GraduationCap, Heart, Gamepad2, Users, ShieldOff,
   Shield, Trophy, Zap,
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import m2Logo from "@/assets/m2-logo-official.jpg";
 import mattFamily from "@/assets/matt-family.jpg";
 import mattTraining from "@/assets/matt-training.jpg";
