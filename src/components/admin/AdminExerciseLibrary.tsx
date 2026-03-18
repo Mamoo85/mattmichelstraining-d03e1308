@@ -260,6 +260,23 @@ const AdminExerciseLibrary = () => {
               className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground mb-3 outline-none focus:ring-1 focus:ring-primary"
             />
 
+            {/* Level */}
+            <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Level</label>
+            <div className="flex gap-1 flex-wrap mb-3">
+              {PRESET_LEVELS.map((lv) => (
+                <button
+                  key={lv}
+                  type="button"
+                  onClick={() => setEditing({ ...editing, level: lv })}
+                  className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest transition-m2 ${
+                    editing.level === lv ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {lv}
+                </button>
+              ))}
+            </div>
+
             {/* The Why */}
             <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">The Why</label>
             <textarea
