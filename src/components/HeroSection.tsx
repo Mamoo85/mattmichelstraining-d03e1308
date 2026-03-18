@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 import m2Logo from "@/assets/m2-logo-official.jpg";
 import { useSectionVisible } from "@/hooks/useSiteContent";
-
 import AudienceSelector from "./landing/AudienceSelector";
 import ForParentsCTA from "./landing/ForParentsCTA";
 import Testimonials from "./landing/Testimonials";
