@@ -224,20 +224,46 @@ serve(async (req) => {
       const customer = await stripe.customers.retrieve(customerId);
       const email = (customer as any).email;
 
-      if (email && subscription.status === "active") {
-        const productId = subscription.items.data[0]?.price?.product as string;
-        const tier = PRODUCT_TIER_MAP[productId] || "basic";
-        await syncTierToProfile(sb, email, tier, customerId);
+      if (email && (subscription.status === "active" || subscription.status === "trialing")) {
+        // Multi-item subscription: sync each item's tier to the mapped member
+        for (const item of subscription.items.data) {
+          const productId = item.price.product as string;
+          const tier = PRODUCT_TIER_MAP[productId] || "basic";
+
+          // Check if this item is mapped to a specific family member
+          const { data: familyItem } = await sb
+            .from("family_subscription_items")
+            .select("member_user_id")
+            .eq("stripe_subscription_item_id", item.id)
+            .maybeSingle();
+
+          if (familyItem) {
+            // Sync tier to the specific family member
+            await sb.from("profiles")
+              .update({ subscription_tier: tier, stripe_customer_id: customerId })
+              .eq("user_id", familyItem.member_user_id);
+            console.log(`[WEBHOOK] Synced tier '${tier}' for family member ${familyItem.member_user_id}`);
+          } else {
+            // Fallback: sync to the account owner (first item = parent)
+            await syncTierToProfile(sb, email, tier, customerId);
+          }
+        }
 
         // Log subscription transaction
         if (event.type === "customer.subscription.created") {
           const uid = await getUserIdByEmail(sb, email);
-          const priceAmount = subscription.items.data[0]?.price?.unit_amount || 0;
+          const totalAmount = subscription.items.data.reduce(
+            (sum: number, item: any) => sum + (item.price?.unit_amount || 0), 0
+          );
+          const tierNames = subscription.items.data.map((item: any) => {
+            const pid = item.price.product as string;
+            return PRODUCT_TIER_MAP[pid] || "basic";
+          }).join(", ");
           await logTransaction({
             userId: uid,
             stripeSubscriptionId: subscription.id,
-            amount: priceAmount,
-            itemName: `${tier.charAt(0).toUpperCase() + tier.slice(1)} Membership`,
+            amount: totalAmount,
+            itemName: `Family Membership (${tierNames})`,
             itemType: "subscription",
             status: "completed",
             customerEmail: email,
@@ -245,7 +271,7 @@ serve(async (req) => {
           });
 
           if (uid) {
-            await awardPts(sb, uid, "membership_monthly", 50, `Subscribed to ${tier} membership`, subscription.id);
+            await awardPts(sb, uid, "membership", 50, `Subscribed: ${tierNames}`, subscription.id);
           }
         }
       }
@@ -258,7 +284,20 @@ serve(async (req) => {
       const email = (customer as any).email;
 
       if (email) {
-        await syncTierToProfile(sb, email, "free", customerId);
+        // Reset all family members tied to this subscription
+        const { data: familyItems } = await sb
+          .from("family_subscription_items")
+          .select("member_user_id")
+          .eq("stripe_subscription_id", subscription.id);
+
+        if (familyItems && familyItems.length > 0) {
+          const memberIds = familyItems.map((fi: any) => fi.member_user_id);
+          await sb.from("profiles").update({ subscription_tier: "free" }).in("user_id", memberIds);
+          await sb.from("family_subscription_items").delete().eq("stripe_subscription_id", subscription.id);
+          console.log(`[WEBHOOK] Reset ${memberIds.length} family members to free`);
+        } else {
+          await syncTierToProfile(sb, email, "free", customerId);
+        }
       }
     }
 

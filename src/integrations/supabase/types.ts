@@ -401,6 +401,42 @@ export type Database = {
         }
         Relationships: []
       }
+      family_subscription_items: {
+        Row: {
+          created_at: string
+          id: string
+          member_user_id: string
+          parent_user_id: string
+          price_id: string
+          stripe_subscription_id: string
+          stripe_subscription_item_id: string
+          tier: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          member_user_id: string
+          parent_user_id: string
+          price_id: string
+          stripe_subscription_id: string
+          stripe_subscription_item_id: string
+          tier?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          member_user_id?: string
+          parent_user_id?: string
+          price_id?: string
+          stripe_subscription_id?: string
+          stripe_subscription_item_id?: string
+          tier?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gift_cards: {
         Row: {
           code: string
