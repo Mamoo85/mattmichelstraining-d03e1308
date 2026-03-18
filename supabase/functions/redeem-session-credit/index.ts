@@ -39,50 +39,78 @@ serve(async (req) => {
     const user = userData.user;
     if (!user?.email) throw new Error("Not authenticated");
 
-    const { slot_date, start_time, session_type } = await req.json();
+    const { slot_date, start_time, session_type, gift_id } = await req.json();
     if (!slot_date || !start_time || !["in_person", "video"].includes(session_type)) {
       throw new Error("Invalid request");
     }
 
-    // Check user is Elite subscriber
+    // Get user profile
     const { data: profile } = await supabaseAdmin
       .from("profiles")
       .select("subscription_tier, full_name, athlete_name")
       .eq("user_id", user.id)
       .single();
 
-    const eliteTiers = ["custom", "team_elite"];
-    if (!profile || !eliteTiers.includes(profile.subscription_tier)) {
-      throw new Error("Session credits are only available for Custom and Team/Elite subscribers");
+    let redemptionType: "credit" | "gift" = "credit";
+    let creditId: string | null = null;
+
+    if (gift_id) {
+      // ── GIFTED SESSION REDEMPTION ──
+      redemptionType = "gift";
+
+      // Verify the gift exists and is pending for this user
+      const { data: gift } = await supabaseAdmin
+        .from("gifted_sessions")
+        .select("*")
+        .eq("id", gift_id)
+        .eq("status", "pending")
+        .single();
+
+      if (!gift) throw new Error("No valid gifted session found");
+
+      // Verify receiver matches (by claimed_by or receiver_email)
+      if (gift.claimed_by && gift.claimed_by !== user.id) {
+        throw new Error("This gift is not for your account");
+      }
+      if (!gift.claimed_by && gift.receiver_email !== user.email) {
+        throw new Error("This gift is not for your account");
+      }
+    } else {
+      // ── ELITE CREDIT REDEMPTION ──
+      const eliteTiers = ["custom", "team_elite"];
+      if (!profile || !eliteTiers.includes(profile.subscription_tier)) {
+        throw new Error("Session credits are only available for Custom and Team/Elite subscribers");
+      }
+
+      // Check for available credit this month
+      const now = new Date();
+      const currentMonth = now.getMonth() + 1;
+      const currentYear = now.getFullYear();
+
+      // Ensure credit exists for this month (auto-grant)
+      await supabaseAdmin.from("session_credits").upsert({
+        user_id: user.id,
+        credit_type: "30_min",
+        month: currentMonth,
+        year: currentYear,
+        source: "subscription",
+      }, { onConflict: "user_id,credit_type,month,year", ignoreDuplicates: true });
+
+      // Fetch the credit
+      const { data: credit } = await supabaseAdmin
+        .from("session_credits")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("month", currentMonth)
+        .eq("year", currentYear)
+        .eq("is_used", false)
+        .single();
+
+      if (!credit) throw new Error("No available session credit this month");
+      creditId = credit.id;
     }
 
-    // Check for available credit this month
-    const now = new Date();
-    const currentMonth = now.getMonth() + 1;
-    const currentYear = now.getFullYear();
-
-    // Ensure credit exists for this month (auto-grant)
-    await supabaseAdmin.from("session_credits").upsert({
-      user_id: user.id,
-      credit_type: "30_min",
-      month: currentMonth,
-      year: currentYear,
-      source: "subscription",
-    }, { onConflict: "user_id,credit_type,month,year", ignoreDuplicates: true });
-
-    // Fetch the credit
-    const { data: credit } = await supabaseAdmin
-      .from("session_credits")
-      .select("*")
-      .eq("user_id", user.id)
-      .eq("month", currentMonth)
-      .eq("year", currentYear)
-      .eq("is_used", false)
-      .single();
-
-    if (!credit) throw new Error("No available session credit this month");
-
-    // Check slot availability (30 min only for credits)
+    // Check slot availability (30 min only for credits/gifts)
     const { data: slotsData } = await supabaseAdmin
       .from("schedule_slots")
       .select("*")
@@ -111,9 +139,9 @@ serve(async (req) => {
         duration_minutes: 30,
         amount_cents: 0,
         session_type,
-        credit_id: credit.id,
+        credit_id: creditId,
         user_email: user.email,
-        user_name: profile.full_name || profile.athlete_name || "",
+        user_name: profile?.full_name || profile?.athlete_name || "",
         status: "confirmed",
       })
       .select()
@@ -121,11 +149,23 @@ serve(async (req) => {
 
     if (bookingError) throw bookingError;
 
-    // Mark credit as used
-    await supabaseAdmin
-      .from("session_credits")
-      .update({ is_used: true, used_at: new Date().toISOString(), booking_id: booking.id })
-      .eq("id", credit.id);
+    if (redemptionType === "gift" && gift_id) {
+      // Mark gift as claimed
+      await supabaseAdmin
+        .from("gifted_sessions")
+        .update({
+          status: "claimed",
+          claimed_by: user.id,
+          claimed_at: new Date().toISOString(),
+        })
+        .eq("id", gift_id);
+    } else if (creditId) {
+      // Mark credit as used
+      await supabaseAdmin
+        .from("session_credits")
+        .update({ is_used: true, used_at: new Date().toISOString(), booking_id: booking.id })
+        .eq("id", creditId);
+    }
 
     // Mark slot as booked
     await supabaseAdmin
@@ -142,6 +182,7 @@ serve(async (req) => {
     const dateObj = new Date(slot_date + "T12:00:00");
     const dateStr = dateObj.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
     const typeLabel = session_type === "video" ? "Video Call" : "In-Person";
+    const sourceLabel = redemptionType === "gift" ? "Gifted Session" : "Elite Membership Credit";
 
     const emailHtml = `
       <div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;padding:20px;">
@@ -151,16 +192,16 @@ serve(async (req) => {
           <p><strong>Time:</strong> ${timeStr}</p>
           <p><strong>Duration:</strong> 30 Minutes</p>
           <p><strong>Type:</strong> ${typeLabel}</p>
-          <p><strong>Price:</strong> Included with Elite membership</p>
+          <p><strong>Price:</strong> Included (${sourceLabel})</p>
         </div>
-        <p><strong>Client:</strong> ${profile.full_name || profile.athlete_name || user.email}</p>
+        <p><strong>Client:</strong> ${profile?.full_name || profile?.athlete_name || user.email}</p>
         <p style="color:#666;font-size:12px;margin-top:20px;">
           15121 Kercheval Ave, Grosse Pointe Park, MI 48230 · (313) 806-4952
         </p>
       </div>`;
 
     await sendEmail(user.email, `Session Confirmed — ${dateStr} at ${timeStr}`, emailHtml);
-    await sendEmail(ADMIN_EMAIL, `CREDIT SESSION — ${profile.full_name || user.email} · ${dateStr} ${timeStr} (${typeLabel})`, emailHtml);
+    await sendEmail(ADMIN_EMAIL, `${sourceLabel.toUpperCase()} SESSION — ${profile?.full_name || user.email} · ${dateStr} ${timeStr} (${typeLabel})`, emailHtml);
 
     // Sync to Google Calendar (fire-and-forget)
     try {
