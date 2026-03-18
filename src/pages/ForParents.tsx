@@ -123,11 +123,13 @@ const ForParents = () => {
                   Book a Session
                 </Link>
                 <a
-                  href="mailto:matthewmichels4@gmail.com?subject=Youth%20Training%20Inquiry%20-%20Parent"
+                  href="https://calendly.com/m2training"
+                  target="_blank"
+                  rel="noreferrer"
                   className="inline-flex items-center gap-1.5 border-2 border-primary-foreground/40 px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-primary-foreground/10 transition-m2"
                 >
-                  <Mail size={12} />
-                  Email Matt
+                  <Calendar size={12} />
+                  Book with Matt
                 </a>
                 <a
                   href="tel:+13135551234"

@@ -205,7 +205,9 @@ const FoundationPrograms = () => {
                   {uploading ? "Uploading…" : user ? "Upload Assessment Video" : "Sign in to upload"}
                 </button>
                 <a
-                  href="mailto:matthewmichels4@gmail.com?subject=Postural%20Assessment%20-%20Video%20Chat%20Request"
+                  href="https://calendly.com/m2training"
+                  target="_blank"
+                  rel="noreferrer"
                   className="bg-muted text-muted-foreground hover:text-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest transition-m2"
                 >
                   Schedule Video Chat
