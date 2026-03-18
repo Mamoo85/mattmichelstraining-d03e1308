@@ -14,6 +14,7 @@ import {
 /* ─── Types ────────────────────────────────── */
 
 interface FocusData {
+  id: string;
   title: string;
   topic: string;
   reasoning: string;
@@ -22,6 +23,8 @@ interface FocusData {
   exercises: string[];
   challenge_metric: string;
   matt_quote: string;
+  metric_label: string;
+  target_goal: number;
 }
 
 interface ChallengeData {
@@ -59,8 +62,11 @@ const MonthlyFocusWidget = () => {
 
   // Focus
   const [focus, setFocus] = useState<FocusData | null>(null);
+  const [focusLogs, setFocusLogs] = useState<{ metric_value: number; logged_date: string }[]>([]);
+  const [focusLogTotal, setFocusLogTotal] = useState(0);
+  const [focusLogInput, setFocusLogInput] = useState("");
 
-  // Challenge
+  // Challenge (legacy leaderboard system)
   const [challenge, setChallenge] = useState<ChallengeData | null>(null);
   const [optedIn, setOptedIn] = useState(false);
   const [publicVisible, setPublicVisible] = useState(false);
@@ -74,7 +80,7 @@ const MonthlyFocusWidget = () => {
   useEffect(() => {
     supabase
       .from("monthly_focus")
-      .select("title, topic, reasoning, exercises, matt_quote, biomechanics, common_mistakes, challenge_metric")
+      .select("id, title, topic, reasoning, exercises, matt_quote, biomechanics, common_mistakes, challenge_metric, metric_label, target_goal")
       .eq("month", now.getMonth() + 1)
       .eq("year", now.getFullYear())
       .eq("status", "published")
@@ -93,6 +99,53 @@ const MonthlyFocusWidget = () => {
       .maybeSingle()
       .then(({ data }) => { if (data) setChallenge(data as any); });
   }, []);
+
+  // Load focus_logs for the user
+  useEffect(() => {
+    if (!focus || !user) return;
+    supabase
+      .from("focus_logs")
+      .select("metric_value, logged_date")
+      .eq("user_id", user.id)
+      .eq("focus_id", focus.id)
+      .order("logged_date", { ascending: true })
+      .then(({ data }) => {
+        if (data) {
+          setFocusLogs(data as any[]);
+          const total = (data as any[]).reduce((s, r) => s + Number(r.metric_value), 0);
+          setFocusLogTotal(total);
+        }
+      });
+  }, [focus, user]);
+
+  const handleFocusLog = async () => {
+    if (!user || !focus) return;
+    const val = parseFloat(focusLogInput);
+    if (!val || val <= 0) { toast({ title: "Enter a number", variant: "destructive" }); return; }
+    setActionLoading(true);
+    const today = new Date().toISOString().slice(0, 10);
+    const { error } = await supabase.from("focus_logs").upsert(
+      { user_id: user.id, focus_id: focus.id, metric_value: val, logged_date: today } as any,
+      { onConflict: "user_id,focus_id,logged_date" }
+    );
+    if (error) { toast({ title: "Log failed", description: error.message, variant: "destructive" }); }
+    else {
+      toast({ title: `${val} ${focus.metric_label} logged!` });
+      setFocusLogInput("");
+      // Refresh
+      const { data } = await supabase
+        .from("focus_logs")
+        .select("metric_value, logged_date")
+        .eq("user_id", user.id)
+        .eq("focus_id", focus.id)
+        .order("logged_date", { ascending: true });
+      if (data) {
+        setFocusLogs(data as any[]);
+        setFocusLogTotal((data as any[]).reduce((s, r) => s + Number(r.metric_value), 0));
+      }
+    }
+    setActionLoading(false);
+  };
 
   // Load participation
   useEffect(() => {
@@ -150,8 +203,21 @@ const MonthlyFocusWidget = () => {
     if (data) setEntries(data as any[]);
   };
 
-  // Build cumulative chart data
-  const chartData = useMemo(() => {
+  // Build cumulative chart data from focus_logs (preferred) or challenge_entries (fallback)
+  const focusChartData = useMemo(() => {
+    if (!focusLogs.length) return [];
+    let cumulative = 0;
+    return focusLogs.map((e) => {
+      cumulative += Number(e.metric_value);
+      const d = new Date(e.logged_date + "T00:00:00");
+      return {
+        date: d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+        value: cumulative,
+      };
+    });
+  }, [focusLogs]);
+
+  const challengeChartData = useMemo(() => {
     if (!entries.length) return [];
     let cumulative = 0;
     return entries.map((e) => {
@@ -164,12 +230,15 @@ const MonthlyFocusWidget = () => {
     });
   }, [entries]);
 
-  // Parse target from challenge_metric (try to extract a number)
+  const chartData = focusChartData.length > 0 ? focusChartData : challengeChartData;
+
+  // Use target_goal from focus table (preferred), fallback to parsing challenge_metric text
   const targetValue = useMemo(() => {
+    if (focus?.target_goal && focus.target_goal > 0) return focus.target_goal;
     if (!focus?.challenge_metric) return null;
     const match = focus.challenge_metric.match(/(\d+)/);
     return match ? parseInt(match[1]) : null;
-  }, [focus?.challenge_metric]);
+  }, [focus?.target_goal, focus?.challenge_metric]);
 
   const handleOptIn = async () => {
     if (!subscribed) { toast({ title: "Members only", description: "Subscribe to join challenges.", variant: "destructive" }); return; }
@@ -355,7 +424,54 @@ const MonthlyFocusWidget = () => {
             </div>
           )}
 
-          {/* Challenge + Log */}
+          {/* Focus Log Input (uses focus_logs table) */}
+          {focus && user && (
+            <div className="bg-card border border-border p-4 space-y-3">
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-mono font-black text-primary tracking-tight">
+                  {focusLogTotal}
+                </span>
+                <span className="text-xs text-muted-foreground font-bold uppercase tracking-widest">
+                  {focus.metric_label}
+                </span>
+                {targetValue && targetValue > 0 && (
+                  <span className="text-xs text-muted-foreground font-mono ml-auto">
+                    / {targetValue} goal
+                  </span>
+                )}
+              </div>
+              {targetValue && targetValue > 0 && (
+                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-primary to-primary/70 transition-all duration-500 rounded-full"
+                    style={{ width: `${Math.min(100, (focusLogTotal / Number(targetValue)) * 100)}%` }}
+                  />
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  placeholder={`+${focus.metric_label}`}
+                  value={focusLogInput}
+                  onChange={(e) => setFocusLogInput(e.target.value)}
+                  className="font-mono text-primary text-right w-24 shrink-0"
+                />
+                <button
+                  onClick={handleFocusLog}
+                  disabled={actionLoading}
+                  className="flex-1 bg-primary text-primary-foreground h-10 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-1.5"
+                >
+                  {actionLoading ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
+                  Log Today
+                </button>
+              </div>
+              <p className="text-[10px] text-muted-foreground text-center">
+                One entry per day · updates if you log again today
+              </p>
+            </div>
+          )}
+
+          {/* Challenge + Log (legacy leaderboard) */}
           {challenge ? (
             <div className="bg-card border border-border p-5 space-y-4 relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-primary/3 pointer-events-none" />
@@ -440,7 +556,7 @@ const MonthlyFocusWidget = () => {
           ) : null}
 
           {/* ── Area Chart ── */}
-          {optedIn && chartData.length > 1 && (
+          {(chartData.length > 1) && (
             <div className="bg-card border border-border p-4 relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-t from-primary/3 to-transparent pointer-events-none" />
               <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground block mb-3 relative">

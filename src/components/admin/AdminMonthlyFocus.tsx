@@ -33,6 +33,8 @@ interface Focus {
   common_mistakes: string[];
   exercises: string[];
   challenge_metric: string;
+  metric_label: string;
+  target_goal: number;
   matt_quote: string;
   status: string;
 }
@@ -165,6 +167,8 @@ const AdminMonthlyFocus = () => {
       common_mistakes: focus.common_mistakes || [],
       exercises: focus.exercises,
       challenge_metric: focus.challenge_metric || "",
+      metric_label: (focus as any).metric_label || "reps",
+      target_goal: (focus as any).target_goal || 0,
       matt_quote: focus.matt_quote,
     });
     setEditingFocus(true);
@@ -182,6 +186,8 @@ const AdminMonthlyFocus = () => {
         common_mistakes: editFocus.common_mistakes,
         exercises: editFocus.exercises,
         challenge_metric: editFocus.challenge_metric,
+        metric_label: editFocus.metric_label,
+        target_goal: editFocus.target_goal,
         matt_quote: editFocus.matt_quote,
       } as any)
       .eq("id", focus.id);
@@ -414,6 +420,16 @@ const AdminMonthlyFocus = () => {
             <div>
               <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Challenge Metric</label>
               <Input value={editFocus.challenge_metric || ""} onChange={(e) => setEditFocus(p => ({ ...p, challenge_metric: e.target.value }))} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Metric Label</label>
+                <Input value={editFocus.metric_label || "reps"} onChange={(e) => setEditFocus(p => ({ ...p, metric_label: e.target.value }))} placeholder="reps, seconds, minutes" />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Target Goal (number)</label>
+                <Input type="number" value={editFocus.target_goal || 0} onChange={(e) => setEditFocus(p => ({ ...p, target_goal: parseFloat(e.target.value) || 0 }))} />
+              </div>
             </div>
             <div>
               <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Matt's Quote</label>
