@@ -421,6 +421,16 @@ const AdminMonthlyFocus = () => {
               <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Challenge Metric</label>
               <Input value={editFocus.challenge_metric || ""} onChange={(e) => setEditFocus(p => ({ ...p, challenge_metric: e.target.value }))} />
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Metric Label</label>
+                <Input value={editFocus.metric_label || "reps"} onChange={(e) => setEditFocus(p => ({ ...p, metric_label: e.target.value }))} placeholder="reps, seconds, minutes" />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Target Goal (number)</label>
+                <Input type="number" value={editFocus.target_goal || 0} onChange={(e) => setEditFocus(p => ({ ...p, target_goal: parseFloat(e.target.value) || 0 }))} />
+              </div>
+            </div>
             <div>
               <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Matt's Quote</label>
               <Input value={editFocus.matt_quote || ""} onChange={(e) => setEditFocus(p => ({ ...p, matt_quote: e.target.value }))} />
