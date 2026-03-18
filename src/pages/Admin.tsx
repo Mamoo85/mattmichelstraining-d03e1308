@@ -108,6 +108,7 @@ const Admin = () => {
           ))}
         </div>
 
+        {activeTab === "ai-queue" && <AdminAiQueue />}
         {activeTab === "ai-copilot" && <AdminAiCopilot />}
         {activeTab === "financials" && <AdminFinancials />}
         {activeTab === "broadcasts" && <AdminBroadcasts />}
