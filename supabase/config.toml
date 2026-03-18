@@ -2,3 +2,9 @@ project_id = "eauvubfpanpeuxsrqesu"
 
 [functions.process-email-queue]
 verify_jwt = true
+
+[functions.issue-refund]
+verify_jwt = false
+
+[functions.cancel-user-subscription]
+verify_jwt = false
