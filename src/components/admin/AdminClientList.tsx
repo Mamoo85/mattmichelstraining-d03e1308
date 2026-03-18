@@ -71,6 +71,18 @@ const AdminClientList = () => {
     onError: () => toast.error("Failed to update client status"),
   });
 
+  const setTierMutation = useMutation({
+    mutationFn: async ({ profileId, tier }: { profileId: string; tier: string }) => {
+      const { error } = await supabase.from("profiles").update({ subscription_tier: tier, updated_at: new Date().toISOString() }).eq("id", profileId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-clients"] });
+      toast.success("Tier updated");
+    },
+    onError: () => toast.error("Failed to update tier"),
+  });
+
   const filtered = profiles.filter(
     (p) =>
       (p.email ?? "").toLowerCase().includes(search.toLowerCase()) ||
