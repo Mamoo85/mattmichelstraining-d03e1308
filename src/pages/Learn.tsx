@@ -8,6 +8,7 @@ import {
 import AppNavbar from "@/components/AppNavbar";
 import MonthlyFocus from "@/components/landing/MonthlyFocus";
 import NewsletterSignup from "@/components/NewsletterSignup";
+import TrialCTA from "@/components/TrialCTA";
 
 /* ── Featured Videos ── */
 const VIDEOS = [
@@ -275,31 +276,9 @@ const Learn = () => (
           </div>
         </section>
 
-        {/* ── CTA Banner ── */}
+        {/* ── Trial CTA ── */}
         <section className="mb-10">
-          <div className="bg-primary/5 border border-primary/20 p-6 md:p-8 text-center">
-            <h2 className="text-lg font-bold text-foreground mb-2">
-              Ready to Train With Matt?
-            </h2>
-            <p className="text-sm text-muted-foreground max-w-md mx-auto mb-4">
-              Start with a Foundation program — the same system Matt uses with his in-person athletes.
-              No guesswork. Real coaching. Real results.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link
-                to="/shop"
-                className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
-              >
-                Browse Programs <ArrowRight size={12} />
-              </Link>
-              <Link
-                to="/pricing"
-                className="inline-flex items-center justify-center gap-2 bg-card text-foreground border border-border px-6 py-3 text-xs font-bold uppercase tracking-widest hover:bg-accent/20 transition-m2"
-              >
-                See Membership Plans
-              </Link>
-            </div>
-          </div>
+          <TrialCTA variant="comparison" />
         </section>
 
         {/* Newsletter */}

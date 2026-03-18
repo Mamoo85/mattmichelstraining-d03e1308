@@ -9,6 +9,7 @@ import M2Difference from "./landing/M2Difference";
 import FindUs from "./landing/FindUs";
 import PortalEntrance from "./landing/PortalEntrance";
 import EmailCapture from "./landing/EmailCapture";
+import TrialCTA from "./TrialCTA";
 
 const HeroSection = () => {
   const showHero = useSectionVisible("hero");
@@ -71,7 +72,12 @@ const HeroSection = () => {
         {/* ─── 7. FIND US ─── */}
         {showFindUs && <FindUs />}
 
-        {/* ─── 8. EMAIL CAPTURE ─── */}
+        {/* ─── 8. TRIAL CTA ─── */}
+        <div className="mb-8">
+          <TrialCTA variant="banner" />
+        </div>
+
+        {/* ─── 9. EMAIL CAPTURE ─── */}
         <EmailCapture />
 
         {/* FOOTER */}

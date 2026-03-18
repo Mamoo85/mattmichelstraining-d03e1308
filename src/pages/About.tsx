@@ -8,6 +8,7 @@ import PressAuthority from "@/components/landing/PressAuthority";
 import SuccessStories from "@/components/landing/SuccessStories";
 import AuthorityBar from "@/components/landing/AuthorityBar";
 import { useSectionVisible, useContentMap } from "@/hooks/useSiteContent";
+import TrialCTA from "@/components/TrialCTA";
 
 const ARTICLE_HIGHLIGHTS = [
   {
@@ -120,6 +121,11 @@ const About = () => {
         {showStory && <div className="mt-6"><MattsStory /></div>}
         
         {showClients && <div className="mt-6"><CurrentClients /></div>}
+
+        {/* Trial CTA */}
+        <div className="mt-8">
+          <TrialCTA variant="inline" className="w-full justify-center py-3" />
+        </div>
 
         {/* FOOTER */}
         <div className="mt-10 pt-6 border-t border-border text-center">
