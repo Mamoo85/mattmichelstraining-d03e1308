@@ -320,8 +320,35 @@ const Dashboard = () => {
     return <span className="text-[10px] font-mono font-bold text-muted-foreground w-3.5 text-center">{rank + 1}</span>;
   };
 
+  // Track if user has any activity
+  const [hasPrograms, setHasPrograms] = useState<boolean | null>(null);
+  const [hasLogs, setHasLogs] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    Promise.all([
+      supabase.from("user_active_programs").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+      supabase.from("progress_logs").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+    ]).then(([progRes, logRes]) => {
+      setHasPrograms((progRes.count ?? 0) > 0);
+      setHasLogs((logRes.count ?? 0) > 0);
+    });
+  }, [user]);
+
+  const isNewUser = hasPrograms === false && hasLogs === false;
+
   const renderHome = () => (
     <div className="space-y-6">
+      {/* New user welcome card */}
+      {isNewUser && (
+        <EmptyStateCard
+          title="Welcome to M²"
+          description="Your training log is empty. Select your starting track and begin Day 1 — Matt will review every session and coach you personally."
+          ctaLabel="Select Your Starting Track →"
+          ctaTo="/shop"
+        />
+      )}
+
       {/* Scan Workout Card */}
       <div className="bg-card border border-border p-5 space-y-3">
         <div className="flex items-center gap-2">
