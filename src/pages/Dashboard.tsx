@@ -274,6 +274,9 @@ const Dashboard = () => {
       {/* Points Widget */}
       <PointsWidget onViewLeaderboard={() => setActiveTab("points")} />
 
+      {/* Refer & Earn Card */}
+      <ReferEarnCard onViewAll={() => setActiveTab("referrals")} />
+
       {/* Monthly Focus Section */}
       {focus ? (
         <div>

@@ -471,6 +471,11 @@ const Profile = () => {
           </div>
         )}
 
+        {/* Refer & Earn */}
+        <div className="bg-card border border-border p-5 mb-6">
+          <ReferralDashboard />
+        </div>
+
         {/* Gift Cards */}
         <div className="bg-card border border-border p-5 mb-6">
           <h2 className="text-[10px] font-bold uppercase tracking-widest text-primary mb-4 flex items-center gap-1.5">
