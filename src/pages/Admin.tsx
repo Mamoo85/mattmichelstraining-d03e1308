@@ -26,7 +26,7 @@ import AdminParentReports from "@/components/admin/AdminParentReports";
 import AdminFamilyManager from "@/components/admin/AdminFamilyManager";
 import AdminLearnEditor from "@/components/admin/AdminLearnEditor";
 import AdminSystemSettings from "@/components/admin/AdminSystemSettings";
-import AdminProductManager from "@/components/admin/AdminProductManager";
+
 import AdminTestimonials from "@/components/admin/AdminTestimonials";
 import AdminFrontPage from "@/components/admin/AdminFrontPage";
 import AdminAiCopilot from "@/components/admin/AdminAiCopilot";
