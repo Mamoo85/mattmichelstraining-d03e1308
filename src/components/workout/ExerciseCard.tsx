@@ -107,6 +107,39 @@ const ExerciseCard = ({ exercise, index, onUpdate, onRemove }: ExerciseCardProps
           </div>
         </div>
 
+        {/* Form Video & The Why toggle */}
+        {(exercise.exerciseVideoUrl || exercise.exerciseTheWhy) && (
+          <div className="px-3 pb-2">
+            <button
+              onClick={() => setShowInfo(!showInfo)}
+              className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-all"
+            >
+              {showInfo ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+              <Info size={11} /> Form Video & The Why
+            </button>
+            {showInfo && (
+              <div className="mt-2 space-y-3">
+                {/* Video embed at the top */}
+                <ExerciseVideoEmbed
+                  videoUrl={exercise.exerciseVideoUrl || null}
+                  exerciseTitle={exercise.exerciseTitle}
+                />
+
+                {/* The Why */}
+                {exercise.exerciseTheWhy && (
+                  <div className="bg-primary/5 border-l-2 border-primary/40 p-3">
+                    <div className="flex items-center gap-1 mb-1">
+                      <Info size={10} className="text-primary" />
+                      <span className="text-[9px] font-bold uppercase tracking-widest text-primary">The Why</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{exercise.exerciseTheWhy}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Notes & Video toggle */}
         <div className="px-3 pb-2">
           <button
