@@ -1,24 +1,45 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 import m2Logo from "@/assets/m2-logo.jpg";
-import { ArrowRight, Loader2, Gift } from "lucide-react";
+import { ArrowRight, Loader2, Gift, Users } from "lucide-react";
 
 const Auth = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, loading: authLoading } = useAuth();
+  const { toast } = useToast();
+  const inviteToken = searchParams.get("invite");
 
-  // Redirect if already logged in
+  // Redeem invite after login/signup
   useEffect(() => {
-    if (!authLoading && user) {
-      const params = new URLSearchParams(window.location.search);
-      const redirect = params.get("redirect") || "/dashboard";
+    if (!authLoading && user && inviteToken) {
+      redeemInvite(inviteToken);
+    } else if (!authLoading && user) {
+      const redirect = searchParams.get("redirect") || "/dashboard";
       navigate(redirect, { replace: true });
     }
-  }, [user, authLoading, navigate]);
-  const [isSignUp, setIsSignUp] = useState(false);
+  }, [user, authLoading]);
+
+  const redeemInvite = async (token: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke("redeem-parent-invite", {
+        body: { token },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast({ title: "Account linked!", description: "You're now connected to your parent's account." });
+    } catch (err: any) {
+      console.error("Invite redeem error:", err);
+      // Don't block navigation on error
+    }
+    navigate(searchParams.get("redirect") || "/dashboard", { replace: true });
+  };
+
+  const [isSignUp, setIsSignUp] = useState(!!inviteToken);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
