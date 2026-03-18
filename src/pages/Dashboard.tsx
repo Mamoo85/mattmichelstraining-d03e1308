@@ -437,31 +437,32 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       <AppNavbar />
-      <div className="container pt-20 pb-12">
-        <div className="flex items-start justify-between mb-6">
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-lg font-bold text-foreground">Welcome back, {athleteDisplay}</h2>
+      <div className="container pt-20 pb-12 px-4 sm:px-6">
+        {/* Header — stack on mobile, row on desktop */}
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-base sm:text-lg font-bold text-foreground truncate">Welcome back, {athleteDisplay}</h2>
               {isLegend ? (
-                <Badge className="flex items-center gap-1 text-[10px] uppercase tracking-widest bg-primary text-primary-foreground">
+                <Badge className="flex items-center gap-1 text-[10px] uppercase tracking-widest bg-primary text-primary-foreground shrink-0">
                   <Crown size={10} />
                   M² Legend
                 </Badge>
               ) : subscriptionTier ? (
-                <Badge className="flex items-center gap-1 text-[10px] uppercase tracking-widest">
+                <Badge className="flex items-center gap-1 text-[10px] uppercase tracking-widest shrink-0">
                   <Crown size={10} />
                   {TIERS[subscriptionTier].name}
                 </Badge>
               ) : (
-                <Badge variant="outline" className="text-[10px] uppercase tracking-widest">Free</Badge>
+                <Badge variant="outline" className="text-[10px] uppercase tracking-widest shrink-0">Free</Badge>
               )}
             </div>
-            <p className="text-sm text-muted-foreground">Your training portal · Real training, real results</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">Your training portal · Real training, real results</p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <Link
               to="/profile"
-              className="flex items-center gap-1.5 bg-muted text-muted-foreground px-3 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:text-foreground transition-all"
+              className="flex items-center gap-1.5 bg-muted text-muted-foreground px-3 py-2 text-[10px] font-bold uppercase tracking-widest hover:text-foreground transition-all"
             >
               <User size={12} />
               Profile
@@ -470,10 +471,10 @@ const Dashboard = () => {
               <button
                 onClick={handleManageSubscription}
                 disabled={portalLoading}
-                className="flex items-center gap-1.5 bg-primary text-primary-foreground px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-50"
+                className="flex items-center gap-1.5 bg-primary text-primary-foreground px-3 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-50"
               >
                 {portalLoading ? <Loader2 size={12} className="animate-spin" /> : <ExternalLink size={12} />}
-                Manage Plan
+                Manage
               </button>
             )}
           </div>
@@ -482,13 +483,13 @@ const Dashboard = () => {
         {/* Studio Check-In */}
         <StudioCheckIn />
 
-        {/* Tab switcher */}
-        <div className="flex gap-1 mb-6">
+        {/* Tab switcher — horizontal scroll on mobile */}
+        <div className="flex gap-1 mb-6 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap scrollbar-hide">
           {TABS.map((t) => (
             <button
               key={t.key}
               onClick={() => setActiveTab(t.key)}
-              className={`px-4 py-2.5 text-xs font-bold uppercase tracking-widest transition-all ${
+              className={`px-3 sm:px-4 py-2 sm:py-2.5 text-[10px] sm:text-xs font-bold uppercase tracking-widest transition-all whitespace-nowrap shrink-0 ${
                 activeTab === t.key
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted text-muted-foreground hover:text-foreground"
