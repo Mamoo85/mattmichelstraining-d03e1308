@@ -112,7 +112,7 @@ const PdfGuides = () => {
             onClick={() => setExpandedGuide(expandedGuide === guide.id ? null : guide.id)}
           >
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-primary">PDF Guide</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-primary">PDF Plan</span>
               <span className="text-lg font-mono font-bold text-primary">{guide.price}</span>
             </div>
             <h3 className="text-sm font-bold text-foreground mb-1">{guide.title}</h3>
