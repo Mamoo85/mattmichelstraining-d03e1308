@@ -290,11 +290,44 @@ const TrialWelcome = () => {
               <p className="text-xs text-muted-foreground">Now choose a program to start training today.</p>
             </div>
 
+            {/* FREE STARTER PROGRAM EXPLAINER */}
+            <div className="bg-card shadow-m2 p-5 mb-6 border-l-4 border-primary">
+              <div className="flex items-start gap-3">
+                <Dumbbell size={18} className="text-primary flex-shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="text-sm font-bold text-foreground mb-1">
+                    Your Free 2-Week Starter Program Is Ready
+                  </h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed mb-3">
+                    Every new athlete gets a <strong className="text-foreground">complete 2-week intro program</strong> loaded 
+                    into their dashboard automatically — no purchase needed. It's built to show you exactly what M² Training 
+                    looks like from the inside.
+                  </p>
+                  <div className="bg-muted/50 p-3 mb-3 space-y-1.5">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-primary font-mono mb-1">What's In It</p>
+                    <p className="text-xs text-foreground">• <strong>3 sessions per week</strong> across 2 full weeks (6 total workouts)</p>
+                    <p className="text-xs text-foreground">• <strong>Warmup → Workout → Rolling → Mobility</strong> structure every session</p>
+                    <p className="text-xs text-foreground">• <strong>Progressive overload</strong> — Week 2 builds on Week 1 with increased reps, holds, and distance</p>
+                    <p className="text-xs text-foreground">• <strong>Beginner-level</strong> exercises — no gym experience needed</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed mb-2">
+                    <strong className="text-foreground">How to use it:</strong> Open your Dashboard → find "Today's Program" → 
+                    follow the exercises in order, log your weights after each set. Matt reviews every session you log. 
+                    Think of it as a sample of what a full membership delivers — except you'll get fresh programs monthly, 
+                    sport-specific programming, and direct access to Coach Matt.
+                  </p>
+                  <p className="text-xs text-primary font-bold">
+                    Want more than the sample? Pick a trial program below and go deeper.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <h2 className="text-lg font-bold text-foreground mb-1 text-center">
               Choose Your Intro Program
             </h2>
             <p className="text-xs text-muted-foreground text-center mb-4">
-              Pick the program that fits. You start Day 1 immediately.
+              Pick a program to add alongside your free starter. You start Day 1 immediately.
             </p>
 
             <div className="grid grid-cols-1 gap-3">

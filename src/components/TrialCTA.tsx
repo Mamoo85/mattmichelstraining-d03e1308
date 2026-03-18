@@ -35,13 +35,16 @@ const TrialCTA = ({ variant = "banner", className = "" }: TrialCTAProps) => {
           <div>
             <h3 className="text-sm font-bold text-foreground mb-1">Try Everything Free for 14 Days</h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Full portal access. Programs. Progress tracking. Direct access to Matt. No credit card required.
+              Full portal access. Programs. Progress tracking. Direct access to Matt. Plus a{" "}
+              <strong className="text-foreground">free 2-week starter program</strong> loaded into your dashboard 
+              on Day 1 — warmup, workout, rolling, and mobility every session.
             </p>
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-2 mb-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
           {[
-            { label: "Exercise Library", detail: "85+ exercises" },
+            { label: "Free Starter Program", detail: "2 weeks, 6 sessions" },
+            { label: "Exercise Library", detail: "190+ exercises" },
             { label: "Workout Logging", detail: "Track every set" },
             { label: "Coach Access", detail: "Message Matt" },
           ].map((item) => (
