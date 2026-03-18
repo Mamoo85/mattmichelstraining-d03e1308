@@ -242,6 +242,7 @@ const ArticleCard = ({ article, isExpanded, onToggle }: {
       )}
     </div>
   </motion.div>
+  </>
 );
 
 /* ── Video Card ── */
