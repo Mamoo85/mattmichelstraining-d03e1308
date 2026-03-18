@@ -392,7 +392,7 @@ const Pricing = () => {
             {cms.free_banner_title || "Free When You Sign Up"}
           </h3>
           <p className="text-muted-foreground text-sm mb-4">
-            {cms.free_banner_text || "Monthly Focus Plans, member challenges, and workout logging — no credit card."}
+            {cms.free_banner_text || "A complete 2-week starter program, monthly focus plans, member challenges, and workout logging — no credit card needed. See what real coaching looks like before you commit."}
           </p>
           {!user && (
             <Link
