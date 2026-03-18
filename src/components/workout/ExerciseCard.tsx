@@ -17,7 +17,6 @@ interface ExerciseCardProps {
 
 const ExerciseCard = ({ exercise, index, onUpdate, onRemove }: ExerciseCardProps) => {
   const [showExtras, setShowExtras] = useState(false);
-  const [showInfo, setShowInfo] = useState(false);
   const [showUpsell, setShowUpsell] = useState(false);
   const { isAdmin } = useIsAdmin();
   const { hasAccess: canFlag } = useTierAccess("flag_coach");
