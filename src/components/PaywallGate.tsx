@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Lock, X, ArrowRight, Loader2 } from "lucide-react";
-import { useAuth, TierKey, TIERS } from "@/hooks/useAuth";
+import { useAuth, TIERS } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useTierAccess } from "@/hooks/useTierAccess";
 import { supabase } from "@/integrations/supabase/client";
