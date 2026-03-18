@@ -99,7 +99,7 @@ const PdfGuides = () => {
       {/* Description */}
       <div className="bg-primary/10 border border-primary/20 p-4 mb-6">
         <p className="text-sm text-foreground leading-relaxed">
-          <strong>Top-10 exercise blueprints — $15 each.</strong> Standalone PDF guides. Each one teaches you the WHY behind every movement so your athlete understands what they're doing and why it matters. Buy once, keep forever.
+          <strong>Top-10 exercise blueprints — $15 each.</strong> Standalone PDF plans. Each one teaches you the WHY behind every movement so your athlete understands what they're doing and why it matters. Buy once, keep forever.
         </p>
       </div>
 
