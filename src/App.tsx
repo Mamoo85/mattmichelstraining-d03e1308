@@ -39,6 +39,7 @@ const Merch = lazy(() => import("./pages/Merch"));
 const Learn = lazy(() => import("./pages/Learn"));
 const TrialWelcome = lazy(() => import("./pages/TrialWelcome"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const Install = lazy(() => import("./pages/Install"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
