@@ -75,7 +75,7 @@ const StoreGettingStarted = () => {
           <p className="text-xs text-muted-foreground leading-relaxed mb-1">
             Direct access to Matt — his library, coaching, and programming.
           </p>
-          <p className="text-xs text-primary font-bold mb-3">Starting at $12.99/mo</p>
+          <p className="text-xs text-primary font-bold mb-3">Starting at $15.99/mo</p>
           <Link
             to="/pricing"
             className="inline-flex items-center gap-1 bg-primary text-primary-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
@@ -109,7 +109,7 @@ const StoreGettingStarted = () => {
         <div>
           <h4 className="text-xs font-bold text-foreground mb-1">The Math</h4>
           <p className="text-[11px] text-muted-foreground">
-            In-person training: <span className="text-foreground font-bold">$40–$150/session</span>. Online coaching: <span className="text-foreground font-bold">$100–$300/mo</span>. M² subscription: <span className="text-primary font-bold">$12.99/mo</span>. Same 20 years of expertise.
+            In-person training: <span className="text-foreground font-bold">$40–$150/session</span>. Online coaching: <span className="text-foreground font-bold">$100–$300/mo</span>. M² subscription: <span className="text-primary font-bold">$15.99/mo</span>. Same 20 years of expertise.
           </p>
         </div>
       </div>
@@ -141,28 +141,28 @@ const StoreGettingStarted = () => {
         <h2 className="text-sm font-bold text-foreground mb-3">What Each Tier Unlocks</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <div className="bg-card shadow-m2 p-4 flex gap-3">
-            <div className="text-primary font-mono font-bold text-lg leading-none mt-0.5">$13</div>
+            <div className="text-primary font-mono font-bold text-lg leading-none mt-0.5">$16</div>
             <div>
               <p className="text-xs font-bold text-foreground">Basic</p>
               <p className="text-[11px] text-muted-foreground">Full 85+ exercise library. Filtered by level, sport, and focus.</p>
             </div>
           </div>
           <div className="bg-card shadow-m2 p-4 flex gap-3 border border-primary/20">
-            <div className="text-primary font-mono font-bold text-lg leading-none mt-0.5">$26</div>
+            <div className="text-primary font-mono font-bold text-lg leading-none mt-0.5">$50</div>
             <div>
-              <p className="text-xs font-bold text-foreground">Pro <span className="text-[8px] bg-primary text-primary-foreground px-1.5 py-0.5 uppercase ml-1">Popular</span></p>
-              <p className="text-[11px] text-muted-foreground">Custom monthly programming + Fix It rehab library + form review.</p>
+              <p className="text-xs font-bold text-foreground">Pro / Youth Dev <span className="text-[8px] bg-primary text-primary-foreground px-1.5 py-0.5 uppercase ml-1">Popular</span></p>
+              <p className="text-[11px] text-muted-foreground">Custom programming + Fix It library + form review + child invites.</p>
             </div>
           </div>
           <div className="bg-card shadow-m2 p-4 flex gap-3">
-            <div className="text-primary font-mono font-bold text-lg leading-none mt-0.5">$43</div>
+            <div className="text-primary font-mono font-bold text-lg leading-none mt-0.5">$70</div>
             <div>
               <p className="text-xs font-bold text-foreground">Elite</p>
               <p className="text-[11px] text-muted-foreground">Monthly 1-on-1 check-ins + priority coaching + direct messaging.</p>
             </div>
           </div>
           <div className="bg-card shadow-m2 p-4 flex gap-3">
-            <div className="text-primary font-mono font-bold text-lg leading-none mt-0.5">$85</div>
+            <div className="text-primary font-mono font-bold text-lg leading-none mt-0.5">$90</div>
             <div>
               <p className="text-xs font-bold text-foreground">Team</p>
               <p className="text-[11px] text-muted-foreground">Full-roster programming for coaches and organizations.</p>

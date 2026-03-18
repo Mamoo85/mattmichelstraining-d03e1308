@@ -17,6 +17,8 @@ const TIER_CARDS: {
   features: string[];
   highlight?: boolean;
   cta: string;
+  label?: string;
+  subtitle?: string;
 }[] = [
   {
     key: "basic",
@@ -33,6 +35,7 @@ const TIER_CARDS: {
     key: "pro",
     icon: Star,
     highlight: true,
+    label: "Pro",
     features: [
       "Monthly Focus Plan — Matt's training focus changes monthly to build balanced gym skills",
       "85+ exercise library with sport-specific filters",
@@ -45,6 +48,21 @@ const TIER_CARDS: {
       "Full 'Fix It' rehab library",
     ],
     cta: "Go Pro",
+  },
+  {
+    key: "pro",
+    icon: Shield,
+    label: "Youth Development",
+    subtitle: "Same Pro features — designed for families",
+    features: [
+      "Everything in Pro — same price, same features",
+      "Parent account with child invite link",
+      "Monitor your child's workouts & progress",
+      "Flag Coach Matt on your child's behalf",
+      "Age-appropriate programming from intake",
+      "Parent trial auto-charges Pro when it ends",
+    ],
+    cta: "Start Parent Trial",
   },
   {
     key: "elite",
@@ -158,7 +176,7 @@ const Pricing = () => {
         >
           <p className="text-xs text-muted-foreground leading-relaxed text-center">
             <span className="text-foreground font-bold">1-on-1 training without the 1-on-1 price.</span>{" "}
-            {cms.value_banner || "In-gym personal training averages $40–$150/session. Online coaching packages run $100–$300/mo. Matt's subscriptions start at $12.99/mo — same 20 years of expertise, same personalized approach, for athletes of every age. No contracts, no middleman, available in any state."}
+            {cms.value_banner || "In-gym personal training averages $40–$150/session. Online coaching packages run $100–$300/mo. Matt's subscriptions start at $15.99/mo — same 20 years of expertise, same personalized approach, for athletes of every age. No contracts, no middleman, available in any state."}
           </p>
         </motion.div>
 
@@ -212,7 +230,7 @@ const Pricing = () => {
         )}
 
         {/* Tier grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-6xl mx-auto">
           {TIER_CARDS.map((card, i) => {
             const tier = TIERS[card.key];
             const isCurrentPlan = subscriptionTier === card.key;
@@ -247,7 +265,12 @@ const Pricing = () => {
                 )}
 
                 <Icon className="w-8 h-8 text-primary mb-3" />
-                <h3 className="text-lg font-black uppercase tracking-tight text-foreground">{tier.name}</h3>
+                <h3 className="text-lg font-black uppercase tracking-tight text-foreground">
+                  {card.label || tier.name}
+                </h3>
+                {card.subtitle && (
+                  <p className="text-[10px] text-muted-foreground mb-1">{card.subtitle}</p>
+                )}
                 <div className="flex items-baseline gap-1 mt-1 mb-2">
                   <span className="text-3xl font-black text-foreground">{tier.price}</span>
                   <span className="text-muted-foreground text-sm">/mo</span>
@@ -294,6 +317,13 @@ const Pricing = () => {
                   >
                     Manage Plan
                   </button>
+                ) : card.label === "Youth Development" ? (
+                  <Link
+                    to={user ? "/trial-welcome?path=parent" : "/auth?redirect=/trial-welcome?path=parent"}
+                    className="w-full py-3 text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-colors border-2 border-foreground text-foreground hover:bg-foreground hover:text-background"
+                  >
+                    {card.cta} <ArrowRight className="w-4 h-4" />
+                  </Link>
                 ) : (
                   <button
                     onClick={() => handleCheckout(card.key)}
