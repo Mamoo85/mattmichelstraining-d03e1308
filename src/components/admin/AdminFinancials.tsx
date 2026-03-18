@@ -135,6 +135,29 @@ const AdminFinancials = () => {
 
   return (
     <div className="space-y-4">
+      {/* Stripe Sync Bar */}
+      <div className="bg-card border border-border p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-widest text-foreground flex items-center gap-1.5">
+            <CloudCog size={14} className="text-primary" />
+            Stripe Sync
+          </p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">
+            {lastSynced
+              ? <>Last synced: <span className="font-mono">{new Date(lastSynced).toLocaleString()}</span></>
+              : "Force-sync subscription tiers with Stripe as the source of truth."}
+          </p>
+        </div>
+        <button
+          onClick={handleForceSync}
+          disabled={syncing}
+          className="bg-primary text-primary-foreground px-5 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2 shrink-0"
+        >
+          {syncing ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
+          {syncing ? "Syncing…" : "Sync with Stripe"}
+        </button>
+      </div>
+
       {/* Metrics Row */}
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-card shadow-m2 p-4">
