@@ -27,6 +27,8 @@ interface PrintProgramData {
   weeks: PrintWeek[];
 }
 
+const esc = (s: string) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+
 export const printWorkoutLog = (program: PrintProgramData) => {
   const win = window.open("", "_blank");
   if (!win) return;
