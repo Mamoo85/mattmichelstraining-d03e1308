@@ -423,7 +423,7 @@ const TierComparisonTable = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("tier_features")
-        .select("feature_label, description, tier_basic, tier_pro, tier_elite, tier_team")
+        .select("feature_label, description, tier_basic, tier_foundation, tier_custom, tier_team_elite")
         .order("sort_order");
       if (error) throw error;
       return data;
