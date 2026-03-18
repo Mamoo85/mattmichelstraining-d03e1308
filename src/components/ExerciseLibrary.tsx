@@ -36,6 +36,7 @@ const ExerciseLibrary = () => {
   const [activeSport, setActiveSport] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [substitutionExercise, setSubstitutionExercise] = useState<string | null>(null);
+  const [activeLevel, setActiveLevel] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchExercises = async () => {
