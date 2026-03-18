@@ -798,6 +798,54 @@ export type Database = {
         }
         Relationships: []
       }
+      products: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          external_url: string | null
+          id: string
+          image_url: string | null
+          is_live: boolean
+          metadata: Json
+          name: string
+          price: number
+          product_type: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string
+          external_url?: string | null
+          id?: string
+          image_url?: string | null
+          is_live?: boolean
+          metadata?: Json
+          name: string
+          price?: number
+          product_type?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          external_url?: string | null
+          id?: string
+          image_url?: string | null
+          is_live?: boolean
+          metadata?: Json
+          name?: string
+          price?: number
+          product_type?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           athlete_name: string | null
@@ -1476,6 +1524,48 @@ export type Database = {
           id?: string
           metadata?: Json | null
           reason?: string
+        }
+        Relationships: []
+      }
+      testimonials: {
+        Row: {
+          author_initials: string
+          author_name: string
+          author_role: string
+          created_at: string
+          id: string
+          is_active: boolean
+          page: string
+          quote: string
+          sort_order: number
+          sport: string | null
+          updated_at: string
+        }
+        Insert: {
+          author_initials?: string
+          author_name: string
+          author_role?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          page?: string
+          quote: string
+          sort_order?: number
+          sport?: string | null
+          updated_at?: string
+        }
+        Update: {
+          author_initials?: string
+          author_name?: string
+          author_role?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          page?: string
+          quote?: string
+          sort_order?: number
+          sport?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
