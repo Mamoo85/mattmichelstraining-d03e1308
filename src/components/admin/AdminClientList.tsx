@@ -547,59 +547,31 @@ const AdminClientList = () => {
       </Dialog>
 
       {/* ===== ERASE CONFIRMATION (Double) ===== */}
-      <AlertDialog open={eraseConfirmStep === 1} onOpenChange={() => setEraseConfirmStep(0)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
-              <AlertTriangle size={18} />
-              Delete User Data — Step 1 of 2
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently erase ALL data for <strong>{selectedProfile?.full_name || selectedProfile?.email}</strong> including workouts, progress, messages, subscriptions, and their authentication account. This cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => setEraseConfirmStep(2)}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              I understand, continue
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog open={eraseConfirmStep === 2} onOpenChange={() => setEraseConfirmStep(0)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
-              <Trash2 size={18} />
-              FINAL CONFIRMATION — Step 2 of 2
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              Type the user's email to confirm: <strong>{selectedProfile?.email}</strong>
-              <br /><br />
-              This action is <strong>irreversible</strong>. The user will be completely removed from the platform.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (selectedProfile?.user_id) {
-                  eraseUserMutation.mutate(selectedProfile.user_id);
-                }
-              }}
-              disabled={eraseUserMutation.isPending}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {eraseUserMutation.isPending ? <Loader2 size={14} className="animate-spin mr-1" /> : null}
-              Permanently Delete Everything
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmActionModal
+        open={eraseConfirmStep === 1}
+        onOpenChange={() => setEraseConfirmStep(0)}
+        title="Delete User Data — Step 1 of 2"
+        description={<>This will permanently erase ALL data for <strong>{selectedProfile?.full_name || selectedProfile?.email}</strong> including workouts, progress, messages, subscriptions, and their authentication account. This cannot be undone.</>}
+        confirmLabel="I understand, continue"
+        destructive
+        icon={<AlertTriangle size={18} />}
+        onConfirm={() => setEraseConfirmStep(2)}
+      />
+      <ConfirmActionModal
+        open={eraseConfirmStep === 2}
+        onOpenChange={() => setEraseConfirmStep(0)}
+        title="FINAL CONFIRMATION — Step 2 of 2"
+        description={<>Type the user's email to confirm: <strong>{selectedProfile?.email}</strong><br /><br />This action is <strong>irreversible</strong>. The user will be completely removed from the platform.</>}
+        confirmLabel="Permanently Delete Everything"
+        destructive
+        loading={eraseUserMutation.isPending}
+        icon={<Trash2 size={18} />}
+        onConfirm={() => {
+          if (selectedProfile?.user_id) {
+            eraseUserMutation.mutate(selectedProfile.user_id);
+          }
+        }}
+      />
     </div>
   );
 };
