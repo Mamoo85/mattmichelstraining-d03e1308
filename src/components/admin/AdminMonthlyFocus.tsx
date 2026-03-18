@@ -324,21 +324,35 @@ const AdminMonthlyFocus = () => {
 
       {/* ═══════ MONTHLY FOCUS ═══════ */}
       <div>
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Flame size={16} className="text-primary" />
-            <h2 className="text-sm font-bold uppercase tracking-widest text-foreground">
-              Monthly Focus — {MONTHS[selMonth - 1]} {selYear}
-            </h2>
+        <div className="flex items-center gap-2 mb-4">
+          <Flame size={16} className="text-primary" />
+          <h2 className="text-sm font-bold uppercase tracking-widest text-foreground">
+            Monthly Focus — {MONTHS[selMonth - 1]} {selYear}
+          </h2>
+        </div>
+
+        {/* Topic Input + Generate Button */}
+        <div className="bg-card border border-border p-4 mb-4 space-y-3">
+          <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block">
+            This Month's Focus
+          </label>
+          <div className="flex gap-2">
+            <Input
+              placeholder="e.g., Side Plank, Ankle Mobility, Dead Hang…"
+              value={topicInput}
+              onChange={(e) => setTopicInput(e.target.value)}
+              className="flex-1"
+            />
+            <button
+              onClick={handleGenerate}
+              disabled={generating}
+              className="flex items-center gap-1.5 bg-primary text-primary-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 disabled:opacity-50 transition-all shrink-0"
+            >
+              {generating ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+              Generate Focus Module
+            </button>
           </div>
-          <button
-            onClick={handleGenerate}
-            disabled={generating}
-            className="flex items-center gap-1 bg-primary text-primary-foreground px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 disabled:opacity-50 transition-all"
-          >
-            {generating ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
-            {focus ? "Regenerate" : "Generate with AI"}
-          </button>
+          <p className="text-[10px] text-muted-foreground">Leave blank to let AI pick a topic for this month.</p>
         </div>
 
         {focusLoading ? (
@@ -346,7 +360,7 @@ const AdminMonthlyFocus = () => {
         ) : !focus ? (
           <div className="bg-muted p-5 text-center">
             <Sparkles size={20} className="mx-auto text-muted-foreground/30 mb-2" />
-            <p className="text-sm text-muted-foreground">No focus content for this month. Click "Generate with AI" to create one.</p>
+            <p className="text-sm text-muted-foreground">No focus content for this month. Enter a topic and generate above.</p>
           </div>
         ) : editingFocus ? (
           /* ── Editing Mode ── */
