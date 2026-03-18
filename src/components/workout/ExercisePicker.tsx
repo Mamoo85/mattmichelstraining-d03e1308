@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, memo } from "react";
 import { Search, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -7,7 +7,7 @@ interface ExercisePickerProps {
   onCancel: () => void;
 }
 
-const ExercisePicker = ({ onSelect, onCancel }: ExercisePickerProps) => {
+const ExercisePicker = memo(({ onSelect, onCancel }: ExercisePickerProps) => {
   const [query, setQuery] = useState("");
   const [exercises, setExercises] = useState<{ id: string; title: string }[]>([]);
   const [loading, setLoading] = useState(true);
