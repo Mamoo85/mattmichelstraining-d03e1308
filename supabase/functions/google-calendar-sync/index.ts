@@ -52,6 +52,8 @@ async function getGoogleAccessToken(): Promise<string> {
   }
 
   if (!pemBase64) throw new Error("Private key not found");
+  
+  console.log("pemBase64 length:", pemBase64.length, "first20:", pemBase64.substring(0, 20), "last20:", pemBase64.substring(pemBase64.length - 20));
 
   // Create JWT
   const header = btoa(JSON.stringify({ alg: "RS256", typ: "JWT" }));
