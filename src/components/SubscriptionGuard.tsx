@@ -16,9 +16,8 @@ const SubscriptionGuard = ({ children }: { children: React.ReactNode }) => {
   const loading = authLoading || trialLoading || adminLoading;
 
   // Admins and Legend members always pass through
-  if (isAdmin || isLegend) return <>{children}</>;
-
-  const lockedOut = !subscribed && trialExpired;
+  const bypassed = isAdmin || isLegend;
+  const lockedOut = !bypassed && !subscribed && trialExpired;
 
   useEffect(() => {
     if (loading || !user) return;
