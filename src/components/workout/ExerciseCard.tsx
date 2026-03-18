@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo, useCallback } from "react";
 import { Trash2, ChevronDown, ChevronUp, Plus, Minus, Link, MessageSquare, Lock, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
@@ -15,7 +15,7 @@ interface ExerciseCardProps {
   onRemove: () => void;
 }
 
-const ExerciseCard = ({ exercise, index, onUpdate, onRemove }: ExerciseCardProps) => {
+const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove }: ExerciseCardProps) => {
   const [showExtras, setShowExtras] = useState(false);
   const [showUpsell, setShowUpsell] = useState(false);
   const { isAdmin } = useIsAdmin();

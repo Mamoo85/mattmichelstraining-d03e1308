@@ -96,7 +96,7 @@ function EditableValue({
   return (
     <button
       onClick={startEdit}
-      className="font-mono text-lg font-bold text-foreground w-16 text-center tabular-nums hover:text-primary transition-colors cursor-text"
+      className="font-mono text-lg font-bold text-foreground w-16 text-center tabular-nums hover:text-primary transition-colors cursor-text min-h-[44px] min-w-[44px]"
     >
       {isTime ? formatTime(value) : value}
     </button>

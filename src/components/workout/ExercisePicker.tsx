@@ -57,7 +57,7 @@ const ExercisePicker = memo(({ onSelect, onCancel }: ExercisePickerProps) => {
             <button
               key={ex.id}
               onClick={() => onSelect(ex.id, ex.title)}
-              className="w-full text-left p-3 text-sm text-foreground hover:bg-muted transition-colors"
+              className="w-full text-left p-3 text-sm text-foreground hover:bg-muted transition-colors min-h-[44px]"
             >
               {ex.title}
             </button>
