@@ -19,7 +19,7 @@ import AdminDirectMessages from "@/components/admin/AdminDirectMessages";
 import AdminPointsManager from "@/components/admin/AdminPointsManager";
 import AdminVideoReview from "@/components/admin/AdminVideoReview";
 import AdminParentReports from "@/components/admin/AdminParentReports";
-
+import AdminFamilyManager from "@/components/admin/AdminFamilyManager";
 const TABS = [
   { key: "tiers", label: "Tier Access" },
   { key: "schedule", label: "Schedule" },
