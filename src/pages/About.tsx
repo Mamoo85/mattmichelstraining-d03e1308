@@ -9,10 +9,6 @@ import {
 import m2Logo from "@/assets/m2-logo-official.jpg";
 import mattFamily from "@/assets/matt-family.jpg";
 import mattTraining from "@/assets/matt-training.jpg";
-import athleteFootball from "@/assets/athlete-football.jpg";
-import athleteSoccer from "@/assets/athlete-soccer.jpg";
-import athleteBaseball from "@/assets/athlete-baseball.jpg";
-import athleteLacrosse from "@/assets/athlete-lacrosse.jpg";
 
 /* ─── animation helper ─── */
 const fade = (delay: number) => ({
