@@ -101,6 +101,7 @@ const Admin = () => {
           ))}
         </div>
 
+        {activeTab === "ai-copilot" && <AdminAiCopilot />}
         {activeTab === "trial" && <AdminTrialSettings />}
         {activeTab === "tiers" && <AdminTierManager />}
         {activeTab === "schedule" && <AdminSchedule />}
