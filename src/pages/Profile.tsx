@@ -564,6 +564,7 @@ const Profile = () => {
         </div>
       </div>
       <TechSupportButton />
+      <GiftSessionModal open={giftModalOpen} onClose={() => setGiftModalOpen(false)} />
     </div>
   );
 };
