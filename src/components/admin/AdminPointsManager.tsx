@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Zap, Trophy, Search, Plus, Minus, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { getLevelInfo } from "@/hooks/usePoints";
 
 interface UserPointRow {
@@ -96,12 +97,12 @@ const AdminPointsManager = () => {
       {/* Search */}
       <div className="relative">
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-        <input
+        <Input
           type="text"
           placeholder="Search athletes..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="w-full bg-muted border border-border pl-9 pr-3 py-2 text-sm focus:ring-1 focus:ring-primary outline-none"
+          className="pl-9"
         />
       </div>
 
@@ -112,20 +113,19 @@ const AdminPointsManager = () => {
             Adjust Points — {filtered.find(u => u.user_id === adjustUserId)?.athlete_name || "Athlete"}
           </span>
           <div className="flex gap-2">
-            <input
+            <Input
               type="number"
               placeholder="Points (negative to deduct)"
               value={adjustAmount}
               onChange={e => setAdjustAmount(e.target.value)}
-              className="flex-1 bg-background border border-border px-3 py-2 text-sm font-mono focus:ring-1 focus:ring-primary outline-none"
+              className="flex-1 font-mono"
             />
           </div>
-          <input
+          <Input
             type="text"
             placeholder="Reason (required)"
             value={adjustReason}
             onChange={e => setAdjustReason(e.target.value)}
-            className="w-full bg-background border border-border px-3 py-2 text-sm focus:ring-1 focus:ring-primary outline-none"
           />
           <div className="flex gap-2">
             <button

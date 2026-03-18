@@ -3,6 +3,8 @@ import { LifeBuoy, Send, Loader2, CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 const CATEGORIES = [
   "Billing / Subscription Issue",
@@ -85,27 +87,26 @@ const SupportTicketForm = () => {
                 <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1 block">
                   Category
                 </label>
-                <select
-                  value={subject}
-                  onChange={(e) => setSubject(e.target.value)}
-                  className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors"
-                >
-                  <option value="">Select a category…</option>
-                  {CATEGORIES.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
+                <Select value={subject} onValueChange={setSubject}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select a category…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CATEGORIES.map((c) => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1 block">
                   Describe Your Issue
                 </label>
-                <textarea
+                <Textarea
                   value={body}
                   onChange={(e) => setBody(e.target.value)}
                   rows={4}
                   placeholder="e.g., I meant to buy Foundation for my son but accidentally purchased Basic…"
-                  className="w-full bg-background border border-border px-3 py-2.5 text-sm text-foreground resize-none placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
                 />
               </div>
               <button

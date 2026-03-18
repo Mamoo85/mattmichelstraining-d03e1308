@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Headset, Send, X, Loader2, Bot } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -109,12 +110,12 @@ const TechSupportButton = () => {
               )}
 
               {!replied && (
-                <textarea
+                <Textarea
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   rows={5}
                   placeholder="Tell us what's going on..."
-                  className="w-full bg-background border border-border px-3 py-2.5 text-sm text-foreground resize-none placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+                  className="resize-none"
                 />
               )}
             </div>

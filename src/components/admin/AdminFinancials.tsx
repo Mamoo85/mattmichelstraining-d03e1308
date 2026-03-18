@@ -3,16 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { DollarSign, Users, TrendingUp, MoreHorizontal, Loader2, RefreshCw, CloudCog, CheckCircle2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import ConfirmActionModal from "@/components/ConfirmActionModal";
 
 interface Transaction {
   id: string;
@@ -275,33 +266,23 @@ const AdminFinancials = () => {
       )}
 
       {/* Confirmation Dialog */}
-      <AlertDialog open={!!actionRow && !!actionType} onOpenChange={() => { setActionRow(null); setActionType(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {actionType === "refund" ? "Issue Refund" : "Cancel Subscription"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {actionType === "refund"
-                ? `Are you sure you want to refund ${formatAmount(actionRow?.amount || 0)} to ${displayName(actionRow!)}? This action cannot be undone.`
-                : `Are you sure you want to cancel ${displayName(actionRow!)}'s subscription? They will immediately lose portal access.`}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (!actionRow) return;
-                if (actionType === "refund") refundMutation.mutate(actionRow);
-                else cancelMutation.mutate(actionRow);
-              }}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {actionType === "refund" ? "Confirm Refund" : "Confirm Cancellation"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmActionModal
+        open={!!actionRow && !!actionType}
+        onOpenChange={() => { setActionRow(null); setActionType(null); }}
+        title={actionType === "refund" ? "Issue Refund" : "Cancel Subscription"}
+        description={
+          actionType === "refund"
+            ? `Are you sure you want to refund ${formatAmount(actionRow?.amount || 0)} to ${displayName(actionRow!)}? This action cannot be undone.`
+            : `Are you sure you want to cancel ${displayName(actionRow!)}'s subscription? They will immediately lose portal access.`
+        }
+        confirmLabel={actionType === "refund" ? "Confirm Refund" : "Confirm Cancellation"}
+        destructive
+        onConfirm={() => {
+          if (!actionRow) return;
+          if (actionType === "refund") refundMutation.mutate(actionRow);
+          else cancelMutation.mutate(actionRow);
+        }}
+      />
     </div>
   );
 };
