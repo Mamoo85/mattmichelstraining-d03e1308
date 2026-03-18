@@ -22,7 +22,9 @@ const AiAssistButton = ({ type, context, onResult, label = "AI Assist", classNam
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      if (data?.result) {
+      if (data?.queued) {
+        toast({ title: "Queued for approval", description: "AI draft sent to the approval queue. Review it in the AI Queue tab." });
+      } else if (data?.result) {
         onResult(data.result);
         toast({ title: "AI draft ready", description: "Review and edit before sending." });
       }
