@@ -36,6 +36,7 @@ import AdminPromotions from "@/components/admin/AdminPromotions";
 import AdminPointsManager from "@/components/admin/AdminPointsManager";
 import AdminTierManager from "@/components/admin/AdminTierManager";
 import AdminSystemSettings from "@/components/admin/AdminSystemSettings";
+import AdminStripeProducts from "@/components/admin/AdminStripeProducts";
 
 /* ── Tab 4: Site Content ───────────────────────────── */
 import AdminFrontPage from "@/components/admin/AdminFrontPage";
