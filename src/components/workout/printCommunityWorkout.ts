@@ -165,9 +165,9 @@ export const printCommunityWorkout = (data: PrintCommunityWorkoutData) => {
 <body>
   <button class="print-btn" onclick="window.print()">Print / Save PDF</button>
   <div class="header">
-    <h1>${data.title}</h1>
-    <div class="creator">Created by ${data.creatorName} · Mattletes Community</div>
-    ${data.description ? `<div class="desc">${data.description}</div>` : ""}
+    <h1>${esc(data.title)}</h1>
+    <div class="creator">Created by ${esc(data.creatorName)} · Mattletes Community</div>
+    ${data.description ? `<div class="desc">${esc(data.description)}</div>` : ""}
     <div class="brand">M² Training — Mattletes Workout Bank</div>
   </div>
   <div class="name-date">

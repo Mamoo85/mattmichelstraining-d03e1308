@@ -249,8 +249,8 @@ export const printWorkoutLog = (program: PrintProgramData) => {
   <button class="print-btn" onclick="window.print()">Print / Save PDF</button>
 
   <div class="header">
-    <h1>${program.title}</h1>
-    <div class="meta">${[program.category, program.sport].filter(Boolean).join(" · ")}</div>
+    <h1>${esc(program.title)}</h1>
+    <div class="meta">${[program.category, program.sport].filter(Boolean).map(s => esc(s as string)).join(" · ")}</div>
     <div class="brand">M² Training — Matt Michels</div>
   </div>
 
