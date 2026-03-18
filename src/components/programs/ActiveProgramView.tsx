@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Loader2, ChevronDown, ChevronRight, Dumbbell, Info } from "lucide-react";
+import { Loader2, ChevronDown, ChevronRight, Dumbbell, Info, Printer } from "lucide-react";
 import ExerciseVideoEmbed from "../exercise/ExerciseVideoEmbed";
 import AskCoachMatt from "./AskCoachMatt";
+import { printWorkoutLog } from "./printWorkoutLog";
 
 interface WorkoutExercise {
   id: string;
@@ -81,15 +82,64 @@ const ActiveProgramView = ({ activeProgram }: ActiveProgramProps) => {
   const daysInWeek = [...new Set(workouts.filter((w) => w.week_number === selectedWeek).map((w) => w.day_number))].sort((a, b) => a - b);
   const dayExercises = workouts.filter((w) => w.week_number === selectedWeek && w.day_number === selectedDay);
 
+  const handlePrint = () => {
+    // Build week→day→exercise structure for the print utility
+    const weekMap = new Map<number, Map<number, WorkoutExercise[]>>();
+    workouts.forEach((w) => {
+      if (!weekMap.has(w.week_number)) weekMap.set(w.week_number, new Map());
+      const dayMap = weekMap.get(w.week_number)!;
+      if (!dayMap.has(w.day_number)) dayMap.set(w.day_number, []);
+      dayMap.get(w.day_number)!.push(w);
+    });
+
+    printWorkoutLog({
+      title: activeProgram.program.title,
+      sport: activeProgram.program.sport,
+      category: activeProgram.program.category,
+      weeks: [...weekMap.entries()]
+        .sort(([a], [b]) => a - b)
+        .map(([week, dayMap]) => ({
+          week,
+          days: [...dayMap.entries()]
+            .sort(([a], [b]) => a - b)
+            .map(([day, exercises]) => ({
+              day,
+              exercises: exercises
+                .sort((a, b) => a.sort_order - b.sort_order)
+                .map((ex) => ({
+                  name: ex.exercise.title,
+                  setsReps: ex.prescribed_sets_reps,
+                  instructions: ex.coach_instructions || undefined,
+                })),
+            })),
+        })),
+    });
+  };
+
   return (
     <div className="space-y-4">
       {/* Program header */}
       <div className="bg-card shadow-m2 p-4">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-0.5">
-          {activeProgram.program.category}{activeProgram.program.sport ? ` · ${activeProgram.program.sport}` : ""}
-        </span>
-        <h2 className="text-base font-bold text-foreground">{activeProgram.program.title}</h2>
-        <p className="text-xs text-muted-foreground mt-1">{activeProgram.program.description}</p>
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-0.5">
+              {activeProgram.program.category}{activeProgram.program.sport ? ` · ${activeProgram.program.sport}` : ""}
+            </span>
+            <h2 className="text-base font-bold text-foreground">{activeProgram.program.title}</h2>
+            <p className="text-xs text-muted-foreground mt-1">{activeProgram.program.description}</p>
+          </div>
+          {workouts.length > 0 && (
+            <button
+              onClick={handlePrint}
+              className="flex items-center gap-1.5 px-3 py-2 min-h-[44px] bg-primary/10 hover:bg-primary/20 text-primary text-[10px] font-bold uppercase tracking-widest transition-m2 flex-shrink-0"
+              aria-label="Print or download program as PDF"
+            >
+              <Printer size={14} />
+              <span className="hidden sm:inline">Print / PDF</span>
+              <span className="sm:hidden">PDF</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Week selector */}
