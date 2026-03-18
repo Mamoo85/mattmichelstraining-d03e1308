@@ -29,6 +29,7 @@ const EMPTY: Exercise = {
   focus_area: [],
   sport: [],
   video_url: "",
+  level: "intermediate",
 };
 
 const AdminExerciseLibrary = () => {
