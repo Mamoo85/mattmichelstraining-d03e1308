@@ -162,44 +162,6 @@ const ForParents = () => {
           </div>
         </motion.div>
 
-        {/* DANGER ZONE — INJURY STATS */}
-        <motion.div {...fade(0.1)} className="mb-12">
-          <div className="bg-destructive/10 border-2 border-destructive/30 p-5 mb-4">
-            <div className="flex items-start gap-3">
-              <AlertTriangle size={24} className="text-destructive flex-shrink-0 mt-0.5" />
-              <div>
-                <h2 className="text-base md:text-lg font-bold text-foreground mb-1">
-                  The Dangers Your Child Faces Without Proper Training
-                </h2>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Youth sports injuries are an epidemic. Most are entirely preventable with proper strength training,
-                  recovery programming, and patience. Here are the numbers nobody talks about:
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {INJURY_STATS.map((s) => (
-              <div key={s.label} className="bg-card shadow-m2 p-5">
-                <span className="text-xl md:text-2xl font-bold text-primary font-mono block mb-1">{s.stat}</span>
-                <p className="text-sm text-foreground leading-snug mb-1">{s.label}</p>
-                <span className="text-[10px] text-muted-foreground font-mono">{s.source}</span>
-              </div>
-            ))}
-          </div>
-          <div className="bg-primary/10 border-2 border-primary/30 p-5 mt-3">
-            <div className="flex items-start gap-3">
-              <Shield size={20} className="text-primary flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm text-foreground font-bold mb-1">Matt's record: Zero injuries. Twenty years of youth strength training.</p>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Not because he's lucky. Because he understands work capacity, recovery windows, and the biomechanics of growing bodies.
-                  Every foundation program teaches your child mobility, core stability, and proper strength development — skills they'll carry for life.
-                </p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
 
         {/* COLLEGE PREP TIMELINE */}
         <motion.div {...fade(0.15)} className="mb-12">
