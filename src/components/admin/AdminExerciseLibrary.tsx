@@ -13,6 +13,7 @@ interface Exercise {
   focus_area: string[];
   sport: string[];
   video_url: string;
+  level: string;
 }
 
 const PRESET_CLIENT_TYPES = ["Athlete", "Lifestyle Fitness"];
