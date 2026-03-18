@@ -168,10 +168,10 @@ const Pricing = () => {
             animate={{ opacity: 1, y: 0 }}
             className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-foreground mb-4"
           >
-            {cms.page_heading || cms.page_title || "Online Strength Training Plans"}
+            {cms.page_heading || cms.page_title || "Your Coach. Your Corner. Any Age."}
           </motion.h1>
           <p className="text-muted-foreground max-w-xl mx-auto">
-            {cms.page_subtitle || "Every tier is month-to-month. Cancel anytime. No contracts — just affordable, proven strength programming for athletes in any sport, any state."}
+            {cms.page_subtitle || "I train everyone — youth athletes, parents, adults, coaches. Every tier is month-to-month. Cancel anytime. No contracts. Just 20 years of proven strength programming delivered to your phone."}
           </p>
 
           {subscribed && subscriptionTier && (

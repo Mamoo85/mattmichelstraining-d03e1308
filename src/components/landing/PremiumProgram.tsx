@@ -8,7 +8,7 @@ const PremiumProgram = () => {
 
   const title = c.title || "Your Custom Strength Training Program — $20";
   const subtitle = c.subtitle || "Custom Strength Program · Built by Matt · Not a Template";
-  const description = c.description || "You fill out the intake. Matt reads every word. Then he builds your athlete's strength program from scratch — their sport, their goals, their equipment, their level. No templates. No AI-generated workouts. Just 20 years of experience and a proven system for developing stronger, more durable young athletes.";
+  const description = c.description || "You fill out the intake. Matt reads every word. Then he builds your program from scratch — your sport, your goals, your equipment, your level. No templates. No AI-generated workouts. Just 20 years of experience and a proven system for building stronger, more durable athletes of any age.";
   const price = c.price || "$20";
   const cta = c.cta || "Get Your Strength Program";
 
