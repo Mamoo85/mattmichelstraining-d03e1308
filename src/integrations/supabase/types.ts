@@ -2163,6 +2163,54 @@ export type Database = {
           },
         ]
       }
+      user_content_access: {
+        Row: {
+          access_type: string
+          granted_at: string
+          granted_by: string | null
+          id: string
+          notes: string | null
+          program_id: string | null
+          user_id: string
+          workout_id: string | null
+        }
+        Insert: {
+          access_type?: string
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          notes?: string | null
+          program_id?: string | null
+          user_id: string
+          workout_id?: string | null
+        }
+        Update: {
+          access_type?: string
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          notes?: string | null
+          program_id?: string | null
+          user_id?: string
+          workout_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_content_access_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "training_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_content_access_workout_id_fkey"
+            columns: ["workout_id"]
+            isOneToOne: false
+            referencedRelation: "daily_workouts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_points: {
         Row: {
           created_at: string
