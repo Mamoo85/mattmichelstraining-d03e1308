@@ -92,12 +92,7 @@ const TESTIMONIALS = [
   },
 ];
 
-const SUCCESS_STORIES = [
-  { name: "GP South Athlete", sport: "Football", image: athleteFootball, quote: "Matt's programming took my squat from 225 to 315 in one off-season. Movement and mechanics first — that's the M² difference.", result: "+90 lb Squat" },
-  { name: "M² Client", sport: "Soccer", image: athleteSoccer, quote: "First time I feel fast AND strong. Went from JV to starting varsity after one summer with Coach Matt.", result: "JV → Varsity" },
-  { name: "College Commit", sport: "Baseball", image: athleteBaseball, quote: "Matt fixed mechanics no one else even noticed. One of 50+ college athletes developed at M² Training.", result: "College Commit" },
-  { name: "Comeback Story", sport: "Strength", image: athleteLacrosse, quote: "Tore my ACL sophomore year. Matt got me back stronger than before — movement, mechanics, mindset.", result: "Full Recovery" },
-];
+/* SUCCESS_STORIES — REMOVED: Do not re-add until real athlete stories are collected */
 
 const STATS = [
   { value: "20+", label: "Years Training" },
