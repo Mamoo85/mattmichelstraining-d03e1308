@@ -121,9 +121,24 @@ serve(async (req) => {
     if (hasActiveSub) {
       const subscription = subscriptions.data[0];
       subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
-      productId = subscription.items.data[0].price.product;
-      tier = PRODUCT_TIER_MAP[productId as string] || "basic";
-      logStep("Active subscription found", { productId, tier, subscriptionEnd });
+
+      // Multi-item support: check if this user has a specific subscription item mapped
+      const { data: familyItem } = await supabaseClient
+        .from("family_subscription_items")
+        .select("tier, price_id")
+        .eq("member_user_id", user.id)
+        .eq("stripe_subscription_id", subscription.id)
+        .maybeSingle();
+
+      if (familyItem) {
+        tier = familyItem.tier;
+        logStep("Tier from family item", { tier });
+      } else {
+        // Fallback: use first item (single-member or legacy subscription)
+        productId = subscription.items.data[0].price.product;
+        tier = PRODUCT_TIER_MAP[productId as string] || "basic";
+        logStep("Active subscription found", { productId, tier, subscriptionEnd });
+      }
     } else {
       logStep("No active subscription");
     }
@@ -139,9 +154,27 @@ serve(async (req) => {
         .eq("parent_user_id", user.id);
 
       if (children && children.length > 0) {
-        const childIds = children.map((c: any) => c.child_user_id);
-        await supabaseClient.from("profiles").update({ subscription_tier: tier }).in("user_id", childIds);
-        logStep("Synced tier to children", { childCount: childIds.length, tier });
+        // Only sync children who DON'T have their own family_subscription_items
+        for (const c of children) {
+          const { data: childItem } = await supabaseClient
+            .from("family_subscription_items")
+            .select("tier")
+            .eq("member_user_id", c.child_user_id)
+            .maybeSingle();
+
+          if (childItem) {
+            // Child has their own tier mapping — sync that
+            await supabaseClient.from("profiles")
+              .update({ subscription_tier: childItem.tier })
+              .eq("user_id", c.child_user_id);
+          } else {
+            // Inherit parent's tier
+            await supabaseClient.from("profiles")
+              .update({ subscription_tier: tier })
+              .eq("user_id", c.child_user_id);
+          }
+        }
+        logStep("Synced tier to children", { childCount: children.length, tier });
       }
     }
 
