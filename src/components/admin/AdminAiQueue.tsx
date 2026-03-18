@@ -23,6 +23,7 @@ interface QueueItem {
 
 const ACTION_LABELS: Record<string, string> = {
   form_check: "Form Check",
+  draft_reply: "Coach Draft Reply",
   coach_reply: "Coach Reply",
   newsletter: "Newsletter Draft",
   program_reply: "Program Reply",
@@ -43,6 +44,9 @@ const ACTION_LABELS: Record<string, string> = {
   client_summary: "Client Summary",
   schedule_suggest: "Schedule Suggestion",
   parent_report: "Parent Report",
+  welcome_drip: "🎉 Welcome Drip",
+  weekly_recap: "📊 Weekly Recap",
+  upsell_nudge: "💰 Upsell Nudge",
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -143,26 +147,31 @@ const AdminAiQueue = () => {
 
   const deliverApprovedAction = async (item: QueueItem, text: string) => {
     // For athlete-facing actions, create a notification so the athlete can see the response
-    if (item.target_user_id && ["recovery_advice", "recovery_advisor", "exercise_sub", "exercise_substitution", "intake_analyzer", "form_check", "coach_reply", "program_reply"].includes(item.action_type)) {
+    if (item.target_user_id && ["recovery_advice", "recovery_advisor", "exercise_sub", "exercise_substitution", "intake_analyzer", "form_check", "draft_reply", "coach_reply", "program_reply", "welcome_drip", "weekly_recap", "upsell_nudge"].includes(item.action_type)) {
+      const titleMap: Record<string, string> = {
+        welcome_drip: "Welcome to M² Training!",
+        weekly_recap: "Your Weekly Training Recap",
+        upsell_nudge: "Level Up Your Training",
+      };
       await supabase.from("notifications").insert({
         user_id: item.target_user_id,
-        type: "ai_response",
-        title: `${ACTION_LABELS[item.action_type] || "AI"} Response Ready`,
+        type: item.action_type === "welcome_drip" ? "welcome" : item.action_type === "weekly_recap" ? "recap" : item.action_type === "upsell_nudge" ? "upsell" : "ai_response",
+        title: titleMap[item.action_type] || `${ACTION_LABELS[item.action_type] || "AI"} Response Ready`,
         body: text.slice(0, 500),
-        link: item.context.returnPath || "/dashboard",
+        link: item.action_type === "upsell_nudge" ? "/pricing" : "/dashboard",
       });
     }
 
-    // For coach_reply on flagged exercises, update the coach_reply field
-    if (item.action_type === "coach_reply" && item.context.exerciseLogId) {
+    // For draft_reply on flagged exercises, update the coach_reply field
+    if ((item.action_type === "draft_reply" || item.action_type === "coach_reply") && item.context.exerciseLogId) {
       await supabase
         .from("logged_exercises")
         .update({ coach_reply: text })
         .eq("id", item.context.exerciseLogId);
     }
 
-    // For program_reply, update the coach_reply on the program message
-    if (item.action_type === "program_reply" && item.context.messageId) {
+    // For draft_reply on program messages, update the coach_reply
+    if ((item.action_type === "draft_reply" || item.action_type === "program_reply") && item.context.messageId) {
       await supabase
         .from("program_messages")
         .update({ coach_reply: text })

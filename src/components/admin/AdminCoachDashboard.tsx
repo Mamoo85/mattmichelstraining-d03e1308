@@ -199,12 +199,14 @@ const AdminCoachDashboard = () => {
                 className="flex-1 bg-background border border-border p-3 text-sm text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-primary outline-none min-h-[60px] resize-none"
               />
               <AiAssistButton
-                type="coach_reply"
+                type="draft_reply"
                 context={{
+                  source: "exercise_log",
                   exerciseName: item.exercise_library?.title || "Unknown",
                   setsRepsWeight: JSON.stringify(item.sets_reps_weight),
                   clientNotes: item.client_notes,
                   hasVideo: !!item.video_url,
+                  exerciseLogId: item.id,
                 }}
                 onResult={(text) => setReplies((prev) => ({ ...prev, [item.id]: text }))}
                 label="AI Draft"
