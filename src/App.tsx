@@ -88,6 +88,7 @@ const App = () => (
             <BrowserRouter>
               <ReferralCaptureWrapper />
               <ScrollToTop />
+              <AnnouncementBanner />
               <ErrorBoundary>
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
