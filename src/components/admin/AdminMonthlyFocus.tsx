@@ -374,11 +374,31 @@ const AdminMonthlyFocus = () => {
               <Input value={editFocus.topic || ""} onChange={(e) => setEditFocus(p => ({ ...p, topic: e.target.value }))} />
             </div>
             <div>
-              <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Reasoning (Matt's voice)</label>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">The Why (Matt's voice)</label>
               <Textarea
                 value={editFocus.reasoning || ""}
                 onChange={(e) => setEditFocus(p => ({ ...p, reasoning: e.target.value }))}
-                rows={8}
+                rows={4}
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">
+                Biomechanics — Perfect Form (one per line)
+              </label>
+              <Textarea
+                value={(editFocus.biomechanics || []).join("\n")}
+                onChange={(e) => setEditFocus(p => ({ ...p, biomechanics: e.target.value.split("\n").filter(Boolean) }))}
+                rows={4}
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">
+                Common Mistakes (one per line)
+              </label>
+              <Textarea
+                value={(editFocus.common_mistakes || []).join("\n")}
+                onChange={(e) => setEditFocus(p => ({ ...p, common_mistakes: e.target.value.split("\n").filter(Boolean) }))}
+                rows={4}
               />
             </div>
             <div>
@@ -390,6 +410,10 @@ const AdminMonthlyFocus = () => {
                 onChange={(e) => setEditFocus(p => ({ ...p, exercises: e.target.value.split("\n").filter(Boolean) }))}
                 rows={5}
               />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Challenge Metric</label>
+              <Input value={editFocus.challenge_metric || ""} onChange={(e) => setEditFocus(p => ({ ...p, challenge_metric: e.target.value }))} />
             </div>
             <div>
               <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Matt's Quote</label>
