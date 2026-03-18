@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { useTierAccess } from "@/hooks/useTierAccess";
 import { toast } from "@/hooks/use-toast";
 import { MessageSquare, Video, Send, Loader2, X, AlertTriangle, Lock, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
