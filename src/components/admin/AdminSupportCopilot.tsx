@@ -50,7 +50,7 @@ const AdminSupportCopilot = () => {
         .order("created_at", { ascending: false })
         .limit(50);
       if (error) throw error;
-      return (data || []) as SupportTicket[];
+      return (data || []) as unknown as SupportTicket[];
     },
   });
 

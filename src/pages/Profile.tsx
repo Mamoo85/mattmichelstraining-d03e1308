@@ -567,6 +567,7 @@ const Profile = () => {
           )}
         </div>
       </div>
+      <SupportTicketForm />
       <TechSupportButton />
       <GiftSessionModal open={giftModalOpen} onClose={() => setGiftModalOpen(false)} />
     </div>
