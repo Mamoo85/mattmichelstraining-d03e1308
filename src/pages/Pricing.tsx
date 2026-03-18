@@ -330,7 +330,10 @@ const Pricing = () => {
                 ) : (
                   <div className="space-y-2">
                     <button
-                      onClick={() => handleCheckout(card.key)}
+                      onClick={() => {
+                        if (!user) { navigate("/auth"); return; }
+                        setModalTier({ key: card.key, label: card.label || tier.name });
+                      }}
                       disabled={loadingTier === card.key}
                       className={`w-full py-3 text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-colors ${
                         card.highlight
