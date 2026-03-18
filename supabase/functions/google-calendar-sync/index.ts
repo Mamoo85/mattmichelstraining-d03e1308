@@ -20,14 +20,12 @@ async function getGoogleAccessToken(): Promise<string> {
   
   // Strategy 1: Use GOOGLE_PRIVATE_KEY_B64 (just the base64 key content, no PEM headers)
   if (GOOGLE_PRIVATE_KEY_B64) {
-    // Secret may contain literal \n sequences from PEM format - strip everything non-base64
     pemBase64 = GOOGLE_PRIVATE_KEY_B64
       .replace(/-----BEGIN PRIVATE KEY-----/g, "")
       .replace(/-----END PRIVATE KEY-----/g, "")
-      .replace(/\\n/g, "")     // literal \n (two chars: backslash + n)
-      .replace(/[\n\r\s]/g, "") // actual whitespace
+      .replace(/\\n/g, "")
+      .replace(/[\n\r\s]/g, "")
       .trim();
-    console.log("Using GOOGLE_PRIVATE_KEY_B64, length:", pemBase64.length, "starts:", pemBase64.substring(0, 10), "ends:", pemBase64.substring(pemBase64.length - 10));
   }
   // Strategy 2: Try parsing GOOGLE_SERVICE_ACCOUNT_KEY as full JSON
   else if (GOOGLE_SERVICE_ACCOUNT_KEY) {
