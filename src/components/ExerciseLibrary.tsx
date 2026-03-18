@@ -14,6 +14,7 @@ interface DbExercise {
   the_why: string;
   sport: string[];
   video_url: string | null;
+  level: string;
 }
 
 const CLIENT_TYPES = ["Athlete", "Lifestyle Fitness"] as const;
