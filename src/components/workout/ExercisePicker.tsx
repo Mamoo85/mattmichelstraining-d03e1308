@@ -66,6 +66,8 @@ const ExercisePicker = memo(({ onSelect, onCancel }: ExercisePickerProps) => {
       </div>
     </div>
   );
-};
+});
+
+ExercisePicker.displayName = "ExercisePicker";
 
 export default ExercisePicker;
