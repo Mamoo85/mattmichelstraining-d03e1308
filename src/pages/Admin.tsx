@@ -25,6 +25,7 @@ import AdminVideoReview from "@/components/admin/AdminVideoReview";
 import AdminParentReports from "@/components/admin/AdminParentReports";
 import AdminFamilyManager from "@/components/admin/AdminFamilyManager";
 import AdminLearnEditor from "@/components/admin/AdminLearnEditor";
+import AdminFinancials from "@/components/admin/AdminFinancials";
 import AdminSystemSettings from "@/components/admin/AdminSystemSettings";
 
 import AdminTestimonials from "@/components/admin/AdminTestimonials";
