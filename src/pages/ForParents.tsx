@@ -150,7 +150,7 @@ const ForParents = () => {
               to="/auth?redirect=/trial-welcome"
               className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
             >
-              Start Your 7-Day Free Trial
+              Start Your 14-Day Free Trial
               <ArrowRight size={15} />
             </Link>
             <Link
