@@ -1,7 +1,6 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
 import m2Logo from "@/assets/m2-logo-official.jpg";
-import { useContentMap, useSectionVisible } from "@/hooks/useSiteContent";
+import { useSectionVisible } from "@/hooks/useSiteContent";
 
 import AudienceSelector from "./landing/AudienceSelector";
 import ForParentsCTA from "./landing/ForParentsCTA";
