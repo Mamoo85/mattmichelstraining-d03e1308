@@ -22,7 +22,7 @@ const GUIDES: Guide[] = [
     price: "$15",
     priceId: "price_middle_school_foundation",
     description: "Movement quality, joint integrity, and the base that prevents injuries for years. Not a workout plan — a foundation your athlete keeps forever.",
-    includes: ["10 exercises with full breakdowns", "Age-appropriate progressions", "The WHY behind each movement", "Parent guide included"],
+    includes: ["10 exercises with full breakdowns", "Age-appropriate progressions", "The WHY behind each movement", "Parent resource included"],
   },
   {
     id: "high-school-armor",
