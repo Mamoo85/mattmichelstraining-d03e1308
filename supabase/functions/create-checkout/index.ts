@@ -128,14 +128,24 @@ serve(async (req) => {
       }
     }
 
+    const origin = req.headers.get("origin") || "";
     const sessionParams: any = {
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       line_items: [{ price: priceId, quantity: 1 }],
       mode: "subscription",
-      success_url: `${req.headers.get("origin")}/dashboard?checkout=success`,
-      cancel_url: `${req.headers.get("origin")}/pricing?checkout=canceled`,
+      success_url: successUrl ? `${origin}${successUrl}` : `${origin}/dashboard?checkout=success`,
+      cancel_url: cancelUrl ? `${origin}${cancelUrl}` : `${origin}/pricing?checkout=canceled`,
     };
+
+    // Add trial period if specified
+    if (trialDays && Number(trialDays) > 0) {
+      sessionParams.subscription_data = {
+        trial_period_days: Number(trialDays),
+        metadata: { trial_path: trialPath || "basic" },
+      };
+      logStep("Trial period added", { days: trialDays, path: trialPath });
+    }
 
     if (stripeCouponId) {
       sessionParams.discounts = [{ coupon: stripeCouponId }];
