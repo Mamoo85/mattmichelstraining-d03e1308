@@ -11,6 +11,7 @@ import AdminClientList from "@/components/admin/AdminClientList";
 import AdminProtocols from "@/components/admin/AdminProtocols";
 import AdminSiteEditor from "@/components/admin/AdminSiteEditor";
 import AdminCoachDashboard from "@/components/admin/AdminCoachDashboard";
+import AdminRecoveryHeatmap from "@/components/admin/AdminRecoveryHeatmap";
 import AdminCoachInbox from "@/components/admin/AdminCoachInbox";
 import AdminPrograms from "@/components/admin/AdminPrograms";
 import AdminExerciseLibrary from "@/components/admin/AdminExerciseLibrary";
@@ -114,7 +115,10 @@ const Admin = () => {
         {activeTab === "monthly" && <AdminMonthlyFocus />}
         {activeTab === "coach" && (
           <div className="space-y-8">
-            <AdminCoachInbox />
+            <AdminRecoveryHeatmap />
+            <div className="border-t border-border pt-6">
+              <AdminCoachInbox />
+            </div>
             <div className="border-t border-border pt-6">
               <AdminCoachDashboard />
             </div>
