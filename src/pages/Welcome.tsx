@@ -44,7 +44,7 @@ const Welcome = () => (
         <h1 className="text-2xl md:text-3xl font-bold tracking-display text-foreground mb-3">
           Welcome to <span className="text-primary">M² Training</span>
         </h1>
-        <p className="text-sm text-muted-foreground max-w-lg mx-auto leading-relaxed">
+        <p className="text-sm text-foreground-soft max-w-lg mx-auto leading-relaxed">
           Your free account is ready. Now let's talk about how we can take your
           training — or your athlete's training — to the next level.
         </p>
