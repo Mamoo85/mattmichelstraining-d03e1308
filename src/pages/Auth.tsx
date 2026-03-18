@@ -194,6 +194,7 @@ const Auth = () => {
             </svg>
           )}
           Continue with Apple
+        </button>
 
         {/* Magic Link */}
         {mode !== "magic" && (
