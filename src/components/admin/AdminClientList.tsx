@@ -250,6 +250,29 @@ const AdminClientList = () => {
                           <option value="team">Team</option>
                         </select>
                       </div>
+                      {/* Trial Extension */}
+                      <div className="mt-2 flex items-center justify-between bg-card p-3 shadow-m2">
+                        <div className="flex items-center gap-2">
+                          <Clock size={14} className="text-primary" />
+                          <div>
+                            <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Trial</span>
+                            {profile.trial_started_at && (
+                              <p className="text-[9px] text-muted-foreground">Started {new Date(profile.trial_started_at).toLocaleDateString()}</p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex gap-1">
+                          {[3, 7, 14].map((d) => (
+                            <button
+                              key={d}
+                              onClick={() => extendTrialMutation.mutate({ profileId: profile.id, days: d })}
+                              className="px-2 py-1.5 text-[9px] font-bold uppercase tracking-widest bg-muted text-muted-foreground hover:bg-primary/20 hover:text-primary transition-m2"
+                            >
+                              +{d}d
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
                         <div className="bg-card p-2.5 shadow-m2">
                           <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Joined</p>
