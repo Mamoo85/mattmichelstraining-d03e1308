@@ -25,6 +25,8 @@ export interface LoggedExerciseData {
   clientNotes: string;
   videoUrl: string;
   flagForCoach: boolean;
+  exerciseVideoUrl?: string | null;
+  exerciseTheWhy?: string | null;
 }
 
 const WorkoutLogger = () => {
