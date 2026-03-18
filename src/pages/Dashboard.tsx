@@ -443,6 +443,7 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       <AppNavbar />
+      <PwaInstallBanner />
       <div className="container pt-20 pb-12 px-4 sm:px-6">
         {/* Header — stack on mobile, row on desktop */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
