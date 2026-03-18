@@ -111,7 +111,7 @@ const AdminProgramCreator = () => {
     setDraft(null);
     try {
       const { data, error } = await supabase.functions.invoke("generate-program", {
-        body: { category, level, sport: sport || null, weeks, daysPerWeek, description },
+        body: { category, level, sport: sport || null, weeks, daysPerWeek, description, exercisesPerDay, explanationDetail, includeFixIt, focusAreas: selectedFocusAreas },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
