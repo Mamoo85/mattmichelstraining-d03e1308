@@ -774,6 +774,54 @@ export type Database = {
         }
         Relationships: []
       }
+      parent_inbox: {
+        Row: {
+          admin_reply: string | null
+          body: string
+          child_user_id: string | null
+          created_at: string
+          id: string
+          is_read: boolean
+          is_urgent: boolean
+          parent_email: string
+          parent_name: string | null
+          replied_at: string | null
+          sentiment: string
+          subject: string
+          urgent_reason: string | null
+        }
+        Insert: {
+          admin_reply?: string | null
+          body: string
+          child_user_id?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          is_urgent?: boolean
+          parent_email: string
+          parent_name?: string | null
+          replied_at?: string | null
+          sentiment?: string
+          subject?: string
+          urgent_reason?: string | null
+        }
+        Update: {
+          admin_reply?: string | null
+          body?: string
+          child_user_id?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          is_urgent?: boolean
+          parent_email?: string
+          parent_name?: string | null
+          replied_at?: string | null
+          sentiment?: string
+          subject?: string
+          urgent_reason?: string | null
+        }
+        Relationships: []
+      }
       parent_invite_tokens: {
         Row: {
           child_name: string | null

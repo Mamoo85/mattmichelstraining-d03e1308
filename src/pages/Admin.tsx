@@ -26,6 +26,7 @@ import AdminDirectMessages from "@/components/admin/AdminDirectMessages";
 import AdminPointsManager from "@/components/admin/AdminPointsManager";
 import AdminVideoReview from "@/components/admin/AdminVideoReview";
 import AdminParentReports from "@/components/admin/AdminParentReports";
+import AdminParentInbox from "@/components/admin/AdminParentInbox";
 import AdminFamilyManager from "@/components/admin/AdminFamilyManager";
 import AdminLearnEditor from "@/components/admin/AdminLearnEditor";
 import AdminFinancials from "@/components/admin/AdminFinancials";
@@ -157,6 +158,7 @@ const Admin = () => {
             { key: "athletes", label: "Athletes & Trials", content: <AdminClientList /> },
             { key: "family", label: "Family Accounts", content: <AdminFamilyManager /> },
             { key: "parent-reports", label: "Parent Reports", content: <AdminParentReports /> },
+            { key: "parent-inbox", label: "Parent Inbox", content: <AdminParentInbox /> },
             { key: "trial", label: "Trial Settings", content: <AdminTrialSettings /> },
           ]} />
         )}
