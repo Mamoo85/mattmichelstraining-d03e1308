@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { X, Minus, Plus, Play, Pause, RotateCcw } from "lucide-react";
+import { X, Minus, Plus, Play, Pause, RotateCcw, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { countdownBeep, workBeep, restBeep, completeChime } from "./useTimerAudio";
+import { countdownBeep, workBeep, restBeep, completeChime, setMasterVolume, getMasterVolume, testBeep } from "./useTimerAudio";
 
 function vibrate(pattern: number | number[]) {
   if (navigator.vibrate) navigator.vibrate(pattern);
@@ -109,6 +109,7 @@ const IntervalTimer = ({ onClose }: { onClose: () => void }) => {
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [currentRound, setCurrentRound] = useState(0);
   const [running, setRunning] = useState(false);
+  const [volume, setVolume] = useState(() => getMasterVolume() * 100);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const targetTimeRef = useRef(0);
@@ -357,6 +358,41 @@ const IntervalTimer = ({ onClose }: { onClose: () => void }) => {
                   </div>
                 </div>
               ))}
+            </div>
+
+            {/* Volume Control */}
+            <div className="bg-card border border-border p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <Volume2 size={14} className="text-primary" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Volume</span>
+                </div>
+                <span className="font-mono text-sm font-bold text-foreground tabular-nums">{Math.round(volume)}%</span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={200}
+                step={5}
+                value={volume}
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  setVolume(v);
+                  setMasterVolume(v / 100);
+                }}
+                className="w-full h-3 accent-primary cursor-pointer"
+              />
+              <div className="flex items-center justify-between text-[9px] font-mono text-muted-foreground">
+                <span>MUTE</span>
+                <span>100%</span>
+                <span>200% BOOST</span>
+              </div>
+              <button
+                onClick={testBeep}
+                className="w-full py-2 bg-muted text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground hover:bg-muted-foreground/20 transition-colors border border-border"
+              >
+                🔊 Test Beep
+              </button>
             </div>
 
             <div className="flex gap-2">
