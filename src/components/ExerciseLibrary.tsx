@@ -291,13 +291,22 @@ const ExerciseLibrary = () => {
                 </div>
 
                 {isExpanded && (
-                  <div className="px-4 pb-4 border-t border-border pt-3">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-1">
-                      The WHY
-                    </span>
-                    <p className="text-xs text-foreground leading-relaxed mb-2">
-                      {ex.the_why}
-                    </p>
+                  <div className="px-4 pb-4 border-t border-border pt-3 space-y-3">
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-1">
+                        The WHY
+                      </span>
+                      <p className="text-xs text-foreground leading-relaxed mb-2">
+                        {ex.the_why}
+                      </p>
+                    </div>
+
+                    {/* Video embed */}
+                    <ExerciseVideoEmbed
+                      videoUrl={ex.video_url}
+                      exerciseTitle={ex.title}
+                    />
+
                     <button
                       onClick={(e) => { e.stopPropagation(); setSubstitutionExercise(substitutionExercise === ex.title ? null : ex.title); }}
                       className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-m2"
