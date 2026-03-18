@@ -293,9 +293,23 @@ const ExerciseLibrary = () => {
                     <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-1">
                       The WHY
                     </span>
-                    <p className="text-xs text-foreground leading-relaxed">
+                    <p className="text-xs text-foreground leading-relaxed mb-2">
                       {ex.the_why}
                     </p>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setSubstitutionExercise(substitutionExercise === ex.title ? null : ex.title); }}
+                      className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-m2"
+                    >
+                      <RefreshCw size={10} /> Find a Substitute
+                    </button>
+                    {substitutionExercise === ex.title && (
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <AiExerciseSubstitution
+                          exerciseName={ex.title}
+                          onClose={() => setSubstitutionExercise(null)}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
