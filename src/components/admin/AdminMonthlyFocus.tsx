@@ -58,6 +58,7 @@ const AdminMonthlyFocus = () => {
   const [generating, setGenerating] = useState(false);
   const [editingFocus, setEditingFocus] = useState(false);
   const [editFocus, setEditFocus] = useState<Partial<Focus>>({});
+  const [topicInput, setTopicInput] = useState("");
 
   // Load data
   useEffect(() => {
