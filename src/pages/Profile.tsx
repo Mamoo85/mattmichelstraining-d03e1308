@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth, TIERS, TierKey, TIER_DISCOUNTS } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import AppNavbar from "@/components/AppNavbar";
+import TechSupportButton from "@/components/TechSupportButton";
 import { Link } from "react-router-dom";
 import {
   User, Trophy, Medal, Award, Save, Loader2, Gift, Search,
