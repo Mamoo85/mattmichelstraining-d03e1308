@@ -1,5 +1,6 @@
 import { useState } from "react";
 import AppNavbar from "@/components/AppNavbar";
+import AdminTrialSettings from "@/components/admin/AdminTrialSettings";
 import AdminSubscriberList from "@/components/admin/AdminSubscriberList";
 import AdminNewsletterComposer from "@/components/admin/AdminNewsletterComposer";
 import AdminSendHistory from "@/components/admin/AdminSendHistory";
