@@ -8,6 +8,7 @@ import PressAuthority from "@/components/landing/PressAuthority";
 import SuccessStories from "@/components/landing/SuccessStories";
 import AuthorityBar from "@/components/landing/AuthorityBar";
 import { useSectionVisible, useContentMap } from "@/hooks/useSiteContent";
+import TrialCTA from "@/components/TrialCTA";
 
 const ARTICLE_HIGHLIGHTS = [
   {
