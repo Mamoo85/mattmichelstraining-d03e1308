@@ -22,7 +22,7 @@ const GUIDES: Guide[] = [
     price: "$15",
     priceId: "price_middle_school_foundation",
     description: "Movement quality, joint integrity, and the base that prevents injuries for years. Not a workout plan — a foundation your athlete keeps forever.",
-    includes: ["10 exercises with full breakdowns", "Age-appropriate progressions", "The WHY behind each movement", "Parent guide included"],
+    includes: ["10 exercises with full breakdowns", "Age-appropriate progressions", "The WHY behind each movement", "Parent resource included"],
   },
   {
     id: "high-school-armor",
@@ -99,7 +99,7 @@ const PdfGuides = () => {
       {/* Description */}
       <div className="bg-primary/10 border border-primary/20 p-4 mb-6">
         <p className="text-sm text-foreground leading-relaxed">
-          <strong>Top-10 exercise blueprints — $15 each.</strong> Standalone PDF guides. Each one teaches you the WHY behind every movement so your athlete understands what they're doing and why it matters. Buy once, keep forever.
+          <strong>Top-10 exercise blueprints — $15 each.</strong> Standalone PDF plans. Each one teaches you the WHY behind every movement so your athlete understands what they're doing and why it matters. Buy once, keep forever.
         </p>
       </div>
 
@@ -112,7 +112,7 @@ const PdfGuides = () => {
             onClick={() => setExpandedGuide(expandedGuide === guide.id ? null : guide.id)}
           >
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-primary">PDF Guide</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-primary">PDF Plan</span>
               <span className="text-lg font-mono font-bold text-primary">{guide.price}</span>
             </div>
             <h3 className="text-sm font-bold text-foreground mb-1">{guide.title}</h3>
@@ -143,7 +143,7 @@ const PdfGuides = () => {
                 ) : (
                   <FileText size={12} />
                 )}
-                Buy Guide · {guide.price}
+                Buy Plan · {guide.price}
               </button>
             </div>
           </div>
@@ -154,14 +154,14 @@ const PdfGuides = () => {
       <div className="mt-8 bg-card shadow-m2 p-5">
         <h3 className="text-sm font-bold text-foreground mb-1">Need something specific?</h3>
         <p className="text-[11px] text-muted-foreground mb-4">
-          Tell Matt what you're looking for. He builds new guides based on real demand — not trends.
+          Tell Matt what you're looking for. He builds new plans based on real demand — not trends.
         </p>
         <div className="flex gap-2">
           <input
             type="text"
             value={guideRequest}
             onChange={(e) => setGuideRequest(e.target.value)}
-            placeholder="What guide do you need?"
+            placeholder="What plan do you need?"
             maxLength={200}
             className="flex-1 bg-background border border-border px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-primary outline-none"
           />
