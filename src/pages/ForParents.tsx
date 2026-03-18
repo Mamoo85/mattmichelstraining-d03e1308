@@ -162,44 +162,6 @@ const ForParents = () => {
           </div>
         </motion.div>
 
-        {/* DANGER ZONE — INJURY STATS */}
-        <motion.div {...fade(0.1)} className="mb-12">
-          <div className="bg-destructive/10 border-2 border-destructive/30 p-5 mb-4">
-            <div className="flex items-start gap-3">
-              <AlertTriangle size={24} className="text-destructive flex-shrink-0 mt-0.5" />
-              <div>
-                <h2 className="text-base md:text-lg font-bold text-foreground mb-1">
-                  The Dangers Your Child Faces Without Proper Training
-                </h2>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Youth sports injuries are an epidemic. Most are entirely preventable with proper strength training,
-                  recovery programming, and patience. Here are the numbers nobody talks about:
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {INJURY_STATS.map((s) => (
-              <div key={s.label} className="bg-card shadow-m2 p-5">
-                <span className="text-xl md:text-2xl font-bold text-primary font-mono block mb-1">{s.stat}</span>
-                <p className="text-sm text-foreground leading-snug mb-1">{s.label}</p>
-                <span className="text-[10px] text-muted-foreground font-mono">{s.source}</span>
-              </div>
-            ))}
-          </div>
-          <div className="bg-primary/10 border-2 border-primary/30 p-5 mt-3">
-            <div className="flex items-start gap-3">
-              <Shield size={20} className="text-primary flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm text-foreground font-bold mb-1">Matt's record: Zero injuries. Twenty years of youth strength training.</p>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Not because he's lucky. Because he understands work capacity, recovery windows, and the biomechanics of growing bodies.
-                  Every foundation program teaches your child mobility, core stability, and proper strength development — skills they'll carry for life.
-                </p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
 
         {/* COLLEGE PREP TIMELINE */}
         <motion.div {...fade(0.15)} className="mb-12">
@@ -237,29 +199,7 @@ const ForParents = () => {
           </div>
         </motion.div>
 
-        {/* SLEEP & RECOVERY */}
-        <motion.div {...fade(0.2)} className="mb-12">
-          <div className="bg-card shadow-m2 p-5 md:p-6">
-            <div className="flex items-center gap-2 mb-3">
-              <Heart size={18} className="text-primary" />
-              <h2 className="text-sm font-bold uppercase tracking-widest text-foreground">Strength Training + Recovery</h2>
-            </div>
-            <p className="text-sm text-foreground font-semibold mb-2">
-              Sleep is the #1 reason youth athletes get hurt. Bad or over-training is #2.
-            </p>
-            <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-              Let Matt handle the strength training, and you tell them to go to bed. Young athletes need 72 hours minimum to recover from proper strength work. Matt prioritizes healthy joints and a healthy mind over numbers on a board.
-            </p>
-            <div className="bg-card border-2 border-primary/30 p-4">
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                <span className="text-foreground font-bold">When you buy a program, Matt is on the other end.</span> Not an AI. Not a chatbot. When your athlete has a question — they tap "Ask Matt" and Matt personally responds. For $20, your kid gets a 20-year veteran coach.
-              </p>
-            </div>
-          </div>
-        </motion.div>
 
-        {/* PORTAL SHOWCASE */}
-        <PortalShowcase />
 
         {/* CLEAR PATH */}
         <motion.div {...fade(0.25)} className="mb-12">
@@ -365,32 +305,6 @@ const ForParents = () => {
           </a>
         </motion.div>
 
-        {/* FINAL CTA */}
-        <motion.div {...fade(0.4)} className="mb-12">
-          <div className="bg-primary/10 border-2 border-primary/40 p-6 md:p-8 text-center">
-            <h2 className="text-lg md:text-2xl font-bold text-foreground mb-2">
-              {cms.final_cta_title || "Ready to invest in your athlete's strength and safety?"}
-            </h2>
-            <p className="text-sm text-muted-foreground mb-6 max-w-lg mx-auto">
-              {cms.final_cta_text || "Start a free 14-day trial. Get your athlete set up with real programming from a 20-year veteran coach. No credit card. No commitment. Just results."}
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Link
-                to="/auth?redirect=/trial-welcome"
-                className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
-              >
-                Start Free 14-Day Trial
-                <ArrowRight size={15} />
-              </Link>
-              <Link
-                to="/shop"
-                className="inline-flex items-center gap-2 border-2 border-primary/40 text-primary px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:bg-primary/10 transition-m2"
-              >
-                Browse $20 Programs
-              </Link>
-            </div>
-          </div>
-        </motion.div>
 
         {/* FOOTER */}
         <div className="pt-6 border-t border-border text-center">
