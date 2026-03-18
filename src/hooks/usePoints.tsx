@@ -150,8 +150,8 @@ export const usePoints = () => {
 
   const toggleVisibility = useCallback(async (val: boolean) => {
     if (!user) return;
-    // Update only is_public (row is created by award_points function)
-    await supabase.from("user_points").update({ is_public: val } as any).eq("user_id", user.id);
+    // Use SECURITY DEFINER function — no direct UPDATE on user_points
+    await supabase.rpc("toggle_points_visibility", { _is_public: val });
     setPoints(prev => prev ? { ...prev, is_public: val } : prev);
     loadLeaderboard();
   }, [user, loadLeaderboard]);

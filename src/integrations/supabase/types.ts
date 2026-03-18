@@ -2343,6 +2343,10 @@ export type Database = {
           read_ct: number
         }[]
       }
+      toggle_points_visibility: {
+        Args: { _is_public: boolean }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user" | "parent" | "child"

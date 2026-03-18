@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { format, addDays, startOfDay } from "date-fns";
-import { Loader2, Clock, DollarSign, Info, Calendar, CheckCircle, Video, MapPin, Ticket } from "lucide-react";
+import { Loader2, Clock, DollarSign, Info, Calendar, CheckCircle, Video, MapPin, Ticket, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const formatTime12 = (t: string) => {
@@ -49,6 +49,9 @@ const Schedule = () => {
   const [hasCredit, setHasCredit] = useState(false);
   const [useCredit, setUseCredit] = useState(false);
   const [loadingCredit, setLoadingCredit] = useState(false);
+  const [hasGift, setHasGift] = useState(false);
+  const [giftId, setGiftId] = useState<string | null>(null);
+  const [useGift, setUseGift] = useState(false);
 
   const isElite = subscriptionTier === "custom" || subscriptionTier === "team_elite";
 
@@ -57,35 +60,55 @@ const Schedule = () => {
   const currentDate = days[selectedDay];
   const dateStr = format(currentDate, "yyyy-MM-dd");
 
-  // Check for available session credits (Elite only)
+  // Check for available session credits (Elite only) and gifted sessions
   useEffect(() => {
-    if (!user || !isElite) { setHasCredit(false); return; }
-    const checkCredit = async () => {
+    if (!user) { setHasCredit(false); setHasGift(false); return; }
+
+    const checkEntitlements = async () => {
       setLoadingCredit(true);
-      const now = new Date();
-      const month = now.getMonth() + 1;
-      const year = now.getFullYear();
-      const { data } = await supabase
-        .from("session_credits")
+
+      // Check gifted sessions for ANY tier
+      const { data: giftData } = await supabase
+        .from("gifted_sessions")
         .select("id")
-        .eq("user_id", user.id)
-        .eq("month", month)
-        .eq("year", year)
-        .eq("is_used", false);
-      // If no credit row exists yet, they still have one (will be auto-created on redeem)
-      setHasCredit(!data || data.length === 0 || data.length > 0);
-      // Actually check if they already used it
-      const { data: usedData } = await supabase
-        .from("session_credits")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("month", month)
-        .eq("year", year)
-        .eq("is_used", true);
-      setHasCredit(!usedData || usedData.length === 0);
+        .eq("status", "pending")
+        .eq("claimed_by", user.id)
+        .limit(1);
+
+      // Also check by receiver_email if not claimed yet
+      const userEmail = user.email;
+      let pendingGift = giftData && giftData.length > 0 ? giftData[0] : null;
+      if (!pendingGift && userEmail) {
+        const { data: emailGifts } = await supabase
+          .from("gifted_sessions")
+          .select("id")
+          .eq("status", "pending")
+          .eq("receiver_email", userEmail)
+          .limit(1);
+        pendingGift = emailGifts && emailGifts.length > 0 ? emailGifts[0] : null;
+      }
+      setHasGift(!!pendingGift);
+      setGiftId(pendingGift?.id || null);
+
+      // Check Elite credits
+      if (isElite) {
+        const now = new Date();
+        const month = now.getMonth() + 1;
+        const year = now.getFullYear();
+        const { data: usedData } = await supabase
+          .from("session_credits")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("month", month)
+          .eq("year", year)
+          .eq("is_used", true);
+        setHasCredit(!usedData || usedData.length === 0);
+      } else {
+        setHasCredit(false);
+      }
       setLoadingCredit(false);
     };
-    checkCredit();
+    checkEntitlements();
   }, [user, isElite]);
 
   // Verify session on return from Stripe
@@ -138,7 +161,7 @@ const Schedule = () => {
   const toggleSlot = (time: string) => {
     setSelectedSlots(prev => {
       if (prev.includes(time)) return prev.filter(t => t !== time);
-      if (useCredit) return [time]; // credits = single slot only
+      if (useCredit || useGift) return [time]; // credits/gifts = single slot only
       if (prev.length === 0) return [time];
       if (prev.length === 1) {
         const existing = prev[0];
@@ -154,8 +177,9 @@ const Schedule = () => {
 
   const isConsecutive = selectedSlots.length === 2 &&
     addMinutes(selectedSlots[0], 30) === selectedSlots[1];
-  const duration = useCredit ? 30 : (isConsecutive ? 60 : 30);
-  const price = useCredit ? 0 : (isConsecutive ? 90 : 50);
+  const isFreeSession = useCredit || useGift;
+  const duration = isFreeSession ? 30 : (isConsecutive ? 60 : 30);
+  const price = isFreeSession ? 0 : (isConsecutive ? 90 : 50);
 
   const handlePurchase = async () => {
     if (!user) {
@@ -167,7 +191,7 @@ const Schedule = () => {
     setPurchasing(true);
     try {
       if (useCredit) {
-        // Redeem credit directly
+        // Redeem Elite credit directly
         const { data, error } = await supabase.functions.invoke("redeem-session-credit", {
           body: {
             slot_date: dateStr,
@@ -180,6 +204,23 @@ const Schedule = () => {
         setVerified(true);
         setHasCredit(false);
         toast({ title: "Session booked!", description: "Your Elite session credit has been redeemed. Confirmation emails sent!" });
+      } else if (useGift && giftId) {
+        // Redeem gifted session — book free via edge function
+        const { data, error } = await supabase.functions.invoke("redeem-session-credit", {
+          body: {
+            slot_date: dateStr,
+            start_time: selectedSlots[0],
+            session_type: sessionType,
+            gift_id: giftId,
+          },
+        });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+        setVerified(true);
+        setHasGift(false);
+        setGiftId(null);
+        setUseGift(false);
+        toast({ title: "Session booked!", description: "Your gifted session has been redeemed. Confirmation emails sent!" });
       } else {
         // Stripe checkout
         const { data, error } = await supabase.functions.invoke("create-session-checkout", {
@@ -304,8 +345,8 @@ const Schedule = () => {
           <div className="flex items-start gap-2">
             <Info size={14} className="text-primary flex-shrink-0 mt-0.5" />
             <div className="text-xs text-muted-foreground space-y-1">
-              {useCredit ? (
-                <p><strong className="text-foreground">Free 30-min session</strong> — Select one time slot to redeem your Elite credit.</p>
+              {useCredit || useGift ? (
+                <p><strong className="text-foreground">Free 30-min session</strong> — Select one time slot to redeem your {useCredit ? "Elite credit" : "gifted session"}.</p>
               ) : (
                 <>
                   <p><strong className="text-foreground">30-minute session: $50</strong> — Select one time slot.</p>
@@ -374,18 +415,18 @@ const Schedule = () => {
               <div>
                 <div className="text-sm font-bold text-foreground flex items-center gap-2">
                   {sessionType === "video" ? <Video size={14} /> : <MapPin size={14} />}
-                  {isConsecutive && !useCredit ? "1-Hour Session" : "30-Minute Session"}
+                  {isConsecutive && !isFreeSession ? "1-Hour Session" : "30-Minute Session"}
                   <span className="text-[10px] px-1.5 py-0.5 bg-muted text-muted-foreground font-bold uppercase">
                     {sessionType === "video" ? "Video" : "In-Person"}
                   </span>
                 </div>
                 <div className="text-xs text-muted-foreground">
                   {format(currentDate, "EEEE, MMM d")} at {formatTime12(selectedSlots[0])}
-                  {isConsecutive && !useCredit && ` – ${formatTime12(addMinutes(selectedSlots[1], 30))}`}
+                  {isConsecutive && !isFreeSession && ` – ${formatTime12(addMinutes(selectedSlots[1], 30))}`}
                 </div>
               </div>
               <div className="text-right">
-                {useCredit ? (
+                {isFreeSession ? (
                   <div>
                     <div className="text-xs line-through text-muted-foreground">$50</div>
                     <div className="text-lg font-mono font-bold text-primary">FREE</div>
@@ -401,8 +442,8 @@ const Schedule = () => {
               className="w-full text-xs font-bold uppercase tracking-widest"
             >
               {purchasing ? <Loader2 size={14} className="animate-spin mr-2" /> : 
-                useCredit ? <Ticket size={14} className="mr-2" /> : <DollarSign size={14} className="mr-2" />}
-              {!user ? "Sign In to Book" : useCredit ? "Redeem Credit" : `Book Session · $${price}`}
+                isFreeSession ? (useGift ? <Gift size={14} className="mr-2" /> : <Ticket size={14} className="mr-2" />) : <DollarSign size={14} className="mr-2" />}
+              {!user ? "Sign In to Book" : useCredit ? "Redeem Credit" : useGift ? "Redeem Gift" : `Book Session · $${price}`}
             </Button>
           </div>
         )}

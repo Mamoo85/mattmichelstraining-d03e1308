@@ -335,6 +335,64 @@ serve(async (req) => {
       const session = event.data.object as Stripe.Checkout.Session;
       const meta = session.metadata || {};
 
+      // ── TRAINING SESSION BOOKING FALLBACK ──
+      // If user closes browser before verify-session-booking runs, the webhook ensures the booking is created
+      if (meta.type === "training_session" && meta.user_id && meta.slot_ids) {
+        const { data: existingBooking } = await sb
+          .from("session_bookings")
+          .select("id")
+          .eq("stripe_session_id", session.id)
+          .maybeSingle();
+
+        if (!existingBooking) {
+          const slotIds: string[] = JSON.parse(meta.slot_ids);
+          const durationMinutes = parseInt(meta.duration_minutes || "30");
+          const amountCents = durationMinutes === 60 ? 9000 : 5000;
+
+          const { data: booking, error: bookingError } = await sb
+            .from("session_bookings")
+            .insert({
+              user_id: meta.user_id,
+              slot_date: meta.slot_date,
+              start_time: meta.start_time,
+              duration_minutes: durationMinutes,
+              amount_cents: amountCents,
+              session_type: meta.session_type || "in_person",
+              stripe_session_id: session.id,
+              stripe_payment_intent_id: session.payment_intent as string,
+              user_email: meta.user_email,
+              user_name: meta.user_name,
+              status: "confirmed",
+            })
+            .select()
+            .single();
+
+          if (!bookingError && booking) {
+            for (const slotId of slotIds) {
+              await sb.from("schedule_slots")
+                .update({ booked_by: meta.user_id, booking_id: booking.id })
+                .eq("id", slotId);
+            }
+            console.log(`[WEBHOOK] Training session booking created as fallback: ${booking.id}`);
+
+            // Fire-and-forget GCal sync
+            try {
+              const gcalUrl = `${SUPABASE_URL}/functions/v1/google-calendar-sync`;
+              await fetch(gcalUrl, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+                },
+                body: JSON.stringify({ action: "create_event", booking_id: booking.id }),
+              });
+            } catch (e) { console.error("GCal sync error:", e); }
+          }
+        } else {
+          console.log(`[WEBHOOK] Training session already verified: ${existingBooking.id}`);
+        }
+      }
+
       // Activate gift card if this was a gift card purchase
       if (meta.type === "gift_card" && meta.gift_code) {
         await sb.from("gift_cards")
