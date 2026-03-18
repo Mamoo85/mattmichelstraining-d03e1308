@@ -427,7 +427,7 @@ const TIER_COLS = [
 
 const TierComparisonTable = () => {
   const { data: features = [], isLoading } = useQuery({
-    queryKey: ["tier-features-pricing"],
+    queryKey: ["tier-features"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("tier_features")
