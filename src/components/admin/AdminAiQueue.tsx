@@ -23,6 +23,7 @@ interface QueueItem {
 
 const ACTION_LABELS: Record<string, string> = {
   form_check: "Form Check",
+  draft_reply: "Coach Draft Reply",
   coach_reply: "Coach Reply",
   newsletter: "Newsletter Draft",
   program_reply: "Program Reply",
@@ -43,6 +44,9 @@ const ACTION_LABELS: Record<string, string> = {
   client_summary: "Client Summary",
   schedule_suggest: "Schedule Suggestion",
   parent_report: "Parent Report",
+  welcome_drip: "🎉 Welcome Drip",
+  weekly_recap: "📊 Weekly Recap",
+  upsell_nudge: "💰 Upsell Nudge",
 };
 
 const STATUS_COLORS: Record<string, string> = {
