@@ -290,7 +290,7 @@ const Dashboard = () => {
         _description: "Monthly challenge entry",
         _reference_id: challenge.id,
       });
-    } catch (e) { console.error("Points award failed:", e); }
+    } catch { /* silent */ }
     loadLeaderboard();
     loadEntries();
     setActionLoading(false);
