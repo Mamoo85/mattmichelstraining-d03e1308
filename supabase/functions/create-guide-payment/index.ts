@@ -123,7 +123,7 @@ serve(async (req) => {
         quantity: 1,
       }],
       mode: "payment",
-      success_url: `${origin}/shop?purchase=success`,
+      success_url: `${origin}/dashboard?purchase=success`,
       cancel_url: `${origin}/shop`,
       metadata: sessionMetadata,
     };
