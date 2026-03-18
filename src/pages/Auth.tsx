@@ -47,6 +47,7 @@ const Auth = () => {
   const [appleLoading, setAppleLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -264,12 +265,29 @@ const Auth = () => {
             </div>
           )}
 
+          {mode === "signup" && (
+            <label className="flex items-start gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={termsAccepted}
+                onChange={(e) => setTermsAccepted(e.target.checked)}
+                className="mt-1 accent-primary w-4 h-4 shrink-0"
+              />
+              <span className="text-[11px] text-muted-foreground leading-tight">
+                I agree to the{" "}
+                <a href="/about#terms" target="_blank" className="text-primary hover:underline">Terms of Service</a>
+                {" "}and{" "}
+                <a href="/about#privacy" target="_blank" className="text-primary hover:underline">Privacy Policy</a>
+              </span>
+            </label>
+          )}
+
           {error && <p className="text-sm text-destructive">{error}</p>}
           {success && <p className="text-sm text-primary">{success}</p>}
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || (mode === "signup" && !termsAccepted)}
             className="w-full bg-primary text-primary-foreground px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2 flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {loading ? <Loader2 size={15} className="animate-spin" /> : mode === "magic" ? <Mail size={15} /> : <ArrowRight size={15} />}

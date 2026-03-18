@@ -33,10 +33,15 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
 // Product ID → tier key mapping
 const PRODUCT_TIER_MAP: Record<string, string> = {
+  "prod_UAlStH84vrByST": "basic",
+  "prod_UAlTgNGJWmREZL": "foundation",
+  "prod_UAlTkDlrDfDije": "custom",
+  "prod_UAlUIuvjHBjtNL": "team_elite",
+  // Legacy
   "prod_U9ppSReG0j0RIr": "basic",
-  "prod_U9pqrtuc44EE4A": "pro",
-  "prod_U9pqNqVuxYD6kl": "elite",
-  "prod_U9pq1sVSh9nOQi": "team",
+  "prod_U9pqrtuc44EE4A": "foundation",
+  "prod_U9pqNqVuxYD6kl": "custom",
+  "prod_U9pq1sVSh9nOQi": "team_elite",
 };
 
 // Map Stripe price IDs to guide info
