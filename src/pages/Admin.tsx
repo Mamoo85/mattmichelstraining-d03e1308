@@ -61,7 +61,7 @@ const TABS = [
 ];
 
 const Admin = () => {
-  const [activeTab, setActiveTab] = useState("clients");
+  const [activeTab, setActiveTab] = useState("ai-copilot");
   const { isAdmin, isLoading } = useIsAdmin();
 
   if (isLoading) {
