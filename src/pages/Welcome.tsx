@@ -204,24 +204,24 @@ const Welcome = () => (
           {[
             {
               name: "Basic",
-              price: "$12.99/mo",
+              price: "$14.99/mo",
               icon: Star,
               perks: [
-                "Monthly Focus Plan from Matt",
+                "Exercise library + 10 daily workouts",
                 "Full workout logging & tracking",
                 "Member challenges & leaderboard",
                 "10% off all programs",
               ],
             },
             {
-              name: "Pro",
-              price: "$25.99/mo",
+              name: "Foundation",
+              price: "$39.99/mo",
               icon: Trophy,
               perks: [
                 "Everything in Basic",
+                "8-week periodized training block",
                 "Fix It recovery library",
-                "Direct messaging with Matt",
-                "Video form checks & chats",
+                "Flag Coach Matt for feedback",
                 "15% off all programs",
               ],
               highlight: true,

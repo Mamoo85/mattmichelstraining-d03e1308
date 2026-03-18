@@ -69,7 +69,7 @@ export const EliteUpsellModal = ({ open, onClose }: { open: boolean; onClose: ()
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: { priceId: TIERS.elite.price_id },
+        body: { priceId: TIERS.custom.price_id },
       });
       if (error) throw error;
       if (data?.url) window.open(data.url, "_blank");
@@ -90,11 +90,11 @@ export const EliteUpsellModal = ({ open, onClose }: { open: boolean; onClose: ()
         </button>
         <div className="text-center space-y-3">
           <div className="text-3xl">🏋️</div>
-          <h3 className="text-lg font-black uppercase tracking-tight text-foreground">Upgrade to Elite</h3>
+          <h3 className="text-lg font-black uppercase tracking-tight text-foreground">Upgrade to Custom</h3>
           <p className="text-sm text-muted-foreground">
             Get direct form checks and 1-on-1 coaching from Matt. Flag exercises for review, get personalized feedback, and level up your training.
           </p>
-          <div className="text-2xl font-black text-foreground">$42.99<span className="text-sm font-normal text-muted-foreground">/mo</span></div>
+          <div className="text-2xl font-black text-foreground">$99.99<span className="text-sm font-normal text-muted-foreground">/mo</span></div>
           <button
             onClick={handleCheckout}
             disabled={loading}

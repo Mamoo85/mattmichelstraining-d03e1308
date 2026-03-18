@@ -245,9 +245,9 @@ const AdminClientList = () => {
                         >
                           <option value="free">Free</option>
                           <option value="basic">Basic</option>
-                          <option value="pro">Pro</option>
-                          <option value="elite">Elite</option>
-                          <option value="team">Team</option>
+                          <option value="foundation">Foundation</option>
+                          <option value="custom">Custom</option>
+                          <option value="team_elite">Team/Elite</option>
                         </select>
                       </div>
                       {/* Trial Extension */}

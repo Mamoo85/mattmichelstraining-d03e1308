@@ -16,24 +16,24 @@ const TIER_OPTIONS = [
   {
     key: "basic" as const,
     name: "M² Basic",
-    price: "$12.99/mo",
+    price: "$14.99/mo",
     icon: Star,
-    perks: ["Monthly Focus Plan", "Workout logging & tracking", "Challenges & leaderboard", "10% off programs"],
+    perks: ["Exercise library + daily workouts", "Workout logging & tracking", "Challenges & leaderboard", "10% off programs"],
   },
   {
-    key: "pro" as const,
-    name: "M² Pro",
-    price: "$25.99/mo",
+    key: "foundation" as const,
+    name: "M² Foundation",
+    price: "$39.99/mo",
     icon: Trophy,
     highlight: true,
-    perks: ["Everything in Basic", "Fix It recovery library", "Direct messaging with Matt", "Video form checks", "15% off programs"],
+    perks: ["Everything in Basic", "8-week periodized training", "Fix It recovery library", "Flag Coach Matt", "15% off programs"],
   },
   {
-    key: "elite" as const,
-    name: "M² Elite",
-    price: "$42.99/mo",
+    key: "custom" as const,
+    name: "M² Custom",
+    price: "$99.99/mo",
     icon: Zap,
-    perks: ["Everything in Pro", "1-on-1 coaching from Matt", "Priority scheduling", "Custom programming", "20% off programs"],
+    perks: ["Everything in Foundation", "Custom programming + AI builder", "1-on-1 video assessment", "Gift a session", "20% off programs"],
   },
 ];
 
@@ -42,7 +42,7 @@ const TrialPaywallModal = ({ open, onClose, hardLock }: TrialPaywallModalProps) 
   const navigate = useNavigate();
   const [loading, setLoading] = useState<string | null>(null);
 
-  const handleCheckout = async (tierKey: "basic" | "pro" | "elite") => {
+  const handleCheckout = async (tierKey: "basic" | "foundation" | "custom") => {
     if (!user) {
       navigate("/auth");
       return;

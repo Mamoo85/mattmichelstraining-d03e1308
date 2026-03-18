@@ -26,89 +26,76 @@ const TIER_CARDS: {
     key: "basic",
     icon: Zap,
     features: [
-      "Monthly Focus Plan — Matt's training focus changes monthly to build balanced gym skills",
-      "85+ exercise library with sport-specific filters",
-      "Filter by YOUR sport — find the best exercises for Golf, Volleyball, Football & more",
+      "Exercise library with sport-specific filters",
+      "10 pre-loaded daily workouts",
       "Member challenges & leaderboard",
+      "Monthly Focus Plan access",
     ],
     cta: "Start Basic",
+    subtitle: "The cost of a Netflix subscription — get in the ecosystem.",
   },
   {
-    key: "pro",
+    key: "foundation",
     icon: Star,
     highlight: true,
-    label: "Pro",
     features: [
-      "Monthly Focus Plan — Matt's training focus changes monthly to build balanced gym skills",
-      "85+ exercise library with sport-specific filters",
-      "Filter by YOUR sport — find the best exercises for Golf, Volleyball, Football & more",
-      "Member challenges & leaderboard",
-      "Custom program from intake form",
-      "🎁 Free postural assessment with trial (video or live call)",
-      "🖐️ Flag Coach Matt — raise your hand and get personal coaching feedback on any exercise",
-      "Monthly program updates",
+      "Everything in Basic",
+      "8-week periodized training block",
+      "Program adapts over months — not random sweat sessions",
+      "🖐️ Flag Coach Matt for personal feedback",
       "Full 'Fix It' rehab library",
+      "Monthly program updates",
     ],
-    cta: "Go Pro",
+    cta: "Go Foundation",
+    subtitle: "Your core program. Real structure. Real results.",
   },
   {
-    key: "pro",
+    key: "foundation",
     icon: Shield,
     label: "Youth Development",
-    subtitle: "Same Pro features — designed for families",
+    subtitle: "Same Foundation features — designed for families",
     features: [
-      "Everything in Pro — same price, same features",
+      "Everything in Foundation — same price, same features",
       "🎁 Free postural assessment (video or live call)",
       "Parent account with child invite link",
       "Monitor your child's workouts & progress",
       "Flag Coach Matt on your child's behalf",
       "Age-appropriate programming from intake",
-      "Parent trial auto-charges Pro when it ends",
+      "Parent trial auto-charges Foundation when it ends",
     ],
     cta: "Start Parent Trial",
   },
   {
-    key: "elite",
+    key: "custom",
     icon: Crown,
     features: [
-      "Monthly Focus Plan — Matt's training focus changes monthly to build balanced gym skills",
-      "85+ exercise library with sport-specific filters",
-      "Filter by YOUR sport — find the best exercises for Golf, Volleyball, Football & more",
-      "Member challenges & leaderboard",
-      "Custom program from intake form",
-      "🖐️ Flag Coach Matt — raise your hand and get personal coaching feedback on any exercise",
-      "Optional postural video assessment",
+      "Everything in Foundation",
+      "Fully custom programming + AI builder",
+      "1-on-1 video assessment ($50 value included)",
+      "🎁 Gift a session to a friend",
       "Monthly program updates",
       "Full 'Fix It' rehab library",
-      "1-on-1 monthly check-ins with Matt",
-      "Priority postural assessments",
       "Direct messaging support",
       "Priority Flag Coach Matt responses",
     ],
-    cta: "Go Elite",
+    cta: "Go Custom",
+    subtitle: "Custom protocol from a 20-year vet for less than the session alone.",
   },
   {
-    key: "team",
+    key: "team_elite",
     icon: Users,
     features: [
-      "Monthly Focus Plan — Matt's training focus changes monthly to build balanced gym skills",
-      "85+ exercise library with sport-specific filters",
-      "Filter by YOUR sport — find the best exercises for Golf, Volleyball, Football & more",
-      "Member challenges & leaderboard",
-      "Custom program from intake form",
-      "🖐️ Flag Coach Matt — raise your hand and get personal coaching feedback on any exercise",
-      "Optional postural video assessment",
-      "Monthly program updates",
-      "Full 'Fix It' rehab library",
-      "1-on-1 monthly check-ins with Matt",
-      "Priority postural assessments",
-      "Direct messaging support",
-      "Priority Flag Coach Matt responses",
+      "Everything in Custom",
+      "Comprehensive on/off-season periodization",
+      "Highest level of custom programming",
+      "1-on-1 video session included",
+      "🎁 Gift session included",
       "Bulk programming for full teams",
-      "Seasonal periodization plans",
       "Multi-athlete management",
+      "Seasonal periodization plans",
     ],
-    cta: "Get Team",
+    cta: "Go Team/Elite",
+    subtitle: "For serious athletes making a college roster.",
   },
 ];
 
@@ -141,8 +128,8 @@ const Pricing = () => {
       if (referralCode && !promoCode.trim()) {
         body.referralCode = referralCode;
       }
-      // Elite/Team → schedule page for 1-on-1 assessment booking; others → dashboard
-      if (tierKey === "elite" || tierKey === "team") {
+      // Custom/Team_Elite → schedule page for 1-on-1 assessment booking; others → dashboard
+      if (tierKey === "custom" || tierKey === "team_elite") {
         body.successUrl = "/schedule?checkout=success";
       } else {
         body.successUrl = "/dashboard?checkout=success";
@@ -191,7 +178,7 @@ const Pricing = () => {
         >
           <p className="text-xs text-muted-foreground leading-relaxed text-center">
             <span className="text-foreground font-bold">1-on-1 training without the 1-on-1 price.</span>{" "}
-            {cms.value_banner || "In-gym personal training averages $40–$150/session. Online coaching packages run $100–$300/mo. Matt's subscriptions start at $15.99/mo — same 20 years of expertise, same personalized approach, for athletes of every age. No contracts, no middleman, available in any state."}
+            {cms.value_banner || "In-gym personal training averages $40–$150/session. Online coaching packages run $100–$300/mo. Matt's subscriptions start at $14.99/mo — same 20 years of expertise, same personalized approach, for athletes of every age. No contracts, no middleman, available in any state."}
           </p>
         </motion.div>
 
@@ -363,7 +350,7 @@ const Pricing = () => {
                     </button>
                     {card.highlight && !subscribed && (
                       <Link
-                        to={user ? "/trial-welcome?path=pro" : "/auth?redirect=/trial-welcome?path=pro"}
+                        to={user ? "/trial-welcome?path=foundation" : "/auth?redirect=/trial-welcome?path=foundation"}
                         className="w-full py-2 text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-1.5 text-primary hover:underline"
                       >
                         Or try 14 days free <ArrowRight className="w-3 h-3" />
@@ -416,7 +403,7 @@ const Pricing = () => {
           loading={!!loadingTier}
           productName={modalTier ? (TIERS[modalTier.key].name + " Subscription") : ""}
           productPrice={modalTier ? (TIERS[modalTier.key].price + "/mo") : ""}
-          productType={modalTier?.key as CheckoutProductType || "pro"}
+          productType={modalTier?.key as CheckoutProductType || "foundation"}
         />
       </div>
     </div>
@@ -425,9 +412,9 @@ const Pricing = () => {
 
 const TIER_COLS = [
   { key: "tier_basic", label: "Basic" },
-  { key: "tier_pro", label: "Pro" },
-  { key: "tier_elite", label: "Elite" },
-  { key: "tier_team", label: "Team" },
+  { key: "tier_foundation", label: "Foundation" },
+  { key: "tier_custom", label: "Custom" },
+  { key: "tier_team_elite", label: "Team/Elite" },
 ] as const;
 
 const TierComparisonTable = () => {
@@ -436,7 +423,7 @@ const TierComparisonTable = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("tier_features")
-        .select("feature_label, description, tier_basic, tier_pro, tier_elite, tier_team")
+        .select("feature_label, description, tier_basic, tier_foundation, tier_custom, tier_team_elite")
         .order("sort_order");
       if (error) throw error;
       return data;
@@ -471,7 +458,7 @@ const TierComparisonTable = () => {
                 <th
                   key={col.key}
                   className={`text-center py-3 px-2 text-[10px] font-bold uppercase tracking-widest ${
-                    col.key === "tier_pro" ? "text-primary" : "text-muted-foreground"
+                    col.key === "tier_foundation" ? "text-primary" : "text-muted-foreground"
                   }`}
                 >
                   {col.label}

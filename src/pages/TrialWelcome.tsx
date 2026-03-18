@@ -13,7 +13,7 @@ import { toast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import m2Logo from "@/assets/m2-logo.jpg";
 
-type TrialPath = "parent" | "basic" | "pro" | null;
+type TrialPath = "parent" | "basic" | "foundation" | null;
 
 const TRIAL_PROGRAMS = [
   {
@@ -24,7 +24,7 @@ const TRIAL_PROGRAMS = [
     icon: Shield,
     tags: ["3 Days/Week", "Bodyweight", "Core"],
     color: "text-emerald-500",
-    forPaths: ["basic", "parent", "pro"] as TrialPath[],
+    forPaths: ["basic", "parent", "foundation"] as TrialPath[],
   },
   {
     id: "a1b2c3d4-0002-4000-8000-000000000002",
@@ -34,7 +34,7 @@ const TRIAL_PROGRAMS = [
     icon: Zap,
     tags: ["3 Days/Week", "Mobility", "Strength"],
     color: "text-amber-500",
-    forPaths: ["basic", "parent", "pro"] as TrialPath[],
+    forPaths: ["basic", "parent", "foundation"] as TrialPath[],
   },
   {
     id: "a1b2c3d4-0003-4000-8000-000000000003",
@@ -44,17 +44,17 @@ const TRIAL_PROGRAMS = [
     icon: Dumbbell,
     tags: ["2 Days/Week", "Recovery", "In-Season"],
     color: "text-blue-500",
-    forPaths: ["basic", "parent", "pro"] as TrialPath[],
+    forPaths: ["basic", "parent", "foundation"] as TrialPath[],
   },
   {
     id: "custom",
     title: "Custom Program — Built by Matt",
-    subtitle: "Pro & Youth Dev Only",
+    subtitle: "Foundation & Youth Dev Only",
     description: "Matt builds your program from scratch after reviewing your postural assessment. Start with a free assessment.",
     icon: Star,
     tags: ["Personalized", "Assessment Included", "1-on-1"],
     color: "text-primary",
-    forPaths: ["parent", "pro"] as TrialPath[],
+    forPaths: ["parent", "foundation"] as TrialPath[],
   },
 ];
 
@@ -90,7 +90,7 @@ const TrialWelcome = () => {
 
     setCheckingOut(true);
     try {
-      const priceId = selectedPath === "basic" ? TIERS.basic.price_id : TIERS.pro.price_id;
+      const priceId = selectedPath === "basic" ? TIERS.basic.price_id : TIERS.foundation.price_id;
 
       const { data, error } = await supabase.functions.invoke("create-checkout", {
         body: {
@@ -201,19 +201,19 @@ const TrialWelcome = () => {
                 onClick={() => setSelectedPath("parent")}
                 icon={Users}
                 title="Parent / Youth Dev"
-                charge="$49.99/mo (Pro) after trial"
+                charge="$39.99/mo (Foundation) after trial"
                 desc="Everything in Basic + custom programming, Fix It library, coach form review, and child invite links."
                 badge="Includes child linking"
                 warning={null}
                 bonus="Free postural assessment"
               />
               <TrialPathCard
-                selected={selectedPath === "pro"}
-                onClick={() => setSelectedPath("pro")}
+                selected={selectedPath === "foundation"}
+                onClick={() => setSelectedPath("foundation")}
                 icon={Star}
-                title="Adult Pro Trial"
-                charge="$49.99/mo (Pro) after trial"
-                desc="Everything in Basic + custom programming built for you, Fix It library, and direct coach form review."
+                title="Adult Foundation Trial"
+                charge="$39.99/mo (Foundation) after trial"
+                desc="Everything in Basic + 8-week periodized training, Fix It library, and direct coach form review."
                 badge={null}
                 warning="No child invite on this plan"
                 bonus="Free postural assessment"

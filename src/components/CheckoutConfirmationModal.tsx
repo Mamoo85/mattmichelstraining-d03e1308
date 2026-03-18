@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ShieldCheck, FileText, Rocket, Video, Loader2 } from "lucide-react";
 
-export type CheckoutProductType = "pdf" | "basic" | "pro" | "elite" | "team" | "program" | "session" | "custom";
+export type CheckoutProductType = "pdf" | "basic" | "foundation" | "custom" | "custom_program" | "team_elite" | "program" | "session";
 
 interface CheckoutConfirmationModalProps {
   open: boolean;
@@ -22,25 +22,25 @@ const NEXT_STEPS: Record<CheckoutProductType, { icon: typeof FileText; text: str
     icon: FileText,
     text: "Your program will be instantly unlocked in your Profile to download.",
   },
-  custom: {
+  custom_program: {
     icon: FileText,
     text: "Matt reads your intake and builds a custom program from scratch. You'll receive it in your Profile once it's ready.",
   },
   basic: {
     icon: Rocket,
-    text: "You will get instant access to the portal. Your first task is to select your track and log your baseline numbers.",
+    text: "You will get instant access to the exercise library and 10 pre-loaded daily workouts. Start training today.",
   },
-  pro: {
+  foundation: {
     icon: Rocket,
-    text: "You will get instant access to the portal. Your first task is to select your track and log your baseline numbers.",
+    text: "You will get instant access to the portal with your 8-week periodized training block. Your first task is to log your baseline numbers.",
   },
-  elite: {
+  custom: {
     icon: Video,
-    text: "After checkout, you will be prompted to schedule your mandatory 1-on-1 video assessment with Coach Matt so we can build your custom protocol.",
+    text: "After checkout, you will complete your intake form and schedule your mandatory 1-on-1 video assessment with Coach Matt to build your custom protocol.",
   },
-  team: {
+  team_elite: {
     icon: Video,
-    text: "After checkout, you will be prompted to schedule your mandatory 1-on-1 video assessment with Coach Matt so we can build your custom protocol.",
+    text: "After checkout, you will be prompted to schedule your mandatory 1-on-1 video assessment with Coach Matt so we can build your comprehensive periodization plan.",
   },
   session: {
     icon: Rocket,

@@ -12,9 +12,9 @@ import { Plus, Trash2, Save, Crown, ShieldCheck, Zap, Star, Users, Loader2 } fro
 
 const TIERS = [
   { key: "tier_basic", label: "Basic", icon: Star, color: "text-blue-400" },
-  { key: "tier_pro", label: "Pro", icon: Zap, color: "text-yellow-400" },
-  { key: "tier_elite", label: "Elite", icon: ShieldCheck, color: "text-orange-400" },
-  { key: "tier_team", label: "Team", icon: Users, color: "text-green-400" },
+  { key: "tier_foundation", label: "Foundation", icon: Zap, color: "text-yellow-400" },
+  { key: "tier_custom", label: "Custom", icon: ShieldCheck, color: "text-orange-400" },
+  { key: "tier_team_elite", label: "Team/Elite", icon: Users, color: "text-green-400" },
   { key: "tier_legend", label: "Legend", icon: Crown, color: "text-amber-400" },
 ] as const;
 
@@ -26,9 +26,9 @@ interface TierFeature {
   feature_label: string;
   description: string;
   tier_basic: boolean;
-  tier_pro: boolean;
-  tier_elite: boolean;
-  tier_team: boolean;
+  tier_foundation: boolean;
+  tier_custom: boolean;
+  tier_team_elite: boolean;
   tier_legend: boolean;
   sort_order: number;
 }

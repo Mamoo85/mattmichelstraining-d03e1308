@@ -14,10 +14,10 @@ interface TrialSettings {
 }
 
 const TIER_OPTIONS: { key: string; label: string; price: string }[] = [
-  { key: "basic", label: "M² Basic", price: "$12.99/mo" },
-  { key: "pro", label: "M² Pro", price: "$25.99/mo" },
-  { key: "elite", label: "M² Elite", price: "$42.99/mo" },
-  { key: "team", label: "M² Team", price: "$84.99/mo" },
+  { key: "basic", label: "M² Basic", price: "$14.99/mo" },
+  { key: "foundation", label: "M² Foundation", price: "$39.99/mo" },
+  { key: "custom", label: "M² Custom", price: "$99.99/mo" },
+  { key: "team_elite", label: "M² Team/Elite", price: "$149.99/mo" },
 ];
 
 const AdminTrialSettings = () => {

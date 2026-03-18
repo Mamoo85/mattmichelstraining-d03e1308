@@ -50,7 +50,7 @@ const Schedule = () => {
   const [useCredit, setUseCredit] = useState(false);
   const [loadingCredit, setLoadingCredit] = useState(false);
 
-  const isElite = subscriptionTier === "elite";
+  const isElite = subscriptionTier === "custom" || subscriptionTier === "team_elite";
 
   const today = startOfDay(new Date());
   const days = Array.from({ length: 14 }, (_, i) => addDays(today, i));
