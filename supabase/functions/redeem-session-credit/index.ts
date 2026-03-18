@@ -161,6 +161,19 @@ serve(async (req) => {
     await sendEmail(user.email, `Session Confirmed — ${dateStr} at ${timeStr}`, emailHtml);
     await sendEmail(ADMIN_EMAIL, `CREDIT SESSION — ${profile.full_name || user.email} · ${dateStr} ${timeStr} (${typeLabel})`, emailHtml);
 
+    // Sync to Google Calendar (fire-and-forget)
+    try {
+      const gcalUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/google-calendar-sync`;
+      await fetch(gcalUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+        },
+        body: JSON.stringify({ action: "create_event", booking_id: booking.id }),
+      });
+    } catch (e) { console.error("GCal sync error:", e); }
+
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
