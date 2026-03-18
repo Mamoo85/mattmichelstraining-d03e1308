@@ -78,6 +78,7 @@ const ExerciseLibrary = () => {
     setActiveClientType(null);
     setActiveFocusArea(null);
     setActiveSport(null);
+    setActiveLevel(null);
     setSearch("");
   };
 
