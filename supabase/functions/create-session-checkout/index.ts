@@ -97,6 +97,7 @@ serve(async (req) => {
         slot_date,
         start_time,
         duration_minutes: String(duration_minutes),
+        session_type,
         slot_ids: JSON.stringify(slotsData.map((s: any) => s.id)),
       },
     });

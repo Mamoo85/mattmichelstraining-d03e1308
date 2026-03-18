@@ -67,6 +67,7 @@ serve(async (req) => {
         start_time: meta.start_time,
         duration_minutes: durationMinutes,
         amount_cents: amountCents,
+        session_type: meta.session_type || "in_person",
         stripe_session_id: session_id,
         stripe_payment_intent_id: session.payment_intent as string,
         user_email: meta.user_email,
