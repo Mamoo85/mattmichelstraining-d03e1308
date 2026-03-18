@@ -1,7 +1,10 @@
 import { useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Dumbbell, Shield, Zap, ArrowRight, Loader2, Flag, Video, BookOpen, Users, User, AlertTriangle } from "lucide-react";
+import {
+  Dumbbell, Shield, Zap, ArrowRight, Loader2, Flag, BookOpen,
+  Users, User, AlertTriangle, Star, Video, Calendar, Upload, CheckCircle2,
+} from "lucide-react";
 import AppNavbar from "@/components/AppNavbar";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +12,7 @@ import { toast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import m2Logo from "@/assets/m2-logo-official.jpg";
 
-type TrialPath = "parent" | "basic" | null;
+type TrialPath = "parent" | "basic" | "pro" | null;
 
 const TRIAL_PROGRAMS = [
   {
@@ -20,7 +23,6 @@ const TRIAL_PROGRAMS = [
     icon: Shield,
     tags: ["3 Days/Week", "Bodyweight", "Core"],
     color: "text-emerald-500",
-    paths: ["parent", "basic"] as TrialPath[],
   },
   {
     id: "a1b2c3d4-0002-4000-8000-000000000002",
@@ -30,7 +32,6 @@ const TRIAL_PROGRAMS = [
     icon: Zap,
     tags: ["3 Days/Week", "Mobility", "Strength"],
     color: "text-amber-500",
-    paths: ["parent", "basic"] as TrialPath[],
   },
   {
     id: "a1b2c3d4-0003-4000-8000-000000000003",
@@ -40,7 +41,6 @@ const TRIAL_PROGRAMS = [
     icon: Dumbbell,
     tags: ["2 Days/Week", "Recovery", "In-Season"],
     color: "text-blue-500",
-    paths: ["parent", "basic"] as TrialPath[],
   },
 ];
 
@@ -48,6 +48,20 @@ const HOW_IT_WORKS = [
   { icon: BookOpen, text: "Select your 2-week intro track below." },
   { icon: Dumbbell, text: "Log every set and rep in the portal." },
   { icon: Flag, text: "Flag Coach Matt for personal form review on any exercise." },
+];
+
+const ASSESSMENT_OPTIONS = [
+  {
+    icon: Upload,
+    title: "Send a Video",
+    desc: "Record 5 overhead squats (front & side). Upload through the portal and Matt reviews within 48 hours.",
+  },
+  {
+    icon: Calendar,
+    title: "Schedule a Live Assessment",
+    desc: "Book a free 15-min video call. In-person available in Grosse Pointe Park, MI.",
+    link: "/schedule",
+  },
 ];
 
 const TrialWelcome = () => {
@@ -59,6 +73,12 @@ const TrialWelcome = () => {
 
   const [selectedPath, setSelectedPath] = useState<TrialPath>(urlPath);
   const [selecting, setSelecting] = useState<string | null>(null);
+
+  const showAssessment = selectedPath === "parent" || selectedPath === "pro";
+
+  const autoChargeLabel = selectedPath === "basic"
+    ? "Basic membership at $15.99/mo"
+    : "Pro membership at $49.99/mo";
 
   const handleSelectProgram = async (programId: string) => {
     if (!user) {
@@ -72,7 +92,6 @@ const TrialWelcome = () => {
 
     setSelecting(programId);
     try {
-      // Set trial_started_at and store trial path in profile
       const { error: profileError } = await supabase
         .from("profiles")
         .update({ trial_started_at: new Date().toISOString() })
@@ -80,7 +99,6 @@ const TrialWelcome = () => {
 
       if (profileError) throw profileError;
 
-      // Check if already enrolled
       const { data: existing } = await supabase
         .from("user_active_programs")
         .select("id")
@@ -97,7 +115,8 @@ const TrialWelcome = () => {
 
       queryClient.invalidateQueries({ queryKey: ["trial-status"] });
 
-      toast({ title: "You're in! 🎯", description: `Your 14-day ${selectedPath === "parent" ? "Parent" : "Basic"} trial has started.` });
+      const pathLabel = selectedPath === "parent" ? "Parent" : selectedPath === "pro" ? "Pro" : "Basic";
+      toast({ title: "You're in! 🎯", description: `Your 14-day ${pathLabel} trial has started.` });
       navigate("/dashboard");
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
@@ -139,74 +158,48 @@ const TrialWelcome = () => {
             This determines which membership you'll auto-start after 14 days if you don't cancel.
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {/* Basic Trial */}
-            <button
+            <TrialPathCard
+              selected={selectedPath === "basic"}
               onClick={() => setSelectedPath("basic")}
-              className={`relative p-5 text-left border-2 transition-all ${
-                selectedPath === "basic"
-                  ? "border-primary bg-primary/5"
-                  : "border-border bg-card hover:border-primary/40"
-              }`}
-            >
-              {selectedPath === "basic" && (
-                <div className="absolute -top-2.5 left-4 bg-primary text-primary-foreground text-[9px] font-bold uppercase tracking-widest px-2 py-0.5">
-                  Selected
-                </div>
-              )}
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 bg-primary/10 flex items-center justify-center">
-                  <User size={20} className="text-primary" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-foreground">Basic Trial</h3>
-                  <p className="text-[10px] text-muted-foreground">Auto-charges $15.99/mo after trial</p>
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Individual membership. Exercise library, monthly focus, challenges, and workout logging.
-              </p>
-              <div className="mt-3 flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                <AlertTriangle size={10} className="text-amber-500" />
-                No child invite feature on this plan
-              </div>
-            </button>
+              icon={User}
+              title="Basic Trial"
+              charge="$15.99/mo after trial"
+              desc="Exercise library, monthly focus, challenges, and workout logging."
+              badge={null}
+              warning="No child invite · No custom program"
+            />
 
-            {/* Parent Trial */}
-            <button
+            {/* Parent / Youth Dev Trial */}
+            <TrialPathCard
+              selected={selectedPath === "parent"}
               onClick={() => setSelectedPath("parent")}
-              className={`relative p-5 text-left border-2 transition-all ${
-                selectedPath === "parent"
-                  ? "border-primary bg-primary/5"
-                  : "border-border bg-card hover:border-primary/40"
-              }`}
-            >
-              {selectedPath === "parent" && (
-                <div className="absolute -top-2.5 left-4 bg-primary text-primary-foreground text-[9px] font-bold uppercase tracking-widest px-2 py-0.5">
-                  Selected
-                </div>
-              )}
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 bg-primary/10 flex items-center justify-center">
-                  <Users size={20} className="text-primary" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-foreground">Parent / Youth Development Trial</h3>
-                  <p className="text-[10px] text-muted-foreground">Auto-charges $49.99/mo (Pro) after trial</p>
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Everything in Basic + custom programming, Fix It library, coach form review, and child invite links.
-              </p>
-              <div className="mt-3 flex items-center gap-1.5 text-[10px] text-primary font-bold">
-                <Users size={10} />
-                Includes child account linking
-              </div>
-            </button>
+              icon={Users}
+              title="Parent / Youth Dev"
+              charge="$49.99/mo (Pro) after trial"
+              desc="Everything in Basic + custom programming, Fix It library, coach form review, and child invite links."
+              badge="Includes child linking"
+              warning={null}
+              bonus="Free postural assessment"
+            />
+
+            {/* Adult Pro Trial */}
+            <TrialPathCard
+              selected={selectedPath === "pro"}
+              onClick={() => setSelectedPath("pro")}
+              icon={Star}
+              title="Adult Pro Trial"
+              charge="$49.99/mo (Pro) after trial"
+              desc="Everything in Basic + custom programming built for you, Fix It library, and direct coach form review."
+              badge={null}
+              warning="No child invite on this plan"
+              bonus="Free postural assessment"
+            />
           </div>
         </motion.div>
 
-        {/* HOW IT WORKS */}
+        {/* CONTENT AFTER SELECTION */}
         <AnimatePresence>
           {selectedPath && (
             <motion.div
@@ -215,6 +208,45 @@ const TrialWelcome = () => {
               exit={{ opacity: 0, height: 0 }}
               className="overflow-hidden"
             >
+              {/* FREE ASSESSMENT — only for parent & pro */}
+              {showAssessment && (
+                <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/20 p-5 sm:p-6 mb-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Video size={18} className="text-primary" />
+                    <h3 className="text-sm font-bold text-foreground">Free Postural Assessment — Included With Your Trial</h3>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
+                    Because your trial includes a custom program from Matt, we start with an assessment so your program is built around <strong className="text-foreground">your</strong> body, not a template. Choose how you'd like to do it:
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {ASSESSMENT_OPTIONS.map((opt) => (
+                      <div key={opt.title} className="bg-card border border-border p-4 flex gap-3">
+                        <div className="w-9 h-9 bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <opt.icon size={16} className="text-primary" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-xs font-bold text-foreground mb-0.5">{opt.title}</p>
+                          <p className="text-[11px] text-muted-foreground leading-relaxed">{opt.desc}</p>
+                          {opt.link && (
+                            <Link
+                              to={opt.link}
+                              className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-primary mt-2 hover:underline"
+                            >
+                              Book Now <ArrowRight size={10} />
+                            </Link>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3 flex items-center gap-1.5 text-[10px] text-primary font-bold">
+                    <CheckCircle2 size={12} />
+                    100% free during your trial — no strings attached
+                  </div>
+                </div>
+              )}
+
+              {/* HOW IT WORKS */}
               <div className="bg-card shadow-m2 p-5 mb-8 border-l-4 border-primary">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-3 font-mono">
                   Here's How This Works
@@ -232,11 +264,7 @@ const TrialWelcome = () => {
                 <div className="mt-3 bg-primary/5 border border-primary/20 p-3">
                   <p className="text-xs text-muted-foreground leading-relaxed">
                     After 14 days:{" "}
-                    {selectedPath === "parent" ? (
-                      <strong className="text-foreground">You'll auto-start the Pro membership at $49.99/mo unless you cancel.</strong>
-                    ) : (
-                      <strong className="text-foreground">You'll auto-start the Basic membership at $15.99/mo unless you cancel.</strong>
-                    )}{" "}
+                    <strong className="text-foreground">You'll auto-start the {autoChargeLabel} unless you cancel.</strong>{" "}
                     <span className="text-primary font-bold">Cancel anytime.</span>
                   </p>
                 </div>
@@ -315,5 +343,61 @@ const TrialWelcome = () => {
     </div>
   );
 };
+
+/* ---------- Trial Path Card ---------- */
+interface TrialPathCardProps {
+  selected: boolean;
+  onClick: () => void;
+  icon: typeof User;
+  title: string;
+  charge: string;
+  desc: string;
+  badge: string | null;
+  warning: string | null;
+  bonus?: string;
+}
+
+const TrialPathCard = ({ selected, onClick, icon: Icon, title, charge, desc, badge, warning, bonus }: TrialPathCardProps) => (
+  <button
+    onClick={onClick}
+    className={`relative p-4 text-left border-2 transition-all ${
+      selected ? "border-primary bg-primary/5" : "border-border bg-card hover:border-primary/40"
+    }`}
+  >
+    {selected && (
+      <div className="absolute -top-2.5 left-4 bg-primary text-primary-foreground text-[9px] font-bold uppercase tracking-widest px-2 py-0.5">
+        Selected
+      </div>
+    )}
+    <div className="flex items-center gap-3 mb-2">
+      <div className="w-9 h-9 bg-primary/10 flex items-center justify-center">
+        <Icon size={18} className="text-primary" />
+      </div>
+      <div>
+        <h3 className="text-xs font-bold text-foreground leading-tight">{title}</h3>
+        <p className="text-[10px] text-muted-foreground">{charge}</p>
+      </div>
+    </div>
+    <p className="text-[11px] text-muted-foreground leading-relaxed">{desc}</p>
+    {bonus && (
+      <div className="mt-2 flex items-center gap-1.5 text-[10px] text-primary font-bold">
+        <Video size={10} />
+        {bonus}
+      </div>
+    )}
+    {badge && (
+      <div className="mt-1.5 flex items-center gap-1.5 text-[10px] text-primary font-bold">
+        <Users size={10} />
+        {badge}
+      </div>
+    )}
+    {warning && (
+      <div className="mt-1.5 flex items-center gap-1.5 text-[10px] text-muted-foreground">
+        <AlertTriangle size={10} className="text-amber-500" />
+        {warning}
+      </div>
+    )}
+  </button>
+);
 
 export default TrialWelcome;

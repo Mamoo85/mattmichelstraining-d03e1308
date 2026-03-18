@@ -42,8 +42,8 @@ const TIER_CARDS: {
       "Filter by YOUR sport — find the best exercises for Golf, Volleyball, Football & more",
       "Member challenges & leaderboard",
       "Custom program from intake form",
+      "🎁 Free postural assessment with trial (video or live call)",
       "🖐️ Flag Coach Matt — raise your hand and get personal coaching feedback on any exercise",
-      "Optional postural video assessment",
       "Monthly program updates",
       "Full 'Fix It' rehab library",
     ],
@@ -56,6 +56,7 @@ const TIER_CARDS: {
     subtitle: "Same Pro features — designed for families",
     features: [
       "Everything in Pro — same price, same features",
+      "🎁 Free postural assessment (video or live call)",
       "Parent account with child invite link",
       "Monitor your child's workouts & progress",
       "Flag Coach Matt on your child's behalf",
@@ -325,23 +326,33 @@ const Pricing = () => {
                     {card.cta} <ArrowRight className="w-4 h-4" />
                   </Link>
                 ) : (
-                  <button
-                    onClick={() => handleCheckout(card.key)}
-                    disabled={loadingTier === card.key}
-                    className={`w-full py-3 text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-colors ${
-                      card.highlight
-                        ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                        : "border-2 border-foreground text-foreground hover:bg-foreground hover:text-background"
-                    }`}
-                  >
-                    {loadingTier === card.key ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <>
-                        {card.cta} <ArrowRight className="w-4 h-4" />
-                      </>
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => handleCheckout(card.key)}
+                      disabled={loadingTier === card.key}
+                      className={`w-full py-3 text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-colors ${
+                        card.highlight
+                          ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                          : "border-2 border-foreground text-foreground hover:bg-foreground hover:text-background"
+                      }`}
+                    >
+                      {loadingTier === card.key ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <>
+                          {card.cta} <ArrowRight className="w-4 h-4" />
+                        </>
+                      )}
+                    </button>
+                    {card.highlight && !subscribed && (
+                      <Link
+                        to={user ? "/trial-welcome?path=pro" : "/auth?redirect=/trial-welcome?path=pro"}
+                        className="w-full py-2 text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-1.5 text-primary hover:underline"
+                      >
+                        Or try 14 days free <ArrowRight className="w-3 h-3" />
+                      </Link>
                     )}
-                  </button>
+                  </div>
                 )}
               </motion.div>
             );
