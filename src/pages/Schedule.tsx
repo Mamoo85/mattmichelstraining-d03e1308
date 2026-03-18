@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { format, addDays, startOfDay } from "date-fns";
-import { Loader2, Clock, DollarSign, Info, Calendar, CheckCircle, Video, MapPin, Ticket } from "lucide-react";
+import { Loader2, Clock, DollarSign, Info, Calendar, CheckCircle, Video, MapPin, Ticket, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const formatTime12 = (t: string) => {
