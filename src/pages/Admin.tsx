@@ -157,6 +157,7 @@ const Admin = () => {
         {activeSection === "users" && (
           <SubTabs tabs={[
             { key: "athletes", label: "Athletes & Trials", content: <AdminClientList /> },
+            { key: "teams", label: "Team Rosters", content: <AdminTeamRosters /> },
             { key: "family", label: "Family Accounts", content: <AdminFamilyManager /> },
             { key: "parent-reports", label: "Parent Reports", content: <AdminParentReports /> },
             { key: "parent-inbox", label: "Parent Inbox", content: <AdminParentInbox /> },
