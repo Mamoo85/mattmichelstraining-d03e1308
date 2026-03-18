@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Save, Eye, EyeOff, Loader2, RefreshCw, Sparkles } from "lucide-react";
+import { Save, Eye, EyeOff, Loader2, RefreshCw, Sparkles, Undo2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
