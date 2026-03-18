@@ -34,28 +34,6 @@ const BASE_TABS = [
   { key: "referrals", label: "Refer" },
 ];
 
-interface MonthlyFocusData {
-  title: string;
-  topic: string;
-  reasoning: string;
-  exercises: string[];
-  matt_quote: string;
-}
-
-interface MonthlyChallenge {
-  id: string;
-  title: string;
-  description: string;
-  metric_label: string;
-}
-
-interface LeaderboardEntry {
-  user_id: string;
-  current_value: number;
-  athlete_name: string | null;
-  full_name: string | null;
-  is_public: boolean;
-}
 
 const PRO_AND_ABOVE: (string | null)[] = ["foundation", "custom", "team_elite"];
 
