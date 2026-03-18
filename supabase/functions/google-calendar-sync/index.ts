@@ -13,7 +13,14 @@ const GOOGLE_SERVICE_ACCOUNT_KEY = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_KEY");
 async function getGoogleAccessToken(): Promise<string> {
   if (!GOOGLE_SERVICE_ACCOUNT_KEY) throw new Error("Google service account not configured");
   
-  const key = JSON.parse(GOOGLE_SERVICE_ACCOUNT_KEY);
+  // Handle potential double-encoding or escaped JSON
+  let rawKey = GOOGLE_SERVICE_ACCOUNT_KEY.trim();
+  // If the value starts with a quote, it may be double-encoded
+  if (rawKey.startsWith('"') && rawKey.endsWith('"')) {
+    rawKey = JSON.parse(rawKey);
+  }
+  console.log("Key starts with:", rawKey.substring(0, 20));
+  const key = JSON.parse(rawKey);
   
   // Create JWT
   const header = btoa(JSON.stringify({ alg: "RS256", typ: "JWT" }));
