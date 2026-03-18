@@ -33,6 +33,26 @@ const AdminFinancials = () => {
   const [actionRow, setActionRow] = useState<Transaction | null>(null);
   const [actionType, setActionType] = useState<"refund" | "cancel" | null>(null);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const [lastSynced, setLastSynced] = useState<string | null>(null);
+
+  const handleForceSync = async () => {
+    setSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("force-stripe-sync");
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setLastSynced(data.synced_at);
+      toast({
+        title: "Sync Complete",
+        description: `${data.updated} account${data.updated !== 1 ? "s" : ""} updated. ${data.verified} account${data.verified !== 1 ? "s" : ""} verified.`,
+      });
+    } catch (err: any) {
+      toast({ title: "Sync failed", description: err.message, variant: "destructive" });
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const { data: transactions = [], isLoading } = useQuery({
     queryKey: ["admin-transactions"],
