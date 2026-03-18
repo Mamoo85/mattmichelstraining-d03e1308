@@ -245,9 +245,9 @@ const Welcome = () => (
             One-Time Programs — No Subscription Needed
           </h2>
         </div>
-        <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+        <p className="text-sm text-foreground-soft leading-relaxed mb-3">
           Older athlete? Parent on the road for work? Grab a one-time custom
-          program built by Matt personally. Starting at <strong>$20</strong>.
+          program built by Matt personally. Starting at <strong className="text-foreground">$20</strong>.
           Sport-specific, foundation, or fully custom — real workouts from a real
           trainer, not an algorithm.
         </p>
