@@ -200,8 +200,6 @@ const ForParents = () => {
         </motion.div>
 
 
-        {/* PORTAL SHOWCASE */}
-        <PortalShowcase />
 
         {/* CLEAR PATH */}
         <motion.div {...fade(0.25)} className="mb-12">
