@@ -105,7 +105,7 @@ const PRODUCTS: Product[] = [
     tag: "4-WEEK PROGRAM",
     category: "foundation",
     description: "The exact program Matt gives every new young athlete. Movement quality first, then work capacity, then strength. The foundation that prevents injuries for life.",
-    includes: ["Full 4-week program", "Movement quality checklist", "The WHY behind the system", "Parent guide included", "Download & print as PDF"],
+    includes: ["Full 4-week program", "Movement quality checklist", "The WHY behind the system", "Parent resource included", "Download & print as PDF"],
   },
   {
     id: "custom-program",
