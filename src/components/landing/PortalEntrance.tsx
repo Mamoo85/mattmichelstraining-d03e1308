@@ -89,32 +89,32 @@ const PortalEntrance = () => {
       </div>
 
       {/* Sneak peek — overlapping screenshots with gradient fade */}
-      <div className="relative h-[180px] overflow-hidden bg-card border border-border">
+      <div className="relative h-[140px] sm:h-[180px] overflow-hidden bg-card border border-border">
         <div className="absolute inset-0 flex items-center justify-center">
           <img
             src={portalProgress}
             alt="Progress tracking"
-            className="absolute w-[45%] max-w-[200px] h-[160px] object-cover object-top rounded shadow-m2 -rotate-3 -translate-x-[55%] translate-y-1 opacity-70"
+            className="absolute w-[42%] sm:w-[45%] max-w-[200px] h-[120px] sm:h-[160px] object-cover object-top rounded shadow-m2 -rotate-3 -translate-x-[55%] translate-y-1 opacity-70"
             loading="lazy"
           />
           <img
             src={portalPrograms}
             alt="Training programs"
-            className="absolute w-[50%] max-w-[220px] h-[170px] object-cover object-top rounded shadow-m2-hover z-10"
+            className="absolute w-[48%] sm:w-[50%] max-w-[220px] h-[130px] sm:h-[170px] object-cover object-top rounded shadow-m2-hover z-10"
             loading="lazy"
           />
           <img
             src={portalChat}
             alt="Coach chat"
-            className="absolute w-[45%] max-w-[200px] h-[160px] object-cover object-top rounded shadow-m2 rotate-3 translate-x-[55%] translate-y-1 opacity-70"
+            className="absolute w-[42%] sm:w-[45%] max-w-[200px] h-[120px] sm:h-[160px] object-cover object-top rounded shadow-m2 rotate-3 translate-x-[55%] translate-y-1 opacity-70"
             loading="lazy"
           />
         </div>
 
-        <div className="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-card to-transparent z-20" />
+        <div className="absolute bottom-0 inset-x-0 h-12 sm:h-16 bg-gradient-to-t from-card to-transparent z-20" />
 
         <div className="absolute bottom-2 inset-x-0 z-30 text-center">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
             Already a member? Access your portal
           </span>
         </div>
