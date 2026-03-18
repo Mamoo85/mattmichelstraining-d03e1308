@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
 import { TimerProvider } from "@/hooks/useTimer";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import SubscriptionGuard from "@/components/SubscriptionGuard";
 import IntervalTimer from "@/components/workout/IntervalTimer";
 import { useTimer } from "@/hooks/useTimer";
 import { useReferralCapture } from "@/hooks/useReferral";
@@ -83,9 +84,9 @@ const App = () => (
                 <Route path="/coach" element={<Coach />} />
                 <Route path="/trial-welcome" element={<ProtectedRoute><TrialWelcome /></ProtectedRoute>} />
                 <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
-                <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                <Route path="/dashboard" element={<ProtectedRoute><SubscriptionGuard><Dashboard /></SubscriptionGuard></ProtectedRoute>} />
                 <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-                <Route path="/progress" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                <Route path="/progress" element={<ProtectedRoute><SubscriptionGuard><Dashboard /></SubscriptionGuard></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
