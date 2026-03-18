@@ -205,14 +205,16 @@ const AdminCoachInbox = () => {
               className="flex-1 bg-background border border-border p-3 text-sm text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-primary outline-none min-h-[70px] resize-none"
             />
             <AiAssistButton
-              type="program_reply"
+              type="draft_reply"
               context={{
+                source: "program_message",
                 programTitle: msg.programTitle || "Training Program",
                 exerciseName: msg.exercise_name,
                 weekNumber: msg.week_number,
                 dayNumber: msg.day_number,
                 message: msg.message,
                 videoUrl: msg.video_url,
+                messageId: msg.id,
               }}
               onResult={(text) => setReplies((prev) => ({ ...prev, [msg.id]: text }))}
               label="AI Draft"
