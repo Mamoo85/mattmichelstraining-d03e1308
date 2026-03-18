@@ -151,6 +151,9 @@ serve(async (req) => {
       sessionParams.discounts = [{ coupon: stripeCouponId }];
     } else if (referralCouponId) {
       sessionParams.discounts = [{ coupon: referralCouponId }];
+    } else {
+      // No custom discount — let Stripe's built-in promo code box appear
+      sessionParams.allow_promotion_codes = true;
     }
 
     // Store promo ID and referral code in metadata
