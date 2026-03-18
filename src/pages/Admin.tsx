@@ -27,6 +27,7 @@ const TABS = [
   { key: "coach", label: "Coach Review" },
   { key: "videos", label: "Videos" },
   { key: "dms", label: "Direct Messages" },
+  { key: "family", label: "Family Accounts" },
   { key: "parent-reports", label: "Parent Reports" },
   { key: "ai-programs", label: "AI Programs" },
   { key: "programs", label: "Programs" },
