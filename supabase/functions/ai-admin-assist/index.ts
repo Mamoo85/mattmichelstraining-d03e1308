@@ -25,33 +25,16 @@ serve(async (req) => {
     let userPrompt = "";
 
     switch (type) {
-      case "coach_reply": {
-        systemPrompt = `You are Coach Matt Michels, a strength & conditioning coach with 20+ years of experience training athletes of all ages. You give direct, knowledgeable, encouraging feedback on exercise form and performance. Keep replies conversational, under 100 words. Reference the specific exercise data provided. Use your signature style: practical, real, no-BS coaching.`;
-        userPrompt = `Write coaching feedback for this flagged exercise:\n\nExercise: ${context.exerciseName}\nSets/Reps/Weight: ${context.setsRepsWeight}\nClient Notes: ${context.clientNotes || "None"}\nHas Video: ${context.hasVideo ? "Yes" : "No"}\n\nWrite a helpful, specific coaching reply.`;
-        break;
-      }
-
-      case "newsletter": {
-        systemPrompt = `You are Matt Michels writing his monthly "The Real Deal" newsletter for athletes, parents, and coaches. Your voice is direct, educational, passionate about the WHY behind training. You reference kinesiology, biomechanics, and 20+ years of real-world experience. Format with **bold** for emphasis. Keep it 300-500 words.`;
-        userPrompt = `Write a newsletter about: ${context.topic}\nTemplate style: ${context.templateName || "General"}\nTarget audience: ${context.audience || "Athletes and parents"}\n\nWrite the full newsletter body (not the subject line).`;
-        break;
-      }
-
-      case "exercise": {
-        systemPrompt = `You are an expert exercise scientist and strength coach. Generate detailed exercise entries for a training library. Be precise about equipment, focus areas, and the biomechanical "why" behind each exercise.`;
-        userPrompt = `Create an exercise library entry for: "${context.exerciseName}"\n\nReturn ONLY valid JSON (no markdown, no code fences) with these fields:\n{\n  "title": "proper exercise name",\n  "equipment_needed": "specific equipment",\n  "the_why": "2-3 sentences explaining the biomechanical purpose and benefit",\n  "client_type": ["Athlete" and/or "Lifestyle Fitness"],\n  "focus_area": [pick from: "Mobility", "Strength", "Core Stability", "Flexibility", "Rehab", "Stability", "Posture", "Power", "Speed", "Injury Prevention", "Core"],\n  "sport": [relevant sports or empty array]\n}`;
-        break;
-      }
-
-      case "promo_suggest": {
-        systemPrompt = `You are a fitness business marketing expert. Suggest creative, effective promotional campaigns for an online strength training platform (M² Training). Be specific with codes, percentages, and timing.`;
-        userPrompt = `Suggest 3 promotional ideas for an online training platform.\nCurrent season/month: ${context.month}\nExisting promos: ${context.existingCodes || "None"}\n\nReturn ONLY valid JSON (no markdown, no code fences) as an array:\n[{\n  "code": "PROMO_CODE",\n  "description": "what it does",\n  "discount_type": "percent" or "fixed",\n  "discount_value": number,\n  "applies_to": "all" or "programs" or "subscriptions",\n  "reasoning": "why this works"\n}]`;
-        break;
-      }
-
+      case "draft_reply":
+      case "coach_reply":
       case "program_reply": {
-        systemPrompt = `You are Coach Matt Michels responding to an athlete's question about their training program. Be specific, encouraging, and practical. Under 100 words. Reference the exercise and context provided.`;
-        userPrompt = `An athlete asked about their program:\n\nProgram: ${context.programTitle}\nExercise: ${context.exerciseName}\nWeek ${context.weekNumber}, Day ${context.dayNumber}\nTheir question: "${context.message}"\n${context.videoUrl ? "They attached a form check video." : ""}\n\nWrite a helpful coaching reply.`;
+        systemPrompt = `You are Coach Matt Michels, a strength & conditioning coach with 20+ years of experience training athletes of all ages. You give direct, knowledgeable, encouraging feedback on exercise form and performance. Keep replies conversational, under 100 words. Reference the specific exercise data provided. Use your signature style: practical, real, no-BS coaching.`;
+        
+        if (context.source === "program_message" || type === "program_reply") {
+          userPrompt = `An athlete asked about their program:\n\nProgram: ${context.programTitle || "Training Program"}\nExercise: ${context.exerciseName}\nWeek ${context.weekNumber || "?"}, Day ${context.dayNumber || "?"}\nTheir question: "${context.message || ""}"\n${context.videoUrl ? "They attached a form check video." : ""}\n\nWrite a helpful coaching reply.`;
+        } else {
+          userPrompt = `Write coaching feedback for this flagged exercise:\n\nExercise: ${context.exerciseName}\nSets/Reps/Weight: ${context.setsRepsWeight || "Not specified"}\nClient Notes: ${context.clientNotes || "None"}\nHas Video: ${context.hasVideo ? "Yes" : "No"}\n\nWrite a helpful, specific coaching reply.`;
+        }
         break;
       }
 
