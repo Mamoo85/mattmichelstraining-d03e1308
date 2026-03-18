@@ -15,7 +15,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import AppNavbar from "@/components/AppNavbar";
-import m2Logo from "@/assets/m2-logo-official.png";
+import m2Logo from "@/assets/m2-logo.jpg";
 import ParentTestimonialCard from "@/components/landing/ParentTestimonialCard";
 
 const SELL_POINTS = [

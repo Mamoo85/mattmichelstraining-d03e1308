@@ -9,7 +9,7 @@ import {
   Shield, Trophy, Zap,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import m2Logo from "@/assets/m2-logo-official.png";
+import m2Logo from "@/assets/m2-logo.jpg";
 import mattFamily from "@/assets/matt-family.jpg";
 import mattTraining from "@/assets/matt-training.jpg";
 
@@ -71,13 +71,6 @@ const FALLBACK_TESTIMONIALS = [
     author_name: "Parent of D1 Athlete",
     author_role: "Grosse Pointe, MI",
     author_initials: "KR",
-  },
-  {
-    id: "ft2",
-    quote: "My son started with Matt at 13. Two years later he's the strongest kid on his baseball team and hasn't missed a game to injury.",
-    author_name: "Sarah M.",
-    author_role: "Parent · Grosse Pointe",
-    author_initials: "SM",
   },
   {
     id: "ft3",
