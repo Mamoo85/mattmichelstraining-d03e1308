@@ -130,7 +130,7 @@ const Admin = () => {
         {activeTab === "learn" && <AdminLearnEditor />}
         {activeTab === "system" && <AdminSystemSettings />}
         {activeTab === "front-page" && <AdminFrontPage />}
-        {activeTab === "products" && <AdminProductManager />}
+        
         {activeTab === "testimonials" && <AdminTestimonials />}
         {activeTab === "site" && <AdminSiteEditor />}
         {activeTab === "protocols" && <AdminProtocols />}
