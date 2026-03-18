@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import SEOHead from "@/components/SEOHead";
 import { ExternalLink, ShoppingBag, ArrowRight, Ruler, Truck, RotateCcw, Star } from "lucide-react";
 import AppNavbar from "@/components/AppNavbar";
 import { Link } from "react-router-dom";
@@ -36,6 +37,11 @@ const SIZE_CHART = [
 
 const Merch = () => (
   <div className="min-h-screen bg-background">
+    <SEOHead
+      title="M² Merch — Training Apparel"
+      description="Official M² Training gear. Premium hoodies, tees, tanks, and hats. Rep the brand that keeps athletes moving right."
+      path="/merch"
+    />
     <AppNavbar />
     <div className="pt-14">
       {/* Hero banner */}

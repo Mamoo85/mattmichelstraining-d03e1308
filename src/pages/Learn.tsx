@@ -1,4 +1,5 @@
 import { useState } from "react";
+import SEOHead from "@/components/SEOHead";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
@@ -145,6 +146,21 @@ const ArticleCard = ({ article, isExpanded, onToggle }: {
   isExpanded: boolean;
   onToggle: () => void;
 }) => (
+  <>
+    {isExpanded && (
+      <SEOHead
+        title={article.title}
+        description={article.body.replace(/[#*_`>\-]/g, "").slice(0, 155)}
+        path={`/learn#${article.slug}`}
+        type="article"
+        ogImage={article.cover_image_url}
+        article={{
+          author: article.author || "Coach Matt",
+          publishedTime: article.published_at,
+          category: article.category,
+        }}
+      />
+    )}
   <motion.div
     layout
     className="bg-card shadow-m2 overflow-hidden"
@@ -226,6 +242,7 @@ const ArticleCard = ({ article, isExpanded, onToggle }: {
       )}
     </div>
   </motion.div>
+  </>
 );
 
 /* ── Video Card ── */
@@ -323,6 +340,11 @@ const Learn = () => {
 
   return (
   <div className="min-h-screen bg-background">
+    <SEOHead
+      title="Learn — Youth Strength Training Tips & Articles"
+      description="Free training tips, injury prevention guides, and youth strength development articles from Coach Matt Michels. Real knowledge, no fluff."
+      path="/learn"
+    />
     <AppNavbar />
     <div className="container pt-20 pb-12 px-4 sm:px-6">
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>

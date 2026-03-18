@@ -1,4 +1,5 @@
 import AppNavbar from "@/components/AppNavbar";
+import SEOHead from "@/components/SEOHead";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import PortalShowcase from "@/components/landing/PortalShowcase";
@@ -99,6 +100,11 @@ const ForParents = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="For Parents — Youth Strength Training Safety"
+        description="3.5M youth sports injuries per year — 50% are preventable. Learn how M² Training keeps your athlete safe with science-backed strength programs from $12.99/mo."
+        path="/for-parents"
+      />
       <AppNavbar />
 
       <div className="container pt-20 pb-16">

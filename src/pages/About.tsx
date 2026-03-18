@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import AppNavbar from "@/components/AppNavbar";
+import SEOHead from "@/components/SEOHead";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
@@ -146,6 +147,11 @@ const About = () => {
 
   return (
   <div className="min-h-screen bg-background">
+    <SEOHead
+      title="About Coach Matt Michels"
+      description="Meet Matt Michels — 20+ years training youth athletes in Grosse Pointe. Anti-influencer strength coach who's sent 50+ athletes to the college level with zero injuries."
+      path="/about"
+    />
     <AppNavbar />
     <div className="container pt-20 pb-16 max-w-4xl mx-auto px-4">
 
