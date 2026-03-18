@@ -23,7 +23,7 @@ export const printCommunityWorkout = (data: PrintCommunityWorkoutData) => {
       (ex, i) => `
       <tr class="exercise-row">
         <td class="num">${i + 1}</td>
-        <td class="name"><strong>${ex.name}</strong>${ex.notes ? `<div class="notes">${ex.notes}</div>` : ""}</td>
+        <td class="name"><strong>${esc(ex.name)}</strong>${ex.notes ? `<div class="notes">${esc(ex.notes)}</div>` : ""}</td>
         <td class="center">${ex.sets}</td>
         <td class="center">${ex.reps}</td>
         <td></td>
