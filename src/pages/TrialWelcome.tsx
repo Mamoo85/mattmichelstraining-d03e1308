@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Dumbbell, Shield, Zap, ArrowRight, Loader2, Flag, BookOpen,
-  Users, User, AlertTriangle, Star, Video, Calendar, Upload, CheckCircle2,
+  Users, User, AlertTriangle, Star, Video, Calendar, Upload,
+  CheckCircle2, CreditCard, MessageSquare, Camera,
 } from "lucide-react";
 import AppNavbar from "@/components/AppNavbar";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, TIERS } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
@@ -23,6 +24,7 @@ const TRIAL_PROGRAMS = [
     icon: Shield,
     tags: ["3 Days/Week", "Bodyweight", "Core"],
     color: "text-emerald-500",
+    forPaths: ["basic", "parent", "pro"] as TrialPath[],
   },
   {
     id: "a1b2c3d4-0002-4000-8000-000000000002",
@@ -32,6 +34,7 @@ const TRIAL_PROGRAMS = [
     icon: Zap,
     tags: ["3 Days/Week", "Mobility", "Strength"],
     color: "text-amber-500",
+    forPaths: ["basic", "parent", "pro"] as TrialPath[],
   },
   {
     id: "a1b2c3d4-0003-4000-8000-000000000003",
@@ -41,26 +44,17 @@ const TRIAL_PROGRAMS = [
     icon: Dumbbell,
     tags: ["2 Days/Week", "Recovery", "In-Season"],
     color: "text-blue-500",
-  },
-];
-
-const HOW_IT_WORKS = [
-  { icon: BookOpen, text: "Select your 2-week intro track below." },
-  { icon: Dumbbell, text: "Log every set and rep in the portal." },
-  { icon: Flag, text: "Flag Coach Matt for personal form review on any exercise." },
-];
-
-const ASSESSMENT_OPTIONS = [
-  {
-    icon: Upload,
-    title: "Send a Video",
-    desc: "Record 5 overhead squats (front & side). Upload through the portal and Matt reviews within 48 hours.",
+    forPaths: ["basic", "parent", "pro"] as TrialPath[],
   },
   {
-    icon: Calendar,
-    title: "Schedule a Live Assessment",
-    desc: "Book a free 15-min video call. In-person available in Grosse Pointe Park, MI.",
-    link: "/schedule",
+    id: "custom",
+    title: "Custom Program — Built by Matt",
+    subtitle: "Pro & Youth Dev Only",
+    description: "Matt builds your program from scratch after reviewing your postural assessment. Start with a free assessment.",
+    icon: Star,
+    tags: ["Personalized", "Assessment Included", "1-on-1"],
+    color: "text-primary",
+    forPaths: ["parent", "pro"] as TrialPath[],
   },
 ];
 
@@ -70,17 +64,21 @@ const TrialWelcome = () => {
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const urlPath = searchParams.get("path") as TrialPath;
+  const checkoutDone = searchParams.get("checkout") === "success";
 
   const [selectedPath, setSelectedPath] = useState<TrialPath>(urlPath);
   const [selecting, setSelecting] = useState<string | null>(null);
+  const [checkingOut, setCheckingOut] = useState(false);
+  const [showAssessment, setShowAssessment] = useState(false);
 
-  const showAssessment = selectedPath === "parent" || selectedPath === "pro";
+  // After checkout, user can pick a program
+  const canSelectProgram = checkoutDone;
 
   const autoChargeLabel = selectedPath === "basic"
     ? "Basic membership at $15.99/mo"
     : "Pro membership at $49.99/mo";
 
-  const handleSelectProgram = async (programId: string) => {
+  const handleStartTrial = async () => {
     if (!user) {
       navigate(`/auth?redirect=/trial-welcome${selectedPath ? `?path=${selectedPath}` : ""}`);
       return;
@@ -90,13 +88,46 @@ const TrialWelcome = () => {
       return;
     }
 
+    setCheckingOut(true);
+    try {
+      const priceId = selectedPath === "basic" ? TIERS.basic.price_id : TIERS.pro.price_id;
+
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: {
+          priceId,
+          trialDays: 14,
+          trialPath: selectedPath,
+          successUrl: `/trial-welcome?path=${selectedPath}&checkout=success`,
+          cancelUrl: `/trial-welcome?path=${selectedPath}`,
+        },
+      });
+
+      if (error) throw error;
+      if (data?.url) {
+        window.location.href = data.url;
+      }
+    } catch (e: any) {
+      toast({ title: "Checkout error", description: e.message, variant: "destructive" });
+    } finally {
+      setCheckingOut(false);
+    }
+  };
+
+  const handleSelectProgram = async (programId: string) => {
+    // Custom program → show assessment options
+    if (programId === "custom") {
+      setShowAssessment(true);
+      return;
+    }
+
+    if (!user) return;
+
     setSelecting(programId);
     try {
       const { error: profileError } = await supabase
         .from("profiles")
         .update({ trial_started_at: new Date().toISOString() })
         .eq("user_id", user.id);
-
       if (profileError) throw profileError;
 
       const { data: existing } = await supabase
@@ -114,9 +145,7 @@ const TrialWelcome = () => {
       }
 
       queryClient.invalidateQueries({ queryKey: ["trial-status"] });
-
-      const pathLabel = selectedPath === "parent" ? "Parent" : selectedPath === "pro" ? "Pro" : "Basic";
-      toast({ title: "You're in! 🎯", description: `Your 14-day ${pathLabel} trial has started.` });
+      toast({ title: "You're in! 🎯", description: "Your 14-day trial has started. Let's get to work." });
       navigate("/dashboard");
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
@@ -125,216 +154,279 @@ const TrialWelcome = () => {
     }
   };
 
+  const visiblePrograms = TRIAL_PROGRAMS.filter(
+    (p) => selectedPath && p.forPaths.includes(selectedPath)
+  );
+
   return (
     <div className="min-h-screen bg-background">
       <AppNavbar />
       <div className="container pt-20 pb-16 max-w-3xl mx-auto px-4">
         {/* HERO */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
           <img src={m2Logo} alt="M² Training" className="w-20 h-20 object-contain mx-auto mb-4" />
           <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tight text-foreground mb-3">
             Real Strength. No Shortcuts.
           </h1>
           <p className="text-sm text-muted-foreground max-w-lg mx-auto leading-relaxed">
-            <strong className="text-foreground">14 days free.</strong> Pick your trial path, choose a program, and start training today.
+            <strong className="text-foreground">14 days free.</strong> Pick your path, enter your card, and start training today.
+            You won't be charged until day 15.
           </p>
         </motion.div>
 
-        {/* TRIAL PATH SELECTION */}
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="mb-8"
-        >
-          <h2 className="text-sm font-bold text-foreground text-center mb-1">
-            Step 1 — Choose Your Trial Type
-          </h2>
-          <p className="text-xs text-muted-foreground text-center mb-4">
-            This determines which membership you'll auto-start after 14 days if you don't cancel.
-          </p>
+        {/* ─── STEP 1: CHOOSE PATH ─── */}
+        {!canSelectProgram && (
+          <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+            <h2 className="text-sm font-bold text-foreground text-center mb-1">Step 1 — Choose Your Trial Type</h2>
+            <p className="text-xs text-muted-foreground text-center mb-4">
+              This determines your membership after the 14-day trial.
+            </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {/* Basic Trial */}
-            <TrialPathCard
-              selected={selectedPath === "basic"}
-              onClick={() => setSelectedPath("basic")}
-              icon={User}
-              title="Basic Trial"
-              charge="$15.99/mo after trial"
-              desc="Exercise library, monthly focus, challenges, and workout logging."
-              badge={null}
-              warning="No child invite · No custom program"
-            />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+              <TrialPathCard
+                selected={selectedPath === "basic"}
+                onClick={() => setSelectedPath("basic")}
+                icon={User}
+                title="Basic Trial"
+                charge="$15.99/mo after trial"
+                desc="Exercise library, monthly focus, challenges, and workout logging."
+                badge={null}
+                warning="No child invite · No custom program"
+              />
+              <TrialPathCard
+                selected={selectedPath === "parent"}
+                onClick={() => setSelectedPath("parent")}
+                icon={Users}
+                title="Parent / Youth Dev"
+                charge="$49.99/mo (Pro) after trial"
+                desc="Everything in Basic + custom programming, Fix It library, coach form review, and child invite links."
+                badge="Includes child linking"
+                warning={null}
+                bonus="Free postural assessment"
+              />
+              <TrialPathCard
+                selected={selectedPath === "pro"}
+                onClick={() => setSelectedPath("pro")}
+                icon={Star}
+                title="Adult Pro Trial"
+                charge="$49.99/mo (Pro) after trial"
+                desc="Everything in Basic + custom programming built for you, Fix It library, and direct coach form review."
+                badge={null}
+                warning="No child invite on this plan"
+                bonus="Free postural assessment"
+              />
+            </div>
 
-            {/* Parent / Youth Dev Trial */}
-            <TrialPathCard
-              selected={selectedPath === "parent"}
-              onClick={() => setSelectedPath("parent")}
-              icon={Users}
-              title="Parent / Youth Dev"
-              charge="$49.99/mo (Pro) after trial"
-              desc="Everything in Basic + custom programming, Fix It library, coach form review, and child invite links."
-              badge="Includes child linking"
-              warning={null}
-              bonus="Free postural assessment"
-            />
-
-            {/* Adult Pro Trial */}
-            <TrialPathCard
-              selected={selectedPath === "pro"}
-              onClick={() => setSelectedPath("pro")}
-              icon={Star}
-              title="Adult Pro Trial"
-              charge="$49.99/mo (Pro) after trial"
-              desc="Everything in Basic + custom programming built for you, Fix It library, and direct coach form review."
-              badge={null}
-              warning="No child invite on this plan"
-              bonus="Free postural assessment"
-            />
-          </div>
-        </motion.div>
-
-        {/* CONTENT AFTER SELECTION */}
-        <AnimatePresence>
-          {selectedPath && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="overflow-hidden"
-            >
-              {/* FREE ASSESSMENT — only for parent & pro */}
-              {showAssessment && (
-                <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/20 p-5 sm:p-6 mb-6">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Video size={18} className="text-primary" />
-                    <h3 className="text-sm font-bold text-foreground">Free Postural Assessment — Included With Your Trial</h3>
-                  </div>
-                  <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
-                    Because your trial includes a custom program from Matt, we start with an assessment so your program is built around <strong className="text-foreground">your</strong> body, not a template. Choose how you'd like to do it:
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {ASSESSMENT_OPTIONS.map((opt) => (
-                      <div key={opt.title} className="bg-card border border-border p-4 flex gap-3">
-                        <div className="w-9 h-9 bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <opt.icon size={16} className="text-primary" />
+            {/* WHAT YOU GET DURING TRIAL */}
+            <AnimatePresence>
+              {selectedPath && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="bg-card shadow-m2 p-5 mb-6 border-l-4 border-primary">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-3 font-mono">
+                      Here's How This Works
+                    </p>
+                    <div className="space-y-2.5">
+                      {[
+                        { icon: CreditCard, text: "Enter your card below. You won't be charged for 14 days." },
+                        { icon: BookOpen, text: "Pick a 2-week intro program (or get a custom one built for you)." },
+                        { icon: Dumbbell, text: "Log every set and rep in the portal." },
+                        { icon: Flag, text: "Flag Coach Matt for personal form review on any exercise." },
+                      ].map((step, i) => (
+                        <div key={i} className="flex items-start gap-3">
+                          <div className="w-6 h-6 bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <step.icon size={12} className="text-primary" />
+                          </div>
+                          <p className="text-sm text-foreground leading-relaxed">{step.text}</p>
                         </div>
-                        <div className="flex-1">
-                          <p className="text-xs font-bold text-foreground mb-0.5">{opt.title}</p>
-                          <p className="text-[11px] text-muted-foreground leading-relaxed">{opt.desc}</p>
-                          {opt.link && (
-                            <Link
-                              to={opt.link}
-                              className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-primary mt-2 hover:underline"
-                            >
-                              Book Now <ArrowRight size={10} />
-                            </Link>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-3 flex items-center gap-1.5 text-[10px] text-primary font-bold">
-                    <CheckCircle2 size={12} />
-                    100% free during your trial — no strings attached
-                  </div>
-                </div>
-              )}
-
-              {/* HOW IT WORKS */}
-              <div className="bg-card shadow-m2 p-5 mb-8 border-l-4 border-primary">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-3 font-mono">
-                  Here's How This Works
-                </p>
-                <div className="space-y-2.5">
-                  {HOW_IT_WORKS.map((step, i) => (
-                    <div key={i} className="flex items-start gap-3">
-                      <div className="w-6 h-6 bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <step.icon size={12} className="text-primary" />
-                      </div>
-                      <p className="text-sm text-foreground leading-relaxed">{step.text}</p>
+                      ))}
                     </div>
-                  ))}
-                </div>
-                <div className="mt-3 bg-primary/5 border border-primary/20 p-3">
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    After 14 days:{" "}
-                    <strong className="text-foreground">You'll auto-start the {autoChargeLabel} unless you cancel.</strong>{" "}
-                    <span className="text-primary font-bold">Cancel anytime.</span>
-                  </p>
-                </div>
-              </div>
+                    <div className="mt-3 bg-primary/5 border border-primary/20 p-3">
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        After 14 days:{" "}
+                        <strong className="text-foreground">You'll auto-start the {autoChargeLabel}.</strong>{" "}
+                        <span className="text-primary font-bold">Cancel anytime before day 14 and you won't be charged.</span>
+                      </p>
+                    </div>
+                  </div>
 
-              {/* PROGRAM SELECTION */}
-              <div className="mb-8">
-                <h2 className="text-lg font-bold text-foreground mb-1 text-center">
-                  Step 2 — Select Your 2-Week Intro Track
-                </h2>
-                <p className="text-xs text-muted-foreground text-center mb-4">
-                  Pick the program that fits. You start Day 1 immediately.
-                </p>
-
-                <div className="grid grid-cols-1 gap-3">
-                  {TRIAL_PROGRAMS.map((program) => (
-                    <motion.button
-                      key={program.id}
-                      whileHover={{ scale: 1.01 }}
-                      whileTap={{ scale: 0.99 }}
-                      disabled={selecting !== null}
-                      onClick={() => handleSelectProgram(program.id)}
-                      className="bg-card shadow-m2 p-4 text-left border-2 border-border hover:border-primary transition-all disabled:opacity-60 group"
+                  {/* START TRIAL CTA — requires credit card */}
+                  <div className="text-center mb-8">
+                    <button
+                      onClick={handleStartTrial}
+                      disabled={checkingOut}
+                      className="bg-primary text-primary-foreground px-8 py-4 text-sm font-bold uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-3 mx-auto"
                     >
-                      <div className="flex items-start gap-3">
-                        <div className={`w-9 h-9 bg-primary/10 flex items-center justify-center flex-shrink-0 ${program.color}`}>
-                          <program.icon size={18} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-0.5">
-                            <h3 className="text-sm font-bold text-foreground">{program.title}</h3>
-                            <span className="text-[9px] bg-muted text-muted-foreground px-2 py-0.5 font-bold uppercase tracking-widest">
-                              {program.subtitle}
-                            </span>
-                          </div>
-                          <p className="text-xs text-muted-foreground leading-relaxed mb-1.5">{program.description}</p>
-                          <div className="flex gap-1.5 flex-wrap">
-                            {program.tags.map((tag) => (
-                              <span key={tag} className="text-[9px] bg-primary/10 text-primary px-2 py-0.5 font-bold uppercase tracking-widest">
-                                {tag}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                        <div className="flex-shrink-0 self-center">
-                          {selecting === program.id ? (
-                            <Loader2 size={18} className="text-primary animate-spin" />
-                          ) : (
-                            <ArrowRight size={18} className="text-muted-foreground group-hover:text-primary transition-colors" />
-                          )}
-                        </div>
+                      {checkingOut ? (
+                        <Loader2 size={18} className="animate-spin" />
+                      ) : (
+                        <CreditCard size={18} />
+                      )}
+                      {checkingOut ? "Opening Checkout…" : "Start My 14-Day Free Trial"}
+                    </button>
+                    <p className="text-[10px] text-muted-foreground mt-2">
+                      Secure checkout via Stripe. You won't be charged until day 15.
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        )}
+
+        {/* ─── STEP 2: PROGRAM SELECTION (only after checkout) ─── */}
+        {canSelectProgram && selectedPath && !showAssessment && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <div className="bg-primary/10 border border-primary/20 p-4 mb-6 text-center">
+              <CheckCircle2 size={20} className="text-primary mx-auto mb-2" />
+              <p className="text-sm font-bold text-foreground">You're all set! Your 14-day trial is active.</p>
+              <p className="text-xs text-muted-foreground">Now choose a program to start training today.</p>
+            </div>
+
+            <h2 className="text-lg font-bold text-foreground mb-1 text-center">
+              Choose Your Intro Program
+            </h2>
+            <p className="text-xs text-muted-foreground text-center mb-4">
+              Pick the program that fits. You start Day 1 immediately.
+            </p>
+
+            <div className="grid grid-cols-1 gap-3">
+              {visiblePrograms.map((program) => (
+                <motion.button
+                  key={program.id}
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  disabled={selecting !== null}
+                  onClick={() => handleSelectProgram(program.id)}
+                  className={`bg-card shadow-m2 p-4 text-left border-2 border-border hover:border-primary transition-all disabled:opacity-60 group ${
+                    program.id === "custom" ? "border-primary/30 bg-primary/5" : ""
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`w-9 h-9 bg-primary/10 flex items-center justify-center flex-shrink-0 ${program.color}`}>
+                      <program.icon size={18} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                        <h3 className="text-sm font-bold text-foreground">{program.title}</h3>
+                        <span className="text-[9px] bg-muted text-muted-foreground px-2 py-0.5 font-bold uppercase tracking-widest">
+                          {program.subtitle}
+                        </span>
                       </div>
-                    </motion.button>
-                  ))}
-                </div>
+                      <p className="text-xs text-muted-foreground leading-relaxed mb-1.5">{program.description}</p>
+                      <div className="flex gap-1.5 flex-wrap">
+                        {program.tags.map((tag) => (
+                          <span key={tag} className="text-[9px] bg-primary/10 text-primary px-2 py-0.5 font-bold uppercase tracking-widest">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex-shrink-0 self-center">
+                      {selecting === program.id ? (
+                        <Loader2 size={18} className="text-primary animate-spin" />
+                      ) : (
+                        <ArrowRight size={18} className="text-muted-foreground group-hover:text-primary transition-colors" />
+                      )}
+                    </div>
+                  </div>
+                </motion.button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* ─── CUSTOM PROGRAM ASSESSMENT FLOW ─── */}
+        {canSelectProgram && showAssessment && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <button
+              onClick={() => setShowAssessment(false)}
+              className="text-xs text-primary font-bold uppercase tracking-widest mb-4 flex items-center gap-1 hover:underline"
+            >
+              ← Back to programs
+            </button>
+
+            <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/20 p-5 sm:p-6 mb-6">
+              <div className="flex items-center gap-2 mb-3">
+                <Star size={18} className="text-primary" />
+                <h2 className="text-base font-bold text-foreground">
+                  Your Custom Program Starts With an Assessment
+                </h2>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              <p className="text-xs text-muted-foreground leading-relaxed mb-5">
+                Matt builds your program from scratch — no templates, no AI. But first, he needs to see how you move.
+                Choose one of the options below to get started. This is <strong className="text-foreground">100% free</strong> as part of your trial.
+              </p>
+
+              <div className="grid grid-cols-1 gap-3">
+                {/* Option 1: In-person assessment */}
+                <AssessmentOptionCard
+                  icon={Calendar}
+                  title="In-Person Assessment"
+                  desc="Come to the studio in Grosse Pointe Park, MI. Matt will walk you through a full movement screen and build your program on the spot."
+                  action={
+                    <Link
+                      to="/schedule"
+                      className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all"
+                    >
+                      <Calendar size={12} /> Book In-Person
+                    </Link>
+                  }
+                />
+
+                {/* Option 2: Online video meeting */}
+                <AssessmentOptionCard
+                  icon={Video}
+                  title="Live Video Assessment"
+                  desc="Schedule a free 15-minute video call. Matt will guide you through the movement screen in real time via Google Meet."
+                  action={
+                    <a
+                      href="https://calendly.com/m2training"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all"
+                    >
+                      <Video size={12} /> Schedule Video Call
+                    </a>
+                  }
+                />
+
+                {/* Option 3: Upload a video */}
+                <PosturalVideoUpload userId={user?.id || null} />
+
+                {/* Option 4: Just describe it */}
+                <TextAssessmentOption userId={user?.id || null} />
+              </div>
+            </div>
+
+            <div className="text-center">
+              <p className="text-[10px] text-muted-foreground">
+                Not ready for an assessment? You can always do it later from your dashboard.{" "}
+                <button
+                  onClick={() => {
+                    toast({ title: "No problem!", description: "You can start an assessment from your dashboard any time." });
+                    navigate("/dashboard");
+                  }}
+                  className="text-primary font-bold hover:underline"
+                >
+                  Skip to Dashboard →
+                </button>
+              </p>
+            </div>
+          </motion.div>
+        )}
 
         {/* BOTTOM */}
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="text-center"
+          className="text-center mt-8"
         >
-          <p className="text-[10px] text-muted-foreground mb-2">
-            No credit card required to start. Cancel before day 14 to avoid charges.
-          </p>
           <p className="text-[10px] text-muted-foreground">
             © {new Date().getFullYear()} M² Training · Grosse Pointe Park, MI
           </p>
@@ -344,7 +436,212 @@ const TrialWelcome = () => {
   );
 };
 
-/* ---------- Trial Path Card ---------- */
+/* ─── Postural Video Upload ─── */
+const PosturalVideoUpload = ({ userId }: { userId: string | null }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploaded, setUploaded] = useState(false);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !userId) return;
+
+    if (file.size > 25 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Max 25MB. Try trimming or compressing.", variant: "destructive" });
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || "mp4";
+      const path = `postural/${userId}/${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from("form-check-videos").upload(path, file);
+      if (error) throw error;
+      setUploaded(true);
+      toast({ title: "Video uploaded! 🎯", description: "Matt will review it and start building your custom program." });
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="bg-card border border-border p-5">
+      <div className="flex gap-3 mb-3">
+        <div className="w-9 h-9 bg-primary/10 flex items-center justify-center flex-shrink-0">
+          <Upload size={16} className="text-primary" />
+        </div>
+        <div>
+          <p className="text-xs font-bold text-foreground mb-0.5">Send a Postural Assessment Video</p>
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            Record yourself doing 5 overhead squats and send the video. Matt will review within 48 hours.
+          </p>
+        </div>
+      </div>
+
+      {/* Detailed instructions based on NASM/NFPT guidelines */}
+      <div className="bg-muted p-4 mb-3 space-y-2">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-foreground flex items-center gap-1.5">
+          <Camera size={10} /> How to Record Your Video
+        </p>
+        <div className="text-[11px] text-muted-foreground space-y-2 leading-relaxed">
+          <p className="font-bold text-foreground">Setup:</p>
+          <ul className="list-disc ml-4 space-y-0.5">
+            <li>Wear form-fitting clothes (shorts and a T-shirt) so Matt can see how your body moves</li>
+            <li><strong className="text-foreground">Go barefoot</strong> — shoes hide ankle mobility issues</li>
+            <li>Grab a broomstick, PVC pipe, dowel, or even a light baseball bat</li>
+            <li>Film in a well-lit area with your full body visible head to toe</li>
+            <li>Set your phone on a stable surface or have someone hold it still — <strong className="text-foreground">no handheld shaking</strong></li>
+          </ul>
+
+          <p className="font-bold text-foreground mt-2">The Movement (Overhead Squat):</p>
+          <ol className="list-decimal ml-4 space-y-0.5">
+            <li>Stand with feet <strong className="text-foreground">shoulder-width apart</strong>, toes pointed straight ahead</li>
+            <li>Raise the stick overhead with arms fully extended, hands about shoulder-width apart, arms in line with your ears</li>
+            <li>Keep your eyes focused straight ahead on a fixed point — don't look down</li>
+            <li>Slowly squat down as deep as you comfortably can (roughly chair height), then slowly stand back up</li>
+            <li>Repeat for <strong className="text-foreground">5 reps</strong> — go slow, Matt is watching for compensations</li>
+          </ol>
+
+          <p className="font-bold text-foreground mt-2">Film From Two Angles:</p>
+          <ol className="list-decimal ml-4 space-y-0.5">
+            <li><strong className="text-foreground">Front view</strong> — camera directly in front of you, at about hip height</li>
+            <li><strong className="text-foreground">Side view</strong> — turn 90° and repeat the 5 squats so Matt can see your profile</li>
+          </ol>
+
+          <div className="bg-primary/10 border border-primary/20 p-2.5 mt-2">
+            <p className="text-[10px] text-foreground font-bold">💡 What Matt is looking for:</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              Knee tracking (do your knees cave in?), ankle mobility, hip shift, lower back rounding,
+              arm position (do your arms fall forward?), and foot pronation. Don't try to be "perfect" — the
+              whole point is for Matt to see your natural movement patterns so he can program around them.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {uploaded ? (
+        <div className="flex items-center gap-2 text-xs text-primary font-bold">
+          <CheckCircle2 size={14} /> Video uploaded — Matt will review it and build your program
+        </div>
+      ) : (
+        <>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="video/*"
+            capture="environment"
+            onChange={handleUpload}
+            className="hidden"
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading || !userId}
+            className="bg-primary/10 border border-primary/30 text-primary px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:bg-primary/20 transition-all flex items-center gap-2 disabled:opacity-50"
+          >
+            {uploading ? <Loader2 size={12} className="animate-spin" /> : <Upload size={12} />}
+            {uploading ? "Uploading…" : userId ? "Upload Video (max 25MB)" : "Sign in to upload"}
+          </button>
+        </>
+      )}
+    </div>
+  );
+};
+
+/* ─── Text-Based Assessment ─── */
+const TextAssessmentOption = ({ userId }: { userId: string | null }) => {
+  const [text, setText] = useState("");
+  const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+
+  const handleSend = async () => {
+    if (!text.trim() || !userId) return;
+    setSending(true);
+    try {
+      const { error } = await supabase.from("coach_direct_messages").insert({
+        user_id: userId,
+        sender_id: userId,
+        sender_role: "athlete",
+        message: `[POSTURAL ASSESSMENT — TEXT]\n\n${text.trim()}`,
+      });
+      if (error) throw error;
+      setSent(true);
+      toast({ title: "Sent! ✅", description: "Matt will review and build your custom program." });
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div className="bg-card border border-border p-5">
+      <div className="flex gap-3 mb-3">
+        <div className="w-9 h-9 bg-primary/10 flex items-center justify-center flex-shrink-0">
+          <MessageSquare size={16} className="text-primary" />
+        </div>
+        <div>
+          <p className="text-xs font-bold text-foreground mb-0.5">Just Tell Matt</p>
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            Don't want to record? No problem. Describe your goals, injuries, limitations, equipment, and anything else Matt should know. The more detail, the better.
+          </p>
+        </div>
+      </div>
+
+      {sent ? (
+        <div className="flex items-center gap-2 text-xs text-primary font-bold">
+          <CheckCircle2 size={14} /> Message sent — Matt will build your program based on this
+        </div>
+      ) : (
+        <div className="space-y-2">
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="E.g. I'm 16, play baseball and basketball. I have a tight right hip and my left shoulder clicks when I throw. I train at a gym with dumbbells, cables, and a squat rack. My goal is to throw harder and be more durable through the season…"
+            className="w-full bg-background border border-border px-3 py-2.5 text-sm text-foreground focus:ring-1 focus:ring-primary outline-none h-28 resize-none placeholder:text-muted-foreground"
+          />
+          <button
+            onClick={handleSend}
+            disabled={!text.trim() || sending || !userId}
+            className="bg-primary/10 border border-primary/30 text-primary px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:bg-primary/20 transition-all flex items-center gap-2 disabled:opacity-50"
+          >
+            {sending ? <Loader2 size={12} className="animate-spin" /> : <MessageSquare size={12} />}
+            {sending ? "Sending…" : "Send to Matt"}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ─── Assessment Option Card ─── */
+const AssessmentOptionCard = ({
+  icon: Icon,
+  title,
+  desc,
+  action,
+}: {
+  icon: typeof Calendar;
+  title: string;
+  desc: string;
+  action: React.ReactNode;
+}) => (
+  <div className="bg-card border border-border p-5">
+    <div className="flex gap-3 mb-3">
+      <div className="w-9 h-9 bg-primary/10 flex items-center justify-center flex-shrink-0">
+        <Icon size={16} className="text-primary" />
+      </div>
+      <div>
+        <p className="text-xs font-bold text-foreground mb-0.5">{title}</p>
+        <p className="text-[11px] text-muted-foreground leading-relaxed">{desc}</p>
+      </div>
+    </div>
+    {action}
+  </div>
+);
+
+/* ─── Trial Path Card ─── */
 interface TrialPathCardProps {
   selected: boolean;
   onClick: () => void;
