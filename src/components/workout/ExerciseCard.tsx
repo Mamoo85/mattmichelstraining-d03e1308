@@ -190,6 +190,8 @@ const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove }: ExerciseCard
       <EliteUpsellModal open={showUpsell} onClose={() => setShowUpsell(false)} />
     </>
   );
-};
+});
+
+ExerciseCard.displayName = "ExerciseCard";
 
 export default ExerciseCard;
