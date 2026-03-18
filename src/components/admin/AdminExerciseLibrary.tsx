@@ -12,6 +12,7 @@ interface Exercise {
   client_type: string[];
   focus_area: string[];
   sport: string[];
+  video_url: string;
 }
 
 const PRESET_CLIENT_TYPES = ["Athlete", "Lifestyle Fitness"];
@@ -25,6 +26,7 @@ const EMPTY: Exercise = {
   client_type: [],
   focus_area: [],
   sport: [],
+  video_url: "",
 };
 
 const AdminExerciseLibrary = () => {
@@ -46,7 +48,7 @@ const AdminExerciseLibrary = () => {
   const fetchExercises = async () => {
     const { data } = await supabase
       .from("exercise_library")
-      .select("id, title, equipment_needed, the_why, client_type, focus_area, sport")
+      .select("id, title, equipment_needed, the_why, client_type, focus_area, sport, video_url")
       .order("title");
     if (data) setExercises(data as Exercise[]);
     setLoading(false);
@@ -78,6 +80,7 @@ const AdminExerciseLibrary = () => {
         client_type: parsed.client_type || [],
         focus_area: parsed.focus_area || [],
         sport: parsed.sport || [],
+        video_url: parsed.video_url || prev.video_url,
       }));
     } catch {
       toast.error("Failed to parse AI result — fill in manually");
@@ -94,6 +97,7 @@ const AdminExerciseLibrary = () => {
       client_type: editing.client_type,
       focus_area: editing.focus_area,
       sport: editing.sport,
+      video_url: editing.video_url.trim() || null,
     };
 
     if (editing.id) {
@@ -239,6 +243,16 @@ const AdminExerciseLibrary = () => {
               type="text"
               value={editing.equipment_needed}
               onChange={(e) => setEditing({ ...editing, equipment_needed: e.target.value })}
+              className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground mb-3 outline-none focus:ring-1 focus:ring-primary"
+            />
+
+            {/* Video URL */}
+            <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Video URL (YouTube/Vimeo)</label>
+            <input
+              type="url"
+              value={editing.video_url}
+              onChange={(e) => setEditing({ ...editing, video_url: e.target.value })}
+              placeholder="https://youtube.com/watch?v=..."
               className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground mb-3 outline-none focus:ring-1 focus:ring-primary"
             />
 
