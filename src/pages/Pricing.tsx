@@ -140,6 +140,12 @@ const Pricing = () => {
       if (referralCode && !promoCode.trim()) {
         body.referralCode = referralCode;
       }
+      // Elite/Team → schedule page for 1-on-1 assessment booking; others → dashboard
+      if (tierKey === "elite" || tierKey === "team") {
+        body.successUrl = "/schedule?checkout=success";
+      } else {
+        body.successUrl = "/dashboard?checkout=success";
+      }
 
       const { data, error } = await supabase.functions.invoke("create-checkout", { body });
 
