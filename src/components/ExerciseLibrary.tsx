@@ -82,7 +82,7 @@ const ExerciseLibrary = () => {
     setSearch("");
   };
 
-  const hasActiveFilters = !!activeClientType || !!activeFocusArea || !!activeSport || !!search;
+  const hasActiveFilters = !!activeClientType || !!activeFocusArea || !!activeSport || !!activeLevel || !!search;
 
   return (
     <div>
