@@ -2,7 +2,9 @@ import { useState } from "react";
 import { Navigate } from "react-router-dom";
 import AppNavbar from "@/components/AppNavbar";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import { Loader2 } from "lucide-react";
+import { Loader2, Bot, Users, Dumbbell, Mail, UserCheck, FileText, DollarSign, Settings } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+
 import AdminTrialSettings from "@/components/admin/AdminTrialSettings";
 import AdminSubscriberList from "@/components/admin/AdminSubscriberList";
 import AdminNewsletterComposer from "@/components/admin/AdminNewsletterComposer";
@@ -28,47 +30,42 @@ import AdminFamilyManager from "@/components/admin/AdminFamilyManager";
 import AdminLearnEditor from "@/components/admin/AdminLearnEditor";
 import AdminFinancials from "@/components/admin/AdminFinancials";
 import AdminSystemSettings from "@/components/admin/AdminSystemSettings";
-
 import AdminTestimonials from "@/components/admin/AdminTestimonials";
 import AdminFrontPage from "@/components/admin/AdminFrontPage";
 import AdminAiQueue from "@/components/admin/AdminAiQueue";
 import AdminAiCopilot from "@/components/admin/AdminAiCopilot";
 import AdminBroadcasts from "@/components/admin/AdminBroadcasts";
 
-const TABS = [
-  { key: "ai-queue", label: "AI Queue" },
-  { key: "ai-copilot", label: "AI Copilot" },
-  { key: "financials", label: "Financials" },
-  { key: "broadcasts", label: "Broadcasts" },
-  { key: "clients", label: "Athletes & Trials" },
-  { key: "front-page", label: "Front Page" },
-  
-  { key: "testimonials", label: "Testimonials" },
-  { key: "learn", label: "Learn Hub" },
-  { key: "system", label: "System & Referrals" },
-  { key: "trial", label: "Free Trial" },
-  { key: "tiers", label: "Tier Access" },
-  { key: "schedule", label: "Schedule" },
-  { key: "monthly", label: "Monthly Focus" },
-  { key: "coach", label: "Coach Review" },
-  { key: "videos", label: "Videos" },
-  { key: "dms", label: "Direct Messages" },
-  { key: "family", label: "Family Accounts" },
-  { key: "parent-reports", label: "Parent Reports" },
-  { key: "ai-programs", label: "AI Programs" },
-  { key: "programs", label: "Programs" },
-  { key: "exercises", label: "Exercises" },
-  { key: "promotions", label: "Promotions" },
-  { key: "points", label: "Points" },
-  { key: "site", label: "Site Editor" },
-  { key: "protocols", label: "Protocols" },
-  { key: "subscribers", label: "Newsletter" },
-  { key: "compose", label: "Compose" },
-  { key: "history", label: "Send History" },
+const SECTIONS = [
+  { key: "ai", label: "AI Hub", icon: Bot },
+  { key: "coaching", label: "Coaching", icon: Users },
+  { key: "programs", label: "Programs", icon: Dumbbell },
+  { key: "comms", label: "Communications", icon: Mail },
+  { key: "users", label: "Users & Families", icon: UserCheck },
+  { key: "content", label: "Content & Site", icon: FileText },
+  { key: "commerce", label: "Commerce", icon: DollarSign },
+  { key: "settings", label: "Settings", icon: Settings },
 ];
 
+const SubTabs = ({ tabs, defaultTab }: { tabs: { key: string; label: string; content: React.ReactNode }[]; defaultTab?: string }) => (
+  <Tabs defaultValue={defaultTab || tabs[0].key} className="w-full">
+    <TabsList className="bg-muted/50 h-auto flex-wrap gap-0.5 mb-4">
+      {tabs.map((t) => (
+        <TabsTrigger key={t.key} value={t.key} className="text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+          {t.label}
+        </TabsTrigger>
+      ))}
+    </TabsList>
+    {tabs.map((t) => (
+      <TabsContent key={t.key} value={t.key} className="mt-0">
+        {t.content}
+      </TabsContent>
+    ))}
+  </Tabs>
+);
+
 const Admin = () => {
-  const [activeTab, setActiveTab] = useState("ai-queue");
+  const [activeSection, setActiveSection] = useState("ai");
   const { isAdmin, isLoading } = useIsAdmin();
 
   if (isLoading) {
@@ -92,61 +89,103 @@ const Admin = () => {
           </div>
         </div>
 
-        <div className="flex gap-1 mb-6 flex-wrap">
-          {TABS.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setActiveTab(t.key)}
-              className={`px-4 py-2 text-[10px] font-bold uppercase tracking-widest transition-m2 ${
-                activeTab === t.key
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
+        {/* Primary section selector */}
+        <div className="flex gap-1.5 mb-6 flex-wrap">
+          {SECTIONS.map((s) => {
+            const Icon = s.icon;
+            return (
+              <button
+                key={s.key}
+                onClick={() => setActiveSection(s.key)}
+                className={`flex items-center gap-1.5 px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest transition-m2 ${
+                  activeSection === s.key
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80"
+                }`}
+              >
+                <Icon size={13} />
+                {s.label}
+              </button>
+            );
+          })}
         </div>
 
-        {activeTab === "ai-queue" && <AdminAiQueue />}
-        {activeTab === "ai-copilot" && <AdminAiCopilot />}
-        {activeTab === "financials" && <AdminFinancials />}
-        {activeTab === "broadcasts" && <AdminBroadcasts />}
-        {activeTab === "trial" && <AdminTrialSettings />}
-        {activeTab === "tiers" && <AdminTierManager />}
-        {activeTab === "schedule" && <AdminSchedule />}
-        {activeTab === "monthly" && <AdminMonthlyFocus />}
-        {activeTab === "coach" && (
-          <div className="space-y-8">
-            <AdminRecoveryHeatmap />
-            <div className="border-t border-border pt-6">
-              <AdminCoachInbox />
-            </div>
-            <div className="border-t border-border pt-6">
-              <AdminCoachDashboard />
-            </div>
-          </div>
+        {/* Section content with sub-tabs */}
+        {activeSection === "ai" && (
+          <SubTabs tabs={[
+            { key: "queue", label: "AI Queue", content: <AdminAiQueue /> },
+            { key: "copilot", label: "AI Copilot", content: <AdminAiCopilot /> },
+            { key: "ai-programs", label: "AI Programs", content: <AdminProgramCreator /> },
+          ]} />
         )}
-        {activeTab === "videos" && <AdminVideoReview />}
-        {activeTab === "dms" && <AdminDirectMessages />}
-        {activeTab === "family" && <AdminFamilyManager />}
-        {activeTab === "parent-reports" && <AdminParentReports />}
-        {activeTab === "ai-programs" && <AdminProgramCreator />}
-        {activeTab === "programs" && <AdminPrograms />}
-        {activeTab === "exercises" && <AdminExerciseLibrary />}
-        {activeTab === "promotions" && <AdminPromotions />}
-        {activeTab === "points" && <AdminPointsManager />}
-        {activeTab === "clients" && <AdminClientList />}
-        {activeTab === "learn" && <AdminLearnEditor />}
-        {activeTab === "system" && <AdminSystemSettings />}
-        {activeTab === "front-page" && <AdminFrontPage />}
-        
-        {activeTab === "testimonials" && <AdminTestimonials />}
-        {activeTab === "site" && <AdminSiteEditor />}
-        {activeTab === "protocols" && <AdminProtocols />}
-        {activeTab === "subscribers" && <AdminSubscriberList />}
-        {activeTab === "compose" && <AdminNewsletterComposer />}
-        {activeTab === "history" && <AdminSendHistory />}
+
+        {activeSection === "coaching" && (
+          <SubTabs tabs={[
+            { key: "review", label: "Coach Review", content: (
+              <div className="space-y-8">
+                <AdminCoachInbox />
+                <div className="border-t border-border pt-6">
+                  <AdminCoachDashboard />
+                </div>
+              </div>
+            )},
+            { key: "videos", label: "Videos", content: <AdminVideoReview /> },
+            { key: "dms", label: "Direct Messages", content: <AdminDirectMessages /> },
+            { key: "recovery", label: "Recovery Heatmap", content: <AdminRecoveryHeatmap /> },
+          ]} />
+        )}
+
+        {activeSection === "programs" && (
+          <SubTabs tabs={[
+            { key: "programs", label: "Programs", content: <AdminPrograms /> },
+            { key: "exercises", label: "Exercise Library", content: <AdminExerciseLibrary /> },
+            { key: "protocols", label: "Protocols", content: <AdminProtocols /> },
+          ]} />
+        )}
+
+        {activeSection === "comms" && (
+          <SubTabs tabs={[
+            { key: "broadcasts", label: "Broadcasts", content: <AdminBroadcasts /> },
+            { key: "subscribers", label: "Subscribers", content: <AdminSubscriberList /> },
+            { key: "compose", label: "Compose", content: <AdminNewsletterComposer /> },
+            { key: "history", label: "Send History", content: <AdminSendHistory /> },
+          ]} />
+        )}
+
+        {activeSection === "users" && (
+          <SubTabs tabs={[
+            { key: "athletes", label: "Athletes & Trials", content: <AdminClientList /> },
+            { key: "family", label: "Family Accounts", content: <AdminFamilyManager /> },
+            { key: "parent-reports", label: "Parent Reports", content: <AdminParentReports /> },
+            { key: "trial", label: "Trial Settings", content: <AdminTrialSettings /> },
+          ]} />
+        )}
+
+        {activeSection === "content" && (
+          <SubTabs tabs={[
+            { key: "front-page", label: "Front Page", content: <AdminFrontPage /> },
+            { key: "site", label: "Site Editor", content: <AdminSiteEditor /> },
+            { key: "testimonials", label: "Testimonials", content: <AdminTestimonials /> },
+            { key: "learn", label: "Learn Hub", content: <AdminLearnEditor /> },
+          ]} />
+        )}
+
+        {activeSection === "commerce" && (
+          <SubTabs tabs={[
+            { key: "financials", label: "Financials", content: <AdminFinancials /> },
+            { key: "promotions", label: "Promotions", content: <AdminPromotions /> },
+            { key: "points", label: "Points", content: <AdminPointsManager /> },
+          ]} />
+        )}
+
+        {activeSection === "settings" && (
+          <SubTabs tabs={[
+            { key: "system", label: "System & Referrals", content: <AdminSystemSettings /> },
+            { key: "tiers", label: "Tier Access", content: <AdminTierManager /> },
+            { key: "schedule", label: "Schedule", content: <AdminSchedule /> },
+            { key: "monthly", label: "Monthly Focus", content: <AdminMonthlyFocus /> },
+          ]} />
+        )}
       </div>
     </div>
   );
