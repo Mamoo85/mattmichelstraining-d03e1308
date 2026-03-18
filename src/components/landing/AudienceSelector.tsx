@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Users, Dumbbell, GraduationCap, ArrowRight, X, Sparkles } from "lucide-react";
+import { Shield, Users, Dumbbell, GraduationCap, ArrowRight, X, Sparkles, HeartPulse } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import sneakAthlete from "@/assets/sneak-athlete.jpg";
 import sneakCoach from "@/assets/sneak-coach.jpg";
@@ -19,14 +19,14 @@ const AUDIENCES = [
     peekCaption: "Track your athlete's workouts, recovery, and progress — all from your phone.",
   },
   {
-    label: "I'm an Athlete",
-    icon: Dumbbell,
+    label: "I Want to Train",
+    icon: HeartPulse,
     route: "/shop",
-    desc: "Build workouts. Crush challenges. Track everything.",
+    desc: "Whether you're 12 or 60 — real coaching, real programs, real results.",
     peek: sneakAthlete,
-    peekAlt: "Challenge leaderboard and workout builder",
-    cta: "Peek Inside",
-    peekCaption: "Join monthly challenges, build custom workouts, and compete on the leaderboard.",
+    peekAlt: "Training programs and workout builder",
+    cta: "Browse Programs",
+    peekCaption: "Custom programs for athletes, adults, and anyone who wants to get stronger — not just look strong.",
   },
   {
     label: "I'm a Coach",
