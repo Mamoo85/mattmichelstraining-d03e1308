@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { format, addDays, startOfDay, subDays } from "date-fns";
-import { ChevronLeft, ChevronRight, Loader2, X, Ban, Sparkles } from "lucide-react";
+import { format, addDays, startOfDay, subDays, eachDayOfInterval } from "date-fns";
+import { ChevronLeft, ChevronRight, Loader2, X, Ban, Sparkles, CalendarPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AiAssistButton from "./AiAssistButton";
 
@@ -43,6 +43,15 @@ type Booking = {
   credit_id: string | null;
 };
 
+const WEEK_OPTIONS = [2, 3, 4, 5, 6];
+
+const DEFAULT_OPEN_TIMES = [
+  "06:00:00", "06:30:00", "07:00:00", "07:30:00",
+  "08:00:00", "08:30:00", "09:00:00",
+  "15:00:00", "15:30:00", "16:00:00", "16:30:00",
+  "17:00:00", "17:30:00", "18:00:00", "18:30:00",
+];
+
 const AdminSchedule = () => {
   const [selectedDate, setSelectedDate] = useState(startOfDay(new Date()));
   const [slots, setSlots] = useState<Slot[]>([]);
@@ -50,6 +59,10 @@ const AdminSchedule = () => {
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState<string | null>(null);
+  const [bulkWeeks, setBulkWeeks] = useState<number | null>(null);
+  const [bulkLoading, setBulkLoading] = useState(false);
+  const [bulkTimes, setBulkTimes] = useState<string[]>(DEFAULT_OPEN_TIMES);
+  const [skipWeekends, setSkipWeekends] = useState(true);
   const { toast } = useToast();
 
   const dateStr = format(selectedDate, "yyyy-MM-dd");
@@ -116,6 +129,46 @@ const AdminSchedule = () => {
     }
   };
 
+  const bulkPopulate = async (weeks: number) => {
+    if (!confirm(`Open slots for the next ${weeks} weeks (${bulkTimes.length} time slots/day, ${skipWeekends ? "weekdays only" : "all days"})? This won't overwrite existing booked slots.`)) return;
+    setBulkLoading(true);
+    try {
+      const startDate = startOfDay(new Date());
+      const endDate = addDays(startDate, weeks * 7 - 1);
+      const allDays = eachDayOfInterval({ start: startDate, end: endDate });
+      const days = skipWeekends
+        ? allDays.filter(d => d.getDay() !== 0 && d.getDay() !== 6)
+        : allDays;
+
+      const rows = days.flatMap(day =>
+        bulkTimes.map(time => ({
+          slot_date: format(day, "yyyy-MM-dd"),
+          start_time: time,
+          is_available: true,
+        }))
+      );
+
+      // Batch insert in chunks of 500
+      let inserted = 0;
+      for (let i = 0; i < rows.length; i += 500) {
+        const chunk = rows.slice(i, i + 500);
+        const { error } = await supabase
+          .from("schedule_slots")
+          .upsert(chunk, { onConflict: "slot_date,start_time", ignoreDuplicates: false });
+        if (error) throw error;
+        inserted += chunk.length;
+      }
+
+      toast({ title: "Slots populated", description: `Opened ${inserted} slots across ${days.length} days.` });
+      setBulkWeeks(null);
+      await fetchData();
+    } catch (err: any) {
+      toast({ title: "Bulk populate failed", description: err.message, variant: "destructive" });
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
   const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
 
   const aiContext = useMemo(() => {
@@ -170,6 +223,93 @@ const AdminSchedule = () => {
           {aiSuggestion}
         </div>
       )}
+
+      {/* Bulk Populate */}
+      <div className="bg-card shadow-m2 p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Bulk Open Slots</h3>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Populate availability for multiple weeks at once</p>
+          </div>
+          <CalendarPlus size={16} className="text-primary" />
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {WEEK_OPTIONS.map(w => (
+            <Button
+              key={w}
+              size="sm"
+              variant={bulkWeeks === w ? "default" : "outline"}
+              onClick={() => setBulkWeeks(bulkWeeks === w ? null : w)}
+              className="text-[10px] font-bold uppercase tracking-widest"
+            >
+              {w} Weeks
+            </Button>
+          ))}
+        </div>
+
+        {bulkWeeks && (
+          <div className="space-y-3 border-t border-border pt-3">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={skipWeekends}
+                onChange={e => setSkipWeekends(e.target.checked)}
+                className="accent-primary"
+                id="skip-weekends"
+              />
+              <label htmlFor="skip-weekends" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground cursor-pointer">
+                Skip Weekends
+              </label>
+            </div>
+
+            <div>
+              <div className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-2">
+                Time slots to open ({bulkTimes.length} selected)
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {SLOT_TIMES.map(time => {
+                  const selected = bulkTimes.includes(time);
+                  return (
+                    <button
+                      key={time}
+                      onClick={() =>
+                        setBulkTimes(prev =>
+                          selected ? prev.filter(t => t !== time) : [...prev, time].sort()
+                        )
+                      }
+                      className={`px-2 py-1 text-[9px] font-mono transition-m2 border ${
+                        selected
+                          ? "bg-primary/20 border-primary/40 text-primary font-bold"
+                          : "bg-muted border-border text-muted-foreground hover:border-primary/30"
+                      }`}
+                    >
+                      {formatTime12(time)}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Button
+                onClick={() => bulkPopulate(bulkWeeks)}
+                disabled={bulkLoading || bulkTimes.length === 0}
+                className="text-[10px] font-bold uppercase tracking-widest"
+              >
+                {bulkLoading ? <Loader2 size={12} className="animate-spin mr-1" /> : <CalendarPlus size={12} className="mr-1" />}
+                Open {bulkTimes.length} slots/day for {bulkWeeks} weeks
+              </Button>
+              <button
+                onClick={() => setBulkWeeks(null)}
+                className="text-[10px] text-muted-foreground hover:text-foreground"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Legend */}
       <div className="flex gap-4 text-[10px] font-bold uppercase tracking-widest">
