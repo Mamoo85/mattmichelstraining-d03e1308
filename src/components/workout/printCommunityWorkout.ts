@@ -12,6 +12,8 @@ interface PrintCommunityWorkoutData {
   exercises: PrintExerciseData[];
 }
 
+const esc = (s: string) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+
 export const printCommunityWorkout = (data: PrintCommunityWorkoutData) => {
   const win = window.open("", "_blank");
   if (!win) return;
@@ -21,7 +23,7 @@ export const printCommunityWorkout = (data: PrintCommunityWorkoutData) => {
       (ex, i) => `
       <tr class="exercise-row">
         <td class="num">${i + 1}</td>
-        <td class="name"><strong>${ex.name}</strong>${ex.notes ? `<div class="notes">${ex.notes}</div>` : ""}</td>
+        <td class="name"><strong>${esc(ex.name)}</strong>${ex.notes ? `<div class="notes">${esc(ex.notes)}</div>` : ""}</td>
         <td class="center">${ex.sets}</td>
         <td class="center">${ex.reps}</td>
         <td></td>
@@ -163,9 +165,9 @@ export const printCommunityWorkout = (data: PrintCommunityWorkoutData) => {
 <body>
   <button class="print-btn" onclick="window.print()">Print / Save PDF</button>
   <div class="header">
-    <h1>${data.title}</h1>
-    <div class="creator">Created by ${data.creatorName} · Mattletes Community</div>
-    ${data.description ? `<div class="desc">${data.description}</div>` : ""}
+    <h1>${esc(data.title)}</h1>
+    <div class="creator">Created by ${esc(data.creatorName)} · Mattletes Community</div>
+    ${data.description ? `<div class="desc">${esc(data.description)}</div>` : ""}
     <div class="brand">M² Training — Mattletes Workout Bank</div>
   </div>
   <div class="name-date">

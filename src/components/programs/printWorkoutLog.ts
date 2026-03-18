@@ -27,6 +27,8 @@ interface PrintProgramData {
   weeks: PrintWeek[];
 }
 
+const esc = (s: string) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+
 export const printWorkoutLog = (program: PrintProgramData) => {
   const win = window.open("", "_blank");
   if (!win) return;
@@ -37,9 +39,9 @@ export const printWorkoutLog = (program: PrintProgramData) => {
         (ex) => `
         <tr class="exercise-header">
           <td colspan="5">
-            <strong>${ex.name}</strong>
-            <span class="sets-reps">${ex.setsReps}</span>
-            ${ex.instructions ? `<div class="instructions">${ex.instructions}</div>` : ""}
+            <strong>${esc(ex.name)}</strong>
+            <span class="sets-reps">${esc(ex.setsReps)}</span>
+            ${ex.instructions ? `<div class="instructions">${esc(ex.instructions)}</div>` : ""}
           </td>
         </tr>
         ${Array.from({ length: logRows })
@@ -247,8 +249,8 @@ export const printWorkoutLog = (program: PrintProgramData) => {
   <button class="print-btn" onclick="window.print()">Print / Save PDF</button>
 
   <div class="header">
-    <h1>${program.title}</h1>
-    <div class="meta">${[program.category, program.sport].filter(Boolean).join(" · ")}</div>
+    <h1>${esc(program.title)}</h1>
+    <div class="meta">${[program.category, program.sport].filter(Boolean).map(s => esc(s as string)).join(" · ")}</div>
     <div class="brand">M² Training — Matt Michels</div>
   </div>
 

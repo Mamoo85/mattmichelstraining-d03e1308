@@ -150,8 +150,7 @@ export const usePoints = () => {
 
   const toggleVisibility = useCallback(async (val: boolean) => {
     if (!user) return;
-    // Ensure row exists
-    await supabase.from("user_points").upsert({ user_id: user.id, is_public: val } as any, { onConflict: "user_id" });
+    // Update only is_public (row is created by award_points function)
     await supabase.from("user_points").update({ is_public: val } as any).eq("user_id", user.id);
     setPoints(prev => prev ? { ...prev, is_public: val } : prev);
     loadLeaderboard();
