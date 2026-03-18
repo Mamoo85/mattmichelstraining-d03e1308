@@ -128,8 +128,8 @@ const Pricing = () => {
       if (referralCode && !promoCode.trim()) {
         body.referralCode = referralCode;
       }
-      // Elite/Team → schedule page for 1-on-1 assessment booking; others → dashboard
-      if (tierKey === "elite" || tierKey === "team") {
+      // Custom/Team_Elite → schedule page for 1-on-1 assessment booking; others → dashboard
+      if (tierKey === "custom" || tierKey === "team_elite") {
         body.successUrl = "/schedule?checkout=success";
       } else {
         body.successUrl = "/dashboard?checkout=success";
