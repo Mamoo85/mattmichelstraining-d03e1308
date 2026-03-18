@@ -53,7 +53,7 @@ const HeroSection = () => {
               </h1>
               <p className="text-sm md:text-base text-foreground-soft max-w-xl mx-auto leading-relaxed">
                 In-person training in Grosse Pointe. Online programs anywhere.
-                The same coach either way.
+                Ages 12 to 60+. The same coach either way.
               </p>
             </div>
 
