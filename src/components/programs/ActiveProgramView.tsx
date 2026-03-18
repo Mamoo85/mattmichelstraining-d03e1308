@@ -192,6 +192,12 @@ const ActiveProgramView = ({ activeProgram }: ActiveProgramProps) => {
                               </div>
                             )}
 
+                            {/* Form Video */}
+                            <ExerciseVideoEmbed
+                              videoUrl={workout.exercise.video_url}
+                              exerciseTitle={workout.exercise.title}
+                            />
+
                             {/* Coach Instructions */}
                             {workout.coach_instructions && (
                               <div className="bg-accent/50 border-l-2 border-accent-foreground/20 p-3">
