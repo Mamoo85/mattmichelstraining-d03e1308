@@ -1,6 +1,7 @@
 import AppNavbar from "@/components/AppNavbar";
 import HeroSection from "@/components/HeroSection";
 import SEOHead from "@/components/SEOHead";
+import ChallengeTeaser from "@/components/landing/ChallengeTeaser";
 
 const Index = () => (
   <div className="min-h-screen bg-background">
@@ -11,6 +12,9 @@ const Index = () => (
     />
     <AppNavbar />
     <HeroSection />
+    <div className="container py-12 max-w-xl mx-auto">
+      <ChallengeTeaser />
+    </div>
   </div>
 );
 
