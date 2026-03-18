@@ -126,7 +126,10 @@ const TrialWelcome = () => {
     try {
       const { error: profileError } = await supabase
         .from("profiles")
-        .update({ trial_started_at: new Date().toISOString() })
+        .update({
+          trial_started_at: new Date().toISOString(),
+          trial_path: selectedPath,
+        } as any)
         .eq("user_id", user.id);
       if (profileError) throw profileError;
 
