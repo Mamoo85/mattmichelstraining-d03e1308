@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import SEOHead from "@/components/SEOHead";
 import { Check, X as XIcon, Star, Zap, Shield, Crown, Users, ArrowRight, Loader2, Tag, ChevronDown, ChevronUp } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";

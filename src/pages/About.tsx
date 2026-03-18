@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import AppNavbar from "@/components/AppNavbar";
+import SEOHead from "@/components/SEOHead";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
 import {
   ArrowRight, Quote, Star, Newspaper, ExternalLink,
   GraduationCap, Heart, Gamepad2, Users, ShieldOff,

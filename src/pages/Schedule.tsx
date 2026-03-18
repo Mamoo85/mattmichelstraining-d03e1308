@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import SEOHead from "@/components/SEOHead";
 import AppNavbar from "@/components/AppNavbar";
 import PaywallGate from "@/components/PaywallGate";
 import { supabase } from "@/integrations/supabase/client";
