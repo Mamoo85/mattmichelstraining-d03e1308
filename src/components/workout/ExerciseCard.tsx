@@ -18,7 +18,7 @@ const ExerciseCard = ({ exercise, index, onUpdate, onRemove }: ExerciseCardProps
   const [showExtras, setShowExtras] = useState(false);
   const [showUpsell, setShowUpsell] = useState(false);
   const { isAdmin } = useIsAdmin();
-  const { hasAccess: canFlag } = useTierAccess("flag_for_coach");
+  const { hasAccess: canFlag } = useTierAccess("flag_coach");
 
   const updateSet = (setIndex: number, field: "reps" | "weight", value: number) => {
     const newSets = [...exercise.sets];
