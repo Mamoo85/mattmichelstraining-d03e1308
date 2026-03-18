@@ -37,6 +37,7 @@ import AdminFrontPage from "@/components/admin/AdminFrontPage";
 import AdminAiQueue from "@/components/admin/AdminAiQueue";
 import AdminAiCopilot from "@/components/admin/AdminAiCopilot";
 import AdminBroadcasts from "@/components/admin/AdminBroadcasts";
+import AdminBatchGenerator from "@/components/admin/AdminBatchGenerator";
 
 const SECTIONS = [
   { key: "ai", label: "AI Hub", icon: Bot },
