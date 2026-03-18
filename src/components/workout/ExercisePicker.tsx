@@ -25,9 +25,9 @@ const ExercisePicker = memo(({ onSelect, onCancel }: ExercisePickerProps) => {
     load();
   }, []);
 
-  const filtered = exercises.filter((e) =>
+  const filtered = useMemo(() => exercises.filter((e) =>
     e.title.toLowerCase().includes(query.toLowerCase())
-  );
+  ), [exercises, query]);
 
   return (
     <div className="bg-card border border-border p-3 space-y-2">
