@@ -45,6 +45,7 @@ const Install = () => {
       <SEOHead
         title="Install M² Training App"
         description="Install the M² Training app on your phone for quick access to workouts, progress tracking, and coaching — no app store needed."
+        path="/install"
       />
       <AppNavbar />
       <main className="min-h-screen bg-background pt-20 pb-16">
