@@ -424,7 +424,54 @@ const MonthlyFocusWidget = () => {
             </div>
           )}
 
-          {/* Challenge + Log */}
+          {/* Focus Log Input (uses focus_logs table) */}
+          {focus && user && (
+            <div className="bg-card border border-border p-4 space-y-3">
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-mono font-black text-primary tracking-tight">
+                  {focusLogTotal}
+                </span>
+                <span className="text-xs text-muted-foreground font-bold uppercase tracking-widest">
+                  {focus.metric_label}
+                </span>
+                {targetValue && targetValue > 0 && (
+                  <span className="text-xs text-muted-foreground font-mono ml-auto">
+                    / {targetValue} goal
+                  </span>
+                )}
+              </div>
+              {targetValue && targetValue > 0 && (
+                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-primary to-primary/70 transition-all duration-500 rounded-full"
+                    style={{ width: `${Math.min(100, (focusLogTotal / Number(targetValue)) * 100)}%` }}
+                  />
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  placeholder={`+${focus.metric_label}`}
+                  value={focusLogInput}
+                  onChange={(e) => setFocusLogInput(e.target.value)}
+                  className="font-mono text-primary text-right w-24 shrink-0"
+                />
+                <button
+                  onClick={handleFocusLog}
+                  disabled={actionLoading}
+                  className="flex-1 bg-primary text-primary-foreground h-10 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-1.5"
+                >
+                  {actionLoading ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
+                  Log Today
+                </button>
+              </div>
+              <p className="text-[10px] text-muted-foreground text-center">
+                One entry per day · updates if you log again today
+              </p>
+            </div>
+          )}
+
+          {/* Challenge + Log (legacy leaderboard) */}
           {challenge ? (
             <div className="bg-card border border-border p-5 space-y-4 relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-primary/3 pointer-events-none" />
