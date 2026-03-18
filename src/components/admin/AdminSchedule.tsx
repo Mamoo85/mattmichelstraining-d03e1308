@@ -43,6 +43,15 @@ type Booking = {
   credit_id: string | null;
 };
 
+const WEEK_OPTIONS = [2, 3, 4, 5, 6];
+
+const DEFAULT_OPEN_TIMES = [
+  "06:00:00", "06:30:00", "07:00:00", "07:30:00",
+  "08:00:00", "08:30:00", "09:00:00",
+  "15:00:00", "15:30:00", "16:00:00", "16:30:00",
+  "17:00:00", "17:30:00", "18:00:00", "18:30:00",
+];
+
 const AdminSchedule = () => {
   const [selectedDate, setSelectedDate] = useState(startOfDay(new Date()));
   const [slots, setSlots] = useState<Slot[]>([]);
@@ -50,6 +59,10 @@ const AdminSchedule = () => {
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState<string | null>(null);
+  const [bulkWeeks, setBulkWeeks] = useState<number | null>(null);
+  const [bulkLoading, setBulkLoading] = useState(false);
+  const [bulkTimes, setBulkTimes] = useState<string[]>(DEFAULT_OPEN_TIMES);
+  const [skipWeekends, setSkipWeekends] = useState(true);
   const { toast } = useToast();
 
   const dateStr = format(selectedDate, "yyyy-MM-dd");
