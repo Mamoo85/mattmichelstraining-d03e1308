@@ -103,8 +103,8 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4">
-      <div className="max-w-sm w-full">
+    <div className="min-h-[100dvh] bg-background flex items-center justify-center px-4 overflow-y-auto pb-safe">
+      <div className="max-w-sm w-full my-8">
         <div className="text-center mb-8">
           <img src={m2Logo} alt="M² Training" className="w-20 h-20 object-contain rounded-md mx-auto mb-4" />
           <h1 className="text-xl font-bold tracking-display text-foreground">

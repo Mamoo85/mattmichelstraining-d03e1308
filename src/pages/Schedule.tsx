@@ -369,7 +369,7 @@ const Schedule = () => {
 
         {/* Purchase section */}
         {selectedSlots.length > 0 && (
-          <div className="bg-card shadow-m2 p-5 sticky bottom-4">
+          <div className="bg-card shadow-m2 p-5 sticky bottom-4 pb-safe">
             <div className="flex items-center justify-between mb-3">
               <div>
                 <div className="text-sm font-bold text-foreground flex items-center gap-2">

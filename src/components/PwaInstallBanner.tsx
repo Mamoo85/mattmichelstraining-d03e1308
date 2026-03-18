@@ -45,7 +45,7 @@ const PwaInstallBanner = () => {
   };
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md animate-in slide-in-from-bottom-4 duration-300">
+    <div className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md animate-in slide-in-from-bottom-4 duration-300 mb-[env(safe-area-inset-bottom)]">
       <div className="flex items-center gap-3 rounded-sm border border-border bg-card p-3 shadow-m2">
         <Download size={20} className="shrink-0 text-primary" />
         <p className="flex-1 text-sm text-foreground-soft">

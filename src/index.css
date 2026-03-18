@@ -142,6 +142,14 @@
   .pb-safe {
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }
+  /* Safe area margin bottom utility */
+  .mb-safe {
+    margin-bottom: env(safe-area-inset-bottom);
+  }
+  /* Dynamic viewport height — survives iOS keyboard */
+  .min-h-dvh {
+    min-height: 100dvh;
+  }
   /* Hide scrollbar utility */
   .scrollbar-hide {
     -ms-overflow-style: none;

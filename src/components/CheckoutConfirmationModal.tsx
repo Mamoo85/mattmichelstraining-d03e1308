@@ -62,7 +62,7 @@ const CheckoutConfirmationModal = ({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="sm:max-w-md bg-card border-border p-0 gap-0">
+      <DialogContent className="sm:max-w-md bg-card border-border p-0 gap-0 max-h-[85dvh] overflow-y-auto">
         {/* Header */}
         <DialogHeader className="p-5 pb-0">
           <div className="flex items-center gap-2 mb-1">
