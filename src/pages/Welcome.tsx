@@ -65,6 +65,16 @@ const Welcome = () => (
         ))}
       </motion.div>
 
+      {/* PARENT TRUST TESTIMONIAL */}
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.4 }}
+        className="mb-10"
+      >
+        <ParentTestimonialCard />
+      </motion.div>
+
       {/* STRENGTH > CARDIO — MATT'S PHILOSOPHY */}
       <motion.div
         initial={{ opacity: 0, y: 15 }}
