@@ -110,6 +110,21 @@
       font-size: inherit !important;
     }
   }
+
+  /* Broken image fallback — branded gray placeholder */
+  img {
+    min-height: 1px;
+  }
+  img::after {
+    content: '';
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: hsl(var(--muted));
+  }
 }
 
 @layer utilities {
