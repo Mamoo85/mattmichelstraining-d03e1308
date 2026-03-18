@@ -415,7 +415,7 @@ const Schedule = () => {
               <div>
                 <div className="text-sm font-bold text-foreground flex items-center gap-2">
                   {sessionType === "video" ? <Video size={14} /> : <MapPin size={14} />}
-                  {isConsecutive && !useCredit ? "1-Hour Session" : "30-Minute Session"}
+                  {isConsecutive && !isFreeSession ? "1-Hour Session" : "30-Minute Session"}
                   <span className="text-[10px] px-1.5 py-0.5 bg-muted text-muted-foreground font-bold uppercase">
                     {sessionType === "video" ? "Video" : "In-Person"}
                   </span>
