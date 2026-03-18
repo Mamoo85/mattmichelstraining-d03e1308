@@ -387,14 +387,12 @@ const TrialWelcome = () => {
                   title="Live Video Assessment"
                   desc="Schedule a free 15-minute video call. Matt will guide you through the movement screen in real time via Google Meet."
                   action={
-                    <a
-                      href="https://calendly.com/m2training"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <Link
+                      to="/schedule"
                       className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all"
                     >
                       <Video size={12} /> Schedule Video Call
-                    </a>
+                    </Link>
                   }
                 />
 
