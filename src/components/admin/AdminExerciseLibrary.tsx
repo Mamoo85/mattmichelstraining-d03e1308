@@ -245,6 +245,16 @@ const AdminExerciseLibrary = () => {
               className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground mb-3 outline-none focus:ring-1 focus:ring-primary"
             />
 
+            {/* Video URL */}
+            <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Video URL (YouTube/Vimeo)</label>
+            <input
+              type="url"
+              value={editing.video_url}
+              onChange={(e) => setEditing({ ...editing, video_url: e.target.value })}
+              placeholder="https://youtube.com/watch?v=..."
+              className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground mb-3 outline-none focus:ring-1 focus:ring-primary"
+            />
+
             {/* The Why */}
             <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">The Why</label>
             <textarea
