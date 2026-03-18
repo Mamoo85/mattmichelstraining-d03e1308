@@ -59,14 +59,14 @@ const HeroSection = () => {
         {/* ─── 3. FOR PARENTS — Injury Prevention Hook ─── */}
         <ForParentsCTA />
 
-        {/* ─── 4. SOCIAL PROOF ─── */}
+        {/* ─── 4. MEMBER PORTAL (sneak peek) ─── */}
+        <PortalEntrance />
+
+        {/* ─── 5. SOCIAL PROOF ─── */}
         <Testimonials />
 
-        {/* ─── 5. THE M² DIFFERENCE ─── */}
+        {/* ─── 6. THE M² DIFFERENCE ─── */}
         <M2Difference />
-
-        {/* ─── 6. MEMBER PORTAL (for returning users) ─── */}
-        <PortalEntrance />
 
         {/* ─── 7. FIND US ─── */}
         {showFindUs && <FindUs />}
