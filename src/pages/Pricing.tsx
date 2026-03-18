@@ -403,7 +403,7 @@ const Pricing = () => {
           loading={!!loadingTier}
           productName={modalTier ? (TIERS[modalTier.key].name + " Subscription") : ""}
           productPrice={modalTier ? (TIERS[modalTier.key].price + "/mo") : ""}
-          productType={modalTier?.key as CheckoutProductType || "pro"}
+          productType={modalTier?.key as CheckoutProductType || "foundation"}
         />
       </div>
     </div>
