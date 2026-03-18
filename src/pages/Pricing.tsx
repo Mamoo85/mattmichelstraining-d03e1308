@@ -342,4 +342,92 @@ const Pricing = () => {
   );
 };
 
+const TIER_COLS = [
+  { key: "tier_basic", label: "Basic" },
+  { key: "tier_pro", label: "Pro" },
+  { key: "tier_elite", label: "Elite" },
+  { key: "tier_team", label: "Team" },
+] as const;
+
+const TierComparisonTable = () => {
+  const { data: features = [], isLoading } = useQuery({
+    queryKey: ["tier-features-pricing"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tier_features")
+        .select("feature_label, description, tier_basic, tier_pro, tier_elite, tier_team")
+        .order("sort_order");
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 60_000,
+  });
+
+  if (isLoading || features.length === 0) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3 }}
+      className="mt-16 max-w-5xl mx-auto"
+    >
+      <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tighter text-foreground text-center mb-2">
+        Compare Every Feature
+      </h2>
+      <p className="text-muted-foreground text-sm text-center mb-8">
+        See exactly what's included in each plan — updated in real time.
+      </p>
+
+      <div className="overflow-x-auto -mx-4 px-4">
+        <table className="w-full border-collapse min-w-[540px]">
+          <thead>
+            <tr className="border-b-2 border-primary/30">
+              <th className="text-left py-3 pr-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground w-[40%]">
+                Feature
+              </th>
+              {TIER_COLS.map((col) => (
+                <th
+                  key={col.key}
+                  className={`text-center py-3 px-2 text-[10px] font-bold uppercase tracking-widest ${
+                    col.key === "tier_pro" ? "text-primary" : "text-muted-foreground"
+                  }`}
+                >
+                  {col.label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {features.map((feature: any, i: number) => (
+              <tr
+                key={feature.feature_label}
+                className={`border-b border-border/50 ${i % 2 === 0 ? "bg-card/30" : ""}`}
+              >
+                <td className="py-3 pr-4">
+                  <span className="text-sm font-semibold text-foreground block">{feature.feature_label}</span>
+                  {feature.description && (
+                    <span className="text-[11px] text-muted-foreground leading-tight block mt-0.5">
+                      {feature.description}
+                    </span>
+                  )}
+                </td>
+                {TIER_COLS.map((col) => (
+                  <td key={col.key} className="text-center py-3 px-2">
+                    {feature[col.key] ? (
+                      <Check className="w-4 h-4 text-primary mx-auto" />
+                    ) : (
+                      <XIcon className="w-3.5 h-3.5 text-muted-foreground/30 mx-auto" />
+                    )}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </motion.div>
+  );
+};
+
 export default Pricing;
