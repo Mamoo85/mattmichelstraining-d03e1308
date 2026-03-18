@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, ChevronDown, ChevronUp, Dumbbell, ShoppingBag, Calendar, MapPin, Crown } from "lucide-react";
+import { Search, ChevronDown, ChevronUp, Dumbbell, ShoppingBag, Calendar, MapPin, Crown, Shield } from "lucide-react";
 import { toast } from "sonner";
 import AiAssistButton from "./AiAssistButton";
 
@@ -69,6 +69,18 @@ const AdminClientList = () => {
       toast.success("Client status updated");
     },
     onError: () => toast.error("Failed to update client status"),
+  });
+
+  const setTierMutation = useMutation({
+    mutationFn: async ({ profileId, tier }: { profileId: string; tier: string }) => {
+      const { error } = await supabase.from("profiles").update({ subscription_tier: tier, updated_at: new Date().toISOString() }).eq("id", profileId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-clients"] });
+      toast.success("Tier updated");
+    },
+    onError: () => toast.error("Failed to update tier"),
   });
 
   const filtered = profiles.filter(
@@ -192,6 +204,24 @@ const AdminClientList = () => {
                         >
                           {profile.is_in_person ? "Remove Legend" : "Make Legend"}
                         </button>
+                      </div>
+                      {/* Tier Override */}
+                      <div className="mt-2 flex items-center justify-between bg-card p-3 shadow-m2">
+                        <div className="flex items-center gap-2">
+                          <Shield size={14} className="text-primary" />
+                          <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Subscription Tier</span>
+                        </div>
+                        <select
+                          value={profile.subscription_tier || "free"}
+                          onChange={(e) => setTierMutation.mutate({ profileId: profile.id, tier: e.target.value })}
+                          className="bg-background border border-border px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest text-foreground outline-none focus:ring-1 focus:ring-primary"
+                        >
+                          <option value="free">Free</option>
+                          <option value="basic">Basic</option>
+                          <option value="pro">Pro</option>
+                          <option value="elite">Elite</option>
+                          <option value="team">Team</option>
+                        </select>
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
                         <div className="bg-card p-2.5 shadow-m2">

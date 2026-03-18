@@ -17,7 +17,7 @@ serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 
-    // Authenticate the parent
+    // Authenticate the caller
     const anonClient = createClient(supabaseUrl, anonKey);
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("Not authenticated");
@@ -26,8 +26,26 @@ serve(async (req) => {
     const { data: userData, error: userError } = await anonClient.auth.getUser(token);
     if (userError || !userData.user) throw new Error("Authentication failed");
 
-    const parentId = userData.user.id;
-    const { childEmail, childName, childPassword } = await req.json();
+    const callerId = userData.user.id;
+    const { childEmail, childName, childPassword, adminParentOverride } = await req.json();
+
+    // Use service role client for admin check and account creation
+    const adminClient = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false },
+    });
+
+    // Determine the parent ID
+    let parentId = callerId;
+
+    if (adminParentOverride) {
+      // Verify caller is admin
+      const { data: isAdmin } = await adminClient.rpc("has_role", {
+        _user_id: callerId,
+        _role: "admin",
+      });
+      if (!isAdmin) throw new Error("Only admins can create accounts on behalf of parents");
+      parentId = adminParentOverride;
+    }
 
     if (!childEmail || !childName || !childPassword) {
       throw new Error("Missing required fields: childEmail, childName, childPassword");
@@ -36,11 +54,6 @@ serve(async (req) => {
     if (childPassword.length < 6) {
       throw new Error("Password must be at least 6 characters");
     }
-
-    // Use service role to create the child user
-    const adminClient = createClient(supabaseUrl, serviceRoleKey, {
-      auth: { persistSession: false },
-    });
 
     // Create the child auth user
     const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
