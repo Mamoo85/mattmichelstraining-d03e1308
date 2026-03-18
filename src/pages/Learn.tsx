@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
   BookOpen, Shield, Dumbbell, ArrowRight, Target, Heart, Brain,
-  Play, ChevronDown, ChevronUp, Flame, Clock, Users,
+  Play, ChevronDown, ChevronUp, Flame, Clock, Users, Share2, Check, X,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,7 +18,7 @@ const VIDEOS = [
   {
     title: "Why Most Youth Athletes Get Injured",
     description: "Matt breaks down the #1 reason young athletes get hurt — and what parents can do about it before it's too late.",
-    embedId: "", // YouTube embed ID placeholder
+    embedId: "",
     duration: "8 min",
     category: "Injury Prevention",
   },
@@ -111,10 +111,126 @@ const TOPICS = [
   },
 ];
 
+/* ── Share Button ── */
+const ShareButton = ({ title, slug }: { title: string; slug: string }) => {
+  const [copied, setCopied] = useState(false);
+  const url = `${window.location.origin}/learn#${slug}`;
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: `M² Training — ${title}`, url });
+        return;
+      } catch {}
+    }
+    await navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <button
+      onClick={handleShare}
+      className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-primary transition-m2 px-2 py-1"
+    >
+      {copied ? <Check size={12} className="text-primary" /> : <Share2 size={12} />}
+      {copied ? "Copied!" : "Share"}
+    </button>
+  );
+};
+
+/* ── Article Card ── */
+const ArticleCard = ({ article, isExpanded, onToggle }: {
+  article: any;
+  isExpanded: boolean;
+  onToggle: () => void;
+}) => (
+  <motion.div
+    layout
+    className="bg-card shadow-m2 overflow-hidden"
+    id={article.slug}
+  >
+    {article.cover_image_url && !isExpanded && (
+      <img
+        src={article.cover_image_url}
+        alt={article.title}
+        className="w-full h-40 object-cover"
+        loading="lazy"
+      />
+    )}
+    {article.cover_image_url && isExpanded && (
+      <img
+        src={article.cover_image_url}
+        alt={article.title}
+        className="w-full h-56 object-cover"
+        loading="lazy"
+      />
+    )}
+    <div className="p-4 md:p-5">
+      <div className="flex items-center gap-2 mb-2 flex-wrap">
+        <span className="text-[9px] font-bold uppercase tracking-widest bg-primary/10 text-primary px-1.5 py-0.5">
+          {article.category.replace(/-/g, " ")}
+        </span>
+        <span className="text-[9px] text-muted-foreground">
+          {article.published_at ? new Date(article.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : ""}
+        </span>
+      </div>
+
+      <button onClick={onToggle} className="text-left w-full group">
+        <h3 className="text-base font-bold text-foreground mb-1 group-hover:text-primary transition-m2">
+          {article.title}
+        </h3>
+        {!isExpanded && (
+          <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+            {article.body.replace(/[#*_`>\-]/g, "").slice(0, 160)}…
+          </p>
+        )}
+      </button>
+
+      {isExpanded && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="mt-4"
+        >
+          <div className="prose prose-sm prose-invert max-w-none text-foreground-soft text-sm leading-relaxed
+            prose-headings:text-foreground prose-headings:font-bold prose-headings:tracking-tight
+            prose-a:text-primary prose-strong:text-foreground">
+            <ReactMarkdown>{article.body}</ReactMarkdown>
+          </div>
+          <div className="flex items-center justify-between mt-5 pt-3 border-t border-border">
+            <span className="text-[10px] text-muted-foreground">By {article.author}</span>
+            <div className="flex items-center gap-2">
+              <ShareButton title={article.title} slug={article.slug} />
+              <button
+                onClick={onToggle}
+                className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-m2 px-2 py-1"
+              >
+                <X size={12} /> Close
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {!isExpanded && (
+        <div className="flex items-center justify-between mt-3">
+          <button
+            onClick={onToggle}
+            className="text-[10px] font-bold uppercase tracking-widest text-primary hover:opacity-80 transition-m2 flex items-center gap-1"
+          >
+            Read Article <ArrowRight size={10} />
+          </button>
+          <ShareButton title={article.title} slug={article.slug} />
+        </div>
+      )}
+    </div>
+  </motion.div>
+);
+
 /* ── Video Card ── */
 const VideoCard = ({ video }: { video: typeof VIDEOS[0] }) => (
   <div className="bg-card shadow-m2 overflow-hidden group">
-    {/* Video embed area */}
     <div className="relative aspect-video bg-muted/50">
       {video.embedId ? (
         <iframe
@@ -208,7 +324,7 @@ const Learn = () => {
   return (
   <div className="min-h-screen bg-background">
     <AppNavbar />
-    <div className="container pt-20 pb-12">
+    <div className="container pt-20 pb-12 px-4 sm:px-6">
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
         {/* Hero */}
         <div className="mb-10">
@@ -228,7 +344,7 @@ const Learn = () => {
           </p>
         </div>
 
-        {/* CMS Articles */}
+        {/* CMS Articles Grid */}
         {articles.length > 0 && (
           <section className="mb-10">
             <div className="flex items-center gap-2 mb-4">
@@ -237,35 +353,14 @@ const Learn = () => {
                 Latest from Matt
               </h2>
             </div>
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {articles.map((a: any) => (
-                <div key={a.id} className="bg-card shadow-m2 overflow-hidden">
-                  {a.cover_image_url && (
-                    <img src={a.cover_image_url} alt={a.title} className="w-full h-48 object-cover" />
-                  )}
-                  <div className="p-5">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-[9px] font-bold uppercase tracking-widest bg-primary/10 text-primary px-1.5 py-0.5">
-                        {a.category.replace(/-/g, " ")}
-                      </span>
-                      <span className="text-[9px] text-muted-foreground">
-                        {a.published_at ? new Date(a.published_at).toLocaleDateString() : ""}
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => setExpandedArticle(expandedArticle === a.id ? null : a.id)}
-                      className="text-left w-full"
-                    >
-                      <h3 className="text-base font-bold text-foreground mb-1">{a.title}</h3>
-                      <p className="text-xs text-muted-foreground">By {a.author} · Click to {expandedArticle === a.id ? "collapse" : "read"}</p>
-                    </button>
-                    {expandedArticle === a.id && (
-                      <div className="mt-4 prose prose-sm max-w-none text-foreground-soft text-sm leading-relaxed">
-                        <ReactMarkdown>{a.body}</ReactMarkdown>
-                      </div>
-                    )}
-                  </div>
-                </div>
+                <ArticleCard
+                  key={a.id}
+                  article={a}
+                  isExpanded={expandedArticle === a.id}
+                  onToggle={() => setExpandedArticle(expandedArticle === a.id ? null : a.id)}
+                />
               ))}
             </div>
           </section>
