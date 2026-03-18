@@ -18,6 +18,7 @@ import AdminTierManager from "@/components/admin/AdminTierManager";
 import AdminDirectMessages from "@/components/admin/AdminDirectMessages";
 import AdminPointsManager from "@/components/admin/AdminPointsManager";
 import AdminVideoReview from "@/components/admin/AdminVideoReview";
+import AdminParentReports from "@/components/admin/AdminParentReports";
 
 const TABS = [
   { key: "tiers", label: "Tier Access" },
@@ -26,6 +27,7 @@ const TABS = [
   { key: "coach", label: "Coach Review" },
   { key: "videos", label: "Videos" },
   { key: "dms", label: "Direct Messages" },
+  { key: "parent-reports", label: "Parent Reports" },
   { key: "ai-programs", label: "AI Programs" },
   { key: "programs", label: "Programs" },
   { key: "exercises", label: "Exercises" },
