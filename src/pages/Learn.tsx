@@ -22,8 +22,8 @@ const TOPICS = [
   },
   {
     icon: Target,
-    title: "Sport-Specific Training Guides",
-    desc: "Baseball, soccer, hockey, basketball, football, volleyball, lacrosse — each sport has specific strength demands. Matt's guides cover the top exercises for each sport and explain the WHY behind every movement.",
+    title: "Sport-Specific Training Plans",
+    desc: "Baseball, soccer, hockey, basketball, football, volleyball, lacrosse — each sport has specific strength demands. Matt's plans cover the top exercises for each sport and explain the WHY behind every movement.",
     link: "/shop",
     cta: "Browse training plans",
   },

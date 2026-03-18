@@ -46,7 +46,7 @@ const GuidesGrid = () => {
       </div>
       <div className="mt-2 text-center">
         <Link to="/shop" className="text-xs text-primary font-bold hover:opacity-80 transition-m2">
-          View all guides & programs →
+          View all plans & programs →
         </Link>
       </div>
     </motion.div>

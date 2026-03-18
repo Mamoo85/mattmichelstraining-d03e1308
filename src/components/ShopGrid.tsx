@@ -172,7 +172,7 @@ const ShopGrid = ({ showCustomOnly = false }: { showCustomOnly?: boolean }) => {
           {/* Value hook */}
           <div className="bg-primary/10 border border-primary/20 shadow-m2 p-4 mb-6">
             <p className="text-sm text-foreground text-balance leading-relaxed">
-              <span className="font-bold">"</span>{cms.value_hook || "I can only train so many athletes in person. But I can share what I know. Every guide teaches the WHY — not just what to do. When they understand why, they do it better. 100% of the time."}<span className="font-bold">"</span>
+              <span className="font-bold">"</span>{cms.value_hook || "I can only train so many athletes in person. But I can share what I know. Every plan teaches the WHY — not just what to do. When they understand why, they do it better. 100% of the time."}<span className="font-bold">"</span>
             </p>
             <span className="text-[10px] font-mono text-primary mt-2 block">— Matt Michels, M² Training</span>
           </div>
