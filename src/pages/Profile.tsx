@@ -3,6 +3,7 @@ import { useAuth, TIERS, TierKey, TIER_DISCOUNTS } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import AppNavbar from "@/components/AppNavbar";
 import TechSupportButton from "@/components/TechSupportButton";
+import ReferralDashboard from "@/components/ReferralDashboard";
 import { Link } from "react-router-dom";
 import {
   User, Trophy, Medal, Award, Save, Loader2, Gift, Search,
@@ -470,6 +471,11 @@ const Profile = () => {
             )}
           </div>
         )}
+
+        {/* Refer & Earn */}
+        <div className="bg-card border border-border p-5 mb-6">
+          <ReferralDashboard />
+        </div>
 
         {/* Gift Cards */}
         <div className="bg-card border border-border p-5 mb-6">
