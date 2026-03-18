@@ -112,8 +112,8 @@ const Welcome = () => (
             Parents: Stay in the Loop
           </h2>
         </div>
-        <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-          Create a <strong>linked child account</strong> and monitor every workout,
+        <p className="text-sm text-foreground-soft leading-relaxed mb-4">
+          Create a <strong className="text-foreground">linked child account</strong> and monitor every workout,
           every rep, every progress milestone. Ask Coach Matt questions on behalf of
           your athlete. On Pro membership and above, request video chats and form
           checks so Matt can coach your kid directly — no matter where you are.
