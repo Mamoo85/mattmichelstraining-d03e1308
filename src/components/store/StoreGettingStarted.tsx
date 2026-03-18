@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Gift, Star, Trophy, Users, LogIn, Dumbbell, Shield, Zap, Heart, Target } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import AiIntakeAnalyzer from "../programs/AiIntakeAnalyzer";
+import TrialCTA from "../TrialCTA";
 
 const SignUpButton = ({ size = "default" }: { size?: "default" | "small" }) => (
   <Link
