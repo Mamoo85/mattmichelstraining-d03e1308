@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Dumbbell, ShoppingBag, Home, Menu, X, LogIn, LogOut, Shield, CreditCard, BookOpen, Users, User } from "lucide-react";
+import { Dumbbell, ShoppingBag, Home, Menu, X, LogIn, LogOut, Shield, CreditCard, BookOpen, Users, User, Smartphone } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
