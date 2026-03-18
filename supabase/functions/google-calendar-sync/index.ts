@@ -21,6 +21,7 @@ async function getGoogleAccessToken(): Promise<string> {
   // Strategy 1: Use GOOGLE_PRIVATE_KEY_B64 (just the base64 key content, no PEM headers)
   if (GOOGLE_PRIVATE_KEY_B64) {
     pemBase64 = GOOGLE_PRIVATE_KEY_B64.replace(/\s/g, "");
+    console.log("Using GOOGLE_PRIVATE_KEY_B64, length:", pemBase64.length, "starts:", pemBase64.substring(0, 30));
   }
   // Strategy 2: Try parsing GOOGLE_SERVICE_ACCOUNT_KEY as full JSON
   else if (GOOGLE_SERVICE_ACCOUNT_KEY) {
