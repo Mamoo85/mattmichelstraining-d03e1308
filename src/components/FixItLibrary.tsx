@@ -122,9 +122,15 @@ const FixItLibrary = () => {
                   {isExpanded ? <ChevronUp size={16} className="text-muted-foreground flex-shrink-0 mt-1" /> : <ChevronDown size={16} className="text-muted-foreground flex-shrink-0 mt-1" />}
                 </div>
                 {isExpanded && (
-                  <div className="px-4 pb-4 border-t border-border pt-3">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-1">The WHY</span>
-                    <p className="text-xs text-foreground leading-relaxed">{ex.the_why}</p>
+                  <div className="px-4 pb-4 border-t border-border pt-3 space-y-3">
+                    <ExerciseVideoEmbed
+                      videoUrl={ex.video_url}
+                      exerciseTitle={ex.title}
+                    />
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-1">The WHY</span>
+                      <p className="text-xs text-foreground leading-relaxed">{ex.the_why}</p>
+                    </div>
                   </div>
                 )}
               </div>
