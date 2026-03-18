@@ -201,19 +201,19 @@ const TrialWelcome = () => {
                 onClick={() => setSelectedPath("parent")}
                 icon={Users}
                 title="Parent / Youth Dev"
-                charge="$49.99/mo (Pro) after trial"
+                charge="$39.99/mo (Foundation) after trial"
                 desc="Everything in Basic + custom programming, Fix It library, coach form review, and child invite links."
                 badge="Includes child linking"
                 warning={null}
                 bonus="Free postural assessment"
               />
               <TrialPathCard
-                selected={selectedPath === "pro"}
-                onClick={() => setSelectedPath("pro")}
+                selected={selectedPath === "foundation"}
+                onClick={() => setSelectedPath("foundation")}
                 icon={Star}
-                title="Adult Pro Trial"
-                charge="$49.99/mo (Pro) after trial"
-                desc="Everything in Basic + custom programming built for you, Fix It library, and direct coach form review."
+                title="Adult Foundation Trial"
+                charge="$39.99/mo (Foundation) after trial"
+                desc="Everything in Basic + 8-week periodized training, Fix It library, and direct coach form review."
                 badge={null}
                 warning="No child invite on this plan"
                 bonus="Free postural assessment"
