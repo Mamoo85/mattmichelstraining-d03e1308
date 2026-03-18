@@ -9,7 +9,7 @@ import {
   Shield, Trophy, Zap,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import m2Logo from "@/assets/m2-logo-official.png";
+import m2Logo from "@/assets/m2-logo.jpg";
 import mattFamily from "@/assets/matt-family.jpg";
 import mattTraining from "@/assets/matt-training.jpg";
 
