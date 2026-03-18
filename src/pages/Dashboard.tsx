@@ -20,6 +20,7 @@ import CommunityWorkoutBank from "@/components/workout/CommunityWorkoutBank";
 import ReferralDashboard from "@/components/ReferralDashboard";
 import PointsWidget from "@/components/PointsWidget";
 import PointsLeaderboard from "@/components/PointsLeaderboard";
+import PwaInstallBanner from "@/components/PwaInstallBanner";
 
 const TABS = [
   { key: "home", label: "Home" },
