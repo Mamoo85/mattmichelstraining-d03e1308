@@ -80,6 +80,7 @@ const AdminExerciseLibrary = () => {
         client_type: parsed.client_type || [],
         focus_area: parsed.focus_area || [],
         sport: parsed.sport || [],
+        video_url: parsed.video_url || prev.video_url,
       }));
     } catch {
       toast.error("Failed to parse AI result — fill in manually");
