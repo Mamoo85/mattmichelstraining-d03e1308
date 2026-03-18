@@ -87,12 +87,14 @@ serve(async (req) => {
     // Fix It / rehab instructions
     let fixItInstruction = "";
     if (includeFixIt) {
-      fixItInstruction = `\n- Include Fix It / rehab exercises (marked with "FIX IT") as part of warm-up, cooldown, or corrective blocks. These are mobility, prehab, and core stability exercises.`;
+      fixItInstruction = `\n- Include Fix It / rehab exercises from the FIX IT section as corrective blocks, warm-up, or cooldown — especially exercises matching the program's sport (e.g. ACL Prevention for hockey/soccer, Rotator Cuff for baseball, Knee Pain for jumping sports)`;
     }
+
+    const rollingInstruction = `\n- ALWAYS include 1-2 rolling/soft tissue techniques from the ROLLING & SOFT TISSUE section at the start or end of each training day. Match them to the muscles being trained (e.g. hip flexor release on squat days, posterior shoulder smash on pressing days)`;
 
     const exerciseCount = exercisesPerDay || 8;
 
-    const systemPrompt = `You are Matt Michels' AI assistant for M² Performance Training. You draft training programs using ONLY exercises from Matt's exercise library. Matt is a master of movement science — every program must include: custom warmup, corrective exercises, strength, balance, coordination, core stability, integrity, endurance, and targeted rolling/mobility.
+    const systemPrompt = `You are Matt Michels' AI assistant for M² Performance Training. You draft training programs using ONLY exercises from Matt's exercise library. The library has THREE sections: Main Exercises, Rolling & Soft Tissue Techniques, and Fix It / Rehab Exercises. Matt is a master of movement science — every program must include: custom warmup, corrective exercises, strength, balance, coordination, core stability, integrity, endurance, and targeted rolling/mobility.
 
 RULES:
 - ONLY use exercise IDs from the provided library
@@ -100,7 +102,7 @@ RULES:
 - Be specific with sets/reps (e.g., "3x12", "4x8 @RPE 7")
 - ${detailInstruction}
 - Progressive overload across weeks
-- Every day should have ${exerciseCount} exercises covering the full spectrum${fixItInstruction}${focusInstruction}
+- Every day should have ${exerciseCount} exercises covering the full spectrum${rollingInstruction}${fixItInstruction}${focusInstruction}
 
 Return a JSON object using this tool.`;
 
