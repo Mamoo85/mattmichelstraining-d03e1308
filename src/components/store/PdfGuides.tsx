@@ -143,7 +143,7 @@ const PdfGuides = () => {
                 ) : (
                   <FileText size={12} />
                 )}
-                Buy Guide · {guide.price}
+                Buy Plan · {guide.price}
               </button>
             </div>
           </div>
