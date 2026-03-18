@@ -72,7 +72,7 @@ const ExerciseLibrary = () => {
       const matchesLevel = !activeLevel || ex.level === activeLevel;
       return matchesSearch && matchesClient && matchesFocus && matchesSport && matchesLevel;
     });
-  }, [exercises, search, activeClientType, activeFocusArea, activeSport]);
+  }, [exercises, search, activeClientType, activeFocusArea, activeSport, activeLevel]);
 
   const clearFilters = () => {
     setActiveClientType(null);
