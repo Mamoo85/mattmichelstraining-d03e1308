@@ -313,7 +313,17 @@ const Profile = () => {
           </div>
         )}
 
-        {/* My Programs */}
+        {/* My Programs — show empty state or list */}
+        {activePrograms.length === 0 && purchasedPrograms.length === 0 && liftStats.length === 0 && (
+          <div className="mb-6">
+            <EmptyStateCard
+              title="Your Journey Starts Here"
+              description="You haven't started any programs or logged any lifts yet. Pick your starting track and let Matt build your path."
+              ctaLabel="Select Your Starting Track →"
+              ctaTo="/shop"
+            />
+          </div>
+        )}
         {(activePrograms.length > 0 || purchasedPrograms.length > 0) && (
           <div className="bg-card border border-border p-5 mb-6">
             <h2 className="text-[10px] font-bold uppercase tracking-widest text-primary mb-4 flex items-center gap-1.5">
