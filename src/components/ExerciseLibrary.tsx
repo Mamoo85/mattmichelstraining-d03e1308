@@ -187,6 +187,38 @@ const ExerciseLibrary = () => {
         </div>
       </div>
 
+      {/* Level filter */}
+      <div className="mb-4">
+        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1.5">
+          <Filter size={10} className="inline mr-1" />
+          Level
+        </span>
+        <div className="flex gap-1 flex-wrap">
+          <button
+            onClick={() => setActiveLevel(null)}
+            className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-all ${
+              !activeLevel
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            All Levels
+          </button>
+          {LEVELS.map((lv) => (
+            <button
+              key={lv}
+              onClick={() => setActiveLevel(activeLevel === lv ? null : lv)}
+              className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-all ${
+                activeLevel === lv
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {lv}
+            </button>
+          ))}
+        </div>
+      </div>
       {/* Sport filter */}
       {allSports.length > 0 && (
         <div className="mb-4">
