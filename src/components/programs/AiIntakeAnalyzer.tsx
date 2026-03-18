@@ -68,55 +68,58 @@ const AiIntakeAnalyzer = () => {
           <div className="grid grid-cols-2 gap-3 mb-3">
             <div>
               <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Age *</label>
-              <input type="number" min={8} max={80} value={age} onChange={(e) => setAge(e.target.value)}
-                placeholder="14"
-                className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary" />
+              <Input type="number" min={8} max={80} value={age} onChange={(e) => setAge(e.target.value)} placeholder="14" />
             </div>
             <div>
               <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Sport</label>
-              <select value={sport} onChange={(e) => setSport(e.target.value)}
-                className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary">
-                <option value="">Select sport...</option>
-                {SPORTS.map((s) => <option key={s}>{s}</option>)}
-              </select>
+              <Select value={sport} onValueChange={setSport}>
+                <SelectTrigger><SelectValue placeholder="Select sport..." /></SelectTrigger>
+                <SelectContent>
+                  {SPORTS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Experience *</label>
-              <select value={experience} onChange={(e) => setExperience(e.target.value)}
-                className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary">
-                <option value="">Select...</option>
-                {EXPERIENCE.map((e) => <option key={e}>{e}</option>)}
-              </select>
+              <Select value={experience} onValueChange={setExperience}>
+                <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
+                <SelectContent>
+                  {EXPERIENCE.map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Days/Week</label>
-              <select value={daysPerWeek} onChange={(e) => setDaysPerWeek(e.target.value)}
-                className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary">
-                {["2", "3", "4", "5", "6"].map((d) => <option key={d}>{d}</option>)}
-              </select>
+              <Select value={daysPerWeek} onValueChange={setDaysPerWeek}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {["2", "3", "4", "5", "6"].map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
             <div className="col-span-2">
               <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Equipment Available</label>
-              <select value={equipment} onChange={(e) => setEquipment(e.target.value)}
-                className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary">
-                <option value="">Select...</option>
-                {EQUIPMENT_OPTIONS.map((e) => <option key={e}>{e}</option>)}
-              </select>
+              <Select value={equipment} onValueChange={setEquipment}>
+                <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
+                <SelectContent>
+                  {EQUIPMENT_OPTIONS.map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
           <div className="space-y-3 mb-4">
             <div>
               <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Goals *</label>
-              <textarea value={goals} onChange={(e) => setGoals(e.target.value)}
+              <Textarea value={goals} onChange={(e) => setGoals(e.target.value)}
                 placeholder="e.g., Get stronger for football season, prevent knee injuries, improve speed..."
-                className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary h-16 resize-none" />
+                className="h-16 resize-none" />
             </div>
             <div>
               <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Injury History</label>
-              <textarea value={injuries} onChange={(e) => setInjuries(e.target.value)}
+              <Textarea value={injuries} onChange={(e) => setInjuries(e.target.value)}
                 placeholder="e.g., Sprained ankle last year, shoulder tightness..."
-                className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary h-12 resize-none" />
+                className="h-12 resize-none" />
             </div>
           </div>
 
