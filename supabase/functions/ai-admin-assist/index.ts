@@ -166,6 +166,55 @@ Be specific with times and reasoning.`;
         break;
       }
 
+      case "form_check": {
+        systemPrompt = `You are Coach Matt Michels reviewing an athlete's exercise form. Based on the exercise and any notes/context provided, write detailed form coaching feedback. Be specific about common mistakes, cues to fix them, and what to look for. Reference biomechanics and the WHY behind each cue. Be encouraging but direct. Under 200 words.`;
+        userPrompt = `Write form check feedback for this athlete:
+
+Exercise: ${context.exerciseName}
+Athlete: ${context.athleteName || "Unknown"}
+Sets/Reps Prescribed: ${context.setsReps || "Not specified"}
+Client Notes: ${context.clientNotes || "None"}
+Has Video: ${context.hasVideo ? "Yes — reference that you reviewed their video" : "No video submitted"}
+Tier: ${context.tier || "Unknown"}
+
+Write detailed coaching feedback covering:
+1. Key form cues for this specific exercise
+2. Common mistakes to watch for
+3. A specific correction based on their notes (if any)
+4. Encouragement and what to focus on next session
+
+Sound like Matt — direct, knowledgeable, no-BS coaching.`;
+        break;
+      }
+
+      case "parent_report": {
+        systemPrompt = `You are Coach Matt Michels writing a progress report for a parent about their child's training. Be professional, encouraging, and specific about what the athlete is doing well and where they can improve. Parents want to know their money is well spent and their kid is making progress. Include specific data points when available. Keep it under 250 words.`;
+        userPrompt = `Write a progress report for this athlete's parent:
+
+Athlete Name: ${context.athleteName}
+Subscription: ${context.tier}
+Member Since: ${context.joinDate}
+Total Workouts Logged: ${context.totalWorkouts}
+Recent Activity (last 14 days): ${context.recentWorkouts} workouts
+Active Programs: ${context.activePrograms || "None"}
+Avg Sleep: ${context.avgSleep || "Not tracked"}
+Avg Energy: ${context.avgEnergy || "Not tracked"}
+Avg Soreness: ${context.avgSoreness || "Not tracked"}
+Recent Lifts: ${context.recentLifts || "No lifts logged"}
+Flagged Exercises: ${context.flaggedCount || 0}
+${context.coachNotes ? `Coach's Recent Notes: ${context.coachNotes}` : ""}
+
+Write a parent-friendly progress report covering:
+1. What their athlete has been doing (be specific)
+2. Strengths and improvements observed
+3. Areas to focus on
+4. Encouragement and next steps
+5. Any concerns (if soreness is high, workouts are low, etc.)
+
+Address the parent directly. Sign off as Coach Matt.`;
+        break;
+      }
+
       default:
         throw new Error(`Unknown assist type: ${type}`);
     }
