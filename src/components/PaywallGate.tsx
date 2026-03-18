@@ -31,7 +31,7 @@ const PaywallGate = ({ featureKey, featureName, children }: PaywallGateProps) =>
       <h3 className="text-base font-bold text-foreground mb-2">{featureName}</h3>
       <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
         {user
-          ? `Upgrade to ${info?.name} (${info?.price}) to unlock this feature.`
+          ? "Upgrade your plan to unlock this feature."
           : "Sign in and subscribe to access this feature."}
       </p>
       <div className="flex flex-col sm:flex-row gap-2 justify-center">
