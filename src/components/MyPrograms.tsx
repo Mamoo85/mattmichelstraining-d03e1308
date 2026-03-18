@@ -228,21 +228,13 @@ const MyPrograms = () => {
 
   if (!hasAny) {
     return (
-      <div className="bg-card shadow-m2 p-6 text-center">
-        <ShoppingBag size={32} className="text-muted-foreground mx-auto mb-3" />
-        <h3 className="text-sm font-bold text-foreground mb-1">No programs yet</h3>
-        <p className="text-xs text-muted-foreground mb-4 max-w-sm mx-auto">
-          When you purchase a custom program or interactive training system from Matt, it automatically appears here —
-          ready to log, track, and get coaching feedback on every lift.
-        </p>
-        <Link
-          to="/shop"
-          className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
-        >
-          Browse Programs
-          <Dumbbell size={14} />
-        </Link>
-      </div>
+      <EmptyStateCard
+        icon={<ShoppingBag size={28} className="text-primary" />}
+        title="No Programs Yet"
+        description="When you purchase a custom program or interactive training system from Matt, it appears here — ready to log, track, and get coaching feedback on every lift."
+        ctaLabel="Browse Programs →"
+        ctaTo="/shop"
+      />
     );
   }
 
