@@ -1152,8 +1152,11 @@ export type Database = {
           amount_cents: number
           cancelled_at: string | null
           created_at: string
+          credit_id: string | null
           duration_minutes: number
+          google_calendar_event_id: string | null
           id: string
+          session_type: string
           slot_date: string
           start_time: string
           status: string
@@ -1167,8 +1170,11 @@ export type Database = {
           amount_cents: number
           cancelled_at?: string | null
           created_at?: string
+          credit_id?: string | null
           duration_minutes?: number
+          google_calendar_event_id?: string | null
           id?: string
+          session_type?: string
           slot_date: string
           start_time: string
           status?: string
@@ -1182,8 +1188,11 @@ export type Database = {
           amount_cents?: number
           cancelled_at?: string | null
           created_at?: string
+          credit_id?: string | null
           duration_minutes?: number
+          google_calendar_event_id?: string | null
           id?: string
+          session_type?: string
           slot_date?: string
           start_time?: string
           status?: string
@@ -1194,6 +1203,53 @@ export type Database = {
           user_name?: string | null
         }
         Relationships: []
+      }
+      session_credits: {
+        Row: {
+          booking_id: string | null
+          credit_type: string
+          granted_at: string
+          id: string
+          is_used: boolean
+          month: number
+          source: string
+          used_at: string | null
+          user_id: string
+          year: number
+        }
+        Insert: {
+          booking_id?: string | null
+          credit_type?: string
+          granted_at?: string
+          id?: string
+          is_used?: boolean
+          month: number
+          source?: string
+          used_at?: string | null
+          user_id: string
+          year: number
+        }
+        Update: {
+          booking_id?: string | null
+          credit_type?: string
+          granted_at?: string
+          id?: string
+          is_used?: boolean
+          month?: number
+          source?: string
+          used_at?: string | null
+          user_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_credits_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "session_bookings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       site_content: {
         Row: {
