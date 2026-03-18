@@ -103,19 +103,39 @@ serve(async (req) => {
 
     const isFoundation = (program.category || "").toLowerCase() === "foundation";
 
+    const libraryContext = `The exercise library has THREE sections:
+1. MAIN EXERCISES — strength, power, conditioning, mobility movements
+2. ROLLING & SOFT TISSUE TECHNIQUES — foam roller, lacrosse ball, barbell smash, voodoo floss techniques from Kelly Starrett's methodology
+3. FIX IT / REHAB EXERCISES — injury prevention protocols (ACL, shoulder impingement, knee pain, ankle stability, etc.)
+
+CRITICAL RULES FOR ALL PROGRAMS:
+- Every training day MUST include at least 1 rolling/soft tissue technique as part of warmup or cooldown
+- Include Fix It exercises when relevant to the sport or program focus (e.g. ACL prevention for hockey/soccer, rotator cuff for baseball/hockey)
+- Match rolling techniques to the muscles being trained that day (e.g. quad barbell smash on squat days, hip flexor release on deadlift days)
+- ONLY use exercise IDs from the provided library`;
+
     const systemPrompt = isFoundation
-      ? `You are Matt Michels' AI assistant for M² Performance Training youth foundation programs. These are AGE-APPROPRIATE programs for young athletes. RULES:
-- ONLY use exercise IDs from the provided library
-- Structure as 4 weeks, 3 days/week with 5-7 exercises per day
+      ? `You are Matt Michels' AI assistant for M² Performance Training youth foundation programs. These are AGE-APPROPRIATE programs for young athletes.
+${libraryContext}
+ADDITIONAL FOUNDATION RULES:
+- Structure as 4 weeks, 3 days/week with 5-8 exercises per day
 - Be specific with sets/reps (e.g. "2x10", "3x8")
 - Include coach instructions in Matt's voice — encouraging, safety-first, technique-focused
 - Progressive overload across weeks but NEVER heavy loading for younger ages
-- Every day: warmup/mobility, core stability, strength, coordination/balance, cooldown
+- Every day: warmup with rolling/mobility, core stability, strength, coordination/balance, cooldown with rolling
 - For ages 11-13: focus on movement quality, bodyweight, coordination, NO heavy loads
 - For ages 14-15: joint/tendon strengthening, connective tissue, moderate loads
 - For ages 16-17: progressive overload, sport-specific power, advanced mobility
 - For ages 18+: college-prep conditioning, peak performance, durability under volume`
-      : `You are Matt Michels' AI assistant. Draft a 4-week, 3-day/week training program using ONLY exercise IDs from the library. Each day should have 5-6 exercises. Be specific with sets/reps (e.g. "3x12", "4x8"). Include brief coach instructions. Use ONLY the exercise IDs provided.`;
+      : `You are Matt Michels' AI assistant. Draft a 4-week, 3-day/week training program.
+${libraryContext}
+ADDITIONAL RULES:
+- Each day should have 6-8 exercises including rolling and Fix It work
+- Be specific with sets/reps (e.g. "3x12", "4x8")
+- Include brief coach instructions in Matt's direct, no-BS voice
+- Start each day with 1-2 rolling/soft tissue techniques targeting the muscles being trained
+- End each day with 1 mobility or Fix It exercise as a cooldown
+- Use ONLY the exercise IDs provided`;
 
     const userPrompt = `Program: "${program.title}" (${program.category}, ${program.level}${program.sport ? `, ${program.sport}` : ""}${program.description ? `\nDescription: ${program.description}` : ""})
 Available exercises (ID: Name):
