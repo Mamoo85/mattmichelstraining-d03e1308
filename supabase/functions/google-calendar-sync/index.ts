@@ -8,38 +8,58 @@ const corsHeaders = {
 
 const GOOGLE_CALENDAR_ID = Deno.env.get("GOOGLE_CALENDAR_ID") || "primary";
 const GOOGLE_SERVICE_ACCOUNT_KEY = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_KEY");
+const GOOGLE_PRIVATE_KEY_B64 = Deno.env.get("GOOGLE_PRIVATE_KEY_B64");
+
+// Known service account details (non-sensitive)
+const SERVICE_ACCOUNT_EMAIL = "m2-872@subtle-seer-490106-v4.iam.gserviceaccount.com";
 
 // Get access token from service account
 async function getGoogleAccessToken(): Promise<string> {
-  if (!GOOGLE_SERVICE_ACCOUNT_KEY) throw new Error("Google service account not configured");
+  let clientEmail = SERVICE_ACCOUNT_EMAIL;
+  let pemBase64 = "";
   
-  // Handle potential double-encoding or escaped JSON
-  let rawKey = GOOGLE_SERVICE_ACCOUNT_KEY.trim();
-  // If the value starts with a quote, it may be double-encoded
-  if (rawKey.startsWith('"') && rawKey.endsWith('"')) {
-    rawKey = JSON.parse(rawKey);
+  // Strategy 1: Use GOOGLE_PRIVATE_KEY_B64 (just the base64 key content, no PEM headers)
+  if (GOOGLE_PRIVATE_KEY_B64) {
+    pemBase64 = GOOGLE_PRIVATE_KEY_B64.replace(/\s/g, "");
   }
-  console.log("Key starts with:", rawKey.substring(0, 20));
-  const key = JSON.parse(rawKey);
-  
+  // Strategy 2: Try parsing GOOGLE_SERVICE_ACCOUNT_KEY as full JSON
+  else if (GOOGLE_SERVICE_ACCOUNT_KEY) {
+    try {
+      const key = JSON.parse(GOOGLE_SERVICE_ACCOUNT_KEY);
+      clientEmail = key.client_email || SERVICE_ACCOUNT_EMAIL;
+      pemBase64 = key.private_key
+        .replace(/-----BEGIN PRIVATE KEY-----/, "")
+        .replace(/-----END PRIVATE KEY-----/, "")
+        .replace(/[\n\r\s]/g, "");
+    } catch {
+      // Treat as raw private key content
+      const raw = GOOGLE_SERVICE_ACCOUNT_KEY.trim();
+      pemBase64 = raw
+        .replace(/-----BEGIN PRIVATE KEY-----/, "")
+        .replace(/-----END PRIVATE KEY-----/, "")
+        .replace(/[\n\r\s]/g, "")
+        .replace(/^n/, ""); // strip leading 'n' from escaped \n
+    }
+  } else {
+    throw new Error("Google service account not configured - set GOOGLE_PRIVATE_KEY_B64 or GOOGLE_SERVICE_ACCOUNT_KEY");
+  }
+
+  if (!pemBase64) throw new Error("Private key not found");
+
   // Create JWT
   const header = btoa(JSON.stringify({ alg: "RS256", typ: "JWT" }));
   const now = Math.floor(Date.now() / 1000);
   const claim = btoa(JSON.stringify({
-    iss: key.client_email,
+    iss: clientEmail,
     scope: "https://www.googleapis.com/auth/calendar",
     aud: "https://oauth2.googleapis.com/token",
     exp: now + 3600,
     iat: now,
-    sub: key.client_email,
+    sub: clientEmail,
   }));
 
   // Import private key and sign
-  const pemContents = key.private_key
-    .replace(/-----BEGIN PRIVATE KEY-----/, "")
-    .replace(/-----END PRIVATE KEY-----/, "")
-    .replace(/\n/g, "");
-  const binaryKey = Uint8Array.from(atob(pemContents), c => c.charCodeAt(0));
+  const binaryKey = Uint8Array.from(atob(pemBase64), c => c.charCodeAt(0));
   
   const cryptoKey = await crypto.subtle.importKey(
     "pkcs8",
