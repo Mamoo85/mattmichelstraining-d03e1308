@@ -108,8 +108,6 @@ const HeroSection = () => {
           <TrialCTA variant="banner" />
         </div>
 
-        {/* ─── 9. EMAIL CAPTURE ─── */}
-        <EmailCapture />
 
         {/* FOOTER */}
         <div className="mt-10 pt-6 border-t border-border text-center">
