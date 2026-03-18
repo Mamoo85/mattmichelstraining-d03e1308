@@ -36,6 +36,7 @@ import AdminPromotions from "@/components/admin/AdminPromotions";
 import AdminPointsManager from "@/components/admin/AdminPointsManager";
 import AdminTierManager from "@/components/admin/AdminTierManager";
 import AdminSystemSettings from "@/components/admin/AdminSystemSettings";
+import AdminStripeProducts from "@/components/admin/AdminStripeProducts";
 
 /* ── Tab 4: Site Content ───────────────────────────── */
 import AdminFrontPage from "@/components/admin/AdminFrontPage";
@@ -173,6 +174,7 @@ const Admin = () => {
             { key: "points", label: "Points", content: <AdminPointsManager /> },
             { key: "tiers", label: "Tier Access", content: <AdminTierManager /> },
             { key: "system", label: "System & Referrals", content: <AdminSystemSettings /> },
+            { key: "stripe-products", label: "Stripe Products", content: <AdminStripeProducts /> },
           ]} />
         )}
 
