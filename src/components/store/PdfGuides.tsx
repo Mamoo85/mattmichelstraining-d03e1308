@@ -161,7 +161,7 @@ const PdfGuides = () => {
             type="text"
             value={guideRequest}
             onChange={(e) => setGuideRequest(e.target.value)}
-            placeholder="What guide do you need?"
+            placeholder="What plan do you need?"
             maxLength={200}
             className="flex-1 bg-background border border-border px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-primary outline-none"
           />
