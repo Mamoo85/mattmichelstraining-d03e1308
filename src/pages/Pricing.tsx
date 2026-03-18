@@ -176,6 +176,11 @@ const Pricing = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="Pricing — Affordable Youth Strength Training"
+        description="Online strength training from $12.99/mo. In-person sessions from $50. Custom programs from $20. 14-day free trial. No contracts."
+        path="/pricing"
+      />
       <AppNavbar />
       <div className="container pt-24 pb-16">
         {/* Value comparison banner */}

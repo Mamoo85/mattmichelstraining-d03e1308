@@ -324,6 +324,11 @@ const Learn = () => {
 
   return (
   <div className="min-h-screen bg-background">
+    <SEOHead
+      title="Learn — Youth Strength Training Tips & Articles"
+      description="Free training tips, injury prevention guides, and youth strength development articles from Coach Matt Michels. Real knowledge, no fluff."
+      path="/learn"
+    />
     <AppNavbar />
     <div className="container pt-20 pb-12 px-4 sm:px-6">
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>

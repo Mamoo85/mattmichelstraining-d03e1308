@@ -232,6 +232,11 @@ const Schedule = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="Schedule a Session — In-Person Training"
+        description="Book an in-person strength training session with Coach Matt in Grosse Pointe Park, MI. 30-min ($50) and 60-min ($90) sessions available."
+        path="/schedule"
+      />
       <AppNavbar />
       <div className="container pt-20 pb-12 max-w-2xl">
         <PaywallGate featureKey="priority_scheduling" featureName="1-on-1 Session Booking">
