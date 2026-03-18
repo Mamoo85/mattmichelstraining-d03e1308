@@ -139,7 +139,7 @@ const About = () => (
               <span className="text-primary">that's what I do.</span>
             </h1>
             <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-              Born and raised in Grosse Pointe. B.S. in Kinesiology. 20+ years of training athletes
+              Born and raised in Grosse Pointe. 20+ years of training athletes
               of every age — from middle schoolers learning their first squat to college-bound
               competitors chasing scholarships. Built entirely by word of mouth.
             </p>
