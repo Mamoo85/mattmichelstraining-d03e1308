@@ -346,7 +346,7 @@ const Auth = () => {
           )}
 
           {/* Child account fields for parent signup */}
-          {mode === "signup" && signupRole === "parent" && mode !== "magic" && (
+          {mode === "signup" && signupRole === "parent" && (
             <div className="border-t border-border pt-3 mt-3 space-y-3">
               <p className="text-[10px] font-bold uppercase tracking-widest text-primary font-mono">Athlete's Account</p>
               <div>
