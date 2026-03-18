@@ -404,12 +404,40 @@ serve(async (req) => {
         }
       }
 
+      // Log the payment transaction
+      const sessionAmount = session.amount_total || 0;
+      const customerEmail = session.customer_details?.email || session.customer_email;
+      const customerName = session.customer_details?.name || null;
+      const userId = customerEmail ? await getUserIdByEmail(sb, customerEmail) : null;
+      const guide = priceId ? GUIDE_MAP[priceId] : null;
+      const txItemName = guide?.title || meta.item_name || "Purchase";
+      const txItemType = meta.type === "gift_card" ? "gift_card" : guide ? "pdf" : (meta.item_type || "purchase");
+
+      // Get the Stripe charge ID from the payment intent
+      let chargeId: string | null = null;
+      if (session.payment_intent) {
+        try {
+          const pi = await stripe.paymentIntents.retrieve(session.payment_intent as string);
+          chargeId = pi.latest_charge as string || null;
+        } catch (_) { /* ignore */ }
+      }
+
+      await logTransaction({
+        userId,
+        stripeChargeId: chargeId,
+        amount: sessionAmount,
+        itemName: txItemName,
+        itemType: txItemType,
+        status: "completed",
+        customerEmail,
+        customerName,
+      });
+
       if (session.mode !== "payment") {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
-      const customerEmail = session.customer_details?.email || session.customer_email;
-      const priceId = meta.priceId;
+      const priceIdFinal = priceId;
 
       if (!customerEmail) {
         console.error("[WEBHOOK] No customer email found on session", session.id);
