@@ -1665,6 +1665,48 @@ export type Database = {
         }
         Relationships: []
       }
+      transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          customer_email: string | null
+          customer_name: string | null
+          id: string
+          item_name: string
+          item_type: string
+          status: string
+          stripe_charge_id: string | null
+          stripe_subscription_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          id?: string
+          item_name?: string
+          item_type?: string
+          status?: string
+          stripe_charge_id?: string | null
+          stripe_subscription_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          id?: string
+          item_name?: string
+          item_type?: string
+          status?: string
+          stripe_charge_id?: string | null
+          stripe_subscription_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       trial_emails_sent: {
         Row: {
           email_type: string

@@ -179,6 +179,36 @@ serve(async (req) => {
 
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
+    // Helper: log transaction to the transactions table
+    async function logTransaction(opts: {
+      userId?: string | null;
+      stripeChargeId?: string | null;
+      stripeSubscriptionId?: string | null;
+      amount: number;
+      itemName: string;
+      itemType: string;
+      status: string;
+      customerEmail?: string | null;
+      customerName?: string | null;
+    }) {
+      try {
+        await sb.from("transactions").insert({
+          user_id: opts.userId || null,
+          stripe_charge_id: opts.stripeChargeId || null,
+          stripe_subscription_id: opts.stripeSubscriptionId || null,
+          amount: opts.amount,
+          item_name: opts.itemName,
+          item_type: opts.itemType,
+          status: opts.status,
+          customer_email: opts.customerEmail || null,
+          customer_name: opts.customerName || null,
+        });
+        console.log(`[WEBHOOK] Transaction logged: ${opts.itemName} - $${(opts.amount / 100).toFixed(2)}`);
+      } catch (e) {
+        console.error(`[WEBHOOK] Transaction log failed:`, e);
+      }
+    }
+
     // Handle subscription lifecycle events
     if (
       event.type === "customer.subscription.created" ||
@@ -194,9 +224,21 @@ serve(async (req) => {
         const tier = PRODUCT_TIER_MAP[productId] || "basic";
         await syncTierToProfile(sb, email, tier, customerId);
 
-        // Award membership points (only on created, not every update)
+        // Log subscription transaction
         if (event.type === "customer.subscription.created") {
           const uid = await getUserIdByEmail(sb, email);
+          const priceAmount = subscription.items.data[0]?.price?.unit_amount || 0;
+          await logTransaction({
+            userId: uid,
+            stripeSubscriptionId: subscription.id,
+            amount: priceAmount,
+            itemName: `${tier.charAt(0).toUpperCase() + tier.slice(1)} Membership`,
+            itemType: "subscription",
+            status: "completed",
+            customerEmail: email,
+            customerName: (customer as any).name || null,
+          });
+
           if (uid) {
             await awardPts(sb, uid, "membership_monthly", 50, `Subscribed to ${tier} membership`, subscription.id);
           }
@@ -214,6 +256,35 @@ serve(async (req) => {
         await syncTierToProfile(sb, email, "free", customerId);
       }
     }
+
+    // Handle charge refunds
+    if (event.type === "charge.refunded") {
+      const charge = event.data.object as Stripe.Charge;
+      const refundedAmount = charge.amount_refunded || 0;
+      // Update existing transaction to refunded
+      const { data: existing } = await sb
+        .from("transactions")
+        .select("id")
+        .eq("stripe_charge_id", charge.id)
+        .limit(1);
+      if (existing && existing.length > 0) {
+        await sb.from("transactions").update({ status: "refunded" }).eq("id", existing[0].id);
+      } else {
+        // Log it as a new refund entry
+        await logTransaction({
+          userId: null,
+          stripeChargeId: charge.id,
+          amount: refundedAmount,
+          itemName: "Refund",
+          itemType: "refund",
+          status: "refunded",
+          customerEmail: charge.billing_details?.email || null,
+          customerName: charge.billing_details?.name || null,
+        });
+      }
+      console.log(`[WEBHOOK] Charge refunded: ${charge.id} — $${(refundedAmount / 100).toFixed(2)}`);
+    }
+
 
     // Handle guide purchases (existing logic)
     if (event.type === "checkout.session.completed") {
@@ -333,12 +404,40 @@ serve(async (req) => {
         }
       }
 
+      // Log the payment transaction
+      const sessionAmount = session.amount_total || 0;
+      const customerEmail = session.customer_details?.email || session.customer_email;
+      const customerName = session.customer_details?.name || null;
+      const userId = customerEmail ? await getUserIdByEmail(sb, customerEmail) : null;
+      const guide = priceId ? GUIDE_MAP[priceId] : null;
+      const txItemName = guide?.title || meta.item_name || "Purchase";
+      const txItemType = meta.type === "gift_card" ? "gift_card" : guide ? "pdf" : (meta.item_type || "purchase");
+
+      // Get the Stripe charge ID from the payment intent
+      let chargeId: string | null = null;
+      if (session.payment_intent) {
+        try {
+          const pi = await stripe.paymentIntents.retrieve(session.payment_intent as string);
+          chargeId = pi.latest_charge as string || null;
+        } catch (_) { /* ignore */ }
+      }
+
+      await logTransaction({
+        userId,
+        stripeChargeId: chargeId,
+        amount: sessionAmount,
+        itemName: txItemName,
+        itemType: txItemType,
+        status: "completed",
+        customerEmail,
+        customerName,
+      });
+
       if (session.mode !== "payment") {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
-      const customerEmail = session.customer_details?.email || session.customer_email;
-      const priceId = meta.priceId;
+      const priceIdFinal = priceId;
 
       if (!customerEmail) {
         console.error("[WEBHOOK] No customer email found on session", session.id);

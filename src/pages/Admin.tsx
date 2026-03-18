@@ -25,6 +25,7 @@ import AdminVideoReview from "@/components/admin/AdminVideoReview";
 import AdminParentReports from "@/components/admin/AdminParentReports";
 import AdminFamilyManager from "@/components/admin/AdminFamilyManager";
 import AdminLearnEditor from "@/components/admin/AdminLearnEditor";
+import AdminFinancials from "@/components/admin/AdminFinancials";
 import AdminSystemSettings from "@/components/admin/AdminSystemSettings";
 
 import AdminTestimonials from "@/components/admin/AdminTestimonials";
@@ -34,6 +35,7 @@ import AdminBroadcasts from "@/components/admin/AdminBroadcasts";
 
 const TABS = [
   { key: "ai-copilot", label: "AI Copilot" },
+  { key: "financials", label: "Financials" },
   { key: "broadcasts", label: "Broadcasts" },
   { key: "clients", label: "Athletes & Trials" },
   { key: "front-page", label: "Front Page" },
@@ -104,6 +106,7 @@ const Admin = () => {
         </div>
 
         {activeTab === "ai-copilot" && <AdminAiCopilot />}
+        {activeTab === "financials" && <AdminFinancials />}
         {activeTab === "broadcasts" && <AdminBroadcasts />}
         {activeTab === "trial" && <AdminTrialSettings />}
         {activeTab === "tiers" && <AdminTierManager />}
