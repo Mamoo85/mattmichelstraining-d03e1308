@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import m2Logo from "@/assets/m2-logo.jpg";
+import m2Logo from "@/assets/m2-logo-official.png";
 import { ArrowRight, Loader2, Gift, Users, Mail } from "lucide-react";
 
 const Auth = () => {
