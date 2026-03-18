@@ -1,13 +1,27 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, ChevronDown, ChevronUp, Dumbbell, ShoppingBag, Calendar, MapPin, Crown, Shield, Clock } from "lucide-react";
+import {
+  Search, ChevronDown, ChevronUp, Dumbbell, ShoppingBag, Calendar,
+  Crown, Shield, Clock, Loader2, X, Link2, Unlink, Mail, Trash2, Users, AlertTriangle,
+} from "lucide-react";
 import { toast } from "sonner";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import AiAssistButton from "./AiAssistButton";
 
 const AdminClientList = () => {
   const [search, setSearch] = useState("");
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
+  const [eraseConfirmStep, setEraseConfirmStep] = useState(0); // 0=closed, 1=first confirm, 2=second confirm
+  const [linkSearch, setLinkSearch] = useState("");
   const queryClient = useQueryClient();
 
   const { data: profiles = [], isLoading } = useQuery({
@@ -51,14 +65,15 @@ const AdminClientList = () => {
     },
   });
 
-  const { data: subscriptions = [] } = useQuery({
-    queryKey: ["admin-all-subscriptions"],
+  const { data: familyLinks = [] } = useQuery({
+    queryKey: ["admin-all-family-links"],
     queryFn: async () => {
-      const { data } = await supabase.from("subscriptions").select("*");
+      const { data } = await supabase.from("parent_child_links").select("*");
       return data || [];
     },
   });
 
+  // Mutations
   const toggleInPerson = useMutation({
     mutationFn: async ({ profileId, value }: { profileId: string; value: boolean }) => {
       const { error } = await supabase.from("profiles").update({ is_in_person: value }).eq("id", profileId);
@@ -68,7 +83,7 @@ const AdminClientList = () => {
       queryClient.invalidateQueries({ queryKey: ["admin-clients"] });
       toast.success("Client status updated");
     },
-    onError: () => toast.error("Failed to update client status"),
+    onError: () => toast.error("Failed to update"),
   });
 
   const setTierMutation = useMutation({
@@ -79,22 +94,24 @@ const AdminClientList = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-clients"] });
       toast.success("Tier updated");
+      // Refresh selected profile
+      if (selectedProfile) {
+        const updated = profiles.find((p) => p.id === selectedProfile.id);
+        if (updated) setSelectedProfile({ ...updated });
+      }
     },
     onError: () => toast.error("Failed to update tier"),
   });
 
   const extendTrialMutation = useMutation({
     mutationFn: async ({ profileId, days }: { profileId: string; days: number }) => {
-      // Get current trial_started_at and push it forward by `days`
       const profile = profiles.find((p) => p.id === profileId);
       let newStart: string;
       if (profile?.trial_started_at) {
-        // Extend by pushing start date forward (effectively extends expiration)
         const current = new Date(profile.trial_started_at);
         current.setDate(current.getDate() + days);
         newStart = current.toISOString();
       } else {
-        // Start a fresh trial from now
         newStart = new Date().toISOString();
       }
       const { error } = await supabase.from("profiles").update({
@@ -110,6 +127,85 @@ const AdminClientList = () => {
     onError: () => toast.error("Failed to extend trial"),
   });
 
+  const setTrialDateMutation = useMutation({
+    mutationFn: async ({ profileId, date }: { profileId: string; date: string }) => {
+      const { error } = await supabase.from("profiles").update({
+        trial_started_at: date ? new Date(date).toISOString() : null,
+        updated_at: new Date().toISOString(),
+      }).eq("id", profileId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-clients"] });
+      toast.success("Trial date updated");
+    },
+    onError: () => toast.error("Failed to update trial date"),
+  });
+
+  const sendMagicLinkMutation = useMutation({
+    mutationFn: async (email: string) => {
+      const { data, error } = await supabase.functions.invoke("admin-user-manage", {
+        body: { action: "send_magic_link", targetEmail: email },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: (data) => toast.success(data.message),
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const eraseUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const { data, error } = await supabase.functions.invoke("admin-user-manage", {
+        body: { action: "erase_user_data", targetUserId: userId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-clients"] });
+      toast.success("User data erased");
+      setSelectedProfile(null);
+      setEraseConfirmStep(0);
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const linkFamilyMutation = useMutation({
+    mutationFn: async ({ parentId, childId }: { parentId: string; childId: string }) => {
+      const { data, error } = await supabase.functions.invoke("admin-user-manage", {
+        body: { action: "link_family", linkParentId: parentId, targetUserId: childId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-all-family-links"] });
+      toast.success("Family link created");
+      setLinkSearch("");
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const unlinkFamilyMutation = useMutation({
+    mutationFn: async (childId: string) => {
+      const { data, error } = await supabase.functions.invoke("admin-user-manage", {
+        body: { action: "unlink_family", unlinkChildId: childId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-all-family-links"] });
+      toast.success("Family link removed");
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
   const filtered = profiles.filter(
     (p) =>
       (p.email ?? "").toLowerCase().includes(search.toLowerCase()) ||
@@ -117,10 +213,28 @@ const AdminClientList = () => {
       (p.athlete_name ?? "").toLowerCase().includes(search.toLowerCase())
   );
 
-  const getClientLogs = (userId: string) => workoutLogs.filter((l) => l.user_id === userId).slice(0, 5);
   const getClientPrograms = (userId: string) => activePrograms.filter((p: any) => p.user_id === userId);
-  const getClientProgress = (userId: string) => progressLogs.filter((l) => l.user_id === userId).slice(0, 5);
-  const getClientGifts = (userId: string) => gifts.filter((g) => g.user_id === userId);
+
+  // Family helpers
+  const getParentOf = (userId: string) => {
+    const link = familyLinks.find((l: any) => l.child_user_id === userId);
+    if (!link) return null;
+    return profiles.find((p) => p.user_id === (link as any).parent_user_id) || null;
+  };
+  const getChildrenOf = (userId: string) => {
+    const childIds = familyLinks.filter((l: any) => l.parent_user_id === userId).map((l: any) => l.child_user_id);
+    return profiles.filter((p) => childIds.includes(p.user_id));
+  };
+
+  // Link search results
+  const linkSearchResults = linkSearch.length >= 2
+    ? profiles.filter(
+        (p) =>
+          p.user_id !== selectedProfile?.user_id &&
+          ((p.email ?? "").toLowerCase().includes(linkSearch.toLowerCase()) ||
+           (p.full_name ?? "").toLowerCase().includes(linkSearch.toLowerCase()))
+      ).slice(0, 5)
+    : [];
 
   // Stats
   const activeUsers7d = new Set(workoutLogs.filter((l) => new Date(l.date) > new Date(Date.now() - 7 * 86400000)).map((l) => l.user_id)).size;
@@ -130,26 +244,17 @@ const AdminClientList = () => {
     <div className="space-y-4">
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-card shadow-m2 p-4">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Total Clients</p>
-          <p className="text-2xl font-mono font-bold text-foreground">{profiles.length}</p>
-        </div>
-        <div className="bg-card shadow-m2 p-4">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Pro Members</p>
-          <p className="text-2xl font-mono font-bold text-primary">{profiles.filter((p) => p.is_pro).length}</p>
-        </div>
-        <div className="bg-card shadow-m2 p-4">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Active (7d)</p>
-          <p className="text-2xl font-mono font-bold text-foreground">{activeUsers7d}</p>
-        </div>
-        <div className="bg-card shadow-m2 p-4">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Total Workouts</p>
-          <p className="text-2xl font-mono font-bold text-foreground">{workoutLogs.length}</p>
-        </div>
-        <div className="bg-card shadow-m2 p-4">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Legend Members</p>
-          <p className="text-2xl font-mono font-bold text-primary">{legendCount}</p>
-        </div>
+        {[
+          { label: "Total Clients", value: profiles.length },
+          { label: "Pro Members", value: profiles.filter((p) => p.is_pro).length, highlight: true },
+          { label: "Active (7d)", value: activeUsers7d },
+          { label: "Legend Members", value: legendCount, highlight: true },
+        ].map((s) => (
+          <div key={s.label} className="bg-card shadow-m2 p-4">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{s.label}</p>
+            <p className={`text-2xl font-mono font-bold ${s.highlight ? "text-primary" : "text-foreground"}`}>{s.value}</p>
+          </div>
+        ))}
       </div>
 
       {/* Search */}
@@ -161,216 +266,343 @@ const AdminClientList = () => {
       {/* Client list */}
       <div className="bg-card shadow-m2">
         {isLoading ? (
-          <p className="p-4 text-sm text-muted-foreground">Loading...</p>
+          <div className="flex justify-center py-8"><Loader2 size={20} className="text-primary animate-spin" /></div>
         ) : filtered.length === 0 ? (
           <p className="p-4 text-sm text-muted-foreground">No clients found</p>
         ) : (
           <div className="divide-y divide-border">
-            {filtered.map((profile) => {
-              const expanded = expandedId === profile.id;
-              const logs = expanded ? getClientLogs(profile.user_id) : [];
-              const progs = expanded ? getClientPrograms(profile.user_id) : [];
-              const progress = expanded ? getClientProgress(profile.user_id) : [];
-              const clientGifts = expanded ? getClientGifts(profile.user_id) : [];
-
-              return (
-                <div key={profile.id}>
-                  <button onClick={() => setExpandedId(expanded ? null : profile.id)} className="w-full flex items-center justify-between px-4 py-3 hover:bg-accent/20 transition-m2 text-left">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-sm font-bold text-foreground truncate">{profile.full_name || "No name"}</p>
-                        {profile.is_in_person && <span className="text-[9px] font-bold uppercase tracking-widest bg-primary/20 text-primary px-1.5 py-0.5 flex items-center gap-0.5"><Crown size={8} />LEGEND</span>}
-                        {profile.is_pro && <span className="text-[9px] font-bold uppercase tracking-widest bg-primary/10 text-primary px-1.5 py-0.5">PRO</span>}
-                        {profile.subscription_tier && profile.subscription_tier !== "free" && (
-                          <span className="text-[9px] font-bold uppercase tracking-widest bg-accent text-accent-foreground px-1.5 py-0.5">{profile.subscription_tier}</span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-3 mt-0.5">
-                        <p className="text-xs text-muted-foreground truncate">{profile.email}</p>
-                        {profile.athlete_name && <p className="text-xs text-muted-foreground">· Athlete: <span className="text-foreground">{profile.athlete_name}</span></p>}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 ml-2">
-                      <span className="text-[10px] text-muted-foreground">{new Date(profile.created_at).toLocaleDateString()}</span>
-                      {expanded ? <ChevronUp size={14} className="text-muted-foreground" /> : <ChevronDown size={14} className="text-muted-foreground" />}
-                    </div>
-                  </button>
-
-                  {expanded && (
-                    <div className="px-4 pb-4 bg-muted/20 space-y-4">
-                      {/* AI Summary */}
-                      <div className="mt-2 flex items-center justify-between bg-card p-3 shadow-m2">
-                        <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">AI Engagement Summary</span>
-                        <AiAssistButton
-                          type="client_summary"
-                          context={{
-                            name: profile.full_name || profile.athlete_name || "Unknown",
-                            joined: new Date(profile.created_at).toLocaleDateString(),
-                            tier: profile.subscription_tier || "free",
-                            totalWorkouts: workoutLogs.filter((l) => l.user_id === profile.user_id).length,
-                            recentlyActive: workoutLogs.some((l) => l.user_id === profile.user_id && new Date(l.date) > new Date(Date.now() - 7 * 86400000)),
-                            programCount: getClientPrograms(profile.user_id).length,
-                            recentLifts: getClientProgress(profile.user_id).map((l) => `${l.exercise_name} ${l.weight}lbs×${l.reps}`).join(", "),
-                          }}
-                          onResult={(text) => toast.success(text, { duration: 15000 })}
-                          label="AI Summary"
-                        />
-                      </div>
-                      <div className="mt-2 flex items-center justify-between bg-card p-3 shadow-m2">
-                        <div className="flex items-center gap-2">
-                          <Crown size={14} className="text-primary" />
-                          <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Legend Member</span>
-                        </div>
-                        <button
-                          onClick={() => toggleInPerson.mutate({ profileId: profile.id, value: !profile.is_in_person })}
-                          className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-colors ${
-                            profile.is_in_person
-                              ? "bg-green-600/20 text-green-400 hover:bg-red-600/20 hover:text-red-400"
-                              : "bg-muted text-muted-foreground hover:bg-green-600/20 hover:text-green-400"
-                          }`}
-                        >
-                          {profile.is_in_person ? "Remove Legend" : "Make Legend"}
-                        </button>
-                      </div>
-                      {/* Tier Override */}
-                      <div className="mt-2 flex items-center justify-between bg-card p-3 shadow-m2">
-                        <div className="flex items-center gap-2">
-                          <Shield size={14} className="text-primary" />
-                          <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Subscription Tier</span>
-                        </div>
-                        <select
-                          value={profile.subscription_tier || "free"}
-                          onChange={(e) => setTierMutation.mutate({ profileId: profile.id, tier: e.target.value })}
-                          className="bg-background border border-border px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest text-foreground outline-none focus:ring-1 focus:ring-primary"
-                        >
-                          <option value="free">Free</option>
-                          <option value="basic">Basic</option>
-                          <option value="foundation">Foundation</option>
-                          <option value="custom">Custom</option>
-                          <option value="team_elite">Team/Elite</option>
-                        </select>
-                      </div>
-                      {/* Trial Extension */}
-                      <div className="mt-2 flex items-center justify-between bg-card p-3 shadow-m2">
-                        <div className="flex items-center gap-2">
-                          <Clock size={14} className="text-primary" />
-                          <div>
-                            <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Trial</span>
-                            {profile.trial_started_at && (
-                              <p className="text-[9px] text-muted-foreground">Started {new Date(profile.trial_started_at).toLocaleDateString()}</p>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex gap-1">
-                          {[3, 7, 14].map((d) => (
-                            <button
-                              key={d}
-                              onClick={() => extendTrialMutation.mutate({ profileId: profile.id, days: d })}
-                              className="px-2 py-1.5 text-[9px] font-bold uppercase tracking-widest bg-muted text-muted-foreground hover:bg-primary/20 hover:text-primary transition-m2"
-                            >
-                              +{d}d
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
-                        <div className="bg-card p-2.5 shadow-m2">
-                          <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Joined</p>
-                          <p className="text-xs font-bold text-foreground">{new Date(profile.created_at).toLocaleDateString()}</p>
-                        </div>
-                        <div className="bg-card p-2.5 shadow-m2">
-                          <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Tier</p>
-                          <p className="text-xs font-bold text-foreground">{profile.subscription_tier || "Free"}</p>
-                        </div>
-                        <div className="bg-card p-2.5 shadow-m2">
-                          <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Programs</p>
-                          <p className="text-xs font-bold text-foreground">{getClientPrograms(profile.user_id).length}</p>
-                        </div>
-                        <div className="bg-card p-2.5 shadow-m2">
-                          <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Workouts</p>
-                          <p className="text-xs font-bold text-foreground">{workoutLogs.filter((l) => l.user_id === profile.user_id).length}</p>
-                        </div>
-                      </div>
-
-                      {/* Active Programs */}
-                      <div>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5"><ShoppingBag size={10} className="inline mr-1" />Active Programs</p>
-                        {progs.length === 0 ? (
-                          <p className="text-xs text-muted-foreground">No programs</p>
-                        ) : (
-                          <div className="space-y-1">
-                            {progs.map((p: any) => (
-                              <div key={p.id} className="flex items-center justify-between text-xs bg-card p-2 shadow-m2">
-                                <span className="text-foreground font-bold">{p.training_programs?.title || "Program"}</span>
-                                <span className="text-[9px] text-muted-foreground">{p.training_programs?.category} · {p.status}</span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Gifts */}
-                      {clientGifts.length > 0 && (
-                        <div>
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">🎁 Gifts Received</p>
-                          <div className="space-y-1">
-                            {clientGifts.map((g) => (
-                              <div key={g.id} className="text-xs bg-card p-2 shadow-m2">
-                                <span className="font-bold text-foreground uppercase">{g.gift_type}</span>
-                                {g.notes && <span className="text-muted-foreground ml-2">{g.notes}</span>}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Recent Progress */}
-                      <div>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5"><Dumbbell size={10} className="inline mr-1" />Recent Progress Logs</p>
-                        {progress.length === 0 ? (
-                          <p className="text-xs text-muted-foreground">No progress logs</p>
-                        ) : (
-                          <div className="space-y-1">
-                            {progress.map((l, i) => (
-                              <div key={i} className="flex items-center justify-between text-xs bg-card p-2 shadow-m2">
-                                <div>
-                                  <span className="text-foreground font-bold">{l.exercise_name}</span>
-                                  <span className="text-muted-foreground ml-2">{l.weight}lbs × {l.reps}</span>
-                                </div>
-                                <span className="text-[10px] text-muted-foreground">{new Date(l.logged_at).toLocaleDateString()}</span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Recent Workouts */}
-                      <div>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5"><Calendar size={10} className="inline mr-1" />Recent Workouts</p>
-                        {logs.length === 0 ? (
-                          <p className="text-xs text-muted-foreground">No workout logs yet</p>
-                        ) : (
-                          <div className="space-y-1">
-                            {logs.map((log) => (
-                              <div key={log.id} className="flex items-center justify-between text-xs bg-card p-2 shadow-m2">
-                                <div>
-                                  <span className="text-foreground font-bold">Workout Session</span>
-                                  {log.session_notes && <span className="text-muted-foreground ml-2">{log.session_notes}</span>}
-                                </div>
-                                <span className="text-[10px] text-muted-foreground">{new Date(log.date).toLocaleDateString()}</span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
+            {filtered.map((profile) => (
+              <button
+                key={profile.id}
+                onClick={() => setSelectedProfile(profile)}
+                className="w-full flex items-center justify-between px-4 py-3 hover:bg-accent/20 transition-m2 text-left"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-sm font-bold text-foreground truncate">{profile.full_name || "No name"}</p>
+                    {profile.is_in_person && <Badge variant="outline" className="text-[9px] uppercase tracking-widest border-primary/30 text-primary"><Crown size={8} className="mr-0.5" />Legend</Badge>}
+                    {profile.subscription_tier && profile.subscription_tier !== "free" && (
+                      <Badge variant="outline" className="text-[9px] uppercase tracking-widest">{profile.subscription_tier}</Badge>
+                    )}
+                    {profile.account_role === "parent" && <Badge variant="outline" className="text-[9px] uppercase tracking-widest border-primary/20 text-primary"><Users size={8} className="mr-0.5" />Parent</Badge>}
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate mt-0.5">{profile.email}</p>
                 </div>
-              );
-            })}
+                <span className="text-[10px] text-muted-foreground ml-2">{new Date(profile.created_at).toLocaleDateString()}</span>
+              </button>
+            ))}
           </div>
         )}
       </div>
+
+      {/* ===== USER CONTROL MODAL ===== */}
+      <Dialog open={!!selectedProfile} onOpenChange={(open) => { if (!open) setSelectedProfile(null); }}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          {selectedProfile && (() => {
+            const p = selectedProfile;
+            const parent = getParentOf(p.user_id);
+            const children = getChildrenOf(p.user_id);
+            const userWorkouts = workoutLogs.filter((l) => l.user_id === p.user_id).length;
+            const userPrograms = getClientPrograms(p.user_id);
+
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="text-base font-bold text-foreground flex items-center gap-2">
+                    <Shield size={18} className="text-primary" />
+                    User Control — {p.full_name || p.email}
+                  </DialogTitle>
+                  <DialogDescription className="text-xs">
+                    {p.email} · Joined {new Date(p.created_at).toLocaleDateString()} · {userWorkouts} workouts · {userPrograms.length} programs
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="space-y-4 mt-2">
+                  {/* Quick Stats */}
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { label: "Tier", value: p.subscription_tier || "free" },
+                      { label: "Role", value: p.account_role || "athlete" },
+                      { label: "Legend", value: p.is_in_person ? "Yes" : "No" },
+                    ].map((s) => (
+                      <div key={s.label} className="bg-secondary/50 border border-border p-2.5 text-center">
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">{s.label}</p>
+                        <p className="text-xs font-bold text-foreground uppercase">{s.value}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Tier Override */}
+                  <div className="bg-secondary/30 border border-border p-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Shield size={14} className="text-primary" />
+                        <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Tier Override</span>
+                      </div>
+                      <select
+                        value={p.subscription_tier || "free"}
+                        onChange={(e) => {
+                          setTierMutation.mutate({ profileId: p.id, tier: e.target.value });
+                          setSelectedProfile({ ...p, subscription_tier: e.target.value });
+                        }}
+                        className="bg-background border border-border px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest text-foreground outline-none focus:ring-1 focus:ring-primary"
+                      >
+                        <option value="free">Free</option>
+                        <option value="basic">Basic ($14.99)</option>
+                        <option value="foundation">Foundation ($39.99)</option>
+                        <option value="custom">Custom ($99.99)</option>
+                        <option value="team_elite">Team/Elite ($149.99)</option>
+                      </select>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-1">Bypasses Stripe — sets access directly in database.</p>
+                  </div>
+
+                  {/* Legend Toggle */}
+                  <div className="bg-secondary/30 border border-border p-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Crown size={14} className="text-primary" />
+                      <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Legend (In-Person)</span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        toggleInPerson.mutate({ profileId: p.id, value: !p.is_in_person });
+                        setSelectedProfile({ ...p, is_in_person: !p.is_in_person });
+                      }}
+                      className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-colors ${
+                        p.is_in_person
+                          ? "bg-primary/20 text-primary"
+                          : "bg-muted text-muted-foreground hover:bg-primary/20 hover:text-primary"
+                      }`}
+                    >
+                      {p.is_in_person ? "Active" : "Enable"}
+                    </button>
+                  </div>
+
+                  {/* Trial Manipulation */}
+                  <div className="bg-secondary/30 border border-border p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Clock size={14} className="text-primary" />
+                      <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Trial Control</span>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <input
+                        type="date"
+                        value={p.trial_started_at ? new Date(p.trial_started_at).toISOString().split("T")[0] : ""}
+                        onChange={(e) => {
+                          setTrialDateMutation.mutate({ profileId: p.id, date: e.target.value });
+                          setSelectedProfile({ ...p, trial_started_at: e.target.value ? new Date(e.target.value).toISOString() : null });
+                        }}
+                        className="bg-background border border-border px-2 py-1.5 text-xs text-foreground outline-none focus:ring-1 focus:ring-primary"
+                      />
+                      {[3, 7, 14, 30].map((d) => (
+                        <button
+                          key={d}
+                          onClick={() => {
+                            extendTrialMutation.mutate({ profileId: p.id, days: d });
+                          }}
+                          className="px-2 py-1.5 text-[9px] font-bold uppercase tracking-widest bg-muted text-muted-foreground hover:bg-primary/20 hover:text-primary transition-colors"
+                        >
+                          +{d}d
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => {
+                          setTrialDateMutation.mutate({ profileId: p.id, date: "" });
+                          setSelectedProfile({ ...p, trial_started_at: null });
+                        }}
+                        className="px-2 py-1.5 text-[9px] font-bold uppercase tracking-widest bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
+                      >
+                        Expire Now
+                      </button>
+                    </div>
+                    {p.trial_started_at && (
+                      <p className="text-[10px] text-muted-foreground mt-1.5">
+                        Trial started: {new Date(p.trial_started_at).toLocaleDateString()} — 
+                        Expires: {new Date(new Date(p.trial_started_at).getTime() + 7 * 86400000).toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* ===== FAMILY LINK MANAGER ===== */}
+                  <div className="bg-secondary/30 border border-border p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Users size={14} className="text-primary" />
+                      <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Family Links</span>
+                    </div>
+
+                    {/* Current parent */}
+                    {parent && (
+                      <div className="flex items-center justify-between bg-card border border-border p-2 mb-2">
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Parent Account</p>
+                          <p className="text-xs font-bold text-foreground">{parent.full_name || parent.email}</p>
+                        </div>
+                        <button
+                          onClick={() => unlinkFamilyMutation.mutate(p.user_id)}
+                          className="text-destructive hover:text-destructive/80 transition-colors p-1"
+                          title="Unlink from parent"
+                        >
+                          <Unlink size={14} />
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Children */}
+                    {children.length > 0 && (
+                      <div className="space-y-1 mb-2">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Linked Athletes</p>
+                        {children.map((child: any) => (
+                          <div key={child.user_id} className="flex items-center justify-between bg-card border border-border p-2">
+                            <p className="text-xs font-bold text-foreground">{child.athlete_name || child.full_name || child.email}</p>
+                            <button
+                              onClick={() => unlinkFamilyMutation.mutate(child.user_id)}
+                              className="text-destructive hover:text-destructive/80 transition-colors p-1"
+                              title="Unlink athlete"
+                            >
+                              <Unlink size={14} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {!parent && children.length === 0 && (
+                      <p className="text-xs text-muted-foreground mb-2">No family links.</p>
+                    )}
+
+                    {/* Link search */}
+                    <div className="relative">
+                      <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        value={linkSearch}
+                        onChange={(e) => setLinkSearch(e.target.value)}
+                        placeholder="Search user to link as child..."
+                        className="pl-8 text-xs h-8"
+                      />
+                    </div>
+                    {linkSearchResults.length > 0 && (
+                      <div className="mt-1 border border-border bg-card max-h-32 overflow-y-auto">
+                        {linkSearchResults.map((r) => (
+                          <button
+                            key={r.user_id}
+                            onClick={() => linkFamilyMutation.mutate({ parentId: p.user_id, childId: r.user_id })}
+                            className="w-full text-left px-3 py-2 text-xs hover:bg-accent/20 transition-colors flex items-center gap-2"
+                          >
+                            <Link2 size={12} className="text-primary shrink-0" />
+                            <span className="font-bold text-foreground">{r.full_name || r.email}</span>
+                            <span className="text-muted-foreground ml-auto text-[10px]">{r.email}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ===== AUTH RESETS ===== */}
+                  <div className="bg-secondary/30 border border-border p-3 space-y-2">
+                    <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                      <Mail size={14} className="text-primary" />
+                      Authentication Actions
+                    </p>
+
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => p.email && sendMagicLinkMutation.mutate(p.email)}
+                        disabled={sendMagicLinkMutation.isPending || !p.email}
+                        className="bg-primary text-primary-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-1.5"
+                      >
+                        {sendMagicLinkMutation.isPending ? <Loader2 size={12} className="animate-spin" /> : <Mail size={12} />}
+                        Send Magic Login Link
+                      </button>
+
+                      <button
+                        onClick={() => setEraseConfirmStep(1)}
+                        className="bg-destructive/10 text-destructive px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-destructive/20 transition-all flex items-center gap-1.5"
+                      >
+                        <Trash2 size={12} />
+                        Erase User Data
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* AI Summary */}
+                  <div className="flex items-center justify-between bg-secondary/30 border border-border p-3">
+                    <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">AI Engagement Summary</span>
+                    <AiAssistButton
+                      type="client_summary"
+                      context={{
+                        name: p.full_name || p.athlete_name || "Unknown",
+                        joined: new Date(p.created_at).toLocaleDateString(),
+                        tier: p.subscription_tier || "free",
+                        totalWorkouts: workoutLogs.filter((l) => l.user_id === p.user_id).length,
+                        recentlyActive: workoutLogs.some((l) => l.user_id === p.user_id && new Date(l.date) > new Date(Date.now() - 7 * 86400000)),
+                        programCount: userPrograms.length,
+                        recentLifts: progressLogs.filter((l) => l.user_id === p.user_id).slice(0, 5).map((l) => `${l.exercise_name} ${l.weight}lbs×${l.reps}`).join(", "),
+                      }}
+                      onResult={(text) => toast.success(text, { duration: 15000 })}
+                      label="AI Summary"
+                    />
+                  </div>
+                </div>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
+
+      {/* ===== ERASE CONFIRMATION (Double) ===== */}
+      <AlertDialog open={eraseConfirmStep === 1} onOpenChange={() => setEraseConfirmStep(0)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle size={18} />
+              Delete User Data — Step 1 of 2
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently erase ALL data for <strong>{selectedProfile?.full_name || selectedProfile?.email}</strong> including workouts, progress, messages, subscriptions, and their authentication account. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => setEraseConfirmStep(2)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              I understand, continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={eraseConfirmStep === 2} onOpenChange={() => setEraseConfirmStep(0)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 size={18} />
+              FINAL CONFIRMATION — Step 2 of 2
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Type the user's email to confirm: <strong>{selectedProfile?.email}</strong>
+              <br /><br />
+              This action is <strong>irreversible</strong>. The user will be completely removed from the platform.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (selectedProfile?.user_id) {
+                  eraseUserMutation.mutate(selectedProfile.user_id);
+                }
+              }}
+              disabled={eraseUserMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {eraseUserMutation.isPending ? <Loader2 size={14} className="animate-spin mr-1" /> : null}
+              Permanently Delete Everything
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
