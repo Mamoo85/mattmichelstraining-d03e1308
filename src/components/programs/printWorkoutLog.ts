@@ -39,9 +39,9 @@ export const printWorkoutLog = (program: PrintProgramData) => {
         (ex) => `
         <tr class="exercise-header">
           <td colspan="5">
-            <strong>${ex.name}</strong>
-            <span class="sets-reps">${ex.setsReps}</span>
-            ${ex.instructions ? `<div class="instructions">${ex.instructions}</div>` : ""}
+            <strong>${esc(ex.name)}</strong>
+            <span class="sets-reps">${esc(ex.setsReps)}</span>
+            ${ex.instructions ? `<div class="instructions">${esc(ex.instructions)}</div>` : ""}
           </td>
         </tr>
         ${Array.from({ length: logRows })
