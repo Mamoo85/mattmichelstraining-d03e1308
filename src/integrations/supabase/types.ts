@@ -409,6 +409,48 @@ export type Database = {
           },
         ]
       }
+      learn_articles: {
+        Row: {
+          author: string
+          body: string
+          category: string
+          cover_image_url: string | null
+          created_at: string
+          id: string
+          is_published: boolean
+          published_at: string | null
+          slug: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author?: string
+          body?: string
+          category?: string
+          cover_image_url?: string | null
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          published_at?: string | null
+          slug: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author?: string
+          body?: string
+          category?: string
+          cover_image_url?: string | null
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          published_at?: string | null
+          slug?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       lift_messages: {
         Row: {
           created_at: string

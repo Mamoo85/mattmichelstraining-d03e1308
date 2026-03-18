@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, ChevronDown, ChevronUp, Dumbbell, ShoppingBag, Calendar, MapPin, Crown, Shield } from "lucide-react";
+import { Search, ChevronDown, ChevronUp, Dumbbell, ShoppingBag, Calendar, MapPin, Crown, Shield, Clock } from "lucide-react";
 import { toast } from "sonner";
 import AiAssistButton from "./AiAssistButton";
 
@@ -81,6 +81,33 @@ const AdminClientList = () => {
       toast.success("Tier updated");
     },
     onError: () => toast.error("Failed to update tier"),
+  });
+
+  const extendTrialMutation = useMutation({
+    mutationFn: async ({ profileId, days }: { profileId: string; days: number }) => {
+      // Get current trial_started_at and push it forward by `days`
+      const profile = profiles.find((p) => p.id === profileId);
+      let newStart: string;
+      if (profile?.trial_started_at) {
+        // Extend by pushing start date forward (effectively extends expiration)
+        const current = new Date(profile.trial_started_at);
+        current.setDate(current.getDate() + days);
+        newStart = current.toISOString();
+      } else {
+        // Start a fresh trial from now
+        newStart = new Date().toISOString();
+      }
+      const { error } = await supabase.from("profiles").update({
+        trial_started_at: newStart,
+        updated_at: new Date().toISOString(),
+      }).eq("id", profileId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-clients"] });
+      toast.success("Trial extended");
+    },
+    onError: () => toast.error("Failed to extend trial"),
   });
 
   const filtered = profiles.filter(
@@ -222,6 +249,29 @@ const AdminClientList = () => {
                           <option value="elite">Elite</option>
                           <option value="team">Team</option>
                         </select>
+                      </div>
+                      {/* Trial Extension */}
+                      <div className="mt-2 flex items-center justify-between bg-card p-3 shadow-m2">
+                        <div className="flex items-center gap-2">
+                          <Clock size={14} className="text-primary" />
+                          <div>
+                            <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Trial</span>
+                            {profile.trial_started_at && (
+                              <p className="text-[9px] text-muted-foreground">Started {new Date(profile.trial_started_at).toLocaleDateString()}</p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex gap-1">
+                          {[3, 7, 14].map((d) => (
+                            <button
+                              key={d}
+                              onClick={() => extendTrialMutation.mutate({ profileId: profile.id, days: d })}
+                              className="px-2 py-1.5 text-[9px] font-bold uppercase tracking-widest bg-muted text-muted-foreground hover:bg-primary/20 hover:text-primary transition-m2"
+                            >
+                              +{d}d
+                            </button>
+                          ))}
+                        </div>
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
                         <div className="bg-card p-2.5 shadow-m2">
