@@ -22,7 +22,9 @@ const PointsWidget = ({ onViewLeaderboard }: PointsWidgetProps) => {
     : 100;
 
   return (
-    <div className="space-y-3">
+    <>
+      <LevelUpCelebration levelKey={levelUp} onDismiss={dismissLevelUp} />
+      <div className="space-y-3">
       {/* Points Header */}
       <div className="flex items-center gap-2 mb-3">
         <Zap size={14} className="text-primary" />
