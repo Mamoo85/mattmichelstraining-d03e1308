@@ -4,6 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import ReactMarkdown from "react-markdown";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const SPORTS = ["Baseball", "Football", "Basketball", "Volleyball", "Golf", "Soccer", "Hockey", "Lacrosse", "Swimming", "Track & Field", "Tennis", "General Fitness"];
 const EXPERIENCE = ["Never trained before", "Some gym experience (<1 year)", "Intermediate (1-3 years)", "Advanced (3+ years)"];
