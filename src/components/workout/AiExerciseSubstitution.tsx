@@ -49,7 +49,11 @@ const AiExerciseSubstitution = ({ exerciseName, onClose }: AiExerciseSubstitutio
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      setResult(data.result);
+      if (data?.queued) {
+        setResult("✅ Your substitution request has been submitted for Coach Matt's review. You'll get a notification when it's ready.");
+      } else {
+        setResult(data.result);
+      }
     } catch (e: any) {
       toast({ title: "Substitution failed", description: e.message, variant: "destructive" });
     } finally {
