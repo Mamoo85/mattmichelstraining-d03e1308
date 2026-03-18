@@ -348,6 +348,7 @@ const Learn = () => {
       </motion.div>
     </div>
   </div>
-);
+  );
+};
 
 export default Learn;
