@@ -27,7 +27,7 @@ const FixItLibrary = () => {
     const fetch = async () => {
       const { data, error } = await supabase
         .from("exercise_library")
-        .select("id, title, the_why, equipment_needed, focus_area, fix_it_protocol")
+        .select("id, title, the_why, equipment_needed, focus_area, fix_it_protocol, video_url")
         .eq("is_fix_it", true)
         .order("title");
       if (!error && data) setExercises(data as FixItExercise[]);
