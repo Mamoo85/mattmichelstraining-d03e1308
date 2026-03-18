@@ -355,8 +355,8 @@ const About = () => {
           Real results from real families
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {TESTIMONIALS.map((t) => (
-            <div key={t.name} className="bg-card shadow-m2 p-5 flex flex-col">
+          {TESTIMONIALS.map((t: any) => (
+            <div key={t.id || t.author_name} className="bg-card shadow-m2 p-5 flex flex-col">
               <Quote size={16} className="text-primary/40 mb-2" />
               <p className="text-sm text-muted-foreground leading-relaxed flex-1 italic">
                 "{t.quote}"
@@ -369,11 +369,11 @@ const About = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center">
-                    <span className="text-[9px] font-bold text-primary">{t.initials}</span>
+                    <span className="text-[9px] font-bold text-primary">{t.author_initials}</span>
                   </div>
                   <div>
-                    <span className="text-xs font-bold text-foreground block">{t.name}</span>
-                    <span className="text-[10px] text-muted-foreground">{t.role}</span>
+                    <span className="text-xs font-bold text-foreground block">{t.author_name}</span>
+                    <span className="text-[10px] text-muted-foreground">{t.author_role}</span>
                   </div>
                 </div>
               </div>
