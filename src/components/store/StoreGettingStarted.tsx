@@ -116,6 +116,13 @@ const StoreGettingStarted = () => {
         ))}
       </div>
 
+      {/* AI Program Finder */}
+      {user && (
+        <div className="mb-6">
+          <AiIntakeAnalyzer />
+        </div>
+      )}
+
       {/* Free member banner */}
       <div className="bg-card shadow-m2 p-5 mb-6">
         <div className="flex items-start gap-3 mb-3">
