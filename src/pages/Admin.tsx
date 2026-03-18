@@ -115,7 +115,10 @@ const Admin = () => {
         {activeTab === "monthly" && <AdminMonthlyFocus />}
         {activeTab === "coach" && (
           <div className="space-y-8">
-            <AdminCoachInbox />
+            <AdminRecoveryHeatmap />
+            <div className="border-t border-border pt-6">
+              <AdminCoachInbox />
+            </div>
             <div className="border-t border-border pt-6">
               <AdminCoachDashboard />
             </div>
