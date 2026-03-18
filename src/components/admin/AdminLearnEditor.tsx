@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Pencil, Trash2, Loader2, Eye, EyeOff, BookOpen } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Eye, EyeOff, BookOpen, Sparkles } from "lucide-react";
+import AiAssistButton from "./AiAssistButton";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -35,6 +36,8 @@ const AdminLearnEditor = () => {
   const queryClient = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Partial<Article> | null>(null);
+  const [aiDraftLoading, setAiDraftLoading] = useState(false);
+  const [rawIdea, setRawIdea] = useState("");
 
   const { data: articles = [], isLoading } = useQuery({
     queryKey: ["admin-learn-articles"],
@@ -239,6 +242,51 @@ const AdminLearnEditor = () => {
                   className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground focus:ring-1 focus:ring-primary outline-none"
                   placeholder="https://..."
                 />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">AI Draft Assist</label>
+                <div className="flex gap-2 mb-2">
+                  <input
+                    value={rawIdea}
+                    onChange={(e) => setRawIdea(e.target.value)}
+                    className="flex-1 bg-background border border-border px-3 py-2 text-sm text-foreground focus:ring-1 focus:ring-primary outline-none"
+                    placeholder="Type a raw thought: 'Why kids shouldn't do 1-rep maxes'"
+                  />
+                  <button
+                    onClick={async () => {
+                      if (!rawIdea.trim()) return;
+                      setAiDraftLoading(true);
+                      try {
+                        const { data, error } = await supabase.functions.invoke("ai-admin-assist", {
+                          body: { type: "blog_draft", context: { rawIdea } },
+                        });
+                        if (error) throw error;
+                        if (data?.error) throw new Error(data.error);
+                        const raw = data?.result || "{}";
+                        const parsed = typeof raw === "string" ? JSON.parse(raw.replace(/```json?\n?/g, "").replace(/```/g, "").trim()) : raw;
+                        setEditing({
+                          ...editing,
+                          title: parsed.title || editing?.title || "",
+                          body: parsed.body || editing?.body || "",
+                          category: parsed.category || editing?.category || "general",
+                          slug: parsed.slug || "",
+                        });
+                        setRawIdea("");
+                        toast.success("AI draft generated — review & edit before publishing");
+                      } catch (e: any) {
+                        toast.error(e.message || "AI draft failed");
+                      } finally {
+                        setAiDraftLoading(false);
+                      }
+                    }}
+                    disabled={aiDraftLoading || !rawIdea.trim()}
+                    className="flex items-center gap-1.5 px-4 py-2 text-[10px] font-bold uppercase tracking-widest bg-accent text-accent-foreground hover:bg-accent/80 disabled:opacity-50 transition-all"
+                  >
+                    {aiDraftLoading ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+                    {aiDraftLoading ? "Drafting…" : "AI Draft"}
+                  </button>
+                </div>
               </div>
 
               <div>
