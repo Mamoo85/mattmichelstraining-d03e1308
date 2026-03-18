@@ -64,8 +64,11 @@ const PortalShowcase = () => (
             <img
               src={f.image}
               alt={f.alt}
+              width={280}
+              height={280}
               className="w-full h-full md:h-48 object-cover object-top"
               loading="lazy"
+              decoding="async"
             />
           </div>
           {/* Text */}

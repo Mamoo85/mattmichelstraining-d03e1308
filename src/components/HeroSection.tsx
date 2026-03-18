@@ -42,6 +42,8 @@ const HeroSection = () => {
               <img
                 src={m2Logo}
                 alt="M² Training"
+                width={224}
+                height={224}
                 className="w-36 h-36 md:w-48 md:h-48 lg:w-56 lg:h-56 object-contain mb-4"
               />
               <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold tracking-display text-foreground leading-snug mb-3">
