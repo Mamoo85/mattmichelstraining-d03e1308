@@ -199,26 +199,6 @@ const ForParents = () => {
           </div>
         </motion.div>
 
-        {/* SLEEP & RECOVERY */}
-        <motion.div {...fade(0.2)} className="mb-12">
-          <div className="bg-card shadow-m2 p-5 md:p-6">
-            <div className="flex items-center gap-2 mb-3">
-              <Heart size={18} className="text-primary" />
-              <h2 className="text-sm font-bold uppercase tracking-widest text-foreground">Strength Training + Recovery</h2>
-            </div>
-            <p className="text-sm text-foreground font-semibold mb-2">
-              Sleep is the #1 reason youth athletes get hurt. Bad or over-training is #2.
-            </p>
-            <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-              Let Matt handle the strength training, and you tell them to go to bed. Young athletes need 72 hours minimum to recover from proper strength work. Matt prioritizes healthy joints and a healthy mind over numbers on a board.
-            </p>
-            <div className="bg-card border-2 border-primary/30 p-4">
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                <span className="text-foreground font-bold">When you buy a program, Matt is on the other end.</span> Not an AI. Not a chatbot. When your athlete has a question — they tap "Ask Matt" and Matt personally responds. For $20, your kid gets a 20-year veteran coach.
-              </p>
-            </div>
-          </div>
-        </motion.div>
 
         {/* PORTAL SHOWCASE */}
         <PortalShowcase />
