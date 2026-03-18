@@ -305,32 +305,6 @@ const ForParents = () => {
           </a>
         </motion.div>
 
-        {/* FINAL CTA */}
-        <motion.div {...fade(0.4)} className="mb-12">
-          <div className="bg-primary/10 border-2 border-primary/40 p-6 md:p-8 text-center">
-            <h2 className="text-lg md:text-2xl font-bold text-foreground mb-2">
-              {cms.final_cta_title || "Ready to invest in your athlete's strength and safety?"}
-            </h2>
-            <p className="text-sm text-muted-foreground mb-6 max-w-lg mx-auto">
-              {cms.final_cta_text || "Start a free 14-day trial. Get your athlete set up with real programming from a 20-year veteran coach. No credit card. No commitment. Just results."}
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Link
-                to="/auth?redirect=/trial-welcome"
-                className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
-              >
-                Start Free 14-Day Trial
-                <ArrowRight size={15} />
-              </Link>
-              <Link
-                to="/shop"
-                className="inline-flex items-center gap-2 border-2 border-primary/40 text-primary px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:bg-primary/10 transition-m2"
-              >
-                Browse $20 Programs
-              </Link>
-            </div>
-          </div>
-        </motion.div>
 
         {/* FOOTER */}
         <div className="pt-6 border-t border-border text-center">
