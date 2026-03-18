@@ -113,12 +113,12 @@ const AdminPointsManager = () => {
             Adjust Points — {filtered.find(u => u.user_id === adjustUserId)?.athlete_name || "Athlete"}
           </span>
           <div className="flex gap-2">
-            <input
+            <Input
               type="number"
               placeholder="Points (negative to deduct)"
               value={adjustAmount}
               onChange={e => setAdjustAmount(e.target.value)}
-              className="flex-1 bg-background border border-border px-3 py-2 text-sm font-mono focus:ring-1 focus:ring-primary outline-none"
+              className="flex-1 font-mono"
             />
           </div>
           <input
