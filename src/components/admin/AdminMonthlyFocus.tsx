@@ -178,7 +178,10 @@ const AdminMonthlyFocus = () => {
         title: editFocus.title,
         topic: editFocus.topic,
         reasoning: editFocus.reasoning,
+        biomechanics: editFocus.biomechanics,
+        common_mistakes: editFocus.common_mistakes,
         exercises: editFocus.exercises,
+        challenge_metric: editFocus.challenge_metric,
         matt_quote: editFocus.matt_quote,
       } as any)
       .eq("id", focus.id);
