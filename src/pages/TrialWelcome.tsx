@@ -109,7 +109,7 @@ const TrialWelcome = () => {
             Real Strength. No Shortcuts.
           </h1>
           <p className="text-sm text-muted-foreground max-w-lg mx-auto leading-relaxed">
-            Welcome to the M² Training system. You have <strong className="text-foreground">7 days</strong> to see how
+            Welcome to the M² Training system. You have <strong className="text-foreground">14 days</strong> to see how
             we do things the right way. No fake influencer workouts, just proven mechanics.
           </p>
         </motion.div>
