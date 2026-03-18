@@ -49,12 +49,12 @@ serve(async (req) => {
   try {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Find users whose trial started exactly 6 days ago (between 6 and 7 days)
+    // Find users whose trial started exactly 13 days ago (day before 14-day trial expires)
     const now = new Date();
-    const sixDaysAgo = new Date(now);
-    sixDaysAgo.setDate(sixDaysAgo.getDate() - 6);
-    const sevenDaysAgo = new Date(now);
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const thirteenDaysAgo = new Date(now);
+    thirteenDaysAgo.setDate(thirteenDaysAgo.getDate() - 13);
+    const fourteenDaysAgo = new Date(now);
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
 
     // Get profiles with trial_started_at between 7 and 6 days ago
     const { data: trialUsers, error: queryErr } = await supabase
