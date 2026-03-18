@@ -208,7 +208,7 @@ const TrialWelcome = () => {
           className="text-center"
         >
           <p className="text-[10px] text-muted-foreground mb-2">
-            No credit card required. 7 days of real training, on us.
+            No credit card required. 14 days of real training, on us.
           </p>
           <p className="text-[10px] text-muted-foreground">
             © {new Date().getFullYear()} M² Training · Grosse Pointe Park, MI

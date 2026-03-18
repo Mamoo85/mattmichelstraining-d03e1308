@@ -76,7 +76,7 @@ const TrialPaywallModal = ({ open, onClose, hardLock }: TrialPaywallModalProps) 
         <div className="text-center mb-6">
           <Lock size={28} className="text-primary mx-auto mb-3" />
           <h2 className="text-xl font-black uppercase tracking-tight text-foreground mb-2">
-            Your 7-Day Trial Has Ended
+            Your 14-Day Trial Has Ended
           </h2>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
             You've seen how we do things. Now subscribe to keep your progress, unlock the full exercise library,
