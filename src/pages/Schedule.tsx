@@ -49,6 +49,9 @@ const Schedule = () => {
   const [hasCredit, setHasCredit] = useState(false);
   const [useCredit, setUseCredit] = useState(false);
   const [loadingCredit, setLoadingCredit] = useState(false);
+  const [hasGift, setHasGift] = useState(false);
+  const [giftId, setGiftId] = useState<string | null>(null);
+  const [useGift, setUseGift] = useState(false);
 
   const isElite = subscriptionTier === "custom" || subscriptionTier === "team_elite";
 
