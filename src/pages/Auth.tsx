@@ -118,6 +118,7 @@ const Auth = () => {
     } finally {
       setAppleLoading(false);
     }
+  };
 
   return (
     <div className="min-h-[100dvh] bg-background flex items-center justify-center px-4 overflow-y-auto pb-safe">
