@@ -17,6 +17,8 @@ const TIER_CARDS: {
   features: string[];
   highlight?: boolean;
   cta: string;
+  label?: string;
+  subtitle?: string;
 }[] = [
   {
     key: "basic",
@@ -33,6 +35,7 @@ const TIER_CARDS: {
     key: "pro",
     icon: Star,
     highlight: true,
+    label: "Pro",
     features: [
       "Monthly Focus Plan — Matt's training focus changes monthly to build balanced gym skills",
       "85+ exercise library with sport-specific filters",
@@ -45,6 +48,21 @@ const TIER_CARDS: {
       "Full 'Fix It' rehab library",
     ],
     cta: "Go Pro",
+  },
+  {
+    key: "pro",
+    icon: Shield,
+    label: "Youth Development",
+    subtitle: "Same Pro features — designed for families",
+    features: [
+      "Everything in Pro — same price, same features",
+      "Parent account with child invite link",
+      "Monitor your child's workouts & progress",
+      "Flag Coach Matt on your child's behalf",
+      "Age-appropriate programming from intake",
+      "Parent trial auto-charges Pro when it ends",
+    ],
+    cta: "Start Parent Trial",
   },
   {
     key: "elite",
