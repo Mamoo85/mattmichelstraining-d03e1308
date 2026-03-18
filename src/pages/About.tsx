@@ -42,15 +42,37 @@ const SOCIAL_PROOF = [
 const About = () => {
   const showWhyM2 = useSectionVisible("why_m2");
   const showStory = useSectionVisible("matts_story");
-  
+  const showAuthority = useSectionVisible("authority_bar");
+  const showStats = useSectionVisible("stats");
   const showTestimonial = useSectionVisible("testimonial");
   const showClients = useSectionVisible("current_clients");
   const showPress = useSectionVisible("press");
+  const { content: stats } = useContentMap("stats");
+
+  const STATS = [
+    { value: stats.stat_1_value || "20+", label: stats.stat_1_label || "Years" },
+    { value: stats.stat_2_value || "50+", label: stats.stat_2_label || "College Athletes" },
+    { value: stats.stat_3_value || "1000s", label: stats.stat_3_label || "Clients Trained" },
+    { value: stats.stat_4_value || "Zero", label: stats.stat_4_label || "Injuries" },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
       <AppNavbar />
       <div className="container pt-20 pb-12">
+        {showAuthority && <div className="mb-6"><AuthorityBar /></div>}
+
+        {showStats && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+            {STATS.map((s) => (
+              <div key={s.label} className="bg-card shadow-m2 p-4 text-center">
+                <span className="text-xl md:text-2xl font-bold text-primary font-mono block">{s.value}</span>
+                <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">{s.label}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
         <AboutPhilosophy />
 
         {showPress && <div className="mt-6"><PressAuthority /></div>}
