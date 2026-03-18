@@ -21,6 +21,7 @@ const TIER_CARDS: {
   cta: string;
   label?: string;
   subtitle?: string;
+  badge?: string;
 }[] = [
   {
     key: "basic",
@@ -30,6 +31,7 @@ const TIER_CARDS: {
       "10 pre-loaded daily workouts",
       "Member challenges & leaderboard",
       "Monthly Focus Plan access",
+      "Full workout logging & tracking",
     ],
     cta: "Start Basic",
     subtitle: "The cost of a Netflix subscription — get in the ecosystem.",
@@ -37,7 +39,6 @@ const TIER_CARDS: {
   {
     key: "foundation",
     icon: Star,
-    highlight: true,
     features: [
       "Everything in Basic",
       "8-week periodized training block",
@@ -50,36 +51,20 @@ const TIER_CARDS: {
     subtitle: "Your core program. Real structure. Real results.",
   },
   {
-    key: "foundation",
-    icon: Shield,
-    label: "Youth Development",
-    subtitle: "Same Foundation features — designed for families",
-    features: [
-      "Everything in Foundation — same price, same features",
-      "🎁 Free postural assessment (video or live call)",
-      "Parent account with child invite link",
-      "Monitor your child's workouts & progress",
-      "Flag Coach Matt on your child's behalf",
-      "Age-appropriate programming from intake",
-      "Parent trial auto-charges Foundation when it ends",
-    ],
-    cta: "Start Parent Trial",
-  },
-  {
     key: "custom",
     icon: Crown,
+    highlight: true,
     features: [
       "Everything in Foundation",
       "Fully custom programming + AI builder",
       "1-on-1 video assessment ($50 value included)",
       "🎁 Gift a session to a friend",
-      "Monthly program updates",
-      "Full 'Fix It' rehab library",
       "Direct messaging support",
       "Priority Flag Coach Matt responses",
     ],
     cta: "Go Custom",
     subtitle: "Custom protocol from a 20-year vet for less than the session alone.",
+    badge: "Includes a $50 1-on-1 Video Assessment",
   },
   {
     key: "team_elite",
@@ -88,14 +73,13 @@ const TIER_CARDS: {
       "Everything in Custom",
       "Comprehensive on/off-season periodization",
       "Highest level of custom programming",
-      "1-on-1 video session included",
-      "🎁 Gift session included",
       "Bulk programming for full teams",
       "Multi-athlete management",
       "Seasonal periodization plans",
     ],
     cta: "Go Team/Elite",
     subtitle: "For serious athletes making a college roster.",
+    badge: "Includes a $50 1-on-1 Video Assessment",
   },
 ];
 
