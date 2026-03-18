@@ -1736,10 +1736,10 @@ export type Database = {
           id: string
           sort_order: number
           tier_basic: boolean
-          tier_elite: boolean
+          tier_custom: boolean
+          tier_foundation: boolean
           tier_legend: boolean
-          tier_pro: boolean
-          tier_team: boolean
+          tier_team_elite: boolean
           updated_at: string
         }
         Insert: {
@@ -1750,10 +1750,10 @@ export type Database = {
           id?: string
           sort_order?: number
           tier_basic?: boolean
-          tier_elite?: boolean
+          tier_custom?: boolean
+          tier_foundation?: boolean
           tier_legend?: boolean
-          tier_pro?: boolean
-          tier_team?: boolean
+          tier_team_elite?: boolean
           updated_at?: string
         }
         Update: {
@@ -1764,10 +1764,10 @@ export type Database = {
           id?: string
           sort_order?: number
           tier_basic?: boolean
-          tier_elite?: boolean
+          tier_custom?: boolean
+          tier_foundation?: boolean
           tier_legend?: boolean
-          tier_pro?: boolean
-          tier_team?: boolean
+          tier_team_elite?: boolean
           updated_at?: string
         }
         Relationships: []
