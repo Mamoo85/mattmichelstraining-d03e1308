@@ -189,7 +189,23 @@ const TipCard = ({ tip }: { tip: typeof TIPS[0] }) => {
 };
 
 /* ── Page ── */
-const Learn = () => (
+const Learn = () => {
+  const { data: articles = [] } = useQuery({
+    queryKey: ["learn-articles-published"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("learn_articles")
+        .select("*")
+        .eq("is_published", true)
+        .order("published_at", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const [expandedArticle, setExpandedArticle] = useState<string | null>(null);
+
+  return (
   <div className="min-h-screen bg-background">
     <AppNavbar />
     <div className="container pt-20 pb-12">
@@ -205,12 +221,55 @@ const Learn = () => (
           <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
             Learn from Coach Matt
           </h1>
-          <p className="text-sm text-muted-foreground max-w-xl leading-relaxed">
+          <p className="text-sm text-foreground-soft max-w-xl leading-relaxed">
             20+ years of training knowledge — injury prevention tips, training
             fundamentals, and the hard truths most trainers won't tell you. Free.
             No paywall. No fluff.
           </p>
         </div>
+
+        {/* CMS Articles */}
+        {articles.length > 0 && (
+          <section className="mb-10">
+            <div className="flex items-center gap-2 mb-4">
+              <BookOpen size={16} className="text-primary" />
+              <h2 className="text-sm font-bold uppercase tracking-widest text-foreground">
+                Latest from Matt
+              </h2>
+            </div>
+            <div className="space-y-3">
+              {articles.map((a: any) => (
+                <div key={a.id} className="bg-card shadow-m2 overflow-hidden">
+                  {a.cover_image_url && (
+                    <img src={a.cover_image_url} alt={a.title} className="w-full h-48 object-cover" />
+                  )}
+                  <div className="p-5">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-[9px] font-bold uppercase tracking-widest bg-primary/10 text-primary px-1.5 py-0.5">
+                        {a.category.replace(/-/g, " ")}
+                      </span>
+                      <span className="text-[9px] text-muted-foreground">
+                        {a.published_at ? new Date(a.published_at).toLocaleDateString() : ""}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => setExpandedArticle(expandedArticle === a.id ? null : a.id)}
+                      className="text-left w-full"
+                    >
+                      <h3 className="text-base font-bold text-foreground mb-1">{a.title}</h3>
+                      <p className="text-xs text-muted-foreground">By {a.author} · Click to {expandedArticle === a.id ? "collapse" : "read"}</p>
+                    </button>
+                    {expandedArticle === a.id && (
+                      <div className="mt-4 prose prose-sm max-w-none text-foreground-soft text-sm leading-relaxed">
+                        <ReactMarkdown>{a.body}</ReactMarkdown>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Monthly Focus */}
         <div className="mb-10">
