@@ -48,7 +48,7 @@ const AdminExerciseLibrary = () => {
   const fetchExercises = async () => {
     const { data } = await supabase
       .from("exercise_library")
-      .select("id, title, equipment_needed, the_why, client_type, focus_area, sport")
+      .select("id, title, equipment_needed, the_why, client_type, focus_area, sport, video_url")
       .order("title");
     if (data) setExercises(data as Exercise[]);
     setLoading(false);
