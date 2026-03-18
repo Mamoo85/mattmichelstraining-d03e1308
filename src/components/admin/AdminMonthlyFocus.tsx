@@ -29,7 +29,10 @@ interface Focus {
   title: string;
   topic: string;
   reasoning: string;
+  biomechanics: string[];
+  common_mistakes: string[];
   exercises: string[];
+  challenge_metric: string;
   matt_quote: string;
   status: string;
 }
@@ -55,6 +58,7 @@ const AdminMonthlyFocus = () => {
   const [generating, setGenerating] = useState(false);
   const [editingFocus, setEditingFocus] = useState(false);
   const [editFocus, setEditFocus] = useState<Partial<Focus>>({});
+  const [topicInput, setTopicInput] = useState("");
 
   // Load data
   useEffect(() => {
@@ -123,7 +127,7 @@ const AdminMonthlyFocus = () => {
     setGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke("generate-monthly-focus", {
-        body: { month: selMonth, year: selYear },
+        body: { month: selMonth, year: selYear, topic: topicInput.trim() || undefined },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -157,7 +161,10 @@ const AdminMonthlyFocus = () => {
       title: focus.title,
       topic: focus.topic,
       reasoning: focus.reasoning,
+      biomechanics: focus.biomechanics || [],
+      common_mistakes: focus.common_mistakes || [],
       exercises: focus.exercises,
+      challenge_metric: focus.challenge_metric || "",
       matt_quote: focus.matt_quote,
     });
     setEditingFocus(true);
@@ -171,7 +178,10 @@ const AdminMonthlyFocus = () => {
         title: editFocus.title,
         topic: editFocus.topic,
         reasoning: editFocus.reasoning,
+        biomechanics: editFocus.biomechanics,
+        common_mistakes: editFocus.common_mistakes,
         exercises: editFocus.exercises,
+        challenge_metric: editFocus.challenge_metric,
         matt_quote: editFocus.matt_quote,
       } as any)
       .eq("id", focus.id);
@@ -314,21 +324,35 @@ const AdminMonthlyFocus = () => {
 
       {/* ═══════ MONTHLY FOCUS ═══════ */}
       <div>
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Flame size={16} className="text-primary" />
-            <h2 className="text-sm font-bold uppercase tracking-widest text-foreground">
-              Monthly Focus — {MONTHS[selMonth - 1]} {selYear}
-            </h2>
+        <div className="flex items-center gap-2 mb-4">
+          <Flame size={16} className="text-primary" />
+          <h2 className="text-sm font-bold uppercase tracking-widest text-foreground">
+            Monthly Focus — {MONTHS[selMonth - 1]} {selYear}
+          </h2>
+        </div>
+
+        {/* Topic Input + Generate Button */}
+        <div className="bg-card border border-border p-4 mb-4 space-y-3">
+          <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block">
+            This Month's Focus
+          </label>
+          <div className="flex gap-2">
+            <Input
+              placeholder="e.g., Side Plank, Ankle Mobility, Dead Hang…"
+              value={topicInput}
+              onChange={(e) => setTopicInput(e.target.value)}
+              className="flex-1"
+            />
+            <button
+              onClick={handleGenerate}
+              disabled={generating}
+              className="flex items-center gap-1.5 bg-primary text-primary-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 disabled:opacity-50 transition-all shrink-0"
+            >
+              {generating ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+              Generate Focus Module
+            </button>
           </div>
-          <button
-            onClick={handleGenerate}
-            disabled={generating}
-            className="flex items-center gap-1 bg-primary text-primary-foreground px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 disabled:opacity-50 transition-all"
-          >
-            {generating ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
-            {focus ? "Regenerate" : "Generate with AI"}
-          </button>
+          <p className="text-[10px] text-muted-foreground">Leave blank to let AI pick a topic for this month.</p>
         </div>
 
         {focusLoading ? (
@@ -336,7 +360,7 @@ const AdminMonthlyFocus = () => {
         ) : !focus ? (
           <div className="bg-muted p-5 text-center">
             <Sparkles size={20} className="mx-auto text-muted-foreground/30 mb-2" />
-            <p className="text-sm text-muted-foreground">No focus content for this month. Click "Generate with AI" to create one.</p>
+            <p className="text-sm text-muted-foreground">No focus content for this month. Enter a topic and generate above.</p>
           </div>
         ) : editingFocus ? (
           /* ── Editing Mode ── */
@@ -350,11 +374,31 @@ const AdminMonthlyFocus = () => {
               <Input value={editFocus.topic || ""} onChange={(e) => setEditFocus(p => ({ ...p, topic: e.target.value }))} />
             </div>
             <div>
-              <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Reasoning (Matt's voice)</label>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">The Why (Matt's voice)</label>
               <Textarea
                 value={editFocus.reasoning || ""}
                 onChange={(e) => setEditFocus(p => ({ ...p, reasoning: e.target.value }))}
-                rows={8}
+                rows={4}
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">
+                Biomechanics — Perfect Form (one per line)
+              </label>
+              <Textarea
+                value={(editFocus.biomechanics || []).join("\n")}
+                onChange={(e) => setEditFocus(p => ({ ...p, biomechanics: e.target.value.split("\n").filter(Boolean) }))}
+                rows={4}
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">
+                Common Mistakes (one per line)
+              </label>
+              <Textarea
+                value={(editFocus.common_mistakes || []).join("\n")}
+                onChange={(e) => setEditFocus(p => ({ ...p, common_mistakes: e.target.value.split("\n").filter(Boolean) }))}
+                rows={4}
               />
             </div>
             <div>
@@ -366,6 +410,10 @@ const AdminMonthlyFocus = () => {
                 onChange={(e) => setEditFocus(p => ({ ...p, exercises: e.target.value.split("\n").filter(Boolean) }))}
                 rows={5}
               />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Challenge Metric</label>
+              <Input value={editFocus.challenge_metric || ""} onChange={(e) => setEditFocus(p => ({ ...p, challenge_metric: e.target.value }))} />
             </div>
             <div>
               <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Matt's Quote</label>
@@ -425,7 +473,40 @@ const AdminMonthlyFocus = () => {
             <div className="p-5 space-y-4">
               <h3 className="text-lg font-black uppercase tracking-tight text-foreground">{focus.title}</h3>
               <p className="text-[10px] font-bold uppercase tracking-widest text-primary">{focus.topic}</p>
-              <div className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{focus.reasoning}</div>
+
+              {/* The Why */}
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-1">The Why</span>
+                <div className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{focus.reasoning}</div>
+              </div>
+
+              {/* Biomechanics */}
+              {(focus.biomechanics?.length ?? 0) > 0 && (
+                <div className="bg-muted p-4 space-y-1.5">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary block">Perfect Form</span>
+                  {focus.biomechanics.map((b, i) => (
+                    <div key={i} className="flex items-start gap-2 text-sm text-foreground">
+                      <span className="text-primary mt-0.5">•</span>
+                      <span>{b}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Common Mistakes */}
+              {(focus.common_mistakes?.length ?? 0) > 0 && (
+                <div className="bg-destructive/5 border border-destructive/10 p-4 space-y-1.5">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-destructive block">What to Avoid</span>
+                  {focus.common_mistakes.map((m, i) => (
+                    <div key={i} className="flex items-start gap-2 text-sm text-foreground">
+                      <span className="text-destructive mt-0.5">✗</span>
+                      <span>{m}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Exercises */}
               {focus.exercises.length > 0 && (
                 <div className="bg-muted p-4 space-y-2">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-primary block">Exercises</span>
@@ -437,6 +518,15 @@ const AdminMonthlyFocus = () => {
                   ))}
                 </div>
               )}
+
+              {/* Challenge Metric */}
+              {focus.challenge_metric && (
+                <div className="bg-primary/5 border border-primary/10 p-4">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-1">Challenge Goal</span>
+                  <p className="text-sm font-semibold text-foreground">{focus.challenge_metric}</p>
+                </div>
+              )}
+
               {focus.matt_quote && (
                 <p className="text-xs text-muted-foreground italic border-l-2 border-primary/30 pl-3">
                   "{focus.matt_quote}" — Matt

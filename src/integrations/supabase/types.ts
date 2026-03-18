@@ -724,6 +724,9 @@ export type Database = {
         Row: {
           approved_at: string | null
           approved_by: string | null
+          biomechanics: string[] | null
+          challenge_metric: string | null
+          common_mistakes: string[] | null
           created_at: string
           exercises: string[]
           id: string
@@ -738,6 +741,9 @@ export type Database = {
         Insert: {
           approved_at?: string | null
           approved_by?: string | null
+          biomechanics?: string[] | null
+          challenge_metric?: string | null
+          common_mistakes?: string[] | null
           created_at?: string
           exercises?: string[]
           id?: string
@@ -752,6 +758,9 @@ export type Database = {
         Update: {
           approved_at?: string | null
           approved_by?: string | null
+          biomechanics?: string[] | null
+          challenge_metric?: string | null
+          common_mistakes?: string[] | null
           created_at?: string
           exercises?: string[]
           id?: string
