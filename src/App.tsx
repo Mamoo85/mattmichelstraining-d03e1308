@@ -15,6 +15,7 @@ import IntervalTimer from "@/components/workout/IntervalTimer";
 import ScrollToTop from "@/components/ScrollToTop";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import OfflineBadge from "@/components/OfflineBadge";
+import AnnouncementBanner from "@/components/AnnouncementBanner";
 
 import { useTimer } from "@/hooks/useTimer";
 import { useReferralCapture } from "@/hooks/useReferral";
@@ -87,6 +88,7 @@ const App = () => (
             <BrowserRouter>
               <ReferralCaptureWrapper />
               <ScrollToTop />
+              <AnnouncementBanner />
               <ErrorBoundary>
                 <Suspense fallback={<PageLoader />}>
                   <Routes>

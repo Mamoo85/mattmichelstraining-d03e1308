@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import AppNavbar from "@/components/AppNavbar";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -6,6 +7,7 @@ import {
   GraduationCap, Heart, Gamepad2, Users, ShieldOff,
   Shield, Trophy, Zap,
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import m2Logo from "@/assets/m2-logo-official.jpg";
 import mattFamily from "@/assets/matt-family.jpg";
 import mattTraining from "@/assets/matt-training.jpg";
@@ -61,36 +63,38 @@ const STORY_BEATS = [
   },
 ];
 
-const TESTIMONIALS = [
+const FALLBACK_TESTIMONIALS = [
   {
-    quote: "My son trained with Matt for three years. He walked on at Michigan as a freshman and started by his junior year. Matt didn't just make him stronger — he made him durable. Three years of college ball, zero time missed to injury.",
-    name: "Parent of D1 Athlete",
-    role: "Grosse Pointe, MI",
-    initials: "KR",
+    id: "ft1",
+    quote: "My son trained with Matt for three years. He walked on at Michigan as a freshman and started by his junior year. Matt didn't just make him stronger — he made him durable.",
+    author_name: "Parent of D1 Athlete",
+    author_role: "Grosse Pointe, MI",
+    author_initials: "KR",
   },
   {
-    quote: "My son started with Matt at 13. Two years later he's the strongest kid on his baseball team and hasn't missed a game to injury. Matt teaches him how to take care of his body — not just lift weights.",
-    name: "Sarah M.",
-    role: "Parent · Grosse Pointe",
-    initials: "SM",
+    id: "ft2",
+    quote: "My son started with Matt at 13. Two years later he's the strongest kid on his baseball team and hasn't missed a game to injury.",
+    author_name: "Sarah M.",
+    author_role: "Parent · Grosse Pointe",
+    author_initials: "SM",
   },
   {
-    quote: "I've worked with online coaches before and they send you a PDF and disappear. Matt actually watches my videos, replies the same day, and adjusts my program. It's not even close to the same thing.",
-    name: "Jake R.",
-    role: "College Athlete · Remote",
-    initials: "JR",
+    id: "ft3",
+    quote: "I've worked with online coaches before and they send you a PDF and disappear. Matt actually watches my videos, replies the same day, and adjusts my program.",
+    author_name: "Jake R.",
+    author_role: "College Athlete · Remote",
+    author_initials: "JR",
   },
   {
+    id: "ft4",
     quote: "We were spending $200/month on a trainer who had our daughter doing the same exercises as adults. Matt's youth program is age-appropriate, affordable, and she actually enjoys it.",
-    name: "Lisa & Tom K.",
-    role: "Parents · St. Clair Shores",
-    initials: "LT",
+    author_name: "Lisa & Tom K.",
+    author_role: "Parents · St. Clair Shores",
+    author_initials: "LT",
   },
 ];
 
-/* SUCCESS_STORIES — REMOVED: Do not re-add until real athlete stories are collected */
-
-const STATS = [
+const FALLBACK_STATS = [
   { value: "20+", label: "Years Training" },
   { value: "50+", label: "College Athletes" },
   { value: "1000s", label: "Clients Coached" },
@@ -99,7 +103,48 @@ const STATS = [
 
 /* ─── page ─── */
 
-const About = () => (
+const About = () => {
+  // CMS stats
+  const { data: cmsStats } = useQuery({
+    queryKey: ["homepage-stats"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("site_content")
+        .select("content_key, content_value")
+        .eq("section", "homepage_stats")
+        .order("sort_order", { ascending: true });
+      if (!data || data.length === 0) return null;
+      const map: Record<string, string> = {};
+      data.forEach((d: any) => { map[d.content_key] = d.content_value; });
+      return [
+        { value: map["stat_1_value"] || "", label: map["stat_1_label"] || "" },
+        { value: map["stat_2_value"] || "", label: map["stat_2_label"] || "" },
+        { value: map["stat_3_value"] || "", label: map["stat_3_label"] || "" },
+        { value: map["stat_4_value"] || "", label: map["stat_4_label"] || "" },
+      ].filter((s) => s.value && s.label);
+    },
+    staleTime: 5 * 60_000,
+  });
+
+  // CMS testimonials for about page
+  const { data: cmsTestimonials } = useQuery({
+    queryKey: ["testimonials", "about"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("testimonials" as any)
+        .select("id, quote, author_name, author_role, author_initials")
+        .eq("page", "about")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true });
+      return (data || []) as any[];
+    },
+    staleTime: 5 * 60_000,
+  });
+
+  const STATS = cmsStats && cmsStats.length > 0 ? cmsStats : FALLBACK_STATS;
+  const TESTIMONIALS = cmsTestimonials && cmsTestimonials.length > 0 ? cmsTestimonials : FALLBACK_TESTIMONIALS;
+
+  return (
   <div className="min-h-screen bg-background">
     <AppNavbar />
     <div className="container pt-20 pb-16 max-w-4xl mx-auto px-4">
@@ -310,8 +355,8 @@ const About = () => (
           Real results from real families
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {TESTIMONIALS.map((t) => (
-            <div key={t.name} className="bg-card shadow-m2 p-5 flex flex-col">
+          {TESTIMONIALS.map((t: any) => (
+            <div key={t.id || t.author_name} className="bg-card shadow-m2 p-5 flex flex-col">
               <Quote size={16} className="text-primary/40 mb-2" />
               <p className="text-sm text-muted-foreground leading-relaxed flex-1 italic">
                 "{t.quote}"
@@ -324,11 +369,11 @@ const About = () => (
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center">
-                    <span className="text-[9px] font-bold text-primary">{t.initials}</span>
+                    <span className="text-[9px] font-bold text-primary">{t.author_initials}</span>
                   </div>
                   <div>
-                    <span className="text-xs font-bold text-foreground block">{t.name}</span>
-                    <span className="text-[10px] text-muted-foreground">{t.role}</span>
+                    <span className="text-xs font-bold text-foreground block">{t.author_name}</span>
+                    <span className="text-[10px] text-muted-foreground">{t.author_role}</span>
                   </div>
                 </div>
               </div>
@@ -399,6 +444,7 @@ const About = () => (
       </div>
     </div>
   </div>
-);
+  );
+};
 
 export default About;
