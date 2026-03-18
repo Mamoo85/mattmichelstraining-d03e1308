@@ -556,7 +556,7 @@ const MonthlyFocusWidget = () => {
           ) : null}
 
           {/* ── Area Chart ── */}
-          {optedIn && chartData.length > 1 && (
+          {(chartData.length > 1) && (
             <div className="bg-card border border-border p-4 relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-t from-primary/3 to-transparent pointer-events-none" />
               <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground block mb-3 relative">
