@@ -412,9 +412,9 @@ const Pricing = () => {
 
 const TIER_COLS = [
   { key: "tier_basic", label: "Basic" },
-  { key: "tier_pro", label: "Pro" },
-  { key: "tier_elite", label: "Elite" },
-  { key: "tier_team", label: "Team" },
+  { key: "tier_foundation", label: "Foundation" },
+  { key: "tier_custom", label: "Custom" },
+  { key: "tier_team_elite", label: "Team/Elite" },
 ] as const;
 
 const TierComparisonTable = () => {
