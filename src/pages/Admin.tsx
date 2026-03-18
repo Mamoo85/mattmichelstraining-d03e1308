@@ -36,6 +36,7 @@ import AdminAiCopilot from "@/components/admin/AdminAiCopilot";
 import AdminBroadcasts from "@/components/admin/AdminBroadcasts";
 
 const TABS = [
+  { key: "ai-queue", label: "AI Queue" },
   { key: "ai-copilot", label: "AI Copilot" },
   { key: "financials", label: "Financials" },
   { key: "broadcasts", label: "Broadcasts" },
