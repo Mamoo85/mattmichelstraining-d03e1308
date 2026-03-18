@@ -121,6 +121,7 @@ const Pricing = () => {
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
   const [expandedTiers, setExpandedTiers] = useState<Record<string, boolean>>({});
+  const [modalTier, setModalTier] = useState<{ key: TierKey; label: string } | null>(null);
 
   const handleCheckout = async (tierKey: TierKey) => {
     if (!user) {
