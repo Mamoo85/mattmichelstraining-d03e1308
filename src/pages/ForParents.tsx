@@ -372,7 +372,7 @@ const ForParents = () => {
               {cms.final_cta_title || "Ready to invest in your athlete's strength and safety?"}
             </h2>
             <p className="text-sm text-muted-foreground mb-6 max-w-lg mx-auto">
-              {cms.final_cta_text || "Start a free 7-day trial. Get your athlete set up with real programming from a 20-year veteran coach. No credit card. No commitment. Just results."}
+              {cms.final_cta_text || "Start a free 14-day trial. Get your athlete set up with real programming from a 20-year veteran coach. No credit card. No commitment. Just results."}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link
