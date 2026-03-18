@@ -48,7 +48,7 @@ async function getGoogleAccessToken(): Promise<string> {
   }));
 
   // Import private key and sign
-  const pemContents = key.private_key
+  const pemContents = privateKey
     .replace(/-----BEGIN PRIVATE KEY-----/, "")
     .replace(/-----END PRIVATE KEY-----/, "")
     .replace(/\n/g, "");
