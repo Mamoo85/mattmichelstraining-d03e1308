@@ -41,6 +41,7 @@ const WorkoutPickerModal = ({ open, onOpenChange }: WorkoutPickerModalProps) => 
   const { user, subscribed } = useAuth();
   const navigate = useNavigate();
   const [programs, setPrograms] = useState<PurchasedProgram[]>([]);
+  const [activePrograms, setActivePrograms] = useState<ActiveProgram[]>([]);
   const [workouts, setWorkouts] = useState<CommunityWorkout[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -56,13 +57,26 @@ const WorkoutPickerModal = ({ open, onOpenChange }: WorkoutPickerModalProps) => 
         .eq("is_active", true)
         .order("purchased_at", { ascending: false }),
       supabase
+        .from("user_active_programs" as any)
+        .select("id, program_id, training_programs(id, title, category, sport)")
+        .eq("user_id", user.id)
+        .eq("status", "active"),
+      supabase
         .from("community_workouts")
         .select("id, title, exercises")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(20),
-    ]).then(([progRes, cwRes]) => {
+    ]).then(([progRes, activeRes, cwRes]) => {
       setPrograms((progRes.data as PurchasedProgram[] | null) ?? []);
+      const mapped = ((activeRes.data as any[]) ?? []).map((a: any) => ({
+        id: a.id,
+        program_id: a.program_id,
+        program_title: a.training_programs?.title ?? "Program",
+        sport: a.training_programs?.sport ?? null,
+        exercises: [],
+      }));
+      setActivePrograms(mapped);
       setWorkouts((cwRes.data as CommunityWorkout[] | null) ?? []);
       setLoading(false);
     });
