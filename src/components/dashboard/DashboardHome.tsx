@@ -19,18 +19,18 @@ interface DashboardHomeProps {
 }
 
 const DashboardHome = memo(({ isNewUser, onViewPoints, onViewReferrals }: DashboardHomeProps) => {
-  const { subscribed, isLegend } = useAuth();
+  const { subscribed } = useAuth();
   const navigate = useNavigate();
   const [pickerOpen, setPickerOpen] = useState(false);
 
   const handleStartWorkout = useCallback(() => {
     // Free users with no content go straight to pricing
-    if (!subscribed && !isLegend && isNewUser) {
+    if (!subscribed && isNewUser) {
       navigate("/pricing");
       return;
     }
     setPickerOpen(true);
-  }, [subscribed, isLegend, isNewUser, navigate]);
+  }, [subscribed, isNewUser, navigate]);
 
   return (
   <div className="space-y-6">

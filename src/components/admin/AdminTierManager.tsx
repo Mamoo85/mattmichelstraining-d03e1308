@@ -8,14 +8,13 @@ import { Label } from "@/components/ui/label";
 import {
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from "@/components/ui/table";
-import { Plus, Trash2, Save, Crown, ShieldCheck, Zap, Star, Users, Loader2 } from "lucide-react";
+import { Plus, Trash2, Save, ShieldCheck, Zap, Star, Users, Loader2 } from "lucide-react";
 
 const TIERS = [
   { key: "tier_basic", label: "Basic", icon: Star, color: "text-blue-400" },
   { key: "tier_foundation", label: "Foundation", icon: Zap, color: "text-yellow-400" },
   { key: "tier_custom", label: "Custom", icon: ShieldCheck, color: "text-orange-400" },
   { key: "tier_team_elite", label: "Team/Elite", icon: Users, color: "text-green-400" },
-  { key: "tier_legend", label: "Legend", icon: Crown, color: "text-amber-400" },
 ] as const;
 
 type TierKey = typeof TIERS[number]["key"];
@@ -29,7 +28,6 @@ interface TierFeature {
   tier_foundation: boolean;
   tier_custom: boolean;
   tier_team_elite: boolean;
-  tier_legend: boolean;
   sort_order: number;
 }
 
@@ -227,7 +225,7 @@ const AdminTierManager = () => {
       <div className="bg-muted/50 border border-border p-3">
         <p className="text-[10px] text-muted-foreground">
           <strong>How it works:</strong> Use <code className="text-[9px] bg-muted px-1">feature_key</code> values in PaywallGate components throughout the app. 
-          When a feature is checked for a tier, users on that tier (or higher) get access. Legend members and admins always bypass all gates.
+          When a feature is checked for a tier, users on that tier (or higher) get access. Admins always bypass all gates.
         </p>
       </div>
     </div>

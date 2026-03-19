@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Search, ChevronDown, ChevronUp, Dumbbell, ShoppingBag, Calendar,
-  Crown, Shield, Clock, Loader2, X, Link2, Unlink, Mail, Trash2, Users, AlertTriangle,
+  Shield, Clock, Loader2, X, Link2, Unlink, Mail, Trash2, Users, AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -235,17 +235,15 @@ const AdminClientList = () => {
 
   // Stats
   const activeUsers7d = new Set(workoutLogs.filter((l) => new Date(l.date) > new Date(Date.now() - 7 * 86400000)).map((l) => l.user_id)).size;
-  const legendCount = profiles.filter((p) => p.is_in_person).length;
 
   return (
     <div className="space-y-4">
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {[
           { label: "Total Clients", value: profiles.length },
           { label: "Pro Members", value: profiles.filter((p) => p.is_pro).length, highlight: true },
           { label: "Active (7d)", value: activeUsers7d },
-          { label: "Legend Members", value: legendCount, highlight: true },
         ].map((s) => (
           <div key={s.label} className="bg-card shadow-m2 p-4">
             <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{s.label}</p>
@@ -277,7 +275,6 @@ const AdminClientList = () => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-sm font-bold text-foreground truncate">{profile.full_name || "No name"}</p>
-                    {profile.is_in_person && <Badge variant="outline" className="text-[9px] uppercase tracking-widest border-primary/30 text-primary"><Crown size={8} className="mr-0.5" />Legend</Badge>}
                     {profile.subscription_tier && profile.subscription_tier !== "free" && (
                       <Badge variant="outline" className="text-[9px] uppercase tracking-widest">{profile.subscription_tier}</Badge>
                     )}
@@ -316,11 +313,10 @@ const AdminClientList = () => {
 
                 <div className="space-y-4 mt-2">
                   {/* Quick Stats */}
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     {[
                       { label: "Tier", value: p.subscription_tier || "free" },
                       { label: "Role", value: p.account_role || "athlete" },
-                      { label: "Legend", value: p.is_in_person ? "Yes" : "No" },
                     ].map((s) => (
                       <div key={s.label} className="bg-secondary/50 border border-border p-2.5 text-center">
                         <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">{s.label}</p>
@@ -354,26 +350,6 @@ const AdminClientList = () => {
                     <p className="text-[10px] text-muted-foreground mt-1">Bypasses Stripe — sets access directly in database.</p>
                   </div>
 
-                  {/* Legend Toggle */}
-                  <div className="bg-secondary/30 border border-border p-3 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Crown size={14} className="text-primary" />
-                      <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Legend (In-Person)</span>
-                    </div>
-                    <button
-                      onClick={() => {
-                        toggleInPerson.mutate({ profileId: p.id, value: !p.is_in_person });
-                        setSelectedProfile({ ...p, is_in_person: !p.is_in_person });
-                      }}
-                      className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-colors ${
-                        p.is_in_person
-                          ? "bg-primary/20 text-primary"
-                          : "bg-muted text-muted-foreground hover:bg-primary/20 hover:text-primary"
-                      }`}
-                    >
-                      {p.is_in_person ? "Active" : "Enable"}
-                    </button>
-                  </div>
 
                   {/* Trial Manipulation */}
                   <div className="bg-secondary/30 border border-border p-3">

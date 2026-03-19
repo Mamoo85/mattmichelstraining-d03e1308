@@ -39,7 +39,7 @@ const TabLoader = () => (
 );
 
 const Dashboard = () => {
-  const { user, subscribed, subscriptionTier, isLegend } = useAuth();
+  const { user, subscribed, subscriptionTier } = useAuth();
   const { trialExpired, isOnTrial, trialDaysLeft } = useTrialStatus();
   const { isAdmin } = useIsAdmin();
   const [profile, setProfile] = useState<{ full_name: string | null; athlete_name: string | null } | null>(null);
@@ -95,11 +95,7 @@ const Dashboard = () => {
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <h2 className="text-base sm:text-lg font-bold text-foreground truncate">Welcome back, {athleteDisplay}</h2>
-              {isLegend ? (
-                <Badge className="flex items-center gap-1 text-[10px] uppercase tracking-widest bg-primary text-primary-foreground shrink-0">
-                  <Crown size={10} /> M² Legend
-                </Badge>
-              ) : subscriptionTier ? (
+              {subscriptionTier ? (
                 <Badge className="flex items-center gap-1 text-[10px] uppercase tracking-widest shrink-0">
                   <Crown size={10} /> {TIERS[subscriptionTier].name}
                 </Badge>
@@ -179,14 +175,14 @@ const Dashboard = () => {
       {/* Timer moved to ActiveWorkoutZone */}
 
       {/* Trial banner */}
-      {isOnTrial && !subscribed && !isAdmin && !isLegend && (
+      {isOnTrial && !subscribed && !isAdmin && (
         <div className="fixed top-16 left-0 right-0 z-40 bg-primary text-primary-foreground text-center py-2 text-xs font-bold uppercase tracking-widest">
           🔥 Trial: {trialDaysLeft} day{trialDaysLeft !== 1 ? "s" : ""} remaining
         </div>
       )}
 
       {/* Hard paywall */}
-      {trialExpired && !subscribed && !isAdmin && !isLegend && (
+      {trialExpired && !subscribed && !isAdmin && (
         <TrialPaywallModal open={true} hardLock />
       )}
     </div>

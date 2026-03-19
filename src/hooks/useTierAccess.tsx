@@ -23,7 +23,7 @@ export const hasTierAccess = (userTier: TierKey | null, requiredTier: TierKey): 
 };
 
 export const useTierAccess = (featureKey: string) => {
-  const { subscriptionTier, isLegend } = useAuth();
+  const { subscriptionTier } = useAuth();
   const { isAdmin } = useIsAdmin();
 
   const { data: features = [] } = useQuery({
@@ -39,8 +39,8 @@ export const useTierAccess = (featureKey: string) => {
     staleTime: 60_000,
   });
 
-  // Admins and Legends always have access
-  if (isAdmin || isLegend) return { hasAccess: true, loading: false };
+  // Admins always have access
+  if (isAdmin) return { hasAccess: true, loading: false };
 
   const feature = features.find((f: any) => f.feature_key === featureKey);
   if (!feature) return { hasAccess: false, loading: false };
@@ -64,9 +64,9 @@ export const useTierAccess = (featureKey: string) => {
 
 // Simple hook: does user have at least this tier?
 export const useMinTier = (requiredTier: TierKey) => {
-  const { subscriptionTier, isLegend } = useAuth();
+  const { subscriptionTier } = useAuth();
   const { isAdmin } = useIsAdmin();
 
-  if (isAdmin || isLegend) return true;
+  if (isAdmin) return true;
   return hasTierAccess(subscriptionTier, requiredTier);
 };

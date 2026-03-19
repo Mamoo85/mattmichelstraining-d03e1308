@@ -30,7 +30,7 @@ interface WorkoutPickerModalProps {
 }
 
 const WorkoutPickerModal = ({ open, onOpenChange }: WorkoutPickerModalProps) => {
-  const { user, subscribed, isLegend } = useAuth();
+  const { user, subscribed } = useAuth();
   const navigate = useNavigate();
   const [programs, setPrograms] = useState<PurchasedProgram[]>([]);
   const [workouts, setWorkouts] = useState<CommunityWorkout[]>([]);
@@ -91,7 +91,7 @@ const WorkoutPickerModal = ({ open, onOpenChange }: WorkoutPickerModalProps) => 
     launchWorkout(w.title, "community", mapped);
   };
 
-  const canCreate = subscribed || isLegend;
+  const canCreate = subscribed;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
