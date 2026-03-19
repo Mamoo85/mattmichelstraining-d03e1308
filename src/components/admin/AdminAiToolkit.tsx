@@ -335,10 +335,12 @@ const MealPrepTool = () => {
   const [goal, setGoal] = useState("muscle gain");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState("");
+  const [usage, setUsage] = useState<any>(null);
 
   const run = async () => {
     setLoading(true);
     setResult("");
+    setUsage(null);
     try {
       const { data, error } = await supabase.functions.invoke("ai-meal-prep", {
         body: {
@@ -354,6 +356,7 @@ const MealPrepTool = () => {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setResult(data.mealPlan);
+      if (data?.usage) setUsage(data.usage);
     } catch (e: any) {
       toast.error(e.message || "Failed to generate meal plan");
     } finally {
@@ -412,11 +415,14 @@ const MealPrepTool = () => {
         {loading ? "Generating…" : "Generate Meal Plan"}
       </Button>
       {result && (
-        <Card>
-          <CardContent className="pt-4 prose prose-sm max-w-none dark:prose-invert">
-            <ReactMarkdown>{result}</ReactMarkdown>
-          </CardContent>
-        </Card>
+        <>
+          <UsageBadge usage={usage} />
+          <Card>
+            <CardContent className="pt-4 prose prose-sm max-w-none dark:prose-invert">
+              <ReactMarkdown>{result}</ReactMarkdown>
+            </CardContent>
+          </Card>
+        </>
       )}
     </div>
   );
