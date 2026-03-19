@@ -82,6 +82,8 @@ const AdminFrontPage = () => {
 
   return (
     <div className="space-y-6">
+      {/* Pinned Reminders */}
+      <AdminPinnedNotes />
       {/* Announcement Banner */}
       <div className="bg-card border border-border p-5 space-y-4">
         <div className="flex items-center gap-2">
