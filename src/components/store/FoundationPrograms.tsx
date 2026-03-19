@@ -199,11 +199,11 @@ const FoundationPrograms = () => {
             <div className="flex items-center gap-2 mb-1">
               <Brain size={14} className="text-primary" />
               <span className="text-[9px] font-bold uppercase tracking-widest text-primary">
-                Proprietary AI Technology
+                Advanced Biomechanics
               </span>
             </div>
             <h3 className="text-sm font-black uppercase tracking-tight text-foreground">
-              Every Program Includes AI Postural Assessment
+              Every Program Includes a Postural Assessment
             </h3>
           </div>
         </div>
