@@ -72,6 +72,7 @@ const Nutrition = () => {
 
   const [preview, setPreview] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
+  const [editableItems, setEditableItems] = useState<FoodItem[]>([]);
   const [analyzing, setAnalyzing] = useState(false);
   const [editingGoals, setEditingGoals] = useState(false);
   const [goalInputs, setGoalInputs] = useState<Record<string, string>>({});
