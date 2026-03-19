@@ -148,8 +148,8 @@ const FoundationPrograms = () => {
               Best Results Start In Person
             </h2>
             <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-              Book a 1-on-1 session with Matt. He'll run your child through our 
-              <strong className="text-foreground"> AI biomechanics assessment</strong> — front and side photos analyzed in seconds — 
+              Book a 1-on-1 session with Matt. He'll run your child through a 
+              <strong className="text-foreground"> full biomechanics assessment</strong> — front and side photos analyzed in seconds — 
               and build a program around what their body actually needs. Not a template. Not a guess.
             </p>
             <a
