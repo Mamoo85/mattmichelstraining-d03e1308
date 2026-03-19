@@ -43,8 +43,14 @@ const SmartCamera = ({ onCapture, onClose }: SmartCameraProps) => {
   const [modelReady, setModelReady] = useState(false);
   const [statusText, setStatusText] = useState("Loading pose model…");
 
-  // Initialize TF.js + MoveNet
+  const startCamera = () => {
+    setState("loading");
+    setStatusText("Loading pose model…");
+  };
+
+  // Initialize TF.js + MoveNet (only after guide is dismissed)
   useEffect(() => {
+    if (state === "guide") return;
     let cancelled = false;
 
     const init = async () => {
