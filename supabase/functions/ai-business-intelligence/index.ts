@@ -194,8 +194,9 @@ Rules:
 
     const data = await response.json();
     const result = data.choices?.[0]?.message?.content || "";
+    const usage = data.usage || {};
 
-    return new Response(JSON.stringify({ result, tool }), {
+    return new Response(JSON.stringify({ result, tool, usage: { prompt_tokens: usage.prompt_tokens || 0, completion_tokens: usage.completion_tokens || 0, total_tokens: usage.total_tokens || 0, model: data.model || "google/gemini-3-flash-preview" } }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

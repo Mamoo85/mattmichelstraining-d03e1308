@@ -97,8 +97,9 @@ Format the output cleanly with clear headers for each day.`;
 
     const aiData = await aiResponse.json();
     const mealPlan = aiData.choices?.[0]?.message?.content || "No plan generated";
+    const usage = aiData.usage || {};
 
-    return new Response(JSON.stringify({ mealPlan, macros: { calories, proteinG, carbsG, fatG, meals } }), {
+    return new Response(JSON.stringify({ mealPlan, macros: { calories, proteinG, carbsG, fatG, meals }, usage: { prompt_tokens: usage.prompt_tokens || 0, completion_tokens: usage.completion_tokens || 0, total_tokens: usage.total_tokens || 0, model: aiData.model || "google/gemini-2.5-flash" } }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

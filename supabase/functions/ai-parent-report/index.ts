@@ -126,6 +126,7 @@ Use specific numbers and exercise names. Keep it positive but honest. Parents wa
 
     const aiData = await aiResponse.json();
     const report = aiData.choices?.[0]?.message?.content || "No report generated";
+    const usage = aiData.usage || {};
 
     return new Response(JSON.stringify({
       report,
@@ -138,6 +139,7 @@ Use specific numbers and exercise names. Keep it positive but honest. Parents wa
         level: context.level,
         prs,
       },
+      usage: { prompt_tokens: usage.prompt_tokens || 0, completion_tokens: usage.completion_tokens || 0, total_tokens: usage.total_tokens || 0, model: aiData.model || "google/gemini-2.5-flash" },
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
