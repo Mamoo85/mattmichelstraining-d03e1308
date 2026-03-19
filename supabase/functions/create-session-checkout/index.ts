@@ -20,15 +20,44 @@ serve(async (req) => {
   );
 
   try {
-    const authHeader = req.headers.get("Authorization")!;
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData } = await supabaseClient.auth.getUser(token);
-    const user = userData.user;
-    if (!user?.email) throw new Error("Not authenticated");
-
-    const { slot_date, start_time, duration_minutes, session_type = "in_person" } = await req.json();
+    const { slot_date, start_time, duration_minutes, session_type = "in_person", guest_name, guest_email } = await req.json();
     if (!slot_date || !start_time || ![30, 60].includes(duration_minutes)) {
       throw new Error("Invalid request");
+    }
+
+    // Try to get authenticated user (optional)
+    let userId: string | null = null;
+    let userEmail: string | null = null;
+    let userName: string | null = null;
+
+    const authHeader = req.headers.get("Authorization");
+    if (authHeader) {
+      const token = authHeader.replace("Bearer ", "");
+      const { data: userData } = await supabaseClient.auth.getUser(token);
+      if (userData?.user) {
+        userId = userData.user.id;
+        userEmail = userData.user.email || null;
+        // Get profile name
+        const { data: profile } = await supabaseAdmin
+          .from("profiles")
+          .select("full_name, athlete_name")
+          .eq("user_id", userId)
+          .single();
+        userName = profile?.full_name || profile?.athlete_name || null;
+      }
+    }
+
+    // If no authenticated user, require guest fields
+    if (!userId) {
+      if (!guest_name || !guest_email) {
+        throw new Error("Name and email are required to book a session");
+      }
+      // Basic email validation
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guest_email)) {
+        throw new Error("Invalid email address");
+      }
+      userEmail = guest_email;
+      userName = guest_name;
     }
 
     // Check slot availability
@@ -62,22 +91,18 @@ serve(async (req) => {
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { apiVersion: "2025-08-27.basil" });
 
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    // Look up or skip Stripe customer
     let customerId: string | undefined;
-    if (customers.data.length > 0) customerId = customers.data[0].id;
-
-    // Get user profile for name
-    const { data: profile } = await supabaseAdmin
-      .from("profiles")
-      .select("full_name, athlete_name")
-      .eq("user_id", user.id)
-      .single();
+    if (userEmail) {
+      const customers = await stripe.customers.list({ email: userEmail, limit: 1 });
+      if (customers.data.length > 0) customerId = customers.data[0].id;
+    }
 
     const origin = req.headers.get("origin") || "https://m2training.lovable.app";
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
-      customer_email: customerId ? undefined : user.email,
+      customer_email: customerId ? undefined : userEmail!,
       line_items: [{
         price_data: {
           currency: "usd",
@@ -91,14 +116,15 @@ serve(async (req) => {
       cancel_url: `${origin}/schedule`,
       metadata: {
         type: "training_session",
-        user_id: user.id,
-        user_email: user.email,
-        user_name: profile?.full_name || profile?.athlete_name || "",
+        user_id: userId || "guest",
+        user_email: userEmail!,
+        user_name: userName || "",
         slot_date,
         start_time,
         duration_minutes: String(duration_minutes),
         session_type,
         slot_ids: JSON.stringify(slotsData.map((s: any) => s.id)),
+        is_guest: userId ? "false" : "true",
       },
     });
 
