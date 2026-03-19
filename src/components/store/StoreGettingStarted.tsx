@@ -79,8 +79,8 @@ const StoreGettingStarted = () => {
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Matt's two loves — <strong className="text-foreground">computers and exercise</strong> — fused into something 
-              nobody else has. A front photo. A side photo. That's all it takes. Our proprietary AI biomechanics engine 
-              analyzes joint angles, postural alignment, muscle activation patterns, and movement compensations in seconds.
+              nobody else has. A front photo. A side photo. That's all it takes. Our advanced biomechanics system 
+              analyzes joint angles, postural alignment, muscle activation patterns, and movement compensations in seconds — giving Matt data no other trainer has.
             </p>
             <p className="text-xs text-primary font-bold italic">
               "Always 5 years ahead. I can't help it."
