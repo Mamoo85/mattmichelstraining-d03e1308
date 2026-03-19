@@ -183,20 +183,20 @@ const Nutrition = () => {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      if (!analysis || !user) throw new Error("No analysis to save");
-      const totals = analysis.items.reduce(
+      if (!editableItems.length || !user) throw new Error("No analysis to save");
+      const totals = editableItems.reduce(
         (acc, i) => ({ cal: acc.cal + i.calories, p: acc.p + i.protein_g, c: acc.c + i.carbs_g, f: acc.f + i.fat_g, fi: acc.fi + i.fiber_g }),
         { cal: 0, p: 0, c: 0, f: 0, fi: 0 }
       );
       const { error } = await supabase.from("nutrition_logs").insert({
         user_id: user.id,
-        food_items: analysis.items as any,
+        food_items: editableItems as any,
         total_calories: Math.round(totals.cal),
         total_protein_g: Math.round(totals.p * 10) / 10,
         total_carbs_g: Math.round(totals.c * 10) / 10,
         total_fat_g: Math.round(totals.f * 10) / 10,
         total_fiber_g: Math.round(totals.fi * 10) / 10,
-        notes: analysis.note || null,
+        notes: analysis?.note || null,
       });
       if (error) throw error;
     },
@@ -205,6 +205,7 @@ const Nutrition = () => {
       queryClient.invalidateQueries({ queryKey: ["nutrition-logs"] });
       setPreview(null);
       setAnalysis(null);
+      setEditableItems([]);
     },
     onError: (e: any) => toast.error(e.message || "Failed to save"),
   });
