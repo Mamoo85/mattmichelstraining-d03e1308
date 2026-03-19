@@ -15,7 +15,6 @@ const TIERS = [
   { key: "tier_foundation", label: "Foundation", icon: Zap, color: "text-yellow-400" },
   { key: "tier_custom", label: "Custom", icon: ShieldCheck, color: "text-orange-400" },
   { key: "tier_team_elite", label: "Team/Elite", icon: Users, color: "text-green-400" },
-  { key: "tier_legend", label: "Legend", icon: Crown, color: "text-amber-400" },
 ] as const;
 
 type TierKey = typeof TIERS[number]["key"];
