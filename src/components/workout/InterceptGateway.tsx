@@ -38,6 +38,7 @@ const InterceptGateway = ({ onSelect, onExit }: InterceptGatewayProps) => {
   const navigate = useNavigate();
   const hasTemplateAccess = useMinTier("foundation");
   const [programs, setPrograms] = useState<PurchasedProgram[]>([]);
+  const [activePrograms, setActivePrograms] = useState<ActiveProgramEntry[]>([]);
   const [personalWorkouts, setPersonalWorkouts] = useState<CommunityWorkout[]>([]);
   const [masterTemplates, setMasterTemplates] = useState<CommunityWorkout[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,6 +54,11 @@ const InterceptGateway = ({ onSelect, onExit }: InterceptGatewayProps) => {
         .eq("is_active", true)
         .order("purchased_at", { ascending: false }),
       supabase
+        .from("user_active_programs" as any)
+        .select("id, program_id, training_programs(id, title, sport)")
+        .eq("user_id", user.id)
+        .eq("status", "active"),
+      supabase
         .from("community_workouts")
         .select("id, title, exercises, creator_name")
         .eq("user_id", user.id)
@@ -65,8 +71,15 @@ const InterceptGateway = ({ onSelect, onExit }: InterceptGatewayProps) => {
         .neq("user_id", user.id)
         .order("likes_count", { ascending: false })
         .limit(20),
-    ]).then(([progRes, personalRes, templateRes]) => {
+    ]).then(([progRes, activeRes, personalRes, templateRes]) => {
       setPrograms((progRes.data as PurchasedProgram[] | null) ?? []);
+      const mapped = ((activeRes.data as any[]) ?? []).map((a: any) => ({
+        id: a.id,
+        program_id: a.program_id,
+        program_title: a.training_programs?.title ?? "Program",
+        sport: a.training_programs?.sport ?? null,
+      }));
+      setActivePrograms(mapped);
       setPersonalWorkouts((personalRes.data as CommunityWorkout[] | null) ?? []);
       setMasterTemplates((templateRes.data as CommunityWorkout[] | null) ?? []);
       setLoading(false);
