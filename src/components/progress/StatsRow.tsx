@@ -19,13 +19,13 @@ const StatsRow = ({ current, delta, max, repMax }: StatsRowProps) => {
   };
 
   return (
-    <div className="grid grid-cols-3 gap-3 mb-4">
+    <div className="grid grid-cols-3 gap-4 mb-4">
       {stats.map((s) => {
         const a = accentMap[s.accent];
         return (
           <div
             key={s.label}
-            className="p-3 transition-all duration-300 group"
+            className="p-5 rounded-xl transition-all duration-300 group"
             style={{
               background: "hsl(var(--synth-card))",
               border: `1px solid ${a.border}`,
