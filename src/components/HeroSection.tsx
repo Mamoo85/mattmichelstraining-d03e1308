@@ -105,21 +105,30 @@ const HeroSection = () => {
           </motion.div>
         )}
 
-        {/* ─── 2. TECH SHOWCASE — The Edge ─── */}
+        {/* ─── 2. SPORT PICKER — What do you play? ─── */}
+        <SportPicker />
+
+        {/* ─── 3. ATHLETE RESULTS — Social proof ─── */}
+        <AthleteResults />
+
+        {/* ─── 4. TECH SHOWCASE — The Edge ─── */}
         <TechShowcaseCard />
 
-        {/* ─── 3. FOR PARENTS — Injury Prevention Hook ─── */}
+        {/* ─── 5. FREE WORKOUT TEASER ─── */}
+        <FreeWorkoutTeaser />
+
+        {/* ─── 6. FOR PARENTS — Injury Prevention Hook ─── */}
         <ForParentsCTA />
 
-        {/* ─── 4. MEMBER PORTAL (sneak peek) ─── */}
+        {/* ─── 7. MEMBER PORTAL (sneak peek) ─── */}
         <PortalEntrance />
 
-        {/* ─── 5. MONTHLY FOCUS ─── */}
+        {/* ─── 8. MONTHLY FOCUS ─── */}
         <div className="mb-8">
           <MonthlyFocus />
         </div>
 
-        {/* ─── 6. THE M² DIFFERENCE ─── */}
+        {/* ─── 9. THE M² DIFFERENCE ─── */}
         <M2Difference />
 
         {/* ─── 7. MEMBERSHIP CTA ─── */}
