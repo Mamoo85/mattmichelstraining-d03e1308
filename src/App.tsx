@@ -94,6 +94,7 @@ const ActiveWorkoutWrapper = () => {
       setZoneContext(detail);
       setZoneOpen(true);
       setHasPaused(false);
+      setPortalActive(true);
     };
     window.addEventListener("open-workout-zone", handler);
     return () => window.removeEventListener("open-workout-zone", handler);
