@@ -46,8 +46,41 @@ const Nutrition = () => {
   const [preview, setPreview] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
+  const [editingGoal, setEditingGoal] = useState(false);
+  const [goalInput, setGoalInput] = useState("");
 
-  // Fetch history
+  // Fetch calorie goal from profile
+  const { data: profile } = useQuery({
+    queryKey: ["profile-calorie-goal", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("daily_calorie_goal")
+        .eq("user_id", user!.id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const calorieGoal = (profile as any)?.daily_calorie_goal ?? 2000;
+
+  const updateGoalMutation = useMutation({
+    mutationFn: async (goal: number) => {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ daily_calorie_goal: goal } as any)
+        .eq("user_id", user!.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Calorie goal updated!");
+      queryClient.invalidateQueries({ queryKey: ["profile-calorie-goal"] });
+      setEditingGoal(false);
+    },
+    onError: (e: any) => toast.error(e.message || "Failed to update goal"),
+  });
   const { data: logs = [], isLoading: logsLoading } = useQuery({
     queryKey: ["nutrition-logs", user?.id],
     queryFn: async () => {
