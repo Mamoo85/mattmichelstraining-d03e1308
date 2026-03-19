@@ -196,7 +196,7 @@ const LogForm = ({ activeLift, repMax, effectiveUserId, onLogged }: LogFormProps
         <button
           onClick={handleLog}
           disabled={logging}
-          className="bg-primary text-primary-foreground px-5 h-9 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-50"
+          className="bg-primary text-primary-foreground px-5 h-9 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all duration-100 active:scale-95 disabled:opacity-50"
         >
           {logging ? "…" : "Log"}
         </button>
