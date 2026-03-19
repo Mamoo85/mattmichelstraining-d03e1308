@@ -109,6 +109,7 @@ const ActiveWorkoutWrapper = () => {
           setZoneContext(JSON.parse(saved));
           setZoneOpen(true);
           setHasPaused(false);
+          setPortalActive(true);
         } catch {}
       }
     };
