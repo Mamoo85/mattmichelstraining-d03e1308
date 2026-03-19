@@ -10,19 +10,18 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const authHeader = req.headers.get("Authorization") ?? "";
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
     // Verify admin
-    const anonClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!
-    );
+    const authHeader = req.headers.get("Authorization") ?? "";
     const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: authErr } = await anonClient.auth.getUser(token);
+    const { data: { user }, error: authErr } = await supabaseClient.auth.getUser(token);
     if (authErr || !user) throw new Error("Unauthorized");
 
     const { data: isAdmin } = await supabaseClient.rpc("has_role", { _user_id: user.id, _role: "admin" });
@@ -39,94 +38,109 @@ Deno.serve(async (req) => {
       .single();
     if (tErr || !ticket) throw new Error("Ticket not found");
 
-    // Fetch user context
-    const { data: profile } = await supabaseClient
-      .from("profiles")
-      .select("full_name, athlete_name, email, subscription_tier, trial_started_at, stripe_customer_id, is_in_person")
-      .eq("user_id", ticket.user_id)
-      .single();
+    // Fetch rich user context
+    const [profileRes, subsRes, bookingsRes, programsRes, workoutCountRes, pointsRes] = await Promise.all([
+      supabaseClient.from("profiles").select("full_name, athlete_name, email, subscription_tier, trial_started_at, stripe_customer_id, is_in_person, created_at").eq("user_id", ticket.user_id).single(),
+      supabaseClient.from("subscriptions").select("plan, status, stripe_subscription_id, current_period_end").eq("user_id", ticket.user_id).order("created_at", { ascending: false }).limit(3),
+      supabaseClient.from("session_bookings").select("session_type, slot_date, status, amount_cents").eq("user_id", ticket.user_id).order("created_at", { ascending: false }).limit(5),
+      supabaseClient.from("purchased_programs").select("program_title, program_type, purchased_at").eq("user_id", ticket.user_id).limit(10),
+      supabaseClient.from("workout_logs").select("date").eq("user_id", ticket.user_id),
+      supabaseClient.from("user_points").select("total_points, level, current_streak").eq("user_id", ticket.user_id).single(),
+    ]);
 
-    const { data: subscriptions } = await supabaseClient
-      .from("subscriptions")
-      .select("plan, status, stripe_subscription_id, current_period_end")
-      .eq("user_id", ticket.user_id)
-      .order("created_at", { ascending: false })
-      .limit(3);
+    const profile = profileRes.data;
+    const subscriptions = subsRes.data || [];
+    const recentBookings = bookingsRes.data || [];
+    const purchasedPrograms = programsRes.data || [];
+    const totalWorkouts = workoutCountRes.data?.length || 0;
+    const points = pointsRes.data;
 
-    const { data: recentBookings } = await supabaseClient
-      .from("session_bookings")
-      .select("session_type, slot_date, status, amount_cents")
-      .eq("user_id", ticket.user_id)
-      .order("created_at", { ascending: false })
-      .limit(5);
+    const memberSince = profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : "Unknown";
 
-    const { data: purchasedPrograms } = await supabaseClient
-      .from("purchased_programs")
-      .select("program_title, program_type, purchased_at")
-      .eq("user_id", ticket.user_id)
-      .limit(10);
+    const systemPrompt = `You are an AI support copilot for M² Training, Coach Matt Michels' strength & conditioning business.
+You analyze support tickets and propose concrete technical actions to resolve them.
 
-    // Build context for AI
-    const userContext = {
-      profile,
-      subscriptions,
-      recentBookings,
-      purchasedPrograms,
-    };
+USER PROFILE:
+- Name: ${profile?.athlete_name || profile?.full_name || "Unknown"}
+- Email: ${profile?.email}
+- Tier: ${profile?.subscription_tier || "free"}
+- Member Since: ${memberSince}
+- In-Person Client: ${profile?.is_in_person ? "Yes" : "No"}
+- Total Workouts: ${totalWorkouts}
+- Points: ${points?.total_points || 0} (${points?.level || "rookie"})
+- Streak: ${points?.current_streak || 0} days
+- Stripe Customer: ${profile?.stripe_customer_id ? "Yes" : "No"}
+- Trial Started: ${profile?.trial_started_at || "N/A"}
 
-    const systemPrompt = `You are an AI support copilot for M2 Training, a sports training business run by Coach Matt.
-You analyze support tickets submitted by users and propose concrete technical actions to resolve them.
+SUBSCRIPTIONS: ${JSON.stringify(subscriptions)}
+RECENT BOOKINGS: ${JSON.stringify(recentBookings)}
+PURCHASED PROGRAMS: ${JSON.stringify(purchasedPrograms)}
 
 Available actions you can propose (return as JSON array):
-- { "type": "tier_change", "from": "basic", "to": "foundation", "reason": "..." }
+- { "type": "tier_change", "from": "...", "to": "...", "reason": "..." }
 - { "type": "stripe_refund", "amount_cents": 1499, "reason": "..." }
 - { "type": "extend_trial", "days": 7, "reason": "..." }
 - { "type": "send_email", "subject": "...", "body_draft": "..." }
-- { "type": "manual_note", "note": "..." } (for things requiring manual intervention)
+- { "type": "manual_note", "note": "..." }
 
 Rules:
-- Always be specific about amounts, tiers, and actions.
-- Never propose actions that aren't warranted by the ticket.
-- If the issue is unclear, propose a "manual_note" action asking the admin to follow up.
-- Return a JSON object with "summary" (human-readable explanation) and "actions" (array of proposed actions).`;
+- Be specific about amounts, tiers, and actions
+- Never propose unwarranted actions
+- Consider the user's engagement level (workouts, streak, points) when assessing priority
+- For billing issues, check their subscription and Stripe data carefully
+- For access issues, check their tier and trial status
+- If the issue is unclear, propose a "manual_note" asking admin to follow up
+- Return valid JSON only: { "summary": "...", "priority": "low|medium|high|urgent", "actions": [...] }`;
 
     const userPrompt = `Support Ticket:
 Subject: ${ticket.subject}
 Body: ${ticket.body}
 Submitted: ${ticket.created_at}
 
-User Context:
-${JSON.stringify(userContext, null, 2)}
-
 Analyze this ticket and propose a resolution. Return valid JSON only.`;
 
-    // Call AI via Lovable proxy
-    const aiRes = await fetch("https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/ai-admin-assist", {
+    // Call AI gateway directly
+    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
-        Authorization: `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
-        apikey: Deno.env.get("SUPABASE_ANON_KEY")!,
       },
       body: JSON.stringify({
-        type: "support_triage",
-        context: { systemPrompt, userPrompt },
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
       }),
     });
 
     let aiResult: any;
     if (aiRes.ok) {
       const aiData = await aiRes.json();
-      const raw = aiData?.result || "{}";
+      const raw = aiData?.choices?.[0]?.message?.content || "{}";
       try {
         aiResult = typeof raw === "string"
           ? JSON.parse(raw.replace(/```json?\n?/g, "").replace(/```/g, "").trim())
           : raw;
       } catch {
-        aiResult = { summary: raw, actions: [] };
+        aiResult = { summary: raw, priority: "medium", actions: [] };
       }
     } else {
-      aiResult = { summary: "AI analysis unavailable. Please review manually.", actions: [{ type: "manual_note", note: "AI service returned an error." }] };
+      const status = aiRes.status;
+      if (status === 429) {
+        return new Response(JSON.stringify({ error: "Rate limited — try again in a moment." }), {
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (status === 402) {
+        return new Response(JSON.stringify({ error: "AI credits needed." }), {
+          status: 402,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      aiResult = { summary: "AI analysis unavailable. Please review manually.", priority: "medium", actions: [{ type: "manual_note", note: "AI service returned an error." }] };
     }
 
     // Update ticket with AI suggestion

@@ -29,6 +29,26 @@ serve(async (req) => {
     const userId = userData.user.id;
     const { type, context } = await req.json();
 
+    // ── Fetch rich athlete context for all types ──
+    const [profileRes, recentLogsRes, recentPRsRes, programsRes] = await Promise.all([
+      supabaseClient.from("profiles").select("full_name, athlete_name, subscription_tier, daily_calorie_goal, daily_protein_goal, auto_regulate, is_in_person").eq("user_id", userId).single(),
+      supabaseClient.from("workout_logs").select("date, sleep_hours, sleep_quality, soreness, energy, session_notes, duration_minutes").eq("user_id", userId).order("date", { ascending: false }).limit(14),
+      supabaseClient.from("progress_logs").select("exercise_name, weight, reps, estimated_1rm, logged_at").eq("user_id", userId).order("logged_at", { ascending: false }).limit(20),
+      supabaseClient.from("purchased_programs").select("program_title, sport, is_active").eq("user_id", userId).eq("is_active", true).limit(5),
+    ]);
+
+    const profile = profileRes.data;
+    const athleteName = profile?.athlete_name || profile?.full_name || "Athlete";
+    const recentLogs = recentLogsRes.data || [];
+    const recentPRs = recentPRsRes.data || [];
+    const activePrograms = programsRes.data || [];
+
+    const athleteContext = `
+ATHLETE: ${athleteName} | Tier: ${profile?.subscription_tier || "free"} | In-Person: ${profile?.is_in_person ? "Yes" : "No"}
+Active Programs: ${activePrograms.length > 0 ? activePrograms.map((p: any) => p.program_title).join(", ") : "None"}
+Recent Logs (${recentLogs.length}): ${recentLogs.slice(0, 7).map((l: any) => `${l.date}: Sleep ${l.sleep_hours || "?"}hrs, Soreness ${l.soreness || "?"}/10, Energy ${l.energy || "?"}/10`).join(" | ")}
+Recent Lifts: ${recentPRs.slice(0, 10).map((p: any) => `${p.exercise_name} ${p.weight}lbs x${p.reps}`).join(", ") || "None logged"}`;
+
     let systemPrompt = "";
     let userPrompt = "";
 
@@ -45,40 +65,83 @@ serve(async (req) => {
           .map((p: any) => `- "${p.title}" | Category: ${p.category} | Level: ${p.level} | Sport: ${p.sport || "General"} | $${p.price} | ${p.description}`)
           .join("\n");
 
-        systemPrompt = `You are Coach Matt Michels' AI intake assistant. You analyze an athlete's questionnaire answers and recommend the best training program from the available catalog. Be direct, knowledgeable, and practical. Explain WHY each recommendation fits their specific needs. If their goals involve injury prevention, mention the Fix It library (available with Pro+ subscriptions).`;
-        userPrompt = `Analyze this athlete's intake and recommend the best program(s):\n\nAge: ${context.age}\nSport: ${context.sport || "General fitness"}\nExperience Level: ${context.experience}\nGoals: ${context.goals}\nAvailable Equipment: ${context.equipment}\nInjury History: ${context.injuries || "None reported"}\nTraining Days Available: ${context.daysPerWeek || "3-4"}\n${context.additionalNotes ? `Additional Notes: ${context.additionalNotes}` : ""}\n\nAVAILABLE PROGRAMS:\n${programList}\n\nProvide:\n1. Your #1 recommendation with a clear explanation\n2. An alternative option\n3. Any important considerations for their injury history or goals\n4. Whether they should consider a subscription tier for ongoing coaching\n\nKeep it under 250 words. Be specific about which program and why.`;
+        systemPrompt = `You are Coach Matt Michels' AI intake assistant. You analyze an athlete's questionnaire answers and recommend the best training program from the available catalog. Be direct, knowledgeable, and practical. Explain WHY each recommendation fits their specific needs. Consider the athlete's existing training data below when making recommendations.
+
+${athleteContext}`;
+        userPrompt = `Analyze this athlete's intake and recommend the best program(s):
+
+Age: ${context.age}
+Sport: ${context.sport || "General fitness"}
+Experience Level: ${context.experience}
+Goals: ${context.goals}
+Available Equipment: ${context.equipment}
+Injury History: ${context.injuries || "None reported"}
+Training Days Available: ${context.daysPerWeek || "3-4"}
+${context.additionalNotes ? `Additional Notes: ${context.additionalNotes}` : ""}
+
+AVAILABLE PROGRAMS:
+${programList}
+
+Provide:
+1. Your #1 recommendation with a clear explanation tied to their goals and data
+2. An alternative option
+3. Important considerations for their injury history, current training load, or recovery patterns
+4. Whether they should consider a subscription tier for ongoing coaching
+
+Keep it under 300 words. Be specific about which program and why.`;
         break;
       }
 
       case "exercise_substitution": {
         const { data: exercises } = await supabaseClient
           .from("exercise_library")
-          .select("id, title, focus_area, sport, equipment_needed, the_why")
+          .select("id, title, focus_area, sport, equipment_needed, the_why, level")
           .order("title");
 
         const exerciseList = (exercises || [])
-          .map((e: any) => `- ${e.title} | Focus: ${e.focus_area?.join(", ")} | Equipment: ${e.equipment_needed}`)
+          .map((e: any) => `- ${e.title} | Focus: ${e.focus_area?.join(", ")} | Equipment: ${e.equipment_needed} | Level: ${e.level}`)
           .join("\n");
 
-        systemPrompt = `You are Coach Matt Michels' exercise substitution assistant. When an athlete can't do an exercise (missing equipment, injury limitation, etc.), you suggest the best alternatives from the M² exercise library. Always explain WHY the substitution works — what movement pattern, muscle group, or training effect is preserved. Be direct and practical.`;
-        userPrompt = `The athlete needs a substitution:\n\nOriginal Exercise: ${context.exerciseName}\nReason: ${context.reason}\nAvailable Equipment: ${context.availableEquipment || "Bodyweight only"}\n${context.injuryNotes ? `Injury/Limitation: ${context.injuryNotes}` : ""}\n\nEXERCISE LIBRARY:\n${exerciseList}\n\nSuggest 2-3 alternatives ranked by best fit. For each:\n- Exercise name (must be from the library above)\n- Why it's a good substitute (what movement pattern/muscle group it preserves)\n- Any modifications needed\n\nKeep it under 200 words.`;
+        systemPrompt = `You are Coach Matt Michels' exercise substitution assistant. When an athlete can't do an exercise, suggest the best alternatives from the M² exercise library. Always explain WHY the substitution works — what movement pattern, muscle group, or training effect is preserved. Consider this athlete's training level and recent lifts.
+
+${athleteContext}`;
+        userPrompt = `The athlete needs a substitution:
+
+Original Exercise: ${context.exerciseName}
+Reason: ${context.reason}
+Available Equipment: ${context.availableEquipment || "Bodyweight only"}
+${context.injuryNotes ? `Injury/Limitation: ${context.injuryNotes}` : ""}
+
+EXERCISE LIBRARY:
+${exerciseList}
+
+Suggest 2-3 alternatives ranked by best fit. For each:
+- Exercise name (must be from the library above)
+- Why it's a good substitute (what movement pattern/muscle group it preserves)
+- Sets/reps recommendation based on their training level
+- Any modifications needed
+
+Keep it under 250 words.`;
         break;
       }
 
       case "recovery_advisor": {
-        const { data: recentLogs } = await supabaseClient
-          .from("workout_logs")
-          .select("date, sleep_hours, sleep_quality, soreness, energy, session_notes")
-          .eq("user_id", userId)
-          .order("date", { ascending: false })
-          .limit(14);
+        systemPrompt = `You are Coach Matt Michels' AI recovery advisor. Analyze an athlete's recent sleep, soreness, and energy data to provide actionable recovery recommendations. Be direct, science-backed, and practical. Reference SPECIFIC trends and data points you see. Never recommend skipping training — instead suggest modifications. Consider their active programs and recent lift numbers.
 
-        const logSummary = (recentLogs || [])
-          .map((l: any) => `${l.date}: Sleep ${l.sleep_hours || "?"}hrs (quality: ${l.sleep_quality || "?"}), Soreness: ${l.soreness || "?"}/10, Energy: ${l.energy || "?"}/10${l.session_notes ? ` — "${l.session_notes}"` : ""}`)
-          .join("\n");
+${athleteContext}`;
+        userPrompt = `Analyze this athlete's recovery data and provide personalized recommendations:
 
-        systemPrompt = `You are Coach Matt Michels' AI recovery advisor. Analyze an athlete's recent sleep, soreness, and energy data to provide actionable recovery recommendations. Be direct, science-backed, and practical. Reference trends you see in the data. Never recommend skipping training entirely — instead suggest modifications. Include hydration, nutrition, and sleep hygiene tips when relevant.`;
-        userPrompt = `Analyze this athlete's last 14 sessions of recovery data and provide recommendations:\n\n${logSummary || "No recovery data logged yet."}\n\nProvide:\n1. Key trends you notice (improving, declining, inconsistent?)\n2. Top 2-3 actionable recommendations\n3. Whether they should modify their training intensity this week\n4. One recovery habit to focus on\n\nKeep it under 200 words. Be specific about what the data shows.`;
+DETAILED RECOVERY LOG:
+${recentLogs.length > 0 ? recentLogs.map((l: any) => `${l.date}: Sleep ${l.sleep_hours || "?"}hrs (quality: ${l.sleep_quality || "?"}), Soreness: ${l.soreness || "?"}/10, Energy: ${l.energy || "?"}/10, Duration: ${l.duration_minutes || "?"}min${l.session_notes ? ` — "${l.session_notes}"` : ""}`).join("\n") : "No recovery data logged yet."}
+
+Provide:
+1. **Recovery Score** — 🟢 Good / 🟡 Caution / 🔴 At Risk
+2. Key trends (improving, declining, inconsistent?)
+3. Top 3 actionable recommendations specific to their data
+4. Training intensity guidance for this week (reference specific lifts)
+5. One recovery habit to focus on
+
+Keep it under 300 words. Reference specific data points.`;
         break;
       }
 
@@ -122,7 +185,7 @@ serve(async (req) => {
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || "";
 
-    // Queue the result for admin approval instead of returning directly
+    // Queue the result for admin approval
     const { error: queueError } = await supabaseClient
       .from("ai_action_queue")
       .insert({
@@ -135,7 +198,6 @@ serve(async (req) => {
 
     if (queueError) {
       console.error("Failed to queue AI action:", queueError);
-      // Fall through and return result anyway if queue fails
       return new Response(JSON.stringify({ result: content }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
