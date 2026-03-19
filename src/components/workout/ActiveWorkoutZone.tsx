@@ -75,6 +75,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
     initialContext?.resumedExercises || []
   );
   const [saving, setSaving] = useState(false);
+  const { save: saveWorkout, saving: savingWorkout } = useWorkoutSave();
   const [showPicker, setShowPicker] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [recovery, setRecovery] = useState<RecoveryData>(
