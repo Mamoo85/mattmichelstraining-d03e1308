@@ -436,7 +436,16 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowIntervalTimer(true)}
+              className="text-xs gap-1 text-muted-foreground hover:text-primary"
+              title="Interval Timer"
+            >
+              <Clock size={14} />
+            </Button>
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="sm" className="text-xs font-mono gap-1">
