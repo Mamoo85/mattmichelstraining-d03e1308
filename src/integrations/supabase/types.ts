@@ -1213,6 +1213,42 @@ export type Database = {
         }
         Relationships: []
       }
+      posture_requests: {
+        Row: {
+          analysis: string | null
+          created_at: string
+          front_photo_url: string | null
+          id: string
+          promo_code: string | null
+          side_photo_url: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          analysis?: string | null
+          created_at?: string
+          front_photo_url?: string | null
+          id?: string
+          promo_code?: string | null
+          side_photo_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          analysis?: string | null
+          created_at?: string
+          front_photo_url?: string | null
+          id?: string
+          promo_code?: string | null
+          side_photo_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           category: string
