@@ -238,7 +238,7 @@ serve(async (req) => {
       });
     }
 
-    return new Response(JSON.stringify({ queued: true, message: "AI response queued for admin approval" }), {
+    return new Response(JSON.stringify({ queued: true, result: content, message: "AI response queued for admin approval" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
