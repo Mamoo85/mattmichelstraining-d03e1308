@@ -39,7 +39,7 @@ const StoreGettingStarted = () => {
           </h1>
           <p className="text-sm text-muted-foreground max-w-lg leading-relaxed">
             Start with a monthly 1-on-1 session. Matt builds your foundation, tracks your movement with 
-            <strong className="text-foreground"> proprietary AI biomechanics technology</strong>, and programs 
+            <strong className="text-foreground"> advanced biomechanics technology</strong>, and programs 
             everything around what your body actually needs. Add sessions at a discount as you grow.
           </p>
           <div className="flex flex-wrap gap-3 pt-1">
