@@ -14,6 +14,7 @@ import RecoveryInput, { type RecoveryData } from "./RecoveryInput";
 import VoiceNoteButton from "./VoiceNoteButton";
 import ConfirmActionModal from "@/components/ConfirmActionModal";
 import PostWorkoutSummary from "./PostWorkoutSummary";
+import LiveFormTracker from "./LiveFormTracker";
 import type { LoggedExerciseData } from "./WorkoutLogger";
 
 /* ─── Context types ─── */
