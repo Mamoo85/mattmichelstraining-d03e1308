@@ -54,6 +54,12 @@ const DashboardHome = memo(({ isNewUser, onViewPoints, onViewReferrals }: Dashbo
 
   return (
   <div className="space-y-6">
+    <Suspense fallback={null}>
+      {showWelcome && (
+        <WelcomeGiftModal open={showWelcome} onClose={() => setShowWelcome(false)} />
+      )}
+    </Suspense>
+
     {isNewUser && (
       <EmptyStateCard
         title="Welcome to M²"
