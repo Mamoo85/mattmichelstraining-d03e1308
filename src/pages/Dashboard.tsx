@@ -172,17 +172,7 @@ const Dashboard = () => {
         </Suspense>
       </div>
 
-      {/* Floating timer */}
-      {!showTimer && (
-        <button
-          onClick={() => setShowTimer(true)}
-          className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:opacity-90 transition-all rounded-full mb-[env(safe-area-inset-bottom)]"
-          aria-label="Open interval timer"
-        >
-          <Timer size={24} />
-        </button>
-      )}
-      {showTimer && <IntervalTimer onClose={() => setShowTimer(false)} />}
+      {/* Timer moved to ActiveWorkoutZone */}
 
       {/* Trial banner */}
       {isOnTrial && !subscribed && !isAdmin && !isLegend && (
