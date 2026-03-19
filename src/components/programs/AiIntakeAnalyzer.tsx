@@ -59,7 +59,7 @@ const AiIntakeAnalyzer = () => {
     <div className="bg-card shadow-m2 p-5">
       <div className="flex items-center gap-2 mb-4">
         <Brain size={18} className="text-primary" />
-        <h3 className="text-sm font-bold text-foreground">AI Program Finder</h3>
+        <h3 className="text-sm font-bold text-foreground">Program Finder</h3>
         <span className="text-[10px] text-muted-foreground">Tell us about your athlete — we'll recommend the right program</span>
       </div>
 

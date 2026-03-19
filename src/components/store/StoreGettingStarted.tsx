@@ -271,7 +271,7 @@ const StoreGettingStarted = () => {
             <div className="text-primary font-mono font-bold text-lg leading-none mt-0.5">$100</div>
             <div>
               <p className="text-xs font-bold text-foreground">M² Custom</p>
-              <p className="text-[11px] text-muted-foreground">AI custom program builder + 1-on-1 video assessment + direct messaging.</p>
+              <p className="text-[11px] text-muted-foreground">Fully custom program from Matt + 1-on-1 video assessment + direct messaging.</p>
             </div>
           </div>
           <div className="bg-card shadow-m2 p-4 flex gap-3">
