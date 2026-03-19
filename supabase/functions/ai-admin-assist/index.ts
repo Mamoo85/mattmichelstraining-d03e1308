@@ -65,12 +65,26 @@ serve(async (req) => {
       case "draft_reply":
       case "coach_reply":
       case "program_reply": {
-        systemPrompt = `You are Coach Matt Michels, a strength & conditioning coach with 20+ years of experience training athletes of all ages. You give direct, knowledgeable, encouraging feedback on exercise form and performance. Keep replies conversational, under 100 words. Reference the specific exercise data provided. Use your signature style: practical, real, no-BS coaching.`;
+        // Fetch athlete context for personalized replies
+        let athleteData = "";
+        if (context._targetUserId) {
+          const [profRes, logsRes, prsRes] = await Promise.all([
+            supabaseClient.from("profiles").select("full_name, athlete_name, subscription_tier, is_in_person").eq("user_id", context._targetUserId).single(),
+            supabaseClient.from("workout_logs").select("date, soreness, energy, sleep_hours").eq("user_id", context._targetUserId).order("date", { ascending: false }).limit(7),
+            supabaseClient.from("progress_logs").select("exercise_name, weight, reps, logged_at").eq("user_id", context._targetUserId).order("logged_at", { ascending: false }).limit(10),
+          ]);
+          const prof = profRes.data;
+          const logs = logsRes.data || [];
+          const prs = prsRes.data || [];
+          athleteData = `\n\nATHLETE CONTEXT:\n- Name: ${prof?.athlete_name || prof?.full_name || "Unknown"}\n- Tier: ${prof?.subscription_tier}\n- In-Person: ${prof?.is_in_person ? "Yes" : "No"}\n- Recent Recovery: ${logs.slice(0, 3).map((l: any) => `${l.date}: Sleep ${l.sleep_hours || "?"}hrs, Soreness ${l.soreness || "?"}/10`).join(" | ")}\n- Recent Lifts: ${prs.slice(0, 5).map((p: any) => `${p.exercise_name} ${p.weight}lbs x${p.reps}`).join(", ")}`;
+        }
+
+        systemPrompt = `You are Coach Matt Michels, a strength & conditioning coach with 20+ years of experience training athletes of all ages. You give direct, knowledgeable, encouraging feedback on exercise form and performance. Keep replies conversational, under 100 words. Reference the specific exercise data and athlete context provided. Use your signature style: practical, real, no-BS coaching. Use proper grammar — no text slang.${athleteData}`;
         
         if (context.source === "program_message" || type === "program_reply") {
-          userPrompt = `An athlete asked about their program:\n\nProgram: ${context.programTitle || "Training Program"}\nExercise: ${context.exerciseName}\nWeek ${context.weekNumber || "?"}, Day ${context.dayNumber || "?"}\nTheir question: "${context.message || ""}"\n${context.videoUrl ? "They attached a form check video." : ""}\n\nWrite a helpful coaching reply.`;
+          userPrompt = `An athlete asked about their program:\n\nProgram: ${context.programTitle || "Training Program"}\nExercise: ${context.exerciseName}\nWeek ${context.weekNumber || "?"}, Day ${context.dayNumber || "?"}\nTheir question: "${context.message || ""}"\n${context.videoUrl ? "They attached a form check video." : ""}\n\nWrite a helpful coaching reply. Reference their recent lift numbers and recovery data if relevant.`;
         } else {
-          userPrompt = `Write coaching feedback for this flagged exercise:\n\nExercise: ${context.exerciseName}\nSets/Reps/Weight: ${context.setsRepsWeight || "Not specified"}\nClient Notes: ${context.clientNotes || "None"}\nHas Video: ${context.hasVideo ? "Yes" : "No"}\n\nWrite a helpful, specific coaching reply.`;
+          userPrompt = `Write coaching feedback for this flagged exercise:\n\nExercise: ${context.exerciseName}\nSets/Reps/Weight: ${context.setsRepsWeight || "Not specified"}\nClient Notes: ${context.clientNotes || "None"}\nHas Video: ${context.hasVideo ? "Yes" : "No"}\n\nWrite a helpful, specific coaching reply. Reference their recent training data if relevant.`;
         }
         break;
       }
@@ -124,7 +138,19 @@ serve(async (req) => {
       }
 
       case "form_check": {
-        systemPrompt = `You are Coach Matt Michels reviewing an athlete's exercise form. Based on the exercise and any notes/context provided, write detailed form coaching feedback. Be specific about common mistakes, cues to fix them, and what to look for. Reference biomechanics and the WHY behind each cue. Be encouraging but direct. Under 200 words.`;
+        // Fetch athlete context for personalized form checks
+        let fcAthleteData = "";
+        if (context._targetUserId) {
+          const [profRes, prsRes] = await Promise.all([
+            supabaseClient.from("profiles").select("full_name, athlete_name, subscription_tier").eq("user_id", context._targetUserId).single(),
+            supabaseClient.from("progress_logs").select("exercise_name, weight, reps, logged_at").eq("user_id", context._targetUserId).eq("exercise_name", context.exerciseName).order("logged_at", { ascending: false }).limit(5),
+          ]);
+          const prof = profRes.data;
+          const history = prsRes.data || [];
+          fcAthleteData = `\n\nATHLETE HISTORY on ${context.exerciseName}:\n- ${history.map((h: any) => `${new Date(h.logged_at).toLocaleDateString()}: ${h.weight}lbs x ${h.reps}`).join("\n- ") || "No previous logs"}`;
+        }
+
+        systemPrompt = `You are Coach Matt Michels reviewing an athlete's exercise form. Based on the exercise and any notes/context provided, write detailed form coaching feedback. Be specific about common mistakes, cues to fix them, and what to look for. Reference biomechanics and the WHY behind each cue. Be encouraging but direct. Reference their exercise history when available. Under 200 words.${fcAthleteData}`;
         userPrompt = `Write form check feedback for this athlete:\n\nExercise: ${context.exerciseName}\nAthlete: ${context.athleteName || "Unknown"}\nSets/Reps Prescribed: ${context.setsReps || "Not specified"}\nClient Notes: ${context.clientNotes || "None"}\nHas Video: ${context.hasVideo ? "Yes — reference that you reviewed their video" : "No video submitted"}\nTier: ${context.tier || "Unknown"}\n\nWrite detailed coaching feedback covering:\n1. Key form cues for this specific exercise\n2. Common mistakes to watch for\n3. A specific correction based on their notes (if any)\n4. Encouragement and what to focus on next session\n\nSound like Matt — direct, knowledgeable, no-BS coaching.`;
         break;
       }

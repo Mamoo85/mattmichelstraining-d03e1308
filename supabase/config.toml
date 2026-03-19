@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.churn-radar]
 verify_jwt = false
+
+[functions.ai-athlete-stream]
+verify_jwt = false

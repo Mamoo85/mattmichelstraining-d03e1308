@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Sparkles, Loader2, RefreshCw } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { Sparkles, Loader2, RefreshCw, StopCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { useAiStream } from "@/hooks/useAiStream";
 import ReactMarkdown from "react-markdown";
 
 interface AiExerciseSubstitutionProps {
@@ -30,35 +30,21 @@ const AiExerciseSubstitution = ({ exerciseName, onClose }: AiExerciseSubstitutio
   const [reason, setReason] = useState("");
   const [availableEquipment, setAvailableEquipment] = useState("");
   const [injuryNotes, setInjuryNotes] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<string | null>(null);
+
+  const { stream, streaming, content, error, abort, reset } = useAiStream({
+    functionName: "ai-athlete-stream",
+  });
 
   const handleSubstitute = async () => {
     if (!reason) {
       toast({ title: "Select a reason", variant: "destructive" });
       return;
     }
-    setLoading(true);
-    setResult(null);
-    try {
-      const { data, error } = await supabase.functions.invoke("ai-athlete-assist", {
-        body: {
-          type: "exercise_substitution",
-          context: { exerciseName, reason, availableEquipment, injuryNotes },
-        },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      if (data?.queued) {
-        setResult("✅ Your substitution request has been submitted for Coach Matt's review. You'll get a notification when it's ready.");
-      } else {
-        setResult(data.result);
-      }
-    } catch (e: any) {
-      toast({ title: "Substitution failed", description: e.message, variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
+    reset();
+    await stream({
+      type: "exercise_substitution",
+      context: { exerciseName, reason, availableEquipment, injuryNotes },
+    });
   };
 
   return (
@@ -70,12 +56,19 @@ const AiExerciseSubstitution = ({ exerciseName, onClose }: AiExerciseSubstitutio
             Find a Substitute for "{exerciseName}"
           </span>
         </div>
-        {onClose && (
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground text-xs">✕</button>
-        )}
+        <div className="flex items-center gap-2">
+          {streaming && (
+            <button onClick={abort} className="text-destructive hover:text-destructive/80 text-xs">
+              <StopCircle size={14} />
+            </button>
+          )}
+          {onClose && (
+            <button onClick={onClose} className="text-muted-foreground hover:text-foreground text-xs">✕</button>
+          )}
+        </div>
       </div>
 
-      {!result ? (
+      {!content && !streaming ? (
         <>
           <div className="grid grid-cols-2 gap-2 mb-3">
             <div>
@@ -105,21 +98,31 @@ const AiExerciseSubstitution = ({ exerciseName, onClose }: AiExerciseSubstitutio
             </div>
           )}
 
-          <button onClick={handleSubstitute} disabled={loading}
+          <button onClick={handleSubstitute} disabled={streaming}
             className="w-full bg-primary text-primary-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-m2 flex items-center justify-center gap-2 disabled:opacity-50">
-            {loading ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
-            {loading ? "Finding alternatives…" : "Find Substitutes"}
+            <Sparkles size={12} />
+            Find Substitutes
           </button>
         </>
       ) : (
         <div>
           <div className="prose prose-sm max-w-none text-foreground text-xs leading-relaxed">
-            <ReactMarkdown>{result}</ReactMarkdown>
+            <ReactMarkdown>{content}</ReactMarkdown>
+            {streaming && (
+              <span className="inline-block w-1.5 h-3.5 bg-primary animate-pulse ml-0.5 align-text-bottom" />
+            )}
           </div>
-          <button onClick={() => setResult(null)}
-            className="text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-m2 mt-2">
-            ← Try Again
-          </button>
+          {error && (
+            <div className="bg-destructive/10 border border-destructive/20 p-3 mt-2">
+              <p className="text-xs text-destructive">{error}</p>
+            </div>
+          )}
+          {!streaming && (
+            <button onClick={() => { reset(); setReason(""); }}
+              className="text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-m2 mt-2">
+              ← Try Again
+            </button>
+          )}
         </div>
       )}
     </div>
