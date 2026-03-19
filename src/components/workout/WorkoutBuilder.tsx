@@ -28,6 +28,7 @@ const WorkoutBuilder = ({ onSaved, onClose }: WorkoutBuilderProps) => {
   const [showPicker, setShowPicker] = useState(false);
   const [saving, setSaving] = useState(false);
   const [shareToBank, setShareToBank] = useState(true);
+  const [savedWorkout, setSavedWorkout] = useState<{ title: string; exercises: WorkoutExercise[] } | null>(null);
 
   const addExercise = (id: string, titleStr: string) => {
     setExercises((prev) => [
