@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useFamilyUserIds } from "@/hooks/useFamilyUserIds";
 import { Loader2, Dumbbell, MessageSquare, ShoppingBag, ChevronLeft, ChevronRight, Printer, Play } from "lucide-react";
 import EmptyStateCard from "./EmptyStateCard";
 import { Link } from "react-router-dom";
