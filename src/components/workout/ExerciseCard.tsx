@@ -173,7 +173,7 @@ const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTrac
                   type="url"
                   placeholder="Form check video link…"
                   value={exercise.videoUrl}
-                  onChange={(e) => onUpdate({ videoUrl: e.target.value })}
+                  onChange={(e) => onUpdate(index, { videoUrl: e.target.value })}
                   className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
                 />
               </div>
