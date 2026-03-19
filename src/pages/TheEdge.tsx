@@ -468,7 +468,7 @@ const FEATURES: TechFeature[] = [
       "Realtime messaging via database subscriptions",
       "Video attachment support for form checks",
       "Read receipts and notification system",
-      "Admin inbox with AI-assisted triage for priority routing",
+      "Smart inbox with priority routing for urgent questions",
     ],
     demoComponent: CoachDMDemo,
   },
