@@ -92,7 +92,29 @@ const HeroSection = () => {
         {/* ─── 5. THE M² DIFFERENCE ─── */}
         <M2Difference />
 
-        {/* ─── 6. MEMBERSHIP CTA ─── */}
+        {/* ─── 6. DEEP DIVE ─── */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4 }}
+          className="mb-6 space-y-3"
+        >
+          <Link
+            to="/shop"
+            className="flex items-center justify-center gap-2 w-full bg-primary text-primary-foreground py-4 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
+          >
+            <Star size={14} /> Browse Programs <ArrowRight size={14} />
+          </Link>
+          <Link
+            to="/pricing"
+            className="flex items-center justify-center gap-2 w-full border-2 border-primary text-primary py-4 text-xs font-bold uppercase tracking-widest hover:bg-primary/10 transition-m2"
+          >
+            Compare Monthly Plans <ArrowRight size={14} />
+          </Link>
+        </motion.div>
+
+        {/* ─── 7. MEMBERSHIP CTA ─── */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
