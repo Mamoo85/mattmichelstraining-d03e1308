@@ -77,6 +77,13 @@ const GlobalTimer = () => {
   return <IntervalTimer onClose={closeTimer} />;
 };
 
+const AuthBottomNav = () => {
+  const { user } = useAuth();
+  const isMobile = useIsMobile();
+  if (!user || !isMobile) return null;
+  return <BottomNav />;
+};
+
 const ReferralCaptureWrapper = () => {
   useReferralCapture();
   return null;
