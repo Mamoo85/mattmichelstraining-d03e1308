@@ -139,6 +139,7 @@ const Admin = () => {
                 <div className="border-t border-border pt-6"><AdminCoachDashboard /></div>
               </div>
             )},
+            { key: "posture", label: "Posture Requests", content: <AdminPostureRequests /> },
             { key: "messages", label: "Messages", content: <AdminDirectMessages /> },
             { key: "videos", label: "Videos", content: <AdminVideoReview /> },
             { key: "families", label: "Families & Teams", content: (
