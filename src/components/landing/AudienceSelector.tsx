@@ -12,11 +12,11 @@ const AUDIENCES = [
     label: "I Want to Train",
     icon: HeartPulse,
     route: "/shop",
-    desc: "Whether you're 12 or 60 — real coaching, real programs, real results.",
+    desc: "Get faster. Get stronger. Dominate your season. Programs for every sport and level.",
     peek: sneakAthlete,
     peekAlt: "Training programs and workout builder",
     cta: "Browse Programs",
-    peekCaption: "Custom programs for athletes, adults, and anyone who wants to get stronger — not just look strong.",
+    peekCaption: "Your playbook for getting recruited, making varsity, or just being the hardest worker on the field.",
   },
   {
     label: "I'm a Parent",

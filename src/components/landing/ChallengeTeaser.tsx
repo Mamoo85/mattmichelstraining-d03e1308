@@ -44,6 +44,12 @@ const ChallengeTeaser = () => {
       });
   }, []);
 
+  const TOP_3 = [
+    { rank: 1, name: "Jake M.", value: 215, avatar: "🥇" },
+    { rank: 2, name: "Riley S.", value: 188, avatar: "🥈" },
+    { rank: 3, name: "Aiden T.", value: 172, avatar: "🥉" },
+  ];
+
   return (
     <div className="relative bg-card border-2 border-border overflow-hidden">
       {/* Header */}
@@ -62,48 +68,46 @@ const ChallengeTeaser = () => {
         )}
       </div>
 
-      {/* Blurred chart teaser */}
-      <div className="relative h-36 mx-5 mb-2">
-        <div className="absolute inset-0 blur-[6px] opacity-60 select-none pointer-events-none">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={FAKE_DATA} margin={{ top: 5, right: 5, left: 5, bottom: 0 }}>
-              <defs>
-                <linearGradient id="teaserGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="hsl(18, 82%, 50%)" stopOpacity={0.5} />
-                  <stop offset="100%" stopColor="hsl(18, 82%, 50%)" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <ReferenceLine y={180} stroke="hsl(0,0%,35%)" strokeDasharray="4 4" strokeWidth={1} />
-              <Area
-                type="monotone"
-                dataKey="v"
-                stroke="hsl(18, 82%, 50%)"
-                strokeWidth={2}
-                fill="url(#teaserGrad)"
-                dot={false}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Stats overlay */}
-        <div className="absolute inset-0 flex items-end justify-between px-1 pb-1 blur-[4px] opacity-40 select-none pointer-events-none">
-          <div className="flex items-baseline gap-1">
-            <span className="text-2xl font-mono font-black text-primary">172</span>
-            <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">reps</span>
+      {/* Public top-3 leaderboard */}
+      <div className="px-5 pb-2 space-y-1.5">
+        {TOP_3.map((entry) => (
+          <div
+            key={entry.rank}
+            className={`flex items-center gap-3 px-3 py-2.5 ${
+              entry.rank === 1
+                ? "bg-primary/10 border border-primary/30"
+                : "bg-muted/30 border border-transparent"
+            }`}
+          >
+            <span className="text-base">{entry.avatar}</span>
+            <span className="text-xs font-bold text-foreground flex-1">
+              {entry.name}
+            </span>
+            <span className="text-sm font-black font-mono text-primary">
+              {entry.value}
+            </span>
           </div>
-          <div className="flex items-center gap-1 text-primary">
-            <TrendingUp size={12} />
-            <span className="text-[9px] font-bold uppercase tracking-widest">+22 today</span>
-          </div>
-        </div>
+        ))}
+      </div>
 
-        {/* Lock overlay */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/30 backdrop-blur-[2px]">
-          <Lock size={20} className="text-primary mb-2" />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-            Members Only
-          </span>
+      {/* Blurred remaining spots */}
+      <div className="relative mx-5 mb-2">
+        <div className="space-y-1 blur-[4px] opacity-40 select-none pointer-events-none">
+          {[4, 5, 6].map((r) => (
+            <div key={r} className="flex items-center gap-3 bg-muted/30 px-3 py-2">
+              <span className="text-[10px] font-mono text-muted-foreground w-4">{r}</span>
+              <span className="text-xs text-muted-foreground flex-1">████████</span>
+              <span className="text-xs font-mono text-muted-foreground">███</span>
+            </div>
+          ))}
+        </div>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="flex items-center gap-2">
+            <Lock size={14} className="text-primary" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Join to see full leaderboard
+            </span>
+          </div>
         </div>
       </div>
 
