@@ -73,8 +73,8 @@ const PageLoader = () => (
 );
 
 const GlobalTimer = () => {
-  const { timerOpen, closeTimer } = useTimer();
-  if (!timerOpen) return null;
+  const { timerOpen, closeTimer, portalActive } = useTimer();
+  if (!timerOpen || portalActive) return null;
   return <IntervalTimer onClose={closeTimer} />;
 };
 
