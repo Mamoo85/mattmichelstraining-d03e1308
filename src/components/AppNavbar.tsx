@@ -173,4 +173,4 @@ const AppNavbar = () => {
   );
 };
 
-export default AppNavbar;
+export default memo(AppNavbar);
