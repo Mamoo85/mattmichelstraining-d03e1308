@@ -25,11 +25,26 @@ const ForParentsHero = ({ cms }: Props) => (
           </span>
         </div>
         <h1 className="text-2xl md:text-5xl lg:text-6xl font-bold tracking-display text-foreground leading-[1.1]">
-          <motion.span {...fade(0.15)} className="block">{cms.hero_line_1 || "Your athlete's body"}</motion.span>
-          <motion.span {...fade(0.25)} className="block">{cms.hero_line_2 || "is not a science experiment."}</motion.span>
+          <motion.span {...fade(0.15)} className="block">{cms.hero_line_1 || "3.5 million youth sports injuries"}</motion.span>
+          <motion.span {...fade(0.25)} className="block text-primary">{cms.hero_line_2 || "per year. Half are preventable."}</motion.span>
         </h1>
       </div>
     </div>
+
+    {/* Stat proof bar */}
+    <div className="flex flex-wrap gap-4 sm:gap-8 mb-5">
+      {[
+        { val: "20+", lbl: "Years Coaching Youth" },
+        { val: "50+", lbl: "College Athletes Produced" },
+        { val: "0", lbl: "Training Injuries" },
+      ].map((s) => (
+        <div key={s.lbl} className="flex items-center gap-2">
+          <span className="text-xl font-black text-primary font-mono">{s.val}</span>
+          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground leading-tight">{s.lbl}</span>
+        </div>
+      ))}
+    </div>
+
     <p className="text-sm md:text-base text-muted-foreground max-w-2xl mb-6 leading-relaxed">
       {cms.hero_subtitle || "Most youth training programs are built by people who learned from social media — not from 20 years of watching what actually breaks down in a young athlete's body. Matt has trained thousands of kids. 50+ went on to compete at the college level. Zero got injured. That's not a slogan — it's a track record."}
     </p>

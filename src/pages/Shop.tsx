@@ -8,7 +8,7 @@ import FixItLibrary from "@/components/FixItLibrary";
 import PaywallGate from "@/components/PaywallGate";
 
 const TABS = [
-  { key: "start", label: "Getting Started" },
+  { key: "start", label: "How It Works" },
   { key: "store", label: "Store" },
   { key: "library", label: "Exercise Library" },
   { key: "fixit", label: "Fix It Library" },
