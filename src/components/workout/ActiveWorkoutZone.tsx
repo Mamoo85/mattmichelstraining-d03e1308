@@ -316,8 +316,9 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
       }));
 
       const { error: exErr } = await supabase.from("logged_exercises").insert(rows);
-    if (exErr) {
-      toast.error(exErr.message || "Exercises failed to save");
+      if (exErr) {
+        toast.error(exErr.message || "Exercises failed to save");
+      }
     }
 
     // Clear paused state
