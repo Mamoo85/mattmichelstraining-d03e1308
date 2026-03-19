@@ -179,7 +179,7 @@ const BodyAvatar = ({ activeLift }: BodyAvatarProps) => {
             return (m.view === "back" || m.view === "both") && activeMs.includes(key);
           })
           .map(([key, muscle]) => (
-            <path
+          <path
               key={key}
               d={muscle.d}
               fill={`url(#thermal-${view})`}
@@ -187,7 +187,7 @@ const BodyAvatar = ({ activeLift }: BodyAvatarProps) => {
               stroke="hsl(0, 90%, 50%)"
               strokeWidth="0.6"
               filter={`url(#thermalGlow-${view})`}
-              className="print:fill-gray-600 print:stroke-gray-800 print:[filter:none]"
+              className="avatar-muscle-active"
             />
           ))}
       </svg>
