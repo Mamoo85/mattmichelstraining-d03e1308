@@ -50,7 +50,7 @@ const TronChart = ({ data, repMax }: TronChartProps) => {
 
   return (
     <div
-      className="p-4 border"
+      className="p-6 border rounded-xl"
       style={{
         background: "hsl(var(--synth-card))",
         borderColor: "hsl(var(--synth-cyan) / 0.15)",

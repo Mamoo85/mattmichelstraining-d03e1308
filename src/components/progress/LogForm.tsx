@@ -136,7 +136,7 @@ const LogForm = ({ activeLift, repMax, effectiveUserId, onLogged }: LogFormProps
   };
 
   return (
-    <div className="mt-4 mb-4 p-4 bg-card border border-border">
+    <div className="mt-4 mb-4 p-6 bg-card border border-border rounded-xl">
       <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-2">
         Log {activeLift}
       </span>

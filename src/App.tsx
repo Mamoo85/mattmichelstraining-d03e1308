@@ -16,9 +16,12 @@ import ScrollToTop from "@/components/ScrollToTop";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import OfflineBadge from "@/components/OfflineBadge";
 import AnnouncementBanner from "@/components/AnnouncementBanner";
+import BottomNav from "@/components/BottomNav";
 
 import { useTimer } from "@/hooks/useTimer";
+import { useAuth } from "@/hooks/useAuth";
 import { useReferralCapture } from "@/hooks/useReferral";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Loader2 } from "lucide-react";
 
 // Lazy-load all pages for code-splitting
