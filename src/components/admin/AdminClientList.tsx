@@ -93,13 +93,26 @@ const AdminClientList = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-clients"] });
       toast.success("Tier updated");
-      // Refresh selected profile
       if (selectedProfile) {
         const updated = profiles.find((p) => p.id === selectedProfile.id);
         if (updated) setSelectedProfile({ ...updated });
       }
     },
     onError: () => toast.error("Failed to update tier"),
+  });
+
+  const toggleVipMutation = useMutation({
+    mutationFn: async ({ profileId, value, setBasic }: { profileId: string; value: boolean; setBasic?: boolean }) => {
+      const updates: any = { is_vip: value, updated_at: new Date().toISOString() };
+      if (value && setBasic) updates.subscription_tier = "basic";
+      const { error } = await supabase.from("profiles").update(updates).eq("id", profileId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-clients"] });
+      toast.success("VIP status updated");
+    },
+    onError: () => toast.error("Failed to update VIP status"),
   });
 
   const extendTrialMutation = useMutation({
