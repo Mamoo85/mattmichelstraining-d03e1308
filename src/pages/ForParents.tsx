@@ -277,6 +277,11 @@ const ForParents = () => {
           </motion.div>
         )}
 
+        {/* TECH SHOWCASE */}
+        <motion.div {...fade(0.33)} className="mb-12">
+          <TechShowcaseCard />
+        </motion.div>
+
         {/* SOCIAL — Instagram */}
         <motion.div {...fade(0.35)} className="mb-12">
           <InstagramSocialBox />
