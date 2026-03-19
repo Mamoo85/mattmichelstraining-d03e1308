@@ -58,8 +58,10 @@ const DEFAULT_RECOVERY: RecoveryData = {
 };
 
 const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZoneProps) => {
-  const { user } = useAuth();
-  const [phase, setPhase] = useState<"readiness" | "active" | "summary">("readiness");
+  const hasInitialContent = !!(initialContext?.exercises?.length || initialContext?.resumed);
+  const [phase, setPhase] = useState<"intercept" | "readiness" | "active" | "summary">(
+    hasInitialContent ? "readiness" : "intercept"
+  );
   const [readinessResult, setReadinessResult] = useState<ReadinessResult | null>(null);
   const [autoRegulateEnabled, setAutoRegulateEnabled] = useState<boolean | null>(null);
   const [date, setDate] = useState<Date>(
