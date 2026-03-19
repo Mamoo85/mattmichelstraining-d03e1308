@@ -11,12 +11,8 @@ import { TimerProvider } from "@/hooks/useTimer";
 import { OfflineSyncProvider } from "@/hooks/useOfflineSync";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import SubscriptionGuard from "@/components/SubscriptionGuard";
-import IntervalTimer from "@/components/workout/IntervalTimer";
-import ScrollToTop from "@/components/ScrollToTop";
-import ErrorBoundary from "@/components/ErrorBoundary";
-import OfflineBadge from "@/components/OfflineBadge";
-import AnnouncementBanner from "@/components/AnnouncementBanner";
-import ActiveWorkoutZone from "@/components/workout/ActiveWorkoutZone";
+const IntervalTimer = lazy(() => import("@/components/workout/IntervalTimer"));
+const ActiveWorkoutZone = lazy(() => import("@/components/workout/ActiveWorkoutZone"));
 
 import { useTimer } from "@/hooks/useTimer";
 import { useAuth } from "@/hooks/useAuth";
