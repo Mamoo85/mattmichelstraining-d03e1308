@@ -190,7 +190,7 @@ const FoundationPrograms = () => {
         <div className="relative">
           <img
             src={aiBiomechanicsHero}
-            alt="AI Biomechanics Analysis Technology"
+            alt="Biomechanics Analysis Technology"
             className="w-full h-40 sm:h-52 object-cover"
             loading="lazy"
           />
