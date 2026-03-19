@@ -237,13 +237,13 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
     setShowPicker(false);
   }, []);
 
-  const updateExercise = (index: number, data: Partial<LoggedExerciseData>) => {
+  const updateExercise = useCallback((index: number, data: Partial<LoggedExerciseData>) => {
     setExercises((prev) => prev.map((e, i) => (i === index ? { ...e, ...data } : e)));
-  };
+  }, []);
 
-  const removeExercise = (index: number) => {
+  const removeExercise = useCallback((index: number) => {
     setExercises((prev) => prev.filter((_, i) => i !== index));
-  };
+  }, []);
 
   // Pause handler
   const handlePause = useCallback(() => {
