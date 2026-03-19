@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, FileText, User, Calendar, Dumbbell } from "lucide-react";
+import { Search, FileText, User, Calendar, Dumbbell, Play } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { printCommunityWorkout } from "./printCommunityWorkout";
@@ -149,6 +149,27 @@ const CommunityWorkoutBank = ({ onCreateNew }: CommunityWorkoutBankProps) => {
 
                   {/* Actions */}
                   <div className="flex gap-2 pt-2">
+                    <button
+                      onClick={() => {
+                        window.dispatchEvent(
+                          new CustomEvent("open-workout-zone", {
+                            detail: {
+                              title: w.title,
+                              source: "community",
+                              exercises: w.exercises.map((ex) => ({
+                                exerciseTitle: ex.title,
+                                prescribedSets: parseInt(ex.sets) || 3,
+                                prescribedReps: parseInt(ex.reps) || 10,
+                                notes: ex.notes,
+                              })),
+                            },
+                          })
+                        );
+                      }}
+                      className="flex-1 h-10 bg-primary text-primary-foreground flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all"
+                    >
+                      <Play size={12} /> Start Workout
+                    </button>
                     <button
                       onClick={() => handlePrint(w)}
                       className="flex-1 h-10 bg-muted text-foreground flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:bg-muted/80 transition-all"

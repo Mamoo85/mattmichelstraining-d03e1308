@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Loader2, Dumbbell, MessageSquare, ShoppingBag, ChevronLeft, ChevronRight, Printer } from "lucide-react";
+import { Loader2, Dumbbell, MessageSquare, ShoppingBag, ChevronLeft, ChevronRight, Printer, Play } from "lucide-react";
 import EmptyStateCard from "./EmptyStateCard";
 import { Link } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
@@ -267,12 +267,27 @@ const MyPrograms = () => {
                   <span className="text-[10px] text-muted-foreground font-mono">
                     Started {format(new Date(ap.start_date), "MMM d, yyyy")}
                   </span>
-                  <button
-                    onClick={() => handlePrintInteractive(ap)}
-                    className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-primary transition-m2"
-                  >
-                    <Printer size={12} /> Print Log
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.dispatchEvent(
+                          new CustomEvent("open-workout-zone", {
+                            detail: { title: ap.program.title, source: "program", programId: ap.program_id },
+                          })
+                        );
+                      }}
+                      className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary hover:opacity-80 transition-m2"
+                    >
+                      <Play size={12} /> Start Workout
+                    </button>
+                    <button
+                      onClick={() => handlePrintInteractive(ap)}
+                      className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-primary transition-m2"
+                    >
+                      <Printer size={12} /> Print Log
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -352,7 +367,28 @@ const MyPrograms = () => {
                 })}
               </div>
 
-              <div className="p-3 flex justify-end">
+              <div className="p-3 flex justify-end gap-2">
+                <button
+                  onClick={() => {
+                    window.dispatchEvent(
+                      new CustomEvent("open-workout-zone", {
+                        detail: {
+                          title: program.program_title,
+                          source: "custom",
+                          exercises: program.exercises.map((ex) => ({
+                            exerciseTitle: ex.name,
+                            prescribedSets: parseInt(ex.sets) || 3,
+                            prescribedReps: parseInt(ex.reps) || 10,
+                            notes: ex.notes,
+                          })),
+                        },
+                      })
+                    );
+                  }}
+                  className="bg-muted text-foreground px-4 py-2.5 text-xs font-bold uppercase tracking-widest hover:bg-muted/80 transition-m2 flex items-center gap-2"
+                >
+                  <Play size={12} /> Start Workout
+                </button>
                 <button
                   onClick={() => logProgramSession(program)}
                   disabled={loggingProgram === program.id}

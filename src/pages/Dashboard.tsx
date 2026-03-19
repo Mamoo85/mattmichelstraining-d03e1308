@@ -5,7 +5,7 @@ import TrialPaywallModal from "@/components/TrialPaywallModal";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
-import { ExternalLink, Loader2, Crown, User, Dumbbell } from "lucide-react";
+import { ExternalLink, Loader2, Crown, User, Dumbbell, Play } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import PwaInstallBanner from "@/components/PwaInstallBanner";
@@ -110,12 +110,6 @@ const Dashboard = () => {
             <p className="text-xs sm:text-sm text-muted-foreground">Your training portal · Real training, real results</p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={() => window.dispatchEvent(new Event("open-workout-zone"))}
-              className="flex items-center gap-1.5 bg-primary text-primary-foreground px-3 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all active:scale-95"
-            >
-              <Dumbbell size={12} /> Start Workout
-            </button>
             <Link
               to="/profile"
               className="flex items-center gap-1.5 bg-muted text-muted-foreground px-3 py-2 text-[10px] font-bold uppercase tracking-widest hover:text-foreground transition-all"
@@ -136,6 +130,16 @@ const Dashboard = () => {
         </div>
 
         <StudioCheckIn />
+
+        {/* Resume workout banner */}
+        {localStorage.getItem("m2-paused-workout") && (
+          <button
+            onClick={() => window.dispatchEvent(new Event("resume-workout-zone"))}
+            className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground py-3 mb-4 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all animate-pulse"
+          >
+            <Play size={14} /> Resume Paused Workout
+          </button>
+        )}
 
         {/* Tab switcher */}
         <div className="flex gap-1 mb-6 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap scrollbar-hide">

@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
 import MonthlyFocusWidget from "@/components/MonthlyFocusWidget";
 import UpcomingSessions from "@/components/UpcomingSessions";
@@ -6,6 +6,8 @@ import PointsWidget from "@/components/PointsWidget";
 import WorkoutScanner from "@/components/workout/WorkoutScanner";
 import EmptyStateCard from "@/components/EmptyStateCard";
 import ReferEarnCard from "./ReferEarnCard";
+
+const SharedWorkoutFeed = lazy(() => import("@/components/workout/SharedWorkoutFeed"));
 
 interface DashboardHomeProps {
   isNewUser: boolean;
@@ -50,6 +52,10 @@ const DashboardHome = memo(({ isNewUser, onViewPoints, onViewReferrals }: Dashbo
     <PointsWidget onViewLeaderboard={onViewPoints} />
     <ReferEarnCard onViewAll={onViewReferrals} />
     <MonthlyFocusWidget />
+
+    <Suspense fallback={null}>
+      <SharedWorkoutFeed />
+    </Suspense>
   </div>
 ));
 
