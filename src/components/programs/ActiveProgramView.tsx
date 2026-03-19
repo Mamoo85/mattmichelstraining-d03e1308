@@ -250,11 +250,11 @@ const ActiveProgramView = ({ activeProgram }: ActiveProgramProps) => {
 
                             {/* Coach Instructions */}
                             {workout.coach_instructions && (
-                              <div className="bg-accent/50 border-l-2 border-accent-foreground/20 p-3">
+                              <div className="bg-muted border-l-2 border-primary/40 p-3">
                                 <div className="flex items-center gap-1 mb-1">
-                                  <span className="text-[9px] font-bold uppercase tracking-widest text-foreground">Coach Matt's Instructions</span>
+                                  <span className="text-[9px] font-bold uppercase tracking-widest text-primary">Coach Matt's Instructions</span>
                                 </div>
-                                <p className="text-xs text-muted-foreground leading-relaxed">{workout.coach_instructions}</p>
+                                <p className="text-xs text-foreground leading-relaxed">{workout.coach_instructions}</p>
                               </div>
                             )}
                           </div>
