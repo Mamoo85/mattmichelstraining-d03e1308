@@ -50,6 +50,8 @@ import AdminBroadcasts from "@/components/admin/AdminBroadcasts";
 import AdminSubscriberList from "@/components/admin/AdminSubscriberList";
 import AdminNewsletterComposer from "@/components/admin/AdminNewsletterComposer";
 import AdminSendHistory from "@/components/admin/AdminSendHistory";
+import AdminServiceCatalog from "@/components/admin/AdminServiceCatalog";
+import AdminMarketingDrafts from "@/components/admin/AdminMarketingDrafts";
 
 const MASTER_TABS = [
   { key: "roster", label: "The Roster", icon: Users, desc: "Users · Support · Families" },
@@ -181,6 +183,7 @@ const Admin = () => {
             { key: "tiers", label: "Tier Access", content: <AdminTierManager /> },
             { key: "system", label: "System & Referrals", content: <AdminSystemSettings /> },
             { key: "stripe-products", label: "Stripe Products", content: <AdminStripeProducts /> },
+            { key: "catalog", label: "Service Catalog", content: <AdminServiceCatalog /> },
           ]} />
         )}
 
@@ -195,6 +198,7 @@ const Admin = () => {
             { key: "subscribers", label: "Subscribers", content: <AdminSubscriberList /> },
             { key: "compose", label: "Compose", content: <AdminNewsletterComposer /> },
             { key: "history", label: "Send History", content: <AdminSendHistory /> },
+            { key: "ad-drafts", label: "Ad Drafts", content: <AdminMarketingDrafts /> },
           ]} />
         )}
       </div>
