@@ -86,29 +86,7 @@ const HeroSection = () => {
         {/* ─── 5. THE M² DIFFERENCE ─── */}
         <M2Difference />
 
-        {/* ─── 6. DEEP DIVE ─── */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.4 }}
-          className="mb-6 space-y-3"
-        >
-          <Link
-            to="/shop"
-            className="flex items-center justify-center gap-2 w-full bg-primary text-primary-foreground py-4 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
-          >
-            <Star size={14} /> Browse Programs <ArrowRight size={14} />
-          </Link>
-          <Link
-            to="/pricing"
-            className="flex items-center justify-center gap-2 w-full border-2 border-primary text-primary py-4 text-xs font-bold uppercase tracking-widest hover:bg-primary/10 transition-m2"
-          >
-            Compare Monthly Plans <ArrowRight size={14} />
-          </Link>
-        </motion.div>
-
-        {/* ─── 7. MEMBERSHIP CTA ─── */}
+        {/* ─── 6. MEMBERSHIP CTA ─── */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -133,20 +111,12 @@ const HeroSection = () => {
                 and direct coaching from Matt — all from your phone. Every plan includes a
                 <strong className="text-foreground"> 14-day free trial</strong>. No contracts. Cancel anytime.
               </p>
-              <div className="flex flex-wrap gap-3 pt-2">
-                <Link
-                  to="/pricing"
-                  className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
-                >
-                  <Star size={14} /> Compare Plans
-                </Link>
-                <Link
-                  to="/auth?redirect=/trial-welcome"
-                  className="inline-flex items-center gap-2 border-2 border-primary/40 text-primary px-5 py-3 text-xs font-bold uppercase tracking-widest hover:bg-primary/10 transition-m2"
-                >
-                  Try 14 Days Free <ArrowRight size={12} />
-                </Link>
-              </div>
+              <Link
+                to="/auth?redirect=/trial-welcome"
+                className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
+              >
+                Try 14 Days Free <ArrowRight size={12} />
+              </Link>
             </div>
           </div>
         </motion.div>
