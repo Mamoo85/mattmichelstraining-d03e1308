@@ -98,11 +98,10 @@ const HeroSection = () => {
           <TrialCTA variant="banner" />
         </div>
 
-        {/* ─── 7. SOCIAL PROOF ─── */}
+        {/* ─── 7. SOCIAL — Instagram Feed ─── */}
         <div className="mb-8">
-          <ParentTestimonialCard />
+          <InstagramSocialBox />
         </div>
-        <Testimonials />
 
         {/* ─── 8. FIND US — always last ─── */}
         {showFindUs && <div className="mb-8"><FindUs /></div>}
