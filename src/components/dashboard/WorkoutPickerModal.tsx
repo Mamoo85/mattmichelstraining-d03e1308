@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Play, Plus, Dumbbell, BookOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useFamilyUserIds } from "@/hooks/useFamilyUserIds";
 import {
   Sheet,
   SheetContent,
@@ -39,6 +40,7 @@ interface WorkoutPickerModalProps {
 
 const WorkoutPickerModal = ({ open, onOpenChange }: WorkoutPickerModalProps) => {
   const { user } = useAuth();
+  const { familyIds } = useFamilyUserIds();
   const navigate = useNavigate();
   const [programs, setPrograms] = useState<PurchasedProgram[]>([]);
   const [activePrograms, setActivePrograms] = useState<ActiveProgram[]>([]);
@@ -48,23 +50,24 @@ const WorkoutPickerModal = ({ open, onOpenChange }: WorkoutPickerModalProps) => 
   useEffect(() => {
     if (!open || !user) return;
     setLoading(true);
+    const userIds = familyIds.length > 0 ? familyIds : [user.id];
 
     Promise.all([
       supabase
         .from("purchased_programs")
         .select("id, program_title, sport, exercises")
-        .eq("user_id", user.id)
+        .in("user_id", userIds)
         .eq("is_active", true)
         .order("purchased_at", { ascending: false }),
       supabase
         .from("user_active_programs" as any)
         .select("id, program_id, training_programs(id, title, category, sport)")
-        .eq("user_id", user.id)
+        .in("user_id", userIds)
         .eq("status", "active"),
       supabase
         .from("community_workouts")
         .select("id, title, exercises")
-        .eq("user_id", user.id)
+        .in("user_id", userIds)
         .order("created_at", { ascending: false })
         .limit(20),
     ]).then(([progRes, activeRes, cwRes]) => {
@@ -80,7 +83,7 @@ const WorkoutPickerModal = ({ open, onOpenChange }: WorkoutPickerModalProps) => 
       setWorkouts((cwRes.data as CommunityWorkout[] | null) ?? []);
       setLoading(false);
     });
-  }, [open, user]);
+  }, [open, user, familyIds]);
 
   const launchWorkout = (title: string, source: string, exercises: any[]) => {
     onOpenChange(false);
