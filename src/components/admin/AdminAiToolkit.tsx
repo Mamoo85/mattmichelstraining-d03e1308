@@ -7,12 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import {
   Loader2, Camera, Zap, ScanLine, Activity, Brain, Utensils,
   ArrowRight, X, Crosshair, Gauge, ShieldAlert, Video,
-  FileText, ChefHat,
+  FileText, ChefHat, Copy, Save, Trash2, RefreshCw,
 } from "lucide-react";
 
 /* Lazy-load existing AI tools */
