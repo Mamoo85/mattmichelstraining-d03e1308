@@ -175,14 +175,14 @@ const Dashboard = () => {
       {/* Timer moved to ActiveWorkoutZone */}
 
       {/* Trial banner */}
-      {isOnTrial && !subscribed && !isAdmin && !isLegend && (
+      {isOnTrial && !subscribed && !isAdmin && (
         <div className="fixed top-16 left-0 right-0 z-40 bg-primary text-primary-foreground text-center py-2 text-xs font-bold uppercase tracking-widest">
           🔥 Trial: {trialDaysLeft} day{trialDaysLeft !== 1 ? "s" : ""} remaining
         </div>
       )}
 
       {/* Hard paywall */}
-      {trialExpired && !subscribed && !isAdmin && !isLegend && (
+      {trialExpired && !subscribed && !isAdmin && (
         <TrialPaywallModal open={true} hardLock />
       )}
     </div>

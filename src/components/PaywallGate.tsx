@@ -14,12 +14,12 @@ interface PaywallGateProps {
 }
 
 const PaywallGate = ({ featureKey, featureName, children }: PaywallGateProps) => {
-  const { user, isLegend } = useAuth();
+  const { user } = useAuth();
   const { isAdmin } = useIsAdmin();
   const { hasAccess } = useTierAccess(featureKey);
 
-  // Admins and Legend members bypass all paywalls
-  if (isAdmin || isLegend) return <>{children}</>;
+  // Admins bypass all paywalls
+  if (isAdmin) return <>{children}</>;
 
   // Dynamic tier_features check
   if (hasAccess) return <>{children}</>;

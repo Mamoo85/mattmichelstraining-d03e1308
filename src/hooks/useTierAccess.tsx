@@ -64,9 +64,9 @@ export const useTierAccess = (featureKey: string) => {
 
 // Simple hook: does user have at least this tier?
 export const useMinTier = (requiredTier: TierKey) => {
-  const { subscriptionTier, isLegend } = useAuth();
+  const { subscriptionTier } = useAuth();
   const { isAdmin } = useIsAdmin();
 
-  if (isAdmin || isLegend) return true;
+  if (isAdmin) return true;
   return hasTierAccess(subscriptionTier, requiredTier);
 };
