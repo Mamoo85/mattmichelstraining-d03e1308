@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import AppNavbar from "@/components/AppNavbar";
 import TechSupportButton from "@/components/TechSupportButton";
 import SupportTicketForm from "@/components/SupportTicketForm";
-import ReferralDashboard from "@/components/ReferralDashboard";
 import PrivacySettingsCard from "@/components/PrivacySettingsCard";
 import { Link } from "react-router-dom";
 import {
