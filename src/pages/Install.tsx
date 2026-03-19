@@ -52,8 +52,8 @@ const Install = () => {
       <main className="min-h-screen bg-background pt-20 pb-16">
         <div className="container max-w-lg mx-auto px-4">
           <div className="text-center mb-8">
-            <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-primary/10 flex items-center justify-center">
-              <Smartphone className="text-primary" size={36} />
+            <div className="w-20 h-20 mx-auto mb-4 rounded-2xl overflow-hidden shadow-m2">
+              <img src={m2Logo} alt="M² Training" className="w-full h-full object-cover" />
             </div>
             <h1 className="text-3xl font-heading font-black text-foreground mb-2">
               Get the M² App
