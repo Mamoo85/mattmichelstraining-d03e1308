@@ -1312,6 +1312,7 @@ export type Database = {
           id: string
           is_in_person: boolean
           is_pro: boolean
+          is_vip: boolean
           stripe_customer_id: string | null
           subscription_tier: string
           trial_path: string | null
@@ -1333,6 +1334,7 @@ export type Database = {
           id?: string
           is_in_person?: boolean
           is_pro?: boolean
+          is_vip?: boolean
           stripe_customer_id?: string | null
           subscription_tier?: string
           trial_path?: string | null
@@ -1354,6 +1356,7 @@ export type Database = {
           id?: string
           is_in_person?: boolean
           is_pro?: boolean
+          is_vip?: boolean
           stripe_customer_id?: string | null
           subscription_tier?: string
           trial_path?: string | null
