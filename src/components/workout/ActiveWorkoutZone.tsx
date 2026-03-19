@@ -14,6 +14,7 @@ import RecoveryInput, { type RecoveryData } from "./RecoveryInput";
 import VoiceNoteButton from "./VoiceNoteButton";
 import ConfirmActionModal from "@/components/ConfirmActionModal";
 import PostWorkoutSummary from "./PostWorkoutSummary";
+import LiveFormTracker from "./LiveFormTracker";
 import type { LoggedExerciseData } from "./WorkoutLogger";
 
 /* ─── Context types ─── */
@@ -71,6 +72,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
     initialContext?.resumedRecovery || { ...DEFAULT_RECOVERY }
   );
   const [workoutLogId, setWorkoutLogId] = useState<string | null>(null);
+  const [formTrackerExercise, setFormTrackerExercise] = useState<string | null>(null);
   const workoutTitle = initialContext?.title || "Workout";
 
   // Timer
@@ -300,6 +302,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
               index={i}
               onUpdate={(data) => updateExercise(i, data)}
               onRemove={() => removeExercise(i)}
+              onOpenFormTracker={(title) => setFormTrackerExercise(title)}
             />
           ))}
 
@@ -394,6 +397,13 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
         loading={saving}
         icon={<CheckCircle size={16} />}
       />
+
+      {formTrackerExercise && (
+        <LiveFormTracker
+          exerciseTitle={formTrackerExercise}
+          onClose={() => setFormTrackerExercise(null)}
+        />
+      )}
     </>
   );
 };

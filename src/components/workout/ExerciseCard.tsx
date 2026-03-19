@@ -1,5 +1,5 @@
 import { useState, memo, useCallback } from "react";
-import { Trash2, ChevronDown, ChevronUp, Plus, Minus, Link, MessageSquare, Lock, Info } from "lucide-react";
+import { Trash2, ChevronDown, ChevronUp, Plus, Minus, Link, MessageSquare, Lock, Info, Crosshair } from "lucide-react";
 import VoiceNoteButton from "./VoiceNoteButton";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
@@ -14,9 +14,10 @@ interface ExerciseCardProps {
   index: number;
   onUpdate: (data: Partial<LoggedExerciseData>) => void;
   onRemove: () => void;
+  onOpenFormTracker?: (exerciseTitle: string) => void;
 }
 
-const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove }: ExerciseCardProps) => {
+const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTracker }: ExerciseCardProps) => {
   const [showExtras, setShowExtras] = useState(false);
   const [showUpsell, setShowUpsell] = useState(false);
   const { isAdmin } = useIsAdmin();
@@ -62,9 +63,20 @@ const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove }: ExerciseCard
             <span className="text-[10px] font-mono text-muted-foreground">{index + 1}</span>
             <span className="text-sm font-bold text-foreground truncate">{exercise.exerciseTitle}</span>
           </div>
-          <button onClick={onRemove} className="h-8 w-8 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors flex-shrink-0">
-            <Trash2 size={14} />
-          </button>
+          <div className="flex items-center gap-1 flex-shrink-0">
+            {onOpenFormTracker && (
+              <button
+                onClick={() => onOpenFormTracker(exercise.exerciseTitle)}
+                className="h-8 w-8 flex items-center justify-center text-muted-foreground hover:text-primary transition-colors"
+                title="Live Form Tracker"
+              >
+                <Crosshair size={14} />
+              </button>
+            )}
+            <button onClick={onRemove} className="h-8 w-8 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors">
+              <Trash2 size={14} />
+            </button>
+          </div>
         </div>
 
         {/* 2. Video Player — full width, rounded, no autoplay */}
