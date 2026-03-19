@@ -17,75 +17,53 @@ import TechShowcaseCard from "@/components/landing/TechShowcaseCard";
 
 /* ---------- data ---------- */
 
-const INJURY_STATS = [
-  { stat: "3.5 million", label: "youth sports injuries per year in the U.S. — most from overuse, not contact", source: "Stanford Children's Health" },
-  { stat: "50%", label: "are preventable with proper strength training and recovery programming", source: "American Academy of Pediatrics" },
-  { stat: "62%", label: "of organized-sport injuries happen during practice — not games", source: "Safe Kids Worldwide" },
-  { stat: "#1 cause", label: "Overuse and bad programming. Not bad luck. Proper strength training prevents this.", source: "Johns Hopkins Medicine" },
-];
-
-const PRESS_QUOTE = {
-  outlet: "Grosse Pointe News",
-  quote: "His business, built entirely by word of mouth, is a testament to the impact he's had on his clients. Whether he's coaching middle schoolers, training college-bound athletes or helping everyday individuals move and feel better, Michels is, at his core, a teacher.",
-  url: "https://www.grossepointenews.com/articles/strength-in-motion-how-one-trainer-turned-passion-into-purpose/",
-};
-
-const TIMELINE = [
+const MEMBERSHIP_TIERS = [
   {
-    age: "11–13",
-    title: "Foundation Phase — Youth Strength Basics",
-    desc: "Movement quality, body awareness, and coordination through age-appropriate strength training. No heavy loading — ever. This is about building the operating system their body will run on for the next decade.",
-    action: "Custom Program — from $40",
-    link: "/shop",
-  },
-  {
-    age: "14–15",
-    title: "Work Capacity Phase — Building Durability",
-    desc: "Introduce structured resistance training focused on joints, tendons, and connective tissue BEFORE adding load. This is the phase most youth programs skip — and where injuries start.",
-    action: "Custom Program — from $40",
-    link: "/shop",
-  },
-  {
-    age: "16–17",
-    title: "Strength & Power Phase — Sport Performance",
-    desc: "Now they're ready. Progressive overload, sport-specific strength development, and competition prep. Their body can handle it because you didn't rush the first two phases.",
-    action: "4-Week Custom Program — $80",
-    link: "/shop",
-  },
-  {
-    age: "18+",
-    title: "College Prep Phase — Peak Durability",
-    desc: "Peak performance strength programming. Matt has sent 50+ athletes to the college level. This phase is about durability under volume.",
-    action: "8-Week Custom Program — $160",
-    link: "/shop",
-  },
-];
-
-const FUNNEL_STEPS = [
-  {
-    step: "1",
-    title: "Start Your Free 14-Day Trial",
-    desc: "Create a parent account and start your 14-day trial. Full portal access — programs, progress tracking, and direct access to Matt. Cancel anytime.",
-    icon: Shield,
-    cta: "Start Free Trial",
+    name: "Basic",
+    price: "$14.99/mo",
+    highlights: [
+      "Full exercise library access (200+ exercises)",
+      "10 pre-loaded training workouts",
+      "Monthly Focus Plan with tracking",
+      "Progress logging & coach feedback",
+    ],
+    cta: "Start 14-Day Free Trial",
     link: "/auth?redirect=/trial-welcome",
+    accent: false,
   },
   {
-    step: "2",
-    title: "Invite Your Athlete",
-    desc: "Send your kid an invite link. They create their own login, and their account is automatically linked to yours. You see everything they log.",
-    icon: Users,
-    cta: "Set Up Below",
-    link: "#parent-portal",
+    name: "Foundation",
+    price: "$39.99/mo",
+    highlights: [
+      "Everything in Basic",
+      "8-week periodized training blocks",
+      "Fix It rehab & recovery library",
+      "Monthly 'Real Deal' newsletter",
+    ],
+    cta: "Start 14-Day Free Trial",
+    link: "/auth?redirect=/trial-welcome",
+    accent: true,
   },
   {
-    step: "3",
-    title: "Pick a Plan That Fits",
-    desc: "After the trial, choose a membership tier or grab a one-time $20 program. In-person sessions available in Grosse Pointe for local families.",
-    icon: GraduationCap,
-    cta: "View Plans",
-    link: "/pricing",
+    name: "Custom",
+    price: "$99.99/mo",
+    highlights: [
+      "Everything in Foundation",
+      "1-on-1 video movement assessment",
+      "Advanced biomechanics tracking",
+      "Priority coach messaging",
+    ],
+    cta: "Start 14-Day Free Trial",
+    link: "/auth?redirect=/trial-welcome",
+    accent: false,
   },
+];
+
+const PARENT_CHILD_BENEFITS = [
+  { icon: Shield, title: "Full Visibility", desc: "See every workout your athlete logs — sets, reps, weights, and coach feedback." },
+  { icon: TrendingUp, title: "Progress Tracking", desc: "Monitor strength gains, recovery trends, and training consistency over time." },
+  { icon: Heart, title: "Independent Tiers", desc: "Choose different subscription levels for yourself and each linked athlete." },
+  { icon: Zap, title: "Direct Coach Access", desc: "Flag exercises for Matt's review and message him directly from the portal." },
 ];
 
 const fade = (delay: number) => ({
