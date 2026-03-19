@@ -86,42 +86,30 @@ const StoreGettingStarted = () => {
       </Link>
 
 
-      {/* ═══════════ PRICING: Sessions + Subscription ═══════════ */}
-      <div className="bg-card shadow-m2 border border-primary/20 p-5 sm:p-6">
-        <h2 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
-          <Calendar size={16} className="text-primary" />
-          In-Person Session Pricing
+      {/* Who Matt trains — moved up */}
+      <div>
+        <h2 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
+          <Dumbbell size={16} className="text-primary" />
+          Who Matt Trains
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-          <div className="bg-background border-2 border-primary/30 p-4 text-center">
-            <div className="text-2xl font-mono font-black text-primary mb-1">1×</div>
-            <p className="text-xs font-bold text-foreground mb-0.5">Monthly Session</p>
-            <p className="text-[10px] text-muted-foreground">Assessment + AI analysis + custom program</p>
-            <Link
-              to="/schedule"
-              className="inline-flex items-center gap-1 bg-primary text-primary-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-m2 mt-3"
-            >
-              Book Now
-            </Link>
-          </div>
-          <div className="bg-background border border-border p-4 text-center">
-            <div className="text-2xl font-mono font-black text-primary mb-1">2×</div>
-            <p className="text-xs font-bold text-foreground mb-0.5">Twice Monthly</p>
-            <p className="text-[10px] text-muted-foreground">More coaching time, faster progress</p>
-            <p className="text-[10px] text-primary font-bold mt-2">Member discount applied</p>
-          </div>
-          <div className="bg-background border border-border p-4 text-center">
-            <div className="text-2xl font-mono font-black text-primary mb-1">4×</div>
-            <p className="text-xs font-bold text-foreground mb-0.5">Weekly Sessions</p>
-            <p className="text-[10px] text-muted-foreground">Maximum accountability & results</p>
-            <p className="text-[10px] text-primary font-bold mt-2">Best per-session rate</p>
-          </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {[
+            { icon: Target, label: "Youth Athletes", sub: "Build it right from day one" },
+            { icon: Users, label: "Parents", sub: "Train with — or for — your kids" },
+            { icon: Heart, label: "Adults", sub: "Feel strong again at any age" },
+            { icon: Zap, label: "Coaches", sub: "Practice what you preach" },
+          ].map(({ icon: Icon, label, sub }) => (
+            <div key={label} className="bg-card shadow-m2 p-3 text-center">
+              <Icon size={20} className="text-primary mx-auto mb-1.5" />
+              <p className="text-xs font-bold text-foreground">{label}</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">{sub}</p>
+            </div>
+          ))}
         </div>
-        <p className="text-[11px] text-muted-foreground text-center">
-          All in-person clients receive <strong className="text-foreground">full M² Legend portal access</strong> — exercise library, AI nutrition, 
-          progress tracking, challenges, and direct messaging with Matt.
-        </p>
       </div>
+
+      {/* Trial CTA — moved up */}
+      <TrialCTA variant="banner" />
 
       {/* ═══════════ NOT LOCAL? Online Options ═══════════ */}
       <div className="border-t border-border pt-6">
@@ -174,9 +162,6 @@ const StoreGettingStarted = () => {
         </div>
       </div>
 
-      {/* Trial CTA */}
-      <TrialCTA variant="banner" />
-
       {/* Program Finder */}
       {user && (
         <div>
@@ -218,27 +203,6 @@ const StoreGettingStarted = () => {
         </div>
       </div>
 
-      {/* Who Matt trains */}
-      <div>
-        <h2 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
-          <Dumbbell size={16} className="text-primary" />
-          Who Matt Trains
-        </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {[
-            { icon: Target, label: "Youth Athletes", sub: "Build it right from day one" },
-            { icon: Users, label: "Parents", sub: "Train with — or for — your kids" },
-            { icon: Heart, label: "Adults", sub: "Feel strong again at any age" },
-            { icon: Zap, label: "Coaches", sub: "Practice what you preach" },
-          ].map(({ icon: Icon, label, sub }) => (
-            <div key={label} className="bg-card shadow-m2 p-3 text-center">
-              <Icon size={20} className="text-primary mx-auto mb-1.5" />
-              <p className="text-xs font-bold text-foreground">{label}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">{sub}</p>
-            </div>
-          ))}
-        </div>
-      </div>
 
       {/* Free features */}
       <div className="bg-card shadow-m2 p-4">
