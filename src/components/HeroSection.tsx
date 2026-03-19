@@ -94,20 +94,19 @@ const HeroSection = () => {
         {/* ─── 5. THE M² DIFFERENCE ─── */}
         <M2Difference />
 
-        {/* ─── 6. FIND US ─── */}
-        {showFindUs && <FindUs />}
-
-        {/* ─── 7. TRIAL CTA ─── */}
+        {/* ─── 6. TRIAL CTA ─── */}
         <div className="mb-8">
           <TrialCTA variant="banner" />
         </div>
 
-        {/* ─── 8. SOCIAL PROOF ─── */}
+        {/* ─── 7. SOCIAL PROOF ─── */}
         <div className="mb-8">
           <ParentTestimonialCard />
         </div>
         <Testimonials />
 
+        {/* ─── 8. FIND US — always last ─── */}
+        {showFindUs && <div className="mb-8"><FindUs /></div>}
 
         {/* FOOTER */}
         <div className="mt-10 pt-6 border-t border-border text-center">
