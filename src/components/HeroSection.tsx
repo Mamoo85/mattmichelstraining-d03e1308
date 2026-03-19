@@ -59,7 +59,7 @@ const HeroSection = () => {
             {/* Quick-action CTA buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
               <Link
-                to="/schedule"
+                to="/pricing"
                 className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2 w-full sm:w-auto justify-center"
               >
                 Start Training
