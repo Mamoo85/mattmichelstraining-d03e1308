@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Camera, Upload, Loader2, Flame, Beef, Wheat, Droplets, Leaf, Trash2, Target, Pencil, Check, X } from "lucide-react";
+import { Camera, Loader2, Flame, Beef, Wheat, Droplets, Leaf, Trash2, Target, Pencil, Check, X } from "lucide-react";
 import { format } from "date-fns";
 
 interface FoodItem {
@@ -43,6 +43,13 @@ const DEFAULT_GOALS: MacroGoals = {
   daily_fat_goal: 65,
 };
 
+const MACRO_CONFIG = [
+  { key: "daily_calorie_goal", icon: Flame, label: "Cal", totalKey: "calories" as const, unit: "", color: "text-orange-600" },
+  { key: "daily_protein_goal", icon: Beef, label: "Pro", totalKey: "protein" as const, unit: "g", color: "text-red-600" },
+  { key: "daily_carbs_goal", icon: Wheat, label: "Carb", totalKey: "carbs" as const, unit: "g", color: "text-amber-600" },
+  { key: "daily_fat_goal", icon: Droplets, label: "Fat", totalKey: "fat" as const, unit: "g", color: "text-blue-600" },
+];
+
 const MacroPill = ({ icon: Icon, label, value, unit, color }: { icon: any; label: string; value: number; unit: string; color: string }) => (
   <div className={`flex flex-col items-center gap-1 rounded-xl px-3 py-2 ${color}`}>
     <Icon size={16} className="opacity-80" />
@@ -51,62 +58,16 @@ const MacroPill = ({ icon: Icon, label, value, unit, color }: { icon: any; label
   </div>
 );
 
-const GoalRow = ({ 
-  icon: Icon, label, current, goal, unit, color, goalKey, onSave 
-}: { 
-  icon: any; label: string; current: number; goal: number; unit: string; color: string; goalKey: string;
-  onSave: (key: string, val: number) => void;
-}) => {
-  const [editing, setEditing] = useState(false);
-  const [input, setInput] = useState(String(goal));
-  const pct = goal > 0 ? Math.min((current / goal) * 100, 100) : 0;
-
-  return (
-    <div className="space-y-1">
-      <div className="flex items-center justify-between text-sm">
-        <span className={`flex items-center gap-1.5 font-medium ${color}`}>
-          <Icon size={14} /> {label}
-        </span>
-        {editing ? (
-          <div className="flex items-center gap-1">
-            <Input
-              type="number"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              className="w-16 h-6 text-xs px-1"
-              min={0}
-            />
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => {
-              const val = parseInt(input);
-              if (val > 0) { onSave(goalKey, val); setEditing(false); }
-              else toast.error("Goal must be greater than 0");
-            }}>
-              <Check size={12} />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setEditing(false)}>
-              <X size={12} />
-            </Button>
-          </div>
-        ) : (
-          <button onClick={() => { setInput(String(goal)); setEditing(true); }} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1">
-            {Math.round(current)}{unit} / {goal}{unit} <Pencil size={10} />
-          </button>
-        )}
-      </div>
-      <Progress value={pct} className="h-2" />
-    </div>
-  );
-};
-
 const Nutrition = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const [preview, setPreview] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
+  const [editingGoals, setEditingGoals] = useState(false);
+  const [goalInputs, setGoalInputs] = useState<Record<string, string>>({});
 
   // Fetch goals from profile
   const { data: profile } = useQuery({
@@ -131,22 +92,34 @@ const Nutrition = () => {
   };
 
   const updateGoalMutation = useMutation({
-    mutationFn: async ({ key, value }: { key: string; value: number }) => {
+    mutationFn: async (updates: Record<string, number>) => {
       const { error } = await supabase
         .from("profiles")
-        .update({ [key]: value } as any)
+        .update(updates as any)
         .eq("user_id", user!.id);
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Goal updated!");
+      toast.success("Goals updated!");
       queryClient.invalidateQueries({ queryKey: ["profile-nutrition-goals"] });
+      setEditingGoals(false);
     },
-    onError: (e: any) => toast.error(e.message || "Failed to update goal"),
+    onError: (e: any) => toast.error(e.message || "Failed to update goals"),
   });
 
-  const handleSaveGoal = (key: string, value: number) => {
-    updateGoalMutation.mutate({ key, value });
+  const handleSaveAllGoals = () => {
+    const updates: Record<string, number> = {};
+    for (const m of MACRO_CONFIG) {
+      const val = parseInt(goalInputs[m.key] || String((goals as any)[m.key]));
+      if (!val || val <= 0) { toast.error("All goals must be greater than 0"); return; }
+      updates[m.key] = val;
+    }
+    updateGoalMutation.mutate(updates);
+  };
+
+  const startEditingGoals = () => {
+    setGoalInputs(Object.fromEntries(MACRO_CONFIG.map(m => [m.key, String((goals as any)[m.key])])));
+    setEditingGoals(true);
   };
 
   // Fetch history
@@ -179,14 +152,8 @@ const Nutrition = () => {
   );
 
   const handleImageSelect = useCallback(async (file: File) => {
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please select an image file");
-      return;
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("Image must be under 10 MB");
-      return;
-    }
+    if (!file.type.startsWith("image/")) { toast.error("Please select an image file"); return; }
+    if (file.size > 10 * 1024 * 1024) { toast.error("Image must be under 10 MB"); return; }
 
     const reader = new FileReader();
     reader.onload = async (e) => {
@@ -194,15 +161,10 @@ const Nutrition = () => {
       setPreview(base64);
       setAnalysis(null);
       setAnalyzing(true);
-
       try {
-        const { data, error } = await supabase.functions.invoke("analyze-food", {
-          body: { imageBase64: base64 },
-        });
-
+        const { data, error } = await supabase.functions.invoke("analyze-food", { body: { imageBase64: base64 } });
         if (error) throw error;
         if (data.error) throw new Error(data.error);
-
         setAnalysis(data as AnalysisResult);
       } catch (err: any) {
         console.error(err);
@@ -218,16 +180,9 @@ const Nutrition = () => {
     mutationFn: async () => {
       if (!analysis || !user) throw new Error("No analysis to save");
       const totals = analysis.items.reduce(
-        (acc, i) => ({
-          cal: acc.cal + i.calories,
-          p: acc.p + i.protein_g,
-          c: acc.c + i.carbs_g,
-          f: acc.f + i.fat_g,
-          fi: acc.fi + i.fiber_g,
-        }),
+        (acc, i) => ({ cal: acc.cal + i.calories, p: acc.p + i.protein_g, c: acc.c + i.carbs_g, f: acc.f + i.fat_g, fi: acc.fi + i.fiber_g }),
         { cal: 0, p: 0, c: 0, f: 0, fi: 0 }
       );
-
       const { error } = await supabase.from("nutrition_logs").insert({
         user_id: user.id,
         food_items: analysis.items as any,
@@ -266,54 +221,81 @@ const Nutrition = () => {
   const totalFat = analysis ? analysis.items.reduce((s, i) => s + i.fat_g, 0) : 0;
   const totalFiber = analysis ? analysis.items.reduce((s, i) => s + i.fiber_g, 0) : 0;
 
-  const allGoalsReached = todayTotals.calories >= goals.daily_calorie_goal &&
-    todayTotals.protein >= goals.daily_protein_goal &&
-    todayTotals.carbs >= goals.daily_carbs_goal &&
-    todayTotals.fat >= goals.daily_fat_goal;
-
   return (
     <>
       <SEOHead title="Nutrition Tracker | M² Training" description="Snap a photo of your food and get instant calorie and macro estimates powered by AI." path="/nutrition" />
       <AppNavbar />
       <main className="min-h-screen bg-background pt-16 pb-24">
-        <div className="container max-w-lg mx-auto space-y-6 px-4">
-          {/* Header */}
-          <div className="text-center pt-4">
+        <div className="container max-w-lg mx-auto space-y-5 px-4">
+          {/* Header + Snap button */}
+          <div className="text-center pt-4 space-y-3">
             <h1 className="text-2xl font-black tracking-tight">NUTRITION TRACKER</h1>
-            <p className="text-sm text-muted-foreground mt-1">Snap a photo → get instant macro estimates</p>
+            <Button className="w-full gap-2" size="lg" onClick={() => fileInputRef.current?.click()}>
+              <Camera size={18} /> Snap or Upload a Meal Photo
+            </Button>
+            <input ref={fileInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => e.target.files?.[0] && handleImageSelect(e.target.files[0])} />
           </div>
 
-          {/* Daily Goals Progress */}
+          {/* Daily Goals — compact card with progress bars */}
           <Card className="border-primary/20">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Target size={14} /> Daily Goals
-              </CardTitle>
+            <CardHeader className="pb-1">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Target size={14} /> Today's Progress
+                </CardTitle>
+                {editingGoals ? (
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleSaveAllGoals} disabled={updateGoalMutation.isPending}>
+                      <Check size={14} />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingGoals(false)}>
+                      <X size={14} />
+                    </Button>
+                  </div>
+                ) : (
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground" onClick={startEditingGoals}>
+                    <Pencil size={12} />
+                  </Button>
+                )}
+              </div>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <GoalRow icon={Flame} label="Calories" current={todayTotals.calories} goal={goals.daily_calorie_goal} unit=" cal" color="text-orange-600" goalKey="daily_calorie_goal" onSave={handleSaveGoal} />
-              <GoalRow icon={Beef} label="Protein" current={todayTotals.protein} goal={goals.daily_protein_goal} unit="g" color="text-red-600" goalKey="daily_protein_goal" onSave={handleSaveGoal} />
-              <GoalRow icon={Wheat} label="Carbs" current={todayTotals.carbs} goal={goals.daily_carbs_goal} unit="g" color="text-amber-600" goalKey="daily_carbs_goal" onSave={handleSaveGoal} />
-              <GoalRow icon={Droplets} label="Fat" current={todayTotals.fat} goal={goals.daily_fat_goal} unit="g" color="text-blue-600" goalKey="daily_fat_goal" onSave={handleSaveGoal} />
-              {allGoalsReached && (
-                <p className="text-xs text-primary font-medium text-center pt-1">🎯 All goals reached!</p>
-              )}
+            <CardContent className="space-y-2.5 pb-4">
+              {MACRO_CONFIG.map(({ key, icon: Icon, label, totalKey, unit, color }) => {
+                const current = todayTotals[totalKey];
+                const goal = (goals as any)[key];
+                const pct = goal > 0 ? Math.min((current / goal) * 100, 100) : 0;
+                const reached = current >= goal;
+
+                return (
+                  <div key={key} className="space-y-0.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className={`flex items-center gap-1 font-medium ${color}`}>
+                        <Icon size={12} /> {label}
+                      </span>
+                      {editingGoals ? (
+                        <div className="flex items-center gap-1">
+                          <span className="text-muted-foreground">{Math.round(current)}{unit} /</span>
+                          <Input
+                            type="number"
+                            value={goalInputs[key] || ""}
+                            onChange={(e) => setGoalInputs(prev => ({ ...prev, [key]: e.target.value }))}
+                            className="w-14 h-5 text-xs px-1 py-0"
+                            min={1}
+                          />
+                          <span className="text-muted-foreground">{unit}</span>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">
+                          {Math.round(current)}{unit} / {goal}{unit} {reached && "✓"}
+                        </span>
+                      )}
+                    </div>
+                    <Progress value={pct} className="h-1.5" />
+                  </div>
+                );
+              })}
             </CardContent>
           </Card>
-
-          {/* Camera / Upload */}
-          <div className="grid grid-cols-2 gap-3">
-            <Button variant="outline" className="h-20 flex-col gap-2 border-dashed" onClick={() => cameraInputRef.current?.click()}>
-              <Camera size={24} />
-              <span className="text-xs">Take Photo</span>
-            </Button>
-            <Button variant="outline" className="h-20 flex-col gap-2 border-dashed" onClick={() => fileInputRef.current?.click()}>
-              <Upload size={24} />
-              <span className="text-xs">Upload Image</span>
-            </Button>
-            <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => e.target.files?.[0] && handleImageSelect(e.target.files[0])} />
-            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleImageSelect(e.target.files[0])} />
-          </div>
 
           {/* Preview + Analysis */}
           {preview && (
