@@ -15,6 +15,7 @@ import VoiceNoteButton from "./VoiceNoteButton";
 import ConfirmActionModal from "@/components/ConfirmActionModal";
 import PostWorkoutSummary from "./PostWorkoutSummary";
 import LiveFormTracker from "./LiveFormTracker";
+import ReadinessGate, { calculateAdjustments, type ReadinessResult } from "./ReadinessGate";
 import type { LoggedExerciseData } from "./WorkoutLogger";
 
 /* ─── Context types ─── */
