@@ -135,7 +135,7 @@ const StoreGettingStarted = () => {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 border-t border-border">
             {[
               { icon: Camera, label: "2 Photos", desc: "Front + side view" },
-              { icon: Cpu, label: "AI Scans", desc: "Joint angles & alignment" },
+              { icon: Cpu, label: "Full Scan", desc: "Joint angles & alignment" },
               { icon: Sparkles, label: "Correctives", desc: "Personalized protocols" },
               { icon: Target, label: "Track", desc: "Progress over time" },
             ].map(({ icon: Icon, label, desc }, i) => (
