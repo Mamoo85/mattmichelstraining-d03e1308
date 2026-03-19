@@ -301,12 +301,13 @@ const MonthlyFocusWidget = () => {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center gap-2">
-        <Flame size={14} className="text-primary" />
-        <span className="text-[10px] font-bold uppercase tracking-widest text-primary">
+      <div className="flex items-center gap-3">
+        <div className="w-1 h-8 bg-primary rounded-full" />
+        <Flame size={20} className="text-primary" />
+        <h2 className="text-xl md:text-2xl font-black uppercase tracking-tight text-foreground">
           Monthly Focus & Challenge
-        </span>
-        <span className="text-[10px] text-muted-foreground ml-auto">
+        </h2>
+        <span className="text-xs text-muted-foreground ml-auto font-mono">
           {now.toLocaleString("default", { month: "long", year: "numeric" })}
         </span>
       </div>

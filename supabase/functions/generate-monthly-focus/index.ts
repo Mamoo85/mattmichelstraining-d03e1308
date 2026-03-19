@@ -57,15 +57,17 @@ MATT'S VOICE PATTERNS:
 
     const userPrompt = `Generate a Monthly Focus plan for ${getMonthName(month)} ${year} on the topic: "${focusTopic}".
 
-Return a structured response using the tool provided. Fields:
-- title: Short catchy title (e.g., "Posterior Chain Month", "The Brace Reset")
-- topic: The skill/area of focus in 2-3 words
-- the_why: A punchy, 3-sentence explanation of why this matters for longevity and performance. Written in Matt's voice.
-- biomechanics: An array of 3-5 bullet points on perfect form for this focus area
-- common_mistakes: An array of 3-5 bullet points on what to avoid
-- exercises: An array of 4-6 specific exercises or drills with sets/reps (e.g., "Dead Bug — 3×8 each side, hold 3 sec")
-- challenge_metric: The monthly challenge goal (e.g., "Accumulate 10 minutes total over 30 days" or "Hit a 2-minute max hold")
-- matt_quote: A one-liner motivational quote from Matt about this focus area`;
+Return a structured response using the tool provided. Keep ALL text SHORT and PUNCHY — no filler, no fluff.
+
+Fields:
+- title: 2-4 word punchy title (e.g., "Posterior Chain Month", "The Brace Reset", "Own the Hinge")
+- topic: The skill/area in 2-3 words
+- the_why: MAX 2 sentences. Direct. In Matt's voice. Why this matters for longevity and performance. Example tone: "Your posterior chain is the engine behind every athletic movement. If it's weak, everything else compensates — and that's where injuries start."
+- biomechanics: 3-4 bullet points on perfect form. Each bullet MAX 12 words.
+- common_mistakes: 3-4 bullet points on what to avoid. Each bullet MAX 12 words.
+- exercises: 4-5 specific exercises with sets/reps (e.g., "Dead Bug — 3×8 each side, 3 sec hold")
+- challenge_metric: One clear monthly goal in one sentence (e.g., "Accumulate 10 minutes total planks over 30 days")
+- matt_quote: One punchy line from Matt. Conversational, real, like he'd say it in the gym. No motivational poster energy.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

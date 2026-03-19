@@ -47,14 +47,14 @@ const ChallengeTeaser = () => {
   return (
     <div className="relative bg-card border-2 border-border overflow-hidden">
       {/* Header */}
-      <div className="px-5 pt-5 pb-3 space-y-1">
+      <div className="px-5 pt-5 pb-3 space-y-2">
         <div className="flex items-center gap-2">
-          <Flame size={14} className="text-primary" />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-primary">
+          <Flame size={18} className="text-primary" />
+          <span className="text-xs font-black uppercase tracking-widest text-primary">
             Community Challenge
           </span>
         </div>
-        <h3 className="text-base font-black uppercase tracking-tight text-foreground">
+        <h3 className="text-xl md:text-2xl font-black uppercase tracking-tight text-foreground">
           {challengeTitle || focusTitle || "Monthly Training Challenge"}
         </h3>
         {focusTitle && challengeTitle && (
