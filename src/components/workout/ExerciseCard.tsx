@@ -29,12 +29,12 @@ const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTrac
     onUpdate(index, { sets: newSets });
   }, [exercise.sets, index, onUpdate]);
 
-  const addSet = () => {
+  const addSet = useCallback(() => {
     const lastSet = exercise.sets[exercise.sets.length - 1];
-    onUpdate({
+    onUpdate(index, {
       sets: [...exercise.sets, { set: exercise.sets.length + 1, reps: lastSet?.reps || 0, weight: lastSet?.weight || 0 }],
     });
-  };
+  }, [exercise.sets, index, onUpdate]);
 
   const removeSet = () => {
     if (exercise.sets.length <= 1) return;
