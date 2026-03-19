@@ -39,7 +39,7 @@ const StoreGettingStarted = () => {
           </h1>
           <p className="text-sm text-muted-foreground max-w-lg leading-relaxed">
             Start with a monthly 1-on-1 session. Matt builds your foundation, tracks your movement with 
-            <strong className="text-foreground"> proprietary AI biomechanics technology</strong>, and programs 
+            <strong className="text-foreground"> advanced biomechanics technology</strong>, and programs 
             everything around what your body actually needs. Add sessions at a discount as you grow.
           </p>
           <div className="flex flex-wrap gap-3 pt-1">
@@ -79,8 +79,8 @@ const StoreGettingStarted = () => {
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Matt's two loves — <strong className="text-foreground">computers and exercise</strong> — fused into something 
-              nobody else has. A front photo. A side photo. That's all it takes. Our proprietary AI biomechanics engine 
-              analyzes joint angles, postural alignment, muscle activation patterns, and movement compensations in seconds.
+              nobody else has. A front photo. A side photo. That's all it takes. Our advanced biomechanics system 
+              analyzes joint angles, postural alignment, muscle activation patterns, and movement compensations in seconds — giving Matt data no other trainer has.
             </p>
             <p className="text-xs text-primary font-bold italic">
               "Always 5 years ahead. I can't help it."
@@ -98,7 +98,7 @@ const StoreGettingStarted = () => {
             >
               <img
                 src={aiBiomechanicsHero}
-                alt="AI Biomechanics Analysis — Front View"
+                alt="Biomechanics Analysis — Front View"
                 className="w-full h-48 sm:h-64 object-cover transition-transform duration-700 group-hover:scale-105"
                 loading="lazy"
               />
@@ -135,7 +135,7 @@ const StoreGettingStarted = () => {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 border-t border-border">
             {[
               { icon: Camera, label: "2 Photos", desc: "Front + side view" },
-              { icon: Cpu, label: "AI Scans", desc: "Joint angles & alignment" },
+              { icon: Cpu, label: "Full Scan", desc: "Joint angles & alignment" },
               { icon: Sparkles, label: "Correctives", desc: "Personalized protocols" },
               { icon: Target, label: "Track", desc: "Progress over time" },
             ].map(({ icon: Icon, label, desc }, i) => (
@@ -271,7 +271,7 @@ const StoreGettingStarted = () => {
             <div className="text-primary font-mono font-bold text-lg leading-none mt-0.5">$100</div>
             <div>
               <p className="text-xs font-bold text-foreground">M² Custom</p>
-              <p className="text-[11px] text-muted-foreground">AI custom program builder + 1-on-1 video assessment + direct messaging.</p>
+              <p className="text-[11px] text-muted-foreground">Fully custom program from Matt + 1-on-1 video assessment + direct messaging.</p>
             </div>
           </div>
           <div className="bg-card shadow-m2 p-4 flex gap-3">
@@ -296,7 +296,7 @@ const StoreGettingStarted = () => {
       {/* Trial CTA */}
       <TrialCTA variant="banner" />
 
-      {/* AI Program Finder */}
+      {/* Program Finder */}
       {user && (
         <div>
           <AiIntakeAnalyzer />
@@ -316,7 +316,7 @@ const StoreGettingStarted = () => {
             <p className="text-xs text-muted-foreground leading-relaxed">
               20 years of training. A degree in computer engineering. 50+ college athletes. Zero injuries. 
               Matt didn't just pick up a certification — he spent two decades merging the science of movement with 
-              the power of technology. The AI biomechanics engine isn't a gimmick. It's what happens when someone 
+              the power of technology. The biomechanics system isn't a gimmick. It's what happens when someone 
               who actually understands both worlds builds the tools he wished existed.
             </p>
             <div className="flex flex-wrap gap-4 pt-1">
@@ -330,7 +330,7 @@ const StoreGettingStarted = () => {
               </div>
               <div className="flex items-center gap-1.5">
                 <Cpu size={12} className="text-primary" />
-                <span className="text-[10px] text-foreground font-bold">Proprietary AI technology</span>
+                <span className="text-[10px] text-foreground font-bold">Advanced biomechanics tech</span>
               </div>
             </div>
           </div>

@@ -41,7 +41,7 @@ const TechShowcaseCard = () => (
             Training Technology That's 5 Years Ahead
           </h2>
           <p className="text-xs text-muted-foreground leading-relaxed mb-4 max-w-lg">
-            AI-powered posture analysis, real-time velocity tracking, instant nutrition scanning, and smart workout logging — all running on your phone. No extra hardware needed.
+            Advanced posture analysis, real-time velocity tracking, instant nutrition scanning, and smart workout logging — all running on your phone. No extra hardware needed.
           </p>
 
           {/* Tech pills */}

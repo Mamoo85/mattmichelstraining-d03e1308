@@ -148,8 +148,8 @@ const FoundationPrograms = () => {
               Best Results Start In Person
             </h2>
             <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-              Book a 1-on-1 session with Matt. He'll run your child through our 
-              <strong className="text-foreground"> AI biomechanics assessment</strong> — front and side photos analyzed in seconds — 
+              Book a 1-on-1 session with Matt. He'll run your child through a 
+              <strong className="text-foreground"> full biomechanics assessment</strong> — front and side photos analyzed in seconds — 
               and build a program around what their body actually needs. Not a template. Not a guess.
             </p>
             <a
@@ -190,7 +190,7 @@ const FoundationPrograms = () => {
         <div className="relative">
           <img
             src={aiBiomechanicsHero}
-            alt="AI Biomechanics Analysis Technology"
+            alt="Biomechanics Analysis Technology"
             className="w-full h-40 sm:h-52 object-cover"
             loading="lazy"
           />
@@ -199,11 +199,11 @@ const FoundationPrograms = () => {
             <div className="flex items-center gap-2 mb-1">
               <Brain size={14} className="text-primary" />
               <span className="text-[9px] font-bold uppercase tracking-widest text-primary">
-                Proprietary AI Technology
+                Advanced Biomechanics
               </span>
             </div>
             <h3 className="text-sm font-black uppercase tracking-tight text-foreground">
-              Every Program Includes AI Postural Assessment
+              Every Program Includes a Postural Assessment
             </h3>
           </div>
         </div>
@@ -211,7 +211,7 @@ const FoundationPrograms = () => {
           <div className="grid grid-cols-3 gap-2 mb-3">
             {[
               { icon: Camera, label: "2 Photos", desc: "Front + side" },
-              { icon: Brain, label: "AI Scans", desc: "Joint angles" },
+              { icon: Brain, label: "Full Scan", desc: "Joint angles" },
               { icon: Shield, label: "Custom Fix", desc: "Correctives" },
             ].map(({ icon: Icon, label, desc }) => (
               <div key={label} className="text-center p-2 bg-background border border-border">
@@ -223,7 +223,7 @@ const FoundationPrograms = () => {
           </div>
           <p className="text-xs text-muted-foreground">
             Upload a front and side photo or video of <strong className="text-foreground">5 overhead squats</strong>. 
-            Matt's AI analyzes alignment, compensations, and joint angles — then he builds correctives into your program.
+            The system analyzes alignment, compensations, and joint angles — then Matt builds correctives into your program.
           </p>
         </div>
       </motion.div>
@@ -356,7 +356,7 @@ const FoundationPrograms = () => {
         <h3 className="text-sm font-bold text-foreground mb-2">Best Results Start In Person</h3>
         <p className="text-xs text-muted-foreground mb-4 max-w-md mx-auto">
           Matt trains youth athletes in Grosse Pointe Park, MI. Start with a monthly 1-on-1 session — 
-          AI biomechanics assessment included. Add sessions at a member discount as you grow.
+          full biomechanics assessment included. Add sessions at a member discount as you grow.
         </p>
         <div className="flex flex-wrap gap-3 justify-center">
           <a

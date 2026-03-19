@@ -56,7 +56,7 @@ const TIER_CARDS: {
     highlight: true,
     features: [
       "Everything in Foundation, plus…",
-      "A program built just for you (custom or AI-generated)",
+      "A program built just for you by Coach Matt",
       "1-on-1 video movement assessment ($50 value included)",
       "Direct message Coach Matt anytime",
       "🎁 Gift a training session to a friend",

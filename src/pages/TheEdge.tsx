@@ -331,22 +331,22 @@ const FEATURES: TechFeature[] = [
   {
     id: "posture-ai",
     icon: Camera,
-    title: "AI Posture & Biomechanics Analysis",
-    tagline: "Two photos. Full skeletal scan. Corrective program generated.",
+    title: "Posture & Biomechanics Analysis",
+    tagline: "Two photos. Full skeletal scan. Data Matt can't get any other way.",
     color: "text-[hsl(var(--synth-cyan))]",
     glowColor: "bg-[hsl(var(--synth-cyan))]/10",
     tier: "custom",
-    description: "Take a front and side photo from your phone. Our proprietary AI maps 17 skeletal keypoints, measures joint angles, detects asymmetries, and generates a 3-phase corrective program — from Mobility & Activation through Load Integration. This is the same technology used in $10,000+ sports labs, running on your phone.",
+    description: "Take a front and side photo from your phone. Advanced computer vision maps 17 skeletal keypoints, measures joint angles, and detects asymmetries — giving Matt data that used to require $10,000+ sports lab equipment. He uses this data to build your corrective program from scratch, tailored to exactly what your body needs.",
     howItWorks: [
       "Stand in front of your phone camera — front view, then side view",
-      "AI detects 17 skeletal keypoints using on-device neural networks",
+      "The system detects 17 skeletal keypoints using on-device processing",
       "Joint angles, postural deviations, and asymmetries are measured to sub-degree accuracy",
-      "A corrective exercise program is generated: Phase 1 (Mobility), Phase 2 (Stability), Phase 3 (Strength)",
-      "Coach Matt reviews and customizes the plan before it reaches you",
+      "Matt receives the full diagnostic data — postural tilt, alignment scores, compensation patterns",
+      "Matt builds your corrective program personally based on the analysis",
     ],
     techSpecs: [
-      "TensorFlow.js MoveNet — runs 100% on-device",
-      "Zero data leaves your phone until coach review",
+      "On-device skeletal tracking — runs 100% on your phone",
+      "Zero data leaves your phone until you share it with Matt",
       "17-point skeletal mapping with confidence scoring",
       "Anterior/posterior tilt, valgus, shoulder asymmetry detection",
     ],
@@ -360,16 +360,16 @@ const FEATURES: TechFeature[] = [
     color: "text-[hsl(var(--synth-orange))]",
     glowColor: "bg-[hsl(var(--synth-orange))]/10",
     tier: "foundation",
-    description: "Your phone camera tracks the barbell in real-time, measuring concentric and eccentric velocity for every rep. When bar speed drops below your target, the system tells you to stop — preventing junk volume and overtraining. This is the same method used by elite powerlifters and Olympic programs.",
+    description: "Your phone camera tracks the barbell in real-time, measuring concentric and eccentric velocity for every rep. When bar speed drops below your target, the system tells you to stop — preventing junk volume and overtraining. This is the same method used by elite powerlifters and Olympic programs. Matt uses this data to adjust your programming week to week.",
     howItWorks: [
       "Prop your phone to see the barbell from the side",
-      "AI tracks wrist position at 30+ frames per second",
+      "The system tracks wrist position at 30+ frames per second",
       "Real-time velocity displayed in m/s with color-coded feedback",
       "Automatic rep counting and concentric/eccentric phase detection",
       "Set-over-set velocity trends warn you when fatigue is too high",
     ],
     techSpecs: [
-      "MoveNet pose detection at 30+ FPS on-device",
+      "On-device pose detection at 30+ FPS",
       "Rolling velocity averaging with 5-frame smoothing",
       "Approximate m/s conversion from pixel displacement",
       "Automatic rep detection via Y-axis direction changes",
@@ -379,23 +379,23 @@ const FEATURES: TechFeature[] = [
   {
     id: "nutrition",
     icon: Brain,
-    title: "AI Nutrition Scanner",
+    title: "Instant Nutrition Scanner",
     tagline: "Snap a photo. Get every macro. No manual entry.",
     color: "text-[hsl(var(--synth-pink))]",
     glowColor: "bg-[hsl(var(--synth-pink))]/10",
     tier: "foundation",
-    description: "Take a photo of your meal and AI identifies every food item, estimates portions, and calculates calories, protein, carbs, fat, and fiber — instantly. Daily totals update in real-time, and you can track 7-day trends, set personal macro goals, and print weekly nutrition reports.",
+    description: "Take a photo of your meal and the system identifies every food item, estimates portions, and calculates calories, protein, carbs, fat, and fiber — instantly. Daily totals update in real-time, and you can track 7-day trends, set personal macro goals, and print weekly nutrition reports. Matt can see your nutrition data too, so he can adjust your programming if needed.",
     howItWorks: [
       "Point your camera at any meal or snack",
-      "AI identifies food items and estimates portion sizes",
+      "Food items are identified and portion sizes estimated automatically",
       "Macros calculated: calories, protein, carbs, fat, fiber",
       "Daily running totals update immediately with progress bars",
       "7-day trend charts show macro adherence over time",
     ],
     techSpecs: [
-      "Google Gemini Vision for food recognition",
+      "Computer vision food recognition",
       "Sub-3-second processing time",
-      "Persistent nutrition_logs with 30-day history",
+      "Persistent nutrition logs with 30-day history",
       "Custom daily goals per macro with profile settings",
     ],
     demoComponent: NutritionDemo,
@@ -427,23 +427,23 @@ const FEATURES: TechFeature[] = [
   {
     id: "progress",
     icon: LineChart,
-    title: "AI Progress Tracking & Insights",
-    tagline: "Estimated 1RM. Trend analysis. AI-powered recovery advice.",
+    title: "Progress Tracking & Insights",
+    tagline: "Estimated 1RM. Trend analysis. Recovery data.",
     color: "text-[hsl(var(--synth-cyan))]",
     glowColor: "bg-[hsl(var(--synth-cyan))]/10",
     tier: "foundation",
-    description: "Every lift you log feeds into estimated 1RM calculations, trend graphs, and AI-powered insights. The system detects plateaus, suggests deload weeks, and provides recovery recommendations based on your training volume and sleep data. Coach Matt sees everything — and can add notes directly to your progress charts.",
+    description: "Every lift you log feeds into estimated 1RM calculations, trend graphs, and performance insights. The system detects plateaus and flags overreaching patterns — data Matt uses to adjust your programming. He can add notes directly to your progress charts so you always know what's next.",
     howItWorks: [
       "Log your lifts — 1RM is estimated automatically (Epley formula)",
       "Track progress over weeks and months with visual charts",
-      "AI analyzes trends and detects stalls or overreaching",
+      "The system analyzes trends and flags stalls or overreaching",
       "Recovery advisor suggests deload or sleep adjustments",
       "Coach Matt can annotate your charts with personal notes",
     ],
     techSpecs: [
       "Epley 1RM estimation with trend regression",
-      "Recharts-powered interactive progress graphs",
-      "AI recovery advisor via Gemini analysis",
+      "Interactive progress graphs",
+      "Recovery advisor based on training volume analysis",
       "Coach notes system linked to individual progress logs",
     ],
     demoComponent: ProgressDemo,
@@ -456,7 +456,7 @@ const FEATURES: TechFeature[] = [
     color: "text-primary",
     glowColor: "bg-primary/10",
     tier: "custom",
-    description: "Have a question about your form? Not sure about a substitution? Message Coach Matt directly from your dashboard. He reviews every message personally and responds within 24 hours. No AI middleman on the coaching side — this is Matt, looking at your video, giving you real feedback.",
+    description: "Have a question about your form? Not sure about a substitution? Message Coach Matt directly from your dashboard. He reviews every message personally and responds within 24 hours. This is Matt, looking at your video, giving you real feedback.",
     howItWorks: [
       "Open Coach Messaging from your dashboard",
       "Type your question or attach a video clip",
@@ -468,7 +468,7 @@ const FEATURES: TechFeature[] = [
       "Realtime messaging via database subscriptions",
       "Video attachment support for form checks",
       "Read receipts and notification system",
-      "Admin inbox with AI-assisted triage for priority routing",
+      "Smart inbox with priority routing for urgent questions",
     ],
     demoComponent: CoachDMDemo,
   },
@@ -610,8 +610,8 @@ const TheEdge = () => {
             </h1>
             <p className="text-sm text-foreground-soft max-w-xl leading-relaxed">
               Matt's two passions — computer engineering and exercise science — fused into a platform
-              no other trainer can match. AI-powered analysis, real-time tracking, and intelligent
-              programming — all running on your phone. No extra hardware. No gimmicks.
+              no other trainer can match. Advanced analysis, real-time tracking, and intelligent
+              tools that give Matt data no one else has — and give you results no one else can deliver.
             </p>
           </div>
 
