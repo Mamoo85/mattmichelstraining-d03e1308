@@ -95,9 +95,10 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
       .then(({ data }) => {
         const enabled = (data as any)?.auto_regulate === true;
         setAutoRegulateEnabled(enabled);
-        if (!enabled) setPhase("active");
+        // Only advance past intercept if we already have content loaded
+        if (!enabled && hasInitialContent) setPhase("active");
       });
-  }, [user, initialContext?.resumed]);
+  }, [user, initialContext?.resumed, hasInitialContent]);
 
   // Apply readiness adjustments to exercises
   const applyReadinessAdjustments = useCallback(async (result: ReadinessResult, currentExercises: LoggedExerciseData[]) => {
