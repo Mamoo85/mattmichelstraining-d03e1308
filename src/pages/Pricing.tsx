@@ -57,7 +57,7 @@ const TIER_CARDS: {
     features: [
       "Everything in Foundation, plus…",
       "A program built just for you by Coach Matt",
-      "1-on-1 video movement assessment ($50 value included)",
+      "In-person or online movement assessment ($50 value — optional)",
       "Direct message Coach Matt anytime",
       "🎁 Gift a training session to a friend",
       "Fastest response times on form checks",
