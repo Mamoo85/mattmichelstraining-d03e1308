@@ -45,7 +45,6 @@ const Dashboard = () => {
   const [profile, setProfile] = useState<{ full_name: string | null; athlete_name: string | null } | null>(null);
   const [activeTab, setActiveTab] = useState("home");
   const [portalLoading, setPortalLoading] = useState(false);
-  const [showTimer, setShowTimer] = useState(false);
   const [hasPrograms, setHasPrograms] = useState<boolean | null>(null);
   const [hasLogs, setHasLogs] = useState<boolean | null>(null);
 
