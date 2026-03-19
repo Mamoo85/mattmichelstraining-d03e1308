@@ -396,7 +396,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
         </header>
 
         {/* Scrollable content */}
-        <main className="flex-1 overflow-y-auto px-4 py-4 space-y-4 pb-28">
+        <main className="flex-1 overflow-y-auto px-4 py-4 space-y-4 pb-[120px]">
           {exercises.length === 0 && !showPicker && (
             <div className="flex flex-col items-center justify-center py-16 text-center space-y-4">
               <Dumbbell size={32} className="text-muted-foreground/30" />
