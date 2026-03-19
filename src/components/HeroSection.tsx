@@ -93,12 +93,7 @@ const HeroSection = () => {
         {/* ─── 5. THE M² DIFFERENCE ─── */}
         <M2Difference />
 
-        {/* ─── 6. TRIAL CTA ─── */}
-        <div className="mb-8">
-          <TrialCTA variant="banner" />
-        </div>
-
-        {/* ─── 7. SOCIAL — Instagram Feed ─── */}
+        {/* ─── 6. SOCIAL — Instagram Feed ─── */}
         <div className="mb-8">
           <InstagramSocialBox />
         </div>

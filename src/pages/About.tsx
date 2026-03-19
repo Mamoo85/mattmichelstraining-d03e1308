@@ -305,43 +305,6 @@ const About = () => {
         </div>
       </motion.div>
 
-      {/* ═══════════════════════════════════════════
-          5. WHY M² — Core pillars
-      ═══════════════════════════════════════════ */}
-      <motion.div {...fade(0.25)} className="mb-12">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-1">
-          The M² Difference
-        </span>
-        <h2 className="text-lg font-bold text-foreground mb-4">
-          Why families keep coming back
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="bg-card shadow-m2 p-5">
-            <Shield size={20} className="text-primary mb-2" />
-            <h3 className="text-sm font-bold text-foreground mb-1">Injury Prevention First</h3>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Every program starts with joint health and connective tissue strength before chasing numbers.
-              That's why Matt's athletes stay on the field — not on the bench.
-            </p>
-          </div>
-          <div className="bg-card shadow-m2 p-5">
-            <Trophy size={20} className="text-primary mb-2" />
-            <h3 className="text-sm font-bold text-foreground mb-1">50+ College Athletes. Zero Injuries.</h3>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Most trainers move on to higher-paying clients. Matt stayed with young athletes for 20+ years.
-              These programs are built on experience — not trends.
-            </p>
-          </div>
-          <div className="bg-card shadow-m2 p-5">
-            <Zap size={20} className="text-primary mb-2" />
-            <h3 className="text-sm font-bold text-foreground mb-1">Strength Is the Foundation</h3>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Speed and agility come from strength — not ladder drills. When an athlete gets stronger safely,
-              everything improves: first-step quickness, change of direction, durability.
-            </p>
-          </div>
-        </div>
-      </motion.div>
 
       {/* ═══════════════════════════════════════════
           6. TESTIMONIALS — What families say

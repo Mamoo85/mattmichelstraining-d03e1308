@@ -380,12 +380,6 @@ const Pricing = () => {
         {/* Dynamic Feature Comparison Table */}
         <TierComparisonTable />
 
-        {/* Challenge Teaser for non-subscribers */}
-        {!subscribed && (
-          <div className="mt-12 max-w-xl mx-auto">
-            <ChallengeTeaser />
-          </div>
-        )}
 
 
 

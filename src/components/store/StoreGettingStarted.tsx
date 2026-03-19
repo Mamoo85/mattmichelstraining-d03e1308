@@ -169,39 +169,6 @@ const StoreGettingStarted = () => {
         </div>
       )}
 
-      {/* ═══════════ Matt's Edge — The Fusion ═══════════ */}
-      <div className="bg-primary/5 border border-primary/20 p-5 sm:p-6">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 bg-primary/10 border border-primary/30 flex items-center justify-center shrink-0">
-            <Brain size={24} className="text-primary" />
-          </div>
-          <div className="space-y-2">
-            <h3 className="text-sm font-black uppercase tracking-tight text-foreground">
-              Computer Engineer Turned Strength Coach
-            </h3>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              20 years of training. A degree in computer engineering. 50+ college athletes. Zero injuries. 
-              Matt didn't just pick up a certification — he spent two decades merging the science of movement with 
-              the power of technology. The biomechanics system isn't a gimmick. It's what happens when someone 
-              who actually understands both worlds builds the tools he wished existed.
-            </p>
-            <div className="flex flex-wrap gap-4 pt-1">
-              <div className="flex items-center gap-1.5">
-                <Shield size={12} className="text-primary" />
-                <span className="text-[10px] text-foreground font-bold">0 injuries in 20 years</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Trophy size={12} className="text-primary" />
-                <span className="text-[10px] text-foreground font-bold">50+ college athletes trained</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Cpu size={12} className="text-primary" />
-                <span className="text-[10px] text-foreground font-bold">Advanced biomechanics tech</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
 
       {/* Free features */}

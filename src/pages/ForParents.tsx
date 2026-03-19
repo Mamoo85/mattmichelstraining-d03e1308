@@ -282,28 +282,6 @@ const ForParents = () => {
           <TechShowcaseCard />
         </motion.div>
 
-        {/* SOCIAL — Instagram */}
-        <motion.div {...fade(0.35)} className="mb-12">
-          <InstagramSocialBox />
-        </motion.div>
-
-        {/* PRESS */}
-        <motion.div {...fade(0.38)} className="mb-12">
-          <a
-            href={PRESS_QUOTE.url}
-            target="_blank"
-            rel="noreferrer"
-            className="block bg-card shadow-m2 p-5 md:p-6 border-l-4 border-primary hover:bg-secondary/50 transition-m2"
-          >
-            <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-2">
-              {PRESS_QUOTE.outlet}
-            </span>
-            <p className="text-xs text-muted-foreground italic leading-relaxed">
-              "{PRESS_QUOTE.quote}"
-            </p>
-            <span className="text-[10px] text-primary font-bold mt-2 block">Read full article →</span>
-          </a>
-        </motion.div>
 
 
         {/* FOOTER */}
