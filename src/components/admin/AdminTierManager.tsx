@@ -225,7 +225,7 @@ const AdminTierManager = () => {
       <div className="bg-muted/50 border border-border p-3">
         <p className="text-[10px] text-muted-foreground">
           <strong>How it works:</strong> Use <code className="text-[9px] bg-muted px-1">feature_key</code> values in PaywallGate components throughout the app. 
-          When a feature is checked for a tier, users on that tier (or higher) get access. Legend members and admins always bypass all gates.
+          When a feature is checked for a tier, users on that tier (or higher) get access. Admins always bypass all gates.
         </p>
       </div>
     </div>
