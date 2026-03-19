@@ -266,7 +266,31 @@ const AdminMonthlyFocus = () => {
           </button>
         </div>
 
-        {/* New Challenge Form */}
+        {/* AI Challenge Generator */}
+        <div className="bg-card border border-border p-4 mb-4 space-y-3">
+          <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block">
+            AI Challenge Generator
+          </label>
+          <div className="flex gap-2">
+            <Input
+              placeholder="e.g., Push-ups, Wall Sits, Burpees…"
+              value={challengeTopicInput}
+              onChange={(e) => setChallengeTopicInput(e.target.value)}
+              className="flex-1"
+            />
+            <button
+              onClick={handleGenerateChallenge}
+              disabled={generatingChallenge}
+              className="flex items-center gap-1.5 bg-accent text-accent-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 disabled:opacity-50 transition-all shrink-0"
+            >
+              {generatingChallenge ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+              {generatingChallenge ? "Cooking…" : "AI Generate"}
+            </button>
+          </div>
+          <p className="text-[10px] text-muted-foreground">Leave blank for a surprise. AI writes a funny 2-3 sentence challenge in Matt's voice.</p>
+        </div>
+
+        {/* New Challenge Form (manual) */}
         {showNewChallenge && (
           <div className="bg-card border border-border p-5 mb-4 space-y-3">
             <Input
