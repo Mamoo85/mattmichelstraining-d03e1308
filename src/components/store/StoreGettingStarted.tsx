@@ -330,7 +330,7 @@ const StoreGettingStarted = () => {
               </div>
               <div className="flex items-center gap-1.5">
                 <Cpu size={12} className="text-primary" />
-                <span className="text-[10px] text-foreground font-bold">Proprietary AI technology</span>
+                <span className="text-[10px] text-foreground font-bold">Advanced biomechanics tech</span>
               </div>
             </div>
           </div>

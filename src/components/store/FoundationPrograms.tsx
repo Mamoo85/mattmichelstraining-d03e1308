@@ -356,7 +356,7 @@ const FoundationPrograms = () => {
         <h3 className="text-sm font-bold text-foreground mb-2">Best Results Start In Person</h3>
         <p className="text-xs text-muted-foreground mb-4 max-w-md mx-auto">
           Matt trains youth athletes in Grosse Pointe Park, MI. Start with a monthly 1-on-1 session — 
-          AI biomechanics assessment included. Add sessions at a member discount as you grow.
+          full biomechanics assessment included. Add sessions at a member discount as you grow.
         </p>
         <div className="flex flex-wrap gap-3 justify-center">
           <a
