@@ -73,6 +73,8 @@ const ProtocolTable = () => {
     }
     toast({ title: "Session logged", description: "Nice work. Matt sees this." });
     setWeights({});
+    setLogSuccess(true);
+    setTimeout(() => setLogSuccess(false), 500);
   };
 
   if (loading) {
