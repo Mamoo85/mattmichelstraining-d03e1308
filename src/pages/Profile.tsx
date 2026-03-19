@@ -125,7 +125,8 @@ const Profile = () => {
     const { error } = await supabase.from("profiles").update({
       full_name: fullName.trim() || null,
       athlete_name: athleteName.trim() || null,
-    }).eq("user_id", user.id);
+      auto_regulate: autoRegulate,
+    } as any).eq("user_id", user.id);
     if (error) {
       toast({ title: "Error saving", description: error.message, variant: "destructive" });
     } else {
