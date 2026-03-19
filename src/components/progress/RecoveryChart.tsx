@@ -72,7 +72,7 @@ const RecoveryChart = ({ userId }: RecoveryChartProps) => {
   if (loading || data.length === 0) return null;
 
   return (
-    <div className="p-4 bg-card border border-border mt-4">
+    <div className="p-6 bg-card border border-border mt-4 rounded-xl">
       <div className="flex items-center gap-2 mb-3">
         <Activity size={14} className="text-primary" />
         <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-primary">
