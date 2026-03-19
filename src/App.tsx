@@ -40,6 +40,7 @@ const Learn = lazy(() => import("./pages/Learn"));
 const TrialWelcome = lazy(() => import("./pages/TrialWelcome"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Install = lazy(() => import("./pages/Install"));
+const Nutrition = lazy(() => import("./pages/Nutrition"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
