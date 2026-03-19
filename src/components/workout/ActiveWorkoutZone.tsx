@@ -175,7 +175,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
 
   // Timer
   const [elapsedSeconds, setElapsedSeconds] = useState(initialContext?.resumedElapsed || 0);
-  const [timerRunning, setTimerRunning] = useState(true);
+  const [timerRunning, setTimerRunning] = useState(hasInitialContent);
 
   useEffect(() => {
     if (!timerRunning) return;
