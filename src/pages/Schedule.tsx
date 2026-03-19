@@ -1,16 +1,15 @@
 import { useState, useEffect, useMemo } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import SEOHead from "@/components/SEOHead";
 import AppNavbar from "@/components/AppNavbar";
-import PaywallGate from "@/components/PaywallGate";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { format, addDays, startOfDay } from "date-fns";
-import { Loader2, Clock, DollarSign, Info, Calendar, CheckCircle, Video, MapPin, Ticket, Gift } from "lucide-react";
+import { Loader2, Clock, DollarSign, Info, Calendar, CheckCircle, Video, MapPin, Ticket, Gift, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import ScheduleSneakPeek from "@/components/landing/ScheduleSneakPeek";
-import InstagramSocialBox from "@/components/landing/InstagramSocialBox";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const formatTime12 = (t: string) => {
   const [hStr, mStr] = t.split(":");
@@ -55,6 +54,11 @@ const Schedule = () => {
   const [giftId, setGiftId] = useState<string | null>(null);
   const [useGift, setUseGift] = useState(false);
 
+  // Guest booking fields
+  const [guestName, setGuestName] = useState("");
+  const [guestEmail, setGuestEmail] = useState("");
+  const [agreeTerms, setAgreeTerms] = useState(false);
+
   const isElite = subscriptionTier === "custom" || subscriptionTier === "team_elite";
 
   const today = startOfDay(new Date());
@@ -68,8 +72,6 @@ const Schedule = () => {
 
     const checkEntitlements = async () => {
       setLoadingCredit(true);
-
-      // Check gifted sessions for ANY tier
       const { data: giftData } = await supabase
         .from("gifted_sessions")
         .select("id")
@@ -77,7 +79,6 @@ const Schedule = () => {
         .eq("claimed_by", user.id)
         .limit(1);
 
-      // Also check by receiver_email if not claimed yet
       const userEmail = user.email;
       let pendingGift = giftData && giftData.length > 0 ? giftData[0] : null;
       if (!pendingGift && userEmail) {
@@ -92,7 +93,6 @@ const Schedule = () => {
       setHasGift(!!pendingGift);
       setGiftId(pendingGift?.id || null);
 
-      // Check Elite credits
       if (isElite) {
         const now = new Date();
         const month = now.getMonth() + 1;
@@ -163,7 +163,7 @@ const Schedule = () => {
   const toggleSlot = (time: string) => {
     setSelectedSlots(prev => {
       if (prev.includes(time)) return prev.filter(t => t !== time);
-      if (useCredit || useGift) return [time]; // credits/gifts = single slot only
+      if (useCredit || useGift) return [time];
       if (prev.length === 0) return [time];
       if (prev.length === 1) {
         const existing = prev[0];
@@ -183,38 +183,49 @@ const Schedule = () => {
   const duration = isFreeSession ? 30 : (isConsecutive ? 60 : 30);
   const price = isFreeSession ? 0 : (isConsecutive ? 90 : 50);
 
+  // Determine name/email for booking
+  const bookingName = user
+    ? ""  // handled server-side from profile
+    : guestName.trim();
+  const bookingEmail = user?.email || guestEmail.trim();
+
+  const canBook = user
+    ? selectedSlots.length > 0
+    : selectedSlots.length > 0 && guestName.trim().length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail) && agreeTerms;
+
   const handlePurchase = async () => {
-    if (!user) {
-      window.location.href = `/auth?redirect=/schedule`;
-      return;
-    }
     if (selectedSlots.length === 0) return;
+
+    // Guest validation
+    if (!user) {
+      if (!guestName.trim()) {
+        toast({ title: "Name required", description: "Please enter your name.", variant: "destructive" });
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail)) {
+        toast({ title: "Valid email required", description: "Please enter a valid email address.", variant: "destructive" });
+        return;
+      }
+      if (!agreeTerms) {
+        toast({ title: "Agreement required", description: "Please agree to the terms to continue.", variant: "destructive" });
+        return;
+      }
+    }
 
     setPurchasing(true);
     try {
-      if (useCredit) {
-        // Redeem Elite credit directly
+      if (user && useCredit) {
         const { data, error } = await supabase.functions.invoke("redeem-session-credit", {
-          body: {
-            slot_date: dateStr,
-            start_time: selectedSlots[0],
-            session_type: sessionType,
-          },
+          body: { slot_date: dateStr, start_time: selectedSlots[0], session_type: sessionType },
         });
         if (error) throw error;
         if (data?.error) throw new Error(data.error);
         setVerified(true);
         setHasCredit(false);
-        toast({ title: "Session booked!", description: "Your Elite session credit has been redeemed. Confirmation emails sent!" });
-      } else if (useGift && giftId) {
-        // Redeem gifted session — book free via edge function
+        toast({ title: "Session booked!", description: "Your Elite session credit has been redeemed." });
+      } else if (user && useGift && giftId) {
         const { data, error } = await supabase.functions.invoke("redeem-session-credit", {
-          body: {
-            slot_date: dateStr,
-            start_time: selectedSlots[0],
-            session_type: sessionType,
-            gift_id: giftId,
-          },
+          body: { slot_date: dateStr, start_time: selectedSlots[0], session_type: sessionType, gift_id: giftId },
         });
         if (error) throw error;
         if (data?.error) throw new Error(data.error);
@@ -222,17 +233,20 @@ const Schedule = () => {
         setHasGift(false);
         setGiftId(null);
         setUseGift(false);
-        toast({ title: "Session booked!", description: "Your gifted session has been redeemed. Confirmation emails sent!" });
+        toast({ title: "Session booked!", description: "Your gifted session has been redeemed." });
       } else {
-        // Stripe checkout
-        const { data, error } = await supabase.functions.invoke("create-session-checkout", {
-          body: {
-            slot_date: dateStr,
-            start_time: selectedSlots[0],
-            duration_minutes: duration,
-            session_type: sessionType,
-          },
-        });
+        // Stripe checkout — works for both logged-in and guest users
+        const body: any = {
+          slot_date: dateStr,
+          start_time: selectedSlots[0],
+          duration_minutes: duration,
+          session_type: sessionType,
+        };
+        if (!user) {
+          body.guest_name = guestName.trim();
+          body.guest_email = guestEmail.trim();
+        }
+        const { data, error } = await supabase.functions.invoke("create-session-checkout", { body });
         if (error) throw error;
         if (data?.error) throw new Error(data.error);
         if (data?.url) window.location.href = data.url;
@@ -276,27 +290,18 @@ const Schedule = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Schedule a Session — In-Person Training"
-        description="Book an in-person strength training session with Coach Matt in Grosse Pointe Park, MI. 30-min ($50) and 60-min ($90) sessions available."
+        title="Schedule a Session — M² Training"
+        description="Book an in-person or video training session with Coach Matt. 30-min ($50) and 60-min ($90) sessions. No account required."
         path="/schedule"
       />
       <AppNavbar />
       <div className="container pt-20 pb-12 max-w-2xl">
-        {/* Public-facing schedule landing — always visible */}
-        <div className="mb-10 space-y-8">
-          <ScheduleSneakPeek />
 
-          {/* Instagram Social Box */}
-          <div className="bg-card border border-border p-5">
-            <InstagramSocialBox />
-          </div>
-        </div>
-
-        <PaywallGate featureKey="priority_scheduling" featureName="1-on-1 Session Booking">
+        {/* Header */}
         <div className="mb-6">
           <h1 className="text-lg font-bold text-foreground tracking-display">Schedule a Session</h1>
           <p className="text-xs text-muted-foreground mt-1">
-            Book a training session with Matt. Select a day, pick your time, and checkout.
+            Pick a day, choose your time, and book. No account needed — just your name and email.
           </p>
         </div>
 
@@ -325,7 +330,7 @@ const Schedule = () => {
         </div>
 
         {/* Elite Credit Banner */}
-        {isElite && hasCredit && !loadingCredit && (
+        {user && isElite && hasCredit && !loadingCredit && (
           <div className="bg-accent/20 border border-accent p-3 mb-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -352,17 +357,45 @@ const Schedule = () => {
           </div>
         )}
 
+        {/* Gift banner */}
+        {user && hasGift && !useCredit && (
+          <div className="bg-accent/20 border border-accent p-3 mb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Gift size={14} className="text-accent-foreground" />
+                <div>
+                  <div className="text-xs font-bold text-foreground">Gifted Session Available</div>
+                  <div className="text-[10px] text-muted-foreground">You have a free session gift to redeem</div>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setUseGift(!useGift);
+                  if (!useGift) setSelectedSlots(prev => prev.slice(0, 1));
+                }}
+                className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest border transition-m2 ${
+                  useGift
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-card border-border text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {useGift ? "Using Gift" : "Use Gift"}
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Info box */}
         <div className="bg-primary/10 border border-primary/20 p-4 mb-6 space-y-1">
           <div className="flex items-start gap-2">
             <Info size={14} className="text-primary flex-shrink-0 mt-0.5" />
             <div className="text-xs text-muted-foreground space-y-1">
-              {useCredit || useGift ? (
+              {isFreeSession ? (
                 <p><strong className="text-foreground">Free 30-min session</strong> — Select one time slot to redeem your {useCredit ? "Elite credit" : "gifted session"}.</p>
               ) : (
                 <>
                   <p><strong className="text-foreground">30-minute session: $50</strong> — Select one time slot.</p>
-                  <p><strong className="text-foreground">1-hour session: $90</strong> — Select two consecutive slots to automatically combine into an hour.</p>
+                  <p><strong className="text-foreground">1-hour session: $90</strong> — Select two consecutive slots to combine.</p>
                 </>
               )}
               <p>Slots close 2.5 hours before start time. Sessions available up to 2 weeks out.</p>
@@ -420,6 +453,39 @@ const Schedule = () => {
           </div>
         )}
 
+        {/* Guest booking fields — only shown when not logged in */}
+        {!user && selectedSlots.length > 0 && (
+          <div className="bg-card border border-border p-4 mb-4 space-y-3">
+            <p className="text-xs font-bold text-foreground uppercase tracking-widest">Your Info</p>
+            <Input
+              placeholder="Full name"
+              value={guestName}
+              onChange={e => setGuestName(e.target.value)}
+              className="text-sm"
+              maxLength={100}
+            />
+            <Input
+              type="email"
+              placeholder="Email address"
+              value={guestEmail}
+              onChange={e => setGuestEmail(e.target.value)}
+              className="text-sm"
+              maxLength={255}
+            />
+            <div className="flex items-start gap-2">
+              <Checkbox
+                id="agree-terms"
+                checked={agreeTerms}
+                onCheckedChange={(v) => setAgreeTerms(v === true)}
+                className="mt-0.5"
+              />
+              <label htmlFor="agree-terms" className="text-[11px] text-muted-foreground leading-tight cursor-pointer">
+                I agree to be charged for this session and understand the booking terms. I consent to receiving a confirmation email at the address provided.
+              </label>
+            </div>
+          </div>
+        )}
+
         {/* Purchase section */}
         {selectedSlots.length > 0 && (
           <div className="bg-card shadow-m2 p-5 sticky bottom-4 pb-safe">
@@ -450,16 +516,34 @@ const Schedule = () => {
             </div>
             <Button
               onClick={handlePurchase}
-              disabled={purchasing}
+              disabled={purchasing || !canBook}
               className="w-full text-xs font-bold uppercase tracking-widest"
             >
-              {purchasing ? <Loader2 size={14} className="animate-spin mr-2" /> : 
+              {purchasing ? <Loader2 size={14} className="animate-spin mr-2" /> :
                 isFreeSession ? (useGift ? <Gift size={14} className="mr-2" /> : <Ticket size={14} className="mr-2" />) : <DollarSign size={14} className="mr-2" />}
-              {!user ? "Sign In to Book" : useCredit ? "Redeem Credit" : useGift ? "Redeem Gift" : `Book Session · $${price}`}
+              {useCredit ? "Redeem Credit" : useGift ? "Redeem Gift" : `Book Session · $${price}`}
             </Button>
           </div>
         )}
-        </PaywallGate>
+
+        {/* Free Trial CTA */}
+        {!user && (
+          <div className="mt-10 bg-primary/5 border border-primary/20 p-6 text-center">
+            <Zap size={20} className="text-primary mx-auto mb-2" />
+            <p className="text-sm font-bold text-foreground mb-1">Want priority scheduling & session credits?</p>
+            <p className="text-xs text-muted-foreground mb-4">
+              Members get exclusive perks, training programs, and more. Try it free for 14 days.
+            </p>
+            <Link
+              to="/auth?trial=true"
+              className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all"
+            >
+              <Zap size={12} />
+              Start Free Trial
+            </Link>
+          </div>
+        )}
+
       </div>
     </div>
   );
