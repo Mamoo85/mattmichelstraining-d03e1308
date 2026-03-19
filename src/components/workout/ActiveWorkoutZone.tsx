@@ -302,6 +302,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
               index={i}
               onUpdate={(data) => updateExercise(i, data)}
               onRemove={() => removeExercise(i)}
+              onOpenFormTracker={(title) => setFormTrackerExercise(title)}
             />
           ))}
 
