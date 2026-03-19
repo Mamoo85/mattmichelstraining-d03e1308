@@ -215,11 +215,13 @@ const VideoFormReviewTool = () => {
   const [athlete, setAthlete] = useState("Athlete");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState("");
+  const [usage, setUsage] = useState<any>(null);
 
   const run = async () => {
     if (!videoUrl.trim()) return toast.error("Paste a video URL");
     setLoading(true);
     setResult("");
+    setUsage(null);
     try {
       const { data, error } = await supabase.functions.invoke("ai-video-form-review", {
         body: { videoUrl: videoUrl.trim(), exerciseName: exercise, athleteName: athlete },
@@ -227,6 +229,7 @@ const VideoFormReviewTool = () => {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setResult(data.review);
+      if (data?.usage) setUsage(data.usage);
     } catch (e: any) {
       toast.error(e.message || "Failed to review");
     } finally {
@@ -246,11 +249,14 @@ const VideoFormReviewTool = () => {
         </Button>
       </div>
       {result && (
-        <Card>
-          <CardContent className="pt-4 prose prose-sm max-w-none dark:prose-invert">
-            <ReactMarkdown>{result}</ReactMarkdown>
-          </CardContent>
-        </Card>
+        <>
+          <UsageBadge usage={usage} />
+          <Card>
+            <CardContent className="pt-4 prose prose-sm max-w-none dark:prose-invert">
+              <ReactMarkdown>{result}</ReactMarkdown>
+            </CardContent>
+          </Card>
+        </>
       )}
     </div>
   );
