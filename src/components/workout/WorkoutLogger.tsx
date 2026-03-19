@@ -36,6 +36,7 @@ const WorkoutLogger = () => {
   const [exercises, setExercises] = useState<LoggedExerciseData[]>([]);
   const [saving, setSaving] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const [pastLogs, setPastLogs] = useState<any[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [recovery, setRecovery] = useState<RecoveryData>({
