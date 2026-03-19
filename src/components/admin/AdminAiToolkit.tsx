@@ -531,6 +531,12 @@ const AdminAiToolkit = () => {
           </Suspense>
         </div>
       )}
+      {/* AI Copilot — Automated Monitoring */}
+      <div className="border-t border-border pt-6">
+        <Suspense fallback={<ToolLoader />}>
+          <AdminAiCopilot />
+        </Suspense>
+      </div>
     </div>
   );
 };
