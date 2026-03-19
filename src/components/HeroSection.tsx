@@ -166,10 +166,10 @@ const HeroSection = () => {
           </div>
         </motion.div>
 
-        {/* ─── 8. EMAIL CAPTURE ─── */}
+        {/* ─── 11. EMAIL CAPTURE ─── */}
         <EmailCapture />
 
-        {/* ─── 9. FIND US — always last ─── */}
+        {/* ─── 12. FIND US — always last ─── */}
         {showFindUs && <div className="mb-8"><FindUs /></div>}
 
         {/* FOOTER */}
