@@ -282,6 +282,16 @@ const Schedule = () => {
       />
       <AppNavbar />
       <div className="container pt-20 pb-12 max-w-2xl">
+        {/* Public-facing schedule landing — always visible */}
+        <div className="mb-10 space-y-8">
+          <ScheduleSneakPeek />
+
+          {/* Instagram Social Box */}
+          <div className="bg-card border border-border p-5">
+            <InstagramSocialBox />
+          </div>
+        </div>
+
         <PaywallGate featureKey="priority_scheduling" featureName="1-on-1 Session Booking">
         <div className="mb-6">
           <h1 className="text-lg font-bold text-foreground tracking-display">Schedule a Session</h1>
