@@ -170,6 +170,7 @@ const Nutrition = () => {
         if (error) throw error;
         if (data.error) throw new Error(data.error);
         setAnalysis(data as AnalysisResult);
+        setEditableItems((data as AnalysisResult).items.map(item => ({ ...item })));
       } catch (err: any) {
         console.error(err);
         toast.error(err.message || "Failed to analyze image");
