@@ -55,6 +55,7 @@ const HeroSection = () => {
                 alt="M² Training"
                 width={224}
                 height={224}
+                fetchPriority="high"
                 className="w-36 h-36 md:w-48 md:h-48 lg:w-56 lg:h-56 object-contain mb-4"
               />
 
