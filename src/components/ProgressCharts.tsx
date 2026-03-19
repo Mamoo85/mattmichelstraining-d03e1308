@@ -40,7 +40,7 @@ const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) =
   const config = getLiftConfig(activeLift);
   const repMax = config?.repMax ?? 3;
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!effectiveUserId) { setLoading(false); return; }
     setLoading(true);
     const { data: rawLogs } = await supabase
@@ -59,7 +59,7 @@ const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) =
       );
     }
     setLoading(false);
-  };
+  }, [effectiveUserId, activeLift]);
 
   useEffect(() => {
     fetchData();
