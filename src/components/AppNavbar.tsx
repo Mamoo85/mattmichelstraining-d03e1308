@@ -24,11 +24,6 @@ const AppNavbar = () => {
   const { user, signOut } = useAuth();
   const { isAdmin } = useIsAdmin();
   const { timerOpen, toggleTimer } = useTimer();
-  const [isStandalone, setIsStandalone] = useState(false);
-
-  useEffect(() => {
-    setIsStandalone(window.matchMedia("(display-mode: standalone)").matches);
-  }, []);
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm shadow-m2">
