@@ -72,6 +72,7 @@ const Nutrition = () => {
 
   const [preview, setPreview] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
+  const [editableItems, setEditableItems] = useState<FoodItem[]>([]);
   const [analyzing, setAnalyzing] = useState(false);
   const [editingGoals, setEditingGoals] = useState(false);
   const [goalInputs, setGoalInputs] = useState<Record<string, string>>({});
@@ -169,6 +170,7 @@ const Nutrition = () => {
         if (error) throw error;
         if (data.error) throw new Error(data.error);
         setAnalysis(data as AnalysisResult);
+        setEditableItems((data as AnalysisResult).items.map(item => ({ ...item })));
       } catch (err: any) {
         console.error(err);
         toast.error(err.message || "Failed to analyze image");
@@ -181,20 +183,20 @@ const Nutrition = () => {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      if (!analysis || !user) throw new Error("No analysis to save");
-      const totals = analysis.items.reduce(
+      if (!editableItems.length || !user) throw new Error("No analysis to save");
+      const totals = editableItems.reduce(
         (acc, i) => ({ cal: acc.cal + i.calories, p: acc.p + i.protein_g, c: acc.c + i.carbs_g, f: acc.f + i.fat_g, fi: acc.fi + i.fiber_g }),
         { cal: 0, p: 0, c: 0, f: 0, fi: 0 }
       );
       const { error } = await supabase.from("nutrition_logs").insert({
         user_id: user.id,
-        food_items: analysis.items as any,
+        food_items: editableItems as any,
         total_calories: Math.round(totals.cal),
         total_protein_g: Math.round(totals.p * 10) / 10,
         total_carbs_g: Math.round(totals.c * 10) / 10,
         total_fat_g: Math.round(totals.f * 10) / 10,
         total_fiber_g: Math.round(totals.fi * 10) / 10,
-        notes: analysis.note || null,
+        notes: analysis?.note || null,
       });
       if (error) throw error;
     },
@@ -203,6 +205,7 @@ const Nutrition = () => {
       queryClient.invalidateQueries({ queryKey: ["nutrition-logs"] });
       setPreview(null);
       setAnalysis(null);
+      setEditableItems([]);
     },
     onError: (e: any) => toast.error(e.message || "Failed to save"),
   });
@@ -218,11 +221,17 @@ const Nutrition = () => {
     },
   });
 
-  const totalCalFromAnalysis = analysis ? analysis.items.reduce((s, i) => s + i.calories, 0) : 0;
-  const totalProtein = analysis ? analysis.items.reduce((s, i) => s + i.protein_g, 0) : 0;
-  const totalCarbs = analysis ? analysis.items.reduce((s, i) => s + i.carbs_g, 0) : 0;
-  const totalFat = analysis ? analysis.items.reduce((s, i) => s + i.fat_g, 0) : 0;
-  const totalFiber = analysis ? analysis.items.reduce((s, i) => s + i.fiber_g, 0) : 0;
+  const totalCalFromAnalysis = editableItems.reduce((s, i) => s + i.calories, 0);
+  const totalProtein = editableItems.reduce((s, i) => s + i.protein_g, 0);
+  const totalCarbs = editableItems.reduce((s, i) => s + i.carbs_g, 0);
+  const totalFat = editableItems.reduce((s, i) => s + i.fat_g, 0);
+  const totalFiber = editableItems.reduce((s, i) => s + i.fiber_g, 0);
+
+  const updateItem = (index: number, field: keyof FoodItem, value: number) => {
+    setEditableItems(prev => prev.map((item, i) =>
+      i === index ? { ...item, [field]: Math.max(0, value) } : item
+    ));
+  };
 
   const handlePrint = () => {
     printNutritionReport({
@@ -353,8 +362,9 @@ const Nutrition = () => {
                     <span className="text-sm">Analyzing your meal…</span>
                   </div>
                 )}
-                {analysis && (
+                {analysis && editableItems.length > 0 && (
                   <div className="space-y-4">
+                    {/* Live totals */}
                     <div className="grid grid-cols-5 gap-2">
                       <MacroPill icon={Flame} label="cal" value={totalCalFromAnalysis} unit="" color="bg-orange-500/10 text-orange-600" />
                       <MacroPill icon={Beef} label="pro" value={totalProtein} unit="g" color="bg-red-500/10 text-red-600" />
@@ -362,18 +372,86 @@ const Nutrition = () => {
                       <MacroPill icon={Droplets} label="fat" value={totalFat} unit="g" color="bg-blue-500/10 text-blue-600" />
                       <MacroPill icon={Leaf} label="fib" value={totalFiber} unit="g" color="bg-green-500/10 text-green-600" />
                     </div>
+
+                    <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-primary font-bold">
+                      <Pencil size={10} />
+                      Tap any number to adjust before saving
+                    </div>
+
                     <Separator />
-                    <div className="space-y-2">
-                      {analysis.items.map((item, i) => (
-                        <div key={i} className="flex items-center justify-between text-sm">
-                          <div>
-                            <span className="font-medium">{item.name}</span>
-                            <span className="text-muted-foreground ml-2 text-xs">({item.portion})</span>
+
+                    {/* Editable food items */}
+                    <div className="space-y-3">
+                      {editableItems.map((item, i) => (
+                        <div key={i} className="bg-muted/50 border border-border rounded-md p-3 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <span className="text-sm font-bold text-foreground">{item.name}</span>
+                              <span className="text-muted-foreground ml-2 text-xs">({item.portion})</span>
+                            </div>
+                            <button
+                              onClick={() => setEditableItems(prev => prev.filter((_, idx) => idx !== i))}
+                              className="text-muted-foreground hover:text-destructive transition-colors"
+                            >
+                              <Trash2 size={14} />
+                            </button>
                           </div>
-                          <Badge variant="secondary">{item.calories} cal</Badge>
+                          <div className="grid grid-cols-5 gap-1.5">
+                            <div className="space-y-0.5">
+                              <label className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">Cal</label>
+                              <Input
+                                type="number"
+                                inputMode="numeric"
+                                value={item.calories || ""}
+                                onChange={(e) => updateItem(i, "calories", parseInt(e.target.value) || 0)}
+                                className="h-8 text-xs text-center font-mono px-1"
+                              />
+                            </div>
+                            <div className="space-y-0.5">
+                              <label className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">Pro</label>
+                              <Input
+                                type="number"
+                                inputMode="decimal"
+                                value={item.protein_g || ""}
+                                onChange={(e) => updateItem(i, "protein_g", parseFloat(e.target.value) || 0)}
+                                className="h-8 text-xs text-center font-mono px-1"
+                              />
+                            </div>
+                            <div className="space-y-0.5">
+                              <label className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">Carb</label>
+                              <Input
+                                type="number"
+                                inputMode="decimal"
+                                value={item.carbs_g || ""}
+                                onChange={(e) => updateItem(i, "carbs_g", parseFloat(e.target.value) || 0)}
+                                className="h-8 text-xs text-center font-mono px-1"
+                              />
+                            </div>
+                            <div className="space-y-0.5">
+                              <label className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">Fat</label>
+                              <Input
+                                type="number"
+                                inputMode="decimal"
+                                value={item.fat_g || ""}
+                                onChange={(e) => updateItem(i, "fat_g", parseFloat(e.target.value) || 0)}
+                                className="h-8 text-xs text-center font-mono px-1"
+                              />
+                            </div>
+                            <div className="space-y-0.5">
+                              <label className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">Fib</label>
+                              <Input
+                                type="number"
+                                inputMode="decimal"
+                                value={item.fiber_g || ""}
+                                onChange={(e) => updateItem(i, "fiber_g", parseFloat(e.target.value) || 0)}
+                                className="h-8 text-xs text-center font-mono px-1"
+                              />
+                            </div>
+                          </div>
                         </div>
                       ))}
                     </div>
+
                     {analysis.note && <p className="text-xs text-muted-foreground italic">{analysis.note}</p>}
                     <Button className="w-full" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
                       {saveMutation.isPending ? <Loader2 className="animate-spin mr-2" size={16} /> : <Flame className="mr-2" size={16} />}
