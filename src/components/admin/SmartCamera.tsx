@@ -287,6 +287,77 @@ const SmartCamera = ({ onCapture, onClose }: SmartCameraProps) => {
         ? "border-primary"
         : "border-border";
 
+  if (state === "guide") {
+    return (
+      <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center p-6">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onClose}
+          className="absolute top-4 right-4 z-50 text-white hover:bg-white/20"
+        >
+          <X size={24} />
+        </Button>
+
+        <h2 className="text-white text-xl font-bold mb-6">Positioning Guide</h2>
+
+        <div className="flex flex-col sm:flex-row gap-6 max-w-2xl w-full mb-8">
+          {/* Front View */}
+          <div className="flex-1 border border-border/40 rounded-lg p-4 bg-white/5">
+            <p className="text-white text-sm font-semibold text-center mb-3">Front View</p>
+            <svg viewBox="0 0 120 200" className="w-full max-w-[140px] mx-auto mb-3" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <ellipse cx="60" cy="30" rx="14" ry="17" className="text-primary" />
+              <line x1="60" y1="47" x2="60" y2="110" className="text-primary" />
+              <line x1="35" y1="65" x2="85" y2="65" className="text-primary" />
+              <line x1="35" y1="65" x2="25" y2="100" className="text-primary" />
+              <line x1="85" y1="65" x2="95" y2="100" className="text-primary" />
+              <line x1="45" y1="110" x2="75" y2="110" className="text-primary" />
+              <line x1="45" y1="110" x2="40" y2="160" className="text-primary" />
+              <line x1="75" y1="110" x2="80" y2="160" className="text-primary" />
+              <line x1="40" y1="160" x2="35" y2="195" className="text-primary" />
+              <line x1="80" y1="160" x2="85" y2="195" className="text-primary" />
+            </svg>
+            <ul className="text-white/70 text-xs space-y-1">
+              <li>• Face camera directly</li>
+              <li>• Arms at sides, relaxed</li>
+              <li>• Feet shoulder-width apart</li>
+              <li>• Full body visible head to toe</li>
+            </ul>
+          </div>
+
+          {/* Side View */}
+          <div className="flex-1 border border-border/40 rounded-lg p-4 bg-white/5">
+            <p className="text-white text-sm font-semibold text-center mb-3">Side View</p>
+            <svg viewBox="0 0 120 200" className="w-full max-w-[140px] mx-auto mb-3" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <ellipse cx="55" cy="30" rx="14" ry="17" className="text-primary" />
+              <line x1="55" y1="47" x2="58" y2="110" className="text-primary" />
+              <line x1="55" y1="65" x2="40" y2="100" className="text-primary" />
+              <line x1="58" y1="110" x2="55" y2="160" className="text-primary" />
+              <line x1="55" y1="160" x2="50" y2="195" className="text-primary" />
+              {/* slight forward lean hint */}
+              <line x1="58" y1="110" x2="62" y2="160" className="text-muted-foreground" strokeDasharray="3 3" />
+            </svg>
+            <ul className="text-white/70 text-xs space-y-1">
+              <li>• Stand sideways to camera</li>
+              <li>• Natural posture, don't flex</li>
+              <li>• Arms relaxed at sides</li>
+              <li>• Keep feet together or natural</li>
+            </ul>
+          </div>
+        </div>
+
+        <p className="text-white/50 text-xs text-center mb-4 max-w-md">
+          The camera will auto-capture when all keypoints are detected and centered for 2 seconds.
+        </p>
+
+        <Button onClick={startCamera} className="gap-2">
+          <Camera size={16} />
+          Start Camera
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center">
       {/* Close button */}
