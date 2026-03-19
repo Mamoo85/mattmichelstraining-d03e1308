@@ -13,7 +13,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Plus, Trash2, Save, ShieldCheck, Zap, Star, Users, Loader2, ChevronDown, Pencil } from "lucide-react";
 
+import { Eye } from "lucide-react";
+
 const TIERS = [
+  { key: "tier_free", label: "Free", icon: Eye, color: "text-muted-foreground" },
   { key: "tier_basic", label: "Basic", icon: Star, color: "text-blue-400" },
   { key: "tier_foundation", label: "Foundation", icon: Zap, color: "text-yellow-400" },
   { key: "tier_custom", label: "Custom", icon: ShieldCheck, color: "text-orange-400" },
@@ -44,6 +47,7 @@ interface TierFeature {
   feature_key: string;
   feature_label: string;
   description: string;
+  tier_free: boolean;
   tier_basic: boolean;
   tier_foundation: boolean;
   tier_custom: boolean;

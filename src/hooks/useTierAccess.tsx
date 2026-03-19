@@ -7,6 +7,7 @@ import { useIsAdmin } from "./useIsAdmin";
 const TIER_HIERARCHY: TierKey[] = ["basic", "foundation", "custom", "team_elite"];
 
 const TIER_COLUMN_MAP: Record<string, string> = {
+  free: "tier_free",
   basic: "tier_basic",
   foundation: "tier_foundation",
   custom: "tier_custom",
@@ -45,7 +46,10 @@ export const useTierAccess = (featureKey: string) => {
   const feature = features.find((f: any) => f.feature_key === featureKey);
   if (!feature) return { hasAccess: false, loading: false };
 
-  if (!subscriptionTier) return { hasAccess: false, loading: false };
+  // No subscription → check free tier access
+  if (!subscriptionTier) {
+    return { hasAccess: !!(feature as any).tier_free, loading: false };
+  }
 
   // Check current tier AND all lower tiers (inheritance)
   const userLevel = getTierLevel(subscriptionTier);

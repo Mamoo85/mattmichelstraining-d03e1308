@@ -2308,6 +2308,7 @@ export type Database = {
           tier_basic: boolean
           tier_custom: boolean
           tier_foundation: boolean
+          tier_free: boolean
           tier_legend: boolean
           tier_team_elite: boolean
           updated_at: string
@@ -2322,6 +2323,7 @@ export type Database = {
           tier_basic?: boolean
           tier_custom?: boolean
           tier_foundation?: boolean
+          tier_free?: boolean
           tier_legend?: boolean
           tier_team_elite?: boolean
           updated_at?: string
@@ -2336,6 +2338,7 @@ export type Database = {
           tier_basic?: boolean
           tier_custom?: boolean
           tier_foundation?: boolean
+          tier_free?: boolean
           tier_legend?: boolean
           tier_team_elite?: boolean
           updated_at?: string
