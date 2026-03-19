@@ -32,6 +32,7 @@ const AdminRecoveryHeatmap = lazy(() => import("@/components/admin/AdminRecovery
 const AdminSchedule = lazy(() => import("@/components/admin/AdminSchedule"));
 const AdminMonthlyFocus = lazy(() => import("@/components/admin/AdminMonthlyFocus"));
 const AdminBiomechanics = lazy(() => import("@/components/admin/AdminBiomechanics"));
+const AdminAiToolkit = lazy(() => import("@/components/admin/AdminAiToolkit"));
 
 const AdminFinancials = lazy(() => import("@/components/admin/AdminFinancials"));
 const AdminPromotions = lazy(() => import("@/components/admin/AdminPromotions"));
@@ -174,6 +175,7 @@ const Admin = () => {
             { key: "schedule", label: "Schedule", content: <AdminSchedule /> },
             { key: "monthly", label: "Monthly Focus", content: <AdminMonthlyFocus /> },
             { key: "biomechanics", label: "Biomechanics", content: <AdminBiomechanics /> },
+            { key: "ai-toolkit", label: "AI Toolkit", content: <AdminAiToolkit /> },
           ]} />
         )}
 
