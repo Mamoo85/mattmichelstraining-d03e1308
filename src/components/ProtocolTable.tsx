@@ -131,7 +131,7 @@ const ProtocolTable = () => {
       <div className="flex justify-end mt-4">
         <button
           onClick={logSession}
-          className="bg-primary text-primary-foreground px-6 py-2.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
+          className={`bg-primary text-primary-foreground px-6 py-2.5 text-xs font-bold uppercase tracking-widest hover:brightness-110 active:scale-95 transition-transform duration-100 ${logSuccess ? "animate-log-success" : ""}`}
         >
           Log Session
         </button>

@@ -210,7 +210,7 @@ const WorkoutLogger = () => {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="w-full h-14 bg-primary text-primary-foreground text-sm font-bold uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+          className={`w-full h-14 bg-primary text-primary-foreground text-sm font-bold uppercase tracking-widest hover:brightness-110 active:scale-95 transition-transform duration-100 disabled:opacity-50 flex items-center justify-center gap-2 ${saveSuccess ? "animate-log-success" : ""}`}
         >
           {saving ? <Loader2 size={16} className="animate-spin" /> : null}
           {saving ? "Saving…" : `Save Workout (${exercises.length} exercise${exercises.length > 1 ? "s" : ""})`}
