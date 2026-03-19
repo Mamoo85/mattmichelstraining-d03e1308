@@ -350,26 +350,6 @@ const AdminClientList = () => {
                     <p className="text-[10px] text-muted-foreground mt-1">Bypasses Stripe — sets access directly in database.</p>
                   </div>
 
-                  {/* Legend Toggle */}
-                  <div className="bg-secondary/30 border border-border p-3 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Crown size={14} className="text-primary" />
-                      <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Legend (In-Person)</span>
-                    </div>
-                    <button
-                      onClick={() => {
-                        toggleInPerson.mutate({ profileId: p.id, value: !p.is_in_person });
-                        setSelectedProfile({ ...p, is_in_person: !p.is_in_person });
-                      }}
-                      className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-colors ${
-                        p.is_in_person
-                          ? "bg-primary/20 text-primary"
-                          : "bg-muted text-muted-foreground hover:bg-primary/20 hover:text-primary"
-                      }`}
-                    >
-                      {p.is_in_person ? "Active" : "Enable"}
-                    </button>
-                  </div>
 
                   {/* Trial Manipulation */}
                   <div className="bg-secondary/30 border border-border p-3">
