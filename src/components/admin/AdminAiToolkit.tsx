@@ -269,11 +269,13 @@ const ParentReportTool = () => {
   const [year, setYear] = useState(String(now.getFullYear()));
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState("");
+  const [usage, setUsage] = useState<any>(null);
 
   const run = async () => {
     if (!childId.trim()) return toast.error("Paste athlete user ID");
     setLoading(true);
     setResult("");
+    setUsage(null);
     try {
       const { data, error } = await supabase.functions.invoke("ai-parent-report", {
         body: { childUserId: childId.trim(), month: Number(month), year: Number(year) },
@@ -281,6 +283,7 @@ const ParentReportTool = () => {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setResult(data.report);
+      if (data?.usage) setUsage(data.usage);
     } catch (e: any) {
       toast.error(e.message || "Failed to generate report");
     } finally {
@@ -309,11 +312,14 @@ const ParentReportTool = () => {
         {loading ? "Generating…" : "Generate Report"}
       </Button>
       {result && (
-        <Card>
-          <CardContent className="pt-4 prose prose-sm max-w-none dark:prose-invert">
-            <ReactMarkdown>{result}</ReactMarkdown>
-          </CardContent>
-        </Card>
+        <>
+          <UsageBadge usage={usage} />
+          <Card>
+            <CardContent className="pt-4 prose prose-sm max-w-none dark:prose-invert">
+              <ReactMarkdown>{result}</ReactMarkdown>
+            </CardContent>
+          </Card>
+        </>
       )}
     </div>
   );
