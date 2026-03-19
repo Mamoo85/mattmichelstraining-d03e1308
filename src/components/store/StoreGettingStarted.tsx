@@ -156,54 +156,6 @@ const StoreGettingStarted = () => {
         </div>
       </div>
 
-      {/* ═══════════ HOW IT WORKS: In-Person Flow ═══════════ */}
-      <div>
-        <h2 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
-          <Dumbbell size={16} className="text-primary" />
-          How It Works
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="bg-card shadow-m2 p-5 border-t-4 border-primary/30">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="text-sm font-mono font-bold text-primary">1</span>
-              </div>
-              <h3 className="text-sm font-bold text-foreground">Book a Session</h3>
-            </div>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Start with a monthly 1-on-1 session in Grosse Pointe Park. Matt assesses your movement, 
-              takes your front and side photos, and runs his AI analysis. You walk out with a program built for YOUR body.
-            </p>
-          </div>
-
-          <div className="bg-card shadow-m2 p-5 border-t-4 border-primary/60">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="text-sm font-mono font-bold text-primary">2</span>
-              </div>
-              <h3 className="text-sm font-bold text-foreground">Train & Track</h3>
-            </div>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Log every workout in the portal. Matt monitors your progress, adjusts your programming, 
-              and coaches you between sessions. AI tracks your biomechanics progress month over month.
-            </p>
-          </div>
-
-          <div className="bg-card shadow-m2 p-5 border-t-4 border-primary">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="text-sm font-mono font-bold text-primary">3</span>
-              </div>
-              <h3 className="text-sm font-bold text-foreground">Add Sessions & Save</h3>
-            </div>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              As you grow, add extra sessions at a <strong className="text-primary">member discount</strong>. 
-              Unlock the full M² portal — exercise library, AI nutrition tracking, Fix It recovery protocols, 
-              challenges, and more.
-            </p>
-          </div>
-        </div>
-      </div>
 
       {/* ═══════════ PRICING: Sessions + Subscription ═══════════ */}
       <div className="bg-card shadow-m2 border border-primary/20 p-5 sm:p-6">
