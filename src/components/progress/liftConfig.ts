@@ -33,10 +33,6 @@ export const LIFT_CATEGORIES: LiftCategory[] = [
     label: "Advanced · Olympic",
     lifts: [
       { name: "Power Clean", repMax: 1, muscles: ["quads", "glutes", "hamstrings", "upperBack", "shoulders", "forearms"] },
-      { name: "Hang Clean", repMax: 1, muscles: ["quads", "glutes", "upperBack", "shoulders", "forearms"] },
-      { name: "Clean & Jerk", repMax: 1, muscles: ["quads", "glutes", "hamstrings", "shoulders", "upperBack", "triceps", "core"] },
-      { name: "Snatch", repMax: 1, muscles: ["quads", "glutes", "hamstrings", "shoulders", "upperBack", "core"] },
-      { name: "Push Press", repMax: 1, muscles: ["shoulders", "triceps", "quads", "core"] },
     ],
   },
 ];
