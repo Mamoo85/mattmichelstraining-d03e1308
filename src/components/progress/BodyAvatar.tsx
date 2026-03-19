@@ -161,14 +161,14 @@ const BodyAvatar = ({ activeLift }: BodyAvatarProps) => {
             return (m.view === "back" || m.view === "both") && !activeMs.includes(key);
           })
           .map(([key, muscle]) => (
-            <path
+          <path
               key={key}
               d={muscle.d}
               fill="hsl(215, 20%, 18%)"
               fillOpacity={0.3}
               stroke="hsl(215, 20%, 25%)"
               strokeWidth="0.3"
-              className="print:fill-gray-200 print:stroke-gray-400"
+              className="avatar-muscle-inactive"
             />
           ))}
 
