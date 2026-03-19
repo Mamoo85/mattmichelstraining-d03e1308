@@ -211,7 +211,64 @@ const Nutrition = () => {
             <p className="text-sm text-muted-foreground mt-1">Snap a photo → get instant macro estimates</p>
           </div>
 
-          {/* Today's summary */}
+          {/* Daily Goal Progress */}
+          <Card className="border-primary/20">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Target size={14} /> Daily Calorie Goal
+                </CardTitle>
+                {editingGoal ? (
+                  <div className="flex items-center gap-1">
+                    <Input
+                      type="number"
+                      value={goalInput}
+                      onChange={(e) => setGoalInput(e.target.value)}
+                      className="w-20 h-7 text-xs"
+                      min={500}
+                      max={10000}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => {
+                        const val = parseInt(goalInput);
+                        if (val >= 500 && val <= 10000) updateGoalMutation.mutate(val);
+                        else toast.error("Goal must be between 500–10,000 cal");
+                      }}
+                    >
+                      <Check size={14} />
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-muted-foreground"
+                    onClick={() => { setGoalInput(String(calorieGoal)); setEditingGoal(true); }}
+                  >
+                    <Pencil size={12} />
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="flex items-baseline justify-between text-sm">
+                <span className="font-bold">{todayTotals.calories}</span>
+                <span className="text-muted-foreground">/ {calorieGoal} cal</span>
+              </div>
+              <Progress
+                value={Math.min((todayTotals.calories / calorieGoal) * 100, 100)}
+                className="h-3"
+              />
+              {todayTotals.calories >= calorieGoal && (
+                <p className="text-xs text-primary font-medium">🎯 Goal reached!</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Today's macro summary */}
           {todayLogs.length > 0 && (
             <Card className="border-primary/20">
               <CardHeader className="pb-2">
