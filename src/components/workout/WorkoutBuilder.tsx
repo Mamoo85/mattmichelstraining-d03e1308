@@ -247,6 +247,40 @@ const WorkoutBuilder = ({ onSaved, onClose }: WorkoutBuilderProps) => {
           </button>
         </div>
       )}
+      {/* Start Workout after save */}
+      {savedWorkout && (
+        <div className="space-y-2">
+          <button
+            onClick={() => {
+              window.dispatchEvent(
+                new CustomEvent("open-workout-zone", {
+                  detail: {
+                    title: savedWorkout.title,
+                    source: "builder",
+                    exercises: savedWorkout.exercises.map((e) => ({
+                      name: e.exerciseTitle,
+                      exerciseId: e.exerciseId,
+                      sets: e.sets,
+                      reps: e.reps,
+                      notes: e.notes,
+                    })),
+                  },
+                })
+              );
+              onSaved?.();
+            }}
+            className="w-full h-14 bg-primary text-primary-foreground flex items-center justify-center gap-3 text-sm font-black uppercase tracking-widest hover:opacity-90 transition-all"
+          >
+            <Play size={18} /> Start This Workout
+          </button>
+          <button
+            onClick={() => onSaved?.()}
+            className="w-full text-xs text-muted-foreground hover:text-foreground text-center py-2"
+          >
+            Back to Workouts
+          </button>
+        </div>
+      )}
     </div>
   );
 };
