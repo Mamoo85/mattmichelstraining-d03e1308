@@ -28,6 +28,7 @@ interface CommunityWorkoutBankProps {
 
 const CommunityWorkoutBank = ({ onCreateNew }: CommunityWorkoutBankProps) => {
   const { user } = useAuth();
+  const { familyIds } = useFamilyUserIds();
   const [workouts, setWorkouts] = useState<CommunityWorkout[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
@@ -35,11 +36,12 @@ const CommunityWorkoutBank = ({ onCreateNew }: CommunityWorkoutBankProps) => {
 
   useEffect(() => {
     loadWorkouts();
-  }, [user]);
+  }, [user, familyIds]);
 
   const loadWorkouts = async () => {
     setLoading(true);
-    // Fetch public workouts + user's own private workouts
+    // Fetch public workouts + user's own + family members' private workouts
+    const userIds = familyIds.length > 0 ? familyIds : user ? [user.id] : [];
     const [publicRes, privateRes] = await Promise.all([
       supabase
         .from("community_workouts")
@@ -47,14 +49,14 @@ const CommunityWorkoutBank = ({ onCreateNew }: CommunityWorkoutBankProps) => {
         .eq("is_public", true)
         .order("created_at", { ascending: false })
         .limit(50),
-      user
+      userIds.length > 0
         ? supabase
             .from("community_workouts")
             .select("*")
-            .eq("user_id", user.id)
+            .in("user_id", userIds)
             .eq("is_public", false)
             .order("created_at", { ascending: false })
-            .limit(20)
+            .limit(50)
         : Promise.resolve({ data: [] }),
     ]);
     const publicWorkouts = (publicRes.data as any[]) ?? [];

@@ -4,6 +4,7 @@ import { Play, Dumbbell, BookOpen, Lock, Zap, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useMinTier } from "@/hooks/useTierAccess";
+import { useFamilyUserIds } from "@/hooks/useFamilyUserIds";
 import { toast } from "sonner";
 import type { WorkoutZoneContext } from "./ActiveWorkoutZone";
 

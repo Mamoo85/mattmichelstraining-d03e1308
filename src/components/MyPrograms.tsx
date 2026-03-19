@@ -44,6 +44,7 @@ interface ActiveProgram {
 
 const MyPrograms = () => {
   const { user } = useAuth();
+  const { familyIds } = useFamilyUserIds();
   const [purchasedPrograms, setPurchasedPrograms] = useState<PurchasedProgram[]>([]);
   const [activePrograms, setActivePrograms] = useState<ActiveProgram[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,13 +54,13 @@ const MyPrograms = () => {
   const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || familyIds.length === 0) return;
     const fetchAll = async () => {
-      // Fetch ALL purchased programs (not just active)
+      // Fetch purchased programs for user AND linked family members
       const { data: purchased } = await supabase
         .from("purchased_programs" as any)
         .select("*")
-        .eq("user_id", user.id)
+        .in("user_id", familyIds)
         .order("purchased_at", { ascending: false });
 
       if (purchased) {
@@ -71,11 +72,11 @@ const MyPrograms = () => {
         );
       }
 
-      // Fetch ALL interactive programs (active + completed)
+      // Fetch interactive programs for user AND linked family members
       const { data: active } = await supabase
         .from("user_active_programs")
         .select("id, program_id, start_date, status, training_programs(id, title, description, category, sport)")
-        .eq("user_id", user.id)
+        .in("user_id", familyIds)
         .order("created_at", { ascending: false });
 
       if (active) {
@@ -90,7 +91,7 @@ const MyPrograms = () => {
       setLoading(false);
     };
     fetchAll();
-  }, [user]);
+  }, [user, familyIds]);
 
   const logProgramSession = async (program: PurchasedProgram) => {
     if (!user) return;
