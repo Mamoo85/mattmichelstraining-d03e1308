@@ -39,7 +39,7 @@ const TabLoader = () => (
 );
 
 const Dashboard = () => {
-  const { user, subscribed, subscriptionTier, isLegend } = useAuth();
+  const { user, subscribed, subscriptionTier } = useAuth();
   const { trialExpired, isOnTrial, trialDaysLeft } = useTrialStatus();
   const { isAdmin } = useIsAdmin();
   const [profile, setProfile] = useState<{ full_name: string | null; athlete_name: string | null } | null>(null);
