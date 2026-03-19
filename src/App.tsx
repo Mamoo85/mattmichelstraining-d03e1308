@@ -73,13 +73,14 @@ const PageLoader = () => (
 );
 
 const GlobalTimer = () => {
-  const { timerOpen, closeTimer } = useTimer();
-  if (!timerOpen) return null;
+  const { timerOpen, closeTimer, portalActive } = useTimer();
+  if (!timerOpen || portalActive) return null;
   return <IntervalTimer onClose={closeTimer} />;
 };
 
 const ActiveWorkoutWrapper = () => {
   const { user } = useAuth();
+  const { setPortalActive } = useTimer();
   const [zoneOpen, setZoneOpen] = useState(false);
   const [zoneContext, setZoneContext] = useState<any>(null);
   const [hasPaused, setHasPaused] = useState(
@@ -93,6 +94,7 @@ const ActiveWorkoutWrapper = () => {
       setZoneContext(detail);
       setZoneOpen(true);
       setHasPaused(false);
+      setPortalActive(true);
     };
     window.addEventListener("open-workout-zone", handler);
     return () => window.removeEventListener("open-workout-zone", handler);
@@ -107,6 +109,7 @@ const ActiveWorkoutWrapper = () => {
           setZoneContext(JSON.parse(saved));
           setZoneOpen(true);
           setHasPaused(false);
+          setPortalActive(true);
         } catch {}
       }
     };
@@ -122,11 +125,13 @@ const ActiveWorkoutWrapper = () => {
         setZoneOpen(false);
         setZoneContext(null);
         setHasPaused(false);
+        setPortalActive(false);
         localStorage.removeItem("m2-paused-workout");
       }}
       onPause={() => {
         setZoneOpen(false);
         setHasPaused(true);
+        setPortalActive(false);
       }}
     />
   );

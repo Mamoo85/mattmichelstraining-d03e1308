@@ -53,9 +53,9 @@ const DashboardHome = memo(({ isNewUser, onViewPoints, onViewReferrals }: Dashbo
       <WorkoutScanner />
       <button
         onClick={handleStartWorkout}
-        className="w-full h-10 bg-primary text-primary-foreground flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all mt-2"
+        className="w-full h-10 border-2 border-orange-500 text-orange-400 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest hover:border-orange-400 hover:shadow-[0_0_15px_rgba(249,115,22,0.5)] transition-all mt-2"
       >
-        <Play size={14} /> Start Workout
+        <Play size={14} /> Enter The Portal
       </button>
     </div>
 
