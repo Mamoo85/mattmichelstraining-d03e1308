@@ -20,8 +20,27 @@ interface DashboardHomeProps {
 }
 
 const DashboardHome = memo(({ isNewUser, onViewPoints, onViewReferrals }: DashboardHomeProps) => {
-  const { subscribed } = useAuth();
+  const { subscribed, user } = useAuth();
   const navigate = useNavigate();
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [hasPosture, setHasPosture] = useState<boolean | null>(null);
+
+  // Show welcome modal for new users who haven't seen it
+  useEffect(() => {
+    if (isNewUser && !localStorage.getItem("m2-welcome-gift-seen")) {
+      setShowWelcome(true);
+    }
+  }, [isNewUser]);
+
+  // Check if user already submitted posture
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("posture_requests" as any)
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .then(({ count }) => setHasPosture((count ?? 0) > 0));
+  }, [user]);
 
   const handleStartWorkout = useCallback(() => {
     if (!subscribed && isNewUser) {
@@ -30,6 +49,8 @@ const DashboardHome = memo(({ isNewUser, onViewPoints, onViewReferrals }: Dashbo
     }
     window.dispatchEvent(new CustomEvent("open-workout-zone", { detail: null }));
   }, [subscribed, isNewUser, navigate]);
+
+  const [showPostureCapture, setShowPostureCapture] = useState(false);
 
   return (
   <div className="space-y-6">
