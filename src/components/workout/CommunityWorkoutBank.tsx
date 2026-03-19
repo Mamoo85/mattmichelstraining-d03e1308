@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, FileText, User, Calendar, Dumbbell } from "lucide-react";
+import { Search, FileText, User, Calendar, Dumbbell, Play } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { printCommunityWorkout } from "./printCommunityWorkout";
