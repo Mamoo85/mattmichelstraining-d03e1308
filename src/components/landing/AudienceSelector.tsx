@@ -9,16 +9,6 @@ import portalProgress from "@/assets/portal-progress.png";
 
 const AUDIENCES = [
   {
-    label: "I'm a Parent",
-    icon: Shield,
-    route: "/for-parents",
-    desc: "Monitor every rep. Message Coach Matt. Zero guesswork.",
-    peek: sneakParent,
-    peekAlt: "Parent monitoring dashboard showing recovery metrics",
-    cta: "See How It Works",
-    peekCaption: "Track your athlete's workouts, recovery, and progress — all from your phone.",
-  },
-  {
     label: "I Want to Train",
     icon: HeartPulse,
     route: "/shop",
@@ -27,6 +17,16 @@ const AUDIENCES = [
     peekAlt: "Training programs and workout builder",
     cta: "Browse Programs",
     peekCaption: "Custom programs for athletes, adults, and anyone who wants to get stronger — not just look strong.",
+  },
+  {
+    label: "I'm a Parent",
+    icon: Shield,
+    route: "/for-parents",
+    desc: "Monitor every rep. Message Coach Matt. Zero guesswork.",
+    peek: sneakParent,
+    peekAlt: "Parent monitoring dashboard showing recovery metrics",
+    cta: "See How It Works",
+    peekCaption: "Track your athlete's workouts, recovery, and progress — all from your phone.",
   },
   {
     label: "I'm a Coach",
