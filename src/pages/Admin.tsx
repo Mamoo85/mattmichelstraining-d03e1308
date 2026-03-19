@@ -148,6 +148,7 @@ const Admin = () => {
               </div>
             )},
             { key: "trials", label: "Trial Settings", content: <AdminTrialSettings /> },
+            { key: "onboarding", label: "Onboarding", content: <AdminClientOnboarding /> },
           ]} />
         )}
 
