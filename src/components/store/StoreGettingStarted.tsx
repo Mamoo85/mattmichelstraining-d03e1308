@@ -296,7 +296,7 @@ const StoreGettingStarted = () => {
       {/* Trial CTA */}
       <TrialCTA variant="banner" />
 
-      {/* AI Program Finder */}
+      {/* Program Finder */}
       {user && (
         <div>
           <AiIntakeAnalyzer />
