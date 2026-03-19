@@ -120,21 +120,23 @@ const ActiveWorkoutWrapper = () => {
 
   if (!user || !zoneOpen) return null;
   return (
-    <ActiveWorkoutZone
-      initialContext={zoneContext}
-      onFinish={() => {
-        setZoneOpen(false);
-        setZoneContext(null);
-        setHasPaused(false);
-        setPortalActive(false);
-        localStorage.removeItem("m2-paused-workout");
-      }}
-      onPause={() => {
-        setZoneOpen(false);
-        setHasPaused(true);
-        setPortalActive(false);
-      }}
-    />
+    <Suspense fallback={null}>
+      <ActiveWorkoutZone
+        initialContext={zoneContext}
+        onFinish={() => {
+          setZoneOpen(false);
+          setZoneContext(null);
+          setHasPaused(false);
+          setPortalActive(false);
+          localStorage.removeItem("m2-paused-workout");
+        }}
+        onPause={() => {
+          setZoneOpen(false);
+          setHasPaused(true);
+          setPortalActive(false);
+        }}
+      />
+    </Suspense>
   );
 };
 

@@ -108,74 +108,75 @@ const HeroSection = () => {
           </motion.div>
         )}
 
-        {/* ─── 2. SPORT PICKER — What do you play? ─── */}
-        <SportPicker />
+        {/* Below-the-fold lazy sections */}
+        <Suspense fallback={null}>
+          {/* ─── 2. SPORT PICKER ─── */}
+          <SportPicker />
 
-        {/* (AthleteResults moved below Membership CTA) */}
+          {/* ─── 4. TECH SHOWCASE ─── */}
+          <TechShowcaseCard />
 
-        {/* ─── 4. TECH SHOWCASE — The Edge ─── */}
-        <TechShowcaseCard />
+          {/* ─── 5. FREE WORKOUT TEASER ─── */}
+          <FreeWorkoutTeaser />
 
-        {/* ─── 5. FREE WORKOUT TEASER ─── */}
-        <FreeWorkoutTeaser />
+          {/* ─── 6. FOR PARENTS ─── */}
+          <ForParentsCTA />
 
-        {/* ─── 6. FOR PARENTS — Injury Prevention Hook ─── */}
-        <ForParentsCTA />
+          {/* ─── 7. MEMBER PORTAL ─── */}
+          <PortalEntrance />
 
-        {/* ─── 7. MEMBER PORTAL (sneak peek) ─── */}
-        <PortalEntrance />
-
-        {/* ─── 8. MONTHLY FOCUS ─── */}
-        <div className="mb-8">
-          <MonthlyFocus />
-        </div>
-
-        {/* ─── 9. THE M² DIFFERENCE ─── */}
-        <M2Difference />
-
-        {/* ─── 10. MEMBERSHIP CTA ─── */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="mb-8"
-        >
-          <div className="bg-gradient-to-br from-primary/10 via-background to-background border border-primary/30 overflow-hidden">
-            <div className="p-6 sm:p-8 space-y-4">
-              <div className="flex items-center gap-2">
-                <Star size={16} className="text-primary" />
-                <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-primary">
-                  Monthly Plans
-                </span>
-              </div>
-              <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-foreground leading-tight">
-                Train Like a Pro.<br />
-                <span className="text-primary">Starting at $14.99/mo.</span>
-              </h2>
-              <p className="text-sm text-muted-foreground max-w-lg leading-relaxed">
-                Access the full exercise library, structured programs, injury recovery guides,
-                and direct coaching from Matt — all from your phone. Every plan includes a
-                <strong className="text-foreground"> 14-day free trial</strong>. No contracts. Cancel anytime.
-              </p>
-              <Link
-                to="/auth?redirect=/trial-welcome"
-                className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
-              >
-                Try 14 Days Free <ArrowRight size={12} />
-              </Link>
-            </div>
+          {/* ─── 8. MONTHLY FOCUS ─── */}
+          <div className="mb-8">
+            <MonthlyFocus />
           </div>
-        </motion.div>
 
-        {/* ─── 11. ATHLETE RESULTS ─── */}
-        <AthleteResults />
+          {/* ─── 9. THE M² DIFFERENCE ─── */}
+          <M2Difference />
 
-        {/* ─── 12. EMAIL CAPTURE ─── */}
-        <EmailCapture />
+          {/* ─── 10. MEMBERSHIP CTA ─── */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="mb-8"
+          >
+            <div className="bg-gradient-to-br from-primary/10 via-background to-background border border-primary/30 overflow-hidden">
+              <div className="p-6 sm:p-8 space-y-4">
+                <div className="flex items-center gap-2">
+                  <Star size={16} className="text-primary" />
+                  <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-primary">
+                    Monthly Plans
+                  </span>
+                </div>
+                <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-foreground leading-tight">
+                  Train Like a Pro.<br />
+                  <span className="text-primary">Starting at $14.99/mo.</span>
+                </h2>
+                <p className="text-sm text-muted-foreground max-w-lg leading-relaxed">
+                  Access the full exercise library, structured programs, injury recovery guides,
+                  and direct coaching from Matt — all from your phone. Every plan includes a
+                  <strong className="text-foreground"> 14-day free trial</strong>. No contracts. Cancel anytime.
+                </p>
+                <Link
+                  to="/auth?redirect=/trial-welcome"
+                  className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
+                >
+                  Try 14 Days Free <ArrowRight size={12} />
+                </Link>
+              </div>
+            </div>
+          </motion.div>
 
-        {/* ─── 12. FIND US — always last ─── */}
-        {showFindUs && <div className="mb-8"><FindUs /></div>}
+          {/* ─── 11. ATHLETE RESULTS ─── */}
+          <AthleteResults />
+
+          {/* ─── 12. EMAIL CAPTURE ─── */}
+          <EmailCapture />
+
+          {/* ─── 12. FIND US ─── */}
+          {showFindUs && <div className="mb-8"><FindUs /></div>}
+        </Suspense>
 
         {/* FOOTER */}
         <div className="mt-10 pt-6 border-t border-border text-center">
