@@ -11,7 +11,7 @@ const WorkoutsTab = memo(() => {
       onClose={() => setShowBuilder(false)}
     />
   ) : (
-    <CommunityWorkoutBank onCreateNew={canCreate ? () => setShowBuilder(true) : undefined} />
+    <CommunityWorkoutBank onCreateNew={() => setShowBuilder(true)} />
   );
 });
 
