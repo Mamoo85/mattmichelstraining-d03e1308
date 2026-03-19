@@ -18,6 +18,14 @@ interface PurchasedProgram {
   exercises: any;
 }
 
+interface ActiveProgram {
+  id: string;
+  program_id: string;
+  program_title: string;
+  sport: string | null;
+  exercises: any;
+}
+
 interface CommunityWorkout {
   id: string;
   title: string;
