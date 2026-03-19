@@ -87,21 +87,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSubscribed(false);
       setSubscriptionTier(null);
       setSubscriptionEnd(null);
-      setIsLegend(false);
       return;
     }
     try {
-      // Check subscription + legend status in parallel
-      const [subResult, profileResult] = await Promise.all([
-        supabase.functions.invoke("check-subscription"),
-        supabase.from("profiles").select("is_in_person").eq("user_id", currentSession.user.id).single(),
-      ]);
+      const subResult = await supabase.functions.invoke("check-subscription");
       if (!subResult.error) {
         setSubscribed(subResult.data?.subscribed ?? false);
         setSubscriptionTier(getTierByProductId(subResult.data?.product_id ?? null));
         setSubscriptionEnd(subResult.data?.subscription_end ?? null);
       }
-      setIsLegend(profileResult.data?.is_in_person ?? false);
     } catch (e) {
       // subscription check failed silently
     }
