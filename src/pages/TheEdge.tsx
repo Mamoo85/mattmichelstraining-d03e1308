@@ -456,7 +456,7 @@ const FEATURES: TechFeature[] = [
     color: "text-primary",
     glowColor: "bg-primary/10",
     tier: "custom",
-    description: "Have a question about your form? Not sure about a substitution? Message Coach Matt directly from your dashboard. He reviews every message personally and responds within 24 hours. No AI middleman on the coaching side — this is Matt, looking at your video, giving you real feedback.",
+    description: "Have a question about your form? Not sure about a substitution? Message Coach Matt directly from your dashboard. He reviews every message personally and responds within 24 hours. This is Matt, looking at your video, giving you real feedback.",
     howItWorks: [
       "Open Coach Messaging from your dashboard",
       "Type your question or attach a video clip",
