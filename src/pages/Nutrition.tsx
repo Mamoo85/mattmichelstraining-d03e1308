@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Camera, Upload, Loader2, Flame, Beef, Wheat, Droplets, Leaf, Trash2, CalendarDays, Target, Pencil, Check } from "lucide-react";
+import { Camera, Upload, Loader2, Flame, Beef, Wheat, Droplets, Leaf, Trash2, Target, Pencil, Check, X } from "lucide-react";
 import { format } from "date-fns";
 
 interface FoodItem {
@@ -29,6 +29,20 @@ interface AnalysisResult {
   note?: string;
 }
 
+interface MacroGoals {
+  daily_calorie_goal: number;
+  daily_protein_goal: number;
+  daily_carbs_goal: number;
+  daily_fat_goal: number;
+}
+
+const DEFAULT_GOALS: MacroGoals = {
+  daily_calorie_goal: 2000,
+  daily_protein_goal: 150,
+  daily_carbs_goal: 250,
+  daily_fat_goal: 65,
+};
+
 const MacroPill = ({ icon: Icon, label, value, unit, color }: { icon: any; label: string; value: number; unit: string; color: string }) => (
   <div className={`flex flex-col items-center gap-1 rounded-xl px-3 py-2 ${color}`}>
     <Icon size={16} className="opacity-80" />
@@ -36,6 +50,53 @@ const MacroPill = ({ icon: Icon, label, value, unit, color }: { icon: any; label
     <span className="text-[10px] uppercase tracking-wider opacity-70">{unit} {label}</span>
   </div>
 );
+
+const GoalRow = ({ 
+  icon: Icon, label, current, goal, unit, color, goalKey, onSave 
+}: { 
+  icon: any; label: string; current: number; goal: number; unit: string; color: string; goalKey: string;
+  onSave: (key: string, val: number) => void;
+}) => {
+  const [editing, setEditing] = useState(false);
+  const [input, setInput] = useState(String(goal));
+  const pct = goal > 0 ? Math.min((current / goal) * 100, 100) : 0;
+
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between text-sm">
+        <span className={`flex items-center gap-1.5 font-medium ${color}`}>
+          <Icon size={14} /> {label}
+        </span>
+        {editing ? (
+          <div className="flex items-center gap-1">
+            <Input
+              type="number"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              className="w-16 h-6 text-xs px-1"
+              min={0}
+            />
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => {
+              const val = parseInt(input);
+              if (val > 0) { onSave(goalKey, val); setEditing(false); }
+              else toast.error("Goal must be greater than 0");
+            }}>
+              <Check size={12} />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setEditing(false)}>
+              <X size={12} />
+            </Button>
+          </div>
+        ) : (
+          <button onClick={() => { setInput(String(goal)); setEditing(true); }} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1">
+            {Math.round(current)}{unit} / {goal}{unit} <Pencil size={10} />
+          </button>
+        )}
+      </div>
+      <Progress value={pct} className="h-2" />
+    </div>
+  );
+};
 
 const Nutrition = () => {
   const { user } = useAuth();
@@ -46,16 +107,14 @@ const Nutrition = () => {
   const [preview, setPreview] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
-  const [editingGoal, setEditingGoal] = useState(false);
-  const [goalInput, setGoalInput] = useState("");
 
-  // Fetch calorie goal from profile
+  // Fetch goals from profile
   const { data: profile } = useQuery({
-    queryKey: ["profile-calorie-goal", user?.id],
+    queryKey: ["profile-nutrition-goals", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("daily_calorie_goal")
+        .select("daily_calorie_goal, daily_protein_goal, daily_carbs_goal, daily_fat_goal")
         .eq("user_id", user!.id)
         .single();
       if (error) throw error;
@@ -64,23 +123,33 @@ const Nutrition = () => {
     enabled: !!user,
   });
 
-  const calorieGoal = (profile as any)?.daily_calorie_goal ?? 2000;
+  const goals: MacroGoals = {
+    daily_calorie_goal: (profile as any)?.daily_calorie_goal ?? DEFAULT_GOALS.daily_calorie_goal,
+    daily_protein_goal: (profile as any)?.daily_protein_goal ?? DEFAULT_GOALS.daily_protein_goal,
+    daily_carbs_goal: (profile as any)?.daily_carbs_goal ?? DEFAULT_GOALS.daily_carbs_goal,
+    daily_fat_goal: (profile as any)?.daily_fat_goal ?? DEFAULT_GOALS.daily_fat_goal,
+  };
 
   const updateGoalMutation = useMutation({
-    mutationFn: async (goal: number) => {
+    mutationFn: async ({ key, value }: { key: string; value: number }) => {
       const { error } = await supabase
         .from("profiles")
-        .update({ daily_calorie_goal: goal } as any)
+        .update({ [key]: value } as any)
         .eq("user_id", user!.id);
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Calorie goal updated!");
-      queryClient.invalidateQueries({ queryKey: ["profile-calorie-goal"] });
-      setEditingGoal(false);
+      toast.success("Goal updated!");
+      queryClient.invalidateQueries({ queryKey: ["profile-nutrition-goals"] });
     },
     onError: (e: any) => toast.error(e.message || "Failed to update goal"),
   });
+
+  const handleSaveGoal = (key: string, value: number) => {
+    updateGoalMutation.mutate({ key, value });
+  };
+
+  // Fetch history
   const { data: logs = [], isLoading: logsLoading } = useQuery({
     queryKey: ["nutrition-logs", user?.id],
     queryFn: async () => {
@@ -191,13 +260,16 @@ const Nutrition = () => {
     },
   });
 
-  const totalCalFromAnalysis = analysis
-    ? analysis.items.reduce((s, i) => s + i.calories, 0)
-    : 0;
+  const totalCalFromAnalysis = analysis ? analysis.items.reduce((s, i) => s + i.calories, 0) : 0;
   const totalProtein = analysis ? analysis.items.reduce((s, i) => s + i.protein_g, 0) : 0;
   const totalCarbs = analysis ? analysis.items.reduce((s, i) => s + i.carbs_g, 0) : 0;
   const totalFat = analysis ? analysis.items.reduce((s, i) => s + i.fat_g, 0) : 0;
   const totalFiber = analysis ? analysis.items.reduce((s, i) => s + i.fiber_g, 0) : 0;
+
+  const allGoalsReached = todayTotals.calories >= goals.daily_calorie_goal &&
+    todayTotals.protein >= goals.daily_protein_goal &&
+    todayTotals.carbs >= goals.daily_carbs_goal &&
+    todayTotals.fat >= goals.daily_fat_goal;
 
   return (
     <>
@@ -211,137 +283,51 @@ const Nutrition = () => {
             <p className="text-sm text-muted-foreground mt-1">Snap a photo → get instant macro estimates</p>
           </div>
 
-          {/* Daily Goal Progress */}
+          {/* Daily Goals Progress */}
           <Card className="border-primary/20">
             <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Target size={14} /> Daily Calorie Goal
-                </CardTitle>
-                {editingGoal ? (
-                  <div className="flex items-center gap-1">
-                    <Input
-                      type="number"
-                      value={goalInput}
-                      onChange={(e) => setGoalInput(e.target.value)}
-                      className="w-20 h-7 text-xs"
-                      min={500}
-                      max={10000}
-                    />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7"
-                      onClick={() => {
-                        const val = parseInt(goalInput);
-                        if (val >= 500 && val <= 10000) updateGoalMutation.mutate(val);
-                        else toast.error("Goal must be between 500–10,000 cal");
-                      }}
-                    >
-                      <Check size={14} />
-                    </Button>
-                  </div>
-                ) : (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 text-muted-foreground"
-                    onClick={() => { setGoalInput(String(calorieGoal)); setEditingGoal(true); }}
-                  >
-                    <Pencil size={12} />
-                  </Button>
-                )}
-              </div>
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Target size={14} /> Daily Goals
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="flex items-baseline justify-between text-sm">
-                <span className="font-bold">{todayTotals.calories}</span>
-                <span className="text-muted-foreground">/ {calorieGoal} cal</span>
-              </div>
-              <Progress
-                value={Math.min((todayTotals.calories / calorieGoal) * 100, 100)}
-                className="h-3"
-              />
-              {todayTotals.calories >= calorieGoal && (
-                <p className="text-xs text-primary font-medium">🎯 Goal reached!</p>
+            <CardContent className="space-y-3">
+              <GoalRow icon={Flame} label="Calories" current={todayTotals.calories} goal={goals.daily_calorie_goal} unit=" cal" color="text-orange-600" goalKey="daily_calorie_goal" onSave={handleSaveGoal} />
+              <GoalRow icon={Beef} label="Protein" current={todayTotals.protein} goal={goals.daily_protein_goal} unit="g" color="text-red-600" goalKey="daily_protein_goal" onSave={handleSaveGoal} />
+              <GoalRow icon={Wheat} label="Carbs" current={todayTotals.carbs} goal={goals.daily_carbs_goal} unit="g" color="text-amber-600" goalKey="daily_carbs_goal" onSave={handleSaveGoal} />
+              <GoalRow icon={Droplets} label="Fat" current={todayTotals.fat} goal={goals.daily_fat_goal} unit="g" color="text-blue-600" goalKey="daily_fat_goal" onSave={handleSaveGoal} />
+              {allGoalsReached && (
+                <p className="text-xs text-primary font-medium text-center pt-1">🎯 All goals reached!</p>
               )}
             </CardContent>
           </Card>
 
-          {/* Today's macro summary */}
-          {todayLogs.length > 0 && (
-            <Card className="border-primary/20">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <CalendarDays size={14} /> Today's Totals
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-4 gap-2">
-                  <MacroPill icon={Flame} label="cal" value={todayTotals.calories} unit="" color="bg-orange-500/10 text-orange-600" />
-                  <MacroPill icon={Beef} label="pro" value={todayTotals.protein} unit="g" color="bg-red-500/10 text-red-600" />
-                  <MacroPill icon={Wheat} label="carb" value={todayTotals.carbs} unit="g" color="bg-amber-500/10 text-amber-600" />
-                  <MacroPill icon={Droplets} label="fat" value={todayTotals.fat} unit="g" color="bg-blue-500/10 text-blue-600" />
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
           {/* Camera / Upload */}
           <div className="grid grid-cols-2 gap-3">
-            <Button
-              variant="outline"
-              className="h-20 flex-col gap-2 border-dashed"
-              onClick={() => cameraInputRef.current?.click()}
-            >
+            <Button variant="outline" className="h-20 flex-col gap-2 border-dashed" onClick={() => cameraInputRef.current?.click()}>
               <Camera size={24} />
               <span className="text-xs">Take Photo</span>
             </Button>
-            <Button
-              variant="outline"
-              className="h-20 flex-col gap-2 border-dashed"
-              onClick={() => fileInputRef.current?.click()}
-            >
+            <Button variant="outline" className="h-20 flex-col gap-2 border-dashed" onClick={() => fileInputRef.current?.click()}>
               <Upload size={24} />
               <span className="text-xs">Upload Image</span>
             </Button>
-            <input
-              ref={cameraInputRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              className="hidden"
-              onChange={(e) => e.target.files?.[0] && handleImageSelect(e.target.files[0])}
-            />
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => e.target.files?.[0] && handleImageSelect(e.target.files[0])}
-            />
+            <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => e.target.files?.[0] && handleImageSelect(e.target.files[0])} />
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleImageSelect(e.target.files[0])} />
           </div>
 
           {/* Preview + Analysis */}
           {preview && (
             <Card>
               <CardContent className="pt-4 space-y-4">
-                <img
-                  src={preview}
-                  alt="Food"
-                  className="w-full rounded-lg max-h-64 object-cover"
-                />
-
+                <img src={preview} alt="Food" className="w-full rounded-lg max-h-64 object-cover" />
                 {analyzing && (
                   <div className="flex items-center justify-center gap-2 py-6 text-muted-foreground">
                     <Loader2 className="animate-spin" size={20} />
                     <span className="text-sm">Analyzing your meal…</span>
                   </div>
                 )}
-
                 {analysis && (
                   <div className="space-y-4">
-                    {/* Macro summary */}
                     <div className="grid grid-cols-5 gap-2">
                       <MacroPill icon={Flame} label="cal" value={totalCalFromAnalysis} unit="" color="bg-orange-500/10 text-orange-600" />
                       <MacroPill icon={Beef} label="pro" value={totalProtein} unit="g" color="bg-red-500/10 text-red-600" />
@@ -349,10 +335,7 @@ const Nutrition = () => {
                       <MacroPill icon={Droplets} label="fat" value={totalFat} unit="g" color="bg-blue-500/10 text-blue-600" />
                       <MacroPill icon={Leaf} label="fib" value={totalFiber} unit="g" color="bg-green-500/10 text-green-600" />
                     </div>
-
                     <Separator />
-
-                    {/* Itemized list */}
                     <div className="space-y-2">
                       {analysis.items.map((item, i) => (
                         <div key={i} className="flex items-center justify-between text-sm">
@@ -364,21 +347,9 @@ const Nutrition = () => {
                         </div>
                       ))}
                     </div>
-
-                    {analysis.note && (
-                      <p className="text-xs text-muted-foreground italic">{analysis.note}</p>
-                    )}
-
-                    <Button
-                      className="w-full"
-                      onClick={() => saveMutation.mutate()}
-                      disabled={saveMutation.isPending}
-                    >
-                      {saveMutation.isPending ? (
-                        <Loader2 className="animate-spin mr-2" size={16} />
-                      ) : (
-                        <Flame className="mr-2" size={16} />
-                      )}
+                    {analysis.note && <p className="text-xs text-muted-foreground italic">{analysis.note}</p>}
+                    <Button className="w-full" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
+                      {saveMutation.isPending ? <Loader2 className="animate-spin mr-2" size={16} /> : <Flame className="mr-2" size={16} />}
                       Log This Meal
                     </Button>
                   </div>
@@ -414,12 +385,7 @@ const Nutrition = () => {
                               {items.map((i) => i.name).join(", ") || "Meal"}
                             </p>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                            onClick={() => deleteMutation.mutate(log.id)}
-                          >
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => deleteMutation.mutate(log.id)}>
                             <Trash2 size={14} />
                           </Button>
                         </div>
