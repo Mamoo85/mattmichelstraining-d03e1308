@@ -77,11 +77,19 @@ const GlobalTimer = () => {
   return <IntervalTimer onClose={closeTimer} />;
 };
 
-const AuthBottomNav = () => {
+const ActiveWorkoutWrapper = () => {
   const { user } = useAuth();
-  const isMobile = useIsMobile();
-  if (!user || !isMobile) return null;
-  return <BottomNav />;
+  const [zoneOpen, setZoneOpen] = useState(false);
+
+  // Expose zone opener globally via custom event
+  useEffect(() => {
+    const handler = () => setZoneOpen(true);
+    window.addEventListener("open-workout-zone", handler);
+    return () => window.removeEventListener("open-workout-zone", handler);
+  }, []);
+
+  if (!user || !zoneOpen) return null;
+  return <ActiveWorkoutZone onFinish={() => setZoneOpen(false)} />;
 };
 
 const ReferralCaptureWrapper = () => {
