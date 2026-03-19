@@ -17,3 +17,15 @@ verify_jwt = false
 
 [functions.ai-athlete-stream]
 verify_jwt = false
+
+[functions.ai-injury-risk]
+verify_jwt = false
+
+[functions.ai-video-form-review]
+verify_jwt = false
+
+[functions.ai-parent-report]
+verify_jwt = false
+
+[functions.ai-meal-prep]
+verify_jwt = false
