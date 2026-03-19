@@ -302,16 +302,20 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
       return;
     }
 
-    const rows = exercises.map((e) => ({
-      log_id: log.id,
-      exercise_id: e.exerciseId || null,
-      sets_reps_weight: e.sets as any,
-      client_notes: e.clientNotes || null,
-      video_url: e.videoUrl || null,
-      flag_for_coach: e.flagForCoach,
-    }));
+    // Filter out exercises without a valid exercise_id (FK constraint requires non-null)
+    const validExercises = exercises.filter(e => e.exerciseId && e.exerciseId.length > 0);
+    
+    if (validExercises.length > 0) {
+      const rows = validExercises.map((e) => ({
+        log_id: log.id,
+        exercise_id: e.exerciseId,
+        sets_reps_weight: e.sets as any,
+        client_notes: e.clientNotes || null,
+        video_url: e.videoUrl || null,
+        flag_for_coach: e.flagForCoach,
+      }));
 
-    const { error: exErr } = await supabase.from("logged_exercises").insert(rows);
+      const { error: exErr } = await supabase.from("logged_exercises").insert(rows);
     if (exErr) {
       toast.error(exErr.message || "Exercises failed to save");
     }
