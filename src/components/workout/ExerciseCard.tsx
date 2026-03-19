@@ -14,6 +14,7 @@ interface ExerciseCardProps {
   index: number;
   onUpdate: (data: Partial<LoggedExerciseData>) => void;
   onRemove: () => void;
+  onOpenFormTracker?: (exerciseTitle: string) => void;
 }
 
 const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove }: ExerciseCardProps) => {
