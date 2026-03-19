@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,8 +7,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Upload, CheckCircle, X, Eye } from "lucide-react";
+import { Loader2, Upload, CheckCircle, X, Eye, Camera } from "lucide-react";
 import { toast } from "sonner";
+
+const SmartCamera = lazy(() => import("./SmartCamera"));
 
 const AdminBiomechanics = () => {
   const queryClient = useQueryClient();
