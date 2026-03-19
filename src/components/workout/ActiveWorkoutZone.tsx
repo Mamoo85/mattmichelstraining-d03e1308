@@ -81,6 +81,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
   );
   const [workoutLogId, setWorkoutLogId] = useState<string | null>(null);
   const [formTrackerExercise, setFormTrackerExercise] = useState<string | null>(null);
+  const [showIntervalTimer, setShowIntervalTimer] = useState(false);
   const [workoutTitle, setWorkoutTitle] = useState(initialContext?.title || "Workout");
 
   // Check if auto-regulate is enabled for this user
