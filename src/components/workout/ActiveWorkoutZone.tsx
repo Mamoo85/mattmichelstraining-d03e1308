@@ -361,6 +361,19 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
 
   // Readiness gate phase
   if (phase === "readiness" && autoRegulateEnabled) {
+    return (
+      <ReadinessGate
+        onComplete={(result) => {
+          handleReadinessComplete(result);
+          setTimerRunning(true);
+        }}
+        onSkip={() => {
+          handleReadinessSkip();
+          setTimerRunning(true);
+        }}
+      />
+    );
+  }
 
   // Still loading auto_regulate preference
   if (autoRegulateEnabled === null) {
