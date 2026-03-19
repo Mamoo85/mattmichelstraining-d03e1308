@@ -73,7 +73,7 @@ const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTrac
                 <Crosshair size={14} />
               </button>
             )}
-            <button onClick={onRemove} className="h-8 w-8 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors">
+            <button onClick={() => onRemove(index)} className="h-8 w-8 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors">
               <Trash2 size={14} />
             </button>
           </div>
