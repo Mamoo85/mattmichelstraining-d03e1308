@@ -47,6 +47,7 @@ interface TierFeature {
   feature_key: string;
   feature_label: string;
   description: string;
+  tier_free: boolean;
   tier_basic: boolean;
   tier_foundation: boolean;
   tier_custom: boolean;

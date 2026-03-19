@@ -46,7 +46,10 @@ export const useTierAccess = (featureKey: string) => {
   const feature = features.find((f: any) => f.feature_key === featureKey);
   if (!feature) return { hasAccess: false, loading: false };
 
-  if (!subscriptionTier) return { hasAccess: false, loading: false };
+  // No subscription → check free tier access
+  if (!subscriptionTier) {
+    return { hasAccess: !!(feature as any).tier_free, loading: false };
+  }
 
   // Check current tier AND all lower tiers (inheritance)
   const userLevel = getTierLevel(subscriptionTier);
