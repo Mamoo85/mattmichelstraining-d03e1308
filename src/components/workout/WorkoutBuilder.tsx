@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Trash2, GripVertical, Save, FileText, Share2, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, Trash2, GripVertical, Save, FileText, Share2, ArrowUp, ArrowDown, Play } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -28,6 +28,7 @@ const WorkoutBuilder = ({ onSaved, onClose }: WorkoutBuilderProps) => {
   const [showPicker, setShowPicker] = useState(false);
   const [saving, setSaving] = useState(false);
   const [shareToBank, setShareToBank] = useState(true);
+  const [savedWorkout, setSavedWorkout] = useState<{ title: string; exercises: WorkoutExercise[] } | null>(null);
 
   const addExercise = (id: string, titleStr: string) => {
     setExercises((prev) => [
@@ -93,7 +94,7 @@ const WorkoutBuilder = ({ onSaved, onClose }: WorkoutBuilderProps) => {
       toast({ title: "Failed to save", description: error.message, variant: "destructive" });
     } else {
       toast({ title: shareToBank ? "Workout shared! 🎉 +30 M² Points" : "Workout saved! 💪" });
-      onSaved?.();
+      setSavedWorkout({ title: title.trim(), exercises: [...exercises] });
     }
     setSaving(false);
   };
@@ -243,6 +244,40 @@ const WorkoutBuilder = ({ onSaved, onClose }: WorkoutBuilderProps) => {
             className="flex-1 h-12 bg-primary text-primary-foreground flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-50"
           >
             <Save size={14} /> {saving ? "Saving…" : "Save Workout"}
+          </button>
+        </div>
+      )}
+      {/* Start Workout after save */}
+      {savedWorkout && (
+        <div className="space-y-2">
+          <button
+            onClick={() => {
+              window.dispatchEvent(
+                new CustomEvent("open-workout-zone", {
+                  detail: {
+                    title: savedWorkout.title,
+                    source: "builder",
+                    exercises: savedWorkout.exercises.map((e) => ({
+                      name: e.exerciseTitle,
+                      exerciseId: e.exerciseId,
+                      sets: e.sets,
+                      reps: e.reps,
+                      notes: e.notes,
+                    })),
+                  },
+                })
+              );
+              onSaved?.();
+            }}
+            className="w-full h-14 bg-primary text-primary-foreground flex items-center justify-center gap-3 text-sm font-black uppercase tracking-widest hover:opacity-90 transition-all"
+          >
+            <Play size={18} /> Start This Workout
+          </button>
+          <button
+            onClick={() => onSaved?.()}
+            className="w-full text-xs text-muted-foreground hover:text-foreground text-center py-2"
+          >
+            Back to Workouts
           </button>
         </div>
       )}

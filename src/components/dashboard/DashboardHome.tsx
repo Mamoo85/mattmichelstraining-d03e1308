@@ -1,5 +1,6 @@
 import { memo, lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
+import { Play } from "lucide-react";
 import MonthlyFocusWidget from "@/components/MonthlyFocusWidget";
 import UpcomingSessions from "@/components/UpcomingSessions";
 import PointsWidget from "@/components/PointsWidget";
@@ -34,6 +35,12 @@ const DashboardHome = memo(({ isNewUser, onViewPoints, onViewReferrals }: Dashbo
         Snap a photo of your school workout card or gym whiteboard — AI reads it and logs your session instantly.
       </p>
       <WorkoutScanner />
+      <button
+        onClick={() => window.dispatchEvent(new CustomEvent("open-workout-zone", { detail: { title: "Quick Workout", source: "quick", exercises: [] } }))}
+        className="w-full h-10 bg-primary text-primary-foreground flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all mt-2"
+      >
+        <Play size={14} /> Start Workout
+      </button>
     </div>
 
     <Link
