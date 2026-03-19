@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.analyze-biomechanics]
 verify_jwt = false
+
+[functions.churn-radar]
+verify_jwt = false
