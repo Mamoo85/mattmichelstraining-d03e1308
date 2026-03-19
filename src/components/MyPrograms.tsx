@@ -367,7 +367,28 @@ const MyPrograms = () => {
                 })}
               </div>
 
-              <div className="p-3 flex justify-end">
+              <div className="p-3 flex justify-end gap-2">
+                <button
+                  onClick={() => {
+                    window.dispatchEvent(
+                      new CustomEvent("open-workout-zone", {
+                        detail: {
+                          title: program.program_title,
+                          source: "custom",
+                          exercises: program.exercises.map((ex) => ({
+                            exerciseTitle: ex.name,
+                            prescribedSets: parseInt(ex.sets) || 3,
+                            prescribedReps: parseInt(ex.reps) || 10,
+                            notes: ex.notes,
+                          })),
+                        },
+                      })
+                    );
+                  }}
+                  className="bg-muted text-foreground px-4 py-2.5 text-xs font-bold uppercase tracking-widest hover:bg-muted/80 transition-m2 flex items-center gap-2"
+                >
+                  <Play size={12} /> Start Workout
+                </button>
                 <button
                   onClick={() => logProgramSession(program)}
                   disabled={loggingProgram === program.id}

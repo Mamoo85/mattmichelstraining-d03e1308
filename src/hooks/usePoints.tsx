@@ -12,6 +12,7 @@ export const POINT_VALUES = {
   membership_monthly: 50,
   merch_purchase: 75,
   weekly_streak: 50,
+  share_workout: 25,
 } as const;
 
 export const LEVELS = [

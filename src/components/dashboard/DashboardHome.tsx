@@ -52,6 +52,10 @@ const DashboardHome = memo(({ isNewUser, onViewPoints, onViewReferrals }: Dashbo
     <PointsWidget onViewLeaderboard={onViewPoints} />
     <ReferEarnCard onViewAll={onViewReferrals} />
     <MonthlyFocusWidget />
+
+    <Suspense fallback={null}>
+      <SharedWorkoutFeed />
+    </Suspense>
   </div>
 ));
 

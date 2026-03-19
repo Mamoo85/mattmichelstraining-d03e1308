@@ -131,6 +131,16 @@ const Dashboard = () => {
 
         <StudioCheckIn />
 
+        {/* Resume workout banner */}
+        {localStorage.getItem("m2-paused-workout") && (
+          <button
+            onClick={() => window.dispatchEvent(new Event("resume-workout-zone"))}
+            className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground py-3 mb-4 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all animate-pulse"
+          >
+            <Play size={14} /> Resume Paused Workout
+          </button>
+        )}
+
         {/* Tab switcher */}
         <div className="flex gap-1 mb-6 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap scrollbar-hide">
           {tabs.map((t) => (

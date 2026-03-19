@@ -80,16 +80,55 @@ const GlobalTimer = () => {
 const ActiveWorkoutWrapper = () => {
   const { user } = useAuth();
   const [zoneOpen, setZoneOpen] = useState(false);
+  const [zoneContext, setZoneContext] = useState<any>(null);
+  const [hasPaused, setHasPaused] = useState(
+    () => !!localStorage.getItem("m2-paused-workout")
+  );
 
-  // Expose zone opener globally via custom event
+  // Listen for open event with context
   useEffect(() => {
-    const handler = () => setZoneOpen(true);
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail || null;
+      setZoneContext(detail);
+      setZoneOpen(true);
+      setHasPaused(false);
+    };
     window.addEventListener("open-workout-zone", handler);
     return () => window.removeEventListener("open-workout-zone", handler);
   }, []);
 
+  // Listen for resume event
+  useEffect(() => {
+    const handler = () => {
+      const saved = localStorage.getItem("m2-paused-workout");
+      if (saved) {
+        try {
+          setZoneContext(JSON.parse(saved));
+          setZoneOpen(true);
+          setHasPaused(false);
+        } catch {}
+      }
+    };
+    window.addEventListener("resume-workout-zone", handler);
+    return () => window.removeEventListener("resume-workout-zone", handler);
+  }, []);
+
   if (!user || !zoneOpen) return null;
-  return <ActiveWorkoutZone onFinish={() => setZoneOpen(false)} />;
+  return (
+    <ActiveWorkoutZone
+      initialContext={zoneContext}
+      onFinish={() => {
+        setZoneOpen(false);
+        setZoneContext(null);
+        setHasPaused(false);
+        localStorage.removeItem("m2-paused-workout");
+      }}
+      onPause={() => {
+        setZoneOpen(false);
+        setHasPaused(true);
+      }}
+    />
+  );
 };
 
 const ReferralCaptureWrapper = () => {

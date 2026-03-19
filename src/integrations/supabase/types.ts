@@ -1760,6 +1760,53 @@ export type Database = {
           },
         ]
       }
+      shared_workout_results: {
+        Row: {
+          caption: string | null
+          created_at: string
+          exercises: Json
+          id: string
+          image_status: string
+          image_url: string | null
+          stats: Json
+          user_id: string
+          workout_log_id: string | null
+          workout_title: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          exercises?: Json
+          id?: string
+          image_status?: string
+          image_url?: string | null
+          stats?: Json
+          user_id: string
+          workout_log_id?: string | null
+          workout_title?: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          exercises?: Json
+          id?: string
+          image_status?: string
+          image_url?: string | null
+          stats?: Json
+          user_id?: string
+          workout_log_id?: string | null
+          workout_title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shared_workout_results_workout_log_id_fkey"
+            columns: ["workout_log_id"]
+            isOneToOne: false
+            referencedRelation: "workout_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       site_content: {
         Row: {
           content_key: string

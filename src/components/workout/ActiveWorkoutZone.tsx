@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { format } from "date-fns";
-import { Plus, X, Timer, CheckCircle, Loader2, CalendarIcon, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, X, Timer, CheckCircle, Loader2, CalendarIcon, Pause, Play, Dumbbell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -11,76 +11,107 @@ import { toast } from "sonner";
 import ExercisePicker from "./ExercisePicker";
 import ExerciseCard from "./ExerciseCard";
 import RecoveryInput, { type RecoveryData } from "./RecoveryInput";
+import VoiceNoteButton from "./VoiceNoteButton";
+import ConfirmActionModal from "@/components/ConfirmActionModal";
+import PostWorkoutSummary from "./PostWorkoutSummary";
 import type { LoggedExerciseData } from "./WorkoutLogger";
 
-/* ─── Inline Timer ─── */
-const ZoneTimer = () => {
-  const [seconds, setSeconds] = useState(0);
-  const [running, setRunning] = useState(false);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  useEffect(() => {
-    if (running) {
-      intervalRef.current = setInterval(() => setSeconds((s) => s + 1), 1000);
-    } else if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [running]);
-
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-
-  return (
-    <div className="flex items-center gap-2">
-      <button
-        onClick={() => setRunning(!running)}
-        className={cn(
-          "flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase tracking-widest transition-all",
-          running
-            ? "bg-primary text-primary-foreground"
-            : "bg-muted text-muted-foreground hover:text-foreground"
-        )}
-      >
-        <Timer size={14} />
-        {String(mins).padStart(2, "0")}:{String(secs).padStart(2, "0")}
-      </button>
-      {seconds > 0 && (
-        <button
-          onClick={() => { setSeconds(0); setRunning(false); }}
-          className="text-[10px] text-muted-foreground hover:text-foreground uppercase tracking-widest"
-        >
-          Reset
-        </button>
-      )}
-    </div>
-  );
-};
-
-/* ─── Active Workout Zone ─── */
-interface ActiveWorkoutZoneProps {
-  onFinish: () => void;
+/* ─── Context types ─── */
+export interface WorkoutZoneContext {
+  title?: string;
+  source?: "program" | "community" | "custom" | "manual";
+  programId?: string;
+  // Pre-populated exercises from programs/community
+  exercises?: Array<{
+    exerciseId?: string;
+    exerciseTitle: string;
+    prescribedSets?: number;
+    prescribedReps?: number;
+    notes?: string;
+    videoUrl?: string | null;
+    theWhy?: string | null;
+  }>;
+  // Resumed state
+  resumed?: boolean;
+  resumedExercises?: LoggedExerciseData[];
+  resumedNotes?: string;
+  resumedRecovery?: RecoveryData;
+  resumedElapsed?: number;
+  resumedDate?: string;
 }
 
-const ActiveWorkoutZone = ({ onFinish }: ActiveWorkoutZoneProps) => {
+interface ActiveWorkoutZoneProps {
+  onFinish: () => void;
+  onPause?: () => void;
+  initialContext?: WorkoutZoneContext | null;
+}
+
+const DEFAULT_RECOVERY: RecoveryData = {
+  sleepHours: "",
+  sleepQuality: null,
+  soreness: null,
+  energy: null,
+  recoveryNotes: "",
+};
+
+const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZoneProps) => {
   const { user } = useAuth();
-  const [date, setDate] = useState<Date>(new Date());
-  const [sessionNotes, setSessionNotes] = useState("");
-  const [exercises, setExercises] = useState<LoggedExerciseData[]>([]);
+  const [phase, setPhase] = useState<"active" | "summary">("active");
+  const [date, setDate] = useState<Date>(
+    initialContext?.resumedDate ? new Date(initialContext.resumedDate) : new Date()
+  );
+  const [sessionNotes, setSessionNotes] = useState(initialContext?.resumedNotes || "");
+  const [exercises, setExercises] = useState<LoggedExerciseData[]>(
+    initialContext?.resumedExercises || []
+  );
   const [saving, setSaving] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
-  const [recovery, setRecovery] = useState<RecoveryData>({
-    sleepHours: "",
-    sleepQuality: null,
-    soreness: null,
-    energy: null,
-    recoveryNotes: "",
-  });
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [recovery, setRecovery] = useState<RecoveryData>(
+    initialContext?.resumedRecovery || { ...DEFAULT_RECOVERY }
+  );
+  const [workoutLogId, setWorkoutLogId] = useState<string | null>(null);
+  const workoutTitle = initialContext?.title || "Workout";
+
+  // Timer
+  const [elapsedSeconds, setElapsedSeconds] = useState(initialContext?.resumedElapsed || 0);
+  const [timerRunning, setTimerRunning] = useState(true);
+
+  useEffect(() => {
+    if (!timerRunning) return;
+    const id = setInterval(() => setElapsedSeconds((s) => s + 1), 1000);
+    return () => clearInterval(id);
+  }, [timerRunning]);
+
+  const mins = Math.floor(elapsedSeconds / 60);
+  const secs = elapsedSeconds % 60;
 
   // Prevent body scroll
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = ""; };
+  }, []);
+
+  // Auto-populate exercises from context on mount
+  useEffect(() => {
+    if (initialContext?.resumed) return; // Already restored above
+    if (!initialContext?.exercises || initialContext.exercises.length === 0) return;
+
+    const mapped: LoggedExerciseData[] = initialContext.exercises.map((ex) => ({
+      exerciseId: ex.exerciseId || "",
+      exerciseTitle: ex.exerciseTitle,
+      sets: Array.from({ length: ex.prescribedSets || 3 }, (_, i) => ({
+        set: i + 1,
+        reps: ex.prescribedReps || 0,
+        weight: 0,
+      })),
+      clientNotes: ex.notes || "",
+      videoUrl: "",
+      flagForCoach: false,
+      exerciseVideoUrl: ex.videoUrl || null,
+      exerciseTheWhy: ex.theWhy || null,
+    }));
+    setExercises(mapped);
   }, []);
 
   const addExercise = useCallback(async (id: string, title: string) => {
@@ -114,15 +145,36 @@ const ActiveWorkoutZone = ({ onFinish }: ActiveWorkoutZoneProps) => {
     setExercises((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleFinish = async () => {
-    if (!user) return;
+  // Pause handler
+  const handlePause = useCallback(() => {
+    setTimerRunning(false);
+    const state = {
+      title: workoutTitle,
+      source: initialContext?.source,
+      resumedExercises: exercises,
+      resumedNotes: sessionNotes,
+      resumedRecovery: recovery,
+      resumedElapsed: elapsedSeconds,
+      resumedDate: date.toISOString(),
+      resumed: true,
+    };
+    localStorage.setItem("m2-paused-workout", JSON.stringify(state));
+    toast.info("Workout paused. Resume anytime from your dashboard.");
+    onPause?.();
+  }, [exercises, sessionNotes, recovery, elapsedSeconds, date, workoutTitle, initialContext, onPause]);
 
-    // If no exercises, just close
+  // Finish handler
+  const handleFinishClick = () => {
     if (exercises.length === 0) {
       onFinish();
       return;
     }
+    setShowConfirm(true);
+  };
 
+  const handleFinishConfirmed = async () => {
+    if (!user) return;
+    setShowConfirm(false);
     setSaving(true);
 
     const recoveryPayload: Record<string, any> = {};
@@ -134,7 +186,12 @@ const ActiveWorkoutZone = ({ onFinish }: ActiveWorkoutZoneProps) => {
 
     const { data: log, error: logErr } = await supabase
       .from("workout_logs")
-      .insert({ user_id: user.id, date: date.toISOString(), session_notes: sessionNotes || null, ...recoveryPayload } as any)
+      .insert({
+        user_id: user.id,
+        date: date.toISOString(),
+        session_notes: sessionNotes || null,
+        ...recoveryPayload,
+      } as any)
       .select("id")
       .single();
 
@@ -146,7 +203,7 @@ const ActiveWorkoutZone = ({ onFinish }: ActiveWorkoutZoneProps) => {
 
     const rows = exercises.map((e) => ({
       log_id: log.id,
-      exercise_id: e.exerciseId,
+      exercise_id: e.exerciseId || null,
       sets_reps_weight: e.sets as any,
       client_notes: e.clientNotes || null,
       video_url: e.videoUrl || null,
@@ -156,100 +213,188 @@ const ActiveWorkoutZone = ({ onFinish }: ActiveWorkoutZoneProps) => {
     const { error: exErr } = await supabase.from("logged_exercises").insert(rows);
     if (exErr) {
       toast.error(exErr.message || "Exercises failed to save");
-    } else {
-      toast.success(`Workout saved — ${exercises.length} exercise${exercises.length > 1 ? "s" : ""} logged 💪`);
     }
 
+    // Clear paused state
+    localStorage.removeItem("m2-paused-workout");
+
+    setWorkoutLogId(log.id);
     setSaving(false);
-    onFinish();
+    setPhase("summary");
   };
 
+  // Summary phase
+  if (phase === "summary" && workoutLogId) {
+    return (
+      <PostWorkoutSummary
+        exercises={exercises}
+        duration={elapsedSeconds}
+        workoutLogId={workoutLogId}
+        workoutTitle={workoutTitle}
+        date={date}
+        sessionNotes={sessionNotes}
+        recovery={recovery}
+        onClose={() => {
+          localStorage.removeItem("m2-paused-workout");
+          onFinish();
+        }}
+      />
+    );
+  }
+
   return (
-    <div className="fixed inset-0 z-[100] bg-background flex flex-col">
-      {/* Top header - minimal */}
-      <header className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-border bg-background">
-        <span className="text-xs font-bold uppercase tracking-widest text-primary">Active Workout</span>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="ghost" size="sm" className="text-xs font-mono gap-1">
-              <CalendarIcon size={12} />
-              {format(date, "MMM d")}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="end">
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={(d) => d && setDate(d)}
-              disabled={(d) => d > new Date()}
-              initialFocus
-              className="p-3 pointer-events-auto"
-            />
-          </PopoverContent>
-        </Popover>
-      </header>
+    <>
+      <div className="fixed inset-0 z-[100] bg-background flex flex-col">
+        {/* Top header */}
+        <header className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-border bg-background">
+          <div className="flex items-center gap-2 min-w-0">
+            <Dumbbell size={14} className="text-primary flex-shrink-0" />
+            <span className="text-xs font-bold uppercase tracking-widest text-primary truncate">
+              {workoutTitle}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="sm" className="text-xs font-mono gap-1">
+                  <CalendarIcon size={12} />
+                  {format(date, "MMM d")}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={(d) => d && setDate(d)}
+                  disabled={(d) => d > new Date()}
+                  initialFocus
+                  className="p-3 pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+        </header>
 
-      {/* Scrollable content */}
-      <main className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-        {exercises.map((ex, i) => (
-          <ExerciseCard
-            key={i}
-            exercise={ex}
-            index={i}
-            onUpdate={(data) => updateExercise(i, data)}
-            onRemove={() => removeExercise(i)}
-          />
-        ))}
-
-        {showPicker ? (
-          <ExercisePicker onSelect={addExercise} onCancel={() => setShowPicker(false)} />
-        ) : null}
-
-        {exercises.length > 0 && (
-          <RecoveryInput value={recovery} onChange={setRecovery} />
-        )}
-
-        {exercises.length > 0 && (
-          <textarea
-            placeholder="Session notes (optional)…"
-            value={sessionNotes}
-            onChange={(e) => setSessionNotes(e.target.value)}
-            className="w-full bg-card border border-border p-4 text-sm text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-primary outline-none min-h-[60px] resize-none"
-          />
-        )}
-
-        {/* Spacer for bottom bar */}
-        <div className="h-24" />
-      </main>
-
-      {/* Sticky bottom bar */}
-      <footer className="shrink-0 border-t border-border bg-background px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
-        <div className="flex items-center justify-between gap-2 max-w-lg mx-auto">
-          <ZoneTimer />
-
-          {!showPicker && (
-            <Button
-              onClick={() => setShowPicker(true)}
-              size="sm"
-              variant="outline"
-              className="gap-1 text-xs font-bold uppercase tracking-widest"
-            >
-              <Plus size={14} /> Add Set / Log
-            </Button>
+        {/* Scrollable content */}
+        <main className="flex-1 overflow-y-auto px-4 py-4 space-y-4 pb-28">
+          {exercises.length === 0 && !showPicker && (
+            <div className="flex flex-col items-center justify-center py-16 text-center space-y-4">
+              <Dumbbell size={32} className="text-muted-foreground/30" />
+              <div>
+                <h3 className="text-sm font-bold text-foreground mb-1">Ready to train</h3>
+                <p className="text-xs text-muted-foreground">Add exercises from the library to start logging your workout.</p>
+              </div>
+              <Button
+                onClick={() => setShowPicker(true)}
+                className="gap-1.5 text-xs font-bold uppercase tracking-widest"
+              >
+                <Plus size={14} /> Add Exercise
+              </Button>
+            </div>
           )}
 
-          <Button
-            onClick={handleFinish}
-            disabled={saving}
-            size="sm"
-            className="gap-1 text-xs font-bold uppercase tracking-widest bg-primary text-primary-foreground"
-          >
-            {saving ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
-            Finish & Exit
-          </Button>
-        </div>
-      </footer>
-    </div>
+          {exercises.map((ex, i) => (
+            <ExerciseCard
+              key={i}
+              exercise={ex}
+              index={i}
+              onUpdate={(data) => updateExercise(i, data)}
+              onRemove={() => removeExercise(i)}
+            />
+          ))}
+
+          {showPicker && (
+            <ExercisePicker onSelect={addExercise} onCancel={() => setShowPicker(false)} />
+          )}
+
+          {exercises.length > 0 && (
+            <RecoveryInput value={recovery} onChange={setRecovery} />
+          )}
+
+          {exercises.length > 0 && (
+            <div className="relative">
+              <textarea
+                placeholder="Session notes (optional)…"
+                value={sessionNotes}
+                onChange={(e) => setSessionNotes(e.target.value)}
+                className="w-full bg-card border border-border p-4 pr-12 text-sm text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-primary outline-none min-h-[60px] resize-none"
+              />
+              <VoiceNoteButton
+                onTranscript={(t) => setSessionNotes((prev) => (prev ? prev + " " + t : t))}
+                className="absolute top-3 right-3"
+              />
+            </div>
+          )}
+        </main>
+
+        {/* Sticky bottom bar */}
+        <footer className="shrink-0 border-t border-border bg-background px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+          <div className="flex items-center justify-between gap-2 max-w-lg mx-auto">
+            {/* Timer */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setTimerRunning(!timerRunning)}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase tracking-widest transition-all",
+                  timerRunning
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Timer size={14} />
+                {String(mins).padStart(2, "0")}:{String(secs).padStart(2, "0")}
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {/* Pause */}
+              <Button
+                onClick={handlePause}
+                size="sm"
+                variant="outline"
+                className="gap-1 text-xs font-bold uppercase tracking-widest"
+              >
+                <Pause size={14} /> Pause
+              </Button>
+
+              {/* Add Exercise */}
+              {!showPicker && exercises.length > 0 && (
+                <Button
+                  onClick={() => setShowPicker(true)}
+                  size="sm"
+                  variant="outline"
+                  className="gap-1 text-xs font-bold uppercase tracking-widest"
+                >
+                  <Plus size={14} /> Add
+                </Button>
+              )}
+
+              {/* Finish */}
+              <Button
+                onClick={handleFinishClick}
+                disabled={saving}
+                size="sm"
+                className="gap-1 text-xs font-bold uppercase tracking-widest bg-primary text-primary-foreground"
+              >
+                {saving ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
+                Finish
+              </Button>
+            </div>
+          </div>
+        </footer>
+      </div>
+
+      <ConfirmActionModal
+        open={showConfirm}
+        onOpenChange={setShowConfirm}
+        title="Finish Workout?"
+        description={`Save ${exercises.length} exercise${exercises.length !== 1 ? "s" : ""} and view your workout analysis.`}
+        confirmLabel="Finish & Save"
+        onConfirm={handleFinishConfirmed}
+        loading={saving}
+        icon={<CheckCircle size={16} />}
+      />
+    </>
   );
 };
 

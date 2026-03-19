@@ -143,12 +143,18 @@ const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove }: ExerciseCard
           </button>
           {showExtras && (
             <div className="mt-2 space-y-2">
-              <textarea
-                placeholder="How did this feel? Any pain or issues?"
-                value={exercise.clientNotes}
-                onChange={(e) => onUpdate({ clientNotes: e.target.value })}
-                className="w-full bg-background border border-border rounded-sm p-3 text-sm text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-primary outline-none min-h-[60px] resize-none"
-              />
+              <div className="relative">
+                <textarea
+                  placeholder="How did this feel? Any pain or issues?"
+                  value={exercise.clientNotes}
+                  onChange={(e) => onUpdate({ clientNotes: e.target.value })}
+                  className="w-full bg-background border border-border rounded-sm p-3 pr-12 text-sm text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-primary outline-none min-h-[60px] resize-none"
+                />
+                <VoiceNoteButton
+                  onTranscript={(t) => onUpdate({ clientNotes: (exercise.clientNotes ? exercise.clientNotes + " " : "") + t })}
+                  className="absolute top-2 right-2"
+                />
+              </div>
               <div className="flex items-center bg-background border border-border rounded-sm px-3 h-12">
                 <Link size={14} className="text-muted-foreground mr-2 flex-shrink-0" />
                 <input
