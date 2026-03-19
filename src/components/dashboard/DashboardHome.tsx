@@ -7,7 +7,6 @@ import PointsWidget from "@/components/PointsWidget";
 import WorkoutScanner from "@/components/workout/WorkoutScanner";
 import EmptyStateCard from "@/components/EmptyStateCard";
 import ReferEarnCard from "./ReferEarnCard";
-import WorkoutPickerModal from "./WorkoutPickerModal";
 import { useAuth } from "@/hooks/useAuth";
 
 const SharedWorkoutFeed = lazy(() => import("@/components/workout/SharedWorkoutFeed"));
