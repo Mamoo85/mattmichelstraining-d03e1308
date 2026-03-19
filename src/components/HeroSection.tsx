@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowRight, Star } from "lucide-react";
+import { ArrowRight, Star, Shield, Trophy, Clock } from "lucide-react";
 
 import m2Logo from "@/assets/m2-logo.jpg";
 import { useSectionVisible } from "@/hooks/useSiteContent";
@@ -9,8 +9,15 @@ import ForParentsCTA from "./landing/ForParentsCTA";
 import M2Difference from "./landing/M2Difference";
 import FindUs from "./landing/FindUs";
 import PortalEntrance from "./landing/PortalEntrance";
+import TechShowcaseCard from "./landing/TechShowcaseCard";
+import EmailCapture from "./landing/EmailCapture";
+import MonthlyFocus from "./landing/MonthlyFocus";
 
-
+const STATS = [
+  { icon: Clock, value: "20+", label: "Years Coaching" },
+  { icon: Trophy, value: "50+", label: "College Athletes" },
+  { icon: Shield, value: "Zero", label: "Injuries" },
+];
 
 const HeroSection = () => {
   const showHero = useSectionVisible("hero");
@@ -44,6 +51,24 @@ const HeroSection = () => {
                 height={224}
                 className="w-36 h-36 md:w-48 md:h-48 lg:w-56 lg:h-56 object-contain mb-4"
               />
+
+              {/* ── Impact Stats Bar ── */}
+              <div className="flex items-center justify-center gap-4 sm:gap-8 mb-5">
+                {STATS.map((s) => (
+                  <motion.div
+                    key={s.label}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2, duration: 0.4 }}
+                    className="flex flex-col items-center"
+                  >
+                    <s.icon size={14} className="text-primary mb-1" />
+                    <span className="text-lg sm:text-xl font-black text-primary font-mono leading-none">{s.value}</span>
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mt-0.5">{s.label}</span>
+                  </motion.div>
+                ))}
+              </div>
+
               <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold tracking-display text-foreground leading-snug mb-3">
                 Real strength. Zero gimmicks.
                 <br />
@@ -77,16 +102,24 @@ const HeroSection = () => {
           </motion.div>
         )}
 
+        {/* ─── 2. TECH SHOWCASE — The Edge ─── */}
+        <TechShowcaseCard />
+
         {/* ─── 3. FOR PARENTS — Injury Prevention Hook ─── */}
         <ForParentsCTA />
 
         {/* ─── 4. MEMBER PORTAL (sneak peek) ─── */}
         <PortalEntrance />
 
-        {/* ─── 5. THE M² DIFFERENCE ─── */}
+        {/* ─── 5. MONTHLY FOCUS ─── */}
+        <div className="mb-8">
+          <MonthlyFocus />
+        </div>
+
+        {/* ─── 6. THE M² DIFFERENCE ─── */}
         <M2Difference />
 
-        {/* ─── 6. MEMBERSHIP CTA ─── */}
+        {/* ─── 7. MEMBERSHIP CTA ─── */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -121,7 +154,10 @@ const HeroSection = () => {
           </div>
         </motion.div>
 
-        {/* ─── 8. FIND US — always last ─── */}
+        {/* ─── 8. EMAIL CAPTURE ─── */}
+        <EmailCapture />
+
+        {/* ─── 9. FIND US — always last ─── */}
         {showFindUs && <div className="mb-8"><FindUs /></div>}
 
         {/* FOOTER */}

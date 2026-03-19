@@ -395,8 +395,8 @@ const Learn = () => {
           <MonthlyFocus />
         </div>
 
-        {/* ── Featured Videos ── */}
-        {showFeaturedVideos && (
+        {/* ── Featured Videos ── only show when at least one has a real embed */}
+        {showFeaturedVideos && VIDEOS.some((v) => v.embedId) && (
         <section className="mb-10">
           <div className="flex items-center gap-2 mb-4">
             <Play size={16} className="text-primary" />
@@ -405,7 +405,7 @@ const Learn = () => {
             </h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {VIDEOS.map((v) => (
+            {VIDEOS.filter((v) => v.embedId).map((v) => (
               <VideoCard key={v.title} video={v} />
             ))}
           </div>

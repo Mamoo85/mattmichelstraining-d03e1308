@@ -4,6 +4,7 @@ import { toast } from "@/hooks/use-toast";
 import { Save, Loader2, Megaphone } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
+import AdminPinnedNotes from "./AdminPinnedNotes";
 
 const AdminFrontPage = () => {
   const [loading, setLoading] = useState(true);
@@ -79,6 +80,8 @@ const AdminFrontPage = () => {
 
   return (
     <div className="space-y-6">
+      {/* Pinned Reminders */}
+      <AdminPinnedNotes />
       {/* Announcement Banner */}
       <div className="bg-card border border-border p-5 space-y-4">
         <div className="flex items-center gap-2">
