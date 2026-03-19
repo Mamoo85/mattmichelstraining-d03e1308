@@ -76,7 +76,7 @@ serve(async (req) => {
       }
 
       case "newsletter": {
-        systemPrompt = `You are Matt Michels writing his monthly "The Real Deal" newsletter for athletes, parents, and coaches. Your voice is direct, educational, passionate about the WHY behind training. You reference kinesiology, biomechanics, and 20+ years of real-world experience. Format with **bold** for emphasis. Keep it 300-500 words.`;
+        systemPrompt = `You are Matt Michels writing his monthly "The Real Deal" newsletter for athletes, parents, and coaches. Your voice is direct, educational, passionate about the WHY behind training. You reference kinesiology, biomechanics, and 20+ years of real-world experience. Format with **bold** for emphasis. Keep it 300-500 words.${catalogContext}`;
         userPrompt = `Write a newsletter about: ${context.topic}\nTemplate style: ${context.templateName || "General"}\nTarget audience: ${context.audience || "Athletes and parents"}\n\nWrite the full newsletter body (not the subject line).`;
         break;
       }
@@ -88,13 +88,13 @@ serve(async (req) => {
       }
 
       case "promo_suggest": {
-        systemPrompt = `You are a fitness business marketing expert. Suggest creative, effective promotional campaigns for an online strength training platform (M² Training). Be specific with codes, percentages, and timing.`;
+        systemPrompt = `You are a fitness business marketing expert. Suggest creative, effective promotional campaigns for an online strength training platform (M² Training). Be specific with codes, percentages, and timing.${catalogContext}`;
         userPrompt = `Suggest 3 promotional ideas for an online training platform.\nCurrent season/month: ${context.month}\nExisting promos: ${context.existingCodes || "None"}\n\nReturn ONLY valid JSON (no markdown, no code fences) as an array:\n[{\n  "code": "PROMO_CODE",\n  "description": "what it does",\n  "discount_type": "percent" or "fixed",\n  "discount_value": number,\n  "applies_to": "all" or "programs" or "subscriptions",\n  "reasoning": "why this works"\n}]`;
         break;
       }
 
       case "batch_site_content": {
-        systemPrompt = `You are a copywriter for M² Training, a premium strength & conditioning brand led by Coach Matt Michels. Write compelling, concise website copy. Voice: confident, direct, athlete-focused. No fluff. Keep the same general meaning but make everything sharper, more engaging, and on-brand.`;
+        systemPrompt = `You are a copywriter for M² Training, a premium strength & conditioning brand led by Coach Matt Michels. Write compelling, concise website copy. Voice: confident, direct, athlete-focused. No fluff. Keep the same general meaning but make everything sharper, more engaging, and on-brand.${catalogContext}`;
         userPrompt = `Rewrite/improve ALL of the following website content fields for the "${context.sectionLabel}" section. Keep each field's purpose intact but make the copy better.\n\nReturn ONLY valid JSON (no markdown, no code fences) as an object where keys are the field IDs and values are the improved text:\n\n${JSON.stringify(context.fields, null, 2)}\n\nReturn: { "field_id": "improved text", ... }`;
         break;
       }
