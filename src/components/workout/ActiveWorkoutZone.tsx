@@ -15,6 +15,7 @@ import VoiceNoteButton from "./VoiceNoteButton";
 import ConfirmActionModal from "@/components/ConfirmActionModal";
 import PostWorkoutSummary from "./PostWorkoutSummary";
 import LiveFormTracker from "./LiveFormTracker";
+import ReadinessGate, { calculateAdjustments, type ReadinessResult } from "./ReadinessGate";
 import type { LoggedExerciseData } from "./WorkoutLogger";
 
 /* ─── Context types ─── */
@@ -57,7 +58,9 @@ const DEFAULT_RECOVERY: RecoveryData = {
 
 const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZoneProps) => {
   const { user } = useAuth();
-  const [phase, setPhase] = useState<"active" | "summary">("active");
+  const [phase, setPhase] = useState<"readiness" | "active" | "summary">("readiness");
+  const [readinessResult, setReadinessResult] = useState<ReadinessResult | null>(null);
+  const [autoRegulateEnabled, setAutoRegulateEnabled] = useState<boolean | null>(null);
   const [date, setDate] = useState<Date>(
     initialContext?.resumedDate ? new Date(initialContext.resumedDate) : new Date()
   );
@@ -74,6 +77,97 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
   const [workoutLogId, setWorkoutLogId] = useState<string | null>(null);
   const [formTrackerExercise, setFormTrackerExercise] = useState<string | null>(null);
   const workoutTitle = initialContext?.title || "Workout";
+
+  // Check if auto-regulate is enabled for this user
+  useEffect(() => {
+    if (!user) { setAutoRegulateEnabled(false); return; }
+    // If resuming, skip readiness gate
+    if (initialContext?.resumed) { setPhase("active"); setAutoRegulateEnabled(false); return; }
+    supabase
+      .from("profiles")
+      .select("auto_regulate")
+      .eq("user_id", user.id)
+      .single()
+      .then(({ data }) => {
+        const enabled = (data as any)?.auto_regulate === true;
+        setAutoRegulateEnabled(enabled);
+        if (!enabled) setPhase("active");
+      });
+  }, [user, initialContext?.resumed]);
+
+  // Apply readiness adjustments to exercises
+  const applyReadinessAdjustments = useCallback(async (result: ReadinessResult, currentExercises: LoggedExerciseData[]) => {
+    if (result.weightAdjustmentPct === 0 && !result.swapsApplied) return currentExercises;
+
+    let adjusted = [...currentExercises];
+
+    // Apply weight reduction based on logged 3RM/5RM or prescribed weight
+    if (result.weightAdjustmentPct !== 0) {
+      adjusted = adjusted.map(ex => ({
+        ...ex,
+        sets: ex.sets.map(s => ({
+          ...s,
+          weight: s.weight > 0 ? Math.round(s.weight * (1 + result.weightAdjustmentPct / 100)) : 0,
+        })),
+      }));
+    }
+
+    // Swap barbell exercises for alternatives if sleep < 5h
+    if (result.swapsApplied) {
+      const exerciseIds = adjusted.filter(e => e.exerciseId).map(e => e.exerciseId);
+      if (exerciseIds.length > 0) {
+        const { data: libData } = await supabase
+          .from("exercise_library")
+          .select("id, title, barbell_alternative_id, video_url, the_why")
+          .in("id", exerciseIds);
+
+        if (libData) {
+          const altIds = (libData as any[]).filter(e => e.barbell_alternative_id).map(e => e.barbell_alternative_id);
+          let altMap: Record<string, any> = {};
+          if (altIds.length > 0) {
+            const { data: alts } = await supabase
+              .from("exercise_library")
+              .select("id, title, video_url, the_why")
+              .in("id", altIds);
+            if (alts) {
+              alts.forEach((a: any) => { altMap[a.id] = a; });
+            }
+          }
+
+          adjusted = adjusted.map(ex => {
+            const libEntry = (libData as any[]).find(l => l.id === ex.exerciseId);
+            if (libEntry?.barbell_alternative_id && altMap[libEntry.barbell_alternative_id]) {
+              const alt = altMap[libEntry.barbell_alternative_id];
+              return {
+                ...ex,
+                exerciseId: alt.id,
+                exerciseTitle: `${alt.title} ⚡`,
+                exerciseVideoUrl: alt.video_url || null,
+                exerciseTheWhy: alt.the_why || null,
+              };
+            }
+            return ex;
+          });
+        }
+      }
+    }
+
+    return adjusted;
+  }, []);
+
+  const handleReadinessComplete = useCallback(async (result: ReadinessResult) => {
+    setReadinessResult(result);
+    // Apply adjustments to pre-loaded exercises
+    const adjustedExercises = await applyReadinessAdjustments(result, exercises);
+    setExercises(adjustedExercises);
+    // Pre-fill recovery sleep hours from readiness check
+    setRecovery(prev => ({ ...prev, sleepHours: String(result.hoursSlept) }));
+    setPhase("active");
+  }, [exercises, applyReadinessAdjustments]);
+
+  const handleReadinessSkip = useCallback(() => {
+    setPhase("active");
+  }, []);
 
   // Timer
   const [elapsedSeconds, setElapsedSeconds] = useState(initialContext?.resumedElapsed || 0);
@@ -225,6 +319,25 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
     setPhase("summary");
   };
 
+  // Readiness gate phase
+  if (phase === "readiness" && autoRegulateEnabled) {
+    return (
+      <ReadinessGate
+        onComplete={handleReadinessComplete}
+        onSkip={handleReadinessSkip}
+      />
+    );
+  }
+
+  // Still loading auto_regulate preference
+  if (autoRegulateEnabled === null) {
+    return (
+      <div className="fixed inset-0 z-[100] bg-background flex items-center justify-center">
+        <Loader2 size={24} className="animate-spin text-primary" />
+      </div>
+    );
+  }
+
   // Summary phase
   if (phase === "summary" && workoutLogId) {
     return (
@@ -254,6 +367,11 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
             <span className="text-xs font-bold uppercase tracking-widest text-primary truncate">
               {workoutTitle}
             </span>
+            {readinessResult && readinessResult.weightAdjustmentPct !== 0 && (
+              <span className="text-[9px] font-bold uppercase tracking-widest bg-primary/10 text-primary px-2 py-0.5 border border-primary/30 shrink-0">
+                {Math.abs(readinessResult.weightAdjustmentPct)}% adjusted
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <Popover>

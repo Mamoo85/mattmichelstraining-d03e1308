@@ -394,6 +394,7 @@ export type Database = {
       }
       exercise_library: {
         Row: {
+          barbell_alternative_id: string | null
           client_type: string[]
           created_at: string
           equipment_needed: string
@@ -408,6 +409,7 @@ export type Database = {
           video_url: string | null
         }
         Insert: {
+          barbell_alternative_id?: string | null
           client_type?: string[]
           created_at?: string
           equipment_needed?: string
@@ -422,6 +424,7 @@ export type Database = {
           video_url?: string | null
         }
         Update: {
+          barbell_alternative_id?: string | null
           client_type?: string[]
           created_at?: string
           equipment_needed?: string
@@ -435,7 +438,15 @@ export type Database = {
           title?: string
           video_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "exercise_library_barbell_alternative_id_fkey"
+            columns: ["barbell_alternative_id"]
+            isOneToOne: false
+            referencedRelation: "exercise_library"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       family_subscription_items: {
         Row: {
@@ -1212,6 +1223,7 @@ export type Database = {
         Row: {
           account_role: string
           athlete_name: string | null
+          auto_regulate: boolean
           created_at: string
           daily_calorie_goal: number | null
           daily_carbs_goal: number | null
@@ -1232,6 +1244,7 @@ export type Database = {
         Insert: {
           account_role?: string
           athlete_name?: string | null
+          auto_regulate?: boolean
           created_at?: string
           daily_calorie_goal?: number | null
           daily_carbs_goal?: number | null
@@ -1252,6 +1265,7 @@ export type Database = {
         Update: {
           account_role?: string
           athlete_name?: string | null
+          auto_regulate?: boolean
           created_at?: string
           daily_calorie_goal?: number | null
           daily_carbs_goal?: number | null
@@ -1563,6 +1577,33 @@ export type Database = {
           sport?: string | null
           stripe_session_id?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      readiness_checks: {
+        Row: {
+          checked_at: string
+          hours_slept: number
+          id: string
+          swaps_applied: boolean
+          user_id: string
+          weight_adjustment_pct: number
+        }
+        Insert: {
+          checked_at?: string
+          hours_slept: number
+          id?: string
+          swaps_applied?: boolean
+          user_id: string
+          weight_adjustment_pct?: number
+        }
+        Update: {
+          checked_at?: string
+          hours_slept?: number
+          id?: string
+          swaps_applied?: boolean
+          user_id?: string
+          weight_adjustment_pct?: number
         }
         Relationships: []
       }

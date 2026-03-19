@@ -10,8 +10,9 @@ import { Link } from "react-router-dom";
 import {
   User, Trophy, Medal, Award, Save, Loader2, Gift, Search,
   Crown, ExternalLink, ShoppingBag, Dumbbell, Calendar, Shield,
-  ArrowRight, ChevronDown, ChevronUp, Zap, Clock, FileText, Send
+  ArrowRight, ChevronDown, ChevronUp, Zap, Clock, FileText, Send, Activity
 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import GiftSessionModal from "@/components/GiftSessionModal";
 import FamilyBilling from "@/components/FamilyBilling";
 import { toast } from "@/hooks/use-toast";
@@ -31,6 +32,7 @@ const Profile = () => {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [fullName, setFullName] = useState("");
   const [athleteName, setAthleteName] = useState("");
+  const [autoRegulate, setAutoRegulate] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [portalLoading, setPortalLoading] = useState(false);
@@ -54,7 +56,7 @@ const Profile = () => {
 
       // Parallel data fetching for performance
       const [profileRes, partsRes, logsRes, cardsRes, purchasedRes, activeRes, bookingsRes] = await Promise.all([
-        supabase.from("profiles").select("full_name, athlete_name, email, subscription_tier").eq("user_id", user.id).single(),
+        supabase.from("profiles").select("full_name, athlete_name, email, subscription_tier, auto_regulate").eq("user_id", user.id).single(),
         supabase.from("challenge_participants").select("challenge_id, current_value, is_public, monthly_challenge_id").eq("user_id", user.id),
         supabase.from("progress_logs").select("exercise_name, weight").eq("user_id", user.id),
         supabase.from("gift_cards" as any).select("*").or(`purchaser_id.eq.${user.id},redeemed_by.eq.${user.id}`).order("created_at", { ascending: false }),
@@ -67,6 +69,7 @@ const Profile = () => {
         setProfile(profileRes.data as ProfileData);
         setFullName(profileRes.data.full_name || "");
         setAthleteName(profileRes.data.athlete_name || "");
+        setAutoRegulate((profileRes.data as any).auto_regulate === true);
       }
 
       // Challenge enrichment
@@ -122,7 +125,8 @@ const Profile = () => {
     const { error } = await supabase.from("profiles").update({
       full_name: fullName.trim() || null,
       athlete_name: athleteName.trim() || null,
-    }).eq("user_id", user.id);
+      auto_regulate: autoRegulate,
+    } as any).eq("user_id", user.id);
     if (error) {
       toast({ title: "Error saving", description: error.message, variant: "destructive" });
     } else {
@@ -443,6 +447,39 @@ const Profile = () => {
               {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
               Save Changes
             </button>
+          </div>
+        </div>
+
+        {/* Auto-Regulation Engine */}
+        <div className="bg-card border border-border p-5 mb-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <h2 className="text-[10px] font-bold uppercase tracking-widest text-primary mb-2 flex items-center gap-1.5">
+                <Activity size={12} /> Auto-Regulation Engine
+              </h2>
+              <p className="text-xs text-muted-foreground leading-relaxed mb-3">
+                When enabled, you'll be asked how many hours you slept before each workout. 
+                If you're under-recovered, your prescribed working weights (3RM/5RM) automatically drop 
+                and complex barbell movements swap to dumbbell/machine equivalents — protecting your 
+                joints when your nervous system is compromised.
+              </p>
+              <div className="flex items-center gap-3 bg-primary/5 border border-primary/20 p-3">
+                <Switch
+                  id="auto-regulate"
+                  checked={autoRegulate}
+                  onCheckedChange={setAutoRegulate}
+                />
+                <label htmlFor="auto-regulate" className="text-xs font-bold text-foreground cursor-pointer select-none">
+                  {autoRegulate ? "Active — you'll get a readiness check before each workout" : "Disabled — standard programming only"}
+                </label>
+              </div>
+              {autoRegulate && (
+                <p className="text-[10px] text-primary mt-2 flex items-center gap-1">
+                  <Zap size={10} />
+                  Don't forget to hit "Save Changes" above to save this preference.
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
