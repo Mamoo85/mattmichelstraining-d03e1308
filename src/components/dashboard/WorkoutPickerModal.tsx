@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Play, Plus, Dumbbell, BookOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useFamilyUserIds } from "@/hooks/useFamilyUserIds";
 import {
   Sheet,
   SheetContent,
