@@ -98,16 +98,6 @@ const AppNavbar = () => {
 
         {/* Mobile: bell + hamburger */}
         <div className="md:hidden flex items-center gap-1">
-          {!isStandalone && (
-            <Link
-              to="/install"
-              className="flex items-center gap-1 px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest rounded-sm bg-primary/10 text-primary"
-              title="Install the M² App"
-            >
-              <Download size={13} />
-              App
-            </Link>
-          )}
           {user && <NotificationBell />}
           <button className="p-2 text-muted-foreground" onClick={() => setMobileOpen(!mobileOpen)}>
             {mobileOpen ? <X size={22} /> : <Menu size={22} />}
