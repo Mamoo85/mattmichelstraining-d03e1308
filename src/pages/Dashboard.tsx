@@ -176,6 +176,19 @@ const Dashboard = () => {
         <WorkoutScanner />
       </div>
 
+      {/* Nutrition Tracker Link */}
+      <Link
+        to="/nutrition"
+        className="block bg-card border border-border p-5 space-y-1 hover:border-primary/40 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-primary">AI Nutrition</span>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Snap a photo of your food and get instant calorie & macro estimates.
+        </p>
+      </Link>
+
       {/* Upcoming Sessions */}
       <UpcomingSessions />
 
