@@ -610,8 +610,8 @@ const TheEdge = () => {
             </h1>
             <p className="text-sm text-foreground-soft max-w-xl leading-relaxed">
               Matt's two passions — computer engineering and exercise science — fused into a platform
-              no other trainer can match. AI-powered analysis, real-time tracking, and intelligent
-              programming — all running on your phone. No extra hardware. No gimmicks.
+              no other trainer can match. Advanced analysis, real-time tracking, and intelligent
+              tools that give Matt data no one else has — and give you results no one else can deliver.
             </p>
           </div>
 
