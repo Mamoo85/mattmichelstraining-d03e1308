@@ -110,16 +110,6 @@ const Dashboard = () => {
             >
               <User size={12} /> Profile
             </Link>
-            {subscribed && (
-              <button
-                onClick={handleManageSubscription}
-                disabled={portalLoading}
-                className="flex items-center gap-1.5 bg-muted text-muted-foreground px-3 py-2 text-[10px] font-bold uppercase tracking-widest hover:text-foreground transition-all disabled:opacity-50"
-              >
-                {portalLoading ? <Loader2 size={12} className="animate-spin" /> : <ExternalLink size={12} />}
-                Manage
-              </button>
-            )}
           </div>
         </div>
 
