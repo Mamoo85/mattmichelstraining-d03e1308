@@ -13,6 +13,7 @@ const AdminTeamRosters = lazy(() => import("@/components/admin/AdminTeamRosters"
 const AdminParentReports = lazy(() => import("@/components/admin/AdminParentReports"));
 const AdminParentInbox = lazy(() => import("@/components/admin/AdminParentInbox"));
 const AdminCoachInbox = lazy(() => import("@/components/admin/AdminCoachInbox"));
+const AdminPostureRequests = lazy(() => import("@/components/admin/AdminPostureRequests"));
 const AdminCoachDashboard = lazy(() => import("@/components/admin/AdminCoachDashboard"));
 const AdminDirectMessages = lazy(() => import("@/components/admin/AdminDirectMessages"));
 const AdminVideoReview = lazy(() => import("@/components/admin/AdminVideoReview"));
@@ -139,6 +140,7 @@ const Admin = () => {
                 <div className="border-t border-border pt-6"><AdminCoachDashboard /></div>
               </div>
             )},
+            { key: "posture", label: "Posture Requests", content: <AdminPostureRequests /> },
             { key: "messages", label: "Messages", content: <AdminDirectMessages /> },
             { key: "videos", label: "Videos", content: <AdminVideoReview /> },
             { key: "families", label: "Families & Teams", content: (

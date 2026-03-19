@@ -1,6 +1,6 @@
-import { memo, lazy, Suspense, useCallback } from "react";
+import { memo, lazy, Suspense, useCallback, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Play } from "lucide-react";
+import { Play, Camera } from "lucide-react";
 import MonthlyFocusWidget from "@/components/MonthlyFocusWidget";
 import UpcomingSessions from "@/components/UpcomingSessions";
 import PointsWidget from "@/components/PointsWidget";
@@ -8,8 +8,10 @@ import WorkoutScanner from "@/components/workout/WorkoutScanner";
 import EmptyStateCard from "@/components/EmptyStateCard";
 import ReferEarnCard from "./ReferEarnCard";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const SharedWorkoutFeed = lazy(() => import("@/components/workout/SharedWorkoutFeed"));
+const WelcomeGiftModal = lazy(() => import("./WelcomeGiftModal"));
 
 interface DashboardHomeProps {
   isNewUser: boolean;
@@ -18,8 +20,27 @@ interface DashboardHomeProps {
 }
 
 const DashboardHome = memo(({ isNewUser, onViewPoints, onViewReferrals }: DashboardHomeProps) => {
-  const { subscribed } = useAuth();
+  const { subscribed, user } = useAuth();
   const navigate = useNavigate();
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [hasPosture, setHasPosture] = useState<boolean | null>(null);
+
+  // Show welcome modal for new users who haven't seen it
+  useEffect(() => {
+    if (isNewUser && !localStorage.getItem("m2-welcome-gift-seen")) {
+      setShowWelcome(true);
+    }
+  }, [isNewUser]);
+
+  // Check if user already submitted posture
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("posture_requests" as any)
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .then(({ count }) => setHasPosture((count ?? 0) > 0));
+  }, [user]);
 
   const handleStartWorkout = useCallback(() => {
     if (!subscribed && isNewUser) {
@@ -29,8 +50,16 @@ const DashboardHome = memo(({ isNewUser, onViewPoints, onViewReferrals }: Dashbo
     window.dispatchEvent(new CustomEvent("open-workout-zone", { detail: null }));
   }, [subscribed, isNewUser, navigate]);
 
+  const [showPostureCapture, setShowPostureCapture] = useState(false);
+
   return (
   <div className="space-y-6">
+    <Suspense fallback={null}>
+      {showWelcome && (
+        <WelcomeGiftModal open={showWelcome} onClose={() => setShowWelcome(false)} />
+      )}
+    </Suspense>
+
     {isNewUser && (
       <EmptyStateCard
         title="Welcome to M²"
@@ -69,6 +98,25 @@ const DashboardHome = memo(({ isNewUser, onViewPoints, onViewReferrals }: Dashbo
         Snap a photo of your food and get instant calorie & macro estimates.
       </p>
     </Link>
+
+    {/* Persistent posture analysis card for users who skipped */}
+    {hasPosture === false && (
+      <div className="bg-card border border-border p-5 space-y-2">
+        <div className="flex items-center gap-2">
+          <Camera size={14} className="text-primary" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Free Posture Analysis</span>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Take a quick front & side photo — Coach Matt will analyze your posture and send you a personalized breakdown.
+        </p>
+        <button
+          onClick={() => setShowWelcome(true)}
+          className="w-full h-10 border-2 border-primary text-primary flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest hover:bg-primary hover:text-primary-foreground transition-all"
+        >
+          <Camera size={14} /> Get My Free Analysis
+        </button>
+      </div>
+    )}
 
     <UpcomingSessions />
     <PointsWidget onViewLeaderboard={onViewPoints} />
