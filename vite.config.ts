@@ -17,6 +17,11 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     mode === "development" && componentTagger(),
+    ViteImageOptimizer({
+      jpg: { quality: 75 },
+      jpeg: { quality: 75 },
+      png: { quality: 80 },
+    }),
     VitePWA({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "robots.txt"],

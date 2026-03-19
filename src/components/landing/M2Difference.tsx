@@ -54,8 +54,11 @@ const M2Difference = () => (
             <img
               src={f.image}
               alt={f.alt}
+              width={424}
+              height={192}
               className="w-full h-full md:h-48 object-cover object-top"
               loading="lazy"
+              decoding="async"
             />
           </div>
           <div className="p-3 flex flex-col justify-center min-w-0">

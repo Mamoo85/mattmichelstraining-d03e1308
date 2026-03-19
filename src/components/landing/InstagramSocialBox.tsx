@@ -56,8 +56,11 @@ const InstagramSocialBox = () => (
           <img
             src={post.img}
             alt={post.caption}
+            width={432}
+            height={432}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
             loading="lazy"
+            decoding="async"
           />
           {/* Hover overlay */}
           <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-1.5">
