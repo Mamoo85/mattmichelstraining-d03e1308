@@ -151,6 +151,7 @@ const Admin = () => {
             )},
             { key: "trials", label: "Trial Settings", content: <AdminTrialSettings /> },
             { key: "onboarding", label: "Onboarding", content: <AdminClientOnboarding /> },
+            { key: "churn", label: "Churn Radar", content: <AdminChurnRadar /> },
           ]} />
         )}
 
