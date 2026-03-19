@@ -74,16 +74,6 @@ const AppNavbar = () => {
             </Link>
           )}
 
-          {!isStandalone && (
-            <Link
-              to="/install"
-              className="flex items-center gap-1 px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest rounded-sm bg-primary/10 text-primary hover:bg-primary/20 transition-m2"
-              title="Install the M² App"
-            >
-              <Download size={13} />
-              App
-            </Link>
-          )}
 
           {user && <NotificationBell />}
 
