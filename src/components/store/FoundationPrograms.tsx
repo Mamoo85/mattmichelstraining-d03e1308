@@ -4,8 +4,10 @@ import { useAuth, TIER_DISCOUNTS } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import {
   Loader2, ShoppingBag, Shield, AlertTriangle, Check,
-  Upload, Video, Heart, Clock, Zap, BookOpen
+  Upload, Video, Heart, Clock, Zap, BookOpen, Calendar, Brain, Camera
 } from "lucide-react";
+import { motion } from "framer-motion";
+import aiBiomechanicsHero from "@/assets/ai-biomechanics-hero.jpg";
 
 const FOUNDATION_PROGRAMS = [
   {
@@ -22,7 +24,7 @@ const FOUNDATION_PROGRAMS = [
       "Core stability fundamentals",
       "Mobility & flexibility work",
       "No heavy loading — ever",
-      "FREE postural assessment via video",
+      "AI postural assessment included",
     ],
     desc: "The operating system their body will run on for the next decade. Proper form, connective tissue strength, and habits that prevent injury later.",
   },
@@ -40,7 +42,7 @@ const FOUNDATION_PROGRAMS = [
       "Connective tissue development",
       "Injury-proof programming",
       "Work capacity building",
-      "FREE postural assessment via video",
+      "AI postural assessment included",
     ],
     desc: "The phase most programs skip — and where injuries start. Focused on joints, tendons, and connective tissue BEFORE adding load.",
   },
@@ -58,7 +60,7 @@ const FOUNDATION_PROGRAMS = [
       "Competition prep programming",
       "Power development",
       "Advanced mobility protocols",
-      "FREE postural assessment via video",
+      "AI postural assessment included",
     ],
     desc: "Now they're ready. Their body can handle real load because you didn't rush the first two phases.",
   },
@@ -76,7 +78,7 @@ const FOUNDATION_PROGRAMS = [
       "College-ready conditioning",
       "Advanced strength protocols",
       "Recovery & maintenance systems",
-      "FREE postural assessment via video",
+      "AI postural assessment included",
     ],
     desc: "College coaches don't care how strong you were in high school if you're injured by October. This builds durability.",
   },
@@ -137,57 +139,107 @@ const FoundationPrograms = () => {
 
   return (
     <div className="space-y-6">
-      {/* Hero */}
-      <div className="bg-destructive/10 border-2 border-destructive/30 p-5">
+      {/* In-Person CTA — Lead with sessions */}
+      <div className="bg-primary/5 border-2 border-primary/30 p-5">
+        <div className="flex items-start gap-3">
+          <Calendar size={22} className="text-primary flex-shrink-0 mt-0.5" />
+          <div>
+            <h2 className="text-base font-bold text-foreground mb-1">
+              Best Results Start In Person
+            </h2>
+            <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+              Book a 1-on-1 session with Matt. He'll run your child through our 
+              <strong className="text-foreground"> AI biomechanics assessment</strong> — front and side photos analyzed in seconds — 
+              and build a program around what their body actually needs. Not a template. Not a guess.
+            </p>
+            <a
+              href="/schedule"
+              className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
+            >
+              <Calendar size={12} /> Book In-Person Session
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* Injury prevention message */}
+      <div className="bg-destructive/10 border border-destructive/30 p-5">
         <div className="flex items-start gap-3">
           <AlertTriangle size={22} className="text-destructive flex-shrink-0 mt-0.5" />
           <div>
             <h2 className="text-base font-bold text-foreground mb-1">
-              Parents: Your Child's Body Is Not a Science Experiment
+              3.5 Million Youth Sports Injuries Per Year
             </h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              3.5 million youth sports injuries per year — <strong className="text-foreground">50% are preventable</strong> with
-              proper strength training. These foundation programs teach your child how to move correctly, build real strength,
-              and take care of their body for the rest of their life. Each package includes a <strong className="text-primary">FREE
-              postural assessment</strong> by Matt.
+              <strong className="text-foreground">50% are preventable</strong> with proper strength training. 
+              These foundation programs teach your child how to move correctly, build real strength, and take 
+              care of their body for the rest of their life.
             </p>
           </div>
         </div>
       </div>
 
-      {/* How it works */}
-      <div className="bg-card shadow-m2 p-5">
-        <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">
-          How It Works for Parents
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-muted-foreground">
-          <div className="flex items-start gap-2">
-            <span className="text-primary font-mono font-bold">1</span>
-            <p><strong className="text-foreground">Buy the program</strong> — it's loaded into the portal instantly. Your child can access it on their phone, or you can print it out.</p>
-          </div>
-          <div className="flex items-start gap-2">
-            <span className="text-primary font-mono font-bold">2</span>
-            <p><strong className="text-foreground">Create a child account</strong> — link it to yours so you can monitor progress alongside Matt.</p>
-          </div>
-          <div className="flex items-start gap-2">
-            <span className="text-primary font-mono font-bold">3</span>
-            <p><strong className="text-foreground">FREE postural assessment</strong> — Matt reviews your child's movement via video and personalizes guidance.</p>
+      {/* AI tech showcase */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+        className="bg-card shadow-m2 overflow-hidden border border-primary/20"
+      >
+        <div className="relative">
+          <img
+            src={aiBiomechanicsHero}
+            alt="AI Biomechanics Analysis Technology"
+            className="w-full h-40 sm:h-52 object-cover"
+            loading="lazy"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent" />
+          <div className="absolute bottom-3 left-4 right-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Brain size={14} className="text-primary" />
+              <span className="text-[9px] font-bold uppercase tracking-widest text-primary">
+                Proprietary AI Technology
+              </span>
+            </div>
+            <h3 className="text-sm font-black uppercase tracking-tight text-foreground">
+              Every Program Includes AI Postural Assessment
+            </h3>
           </div>
         </div>
-      </div>
+        <div className="p-4">
+          <div className="grid grid-cols-3 gap-2 mb-3">
+            {[
+              { icon: Camera, label: "2 Photos", desc: "Front + side" },
+              { icon: Brain, label: "AI Scans", desc: "Joint angles" },
+              { icon: Shield, label: "Custom Fix", desc: "Correctives" },
+            ].map(({ icon: Icon, label, desc }) => (
+              <div key={label} className="text-center p-2 bg-background border border-border">
+                <Icon size={14} className="text-primary mx-auto mb-1" />
+                <p className="text-[10px] font-bold text-foreground">{label}</p>
+                <p className="text-[9px] text-muted-foreground">{desc}</p>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Upload a front and side photo or video of <strong className="text-foreground">5 overhead squats</strong>. 
+            Matt's AI analyzes alignment, compensations, and joint angles — then he builds correctives into your program.
+          </p>
+        </div>
+      </motion.div>
 
-      {/* Postural video upload */}
+      {/* Video upload / schedule */}
       <div className="bg-card shadow-m2 p-5 border border-primary/20">
         <div className="flex items-start gap-3">
           <Video size={20} className="text-primary flex-shrink-0 mt-0.5" />
           <div className="flex-1">
             <h3 className="text-sm font-bold text-foreground mb-1">
-              FREE Postural Assessment
+              Submit Your Assessment
               <span className="text-[9px] font-normal text-primary ml-2 uppercase tracking-widest">Included with every program</span>
             </h3>
             <p className="text-xs text-muted-foreground leading-relaxed mb-3">
               Record <strong className="text-foreground">5 slow overhead squats</strong> (front and side view) and upload here or
-              schedule a live video chat with Matt. He'll review your child's movement patterns and provide personalized guidance.
+              schedule a live video chat with Matt.
             </p>
             {videoUrl ? (
               <div className="flex items-center gap-2 text-xs text-primary font-bold">
@@ -212,6 +264,27 @@ const FoundationPrograms = () => {
                 </a>
               </div>
             )}
+          </div>
+        </div>
+      </div>
+
+      {/* How it works */}
+      <div className="bg-card shadow-m2 p-5">
+        <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">
+          How It Works for Parents
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-muted-foreground">
+          <div className="flex items-start gap-2">
+            <span className="text-primary font-mono font-bold">1</span>
+            <p><strong className="text-foreground">Book in-person or buy online</strong> — program loads into the portal instantly. Your child can access it on their phone.</p>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="text-primary font-mono font-bold">2</span>
+            <p><strong className="text-foreground">Create a child account</strong> — link it to yours so you can monitor progress alongside Matt.</p>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="text-primary font-mono font-bold">3</span>
+            <p><strong className="text-foreground">AI postural assessment</strong> — Matt's AI reviews movement via photo/video and personalizes guidance.</p>
           </div>
         </div>
       </div>
@@ -278,18 +351,19 @@ const FoundationPrograms = () => {
         </div>
       </div>
 
-      {/* In-person option */}
-      <div className="bg-card shadow-m2 p-5 text-center">
-        <h3 className="text-sm font-bold text-foreground mb-2">Prefer In-Person Training?</h3>
+      {/* In-person CTA bottom */}
+      <div className="bg-card shadow-m2 p-5 text-center border border-primary/20">
+        <h3 className="text-sm font-bold text-foreground mb-2">Best Results Start In Person</h3>
         <p className="text-xs text-muted-foreground mb-4 max-w-md mx-auto">
-          Matt trains youth athletes in Grosse Pointe Park, MI. 1-on-1, small group, or team programs available.
+          Matt trains youth athletes in Grosse Pointe Park, MI. Start with a monthly 1-on-1 session — 
+          AI biomechanics assessment included. Add sessions at a member discount as you grow.
         </p>
         <div className="flex flex-wrap gap-3 justify-center">
           <a
             href="/schedule"
             className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
           >
-            Book a Session
+            <Calendar size={12} /> Book a Session
           </a>
           <a
             href="mailto:matthewmichels4@gmail.com?subject=Youth%20Training%20Inquiry"
