@@ -450,6 +450,39 @@ const Profile = () => {
           </div>
         </div>
 
+        {/* Auto-Regulation Engine */}
+        <div className="bg-card border border-border p-5 mb-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <h2 className="text-[10px] font-bold uppercase tracking-widest text-primary mb-2 flex items-center gap-1.5">
+                <Activity size={12} /> Auto-Regulation Engine
+              </h2>
+              <p className="text-xs text-muted-foreground leading-relaxed mb-3">
+                When enabled, you'll be asked how many hours you slept before each workout. 
+                If you're under-recovered, your prescribed working weights (3RM/5RM) automatically drop 
+                and complex barbell movements swap to dumbbell/machine equivalents — protecting your 
+                joints when your nervous system is compromised.
+              </p>
+              <div className="flex items-center gap-3 bg-primary/5 border border-primary/20 p-3">
+                <Switch
+                  id="auto-regulate"
+                  checked={autoRegulate}
+                  onCheckedChange={setAutoRegulate}
+                />
+                <label htmlFor="auto-regulate" className="text-xs font-bold text-foreground cursor-pointer select-none">
+                  {autoRegulate ? "Active — you'll get a readiness check before each workout" : "Disabled — standard programming only"}
+                </label>
+              </div>
+              {autoRegulate && (
+                <p className="text-[10px] text-primary mt-2 flex items-center gap-1">
+                  <Zap size={10} />
+                  Don't forget to hit "Save Changes" above to save this preference.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* Privacy Settings */}
         <PrivacySettingsCard />
 
