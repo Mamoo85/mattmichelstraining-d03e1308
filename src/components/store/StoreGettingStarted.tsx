@@ -98,7 +98,7 @@ const StoreGettingStarted = () => {
             >
               <img
                 src={aiBiomechanicsHero}
-                alt="AI Biomechanics Analysis — Front View"
+                alt="Biomechanics Analysis — Front View"
                 className="w-full h-48 sm:h-64 object-cover transition-transform duration-700 group-hover:scale-105"
                 loading="lazy"
               />
