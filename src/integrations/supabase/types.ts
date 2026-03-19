@@ -1138,6 +1138,7 @@ export type Database = {
           account_role: string
           athlete_name: string | null
           created_at: string
+          daily_calorie_goal: number | null
           email: string | null
           full_name: string | null
           id: string
@@ -1154,6 +1155,7 @@ export type Database = {
           account_role?: string
           athlete_name?: string | null
           created_at?: string
+          daily_calorie_goal?: number | null
           email?: string | null
           full_name?: string | null
           id?: string
@@ -1170,6 +1172,7 @@ export type Database = {
           account_role?: string
           athlete_name?: string | null
           created_at?: string
+          daily_calorie_goal?: number | null
           email?: string | null
           full_name?: string | null
           id?: string
