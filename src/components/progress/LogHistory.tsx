@@ -186,7 +186,7 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
                     </>
                   ) : (
                     <>
-                      <span className="text-xs font-mono text-muted-foreground w-[80px] flex-shrink-0">
+                      <span className="text-[11px] font-mono text-muted-foreground w-[85px] flex-shrink-0">
                         {format(new Date(log.logged_at), "MMM d, yy")}
                       </span>
                       <span className="text-sm font-mono font-bold text-foreground">

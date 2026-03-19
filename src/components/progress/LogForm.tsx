@@ -146,7 +146,7 @@ const LogForm = ({ activeLift, repMax, effectiveUserId, onLogged }: LogFormProps
             <Button
               variant="outline"
               className={cn(
-                "h-9 w-[130px] justify-start text-left font-mono text-sm px-2",
+                "h-9 w-[140px] justify-start text-left font-mono text-xs px-2",
                 !logDate && "text-muted-foreground"
               )}
             >
