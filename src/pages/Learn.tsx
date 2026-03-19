@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
 import AppNavbar from "@/components/AppNavbar";
 import MonthlyFocus from "@/components/landing/MonthlyFocus";
-
+import { useSectionVisible } from "@/hooks/useSiteContent";
 import TrialCTA from "@/components/TrialCTA";
 
 /* ── Featured Videos ── */
@@ -323,6 +323,7 @@ const TipCard = ({ tip }: { tip: typeof TIPS[0] }) => {
 
 /* ── Page ── */
 const Learn = () => {
+  const showFeaturedVideos = useSectionVisible("featured_videos");
   const { data: articles = [] } = useQuery({
     queryKey: ["learn-articles-published"],
     queryFn: async () => {
@@ -395,6 +396,7 @@ const Learn = () => {
         </div>
 
         {/* ── Featured Videos ── */}
+        {showFeaturedVideos && (
         <section className="mb-10">
           <div className="flex items-center gap-2 mb-4">
             <Play size={16} className="text-primary" />
@@ -408,6 +410,7 @@ const Learn = () => {
             ))}
           </div>
         </section>
+        )}
 
         {/* ── Training Tips ── */}
         <section className="mb-10">
