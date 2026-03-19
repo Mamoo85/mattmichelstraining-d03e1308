@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Gift, Star, Trophy, Users, Dumbbell, Shield, Zap, Heart, Target, Cpu, Calendar, Brain } from "lucide-react";
+import { ArrowRight, Gift, Star, Trophy, Users, Dumbbell, Shield, Zap, Heart, Target, Cpu, Calendar } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import AiIntakeAnalyzer from "../programs/AiIntakeAnalyzer";
 import TrialCTA from "../TrialCTA";

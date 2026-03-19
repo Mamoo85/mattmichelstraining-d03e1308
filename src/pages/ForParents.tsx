@@ -1,5 +1,5 @@
 import AppNavbar from "@/components/AppNavbar";
-import InstagramSocialBox from "@/components/landing/InstagramSocialBox";
+
 import SEOHead from "@/components/SEOHead";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
