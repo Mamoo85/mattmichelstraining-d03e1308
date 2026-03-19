@@ -22,6 +22,7 @@ const ProtocolTable = () => {
   const [protocolTitle, setProtocolTitle] = useState("");
   const [loading, setLoading] = useState(true);
   const [weights, setWeights] = useState<Record<string, string>>({});
+  const [logSuccess, setLogSuccess] = useState(false);
 
   useEffect(() => {
     if (!user) return;
