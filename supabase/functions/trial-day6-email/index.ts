@@ -26,7 +26,7 @@ const EMAIL_HTML = `
   <ol style="padding-left: 20px;">
     <li style="margin-bottom: 8px;"><strong>M² Basic ($14.99/mo)</strong> — Exercise library, daily workouts, workout logging, challenges & leaderboard.</li>
     <li style="margin-bottom: 8px;"><strong>M² Foundation ($39.99/mo)</strong> — Everything in Basic + 8-week periodized training, Fix It recovery library, and Flag Coach Matt.</li>
-    <li style="margin-bottom: 8px;"><strong>M² Custom ($99.99/mo)</strong> — Everything in Foundation + custom programming, AI builder, 1-on-1 video assessment, and a gifted session.</li>
+    <li style="margin-bottom: 8px;"><strong>M² Custom ($99.99/mo)</strong> — Everything in Foundation + custom programming, AI builder, in-person or online session (optional), and a gifted session.</li>
     <li style="margin-bottom: 8px;"><strong>M² Team/Elite ($149.99/mo)</strong> — Full team performance periodization with roster management.</li>
   </ol>
 

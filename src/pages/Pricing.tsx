@@ -64,7 +64,7 @@ const TIER_CARDS: {
     ],
     cta: "Go Custom",
     subtitle: "Your own program from a 20-year coaching vet — for less than one session.",
-    badge: "Includes a $50 1-on-1 Video Assessment",
+    badge: "Includes a $50 In-Person or Online Session (Optional)",
   },
   {
     key: "team_elite",
