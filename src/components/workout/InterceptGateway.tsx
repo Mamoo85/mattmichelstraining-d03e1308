@@ -19,6 +19,13 @@ interface PurchasedProgram {
   exercises: any;
 }
 
+interface ActiveProgramEntry {
+  id: string;
+  program_id: string;
+  program_title: string;
+  sport: string | null;
+}
+
 interface CommunityWorkout {
   id: string;
   title: string;
@@ -31,6 +38,7 @@ const InterceptGateway = ({ onSelect, onExit }: InterceptGatewayProps) => {
   const navigate = useNavigate();
   const hasTemplateAccess = useMinTier("foundation");
   const [programs, setPrograms] = useState<PurchasedProgram[]>([]);
+  const [activePrograms, setActivePrograms] = useState<ActiveProgramEntry[]>([]);
   const [personalWorkouts, setPersonalWorkouts] = useState<CommunityWorkout[]>([]);
   const [masterTemplates, setMasterTemplates] = useState<CommunityWorkout[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,6 +54,11 @@ const InterceptGateway = ({ onSelect, onExit }: InterceptGatewayProps) => {
         .eq("is_active", true)
         .order("purchased_at", { ascending: false }),
       supabase
+        .from("user_active_programs" as any)
+        .select("id, program_id, training_programs(id, title, sport)")
+        .eq("user_id", user.id)
+        .eq("status", "active"),
+      supabase
         .from("community_workouts")
         .select("id, title, exercises, creator_name")
         .eq("user_id", user.id)
@@ -58,8 +71,15 @@ const InterceptGateway = ({ onSelect, onExit }: InterceptGatewayProps) => {
         .neq("user_id", user.id)
         .order("likes_count", { ascending: false })
         .limit(20),
-    ]).then(([progRes, personalRes, templateRes]) => {
+    ]).then(([progRes, activeRes, personalRes, templateRes]) => {
       setPrograms((progRes.data as PurchasedProgram[] | null) ?? []);
+      const mapped = ((activeRes.data as any[]) ?? []).map((a: any) => ({
+        id: a.id,
+        program_id: a.program_id,
+        program_title: a.training_programs?.title ?? "Program",
+        sport: a.training_programs?.sport ?? null,
+      }));
+      setActivePrograms(mapped);
       setPersonalWorkouts((personalRes.data as CommunityWorkout[] | null) ?? []);
       setMasterTemplates((templateRes.data as CommunityWorkout[] | null) ?? []);
       setLoading(false);
@@ -81,6 +101,34 @@ const InterceptGateway = ({ onSelect, onExit }: InterceptGatewayProps) => {
       title: p.program_title,
       source: "program",
       exercises: mapExercises(p.exercises),
+    });
+  };
+
+  const handleActiveProgram = async (ap: ActiveProgramEntry) => {
+    // Fetch exercises from program_workouts for this program
+    const { data: workouts } = await supabase
+      .from("program_workouts")
+      .select("exercise_id, prescribed_sets_reps, coach_instructions, exercise_library(id, title, video_url, the_why)")
+      .eq("program_id", ap.program_id)
+      .order("week_number", { ascending: true })
+      .order("day_number", { ascending: true })
+      .order("sort_order", { ascending: true });
+
+    const exercises = ((workouts as any[]) ?? []).map((w: any) => ({
+      exerciseId: w.exercise_library?.id || w.exercise_id,
+      exerciseTitle: w.exercise_library?.title || "Exercise",
+      prescribedSets: parseInt(w.prescribed_sets_reps?.split("x")?.[0]) || 3,
+      prescribedReps: parseInt(w.prescribed_sets_reps?.split("x")?.[1]) || 10,
+      notes: w.coach_instructions || "",
+      videoUrl: w.exercise_library?.video_url || null,
+      theWhy: w.exercise_library?.the_why || null,
+    }));
+
+    onSelect({
+      title: ap.program_title,
+      source: "program",
+      programId: ap.program_id,
+      exercises,
     });
   };
 
@@ -147,7 +195,28 @@ const InterceptGateway = ({ onSelect, onExit }: InterceptGatewayProps) => {
               </section>
             )}
 
-            {/* Personal Bank */}
+            {/* Interactive / Active Programs from My Programs tab */}
+            {activePrograms.length > 0 && (
+              <section className="space-y-2">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                  <Dumbbell size={12} /> My Programs
+                </span>
+                {activePrograms.map((ap) => (
+                  <button
+                    key={ap.id}
+                    onClick={() => handleActiveProgram(ap)}
+                    className="w-full text-left bg-card border border-border p-3 hover:border-primary/40 transition-colors flex items-center gap-3"
+                  >
+                    <Play size={14} className="text-primary flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-foreground truncate">{ap.program_title}</p>
+                      {ap.sport && <p className="text-[10px] text-muted-foreground">{ap.sport}</p>}
+                    </div>
+                  </button>
+                ))}
+              </section>
+            )}
+
             {personalWorkouts.length > 0 && (
               <section className="space-y-2">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
