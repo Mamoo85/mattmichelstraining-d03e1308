@@ -16,7 +16,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import OfflineBadge from "@/components/OfflineBadge";
 import AnnouncementBanner from "@/components/AnnouncementBanner";
-import BottomNav from "@/components/BottomNav";
+import ActiveWorkoutZone from "@/components/workout/ActiveWorkoutZone";
 
 import { useTimer } from "@/hooks/useTimer";
 import { useAuth } from "@/hooks/useAuth";
