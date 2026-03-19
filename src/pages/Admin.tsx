@@ -1,57 +1,54 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { Navigate } from "react-router-dom";
 import AppNavbar from "@/components/AppNavbar";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { Loader2, Users, Dumbbell, Landmark, FileText } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
-/* ── Tab 1: The Roster ─────────────────────────────── */
-import AdminClientList from "@/components/admin/AdminClientList";
-import AdminSupportCopilot from "@/components/admin/AdminSupportCopilot";
-import AdminFamilyManager from "@/components/admin/AdminFamilyManager";
-import AdminTeamRosters from "@/components/admin/AdminTeamRosters";
-import AdminParentReports from "@/components/admin/AdminParentReports";
-import AdminParentInbox from "@/components/admin/AdminParentInbox";
-import AdminCoachInbox from "@/components/admin/AdminCoachInbox";
-import AdminCoachDashboard from "@/components/admin/AdminCoachDashboard";
-import AdminDirectMessages from "@/components/admin/AdminDirectMessages";
-import AdminVideoReview from "@/components/admin/AdminVideoReview";
-import AdminTrialSettings from "@/components/admin/AdminTrialSettings";
-import AdminClientOnboarding from "@/components/admin/AdminClientOnboarding";
-import AdminChurnRadar from "@/components/admin/AdminChurnRadar";
+/* ── Lazy-load ALL admin sub-components ─────────── */
+const AdminClientList = lazy(() => import("@/components/admin/AdminClientList"));
+const AdminSupportCopilot = lazy(() => import("@/components/admin/AdminSupportCopilot"));
+const AdminFamilyManager = lazy(() => import("@/components/admin/AdminFamilyManager"));
+const AdminTeamRosters = lazy(() => import("@/components/admin/AdminTeamRosters"));
+const AdminParentReports = lazy(() => import("@/components/admin/AdminParentReports"));
+const AdminParentInbox = lazy(() => import("@/components/admin/AdminParentInbox"));
+const AdminCoachInbox = lazy(() => import("@/components/admin/AdminCoachInbox"));
+const AdminCoachDashboard = lazy(() => import("@/components/admin/AdminCoachDashboard"));
+const AdminDirectMessages = lazy(() => import("@/components/admin/AdminDirectMessages"));
+const AdminVideoReview = lazy(() => import("@/components/admin/AdminVideoReview"));
+const AdminTrialSettings = lazy(() => import("@/components/admin/AdminTrialSettings"));
+const AdminClientOnboarding = lazy(() => import("@/components/admin/AdminClientOnboarding"));
+const AdminChurnRadar = lazy(() => import("@/components/admin/AdminChurnRadar"));
 
-/* ── Tab 2: The Training Engine ────────────────────── */
-import AdminPrograms from "@/components/admin/AdminPrograms";
-import AdminExerciseLibrary from "@/components/admin/AdminExerciseLibrary";
-import AdminProtocols from "@/components/admin/AdminProtocols";
-import AdminBatchGenerator from "@/components/admin/AdminBatchGenerator";
-import AdminProgramCreator from "@/components/admin/AdminProgramCreator";
-import AdminAiQueue from "@/components/admin/AdminAiQueue";
-import AdminAiCopilot from "@/components/admin/AdminAiCopilot";
-import AdminRecoveryHeatmap from "@/components/admin/AdminRecoveryHeatmap";
-import AdminSchedule from "@/components/admin/AdminSchedule";
-import AdminMonthlyFocus from "@/components/admin/AdminMonthlyFocus";
-import AdminBiomechanics from "@/components/admin/AdminBiomechanics";
+const AdminPrograms = lazy(() => import("@/components/admin/AdminPrograms"));
+const AdminExerciseLibrary = lazy(() => import("@/components/admin/AdminExerciseLibrary"));
+const AdminProtocols = lazy(() => import("@/components/admin/AdminProtocols"));
+const AdminBatchGenerator = lazy(() => import("@/components/admin/AdminBatchGenerator"));
+const AdminProgramCreator = lazy(() => import("@/components/admin/AdminProgramCreator"));
+const AdminAiQueue = lazy(() => import("@/components/admin/AdminAiQueue"));
+const AdminAiCopilot = lazy(() => import("@/components/admin/AdminAiCopilot"));
+const AdminRecoveryHeatmap = lazy(() => import("@/components/admin/AdminRecoveryHeatmap"));
+const AdminSchedule = lazy(() => import("@/components/admin/AdminSchedule"));
+const AdminMonthlyFocus = lazy(() => import("@/components/admin/AdminMonthlyFocus"));
+const AdminBiomechanics = lazy(() => import("@/components/admin/AdminBiomechanics"));
 
-/* ── Tab 3: The Vault ──────────────────────────────── */
-import AdminFinancials from "@/components/admin/AdminFinancials";
-import AdminPromotions from "@/components/admin/AdminPromotions";
-import AdminPointsManager from "@/components/admin/AdminPointsManager";
-import AdminTierManager from "@/components/admin/AdminTierManager";
-import AdminSystemSettings from "@/components/admin/AdminSystemSettings";
-import AdminStripeProducts from "@/components/admin/AdminStripeProducts";
+const AdminFinancials = lazy(() => import("@/components/admin/AdminFinancials"));
+const AdminPromotions = lazy(() => import("@/components/admin/AdminPromotions"));
+const AdminPointsManager = lazy(() => import("@/components/admin/AdminPointsManager"));
+const AdminTierManager = lazy(() => import("@/components/admin/AdminTierManager"));
+const AdminSystemSettings = lazy(() => import("@/components/admin/AdminSystemSettings"));
+const AdminStripeProducts = lazy(() => import("@/components/admin/AdminStripeProducts"));
 
-/* ── Tab 4: Site Content ───────────────────────────── */
-import AdminFrontPage from "@/components/admin/AdminFrontPage";
-import AdminSiteEditor from "@/components/admin/AdminSiteEditor";
-import AdminTestimonials from "@/components/admin/AdminTestimonials";
-import AdminLearnEditor from "@/components/admin/AdminLearnEditor";
-import AdminBroadcasts from "@/components/admin/AdminBroadcasts";
-import AdminSubscriberList from "@/components/admin/AdminSubscriberList";
-import AdminNewsletterComposer from "@/components/admin/AdminNewsletterComposer";
-import AdminSendHistory from "@/components/admin/AdminSendHistory";
-import AdminServiceCatalog from "@/components/admin/AdminServiceCatalog";
-import AdminMarketingDrafts from "@/components/admin/AdminMarketingDrafts";
+const AdminFrontPage = lazy(() => import("@/components/admin/AdminFrontPage"));
+const AdminSiteEditor = lazy(() => import("@/components/admin/AdminSiteEditor"));
+const AdminTestimonials = lazy(() => import("@/components/admin/AdminTestimonials"));
+const AdminLearnEditor = lazy(() => import("@/components/admin/AdminLearnEditor"));
+const AdminBroadcasts = lazy(() => import("@/components/admin/AdminBroadcasts"));
+const AdminSubscriberList = lazy(() => import("@/components/admin/AdminSubscriberList"));
+const AdminNewsletterComposer = lazy(() => import("@/components/admin/AdminNewsletterComposer"));
+const AdminSendHistory = lazy(() => import("@/components/admin/AdminSendHistory"));
+const AdminServiceCatalog = lazy(() => import("@/components/admin/AdminServiceCatalog"));
+const AdminMarketingDrafts = lazy(() => import("@/components/admin/AdminMarketingDrafts"));
 
 const MASTER_TABS = [
   { key: "roster", label: "The Roster", icon: Users, desc: "Users · Support · Families" },
@@ -59,6 +56,12 @@ const MASTER_TABS = [
   { key: "vault", label: "The Vault", icon: Landmark, desc: "Financials · Billing" },
   { key: "content", label: "Site Content", icon: FileText, desc: "CMS · Comms · Learn" },
 ];
+
+const TabLoader = () => (
+  <div className="flex justify-center py-12">
+    <Loader2 size={20} className="text-primary animate-spin" />
+  </div>
+);
 
 const SubTabs = ({ tabs, defaultTab }: { tabs: { key: string; label: string; content: React.ReactNode }[]; defaultTab?: string }) => (
   <Tabs defaultValue={defaultTab || tabs[0].key} className="w-full">
@@ -71,7 +74,9 @@ const SubTabs = ({ tabs, defaultTab }: { tabs: { key: string; label: string; con
     </TabsList>
     {tabs.map((t) => (
       <TabsContent key={t.key} value={t.key} className="mt-0">
-        {t.content}
+        <Suspense fallback={<TabLoader />}>
+          {t.content}
+        </Suspense>
       </TabsContent>
     ))}
   </Tabs>
@@ -95,13 +100,11 @@ const Admin = () => {
     <div className="min-h-screen bg-background">
       <AppNavbar />
       <div className="container pt-20 pb-12">
-        {/* Header */}
         <div className="mb-6">
           <h1 className="text-lg font-bold text-foreground tracking-display">Command Center</h1>
           <p className="text-xs text-muted-foreground">Manage everything from one place</p>
         </div>
 
-        {/* 4 Master Tabs */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6">
           {MASTER_TABS.map((tab) => {
             const Icon = tab.icon;
@@ -126,7 +129,6 @@ const Admin = () => {
           })}
         </div>
 
-        {/* Tab 1: The Roster */}
         {activeTab === "roster" && (
           <SubTabs tabs={[
             { key: "athletes", label: "All Users", content: <AdminClientList /> },
@@ -157,7 +159,6 @@ const Admin = () => {
           ]} />
         )}
 
-        {/* Tab 2: The Training Engine */}
         {activeTab === "engine" && (
           <SubTabs tabs={[
             { key: "programs", label: "Programs", content: <AdminPrograms /> },
@@ -174,7 +175,6 @@ const Admin = () => {
           ]} />
         )}
 
-        {/* Tab 3: The Vault */}
         {activeTab === "vault" && (
           <SubTabs tabs={[
             { key: "revenue", label: "Revenue & Ledger", content: <AdminFinancials /> },
@@ -187,7 +187,6 @@ const Admin = () => {
           ]} />
         )}
 
-        {/* Tab 4: Site Content */}
         {activeTab === "content" && (
           <SubTabs tabs={[
             { key: "front-page", label: "Front Page", content: <AdminFrontPage /> },
