@@ -12,6 +12,9 @@ import PortalEntrance from "./landing/PortalEntrance";
 import TechShowcaseCard from "./landing/TechShowcaseCard";
 import EmailCapture from "./landing/EmailCapture";
 import MonthlyFocus from "./landing/MonthlyFocus";
+import SportPicker from "./landing/SportPicker";
+import FreeWorkoutTeaser from "./landing/FreeWorkoutTeaser";
+import AthleteResults from "./landing/AthleteResults";
 
 const STATS = [
   { icon: Clock, value: "20+", label: "Years Coaching" },
