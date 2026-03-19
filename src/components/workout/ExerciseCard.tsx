@@ -163,7 +163,7 @@ const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTrac
                   className="w-full bg-background border border-border rounded-sm p-3 pr-12 text-sm text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-primary outline-none min-h-[60px] resize-none"
                 />
                 <VoiceNoteButton
-                  onTranscript={(t) => onUpdate({ clientNotes: (exercise.clientNotes ? exercise.clientNotes + " " : "") + t })}
+                  onTranscript={(t) => onUpdate(index, { clientNotes: (exercise.clientNotes ? exercise.clientNotes + " " : "") + t })}
                   className="absolute top-2 right-2"
                 />
               </div>
