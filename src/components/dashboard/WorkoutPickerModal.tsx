@@ -38,7 +38,7 @@ interface WorkoutPickerModalProps {
 }
 
 const WorkoutPickerModal = ({ open, onOpenChange }: WorkoutPickerModalProps) => {
-  const { user, subscribed } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [programs, setPrograms] = useState<PurchasedProgram[]>([]);
   const [activePrograms, setActivePrograms] = useState<ActiveProgram[]>([]);
