@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,8 +7,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Upload, CheckCircle, X, Eye } from "lucide-react";
+import { Loader2, Upload, CheckCircle, X, Eye, Camera } from "lucide-react";
 import { toast } from "sonner";
+
+const SmartCamera = lazy(() => import("./SmartCamera"));
 
 const AdminBiomechanics = () => {
   const queryClient = useQueryClient();
@@ -18,6 +20,7 @@ const AdminBiomechanics = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editFindings, setEditFindings] = useState("");
   const [editProgram, setEditProgram] = useState("");
+  const [showCamera, setShowCamera] = useState(false);
 
   // Fetch profiles for client selector
   const { data: profiles } = useQuery({
@@ -182,16 +185,33 @@ const AdminBiomechanics = () => {
             </SelectContent>
           </Select>
 
-          <div>
-            <Input
-              type="file"
-              accept="image/*,video/*"
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <Input
+                type="file"
+                accept="image/*,video/*"
+                disabled={!selectedClient || uploading || analyzing}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleUploadAndAnalyze(file);
+                }}
+              />
+            </div>
+            <Button
+              variant="outline"
               disabled={!selectedClient || uploading || analyzing}
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) handleUploadAndAnalyze(file);
+              onClick={() => {
+                if (!selectedClient) {
+                  toast.error("Select a client first");
+                  return;
+                }
+                setShowCamera(true);
               }}
-            />
+              className="gap-2 shrink-0"
+            >
+              <Camera size={16} />
+              Smart Capture
+            </Button>
           </div>
 
           {(uploading || analyzing) && (
@@ -360,6 +380,24 @@ const AdminBiomechanics = () => {
           )}
         </CardContent>
       </Card>
+      {/* Smart Camera overlay */}
+      {showCamera && (
+        <Suspense
+          fallback={
+            <div className="fixed inset-0 z-50 bg-black flex items-center justify-center">
+              <Loader2 className="animate-spin text-white" size={32} />
+            </div>
+          }
+        >
+          <SmartCamera
+            onCapture={(file) => {
+              setShowCamera(false);
+              handleUploadAndAnalyze(file);
+            }}
+            onClose={() => setShowCamera(false)}
+          />
+        </Suspense>
+      )}
     </div>
   );
 };
