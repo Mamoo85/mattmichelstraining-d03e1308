@@ -131,7 +131,7 @@ const HeroSection = () => {
         {/* ─── 9. THE M² DIFFERENCE ─── */}
         <M2Difference />
 
-        {/* ─── 7. MEMBERSHIP CTA ─── */}
+        {/* ─── 10. MEMBERSHIP CTA ─── */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}

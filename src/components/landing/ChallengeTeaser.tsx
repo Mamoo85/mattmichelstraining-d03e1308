@@ -1,16 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Lock, Flame, TrendingUp } from "lucide-react";
-import { AreaChart, Area, ResponsiveContainer, ReferenceLine } from "recharts";
+import { Lock, Flame } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-
-// Fake cumulative data for the blurred teaser chart
-const FAKE_DATA = [
-  { d: "Mar 1", v: 0 }, { d: "Mar 4", v: 12 }, { d: "Mar 7", v: 28 },
-  { d: "Mar 10", v: 45 }, { d: "Mar 13", v: 68 }, { d: "Mar 16", v: 82 },
-  { d: "Mar 19", v: 110 }, { d: "Mar 22", v: 135 }, { d: "Mar 25", v: 158 },
-  { d: "Mar 28", v: 172 },
-];
 
 const ChallengeTeaser = () => {
   const [focusTitle, setFocusTitle] = useState<string | null>(null);
