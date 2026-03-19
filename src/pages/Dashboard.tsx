@@ -2,28 +2,27 @@ import AppNavbar from "@/components/AppNavbar";
 import { useAuth, TIERS } from "@/hooks/useAuth";
 import { useTrialStatus } from "@/hooks/useTrialStatus";
 import TrialPaywallModal from "@/components/TrialPaywallModal";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
-import { ExternalLink, Loader2, Crown, Timer, User, Dumbbell, Gift, Copy, Check } from "lucide-react";
+import { ExternalLink, Loader2, Crown, Timer, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "@/hooks/use-toast";
-import MonthlyFocusWidget from "@/components/MonthlyFocusWidget";
-import IntervalTimer from "@/components/workout/IntervalTimer";
-import MyPrograms from "@/components/MyPrograms";
-import ProgressCharts from "@/components/ProgressCharts";
-import UpcomingSessions from "@/components/UpcomingSessions";
-import StudioCheckIn from "@/components/StudioCheckIn";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import WorkoutBuilder from "@/components/workout/WorkoutBuilder";
-import CommunityWorkoutBank from "@/components/workout/CommunityWorkoutBank";
-import ReferralDashboard from "@/components/ReferralDashboard";
-import PointsWidget from "@/components/PointsWidget";
-import PointsLeaderboard from "@/components/PointsLeaderboard";
 import PwaInstallBanner from "@/components/PwaInstallBanner";
-import WorkoutScanner from "@/components/workout/WorkoutScanner";
-import EmptyStateCard from "@/components/EmptyStateCard";
-import TeamManager from "@/components/TeamManager";
+import StudioCheckIn from "@/components/StudioCheckIn";
+import IntervalTimer from "@/components/workout/IntervalTimer";
+
+// Extracted sub-components
+import DashboardHome from "@/components/dashboard/DashboardHome";
+import WorkoutsTab from "@/components/dashboard/WorkoutsTab";
+
+// Lazy-load heavier tabs
+import { lazy, Suspense } from "react";
+const ProgressCharts = lazy(() => import("@/components/ProgressCharts"));
+const MyPrograms = lazy(() => import("@/components/MyPrograms"));
+const PointsLeaderboard = lazy(() => import("@/components/PointsLeaderboard"));
+const ReferralDashboard = lazy(() => import("@/components/ReferralDashboard"));
+const TeamManager = lazy(() => import("@/components/TeamManager"));
 
 const BASE_TABS = [
   { key: "home", label: "Home" },
@@ -32,79 +31,13 @@ const BASE_TABS = [
   { key: "workouts", label: "Workouts" },
   { key: "points", label: "Points" },
   { key: "referrals", label: "Refer" },
-];
+] as const;
 
-
-const PRO_AND_ABOVE: (string | null)[] = ["foundation", "custom", "team_elite"];
-
-/* Compact referral card for the Home tab */
-const ReferEarnCard = ({ onViewAll }: { onViewAll: () => void }) => {
-  const { user } = useAuth();
-  const [code, setCode] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    if (!user) return;
-    supabase
-      .from("referral_codes")
-      .select("code")
-      .eq("user_id", user.id)
-      .maybeSingle()
-      .then(({ data }) => { if (data) setCode((data as any).code); });
-  }, [user]);
-
-  const handleCopy = () => {
-    if (!code) return;
-    navigator.clipboard.writeText(`${window.location.origin}/?ref=${code}`);
-    setCopied(true);
-    toast({ title: "Referral link copied!" });
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  if (!code) return null;
-
-  return (
-    <div className="bg-primary/5 border border-primary/20 p-5 space-y-3">
-      <div className="flex items-center gap-2">
-        <Gift size={14} className="text-primary" />
-        <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Refer & Earn</span>
-      </div>
-      <p className="text-sm text-foreground leading-relaxed">
-        Know an athlete who needs real coaching? Send them your link. They get their first month of M² Basic <strong className="text-primary">free</strong>, and you get a <strong className="text-primary">free month</strong> added to your subscription.
-      </p>
-      <div className="flex items-center gap-2">
-        <button
-          onClick={handleCopy}
-          className="flex-1 flex items-center justify-center gap-2 bg-primary text-primary-foreground py-2.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all"
-        >
-          {copied ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy Referral Link</>}
-        </button>
-        <button
-          onClick={onViewAll}
-          className="border border-primary/30 text-primary px-3 py-2.5 text-xs font-bold uppercase tracking-widest hover:bg-primary/10 transition-all shrink-0"
-        >
-          Details
-        </button>
-      </div>
-    </div>
-  );
-};
-
-const WorkoutsTab = () => {
-  const [showBuilder, setShowBuilder] = useState(false);
-  const { subscriptionTier, isLegend } = useAuth();
-  const { isAdmin } = useIsAdmin();
-  const canCreate = isAdmin || isLegend || PRO_AND_ABOVE.includes(subscriptionTier);
-
-  return showBuilder ? (
-    <WorkoutBuilder
-      onSaved={() => setShowBuilder(false)}
-      onClose={() => setShowBuilder(false)}
-    />
-  ) : (
-    <CommunityWorkoutBank onCreateNew={canCreate ? () => setShowBuilder(true) : undefined} />
-  );
-};
+const TabLoader = () => (
+  <div className="flex justify-center py-12">
+    <Loader2 size={20} className="text-primary animate-spin" />
+  </div>
+);
 
 const Dashboard = () => {
   const { user, subscribed, subscriptionTier, isLegend } = useAuth();
@@ -114,16 +47,24 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("home");
   const [portalLoading, setPortalLoading] = useState(false);
   const [showTimer, setShowTimer] = useState(false);
-
+  const [hasPrograms, setHasPrograms] = useState<boolean | null>(null);
+  const [hasLogs, setHasLogs] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("profiles").select("full_name, athlete_name").eq("user_id", user.id).single()
-      .then(({ data }) => { if (data) setProfile(data); });
+    // Fetch profile + activity counts in parallel
+    Promise.all([
+      supabase.from("profiles").select("full_name, athlete_name").eq("user_id", user.id).single(),
+      supabase.from("user_active_programs").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+      supabase.from("progress_logs").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+    ]).then(([profileRes, progRes, logRes]) => {
+      if (profileRes.data) setProfile(profileRes.data);
+      setHasPrograms((progRes.count ?? 0) > 0);
+      setHasLogs((logRes.count ?? 0) > 0);
+    });
   }, [user]);
 
-
-  const handleManageSubscription = async () => {
+  const handleManageSubscription = useCallback(async () => {
     setPortalLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("customer-portal");
@@ -131,97 +72,38 @@ const Dashboard = () => {
       if (data?.url) window.open(data.url, "_blank");
     } catch { /* silent */ }
     finally { setPortalLoading(false); }
-  };
+  }, []);
 
   const athleteDisplay = profile?.athlete_name || profile?.full_name || "Athlete";
-
-
-  // Track if user has any activity
-  const [hasPrograms, setHasPrograms] = useState<boolean | null>(null);
-  const [hasLogs, setHasLogs] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    if (!user) return;
-    Promise.all([
-      supabase.from("user_active_programs").select("id", { count: "exact", head: true }).eq("user_id", user.id),
-      supabase.from("progress_logs").select("id", { count: "exact", head: true }).eq("user_id", user.id),
-    ]).then(([progRes, logRes]) => {
-      setHasPrograms((progRes.count ?? 0) > 0);
-      setHasLogs((logRes.count ?? 0) > 0);
-    });
-  }, [user]);
-
   const isNewUser = hasPrograms === false && hasLogs === false;
 
-  const renderHome = () => (
-    <div className="space-y-6">
-      {/* New user welcome card */}
-      {isNewUser && (
-        <EmptyStateCard
-          title="Welcome to M²"
-          description="Your training log is empty. Select your starting track and begin Day 1 — Matt will review every session and coach you personally."
-          ctaLabel="Select Your Starting Track →"
-          ctaTo="/shop"
-        />
-      )}
-
-      {/* Scan Workout Card */}
-      <div className="bg-card border border-border p-5 space-y-3">
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Quick Log</span>
-        </div>
-        <p className="text-xs text-muted-foreground">
-          Snap a photo of your school workout card or gym whiteboard — AI reads it and logs your session instantly.
-        </p>
-        <WorkoutScanner />
-      </div>
-
-      {/* Nutrition Tracker Link */}
-      <Link
-        to="/nutrition"
-        className="block bg-card border border-border p-5 space-y-1 hover:border-primary/40 transition-colors"
-      >
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-primary">AI Nutrition</span>
-        </div>
-        <p className="text-xs text-muted-foreground">
-          Snap a photo of your food and get instant calorie & macro estimates.
-        </p>
-      </Link>
-
-      {/* Upcoming Sessions */}
-      <UpcomingSessions />
-
-      {/* Points Widget */}
-      <PointsWidget onViewLeaderboard={() => setActiveTab("points")} />
-
-      {/* Refer & Earn Card */}
-      <ReferEarnCard onViewAll={() => setActiveTab("referrals")} />
-
-      {/* Monthly Focus & Challenge Widget */}
-      <MonthlyFocusWidget />
-    </div>
+  const tabs = useMemo(() =>
+    subscriptionTier === "team_elite" || isAdmin
+      ? [...BASE_TABS, { key: "team", label: "Team" } as const]
+      : BASE_TABS,
+    [subscriptionTier, isAdmin]
   );
+
+  const handleViewPoints = useCallback(() => setActiveTab("points"), []);
+  const handleViewReferrals = useCallback(() => setActiveTab("referrals"), []);
 
   return (
     <div className="min-h-screen bg-background">
       <AppNavbar />
       <PwaInstallBanner />
       <div className="container pt-20 pb-12 px-4 sm:px-6">
-        {/* Header — stack on mobile, row on desktop */}
+        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <h2 className="text-base sm:text-lg font-bold text-foreground truncate">Welcome back, {athleteDisplay}</h2>
               {isLegend ? (
                 <Badge className="flex items-center gap-1 text-[10px] uppercase tracking-widest bg-primary text-primary-foreground shrink-0">
-                  <Crown size={10} />
-                  M² Legend
+                  <Crown size={10} /> M² Legend
                 </Badge>
               ) : subscriptionTier ? (
                 <Badge className="flex items-center gap-1 text-[10px] uppercase tracking-widest shrink-0">
-                  <Crown size={10} />
-                  {TIERS[subscriptionTier].name}
+                  <Crown size={10} /> {TIERS[subscriptionTier].name}
                 </Badge>
               ) : (
                 <Badge variant="outline" className="text-[10px] uppercase tracking-widest shrink-0">Free</Badge>
@@ -234,8 +116,7 @@ const Dashboard = () => {
               to="/profile"
               className="flex items-center gap-1.5 bg-muted text-muted-foreground px-3 py-2 text-[10px] font-bold uppercase tracking-widest hover:text-foreground transition-all"
             >
-              <User size={12} />
-              Profile
+              <User size={12} /> Profile
             </Link>
             {subscribed && (
               <button
@@ -250,43 +131,44 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Studio Check-In */}
         <StudioCheckIn />
 
-        {/* Tab switcher — horizontal scroll on mobile */}
-        {(() => {
-          const TABS = subscriptionTier === "team_elite" || isAdmin
-            ? [...BASE_TABS, { key: "team", label: "Team" }]
-            : BASE_TABS;
-          return (
-            <div className="flex gap-1 mb-6 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap scrollbar-hide">
-              {TABS.map((t) => (
-                <button
-                  key={t.key}
-                  onClick={() => setActiveTab(t.key)}
-                  className={`px-3 sm:px-4 py-2 sm:py-2.5 text-[10px] sm:text-xs font-bold uppercase tracking-widest transition-all whitespace-nowrap shrink-0 ${
-                    activeTab === t.key
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
-          );
-        })()}
+        {/* Tab switcher */}
+        <div className="flex gap-1 mb-6 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap scrollbar-hide">
+          {tabs.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setActiveTab(t.key)}
+              className={`px-3 sm:px-4 py-2 sm:py-2.5 text-[10px] sm:text-xs font-bold uppercase tracking-widest transition-all whitespace-nowrap shrink-0 ${
+                activeTab === t.key
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
 
-        {activeTab === "home" && renderHome()}
-        {activeTab === "progress" && <ProgressCharts />}
-        {activeTab === "programs" && <MyPrograms />}
-        {activeTab === "workouts" && <WorkoutsTab />}
-        {activeTab === "points" && <PointsLeaderboard />}
-        {activeTab === "referrals" && <ReferralDashboard />}
-        {activeTab === "team" && <TeamManager />}
+        {/* Tab content */}
+        <Suspense fallback={<TabLoader />}>
+          {activeTab === "home" && (
+            <DashboardHome
+              isNewUser={isNewUser}
+              onViewPoints={handleViewPoints}
+              onViewReferrals={handleViewReferrals}
+            />
+          )}
+          {activeTab === "progress" && <ProgressCharts />}
+          {activeTab === "programs" && <MyPrograms />}
+          {activeTab === "workouts" && <WorkoutsTab />}
+          {activeTab === "points" && <PointsLeaderboard />}
+          {activeTab === "referrals" && <ReferralDashboard />}
+          {activeTab === "team" && <TeamManager />}
+        </Suspense>
       </div>
 
-      {/* Floating timer button */}
+      {/* Floating timer */}
       {!showTimer && (
         <button
           onClick={() => setShowTimer(true)}
@@ -305,7 +187,7 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Hard paywall when trial expires */}
+      {/* Hard paywall */}
       {trialExpired && !subscribed && !isAdmin && !isLegend && (
         <TrialPaywallModal open={true} hardLock />
       )}
