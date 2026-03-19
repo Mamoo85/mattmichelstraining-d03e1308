@@ -276,7 +276,6 @@ const AdminClientList = () => {
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-sm font-bold text-foreground truncate">{profile.full_name || "No name"}</p>
                     {profile.subscription_tier && profile.subscription_tier !== "free" && (
-                    {profile.subscription_tier && profile.subscription_tier !== "free" && (
                       <Badge variant="outline" className="text-[9px] uppercase tracking-widest">{profile.subscription_tier}</Badge>
                     )}
                     {profile.account_role === "parent" && <Badge variant="outline" className="text-[9px] uppercase tracking-widest border-primary/20 text-primary"><Users size={8} className="mr-0.5" />Parent</Badge>}
