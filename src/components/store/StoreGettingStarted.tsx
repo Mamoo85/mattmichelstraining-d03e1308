@@ -59,102 +59,34 @@ const StoreGettingStarted = () => {
         </div>
       </div>
 
-      {/* ═══════════ THE EDGE: AI Tech Showcase ═══════════ */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-3">
-          <div className="h-px flex-1 bg-gradient-to-r from-primary/50 to-transparent" />
-          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary flex items-center gap-2">
-            <Brain size={14} /> The M² Edge
-          </span>
-          <div className="h-px flex-1 bg-gradient-to-l from-primary/50 to-transparent" />
-        </div>
-
-        <div className="bg-card border border-border overflow-hidden">
-          <div className="p-5 sm:p-6 space-y-3">
-            <div className="flex items-center gap-2">
-              <Cpu size={16} className="text-primary" />
-              <h2 className="text-base font-black uppercase tracking-tight text-foreground">
-                Computer Science Meets Strength & Conditioning
-              </h2>
+      {/* ═══════════ THE EDGE: Compact Tech Teaser ═══════════ */}
+      <Link
+        to="/the-edge"
+        className="block bg-card border border-primary/20 overflow-hidden hover:border-primary/50 transition-all group"
+      >
+        <div className="p-5 flex items-start gap-4">
+          <div className="w-10 h-10 bg-primary/10 border border-primary/30 flex items-center justify-center shrink-0">
+            <Cpu size={20} className="text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-primary bg-primary/10 px-2 py-0.5">
+                Cutting-Edge Tech
+              </span>
             </div>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Matt's two loves — <strong className="text-foreground">computers and exercise</strong> — fused into something 
-              nobody else has. A front photo. A side photo. That's all it takes. Our advanced biomechanics system 
-              analyzes joint angles, postural alignment, muscle activation patterns, and movement compensations in seconds — giving Matt data no other trainer has.
+            <h2 className="text-sm font-black uppercase tracking-tight text-foreground mb-1">
+              The Data Behind Your Program
+            </h2>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Two photos. Instant biomechanics scan. Joint angles, postural alignment, muscle activation patterns — 
+              data that gives Matt insight no other trainer has. See exactly what our technology reveals.
             </p>
-            <p className="text-xs text-primary font-bold italic">
-              "Always 5 years ahead. I can't help it."
-            </p>
-          </div>
-
-          {/* AI showcase images with floating data effect */}
-          <div className="grid grid-cols-2 gap-0 border-t border-border">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="relative group overflow-hidden"
-            >
-              <img
-                src={aiBiomechanicsHero}
-                alt="Biomechanics Analysis — Front View"
-                className="w-full h-48 sm:h-64 object-cover transition-transform duration-700 group-hover:scale-105"
-                loading="lazy"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />
-              <div className="absolute bottom-3 left-3">
-                <span className="text-[9px] font-bold uppercase tracking-widest text-primary bg-background/80 backdrop-blur-sm px-2 py-1 border border-primary/30">
-                  Front Analysis
-                </span>
-              </div>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.15 }}
-              className="relative group overflow-hidden"
-            >
-              <img
-                src={aiPostureSide}
-                alt="AI Posture Analysis — Side View"
-                className="w-full h-48 sm:h-64 object-cover transition-transform duration-700 group-hover:scale-105"
-                loading="lazy"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />
-              <div className="absolute bottom-3 left-3">
-                <span className="text-[9px] font-bold uppercase tracking-widest text-primary bg-background/80 backdrop-blur-sm px-2 py-1 border border-primary/30">
-                  Side Analysis
-                </span>
-              </div>
-            </motion.div>
-          </div>
-
-          {/* What the AI does */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 border-t border-border">
-            {[
-              { icon: Camera, label: "2 Photos", desc: "Front + side view" },
-              { icon: Cpu, label: "Full Scan", desc: "Joint angles & alignment" },
-              { icon: Sparkles, label: "Correctives", desc: "Personalized protocols" },
-              { icon: Target, label: "Track", desc: "Progress over time" },
-            ].map(({ icon: Icon, label, desc }, i) => (
-              <motion.div
-                key={label}
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: i * 0.1 }}
-                className="p-4 text-center border-r last:border-r-0 border-border"
-              >
-                <Icon size={18} className="text-primary mx-auto mb-1.5" />
-                <p className="text-xs font-bold text-foreground">{label}</p>
-                <p className="text-[10px] text-muted-foreground">{desc}</p>
-              </motion.div>
-            ))}
+            <span className="inline-flex items-center gap-1.5 text-xs text-primary font-bold mt-2 group-hover:gap-2.5 transition-all">
+              Explore The Technology <ArrowRight size={12} />
+            </span>
           </div>
         </div>
-      </div>
+      </Link>
 
 
       {/* ═══════════ PRICING: Sessions + Subscription ═══════════ */}
