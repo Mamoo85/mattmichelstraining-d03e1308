@@ -11,8 +11,15 @@ import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Camera, Loader2, Flame, Beef, Wheat, Droplets, Leaf, Trash2, Target, Pencil, Check, X } from "lucide-react";
+import {
+  Camera, Loader2, Flame, Beef, Wheat, Droplets, Leaf,
+  Trash2, Target, Pencil, Check, X, Printer,
+} from "lucide-react";
 import { format } from "date-fns";
+import WeeklyMacroChart from "@/components/nutrition/WeeklyMacroChart";
+import MacroDonut from "@/components/nutrition/MacroDonut";
+import NutritionStats from "@/components/nutrition/NutritionStats";
+import { printNutritionReport } from "@/components/nutrition/printNutritionReport";
 
 interface FoodItem {
   name: string;
@@ -69,13 +76,12 @@ const Nutrition = () => {
   const [editingGoals, setEditingGoals] = useState(false);
   const [goalInputs, setGoalInputs] = useState<Record<string, string>>({});
 
-  // Fetch goals from profile
   const { data: profile } = useQuery({
     queryKey: ["profile-nutrition-goals", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("daily_calorie_goal, daily_protein_goal, daily_carbs_goal, daily_fat_goal")
+        .select("daily_calorie_goal, daily_protein_goal, daily_carbs_goal, daily_fat_goal, full_name")
         .eq("user_id", user!.id)
         .single();
       if (error) throw error;
@@ -122,7 +128,6 @@ const Nutrition = () => {
     setEditingGoals(true);
   };
 
-  // Fetch history
   const { data: logs = [], isLoading: logsLoading } = useQuery({
     queryKey: ["nutrition-logs", user?.id],
     queryFn: async () => {
@@ -138,7 +143,6 @@ const Nutrition = () => {
     enabled: !!user,
   });
 
-  // Today's totals
   const todayStr = format(new Date(), "yyyy-MM-dd");
   const todayLogs = logs.filter((l: any) => l.logged_at?.startsWith(todayStr));
   const todayTotals = todayLogs.reduce(
@@ -154,7 +158,6 @@ const Nutrition = () => {
   const handleImageSelect = useCallback(async (file: File) => {
     if (!file.type.startsWith("image/")) { toast.error("Please select an image file"); return; }
     if (file.size > 10 * 1024 * 1024) { toast.error("Image must be under 10 MB"); return; }
-
     const reader = new FileReader();
     reader.onload = async (e) => {
       const base64 = e.target?.result as string;
@@ -221,22 +224,38 @@ const Nutrition = () => {
   const totalFat = analysis ? analysis.items.reduce((s, i) => s + i.fat_g, 0) : 0;
   const totalFiber = analysis ? analysis.items.reduce((s, i) => s + i.fiber_g, 0) : 0;
 
+  const handlePrint = () => {
+    printNutritionReport({
+      logs: logs as any,
+      goals,
+      userName: (profile as any)?.full_name || undefined,
+    });
+  };
+
   return (
     <>
       <SEOHead title="Nutrition Tracker | M² Training" description="Snap a photo of your food and get instant calorie and macro estimates powered by AI." path="/nutrition" />
       <AppNavbar />
       <main className="min-h-screen bg-background pt-16 pb-24">
         <div className="container max-w-lg mx-auto space-y-5 px-4">
-          {/* Header + Snap button */}
+          {/* Header */}
           <div className="text-center pt-4 space-y-3">
-            <h1 className="text-2xl font-black tracking-tight">NUTRITION TRACKER</h1>
+            <div className="flex items-center justify-between">
+              <h1 className="text-2xl font-black tracking-tight">NUTRITION TRACKER</h1>
+              <Button variant="outline" size="icon" className="h-9 w-9" onClick={handlePrint} title="Print Report">
+                <Printer size={16} />
+              </Button>
+            </div>
             <Button className="w-full gap-2" size="lg" onClick={() => fileInputRef.current?.click()}>
               <Camera size={18} /> Snap or Upload a Meal Photo
             </Button>
             <input ref={fileInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => e.target.files?.[0] && handleImageSelect(e.target.files[0])} />
           </div>
 
-          {/* Daily Goals — compact card with progress bars */}
+          {/* Quick Stats */}
+          <NutritionStats logs={logs as any} />
+
+          {/* Daily Goals */}
           <Card className="border-primary/20">
             <CardHeader className="pb-1">
               <div className="flex items-center justify-between">
@@ -265,7 +284,6 @@ const Nutrition = () => {
                 const goal = (goals as any)[key];
                 const pct = goal > 0 ? Math.min((current / goal) * 100, 100) : 0;
                 const reached = current >= goal;
-
                 return (
                   <div key={key} className="space-y-0.5">
                     <div className="flex items-center justify-between text-xs">
@@ -294,6 +312,33 @@ const Nutrition = () => {
                   </div>
                 );
               })}
+            </CardContent>
+          </Card>
+
+          {/* Macro Breakdown Donut */}
+          {(todayTotals.protein > 0 || todayTotals.carbs > 0 || todayTotals.fat > 0) && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Today's Macro Split</CardTitle>
+              </CardHeader>
+              <CardContent className="pb-4">
+                <MacroDonut protein={todayTotals.protein} carbs={todayTotals.carbs} fat={todayTotals.fat} />
+              </CardContent>
+            </Card>
+          )}
+
+          {/* 7-Day Trend Chart */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">7-Day Trend</CardTitle>
+            </CardHeader>
+            <CardContent className="pb-4">
+              <WeeklyMacroChart logs={logs as any} calorieGoal={goals.daily_calorie_goal} />
+              {!logs.some((l: any) => l.total_calories > 0) && (
+                <p className="text-xs text-muted-foreground text-center py-6">
+                  Log meals to see your weekly trends
+                </p>
+              )}
             </CardContent>
           </Card>
 
