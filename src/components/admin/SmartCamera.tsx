@@ -27,7 +27,7 @@ interface SmartCameraProps {
   onClose: () => void;
 }
 
-type CameraState = "loading" | "detecting" | "aligned" | "countdown" | "captured";
+type CameraState = "guide" | "loading" | "detecting" | "aligned" | "countdown" | "captured";
 
 const SmartCamera = ({ onCapture, onClose }: SmartCameraProps) => {
   const webcamRef = useRef<Webcam>(null);
@@ -37,7 +37,7 @@ const SmartCamera = ({ onCapture, onClose }: SmartCameraProps) => {
   const detectionLoopRef = useRef<number | null>(null);
   const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const [state, setState] = useState<CameraState>("loading");
+  const [state, setState] = useState<CameraState>("guide");
   const [countdown, setCountdown] = useState(COUNTDOWN_SECONDS);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [modelReady, setModelReady] = useState(false);
