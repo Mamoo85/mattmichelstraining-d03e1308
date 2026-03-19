@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Dumbbell, ShoppingBag, Home, Menu, X, LogIn, LogOut, Shield, CreditCard, BookOpen, Users, User, Download } from "lucide-react";
+import { Dumbbell, ShoppingBag, Home, Menu, X, LogIn, LogOut, Shield, CreditCard, BookOpen, Users, User, Download, CalendarClock } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -12,10 +12,10 @@ const navItems = [
   { to: "/about", label: "ABOUT", icon: User },
   { to: "/dashboard", label: "PORTAL", icon: Dumbbell },
   { to: "/shop", label: "SHOP", icon: ShoppingBag },
+  { to: "/schedule", label: "SCHEDULE", icon: CalendarClock },
   { to: "/for-parents", label: "PARENTS", icon: Users },
   { to: "/learn", label: "LEARN", icon: BookOpen },
   { to: "/pricing", label: "PRICING", icon: CreditCard },
-  
 ];
 
 const AppNavbar = () => {
