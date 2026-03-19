@@ -1,5 +1,6 @@
 import { memo, lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
+import { Play } from "lucide-react";
 import MonthlyFocusWidget from "@/components/MonthlyFocusWidget";
 import UpcomingSessions from "@/components/UpcomingSessions";
 import PointsWidget from "@/components/PointsWidget";
