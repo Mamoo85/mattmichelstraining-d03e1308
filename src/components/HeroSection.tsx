@@ -11,7 +11,7 @@ import M2Difference from "./landing/M2Difference";
 import FindUs from "./landing/FindUs";
 import PortalEntrance from "./landing/PortalEntrance";
 
-import TrialCTA from "./TrialCTA";
+
 
 const HeroSection = () => {
   const showHero = useSectionVisible("hero");
@@ -93,12 +93,7 @@ const HeroSection = () => {
         {/* ─── 5. THE M² DIFFERENCE ─── */}
         <M2Difference />
 
-        {/* ─── 6. TRIAL CTA ─── */}
-        <div className="mb-8">
-          <TrialCTA variant="banner" />
-        </div>
-
-        {/* ─── 7. SOCIAL — Instagram Feed ─── */}
+        {/* ─── 6. SOCIAL — Instagram Feed ─── */}
         <div className="mb-8">
           <InstagramSocialBox />
         </div>

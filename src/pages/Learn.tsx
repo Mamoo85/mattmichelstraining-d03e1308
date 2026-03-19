@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
 import AppNavbar from "@/components/AppNavbar";
 import MonthlyFocus from "@/components/landing/MonthlyFocus";
-import TechShowcaseCard from "@/components/landing/TechShowcaseCard";
+
 import TrialCTA from "@/components/TrialCTA";
 
 /* ── Featured Videos ── */
@@ -388,8 +388,6 @@ const Learn = () => {
           </section>
         )}
 
-        {/* Tech Showcase */}
-        <TechShowcaseCard />
 
         {/* Monthly Focus */}
         <div className="mb-10">

@@ -11,7 +11,7 @@ import { toast } from "@/hooks/use-toast";
 import { useContentMap } from "@/hooks/useSiteContent";
 import TrialCTA from "@/components/TrialCTA";
 import { getStoredReferralCode, clearStoredReferralCode } from "@/hooks/useReferral";
-import ChallengeTeaser from "@/components/landing/ChallengeTeaser";
+
 import CheckoutConfirmationModal, { type CheckoutProductType } from "@/components/CheckoutConfirmationModal";
 
 const TIER_CARDS: {
@@ -380,12 +380,6 @@ const Pricing = () => {
         {/* Dynamic Feature Comparison Table */}
         <TierComparisonTable />
 
-        {/* Challenge Teaser for non-subscribers */}
-        {!subscribed && (
-          <div className="mt-12 max-w-xl mx-auto">
-            <ChallengeTeaser />
-          </div>
-        )}
 
 
 
