@@ -266,10 +266,14 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
 
   // Finish handler
   const handleFinishClick = () => {
+    if (saving) return;
+
     if (exercises.length === 0) {
+      localStorage.removeItem("m2-paused-workout");
       onFinish();
       return;
     }
+
     setShowConfirm(true);
   };
 

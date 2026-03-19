@@ -1,14 +1,14 @@
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Loader2 } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface ConfirmActionModalProps {
   open: boolean;
@@ -34,31 +34,42 @@ const ConfirmActionModal = ({
   loading = false,
   destructive = false,
   icon,
-}: ConfirmActionModalProps) => (
-  <AlertDialog open={open} onOpenChange={onOpenChange}>
-    <AlertDialogContent>
-      <AlertDialogHeader>
-        <AlertDialogTitle className={`flex items-center gap-2 ${destructive ? "text-destructive" : ""}`}>
-          {icon}
-          {title}
-        </AlertDialogTitle>
-        <AlertDialogDescription asChild>
-          <div>{description}</div>
-        </AlertDialogDescription>
-      </AlertDialogHeader>
-      <AlertDialogFooter>
-        <AlertDialogCancel disabled={loading}>{cancelLabel}</AlertDialogCancel>
-        <AlertDialogAction
-          onClick={onConfirm}
-          disabled={loading}
-          className={destructive ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}
-        >
-          {loading && <Loader2 size={14} className="animate-spin mr-1.5" />}
-          {confirmLabel}
-        </AlertDialogAction>
-      </AlertDialogFooter>
-    </AlertDialogContent>
-  </AlertDialog>
-);
+}: ConfirmActionModalProps) => {
+  const handleCancel = () => {
+    if (!loading) onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className={destructive ? "flex items-center gap-2 text-destructive" : "flex items-center gap-2"}>
+            {icon}
+            {title}
+          </DialogTitle>
+          {typeof description === "string" ? (
+            <DialogDescription>{description}</DialogDescription>
+          ) : (
+            <div className="text-sm text-muted-foreground">{description}</div>
+          )}
+        </DialogHeader>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={handleCancel} disabled={loading}>
+            {cancelLabel}
+          </Button>
+          <Button
+            onClick={onConfirm}
+            disabled={loading}
+            variant={destructive ? "destructive" : "default"}
+          >
+            {loading && <Loader2 size={14} className="mr-1.5 animate-spin" />}
+            {confirmLabel}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 export default ConfirmActionModal;
