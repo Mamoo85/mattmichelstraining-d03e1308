@@ -94,20 +94,29 @@ const PortalEntrance = () => {
           <img
             src={portalProgress}
             alt="Progress tracking"
+            width={200}
+            height={160}
             className="absolute w-[42%] sm:w-[45%] max-w-[200px] h-[120px] sm:h-[160px] object-cover object-top rounded shadow-m2 -rotate-3 -translate-x-[55%] translate-y-1 opacity-70"
             loading="lazy"
+            decoding="async"
           />
           <img
             src={portalPrograms}
             alt="Training programs"
+            width={220}
+            height={170}
             className="absolute w-[48%] sm:w-[50%] max-w-[220px] h-[130px] sm:h-[170px] object-cover object-top rounded shadow-m2-hover z-10"
             loading="lazy"
+            decoding="async"
           />
           <img
             src={portalChat}
             alt="Coach chat"
+            width={200}
+            height={160}
             className="absolute w-[42%] sm:w-[45%] max-w-[200px] h-[120px] sm:h-[160px] object-cover object-top rounded shadow-m2 rotate-3 translate-x-[55%] translate-y-1 opacity-70"
             loading="lazy"
+            decoding="async"
           />
         </div>
 
