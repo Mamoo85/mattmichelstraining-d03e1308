@@ -184,3 +184,86 @@
     display: none;
   }
 }
+
+/* ═══════ PRINT MODE ═══════ */
+@media print {
+  /* Force white background, dark text */
+  html, body, .min-h-screen, .bg-background {
+    background: #ffffff !important;
+    color: #1a1a1a !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Kill neon glows, shadows, dark card backgrounds */
+  * {
+    text-shadow: none !important;
+    filter: none !important;
+  }
+  [style*="box-shadow"] {
+    box-shadow: none !important;
+  }
+  [style*="background: hsl(var(--synth"] {
+    background: #ffffff !important;
+    border-color: #d1d5db !important;
+  }
+  .bg-card, .bg-muted, [class*="bg-primary/"] {
+    background: #f9fafb !important;
+  }
+
+  /* Text legibility */
+  .text-foreground, .text-primary, .text-primary-foreground,
+  [style*="color: hsl(var(--synth"] {
+    color: #1a1a1a !important;
+  }
+  .text-muted-foreground {
+    color: #6b7280 !important;
+  }
+
+  /* Hide UI chrome */
+  nav, .fixed, button, .print\\:hidden,
+  [aria-label="Open interval timer"],
+  form {
+    display: none !important;
+  }
+
+  /* Recharts graph: black line, light gray fill */
+  .recharts-area-curve {
+    stroke: #1a1a1a !important;
+    filter: none !important;
+  }
+  .recharts-area-area {
+    fill: #e5e7eb !important;
+  }
+  .recharts-cartesian-grid line {
+    stroke: #d1d5db !important;
+  }
+  .recharts-reference-line line {
+    stroke: #6b7280 !important;
+  }
+  .recharts-text {
+    fill: #374151 !important;
+  }
+
+  /* Avatar print overrides */
+  .print\\:fill-gray-200 { fill: #e5e7eb !important; }
+  .print\\:fill-gray-600 { fill: #4b5563 !important; }
+  .print\\:stroke-gray-400 { stroke: #9ca3af !important; }
+  .print\\:stroke-gray-500 { stroke: #6b7280 !important; }
+  .print\\:stroke-gray-800 { stroke: #1f2937 !important; }
+  .print\\:bg-white { background: #ffffff !important; }
+  .print\\:border-gray-300 { border-color: #d1d5db !important; }
+  .print\\:bg-gray-100 { background: #f3f4f6 !important; }
+  .print\\:text-gray-800 { color: #1f2937 !important; }
+  .print\\:\\[filter\\:none\\] { filter: none !important; }
+
+  /* Ensure cards have visible borders */
+  [style*="border"] {
+    border-color: #d1d5db !important;
+  }
+
+  /* Page margins */
+  @page {
+    margin: 1cm;
+  }
+}
