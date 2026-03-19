@@ -397,6 +397,13 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
         loading={saving}
         icon={<CheckCircle size={16} />}
       />
+
+      {formTrackerExercise && (
+        <LiveFormTracker
+          exerciseTitle={formTrackerExercise}
+          onClose={() => setFormTrackerExercise(null)}
+        />
+      )}
     </>
   );
 };
