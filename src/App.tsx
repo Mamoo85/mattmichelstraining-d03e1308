@@ -80,6 +80,7 @@ const GlobalTimer = () => {
 
 const ActiveWorkoutWrapper = () => {
   const { user } = useAuth();
+  const { setPortalActive } = useTimer();
   const [zoneOpen, setZoneOpen] = useState(false);
   const [zoneContext, setZoneContext] = useState<any>(null);
   const [hasPaused, setHasPaused] = useState(
