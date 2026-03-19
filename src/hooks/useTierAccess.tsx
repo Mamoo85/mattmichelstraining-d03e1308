@@ -7,6 +7,7 @@ import { useIsAdmin } from "./useIsAdmin";
 const TIER_HIERARCHY: TierKey[] = ["basic", "foundation", "custom", "team_elite"];
 
 const TIER_COLUMN_MAP: Record<string, string> = {
+  free: "tier_free",
   basic: "tier_basic",
   foundation: "tier_foundation",
   custom: "tier_custom",
