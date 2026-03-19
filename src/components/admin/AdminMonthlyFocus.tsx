@@ -55,6 +55,8 @@ const AdminMonthlyFocus = () => {
   const [savingChallenge, setSavingChallenge] = useState(false);
   const [generatingChallenge, setGeneratingChallenge] = useState(false);
   const [challengeTopicInput, setChallengeTopicInput] = useState("");
+  const [challengePreview, setChallengePreview] = useState<{ title: string; description: string; metric_label: string } | null>(null);
+  const [savingPreview, setSavingPreview] = useState(false);
 
   // Focus state
   const [focus, setFocus] = useState<Focus | null>(null);
