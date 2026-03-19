@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.cancel-user-subscription]
 verify_jwt = false
+
+[functions.analyze-biomechanics]
+verify_jwt = false
