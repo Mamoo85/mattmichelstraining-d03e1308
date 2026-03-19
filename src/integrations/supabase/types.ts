@@ -1626,6 +1626,39 @@ export type Database = {
         }
         Relationships: []
       }
+      retention_alerts: {
+        Row: {
+          alert_type: string
+          avg_weekly_logs: number
+          created_at: string
+          days_since_last_log: number
+          id: string
+          resolved_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          alert_type?: string
+          avg_weekly_logs?: number
+          created_at?: string
+          days_since_last_log?: number
+          id?: string
+          resolved_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          alert_type?: string
+          avg_weekly_logs?: number
+          created_at?: string
+          days_since_last_log?: number
+          id?: string
+          resolved_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       schedule_slots: {
         Row: {
           booked_by: string | null
