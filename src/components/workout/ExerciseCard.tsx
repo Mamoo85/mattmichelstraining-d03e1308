@@ -63,9 +63,20 @@ const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTrac
             <span className="text-[10px] font-mono text-muted-foreground">{index + 1}</span>
             <span className="text-sm font-bold text-foreground truncate">{exercise.exerciseTitle}</span>
           </div>
-          <button onClick={onRemove} className="h-8 w-8 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors flex-shrink-0">
-            <Trash2 size={14} />
-          </button>
+          <div className="flex items-center gap-1 flex-shrink-0">
+            {onOpenFormTracker && (
+              <button
+                onClick={() => onOpenFormTracker(exercise.exerciseTitle)}
+                className="h-8 w-8 flex items-center justify-center text-muted-foreground hover:text-primary transition-colors"
+                title="Live Form Tracker"
+              >
+                <Crosshair size={14} />
+              </button>
+            )}
+            <button onClick={onRemove} className="h-8 w-8 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors">
+              <Trash2 size={14} />
+            </button>
+          </div>
         </div>
 
         {/* 2. Video Player — full width, rounded, no autoplay */}
