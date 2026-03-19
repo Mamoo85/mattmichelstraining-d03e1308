@@ -160,6 +160,55 @@ const UsageBadge = ({ usage }: { usage: { prompt_tokens: number; completion_toke
   );
 };
 
+/* ── Shared result action bar for all AI tools ── */
+const AiResultActions = ({ result, onDiscard, onRegenerate, toolLabel }: {
+  result: string;
+  onDiscard: () => void;
+  onRegenerate: () => void;
+  toolLabel: string;
+}) => {
+  const qc = useQueryClient();
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(result);
+    toast.success("Copied to clipboard");
+  };
+
+  const saveToDrafts = async () => {
+    try {
+      const { error } = await supabase.from("marketing_drafts").insert({
+        title: `${toolLabel} Report`,
+        body: result,
+        draft_type: "ai_report",
+        status: "pending",
+        generated_by: "ai",
+      });
+      if (error) throw error;
+      qc.invalidateQueries({ queryKey: ["marketing-drafts"] });
+      toast.success("Saved to Drafts for review");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to save");
+    }
+  };
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      <Button size="sm" variant="outline" onClick={copyToClipboard} className="text-xs gap-1">
+        <Copy size={12} /> Copy
+      </Button>
+      <Button size="sm" variant="default" onClick={saveToDrafts} className="text-xs gap-1">
+        <Save size={12} /> Save to Drafts
+      </Button>
+      <Button size="sm" variant="outline" onClick={onRegenerate} className="text-xs gap-1">
+        <RefreshCw size={12} /> Regenerate
+      </Button>
+      <Button size="sm" variant="ghost" onClick={onDiscard} className="text-xs gap-1 text-destructive hover:text-destructive">
+        <Trash2 size={12} /> Discard
+      </Button>
+    </div>
+  );
+};
+
 /* ── Inline tool UIs for new AI features ── */
 
 const InjuryRiskTool = () => {
