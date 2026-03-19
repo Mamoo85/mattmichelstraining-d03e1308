@@ -150,7 +150,7 @@ const BodyAvatar = ({ activeLift }: BodyAvatarProps) => {
             fill="none"
             stroke="hsl(215, 20%, 28%)"
             strokeWidth="0.4"
-            className="print:stroke-gray-500"
+            className="avatar-skeleton"
           />
         ))}
 
