@@ -159,7 +159,7 @@ const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTrac
                 <textarea
                   placeholder="How did this feel? Any pain or issues?"
                   value={exercise.clientNotes}
-                  onChange={(e) => onUpdate({ clientNotes: e.target.value })}
+                  onChange={(e) => onUpdate(index, { clientNotes: e.target.value })}
                   className="w-full bg-background border border-border rounded-sm p-3 pr-12 text-sm text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-primary outline-none min-h-[60px] resize-none"
                 />
                 <VoiceNoteButton
