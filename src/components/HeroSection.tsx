@@ -112,6 +112,42 @@ const HeroSection = () => {
 
         {/* Below-the-fold lazy sections */}
         <Suspense fallback={null}>
+          {/* ─── FORM CHECK CTA ─── */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="mb-8"
+          >
+            <div className="bg-gradient-to-br from-primary/10 via-background to-background border border-primary/30 overflow-hidden">
+              <div className="p-6 sm:p-8 space-y-4">
+                <div className="flex items-center gap-2">
+                  <Star size={16} className="text-primary" />
+                  <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-primary">
+                    Unlimited Form Checks
+                  </span>
+                </div>
+                <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-foreground leading-tight">
+                  Real Coaching Feedback.<br />
+                  <span className="text-primary">Just $15/mo.</span>
+                </h2>
+                <p className="text-sm text-muted-foreground max-w-lg leading-relaxed">
+                  Upload a couple reps of any lift and Matt will send you a
+                  <strong className="text-foreground"> detailed, personalized reply within 24 hours</strong>.
+                  Unlimited form checks — no cap, no extra fees. For the price of a single
+                  coffee run you get a 20-year veteran coach watching every rep. That's a steal.
+                </p>
+                <Link
+                  to="/auth?redirect=/trial-welcome"
+                  className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
+                >
+                  Try 14 Days Free <ArrowRight size={12} />
+                </Link>
+              </div>
+            </div>
+          </motion.div>
+
           {/* ─── 2. SPORT PICKER ─── */}
           <SportPicker />
 
@@ -134,41 +170,6 @@ const HeroSection = () => {
 
           {/* ─── 9. THE M² DIFFERENCE ─── */}
           <M2Difference />
-
-          {/* ─── 10. MEMBERSHIP CTA ─── */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="mb-8"
-          >
-            <div className="bg-gradient-to-br from-primary/10 via-background to-background border border-primary/30 overflow-hidden">
-              <div className="p-6 sm:p-8 space-y-4">
-                <div className="flex items-center gap-2">
-                  <Star size={16} className="text-primary" />
-                  <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-primary">
-                    Monthly Plans
-                  </span>
-                </div>
-                <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-foreground leading-tight">
-                  Train Like a Pro.<br />
-                  <span className="text-primary">Starting at $14.99/mo.</span>
-                </h2>
-                <p className="text-sm text-muted-foreground max-w-lg leading-relaxed">
-                  Access the full exercise library, structured programs, injury recovery guides,
-                  and direct coaching from Matt — all from your phone. Every plan includes a
-                  <strong className="text-foreground"> 14-day free trial</strong>. No contracts. Cancel anytime.
-                </p>
-                <Link
-                  to="/auth?redirect=/trial-welcome"
-                  className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
-                >
-                  Try 14 Days Free <ArrowRight size={12} />
-                </Link>
-              </div>
-            </div>
-          </motion.div>
 
           {/* ─── 11. ATHLETE RESULTS ─── */}
           <AthleteResults />

@@ -4,13 +4,15 @@ import { ArrowRight } from "lucide-react";
 import athleteBaseball from "@/assets/athlete-baseball.jpg";
 import athleteFootball from "@/assets/athlete-football.jpg";
 import athleteSoccer from "@/assets/athlete-soccer.jpg";
-import athleteLacrosse from "@/assets/athlete-lacrosse.jpg";
+import athleteHockey from "@/assets/athlete-hockey.jpg";
+import athleteSmallGroup from "@/assets/athlete-smallgroup.jpg";
 
 const SPORTS = [
   { name: "Baseball", image: athleteBaseball, tag: "Arm care + explosiveness" },
   { name: "Football", image: athleteFootball, tag: "Speed & power" },
   { name: "Soccer", image: athleteSoccer, tag: "Durability + agility" },
-  { name: "Lacrosse", image: athleteLacrosse, tag: "Full-body strength" },
+  { name: "Hockey", image: athleteHockey, tag: "Full-body strength" },
+  { name: "Small Group", image: athleteSmallGroup, tag: "1–4 athletes" },
 ];
 
 const SportPicker = () => (
@@ -30,7 +32,7 @@ const SportPicker = () => (
       </h2>
     </div>
 
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+    <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
       {SPORTS.map((s) => (
         <Link
           key={s.name}
@@ -46,11 +48,11 @@ const SportPicker = () => (
             />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
           </div>
-          <div className="absolute bottom-0 inset-x-0 p-3">
-            <span className="text-sm font-black uppercase tracking-tight text-foreground block">
+          <div className="absolute bottom-0 inset-x-0 p-2">
+            <span className="text-xs font-black uppercase tracking-tight text-foreground block leading-tight">
               {s.name}
             </span>
-            <span className="text-[9px] font-bold uppercase tracking-widest text-primary">
+            <span className="text-[8px] font-bold uppercase tracking-widest text-primary">
               {s.tag}
             </span>
           </div>
