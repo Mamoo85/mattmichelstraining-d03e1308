@@ -219,7 +219,7 @@ const BodyAvatar = ({ activeLift }: BodyAvatarProps) => {
         {activeMs.map((key) => (
           <span
             key={key}
-            className="text-[7px] font-mono font-bold uppercase tracking-widest px-1.5 py-px print:bg-gray-100 print:text-gray-800 print:border-gray-300"
+            className="text-[7px] font-mono font-bold uppercase tracking-widest px-1.5 py-px avatar-label"
             style={{
               color: "hsl(var(--synth-orange))",
               background: "hsl(var(--synth-orange) / 0.08)",
