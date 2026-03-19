@@ -110,12 +110,6 @@ const Dashboard = () => {
             <p className="text-xs sm:text-sm text-muted-foreground">Your training portal · Real training, real results</p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={() => window.dispatchEvent(new Event("open-workout-zone"))}
-              className="flex items-center gap-1.5 bg-primary text-primary-foreground px-3 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all active:scale-95"
-            >
-              <Dumbbell size={12} /> Start Workout
-            </button>
             <Link
               to="/profile"
               className="flex items-center gap-1.5 bg-muted text-muted-foreground px-3 py-2 text-[10px] font-bold uppercase tracking-widest hover:text-foreground transition-all"
