@@ -313,11 +313,10 @@ const AdminClientList = () => {
 
                 <div className="space-y-4 mt-2">
                   {/* Quick Stats */}
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     {[
                       { label: "Tier", value: p.subscription_tier || "free" },
                       { label: "Role", value: p.account_role || "athlete" },
-                      { label: "Legend", value: p.is_in_person ? "Yes" : "No" },
                     ].map((s) => (
                       <div key={s.label} className="bg-secondary/50 border border-border p-2.5 text-center">
                         <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">{s.label}</p>
