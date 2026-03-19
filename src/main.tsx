@@ -22,3 +22,10 @@ createRoot(document.getElementById("root")!).render(
     <App />
   </HelmetProvider>
 );
+
+// Register service worker after first paint to avoid blocking FCP
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/registerSW.js").catch(() => {});
+  });
+}
