@@ -398,9 +398,9 @@ const AdminBiomechanics = () => {
           }
         >
           <SmartCamera
-            onCapture={(file) => {
+            onCapture={(files) => {
               setShowCamera(false);
-              handleUploadAndAnalyze(file);
+              handleUploadAndAnalyze(files);
             }}
             onClose={() => setShowCamera(false)}
           />
