@@ -196,7 +196,7 @@ const BodyAvatar = ({ activeLift }: BodyAvatarProps) => {
 
   return (
     <div
-      className="p-3 print:bg-white print:border-gray-300"
+      className="p-3 avatar-container"
       style={{
         background: "hsl(var(--synth-card))",
         border: "1px solid hsl(var(--synth-cyan) / 0.12)",

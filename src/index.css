@@ -245,7 +245,14 @@
     fill: #374151 !important;
   }
 
-  /* Avatar & element print overrides handled by Tailwind print: variant */
+  /* Avatar print overrides */
+  .avatar-skeleton { stroke: #6b7280 !important; }
+  .avatar-muscle-inactive { fill: #e5e7eb !important; stroke: #9ca3af !important; }
+  .avatar-muscle-active { fill: #4b5563 !important; stroke: #1f2937 !important; filter: none !important; }
+  .avatar-cyber-grid { display: none !important; }
+  .avatar-label { background: #f3f4f6 !important; color: #1f2937 !important; border-color: #d1d5db !important; }
+  .avatar-container { background: #ffffff !important; border-color: #d1d5db !important; }
+  .avatar-title { color: #1f2937 !important; }
 
   /* Ensure cards have visible borders */
   [style*="border"] {
