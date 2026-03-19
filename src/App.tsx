@@ -44,6 +44,7 @@ const TrialWelcome = lazy(() => import("./pages/TrialWelcome"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Install = lazy(() => import("./pages/Install"));
 const Nutrition = lazy(() => import("./pages/Nutrition"));
+const TheEdge = lazy(() => import("./pages/TheEdge"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
