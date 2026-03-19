@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { format } from "date-fns";
-import { Plus, X, Timer, CheckCircle, Loader2, CalendarIcon, Play, Dumbbell, Clock } from "lucide-react";
+import { Plus, X, CheckCircle, Loader2, CalendarIcon, Dumbbell, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -17,6 +17,7 @@ import ConfirmActionModal from "@/components/ConfirmActionModal";
 import InterceptGateway from "./InterceptGateway";
 import IntervalTimer from "./IntervalTimer";
 import PostWorkoutSummary from "./PostWorkoutSummary";
+import WorkoutTimer from "./WorkoutTimer";
 import LiveFormTracker from "./LiveFormTracker";
 import ReadinessGate, { calculateAdjustments, type ReadinessResult } from "./ReadinessGate";
 import type { LoggedExerciseData } from "./WorkoutLogger";
@@ -177,18 +178,13 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
     setPhase("active");
   }, []);
 
-  // Timer
-  const [elapsedSeconds, setElapsedSeconds] = useState(initialContext?.resumedElapsed || 0);
-  const [timerRunning, setTimerRunning] = useState(hasInitialContent);
+  // Timer — elapsed stored in ref, only synced on pause/unmount to avoid re-renders
+  const elapsedRef = useRef(initialContext?.resumedElapsed || 0);
+  const [timerAutoStart, setTimerAutoStart] = useState(hasInitialContent);
 
-  useEffect(() => {
-    if (!timerRunning) return;
-    const id = setInterval(() => setElapsedSeconds((s) => s + 1), 1000);
-    return () => clearInterval(id);
-  }, [timerRunning]);
-
-  const mins = Math.floor(elapsedSeconds / 60);
-  const secs = elapsedSeconds % 60;
+  const handleElapsedChange = useCallback((seconds: number) => {
+    elapsedRef.current = seconds;
+  }, []);
 
   // Prevent body scroll
   useEffect(() => {
@@ -241,31 +237,30 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
     setShowPicker(false);
   }, []);
 
-  const updateExercise = (index: number, data: Partial<LoggedExerciseData>) => {
+  const updateExercise = useCallback((index: number, data: Partial<LoggedExerciseData>) => {
     setExercises((prev) => prev.map((e, i) => (i === index ? { ...e, ...data } : e)));
-  };
+  }, []);
 
-  const removeExercise = (index: number) => {
+  const removeExercise = useCallback((index: number) => {
     setExercises((prev) => prev.filter((_, i) => i !== index));
-  };
+  }, []);
 
   // Pause handler
   const handlePause = useCallback(() => {
-    setTimerRunning(false);
     const state = {
       title: workoutTitle,
       source: initialContext?.source,
       resumedExercises: exercises,
       resumedNotes: sessionNotes,
       resumedRecovery: recovery,
-      resumedElapsed: elapsedSeconds,
+      resumedElapsed: elapsedRef.current,
       resumedDate: date.toISOString(),
       resumed: true,
     };
     localStorage.setItem("m2-paused-workout", JSON.stringify(state));
     toast.info("Workout paused. Resume anytime from your dashboard.");
     onPause?.();
-  }, [exercises, sessionNotes, recovery, elapsedSeconds, date, workoutTitle, initialContext, onPause]);
+  }, [exercises, sessionNotes, recovery, date, workoutTitle, initialContext, onPause]);
 
   // Finish handler
   const handleFinishClick = () => {
@@ -326,7 +321,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
             setPhase("readiness");
           } else {
             setPhase("active");
-            setTimerRunning(true);
+            setTimerAutoStart(true);
           }
         }}
         onExit={onFinish}
@@ -340,11 +335,11 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
       <ReadinessGate
         onComplete={(result) => {
           handleReadinessComplete(result);
-          setTimerRunning(true);
+          setTimerAutoStart(true);
         }}
         onSkip={() => {
           handleReadinessSkip();
-          setTimerRunning(true);
+          setTimerAutoStart(true);
         }}
       />
     );
@@ -364,7 +359,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
     return (
       <PostWorkoutSummary
         exercises={exercises}
-        duration={elapsedSeconds}
+        duration={elapsedRef.current}
         workoutLogId={workoutLogId}
         workoutTitle={workoutTitle}
         date={date}
@@ -448,9 +443,9 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
               key={i}
               exercise={ex}
               index={i}
-              onUpdate={(data) => updateExercise(i, data)}
-              onRemove={() => removeExercise(i)}
-              onOpenFormTracker={(title) => setFormTrackerExercise(title)}
+              onUpdate={updateExercise}
+              onRemove={removeExercise}
+              onOpenFormTracker={setFormTrackerExercise}
             />
           ))}
 
@@ -482,18 +477,11 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
         <footer className="fixed bottom-0 w-full z-50 bg-background/95 backdrop-blur-md border-t border-border px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
           <div className="flex items-center justify-between gap-2 max-w-lg mx-auto">
             {/* Left: Timer readout */}
-            <button
-              onClick={() => setTimerRunning(!timerRunning)}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase tracking-widest transition-all",
-                timerRunning
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {timerRunning ? <Timer size={14} /> : <Play size={14} />}
-              {String(mins).padStart(2, "0")}:{String(secs).padStart(2, "0")}
-            </button>
+            <WorkoutTimer
+              initialElapsed={initialContext?.resumedElapsed || 0}
+              autoStart={timerAutoStart}
+              onElapsedChange={handleElapsedChange}
+            />
 
             {/* Center: Add Exercise */}
             <Button

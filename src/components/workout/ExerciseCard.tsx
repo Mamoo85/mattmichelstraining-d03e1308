@@ -12,9 +12,9 @@ import type { LoggedExerciseData } from "./WorkoutLogger";
 interface ExerciseCardProps {
   exercise: LoggedExerciseData;
   index: number;
-  onUpdate: (data: Partial<LoggedExerciseData>) => void;
-  onRemove: () => void;
-  onOpenFormTracker?: (exerciseTitle: string) => void;
+  onUpdate: (index: number, data: Partial<LoggedExerciseData>) => void;
+  onRemove: (index: number) => void;
+  onOpenFormTracker: (exerciseTitle: string) => void;
 }
 
 const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTracker }: ExerciseCardProps) => {
@@ -23,31 +23,31 @@ const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTrac
   const { isAdmin } = useIsAdmin();
   const { hasAccess: canFlag } = useTierAccess("flag_coach");
 
-  const updateSet = (setIndex: number, field: "reps" | "weight", value: number) => {
+  const updateSet = useCallback((setIndex: number, field: "reps" | "weight", value: number) => {
     const newSets = [...exercise.sets];
     newSets[setIndex] = { ...newSets[setIndex], [field]: Math.max(0, value) };
-    onUpdate({ sets: newSets });
-  };
+    onUpdate(index, { sets: newSets });
+  }, [exercise.sets, index, onUpdate]);
 
-  const addSet = () => {
+  const addSet = useCallback(() => {
     const lastSet = exercise.sets[exercise.sets.length - 1];
-    onUpdate({
+    onUpdate(index, {
       sets: [...exercise.sets, { set: exercise.sets.length + 1, reps: lastSet?.reps || 0, weight: lastSet?.weight || 0 }],
     });
-  };
+  }, [exercise.sets, index, onUpdate]);
 
-  const removeSet = () => {
+  const removeSet = useCallback(() => {
     if (exercise.sets.length <= 1) return;
-    onUpdate({ sets: exercise.sets.slice(0, -1) });
-  };
+    onUpdate(index, { sets: exercise.sets.slice(0, -1) });
+  }, [exercise.sets, index, onUpdate]);
 
-  const handleFlagToggle = (checked: boolean) => {
+  const handleFlagToggle = useCallback((checked: boolean) => {
     if (!canFlag) {
       setShowUpsell(true);
       return;
     }
-    onUpdate({ flagForCoach: checked });
-  };
+    onUpdate(index, { flagForCoach: checked });
+  }, [canFlag, index, onUpdate]);
 
   return (
     <>
@@ -73,7 +73,7 @@ const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTrac
                 <Crosshair size={14} />
               </button>
             )}
-            <button onClick={onRemove} className="h-8 w-8 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors">
+            <button onClick={() => onRemove(index)} className="h-8 w-8 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors">
               <Trash2 size={14} />
             </button>
           </div>
@@ -159,11 +159,11 @@ const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTrac
                 <textarea
                   placeholder="How did this feel? Any pain or issues?"
                   value={exercise.clientNotes}
-                  onChange={(e) => onUpdate({ clientNotes: e.target.value })}
+                  onChange={(e) => onUpdate(index, { clientNotes: e.target.value })}
                   className="w-full bg-background border border-border rounded-sm p-3 pr-12 text-sm text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-primary outline-none min-h-[60px] resize-none"
                 />
                 <VoiceNoteButton
-                  onTranscript={(t) => onUpdate({ clientNotes: (exercise.clientNotes ? exercise.clientNotes + " " : "") + t })}
+                  onTranscript={(t) => onUpdate(index, { clientNotes: (exercise.clientNotes ? exercise.clientNotes + " " : "") + t })}
                   className="absolute top-2 right-2"
                 />
               </div>
@@ -173,7 +173,7 @@ const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTrac
                   type="url"
                   placeholder="Form check video link…"
                   value={exercise.videoUrl}
-                  onChange={(e) => onUpdate({ videoUrl: e.target.value })}
+                  onChange={(e) => onUpdate(index, { videoUrl: e.target.value })}
                   className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
                 />
               </div>

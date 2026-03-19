@@ -86,13 +86,17 @@ const WorkoutLogger = () => {
     setShowPicker(false);
   };
 
-  const updateExercise = (index: number, data: Partial<LoggedExerciseData>) => {
+  const updateExercise = useCallback((index: number, data: Partial<LoggedExerciseData>) => {
     setExercises((prev) => prev.map((e, i) => (i === index ? { ...e, ...data } : e)));
-  };
+  }, []);
 
-  const removeExercise = (index: number) => {
+  const removeExercise = useCallback((index: number) => {
     setExercises((prev) => prev.filter((_, i) => i !== index));
-  };
+  }, []);
+
+  const handleOpenFormTracker = useCallback((_title: string) => {
+    // WorkoutLogger doesn't use form tracker, but prop is required
+  }, []);
 
   const handleSave = async () => {
     if (!user || exercises.length === 0) {
@@ -174,8 +178,9 @@ const WorkoutLogger = () => {
           key={i}
           exercise={ex}
           index={i}
-          onUpdate={(data) => updateExercise(i, data)}
-          onRemove={() => removeExercise(i)}
+          onUpdate={updateExercise}
+          onRemove={removeExercise}
+          onOpenFormTracker={handleOpenFormTracker}
         />
       ))}
 
