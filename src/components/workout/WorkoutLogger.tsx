@@ -133,6 +133,8 @@ const WorkoutLogger = () => {
       toast({ title: "Exercises failed to save", description: exErr.message, variant: "destructive" });
     } else {
       toast({ title: "Workout saved! 💪", description: `${exercises.length} exercise${exercises.length > 1 ? "s" : ""} logged` });
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 500);
       setExercises([]);
       setSessionNotes("");
       setRecovery({ sleepHours: "", sleepQuality: null, soreness: null, energy: null, recoveryNotes: "" });
