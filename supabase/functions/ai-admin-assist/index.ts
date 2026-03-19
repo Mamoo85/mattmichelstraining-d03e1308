@@ -138,7 +138,19 @@ serve(async (req) => {
       }
 
       case "form_check": {
-        systemPrompt = `You are Coach Matt Michels reviewing an athlete's exercise form. Based on the exercise and any notes/context provided, write detailed form coaching feedback. Be specific about common mistakes, cues to fix them, and what to look for. Reference biomechanics and the WHY behind each cue. Be encouraging but direct. Under 200 words.`;
+        // Fetch athlete context for personalized form checks
+        let fcAthleteData = "";
+        if (context._targetUserId) {
+          const [profRes, prsRes] = await Promise.all([
+            supabaseClient.from("profiles").select("full_name, athlete_name, subscription_tier").eq("user_id", context._targetUserId).single(),
+            supabaseClient.from("progress_logs").select("exercise_name, weight, reps, logged_at").eq("user_id", context._targetUserId).eq("exercise_name", context.exerciseName).order("logged_at", { ascending: false }).limit(5),
+          ]);
+          const prof = profRes.data;
+          const history = prsRes.data || [];
+          fcAthleteData = `\n\nATHLETE HISTORY on ${context.exerciseName}:\n- ${history.map((h: any) => `${new Date(h.logged_at).toLocaleDateString()}: ${h.weight}lbs x ${h.reps}`).join("\n- ") || "No previous logs"}`;
+        }
+
+        systemPrompt = `You are Coach Matt Michels reviewing an athlete's exercise form. Based on the exercise and any notes/context provided, write detailed form coaching feedback. Be specific about common mistakes, cues to fix them, and what to look for. Reference biomechanics and the WHY behind each cue. Be encouraging but direct. Reference their exercise history when available. Under 200 words.${fcAthleteData}`;
         userPrompt = `Write form check feedback for this athlete:\n\nExercise: ${context.exerciseName}\nAthlete: ${context.athleteName || "Unknown"}\nSets/Reps Prescribed: ${context.setsReps || "Not specified"}\nClient Notes: ${context.clientNotes || "None"}\nHas Video: ${context.hasVideo ? "Yes — reference that you reviewed their video" : "No video submitted"}\nTier: ${context.tier || "Unknown"}\n\nWrite detailed coaching feedback covering:\n1. Key form cues for this specific exercise\n2. Common mistakes to watch for\n3. A specific correction based on their notes (if any)\n4. Encouragement and what to focus on next session\n\nSound like Matt — direct, knowledgeable, no-BS coaching.`;
         break;
       }
