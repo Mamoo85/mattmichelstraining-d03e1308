@@ -17,6 +17,7 @@ import AdminCoachDashboard from "@/components/admin/AdminCoachDashboard";
 import AdminDirectMessages from "@/components/admin/AdminDirectMessages";
 import AdminVideoReview from "@/components/admin/AdminVideoReview";
 import AdminTrialSettings from "@/components/admin/AdminTrialSettings";
+import AdminClientOnboarding from "@/components/admin/AdminClientOnboarding";
 
 /* ── Tab 2: The Training Engine ────────────────────── */
 import AdminPrograms from "@/components/admin/AdminPrograms";
@@ -147,6 +148,7 @@ const Admin = () => {
               </div>
             )},
             { key: "trials", label: "Trial Settings", content: <AdminTrialSettings /> },
+            { key: "onboarding", label: "Onboarding", content: <AdminClientOnboarding /> },
           ]} />
         )}
 
