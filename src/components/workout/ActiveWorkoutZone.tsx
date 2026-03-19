@@ -477,18 +477,11 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
         <footer className="fixed bottom-0 w-full z-50 bg-background/95 backdrop-blur-md border-t border-border px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
           <div className="flex items-center justify-between gap-2 max-w-lg mx-auto">
             {/* Left: Timer readout */}
-            <button
-              onClick={() => setTimerRunning(!timerRunning)}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase tracking-widest transition-all",
-                timerRunning
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {timerRunning ? <Timer size={14} /> : <Play size={14} />}
-              {String(mins).padStart(2, "0")}:{String(secs).padStart(2, "0")}
-            </button>
+            <WorkoutTimer
+              initialElapsed={initialContext?.resumedElapsed || 0}
+              autoStart={timerAutoStart}
+              onElapsedChange={handleElapsedChange}
+            />
 
             {/* Center: Add Exercise */}
             <Button
