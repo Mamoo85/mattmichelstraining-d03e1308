@@ -6,8 +6,7 @@ import m2Logo from "@/assets/m2-logo.jpg";
 import { useSectionVisible } from "@/hooks/useSiteContent";
 import AudienceSelector from "./landing/AudienceSelector";
 import ForParentsCTA from "./landing/ForParentsCTA";
-import Testimonials from "./landing/Testimonials";
-import ParentTestimonialCard from "./landing/ParentTestimonialCard";
+import InstagramSocialBox from "./landing/InstagramSocialBox";
 import M2Difference from "./landing/M2Difference";
 import FindUs from "./landing/FindUs";
 import PortalEntrance from "./landing/PortalEntrance";
@@ -99,11 +98,10 @@ const HeroSection = () => {
           <TrialCTA variant="banner" />
         </div>
 
-        {/* ─── 7. SOCIAL PROOF ─── */}
+        {/* ─── 7. SOCIAL — Instagram Feed ─── */}
         <div className="mb-8">
-          <ParentTestimonialCard />
+          <InstagramSocialBox />
         </div>
-        <Testimonials />
 
         {/* ─── 8. FIND US — always last ─── */}
         {showFindUs && <div className="mb-8"><FindUs /></div>}
