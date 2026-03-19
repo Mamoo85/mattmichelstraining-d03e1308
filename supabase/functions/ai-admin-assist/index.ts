@@ -100,7 +100,7 @@ serve(async (req) => {
       }
 
       case "site_content": {
-        systemPrompt = `You are a copywriter for M² Training, a premium strength & conditioning brand led by Coach Matt Michels. Write compelling, concise website copy. Voice: confident, direct, athlete-focused. No fluff.`;
+        systemPrompt = `You are a copywriter for M² Training, a premium strength & conditioning brand led by Coach Matt Michels. Write compelling, concise website copy. Voice: confident, direct, athlete-focused. No fluff.${catalogContext}`;
         userPrompt = `Rewrite/improve this website content field:\n\nSection: ${context.section}\nField: ${context.label}\nCurrent text: "${context.currentValue}"\n\nWrite improved copy that's more engaging and on-brand. Return ONLY the new text, nothing else.`;
         break;
       }
@@ -130,20 +130,26 @@ serve(async (req) => {
       }
 
       case "parent_report": {
-        systemPrompt = `You are Coach Matt Michels writing a progress report for a parent about their child's training. Be professional, encouraging, and specific about what the athlete is doing well and where they can improve. Parents want to know their money is well spent and their kid is making progress. Include specific data points when available. Keep it under 250 words.`;
+        systemPrompt = `You are Coach Matt Michels writing a progress report for a parent about their child's training. Be professional, encouraging, and specific about what the athlete is doing well and where they can improve. Parents want to know their money is well spent and their kid is making progress. Include specific data points when available. Keep it under 250 words.${catalogContext}`;
         userPrompt = `Write a progress report for this athlete's parent:\n\nAthlete Name: ${context.athleteName}\nSubscription: ${context.tier}\nMember Since: ${context.joinDate}\nTotal Workouts Logged: ${context.totalWorkouts}\nRecent Activity (last 14 days): ${context.recentWorkouts} workouts\nActive Programs: ${context.activePrograms || "None"}\nAvg Sleep: ${context.avgSleep || "Not tracked"}\nAvg Energy: ${context.avgEnergy || "Not tracked"}\nAvg Soreness: ${context.avgSoreness || "Not tracked"}\nRecent Lifts: ${context.recentLifts || "No lifts logged"}\nFlagged Exercises: ${context.flaggedCount || 0}\n${context.coachNotes ? `Coach's Recent Notes: ${context.coachNotes}` : ""}\n\nWrite a parent-friendly progress report covering:\n1. What their athlete has been doing (be specific)\n2. Strengths and improvements observed\n3. Areas to focus on\n4. Encouragement and next steps\n5. Any concerns (if soreness is high, workouts are low, etc.)\n\nAddress the parent directly. Sign off as Coach Matt.`;
         break;
       }
 
       case "ai_copilot": {
-        systemPrompt = `You are an AI performance analyst for M² Training, Coach Matt Michels' strength & conditioning business. Analyze athlete data to flag actionable insights. Be concise, specific, and data-driven. Use a professional but direct tone. Format output as JSON.`;
+        systemPrompt = `You are an AI performance analyst for M² Training, Coach Matt Michels' strength & conditioning business. Analyze athlete data to flag actionable insights. Be concise, specific, and data-driven. Use a professional but direct tone. Format output as JSON.${catalogContext}`;
         userPrompt = `Analyze this athlete roster data and generate actionable coaching insights.\n\nATHLETE DATA:\n${JSON.stringify(context.athletes, null, 2)}\n\nTRIAL USERS:\n${JSON.stringify(context.trialUsers, null, 2)}\n\nToday's date: ${context.today}\n\nGenerate insights in these categories:\n1. "stagnation" — athletes who haven't increased weight on core lifts (Squat, Bench, Deadlift, or similar compound movements) in 3+ weeks. Include their name, the exercise, and a suggested coach message.\n2. "ghost_trials" — trial users who signed up 4+ days ago but have zero workout logs. Include their name, email, days since signup, and a draft check-in message.\n\nReturn ONLY valid JSON (no markdown, no code fences):\n{\n  "stagnation": [{ "name": "...", "exercise": "...", "lastWeight": number, "weeksSince": number, "suggestedMessage": "..." }],\n  "ghost_trials": [{ "name": "...", "email": "...", "daysSinceSignup": number, "draftMessage": "..." }]\n}`;
         break;
       }
 
       case "blog_draft": {
-        systemPrompt = `You are Coach Matt Michels — the "Anti-Influencer" strength coach. You've trained athletes for 20+ years. Your writing style is:\n- Direct, no-BS, conversational\n- Backed by real experience, not internet trends\n- You call out bad fitness advice openly\n- You explain the WHY behind everything (biomechanics, kinesiology)\n- You care deeply about youth athletes and parent education\n- No clickbait, no hype — just real talk\n\nWrite SEO-optimized blog posts that sound like Matt talking to a parent or athlete over coffee. Use short paragraphs, bold key points, and end with a clear takeaway.`;
+        systemPrompt = `You are Coach Matt Michels — the "Anti-Influencer" strength coach. You've trained athletes for 20+ years. Your writing style is:\n- Direct, no-BS, conversational\n- Backed by real experience, not internet trends\n- You call out bad fitness advice openly\n- You explain the WHY behind everything (biomechanics, kinesiology)\n- You care deeply about youth athletes and parent education\n- No clickbait, no hype — just real talk\n\nWrite SEO-optimized blog posts that sound like Matt talking to a parent or athlete over coffee. Use short paragraphs, bold key points, and end with a clear takeaway.${catalogContext}`;
         userPrompt = `Matt typed this raw thought: "${context.rawIdea}"\n\nTurn this into a professional, ~300-word SEO-optimized blog post in Matt's "Anti-Influencer" voice.\n\nRequirements:\n- Catchy, SEO-friendly title (include relevant keywords)\n- Opening hook that grabs parents or athletes\n- 3-4 short paragraphs with **bold** key phrases\n- Practical takeaway at the end\n- Tone: confident, educational, no fluff\n\nReturn ONLY valid JSON (no markdown, no code fences):\n{\n  "title": "...",\n  "body": "... (markdown formatted)",\n  "category": "one of: general, injury-prevention, youth-development, training-fundamentals, recovery, nutrition, parent-guide",\n  "slug": "url-friendly-slug"\n}`;
+        break;
+      }
+
+      case "generate_ad": {
+        systemPrompt = `You are a precise marketing copywriter for M² Training, Coach Matt Michels' strength & conditioning brand. You are provided with a strict JSON array of available services and their exact prices.${catalogContext}\n\nRULE 1: You may ONLY reference the exact item_name provided in the context. RULE 2: You may ONLY use the exact exact_price provided. RULE 3: Do NOT invent, estimate, discount, or hallucinate any items, packages, or prices that are not explicitly listed in the context array. If a price is not in the array, do not mention a price.`;
+        userPrompt = `Generate a marketing ad/copy for:\nTarget: ${context.target || "general audience"}\nPlatform: ${context.platform || "website"}\nTone: ${context.tone || "confident, direct"}\nFocus: ${context.focus || "general services"}\n\nReturn ONLY valid JSON (no markdown, no code fences):\n{\n  "title": "ad headline",\n  "body": "full ad copy (markdown ok)",\n  "cta": "call to action text"\n}`;
         break;
       }
 
