@@ -153,10 +153,50 @@ const Pricing = () => {
       />
       <AppNavbar />
       <div className="container pt-24 pb-16">
+        {/* ═══════════ In-Person Hero Banner ═══════════ */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative overflow-hidden border border-primary/30 bg-gradient-to-br from-primary/10 via-background to-background mb-8 max-w-3xl mx-auto"
+        >
+          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/8 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
+          <div className="relative p-6 sm:p-8 space-y-4">
+            <div className="flex items-center gap-2">
+              <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-primary bg-primary/10 border border-primary/20 px-2.5 py-1">
+                Grosse Pointe Park, MI
+              </span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-foreground leading-tight">
+              Train With Matt.<br />
+              <span className="text-primary">In Person. One-on-One.</span>
+            </h2>
+            <p className="text-sm text-muted-foreground max-w-lg leading-relaxed">
+              Start with a monthly 1-on-1 session. Matt builds your foundation, tracks your movement with
+              <strong className="text-foreground"> advanced biomechanics technology</strong>, and programs
+              everything around what your body actually needs. Add sessions at a discount as you grow.
+            </p>
+            <div className="flex flex-wrap gap-3 pt-1">
+              <Link
+                to="/schedule"
+                className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
+              >
+                <Calendar size={14} /> Book Your First Session
+              </Link>
+              <a
+                href="mailto:matthewmichels4@gmail.com?subject=Training%20Inquiry"
+                className="inline-flex items-center gap-2 border-2 border-primary/40 text-primary px-5 py-3 text-xs font-bold uppercase tracking-widest hover:bg-primary/10 transition-m2"
+              >
+                Email Matt
+              </a>
+            </div>
+          </div>
+        </motion.div>
+
         {/* Value comparison banner */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
           className="bg-primary/5 border border-primary/15 p-4 md:p-5 mb-8 max-w-3xl mx-auto"
         >
           <p className="text-xs text-muted-foreground leading-relaxed text-center">
