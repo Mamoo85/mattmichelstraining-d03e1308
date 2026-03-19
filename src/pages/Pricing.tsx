@@ -191,6 +191,13 @@ const Pricing = () => {
           )}
         </div>
 
+        {/* Trial CTA — top position */}
+        {!subscribed && (
+          <div className="mb-8 max-w-2xl mx-auto">
+            <TrialCTA variant="comparison" />
+          </div>
+        )}
+
         {/* Promo code input */}
         {!subscribed && (
           <div className="max-w-md mx-auto mb-8">
