@@ -77,7 +77,7 @@ const HeroSection = () => {
                 <br />
                 <span className="text-primary">Real coaching. Real results.</span>
               </h1>
-              <p className="text-sm md:text-base text-foreground-soft max-w-xl mx-auto leading-relaxed">
+              <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto leading-relaxed">
                 In-person training in Grosse Pointe. Online programs anywhere.
                 Ages 12 to 60+. The same coach either way.
               </p>
@@ -131,7 +131,7 @@ const HeroSection = () => {
         {/* ─── 9. THE M² DIFFERENCE ─── */}
         <M2Difference />
 
-        {/* ─── 7. MEMBERSHIP CTA ─── */}
+        {/* ─── 10. MEMBERSHIP CTA ─── */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -166,10 +166,10 @@ const HeroSection = () => {
           </div>
         </motion.div>
 
-        {/* ─── 8. EMAIL CAPTURE ─── */}
+        {/* ─── 11. EMAIL CAPTURE ─── */}
         <EmailCapture />
 
-        {/* ─── 9. FIND US — always last ─── */}
+        {/* ─── 12. FIND US — always last ─── */}
         {showFindUs && <div className="mb-8"><FindUs /></div>}
 
         {/* FOOTER */}
