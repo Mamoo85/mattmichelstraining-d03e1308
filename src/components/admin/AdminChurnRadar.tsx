@@ -181,7 +181,7 @@ const AdminChurnRadar = () => {
 
       <ConfirmActionModal
         open={!!dismissTarget}
-        onClose={() => setDismissTarget(null)}
+        onOpenChange={(open) => { if (!open) setDismissTarget(null); }}
         onConfirm={handleDismiss}
         title="Dismiss Alert"
         description={`Dismiss churn alert for ${dismissTarget?.full_name}? You can still reach out manually later.`}
