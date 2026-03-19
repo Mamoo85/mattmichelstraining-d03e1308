@@ -211,7 +211,7 @@ const FoundationPrograms = () => {
           <div className="grid grid-cols-3 gap-2 mb-3">
             {[
               { icon: Camera, label: "2 Photos", desc: "Front + side" },
-              { icon: Brain, label: "AI Scans", desc: "Joint angles" },
+              { icon: Brain, label: "Full Scan", desc: "Joint angles" },
               { icon: Shield, label: "Custom Fix", desc: "Correctives" },
             ].map(({ icon: Icon, label, desc }) => (
               <div key={label} className="text-center p-2 bg-background border border-border">
