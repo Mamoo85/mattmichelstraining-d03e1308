@@ -33,7 +33,7 @@ const TIER_OPTIONS = [
     name: "M² Custom",
     price: "$99.99/mo",
     icon: Zap,
-    perks: ["Everything in Foundation", "Custom programming + AI builder", "1-on-1 video assessment", "Gift a session", "20% off programs"],
+    perks: ["Everything in Foundation", "Custom programming + AI builder", "In-person or online session (optional)", "Gift a session", "20% off programs"],
   },
 ];
 

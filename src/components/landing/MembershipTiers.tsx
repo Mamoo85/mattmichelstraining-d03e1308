@@ -35,7 +35,7 @@ const MEMBERSHIP_TIERS = [
     price: "$99.99/mo",
     highlights: [
       "Everything in Foundation",
-      "1-on-1 video movement assessment",
+      "In-person or online movement assessment (optional)",
       "Advanced biomechanics tracking",
       "Priority coach messaging",
     ],

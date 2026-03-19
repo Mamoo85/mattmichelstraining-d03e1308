@@ -36,7 +36,7 @@ const NEXT_STEPS: Record<CheckoutProductType, { icon: typeof FileText; text: str
   },
   custom: {
     icon: Video,
-    text: "After checkout, you will complete your intake form and schedule your mandatory 1-on-1 video assessment with Coach Matt to build your custom protocol.",
+    text: "After checkout, you will complete your intake form and optionally schedule an in-person or online session with Coach Matt to build your custom protocol.",
   },
   team_elite: {
     icon: Users,

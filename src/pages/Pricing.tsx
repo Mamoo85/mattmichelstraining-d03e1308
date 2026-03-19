@@ -57,14 +57,14 @@ const TIER_CARDS: {
     features: [
       "Everything in Foundation, plus…",
       "A program built just for you by Coach Matt",
-      "1-on-1 video movement assessment ($50 value included)",
+      "In-person or online movement assessment ($50 value — optional)",
       "Direct message Coach Matt anytime",
       "🎁 Gift a training session to a friend",
       "Fastest response times on form checks",
     ],
     cta: "Go Custom",
     subtitle: "Your own program from a 20-year coaching vet — for less than one session.",
-    badge: "Includes a $50 1-on-1 Video Assessment",
+    badge: "Includes a $50 In-Person or Online Session (Optional)",
   },
   {
     key: "team_elite",
