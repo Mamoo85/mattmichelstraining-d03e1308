@@ -766,6 +766,48 @@ export type Database = {
           },
         ]
       }
+      marketing_drafts: {
+        Row: {
+          admin_notes: string | null
+          approved_at: string | null
+          approved_by: string | null
+          body: string
+          created_at: string
+          draft_type: string
+          generated_by: string
+          id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          body: string
+          created_at?: string
+          draft_type?: string
+          generated_by?: string
+          id?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          body?: string
+          created_at?: string
+          draft_type?: string
+          generated_by?: string
+          id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       master_templates: {
         Row: {
           ai_findings: Json | null
@@ -1727,6 +1769,39 @@ export type Database = {
           is_available?: boolean
           slot_date?: string
           start_time?: string
+        }
+        Relationships: []
+      }
+      service_catalog: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          exact_price: number
+          id: string
+          is_active: boolean
+          item_name: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string
+          exact_price: number
+          id?: string
+          is_active?: boolean
+          item_name: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          exact_price?: number
+          id?: string
+          is_active?: boolean
+          item_name?: string
+          updated_at?: string
         }
         Relationships: []
       }
