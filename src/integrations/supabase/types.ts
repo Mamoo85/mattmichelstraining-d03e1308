@@ -2653,6 +2653,10 @@ export type Database = {
         }
         Returns: number
       }
+      check_user_visibility: {
+        Args: { _field: string; _target_user_id: string }
+        Returns: boolean
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
