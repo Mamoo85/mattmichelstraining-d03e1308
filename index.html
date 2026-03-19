@@ -16,11 +16,18 @@
     <meta property="og:url" content="https://m2training.com/" />
     <meta property="og:site_name" content="M² Training" />
     <link rel="canonical" href="https://m2training.com/" />
-    <link rel="preconnect" href="https://eauvubfpanpeuxsrqesu.supabase.co" />
+    <link rel="preconnect" href="https://eauvubfpanpeuxsrqesu.supabase.co" crossorigin />
+    <link rel="preconnect" href="https://cdn.gpteng.co" crossorigin />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&family=Oswald:wght@600;700;800&display=swap" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&family=Oswald:wght@600;700;800&display=swap" media="print" onload="this.media='all'" />
+    <style>
+      /* Critical inline CSS for FCP — matches design tokens */
+      :root { --background: 0 0% 5%; --foreground: 0 0% 93%; --primary: 17 84% 50%; --muted-foreground: 0 0% 55%; }
+      body { margin: 0; background: hsl(0 0% 5%); color: hsl(0 0% 93%); font-family: 'Geist Mono', ui-monospace, monospace; }
+      #root { min-height: 100vh; }
+    </style>
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
