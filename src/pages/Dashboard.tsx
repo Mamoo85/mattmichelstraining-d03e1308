@@ -59,16 +59,6 @@ const Dashboard = () => {
     });
   }, [user]);
 
-  const handleManageSubscription = useCallback(async () => {
-    setPortalLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("customer-portal");
-      if (error) throw error;
-      if (data?.url) window.open(data.url, "_blank");
-    } catch { /* silent */ }
-    finally { setPortalLoading(false); }
-  }, []);
-
   const athleteDisplay = profile?.athlete_name || profile?.full_name || "Athlete";
   const isNewUser = hasPrograms === false && hasLogs === false;
 
