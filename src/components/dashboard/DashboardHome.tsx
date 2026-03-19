@@ -1,4 +1,4 @@
-import { memo, lazy, Suspense, useState, useCallback } from "react";
+import { memo, lazy, Suspense, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Play } from "lucide-react";
 import MonthlyFocusWidget from "@/components/MonthlyFocusWidget";
