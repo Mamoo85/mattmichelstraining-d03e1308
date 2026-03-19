@@ -223,7 +223,7 @@ const FoundationPrograms = () => {
           </div>
           <p className="text-xs text-muted-foreground">
             Upload a front and side photo or video of <strong className="text-foreground">5 overhead squats</strong>. 
-            Matt's AI analyzes alignment, compensations, and joint angles — then he builds correctives into your program.
+            The system analyzes alignment, compensations, and joint angles — then Matt builds correctives into your program.
           </p>
         </div>
       </motion.div>
