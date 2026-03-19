@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -40,7 +40,7 @@ const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) =
   const config = getLiftConfig(activeLift);
   const repMax = config?.repMax ?? 3;
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!effectiveUserId) { setLoading(false); return; }
     setLoading(true);
     const { data: rawLogs } = await supabase
@@ -59,12 +59,11 @@ const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) =
       );
     }
     setLoading(false);
-  };
+  }, [effectiveUserId, activeLift]);
 
   useEffect(() => {
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [effectiveUserId, activeLift]);
+  }, [fetchData]);
 
   const current = data.length > 0 ? data[data.length - 1].value : 0;
   const previous = data.length > 1 ? data[data.length - 2].value : current;
