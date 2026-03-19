@@ -50,6 +50,8 @@ import AdminBroadcasts from "@/components/admin/AdminBroadcasts";
 import AdminSubscriberList from "@/components/admin/AdminSubscriberList";
 import AdminNewsletterComposer from "@/components/admin/AdminNewsletterComposer";
 import AdminSendHistory from "@/components/admin/AdminSendHistory";
+import AdminServiceCatalog from "@/components/admin/AdminServiceCatalog";
+import AdminMarketingDrafts from "@/components/admin/AdminMarketingDrafts";
 
 const MASTER_TABS = [
   { key: "roster", label: "The Roster", icon: Users, desc: "Users · Support · Families" },
