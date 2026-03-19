@@ -17,6 +17,7 @@ import ConfirmActionModal from "@/components/ConfirmActionModal";
 import InterceptGateway from "./InterceptGateway";
 import IntervalTimer from "./IntervalTimer";
 import PostWorkoutSummary from "./PostWorkoutSummary";
+import WorkoutTimer from "./WorkoutTimer";
 import LiveFormTracker from "./LiveFormTracker";
 import ReadinessGate, { calculateAdjustments, type ReadinessResult } from "./ReadinessGate";
 import type { LoggedExerciseData } from "./WorkoutLogger";
