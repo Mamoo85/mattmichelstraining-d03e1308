@@ -469,14 +469,15 @@ const MealPrepTool = () => {
         {loading ? "Generating…" : "Generate Meal Plan"}
       </Button>
       {result && (
-        <>
+        <div className="space-y-3">
+          <AiResultActions result={result} onDiscard={() => { setResult(""); setUsage(null); }} onRegenerate={run} toolLabel="Meal Prep" />
           <UsageBadge usage={usage} />
           <Card>
             <CardContent className="pt-4 prose prose-sm max-w-none dark:prose-invert">
               <ReactMarkdown>{result}</ReactMarkdown>
             </CardContent>
           </Card>
-        </>
+        </div>
       )}
     </div>
   );
