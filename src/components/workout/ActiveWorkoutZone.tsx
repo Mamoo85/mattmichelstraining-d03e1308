@@ -72,6 +72,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
     initialContext?.resumedRecovery || { ...DEFAULT_RECOVERY }
   );
   const [workoutLogId, setWorkoutLogId] = useState<string | null>(null);
+  const [formTrackerExercise, setFormTrackerExercise] = useState<string | null>(null);
   const workoutTitle = initialContext?.title || "Workout";
 
   // Timer
