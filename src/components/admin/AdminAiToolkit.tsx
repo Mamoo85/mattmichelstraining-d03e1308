@@ -23,7 +23,13 @@ const PostureCapture = lazy(() => import("@/components/dashboard/PostureCapture"
 const AiExerciseSubstitution = lazy(() => import("@/components/workout/AiExerciseSubstitution"));
 const AiRecoveryAdvisor = lazy(() => import("@/components/progress/AiRecoveryAdvisor"));
 const AiIntakeAnalyzer = lazy(() => import("@/components/programs/AiIntakeAnalyzer"));
-const IntervalTimer = lazy(() => import("@/components/workout/IntervalTimer"));
+const AdminAiCopilot = lazy(() => import("@/components/admin/AdminAiCopilot"));
+
+const ToolLoader = () => (
+  <div className="flex justify-center py-20">
+    <Loader2 className="animate-spin text-primary" size={28} />
+  </div>
+);
 
 type ActiveTool =
   | null
