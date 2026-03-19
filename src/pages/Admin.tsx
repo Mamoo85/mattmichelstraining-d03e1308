@@ -30,6 +30,7 @@ import AdminAiCopilot from "@/components/admin/AdminAiCopilot";
 import AdminRecoveryHeatmap from "@/components/admin/AdminRecoveryHeatmap";
 import AdminSchedule from "@/components/admin/AdminSchedule";
 import AdminMonthlyFocus from "@/components/admin/AdminMonthlyFocus";
+import AdminBiomechanics from "@/components/admin/AdminBiomechanics";
 
 /* ── Tab 3: The Vault ──────────────────────────────── */
 import AdminFinancials from "@/components/admin/AdminFinancials";
