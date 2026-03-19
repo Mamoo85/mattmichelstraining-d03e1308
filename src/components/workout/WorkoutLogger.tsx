@@ -184,7 +184,7 @@ const WorkoutLogger = () => {
       ) : (
         <button
           onClick={() => setShowPicker(true)}
-          className="w-full h-14 border-2 border-dashed border-border text-muted-foreground hover:border-primary hover:text-primary flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-widest transition-all"
+          className="w-full h-14 border-2 border-dashed border-border text-muted-foreground hover:border-primary hover:text-primary hover:brightness-110 active:scale-95 flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-widest transition-transform duration-100"
         >
           <Plus size={18} /> Add Exercise
         </button>
