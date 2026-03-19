@@ -78,7 +78,7 @@ const TIER_CARDS: {
     ],
     cta: "Go Team/Elite",
     subtitle: "Train a team or manage multiple athletes under one plan.",
-    badge: "Includes a $50 1-on-1 Video Assessment",
+    badge: null,
   },
 ];
 

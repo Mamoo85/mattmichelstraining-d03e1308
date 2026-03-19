@@ -1,5 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { ShieldCheck, FileText, Rocket, Video, Loader2 } from "lucide-react";
+import { ShieldCheck, FileText, Rocket, Video, Users, Loader2 } from "lucide-react";
 
 export type CheckoutProductType = "pdf" | "basic" | "foundation" | "custom" | "custom_program" | "team_elite" | "program" | "session";
 
@@ -39,8 +39,8 @@ const NEXT_STEPS: Record<CheckoutProductType, { icon: typeof FileText; text: str
     text: "After checkout, you will complete your intake form and schedule your mandatory 1-on-1 video assessment with Coach Matt to build your custom protocol.",
   },
   team_elite: {
-    icon: Video,
-    text: "After checkout, you will be prompted to schedule your mandatory 1-on-1 video assessment with Coach Matt so we can build your comprehensive periodization plan.",
+    icon: Users,
+    text: "After checkout, you'll get access to roster management and full-season training plans for your entire team.",
   },
   session: {
     icon: Rocket,
