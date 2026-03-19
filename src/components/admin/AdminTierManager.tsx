@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import {
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from "@/components/ui/table";
-import { Plus, Trash2, Save, Crown, ShieldCheck, Zap, Star, Users, Loader2 } from "lucide-react";
+import { Plus, Trash2, Save, ShieldCheck, Zap, Star, Users, Loader2 } from "lucide-react";
 
 const TIERS = [
   { key: "tier_basic", label: "Basic", icon: Star, color: "text-blue-400" },
