@@ -48,6 +48,16 @@ serve(async (req) => {
 
     const { type, context } = await req.json();
 
+    // ── RAG: Fetch service catalog as source of truth ──
+    const { data: catalog } = await supabaseClient
+      .from("service_catalog")
+      .select("item_name, exact_price, description, category")
+      .eq("is_active", true);
+
+    const catalogContext = catalog && catalog.length > 0
+      ? `\n\nAVAILABLE INVENTORY CONTEXT (Source of Truth):\n${JSON.stringify(catalog)}\n\nRULE 1: You may ONLY reference the exact item_name provided in the context. RULE 2: You may ONLY use the exact exact_price provided. RULE 3: Do NOT invent, estimate, discount, or hallucinate any items, packages, or prices that are not explicitly listed in the context array. If a price is not in the array, do not mention a price.`
+      : "";
+
     let systemPrompt = "";
     let userPrompt = "";
 
