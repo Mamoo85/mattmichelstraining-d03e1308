@@ -57,6 +57,7 @@ const LogForm = ({ activeLift, repMax, effectiveUserId, onLogged }: LogFormProps
   const [logDate, setLogDate] = useState<Date>(new Date());
   const [logging, setLogging] = useState(false);
   const [listening, setListening] = useState(false);
+  const [logSuccess, setLogSuccess] = useState(false);
   const recognitionRef = useRef<any>(null);
 
   const startListening = useCallback(() => {
