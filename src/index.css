@@ -246,16 +246,13 @@
   }
 
   /* Avatar print overrides */
-  .print\\:fill-gray-200 { fill: #e5e7eb !important; }
-  .print\\:fill-gray-600 { fill: #4b5563 !important; }
-  .print\\:stroke-gray-400 { stroke: #9ca3af !important; }
-  .print\\:stroke-gray-500 { stroke: #6b7280 !important; }
-  .print\\:stroke-gray-800 { stroke: #1f2937 !important; }
-  .print\\:bg-white { background: #ffffff !important; }
-  .print\\:border-gray-300 { border-color: #d1d5db !important; }
-  .print\\:bg-gray-100 { background: #f3f4f6 !important; }
-  .print\\:text-gray-800 { color: #1f2937 !important; }
-  .print\\:\\[filter\\:none\\] { filter: none !important; }
+  .avatar-skeleton { stroke: #6b7280 !important; }
+  .avatar-muscle-inactive { fill: #e5e7eb !important; stroke: #9ca3af !important; }
+  .avatar-muscle-active { fill: #4b5563 !important; stroke: #1f2937 !important; filter: none !important; }
+  .avatar-cyber-grid { display: none !important; }
+  .avatar-label { background: #f3f4f6 !important; color: #1f2937 !important; border-color: #d1d5db !important; }
+  .avatar-container { background: #ffffff !important; border-color: #d1d5db !important; }
+  .avatar-title { color: #1f2937 !important; }
 
   /* Ensure cards have visible borders */
   [style*="border"] {

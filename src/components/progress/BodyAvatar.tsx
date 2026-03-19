@@ -139,8 +139,8 @@ const BodyAvatar = ({ activeLift }: BodyAvatarProps) => {
         </defs>
 
         {/* Circular cyber-grid background */}
-        <circle cx="31.5" cy="42" r="36" fill={`url(#cyberGrid-${view})`} className="print:hidden" />
-        <circle cx="31.5" cy="42" r="36" fill="none" stroke="hsl(185, 100%, 48%)" strokeWidth="0.2" strokeOpacity="0.08" className="print:hidden" />
+        <circle cx="31.5" cy="42" r="36" fill={`url(#cyberGrid-${view})`} className="avatar-cyber-grid" />
+        <circle cx="31.5" cy="42" r="36" fill="none" stroke="hsl(185, 100%, 48%)" strokeWidth="0.2" strokeOpacity="0.08" className="avatar-cyber-grid" />
 
         {/* Skeleton wireframe */}
         {skeleton.map((d, i) => (
@@ -150,7 +150,7 @@ const BodyAvatar = ({ activeLift }: BodyAvatarProps) => {
             fill="none"
             stroke="hsl(215, 20%, 28%)"
             strokeWidth="0.4"
-            className="print:stroke-gray-500"
+            className="avatar-skeleton"
           />
         ))}
 
@@ -161,14 +161,14 @@ const BodyAvatar = ({ activeLift }: BodyAvatarProps) => {
             return (m.view === "back" || m.view === "both") && !activeMs.includes(key);
           })
           .map(([key, muscle]) => (
-            <path
+          <path
               key={key}
               d={muscle.d}
               fill="hsl(215, 20%, 18%)"
               fillOpacity={0.3}
               stroke="hsl(215, 20%, 25%)"
               strokeWidth="0.3"
-              className="print:fill-gray-200 print:stroke-gray-400"
+              className="avatar-muscle-inactive"
             />
           ))}
 
@@ -179,7 +179,7 @@ const BodyAvatar = ({ activeLift }: BodyAvatarProps) => {
             return (m.view === "back" || m.view === "both") && activeMs.includes(key);
           })
           .map(([key, muscle]) => (
-            <path
+          <path
               key={key}
               d={muscle.d}
               fill={`url(#thermal-${view})`}
@@ -187,7 +187,7 @@ const BodyAvatar = ({ activeLift }: BodyAvatarProps) => {
               stroke="hsl(0, 90%, 50%)"
               strokeWidth="0.6"
               filter={`url(#thermalGlow-${view})`}
-              className="print:fill-gray-600 print:stroke-gray-800 print:[filter:none]"
+              className="avatar-muscle-active"
             />
           ))}
       </svg>
@@ -196,14 +196,14 @@ const BodyAvatar = ({ activeLift }: BodyAvatarProps) => {
 
   return (
     <div
-      className="p-3 print:bg-white print:border-gray-300"
+      className="p-3 avatar-container"
       style={{
         background: "hsl(var(--synth-card))",
         border: "1px solid hsl(var(--synth-cyan) / 0.12)",
       }}
     >
       <h3
-        className="text-[9px] font-bold uppercase tracking-[0.2em] mb-2 font-mono text-center print:text-gray-800"
+        className="text-[9px] font-bold uppercase tracking-[0.2em] mb-2 font-mono text-center avatar-title"
         style={{ color: "hsl(var(--synth-cyan))" }}
       >
         Target · {activeLift}
@@ -219,7 +219,7 @@ const BodyAvatar = ({ activeLift }: BodyAvatarProps) => {
         {activeMs.map((key) => (
           <span
             key={key}
-            className="text-[7px] font-mono font-bold uppercase tracking-widest px-1.5 py-px print:bg-gray-100 print:text-gray-800 print:border-gray-300"
+            className="text-[7px] font-mono font-bold uppercase tracking-widest px-1.5 py-px avatar-label"
             style={{
               color: "hsl(var(--synth-orange))",
               background: "hsl(var(--synth-orange) / 0.08)",
