@@ -8,84 +8,62 @@ import ParentChildManager from "@/components/ParentChildManager";
 import { useContentMap } from "@/hooks/useSiteContent";
 import { useAuth } from "@/hooks/useAuth";
 import {
-  ArrowRight, Shield, AlertTriangle, TrendingUp, Clock,
-  ChevronRight, GraduationCap, Heart, Zap, BookOpen,
-  Calendar, Mail, Phone, MapPin, Users
+  ArrowRight, Shield, TrendingUp,
+  ChevronRight, GraduationCap, Heart, Zap,
+  Calendar, MapPin, Users
 } from "lucide-react";
 import m2Logo from "@/assets/m2-logo.jpg";
 import TechShowcaseCard from "@/components/landing/TechShowcaseCard";
 
 /* ---------- data ---------- */
 
-const INJURY_STATS = [
-  { stat: "3.5 million", label: "youth sports injuries per year in the U.S. — most from overuse, not contact", source: "Stanford Children's Health" },
-  { stat: "50%", label: "are preventable with proper strength training and recovery programming", source: "American Academy of Pediatrics" },
-  { stat: "62%", label: "of organized-sport injuries happen during practice — not games", source: "Safe Kids Worldwide" },
-  { stat: "#1 cause", label: "Overuse and bad programming. Not bad luck. Proper strength training prevents this.", source: "Johns Hopkins Medicine" },
-];
-
-const PRESS_QUOTE = {
-  outlet: "Grosse Pointe News",
-  quote: "His business, built entirely by word of mouth, is a testament to the impact he's had on his clients. Whether he's coaching middle schoolers, training college-bound athletes or helping everyday individuals move and feel better, Michels is, at his core, a teacher.",
-  url: "https://www.grossepointenews.com/articles/strength-in-motion-how-one-trainer-turned-passion-into-purpose/",
-};
-
-const TIMELINE = [
+const MEMBERSHIP_TIERS = [
   {
-    age: "11–13",
-    title: "Foundation Phase — Youth Strength Basics",
-    desc: "Movement quality, body awareness, and coordination through age-appropriate strength training. No heavy loading — ever. This is about building the operating system their body will run on for the next decade.",
-    action: "Custom Program — from $40",
-    link: "/shop",
-  },
-  {
-    age: "14–15",
-    title: "Work Capacity Phase — Building Durability",
-    desc: "Introduce structured resistance training focused on joints, tendons, and connective tissue BEFORE adding load. This is the phase most youth programs skip — and where injuries start.",
-    action: "Custom Program — from $40",
-    link: "/shop",
-  },
-  {
-    age: "16–17",
-    title: "Strength & Power Phase — Sport Performance",
-    desc: "Now they're ready. Progressive overload, sport-specific strength development, and competition prep. Their body can handle it because you didn't rush the first two phases.",
-    action: "4-Week Custom Program — $80",
-    link: "/shop",
-  },
-  {
-    age: "18+",
-    title: "College Prep Phase — Peak Durability",
-    desc: "Peak performance strength programming. Matt has sent 50+ athletes to the college level. This phase is about durability under volume.",
-    action: "8-Week Custom Program — $160",
-    link: "/shop",
-  },
-];
-
-const FUNNEL_STEPS = [
-  {
-    step: "1",
-    title: "Start Your Free 14-Day Trial",
-    desc: "Create a parent account and start your 14-day trial. Full portal access — programs, progress tracking, and direct access to Matt. Cancel anytime.",
-    icon: Shield,
-    cta: "Start Free Trial",
+    name: "Basic",
+    price: "$14.99/mo",
+    highlights: [
+      "Full exercise library access (200+ exercises)",
+      "10 pre-loaded training workouts",
+      "Monthly Focus Plan with tracking",
+      "Progress logging & coach feedback",
+    ],
+    cta: "Start 14-Day Free Trial",
     link: "/auth?redirect=/trial-welcome",
+    accent: false,
   },
   {
-    step: "2",
-    title: "Invite Your Athlete",
-    desc: "Send your kid an invite link. They create their own login, and their account is automatically linked to yours. You see everything they log.",
-    icon: Users,
-    cta: "Set Up Below",
-    link: "#parent-portal",
+    name: "Foundation",
+    price: "$39.99/mo",
+    highlights: [
+      "Everything in Basic",
+      "8-week periodized training blocks",
+      "Fix It rehab & recovery library",
+      "Monthly 'Real Deal' newsletter",
+    ],
+    cta: "Start 14-Day Free Trial",
+    link: "/auth?redirect=/trial-welcome",
+    accent: true,
   },
   {
-    step: "3",
-    title: "Pick a Plan That Fits",
-    desc: "After the trial, choose a membership tier or grab a one-time $20 program. In-person sessions available in Grosse Pointe for local families.",
-    icon: GraduationCap,
-    cta: "View Plans",
-    link: "/pricing",
+    name: "Custom",
+    price: "$99.99/mo",
+    highlights: [
+      "Everything in Foundation",
+      "1-on-1 video movement assessment",
+      "Advanced biomechanics tracking",
+      "Priority coach messaging",
+    ],
+    cta: "Start 14-Day Free Trial",
+    link: "/auth?redirect=/trial-welcome",
+    accent: false,
   },
+];
+
+const PARENT_CHILD_BENEFITS = [
+  { icon: Shield, title: "Full Visibility", desc: "See every workout your athlete logs — sets, reps, weights, and coach feedback." },
+  { icon: TrendingUp, title: "Progress Tracking", desc: "Monitor strength gains, recovery trends, and training consistency over time." },
+  { icon: Heart, title: "Independent Tiers", desc: "Choose different subscription levels for yourself and each linked athlete." },
+  { icon: Zap, title: "Direct Coach Access", desc: "Flag exercises for Matt's review and message him directly from the portal." },
 ];
 
 const fade = (delay: number) => ({
@@ -171,78 +149,70 @@ const ForParents = () => {
         </motion.div>
 
 
-        {/* COLLEGE PREP TIMELINE */}
-        <motion.div {...fade(0.15)} className="mb-12" id="youth-timeline">
+        {/* MEMBERSHIP TIERS */}
+        <motion.div {...fade(0.15)} className="mb-12">
           <div className="flex items-center gap-2 mb-4">
-            <Clock size={18} className="text-primary" />
+            <GraduationCap size={18} className="text-primary" />
             <h2 className="text-sm font-bold uppercase tracking-widest text-foreground">
-              Youth Strength Development Timeline
+              Membership Plans for Your Athlete
             </h2>
           </div>
           <p className="text-sm text-muted-foreground mb-6 max-w-2xl leading-relaxed">
-            There's a right time for everything. Rush the process and your athlete pays for it — usually with an overuse injury.
+            Every plan includes a 14-day free trial. Pick the level that fits your athlete — upgrade or cancel anytime.
           </p>
-          <div className="space-y-3">
-            {TIMELINE.map((t) => (
-              <div key={t.age} className="bg-card shadow-m2 p-5 md:p-6 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-14 h-14 bg-primary/10 border border-primary/30 flex items-center justify-center">
-                    <span className="text-sm font-mono font-bold text-primary">{t.age}</span>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {MEMBERSHIP_TIERS.map((t) => (
+              <div key={t.name} className={`bg-card shadow-m2 p-5 flex flex-col relative overflow-hidden ${t.accent ? "ring-2 ring-primary" : ""}`}>
+                {t.accent && (
+                  <div className="absolute top-0 left-0 right-0 bg-primary text-primary-foreground text-[9px] font-bold uppercase tracking-widest text-center py-1">
+                    Most Popular
                   </div>
-                  <div className="flex-1">
-                    <h3 className="text-sm md:text-base font-bold text-foreground mb-1">{t.title}</h3>
-                    <p className="text-xs md:text-sm text-muted-foreground leading-relaxed mb-3">{t.desc}</p>
-                    <Link
-                      to={t.link}
-                      className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:opacity-80 transition-m2"
-                    >
-                      {t.action}
-                      <ChevronRight size={12} />
-                    </Link>
-                  </div>
+                )}
+                <div className={t.accent ? "mt-4" : ""}>
+                  <h3 className="text-base font-bold text-foreground mb-0.5">{t.name}</h3>
+                  <p className="text-lg font-mono font-bold text-primary mb-3">{t.price}</p>
+                  <ul className="space-y-2 mb-4 flex-1">
+                    {t.highlights.map((h) => (
+                      <li key={h} className="flex items-start gap-2 text-xs text-muted-foreground leading-relaxed">
+                        <ChevronRight size={10} className="text-primary mt-0.5 flex-shrink-0" />
+                        {h}
+                      </li>
+                    ))}
+                  </ul>
+                  <Link
+                    to={t.link}
+                    className={`inline-flex items-center justify-center gap-2 w-full py-2.5 text-[10px] font-bold uppercase tracking-widest transition-m2 ${
+                      t.accent
+                        ? "bg-primary text-primary-foreground hover:opacity-90"
+                        : "border border-primary/40 text-primary hover:bg-primary/10"
+                    }`}
+                  >
+                    {t.cta}
+                    <ArrowRight size={12} />
+                  </Link>
                 </div>
               </div>
             ))}
           </div>
+          <p className="text-[10px] text-muted-foreground mt-3 text-center">
+            <Link to="/pricing" className="text-primary hover:opacity-80 transition-m2">View full plan comparison →</Link>
+          </p>
         </motion.div>
 
-
-
-        {/* CLEAR PATH */}
+        {/* PARENT-CHILD BENEFITS */}
         <motion.div {...fade(0.25)} className="mb-12">
           <div className="flex items-center gap-2 mb-4">
-            <TrendingUp size={18} className="text-primary" />
+            <Users size={18} className="text-primary" />
             <h2 className="text-sm font-bold uppercase tracking-widest text-foreground">
-              Your Path to Stronger, Safer Athletes
+              Why Link Your Parent Account
             </h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {FUNNEL_STEPS.map((f) => (
-              <div key={f.step} className="bg-card shadow-m2 p-5 flex flex-col relative overflow-hidden">
-                <div className="absolute top-3 right-3">
-                  <span className="text-3xl font-mono font-bold text-primary/15">{f.step}</span>
-                </div>
-                <f.icon size={22} className="text-primary mb-3" />
-                <h3 className="text-sm font-bold text-foreground mb-1">{f.title}</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed mb-4 flex-1">{f.desc}</p>
-                {f.link.startsWith("#") ? (
-                  <a
-                    href={f.link}
-                    className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:opacity-80 transition-m2"
-                  >
-                    {f.cta}
-                    <ArrowRight size={12} />
-                  </a>
-                ) : (
-                  <Link
-                    to={f.link}
-                    className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:opacity-80 transition-m2"
-                  >
-                    {f.cta}
-                    <ArrowRight size={12} />
-                  </Link>
-                )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {PARENT_CHILD_BENEFITS.map((b) => (
+              <div key={b.title} className="bg-card shadow-m2 p-5">
+                <b.icon size={20} className="text-primary mb-2" />
+                <h3 className="text-sm font-bold text-foreground mb-1">{b.title}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">{b.desc}</p>
               </div>
             ))}
           </div>
