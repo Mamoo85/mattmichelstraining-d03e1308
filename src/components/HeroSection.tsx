@@ -108,8 +108,7 @@ const HeroSection = () => {
         {/* ─── 2. SPORT PICKER — What do you play? ─── */}
         <SportPicker />
 
-        {/* ─── 3. ATHLETE RESULTS — Social proof ─── */}
-        <AthleteResults />
+        {/* (AthleteResults moved below Membership CTA) */}
 
         {/* ─── 4. TECH SHOWCASE — The Edge ─── */}
         <TechShowcaseCard />
@@ -166,7 +165,10 @@ const HeroSection = () => {
           </div>
         </motion.div>
 
-        {/* ─── 11. EMAIL CAPTURE ─── */}
+        {/* ─── 11. ATHLETE RESULTS ─── */}
+        <AthleteResults />
+
+        {/* ─── 12. EMAIL CAPTURE ─── */}
         <EmailCapture />
 
         {/* ─── 12. FIND US — always last ─── */}
