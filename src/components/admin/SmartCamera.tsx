@@ -85,7 +85,7 @@ const SmartCamera = ({ onCapture, onClose }: SmartCameraProps) => {
       if (detectionLoopRef.current) cancelAnimationFrame(detectionLoopRef.current);
       if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
     };
-  }, []);
+  }, [state === "guide"]);
 
   // Detection loop
   useEffect(() => {
