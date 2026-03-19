@@ -43,6 +43,16 @@
     --m2-dim: 0 0% 40%;
     --m2-text-dim: 0 0% 65%;
     --foreground-soft: 0 0% 82%;
+
+    /* Synthwave / Lift Tracker tokens */
+    --synth-bg: 240 15% 4%;
+    --synth-card: 240 12% 7%;
+    --synth-cyan: 185 100% 48%;
+    --synth-pink: 300 100% 46%;
+    --synth-orange: 14 100% 57%;
+    --synth-glow-cyan: 0 0 12px hsl(185 100% 48% / 0.5);
+    --synth-glow-pink: 0 0 12px hsl(300 100% 46% / 0.4);
+    --synth-glow-orange: 0 0 12px hsl(14 100% 57% / 0.4);
   }
 
   .dark {
