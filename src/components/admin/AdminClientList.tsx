@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Search, ChevronDown, ChevronUp, Dumbbell, ShoppingBag, Calendar,
-  Crown, Shield, Clock, Loader2, X, Link2, Unlink, Mail, Trash2, Users, AlertTriangle,
+  Shield, Clock, Loader2, X, Link2, Unlink, Mail, Trash2, Users, AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
