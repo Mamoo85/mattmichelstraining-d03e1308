@@ -55,9 +55,8 @@ MATT'S VOICE PATTERNS:
 Your job: create a monthly community challenge. Match the energy to the topic.`;
 
     const userPrompt = `Generate a Monthly Challenge for ${getMonthName(month)} ${year} around: "${challengeTopic}".
-${focusContext}
 
-Return structured data via the tool. The description should be 2-3 SHORT punchy sentences in Matt's REAL texting voice — not generic coach speak.`;
+Return structured data via the tool. The title AND description should both be in Matt's voice — punchy, fun, memorable. Not generic. The description should be 2-3 SHORT sentences.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
