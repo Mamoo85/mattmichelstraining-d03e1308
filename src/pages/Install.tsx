@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Download, Smartphone, Share, PlusSquare, MoreVertical, CheckCircle2 } from "lucide-react";
+import { Download, Share, PlusSquare, MoreVertical, CheckCircle2 } from "lucide-react";
+import m2Logo from "@/assets/m2-logo.jpg";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import AppNavbar from "@/components/AppNavbar";
