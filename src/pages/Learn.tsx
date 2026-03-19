@@ -396,6 +396,7 @@ const Learn = () => {
         </div>
 
         {/* ── Featured Videos ── */}
+        {showFeaturedVideos && (
         <section className="mb-10">
           <div className="flex items-center gap-2 mb-4">
             <Play size={16} className="text-primary" />
@@ -409,6 +410,7 @@ const Learn = () => {
             ))}
           </div>
         </section>
+        )}
 
         {/* ── Training Tips ── */}
         <section className="mb-10">
