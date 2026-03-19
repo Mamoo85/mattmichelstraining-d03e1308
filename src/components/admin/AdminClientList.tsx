@@ -235,17 +235,15 @@ const AdminClientList = () => {
 
   // Stats
   const activeUsers7d = new Set(workoutLogs.filter((l) => new Date(l.date) > new Date(Date.now() - 7 * 86400000)).map((l) => l.user_id)).size;
-  const legendCount = profiles.filter((p) => p.is_in_person).length;
 
   return (
     <div className="space-y-4">
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {[
           { label: "Total Clients", value: profiles.length },
           { label: "Pro Members", value: profiles.filter((p) => p.is_pro).length, highlight: true },
           { label: "Active (7d)", value: activeUsers7d },
-          { label: "Legend Members", value: legendCount, highlight: true },
         ].map((s) => (
           <div key={s.label} className="bg-card shadow-m2 p-4">
             <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{s.label}</p>
