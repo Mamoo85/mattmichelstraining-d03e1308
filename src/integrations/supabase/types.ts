@@ -755,6 +755,45 @@ export type Database = {
           },
         ]
       }
+      master_templates: {
+        Row: {
+          ai_findings: Json | null
+          created_at: string
+          created_by: string
+          equipment: string[]
+          experience_level: string
+          id: string
+          primary_focus: string
+          program: Json
+          program_duration: string
+          title: string
+        }
+        Insert: {
+          ai_findings?: Json | null
+          created_at?: string
+          created_by: string
+          equipment?: string[]
+          experience_level: string
+          id?: string
+          primary_focus: string
+          program: Json
+          program_duration: string
+          title: string
+        }
+        Update: {
+          ai_findings?: Json | null
+          created_at?: string
+          created_by?: string
+          equipment?: string[]
+          experience_level?: string
+          id?: string
+          primary_focus?: string
+          program?: Json
+          program_duration?: string
+          title?: string
+        }
+        Relationships: []
+      }
       monthly_challenges: {
         Row: {
           created_at: string
