@@ -20,6 +20,7 @@ const AdminVideoReview = lazy(() => import("@/components/admin/AdminVideoReview"
 const AdminTrialSettings = lazy(() => import("@/components/admin/AdminTrialSettings"));
 const AdminClientOnboarding = lazy(() => import("@/components/admin/AdminClientOnboarding"));
 const AdminChurnRadar = lazy(() => import("@/components/admin/AdminChurnRadar"));
+const AdminSchedule = lazy(() => import("@/components/admin/AdminSchedule"));
 
 const AdminPrograms = lazy(() => import("@/components/admin/AdminPrograms"));
 const AdminExerciseLibrary = lazy(() => import("@/components/admin/AdminExerciseLibrary"));
@@ -27,9 +28,7 @@ const AdminProtocols = lazy(() => import("@/components/admin/AdminProtocols"));
 const AdminBatchGenerator = lazy(() => import("@/components/admin/AdminBatchGenerator"));
 const AdminProgramCreator = lazy(() => import("@/components/admin/AdminProgramCreator"));
 const AdminAiQueue = lazy(() => import("@/components/admin/AdminAiQueue"));
-const AdminAiCopilot = lazy(() => import("@/components/admin/AdminAiCopilot"));
 const AdminRecoveryHeatmap = lazy(() => import("@/components/admin/AdminRecoveryHeatmap"));
-const AdminSchedule = lazy(() => import("@/components/admin/AdminSchedule"));
 const AdminMonthlyFocus = lazy(() => import("@/components/admin/AdminMonthlyFocus"));
 const AdminBiomechanics = lazy(() => import("@/components/admin/AdminBiomechanics"));
 const AdminAiToolkit = lazy(() => import("@/components/admin/AdminAiToolkit"));
@@ -40,6 +39,7 @@ const AdminPointsManager = lazy(() => import("@/components/admin/AdminPointsMana
 const AdminTierManager = lazy(() => import("@/components/admin/AdminTierManager"));
 const AdminSystemSettings = lazy(() => import("@/components/admin/AdminSystemSettings"));
 const AdminStripeProducts = lazy(() => import("@/components/admin/AdminStripeProducts"));
+const AdminServiceCatalog = lazy(() => import("@/components/admin/AdminServiceCatalog"));
 
 const AdminFrontPage = lazy(() => import("@/components/admin/AdminFrontPage"));
 const AdminSiteEditor = lazy(() => import("@/components/admin/AdminSiteEditor"));
@@ -49,15 +49,14 @@ const AdminBroadcasts = lazy(() => import("@/components/admin/AdminBroadcasts"))
 const AdminSubscriberList = lazy(() => import("@/components/admin/AdminSubscriberList"));
 const AdminNewsletterComposer = lazy(() => import("@/components/admin/AdminNewsletterComposer"));
 const AdminSendHistory = lazy(() => import("@/components/admin/AdminSendHistory"));
-const AdminServiceCatalog = lazy(() => import("@/components/admin/AdminServiceCatalog"));
 const AdminMarketingDrafts = lazy(() => import("@/components/admin/AdminMarketingDrafts"));
 const AdminAiBusinessTools = lazy(() => import("@/components/admin/AdminAiBusinessTools"));
 
 const MASTER_TABS = [
   { key: "roster", label: "The Roster", icon: Users, desc: "Users · Support · Families" },
   { key: "engine", label: "Training Engine", icon: Dumbbell, desc: "Programs · AI · Coaching" },
-  { key: "vault", label: "The Vault", icon: Landmark, desc: "Financials · Billing" },
-  { key: "content", label: "Site Content", icon: FileText, desc: "CMS · Comms · Learn" },
+  { key: "vault", label: "The Vault", icon: Landmark, desc: "Revenue · Business" },
+  { key: "content", label: "Site Content", icon: FileText, desc: "CMS · Comms · Marketing" },
 ];
 
 const TabLoader = () => (
@@ -132,6 +131,7 @@ const Admin = () => {
           })}
         </div>
 
+        {/* ── THE ROSTER ── */}
         {activeTab === "roster" && (
           <SubTabs tabs={[
             { key: "athletes", label: "All Users", content: <AdminClientList /> },
@@ -140,11 +140,11 @@ const Admin = () => {
               <div className="space-y-8">
                 <AdminCoachInbox />
                 <div className="border-t border-border pt-6"><AdminCoachDashboard /></div>
+                <div className="border-t border-border pt-6"><AdminPostureRequests /></div>
+                <div className="border-t border-border pt-6"><AdminVideoReview /></div>
               </div>
             )},
-            { key: "posture", label: "Posture Requests", content: <AdminPostureRequests /> },
             { key: "messages", label: "Messages", content: <AdminDirectMessages /> },
-            { key: "videos", label: "Videos", content: <AdminVideoReview /> },
             { key: "families", label: "Families & Teams", content: (
               <div className="space-y-8">
                 <AdminFamilyManager />
@@ -157,12 +157,17 @@ const Admin = () => {
                 <div className="border-t border-border pt-6"><AdminParentReports /></div>
               </div>
             )},
-            { key: "trials", label: "Trial Settings", content: <AdminTrialSettings /> },
-            { key: "onboarding", label: "Onboarding", content: <AdminClientOnboarding /> },
-            { key: "churn", label: "Churn Radar", content: <AdminChurnRadar /> },
+            { key: "onboarding", label: "Onboarding & Trials", content: (
+              <div className="space-y-8">
+                <AdminClientOnboarding />
+                <div className="border-t border-border pt-6"><AdminTrialSettings /></div>
+              </div>
+            )},
+            { key: "schedule", label: "Schedule", content: <AdminSchedule /> },
           ]} />
         )}
 
+        {/* ── TRAINING ENGINE ── */}
         {activeTab === "engine" && (
           <SubTabs tabs={[
             { key: "programs", label: "Programs", content: <AdminPrograms /> },
@@ -171,15 +176,14 @@ const Admin = () => {
             { key: "batch", label: "AI Generator", content: <AdminBatchGenerator /> },
             { key: "ai-programs", label: "AI Programs", content: <AdminProgramCreator /> },
             { key: "ai-queue", label: "AI Queue", content: <AdminAiQueue /> },
-            { key: "ai-copilot", label: "AI Copilot", content: <AdminAiCopilot /> },
+            { key: "ai-toolkit", label: "AI Toolkit", content: <AdminAiToolkit /> },
             { key: "recovery", label: "Recovery Map", content: <AdminRecoveryHeatmap /> },
-            { key: "schedule", label: "Schedule", content: <AdminSchedule /> },
             { key: "monthly", label: "Monthly Focus", content: <AdminMonthlyFocus /> },
             { key: "biomechanics", label: "Biomechanics", content: <AdminBiomechanics /> },
-            { key: "ai-toolkit", label: "AI Toolkit", content: <AdminAiToolkit /> },
           ]} />
         )}
 
+        {/* ── THE VAULT ── */}
         {activeTab === "vault" && (
           <SubTabs tabs={[
             { key: "revenue", label: "Revenue & Ledger", content: <AdminFinancials /> },
@@ -188,10 +192,12 @@ const Admin = () => {
             { key: "tiers", label: "Tier Access", content: <AdminTierManager /> },
             { key: "system", label: "System & Referrals", content: <AdminSystemSettings /> },
             { key: "stripe-products", label: "Stripe Products", content: <AdminStripeProducts /> },
+            { key: "churn", label: "Churn Radar", content: <AdminChurnRadar /> },
             { key: "catalog", label: "Service Catalog", content: <AdminServiceCatalog /> },
           ]} />
         )}
 
+        {/* ── SITE CONTENT ── */}
         {activeTab === "content" && (
           <SubTabs tabs={[
             { key: "front-page", label: "Front Page", content: <AdminFrontPage /> },
@@ -202,8 +208,12 @@ const Admin = () => {
             { key: "subscribers", label: "Subscribers", content: <AdminSubscriberList /> },
             { key: "compose", label: "Compose", content: <AdminNewsletterComposer /> },
             { key: "history", label: "Send History", content: <AdminSendHistory /> },
-            { key: "ad-drafts", label: "Ad Drafts", content: <AdminMarketingDrafts /> },
-            { key: "ai-business", label: "AI Business Tools", content: <AdminAiBusinessTools /> },
+            { key: "marketing-ai", label: "Marketing & AI", content: (
+              <div className="space-y-8">
+                <AdminMarketingDrafts />
+                <div className="border-t border-border pt-6"><AdminAiBusinessTools /></div>
+              </div>
+            )},
           ]} />
         )}
       </div>

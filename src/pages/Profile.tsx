@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import AppNavbar from "@/components/AppNavbar";
 import TechSupportButton from "@/components/TechSupportButton";
 import SupportTicketForm from "@/components/SupportTicketForm";
-import ReferralDashboard from "@/components/ReferralDashboard";
 import PrivacySettingsCard from "@/components/PrivacySettingsCard";
 import { Link } from "react-router-dom";
 import {
@@ -537,9 +536,20 @@ const Profile = () => {
         )}
 
         {/* Refer & Earn */}
-        <div className="bg-card border border-border p-5 mb-6">
-          <ReferralDashboard />
-        </div>
+        <Link
+          to="/dashboard"
+          onClick={() => { /* will navigate; tab set handled by Dashboard */ }}
+          className="bg-card border border-border p-5 mb-6 flex items-center justify-between hover:border-primary/40 transition-all group"
+        >
+          <div className="flex items-center gap-2">
+            <Send size={14} className="text-primary" />
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-primary">Refer & Earn</p>
+              <p className="text-xs text-muted-foreground">Share your referral code and earn credits</p>
+            </div>
+          </div>
+          <ArrowRight size={14} className="text-muted-foreground group-hover:text-primary transition-all" />
+        </Link>
 
         {/* Gift Cards */}
         <div className="bg-card border border-border p-5 mb-6">

@@ -5,7 +5,7 @@ import TrialPaywallModal from "@/components/TrialPaywallModal";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
-import { ExternalLink, Loader2, Crown, User, Dumbbell, Play } from "lucide-react";
+import { Loader2, Crown, User, Dumbbell, Play } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import PwaInstallBanner from "@/components/PwaInstallBanner";
@@ -17,7 +17,6 @@ import WorkoutsTab from "@/components/dashboard/WorkoutsTab";
 
 // Lazy-load heavier tabs
 import { lazy, Suspense } from "react";
-const ProgressCharts = lazy(() => import("@/components/ProgressCharts"));
 const MyPrograms = lazy(() => import("@/components/MyPrograms"));
 const PointsLeaderboard = lazy(() => import("@/components/PointsLeaderboard"));
 const ReferralDashboard = lazy(() => import("@/components/ReferralDashboard"));
@@ -25,7 +24,6 @@ const TeamManager = lazy(() => import("@/components/TeamManager"));
 
 const BASE_TABS = [
   { key: "home", label: "Home" },
-  { key: "progress", label: "Progress" },
   { key: "programs", label: "My Programs" },
   { key: "workouts", label: "Workouts" },
   { key: "points", label: "Points" },
@@ -44,7 +42,6 @@ const Dashboard = () => {
   const { isAdmin } = useIsAdmin();
   const [profile, setProfile] = useState<{ full_name: string | null; athlete_name: string | null } | null>(null);
   const [activeTab, setActiveTab] = useState("home");
-  const [portalLoading, setPortalLoading] = useState(false);
   const [hasPrograms, setHasPrograms] = useState<boolean | null>(null);
   const [hasLogs, setHasLogs] = useState<boolean | null>(null);
 
@@ -61,16 +58,6 @@ const Dashboard = () => {
       setHasLogs((logRes.count ?? 0) > 0);
     });
   }, [user]);
-
-  const handleManageSubscription = useCallback(async () => {
-    setPortalLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("customer-portal");
-      if (error) throw error;
-      if (data?.url) window.open(data.url, "_blank");
-    } catch { /* silent */ }
-    finally { setPortalLoading(false); }
-  }, []);
 
   const athleteDisplay = profile?.athlete_name || profile?.full_name || "Athlete";
   const isNewUser = hasPrograms === false && hasLogs === false;
@@ -112,16 +99,6 @@ const Dashboard = () => {
             >
               <User size={12} /> Profile
             </Link>
-            {subscribed && (
-              <button
-                onClick={handleManageSubscription}
-                disabled={portalLoading}
-                className="flex items-center gap-1.5 bg-muted text-muted-foreground px-3 py-2 text-[10px] font-bold uppercase tracking-widest hover:text-foreground transition-all disabled:opacity-50"
-              >
-                {portalLoading ? <Loader2 size={12} className="animate-spin" /> : <ExternalLink size={12} />}
-                Manage
-              </button>
-            )}
           </div>
         </div>
 
@@ -163,7 +140,6 @@ const Dashboard = () => {
               onViewReferrals={handleViewReferrals}
             />
           )}
-          {activeTab === "progress" && <ProgressCharts />}
           {activeTab === "programs" && <MyPrograms />}
           {activeTab === "workouts" && <WorkoutsTab />}
           {activeTab === "points" && <PointsLeaderboard />}

@@ -24,6 +24,7 @@ const AiExerciseSubstitution = lazy(() => import("@/components/workout/AiExercis
 const AiRecoveryAdvisor = lazy(() => import("@/components/progress/AiRecoveryAdvisor"));
 const AiIntakeAnalyzer = lazy(() => import("@/components/programs/AiIntakeAnalyzer"));
 const IntervalTimer = lazy(() => import("@/components/workout/IntervalTimer"));
+const AdminAiCopilot = lazy(() => import("@/components/admin/AdminAiCopilot"));
 
 type ActiveTool =
   | null
@@ -530,6 +531,12 @@ const AdminAiToolkit = () => {
           </Suspense>
         </div>
       )}
+      {/* AI Copilot — Automated Monitoring */}
+      <div className="border-t border-border pt-6">
+        <Suspense fallback={<ToolLoader />}>
+          <AdminAiCopilot />
+        </Suspense>
+      </div>
     </div>
   );
 };
