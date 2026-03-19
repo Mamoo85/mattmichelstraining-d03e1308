@@ -13,6 +13,7 @@ import {
   Calendar, Mail, Phone, MapPin, Users
 } from "lucide-react";
 import m2Logo from "@/assets/m2-logo.jpg";
+import TechShowcaseCard from "@/components/landing/TechShowcaseCard";
 
 /* ---------- data ---------- */
 
