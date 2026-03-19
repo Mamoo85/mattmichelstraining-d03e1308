@@ -359,7 +359,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
     return (
       <PostWorkoutSummary
         exercises={exercises}
-        duration={elapsedSeconds}
+        duration={elapsedRef.current}
         workoutLogId={workoutLogId}
         workoutTitle={workoutTitle}
         date={date}
