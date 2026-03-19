@@ -236,7 +236,7 @@ const Nutrition = () => {
     <>
       <SEOHead title="Nutrition Tracker | M² Training" description="Snap a photo of your food and get instant calorie and macro estimates powered by AI." path="/nutrition" />
       <AppNavbar />
-      <main className="min-h-screen bg-background pt-16 pb-24">
+      <main className="min-h-screen bg-background pt-16 pb-12">
         <div className="container max-w-lg mx-auto space-y-5 px-4">
           {/* Header */}
           <div className="text-center pt-4 space-y-3">
