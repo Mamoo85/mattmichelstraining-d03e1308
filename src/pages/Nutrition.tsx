@@ -362,8 +362,9 @@ const Nutrition = () => {
                     <span className="text-sm">Analyzing your meal…</span>
                   </div>
                 )}
-                {analysis && (
+                {analysis && editableItems.length > 0 && (
                   <div className="space-y-4">
+                    {/* Live totals */}
                     <div className="grid grid-cols-5 gap-2">
                       <MacroPill icon={Flame} label="cal" value={totalCalFromAnalysis} unit="" color="bg-orange-500/10 text-orange-600" />
                       <MacroPill icon={Beef} label="pro" value={totalProtein} unit="g" color="bg-red-500/10 text-red-600" />
@@ -371,18 +372,86 @@ const Nutrition = () => {
                       <MacroPill icon={Droplets} label="fat" value={totalFat} unit="g" color="bg-blue-500/10 text-blue-600" />
                       <MacroPill icon={Leaf} label="fib" value={totalFiber} unit="g" color="bg-green-500/10 text-green-600" />
                     </div>
+
+                    <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-primary font-bold">
+                      <Pencil size={10} />
+                      Tap any number to adjust before saving
+                    </div>
+
                     <Separator />
-                    <div className="space-y-2">
-                      {analysis.items.map((item, i) => (
-                        <div key={i} className="flex items-center justify-between text-sm">
-                          <div>
-                            <span className="font-medium">{item.name}</span>
-                            <span className="text-muted-foreground ml-2 text-xs">({item.portion})</span>
+
+                    {/* Editable food items */}
+                    <div className="space-y-3">
+                      {editableItems.map((item, i) => (
+                        <div key={i} className="bg-muted/50 border border-border rounded-md p-3 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <span className="text-sm font-bold text-foreground">{item.name}</span>
+                              <span className="text-muted-foreground ml-2 text-xs">({item.portion})</span>
+                            </div>
+                            <button
+                              onClick={() => setEditableItems(prev => prev.filter((_, idx) => idx !== i))}
+                              className="text-muted-foreground hover:text-destructive transition-colors"
+                            >
+                              <Trash2 size={14} />
+                            </button>
                           </div>
-                          <Badge variant="secondary">{item.calories} cal</Badge>
+                          <div className="grid grid-cols-5 gap-1.5">
+                            <div className="space-y-0.5">
+                              <label className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">Cal</label>
+                              <Input
+                                type="number"
+                                inputMode="numeric"
+                                value={item.calories || ""}
+                                onChange={(e) => updateItem(i, "calories", parseInt(e.target.value) || 0)}
+                                className="h-8 text-xs text-center font-mono px-1"
+                              />
+                            </div>
+                            <div className="space-y-0.5">
+                              <label className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">Pro</label>
+                              <Input
+                                type="number"
+                                inputMode="decimal"
+                                value={item.protein_g || ""}
+                                onChange={(e) => updateItem(i, "protein_g", parseFloat(e.target.value) || 0)}
+                                className="h-8 text-xs text-center font-mono px-1"
+                              />
+                            </div>
+                            <div className="space-y-0.5">
+                              <label className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">Carb</label>
+                              <Input
+                                type="number"
+                                inputMode="decimal"
+                                value={item.carbs_g || ""}
+                                onChange={(e) => updateItem(i, "carbs_g", parseFloat(e.target.value) || 0)}
+                                className="h-8 text-xs text-center font-mono px-1"
+                              />
+                            </div>
+                            <div className="space-y-0.5">
+                              <label className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">Fat</label>
+                              <Input
+                                type="number"
+                                inputMode="decimal"
+                                value={item.fat_g || ""}
+                                onChange={(e) => updateItem(i, "fat_g", parseFloat(e.target.value) || 0)}
+                                className="h-8 text-xs text-center font-mono px-1"
+                              />
+                            </div>
+                            <div className="space-y-0.5">
+                              <label className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">Fib</label>
+                              <Input
+                                type="number"
+                                inputMode="decimal"
+                                value={item.fiber_g || ""}
+                                onChange={(e) => updateItem(i, "fiber_g", parseFloat(e.target.value) || 0)}
+                                className="h-8 text-xs text-center font-mono px-1"
+                              />
+                            </div>
+                          </div>
                         </div>
                       ))}
                     </div>
+
                     {analysis.note && <p className="text-xs text-muted-foreground italic">{analysis.note}</p>}
                     <Button className="w-full" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
                       {saveMutation.isPending ? <Loader2 className="animate-spin mr-2" size={16} /> : <Flame className="mr-2" size={16} />}
