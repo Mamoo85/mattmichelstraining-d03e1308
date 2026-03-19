@@ -380,6 +380,24 @@ const AdminBiomechanics = () => {
           )}
         </CardContent>
       </Card>
+      {/* Smart Camera overlay */}
+      {showCamera && (
+        <Suspense
+          fallback={
+            <div className="fixed inset-0 z-50 bg-black flex items-center justify-center">
+              <Loader2 className="animate-spin text-white" size={32} />
+            </div>
+          }
+        >
+          <SmartCamera
+            onCapture={(file) => {
+              setShowCamera(false);
+              handleUploadAndAnalyze(file);
+            }}
+            onClose={() => setShowCamera(false)}
+          />
+        </Suspense>
+      )}
     </div>
   );
 };
