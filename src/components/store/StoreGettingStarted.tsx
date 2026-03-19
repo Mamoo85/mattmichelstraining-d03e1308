@@ -203,27 +203,6 @@ const StoreGettingStarted = () => {
         </div>
       </div>
 
-      {/* Who Matt trains */}
-      <div>
-        <h2 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
-          <Dumbbell size={16} className="text-primary" />
-          Who Matt Trains
-        </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {[
-            { icon: Target, label: "Youth Athletes", sub: "Build it right from day one" },
-            { icon: Users, label: "Parents", sub: "Train with — or for — your kids" },
-            { icon: Heart, label: "Adults", sub: "Feel strong again at any age" },
-            { icon: Zap, label: "Coaches", sub: "Practice what you preach" },
-          ].map(({ icon: Icon, label, sub }) => (
-            <div key={label} className="bg-card shadow-m2 p-3 text-center">
-              <Icon size={20} className="text-primary mx-auto mb-1.5" />
-              <p className="text-xs font-bold text-foreground">{label}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">{sub}</p>
-            </div>
-          ))}
-        </div>
-      </div>
 
       {/* Free features */}
       <div className="bg-card shadow-m2 p-4">
