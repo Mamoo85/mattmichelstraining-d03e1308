@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Camera, Upload, Loader2, Flame, Beef, Wheat, Droplets, Leaf, Trash2, CalendarDays } from "lucide-react";
+import { Camera, Upload, Loader2, Flame, Beef, Wheat, Droplets, Leaf, Trash2, CalendarDays, Target, Pencil, Check } from "lucide-react";
 import { format } from "date-fns";
 
 interface FoodItem {
