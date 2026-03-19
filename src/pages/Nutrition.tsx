@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Camera, Upload, Loader2, Flame, Beef, Wheat, Droplets, Leaf, Trash2, CalendarDays } from "lucide-react";
+import { Camera, Upload, Loader2, Flame, Beef, Wheat, Droplets, Leaf, Trash2, CalendarDays, Target, Pencil, Check } from "lucide-react";
 import { format } from "date-fns";
 
 interface FoodItem {
@@ -44,8 +46,41 @@ const Nutrition = () => {
   const [preview, setPreview] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
+  const [editingGoal, setEditingGoal] = useState(false);
+  const [goalInput, setGoalInput] = useState("");
 
-  // Fetch history
+  // Fetch calorie goal from profile
+  const { data: profile } = useQuery({
+    queryKey: ["profile-calorie-goal", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("daily_calorie_goal")
+        .eq("user_id", user!.id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const calorieGoal = (profile as any)?.daily_calorie_goal ?? 2000;
+
+  const updateGoalMutation = useMutation({
+    mutationFn: async (goal: number) => {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ daily_calorie_goal: goal } as any)
+        .eq("user_id", user!.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Calorie goal updated!");
+      queryClient.invalidateQueries({ queryKey: ["profile-calorie-goal"] });
+      setEditingGoal(false);
+    },
+    onError: (e: any) => toast.error(e.message || "Failed to update goal"),
+  });
   const { data: logs = [], isLoading: logsLoading } = useQuery({
     queryKey: ["nutrition-logs", user?.id],
     queryFn: async () => {
@@ -176,7 +211,64 @@ const Nutrition = () => {
             <p className="text-sm text-muted-foreground mt-1">Snap a photo → get instant macro estimates</p>
           </div>
 
-          {/* Today's summary */}
+          {/* Daily Goal Progress */}
+          <Card className="border-primary/20">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Target size={14} /> Daily Calorie Goal
+                </CardTitle>
+                {editingGoal ? (
+                  <div className="flex items-center gap-1">
+                    <Input
+                      type="number"
+                      value={goalInput}
+                      onChange={(e) => setGoalInput(e.target.value)}
+                      className="w-20 h-7 text-xs"
+                      min={500}
+                      max={10000}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => {
+                        const val = parseInt(goalInput);
+                        if (val >= 500 && val <= 10000) updateGoalMutation.mutate(val);
+                        else toast.error("Goal must be between 500–10,000 cal");
+                      }}
+                    >
+                      <Check size={14} />
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-muted-foreground"
+                    onClick={() => { setGoalInput(String(calorieGoal)); setEditingGoal(true); }}
+                  >
+                    <Pencil size={12} />
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="flex items-baseline justify-between text-sm">
+                <span className="font-bold">{todayTotals.calories}</span>
+                <span className="text-muted-foreground">/ {calorieGoal} cal</span>
+              </div>
+              <Progress
+                value={Math.min((todayTotals.calories / calorieGoal) * 100, 100)}
+                className="h-3"
+              />
+              {todayTotals.calories >= calorieGoal && (
+                <p className="text-xs text-primary font-medium">🎯 Goal reached!</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Today's macro summary */}
           {todayLogs.length > 0 && (
             <Card className="border-primary/20">
               <CardHeader className="pb-2">
