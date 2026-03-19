@@ -165,7 +165,10 @@ const HeroSection = () => {
           </div>
         </motion.div>
 
-        {/* ─── 11. EMAIL CAPTURE ─── */}
+        {/* ─── 11. ATHLETE RESULTS ─── */}
+        <AthleteResults />
+
+        {/* ─── 12. EMAIL CAPTURE ─── */}
         <EmailCapture />
 
         {/* ─── 12. FIND US — always last ─── */}
