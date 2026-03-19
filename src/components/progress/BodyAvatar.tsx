@@ -139,8 +139,8 @@ const BodyAvatar = ({ activeLift }: BodyAvatarProps) => {
         </defs>
 
         {/* Circular cyber-grid background */}
-        <circle cx="31.5" cy="42" r="36" fill={`url(#cyberGrid-${view})`} className="print:hidden" />
-        <circle cx="31.5" cy="42" r="36" fill="none" stroke="hsl(185, 100%, 48%)" strokeWidth="0.2" strokeOpacity="0.08" className="print:hidden" />
+        <circle cx="31.5" cy="42" r="36" fill={`url(#cyberGrid-${view})`} className="avatar-cyber-grid" />
+        <circle cx="31.5" cy="42" r="36" fill="none" stroke="hsl(185, 100%, 48%)" strokeWidth="0.2" strokeOpacity="0.08" className="avatar-cyber-grid" />
 
         {/* Skeleton wireframe */}
         {skeleton.map((d, i) => (
