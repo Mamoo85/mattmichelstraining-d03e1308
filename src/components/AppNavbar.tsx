@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Dumbbell, ShoppingBag, Home, Menu, X, LogIn, LogOut, Shield, CreditCard, BookOpen, Users, User, Download, CalendarClock } from "lucide-react";
 import { useState } from "react";
