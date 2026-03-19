@@ -2307,6 +2307,48 @@ export type Database = {
         }
         Relationships: []
       }
+      user_privacy_settings: {
+        Row: {
+          created_at: string
+          id: string
+          show_challenges: boolean
+          show_level: boolean
+          show_lifts: boolean
+          show_nutrition: boolean
+          show_points: boolean
+          show_programs: boolean
+          show_streaks: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          show_challenges?: boolean
+          show_level?: boolean
+          show_lifts?: boolean
+          show_nutrition?: boolean
+          show_points?: boolean
+          show_programs?: boolean
+          show_streaks?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          show_challenges?: boolean
+          show_level?: boolean
+          show_lifts?: boolean
+          show_nutrition?: boolean
+          show_points?: boolean
+          show_programs?: boolean
+          show_streaks?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
