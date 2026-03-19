@@ -12,9 +12,9 @@ import type { LoggedExerciseData } from "./WorkoutLogger";
 interface ExerciseCardProps {
   exercise: LoggedExerciseData;
   index: number;
-  onUpdate: (data: Partial<LoggedExerciseData>) => void;
-  onRemove: () => void;
-  onOpenFormTracker?: (exerciseTitle: string) => void;
+  onUpdate: (index: number, data: Partial<LoggedExerciseData>) => void;
+  onRemove: (index: number) => void;
+  onOpenFormTracker: (exerciseTitle: string) => void;
 }
 
 const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTracker }: ExerciseCardProps) => {
