@@ -7,7 +7,106 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SYSTEM_PROMPT = `You are an elite Strength and Conditioning Coach and Biomechanics Expert. Do NOT provide medical diagnoses. Analyze the provided media for postural deviations and kinetic chain compensations (e.g., anterior pelvic tilt, knee valgus, rounded shoulders, asymmetrical weight shifts). First, provide a bulleted list of your visual findings. Second, generate a structured corrective exercise program broken into three phases: 2-Week (Mobility & Activation), 4-Week (Core Stability & Motor Control), and 8-Week (Load Integration & Strength). Format the output cleanly.`;
+function buildSystemPrompt(experienceLevel: string, programDuration: string, primaryFocus: string, equipment: string[]) {
+  const equipmentStr = equipment.join(", ");
+
+  let levelDirective = "";
+  switch (experienceLevel) {
+    case "Beginner":
+    case "Intermediate":
+      levelDirective = `The athlete is ${experienceLevel}. Prioritize motor control and linear progression. Use simple progressions with consistent volume increases. Keep intensity moderate (≤75% 1RM for compound lifts).`;
+      break;
+    case "Experienced":
+      levelDirective = `The athlete is Experienced. Prioritize sub-maximal accumulation, wave loading, and tempos to challenge the athlete without CNS burnout. Cap absolute intensity at 85% 1RM. Use techniques like 3-1-3 tempos and paused reps.`;
+      break;
+    case "Advanced":
+      levelDirective = `The athlete is Advanced. Utilize heavy Russian volume principles (e.g., Sheiko/Smolov high-frequency accumulation) and peaking phases up to 95%+ 1RM. Program complex wave periodization and heavy singles/doubles where appropriate.`;
+      break;
+  }
+
+  return `You are an elite Strength and Conditioning Coach and Biomechanics Expert. Do NOT provide medical diagnoses. Analyze the provided media for postural deviations and kinetic chain compensations (e.g., anterior pelvic tilt, knee valgus, rounded shoulders, asymmetrical weight shifts).
+
+STRICT PROGRAMMING DIRECTIVES:
+
+Rule 1 — Mobility & Autogenic Inhibition: For every 'overactive' muscle identified in the visual scan, you MUST prescribe specific Autogenic Inhibition techniques (e.g., prolonged PNF stretching, heavy ischemic compression, foam rolling with sustained pressure) in the daily prep section of EVERY phase.
+
+Rule 2 — The Ground-Up Protocol: Every protocol MUST include intrinsic foot and ankle health work (short-foot holds, towel scrunches, loaded dorsiflexion PAILs/RAILs, single-leg balance progressions) regardless of whether upper or lower body findings are present.
+
+Rule 3 — Experience Level Logic: ${levelDirective}
+
+Rule 4 — The Math: You MUST output the exact week-by-week progressive overload math for every exercise. For example: "Week 1: 6×6 @ 70%, Week 2: 7×5 @ 75%, Week 3: 5×4 @ 80%". Every set/rep scheme must include an intensity percentage where applicable.
+
+PARAMETERS:
+- Experience Level: ${experienceLevel}
+- Program Duration: ${programDuration}
+- Primary Focus: ${primaryFocus}
+- Available Equipment: ${equipmentStr}
+
+First, provide a bulleted list of your visual findings. Second, generate a structured corrective exercise program matching the specified duration and focus. Format the output cleanly.`;
+}
+
+const toolSchema = {
+  type: "function",
+  function: {
+    name: "biomechanics_assessment",
+    description: "Return structured biomechanics assessment with findings and a periodized corrective program.",
+    parameters: {
+      type: "object",
+      properties: {
+        findings: {
+          type: "array",
+          items: { type: "string" },
+          description: "Array of biomechanical findings, postural deviations, overactive/underactive muscles, and kinetic chain compensations",
+        },
+        program: {
+          type: "object",
+          properties: {
+            title: { type: "string" },
+            phases: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  phase_name: { type: "string", description: "e.g. 'Phase 1: Mobility & Activation'" },
+                  duration: { type: "string", description: "e.g. '2 Weeks'" },
+                  focus: { type: "string" },
+                  weekly_progression: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "Week-by-week overload math, e.g. ['Week 1: 4x8 @ 60%', 'Week 2: 4x8 @ 65%']",
+                  },
+                  exercises: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        name: { type: "string" },
+                        sets: { type: "number" },
+                        reps: { type: "string" },
+                        intensity_percent: { type: "string", description: "e.g. '70%' or 'bodyweight'" },
+                        tempo: { type: "string", description: "e.g. '3-1-3-0' or 'controlled'" },
+                        notes: { type: "string" },
+                      },
+                      required: ["name", "sets", "reps"],
+                      additionalProperties: false,
+                    },
+                  },
+                },
+                required: ["phase_name", "duration", "focus", "exercises"],
+                additionalProperties: false,
+              },
+              description: "Program phases matching the selected duration",
+            },
+          },
+          required: ["title", "phases"],
+          additionalProperties: false,
+        },
+      },
+      required: ["findings", "program"],
+      additionalProperties: false,
+    },
+  },
+};
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -50,7 +149,16 @@ serve(async (req) => {
       });
     }
 
-    const { mediaUrl, mediaUrls, clientUserId } = await req.json();
+    const {
+      mediaUrl,
+      mediaUrls,
+      clientUserId,
+      experienceLevel = "Intermediate",
+      programDuration = "8-Week Full Mesocycle",
+      primaryFocus = "Corrective/Mobility",
+      equipment = ["Full Gym"],
+    } = await req.json();
+
     if (!mediaUrl || !clientUserId) {
       return new Response(JSON.stringify({ error: "mediaUrl and clientUserId are required" }), {
         status: 400,
@@ -63,7 +171,8 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    // Build image content parts from all provided URLs
+    const systemPrompt = buildSystemPrompt(experienceLevel, programDuration, primaryFocus, equipment);
+
     const allUrls: string[] = mediaUrls?.length ? mediaUrls : [mediaUrl];
     const imageContent = allUrls.map((url: string) => ({
       type: "image_url" as const,
@@ -79,75 +188,19 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
+          { role: "system", content: systemPrompt },
           {
             role: "user",
             content: [
               {
                 type: "text",
-                text: `Analyze this athlete's biomechanics and posture from the uploaded media (${allUrls.length} angle(s)). Provide detailed findings and a structured 3-phase corrective program.`,
+                text: `Analyze this athlete's biomechanics and posture from the uploaded media (${allUrls.length} angle(s)). Experience: ${experienceLevel}. Duration: ${programDuration}. Focus: ${primaryFocus}. Equipment: ${equipment.join(", ")}. Provide detailed findings and a structured periodized corrective program with exact weekly progressive overload math.`,
               },
               ...imageContent,
             ],
           },
         ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "biomechanics_assessment",
-              description: "Return structured biomechanics assessment with findings and a 3-phase corrective program.",
-              parameters: {
-                type: "object",
-                properties: {
-                  findings: {
-                    type: "array",
-                    items: { type: "string" },
-                    description: "Array of biomechanical findings, postural deviations, and kinetic chain compensations",
-                  },
-                  program: {
-                    type: "object",
-                    properties: {
-                      title: { type: "string" },
-                      phases: {
-                        type: "array",
-                        items: {
-                          type: "object",
-                          properties: {
-                            phase_name: { type: "string", description: "e.g. 'Phase 1: Mobility & Activation'" },
-                            duration: { type: "string", description: "e.g. '2 Weeks'" },
-                            focus: { type: "string" },
-                            exercises: {
-                              type: "array",
-                              items: {
-                                type: "object",
-                                properties: {
-                                  name: { type: "string" },
-                                  sets: { type: "number" },
-                                  reps: { type: "string" },
-                                  notes: { type: "string" },
-                                },
-                                required: ["name", "sets", "reps"],
-                                additionalProperties: false,
-                              },
-                            },
-                          },
-                          required: ["phase_name", "duration", "focus", "exercises"],
-                          additionalProperties: false,
-                        },
-                        description: "Exactly 3 phases: 2-Week Mobility & Activation, 4-Week Core Stability & Motor Control, 8-Week Load Integration & Strength",
-                      },
-                    },
-                    required: ["title", "phases"],
-                    additionalProperties: false,
-                  },
-                },
-                required: ["findings", "program"],
-                additionalProperties: false,
-              },
-            },
-          },
-        ],
+        tools: [toolSchema],
         tool_choice: { type: "function", function: { name: "biomechanics_assessment" } },
       }),
     });
@@ -155,7 +208,6 @@ serve(async (req) => {
     if (!aiResponse.ok) {
       const errText = await aiResponse.text();
       console.error("AI gateway error:", aiResponse.status, errText);
-
       if (aiResponse.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limit exceeded, please try again later." }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -178,6 +230,12 @@ serve(async (req) => {
     const parsed = JSON.parse(toolCall.function.arguments);
     const { findings, program } = parsed;
 
+    // Attach generation parameters as metadata inside draft_program
+    const programWithMeta = {
+      ...program,
+      _meta: { experienceLevel, programDuration, primaryFocus, equipment },
+    };
+
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
     const { data: assessment, error: insertError } = await supabaseAdmin
       .from("client_assessments")
@@ -186,7 +244,7 @@ serve(async (req) => {
         admin_user_id: userId,
         media_url: mediaUrl,
         ai_findings: findings,
-        draft_program: program,
+        draft_program: programWithMeta,
         status: "draft",
       })
       .select()
