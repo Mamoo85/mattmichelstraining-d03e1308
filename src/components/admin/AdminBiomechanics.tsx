@@ -48,43 +48,51 @@ const AdminBiomechanics = () => {
     },
   });
 
-  // Upload + analyze
-  const handleUploadAndAnalyze = async (file: File) => {
+  // Upload + analyze (supports single or multiple files)
+  const handleUploadAndAnalyze = async (fileOrFiles: File | File[]) => {
     if (!selectedClient) {
       toast.error("Select a client first");
       return;
     }
 
+    const files = Array.isArray(fileOrFiles) ? fileOrFiles : [fileOrFiles];
+    if (files.length === 0) return;
+
     try {
       setUploading(true);
-      const ext = file.name.split(".").pop();
-      const path = `${selectedClient}/${Date.now()}.${ext}`;
+      const mediaUrls: string[] = [];
 
-      const { error: uploadError } = await supabase.storage
-        .from("biomechanics_media")
-        .upload(path, file);
-      if (uploadError) throw uploadError;
+      for (const file of files) {
+        const ext = file.name.split(".").pop();
+        const path = `${selectedClient}/${Date.now()}-${file.name}.${ext}`;
 
-      const { data: urlData } = supabase.storage
-        .from("biomechanics_media")
-        .getPublicUrl(path);
+        const { error: uploadError } = await supabase.storage
+          .from("biomechanics_media")
+          .upload(path, file);
+        if (uploadError) throw uploadError;
 
-      // Since bucket is private, we need a signed URL for AI
-      const { data: signedData, error: signedError } = await supabase.storage
-        .from("biomechanics_media")
-        .createSignedUrl(path, 3600);
-      if (signedError) throw signedError;
+        const { data: signedData, error: signedError } = await supabase.storage
+          .from("biomechanics_media")
+          .createSignedUrl(path, 3600);
+        if (signedError) throw signedError;
 
-      const mediaUrl = signedData.signedUrl;
+        mediaUrls.push(signedData.signedUrl);
+      }
+
       setUploading(false);
       setAnalyzing(true);
 
+      // Send primary URL for backward compat, plus all URLs
       const { data, error } = await supabase.functions.invoke("analyze-biomechanics", {
-        body: { mediaUrl, clientUserId: selectedClient },
+        body: {
+          mediaUrl: mediaUrls[0],
+          mediaUrls,
+          clientUserId: selectedClient,
+        },
       });
 
       if (error) throw error;
-      toast.success("Analysis complete — draft saved");
+      toast.success(`Analysis complete — ${files.length} angle(s) processed`);
       queryClient.invalidateQueries({ queryKey: ["client-assessments"] });
     } catch (e: any) {
       toast.error(e.message || "Upload/analysis failed");
@@ -390,9 +398,9 @@ const AdminBiomechanics = () => {
           }
         >
           <SmartCamera
-            onCapture={(file) => {
+            onCapture={(files) => {
               setShowCamera(false);
-              handleUploadAndAnalyze(file);
+              handleUploadAndAnalyze(files);
             }}
             onClose={() => setShowCamera(false)}
           />
