@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
 import AppNavbar from "@/components/AppNavbar";
 import MonthlyFocus from "@/components/landing/MonthlyFocus";
-
+import { useSectionVisible } from "@/hooks/useSiteContent";
 import TrialCTA from "@/components/TrialCTA";
 
 /* ── Featured Videos ── */
