@@ -131,18 +131,44 @@ const AdminMonthlyFocus = () => {
   /* ── Challenge AI Generation ── */
   const handleGenerateChallenge = async () => {
     setGeneratingChallenge(true);
+    setChallengePreview(null);
     try {
       const { data, error } = await supabase.functions.invoke("generate-monthly-challenge", {
         body: { month: selMonth, year: selYear, topic: challengeTopicInput.trim() || undefined },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      toast({ title: "🔥 Challenge generated!", description: "Review and activate below." });
-      loadChallenges();
+      if (data?.preview) {
+        setChallengePreview(data.preview);
+        toast({ title: "🔥 Preview ready!", description: "Review below — save it if you like it, or regenerate." });
+      }
     } catch (e: any) {
       toast({ title: "Generation failed", description: e.message, variant: "destructive" });
     }
     setGeneratingChallenge(false);
+  };
+
+  const handleSaveChallengePreview = async () => {
+    if (!challengePreview) return;
+    setSavingPreview(true);
+    const { error } = await supabase.from("monthly_challenges").upsert({
+      title: challengePreview.title,
+      description: challengePreview.description,
+      metric_label: challengePreview.metric_label,
+      month: selMonth,
+      year: selYear,
+      is_active: false,
+      created_by: user?.id,
+    } as any, { onConflict: "month,year" });
+    if (error) {
+      toast({ title: "Save failed", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Challenge saved!", description: "Activate it when you're ready to go live." });
+      setChallengePreview(null);
+      setChallengeTopicInput("");
+      loadChallenges();
+    }
+    setSavingPreview(false);
   };
 
 
