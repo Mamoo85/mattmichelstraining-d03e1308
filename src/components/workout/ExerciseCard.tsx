@@ -17,7 +17,7 @@ interface ExerciseCardProps {
   onOpenFormTracker?: (exerciseTitle: string) => void;
 }
 
-const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove }: ExerciseCardProps) => {
+const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTracker }: ExerciseCardProps) => {
   const [showExtras, setShowExtras] = useState(false);
   const [showUpsell, setShowUpsell] = useState(false);
   const { isAdmin } = useIsAdmin();
