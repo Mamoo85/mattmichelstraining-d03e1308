@@ -366,7 +366,57 @@ const AdminClientList = () => {
                         <option value="team_elite">Team/Elite ($149.99)</option>
                       </select>
                     </div>
-                    <p className="text-[10px] text-muted-foreground mt-1">Bypasses Stripe — sets access directly in database.</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      {(p as any).is_vip
+                        ? "VIP — tier is locked from Stripe sync."
+                        : "Warning: Stripe sync will overwrite this unless VIP is enabled."}
+                    </p>
+                  </div>
+
+                  {/* VIP Toggle */}
+                  <div className="bg-secondary/30 border border-border p-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Star size={14} className="text-primary" />
+                        <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">VIP In-Person Client</span>
+                      </div>
+                      <Switch
+                        checked={!!(p as any).is_vip}
+                        onCheckedChange={(checked) => {
+                          toggleVipMutation.mutate({
+                            profileId: p.id,
+                            value: checked,
+                            setBasic: checked && (!p.subscription_tier || p.subscription_tier === "free"),
+                          });
+                          setSelectedProfile({ ...p, is_vip: checked, subscription_tier: checked && (!p.subscription_tier || p.subscription_tier === "free") ? "basic" : p.subscription_tier });
+                        }}
+                      />
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      VIP clients get free access at their assigned tier. Stripe sync is disabled for VIP users.
+                    </p>
+                  </div>
+
+                  {/* Create Invite Link */}
+                  <div className="bg-secondary/30 border border-border p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <MessageSquare size={14} className="text-primary" />
+                      <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Invite Link</span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const link = `${window.location.origin}/auth?ref=vip`;
+                        navigator.clipboard.writeText(link);
+                        toast.success("Invite link copied! Paste it into a text message.");
+                      }}
+                      className="w-full bg-primary text-primary-foreground px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2"
+                    >
+                      <Copy size={12} />
+                      Copy Invite Link for SMS
+                    </button>
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      Generates a signup link you can text to in-person clients. Mark them as VIP after they sign up.
+                    </p>
                   </div>
 
 
