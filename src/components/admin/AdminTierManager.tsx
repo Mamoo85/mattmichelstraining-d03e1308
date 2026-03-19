@@ -8,7 +8,10 @@ import { Label } from "@/components/ui/label";
 import {
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from "@/components/ui/table";
-import { Plus, Trash2, Save, ShieldCheck, Zap, Star, Users, Loader2 } from "lucide-react";
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { Plus, Trash2, Save, ShieldCheck, Zap, Star, Users, Loader2, ChevronDown, Pencil } from "lucide-react";
 
 const TIERS = [
   { key: "tier_basic", label: "Basic", icon: Star, color: "text-blue-400" },
@@ -18,6 +21,23 @@ const TIERS = [
 ] as const;
 
 type TierKey = typeof TIERS[number]["key"];
+
+const PRESET_FEATURES = [
+  { key: "exercise_library", label: "Exercise Library", description: "Access to the full exercise library" },
+  { key: "fix_it_library", label: "Fix It Library", description: "Corrective exercise video library" },
+  { key: "monthly_focus", label: "Monthly Focus", description: "Monthly training focus plans" },
+  { key: "custom_programming", label: "Custom Programming", description: "AI-generated custom programs" },
+  { key: "coach_messaging", label: "Coach Messaging", description: "Direct messaging with Coach Matt" },
+  { key: "flag_coach", label: "Flag for Coach", description: "Flag exercises for coach review" },
+  { key: "video_analysis", label: "Video Analysis", description: "AI-powered form and video analysis" },
+  { key: "nutrition_scanner", label: "Nutrition Scanner", description: "AI food photo analysis" },
+  { key: "posture_analysis", label: "Posture Analysis", description: "AI biomechanics posture scan" },
+  { key: "velocity_tracker", label: "Velocity Tracker", description: "Velocity-based training tracker" },
+  { key: "community_workouts", label: "Community Workouts", description: "Share and discover workouts" },
+  { key: "challenges", label: "Challenges", description: "Monthly challenges and leaderboard" },
+  { key: "team_management", label: "Team Management", description: "Full roster and team training plans" },
+  { key: "session_booking", label: "Session Booking", description: "Book 1-on-1 training sessions" },
+];
 
 interface TierFeature {
   id: string;
@@ -108,12 +128,39 @@ const AdminTierManager = () => {
           <h2 className="text-sm font-bold text-foreground uppercase tracking-widest">Tier Access Manager</h2>
           <p className="text-xs text-muted-foreground mt-1">Toggle feature access for each subscription tier. Changes take effect immediately.</p>
         </div>
-        <button
-          onClick={() => setShowAdd(!showAdd)}
-          className="flex items-center gap-1 px-3 py-2 text-[10px] font-bold uppercase tracking-widest bg-primary text-primary-foreground hover:opacity-90 transition-m2"
-        >
-          <Plus size={12} /> Add Feature
-        </button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center gap-1 px-3 py-2 text-[10px] font-bold uppercase tracking-widest bg-primary text-primary-foreground hover:opacity-90 transition-m2">
+              <Plus size={12} /> Add Feature <ChevronDown size={10} />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56 max-h-72 overflow-y-auto">
+            {PRESET_FEATURES
+              .filter((p) => !features.some((f) => f.feature_key === p.key))
+              .map((preset) => (
+                <DropdownMenuItem
+                  key={preset.key}
+                  onClick={() => {
+                    setNewFeature({ feature_key: preset.key, feature_label: preset.label, description: preset.description });
+                    setShowAdd(true);
+                  }}
+                  className="text-xs"
+                >
+                  {preset.label}
+                </DropdownMenuItem>
+              ))}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => {
+                setNewFeature({ feature_key: "", feature_label: "", description: "" });
+                setShowAdd(true);
+              }}
+              className="text-xs"
+            >
+              <Pencil size={12} className="mr-2" /> Custom Feature…
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {showAdd && (
