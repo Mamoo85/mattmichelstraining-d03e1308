@@ -58,7 +58,9 @@ const Index = () => (
     <AppNavbar />
     <HeroSection />
     <div className="container py-12 max-w-xl mx-auto">
-      <ChallengeTeaser />
+      <Suspense fallback={null}>
+        <ChallengeTeaser />
+      </Suspense>
     </div>
   </div>
 );
