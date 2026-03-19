@@ -70,12 +70,6 @@ const HeroSection = () => {
               >
                 Meet Matt
               </Link>
-              <Link
-                to="/dashboard"
-                className="inline-flex items-center gap-2 border-2 border-primary text-primary px-6 py-3 text-xs font-bold uppercase tracking-widest hover:border-primary/80 hover:shadow-[0_0_15px_hsl(var(--primary)/0.3)] transition-m2 w-full sm:w-auto justify-center"
-              >
-                Enter The Portal
-              </Link>
             </div>
 
             {/* Audience Router */}
