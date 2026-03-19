@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Search, FileText, User, Calendar, Dumbbell, Play } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useFamilyUserIds } from "@/hooks/useFamilyUserIds";
 import { printCommunityWorkout } from "./printCommunityWorkout";
 
 interface CommunityExercise {
