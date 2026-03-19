@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Dumbbell, ShoppingBag, Home, Menu, X, LogIn, LogOut, Shield, CreditCard, BookOpen, Users, User } from "lucide-react";
+import { Dumbbell, ShoppingBag, Home, Menu, X, LogIn, LogOut, Shield, CreditCard, BookOpen, Users, User, Download } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -69,6 +69,13 @@ const AppNavbar = () => {
             </Link>
           )}
 
+          <Link
+            to="/install"
+            className="flex items-center gap-1 px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest rounded-sm bg-primary/10 text-primary hover:bg-primary/20 transition-m2"
+          >
+            <Download size={13} />
+            App
+          </Link>
 
           {user && <NotificationBell />}
 
@@ -93,6 +100,13 @@ const AppNavbar = () => {
 
         {/* Mobile: bell + hamburger */}
         <div className="md:hidden flex items-center gap-1">
+          <Link
+            to="/install"
+            className="flex items-center gap-1 px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest rounded-sm bg-primary/10 text-primary"
+          >
+            <Download size={13} />
+            App
+          </Link>
           {user && <NotificationBell />}
           <button className="p-2 text-muted-foreground" onClick={() => setMobileOpen(!mobileOpen)}>
             {mobileOpen ? <X size={22} /> : <Menu size={22} />}
