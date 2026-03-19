@@ -321,7 +321,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
             setPhase("readiness");
           } else {
             setPhase("active");
-            setTimerRunning(true);
+            setTimerAutoStart(true);
           }
         }}
         onExit={onFinish}
