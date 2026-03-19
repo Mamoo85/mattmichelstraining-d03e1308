@@ -1,62 +1,40 @@
-- Welcome Gift System for New Signups
 
-## Overview
 
-When a new user creates a free account, they receive two pre-built workouts in their portal and a posture analysis offer popup. The posture flow is designed to funnel free users toward a Basic membership ($14.99/mo).
+# VIP In-Person Client System
+
+## Problem
+Currently, when admin manually sets a user's tier via the Tier Override dropdown, the `check-subscription` edge function overwrites it on every call because it syncs from Stripe. VIP in-person clients who should get free Basic access lose their tier within 60 seconds.
 
 ## What Gets Built
 
-### 1. Database: Seed Welcome Workouts via Trigger
+### 1. Database: Add `is_vip` Column to Profiles
+- Add `is_vip boolean NOT NULL DEFAULT false` to `profiles`
+- This flag tells the system "admin controls this user's tier — don't sync from Stripe"
 
-- Create a DB trigger on the `profiles` table (after insert) that automatically inserts two rows into `community_workouts` for the new user:
-  - **"Death by Hang Cleans"** — 4 rounds: Hang Cleans + Burpees, Hang Clean Front Squats + Burpees, Hang Clean Presses + Burpees, Hang Clean Front Squat Presses + Burpees (10 reps each)
-  - **"Matt's Mountain Workout"** — Pyramid structure with 6 beginner exercises (mobility/core/foundational): Round 1 = Ex1; Round 2 = Ex1+Ex2; ... Round 6 = all 6. Exercises: Cat-Cow, Dead Bug, Goblet Squat, Push-Up, Band Pull-Apart, Plank
-- These workouts will be private (`is_public = false`) and appear in the user's workout bank immediately
+### 2. Edge Function: Respect VIP Flag in `check-subscription`
+- Before doing the Stripe lookup, check if the user's profile has `is_vip = true`
+- If VIP, return the profile's existing `subscription_tier` as-is (skip Stripe sync entirely)
+- This ensures admin-set tiers persist for VIP users
 
-### 2. New Component: `WelcomeGiftModal`
+### 3. Admin UI: VIP Toggle + Invite Links in AdminClientList
+- Add a "VIP Client" toggle switch in the User Control modal (next to Tier Override)
+- When toggled ON, automatically set tier to "basic" (default VIP access level)
+- Admin can still change the tier dropdown to any level (foundation, custom, etc.)
+- Add a **"Create Invite Link"** button that generates an SMS-friendly signup link (e.g., `https://www.mattmichelstraining.com/auth?ref=vip`) the admin can copy/text to clients
+- Add a **"VIP Clients"** stat card and filter option in the client list header
 
-- A full-screen modal shown to new users on their first dashboard visit
-- **Screen 1 — Workout Gift**: Announces the two free workouts with workout names and a "Let's Go" button
-- **Screen 2 — Free Posture Analysis Offer**: 
-  - Explains the free AI posture analysis
-  - Two CTAs: **"Let's Do It"** (opens camera for front + side photos) and **"No, I'm Scared 😅"** (dismiss/do later)
-  - If they choose to do it: uses device camera to capture front and side photos, uploads to `form_checks` storage bucket with metadata, and inserts a row into a lightweight `posture_requests` table so it lands in the admin inbox
-- **Screen 3 — Basic Membership Promo**: After the posture step (whether they did it or skipped), show a promo card with a discount code for Basic membership ($14.99/mo) with a CTA to `/pricing?promo=CODE`
-- Tracks that the user has seen this via `localStorage` key `m2-welcome-gift-seen`
-
-### 3. Database: `posture_requests` Table
-
-- New table: `id`, `user_id`, `front_photo_url`, `side_photo_url`, `status` (pending/analyzed/sent), `analysis`, `created_at`
-- RLS: users can insert their own, admins can read/update all
-- When admin reviews in the existing Biomechanics admin panel, they approve the AI analysis and it gets sent back
-
-### 4. Admin Inbox Integration
-
-- Add a "Posture Requests" section to the admin coach inbox showing pending requests with the uploaded photos
-- Admin can run the existing `analyze-biomechanics` function on the photos, review/edit, and approve — which creates a notification for the user
-
-### 5. Dashboard Integration
-
-- In `DashboardHome`, detect first-time users and show `WelcomeGiftModal`
-- Add a persistent "Free Posture Analysis" card in the dashboard for users who skipped it, linking back to the camera capture flow
-
-### 6. Stripe Promo Code
-
-- Use the existing `create-stripe-promo` edge function to generate a welcome promo code for Basic tier (e.g., `WELCOME-M2` for a percentage off first month)
+### 4. Subscription Guard: Treat VIP as Subscribed
+- Update `check-subscription` response so VIP users return `subscribed: true`
+- This bypasses trial expiration and paywall gating automatically
 
 ## Files Changed
-
-- **New migration**: Create `posture_requests` table + welcome workout trigger on `profiles`
-- **New**: `src/components/dashboard/WelcomeGiftModal.tsx` — multi-step welcome modal
-- **New**: `src/components/dashboard/PostureCapture.tsx` — camera capture component for front/side photos
-- **Edit**: `src/components/dashboard/DashboardHome.tsx` — mount the welcome modal for new users
-- **Edit**: `src/components/admin/AdminCoachInbox.tsx` — add posture requests tab
-- **Edit**: `src/pages/Admin.tsx` — wire up posture requests if needed
+- **New migration**: Add `is_vip` column to `profiles`
+- **Edit**: `supabase/functions/check-subscription/index.ts` — skip Stripe sync for VIP users
+- **Edit**: `src/components/admin/AdminClientList.tsx` — add VIP toggle, invite link button, VIP filter
 
 ## Technical Notes
+- VIP users default to Basic tier access at zero cost — no Stripe subscription needed
+- Admin can elevate any VIP user to higher tiers manually via the existing dropdown
+- The `is_vip` flag prevents `check-subscription` from overwriting admin-set tiers
+- Invite link is a simple copy-to-clipboard URL — no backend needed for link generation
 
-- Welcome workouts use the existing `community_workouts` table structure with `is_public = false`
-- The posture capture reuses camera patterns from the existing `SmartCamera` component
-- Photos upload to the existing `form_checks` public bucket
-- The welcome modal only shows once per device (localStorage flag), but the posture analysis option remains accessible from dashboard
-- 50% off their first month if they sign up for a basic membership within the next 14 days.
