@@ -1,6 +1,6 @@
-import { memo, lazy, Suspense, useCallback } from "react";
+import { memo, lazy, Suspense, useCallback, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Play } from "lucide-react";
+import { Play, Camera } from "lucide-react";
 import MonthlyFocusWidget from "@/components/MonthlyFocusWidget";
 import UpcomingSessions from "@/components/UpcomingSessions";
 import PointsWidget from "@/components/PointsWidget";
@@ -8,8 +8,10 @@ import WorkoutScanner from "@/components/workout/WorkoutScanner";
 import EmptyStateCard from "@/components/EmptyStateCard";
 import ReferEarnCard from "./ReferEarnCard";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const SharedWorkoutFeed = lazy(() => import("@/components/workout/SharedWorkoutFeed"));
+const WelcomeGiftModal = lazy(() => import("./WelcomeGiftModal"));
 
 interface DashboardHomeProps {
   isNewUser: boolean;
