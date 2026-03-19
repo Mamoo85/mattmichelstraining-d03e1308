@@ -178,8 +178,9 @@ const WorkoutLogger = () => {
           key={i}
           exercise={ex}
           index={i}
-          onUpdate={(data) => updateExercise(i, data)}
-          onRemove={() => removeExercise(i)}
+          onUpdate={updateExercise}
+          onRemove={removeExercise}
+          onOpenFormTracker={handleOpenFormTracker}
         />
       ))}
 
