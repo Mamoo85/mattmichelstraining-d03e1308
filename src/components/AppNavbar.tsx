@@ -15,7 +15,7 @@ const navItems = [
   { to: "/for-parents", label: "PARENTS", icon: Users },
   { to: "/learn", label: "LEARN", icon: BookOpen },
   { to: "/pricing", label: "PRICING", icon: CreditCard },
-  { to: "/install", label: "GET APP", icon: Smartphone },
+  
 ];
 
 const AppNavbar = () => {
