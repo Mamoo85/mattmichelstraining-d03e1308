@@ -20,6 +20,7 @@ const AdminBiomechanics = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editFindings, setEditFindings] = useState("");
   const [editProgram, setEditProgram] = useState("");
+  const [showCamera, setShowCamera] = useState(false);
 
   // Fetch profiles for client selector
   const { data: profiles } = useQuery({
