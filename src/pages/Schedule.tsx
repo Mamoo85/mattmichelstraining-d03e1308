@@ -9,6 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { format, addDays, startOfDay } from "date-fns";
 import { Loader2, Clock, DollarSign, Info, Calendar, CheckCircle, Video, MapPin, Ticket, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import ScheduleSneakPeek from "@/components/landing/ScheduleSneakPeek";
+import InstagramSocialBox from "@/components/landing/InstagramSocialBox";
 
 const formatTime12 = (t: string) => {
   const [hStr, mStr] = t.split(":");
