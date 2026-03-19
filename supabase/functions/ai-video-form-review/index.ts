@@ -92,8 +92,9 @@ Keep feedback actionable and athlete-friendly. Use coaching language, not clinic
 
     const aiData = await aiResponse.json();
     const review = aiData.choices?.[0]?.message?.content || "No review generated";
+    const usage = aiData.usage || {};
 
-    return new Response(JSON.stringify({ review, exerciseName, athleteName }), {
+    return new Response(JSON.stringify({ review, exerciseName, athleteName, usage: { prompt_tokens: usage.prompt_tokens || 0, completion_tokens: usage.completion_tokens || 0, total_tokens: usage.total_tokens || 0, model: aiData.model || "google/gemini-2.5-flash" } }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

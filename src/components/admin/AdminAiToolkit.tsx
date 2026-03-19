@@ -145,17 +145,32 @@ const ToolLoader = () => (
   </div>
 );
 
+/* ── Usage display ── */
+const UsageBadge = ({ usage }: { usage: { prompt_tokens: number; completion_tokens: number; total_tokens: number; model: string } | null }) => {
+  if (!usage) return null;
+  return (
+    <div className="flex flex-wrap gap-3 text-[10px] text-muted-foreground bg-muted/50 border border-border px-3 py-2">
+      <span>Model: <strong className="text-foreground">{usage.model}</strong></span>
+      <span>Prompt: <strong className="text-foreground">{usage.prompt_tokens.toLocaleString()}</strong> tokens</span>
+      <span>Completion: <strong className="text-foreground">{usage.completion_tokens.toLocaleString()}</strong> tokens</span>
+      <span>Total: <strong className="text-foreground">{usage.total_tokens.toLocaleString()}</strong> tokens</span>
+    </div>
+  );
+};
+
 /* ── Inline tool UIs for new AI features ── */
 
 const InjuryRiskTool = () => {
   const [userId, setUserId] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState("");
+  const [usage, setUsage] = useState<any>(null);
 
   const run = async () => {
     if (!userId.trim()) return toast.error("Paste an athlete user ID");
     setLoading(true);
     setResult("");
+    setUsage(null);
     try {
       const { data, error } = await supabase.functions.invoke("ai-injury-risk", {
         body: { clientUserId: userId.trim() },
@@ -163,6 +178,7 @@ const InjuryRiskTool = () => {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setResult(data.analysis);
+      if (data?.usage) setUsage(data.usage);
     } catch (e: any) {
       toast.error(e.message || "Failed to analyze");
     } finally {
@@ -180,11 +196,14 @@ const InjuryRiskTool = () => {
         </Button>
       </div>
       {result && (
-        <Card>
-          <CardContent className="pt-4 prose prose-sm max-w-none dark:prose-invert">
-            <ReactMarkdown>{result}</ReactMarkdown>
-          </CardContent>
-        </Card>
+        <>
+          <UsageBadge usage={usage} />
+          <Card>
+            <CardContent className="pt-4 prose prose-sm max-w-none dark:prose-invert">
+              <ReactMarkdown>{result}</ReactMarkdown>
+            </CardContent>
+          </Card>
+        </>
       )}
     </div>
   );
@@ -196,11 +215,13 @@ const VideoFormReviewTool = () => {
   const [athlete, setAthlete] = useState("Athlete");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState("");
+  const [usage, setUsage] = useState<any>(null);
 
   const run = async () => {
     if (!videoUrl.trim()) return toast.error("Paste a video URL");
     setLoading(true);
     setResult("");
+    setUsage(null);
     try {
       const { data, error } = await supabase.functions.invoke("ai-video-form-review", {
         body: { videoUrl: videoUrl.trim(), exerciseName: exercise, athleteName: athlete },
@@ -208,6 +229,7 @@ const VideoFormReviewTool = () => {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setResult(data.review);
+      if (data?.usage) setUsage(data.usage);
     } catch (e: any) {
       toast.error(e.message || "Failed to review");
     } finally {
@@ -227,11 +249,14 @@ const VideoFormReviewTool = () => {
         </Button>
       </div>
       {result && (
-        <Card>
-          <CardContent className="pt-4 prose prose-sm max-w-none dark:prose-invert">
-            <ReactMarkdown>{result}</ReactMarkdown>
-          </CardContent>
-        </Card>
+        <>
+          <UsageBadge usage={usage} />
+          <Card>
+            <CardContent className="pt-4 prose prose-sm max-w-none dark:prose-invert">
+              <ReactMarkdown>{result}</ReactMarkdown>
+            </CardContent>
+          </Card>
+        </>
       )}
     </div>
   );
@@ -244,11 +269,13 @@ const ParentReportTool = () => {
   const [year, setYear] = useState(String(now.getFullYear()));
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState("");
+  const [usage, setUsage] = useState<any>(null);
 
   const run = async () => {
     if (!childId.trim()) return toast.error("Paste athlete user ID");
     setLoading(true);
     setResult("");
+    setUsage(null);
     try {
       const { data, error } = await supabase.functions.invoke("ai-parent-report", {
         body: { childUserId: childId.trim(), month: Number(month), year: Number(year) },
@@ -256,6 +283,7 @@ const ParentReportTool = () => {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setResult(data.report);
+      if (data?.usage) setUsage(data.usage);
     } catch (e: any) {
       toast.error(e.message || "Failed to generate report");
     } finally {
@@ -284,11 +312,14 @@ const ParentReportTool = () => {
         {loading ? "Generating…" : "Generate Report"}
       </Button>
       {result && (
-        <Card>
-          <CardContent className="pt-4 prose prose-sm max-w-none dark:prose-invert">
-            <ReactMarkdown>{result}</ReactMarkdown>
-          </CardContent>
-        </Card>
+        <>
+          <UsageBadge usage={usage} />
+          <Card>
+            <CardContent className="pt-4 prose prose-sm max-w-none dark:prose-invert">
+              <ReactMarkdown>{result}</ReactMarkdown>
+            </CardContent>
+          </Card>
+        </>
       )}
     </div>
   );
@@ -304,10 +335,12 @@ const MealPrepTool = () => {
   const [goal, setGoal] = useState("muscle gain");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState("");
+  const [usage, setUsage] = useState<any>(null);
 
   const run = async () => {
     setLoading(true);
     setResult("");
+    setUsage(null);
     try {
       const { data, error } = await supabase.functions.invoke("ai-meal-prep", {
         body: {
@@ -323,6 +356,7 @@ const MealPrepTool = () => {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setResult(data.mealPlan);
+      if (data?.usage) setUsage(data.usage);
     } catch (e: any) {
       toast.error(e.message || "Failed to generate meal plan");
     } finally {
@@ -381,11 +415,14 @@ const MealPrepTool = () => {
         {loading ? "Generating…" : "Generate Meal Plan"}
       </Button>
       {result && (
-        <Card>
-          <CardContent className="pt-4 prose prose-sm max-w-none dark:prose-invert">
-            <ReactMarkdown>{result}</ReactMarkdown>
-          </CardContent>
-        </Card>
+        <>
+          <UsageBadge usage={usage} />
+          <Card>
+            <CardContent className="pt-4 prose prose-sm max-w-none dark:prose-invert">
+              <ReactMarkdown>{result}</ReactMarkdown>
+            </CardContent>
+          </Card>
+        </>
       )}
     </div>
   );

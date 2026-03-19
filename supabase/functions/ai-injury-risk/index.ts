@@ -108,8 +108,9 @@ End with actionable recommendations: deload protocols, exercise swaps, recovery 
 
     const aiData = await aiResponse.json();
     const analysis = aiData.choices?.[0]?.message?.content || "No analysis generated";
+    const usage = aiData.usage || {};
 
-    return new Response(JSON.stringify({ analysis, athlete: athleteName }), {
+    return new Response(JSON.stringify({ analysis, athlete: athleteName, usage: { prompt_tokens: usage.prompt_tokens || 0, completion_tokens: usage.completion_tokens || 0, total_tokens: usage.total_tokens || 0, model: aiData.model || "google/gemini-2.5-flash" } }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
