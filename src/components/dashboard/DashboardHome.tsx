@@ -20,15 +20,13 @@ interface DashboardHomeProps {
 const DashboardHome = memo(({ isNewUser, onViewPoints, onViewReferrals }: DashboardHomeProps) => {
   const { subscribed } = useAuth();
   const navigate = useNavigate();
-  const [pickerOpen, setPickerOpen] = useState(false);
 
   const handleStartWorkout = useCallback(() => {
-    // Free users with no content go straight to pricing
     if (!subscribed && isNewUser) {
       navigate("/pricing");
       return;
     }
-    setPickerOpen(true);
+    window.dispatchEvent(new CustomEvent("open-workout-zone", { detail: null }));
   }, [subscribed, isNewUser, navigate]);
 
   return (
