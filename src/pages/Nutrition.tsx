@@ -166,7 +166,7 @@ const Nutrition = () => {
 
   return (
     <>
-      <SEOHead title="Nutrition Tracker | M² Training" description="Snap a photo of your food and get instant calorie and macro estimates powered by AI." />
+      <SEOHead title="Nutrition Tracker | M² Training" description="Snap a photo of your food and get instant calorie and macro estimates powered by AI." path="/nutrition" />
       <AppNavbar />
       <main className="min-h-screen bg-background pt-16 pb-24">
         <div className="container max-w-lg mx-auto space-y-6 px-4">
