@@ -335,11 +335,11 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
       <ReadinessGate
         onComplete={(result) => {
           handleReadinessComplete(result);
-          setTimerRunning(true);
+          setTimerAutoStart(true);
         }}
         onSkip={() => {
           handleReadinessSkip();
-          setTimerRunning(true);
+          setTimerAutoStart(true);
         }}
       />
     );
