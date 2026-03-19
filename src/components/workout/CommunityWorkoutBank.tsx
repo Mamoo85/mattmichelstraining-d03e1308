@@ -34,7 +34,7 @@ const CommunityWorkoutBank = ({ onCreateNew }: CommunityWorkoutBankProps) => {
 
   useEffect(() => {
     loadWorkouts();
-  }, []);
+  }, [user]);
 
   const loadWorkouts = async () => {
     setLoading(true);
