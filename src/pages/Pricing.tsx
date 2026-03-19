@@ -191,6 +191,13 @@ const Pricing = () => {
           )}
         </div>
 
+        {/* Trial CTA — top position */}
+        {!subscribed && (
+          <div className="mb-8 max-w-2xl mx-auto">
+            <TrialCTA variant="comparison" />
+          </div>
+        )}
+
         {/* Promo code input */}
         {!subscribed && (
           <div className="max-w-md mx-auto mb-8">
@@ -380,30 +387,8 @@ const Pricing = () => {
           </div>
         )}
 
-        {/* Trial CTA */}
-        {!subscribed && (
-          <div className="mt-12 max-w-2xl mx-auto">
-            <TrialCTA variant="comparison" />
-          </div>
-        )}
 
-        {/* Free member banner */}
-        <div className="mt-8 text-center border-2 border-dashed border-border p-8 max-w-2xl mx-auto">
-          <h3 className="text-lg font-black uppercase tracking-tight text-foreground mb-2">
-            {cms.free_banner_title || "Free When You Sign Up"}
-          </h3>
-          <p className="text-muted-foreground text-sm mb-4">
-            {cms.free_banner_text || "A complete 2-week starter program, monthly focus plans, member challenges, and workout logging — no credit card needed. See what real coaching looks like before you commit."}
-          </p>
-          {!user && (
-            <Link
-              to="/auth"
-              className="inline-flex items-center gap-2 bg-foreground text-background px-6 py-3 text-xs font-bold uppercase tracking-widest hover:bg-foreground/90 transition-colors"
-            >
-              Create Free Account <ArrowRight className="w-4 h-4" />
-            </Link>
-          )}
-        </div>
+
 
         {/* Checkout confirmation modal */}
         <CheckoutConfirmationModal
