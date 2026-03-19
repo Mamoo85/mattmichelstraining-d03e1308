@@ -51,13 +51,15 @@ const AdminAiBusinessTools = () => {
   const [activeTool, setActiveTool] = useState<ToolKey>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState("");
+  const [usage, setUsage] = useState<{ prompt_tokens: number; completion_tokens: number; total_tokens: number; model: string } | null>(null);
   const qc = useQueryClient();
 
-  const close = () => { setActiveTool(null); setResult(""); };
+  const close = () => { setActiveTool(null); setResult(""); setUsage(null); };
 
   const runTool = async (fnName: string, tool: string, context: Record<string, any>) => {
     setLoading(true);
     setResult("");
+    setUsage(null);
     try {
       const { data, error } = await supabase.functions.invoke(fnName, {
         body: { tool, context },
@@ -65,6 +67,7 @@ const AdminAiBusinessTools = () => {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setResult(data.result || "No result returned.");
+      if (data?.usage) setUsage(data.usage);
     } catch (e: any) {
       toast.error(e.message || "Failed to generate");
     } finally {
