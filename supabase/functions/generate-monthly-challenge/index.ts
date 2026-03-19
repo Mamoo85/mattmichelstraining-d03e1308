@@ -29,15 +29,6 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    // Check if there's a monthly focus for context
-    const { data: focusData } = await supabase
-      .from("monthly_focus")
-      .select("title, topic")
-      .eq("month", month)
-      .eq("year", year)
-      .maybeSingle();
-
-    const focusContext = focusData ? `This month's training focus is "${(focusData as any).title}" (topic: ${(focusData as any).topic}). The challenge should complement this focus.` : "";
     const challengeTopic = topic?.trim() || "something fun and athletic";
 
     const systemPrompt = `You are Coach Matt Michels — a strength coach with 20+ years experience. You're writing for an ADULT and PARENT audience, so keep it professional but with your natural humor and directness.
@@ -64,9 +55,8 @@ MATT'S VOICE PATTERNS:
 Your job: create a monthly community challenge. Match the energy to the topic.`;
 
     const userPrompt = `Generate a Monthly Challenge for ${getMonthName(month)} ${year} around: "${challengeTopic}".
-${focusContext}
 
-Return structured data via the tool. The description should be 2-3 SHORT punchy sentences in Matt's REAL texting voice — not generic coach speak.`;
+Return structured data via the tool. The title AND description should both be in Matt's voice — punchy, fun, memorable. Not generic. The description should be 2-3 SHORT sentences.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
