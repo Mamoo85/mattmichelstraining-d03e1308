@@ -178,18 +178,13 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
     setPhase("active");
   }, []);
 
-  // Timer
-  const [elapsedSeconds, setElapsedSeconds] = useState(initialContext?.resumedElapsed || 0);
-  const [timerRunning, setTimerRunning] = useState(hasInitialContent);
+  // Timer — elapsed stored in ref, only synced on pause/unmount to avoid re-renders
+  const elapsedRef = useRef(initialContext?.resumedElapsed || 0);
+  const [timerAutoStart, setTimerAutoStart] = useState(hasInitialContent);
 
-  useEffect(() => {
-    if (!timerRunning) return;
-    const id = setInterval(() => setElapsedSeconds((s) => s + 1), 1000);
-    return () => clearInterval(id);
-  }, [timerRunning]);
-
-  const mins = Math.floor(elapsedSeconds / 60);
-  const secs = elapsedSeconds % 60;
+  const handleElapsedChange = useCallback((seconds: number) => {
+    elapsedRef.current = seconds;
+  }, []);
 
   // Prevent body scroll
   useEffect(() => {
