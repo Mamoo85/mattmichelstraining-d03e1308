@@ -198,6 +198,7 @@ const Admin = () => {
             { key: "subscribers", label: "Subscribers", content: <AdminSubscriberList /> },
             { key: "compose", label: "Compose", content: <AdminNewsletterComposer /> },
             { key: "history", label: "Send History", content: <AdminSendHistory /> },
+            { key: "ad-drafts", label: "Ad Drafts", content: <AdminMarketingDrafts /> },
           ]} />
         )}
       </div>
