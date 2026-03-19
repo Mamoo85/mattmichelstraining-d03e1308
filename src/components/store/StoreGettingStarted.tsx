@@ -316,7 +316,7 @@ const StoreGettingStarted = () => {
             <p className="text-xs text-muted-foreground leading-relaxed">
               20 years of training. A degree in computer engineering. 50+ college athletes. Zero injuries. 
               Matt didn't just pick up a certification — he spent two decades merging the science of movement with 
-              the power of technology. The AI biomechanics engine isn't a gimmick. It's what happens when someone 
+              the power of technology. The biomechanics system isn't a gimmick. It's what happens when someone 
               who actually understands both worlds builds the tools he wished existed.
             </p>
             <div className="flex flex-wrap gap-4 pt-1">
