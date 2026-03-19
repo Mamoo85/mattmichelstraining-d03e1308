@@ -195,7 +195,28 @@ const InterceptGateway = ({ onSelect, onExit }: InterceptGatewayProps) => {
               </section>
             )}
 
-            {/* Personal Bank */}
+            {/* Interactive / Active Programs from My Programs tab */}
+            {activePrograms.length > 0 && (
+              <section className="space-y-2">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                  <Dumbbell size={12} /> My Programs
+                </span>
+                {activePrograms.map((ap) => (
+                  <button
+                    key={ap.id}
+                    onClick={() => handleActiveProgram(ap)}
+                    className="w-full text-left bg-card border border-border p-3 hover:border-primary/40 transition-colors flex items-center gap-3"
+                  >
+                    <Play size={14} className="text-primary flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-foreground truncate">{ap.program_title}</p>
+                      {ap.sport && <p className="text-[10px] text-muted-foreground">{ap.sport}</p>}
+                    </div>
+                  </button>
+                ))}
+              </section>
+            )}
+
             {personalWorkouts.length > 0 && (
               <section className="space-y-2">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
