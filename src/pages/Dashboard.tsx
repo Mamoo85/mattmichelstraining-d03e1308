@@ -24,7 +24,6 @@ const TeamManager = lazy(() => import("@/components/TeamManager"));
 
 const BASE_TABS = [
   { key: "home", label: "Home" },
-  { key: "progress", label: "Progress" },
   { key: "programs", label: "My Programs" },
   { key: "workouts", label: "Workouts" },
   { key: "points", label: "Points" },
