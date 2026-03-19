@@ -185,16 +185,33 @@ const AdminBiomechanics = () => {
             </SelectContent>
           </Select>
 
-          <div>
-            <Input
-              type="file"
-              accept="image/*,video/*"
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <Input
+                type="file"
+                accept="image/*,video/*"
+                disabled={!selectedClient || uploading || analyzing}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleUploadAndAnalyze(file);
+                }}
+              />
+            </div>
+            <Button
+              variant="outline"
               disabled={!selectedClient || uploading || analyzing}
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) handleUploadAndAnalyze(file);
+              onClick={() => {
+                if (!selectedClient) {
+                  toast.error("Select a client first");
+                  return;
+                }
+                setShowCamera(true);
               }}
-            />
+              className="gap-2 shrink-0"
+            >
+              <Camera size={16} />
+              Smart Capture
+            </Button>
           </div>
 
           {(uploading || analyzing) && (
