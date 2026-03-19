@@ -82,7 +82,8 @@ const DashboardHome = memo(({ isNewUser, onViewPoints, onViewReferrals }: Dashbo
       <SharedWorkoutFeed />
     </Suspense>
   </div>
-));
+  );
+});
 
 DashboardHome.displayName = "DashboardHome";
 
