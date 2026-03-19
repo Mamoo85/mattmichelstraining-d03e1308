@@ -1,4 +1,4 @@
-import { memo, lazy, Suspense, useState, useCallback } from "react";
+import { memo, lazy, Suspense, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Play } from "lucide-react";
 import MonthlyFocusWidget from "@/components/MonthlyFocusWidget";
@@ -7,7 +7,6 @@ import PointsWidget from "@/components/PointsWidget";
 import WorkoutScanner from "@/components/workout/WorkoutScanner";
 import EmptyStateCard from "@/components/EmptyStateCard";
 import ReferEarnCard from "./ReferEarnCard";
-import WorkoutPickerModal from "./WorkoutPickerModal";
 import { useAuth } from "@/hooks/useAuth";
 
 const SharedWorkoutFeed = lazy(() => import("@/components/workout/SharedWorkoutFeed"));
@@ -21,15 +20,13 @@ interface DashboardHomeProps {
 const DashboardHome = memo(({ isNewUser, onViewPoints, onViewReferrals }: DashboardHomeProps) => {
   const { subscribed } = useAuth();
   const navigate = useNavigate();
-  const [pickerOpen, setPickerOpen] = useState(false);
 
   const handleStartWorkout = useCallback(() => {
-    // Free users with no content go straight to pricing
     if (!subscribed && isNewUser) {
       navigate("/pricing");
       return;
     }
-    setPickerOpen(true);
+    window.dispatchEvent(new CustomEvent("open-workout-zone", { detail: null }));
   }, [subscribed, isNewUser, navigate]);
 
   return (
@@ -59,7 +56,7 @@ const DashboardHome = memo(({ isNewUser, onViewPoints, onViewReferrals }: Dashbo
       </button>
     </div>
 
-    <WorkoutPickerModal open={pickerOpen} onOpenChange={setPickerOpen} />
+    
 
     <Link
       to="/nutrition"

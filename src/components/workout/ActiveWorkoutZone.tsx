@@ -13,6 +13,7 @@ import ExerciseCard from "./ExerciseCard";
 import RecoveryInput, { type RecoveryData } from "./RecoveryInput";
 import VoiceNoteButton from "./VoiceNoteButton";
 import ConfirmActionModal from "@/components/ConfirmActionModal";
+import InterceptGateway from "./InterceptGateway";
 import PostWorkoutSummary from "./PostWorkoutSummary";
 import LiveFormTracker from "./LiveFormTracker";
 import ReadinessGate, { calculateAdjustments, type ReadinessResult } from "./ReadinessGate";
@@ -58,7 +59,10 @@ const DEFAULT_RECOVERY: RecoveryData = {
 
 const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZoneProps) => {
   const { user } = useAuth();
-  const [phase, setPhase] = useState<"readiness" | "active" | "summary">("readiness");
+  const hasInitialContent = !!(initialContext?.exercises?.length || initialContext?.resumed);
+  const [phase, setPhase] = useState<"intercept" | "readiness" | "active" | "summary">(
+    hasInitialContent ? "readiness" : "intercept"
+  );
   const [readinessResult, setReadinessResult] = useState<ReadinessResult | null>(null);
   const [autoRegulateEnabled, setAutoRegulateEnabled] = useState<boolean | null>(null);
   const [date, setDate] = useState<Date>(
@@ -76,7 +80,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
   );
   const [workoutLogId, setWorkoutLogId] = useState<string | null>(null);
   const [formTrackerExercise, setFormTrackerExercise] = useState<string | null>(null);
-  const workoutTitle = initialContext?.title || "Workout";
+  const [workoutTitle, setWorkoutTitle] = useState(initialContext?.title || "Workout");
 
   // Check if auto-regulate is enabled for this user
   useEffect(() => {
@@ -171,7 +175,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
 
   // Timer
   const [elapsedSeconds, setElapsedSeconds] = useState(initialContext?.resumedElapsed || 0);
-  const [timerRunning, setTimerRunning] = useState(true);
+  const [timerRunning, setTimerRunning] = useState(hasInitialContent);
 
   useEffect(() => {
     if (!timerRunning) return;
@@ -319,12 +323,54 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
     setPhase("summary");
   };
 
+  // Intercept gateway phase
+  if (phase === "intercept") {
+    return (
+      <InterceptGateway
+        onSelect={(ctx) => {
+          if (ctx.exercises?.length) {
+            const mapped: LoggedExerciseData[] = ctx.exercises.map((ex) => ({
+              exerciseId: ex.exerciseId || "",
+              exerciseTitle: ex.exerciseTitle,
+              sets: Array.from({ length: ex.prescribedSets || 3 }, (_, i) => ({
+                set: i + 1,
+                reps: ex.prescribedReps || 0,
+                weight: 0,
+              })),
+              clientNotes: ex.notes || "",
+              videoUrl: "",
+              flagForCoach: false,
+              exerciseVideoUrl: ex.videoUrl || null,
+              exerciseTheWhy: ex.theWhy || null,
+            }));
+            setExercises(mapped);
+          }
+          setWorkoutTitle(ctx.title || "Workout");
+          // Check auto-regulate
+          if (autoRegulateEnabled) {
+            setPhase("readiness");
+          } else {
+            setPhase("active");
+            setTimerRunning(true);
+          }
+        }}
+        onExit={onFinish}
+      />
+    );
+  }
+
   // Readiness gate phase
   if (phase === "readiness" && autoRegulateEnabled) {
     return (
       <ReadinessGate
-        onComplete={handleReadinessComplete}
-        onSkip={handleReadinessSkip}
+        onComplete={(result) => {
+          handleReadinessComplete(result);
+          setTimerRunning(true);
+        }}
+        onSkip={() => {
+          handleReadinessSkip();
+          setTimerRunning(true);
+        }}
       />
     );
   }
