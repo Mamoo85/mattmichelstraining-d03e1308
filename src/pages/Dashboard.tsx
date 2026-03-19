@@ -17,7 +17,6 @@ import WorkoutsTab from "@/components/dashboard/WorkoutsTab";
 
 // Lazy-load heavier tabs
 import { lazy, Suspense } from "react";
-const ProgressCharts = lazy(() => import("@/components/ProgressCharts"));
 const MyPrograms = lazy(() => import("@/components/MyPrograms"));
 const PointsLeaderboard = lazy(() => import("@/components/PointsLeaderboard"));
 const ReferralDashboard = lazy(() => import("@/components/ReferralDashboard"));
