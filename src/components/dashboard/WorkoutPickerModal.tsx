@@ -91,7 +91,7 @@ const WorkoutPickerModal = ({ open, onOpenChange }: WorkoutPickerModalProps) => 
     launchWorkout(w.title, "community", mapped);
   };
 
-  const canCreate = subscribed || isLegend;
+  const canCreate = subscribed;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>

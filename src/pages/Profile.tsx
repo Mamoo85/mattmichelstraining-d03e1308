@@ -214,12 +214,7 @@ const Profile = () => {
               </h1>
               <p className="text-xs text-muted-foreground">{profile?.email}</p>
               <div className="flex items-center gap-2 mt-2 flex-wrap">
-                {isLegend ? (
-                  <Badge className="flex items-center gap-1 text-[10px] uppercase tracking-widest bg-primary text-primary-foreground">
-                    <Crown size={10} />
-                    M² Legend
-                  </Badge>
-                ) : subscriptionTier ? (
+                {subscriptionTier ? (
                   <Badge className="flex items-center gap-1 text-[10px] uppercase tracking-widest">
                     <Crown size={10} />
                     {TIERS[subscriptionTier].name}
