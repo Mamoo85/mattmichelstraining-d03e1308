@@ -448,59 +448,44 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
           )}
         </main>
 
-        {/* Sticky bottom bar */}
-        <footer className="shrink-0 border-t border-border bg-background px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+        {/* Command Bar */}
+        <footer className="fixed bottom-0 w-full z-50 bg-background/95 backdrop-blur-md border-t border-border px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
           <div className="flex items-center justify-between gap-2 max-w-lg mx-auto">
-            {/* Timer */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setTimerRunning(!timerRunning)}
-                className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase tracking-widest transition-all",
-                  timerRunning
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <Timer size={14} />
-                {String(mins).padStart(2, "0")}:{String(secs).padStart(2, "0")}
-              </button>
-            </div>
-
-            <div className="flex items-center gap-2">
-              {/* Pause */}
-              <Button
-                onClick={handlePause}
-                size="sm"
-                variant="outline"
-                className="gap-1 text-xs font-bold uppercase tracking-widest"
-              >
-                <Pause size={14} /> Pause
-              </Button>
-
-              {/* Add Exercise */}
-              {!showPicker && exercises.length > 0 && (
-                <Button
-                  onClick={() => setShowPicker(true)}
-                  size="sm"
-                  variant="outline"
-                  className="gap-1 text-xs font-bold uppercase tracking-widest"
-                >
-                  <Plus size={14} /> Add
-                </Button>
+            {/* Left: Timer readout */}
+            <button
+              onClick={() => setTimerRunning(!timerRunning)}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase tracking-widest transition-all",
+                timerRunning
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:text-foreground"
               )}
+            >
+              {timerRunning ? <Timer size={14} /> : <Play size={14} />}
+              {String(mins).padStart(2, "0")}:{String(secs).padStart(2, "0")}
+            </button>
 
-              {/* Finish */}
-              <Button
-                onClick={handleFinishClick}
-                disabled={saving}
-                size="sm"
-                className="gap-1 text-xs font-bold uppercase tracking-widest bg-primary text-primary-foreground"
-              >
-                {saving ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
-                Finish
-              </Button>
-            </div>
+            {/* Center: Add Exercise */}
+            <Button
+              onClick={() => setShowPicker(true)}
+              size="sm"
+              className="gap-1 text-xs font-bold uppercase tracking-widest bg-primary text-primary-foreground"
+              disabled={showPicker}
+            >
+              <Plus size={14} /> Add Exercise
+            </Button>
+
+            {/* Right: EXIT */}
+            <Button
+              onClick={handleFinishClick}
+              disabled={saving}
+              size="sm"
+              variant="outline"
+              className="gap-1 text-xs font-bold uppercase tracking-widest border-orange-500 text-orange-400 hover:border-orange-400 hover:shadow-[0_0_10px_rgba(249,115,22,0.4)]"
+            >
+              {saving ? <Loader2 size={14} className="animate-spin" /> : <X size={14} />}
+              Exit
+            </Button>
           </div>
         </footer>
       </div>

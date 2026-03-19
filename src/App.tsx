@@ -125,11 +125,13 @@ const ActiveWorkoutWrapper = () => {
         setZoneOpen(false);
         setZoneContext(null);
         setHasPaused(false);
+        setPortalActive(false);
         localStorage.removeItem("m2-paused-workout");
       }}
       onPause={() => {
         setZoneOpen(false);
         setHasPaused(true);
+        setPortalActive(false);
       }}
     />
   );
