@@ -117,7 +117,7 @@ const AdminBiomechanics = () => {
         }
       } else {
         const a = assessments?.find((a: any) => a.id === id);
-        findingsPayload = a?.ai_findings;
+        findingsPayload = a?.ai_findings as unknown as string[];
         programPayload = a?.draft_program;
       }
 

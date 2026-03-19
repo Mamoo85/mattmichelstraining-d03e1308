@@ -166,6 +166,7 @@ const Admin = () => {
             { key: "recovery", label: "Recovery Map", content: <AdminRecoveryHeatmap /> },
             { key: "schedule", label: "Schedule", content: <AdminSchedule /> },
             { key: "monthly", label: "Monthly Focus", content: <AdminMonthlyFocus /> },
+            { key: "biomechanics", label: "Biomechanics", content: <AdminBiomechanics /> },
           ]} />
         )}
 
