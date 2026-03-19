@@ -69,6 +69,7 @@ const Profile = () => {
         setProfile(profileRes.data as ProfileData);
         setFullName(profileRes.data.full_name || "");
         setAthleteName(profileRes.data.athlete_name || "");
+        setAutoRegulate((profileRes.data as any).auto_regulate === true);
       }
 
       // Challenge enrichment
