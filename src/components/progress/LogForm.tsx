@@ -131,6 +131,8 @@ const LogForm = ({ activeLift, repMax, effectiveUserId, onLogged }: LogFormProps
       toast({ title: "Logged +25 pts", description: `${activeLift}: ${weight} lbs × ${reps}` });
       setLogWeight("");
       setLogReps("");
+      setLogSuccess(true);
+      setTimeout(() => setLogSuccess(false), 500);
       await onLogged();
     }
     setLogging(false);
