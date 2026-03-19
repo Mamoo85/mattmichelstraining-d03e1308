@@ -1,6 +1,4 @@
 import { useState, memo } from "react";
-import { useAuth } from "@/hooks/useAuth";
-import { useIsAdmin } from "@/hooks/useIsAdmin";
 import WorkoutBuilder from "@/components/workout/WorkoutBuilder";
 import CommunityWorkoutBank from "@/components/workout/CommunityWorkoutBank";
 
