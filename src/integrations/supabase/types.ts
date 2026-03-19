@@ -905,6 +905,54 @@ export type Database = {
         }
         Relationships: []
       }
+      nutrition_logs: {
+        Row: {
+          created_at: string
+          food_items: Json
+          id: string
+          image_url: string | null
+          logged_at: string
+          meal_label: string | null
+          notes: string | null
+          total_calories: number
+          total_carbs_g: number
+          total_fat_g: number
+          total_fiber_g: number
+          total_protein_g: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          food_items?: Json
+          id?: string
+          image_url?: string | null
+          logged_at?: string
+          meal_label?: string | null
+          notes?: string | null
+          total_calories?: number
+          total_carbs_g?: number
+          total_fat_g?: number
+          total_fiber_g?: number
+          total_protein_g?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          food_items?: Json
+          id?: string
+          image_url?: string | null
+          logged_at?: string
+          meal_label?: string | null
+          notes?: string | null
+          total_calories?: number
+          total_carbs_g?: number
+          total_fat_g?: number
+          total_fiber_g?: number
+          total_protein_g?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       parent_child_links: {
         Row: {
           child_user_id: string
