@@ -6,6 +6,7 @@ import TechSupportButton from "@/components/TechSupportButton";
 import SupportTicketForm from "@/components/SupportTicketForm";
 import ReferralDashboard from "@/components/ReferralDashboard";
 import PrivacySettingsCard from "@/components/PrivacySettingsCard";
+import { Link } from "react-router-dom";
 import {
   User, Trophy, Medal, Award, Save, Loader2, Gift, Search,
   Crown, ExternalLink, ShoppingBag, Dumbbell, Calendar, Shield,
