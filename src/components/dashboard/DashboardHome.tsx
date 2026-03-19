@@ -1,5 +1,5 @@
-import { memo, lazy, Suspense } from "react";
-import { Link } from "react-router-dom";
+import { memo, lazy, Suspense, useState, useCallback } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Play } from "lucide-react";
 import MonthlyFocusWidget from "@/components/MonthlyFocusWidget";
 import UpcomingSessions from "@/components/UpcomingSessions";
@@ -7,6 +7,8 @@ import PointsWidget from "@/components/PointsWidget";
 import WorkoutScanner from "@/components/workout/WorkoutScanner";
 import EmptyStateCard from "@/components/EmptyStateCard";
 import ReferEarnCard from "./ReferEarnCard";
+import WorkoutPickerModal from "./WorkoutPickerModal";
+import { useAuth } from "@/hooks/useAuth";
 
 const SharedWorkoutFeed = lazy(() => import("@/components/workout/SharedWorkoutFeed"));
 
@@ -16,7 +18,21 @@ interface DashboardHomeProps {
   onViewReferrals: () => void;
 }
 
-const DashboardHome = memo(({ isNewUser, onViewPoints, onViewReferrals }: DashboardHomeProps) => (
+const DashboardHome = memo(({ isNewUser, onViewPoints, onViewReferrals }: DashboardHomeProps) => {
+  const { subscribed, isLegend } = useAuth();
+  const navigate = useNavigate();
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  const handleStartWorkout = useCallback(() => {
+    // Free users with no content go straight to pricing
+    if (!subscribed && !isLegend && isNewUser) {
+      navigate("/pricing");
+      return;
+    }
+    setPickerOpen(true);
+  }, [subscribed, isLegend, isNewUser, navigate]);
+
+  return (
   <div className="space-y-6">
     {isNewUser && (
       <EmptyStateCard
@@ -36,12 +52,14 @@ const DashboardHome = memo(({ isNewUser, onViewPoints, onViewReferrals }: Dashbo
       </p>
       <WorkoutScanner />
       <button
-        onClick={() => window.dispatchEvent(new CustomEvent("open-workout-zone", { detail: { title: "Quick Workout", source: "quick", exercises: [] } }))}
+        onClick={handleStartWorkout}
         className="w-full h-10 bg-primary text-primary-foreground flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all mt-2"
       >
         <Play size={14} /> Start Workout
       </button>
     </div>
+
+    <WorkoutPickerModal open={pickerOpen} onOpenChange={setPickerOpen} />
 
     <Link
       to="/nutrition"
@@ -64,7 +82,8 @@ const DashboardHome = memo(({ isNewUser, onViewPoints, onViewReferrals }: Dashbo
       <SharedWorkoutFeed />
     </Suspense>
   </div>
-));
+  );
+});
 
 DashboardHome.displayName = "DashboardHome";
 
