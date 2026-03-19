@@ -36,10 +36,10 @@ const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTrac
     });
   }, [exercise.sets, index, onUpdate]);
 
-  const removeSet = () => {
+  const removeSet = useCallback(() => {
     if (exercise.sets.length <= 1) return;
-    onUpdate({ sets: exercise.sets.slice(0, -1) });
-  };
+    onUpdate(index, { sets: exercise.sets.slice(0, -1) });
+  }, [exercise.sets, index, onUpdate]);
 
   const handleFlagToggle = (checked: boolean) => {
     if (!canFlag) {
