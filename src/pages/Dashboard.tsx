@@ -5,7 +5,7 @@ import TrialPaywallModal from "@/components/TrialPaywallModal";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
-import { ExternalLink, Loader2, Crown, User, Dumbbell, Play } from "lucide-react";
+import { Loader2, Crown, User, Dumbbell, Play } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import PwaInstallBanner from "@/components/PwaInstallBanner";
