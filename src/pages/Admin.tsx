@@ -175,6 +175,7 @@ const Admin = () => {
             { key: "schedule", label: "Schedule", content: <AdminSchedule /> },
             { key: "monthly", label: "Monthly Focus", content: <AdminMonthlyFocus /> },
             { key: "biomechanics", label: "Biomechanics", content: <AdminBiomechanics /> },
+            { key: "ai-toolkit", label: "AI Toolkit", content: <AdminAiToolkit /> },
           ]} />
         )}
 
