@@ -22,6 +22,7 @@ const ProtocolTable = () => {
   const [protocolTitle, setProtocolTitle] = useState("");
   const [loading, setLoading] = useState(true);
   const [weights, setWeights] = useState<Record<string, string>>({});
+  const [logSuccess, setLogSuccess] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -72,6 +73,8 @@ const ProtocolTable = () => {
     }
     toast({ title: "Session logged", description: "Nice work. Matt sees this." });
     setWeights({});
+    setLogSuccess(true);
+    setTimeout(() => setLogSuccess(false), 500);
   };
 
   if (loading) {
@@ -128,7 +131,7 @@ const ProtocolTable = () => {
       <div className="flex justify-end mt-4">
         <button
           onClick={logSession}
-          className="bg-primary text-primary-foreground px-6 py-2.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
+          className={`bg-primary text-primary-foreground px-6 py-2.5 text-xs font-bold uppercase tracking-widest hover:brightness-110 active:scale-95 transition-transform duration-100 ${logSuccess ? "animate-log-success" : ""}`}
         >
           Log Session
         </button>

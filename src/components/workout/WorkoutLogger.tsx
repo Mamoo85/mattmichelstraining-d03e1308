@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { format } from "date-fns";
 import { CalendarIcon, Plus, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -36,6 +36,7 @@ const WorkoutLogger = () => {
   const [exercises, setExercises] = useState<LoggedExerciseData[]>([]);
   const [saving, setSaving] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const [pastLogs, setPastLogs] = useState<any[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [recovery, setRecovery] = useState<RecoveryData>({
@@ -133,6 +134,8 @@ const WorkoutLogger = () => {
       toast({ title: "Exercises failed to save", description: exErr.message, variant: "destructive" });
     } else {
       toast({ title: "Workout saved! 💪", description: `${exercises.length} exercise${exercises.length > 1 ? "s" : ""} logged` });
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 500);
       setExercises([]);
       setSessionNotes("");
       setRecovery({ sleepHours: "", sleepQuality: null, soreness: null, energy: null, recoveryNotes: "" });
@@ -182,7 +185,7 @@ const WorkoutLogger = () => {
       ) : (
         <button
           onClick={() => setShowPicker(true)}
-          className="w-full h-14 border-2 border-dashed border-border text-muted-foreground hover:border-primary hover:text-primary flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-widest transition-all"
+          className="w-full h-14 border-2 border-dashed border-border text-muted-foreground hover:border-primary hover:text-primary hover:brightness-110 active:scale-95 flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-widest transition-transform duration-100"
         >
           <Plus size={18} /> Add Exercise
         </button>
@@ -208,7 +211,7 @@ const WorkoutLogger = () => {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="w-full h-14 bg-primary text-primary-foreground text-sm font-bold uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+          className={`w-full h-14 bg-primary text-primary-foreground text-sm font-bold uppercase tracking-widest hover:brightness-110 active:scale-95 transition-transform duration-100 disabled:opacity-50 flex items-center justify-center gap-2 ${saveSuccess ? "animate-log-success" : ""}`}
         >
           {saving ? <Loader2 size={16} className="animate-spin" /> : null}
           {saving ? "Saving…" : `Save Workout (${exercises.length} exercise${exercises.length > 1 ? "s" : ""})`}

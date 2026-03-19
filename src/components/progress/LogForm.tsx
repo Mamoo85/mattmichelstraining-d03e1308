@@ -57,6 +57,7 @@ const LogForm = ({ activeLift, repMax, effectiveUserId, onLogged }: LogFormProps
   const [logDate, setLogDate] = useState<Date>(new Date());
   const [logging, setLogging] = useState(false);
   const [listening, setListening] = useState(false);
+  const [logSuccess, setLogSuccess] = useState(false);
   const recognitionRef = useRef<any>(null);
 
   const startListening = useCallback(() => {
@@ -130,6 +131,8 @@ const LogForm = ({ activeLift, repMax, effectiveUserId, onLogged }: LogFormProps
       toast({ title: "Logged +25 pts", description: `${activeLift}: ${weight} lbs × ${reps}` });
       setLogWeight("");
       setLogReps("");
+      setLogSuccess(true);
+      setTimeout(() => setLogSuccess(false), 500);
       await onLogged();
     }
     setLogging(false);
@@ -196,7 +199,7 @@ const LogForm = ({ activeLift, repMax, effectiveUserId, onLogged }: LogFormProps
         <button
           onClick={handleLog}
           disabled={logging}
-          className="bg-primary text-primary-foreground px-5 h-9 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all duration-100 active:scale-95 disabled:opacity-50"
+          className={`bg-primary text-primary-foreground px-5 h-9 text-[10px] font-bold uppercase tracking-widest hover:brightness-110 active:scale-95 transition-transform duration-100 disabled:opacity-50 ${logSuccess ? "animate-log-success" : ""}`}
         >
           {logging ? "…" : "Log"}
         </button>
