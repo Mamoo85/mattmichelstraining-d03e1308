@@ -56,7 +56,7 @@ const Profile = () => {
 
       // Parallel data fetching for performance
       const [profileRes, partsRes, logsRes, cardsRes, purchasedRes, activeRes, bookingsRes] = await Promise.all([
-        supabase.from("profiles").select("full_name, athlete_name, email, subscription_tier").eq("user_id", user.id).single(),
+        supabase.from("profiles").select("full_name, athlete_name, email, subscription_tier, auto_regulate").eq("user_id", user.id).single(),
         supabase.from("challenge_participants").select("challenge_id, current_value, is_public, monthly_challenge_id").eq("user_id", user.id),
         supabase.from("progress_logs").select("exercise_name, weight").eq("user_id", user.id),
         supabase.from("gift_cards" as any).select("*").or(`purchaser_id.eq.${user.id},redeemed_by.eq.${user.id}`).order("created_at", { ascending: false }),
