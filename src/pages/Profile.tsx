@@ -445,6 +445,9 @@ const Profile = () => {
           </div>
         </div>
 
+        {/* Privacy Settings */}
+        <PrivacySettingsCard />
+
         {/* Challenge Medals */}
         {challenges.length > 0 && (
           <div className="bg-card border border-border p-5 mb-6">
