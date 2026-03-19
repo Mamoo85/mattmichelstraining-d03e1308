@@ -1,12 +1,11 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Star } from "lucide-react";
 
 import m2Logo from "@/assets/m2-logo.jpg";
 import { useSectionVisible } from "@/hooks/useSiteContent";
 import AudienceSelector from "./landing/AudienceSelector";
 import ForParentsCTA from "./landing/ForParentsCTA";
-import InstagramSocialBox from "./landing/InstagramSocialBox";
 import M2Difference from "./landing/M2Difference";
 import FindUs from "./landing/FindUs";
 import PortalEntrance from "./landing/PortalEntrance";
@@ -73,7 +72,7 @@ const HeroSection = () => {
               </Link>
               <Link
                 to="/dashboard"
-                className="inline-flex items-center gap-2 border-2 border-orange-500 text-orange-400 px-6 py-3 text-xs font-bold uppercase tracking-widest hover:border-orange-400 hover:shadow-[0_0_15px_rgba(249,115,22,0.5)] transition-m2 w-full sm:w-auto justify-center"
+                className="inline-flex items-center gap-2 border-2 border-primary text-primary px-6 py-3 text-xs font-bold uppercase tracking-widest hover:border-primary/80 hover:shadow-[0_0_15px_hsl(var(--primary)/0.3)] transition-m2 w-full sm:w-auto justify-center"
               >
                 Enter The Portal
               </Link>
@@ -93,10 +92,48 @@ const HeroSection = () => {
         {/* ─── 5. THE M² DIFFERENCE ─── */}
         <M2Difference />
 
-        {/* ─── 6. SOCIAL — Instagram Feed ─── */}
-        <div className="mb-8">
-          <InstagramSocialBox />
-        </div>
+        {/* ─── 6. MEMBERSHIP CTA ─── */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="mb-8"
+        >
+          <div className="bg-gradient-to-br from-primary/10 via-background to-background border border-primary/30 overflow-hidden">
+            <div className="p-6 sm:p-8 space-y-4">
+              <div className="flex items-center gap-2">
+                <Star size={16} className="text-primary" />
+                <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-primary">
+                  Monthly Plans
+                </span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-foreground leading-tight">
+                Train Like a Pro.<br />
+                <span className="text-primary">Starting at $14.99/mo.</span>
+              </h2>
+              <p className="text-sm text-muted-foreground max-w-lg leading-relaxed">
+                Access the full exercise library, structured programs, injury recovery guides,
+                and direct coaching from Matt — all from your phone. Every plan includes a
+                <strong className="text-foreground"> 14-day free trial</strong>. No contracts. Cancel anytime.
+              </p>
+              <div className="flex flex-wrap gap-3 pt-2">
+                <Link
+                  to="/pricing"
+                  className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
+                >
+                  <Star size={14} /> Compare Plans
+                </Link>
+                <Link
+                  to="/auth?redirect=/trial-welcome"
+                  className="inline-flex items-center gap-2 border-2 border-primary/40 text-primary px-5 py-3 text-xs font-bold uppercase tracking-widest hover:bg-primary/10 transition-m2"
+                >
+                  Try 14 Days Free <ArrowRight size={12} />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </motion.div>
 
         {/* ─── 8. FIND US — always last ─── */}
         {showFindUs && <div className="mb-8"><FindUs /></div>}
