@@ -431,6 +431,9 @@ const Auth = () => {
             </button>
           )}
         </div>
+
+        {/* Nutrition AI Sneak Peek */}
+        <NutritionSneakPeek />
       </div>
     </div>
   );
