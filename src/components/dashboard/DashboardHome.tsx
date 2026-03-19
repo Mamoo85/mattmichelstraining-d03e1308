@@ -56,7 +56,7 @@ const DashboardHome = memo(({ isNewUser, onViewPoints, onViewReferrals }: Dashbo
       </button>
     </div>
 
-    <WorkoutPickerModal open={pickerOpen} onOpenChange={setPickerOpen} />
+    
 
     <Link
       to="/nutrition"
