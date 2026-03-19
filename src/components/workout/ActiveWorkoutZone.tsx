@@ -319,6 +319,25 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
     setPhase("summary");
   };
 
+  // Readiness gate phase
+  if (phase === "readiness" && autoRegulateEnabled) {
+    return (
+      <ReadinessGate
+        onComplete={handleReadinessComplete}
+        onSkip={handleReadinessSkip}
+      />
+    );
+  }
+
+  // Still loading auto_regulate preference
+  if (autoRegulateEnabled === null) {
+    return (
+      <div className="fixed inset-0 z-[100] bg-background flex items-center justify-center">
+        <Loader2 size={24} className="animate-spin text-primary" />
+      </div>
+    );
+  }
+
   // Summary phase
   if (phase === "summary" && workoutLogId) {
     return (
