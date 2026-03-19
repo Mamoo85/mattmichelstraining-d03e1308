@@ -55,6 +55,8 @@ const AdminMonthlyFocus = () => {
   const [savingChallenge, setSavingChallenge] = useState(false);
   const [generatingChallenge, setGeneratingChallenge] = useState(false);
   const [challengeTopicInput, setChallengeTopicInput] = useState("");
+  const [challengePreview, setChallengePreview] = useState<{ title: string; description: string; metric_label: string } | null>(null);
+  const [savingPreview, setSavingPreview] = useState(false);
 
   // Focus state
   const [focus, setFocus] = useState<Focus | null>(null);
@@ -129,18 +131,44 @@ const AdminMonthlyFocus = () => {
   /* ── Challenge AI Generation ── */
   const handleGenerateChallenge = async () => {
     setGeneratingChallenge(true);
+    setChallengePreview(null);
     try {
       const { data, error } = await supabase.functions.invoke("generate-monthly-challenge", {
         body: { month: selMonth, year: selYear, topic: challengeTopicInput.trim() || undefined },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      toast({ title: "🔥 Challenge generated!", description: "Review and activate below." });
-      loadChallenges();
+      if (data?.preview) {
+        setChallengePreview(data.preview);
+        toast({ title: "🔥 Preview ready!", description: "Review below — save it if you like it, or regenerate." });
+      }
     } catch (e: any) {
       toast({ title: "Generation failed", description: e.message, variant: "destructive" });
     }
     setGeneratingChallenge(false);
+  };
+
+  const handleSaveChallengePreview = async () => {
+    if (!challengePreview) return;
+    setSavingPreview(true);
+    const { error } = await supabase.from("monthly_challenges").upsert({
+      title: challengePreview.title,
+      description: challengePreview.description,
+      metric_label: challengePreview.metric_label,
+      month: selMonth,
+      year: selYear,
+      is_active: false,
+      created_by: user?.id,
+    } as any, { onConflict: "month,year" });
+    if (error) {
+      toast({ title: "Save failed", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Challenge saved!", description: "Activate it when you're ready to go live." });
+      setChallengePreview(null);
+      setChallengeTopicInput("");
+      loadChallenges();
+    }
+    setSavingPreview(false);
   };
 
 
@@ -286,8 +314,45 @@ const AdminMonthlyFocus = () => {
               {generatingChallenge ? "Cooking…" : "AI Generate"}
             </button>
           </div>
-          <p className="text-[10px] text-muted-foreground">Leave blank for a surprise. AI writes a funny 2-3 sentence challenge in Matt's voice.</p>
+          <p className="text-[10px] text-muted-foreground">Leave blank for a surprise. AI writes a 2-3 sentence challenge in Matt's voice.</p>
         </div>
+
+        {/* AI Preview Card */}
+        {challengePreview && (
+          <div className="bg-primary/5 border-2 border-primary/30 p-5 mb-4 space-y-3 animate-fade-in">
+            <div className="flex items-center gap-2 mb-1">
+              <Sparkles size={14} className="text-primary" />
+              <span className="text-[10px] font-bold uppercase tracking-widest text-primary">AI Preview — Not Saved</span>
+            </div>
+            <h3 className="text-sm font-bold text-foreground">{challengePreview.title}</h3>
+            <p className="text-xs text-muted-foreground">{challengePreview.description}</p>
+            <p className="text-[10px] text-muted-foreground">Metric: {challengePreview.metric_label}</p>
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={handleSaveChallengePreview}
+                disabled={savingPreview}
+                className="flex items-center gap-1 bg-primary text-primary-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 disabled:opacity-50 transition-all"
+              >
+                {savingPreview ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
+                Save Challenge
+              </button>
+              <button
+                onClick={handleGenerateChallenge}
+                disabled={generatingChallenge}
+                className="flex items-center gap-1 bg-muted text-muted-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:text-foreground transition-all disabled:opacity-50"
+              >
+                {generatingChallenge ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+                Regenerate
+              </button>
+              <button
+                onClick={() => setChallengePreview(null)}
+                className="flex items-center gap-1 bg-muted text-muted-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:text-destructive transition-all"
+              >
+                <X size={12} /> Discard
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* New Challenge Form (manual) */}
         {showNewChallenge && (

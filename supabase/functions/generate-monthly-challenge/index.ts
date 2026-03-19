@@ -111,24 +111,15 @@ Return structured data via the tool. The description should be 2-3 SHORT punchy 
 
     const fc = JSON.parse(toolCall.function.arguments);
 
-    // Upsert — the table has a unique constraint on (month, year)
-    const { data: inserted, error: insertErr } = await supabase
-      .from("monthly_challenges")
-      .upsert({
+    // Return preview only — admin saves manually from the UI
+    return new Response(JSON.stringify({
+      success: true,
+      preview: {
         title: fc.title,
         description: fc.description,
         metric_label: fc.metric_label,
-        month,
-        year,
-        is_active: false,
-        created_by: user.id,
-      }, { onConflict: "month,year" })
-      .select()
-      .single();
-
-    if (insertErr) throw insertErr;
-
-    return new Response(JSON.stringify({ success: true, challenge: inserted }), {
+      },
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
