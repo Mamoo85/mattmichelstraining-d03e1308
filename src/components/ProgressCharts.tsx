@@ -142,6 +142,9 @@ const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) =
               <BodyAvatar activeLift={activeLift} />
             </div>
           </div>
+
+          {/* Lift Insights */}
+          <LiftInsights logs={logs} liftName={activeLift} />
         </>
       )}
 
