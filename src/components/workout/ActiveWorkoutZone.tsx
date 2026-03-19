@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { format } from "date-fns";
-import { Plus, X, Timer, CheckCircle, Loader2, CalendarIcon, Play, Dumbbell } from "lucide-react";
+import { Plus, X, Timer, CheckCircle, Loader2, CalendarIcon, Play, Dumbbell, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -14,6 +14,7 @@ import RecoveryInput, { type RecoveryData } from "./RecoveryInput";
 import VoiceNoteButton from "./VoiceNoteButton";
 import ConfirmActionModal from "@/components/ConfirmActionModal";
 import InterceptGateway from "./InterceptGateway";
+import IntervalTimer from "./IntervalTimer";
 import PostWorkoutSummary from "./PostWorkoutSummary";
 import LiveFormTracker from "./LiveFormTracker";
 import ReadinessGate, { calculateAdjustments, type ReadinessResult } from "./ReadinessGate";
@@ -80,6 +81,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
   );
   const [workoutLogId, setWorkoutLogId] = useState<string | null>(null);
   const [formTrackerExercise, setFormTrackerExercise] = useState<string | null>(null);
+  const [showIntervalTimer, setShowIntervalTimer] = useState(false);
   const [workoutTitle, setWorkoutTitle] = useState(initialContext?.title || "Workout");
 
   // Check if auto-regulate is enabled for this user
@@ -434,7 +436,16 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowIntervalTimer(true)}
+              className="text-xs gap-1 text-muted-foreground hover:text-primary"
+              title="Interval Timer"
+            >
+              <Clock size={14} />
+            </Button>
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="sm" className="text-xs font-mono gap-1">
@@ -567,6 +578,10 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
           exerciseTitle={formTrackerExercise}
           onClose={() => setFormTrackerExercise(null)}
         />
+      )}
+
+      {showIntervalTimer && (
+        <IntervalTimer onClose={() => setShowIntervalTimer(false)} />
       )}
     </>
   );
