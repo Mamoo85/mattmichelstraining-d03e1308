@@ -367,6 +367,11 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
             <span className="text-xs font-bold uppercase tracking-widest text-primary truncate">
               {workoutTitle}
             </span>
+            {readinessResult && readinessResult.weightAdjustmentPct !== 0 && (
+              <span className="text-[9px] font-bold uppercase tracking-widest bg-primary/10 text-primary px-2 py-0.5 border border-primary/30 shrink-0">
+                {Math.abs(readinessResult.weightAdjustmentPct)}% adjusted
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <Popover>
