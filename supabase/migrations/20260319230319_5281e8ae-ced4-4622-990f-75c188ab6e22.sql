@@ -1,0 +1,1 @@
+ALTER TABLE public.tier_features ADD COLUMN tier_vip boolean NOT NULL DEFAULT true;

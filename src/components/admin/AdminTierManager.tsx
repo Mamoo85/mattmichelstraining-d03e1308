@@ -11,9 +11,7 @@ import {
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Trash2, Save, ShieldCheck, Zap, Star, Users, Loader2, ChevronDown, Pencil } from "lucide-react";
-
-import { Eye } from "lucide-react";
+import { Plus, Trash2, Save, ShieldCheck, Zap, Star, Users, Loader2, ChevronDown, Pencil, Eye, Crown, Copy, Link } from "lucide-react";
 
 const TIERS = [
   { key: "tier_free", label: "Free", icon: Eye, color: "text-muted-foreground" },
@@ -21,6 +19,7 @@ const TIERS = [
   { key: "tier_foundation", label: "Foundation", icon: Zap, color: "text-yellow-400" },
   { key: "tier_custom", label: "Custom", icon: ShieldCheck, color: "text-orange-400" },
   { key: "tier_team_elite", label: "Team/Elite", icon: Users, color: "text-green-400" },
+  { key: "tier_vip", label: "VIP", icon: Crown, color: "text-purple-400" },
 ] as const;
 
 type TierKey = typeof TIERS[number]["key"];
@@ -40,6 +39,20 @@ const PRESET_FEATURES = [
   { key: "challenges", label: "Challenges", description: "Monthly challenges and leaderboard" },
   { key: "team_management", label: "Team Management", description: "Full roster and team training plans" },
   { key: "session_booking", label: "Session Booking", description: "Book 1-on-1 training sessions" },
+  { key: "progress_tracking", label: "Progress Tracking", description: "Progress charts and lift logging" },
+  { key: "ai_recovery", label: "AI Recovery Advisor", description: "AI-powered recovery recommendations" },
+  { key: "workout_scanner", label: "Workout Scanner", description: "Scan workout photos to log exercises" },
+  { key: "shared_feed", label: "Shared Feed", description: "Community workout feed and social sharing" },
+  { key: "posture_capture", label: "Posture Capture", description: "Posture photo capture and analysis" },
+  { key: "lift_insights", label: "Lift Insights", description: "AI lift trend analysis and insights" },
+  { key: "ask_coach_matt", label: "Ask Coach Matt", description: "AI-powered coaching Q&A assistant" },
+  { key: "referral_program", label: "Referral Program", description: "Refer-a-friend and earn credits" },
+  { key: "points_leaderboard", label: "Points & Leaderboard", description: "Points system and leaderboards" },
+  { key: "gift_sessions", label: "Gift Sessions", description: "Gift training sessions to others" },
+  { key: "interval_timer", label: "Interval Timer", description: "Built-in workout interval timer" },
+  { key: "workout_builder", label: "Workout Builder", description: "Custom workout builder tool" },
+  { key: "live_form_tracker", label: "Live Form Tracker", description: "Real-time AI form tracking via camera" },
+  { key: "voice_notes", label: "Voice Notes", description: "Record voice notes during workouts" },
 ];
 
 interface TierFeature {
@@ -52,8 +65,47 @@ interface TierFeature {
   tier_foundation: boolean;
   tier_custom: boolean;
   tier_team_elite: boolean;
+  tier_vip: boolean;
   sort_order: number;
 }
+
+const VipInviteGenerator = () => {
+  const [generating, setGenerating] = useState(false);
+
+  const generateLink = async () => {
+    setGenerating(true);
+    try {
+      const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+      let code = "";
+      for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
+      const link = `${window.location.origin}/auth?ref=vip-${code}`;
+      await navigator.clipboard.writeText(link);
+      toast({ title: "VIP invite link copied!", description: link });
+    } catch {
+      toast({ title: "Failed to copy", variant: "destructive" });
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-3 bg-muted/50 border border-border p-3">
+      <Crown size={16} className="text-purple-400 shrink-0" />
+      <div className="flex-1">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-foreground">VIP Invite</p>
+        <p className="text-[10px] text-muted-foreground">Generate a unique invite link for VIP clients. Admin-only, invite-only access.</p>
+      </div>
+      <button
+        onClick={generateLink}
+        disabled={generating}
+        className="flex items-center gap-1.5 px-3 py-2 text-[10px] font-bold uppercase tracking-widest bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/30 transition-all disabled:opacity-50 whitespace-nowrap"
+      >
+        <Link size={12} />
+        Generate & Copy Link
+      </button>
+    </div>
+  );
+};
 
 const AdminTierManager = () => {
   const queryClient = useQueryClient();
@@ -127,6 +179,8 @@ const AdminTierManager = () => {
 
   return (
     <div className="space-y-4">
+      <VipInviteGenerator />
+
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-sm font-bold text-foreground uppercase tracking-widest">Tier Access Manager</h2>
@@ -216,7 +270,7 @@ const AdminTierManager = () => {
         </div>
       )}
 
-      <div className="border border-border overflow-hidden">
+      <div className="border border-border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
@@ -248,7 +302,7 @@ const AdminTierManager = () => {
                 {TIERS.map(t => (
                   <TableCell key={t.key} className="text-center">
                     <Checkbox
-                      checked={f[t.key as TierKey]}
+                      checked={(f as any)[t.key] ?? false}
                       onCheckedChange={(checked) =>
                         toggleMutation.mutate({ id: f.id, field: t.key as TierKey, value: !!checked })
                       }
@@ -276,7 +330,7 @@ const AdminTierManager = () => {
       <div className="bg-muted/50 border border-border p-3">
         <p className="text-[10px] text-muted-foreground">
           <strong>How it works:</strong> Use <code className="text-[9px] bg-muted px-1">feature_key</code> values in PaywallGate components throughout the app. 
-          When a feature is checked for a tier, users on that tier (or higher) get access. Admins always bypass all gates.
+          When a feature is checked for a tier, users on that tier (or higher) get access. VIP is invite-only and admin-managed. Admins always bypass all gates.
         </p>
       </div>
     </div>

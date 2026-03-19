@@ -2311,6 +2311,7 @@ export type Database = {
           tier_free: boolean
           tier_legend: boolean
           tier_team_elite: boolean
+          tier_vip: boolean
           updated_at: string
         }
         Insert: {
@@ -2326,6 +2327,7 @@ export type Database = {
           tier_free?: boolean
           tier_legend?: boolean
           tier_team_elite?: boolean
+          tier_vip?: boolean
           updated_at?: string
         }
         Update: {
@@ -2341,6 +2343,7 @@ export type Database = {
           tier_free?: boolean
           tier_legend?: boolean
           tier_team_elite?: boolean
+          tier_vip?: boolean
           updated_at?: string
         }
         Relationships: []
