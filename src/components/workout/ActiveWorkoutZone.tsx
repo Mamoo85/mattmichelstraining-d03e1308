@@ -323,15 +323,44 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
     setPhase("summary");
   };
 
-  // Readiness gate phase
-  if (phase === "readiness" && autoRegulateEnabled) {
+  // Intercept gateway phase
+  if (phase === "intercept") {
     return (
-      <ReadinessGate
-        onComplete={handleReadinessComplete}
-        onSkip={handleReadinessSkip}
+      <InterceptGateway
+        onSelect={(ctx) => {
+          if (ctx.exercises?.length) {
+            const mapped: LoggedExerciseData[] = ctx.exercises.map((ex) => ({
+              exerciseId: ex.exerciseId || "",
+              exerciseTitle: ex.exerciseTitle,
+              sets: Array.from({ length: ex.prescribedSets || 3 }, (_, i) => ({
+                set: i + 1,
+                reps: ex.prescribedReps || 0,
+                weight: 0,
+              })),
+              clientNotes: ex.notes || "",
+              videoUrl: "",
+              flagForCoach: false,
+              exerciseVideoUrl: ex.videoUrl || null,
+              exerciseTheWhy: ex.theWhy || null,
+            }));
+            setExercises(mapped);
+          }
+          setWorkoutTitle(ctx.title || "Workout");
+          // Check auto-regulate
+          if (autoRegulateEnabled) {
+            setPhase("readiness");
+          } else {
+            setPhase("active");
+            setTimerRunning(true);
+          }
+        }}
+        onExit={onFinish}
       />
     );
   }
+
+  // Readiness gate phase
+  if (phase === "readiness" && autoRegulateEnabled) {
 
   // Still loading auto_regulate preference
   if (autoRegulateEnabled === null) {
