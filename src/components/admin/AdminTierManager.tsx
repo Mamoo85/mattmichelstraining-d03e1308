@@ -8,7 +8,10 @@ import { Label } from "@/components/ui/label";
 import {
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from "@/components/ui/table";
-import { Plus, Trash2, Save, ShieldCheck, Zap, Star, Users, Loader2 } from "lucide-react";
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { Plus, Trash2, Save, ShieldCheck, Zap, Star, Users, Loader2, ChevronDown, Pencil } from "lucide-react";
 
 const TIERS = [
   { key: "tier_basic", label: "Basic", icon: Star, color: "text-blue-400" },
@@ -18,6 +21,23 @@ const TIERS = [
 ] as const;
 
 type TierKey = typeof TIERS[number]["key"];
+
+const PRESET_FEATURES = [
+  { key: "exercise_library", label: "Exercise Library", description: "Access to the full exercise library" },
+  { key: "fix_it_library", label: "Fix It Library", description: "Corrective exercise video library" },
+  { key: "monthly_focus", label: "Monthly Focus", description: "Monthly training focus plans" },
+  { key: "custom_programming", label: "Custom Programming", description: "AI-generated custom programs" },
+  { key: "coach_messaging", label: "Coach Messaging", description: "Direct messaging with Coach Matt" },
+  { key: "flag_coach", label: "Flag for Coach", description: "Flag exercises for coach review" },
+  { key: "video_analysis", label: "Video Analysis", description: "AI-powered form and video analysis" },
+  { key: "nutrition_scanner", label: "Nutrition Scanner", description: "AI food photo analysis" },
+  { key: "posture_analysis", label: "Posture Analysis", description: "AI biomechanics posture scan" },
+  { key: "velocity_tracker", label: "Velocity Tracker", description: "Velocity-based training tracker" },
+  { key: "community_workouts", label: "Community Workouts", description: "Share and discover workouts" },
+  { key: "challenges", label: "Challenges", description: "Monthly challenges and leaderboard" },
+  { key: "team_management", label: "Team Management", description: "Full roster and team training plans" },
+  { key: "session_booking", label: "Session Booking", description: "Book 1-on-1 training sessions" },
+];
 
 interface TierFeature {
   id: string;
