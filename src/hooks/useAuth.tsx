@@ -80,7 +80,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [subscribed, setSubscribed] = useState(false);
   const [subscriptionTier, setSubscriptionTier] = useState<TierKey | null>(null);
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
-  const [isLegend, setIsLegend] = useState(false);
 
   const checkSubscription = useCallback(async () => {
     const { data: { session: currentSession } } = await supabase.auth.getSession();
