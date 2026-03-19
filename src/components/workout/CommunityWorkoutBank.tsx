@@ -34,17 +34,36 @@ const CommunityWorkoutBank = ({ onCreateNew }: CommunityWorkoutBankProps) => {
 
   useEffect(() => {
     loadWorkouts();
-  }, []);
+  }, [user]);
 
   const loadWorkouts = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from("community_workouts")
-      .select("*")
-      .eq("is_public", true)
-      .order("created_at", { ascending: false })
-      .limit(50);
-    if (data) setWorkouts(data as any[]);
+    // Fetch public workouts + user's own private workouts
+    const [publicRes, privateRes] = await Promise.all([
+      supabase
+        .from("community_workouts")
+        .select("*")
+        .eq("is_public", true)
+        .order("created_at", { ascending: false })
+        .limit(50),
+      user
+        ? supabase
+            .from("community_workouts")
+            .select("*")
+            .eq("user_id", user.id)
+            .eq("is_public", false)
+            .order("created_at", { ascending: false })
+            .limit(20)
+        : Promise.resolve({ data: [] }),
+    ]);
+    const publicWorkouts = (publicRes.data as any[]) ?? [];
+    const privateWorkouts = (privateRes.data as any[]) ?? [];
+    // Merge, deduplicate by id
+    const allMap = new Map<string, any>();
+    for (const w of [...privateWorkouts, ...publicWorkouts]) {
+      if (!allMap.has(w.id)) allMap.set(w.id, w);
+    }
+    setWorkouts(Array.from(allMap.values()));
     setLoading(false);
   };
 

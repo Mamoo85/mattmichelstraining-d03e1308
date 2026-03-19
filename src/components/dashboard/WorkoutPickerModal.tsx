@@ -18,6 +18,14 @@ interface PurchasedProgram {
   exercises: any;
 }
 
+interface ActiveProgram {
+  id: string;
+  program_id: string;
+  program_title: string;
+  sport: string | null;
+  exercises: any;
+}
+
 interface CommunityWorkout {
   id: string;
   title: string;
@@ -33,6 +41,7 @@ const WorkoutPickerModal = ({ open, onOpenChange }: WorkoutPickerModalProps) => 
   const { user, subscribed } = useAuth();
   const navigate = useNavigate();
   const [programs, setPrograms] = useState<PurchasedProgram[]>([]);
+  const [activePrograms, setActivePrograms] = useState<ActiveProgram[]>([]);
   const [workouts, setWorkouts] = useState<CommunityWorkout[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -48,13 +57,26 @@ const WorkoutPickerModal = ({ open, onOpenChange }: WorkoutPickerModalProps) => 
         .eq("is_active", true)
         .order("purchased_at", { ascending: false }),
       supabase
+        .from("user_active_programs" as any)
+        .select("id, program_id, training_programs(id, title, category, sport)")
+        .eq("user_id", user.id)
+        .eq("status", "active"),
+      supabase
         .from("community_workouts")
         .select("id, title, exercises")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(20),
-    ]).then(([progRes, cwRes]) => {
+    ]).then(([progRes, activeRes, cwRes]) => {
       setPrograms((progRes.data as PurchasedProgram[] | null) ?? []);
+      const mapped = ((activeRes.data as any[]) ?? []).map((a: any) => ({
+        id: a.id,
+        program_id: a.program_id,
+        program_title: a.training_programs?.title ?? "Program",
+        sport: a.training_programs?.sport ?? null,
+        exercises: [],
+      }));
+      setActivePrograms(mapped);
       setWorkouts((cwRes.data as CommunityWorkout[] | null) ?? []);
       setLoading(false);
     });
@@ -91,7 +113,7 @@ const WorkoutPickerModal = ({ open, onOpenChange }: WorkoutPickerModalProps) => 
     launchWorkout(w.title, "community", mapped);
   };
 
-  const canCreate = subscribed;
+  const hasContent = programs.length > 0 || activePrograms.length > 0 || workouts.length > 0;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -109,7 +131,7 @@ const WorkoutPickerModal = ({ open, onOpenChange }: WorkoutPickerModalProps) => 
           <p className="text-xs text-muted-foreground text-center py-8">Loading…</p>
         ) : (
           <div className="space-y-4 pb-4">
-            {/* Programs */}
+            {/* Purchased Programs */}
             {programs.length > 0 && (
               <div className="space-y-2">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
@@ -133,7 +155,34 @@ const WorkoutPickerModal = ({ open, onOpenChange }: WorkoutPickerModalProps) => 
               </div>
             )}
 
-            {/* Community workouts */}
+            {/* Active / Interactive Programs */}
+            {activePrograms.length > 0 && (
+              <div className="space-y-2">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                  <BookOpen size={12} /> Active Programs
+                </span>
+                {activePrograms.map((ap) => (
+                  <button
+                    key={ap.id}
+                    onClick={() => {
+                      onOpenChange(false);
+                      navigate("/dashboard?tab=programs");
+                    }}
+                    className="w-full text-left bg-card border border-border p-3 hover:border-primary/40 transition-colors flex items-center gap-3"
+                  >
+                    <Play size={14} className="text-primary flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-foreground truncate">{ap.program_title}</p>
+                      {ap.sport && (
+                        <p className="text-[10px] text-muted-foreground">{ap.sport}</p>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Saved workouts */}
             {workouts.length > 0 && (
               <div className="space-y-2">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
@@ -152,8 +201,8 @@ const WorkoutPickerModal = ({ open, onOpenChange }: WorkoutPickerModalProps) => 
               </div>
             )}
 
-            {/* Create new */}
-            {canCreate && (
+            {/* Create new - available to anyone with content or subscribed */}
+            {(subscribed || hasContent) && (
               <button
                 onClick={() => launchWorkout("Quick Workout", "quick", [])}
                 className="w-full h-11 bg-primary text-primary-foreground flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all"
@@ -163,7 +212,7 @@ const WorkoutPickerModal = ({ open, onOpenChange }: WorkoutPickerModalProps) => 
             )}
 
             {/* Upsell if free with nothing */}
-            {!canCreate && programs.length === 0 && workouts.length === 0 && (
+            {!subscribed && !hasContent && (
               <button
                 onClick={() => {
                   onOpenChange(false);
