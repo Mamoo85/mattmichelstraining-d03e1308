@@ -18,6 +18,7 @@ import AdminDirectMessages from "@/components/admin/AdminDirectMessages";
 import AdminVideoReview from "@/components/admin/AdminVideoReview";
 import AdminTrialSettings from "@/components/admin/AdminTrialSettings";
 import AdminClientOnboarding from "@/components/admin/AdminClientOnboarding";
+import AdminChurnRadar from "@/components/admin/AdminChurnRadar";
 
 /* ── Tab 2: The Training Engine ────────────────────── */
 import AdminPrograms from "@/components/admin/AdminPrograms";
