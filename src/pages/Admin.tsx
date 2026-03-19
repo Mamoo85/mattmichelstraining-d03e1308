@@ -51,6 +51,7 @@ const AdminNewsletterComposer = lazy(() => import("@/components/admin/AdminNewsl
 const AdminSendHistory = lazy(() => import("@/components/admin/AdminSendHistory"));
 const AdminServiceCatalog = lazy(() => import("@/components/admin/AdminServiceCatalog"));
 const AdminMarketingDrafts = lazy(() => import("@/components/admin/AdminMarketingDrafts"));
+const AdminAiBusinessTools = lazy(() => import("@/components/admin/AdminAiBusinessTools"));
 
 const MASTER_TABS = [
   { key: "roster", label: "The Roster", icon: Users, desc: "Users · Support · Families" },
@@ -202,6 +203,7 @@ const Admin = () => {
             { key: "compose", label: "Compose", content: <AdminNewsletterComposer /> },
             { key: "history", label: "Send History", content: <AdminSendHistory /> },
             { key: "ad-drafts", label: "Ad Drafts", content: <AdminMarketingDrafts /> },
+            { key: "ai-business", label: "AI Business Tools", content: <AdminAiBusinessTools /> },
           ]} />
         )}
       </div>

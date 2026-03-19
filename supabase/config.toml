@@ -29,3 +29,9 @@ verify_jwt = false
 
 [functions.ai-meal-prep]
 verify_jwt = false
+
+[functions.ai-marketing-tools]
+verify_jwt = false
+
+[functions.ai-business-intelligence]
+verify_jwt = false
