@@ -7,6 +7,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useWorkoutSave } from "@/hooks/useWorkoutSave";
 import { toast } from "sonner";
 import ExercisePicker from "./ExercisePicker";
 import ExerciseCard from "./ExerciseCard";
