@@ -38,7 +38,7 @@ interface WorkoutPickerModalProps {
 }
 
 const WorkoutPickerModal = ({ open, onOpenChange }: WorkoutPickerModalProps) => {
-  const { user, subscribed } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [programs, setPrograms] = useState<PurchasedProgram[]>([]);
   const [activePrograms, setActivePrograms] = useState<ActiveProgram[]>([]);
@@ -201,28 +201,13 @@ const WorkoutPickerModal = ({ open, onOpenChange }: WorkoutPickerModalProps) => 
               </div>
             )}
 
-            {/* Create new - available to anyone with content or subscribed */}
-            {(subscribed || hasContent) && (
-              <button
-                onClick={() => launchWorkout("Quick Workout", "quick", [])}
-                className="w-full h-11 bg-primary text-primary-foreground flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all"
-              >
-                <Plus size={14} /> Create New Workout
-              </button>
-            )}
-
-            {/* Upsell if free with nothing */}
-            {!subscribed && !hasContent && (
-              <button
-                onClick={() => {
-                  onOpenChange(false);
-                  navigate("/pricing");
-                }}
-                className="w-full h-11 bg-primary text-primary-foreground flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all"
-              >
-                Unlock Training →
-              </button>
-            )}
+            {/* Create new - always available */}
+            <button
+              onClick={() => launchWorkout("Quick Workout", "quick", [])}
+              className="w-full h-11 bg-primary text-primary-foreground flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all"
+            >
+              <Plus size={14} /> Create New Workout
+            </button>
           </div>
         )}
       </SheetContent>
