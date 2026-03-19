@@ -126,6 +126,42 @@ export type Database = {
           },
         ]
       }
+      client_assessments: {
+        Row: {
+          admin_user_id: string
+          ai_findings: Json | null
+          client_user_id: string
+          created_at: string
+          draft_program: Json | null
+          id: string
+          media_url: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_user_id: string
+          ai_findings?: Json | null
+          client_user_id: string
+          created_at?: string
+          draft_program?: Json | null
+          id?: string
+          media_url: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_user_id?: string
+          ai_findings?: Json | null
+          client_user_id?: string
+          created_at?: string
+          draft_program?: Json | null
+          id?: string
+          media_url?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       coach_direct_messages: {
         Row: {
           created_at: string

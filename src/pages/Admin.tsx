@@ -30,6 +30,7 @@ import AdminAiCopilot from "@/components/admin/AdminAiCopilot";
 import AdminRecoveryHeatmap from "@/components/admin/AdminRecoveryHeatmap";
 import AdminSchedule from "@/components/admin/AdminSchedule";
 import AdminMonthlyFocus from "@/components/admin/AdminMonthlyFocus";
+import AdminBiomechanics from "@/components/admin/AdminBiomechanics";
 
 /* ── Tab 3: The Vault ──────────────────────────────── */
 import AdminFinancials from "@/components/admin/AdminFinancials";
@@ -165,6 +166,7 @@ const Admin = () => {
             { key: "recovery", label: "Recovery Map", content: <AdminRecoveryHeatmap /> },
             { key: "schedule", label: "Schedule", content: <AdminSchedule /> },
             { key: "monthly", label: "Monthly Focus", content: <AdminMonthlyFocus /> },
+            { key: "biomechanics", label: "Biomechanics", content: <AdminBiomechanics /> },
           ]} />
         )}
 
