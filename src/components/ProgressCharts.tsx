@@ -63,8 +63,7 @@ const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) =
 
   useEffect(() => {
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [effectiveUserId, activeLift]);
+  }, [fetchData]);
 
   const current = data.length > 0 ? data[data.length - 1].value : 0;
   const previous = data.length > 1 ? data[data.length - 2].value : current;
