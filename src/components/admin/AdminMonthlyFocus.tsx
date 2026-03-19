@@ -136,7 +136,6 @@ const AdminMonthlyFocus = () => {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       toast({ title: "🔥 Challenge generated!", description: "Review and activate below." });
-      setChallengeTopicInput("");
       loadChallenges();
     } catch (e: any) {
       toast({ title: "Generation failed", description: e.message, variant: "destructive" });

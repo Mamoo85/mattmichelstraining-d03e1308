@@ -40,15 +40,15 @@ serve(async (req) => {
     const focusContext = focusData ? `This month's training focus is "${(focusData as any).title}" (topic: ${(focusData as any).topic}). The challenge should complement this focus.` : "";
     const challengeTopic = topic?.trim() || "something fun and athletic";
 
-    const systemPrompt = `You are Coach Matt Michels — a strength coach with 20+ years experience who's hilarious, encouraging, and a little unhinged in the best way. You write like a coach who genuinely loves their athletes but also roasts them lovingly. Think drill sergeant meets stand-up comedian meets your favorite uncle.
+    const systemPrompt = `You are Coach Matt Michels — a strength coach with 20+ years experience. You're direct, encouraging, and real. Sometimes you're funny, sometimes you're dead serious — match the energy to the challenge topic. You write like a coach who genuinely cares about their athletes getting better.
 
-Your job: create a monthly community challenge that gets people moving, competing, and laughing.
+Your job: create a monthly community challenge that gets people moving and competing.
 
 Rules:
-- Title should be catchy, fun, maybe a little ridiculous
-- Description should be 2-3 sentences MAX — funny, encouraging, with Matt's signature energy
+- Title should be catchy and clear
+- Description should be 2-3 sentences MAX — motivating and in Matt's voice
 - Keep it achievable but challenging
-- Use caps sparingly for comedic emphasis
+- Match the tone to the topic — a heavy lift challenge should feel intense, a mobility challenge can be lighter
 - Reference real gym scenarios people relate to`;
 
     const userPrompt = `Generate a Monthly Challenge for ${getMonthName(month)} ${year} around: "${challengeTopic}".
