@@ -68,11 +68,16 @@ const PageLoader = () => (
   </div>
 );
 
-const GlobalTimer = () => {
+const GlobalTimer = memo(() => {
   const { timerOpen, closeTimer, portalActive } = useTimer();
   if (!timerOpen || portalActive) return null;
-  return <IntervalTimer onClose={closeTimer} />;
-};
+  return (
+    <Suspense fallback={null}>
+      <IntervalTimer onClose={closeTimer} />
+    </Suspense>
+  );
+});
+GlobalTimer.displayName = "GlobalTimer";
 
 const ActiveWorkoutWrapper = () => {
   const { user } = useAuth();
