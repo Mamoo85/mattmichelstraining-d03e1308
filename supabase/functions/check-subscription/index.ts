@@ -63,6 +63,28 @@ serve(async (req) => {
     const user = userData.user;
     logStep("User authenticated", { userId: user.id, email: user.email });
 
+    // ===== VIP CHECK: If user is VIP, skip Stripe and return their stored tier =====
+    const { data: vipProfile } = await supabaseClient
+      .from("profiles")
+      .select("is_vip, subscription_tier")
+      .eq("user_id", user.id)
+      .single();
+
+    if (vipProfile?.is_vip) {
+      const vipTier = vipProfile.subscription_tier || "basic";
+      logStep("VIP user — bypassing Stripe sync", { tier: vipTier });
+      return new Response(JSON.stringify({
+        subscribed: true,
+        product_id: null,
+        subscription_end: null,
+        subscription_tier: vipTier,
+        is_vip: true,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
     // Check if this user is a child linked to a parent — if so, inherit parent's subscription
     const { data: childLink } = await supabaseClient
       .from("parent_child_links")
