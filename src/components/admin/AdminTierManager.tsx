@@ -128,12 +128,39 @@ const AdminTierManager = () => {
           <h2 className="text-sm font-bold text-foreground uppercase tracking-widest">Tier Access Manager</h2>
           <p className="text-xs text-muted-foreground mt-1">Toggle feature access for each subscription tier. Changes take effect immediately.</p>
         </div>
-        <button
-          onClick={() => setShowAdd(!showAdd)}
-          className="flex items-center gap-1 px-3 py-2 text-[10px] font-bold uppercase tracking-widest bg-primary text-primary-foreground hover:opacity-90 transition-m2"
-        >
-          <Plus size={12} /> Add Feature
-        </button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center gap-1 px-3 py-2 text-[10px] font-bold uppercase tracking-widest bg-primary text-primary-foreground hover:opacity-90 transition-m2">
+              <Plus size={12} /> Add Feature <ChevronDown size={10} />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56 max-h-72 overflow-y-auto">
+            {PRESET_FEATURES
+              .filter((p) => !features.some((f) => f.feature_key === p.key))
+              .map((preset) => (
+                <DropdownMenuItem
+                  key={preset.key}
+                  onClick={() => {
+                    setNewFeature({ feature_key: preset.key, feature_label: preset.label, description: preset.description });
+                    setShowAdd(true);
+                  }}
+                  className="text-xs"
+                >
+                  {preset.label}
+                </DropdownMenuItem>
+              ))}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => {
+                setNewFeature({ feature_key: "", feature_label: "", description: "" });
+                setShowAdd(true);
+              }}
+              className="text-xs"
+            >
+              <Pencil size={12} className="mr-2" /> Custom Feature…
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {showAdd && (
