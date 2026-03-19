@@ -8,9 +8,9 @@ import ParentChildManager from "@/components/ParentChildManager";
 import { useContentMap } from "@/hooks/useSiteContent";
 import { useAuth } from "@/hooks/useAuth";
 import {
-  ArrowRight, Shield, AlertTriangle, TrendingUp, Clock,
-  ChevronRight, GraduationCap, Heart, Zap, BookOpen,
-  Calendar, Mail, Phone, MapPin, Users
+  ArrowRight, Shield, TrendingUp,
+  ChevronRight, GraduationCap, Heart, Zap,
+  Calendar, MapPin, Users
 } from "lucide-react";
 import m2Logo from "@/assets/m2-logo.jpg";
 import TechShowcaseCard from "@/components/landing/TechShowcaseCard";
