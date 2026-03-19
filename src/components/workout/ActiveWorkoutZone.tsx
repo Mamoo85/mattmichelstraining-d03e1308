@@ -579,6 +579,10 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
           onClose={() => setFormTrackerExercise(null)}
         />
       )}
+
+      {showIntervalTimer && (
+        <IntervalTimer onClose={() => setShowIntervalTimer(false)} />
+      )}
     </>
   );
 };
