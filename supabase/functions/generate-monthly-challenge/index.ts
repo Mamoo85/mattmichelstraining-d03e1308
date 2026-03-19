@@ -111,10 +111,10 @@ Return structured data via the tool. The description should be 2-3 SHORT punchy 
 
     const fc = JSON.parse(toolCall.function.arguments);
 
-    // Insert as inactive (admin reviews first)
+    // Upsert — the table has a unique constraint on (month, year)
     const { data: inserted, error: insertErr } = await supabase
       .from("monthly_challenges")
-      .insert({
+      .upsert({
         title: fc.title,
         description: fc.description,
         metric_label: fc.metric_label,
@@ -122,7 +122,7 @@ Return structured data via the tool. The description should be 2-3 SHORT punchy 
         year,
         is_active: false,
         created_by: user.id,
-      })
+      }, { onConflict: "month,year" })
       .select()
       .single();
 
