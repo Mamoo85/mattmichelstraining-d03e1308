@@ -41,13 +41,13 @@ const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTrac
     onUpdate(index, { sets: exercise.sets.slice(0, -1) });
   }, [exercise.sets, index, onUpdate]);
 
-  const handleFlagToggle = (checked: boolean) => {
+  const handleFlagToggle = useCallback((checked: boolean) => {
     if (!canFlag) {
       setShowUpsell(true);
       return;
     }
-    onUpdate({ flagForCoach: checked });
-  };
+    onUpdate(index, { flagForCoach: checked });
+  }, [canFlag, index, onUpdate]);
 
   return (
     <>
