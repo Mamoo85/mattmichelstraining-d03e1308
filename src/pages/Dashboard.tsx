@@ -5,12 +5,11 @@ import TrialPaywallModal from "@/components/TrialPaywallModal";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
-import { ExternalLink, Loader2, Crown, Timer, User } from "lucide-react";
+import { ExternalLink, Loader2, Crown, User, Dumbbell } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import PwaInstallBanner from "@/components/PwaInstallBanner";
 import StudioCheckIn from "@/components/StudioCheckIn";
-import IntervalTimer from "@/components/workout/IntervalTimer";
 
 // Extracted sub-components
 import DashboardHome from "@/components/dashboard/DashboardHome";
@@ -46,7 +45,6 @@ const Dashboard = () => {
   const [profile, setProfile] = useState<{ full_name: string | null; athlete_name: string | null } | null>(null);
   const [activeTab, setActiveTab] = useState("home");
   const [portalLoading, setPortalLoading] = useState(false);
-  const [showTimer, setShowTimer] = useState(false);
   const [hasPrograms, setHasPrograms] = useState<boolean | null>(null);
   const [hasLogs, setHasLogs] = useState<boolean | null>(null);
 
@@ -112,6 +110,12 @@ const Dashboard = () => {
             <p className="text-xs sm:text-sm text-muted-foreground">Your training portal · Real training, real results</p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => window.dispatchEvent(new Event("open-workout-zone"))}
+              className="flex items-center gap-1.5 bg-primary text-primary-foreground px-3 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all active:scale-95"
+            >
+              <Dumbbell size={12} /> Start Workout
+            </button>
             <Link
               to="/profile"
               className="flex items-center gap-1.5 bg-muted text-muted-foreground px-3 py-2 text-[10px] font-bold uppercase tracking-widest hover:text-foreground transition-all"
@@ -122,7 +126,7 @@ const Dashboard = () => {
               <button
                 onClick={handleManageSubscription}
                 disabled={portalLoading}
-                className="flex items-center gap-1.5 bg-primary text-primary-foreground px-3 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-50"
+                className="flex items-center gap-1.5 bg-muted text-muted-foreground px-3 py-2 text-[10px] font-bold uppercase tracking-widest hover:text-foreground transition-all disabled:opacity-50"
               >
                 {portalLoading ? <Loader2 size={12} className="animate-spin" /> : <ExternalLink size={12} />}
                 Manage
@@ -168,17 +172,7 @@ const Dashboard = () => {
         </Suspense>
       </div>
 
-      {/* Floating timer */}
-      {!showTimer && (
-        <button
-          onClick={() => setShowTimer(true)}
-          className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:opacity-90 transition-all rounded-full mb-[env(safe-area-inset-bottom)]"
-          aria-label="Open interval timer"
-        >
-          <Timer size={24} />
-        </button>
-      )}
-      {showTimer && <IntervalTimer onClose={() => setShowTimer(false)} />}
+      {/* Timer moved to ActiveWorkoutZone */}
 
       {/* Trial banner */}
       {isOnTrial && !subscribed && !isAdmin && !isLegend && (

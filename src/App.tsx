@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useState, useEffect } from "react";
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
@@ -16,7 +16,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import OfflineBadge from "@/components/OfflineBadge";
 import AnnouncementBanner from "@/components/AnnouncementBanner";
-import BottomNav from "@/components/BottomNav";
+import ActiveWorkoutZone from "@/components/workout/ActiveWorkoutZone";
 
 import { useTimer } from "@/hooks/useTimer";
 import { useAuth } from "@/hooks/useAuth";
@@ -77,11 +77,19 @@ const GlobalTimer = () => {
   return <IntervalTimer onClose={closeTimer} />;
 };
 
-const AuthBottomNav = () => {
+const ActiveWorkoutWrapper = () => {
   const { user } = useAuth();
-  const isMobile = useIsMobile();
-  if (!user || !isMobile) return null;
-  return <BottomNav />;
+  const [zoneOpen, setZoneOpen] = useState(false);
+
+  // Expose zone opener globally via custom event
+  useEffect(() => {
+    const handler = () => setZoneOpen(true);
+    window.addEventListener("open-workout-zone", handler);
+    return () => window.removeEventListener("open-workout-zone", handler);
+  }, []);
+
+  if (!user || !zoneOpen) return null;
+  return <ActiveWorkoutZone onFinish={() => setZoneOpen(false)} />;
 };
 
 const ReferralCaptureWrapper = () => {
@@ -127,7 +135,7 @@ const App = () => (
                 </Suspense>
               </ErrorBoundary>
               <GlobalTimer />
-              <AuthBottomNav />
+              <ActiveWorkoutWrapper />
               <OfflineBadge />
             </BrowserRouter>
           </TooltipProvider>

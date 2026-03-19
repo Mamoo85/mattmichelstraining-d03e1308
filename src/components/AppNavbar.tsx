@@ -28,7 +28,7 @@ const AppNavbar = () => {
   const isAuthenticated = !!user;
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm shadow-m2 ${isAuthenticated ? "hidden md:block" : ""}`}>
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm shadow-m2">
       <div className="container flex items-center justify-between h-14">
         <button
           onClick={toggleTimer}
