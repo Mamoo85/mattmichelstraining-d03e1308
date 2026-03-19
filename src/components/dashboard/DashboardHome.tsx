@@ -99,6 +99,25 @@ const DashboardHome = memo(({ isNewUser, onViewPoints, onViewReferrals }: Dashbo
       </p>
     </Link>
 
+    {/* Persistent posture analysis card for users who skipped */}
+    {hasPosture === false && (
+      <div className="bg-card border border-border p-5 space-y-2">
+        <div className="flex items-center gap-2">
+          <Camera size={14} className="text-primary" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Free Posture Analysis</span>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Take a quick front & side photo — Coach Matt will analyze your posture and send you a personalized breakdown.
+        </p>
+        <button
+          onClick={() => setShowWelcome(true)}
+          className="w-full h-10 border-2 border-primary text-primary flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest hover:bg-primary hover:text-primary-foreground transition-all"
+        >
+          <Camera size={14} /> Get My Free Analysis
+        </button>
+      </div>
+    )}
+
     <UpcomingSessions />
     <PointsWidget onViewLeaderboard={onViewPoints} />
     <ReferEarnCard onViewAll={onViewReferrals} />
