@@ -126,7 +126,25 @@ const AdminMonthlyFocus = () => {
     loadChallenges();
   };
 
-  /* ── Focus AI Generation ── */
+  /* ── Challenge AI Generation ── */
+  const handleGenerateChallenge = async () => {
+    setGeneratingChallenge(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-monthly-challenge", {
+        body: { month: selMonth, year: selYear, topic: challengeTopicInput.trim() || undefined },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast({ title: "🔥 Challenge generated!", description: "Review and activate below." });
+      setChallengeTopicInput("");
+      loadChallenges();
+    } catch (e: any) {
+      toast({ title: "Generation failed", description: e.message, variant: "destructive" });
+    }
+    setGeneratingChallenge(false);
+  };
+
+
   const handleGenerate = async () => {
     setGenerating(true);
     try {
