@@ -23,11 +23,11 @@ const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTrac
   const { isAdmin } = useIsAdmin();
   const { hasAccess: canFlag } = useTierAccess("flag_coach");
 
-  const updateSet = (setIndex: number, field: "reps" | "weight", value: number) => {
+  const updateSet = useCallback((setIndex: number, field: "reps" | "weight", value: number) => {
     const newSets = [...exercise.sets];
     newSets[setIndex] = { ...newSets[setIndex], [field]: Math.max(0, value) };
-    onUpdate({ sets: newSets });
-  };
+    onUpdate(index, { sets: newSets });
+  }, [exercise.sets, index, onUpdate]);
 
   const addSet = () => {
     const lastSet = exercise.sets[exercise.sets.length - 1];
