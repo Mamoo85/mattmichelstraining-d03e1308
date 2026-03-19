@@ -203,7 +203,7 @@ const BodyAvatar = ({ activeLift }: BodyAvatarProps) => {
       }}
     >
       <h3
-        className="text-[9px] font-bold uppercase tracking-[0.2em] mb-2 font-mono text-center print:text-gray-800"
+        className="text-[9px] font-bold uppercase tracking-[0.2em] mb-2 font-mono text-center avatar-title"
         style={{ color: "hsl(var(--synth-cyan))" }}
       >
         Target · {activeLift}
