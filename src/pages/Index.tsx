@@ -1,7 +1,9 @@
+import { lazy, Suspense } from "react";
 import AppNavbar from "@/components/AppNavbar";
 import HeroSection from "@/components/HeroSection";
 import SEOHead from "@/components/SEOHead";
-import ChallengeTeaser from "@/components/landing/ChallengeTeaser";
+
+const ChallengeTeaser = lazy(() => import("@/components/landing/ChallengeTeaser"));
 
 const FAQ_SCHEMA = {
   "@context": "https://schema.org",
@@ -56,7 +58,9 @@ const Index = () => (
     <AppNavbar />
     <HeroSection />
     <div className="container py-12 max-w-xl mx-auto">
-      <ChallengeTeaser />
+      <Suspense fallback={null}>
+        <ChallengeTeaser />
+      </Suspense>
     </div>
   </div>
 );
