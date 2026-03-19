@@ -7,6 +7,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useWorkoutSave } from "@/hooks/useWorkoutSave";
 import { toast } from "sonner";
 import ExercisePicker from "./ExercisePicker";
 import ExerciseCard from "./ExerciseCard";
@@ -73,7 +74,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
   const [exercises, setExercises] = useState<LoggedExerciseData[]>(
     initialContext?.resumedExercises || []
   );
-  const [saving, setSaving] = useState(false);
+  const { save: saveWorkout, saving } = useWorkoutSave();
   const [showPicker, setShowPicker] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [recovery, setRecovery] = useState<RecoveryData>(
@@ -282,61 +283,18 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
   const handleFinishConfirmed = async () => {
     if (!user) return;
     setShowConfirm(false);
-    setSaving(true);
 
-    try {
-      const recoveryPayload: Record<string, any> = {};
-      if (recovery.sleepHours) recoveryPayload.sleep_hours = parseFloat(recovery.sleepHours);
-      if (recovery.sleepQuality && recovery.sleepQuality > 0) recoveryPayload.sleep_quality = recovery.sleepQuality;
-      if (recovery.soreness && recovery.soreness > 0) recoveryPayload.soreness = recovery.soreness;
-      if (recovery.energy && recovery.energy > 0) recoveryPayload.energy = recovery.energy;
-      if (recovery.recoveryNotes) recoveryPayload.recovery_notes = recovery.recoveryNotes;
+    const logId = await saveWorkout({
+      userId: user.id,
+      date,
+      sessionNotes,
+      exercises,
+      recovery,
+    });
 
-      const { data: log, error: logErr } = await supabase
-        .from("workout_logs")
-        .insert({
-          user_id: user.id,
-          date: date.toISOString(),
-          session_notes: sessionNotes || null,
-          ...recoveryPayload,
-        } as any)
-        .select("id")
-        .single();
-
-      if (logErr || !log) {
-        toast.error(logErr?.message || "Failed to save workout");
-        setSaving(false);
-        return;
-      }
-
-      // Filter out exercises without a valid exercise_id (FK constraint requires non-null)
-      const validExercises = exercises.filter(e => e.exerciseId && e.exerciseId.length > 0);
-      
-      if (validExercises.length > 0) {
-        const rows = validExercises.map((e) => ({
-          log_id: log.id,
-          exercise_id: e.exerciseId,
-          sets_reps_weight: e.sets as any,
-          client_notes: e.clientNotes || null,
-          video_url: e.videoUrl || null,
-          flag_for_coach: e.flagForCoach,
-        }));
-
-        const { error: exErr } = await supabase.from("logged_exercises").insert(rows);
-        if (exErr) {
-          toast.error(exErr.message || "Exercises failed to save");
-        }
-      }
-
-      // Clear paused state
-      localStorage.removeItem("m2-paused-workout");
-
-      setWorkoutLogId(log.id);
+    if (logId) {
+      setWorkoutLogId(logId);
       setPhase("summary");
-    } catch (err: any) {
-      toast.error(err?.message || "Something went wrong saving your workout");
-    } finally {
-      setSaving(false);
     }
   };
 

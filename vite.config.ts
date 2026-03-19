@@ -71,8 +71,10 @@ export default defineConfig(({ mode }) => ({
         manualChunks: {
           vendor: ["react", "react-dom", "react-router-dom"],
           query: ["@tanstack/react-query"],
-          ui: ["framer-motion", "recharts"],
+          ui: ["framer-motion"],
+          charts: ["recharts"],
           supabase: ["@supabase/supabase-js"],
+          dates: ["date-fns"],
         },
       },
     },

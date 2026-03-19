@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, useEffect } from "react";
+import { lazy, Suspense, useState, useEffect, memo } from "react";
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
@@ -11,12 +11,12 @@ import { TimerProvider } from "@/hooks/useTimer";
 import { OfflineSyncProvider } from "@/hooks/useOfflineSync";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import SubscriptionGuard from "@/components/SubscriptionGuard";
-import IntervalTimer from "@/components/workout/IntervalTimer";
 import ScrollToTop from "@/components/ScrollToTop";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import OfflineBadge from "@/components/OfflineBadge";
 import AnnouncementBanner from "@/components/AnnouncementBanner";
-import ActiveWorkoutZone from "@/components/workout/ActiveWorkoutZone";
+const IntervalTimer = lazy(() => import("@/components/workout/IntervalTimer"));
+const ActiveWorkoutZone = lazy(() => import("@/components/workout/ActiveWorkoutZone"));
 
 import { useTimer } from "@/hooks/useTimer";
 import { useAuth } from "@/hooks/useAuth";
@@ -72,11 +72,16 @@ const PageLoader = () => (
   </div>
 );
 
-const GlobalTimer = () => {
+const GlobalTimer = memo(() => {
   const { timerOpen, closeTimer, portalActive } = useTimer();
   if (!timerOpen || portalActive) return null;
-  return <IntervalTimer onClose={closeTimer} />;
-};
+  return (
+    <Suspense fallback={null}>
+      <IntervalTimer onClose={closeTimer} />
+    </Suspense>
+  );
+});
+GlobalTimer.displayName = "GlobalTimer";
 
 const ActiveWorkoutWrapper = () => {
   const { user } = useAuth();
@@ -119,21 +124,23 @@ const ActiveWorkoutWrapper = () => {
 
   if (!user || !zoneOpen) return null;
   return (
-    <ActiveWorkoutZone
-      initialContext={zoneContext}
-      onFinish={() => {
-        setZoneOpen(false);
-        setZoneContext(null);
-        setHasPaused(false);
-        setPortalActive(false);
-        localStorage.removeItem("m2-paused-workout");
-      }}
-      onPause={() => {
-        setZoneOpen(false);
-        setHasPaused(true);
-        setPortalActive(false);
-      }}
-    />
+    <Suspense fallback={null}>
+      <ActiveWorkoutZone
+        initialContext={zoneContext}
+        onFinish={() => {
+          setZoneOpen(false);
+          setZoneContext(null);
+          setHasPaused(false);
+          setPortalActive(false);
+          localStorage.removeItem("m2-paused-workout");
+        }}
+        onPause={() => {
+          setZoneOpen(false);
+          setHasPaused(true);
+          setPortalActive(false);
+        }}
+      />
+    </Suspense>
   );
 };
 
