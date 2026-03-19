@@ -323,6 +323,7 @@ const TipCard = ({ tip }: { tip: typeof TIPS[0] }) => {
 
 /* ── Page ── */
 const Learn = () => {
+  const showFeaturedVideos = useSectionVisible("featured_videos");
   const { data: articles = [] } = useQuery({
     queryKey: ["learn-articles-published"],
     queryFn: async () => {
