@@ -1,11 +1,8 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Gift, Star, Trophy, Users, LogIn, Dumbbell, Shield, Zap, Heart, Target, Camera, Brain, Cpu, Sparkles, Calendar } from "lucide-react";
+import { ArrowRight, Gift, Star, Trophy, Users, Dumbbell, Shield, Zap, Heart, Target, Cpu, Calendar } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { motion } from "framer-motion";
 import AiIntakeAnalyzer from "../programs/AiIntakeAnalyzer";
 import TrialCTA from "../TrialCTA";
-import aiBiomechanicsHero from "@/assets/ai-biomechanics-hero.jpg";
-import aiPostureSide from "@/assets/ai-posture-side.jpg";
 
 const SignUpButton = ({ size = "default" }: { size?: "default" | "small" }) => (
   <Link
