@@ -29,15 +29,6 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    // Check if there's a monthly focus for context
-    const { data: focusData } = await supabase
-      .from("monthly_focus")
-      .select("title, topic")
-      .eq("month", month)
-      .eq("year", year)
-      .maybeSingle();
-
-    const focusContext = focusData ? `This month's training focus is "${(focusData as any).title}" (topic: ${(focusData as any).topic}). The challenge should complement this focus.` : "";
     const challengeTopic = topic?.trim() || "something fun and athletic";
 
     const systemPrompt = `You are Coach Matt Michels — a strength coach with 20+ years experience. You're writing for an ADULT and PARENT audience, so keep it professional but with your natural humor and directness.
