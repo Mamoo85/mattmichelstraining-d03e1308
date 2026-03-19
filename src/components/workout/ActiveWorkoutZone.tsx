@@ -247,21 +247,20 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
 
   // Pause handler
   const handlePause = useCallback(() => {
-    setTimerRunning(false);
     const state = {
       title: workoutTitle,
       source: initialContext?.source,
       resumedExercises: exercises,
       resumedNotes: sessionNotes,
       resumedRecovery: recovery,
-      resumedElapsed: elapsedSeconds,
+      resumedElapsed: elapsedRef.current,
       resumedDate: date.toISOString(),
       resumed: true,
     };
     localStorage.setItem("m2-paused-workout", JSON.stringify(state));
     toast.info("Workout paused. Resume anytime from your dashboard.");
     onPause?.();
-  }, [exercises, sessionNotes, recovery, elapsedSeconds, date, workoutTitle, initialContext, onPause]);
+  }, [exercises, sessionNotes, recovery, date, workoutTitle, initialContext, onPause]);
 
   // Finish handler
   const handleFinishClick = () => {
