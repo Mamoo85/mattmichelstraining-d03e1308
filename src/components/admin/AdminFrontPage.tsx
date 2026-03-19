@@ -4,6 +4,9 @@ import { toast } from "@/hooks/use-toast";
 import { Save, Loader2, Megaphone } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
+import AdminPinnedNotes from "./AdminPinnedNotes";
+import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
 
 const AdminFrontPage = () => {
   const [loading, setLoading] = useState(true);
