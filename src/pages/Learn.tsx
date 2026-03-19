@@ -388,6 +388,9 @@ const Learn = () => {
           </section>
         )}
 
+        {/* Tech Showcase */}
+        <TechShowcaseCard />
+
         {/* Monthly Focus */}
         <div className="mb-10">
           <MonthlyFocus />
