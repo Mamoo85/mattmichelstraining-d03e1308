@@ -101,7 +101,7 @@ const App = () => (
                     <Route path="/for-parents" element={<ForParents />} />
                     <Route path="/pricing" element={<Pricing />} />
                     <Route path="/about" element={<About />} />
-                    <Route path="/schedule" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />
+                    <Route path="/schedule" element={<Schedule />} />
                     <Route path="/merch" element={<Merch />} />
                     <Route path="/learn" element={<Learn />} />
                     <Route path="/install" element={<Install />} />
