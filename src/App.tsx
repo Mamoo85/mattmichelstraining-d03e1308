@@ -135,7 +135,7 @@ const App = () => (
                 </Suspense>
               </ErrorBoundary>
               <GlobalTimer />
-              <AuthBottomNav />
+              <ActiveWorkoutWrapper />
               <OfflineBadge />
             </BrowserRouter>
           </TooltipProvider>
