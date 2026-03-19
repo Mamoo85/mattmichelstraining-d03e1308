@@ -104,6 +104,34 @@ const InterceptGateway = ({ onSelect, onExit }: InterceptGatewayProps) => {
     });
   };
 
+  const handleActiveProgram = async (ap: ActiveProgramEntry) => {
+    // Fetch exercises from program_workouts for this program
+    const { data: workouts } = await supabase
+      .from("program_workouts")
+      .select("exercise_id, prescribed_sets_reps, coach_instructions, exercise_library(id, title, video_url, the_why)")
+      .eq("program_id", ap.program_id)
+      .order("week_number", { ascending: true })
+      .order("day_number", { ascending: true })
+      .order("sort_order", { ascending: true });
+
+    const exercises = ((workouts as any[]) ?? []).map((w: any) => ({
+      exerciseId: w.exercise_library?.id || w.exercise_id,
+      exerciseTitle: w.exercise_library?.title || "Exercise",
+      prescribedSets: parseInt(w.prescribed_sets_reps?.split("x")?.[0]) || 3,
+      prescribedReps: parseInt(w.prescribed_sets_reps?.split("x")?.[1]) || 10,
+      notes: w.coach_instructions || "",
+      videoUrl: w.exercise_library?.video_url || null,
+      theWhy: w.exercise_library?.the_why || null,
+    }));
+
+    onSelect({
+      title: ap.program_title,
+      source: "program",
+      programId: ap.program_id,
+      exercises,
+    });
+  };
+
   const handleWorkout = (w: CommunityWorkout, source: "community" | "custom") => {
     onSelect({
       title: w.title,
