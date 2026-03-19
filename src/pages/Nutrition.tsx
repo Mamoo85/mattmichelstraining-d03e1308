@@ -221,11 +221,17 @@ const Nutrition = () => {
     },
   });
 
-  const totalCalFromAnalysis = analysis ? analysis.items.reduce((s, i) => s + i.calories, 0) : 0;
-  const totalProtein = analysis ? analysis.items.reduce((s, i) => s + i.protein_g, 0) : 0;
-  const totalCarbs = analysis ? analysis.items.reduce((s, i) => s + i.carbs_g, 0) : 0;
-  const totalFat = analysis ? analysis.items.reduce((s, i) => s + i.fat_g, 0) : 0;
-  const totalFiber = analysis ? analysis.items.reduce((s, i) => s + i.fiber_g, 0) : 0;
+  const totalCalFromAnalysis = editableItems.reduce((s, i) => s + i.calories, 0);
+  const totalProtein = editableItems.reduce((s, i) => s + i.protein_g, 0);
+  const totalCarbs = editableItems.reduce((s, i) => s + i.carbs_g, 0);
+  const totalFat = editableItems.reduce((s, i) => s + i.fat_g, 0);
+  const totalFiber = editableItems.reduce((s, i) => s + i.fiber_g, 0);
+
+  const updateItem = (index: number, field: keyof FoodItem, value: number) => {
+    setEditableItems(prev => prev.map((item, i) =>
+      i === index ? { ...item, [field]: Math.max(0, value) } : item
+    ));
+  };
 
   const handlePrint = () => {
     printNutritionReport({
