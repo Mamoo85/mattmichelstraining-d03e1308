@@ -7,12 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import {
   Loader2, Camera, Zap, ScanLine, Activity, Brain, Utensils,
   ArrowRight, X, Crosshair, Gauge, ShieldAlert, Video,
-  FileText, ChefHat,
+  FileText, ChefHat, Copy, Save, Trash2, RefreshCw,
 } from "lucide-react";
 
 /* Lazy-load existing AI tools */
@@ -159,6 +160,55 @@ const UsageBadge = ({ usage }: { usage: { prompt_tokens: number; completion_toke
   );
 };
 
+/* ── Shared result action bar for all AI tools ── */
+const AiResultActions = ({ result, onDiscard, onRegenerate, toolLabel }: {
+  result: string;
+  onDiscard: () => void;
+  onRegenerate: () => void;
+  toolLabel: string;
+}) => {
+  const qc = useQueryClient();
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(result);
+    toast.success("Copied to clipboard");
+  };
+
+  const saveToDrafts = async () => {
+    try {
+      const { error } = await supabase.from("marketing_drafts").insert({
+        title: `${toolLabel} Report`,
+        body: result,
+        draft_type: "ai_report",
+        status: "pending",
+        generated_by: "ai",
+      });
+      if (error) throw error;
+      qc.invalidateQueries({ queryKey: ["marketing-drafts"] });
+      toast.success("Saved to Drafts for review");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to save");
+    }
+  };
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      <Button size="sm" variant="outline" onClick={copyToClipboard} className="text-xs gap-1">
+        <Copy size={12} /> Copy
+      </Button>
+      <Button size="sm" variant="default" onClick={saveToDrafts} className="text-xs gap-1">
+        <Save size={12} /> Save to Drafts
+      </Button>
+      <Button size="sm" variant="outline" onClick={onRegenerate} className="text-xs gap-1">
+        <RefreshCw size={12} /> Regenerate
+      </Button>
+      <Button size="sm" variant="ghost" onClick={onDiscard} className="text-xs gap-1 text-destructive hover:text-destructive">
+        <Trash2 size={12} /> Discard
+      </Button>
+    </div>
+  );
+};
+
 /* ── Inline tool UIs for new AI features ── */
 
 const InjuryRiskTool = () => {
@@ -197,14 +247,15 @@ const InjuryRiskTool = () => {
         </Button>
       </div>
       {result && (
-        <>
+        <div className="space-y-3">
+          <AiResultActions result={result} onDiscard={() => { setResult(""); setUsage(null); }} onRegenerate={run} toolLabel="Injury Risk" />
           <UsageBadge usage={usage} />
           <Card>
             <CardContent className="pt-4 prose prose-sm max-w-none dark:prose-invert">
               <ReactMarkdown>{result}</ReactMarkdown>
             </CardContent>
           </Card>
-        </>
+        </div>
       )}
     </div>
   );
@@ -250,14 +301,15 @@ const VideoFormReviewTool = () => {
         </Button>
       </div>
       {result && (
-        <>
+        <div className="space-y-3">
+          <AiResultActions result={result} onDiscard={() => { setResult(""); setUsage(null); }} onRegenerate={run} toolLabel="Video Form Review" />
           <UsageBadge usage={usage} />
           <Card>
             <CardContent className="pt-4 prose prose-sm max-w-none dark:prose-invert">
               <ReactMarkdown>{result}</ReactMarkdown>
             </CardContent>
           </Card>
-        </>
+        </div>
       )}
     </div>
   );
@@ -313,14 +365,15 @@ const ParentReportTool = () => {
         {loading ? "Generating…" : "Generate Report"}
       </Button>
       {result && (
-        <>
+        <div className="space-y-3">
+          <AiResultActions result={result} onDiscard={() => { setResult(""); setUsage(null); }} onRegenerate={run} toolLabel="Parent Report" />
           <UsageBadge usage={usage} />
           <Card>
             <CardContent className="pt-4 prose prose-sm max-w-none dark:prose-invert">
               <ReactMarkdown>{result}</ReactMarkdown>
             </CardContent>
           </Card>
-        </>
+        </div>
       )}
     </div>
   );
@@ -416,14 +469,15 @@ const MealPrepTool = () => {
         {loading ? "Generating…" : "Generate Meal Plan"}
       </Button>
       {result && (
-        <>
+        <div className="space-y-3">
+          <AiResultActions result={result} onDiscard={() => { setResult(""); setUsage(null); }} onRegenerate={run} toolLabel="Meal Prep" />
           <UsageBadge usage={usage} />
           <Card>
             <CardContent className="pt-4 prose prose-sm max-w-none dark:prose-invert">
               <ReactMarkdown>{result}</ReactMarkdown>
             </CardContent>
           </Card>
-        </>
+        </div>
       )}
     </div>
   );
