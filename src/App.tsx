@@ -127,6 +127,7 @@ const App = () => (
                 </Suspense>
               </ErrorBoundary>
               <GlobalTimer />
+              <AuthBottomNav />
               <OfflineBadge />
             </BrowserRouter>
           </TooltipProvider>
