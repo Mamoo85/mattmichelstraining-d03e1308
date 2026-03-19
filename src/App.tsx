@@ -44,6 +44,7 @@ const TrialWelcome = lazy(() => import("./pages/TrialWelcome"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Install = lazy(() => import("./pages/Install"));
 const Nutrition = lazy(() => import("./pages/Nutrition"));
+const TheEdge = lazy(() => import("./pages/TheEdge"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -161,6 +162,7 @@ const App = () => (
                     <Route path="/schedule" element={<Schedule />} />
                     <Route path="/merch" element={<Merch />} />
                     <Route path="/learn" element={<Learn />} />
+                    <Route path="/the-edge" element={<TheEdge />} />
                     <Route path="/install" element={<Install />} />
                     <Route path="/coach" element={<ProtectedRoute><SubscriptionGuard><Coach /></SubscriptionGuard></ProtectedRoute>} />
                     <Route path="/trial-welcome" element={<ProtectedRoute><TrialWelcome /></ProtectedRoute>} />
