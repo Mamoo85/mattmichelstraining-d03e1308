@@ -1,5 +1,6 @@
 import { useState, memo, useCallback } from "react";
 import { Trash2, ChevronDown, ChevronUp, Plus, Minus, Link, MessageSquare, Lock, Info } from "lucide-react";
+import VoiceNoteButton from "./VoiceNoteButton";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
