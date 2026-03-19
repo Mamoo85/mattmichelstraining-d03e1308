@@ -137,6 +137,14 @@ const AdminAiBusinessTools = () => {
 
           {result && (
             <div className="space-y-3">
+              {usage && (
+                <div className="flex flex-wrap gap-3 text-[10px] text-muted-foreground bg-muted/50 border border-border px-3 py-2">
+                  <span>Model: <strong className="text-foreground">{usage.model}</strong></span>
+                  <span>Prompt: <strong className="text-foreground">{usage.prompt_tokens.toLocaleString()}</strong> tokens</span>
+                  <span>Completion: <strong className="text-foreground">{usage.completion_tokens.toLocaleString()}</strong> tokens</span>
+                  <span>Total: <strong className="text-foreground">{usage.total_tokens.toLocaleString()}</strong> tokens</span>
+                </div>
+              )}
               <div className="flex gap-2">
                 <Button size="sm" variant="outline" onClick={copyToClipboard} className="text-xs gap-1">
                   <Copy size={12} /> Copy
