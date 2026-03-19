@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Trash2, GripVertical, Save, FileText, Share2, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, Trash2, GripVertical, Save, FileText, Share2, ArrowUp, ArrowDown, Play } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
