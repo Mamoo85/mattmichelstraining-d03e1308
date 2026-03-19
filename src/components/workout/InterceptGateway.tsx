@@ -38,6 +38,7 @@ const InterceptGateway = ({ onSelect, onExit }: InterceptGatewayProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const hasTemplateAccess = useMinTier("foundation");
+  const { familyIds } = useFamilyUserIds();
   const [programs, setPrograms] = useState<PurchasedProgram[]>([]);
   const [activePrograms, setActivePrograms] = useState<ActiveProgramEntry[]>([]);
   const [personalWorkouts, setPersonalWorkouts] = useState<CommunityWorkout[]>([]);
@@ -46,30 +47,31 @@ const InterceptGateway = ({ onSelect, onExit }: InterceptGatewayProps) => {
 
   useEffect(() => {
     if (!user) return;
+    const userIds = familyIds.length > 0 ? familyIds : [user.id];
 
     Promise.all([
       supabase
         .from("purchased_programs")
         .select("id, program_title, sport, exercises")
-        .eq("user_id", user.id)
+        .in("user_id", userIds)
         .eq("is_active", true)
         .order("purchased_at", { ascending: false }),
       supabase
         .from("user_active_programs" as any)
         .select("id, program_id, training_programs(id, title, sport)")
-        .eq("user_id", user.id)
+        .in("user_id", userIds)
         .eq("status", "active"),
       supabase
         .from("community_workouts")
         .select("id, title, exercises, creator_name")
-        .eq("user_id", user.id)
+        .in("user_id", userIds)
         .order("created_at", { ascending: false })
         .limit(20),
       supabase
         .from("community_workouts")
         .select("id, title, exercises, creator_name")
         .eq("is_public", true)
-        .neq("user_id", user.id)
+        .not("user_id", "in", `(${userIds.join(",")})`)
         .order("likes_count", { ascending: false })
         .limit(20),
     ]).then(([progRes, activeRes, personalRes, templateRes]) => {
@@ -85,7 +87,7 @@ const InterceptGateway = ({ onSelect, onExit }: InterceptGatewayProps) => {
       setMasterTemplates((templateRes.data as CommunityWorkout[] | null) ?? []);
       setLoading(false);
     });
-  }, [user]);
+  }, [user, familyIds]);
 
   const mapExercises = (exercises: any) => {
     const arr = Array.isArray(exercises) ? exercises : [];
