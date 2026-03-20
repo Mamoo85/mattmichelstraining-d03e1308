@@ -10,8 +10,8 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import m2Logo from "@/assets/m2-logo.jpg";
-import mattFamily from "@/assets/matt-family.jpg";
-import mattTraining from "@/assets/matt-training.jpg";
+import poiFamily from "@/assets/poi-matt-family.jpg";
+import poiTraining from "@/assets/poi-matt-training.jpg";
 
 /* ─── animation helper ─── */
 const fade = (delay: number) => ({
