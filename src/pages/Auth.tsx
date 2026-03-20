@@ -122,15 +122,30 @@ const Auth = () => {
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     setError("");
+    setSuccess("");
+    console.log("[GOOGLE-AUTH] Starting Google sign-in, origin:", window.location.origin);
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
       });
+      console.log("[GOOGLE-AUTH] Result:", JSON.stringify(result, null, 2));
       if (result?.error) {
-        setError(result.error.message || "Google sign-in failed");
+        const msg = result.error.message || "Google sign-in failed";
+        console.error("[GOOGLE-AUTH] Error:", msg);
+        if (msg.toLowerCase().includes("interrupted") || msg.toLowerCase().includes("popup")) {
+          setError("Sign-in was interrupted. Please try again — make sure popups aren't blocked.");
+        } else {
+          setError(msg);
+        }
       }
     } catch (e: any) {
-      setError(e.message || "Google sign-in failed");
+      console.error("[GOOGLE-AUTH] Catch:", e);
+      const msg = e.message || "Google sign-in failed";
+      if (msg.toLowerCase().includes("interrupted") || msg.toLowerCase().includes("popup")) {
+        setError("Connection interrupted. Check your internet and try again.");
+      } else {
+        setError(msg);
+      }
     } finally {
       setGoogleLoading(false);
     }
@@ -139,6 +154,7 @@ const Auth = () => {
   const handleAppleSignIn = async () => {
     setAppleLoading(true);
     setError("");
+    setSuccess("");
     console.log("[APPLE-AUTH] Starting Apple sign-in, origin:", window.location.origin);
     try {
       const result = await lovable.auth.signInWithOAuth("apple", {
@@ -146,12 +162,22 @@ const Auth = () => {
       });
       console.log("[APPLE-AUTH] Result:", JSON.stringify(result, null, 2));
       if (result?.error) {
-        console.error("[APPLE-AUTH] Error from result:", result.error);
-        setError(result.error.message || "Apple sign-in failed");
+        const msg = result.error.message || "Apple sign-in failed";
+        console.error("[APPLE-AUTH] Error:", msg);
+        if (msg.toLowerCase().includes("interrupted") || msg.toLowerCase().includes("popup")) {
+          setError("Sign-in was interrupted. Please try again — make sure popups aren't blocked.");
+        } else {
+          setError(msg);
+        }
       }
     } catch (e: any) {
-      console.error("[APPLE-AUTH] Catch error:", e);
-      setError(e.message || "Apple sign-in failed");
+      console.error("[APPLE-AUTH] Catch:", e);
+      const msg = e.message || "Apple sign-in failed";
+      if (msg.toLowerCase().includes("interrupted") || msg.toLowerCase().includes("popup")) {
+        setError("Connection interrupted. Check your internet and try again.");
+      } else {
+        setError(msg);
+      }
     } finally {
       setAppleLoading(false);
     }
