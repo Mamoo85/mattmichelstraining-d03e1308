@@ -47,8 +47,8 @@ const FAQ_SCHEMA = {
 const Index = () => (
   <div className="min-h-screen bg-background">
     <SEOHead
-      title="M² Training | Youth Strength Coach — Grosse Pointe & Online"
-      description="In-person youth strength training in Grosse Pointe Park, MI. Online programs anywhere. 20+ years, 50+ college athletes, zero injuries. Custom programs from $20."
+      title="Matt Michels Training | M2 Elite Strength & Conditioning"
+      description="Expert personal training, strength and conditioning, and sports performance coaching in Grosse Pointe, MI. Matt Michels Training (M2) specializes in youth athlete development, powerlifting, functional fitness, post-rehab training, and custom workout programming."
       path="/"
     />
     <script
