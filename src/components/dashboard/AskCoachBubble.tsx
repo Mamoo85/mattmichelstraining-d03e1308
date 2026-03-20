@@ -136,7 +136,7 @@ const AskCoachBubble = () => {
             </button>
           </div>
           <p className="text-[8px] text-muted-foreground text-center pb-1.5">
-            AI-powered answers reviewed by Coach Matt before delivery
+            Every answer reviewed by Coach Matt before delivery
           </p>
         </div>
       )}

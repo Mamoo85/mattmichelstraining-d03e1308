@@ -589,7 +589,7 @@ const TheEdge = () => {
     <div className="min-h-screen bg-background">
       <SEOHead
         title="The M² Edge — Training Technology Suite"
-        description="AI posture analysis, velocity-based training, nutrition scanning, smart workout logging — all running on your phone. Technology that's 5 years ahead."
+        description="Advanced posture analysis, velocity-based training, nutrition scanning, smart workout logging — all running on your phone. Technology that's 5 years ahead."
         path="/the-edge"
       />
       <AppNavbar />

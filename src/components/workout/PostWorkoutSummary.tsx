@@ -219,9 +219,9 @@ const PostWorkoutSummary = ({
           ))}
         </div>
 
-        {/* AI Analysis */}
+        {/* Workout Analysis */}
         <div className="bg-card border border-border p-4 space-y-2">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-primary">🤖 AI Coach Analysis</span>
+          <span className="text-[10px] font-bold uppercase tracking-widest text-primary">📊 Coach Analysis</span>
           {analyzing ? (
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Loader2 size={14} className="animate-spin" />
