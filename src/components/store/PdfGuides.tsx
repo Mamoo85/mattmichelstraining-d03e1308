@@ -140,15 +140,6 @@ const PdfGuides = () => {
               </div>
             )}
 
-            <div className="mt-auto pt-3">
-              <button
-                disabled
-                className="bg-muted text-muted-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 w-full justify-center cursor-not-allowed opacity-60"
-              >
-                <FileText size={12} />
-                Coming Soon · {guide.price}
-              </button>
-            </div>
           </div>
         ))}
       </div>
