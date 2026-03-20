@@ -451,6 +451,12 @@ const AdminClientList = () => {
                     ))}
                   </div>
 
+                  {/* ===== EDIT PROFILE INFO ===== */}
+                  <AdminProfileEditor profile={p} onUpdate={(updated: any) => {
+                    setSelectedProfile(updated);
+                    queryClient.invalidateQueries({ queryKey: ["admin-clients"] });
+                  }} />
+
                   {/* User Library */}
                   <div className="bg-secondary/30 border border-border p-3">
                     <div className="flex items-center gap-2 mb-2">

@@ -1,41 +1,65 @@
-import { memo } from "react";
+import { memo, useState, useCallback, useRef, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Dumbbell, ShoppingBag, Home, Menu, X, LogIn, LogOut, Shield, CreditCard, BookOpen, Users, User, Download, CalendarClock } from "lucide-react";
-import { useState, useCallback } from "react";
+import {
+  Dumbbell, ShoppingBag, Home, Menu, X, LogIn, LogOut, Shield,
+  CreditCard, BookOpen, Users, User, Download, CalendarClock, ChevronDown,
+} from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useTimer } from "@/hooks/useTimer";
 import m2Logo from "@/assets/m2-logo.jpg";
 import NotificationBell from "./NotificationBell";
 
-const navItems = [
+const primaryNav = [
   { to: "/", label: "HOME", icon: Home },
-  { to: "/about", label: "ABOUT", icon: User },
   { to: "/dashboard", label: "PORTAL", icon: Dumbbell },
   { to: "/shop", label: "SHOP", icon: ShoppingBag },
   { to: "/schedule", label: "SCHEDULE", icon: CalendarClock },
+];
+
+const secondaryNav = [
+  { to: "/about", label: "ABOUT", icon: User },
   { to: "/for-parents", label: "PARENTS", icon: Users },
   { to: "/learn", label: "LEARN", icon: BookOpen },
   { to: "/pricing", label: "PRICING", icon: CreditCard },
 ];
 
+const allNav = [...primaryNav, ...secondaryNav];
+
 const AppNavbar = () => {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreRef = useRef<HTMLDivElement>(null);
   const { user, signOut } = useAuth();
   const { isAdmin } = useIsAdmin();
   const { timerOpen, toggleTimer, portalActive } = useTimer();
 
-  const isAuthenticated = !!user;
+  // Close "More" dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
+        setMoreOpen(false);
+      }
+    };
+    if (moreOpen) document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [moreOpen]);
+
+  // Close more dropdown on route change
+  useEffect(() => { setMoreOpen(false); setMobileOpen(false); }, [location.pathname]);
 
   if (portalActive) return null;
+
+  const isSecondaryActive = secondaryNav.some((n) => location.pathname === n.to);
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm shadow-m2">
       <div className="container flex items-center justify-between h-14">
+        {/* Logo / Timer toggle */}
         <button
           onClick={toggleTimer}
-          className={`flex items-center gap-1.5 group transition-m2 ${timerOpen ? "opacity-80" : ""}`}
+          className={`flex items-center gap-1.5 group transition-m2 shrink-0 ${timerOpen ? "opacity-80" : ""}`}
           title={timerOpen ? "Close Timer" : "Open Timer"}
         >
           <img src={m2Logo} alt="M² Timer" className="w-9 h-9 object-contain" />
@@ -45,14 +69,15 @@ const AppNavbar = () => {
         </button>
 
         {/* Desktop nav */}
-        <div className="hidden md:flex items-center gap-1">
-          {navItems.map(({ to, label, icon: Icon }) => {
+        <div className="hidden md:flex items-center gap-0.5">
+          {/* Primary tabs — always visible */}
+          {primaryNav.map(({ to, label, icon: Icon }) => {
             const active = location.pathname === to;
             return (
               <Link
                 key={to}
                 to={to}
-                className={`flex items-center gap-1.5 px-3 py-2 text-[11px] font-bold uppercase tracking-widest transition-m2 ${
+                className={`flex items-center gap-1 px-2.5 py-2 text-[11px] font-bold uppercase tracking-widest transition-m2 ${
                   active ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -62,10 +87,44 @@ const AppNavbar = () => {
             );
           })}
 
+          {/* "More" dropdown for secondary tabs */}
+          <div ref={moreRef} className="relative">
+            <button
+              onClick={() => setMoreOpen((v) => !v)}
+              className={`flex items-center gap-1 px-2.5 py-2 text-[11px] font-bold uppercase tracking-widest transition-m2 ${
+                isSecondaryActive || moreOpen
+                  ? "text-primary bg-primary/10"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              MORE
+              <ChevronDown size={12} className={`transition-transform ${moreOpen ? "rotate-180" : ""}`} />
+            </button>
+            {moreOpen && (
+              <div className="absolute top-full right-0 mt-1 w-44 bg-background border border-border shadow-m2 z-50">
+                {secondaryNav.map(({ to, label, icon: Icon }) => {
+                  const active = location.pathname === to;
+                  return (
+                    <Link
+                      key={to}
+                      to={to}
+                      className={`flex items-center gap-2 px-4 py-3 text-[11px] font-bold uppercase tracking-widest transition-m2 ${
+                        active ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      <Icon size={14} />
+                      {label}
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
           {isAdmin && (
             <Link
               to="/admin"
-              className={`flex items-center gap-1.5 px-3 py-2 text-[11px] font-bold uppercase tracking-widest transition-m2 ${
+              className={`flex items-center gap-1 px-2.5 py-2 text-[11px] font-bold uppercase tracking-widest transition-m2 ${
                 location.pathname === "/admin" ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -87,15 +146,15 @@ const AppNavbar = () => {
           {user ? (
             <button
               onClick={signOut}
-              className="flex items-center gap-1.5 px-3 py-2 text-[11px] font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-m2"
+              className="flex items-center gap-1 px-2.5 py-2 text-[11px] font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-m2"
             >
               <LogOut size={14} />
-              SIGN OUT
+              LOGOUT
             </button>
           ) : (
             <Link
               to="/auth"
-              className="flex items-center gap-1.5 px-3 py-2 text-[11px] font-bold uppercase tracking-widest text-primary hover:opacity-80 transition-m2"
+              className="flex items-center gap-1 px-2.5 py-2 text-[11px] font-bold uppercase tracking-widest text-primary hover:opacity-80 transition-m2"
             >
               <LogIn size={14} />
               LOGIN
@@ -119,9 +178,10 @@ const AppNavbar = () => {
         </div>
       </div>
 
+      {/* Mobile menu */}
       {mobileOpen && (
         <div className="md:hidden bg-background shadow-m2 border-t border-border">
-          {navItems.map(({ to, label, icon: Icon }) => {
+          {allNav.map(({ to, label, icon: Icon }) => {
             const active = location.pathname === to;
             return (
               <Link
@@ -155,7 +215,7 @@ const AppNavbar = () => {
               className="flex items-center gap-2 px-4 py-3.5 text-sm font-bold uppercase tracking-widest text-muted-foreground w-full"
             >
               <LogOut size={16} />
-              SIGN OUT
+              LOGOUT
             </button>
           ) : (
             <Link
