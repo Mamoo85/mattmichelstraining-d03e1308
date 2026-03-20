@@ -2,8 +2,11 @@ import { useState, lazy, Suspense } from "react";
 import { Navigate } from "react-router-dom";
 import AppNavbar from "@/components/AppNavbar";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Users, Dumbbell, Landmark, FileText } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 
 /* ── Lazy-load ALL admin sub-components ─────────── */
 const AdminClientList = lazy(() => import("@/components/admin/AdminClientList"));
