@@ -61,7 +61,6 @@ interface AuthContextType {
   subscriptionTier: TierKey | null;
   subscriptionEnd: string | null;
   checkSubscription: () => Promise<void>;
-  isVip: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -73,7 +72,6 @@ const AuthContext = createContext<AuthContextType>({
   subscriptionTier: null,
   subscriptionEnd: null,
   checkSubscription: async () => {},
-  isVip: false,
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -82,7 +80,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [subscribed, setSubscribed] = useState(false);
   const [subscriptionTier, setSubscriptionTier] = useState<TierKey | null>(null);
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
-  const [isVip, setIsVip] = useState(false);
 
   const checkSubscription = useCallback(async () => {
     const { data: { session: currentSession } } = await supabase.auth.getSession();
@@ -90,18 +87,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSubscribed(false);
       setSubscriptionTier(null);
       setSubscriptionEnd(null);
-      setIsVip(false);
       return;
     }
     try {
-      // Fetch VIP status from profile
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("is_vip")
-        .eq("user_id", currentSession.user.id)
-        .single();
-      setIsVip(profile?.is_vip ?? false);
-
       const subResult = await supabase.functions.invoke("check-subscription");
       if (!subResult.error) {
         setSubscribed(subResult.data?.subscribed ?? false);
@@ -124,7 +112,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSubscribed(false);
         setSubscriptionTier(null);
         setSubscriptionEnd(null);
-        setIsVip(false);
       }
     });
 
@@ -163,7 +150,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       subscriptionTier,
       subscriptionEnd,
       checkSubscription,
-      isVip,
     }}>
       {children}
     </AuthContext.Provider>
