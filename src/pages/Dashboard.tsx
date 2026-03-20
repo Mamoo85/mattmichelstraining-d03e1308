@@ -18,16 +18,14 @@ import WorkoutsTab from "@/components/dashboard/WorkoutsTab";
 // Lazy-load heavier tabs
 import { lazy, Suspense } from "react";
 const MyPrograms = lazy(() => import("@/components/MyPrograms"));
-const PointsLeaderboard = lazy(() => import("@/components/PointsLeaderboard"));
-const ReferralDashboard = lazy(() => import("@/components/ReferralDashboard"));
+const ChallengeHub = lazy(() => import("@/components/dashboard/ChallengeHub"));
 const TeamManager = lazy(() => import("@/components/TeamManager"));
 
 const BASE_TABS = [
   { key: "home", label: "Home" },
   { key: "programs", label: "My Programs" },
   { key: "workouts", label: "Workouts" },
-  { key: "points", label: "Points" },
-  { key: "referrals", label: "Refer" },
+  { key: "challenge", label: "Challenge" },
 ] as const;
 
 const TabLoader = () => (
