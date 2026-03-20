@@ -368,7 +368,6 @@ const AdminClientList = () => {
         {[
           { label: "Total Clients", value: profiles.length },
           { label: "Pro Members", value: profiles.filter((p) => p.is_pro).length, highlight: true },
-          { label: "VIP Clients", value: profiles.filter((p: any) => p.is_vip).length, highlight: true },
           { label: "Active (7d)", value: activeUsers7d },
         ].map((s) => (
           <div key={s.label} className="bg-card shadow-m2 p-4">
