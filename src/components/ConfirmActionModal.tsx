@@ -21,6 +21,7 @@ interface ConfirmActionModalProps {
   loading?: boolean;
   destructive?: boolean;
   icon?: React.ReactNode;
+  extraAction?: React.ReactNode;
 }
 
 const ConfirmActionModal = ({
@@ -34,6 +35,7 @@ const ConfirmActionModal = ({
   loading = false,
   destructive = false,
   icon,
+  extraAction,
 }: ConfirmActionModalProps) => {
   const handleCancel = () => {
     if (!loading) onOpenChange(false);
@@ -67,6 +69,7 @@ const ConfirmActionModal = ({
             {confirmLabel}
           </Button>
         </DialogFooter>
+        {extraAction}
       </DialogContent>
     </Dialog>
   );

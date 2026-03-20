@@ -422,6 +422,12 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
     setShowConfirm(true);
   };
 
+  const handleDiscardExit = () => {
+    setShowConfirm(false);
+    localStorage.removeItem("m2-paused-workout");
+    onFinish();
+  };
+
   const handleFinishConfirmed = async () => {
     if (!user) return;
     setShowConfirm(false);
@@ -761,6 +767,14 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
         onConfirm={handleFinishConfirmed}
         loading={saving}
         icon={<CheckCircle size={16} />}
+        extraAction={
+          <button
+            onClick={handleDiscardExit}
+            className="w-full py-2.5 text-[10px] font-bold uppercase tracking-widest text-destructive hover:bg-destructive/10 transition-colors"
+          >
+            Discard & Exit
+          </button>
+        }
       />
 
       {formTrackerExercise && (
