@@ -110,6 +110,10 @@ serve(async (req) => {
 
 BANNED EXERCISES — Coach Matt NEVER programs these:
 - Barbell Bent Over Row (any variation). Use Dumbbell Rows, Chest-Supported Rows, Cable Rows, or Seal Rows instead.
+- ALL traditional bodybuilding isolation exercises: bicep curls, tricep kickbacks, lateral raises, leg extensions, leg curls (machine), cable flyes, pec deck, skull crushers, tricep pushdowns, calf raises (machine), shrugs, front raises, etc.
+- ALL machine-based isolation work: Smith machine, leg press, hack squat machine, chest/shoulder press machines, cable crossovers, etc.
+- Only acceptable "isolation" = corrective/prehab (band pull-aparts, face pulls, McGill Big 3) or Fix It / Rehab library.
+- Core lifts: Squat, Deadlift, Press, Bench, Power Clean. Accessories = compound (chin-ups, dips, rows, lunges, RDLs, carries). Conditioning = full-body (burpees, box jumps, KB swings, sled, sprints).
 
 CRITICAL RULES FOR ALL PROGRAMS:
 - Every training day MUST include at least 1 rolling/soft tissue technique as part of warmup or cooldown

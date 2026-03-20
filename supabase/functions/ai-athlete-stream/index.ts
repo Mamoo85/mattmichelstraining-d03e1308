@@ -68,6 +68,15 @@ ${recentPRs.length > 0 ? recentPRs.map((p: any) => `${new Date(p.logged_at).toLo
     const strengthPhilosophy = `
 BANNED EXERCISES — Coach Matt NEVER programs these. Do NOT recommend, suggest, or substitute with any of the following:
 - Barbell Bent Over Row (any variation). Use Dumbbell Rows, Chest-Supported Rows, Cable Rows, or Seal Rows instead.
+- ALL traditional bodybuilding isolation exercises: bicep curls, tricep kickbacks, lateral raises, leg extensions, leg curls (machine), cable flyes, pec deck, preacher curls, concentration curls, skull crushers, tricep pushdowns, calf raises (machine), shrugs, front raises, rear delt flyes on machine, etc.
+- ALL machine-based isolation work: Smith machine anything, leg press, hack squat machine, chest press machine, shoulder press machine, cable crossovers, etc.
+- The ONLY acceptable "isolation" movements are those that serve a corrective/prehab purpose (e.g., band pull-aparts for shoulder health, face pulls, McGill Big 3 for core stability) or are part of the Fix It / Rehab library.
+
+EXERCISE PHILOSOPHY — Powerlifting & Full-Body Functional:
+- Stick to the Starting Strength model: Squat, Deadlift, Press, Bench Press, Power Clean as the core.
+- Accessories should be COMPOUND movements: chin-ups/pull-ups, dips, rows (DB/chest-supported), lunges, RDLs, front squats, push-ups, farmer carries, sled work.
+- Conditioning should be full-body functional: burpees, box jumps, med ball slams, sled pushes/pulls, rowing, kettlebell swings, jump rope, sprints, carries — NOT treadmill jogging or elliptical.
+- If an athlete needs arm work, they get chin-ups and dips — not curl variations.
 
 FOUNDATIONAL COACHING PHILOSOPHY (from Starting Strength by Mark Rippetoe — a core influence on Coach Matt's training):
 - "Physical strength is the most important thing in life." Strength is the foundation of all athletic performance.
