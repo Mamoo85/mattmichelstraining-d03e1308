@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import AiAssistButton from "./AiAssistButton";
 import AdminUserLibrary from "./AdminUserLibrary";
+import AdminProfileEditor from "./AdminProfileEditor";
 
 const AdminClientList = () => {
   const [search, setSearch] = useState("");
@@ -450,6 +451,12 @@ const AdminClientList = () => {
                       </div>
                     ))}
                   </div>
+
+                  {/* ===== EDIT PROFILE INFO ===== */}
+                  <AdminProfileEditor profile={p} onUpdate={(updated: any) => {
+                    setSelectedProfile(updated);
+                    queryClient.invalidateQueries({ queryKey: ["admin-clients"] });
+                  }} />
 
                   {/* User Library */}
                   <div className="bg-secondary/30 border border-border p-3">
