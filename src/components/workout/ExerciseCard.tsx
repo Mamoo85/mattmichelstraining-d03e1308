@@ -37,16 +37,15 @@ const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTrac
   // Fetch ghost data (previous performance) for this exercise
   useEffect(() => {
     if (!user || !exercise.exerciseId) return;
-    supabase
+    (supabase
       .from("logged_exercises")
-      .select("sets_reps_weight, log_id, workout_logs!inner(user_id)")
+      .select("sets_reps_weight")
       .eq("exercise_id", exercise.exerciseId)
-      .eq("workout_logs.user_id" as any, user.id)
       .order("created_at", { ascending: false })
-      .limit(1)
-      .then(({ data }) => {
+      .limit(1) as any)
+      .then(({ data }: { data: any[] | null }) => {
         if (data && data.length > 0) {
-          const raw = (data[0] as any).sets_reps_weight;
+          const raw = data[0].sets_reps_weight;
           const sets = Array.isArray(raw) ? raw : [];
           setGhostData(
             sets.map((s: any) => ({
