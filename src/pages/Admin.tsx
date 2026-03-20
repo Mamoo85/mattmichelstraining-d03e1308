@@ -107,6 +107,58 @@ const Admin = () => {
     refetchInterval: 30000,
   });
 
+  const { data: pendingAiQueueCount = 0 } = useQuery({
+    queryKey: ["pending-ai-queue-count"],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("ai_action_queue")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending");
+      return count ?? 0;
+    },
+    refetchInterval: 30000,
+  });
+
+  const { data: pendingSupportCount = 0 } = useQuery({
+    queryKey: ["pending-support-count"],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("support_tickets")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "open");
+      return count ?? 0;
+    },
+    refetchInterval: 30000,
+  });
+
+  const { data: unreadParentCount = 0 } = useQuery({
+    queryKey: ["unread-parent-inbox-count"],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("parent_inbox")
+        .select("id", { count: "exact", head: true })
+        .eq("is_read", false)
+        .eq("is_deleted", false);
+      return count ?? 0;
+    },
+    refetchInterval: 30000,
+  });
+
+  const { data: pendingPostureCount = 0 } = useQuery({
+    queryKey: ["pending-posture-count"],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("posture_requests")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending");
+      return count ?? 0;
+    },
+    refetchInterval: 30000,
+  });
+
+  const totalEngineBadge = pendingDraftsCount + pendingAiQueueCount;
+  const totalRosterBadge = pendingSupportCount + unreadParentCount + pendingPostureCount;
+
   const { data: trashCount = 0 } = useQuery({
     queryKey: ["admin-trash-count"],
     queryFn: async () => {
