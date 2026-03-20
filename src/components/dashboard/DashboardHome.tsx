@@ -107,6 +107,10 @@ const DashboardHome = memo(({ isNewUser, onViewPoints, onViewReferrals }: Dashbo
       </div>
     )}
 
+    <Suspense fallback={null}>
+      <CustomProgramRequest />
+    </Suspense>
+
     <UpcomingSessions />
     <MonthlyFocusWidget />
 

@@ -353,7 +353,7 @@ const AdminCustomRequests = () => {
                   <button
                     onClick={() => handleApprove(req)}
                     disabled={approving === req.id}
-                    className="flex items-center gap-1.5 px-4 py-2 bg-green-600 text-white text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-50"
+                    className="flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-50"
                   >
                     {approving === req.id ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
                     Approve & Deliver
