@@ -35,3 +35,6 @@ verify_jwt = false
 
 [functions.ai-business-intelligence]
 verify_jwt = false
+
+[functions.parse-workout-text]
+verify_jwt = false

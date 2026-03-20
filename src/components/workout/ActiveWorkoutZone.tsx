@@ -20,6 +20,7 @@ import PostWorkoutSummary from "./PostWorkoutSummary";
 import WorkoutTimer from "./WorkoutTimer";
 import LiveFormTracker from "./LiveFormTracker";
 import ReadinessGate, { calculateAdjustments, type ReadinessResult } from "./ReadinessGate";
+import QuickLogBar from "./QuickLogBar";
 import type { LoggedExerciseData } from "./WorkoutLogger";
 
 /* ─── Context types ─── */
@@ -273,6 +274,61 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
     setExercises((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
+  // NLP Quick Log: auto-populate parsed sets into exercises
+  const handleQuickLogParsed = useCallback((parsedSets: Array<{ exercise_name: string; weight_lbs: number; reps: number; rpe: number }>) => {
+    setExercises((prev) => {
+      const updated = [...prev];
+
+      for (const parsed of parsedSets) {
+        // Try to match by exercise name (case-insensitive partial match)
+        const matchIdx = parsed.exercise_name
+          ? updated.findIndex((ex) =>
+              ex.exerciseTitle.toLowerCase().includes(parsed.exercise_name.toLowerCase()) ||
+              parsed.exercise_name.toLowerCase().includes(ex.exerciseTitle.toLowerCase())
+            )
+          : -1;
+
+        if (matchIdx >= 0) {
+          // Find the first empty set (weight === 0) or append a new set
+          const ex = updated[matchIdx];
+          const emptySetIdx = ex.sets.findIndex((s) => s.weight === 0 && s.reps === 0);
+          if (emptySetIdx >= 0) {
+            ex.sets[emptySetIdx] = {
+              ...ex.sets[emptySetIdx],
+              weight: parsed.weight_lbs,
+              reps: parsed.reps,
+            };
+          } else {
+            ex.sets.push({
+              set: ex.sets.length + 1,
+              weight: parsed.weight_lbs,
+              reps: parsed.reps,
+            });
+          }
+        } else if (updated.length > 0) {
+          // No name match — fill the first exercise with an empty set
+          const ex = updated[0];
+          const emptySetIdx = ex.sets.findIndex((s) => s.weight === 0 && s.reps === 0);
+          if (emptySetIdx >= 0) {
+            ex.sets[emptySetIdx] = {
+              ...ex.sets[emptySetIdx],
+              weight: parsed.weight_lbs,
+              reps: parsed.reps,
+            };
+          } else {
+            ex.sets.push({
+              set: ex.sets.length + 1,
+              weight: parsed.weight_lbs,
+              reps: parsed.reps,
+            });
+          }
+        }
+      }
+
+      return updated;
+    });
+  }, []);
+
   // Pause handler
   const handlePause = useCallback(() => {
     const state = {
@@ -449,7 +505,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
         </header>
 
         {/* Scrollable content */}
-        <main className="flex-1 overflow-y-auto px-4 py-4 space-y-4 pb-[120px]">
+        <main className="flex-1 overflow-y-auto px-4 py-4 space-y-4 pb-[160px]">
           {exercises.length === 0 && !showPicker && (
             <div className="flex flex-col items-center justify-center py-16 text-center space-y-4">
               <Dumbbell size={32} className="text-muted-foreground/30" />
@@ -501,6 +557,13 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
             </div>
           )}
         </main>
+
+        {/* Quick Log NLP Bar */}
+        {exercises.length > 0 && (
+          <div className="fixed bottom-[72px] left-0 right-0 z-50 px-4 pb-1">
+            <QuickLogBar exercises={exercises} onApplyParsed={handleQuickLogParsed} />
+          </div>
+        )}
 
         {/* Command Bar */}
         <footer className="fixed bottom-0 w-full z-50 bg-background/95 backdrop-blur-md border-t border-border px-4 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
