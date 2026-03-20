@@ -36,7 +36,7 @@ const SEOHead = ({
   jsonLd,
   noindex = false,
 }: SEOHeadProps) => {
-  const fullTitle = title.includes("M²") ? title : `${title} | M² Training`;
+  const fullTitle = title.includes("M²") || title.includes("Matt Michels") ? title : `${title} | Matt Michels Training`;
   const canonical = `${SITE_URL}${path}`;
   const image = ogImage || DEFAULT_OG;
 
@@ -96,7 +96,7 @@ const SEOHead = ({
       <meta property="og:description" content={description} />
       <meta property="og:url" content={canonical} />
       <meta property="og:image" content={image} />
-      <meta property="og:site_name" content="M² Training" />
+      <meta property="og:site_name" content="Matt Michels Training" />
 
       {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
