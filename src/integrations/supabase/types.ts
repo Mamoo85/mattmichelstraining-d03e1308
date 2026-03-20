@@ -162,6 +162,39 @@ export type Database = {
         }
         Relationships: []
       }
+      coach_ai_drafts: {
+        Row: {
+          admin_edit: string | null
+          ai_answer: string
+          created_at: string | null
+          id: string
+          question: string
+          reviewed_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          admin_edit?: string | null
+          ai_answer: string
+          created_at?: string | null
+          id?: string
+          question: string
+          reviewed_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          admin_edit?: string | null
+          ai_answer?: string
+          created_at?: string | null
+          id?: string
+          question?: string
+          reviewed_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       coach_direct_messages: {
         Row: {
           created_at: string
@@ -229,6 +262,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      coaching_documents: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          search_vector: unknown
+          title: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          search_vector?: unknown
+          title?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          search_vector?: unknown
+          title?: string | null
+        }
+        Relationships: []
       }
       community_workouts: {
         Row: {
@@ -2811,6 +2868,15 @@ export type Database = {
           message: Json
           msg_id: number
           read_ct: number
+        }[]
+      }
+      search_coaching_documents: {
+        Args: { match_count?: number; query: string }
+        Returns: {
+          content: string
+          id: string
+          rank: number
+          title: string
         }[]
       }
       toggle_points_visibility: {
