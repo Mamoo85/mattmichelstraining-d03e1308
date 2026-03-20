@@ -160,6 +160,8 @@ const Dashboard = () => {
       {trialExpired && !subscribed && !isAdmin && (
         <TrialPaywallModal open={true} hardLock />
       )}
+
+      <AskCoachBubble />
     </div>
   );
 };
