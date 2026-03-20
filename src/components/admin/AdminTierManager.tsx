@@ -67,43 +67,7 @@ interface TierFeature {
   sort_order: number;
 }
 
-const VipInviteGenerator = () => {
-  const [generating, setGenerating] = useState(false);
-
-  const generateLink = async () => {
-    setGenerating(true);
-    try {
-      const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-      let code = "";
-      for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
-      const link = `${window.location.origin}/auth?ref=vip-${code}`;
-      await navigator.clipboard.writeText(link);
-      toast({ title: "VIP invite link copied!", description: link });
-    } catch {
-      toast({ title: "Failed to copy", variant: "destructive" });
-    } finally {
-      setGenerating(false);
-    }
-  };
-
-  return (
-    <div className="flex items-center gap-3 bg-muted/50 border border-border p-3">
-      <Crown size={16} className="text-purple-400 shrink-0" />
-      <div className="flex-1">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-foreground">VIP Invite</p>
-        <p className="text-[10px] text-muted-foreground">Generate a unique invite link for VIP clients. Admin-only, invite-only access.</p>
-      </div>
-      <button
-        onClick={generateLink}
-        disabled={generating}
-        className="flex items-center gap-1.5 px-3 py-2 text-[10px] font-bold uppercase tracking-widest bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/30 transition-all disabled:opacity-50 whitespace-nowrap"
-      >
-        <Link size={12} />
-        Generate & Copy Link
-      </button>
-    </div>
-  );
-};
+// VIP invite generator removed
 
 const AdminTierManager = () => {
   const queryClient = useQueryClient();
