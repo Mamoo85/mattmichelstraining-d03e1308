@@ -14,21 +14,23 @@ const CustomProgramRequest = lazy(() => import("./CustomProgramRequest"));
 
 interface DashboardHomeProps {
   isNewUser: boolean;
+  isInPerson: boolean;
   onViewPoints: () => void;
   onViewReferrals: () => void;
 }
 
-const DashboardHome = memo(({ isNewUser, onViewPoints, onViewReferrals }: DashboardHomeProps) => {
+const DashboardHome = memo(({ isNewUser, isInPerson, onViewPoints, onViewReferrals }: DashboardHomeProps) => {
   const { subscribed, user } = useAuth();
   const navigate = useNavigate();
   const [showWelcome, setShowWelcome] = useState(false);
   const [hasPosture, setHasPosture] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if (isNewUser && !localStorage.getItem("m2-welcome-gift-seen")) {
+    // Never show welcome modal for in-person clients
+    if (!isInPerson && isNewUser && !localStorage.getItem("m2-welcome-gift-seen")) {
       setShowWelcome(true);
     }
-  }, [isNewUser]);
+  }, [isNewUser, isInPerson]);
 
   useEffect(() => {
     if (!user) return;
