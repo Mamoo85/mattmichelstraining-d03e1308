@@ -40,7 +40,7 @@ const Dashboard = () => {
   const { user, subscribed, subscriptionTier } = useAuth();
   const { trialExpired, isOnTrial, trialDaysLeft } = useTrialStatus();
   const { isAdmin } = useIsAdmin();
-  const [profile, setProfile] = useState<{ full_name: string | null; athlete_name: string | null } | null>(null);
+  const [profile, setProfile] = useState<{ full_name: string | null; athlete_name: string | null; is_in_person: boolean } | null>(null);
   const [activeTab, setActiveTab] = useState("home");
   const [hasPrograms, setHasPrograms] = useState<boolean | null>(null);
   const [hasLogs, setHasLogs] = useState<boolean | null>(null);
@@ -49,11 +49,11 @@ const Dashboard = () => {
     if (!user) return;
     // Fetch profile + activity counts in parallel
     Promise.all([
-      supabase.from("profiles").select("full_name, athlete_name").eq("user_id", user.id).single(),
+      supabase.from("profiles").select("full_name, athlete_name, is_in_person").eq("user_id", user.id).single(),
       supabase.from("user_active_programs").select("id", { count: "exact", head: true }).eq("user_id", user.id),
       supabase.from("progress_logs").select("id", { count: "exact", head: true }).eq("user_id", user.id),
     ]).then(([profileRes, progRes, logRes]) => {
-      if (profileRes.data) setProfile(profileRes.data);
+      if (profileRes.data) setProfile(profileRes.data as any);
       setHasPrograms((progRes.count ?? 0) > 0);
       setHasLogs((logRes.count ?? 0) > 0);
     });
