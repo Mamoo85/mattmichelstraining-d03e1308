@@ -62,6 +62,35 @@ const DEFAULT_RECOVERY: RecoveryData = {
   recoveryNotes: "",
 };
 
+/** Small collapsible key showing what each icon does */
+const ButtonKeyLegend = () => {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="rounded-xl border border-white/[0.06] bg-card/50 overflow-hidden">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-1.5 w-full px-3 py-2 text-[10px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <HelpCircle size={12} />
+        Button Key
+        {open ? <ChevronUp size={10} className="ml-auto" /> : <ChevronDown size={10} className="ml-auto" />}
+      </button>
+      {open && (
+        <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 px-3 pb-3 text-[10px] text-muted-foreground">
+          <span className="flex items-center gap-1.5"><Check size={10} className="text-emerald-400" /> Complete set</span>
+          <span className="flex items-center gap-1.5"><Info size={10} className="text-primary" /> Coach notes / video</span>
+          <span className="flex items-center gap-1.5"><Crosshair size={10} className="text-primary" /> Live form tracker</span>
+          <span className="flex items-center gap-1.5"><Trash2 size={10} className="text-destructive" /> Remove exercise</span>
+          <span className="flex items-center gap-1.5"><MessageSquare size={10} /> Notes / form check</span>
+          <span className="flex items-center gap-1.5"><Camera size={10} /> Adapt to equipment</span>
+          <span className="flex items-center gap-1.5"><Clock size={10} /> Interval timer</span>
+          <span className="flex items-center gap-1.5"><Plus size={10} className="text-primary" /> Add set / exercise</span>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZoneProps) => {
   const { user } = useAuth();
   const hasInitialContent = !!(initialContext?.exercises?.length || initialContext?.resumed);
