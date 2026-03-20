@@ -418,7 +418,7 @@ const FEATURES: TechFeature[] = [
     ],
     techSpecs: [
       "200+ exercise library with instructional videos",
-      "OCR workout scanning via AI vision",
+      "OCR workout scanning via computer vision",
       "Voice-to-text notes via SpeechRecognition API",
       "Offline-first: logs sync when reconnected",
     ],
