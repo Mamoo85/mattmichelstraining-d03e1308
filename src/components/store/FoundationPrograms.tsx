@@ -284,7 +284,7 @@ const FoundationPrograms = () => {
           </div>
           <div className="flex items-start gap-2">
             <span className="text-primary font-mono font-bold">3</span>
-            <p><strong className="text-foreground">AI postural assessment</strong> — Matt's AI reviews movement via photo/video and personalizes guidance.</p>
+            <p><strong className="text-foreground">Postural assessment</strong> — Matt reviews movement via photo/video and personalizes guidance.</p>
           </div>
         </div>
       </div>
