@@ -93,12 +93,12 @@ const AdminClientOnboarding = () => {
           <CardTitle className="text-sm">In-Person Client Onboarding</CardTitle>
         </div>
         <CardDescription className="text-[11px]">
-          Generate a single-use promo link to hand a client on the spot.
+          Generate a single-use Stripe promo link to hand a client on the spot. Each code works once and creates a permanent discount tied to that client's subscription.
         </CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-3">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 gap-2">
           {PRESETS.map((preset) => {
             const Icon = preset.icon;
             const isLoading = loading === preset.key;
