@@ -817,6 +817,39 @@ export type Database = {
         }
         Relationships: []
       }
+      in_person_invite_tokens: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          is_used: boolean
+          label: string | null
+          token: string
+          used_at: string | null
+          used_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          is_used?: boolean
+          label?: string | null
+          token: string
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_used?: boolean
+          label?: string | null
+          token?: string
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Relationships: []
+      }
       learn_articles: {
         Row: {
           author: string
