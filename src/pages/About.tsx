@@ -156,7 +156,7 @@ const About = () => {
           {/* Photo */}
           <div className="md:col-span-2">
             <img
-              src={mattTraining}
+              src={poiTraining}
               alt="Matt Michels — Strength Coach, M² Training"
               className="w-full aspect-[4/5] object-cover shadow-m2"
             />
