@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
-import SEOHead from "@/components/SEOHead";
-import AppNavbar from "@/components/AppNavbar";
+import SEOHead from "@/components/layout/SEOHead";
+import AppNavbar from "@/components/layout/AppNavbar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";

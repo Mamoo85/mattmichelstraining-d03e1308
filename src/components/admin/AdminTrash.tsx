@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import ConfirmActionModal from "@/components/ConfirmActionModal";
+import ConfirmActionModal from "@/components/shared/ConfirmActionModal";
 import { Trash2, RotateCcw, Loader2, Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 

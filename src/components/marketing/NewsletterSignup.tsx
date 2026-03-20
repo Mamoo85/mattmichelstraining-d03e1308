@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Mail } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import SectionHeader from "./SectionHeader";
+import SectionHeader from "@/components/shared/SectionHeader";
 
 const NewsletterSignup = () => {
   const [email, setEmail] = useState("");

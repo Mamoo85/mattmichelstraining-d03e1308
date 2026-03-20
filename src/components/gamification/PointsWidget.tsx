@@ -3,7 +3,7 @@ import { usePoints, getLevelInfo, getNextLevel, LEVELS } from "@/hooks/usePoints
 import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/useAuth";
-import LevelUpCelebration from "@/components/LevelUpCelebration";
+import LevelUpCelebration from "@/components/gamification/LevelUpCelebration";
 
 interface PointsWidgetProps {
   onViewLeaderboard?: () => void;

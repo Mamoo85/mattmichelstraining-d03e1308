@@ -3,8 +3,8 @@ import { Download, Share, PlusSquare, MoreVertical, CheckCircle2 } from "lucide-
 import m2Logo from "@/assets/m2-logo.jpg";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import AppNavbar from "@/components/AppNavbar";
-import SEOHead from "@/components/SEOHead";
+import AppNavbar from "@/components/layout/AppNavbar";
+import SEOHead from "@/components/layout/SEOHead";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;

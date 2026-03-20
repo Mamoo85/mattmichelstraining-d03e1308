@@ -3,7 +3,7 @@ import { FileText, Loader2, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import CheckoutConfirmationModal from "@/components/CheckoutConfirmationModal";
+import CheckoutConfirmationModal from "@/components/billing/CheckoutConfirmationModal";
 
 interface Guide {
   id: string;

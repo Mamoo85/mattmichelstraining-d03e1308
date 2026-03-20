@@ -1,6 +1,6 @@
 import { useState, lazy, Suspense } from "react";
 import { Navigate } from "react-router-dom";
-import AppNavbar from "@/components/AppNavbar";
+import AppNavbar from "@/components/layout/AppNavbar";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";

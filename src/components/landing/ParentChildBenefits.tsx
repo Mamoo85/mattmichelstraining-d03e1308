@@ -2,7 +2,7 @@ import { memo } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowRight, Shield, TrendingUp, Heart, Zap, Users } from "lucide-react";
-import ParentChildManager from "@/components/ParentChildManager";
+import ParentChildManager from "@/components/features/ParentChildManager";
 
 const BENEFITS = [
   { icon: Shield, title: "Full Visibility", desc: "See every workout your athlete logs — sets, reps, weights, and coach feedback." },

@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useTierAccess } from "@/hooks/useTierAccess";
-import { EliteUpsellModal } from "@/components/PaywallGate";
+import { EliteUpsellModal } from "@/components/billing/PaywallGate";
 import ExerciseVideoEmbed from "@/components/exercise/ExerciseVideoEmbed";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";

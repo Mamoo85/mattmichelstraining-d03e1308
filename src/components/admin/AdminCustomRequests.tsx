@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import ConfirmActionModal from "@/components/ConfirmActionModal";
+import ConfirmActionModal from "@/components/shared/ConfirmActionModal";
 
 interface CustomRequest {
   id: string;

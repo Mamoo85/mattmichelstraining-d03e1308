@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { ShoppingBag, FileText, Loader2 } from "lucide-react";
-import SectionHeader from "./SectionHeader";
+import SectionHeader from "@/components/shared/SectionHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useContentMap } from "@/hooks/useSiteContent";
-import CheckoutConfirmationModal, { type CheckoutProductType } from "./CheckoutConfirmationModal";
+import CheckoutConfirmationModal, { type CheckoutProductType } from "@/components/billing/CheckoutConfirmationModal";
 
 interface Product {
   id: string;

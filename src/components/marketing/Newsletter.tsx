@@ -1,4 +1,4 @@
-import SectionHeader from "./SectionHeader";
+import SectionHeader from "@/components/shared/SectionHeader";
 
 const Newsletter = () => (
   <div>

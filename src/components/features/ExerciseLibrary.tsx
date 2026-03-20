@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
 import { Search, ChevronDown, ChevronUp, Dumbbell, Filter, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import SectionHeader from "./SectionHeader";
-import AiExerciseSubstitution from "./workout/AiExerciseSubstitution";
-import ExerciseVideoEmbed from "./exercise/ExerciseVideoEmbed";
+import SectionHeader from "@/components/shared/SectionHeader";
+import AiExerciseSubstitution from "@/components/workout/AiExerciseSubstitution";
+import ExerciseVideoEmbed from "@/components/exercise/ExerciseVideoEmbed";
 
 interface DbExercise {
   id: string;

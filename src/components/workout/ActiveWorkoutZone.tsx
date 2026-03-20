@@ -14,7 +14,7 @@ import ExercisePicker from "./ExercisePicker";
 import ExerciseCard from "./ExerciseCard";
 import RecoveryInput, { type RecoveryData } from "./RecoveryInput";
 import VoiceNoteButton from "./VoiceNoteButton";
-import ConfirmActionModal from "@/components/ConfirmActionModal";
+import ConfirmActionModal from "@/components/shared/ConfirmActionModal";
 import InterceptGateway from "./InterceptGateway";
 import IntervalTimer from "./IntervalTimer";
 import PostWorkoutSummary from "./PostWorkoutSummary";

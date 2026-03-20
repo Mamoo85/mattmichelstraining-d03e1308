@@ -7,7 +7,7 @@ import { toast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import LevelUpCelebration from "@/components/LevelUpCelebration";
+import LevelUpCelebration from "@/components/gamification/LevelUpCelebration";
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from "recharts";

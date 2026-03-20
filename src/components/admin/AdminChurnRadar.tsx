@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, AlertTriangle, MessageSquare, X, TrendingDown } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import ConfirmActionModal from "@/components/ConfirmActionModal";
+import ConfirmActionModal from "@/components/shared/ConfirmActionModal";
 
 interface ChurnAlert {
   id: string;

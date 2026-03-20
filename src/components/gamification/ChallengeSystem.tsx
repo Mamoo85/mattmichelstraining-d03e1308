@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Trophy, Flame, Target, Send, Clock, Users, Star, Eye, EyeOff, Loader2 } from "lucide-react";
-import SectionHeader from "./SectionHeader";
+import SectionHeader from "@/components/shared/SectionHeader";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Switch } from "@/components/ui/switch";

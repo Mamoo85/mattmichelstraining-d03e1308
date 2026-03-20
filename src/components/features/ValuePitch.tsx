@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Lock, DollarSign, BookOpen, Lightbulb } from "lucide-react";
 import { Link } from "react-router-dom";
-import SectionHeader from "./SectionHeader";
+import SectionHeader from "@/components/shared/SectionHeader";
 
 const ValuePitch = () => (
   <motion.div

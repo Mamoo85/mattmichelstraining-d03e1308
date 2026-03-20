@@ -11,7 +11,7 @@ import {
   MessageCircle,
   Video,
 } from "lucide-react";
-import AppNavbar from "@/components/AppNavbar";
+import AppNavbar from "@/components/layout/AppNavbar";
 import m2Logo from "@/assets/m2-logo.jpg";
 
 const Welcome = () => (

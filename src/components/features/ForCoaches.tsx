@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Users, Target, Award } from "lucide-react";
-import SectionHeader from "./SectionHeader";
+import SectionHeader from "@/components/shared/SectionHeader";
 
 const ForCoaches = () => (
   <motion.div

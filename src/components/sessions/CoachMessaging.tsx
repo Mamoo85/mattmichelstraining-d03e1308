@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Send, Loader2, Sparkles } from "lucide-react";
-import SectionHeader from "./SectionHeader";
+import SectionHeader from "@/components/shared/SectionHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";

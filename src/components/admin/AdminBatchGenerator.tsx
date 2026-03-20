@@ -14,7 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import SectionHeader from "@/components/SectionHeader";
+import SectionHeader from "@/components/shared/SectionHeader";
 
 interface WorkoutExercise {
   name: string;

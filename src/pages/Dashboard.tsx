@@ -1,15 +1,15 @@
-import AppNavbar from "@/components/AppNavbar";
+import AppNavbar from "@/components/layout/AppNavbar";
 import { useAuth, TIERS } from "@/hooks/useAuth";
 import { useTrialStatus } from "@/hooks/useTrialStatus";
-import TrialPaywallModal from "@/components/TrialPaywallModal";
+import TrialPaywallModal from "@/components/billing/TrialPaywallModal";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { Loader2, Crown, User, Dumbbell, Play } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import PwaInstallBanner from "@/components/PwaInstallBanner";
-import StudioCheckIn from "@/components/StudioCheckIn";
+import PwaInstallBanner from "@/components/layout/PwaInstallBanner";
+import StudioCheckIn from "@/components/sessions/StudioCheckIn";
 import { safeLocalStorage } from "@/lib/browserStorage";
 
 // Extracted sub-components
@@ -18,9 +18,9 @@ import WorkoutsTab from "@/components/dashboard/WorkoutsTab";
 
 // Lazy-load heavier tabs
 import { lazy, Suspense } from "react";
-const MyPrograms = lazy(() => import("@/components/MyPrograms"));
+const MyPrograms = lazy(() => import("@/components/features/MyPrograms"));
 const ChallengeHub = lazy(() => import("@/components/dashboard/ChallengeHub"));
-const TeamManager = lazy(() => import("@/components/TeamManager"));
+const TeamManager = lazy(() => import("@/components/features/TeamManager"));
 
 import AskCoachBubble from "@/components/dashboard/AskCoachBubble";
 

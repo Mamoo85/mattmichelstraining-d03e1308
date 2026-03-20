@@ -6,9 +6,9 @@ import {
   ArrowRight, ChevronDown, ChevronUp, Sparkles, BarChart3, MessageCircle,
   ScanLine, Activity, Target, Eye, Smartphone, LineChart,
 } from "lucide-react";
-import SEOHead from "@/components/SEOHead";
-import AppNavbar from "@/components/AppNavbar";
-import TrialCTA from "@/components/TrialCTA";
+import SEOHead from "@/components/layout/SEOHead";
+import AppNavbar from "@/components/layout/AppNavbar";
+import TrialCTA from "@/components/billing/TrialCTA";
 import { useAuth } from "@/hooks/useAuth";
 
 /* ─── Tech Feature Data ─── */

@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useAuth, TIERS, TierKey, TIER_DISCOUNTS } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import AppNavbar from "@/components/AppNavbar";
-import TechSupportButton from "@/components/TechSupportButton";
-import SupportTicketForm from "@/components/SupportTicketForm";
-import PrivacySettingsCard from "@/components/PrivacySettingsCard";
+import AppNavbar from "@/components/layout/AppNavbar";
+import TechSupportButton from "@/components/layout/TechSupportButton";
+import SupportTicketForm from "@/components/features/SupportTicketForm";
+import PrivacySettingsCard from "@/components/features/PrivacySettingsCard";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { Link } from "react-router-dom";
 import {
@@ -13,12 +13,12 @@ import {
   ArrowRight, ChevronDown, ChevronUp, Zap, Clock, FileText, Send, Activity
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import GiftSessionModal from "@/components/GiftSessionModal";
-import FamilyBilling from "@/components/FamilyBilling";
+import GiftSessionModal from "@/components/sessions/GiftSessionModal";
+import FamilyBilling from "@/components/billing/FamilyBilling";
 import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import EmptyStateCard from "@/components/EmptyStateCard";
+import EmptyStateCard from "@/components/shared/EmptyStateCard";
 
 interface ProfileData {
   full_name: string | null;
