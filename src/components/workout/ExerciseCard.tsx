@@ -74,10 +74,22 @@ const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTrac
       newSets[setIndex] = { ...current, weight: ghost.weight, reps: ghost.reps || current.reps };
       onUpdate(index, { sets: newSets });
     }
+    // Haptic feedback
+    if (navigator.vibrate) navigator.vibrate(50);
+    // Pulse animation
+    setJustPopped(setIndex);
+    setTimeout(() => setJustPopped(null), 500);
+
     setCompletedSets(prev => {
       const next = new Set(prev);
-      if (next.has(setIndex)) next.delete(setIndex);
+      const wasCompleted = next.has(setIndex);
+      if (wasCompleted) next.delete(setIndex);
       else next.add(setIndex);
+      // Confetti on last set completion
+      if (!wasCompleted && next.size === exercise.sets.length) {
+        setConfettiSet(setIndex);
+        setTimeout(() => setConfettiSet(null), 1000);
+      }
       return next;
     });
     onSetCompleted?.();
