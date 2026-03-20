@@ -87,6 +87,7 @@ const INITIAL_SHOW = 4;
 
 const Pricing = () => {
   const { user, subscribed, subscriptionTier, subscriptionEnd } = useAuth();
+  const { isAdmin } = useIsAdmin();
   const { content: cms } = useContentMap("pricing_page");
   const navigate = useNavigate();
   const [loadingTier, setLoadingTier] = useState<TierKey | null>(null);
