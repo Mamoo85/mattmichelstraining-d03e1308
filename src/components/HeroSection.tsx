@@ -43,7 +43,7 @@ const HeroSection = () => {
       <div className="container relative z-10 pt-20 pb-12">
         {/* ─── 1. HERO — Identity & Proof ─── */}
         {showHero && (
-          <div className="py-8 md:py-16 animate-[fadeIn_0.4s_ease-out]">
+          <div className="py-8 md:py-16 animate-fadeIn">
             <div className="flex flex-col items-center text-center mb-6">
               <img
                 src={m2Logo}
