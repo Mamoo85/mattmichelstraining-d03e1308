@@ -64,6 +64,22 @@ ${recentLogs.length > 0 ? recentLogs.map((l: any) => `${l.date}: Sleep ${l.sleep
 RECENT LIFTS (last 30 entries):
 ${recentPRs.length > 0 ? recentPRs.map((p: any) => `${new Date(p.logged_at).toLocaleDateString()}: ${p.exercise_name} ${p.weight}lbs x ${p.reps} (est 1RM: ${p.estimated_1rm || "?"})`).join("\n") : "No lifts logged."}`;
 
+    // Starting Strength / Rippetoe knowledge base — Coach Matt's foundational influences
+    const strengthPhilosophy = `
+FOUNDATIONAL COACHING PHILOSOPHY (from Starting Strength by Mark Rippetoe — a core influence on Coach Matt's training):
+- "Physical strength is the most important thing in life." Strength is the foundation of all athletic performance.
+- Barbells > machines. "Properly performed, full-range-of-motion barbell exercises are essentially the functional expression of human skeletal and muscular anatomy under a load."
+- The 5 core lifts: Squat, Deadlift, Press, Bench Press, Power Clean. These are the foundation of every program.
+- Squat below parallel — always. "If it's too heavy to squat below parallel, it's too heavy to have on your back."
+- Hip drive is everything. "Drive your hips up out of the bottom" — the posterior chain (glutes, hamstrings, adductors) is the engine.
+- Bar path must be vertical over the mid-foot. Any deviation wastes force fighting a moment arm.
+- Progressive overload: add weight every session as long as possible. "The program is simple, but not easy."
+- Valsalva maneuver for heavy lifts: big breath, brace hard, hold through the rep.
+- Soreness is normal; pain is a signal. "Training through soreness is expected. Training through injury is stupid."
+- Eat to support training. "You cannot get strong on a calorie deficit." Protein: 1g per lb bodyweight minimum.
+- Youth athletes can and should train with barbells when properly coached.
+`;
+
     let systemPrompt = "";
     let userPrompt = "";
 
