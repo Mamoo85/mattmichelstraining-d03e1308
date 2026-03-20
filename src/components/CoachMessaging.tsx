@@ -146,7 +146,7 @@ const CoachMessaging = () => {
                   <div className="max-w-[85%] p-3 bg-accent/20 border border-accent/30">
                     <div className="flex items-center gap-1.5 mb-1.5">
                       <Sparkles size={10} className="text-accent-foreground" />
-                      <span className="text-[9px] font-bold uppercase tracking-widest text-accent-foreground">AI Quick Answer</span>
+                      <span className="text-[9px] font-bold uppercase tracking-widest text-accent-foreground">Quick Answer</span>
                     </div>
                     <div className="prose prose-sm max-w-none text-foreground text-xs leading-relaxed">
                       <ReactMarkdown>{aiContent}</ReactMarkdown>
