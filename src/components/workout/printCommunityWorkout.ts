@@ -25,27 +25,15 @@ export const printCommunityWorkout = (data: PrintCommunityWorkoutData) => {
       (ex, i) => `
       <tr class="exercise-row">
         <td class="num">${i + 1}</td>
-        <td class="name"><strong>${esc(ex.name)}</strong>${ex.notes ? `<div class="notes">${esc(ex.notes)}</div>` : ""}</td>
+        <td class="name"><strong>${esc(ex.name)}</strong>${ex.notes ? `<span class="notes"> — ${esc(ex.notes)}</span>` : ""}</td>
         <td class="center">${ex.sets}</td>
         <td class="center">${ex.reps}</td>
         <td></td>
         <td></td>
         <td></td>
       </tr>
-      ${Array.from({ length: Math.max(parseInt(ex.sets) || 3, 1) - 1 })
-        .map(
-          () => `
-        <tr class="extra-row">
-          <td></td>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td></td>
-        </tr>`
-        )
-        .join("")}
+      <tr class="extra-row"><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+      <tr class="extra-row"><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
     `
     )
     .join("");
@@ -58,116 +46,51 @@ export const printCommunityWorkout = (data: PrintCommunityWorkoutData) => {
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      padding: 24px;
+      padding: 16px 20px;
       color: #111;
       background: #fff;
     }
     .header {
       text-align: center;
-      margin-bottom: 20px;
-      padding-bottom: 16px;
-      border-bottom: 3px solid #111;
-    }
-    .header h1 {
-      font-size: 22px;
-      font-weight: 900;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-    }
-    .header .creator {
-      font-size: 11px;
-      color: #666;
-      margin-top: 4px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-    .header .desc {
-      font-size: 12px;
-      color: #555;
-      margin-top: 8px;
-      max-width: 500px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-    .header .brand {
-      font-size: 10px;
-      color: #999;
-      margin-top: 8px;
-      letter-spacing: 2px;
-    }
-    .name-date {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 20px;
-      font-size: 12px;
-    }
-    .name-date label {
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      font-size: 9px;
-      display: block;
-      margin-bottom: 4px;
-    }
-    .name-date .field {
-      border-bottom: 1px solid #ccc;
-      min-width: 200px;
-      height: 20px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 11px;
-    }
-    th {
-      text-align: left;
-      font-size: 9px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      padding: 6px 8px;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
       border-bottom: 2px solid #111;
-      color: #555;
     }
+    .header img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin: 0 auto 4px; }
+    .header h1 { font-size: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; }
+    .header .creator { font-size: 9px; color: #666; margin-top: 2px; text-transform: uppercase; letter-spacing: 1px; }
+    .header .desc { font-size: 10px; color: #555; margin-top: 4px; max-width: 500px; margin-left: auto; margin-right: auto; }
+    .header .brand { font-size: 8px; color: #999; margin-top: 4px; letter-spacing: 2px; }
+    .name-date {
+      display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 11px;
+    }
+    .name-date label { font-weight: 700; text-transform: uppercase; letter-spacing: 1px; font-size: 8px; display: block; margin-bottom: 2px; }
+    .name-date .field { border-bottom: 1px solid #ccc; min-width: 180px; height: 16px; }
+    table { width: 100%; border-collapse: collapse; font-size: 10px; }
+    th { text-align: left; font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 3px 6px; border-bottom: 2px solid #111; color: #555; }
     th.center, td.center { text-align: center; }
-    .num { width: 30px; color: #999; font-family: monospace; }
-    .name { font-size: 12px; }
-    .notes { font-size: 10px; color: #888; font-style: italic; margin-top: 2px; }
-    .exercise-row td {
-      padding: 8px;
-      border-top: 1px solid #ddd;
-      background: #fafafa;
-    }
-    .extra-row td {
-      padding: 6px 8px;
-      border-bottom: 1px solid #eee;
-      height: 24px;
-    }
+    .num { width: 24px; color: #999; font-family: monospace; }
+    .name { font-size: 10px; }
+    .notes { font-size: 9px; color: #888; font-style: italic; }
+    .exercise-row td { padding: 4px 6px; border-top: 1px solid #ddd; background: #fafafa; }
+    .extra-row td { padding: 4px 6px; border-bottom: 1px solid #eee; height: 18px; }
+    .footer { text-align: center; margin-top: 12px; font-size: 8px; color: #999; text-transform: uppercase; letter-spacing: 2px; }
     .print-btn {
-      position: fixed;
-      top: 12px;
-      right: 12px;
-      background: #111;
-      color: #fff;
-      border: none;
-      padding: 8px 20px;
-      font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      cursor: pointer;
+      position: fixed; top: 12px; right: 12px; background: #111; color: #fff; border: none;
+      padding: 8px 20px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; cursor: pointer;
     }
     .print-btn:hover { background: #333; }
     @media print {
       .print-btn { display: none; }
-      body { padding: 10px; }
+      html, body { height: 100%; max-height: 100vh; overflow: hidden; }
+      body { padding: 10px 14px; }
     }
   </style>
 </head>
 <body>
   <button class="print-btn" onclick="window.print()">Print / Save PDF</button>
    <div class="header">
-     <img src="${M2_LOGO_BASE64}" alt="M² Training" style="width:60px;height:60px;border-radius:50%;object-fit:cover;margin:0 auto 8px;" />
+     <img src="${M2_LOGO_BASE64}" alt="M² Training" />
      <h1>${esc(data.title)}</h1>
      <div class="creator">Created by ${esc(data.creatorName)} · Mattletes Community</div>
      ${data.description ? `<div class="desc">${esc(data.description)}</div>` : ""}
@@ -193,9 +116,7 @@ export const printCommunityWorkout = (data: PrintCommunityWorkoutData) => {
       ${exerciseRows}
     </tbody>
   </table>
-  <div style="text-align:center; margin-top:32px; font-size:10px; color:#999; text-transform:uppercase; letter-spacing:2px;">
-    Built by M² Training · m2training.lovable.app
-  </div>
+  <div class="footer">Built by M² Training · m2training.lovable.app</div>
 </body>
 </html>`);
   win.document.close();
