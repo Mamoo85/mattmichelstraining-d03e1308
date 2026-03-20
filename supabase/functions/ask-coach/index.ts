@@ -69,6 +69,8 @@ serve(async (req) => {
 
 BANNED EXERCISES — Coach Matt NEVER programs these:
 - Barbell Bent Over Row (any variation). Use Dumbbell Rows, Chest-Supported Rows, Cable Rows, or Seal Rows instead.
+- ALL bodybuilding isolation exercises (curls, kickbacks, lateral raises, leg extensions, machine isolation, etc.). Only corrective/prehab isolation allowed.
+- Stick to powerlifting compounds (Squat, Deadlift, Press, Bench, Power Clean) and functional conditioning (burpees, KB swings, sled, sprints, carries).
 
 CONTEXT FROM COACHING DOCUMENTS:
 ${context}`,

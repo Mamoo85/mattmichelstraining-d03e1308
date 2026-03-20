@@ -22,6 +22,8 @@ serve(async (req) => {
 
 BANNED EXERCISES — Coach Matt NEVER programs these. Do NOT suggest as substitutes:
 - Barbell Bent Over Row (any variation). Use Dumbbell Rows, Chest-Supported Rows, Cable Rows, or Seal Rows instead.
+- ALL bodybuilding isolation exercises (curls, kickbacks, lateral raises, leg extensions, machine flyes, etc.) and machine-based isolation work.
+- Substitute with compound movements only: chin-ups, dips, DB rows, lunges, RDLs, push-ups, carries. Conditioning = burpees, box jumps, KB swings, sled work, sprints.
 
 Your job:
 - Analyze the image and identify ALL available gym equipment visible
