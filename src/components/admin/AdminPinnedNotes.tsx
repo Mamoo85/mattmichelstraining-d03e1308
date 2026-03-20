@@ -3,6 +3,7 @@ import { Pin, Plus, X, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import { safeLocalStorage } from "@/lib/browserStorage";
 
 interface PinnedNote {
   id: string;
@@ -20,7 +21,7 @@ const AdminPinnedNotes = () => {
   const STORAGE_KEY = "m2_admin_pinned_notes";
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = safeLocalStorage.getItem(STORAGE_KEY);
     if (stored) {
       try { setNotes(JSON.parse(stored)); } catch {}
     }
@@ -29,7 +30,7 @@ const AdminPinnedNotes = () => {
 
   const persist = (updated: PinnedNote[]) => {
     setNotes(updated);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    safeLocalStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
   };
 
   const addNote = () => {
