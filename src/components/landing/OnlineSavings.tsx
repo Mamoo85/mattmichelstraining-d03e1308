@@ -49,7 +49,7 @@ const OnlineSavings = () => (
             <span className="text-xs font-bold text-foreground block">M² Online Training</span>
             <span className="text-[10px] text-muted-foreground">Custom programming · any sport · any state · direct coach access</span>
           </div>
-          <span className="text-sm font-mono font-bold text-primary">$12.99–$42.99/mo</span>
+          <span className="text-sm font-mono font-bold text-primary">$12.99–$99.99/mo</span>
         </div>
       </div>
 

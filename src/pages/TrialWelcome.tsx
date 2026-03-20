@@ -212,7 +212,7 @@ const TrialWelcome = () => {
                 onClick={() => setSelectedPath("foundation")}
                 icon={Star}
                 title="Adult Foundation Trial"
-                charge="$39.99/mo (Foundation) after trial"
+                charge="$19.99/mo (Foundation) after trial"
                 desc="Everything in Basic + 8-week periodized training, Fix It library, and direct coach form review."
                 badge={null}
                 warning="No child invite on this plan"

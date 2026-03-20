@@ -119,7 +119,7 @@ const Welcome = () => (
           <Zap size={20} className="text-primary flex-shrink-0" />
           <div className="flex-1 min-w-0">
             <span className="text-sm font-bold text-foreground block">Upgrade to Full Membership</span>
-            <span className="text-[11px] text-muted-foreground">Starting at $14.99/mo — less than a gym membership</span>
+            <span className="text-[11px] text-muted-foreground">Starting at $12.99/mo — less than a gym membership</span>
           </div>
           <ArrowRight size={16} className="text-muted-foreground flex-shrink-0 group-hover:translate-x-1 transition-transform" />
         </Link>
