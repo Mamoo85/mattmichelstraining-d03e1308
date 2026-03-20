@@ -84,7 +84,35 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
   const [workoutLogId, setWorkoutLogId] = useState<string | null>(null);
   const [formTrackerExercise, setFormTrackerExercise] = useState<string | null>(null);
   const [showIntervalTimer, setShowIntervalTimer] = useState(false);
+  const [restSeconds, setRestSeconds] = useState(0);
+  const restRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [workoutTitle, setWorkoutTitle] = useState(initialContext?.title || "Workout");
+
+  // Auto rest timer — countdown triggered by set completion
+  const startRestTimer = useCallback((duration = 90) => {
+    if (restRef.current) clearInterval(restRef.current);
+    setRestSeconds(duration);
+    restRef.current = setInterval(() => {
+      setRestSeconds((prev) => {
+        if (prev <= 1) {
+          if (restRef.current) clearInterval(restRef.current);
+          restRef.current = null;
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, []);
+
+  const clearRestTimer = useCallback(() => {
+    if (restRef.current) clearInterval(restRef.current);
+    restRef.current = null;
+    setRestSeconds(0);
+  }, []);
+
+  useEffect(() => {
+    return () => { if (restRef.current) clearInterval(restRef.current); };
+  }, []);
 
   // Check if auto-regulate is enabled for this user
   useEffect(() => {
@@ -446,6 +474,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
               onUpdate={updateExercise}
               onRemove={removeExercise}
               onOpenFormTracker={setFormTrackerExercise}
+              onSetCompleted={() => startRestTimer(90)}
             />
           ))}
 
@@ -474,7 +503,22 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
         </main>
 
         {/* Command Bar */}
-        <footer className="fixed bottom-0 w-full z-50 bg-background/95 backdrop-blur-md border-t border-border px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+        <footer className="fixed bottom-0 w-full z-50 bg-background/95 backdrop-blur-md border-t border-border px-4 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
+          {/* Rest Timer Banner */}
+          {restSeconds > 0 && (
+            <div className="flex items-center justify-between mb-2 bg-primary/10 border border-primary/30 rounded-sm px-3 py-2 max-w-lg mx-auto">
+              <span className="text-xs font-bold uppercase tracking-widest text-primary">Rest</span>
+              <span className="text-lg font-mono font-bold text-primary">
+                {Math.floor(restSeconds / 60)}:{String(restSeconds % 60).padStart(2, "0")}
+              </span>
+              <button
+                onClick={clearRestTimer}
+                className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground"
+              >
+                Skip
+              </button>
+            </div>
+          )}
           <div className="flex items-center justify-between gap-2 max-w-lg mx-auto">
             {/* Left: Timer readout */}
             <WorkoutTimer
@@ -499,7 +543,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
               disabled={saving}
               size="sm"
               variant="outline"
-              className="gap-1 text-xs font-bold uppercase tracking-widest border-orange-500 text-orange-400 hover:border-orange-400 hover:shadow-[0_0_10px_rgba(249,115,22,0.4)]"
+              className="gap-1 text-xs font-bold uppercase tracking-widest border-primary text-primary hover:border-primary/80 hover:shadow-[0_0_10px_hsl(var(--primary)/0.4)]"
             >
               {saving ? <Loader2 size={14} className="animate-spin" /> : <X size={14} />}
               Exit

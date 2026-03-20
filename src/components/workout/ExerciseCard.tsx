@@ -1,5 +1,5 @@
-import { useState, memo, useCallback } from "react";
-import { Trash2, ChevronDown, ChevronUp, Plus, Minus, Link, MessageSquare, Lock, Info, Crosshair } from "lucide-react";
+import { useState, memo, useCallback, useEffect } from "react";
+import { Trash2, ChevronDown, ChevronUp, Plus, Minus, Link, MessageSquare, Lock, Info, Crosshair, Check } from "lucide-react";
 import VoiceNoteButton from "./VoiceNoteButton";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
@@ -7,6 +7,8 @@ import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useTierAccess } from "@/hooks/useTierAccess";
 import { EliteUpsellModal } from "@/components/PaywallGate";
 import ExerciseVideoEmbed from "@/components/exercise/ExerciseVideoEmbed";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import type { LoggedExerciseData } from "./WorkoutLogger";
 
 interface ExerciseCardProps {
@@ -15,19 +17,64 @@ interface ExerciseCardProps {
   onUpdate: (index: number, data: Partial<LoggedExerciseData>) => void;
   onRemove: (index: number) => void;
   onOpenFormTracker: (exerciseTitle: string) => void;
+  onSetCompleted?: () => void;
 }
 
-const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTracker }: ExerciseCardProps) => {
+interface GhostSet {
+  weight: number;
+  reps: number;
+}
+
+const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTracker, onSetCompleted }: ExerciseCardProps) => {
+  const { user } = useAuth();
   const [showExtras, setShowExtras] = useState(false);
+  const [showCoachNotes, setShowCoachNotes] = useState(false);
   const [showUpsell, setShowUpsell] = useState(false);
   const { isAdmin } = useIsAdmin();
   const { hasAccess: canFlag } = useTierAccess("flag_coach");
+  const [ghostData, setGhostData] = useState<GhostSet[]>([]);
+
+  // Fetch ghost data (previous performance) for this exercise
+  useEffect(() => {
+    if (!user || !exercise.exerciseId) return;
+    (supabase
+      .from("logged_exercises")
+      .select("sets_reps_weight")
+      .eq("exercise_id", exercise.exerciseId)
+      .order("created_at", { ascending: false })
+      .limit(1) as any)
+      .then(({ data }: { data: any[] | null }) => {
+        if (data && data.length > 0) {
+          const raw = data[0].sets_reps_weight;
+          const sets = Array.isArray(raw) ? raw : [];
+          setGhostData(
+            sets.map((s: any) => ({
+              weight: s.weight || 0,
+              reps: s.reps || 0,
+            }))
+          );
+        }
+      });
+  }, [user, exercise.exerciseId]);
 
   const updateSet = useCallback((setIndex: number, field: "reps" | "weight", value: number) => {
     const newSets = [...exercise.sets];
     newSets[setIndex] = { ...newSets[setIndex], [field]: Math.max(0, value) };
     onUpdate(index, { sets: newSets });
   }, [exercise.sets, index, onUpdate]);
+
+  const completeSet = useCallback((setIndex: number) => {
+    // Mark set as completed visually (copy ghost data if empty)
+    const newSets = [...exercise.sets];
+    const ghost = ghostData[setIndex];
+    const current = newSets[setIndex];
+    if (current.weight === 0 && ghost?.weight) {
+      newSets[setIndex] = { ...current, weight: ghost.weight, reps: ghost.reps || current.reps };
+      onUpdate(index, { sets: newSets });
+    }
+    // Trigger auto rest timer
+    onSetCompleted?.();
+  }, [exercise.sets, ghostData, index, onUpdate, onSetCompleted]);
 
   const addSet = useCallback(() => {
     const lastSet = exercise.sets[exercise.sets.length - 1];
@@ -62,6 +109,16 @@ const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTrac
           <div className="flex items-center gap-2 min-w-0">
             <span className="text-[10px] font-mono text-muted-foreground">{index + 1}</span>
             <span className="text-sm font-bold text-foreground truncate">{exercise.exerciseTitle}</span>
+            {/* Coach's Eye: info/video icon for form cues */}
+            {(exercise.exerciseTheWhy || exercise.exerciseVideoUrl) && (
+              <button
+                onClick={() => setShowCoachNotes(!showCoachNotes)}
+                className="h-6 w-6 flex items-center justify-center text-primary/60 hover:text-primary transition-colors"
+                title="Coach notes & form cues"
+              >
+                <Info size={13} />
+              </button>
+            )}
           </div>
           <div className="flex items-center gap-1 flex-shrink-0">
             {onOpenFormTracker && (
@@ -79,59 +136,83 @@ const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTrac
           </div>
         </div>
 
-        {/* 2. Video Player — full width, rounded, no autoplay */}
-        {exercise.exerciseVideoUrl && (
-          <div className="px-3 pb-3">
-            <div className="rounded-md overflow-hidden">
-              <ExerciseVideoEmbed
-                videoUrl={exercise.exerciseVideoUrl}
-                exerciseTitle={exercise.exerciseTitle}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* 3. The Why + Coach's Instructions */}
-        {exercise.exerciseTheWhy && (
-          <div className="px-3 pb-3">
-            <div className="bg-primary/5 border-l-2 border-primary/40 p-3 rounded-sm">
-              <div className="flex items-center gap-1 mb-1">
-                <Info size={10} className="text-primary" />
-                <span className="text-[9px] font-bold uppercase tracking-widest text-primary">The Why</span>
+        {/* Coach's Eye: Collapsible video + form cues */}
+        {showCoachNotes && (
+          <>
+            {exercise.exerciseVideoUrl && (
+              <div className="px-3 pb-3">
+                <div className="rounded-md overflow-hidden">
+                  <ExerciseVideoEmbed
+                    videoUrl={exercise.exerciseVideoUrl}
+                    exerciseTitle={exercise.exerciseTitle}
+                  />
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground leading-relaxed">{exercise.exerciseTheWhy}</p>
-            </div>
-          </div>
+            )}
+            {exercise.exerciseTheWhy && (
+              <div className="px-3 pb-3">
+                <div className="bg-primary/5 border-l-2 border-primary/40 p-3 rounded-sm">
+                  <div className="flex items-center gap-1 mb-1">
+                    <Info size={10} className="text-primary" />
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-primary">Coach's Notes</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{exercise.exerciseTheWhy}</p>
+                </div>
+              </div>
+            )}
+          </>
         )}
 
-        {/* 4. Sets / Reps / Weight inputs */}
+        {/* 4. Dense tabular layout: Set # | Previous | Lbs | Reps | Check */}
         <div className="px-3 pb-2">
-          <div className="grid grid-cols-[auto_1fr_1fr] gap-x-2 gap-y-1 items-center text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">
-            <span>Set</span>
-            <span className="text-center">Weight (lbs)</span>
+          <div className="grid grid-cols-[2rem_1fr_1fr_1fr_2.5rem] gap-x-1 items-center text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">
+            <span className="text-center">Set</span>
+            <span className="text-center">Previous</span>
+            <span className="text-center">Lbs</span>
             <span className="text-center">Reps</span>
+            <span className="text-center">✓</span>
           </div>
-          {exercise.sets.map((s, si) => (
-            <div key={si} className="grid grid-cols-[auto_1fr_1fr] gap-x-2 gap-y-1 items-center mb-1">
-              <span className="text-xs font-mono text-muted-foreground w-6 text-center">{s.set}</span>
-              <input
-                type="number"
-                inputMode="numeric"
-                value={s.weight || ""}
-                onChange={(e) => updateSet(si, "weight", parseInt(e.target.value) || 0)}
-                placeholder="0"
-                className="bg-background border border-border rounded-sm text-center font-mono text-foreground text-base h-12 w-full focus:ring-1 focus:ring-primary outline-none"
-              />
-              <input
-                type="number"
-                inputMode="numeric"
-                value={s.reps || ""}
-                onChange={(e) => updateSet(si, "reps", parseInt(e.target.value) || 0)}
-                placeholder="0"
-                className="bg-background border border-border rounded-sm text-center font-mono text-foreground text-base h-12 w-full focus:ring-1 focus:ring-primary outline-none"
-              />
-            </div>
-          ))}
+          {exercise.sets.map((s, si) => {
+            const ghost = ghostData[si];
+            const isCompleted = s.weight > 0 && s.reps > 0;
+            return (
+              <div key={si} className="grid grid-cols-[2rem_1fr_1fr_1fr_2.5rem] gap-x-1 items-center mb-1">
+                <span className="text-xs font-mono text-muted-foreground text-center">{s.set}</span>
+                {/* Ghost Data: previous performance */}
+                <span className="text-xs font-mono text-muted-foreground/50 text-center truncate">
+                  {ghost ? `${ghost.weight}×${ghost.reps}` : "—"}
+                </span>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  value={s.weight || ""}
+                  onChange={(e) => updateSet(si, "weight", parseInt(e.target.value) || 0)}
+                  placeholder={ghost?.weight ? String(ghost.weight) : "0"}
+                  className="bg-background border border-border rounded-sm text-center font-mono text-foreground text-sm h-10 w-full focus:ring-1 focus:ring-primary outline-none"
+                />
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  value={s.reps || ""}
+                  onChange={(e) => updateSet(si, "reps", parseInt(e.target.value) || 0)}
+                  placeholder={ghost?.reps ? String(ghost.reps) : "0"}
+                  className="bg-background border border-border rounded-sm text-center font-mono text-foreground text-sm h-10 w-full focus:ring-1 focus:ring-primary outline-none"
+                />
+                {/* Checkmark — completes set + triggers auto rest timer */}
+                <button
+                  onClick={() => completeSet(si)}
+                  className={cn(
+                    "h-10 w-full flex items-center justify-center rounded-sm border transition-all",
+                    isCompleted
+                      ? "bg-primary/20 border-primary text-primary"
+                      : "border-border text-muted-foreground/40 hover:border-primary/40 hover:text-primary/60"
+                  )}
+                >
+                  <Check size={14} />
+                </button>
+              </div>
+            );
+          })}
           <div className="flex gap-2 mt-2">
             <button onClick={addSet} className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-primary hover:opacity-80 h-9 px-3 bg-primary/10 rounded-sm">
               <Plus size={12} /> Set

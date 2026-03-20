@@ -94,17 +94,18 @@ const HeroSection = () => {
             {/* Quick-action CTA buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
               <Link
-                to="/pricing"
+                to="/schedule"
                 className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2 w-full sm:w-auto justify-center"
               >
                 Start Training
                 <ArrowRight size={14} />
               </Link>
               <Link
-                to="/about"
-                className="inline-flex items-center gap-2 border-2 border-primary text-primary px-6 py-3 text-xs font-bold uppercase tracking-widest hover:bg-primary/10 transition-m2 w-full sm:w-auto justify-center"
+                to="/dashboard"
+                className="inline-flex items-center gap-2 border-2 border-primary text-primary px-6 py-3 text-xs font-bold uppercase tracking-widest hover:bg-primary/10 hover:shadow-[0_0_20px_rgba(249,115,22,0.35)] transition-all duration-300 w-full sm:w-auto justify-center"
               >
-                Meet Matt
+                Enter The Portal
+                <ArrowRight size={14} />
               </Link>
             </div>
 
