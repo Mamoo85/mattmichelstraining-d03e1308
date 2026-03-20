@@ -412,20 +412,29 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
     onPause?.();
   }, [exercises, sessionNotes, recovery, date, workoutTitle, initialContext, onPause]);
 
-  const handleFinishClick = () => {
+  const handleFinishClick = async () => {
     if (saving) return;
     if (exercises.length === 0) {
       localStorage.removeItem("m2-paused-workout");
       onFinish();
       return;
     }
-    setShowConfirm(true);
-  };
-
-  const handleDiscardExit = () => {
-    setShowConfirm(false);
-    localStorage.removeItem("m2-paused-workout");
-    onFinish();
+    // Auto-save progress on exit
+    if (!user) return;
+    const logId = await saveWorkout({
+      userId: user.id,
+      date,
+      sessionNotes,
+      exercises,
+      recovery,
+    });
+    if (logId) {
+      setWorkoutLogId(logId);
+      setPhase("summary");
+    } else {
+      // Save failed — still exit but preserve in localStorage
+      onFinish();
+    }
   };
 
   const handleFinishConfirmed = async () => {
