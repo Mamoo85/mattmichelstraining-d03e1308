@@ -25,7 +25,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Loader2 } from "lucide-react";
 
 // Lazy-load all pages for code-splitting
-const Index = lazy(() => import("./pages/Index"));
+import Index from "./pages/Index";
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Coach = lazy(() => import("./pages/Coach"));
 const Shop = lazy(() => import("./pages/Shop"));
