@@ -102,26 +102,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
+    let subscription: { unsubscribe: () => void } | null = null;
+    try {
+      const result = supabase.auth.onAuthStateChange((_event, session) => {
+        setSession(session);
+        setLoading(false);
+        if (session) {
+          setTimeout(() => checkSubscription(), 0);
+        } else {
+          setSubscribed(false);
+          setSubscriptionTier(null);
+          setSubscriptionEnd(null);
+        }
+      });
+      subscription = result.data.subscription;
+    } catch (e) {
+      console.warn("[Auth] onAuthStateChange blocked or failed:", e);
       setLoading(false);
-      if (session) {
-        // defer to avoid Supabase deadlock
-        setTimeout(() => checkSubscription(), 0);
-      } else {
-        setSubscribed(false);
-        setSubscriptionTier(null);
-        setSubscriptionEnd(null);
-      }
-    });
+    }
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
       if (session) checkSubscription();
+    }).catch((e) => {
+      console.warn("[Auth] getSession blocked or failed:", e);
+      setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => subscription?.unsubscribe();
   }, [checkSubscription]);
 
   // Auto-refresh every 60s while logged in

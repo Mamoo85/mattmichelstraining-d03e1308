@@ -1,53 +1,122 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, WifiOff, AlertTriangle } from "lucide-react";
 
 interface Props {
   children: ReactNode;
 }
 
+type ErrorKind = "chunk" | "network" | "unknown";
+
 interface State {
   hasError: boolean;
-  isChunkError: boolean;
+  errorKind: ErrorKind;
+  autoRetried: boolean;
 }
 
+function classifyError(error: Error): ErrorKind {
+  const msg = error.message?.toLowerCase() ?? "";
+  if (
+    /loading chunk|failed to fetch dynamically imported module|import|loading css chunk/i.test(msg)
+  ) {
+    return "chunk";
+  }
+  if (/networkerror|failed to fetch|load failed|cors|blocked/i.test(msg)) {
+    return "network";
+  }
+  return "unknown";
+}
+
+const MESSAGES: Record<ErrorKind, { title: string; body: string }> = {
+  chunk: {
+    title: "New version available",
+    body: "A new version of the app was deployed while you were using it. Please reload to get the latest version.",
+  },
+  network: {
+    title: "Connection issue",
+    body: "A request was blocked or failed — this can happen on privacy browsers (like Freespoke or Brave) that restrict third-party connections. Try disabling shields/ad-blockers for this site, or switch to a standard browser.",
+  },
+  unknown: {
+    title: "Something went wrong",
+    body: "An unexpected error occurred. Reloading usually fixes it. If the problem persists, try clearing your browser cache.",
+  },
+};
+
 class ErrorBoundary extends Component<Props, State> {
-  state: State = { hasError: false, isChunkError: false };
+  state: State = { hasError: false, errorKind: "unknown", autoRetried: false };
 
   static getDerivedStateFromError(error: Error): State {
-    const isChunkError =
-      /loading chunk|failed to fetch dynamically imported module|import/i.test(error.message);
-    return { hasError: true, isChunkError };
+    return { hasError: true, errorKind: classifyError(error), autoRetried: false };
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    // Error boundary caught — could report to analytics
+    // Always log the real error for diagnostics
+    console.error("[ErrorBoundary]", error.message, error.stack);
+    console.error("[ErrorBoundary] Component stack:", info.componentStack);
+
+    // Auto-retry chunk errors once by reloading
+    if (this.state.errorKind === "chunk" && !this.state.autoRetried) {
+      this.setState({ autoRetried: true });
+      setTimeout(() => window.location.reload(), 1500);
+    }
   }
 
   handleReload = () => window.location.reload();
 
+  handleClearAndReload = () => {
+    try {
+      localStorage.removeItem("m2-query-cache");
+      localStorage.removeItem("m2_offline_queue");
+      // Clear all caches
+      if ("caches" in window) {
+        caches.keys().then((names) => names.forEach((n) => caches.delete(n)));
+      }
+    } catch {}
+    window.location.reload();
+  };
+
   render() {
     if (!this.state.hasError) return this.props.children;
+
+    const { errorKind, autoRetried } = this.state;
+    const msg = MESSAGES[errorKind];
+    const Icon = errorKind === "network" ? WifiOff : errorKind === "chunk" ? RefreshCw : AlertTriangle;
+
+    if (errorKind === "chunk" && !autoRetried) {
+      return (
+        <div className="min-h-screen bg-background flex items-center justify-center p-6">
+          <div className="text-center max-w-sm space-y-3">
+            <RefreshCw className="w-8 h-8 text-primary mx-auto animate-spin" />
+            <p className="text-sm text-muted-foreground">Updating…</p>
+          </div>
+        </div>
+      );
+    }
 
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-6">
         <div className="text-center max-w-sm space-y-4">
-          <RefreshCw className="w-10 h-10 text-primary mx-auto" />
+          <Icon className="w-10 h-10 text-primary mx-auto" />
           <h1 className="text-lg font-black uppercase tracking-tight text-foreground">
-            Connection interrupted
+            {msg.title}
           </h1>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            {this.state.isChunkError
-              ? "A page failed to load — likely a weak signal or a new version was deployed."
-              : "Something unexpected happened."}
-            {" "}Please check your signal and try again.
+            {msg.body}
           </p>
-          <button
-            onClick={this.handleReload}
-            className="bg-primary text-primary-foreground px-6 py-3 text-xs font-bold uppercase tracking-widest hover:bg-primary/90 transition-colors inline-flex items-center gap-2"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Reload Page
-          </button>
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={this.handleReload}
+              className="bg-primary text-primary-foreground px-6 py-3 text-xs font-bold uppercase tracking-widest hover:bg-primary/90 transition-colors inline-flex items-center justify-center gap-2"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Reload Page
+            </button>
+            <button
+              onClick={this.handleClearAndReload}
+              className="text-xs text-muted-foreground underline hover:text-foreground transition-colors"
+            >
+              Clear cache &amp; reload
+            </button>
+          </div>
         </div>
       </div>
     );
