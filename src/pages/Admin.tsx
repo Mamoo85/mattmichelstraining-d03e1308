@@ -239,6 +239,7 @@ const Admin = () => {
                 <div className="border-t border-border pt-6"><AdminAiBusinessTools /></div>
               </div>
             )},
+            { key: "cmo", label: "CMO Reports", content: <AdminCmoReports /> },
           ]} />
         )}
       </div>
