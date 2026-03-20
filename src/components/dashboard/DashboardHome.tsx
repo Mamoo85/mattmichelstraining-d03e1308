@@ -3,10 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { Play, Camera } from "lucide-react";
 import MonthlyFocusWidget from "@/components/MonthlyFocusWidget";
 import UpcomingSessions from "@/components/UpcomingSessions";
-import PointsWidget from "@/components/PointsWidget";
 import WorkoutScanner from "@/components/workout/WorkoutScanner";
 import EmptyStateCard from "@/components/EmptyStateCard";
-import ReferEarnCard from "./ReferEarnCard";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -25,14 +23,12 @@ const DashboardHome = memo(({ isNewUser, onViewPoints, onViewReferrals }: Dashbo
   const [showWelcome, setShowWelcome] = useState(false);
   const [hasPosture, setHasPosture] = useState<boolean | null>(null);
 
-  // Show welcome modal for new users who haven't seen it
   useEffect(() => {
     if (isNewUser && !localStorage.getItem("m2-welcome-gift-seen")) {
       setShowWelcome(true);
     }
   }, [isNewUser]);
 
-  // Check if user already submitted posture
   useEffect(() => {
     if (!user) return;
     supabase
@@ -49,8 +45,6 @@ const DashboardHome = memo(({ isNewUser, onViewPoints, onViewReferrals }: Dashbo
     }
     window.dispatchEvent(new CustomEvent("open-workout-zone", { detail: null }));
   }, [subscribed, isNewUser, navigate]);
-
-  const [showPostureCapture, setShowPostureCapture] = useState(false);
 
   return (
   <div className="space-y-6">
@@ -85,8 +79,6 @@ const DashboardHome = memo(({ isNewUser, onViewPoints, onViewReferrals }: Dashbo
       </button>
     </div>
 
-    
-
     <Link
       to="/nutrition"
       className="block bg-card border border-border p-5 space-y-1 hover:border-primary/40 transition-colors"
@@ -99,7 +91,6 @@ const DashboardHome = memo(({ isNewUser, onViewPoints, onViewReferrals }: Dashbo
       </p>
     </Link>
 
-    {/* Persistent posture analysis card for users who skipped */}
     {hasPosture === false && (
       <div className="bg-card border border-border p-5 space-y-2">
         <div className="flex items-center gap-2">
@@ -119,8 +110,6 @@ const DashboardHome = memo(({ isNewUser, onViewPoints, onViewReferrals }: Dashbo
     )}
 
     <UpcomingSessions />
-    <PointsWidget onViewLeaderboard={onViewPoints} />
-    <ReferEarnCard onViewAll={onViewReferrals} />
     <MonthlyFocusWidget />
 
     <Suspense fallback={null}>
