@@ -155,7 +155,7 @@ const CoachMessaging = () => {
                       )}
                     </div>
                     <span className="text-[9px] text-muted-foreground mt-1.5 block">
-                      This is an AI-generated answer. Matt will review your message personally.
+                      Matt will review your message and respond personally.
                     </span>
                   </div>
                 </div>
