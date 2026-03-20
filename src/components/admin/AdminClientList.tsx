@@ -80,6 +80,120 @@ const AdminClientList = () => {
     },
   });
 
+  const { data: allPrograms = [] } = useQuery({
+    queryKey: ["admin-all-training-programs"],
+    queryFn: async () => {
+      const { data } = await supabase.from("training_programs").select("id, title, category, level, sport, total_weeks, price").eq("is_active", true).order("title");
+      return data || [];
+    },
+  });
+
+  const { data: allDailyWorkouts = [] } = useQuery({
+    queryKey: ["admin-all-daily-workouts"],
+    queryFn: async () => {
+      const { data } = await supabase.from("daily_workouts").select("id, title, description, target_audience, exercises").eq("is_active", true).order("title");
+      return data || [];
+    },
+  });
+
+  const giftContent = async (targetUserId: string, targetName: string) => {
+    if (!selectedGiftId) { toast.error("Select a program or workout to gift"); return; }
+    setGifting(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      if (giftType === "program") {
+        // Check if already has this program
+        const { data: existing } = await supabase.from("user_active_programs").select("id").eq("user_id", targetUserId).eq("program_id", selectedGiftId).limit(1);
+        if (existing && existing.length > 0) {
+          toast.error("User already has this program");
+          setGifting(false);
+          return;
+        }
+
+        // Insert into user_active_programs
+        const { error: progErr } = await supabase.from("user_active_programs").insert({
+          user_id: targetUserId,
+          program_id: selectedGiftId,
+          status: "active",
+          stripe_session_id: null,
+        });
+        if (progErr) throw progErr;
+
+        // Track in user_content_access
+        const { error: accessErr } = await supabase.from("user_content_access").insert({
+          user_id: targetUserId,
+          program_id: selectedGiftId,
+          access_type: "admin_gift",
+          granted_by: user.id,
+          notes: giftNotes || `Gifted by admin`,
+        });
+        if (accessErr) console.warn("Content access tracking failed:", accessErr);
+
+        // Track in gifted_products
+        const { error: giftErr } = await supabase.from("gifted_products").insert({
+          user_id: targetUserId,
+          gifted_by: user.id,
+          gift_type: "program",
+          product_id: selectedGiftId,
+          notes: giftNotes || null,
+        });
+        if (giftErr) console.warn("Gift tracking failed:", giftErr);
+
+        const prog = allPrograms.find((p: any) => p.id === selectedGiftId);
+        toast.success(`Gifted "${prog?.title}" to ${targetName}`);
+      } else {
+        // Workout gift — copy daily_workouts entry into community_workouts for user
+        const workout = allDailyWorkouts.find((w: any) => w.id === selectedGiftId);
+        if (!workout) throw new Error("Workout not found");
+
+        const { error: insertErr } = await supabase.from("community_workouts").insert({
+          user_id: targetUserId,
+          title: workout.title,
+          description: workout.description || null,
+          creator_name: "Coach Matt",
+          is_public: false,
+          exercises: workout.exercises,
+        });
+        if (insertErr) throw insertErr;
+
+        // Track in user_content_access
+        const { error: accessErr } = await supabase.from("user_content_access").insert({
+          user_id: targetUserId,
+          workout_id: selectedGiftId,
+          access_type: "admin_gift",
+          granted_by: user.id,
+          notes: giftNotes || `Gifted workout by admin`,
+        });
+        if (accessErr) console.warn("Content access tracking failed:", accessErr);
+
+        toast.success(`Gifted workout "${workout.title}" to ${targetName}`);
+      }
+
+      // Send notification
+      await supabase.from("notifications").insert({
+        user_id: targetUserId,
+        type: "gift",
+        title: giftType === "program" ? "🎁 New Program Unlocked!" : "🎁 New Workout Added!",
+        body: giftType === "program"
+          ? `Coach Matt just added a training program to your library. Check it out!`
+          : `Coach Matt just dropped a custom workout into your library. Get after it!`,
+        link: "/dashboard",
+      });
+
+      // Reset form
+      setSelectedGiftId("");
+      setGiftNotes("");
+      queryClient.invalidateQueries({ queryKey: ["admin-all-active-programs"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-all-gifts"] });
+    } catch (err: any) {
+      toast.error(err.message || "Gift failed");
+    } finally {
+      setGifting(false);
+    }
+  };
+
   // Mutations
   const toggleInPerson = useMutation({
     mutationFn: async ({ profileId, value }: { profileId: string; value: boolean }) => {
