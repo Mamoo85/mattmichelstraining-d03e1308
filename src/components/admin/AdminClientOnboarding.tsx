@@ -1,45 +1,51 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Copy, Check, Loader2, UserPlus, Send } from "lucide-react";
+import { Copy, Check, Loader2, UserPlus, LinkIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
-const AdminClientOnboarding = () => {
-  const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<{ email: string; message: string } | null>(null);
+const PUBLISHED_DOMAIN = "https://mattmichelstraining.lovable.app";
 
-  const handleInvite = async () => {
-    if (!email.trim()) {
-      toast({ title: "Enter an email address", variant: "destructive" });
-      return;
-    }
+const AdminClientOnboarding = () => {
+  const [label, setLabel] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [generatedUrl, setGeneratedUrl] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const generateLink = async () => {
     setLoading(true);
-    setResult(null);
+    setGeneratedUrl(null);
+    setCopied(false);
 
     try {
       const { data, error } = await supabase.functions.invoke("admin-user-manage", {
         body: {
-          action: "invite_in_person",
-          targetEmail: email.trim(),
-          targetName: name.trim() || null,
+          action: "create_ip_invite",
+          label: label.trim() || null,
         },
       });
 
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
 
-      setResult({ email: email.trim(), message: data?.message || "Invite sent" });
-      toast({ title: "In-person client invited", description: `${email.trim()} is set up with Basic access.` });
-      setEmail("");
-      setName("");
+      const url = `${PUBLISHED_DOMAIN}/auth?ip=${data.token}`;
+      setGeneratedUrl(url);
+      toast({ title: "Invite link ready", description: "Copy and text it to your client." });
+      setLabel("");
     } catch (e: any) {
-      toast({ title: "Failed to invite", description: e.message, variant: "destructive" });
+      toast({ title: "Failed to generate link", description: e.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
+  };
+
+  const copyToClipboard = async () => {
+    if (!generatedUrl) return;
+    await navigator.clipboard.writeText(generatedUrl);
+    setCopied(true);
+    toast({ title: "Copied — text it to your client" });
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -50,47 +56,44 @@ const AdminClientOnboarding = () => {
           <CardTitle className="text-sm">In-Person Client Invite</CardTitle>
         </div>
         <CardDescription className="text-[11px]">
-          Enter a client's email to instantly give them Basic-tier portal access. They'll get a magic link to sign in — no signup friction, no popups, no trial banners.
+          Generate a one-time invite link and text it to your client. When they sign up through the link they'll automatically get Basic-tier access, welcome workouts, and zero popups or trial banners.
         </CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-3">
         <div>
-          <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Client Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="athlete@example.com"
-            className="w-full bg-muted border border-border px-3 py-2.5 text-sm text-foreground focus:ring-1 focus:ring-primary outline-none"
-          />
-        </div>
-        <div>
-          <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Name (optional)</label>
+          <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Client Name (optional — for your reference)</label>
           <input
             type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="First Last"
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            placeholder="e.g. Jake S."
             className="w-full bg-muted border border-border px-3 py-2.5 text-sm text-foreground focus:ring-1 focus:ring-primary outline-none"
           />
         </div>
 
-        <Button
-          onClick={handleInvite}
-          disabled={loading || !email.trim()}
-          className="w-full"
-        >
-          {loading ? <Loader2 size={14} className="animate-spin mr-2" /> : <Send size={14} className="mr-2" />}
-          Send In-Person Invite
+        <Button onClick={generateLink} disabled={loading} className="w-full">
+          {loading ? <Loader2 size={14} className="animate-spin mr-2" /> : <LinkIcon size={14} className="mr-2" />}
+          Generate Invite Link
         </Button>
 
-        {result && (
-          <div className="bg-primary/10 border border-primary/20 p-3 animate-in fade-in-50 slide-in-from-bottom-2 duration-200">
-            <p className="text-xs font-bold text-foreground">✓ {result.message}</p>
-            <p className="text-[10px] text-muted-foreground mt-1">
-              {result.email} now has Basic access. They'll receive a magic link to sign in.
+        {generatedUrl && (
+          <div className="space-y-2 animate-in fade-in-50 slide-in-from-bottom-2 duration-200">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Ready — copy & text to your client
             </p>
+            <div className="flex items-stretch gap-1.5">
+              <input
+                type="text"
+                readOnly
+                value={generatedUrl}
+                className="flex-1 bg-muted border border-border px-3 py-2 text-xs font-mono select-all focus:outline-none focus:ring-1 focus:ring-primary"
+                onClick={(e) => (e.target as HTMLInputElement).select()}
+              />
+              <Button size="sm" variant="secondary" onClick={copyToClipboard} className="px-3">
+                {copied ? <Check size={14} /> : <Copy size={14} />}
+              </Button>
+            </div>
           </div>
         )}
       </CardContent>

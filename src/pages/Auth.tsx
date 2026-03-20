@@ -16,14 +16,39 @@ const Auth = () => {
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const inviteToken = searchParams.get("invite");
+  const ipToken = searchParams.get("ip");
 
   useEffect(() => {
-    if (!authLoading && user && inviteToken) {
-      redeemInvite(inviteToken);
-    } else if (!authLoading && user) {
+    if (authLoading || !user) return;
+
+    const handlePostAuth = async () => {
+      // Redeem in-person invite token if present
+      if (ipToken) {
+        try {
+          const { data, error } = await supabase.functions.invoke("admin-user-manage", {
+            body: { action: "redeem_ip_invite", token: ipToken, userId: user.id },
+          });
+          if (error) throw error;
+          if (data?.error) throw new Error(data.error);
+          toast({ title: "You're in!", description: "Welcome to M² Training — your portal is ready." });
+        } catch (err: any) {
+          console.warn("[IP-INVITE] Redeem error:", err.message);
+        }
+        navigate("/dashboard", { replace: true });
+        return;
+      }
+
+      // Redeem parent invite token if present
+      if (inviteToken) {
+        await redeemInvite(inviteToken);
+        return;
+      }
+
       const redirect = searchParams.get("redirect") || "/dashboard";
       navigate(redirect, { replace: true });
-    }
+    };
+
+    handlePostAuth();
   }, [user, authLoading]);
 
   const redeemInvite = async (token: string) => {

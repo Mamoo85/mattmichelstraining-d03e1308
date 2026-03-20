@@ -16,11 +16,46 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Admin auth check
+    const body = await req.json();
+    const { action } = body;
+
+    // ── Redeem In-Person Invite (no admin auth needed — called by the signing-up user) ──
+    if (action === "redeem_ip_invite") {
+      const { token, userId } = body;
+      if (!token || !userId) throw new Error("Token and userId required");
+
+      // Look up the token using service role (bypasses RLS)
+      const { data: invite, error: inviteErr } = await supabaseClient
+        .from("in_person_invite_tokens")
+        .select("*")
+        .eq("token", token)
+        .single();
+
+      if (inviteErr || !invite) throw new Error("Invalid invite link");
+      if (invite.is_used) throw new Error("This invite link has already been used");
+
+      // Flag the user's profile as in-person
+      await supabaseClient
+        .from("profiles")
+        .update({ is_in_person: true })
+        .eq("user_id", userId);
+
+      // Mark token as used
+      await supabaseClient
+        .from("in_person_invite_tokens")
+        .update({ is_used: true, used_at: new Date().toISOString(), used_by: userId })
+        .eq("id", invite.id);
+
+      return new Response(JSON.stringify({ success: true, message: "Welcome! You're set up as an in-person client." }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── All other actions require admin auth ──
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) throw new Error("Not authenticated");
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+    const authToken = authHeader.replace("Bearer ", "");
+    const { data: userData, error: userError } = await supabaseClient.auth.getUser(authToken);
     if (userError || !userData.user) throw new Error("Auth failed");
 
     const { data: roleCheck } = await supabaseClient.rpc("has_role", {
@@ -29,26 +64,42 @@ serve(async (req) => {
     });
     if (!roleCheck) throw new Error("Admin access required");
 
-    const { action, targetUserId, targetEmail, targetName, linkParentId, unlinkChildId } = await req.json();
+    const { targetUserId, targetEmail, targetName, linkParentId, unlinkChildId, label } = body;
 
-    // ── Invite In-Person Client ──────────────────────────────────────
+    // ── Create In-Person Invite Token ──
+    if (action === "create_ip_invite") {
+      const token = crypto.randomUUID().replace(/-/g, "").slice(0, 12).toUpperCase();
+
+      const { error: insertErr } = await supabaseClient
+        .from("in_person_invite_tokens")
+        .insert({
+          token,
+          created_by: userData.user.id,
+          label: label || null,
+        });
+
+      if (insertErr) throw new Error(`Failed to create invite: ${insertErr.message}`);
+
+      return new Response(JSON.stringify({ success: true, token }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── Invite In-Person (email-based, kept for backwards compat) ──
     if (action === "invite_in_person") {
       if (!targetEmail) throw new Error("Email required");
 
-      // Check if user already exists
       const { data: existingUsers } = await supabaseClient.auth.admin.listUsers();
       const existingUser = existingUsers?.users?.find(
         (u: any) => u.email?.toLowerCase() === targetEmail.toLowerCase()
       );
 
       if (existingUser) {
-        // User exists — just flag them as in-person
         await supabaseClient
           .from("profiles")
           .update({ is_in_person: true })
           .eq("user_id", existingUser.id);
 
-        // Send them a magic link
         const { error: linkError } = await supabaseClient.auth.admin.generateLink({
           type: "magiclink",
           email: targetEmail,
@@ -66,7 +117,6 @@ serve(async (req) => {
         });
       }
 
-      // New user — create account with auto-confirm, then flag profile
       const tempPassword = crypto.randomUUID();
       const { data: newUser, error: createError } = await supabaseClient.auth.admin.createUser({
         email: targetEmail,
@@ -79,18 +129,12 @@ serve(async (req) => {
       });
       if (createError) throw new Error(`Account creation failed: ${createError.message}`);
 
-      // Flag as in-person on their profile (trigger creates profile on signup)
-      // Small delay to let the trigger fire
       await new Promise((r) => setTimeout(r, 500));
       await supabaseClient
         .from("profiles")
-        .update({
-          is_in_person: true,
-          full_name: targetName || null,
-        })
+        .update({ is_in_person: true, full_name: targetName || null })
         .eq("user_id", newUser.user.id);
 
-      // Send magic link so they can sign in without knowing the temp password
       const { error: linkError } = await supabaseClient.auth.admin.generateLink({
         type: "magiclink",
         email: targetEmail,
@@ -129,30 +173,14 @@ serve(async (req) => {
       if (!targetUserId) throw new Error("User ID required");
 
       const tables = [
-        "logged_exercises",
-        "workout_logs",
-        "progress_logs",
-        "coach_notes",
-        "lift_messages",
-        "coach_direct_messages",
-        "program_messages",
-        "notifications",
-        "point_transactions",
-        "challenge_entries",
-        "challenge_participants",
-        "session_bookings",
-        "session_credits",
-        "studio_checkins",
-        "community_workouts",
-        "gifted_products",
-        "gifted_sessions",
-        "purchased_programs",
-        "user_active_programs",
-        "family_subscription_items",
-        "parent_child_links",
-        "referral_codes",
-        "referral_conversions",
-        "subscriptions",
+        "logged_exercises", "workout_logs", "progress_logs", "coach_notes",
+        "lift_messages", "coach_direct_messages", "program_messages",
+        "notifications", "point_transactions", "challenge_entries",
+        "challenge_participants", "session_bookings", "session_credits",
+        "studio_checkins", "community_workouts", "gifted_products",
+        "gifted_sessions", "purchased_programs", "user_active_programs",
+        "family_subscription_items", "parent_child_links", "referral_codes",
+        "referral_conversions", "subscriptions",
       ];
 
       for (const table of tables) {
