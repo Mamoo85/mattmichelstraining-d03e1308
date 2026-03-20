@@ -114,6 +114,74 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
     setRestSeconds(0);
   }, []);
 
+  // ── Adapt to Equipment (Vision AI) ──
+  const handleAdaptCapture = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || exercises.length === 0) return;
+    e.target.value = "";
+
+    setAdaptLoading(true);
+    setAdaptBanner(null);
+    try {
+      // Convert image to base64
+      const buffer = await file.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+      let binary = "";
+      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+      const imageBase64 = btoa(binary);
+
+      // Build simple workout JSON for the AI
+      const workoutJson = exercises.map((ex) => ({
+        title: ex.exerciseTitle,
+        sets: ex.sets.length,
+        reps: ex.sets[0]?.reps || 0,
+        notes: ex.clientNotes || "",
+      }));
+
+      const { data, error } = await supabase.functions.invoke("adapt-workout-vision", {
+        body: { imageBase64, workout: workoutJson },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      const adaptedExercises = data?.exercises;
+      if (!adaptedExercises?.length) throw new Error("No adapted exercises returned");
+
+      // Map adapted exercises back onto the current workout
+      let swapCount = 0;
+      const updated = exercises.map((ex, i) => {
+        const adapted = adaptedExercises[i];
+        if (!adapted) return ex;
+        if (adapted.was_swapped) {
+          swapCount++;
+          return {
+            ...ex,
+            exerciseId: "", // Clear original ID since it's a new exercise
+            exerciseTitle: adapted.adapted_title,
+            clientNotes: adapted.swap_reason
+              ? `Adapted: ${adapted.swap_reason}${ex.clientNotes ? " | " + ex.clientNotes : ""}`
+              : ex.clientNotes,
+            sets: Array.from({ length: adapted.sets || ex.sets.length }, (_, si) => ({
+              set: si + 1,
+              reps: adapted.reps || ex.sets[0]?.reps || 0,
+              weight: 0,
+            })),
+          };
+        }
+        return ex;
+      });
+
+      setExercises(updated);
+      const summary = data.summary || `${swapCount} exercise${swapCount !== 1 ? "s" : ""} adapted`;
+      setAdaptBanner(summary);
+      toast.success("Workout adapted for available equipment");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to adapt workout");
+    } finally {
+      setAdaptLoading(false);
+    }
+  }, [exercises]);
+
   useEffect(() => {
     return () => { if (restRef.current) clearInterval(restRef.current); };
   }, []);
