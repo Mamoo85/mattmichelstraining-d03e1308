@@ -231,6 +231,7 @@ const Admin = () => {
             { key: "stripe-products", label: "Stripe Products", content: <AdminStripeProducts /> },
             { key: "churn", label: "Churn Radar", content: <AdminChurnRadar /> },
             { key: "catalog", label: "Service Catalog", content: <AdminServiceCatalog /> },
+            { key: "trash", label: <span className="flex items-center gap-1"><Trash2 size={11} /> Trash{trashCount > 0 && <Badge variant="secondary" className="text-[8px] px-1.5 py-0 min-w-[18px] h-4">{trashCount}</Badge>}</span>, content: <AdminTrash /> },
           ]} />
         )}
 
