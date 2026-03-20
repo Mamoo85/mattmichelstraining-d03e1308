@@ -365,7 +365,7 @@ const Nutrition = () => {
                 {analysis && editableItems.length > 0 && (
                   <div className="space-y-4">
                     {/* Live totals */}
-                    <div className="grid grid-cols-5 gap-2">
+                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                       <MacroPill icon={Flame} label="cal" value={totalCalFromAnalysis} unit="" color="bg-orange-500/10 text-orange-600" />
                       <MacroPill icon={Beef} label="pro" value={totalProtein} unit="g" color="bg-red-500/10 text-red-600" />
                       <MacroPill icon={Wheat} label="carb" value={totalCarbs} unit="g" color="bg-amber-500/10 text-amber-600" />
