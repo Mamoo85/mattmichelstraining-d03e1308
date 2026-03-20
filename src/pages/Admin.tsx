@@ -29,6 +29,7 @@ const AdminPrograms = lazy(() => import("@/components/admin/AdminPrograms"));
 const AdminExerciseLibrary = lazy(() => import("@/components/admin/AdminExerciseLibrary"));
 const AdminProtocols = lazy(() => import("@/components/admin/AdminProtocols"));
 const AdminBatchGenerator = lazy(() => import("@/components/admin/AdminBatchGenerator"));
+const AdminExerciseGenerator = lazy(() => import("@/components/admin/AdminExerciseGenerator"));
 const AdminProgramCreator = lazy(() => import("@/components/admin/AdminProgramCreator"));
 const AdminAiQueue = lazy(() => import("@/components/admin/AdminAiQueue"));
 const AdminRecoveryHeatmap = lazy(() => import("@/components/admin/AdminRecoveryHeatmap"));
@@ -209,7 +210,8 @@ const Admin = () => {
             { key: "programs", label: "Programs", content: <AdminPrograms /> },
             { key: "exercises", label: "Exercise Library", content: <AdminExerciseLibrary /> },
             { key: "protocols", label: "Protocols", content: <AdminProtocols /> },
-            { key: "batch", label: "AI Generator", content: <AdminBatchGenerator /> },
+            { key: "batch", label: "AI Workouts", content: <AdminBatchGenerator /> },
+            { key: "exercise-gen", label: "AI Exercises", content: <AdminExerciseGenerator /> },
             { key: "ai-programs", label: "AI Programs", content: <AdminProgramCreator /> },
             { key: "ai-queue", label: "AI Queue", content: <AdminAiQueue /> },
             { key: "ai-toolkit", label: "AI Toolkit", content: <AdminAiToolkit /> },
