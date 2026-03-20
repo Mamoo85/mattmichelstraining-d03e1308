@@ -191,7 +191,7 @@ const TrialWelcome = () => {
                 onClick={() => setSelectedPath("basic")}
                 icon={User}
                 title="Basic Trial"
-                charge="$14.99/mo after trial"
+                charge="$12.99/mo after trial"
                 desc="Exercise library, monthly focus, challenges, and workout logging."
                 badge={null}
                 warning="No child invite · No custom program"
