@@ -34,6 +34,8 @@ const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTrac
   const { hasAccess: canFlag } = useTierAccess("flag_coach");
   const [ghostData, setGhostData] = useState<GhostSet[]>([]);
   const [completedSets, setCompletedSets] = useState<Set<number>>(new Set());
+  const [justPopped, setJustPopped] = useState<number | null>(null);
+  const [confettiSet, setConfettiSet] = useState<number | null>(null);
 
   // Fetch ghost data (previous performance) for this exercise
   useEffect(() => {
