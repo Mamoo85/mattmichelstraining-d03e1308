@@ -8,11 +8,17 @@ const corsHeaders = {
 };
 
 const PRODUCT_TIER_MAP: Record<string, string> = {
+  // Current (prod_UBI* — latest Stripe products)
+  "prod_UBI78IQsBpyfNw": "basic",
+  "prod_UBI7Wdb3liTxiF": "foundation",
+  "prod_UBI8SV9Fa6CibX": "custom",
+  "prod_UBI8mP9jA5rV3U": "team_elite",
+  // Previous generation (prod_UAl*)
   "prod_UAlStH84vrByST": "basic",
   "prod_UAlTgNGJWmREZL": "foundation",
   "prod_UAlTkDlrDfDije": "custom",
   "prod_UAlUIuvjHBjtNL": "team_elite",
-  // Legacy product IDs (keep for existing subscribers during transition)
+  // Legacy (prod_U9p*)
   "prod_U9ppSReG0j0RIr": "basic",
   "prod_U9pqrtuc44EE4A": "foundation",
   "prod_U9pqNqVuxYD6kl": "custom",
