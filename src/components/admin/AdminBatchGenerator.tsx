@@ -506,13 +506,51 @@ const AdminBatchGenerator = () => {
                             >
                               <Trash2 size={12} />
                             </button>
-                            <div className="col-span-2">
+                            <div className="col-span-2 space-y-1.5">
                               <Input
                                 value={ex.notes || ""}
                                 onChange={(e) => updateExercise(wIdx, ex._origIdx, "notes", e.target.value)}
-                                placeholder="Coaching cue…"
+                                placeholder="Coaching cue (SS/BASL reference)…"
                                 className="bg-background text-xs text-muted-foreground"
                               />
+                              {(ex.the_why || ex.coaching_reference) && (
+                                <div className="flex items-start gap-2">
+                                  <Textarea
+                                    value={ex.the_why || ""}
+                                    onChange={(e) => updateExercise(wIdx, ex._origIdx, "the_why", e.target.value)}
+                                    placeholder="Matt's Why — why this exercise matters here…"
+                                    rows={2}
+                                    className="bg-background text-xs text-muted-foreground flex-1"
+                                  />
+                                  {ex.coaching_reference && (
+                                    <Badge
+                                      variant="outline"
+                                      className={
+                                        ex.coaching_reference === "Starting Strength"
+                                          ? "bg-blue-500/10 text-blue-400 border-blue-500/30 shrink-0 text-[9px]"
+                                          : ex.coaching_reference === "Becoming a Supple Leopard"
+                                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30 shrink-0 text-[9px]"
+                                          : ex.coaching_reference === "McGill"
+                                          ? "bg-amber-500/10 text-amber-400 border-amber-500/30 shrink-0 text-[9px]"
+                                          : "bg-primary/10 text-primary border-primary/30 shrink-0 text-[9px]"
+                                      }
+                                    >
+                                      📖 {ex.coaching_reference}
+                                    </Badge>
+                                  )}
+                                </div>
+                              )}
+                              {!ex.the_why && !ex.coaching_reference && (
+                                <button
+                                  onClick={() => {
+                                    updateExercise(wIdx, ex._origIdx, "the_why", "");
+                                    updateExercise(wIdx, ex._origIdx, "coaching_reference", "Coach Matt");
+                                  }}
+                                  className="text-[9px] text-muted-foreground hover:text-primary flex items-center gap-1"
+                                >
+                                  <Plus size={8} /> Add Why & Reference
+                                </button>
+                              )}
                             </div>
                           </div>
                         ))}
