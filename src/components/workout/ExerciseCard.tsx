@@ -236,17 +236,45 @@ const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTrac
                     "placeholder:text-muted-foreground/30"
                   )}
                 />
-                <button
-                  onClick={() => completeSet(si)}
-                  className={cn(
-                    "h-10 w-10 flex items-center justify-center rounded-full transition-all duration-300 mx-auto",
-                    isCompleted
-                      ? "bg-emerald-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.4)] scale-105"
-                      : "border border-white/[0.1] text-muted-foreground/40 hover:border-primary/40 hover:text-primary/60"
+                <div className="relative">
+                  <button
+                    onClick={() => completeSet(si)}
+                    className={cn(
+                      "h-10 w-10 flex items-center justify-center rounded-full transition-all duration-300 mx-auto",
+                      justPopped === si && "animate-set-pop",
+                      isCompleted
+                        ? "bg-emerald-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.4)] scale-105"
+                        : "border border-white/[0.1] text-muted-foreground/40 hover:border-primary/40 hover:text-primary/60"
+                    )}
+                  >
+                    <Check size={16} strokeWidth={isCompleted ? 3 : 2} />
+                  </button>
+                  {confettiSet === si && (
+                    <span className="absolute inset-0 pointer-events-none" aria-hidden>
+                      {Array.from({ length: 20 }).map((_, i) => {
+                        const angle = (i / 20) * 360;
+                        const dist = 18 + Math.random() * 14;
+                        const x = Math.cos((angle * Math.PI) / 180) * dist;
+                        const y = Math.sin((angle * Math.PI) / 180) * dist;
+                        const colors = ["#10b981", "#f59e0b", "#3b82f6", "#ef4444", "#a855f7"];
+                        return (
+                          <span
+                            key={i}
+                            className="absolute left-1/2 top-1/2 w-1.5 h-1.5 rounded-full animate-confetti-burst"
+                            style={{
+                              "--confetti-x": `${x}px`,
+                              "--confetti-y": `${y}px`,
+                              "--confetti-r": `${Math.random() * 360}deg`,
+                              backgroundColor: colors[i % colors.length],
+                              marginLeft: -3,
+                              marginTop: -3,
+                            } as React.CSSProperties}
+                          />
+                        );
+                      })}
+                    </span>
                   )}
-                >
-                  <Check size={16} strokeWidth={isCompleted ? 3 : 2} />
-                </button>
+                </div>
               </div>
             );
           })}
