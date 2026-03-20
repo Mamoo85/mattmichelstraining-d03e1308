@@ -60,10 +60,9 @@ const HeroSection = () => {
                 src={m2Logo}
                 alt="M² Training"
                 width={224}
-                height={224}
                 fetchPriority="high"
                 decoding="sync"
-                className="w-36 h-36 md:w-48 md:h-48 lg:w-56 lg:h-56 object-contain mb-4"
+                className="w-36 md:w-48 lg:w-56 h-auto object-contain mb-4"
               />
 
               {/* ── Impact Stats Bar ── */}
