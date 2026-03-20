@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import SEOHead from "@/components/SEOHead";
+import SEOHead from "@/components/layout/SEOHead";
 import { Check, X as XIcon, Star, Zap, Shield, Crown, Users, ArrowRight, Loader2, Tag, ChevronDown, ChevronUp, Calendar } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
-import AppNavbar from "@/components/AppNavbar";
+import AppNavbar from "@/components/layout/AppNavbar";
 import { useAuth, TIERS, TierKey, TIER_DISCOUNTS } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { supabase } from "@/integrations/supabase/client";

@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
-import SEOHead from "@/components/SEOHead";
+import SEOHead from "@/components/layout/SEOHead";
 import { ExternalLink, ShoppingBag, ArrowRight, Ruler, Truck, RotateCcw, Star } from "lucide-react";
-import AppNavbar from "@/components/AppNavbar";
+import AppNavbar from "@/components/layout/AppNavbar";
 import { Link } from "react-router-dom";
 
 import merchTee from "@/assets/merch-classic-tee.png";

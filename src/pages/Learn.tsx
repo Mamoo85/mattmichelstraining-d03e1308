@@ -1,5 +1,5 @@
 import { useState } from "react";
-import SEOHead from "@/components/SEOHead";
+import SEOHead from "@/components/layout/SEOHead";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
@@ -9,7 +9,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
-import AppNavbar from "@/components/AppNavbar";
+import AppNavbar from "@/components/layout/AppNavbar";
 import MonthlyFocus from "@/components/landing/MonthlyFocus";
 import { useSectionVisible } from "@/hooks/useSiteContent";
 import TrialCTA from "@/components/TrialCTA";

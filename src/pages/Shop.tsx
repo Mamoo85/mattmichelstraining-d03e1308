@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import SEOHead from "@/components/SEOHead";
-import AppNavbar from "@/components/AppNavbar";
+import SEOHead from "@/components/layout/SEOHead";
+import AppNavbar from "@/components/layout/AppNavbar";
 import StoreGettingStarted from "@/components/store/StoreGettingStarted";
 import StoreTab from "@/components/store/StoreTab";
 import ExerciseLibrary from "@/components/ExerciseLibrary";

@@ -1,4 +1,4 @@
-import AppNavbar from "@/components/AppNavbar";
+import AppNavbar from "@/components/layout/AppNavbar";
 import { useAuth, TIERS } from "@/hooks/useAuth";
 import { useTrialStatus } from "@/hooks/useTrialStatus";
 import TrialPaywallModal from "@/components/TrialPaywallModal";
@@ -8,7 +8,7 @@ import { Link } from "react-router-dom";
 import { Loader2, Crown, User, Dumbbell, Play } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import PwaInstallBanner from "@/components/PwaInstallBanner";
+import PwaInstallBanner from "@/components/layout/PwaInstallBanner";
 import StudioCheckIn from "@/components/StudioCheckIn";
 import { safeLocalStorage } from "@/lib/browserStorage";
 

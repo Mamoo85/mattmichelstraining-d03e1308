@@ -9,11 +9,11 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
 import { TimerProvider, useTimer } from "@/hooks/useTimer";
 import { OfflineSyncProvider } from "@/hooks/useOfflineSync";
-import ProtectedRoute from "@/components/ProtectedRoute";
+import ProtectedRoute from "@/components/layout/ProtectedRoute";
 import SubscriptionGuard from "@/components/SubscriptionGuard";
-import ScrollToTop from "@/components/ScrollToTop";
-import ErrorBoundary from "@/components/ErrorBoundary";
-import OfflineBadge from "@/components/OfflineBadge";
+import ScrollToTop from "@/components/layout/ScrollToTop";
+import ErrorBoundary from "@/components/layout/ErrorBoundary";
+import OfflineBadge from "@/components/layout/OfflineBadge";
 import { useAuth } from "@/hooks/useAuth";
 import { useReferralCapture } from "@/hooks/useReferral";
 import { safeLocalStorage } from "@/lib/browserStorage";
@@ -34,7 +34,7 @@ function lazyRetry(importFn: () => Promise<any>, retries = 3): ReturnType<typeof
   );
 }
 
-const AnnouncementBanner = lazyRetry(() => import("@/components/AnnouncementBanner"));
+const AnnouncementBanner = lazyRetry(() => import("@/components/layout/AnnouncementBanner"));
 const IntervalTimer = lazyRetry(() => import("@/components/workout/IntervalTimer"));
 const ActiveWorkoutZone = lazyRetry(() => import("@/components/workout/ActiveWorkoutZone"));
 

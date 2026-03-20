@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useAuth, TIERS, TierKey, TIER_DISCOUNTS } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import AppNavbar from "@/components/AppNavbar";
-import TechSupportButton from "@/components/TechSupportButton";
+import AppNavbar from "@/components/layout/AppNavbar";
+import TechSupportButton from "@/components/layout/TechSupportButton";
 import SupportTicketForm from "@/components/SupportTicketForm";
 import PrivacySettingsCard from "@/components/PrivacySettingsCard";
 import { useIsAdmin } from "@/hooks/useIsAdmin";

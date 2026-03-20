@@ -1,4 +1,4 @@
-import AppNavbar from "@/components/AppNavbar";
+import AppNavbar from "@/components/layout/AppNavbar";
 import CoachMessaging from "@/components/CoachMessaging";
 import PaywallGate from "@/components/PaywallGate";
 

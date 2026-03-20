@@ -1,5 +1,5 @@
-import AppNavbar from "@/components/AppNavbar";
-import SEOHead from "@/components/SEOHead";
+import AppNavbar from "@/components/layout/AppNavbar";
+import SEOHead from "@/components/layout/SEOHead";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { useContentMap } from "@/hooks/useSiteContent";

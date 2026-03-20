@@ -6,7 +6,7 @@ import {
   Users, User, AlertTriangle, Star, Video, Calendar, Upload,
   CheckCircle2, CreditCard, MessageSquare, Camera,
 } from "lucide-react";
-import AppNavbar from "@/components/AppNavbar";
+import AppNavbar from "@/components/layout/AppNavbar";
 import { useAuth, TIERS } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
