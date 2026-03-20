@@ -270,7 +270,7 @@ const Admin = () => {
             { key: "batch", label: "AI Workouts", content: <AdminBatchGenerator /> },
             { key: "exercise-gen", label: "AI Exercises", content: <AdminExerciseGenerator /> },
             { key: "ai-programs", label: "AI Programs", content: <AdminProgramCreator /> },
-            { key: "ai-queue", label: "AI Queue", content: <AdminAiQueue /> },
+            { key: "ai-queue", label: <span className="flex items-center gap-1">AI Queue{pendingAiQueueCount > 0 && <Badge variant="destructive" className="text-[8px] px-1.5 py-0 min-w-[18px] h-4">{pendingAiQueueCount}</Badge>}</span>, content: <AdminAiQueue /> },
             { key: "ai-toolkit", label: "AI Toolkit", content: <AdminAiToolkit /> },
             { key: "recovery", label: "Recovery Map", content: <AdminRecoveryHeatmap /> },
             { key: "monthly", label: "Monthly Focus", content: <AdminMonthlyFocus /> },
