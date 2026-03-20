@@ -43,12 +43,7 @@ const HeroSection = () => {
       <div className="container relative z-10 pt-20 pb-12">
         {/* ─── 1. HERO — Identity & Proof ─── */}
         {showHero && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4 }}
-            className="py-8 md:py-16"
-          >
+          <div className="py-8 md:py-16 animate-[fadeIn_0.4s_ease-out]">
             <div className="flex flex-col items-center text-center mb-6">
               <img
                 src={m2Logo}
@@ -63,17 +58,14 @@ const HeroSection = () => {
               {/* ── Impact Stats Bar ── */}
               <div className="flex items-center justify-center gap-4 sm:gap-8 mb-5">
                 {STATS.map((s) => (
-                  <motion.div
+                  <div
                     key={s.label}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2, duration: 0.4 }}
-                    className="flex flex-col items-center"
+                    className="flex flex-col items-center animate-[fadeInUp_0.4s_ease-out_0.2s_both]"
                   >
                     <s.icon size={14} className="text-primary mb-1" />
                     <span className="text-lg sm:text-xl font-black text-primary font-mono leading-none">{s.value}</span>
                     <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mt-0.5">{s.label}</span>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
 
@@ -106,8 +98,10 @@ const HeroSection = () => {
             </div>
 
             {/* Audience Router */}
-            <AudienceSelector />
-          </motion.div>
+            <Suspense fallback={null}>
+              <AudienceSelector />
+            </Suspense>
+          </div>
         )}
 
         {/* Below-the-fold lazy sections */}
