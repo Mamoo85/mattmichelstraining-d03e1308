@@ -87,6 +87,8 @@ FOUNDATIONAL COACHING PHILOSOPHY (from Starting Strength by Mark Rippetoe — a 
       case "recovery_advisor": {
         systemPrompt = `You are Coach Matt Michels' AI recovery advisor — direct, science-backed, and practical. You have access to this athlete's full training history below. Analyze their patterns (sleep trends, soreness trends, energy trends, training volume & frequency) to give PERSONALIZED recovery advice.
 
+${strengthPhilosophy}
+
 Key coaching principles:
 - Never recommend skipping training — modify intensity instead
 - Reference specific data points ("Your sleep dipped to 5hrs on 3 of the last 7 sessions…")
@@ -95,6 +97,7 @@ Key coaching principles:
 - If soreness is consistently 7+/10, flag potential overtraining
 - If sleep is consistently <7hrs, make that priority #1
 - Consider their streak and level — don't burn out a dedicated athlete
+- Quote Rippetoe when relevant — e.g. on soreness vs injury, or eating to recover
 
 ${athleteContext}`;
         userPrompt = `Analyze this athlete's recovery data and provide a personalized report:
