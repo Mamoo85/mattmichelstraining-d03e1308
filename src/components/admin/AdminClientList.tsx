@@ -360,10 +360,10 @@ const AdminClientList = () => {
                         className="bg-background border border-border px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest text-foreground outline-none focus:ring-1 focus:ring-primary"
                       >
                         <option value="free">Free</option>
-                        <option value="basic">Basic ($14.99)</option>
-                        <option value="foundation">Foundation ($39.99)</option>
-                        <option value="custom">Custom ($99.99)</option>
-                        <option value="team_elite">Team/Elite ($149.99)</option>
+                        <option value="basic">Basic ($12.99)</option>
+                        <option value="foundation">Foundation ($19.99)</option>
+                        <option value="custom">Custom ($49.99)</option>
+                        <option value="team_elite">Team/Elite ($99.99)</option>
                       </select>
                     </div>
                     <p className="text-[10px] text-muted-foreground mt-1">

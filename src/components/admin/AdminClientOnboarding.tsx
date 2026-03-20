@@ -7,18 +7,18 @@ import { toast } from "@/hooks/use-toast";
 
 const PUBLISHED_DOMAIN = "https://m2training.lovable.app";
 
-// Custom tier: $99.99 → $19.99 = $80.00 off, forever
-// Basic tier: $14.99 → free = 100% off, forever
+// Custom tier: $49.99 → $19.99 = $30.00 off, forever
+// Basic tier: $12.99 → free = 100% off, forever
 const PRESETS = [
   {
     key: "vip",
     label: "Generate $20 VIP Link",
     desc: "Custom Tier → $19.99/mo forever",
-    detail: "Gives one client the full Custom tier ($99.99/mo) at $19.99/mo for life. Includes personalized programs, biomechanics analysis, and 1-on-1 assessments. Perfect for loyal in-person clients you want to keep at a VIP rate. Single-use — cannot be shared.",
+    detail: "Gives one client the full Custom tier ($49.99/mo) at $19.99/mo for life. Includes custom 8-week programs, online coaching, and 20% off in-person training. Perfect for loyal clients you want to keep at a VIP rate. Single-use — cannot be shared.",
     icon: Crown,
     params: {
       discount_type: "fixed",
-      discount_value: 80,
+      discount_value: 30,
       duration: "forever",
       max_redemptions: 1,
     },
@@ -28,7 +28,7 @@ const PRESETS = [
     key: "community",
     label: "Generate Free Basic Link",
     desc: "Basic Tier → $0/mo forever",
-    detail: "Gives one client the Basic tier ($14.99/mo) completely free, forever. Includes portal access, workout logging, unlimited form checks, and the exercise library. Use for young athletes, community members, or anyone you want to give free access to. Single-use — cannot be shared.",
+    detail: "Gives one client the Basic tier ($12.99/mo) completely free, forever. Includes portal access, workout logging, unlimited form checks, and the exercise library. Use for young athletes, community members, or anyone you want to give free access to. Single-use — cannot be shared.",
     icon: Users,
     params: {
       discount_type: "percent",

@@ -16,22 +16,22 @@ const OnlineServices = () => (
       <div className="bg-card shadow-m2 p-4">
         <span className="text-[11px] font-bold uppercase tracking-widest text-primary block mb-1">Basic</span>
         <span className="text-lg font-mono font-bold text-foreground block">$12.99<span className="text-xs text-muted-foreground font-normal">/mo</span></span>
-        <p className="text-[11px] text-muted-foreground mt-1">Full 85+ exercise library filtered by level, sport & focus.</p>
+        <p className="text-[11px] text-muted-foreground mt-1">Full 200+ exercise library filtered by level, sport & focus.</p>
       </div>
       <div className="bg-card shadow-m2 p-4 border-2 border-primary/30 relative">
         <div className="absolute -top-2 right-2 bg-primary text-primary-foreground text-[8px] font-bold uppercase px-2 py-0.5">Popular</div>
-        <span className="text-[11px] font-bold uppercase tracking-widest text-primary block mb-1">Pro</span>
-        <span className="text-lg font-mono font-bold text-foreground block">$25.99<span className="text-xs text-muted-foreground font-normal">/mo</span></span>
-        <p className="text-[11px] text-muted-foreground mt-1">Custom programs + Fix It rehab + form review.</p>
+        <span className="text-[11px] font-bold uppercase tracking-widest text-primary block mb-1">Foundation</span>
+        <span className="text-lg font-mono font-bold text-foreground block">$19.99<span className="text-xs text-muted-foreground font-normal">/mo</span></span>
+        <p className="text-[11px] text-muted-foreground mt-1">8-week programs + Fix It rehab + coach form review.</p>
       </div>
       <div className="bg-card shadow-m2 p-4">
-        <span className="text-[11px] font-bold uppercase tracking-widest text-primary block mb-1">Elite</span>
-        <span className="text-lg font-mono font-bold text-foreground block">$42.99<span className="text-xs text-muted-foreground font-normal">/mo</span></span>
-        <p className="text-[11px] text-muted-foreground mt-1">Monthly 1-on-1 check-ins + priority coaching + DMs.</p>
+        <span className="text-[11px] font-bold uppercase tracking-widest text-primary block mb-1">Custom</span>
+        <span className="text-lg font-mono font-bold text-foreground block">$49.99<span className="text-xs text-muted-foreground font-normal">/mo</span></span>
+        <p className="text-[11px] text-muted-foreground mt-1">Custom 8-week program + direct coaching + 20% off in-person.</p>
       </div>
       <div className="bg-card shadow-m2 p-4">
         <span className="text-[11px] font-bold uppercase tracking-widest text-primary block mb-1">Team</span>
-        <span className="text-lg font-mono font-bold text-foreground block">$84.99<span className="text-xs text-muted-foreground font-normal">/mo</span></span>
+        <span className="text-lg font-mono font-bold text-foreground block">$99.99<span className="text-xs text-muted-foreground font-normal">/mo</span></span>
         <p className="text-[11px] text-muted-foreground mt-1">Full-roster programming. Any sport, any state.</p>
       </div>
     </div>

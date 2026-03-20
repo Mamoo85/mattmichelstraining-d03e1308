@@ -57,15 +57,15 @@ const TIER_CARDS: {
     highlight: true,
     features: [
       "Everything in Foundation, plus…",
-      "A program built just for you by Coach Matt",
-      "In-person or online movement assessment ($50 value — optional)",
+      "Custom 8-week program built by Matt — any age, any goal",
+      "Help every single step of the way",
+      "20% off in-person training if you want to learn it first (optional)",
       "Direct message Coach Matt anytime",
       "🎁 Gift a training session to a friend",
-      "Fastest response times on form checks",
     ],
     cta: "Go Custom",
-    subtitle: "Your own program from a 20-year coaching vet — for less than one session.",
-    badge: "Includes a $50 In-Person or Online Session (Optional)",
+    subtitle: "Your own 8-week program from a 20-year coaching vet. Come in or do it all online — totally up to you.",
+    badge: "20% Off In-Person Sessions (Optional — Train Online or In Person)",
   },
   {
     key: "team_elite",
@@ -150,12 +150,12 @@ const Pricing = () => {
     <div className="min-h-screen bg-background">
       <SEOHead
         title="Pricing — Affordable Youth Strength Training"
-        description="Online strength training from $12.99/mo. In-person sessions from $50. Custom programs from $20. 14-day free trial. No contracts."
+        description="Online strength training from $12.99/mo. Custom 8-week programs from $49.99/mo. 14-day free trial. No contracts."
         path="/pricing"
       />
       <AppNavbar />
       <div className="container pt-24 pb-16">
-        {/* ═══════════ In-Person Hero Banner ═══════════ */}
+        {/* ═══════════ Online Training Hero ═══════════ */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -165,24 +165,24 @@ const Pricing = () => {
           <div className="relative p-6 sm:p-8 space-y-4">
             <div className="flex items-center gap-2">
               <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-primary bg-primary/10 border border-primary/20 px-2.5 py-1">
-                Grosse Pointe Park, MI
+                100% Online · Any State
               </span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-foreground leading-tight">
               Train With Matt.<br />
-              <span className="text-primary">In Person. One-on-One.</span>
+              <span className="text-primary">Online. Affordable. Real Coaching.</span>
             </h2>
             <p className="text-sm text-muted-foreground max-w-lg leading-relaxed">
-              Start with a monthly 1-on-1 session. Matt builds your foundation, tracks your movement with
-              <strong className="text-foreground"> advanced biomechanics technology</strong>, and programs
-              everything around what your body actually needs. Add sessions at a discount as you grow.
+              20 years of coaching delivered to your phone. Every plan is month-to-month with a
+              <strong className="text-foreground"> 14-day free trial</strong>. Cancel anytime. Custom members
+              can come train in person at 20% off — or do it all online. Totally up to you.
             </p>
             <div className="flex flex-wrap gap-3 pt-1">
               <Link
-                to="/schedule"
+                to="/auth?redirect=/trial-welcome"
                 className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
               >
-                <Calendar size={14} /> Book Your First Session
+                Start 14-Day Free Trial
               </Link>
               <a
                 href="mailto:matthewmichels4@gmail.com?subject=Training%20Inquiry"
@@ -202,8 +202,8 @@ const Pricing = () => {
           className="bg-primary/5 border border-primary/15 p-4 md:p-5 mb-8 max-w-3xl mx-auto"
         >
           <p className="text-xs text-muted-foreground leading-relaxed text-center">
-            <span className="text-foreground font-bold">1-on-1 training without the 1-on-1 price.</span>{" "}
-            {cms.value_banner || "In-gym personal training averages $40–$150/session. Online coaching packages run $100–$300/mo. Matt's subscriptions start at $14.99/mo — same 20 years of expertise, same personalized approach, for athletes of every age. No contracts, no middleman, available in any state."}
+            <span className="text-foreground font-bold">Real coaching without the premium price tag.</span>{" "}
+            {cms.value_banner || "Online coaching packages run $100–$300/mo. Matt's subscriptions start at $12.99/mo — same 20 years of expertise, same personalized approach, for athletes of every age. No contracts, no middleman, available in any state."}
           </p>
         </motion.div>
 

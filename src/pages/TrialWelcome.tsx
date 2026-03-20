@@ -75,8 +75,8 @@ const TrialWelcome = () => {
   const canSelectProgram = checkoutDone;
 
   const autoChargeLabel = selectedPath === "basic"
-    ? "Basic membership at $14.99/mo"
-    : "Foundation membership at $39.99/mo";
+    ? "Basic membership at $12.99/mo"
+    : "Foundation membership at $19.99/mo";
 
   const handleStartTrial = async () => {
     if (!user) {
@@ -191,7 +191,7 @@ const TrialWelcome = () => {
                 onClick={() => setSelectedPath("basic")}
                 icon={User}
                 title="Basic Trial"
-                charge="$14.99/mo after trial"
+                charge="$12.99/mo after trial"
                 desc="Exercise library, monthly focus, challenges, and workout logging."
                 badge={null}
                 warning="No child invite · No custom program"
@@ -201,7 +201,7 @@ const TrialWelcome = () => {
                 onClick={() => setSelectedPath("parent")}
                 icon={Users}
                 title="Parent / Youth Dev"
-                charge="$39.99/mo (Foundation) after trial"
+                charge="$19.99/mo (Foundation) after trial"
                 desc="Everything in Basic + custom programming, Fix It library, coach form review, and child invite links."
                 badge="Includes child linking"
                 warning={null}
@@ -212,7 +212,7 @@ const TrialWelcome = () => {
                 onClick={() => setSelectedPath("foundation")}
                 icon={Star}
                 title="Adult Foundation Trial"
-                charge="$39.99/mo (Foundation) after trial"
+                charge="$19.99/mo (Foundation) after trial"
                 desc="Everything in Basic + 8-week periodized training, Fix It library, and direct coach form review."
                 badge={null}
                 warning="No child invite on this plan"
