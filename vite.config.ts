@@ -39,6 +39,7 @@ export default defineConfig(({ mode }) => ({
     },
   },
   plugins: [
+    preloadLcpImage(),
     react(),
     mode === "development" && componentTagger(),
     ViteImageOptimizer({
