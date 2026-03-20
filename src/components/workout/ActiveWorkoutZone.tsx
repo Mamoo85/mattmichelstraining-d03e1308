@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { format } from "date-fns";
-import { Plus, X, CheckCircle, Loader2, CalendarIcon, Dumbbell, Clock } from "lucide-react";
+import { Plus, X, CheckCircle, Loader2, CalendarIcon, Dumbbell, Clock, Camera } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -88,6 +88,9 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
   const [restSeconds, setRestSeconds] = useState(0);
   const restRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [workoutTitle, setWorkoutTitle] = useState(initialContext?.title || "Workout");
+  const [adaptLoading, setAdaptLoading] = useState(false);
+  const [adaptBanner, setAdaptBanner] = useState<string | null>(null);
+  const adaptInputRef = useRef<HTMLInputElement>(null);
 
   // Auto rest timer — countdown triggered by set completion
   const startRestTimer = useCallback((duration = 90) => {
@@ -110,6 +113,74 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
     restRef.current = null;
     setRestSeconds(0);
   }, []);
+
+  // ── Adapt to Equipment (Vision AI) ──
+  const handleAdaptCapture = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || exercises.length === 0) return;
+    e.target.value = "";
+
+    setAdaptLoading(true);
+    setAdaptBanner(null);
+    try {
+      // Convert image to base64
+      const buffer = await file.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+      let binary = "";
+      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+      const imageBase64 = btoa(binary);
+
+      // Build simple workout JSON for the AI
+      const workoutJson = exercises.map((ex) => ({
+        title: ex.exerciseTitle,
+        sets: ex.sets.length,
+        reps: ex.sets[0]?.reps || 0,
+        notes: ex.clientNotes || "",
+      }));
+
+      const { data, error } = await supabase.functions.invoke("adapt-workout-vision", {
+        body: { imageBase64, workout: workoutJson },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      const adaptedExercises = data?.exercises;
+      if (!adaptedExercises?.length) throw new Error("No adapted exercises returned");
+
+      // Map adapted exercises back onto the current workout
+      let swapCount = 0;
+      const updated = exercises.map((ex, i) => {
+        const adapted = adaptedExercises[i];
+        if (!adapted) return ex;
+        if (adapted.was_swapped) {
+          swapCount++;
+          return {
+            ...ex,
+            exerciseId: "", // Clear original ID since it's a new exercise
+            exerciseTitle: adapted.adapted_title,
+            clientNotes: adapted.swap_reason
+              ? `Adapted: ${adapted.swap_reason}${ex.clientNotes ? " | " + ex.clientNotes : ""}`
+              : ex.clientNotes,
+            sets: Array.from({ length: adapted.sets || ex.sets.length }, (_, si) => ({
+              set: si + 1,
+              reps: adapted.reps || ex.sets[0]?.reps || 0,
+              weight: 0,
+            })),
+          };
+        }
+        return ex;
+      });
+
+      setExercises(updated);
+      const summary = data.summary || `${swapCount} exercise${swapCount !== 1 ? "s" : ""} adapted`;
+      setAdaptBanner(summary);
+      toast.success("Workout adapted for available equipment");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to adapt workout");
+    } finally {
+      setAdaptLoading(false);
+    }
+  }, [exercises]);
 
   useEffect(() => {
     return () => { if (restRef.current) clearInterval(restRef.current); };
@@ -474,6 +545,26 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
             )}
           </div>
           <div className="flex items-center gap-1">
+            {exercises.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => adaptInputRef.current?.click()}
+                disabled={adaptLoading}
+                className="text-xs gap-1 text-muted-foreground hover:text-primary"
+                title="Adapt to Equipment"
+              >
+                {adaptLoading ? <Loader2 size={14} className="animate-spin" /> : <Camera size={14} />}
+              </Button>
+            )}
+            <input
+              ref={adaptInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={handleAdaptCapture}
+            />
             <Button
               variant="ghost"
               size="sm"
@@ -506,6 +597,25 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
 
         {/* Scrollable content */}
         <main className="flex-1 overflow-y-auto px-4 py-4 space-y-4 pb-[160px]">
+          {/* Adapt to Equipment Banner */}
+          {adaptBanner && (
+            <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/30 px-3 py-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <Camera size={14} className="text-emerald-500 shrink-0" />
+                <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest truncate">{adaptBanner}</span>
+              </div>
+              <button onClick={() => setAdaptBanner(null)} className="text-muted-foreground hover:text-foreground">
+                <X size={12} />
+              </button>
+            </div>
+          )}
+          {adaptLoading && (
+            <div className="flex items-center justify-center gap-2 py-3 bg-muted/50 border border-border">
+              <Loader2 size={14} className="animate-spin text-primary" />
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Analyzing equipment & adapting workout…</span>
+            </div>
+          )}
+
           {exercises.length === 0 && !showPicker && (
             <div className="flex flex-col items-center justify-center py-16 text-center space-y-4">
               <Dumbbell size={32} className="text-muted-foreground/30" />
