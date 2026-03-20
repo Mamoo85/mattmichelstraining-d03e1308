@@ -104,7 +104,7 @@ const DraftsQueue = () => {
             <div className="flex gap-1.5">
               <button
                 onClick={() => updateDraft.mutate({ id: d.id, status: "approved", admin_edit: editingId === d.id ? editText : undefined })}
-                className="flex items-center gap-1 bg-green-600 text-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest hover:opacity-90"
+                className="flex items-center gap-1 bg-primary text-primary-foreground px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest hover:opacity-90"
               >
                 <Check size={12} /> {editingId === d.id ? "Save & Approve" : "Approve"}
               </button>
