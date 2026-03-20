@@ -201,7 +201,7 @@ const TrialWelcome = () => {
                 onClick={() => setSelectedPath("parent")}
                 icon={Users}
                 title="Parent / Youth Dev"
-                charge="$39.99/mo (Foundation) after trial"
+                charge="$19.99/mo (Foundation) after trial"
                 desc="Everything in Basic + custom programming, Fix It library, coach form review, and child invite links."
                 badge="Includes child linking"
                 warning={null}
