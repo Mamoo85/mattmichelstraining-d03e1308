@@ -29,6 +29,7 @@ const AdminPrograms = lazy(() => import("@/components/admin/AdminPrograms"));
 const AdminExerciseLibrary = lazy(() => import("@/components/admin/AdminExerciseLibrary"));
 const AdminProtocols = lazy(() => import("@/components/admin/AdminProtocols"));
 const AdminBatchGenerator = lazy(() => import("@/components/admin/AdminBatchGenerator"));
+const AdminExerciseGenerator = lazy(() => import("@/components/admin/AdminExerciseGenerator"));
 const AdminProgramCreator = lazy(() => import("@/components/admin/AdminProgramCreator"));
 const AdminAiQueue = lazy(() => import("@/components/admin/AdminAiQueue"));
 const AdminRecoveryHeatmap = lazy(() => import("@/components/admin/AdminRecoveryHeatmap"));
