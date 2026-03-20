@@ -1,42 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://m2training.com/</loc>
+    <loc>https://www.mattmichelstraining.com/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://m2training.com/about</loc>
+    <loc>https://www.mattmichelstraining.com/about</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://m2training.com/for-parents</loc>
+    <loc>https://www.mattmichelstraining.com/for-parents</loc>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://m2training.com/pricing</loc>
+    <loc>https://www.mattmichelstraining.com/pricing</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://m2training.com/shop</loc>
+    <loc>https://www.mattmichelstraining.com/shop</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://m2training.com/learn</loc>
+    <loc>https://www.mattmichelstraining.com/learn</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://m2training.com/merch</loc>
+    <loc>https://www.mattmichelstraining.com/merch</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://m2training.com/schedule</loc>
+    <loc>https://www.mattmichelstraining.com/schedule</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
