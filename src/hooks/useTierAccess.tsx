@@ -12,7 +12,6 @@ const TIER_COLUMN_MAP: Record<string, string> = {
   foundation: "tier_foundation",
   custom: "tier_custom",
   team_elite: "tier_team_elite",
-  vip: "tier_vip",
 };
 
 export const getTierLevel = (tier: TierKey | null): number => {
@@ -25,7 +24,7 @@ export const hasTierAccess = (userTier: TierKey | null, requiredTier: TierKey): 
 };
 
 export const useTierAccess = (featureKey: string) => {
-  const { subscriptionTier, isVip } = useAuth();
+  const { subscriptionTier } = useAuth();
   const { isAdmin } = useIsAdmin();
 
   const { data: features = [] } = useQuery({
@@ -46,11 +45,6 @@ export const useTierAccess = (featureKey: string) => {
 
   const feature = features.find((f: any) => f.feature_key === featureKey);
   if (!feature) return { hasAccess: false, loading: false };
-
-  // VIP users check the tier_vip column
-  if (isVip) {
-    return { hasAccess: !!(feature as any).tier_vip, loading: false };
-  }
 
   // No subscription → check free tier access
   if (!subscriptionTier) {

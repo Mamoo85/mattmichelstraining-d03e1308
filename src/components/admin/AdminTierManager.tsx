@@ -11,7 +11,7 @@ import {
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Trash2, Save, ShieldCheck, Zap, Star, Users, Loader2, ChevronDown, Pencil, Eye, Crown, Copy, Link } from "lucide-react";
+import { Plus, Trash2, Save, ShieldCheck, Zap, Star, Users, Loader2, ChevronDown, Pencil, Eye, Copy, Link } from "lucide-react";
 
 const TIERS = [
   { key: "tier_free", label: "Free", icon: Eye, color: "text-muted-foreground" },
@@ -19,7 +19,6 @@ const TIERS = [
   { key: "tier_foundation", label: "Foundation", icon: Zap, color: "text-yellow-400" },
   { key: "tier_custom", label: "Custom", icon: ShieldCheck, color: "text-orange-400" },
   { key: "tier_team_elite", label: "Team/Elite", icon: Users, color: "text-green-400" },
-  { key: "tier_vip", label: "VIP", icon: Crown, color: "text-purple-400" },
 ] as const;
 
 type TierKey = typeof TIERS[number]["key"];
@@ -65,47 +64,10 @@ interface TierFeature {
   tier_foundation: boolean;
   tier_custom: boolean;
   tier_team_elite: boolean;
-  tier_vip: boolean;
   sort_order: number;
 }
 
-const VipInviteGenerator = () => {
-  const [generating, setGenerating] = useState(false);
-
-  const generateLink = async () => {
-    setGenerating(true);
-    try {
-      const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-      let code = "";
-      for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
-      const link = `${window.location.origin}/auth?ref=vip-${code}`;
-      await navigator.clipboard.writeText(link);
-      toast({ title: "VIP invite link copied!", description: link });
-    } catch {
-      toast({ title: "Failed to copy", variant: "destructive" });
-    } finally {
-      setGenerating(false);
-    }
-  };
-
-  return (
-    <div className="flex items-center gap-3 bg-muted/50 border border-border p-3">
-      <Crown size={16} className="text-purple-400 shrink-0" />
-      <div className="flex-1">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-foreground">VIP Invite</p>
-        <p className="text-[10px] text-muted-foreground">Generate a unique invite link for VIP clients. Admin-only, invite-only access.</p>
-      </div>
-      <button
-        onClick={generateLink}
-        disabled={generating}
-        className="flex items-center gap-1.5 px-3 py-2 text-[10px] font-bold uppercase tracking-widest bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/30 transition-all disabled:opacity-50 whitespace-nowrap"
-      >
-        <Link size={12} />
-        Generate & Copy Link
-      </button>
-    </div>
-  );
-};
+// VIP invite generator removed
 
 const AdminTierManager = () => {
   const queryClient = useQueryClient();
@@ -179,7 +141,6 @@ const AdminTierManager = () => {
 
   return (
     <div className="space-y-4">
-      <VipInviteGenerator />
 
       <div className="flex items-center justify-between">
         <div>

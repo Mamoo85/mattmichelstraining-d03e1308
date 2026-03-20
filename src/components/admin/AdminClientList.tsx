@@ -223,19 +223,7 @@ const AdminClientList = () => {
     onError: () => toast.error("Failed to update tier"),
   });
 
-  const toggleVipMutation = useMutation({
-    mutationFn: async ({ profileId, value, setBasic }: { profileId: string; value: boolean; setBasic?: boolean }) => {
-      const updates: any = { is_vip: value, updated_at: new Date().toISOString() };
-      if (value && setBasic) updates.subscription_tier = "basic";
-      const { error } = await supabase.from("profiles").update(updates).eq("id", profileId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-clients"] });
-      toast.success("VIP status updated");
-    },
-    onError: () => toast.error("Failed to update VIP status"),
-  });
+  // VIP system removed — tier override via Stripe sync is the single source of truth
 
   const extendTrialMutation = useMutation({
     mutationFn: async ({ profileId, days }: { profileId: string; days: number }) => {
@@ -380,7 +368,6 @@ const AdminClientList = () => {
         {[
           { label: "Total Clients", value: profiles.length },
           { label: "Pro Members", value: profiles.filter((p) => p.is_pro).length, highlight: true },
-          { label: "VIP Clients", value: profiles.filter((p: any) => p.is_vip).length, highlight: true },
           { label: "Active (7d)", value: activeUsers7d },
         ].map((s) => (
           <div key={s.label} className="bg-card shadow-m2 p-4">
@@ -413,9 +400,6 @@ const AdminClientList = () => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-sm font-bold text-foreground truncate">{profile.full_name || "No name"}</p>
-                    {(profile as any).is_vip && (
-                      <Badge variant="outline" className="text-[9px] uppercase tracking-widest border-primary text-primary"><Star size={8} className="mr-0.5 fill-primary" />VIP</Badge>
-                    )}
                     {profile.subscription_tier && profile.subscription_tier !== "free" && (
                       <Badge variant="outline" className="text-[9px] uppercase tracking-widest">{profile.subscription_tier}</Badge>
                     )}
@@ -489,33 +473,7 @@ const AdminClientList = () => {
                       </select>
                     </div>
                     <p className="text-[10px] text-muted-foreground mt-1">
-                      {(p as any).is_vip
-                        ? "VIP — tier is locked from Stripe sync."
-                        : "Warning: Stripe sync will overwrite this unless VIP is enabled."}
-                    </p>
-                  </div>
-
-                  {/* VIP Toggle */}
-                  <div className="bg-secondary/30 border border-border p-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Star size={14} className="text-primary" />
-                        <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">VIP In-Person Client</span>
-                      </div>
-                      <Switch
-                        checked={!!(p as any).is_vip}
-                        onCheckedChange={(checked) => {
-                          toggleVipMutation.mutate({
-                            profileId: p.id,
-                            value: checked,
-                            setBasic: checked && (!p.subscription_tier || p.subscription_tier === "free"),
-                          });
-                          setSelectedProfile({ ...p, is_vip: checked, subscription_tier: checked && (!p.subscription_tier || p.subscription_tier === "free") ? "basic" : p.subscription_tier });
-                        }}
-                      />
-                    </div>
-                    <p className="text-[10px] text-muted-foreground mt-1">
-                      VIP clients get free access at their assigned tier. Stripe sync is disabled for VIP users.
+                      Warning: Stripe sync will overwrite this on next check.
                     </p>
                   </div>
 
@@ -527,7 +485,7 @@ const AdminClientList = () => {
                     </div>
                     <button
                       onClick={() => {
-                        const link = `${window.location.origin}/auth?ref=vip`;
+                        const link = `${window.location.origin}/auth`;
                         navigator.clipboard.writeText(link);
                         toast.success("Invite link copied! Paste it into a text message.");
                       }}
@@ -537,7 +495,7 @@ const AdminClientList = () => {
                       Copy Invite Link for SMS
                     </button>
                     <p className="text-[10px] text-muted-foreground mt-1">
-                      Generates a signup link you can text to in-person clients. Mark them as VIP after they sign up.
+                      Send this to clients so they can create an account.
                     </p>
                   </div>
 
