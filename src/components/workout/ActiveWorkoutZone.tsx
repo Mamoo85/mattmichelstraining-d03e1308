@@ -92,7 +92,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
   const [adaptBanner, setAdaptBanner] = useState<string | null>(null);
   const adaptInputRef = useRef<HTMLInputElement>(null);
 
-  // Auto rest timer — countdown triggered by set completion
+  // Auto rest timer
   const startRestTimer = useCallback((duration = 90) => {
     if (restRef.current) clearInterval(restRef.current);
     setRestSeconds(duration);
@@ -114,7 +114,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
     setRestSeconds(0);
   }, []);
 
-  // ── Adapt to Equipment (Vision AI) ──
+  // Adapt to Equipment (Vision AI)
   const handleAdaptCapture = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || exercises.length === 0) return;
@@ -123,14 +123,12 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
     setAdaptLoading(true);
     setAdaptBanner(null);
     try {
-      // Convert image to base64
       const buffer = await file.arrayBuffer();
       const bytes = new Uint8Array(buffer);
       let binary = "";
       for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
       const imageBase64 = btoa(binary);
 
-      // Build simple workout JSON for the AI
       const workoutJson = exercises.map((ex) => ({
         title: ex.exerciseTitle,
         sets: ex.sets.length,
@@ -147,7 +145,6 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
       const adaptedExercises = data?.exercises;
       if (!adaptedExercises?.length) throw new Error("No adapted exercises returned");
 
-      // Map adapted exercises back onto the current workout
       let swapCount = 0;
       const updated = exercises.map((ex, i) => {
         const adapted = adaptedExercises[i];
@@ -156,7 +153,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
           swapCount++;
           return {
             ...ex,
-            exerciseId: "", // Clear original ID since it's a new exercise
+            exerciseId: "",
             exerciseTitle: adapted.adapted_title,
             clientNotes: adapted.swap_reason
               ? `Adapted: ${adapted.swap_reason}${ex.clientNotes ? " | " + ex.clientNotes : ""}`
@@ -186,10 +183,8 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
     return () => { if (restRef.current) clearInterval(restRef.current); };
   }, []);
 
-  // Check if auto-regulate is enabled for this user
   useEffect(() => {
     if (!user) { setAutoRegulateEnabled(false); return; }
-    // If resuming, skip readiness gate
     if (initialContext?.resumed) { setPhase("active"); setAutoRegulateEnabled(false); return; }
     supabase
       .from("profiles")
@@ -199,18 +194,15 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
       .then(({ data }) => {
         const enabled = (data as any)?.auto_regulate === true;
         setAutoRegulateEnabled(enabled);
-        // Only advance past intercept if we already have content loaded
         if (!enabled && hasInitialContent) setPhase("active");
       });
   }, [user, initialContext?.resumed, hasInitialContent]);
 
-  // Apply readiness adjustments to exercises
   const applyReadinessAdjustments = useCallback(async (result: ReadinessResult, currentExercises: LoggedExerciseData[]) => {
     if (result.weightAdjustmentPct === 0 && !result.swapsApplied) return currentExercises;
 
     let adjusted = [...currentExercises];
 
-    // Apply weight reduction based on logged 3RM/5RM or prescribed weight
     if (result.weightAdjustmentPct !== 0) {
       adjusted = adjusted.map(ex => ({
         ...ex,
@@ -221,7 +213,6 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
       }));
     }
 
-    // Swap barbell exercises for alternatives if sleep < 5h
     if (result.swapsApplied) {
       const exerciseIds = adjusted.filter(e => e.exerciseId).map(e => e.exerciseId);
       if (exerciseIds.length > 0) {
@@ -266,10 +257,8 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
 
   const handleReadinessComplete = useCallback(async (result: ReadinessResult) => {
     setReadinessResult(result);
-    // Apply adjustments to pre-loaded exercises
     const adjustedExercises = await applyReadinessAdjustments(result, exercises);
     setExercises(adjustedExercises);
-    // Pre-fill recovery sleep hours from readiness check
     setRecovery(prev => ({ ...prev, sleepHours: String(result.hoursSlept) }));
     setPhase("active");
   }, [exercises, applyReadinessAdjustments]);
@@ -278,7 +267,6 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
     setPhase("active");
   }, []);
 
-  // Timer — elapsed stored in ref, only synced on pause/unmount to avoid re-renders
   const elapsedRef = useRef(initialContext?.resumedElapsed || 0);
   const [timerAutoStart, setTimerAutoStart] = useState(hasInitialContent);
 
@@ -286,15 +274,13 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
     elapsedRef.current = seconds;
   }, []);
 
-  // Prevent body scroll
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = ""; };
   }, []);
 
-  // Auto-populate exercises from context on mount
   useEffect(() => {
-    if (initialContext?.resumed) return; // Already restored above
+    if (initialContext?.resumed) return;
     if (!initialContext?.exercises || initialContext.exercises.length === 0) return;
 
     const mapped: LoggedExerciseData[] = initialContext.exercises.map((ex) => ({
@@ -345,13 +331,11 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
     setExercises((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
-  // NLP Quick Log: auto-populate parsed sets into exercises
   const handleQuickLogParsed = useCallback((parsedSets: Array<{ exercise_name: string; weight_lbs: number; reps: number; rpe: number }>) => {
     setExercises((prev) => {
       const updated = [...prev];
 
       for (const parsed of parsedSets) {
-        // Try to match by exercise name (case-insensitive partial match)
         const matchIdx = parsed.exercise_name
           ? updated.findIndex((ex) =>
               ex.exerciseTitle.toLowerCase().includes(parsed.exercise_name.toLowerCase()) ||
@@ -360,38 +344,20 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
           : -1;
 
         if (matchIdx >= 0) {
-          // Find the first empty set (weight === 0) or append a new set
           const ex = updated[matchIdx];
           const emptySetIdx = ex.sets.findIndex((s) => s.weight === 0 && s.reps === 0);
           if (emptySetIdx >= 0) {
-            ex.sets[emptySetIdx] = {
-              ...ex.sets[emptySetIdx],
-              weight: parsed.weight_lbs,
-              reps: parsed.reps,
-            };
+            ex.sets[emptySetIdx] = { ...ex.sets[emptySetIdx], weight: parsed.weight_lbs, reps: parsed.reps };
           } else {
-            ex.sets.push({
-              set: ex.sets.length + 1,
-              weight: parsed.weight_lbs,
-              reps: parsed.reps,
-            });
+            ex.sets.push({ set: ex.sets.length + 1, weight: parsed.weight_lbs, reps: parsed.reps });
           }
         } else if (updated.length > 0) {
-          // No name match — fill the first exercise with an empty set
           const ex = updated[0];
           const emptySetIdx = ex.sets.findIndex((s) => s.weight === 0 && s.reps === 0);
           if (emptySetIdx >= 0) {
-            ex.sets[emptySetIdx] = {
-              ...ex.sets[emptySetIdx],
-              weight: parsed.weight_lbs,
-              reps: parsed.reps,
-            };
+            ex.sets[emptySetIdx] = { ...ex.sets[emptySetIdx], weight: parsed.weight_lbs, reps: parsed.reps };
           } else {
-            ex.sets.push({
-              set: ex.sets.length + 1,
-              weight: parsed.weight_lbs,
-              reps: parsed.reps,
-            });
+            ex.sets.push({ set: ex.sets.length + 1, weight: parsed.weight_lbs, reps: parsed.reps });
           }
         }
       }
@@ -400,7 +366,6 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
     });
   }, []);
 
-  // Pause handler
   const handlePause = useCallback(() => {
     const state = {
       title: workoutTitle,
@@ -417,16 +382,13 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
     onPause?.();
   }, [exercises, sessionNotes, recovery, date, workoutTitle, initialContext, onPause]);
 
-  // Finish handler
   const handleFinishClick = () => {
     if (saving) return;
-
     if (exercises.length === 0) {
       localStorage.removeItem("m2-paused-workout");
       onFinish();
       return;
     }
-
     setShowConfirm(true);
   };
 
@@ -471,7 +433,6 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
             setExercises(mapped);
           }
           setWorkoutTitle(ctx.title || "Workout");
-          // Check auto-regulate
           if (autoRegulateEnabled) {
             setPhase("readiness");
           } else {
@@ -528,34 +489,39 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
     );
   }
 
+  // Rest timer progress (circular)
+  const restProgress = restSeconds > 0 ? (restSeconds / 90) * 100 : 0;
+
   return (
     <>
       <div className="fixed inset-0 z-[100] bg-background flex flex-col">
-        {/* Top header */}
-        <header className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-border bg-background">
-          <div className="flex items-center gap-2 min-w-0">
-            <Dumbbell size={14} className="text-primary flex-shrink-0" />
-            <span className="text-xs font-bold uppercase tracking-widest text-primary truncate">
-              {workoutTitle}
-            </span>
-            {readinessResult && readinessResult.weightAdjustmentPct !== 0 && (
-              <span className="text-[9px] font-bold uppercase tracking-widest bg-primary/10 text-primary px-2 py-0.5 border border-primary/30 shrink-0">
-                {Math.abs(readinessResult.weightAdjustmentPct)}% adjusted
+        {/* Modern Header */}
+        <header className="shrink-0 flex items-center justify-between px-4 py-3 bg-gradient-to-b from-background to-background/80 backdrop-blur-sm">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="h-8 w-8 rounded-full bg-primary/15 text-primary flex items-center justify-center">
+              <Dumbbell size={16} />
+            </div>
+            <div className="min-w-0">
+              <span className="text-sm font-bold text-foreground truncate block leading-tight">
+                {workoutTitle}
               </span>
-            )}
+              {readinessResult && readinessResult.weightAdjustmentPct !== 0 && (
+                <span className="text-[10px] font-medium text-primary">
+                  {Math.abs(readinessResult.weightAdjustmentPct)}% adjusted
+                </span>
+              )}
+            </div>
           </div>
           <div className="flex items-center gap-1">
             {exercises.length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
+              <button
                 onClick={() => adaptInputRef.current?.click()}
                 disabled={adaptLoading}
-                className="text-xs gap-1 text-muted-foreground hover:text-primary"
+                className="h-9 w-9 flex items-center justify-center rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
                 title="Adapt to Equipment"
               >
-                {adaptLoading ? <Loader2 size={14} className="animate-spin" /> : <Camera size={14} />}
-              </Button>
+                {adaptLoading ? <Loader2 size={16} className="animate-spin" /> : <Camera size={16} />}
+              </button>
             )}
             <input
               ref={adaptInputRef}
@@ -565,21 +531,19 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
               className="hidden"
               onChange={handleAdaptCapture}
             />
-            <Button
-              variant="ghost"
-              size="sm"
+            <button
               onClick={() => setShowIntervalTimer(true)}
-              className="text-xs gap-1 text-muted-foreground hover:text-primary"
+              className="h-9 w-9 flex items-center justify-center rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
               title="Interval Timer"
             >
-              <Clock size={14} />
-            </Button>
+              <Clock size={16} />
+            </button>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="sm" className="text-xs font-mono gap-1">
-                  <CalendarIcon size={12} />
+                <button className="h-9 flex items-center gap-1.5 px-3 rounded-full text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
+                  <CalendarIcon size={14} />
                   {format(date, "MMM d")}
-                </Button>
+                </button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="end">
                 <Calendar
@@ -599,36 +563,43 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
         <main className="flex-1 overflow-y-auto px-4 py-4 space-y-4 pb-[160px]">
           {/* Adapt to Equipment Banner */}
           {adaptBanner && (
-            <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/30 px-3 py-2">
+            <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/20 px-4 py-3 rounded-xl">
               <div className="flex items-center gap-2 min-w-0">
                 <Camera size={14} className="text-emerald-500 shrink-0" />
-                <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest truncate">{adaptBanner}</span>
+                <span className="text-xs font-semibold text-emerald-400 truncate">{adaptBanner}</span>
               </div>
-              <button onClick={() => setAdaptBanner(null)} className="text-muted-foreground hover:text-foreground">
+              <button onClick={() => setAdaptBanner(null)} className="text-muted-foreground hover:text-foreground rounded-full h-7 w-7 flex items-center justify-center">
                 <X size={12} />
               </button>
             </div>
           )}
           {adaptLoading && (
-            <div className="flex items-center justify-center gap-2 py-3 bg-muted/50 border border-border">
+            <div className="flex items-center justify-center gap-2 py-4 bg-muted/30 border border-white/[0.06] rounded-xl">
               <Loader2 size={14} className="animate-spin text-primary" />
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Analyzing equipment & adapting workout…</span>
+              <span className="text-xs font-medium text-muted-foreground">Analyzing equipment & adapting workout…</span>
             </div>
           )}
 
           {exercises.length === 0 && !showPicker && (
-            <div className="flex flex-col items-center justify-center py-16 text-center space-y-4">
-              <Dumbbell size={32} className="text-muted-foreground/30" />
-              <div>
-                <h3 className="text-sm font-bold text-foreground mb-1">Ready to train</h3>
-                <p className="text-xs text-muted-foreground">Add exercises from the library to start logging your workout.</p>
+            <div className="flex flex-col items-center justify-center py-20 text-center space-y-5">
+              <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <Dumbbell size={28} className="text-primary/40" />
               </div>
-              <Button
+              <div>
+                <h3 className="text-lg font-bold text-foreground mb-1">Ready to train</h3>
+                <p className="text-sm text-muted-foreground">Add exercises from the library to start logging.</p>
+              </div>
+              <button
                 onClick={() => setShowPicker(true)}
-                className="gap-1.5 text-xs font-bold uppercase tracking-widest"
+                className={cn(
+                  "flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold",
+                  "bg-primary text-primary-foreground",
+                  "shadow-[0_0_20px_hsl(var(--primary)/0.3)] hover:shadow-[0_0_28px_hsl(var(--primary)/0.5)]",
+                  "transition-all active:scale-95"
+                )}
               >
-                <Plus size={14} /> Add Exercise
-              </Button>
+                <Plus size={16} /> Add Exercise
+              </button>
             </div>
           )}
 
@@ -658,7 +629,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
                 placeholder="Session notes (optional)…"
                 value={sessionNotes}
                 onChange={(e) => setSessionNotes(e.target.value)}
-                className="w-full bg-card border border-border p-4 pr-12 text-sm text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-primary outline-none min-h-[60px] resize-none"
+                className="w-full bg-card/80 border border-white/[0.06] rounded-2xl p-4 pr-12 text-sm text-foreground placeholder:text-muted-foreground/50 focus:ring-2 focus:ring-primary/40 outline-none min-h-[72px] resize-none shadow-lg transition-all"
               />
               <VoiceNoteButton
                 onTranscript={(t) => setSessionNotes((prev) => (prev ? prev + " " + t : t))}
@@ -670,57 +641,75 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
 
         {/* Quick Log NLP Bar */}
         {exercises.length > 0 && (
-          <div className="fixed bottom-[72px] left-0 right-0 z-50 px-4 pb-1">
+          <div className="fixed bottom-[80px] left-0 right-0 z-50 px-4 pb-1">
             <QuickLogBar exercises={exercises} onApplyParsed={handleQuickLogParsed} />
           </div>
         )}
 
-        {/* Command Bar */}
-        <footer className="fixed bottom-0 w-full z-50 bg-background/95 backdrop-blur-md border-t border-border px-4 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
-          {/* Rest Timer Banner */}
+        {/* Frosted Glass Command Bar */}
+        <footer className="fixed bottom-0 w-full z-50 bg-card/60 backdrop-blur-xl border-t border-white/[0.06] px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+          {/* Circular Rest Timer */}
           {restSeconds > 0 && (
-            <div className="flex items-center justify-between mb-2 bg-primary/10 border border-primary/30 rounded-sm px-3 py-2 max-w-lg mx-auto">
-              <span className="text-xs font-bold uppercase tracking-widest text-primary">Rest</span>
-              <span className="text-lg font-mono font-bold text-primary">
-                {Math.floor(restSeconds / 60)}:{String(restSeconds % 60).padStart(2, "0")}
-              </span>
-              <button
-                onClick={clearRestTimer}
-                className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground"
-              >
-                Skip
-              </button>
+            <div className="flex items-center justify-center gap-4 mb-3">
+              <div className="relative h-12 w-12">
+                <svg className="h-12 w-12 -rotate-90" viewBox="0 0 48 48">
+                  <circle cx="24" cy="24" r="20" fill="none" stroke="hsl(var(--muted))" strokeWidth="3" />
+                  <circle
+                    cx="24" cy="24" r="20" fill="none"
+                    stroke="hsl(var(--primary))"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeDasharray={`${2 * Math.PI * 20}`}
+                    strokeDashoffset={`${2 * Math.PI * 20 * (1 - restProgress / 100)}`}
+                    className="transition-all duration-1000"
+                  />
+                </svg>
+                <span className="absolute inset-0 flex items-center justify-center text-xs font-bold font-mono text-primary">
+                  {restSeconds}
+                </span>
+              </div>
+              <div>
+                <span className="text-xs font-semibold text-foreground block">Rest Timer</span>
+                <button
+                  onClick={clearRestTimer}
+                  className="text-[11px] font-medium text-primary hover:underline"
+                >
+                  Skip →
+                </button>
+              </div>
             </div>
           )}
-          <div className="flex items-center justify-between gap-2 max-w-lg mx-auto">
-            {/* Left: Timer readout */}
+          <div className="flex items-center justify-between gap-3 max-w-lg mx-auto">
+            {/* Timer pill */}
             <WorkoutTimer
               initialElapsed={initialContext?.resumedElapsed || 0}
               autoStart={timerAutoStart}
               onElapsedChange={handleElapsedChange}
             />
 
-            {/* Center: Add Exercise */}
-            <Button
+            {/* Add Exercise */}
+            <button
               onClick={() => setShowPicker(true)}
-              size="sm"
-              className="gap-1 text-xs font-bold uppercase tracking-widest bg-primary text-primary-foreground"
               disabled={showPicker}
+              className={cn(
+                "flex items-center gap-1.5 px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wide transition-all",
+                "bg-primary text-primary-foreground shadow-[0_0_16px_hsl(var(--primary)/0.3)]",
+                "hover:shadow-[0_0_24px_hsl(var(--primary)/0.5)] active:scale-95",
+                showPicker && "opacity-50"
+              )}
             >
-              <Plus size={14} /> Add Exercise
-            </Button>
+              <Plus size={14} /> Add
+            </button>
 
-            {/* Right: EXIT */}
-            <Button
+            {/* Exit */}
+            <button
               onClick={handleFinishClick}
               disabled={saving}
-              size="sm"
-              variant="outline"
-              className="gap-1 text-xs font-bold uppercase tracking-widest border-primary text-primary hover:border-primary/80 hover:shadow-[0_0_10px_hsl(var(--primary)/0.4)]"
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-bold uppercase tracking-wide border border-white/[0.1] text-foreground hover:bg-muted/50 transition-all active:scale-95"
             >
               {saving ? <Loader2 size={14} className="animate-spin" /> : <X size={14} />}
               Exit
-            </Button>
+            </button>
           </div>
         </footer>
       </div>

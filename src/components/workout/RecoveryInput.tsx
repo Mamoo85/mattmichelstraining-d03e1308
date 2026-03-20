@@ -15,10 +15,19 @@ interface RecoveryInputProps {
   onChange: (data: RecoveryData) => void;
 }
 
-const SCALE_LABELS: Record<string, string[]> = {
-  sleepQuality: ["Awful", "Poor", "OK", "Good", "Great"],
-  soreness: ["None", "Mild", "Moderate", "Sore", "Wrecked"],
-  energy: ["Dead", "Low", "Decent", "Good", "Wired"],
+const SCALE_CONFIG: Record<string, { labels: string[]; emojis: string[] }> = {
+  sleepQuality: {
+    labels: ["Awful", "Poor", "OK", "Good", "Great"],
+    emojis: ["😫", "😕", "😐", "😊", "😴"],
+  },
+  soreness: {
+    labels: ["None", "Mild", "Moderate", "Sore", "Wrecked"],
+    emojis: ["✅", "🟡", "🟠", "🔴", "💀"],
+  },
+  energy: {
+    labels: ["Dead", "Low", "Decent", "Good", "Wired"],
+    emojis: ["🪫", "😮‍💨", "👍", "💪", "⚡"],
+  },
 };
 
 const ScaleSelector = ({
@@ -27,45 +36,44 @@ const ScaleSelector = ({
   field,
   value,
   onSelect,
-  labels,
 }: {
   label: string;
   icon: React.ElementType;
   field: string;
   value: number | null;
   onSelect: (v: number) => void;
-  labels: string[];
-}) => (
-  <div className="space-y-1.5">
-    <div className="flex items-center gap-1.5">
-      <Icon size={12} className="text-muted-foreground" />
-      <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-        {label}
-      </span>
+}) => {
+  const config = SCALE_CONFIG[field];
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        <Icon size={14} className="text-muted-foreground" />
+        <span className="text-xs font-semibold text-muted-foreground">{label}</span>
+      </div>
+      <div className="flex gap-1.5">
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button
+            key={n}
+            type="button"
+            onClick={() => onSelect(value === n ? 0 : n)}
+            className={cn(
+              "flex-1 h-10 rounded-full text-sm font-medium transition-all duration-200 flex items-center justify-center gap-1",
+              value === n
+                ? "bg-primary text-primary-foreground shadow-[0_0_12px_hsl(var(--primary)/0.3)] scale-105"
+                : "bg-muted/40 text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+            )}
+            title={config.labels[n - 1]}
+          >
+            <span className="text-xs">{config.emojis[n - 1]}</span>
+          </button>
+        ))}
+      </div>
+      {value && value > 0 && (
+        <span className="text-[11px] text-primary font-medium pl-1">{config.labels[value - 1]}</span>
+      )}
     </div>
-    <div className="flex gap-1">
-      {[1, 2, 3, 4, 5].map((n) => (
-        <button
-          key={n}
-          type="button"
-          onClick={() => onSelect(value === n ? 0 : n)}
-          className={cn(
-            "flex-1 h-7 text-[10px] font-mono font-bold transition-all",
-            value === n
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted text-muted-foreground hover:text-foreground hover:bg-secondary"
-          )}
-          title={labels[n - 1]}
-        >
-          {n}
-        </button>
-      ))}
-    </div>
-    {value && value > 0 && (
-      <span className="text-[9px] text-muted-foreground font-mono">{labels[value - 1]}</span>
-    )}
-  </div>
-);
+  );
+};
 
 const RecoveryInput = ({ value, onChange }: RecoveryInputProps) => {
   const [expanded, setExpanded] = useState(false);
@@ -77,53 +85,66 @@ const RecoveryInput = ({ value, onChange }: RecoveryInputProps) => {
     (value.energy !== null && value.energy > 0);
 
   return (
-    <div className="border border-border bg-card">
+    <div className="rounded-2xl border border-white/[0.06] bg-gradient-to-b from-card to-card/80 overflow-hidden shadow-lg">
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between px-3 py-2.5 text-left"
+        className="w-full flex items-center justify-between px-4 py-3.5 text-left"
       >
-        <div className="flex items-center gap-2">
-          <Activity size={14} className={cn(hasData ? "text-primary" : "text-muted-foreground")} />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-            How do you feel?
-          </span>
-          {hasData && !expanded && (
-            <span className="text-[9px] font-mono text-primary">
-              {value.sleepHours && `${value.sleepHours}h`}
-              {value.energy && value.energy > 0 ? ` · E${value.energy}` : ""}
-              {value.soreness && value.soreness > 0 ? ` · S${value.soreness}` : ""}
-            </span>
-          )}
+        <div className="flex items-center gap-3">
+          <div className={cn(
+            "h-8 w-8 rounded-full flex items-center justify-center transition-colors",
+            hasData ? "bg-primary/15 text-primary" : "bg-muted/50 text-muted-foreground"
+          )}>
+            <Activity size={16} />
+          </div>
+          <div>
+            <span className="text-sm font-semibold text-foreground block">How do you feel?</span>
+            {hasData && !expanded && (
+              <div className="flex gap-1.5 mt-1">
+                {value.sleepHours && (
+                  <span className="text-[10px] font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full">{value.sleepHours}h sleep</span>
+                )}
+                {value.energy && value.energy > 0 && (
+                  <span className="text-[10px] font-medium bg-muted/50 text-muted-foreground px-2 py-0.5 rounded-full">
+                    {SCALE_CONFIG.energy.emojis[value.energy - 1]} Energy
+                  </span>
+                )}
+                {value.soreness && value.soreness > 0 && (
+                  <span className="text-[10px] font-medium bg-muted/50 text-muted-foreground px-2 py-0.5 rounded-full">
+                    {SCALE_CONFIG.soreness.emojis[value.soreness - 1]} Sore
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
         </div>
         <ChevronDown
-          size={14}
+          size={16}
           className={cn(
-            "text-muted-foreground transition-transform",
+            "text-muted-foreground transition-transform duration-200",
             expanded && "rotate-180"
           )}
         />
       </button>
 
       {expanded && (
-        <div className="px-3 pb-3 space-y-3 border-t border-border pt-3">
+        <div className="px-4 pb-4 space-y-4 border-t border-white/[0.05] pt-4">
           {/* Sleep hours */}
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-1.5">
-              <Moon size={12} className="text-muted-foreground" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                Sleep
-              </span>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Moon size={14} className="text-muted-foreground" />
+              <span className="text-xs font-semibold text-muted-foreground">Hours Slept</span>
             </div>
             <input
               type="number"
               step="0.5"
               min="0"
               max="16"
-              placeholder="Hours slept"
+              placeholder="e.g. 7.5"
               value={value.sleepHours}
               onChange={(e) => onChange({ ...value, sleepHours: e.target.value })}
-              className="bg-background border border-border text-right pr-2 font-mono text-primary text-sm focus:ring-1 focus:ring-primary outline-none h-8 w-24"
+              className="bg-background/60 border border-white/[0.08] rounded-xl text-center font-mono text-primary text-sm focus:ring-2 focus:ring-primary/40 outline-none h-12 w-28 transition-all"
             />
           </div>
 
@@ -133,7 +154,6 @@ const RecoveryInput = ({ value, onChange }: RecoveryInputProps) => {
             field="sleepQuality"
             value={value.sleepQuality}
             onSelect={(v) => onChange({ ...value, sleepQuality: v || null })}
-            labels={SCALE_LABELS.sleepQuality}
           />
 
           <ScaleSelector
@@ -142,7 +162,6 @@ const RecoveryInput = ({ value, onChange }: RecoveryInputProps) => {
             field="soreness"
             value={value.soreness}
             onSelect={(v) => onChange({ ...value, soreness: v || null })}
-            labels={SCALE_LABELS.soreness}
           />
 
           <ScaleSelector
@@ -151,14 +170,13 @@ const RecoveryInput = ({ value, onChange }: RecoveryInputProps) => {
             field="energy"
             value={value.energy}
             onSelect={(v) => onChange({ ...value, energy: v || null })}
-            labels={SCALE_LABELS.energy}
           />
 
           <textarea
             placeholder="Anything else? (optional)"
             value={value.recoveryNotes}
             onChange={(e) => onChange({ ...value, recoveryNotes: e.target.value })}
-            className="w-full bg-background border border-border p-2 text-xs text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-primary outline-none min-h-[40px] resize-none"
+            className="w-full bg-background/60 border border-white/[0.08] rounded-xl p-3 text-xs text-foreground placeholder:text-muted-foreground/50 focus:ring-2 focus:ring-primary/40 outline-none min-h-[48px] resize-none transition-all"
           />
         </div>
       )}
