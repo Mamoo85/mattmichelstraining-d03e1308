@@ -139,14 +139,18 @@ const Auth = () => {
   const handleAppleSignIn = async () => {
     setAppleLoading(true);
     setError("");
+    console.log("[APPLE-AUTH] Starting Apple sign-in, origin:", window.location.origin);
     try {
       const result = await lovable.auth.signInWithOAuth("apple", {
         redirect_uri: window.location.origin,
       });
+      console.log("[APPLE-AUTH] Result:", JSON.stringify(result, null, 2));
       if (result?.error) {
+        console.error("[APPLE-AUTH] Error from result:", result.error);
         setError(result.error.message || "Apple sign-in failed");
       }
     } catch (e: any) {
+      console.error("[APPLE-AUTH] Catch error:", e);
       setError(e.message || "Apple sign-in failed");
     } finally {
       setAppleLoading(false);
