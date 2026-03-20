@@ -1,37 +1,24 @@
 
 
-## Add M² Logo to Workout Zone + PDF Print Files
+## Problem Analysis
 
-### What Changes
+The "CONNECTION INTERRUPTED" screen your clients are seeing is **not** an actual network issue. It's your app's `ErrorBoundary` component catching any JavaScript error and displaying a misleading message. When someone uses a privacy browser like Freespoke (which blocks trackers and third-party requests), certain JS modules or API calls may fail, triggering the ErrorBoundary with this confusing full-screen error.
 
-1. **Workout Zone UI** — Add subtle M² logo branding in two spots:
-   - Replace the Dumbbell icon in the header with the `m2-logo.jpg` image (small 32px circle)
-   - Add a small watermark-style logo in the empty state where exercises haven't been added yet
-   - Add a tiny "M² Training" logo at the bottom of the scrollable exercise list area (visible when scrolled to bottom)
+The current ErrorBoundary has three problems:
+1. It shows "Connection interrupted" for ALL errors, not just network/chunk failures
+2. It doesn't log what actually went wrong, making debugging impossible
+3. It doesn't auto-retry chunk loading failures (which are often transient)
 
-2. **PDF Print Files** — Embed the M² logo as a base64-encoded image in all three print generators so it appears prominently in the header of every printed/PDF document:
-   - `printWorkoutLog.ts` — Program workout logs
-   - `printCommunityWorkout.ts` — Community workout bank prints
-   - `printNutritionReport.ts` — Nutrition report prints
+Additionally, lazy-loaded chunks can fail on first load after a deployment or on slow connections, and there's no retry mechanism.
 
-### Technical Details
+## Plan
 
-**Workout Zone (ActiveWorkoutZone.tsx):**
-- Import `m2Logo from "@/assets/m2-logo.jpg"`
-- Header: swap the `Dumbbell` icon circle for an `<img src={m2Logo}>` with `h-8 w-8 rounded-full object-cover`
-- Empty state: replace the large Dumbbell circle with the logo
-- Bottom of exercise list: add a centered `opacity-20` mini logo with "M² Training" text as a subtle brand stamp
+### 1. Add auto-retry for lazy chunk imports
 
-**PDF Files (all three print*.ts):**
-- Create a shared utility `src/components/workout/m2LogoBase64.ts` that exports the logo as a base64 data URI (convert the JPG at build time won't work in window.open, so we'll inline it)
-- Actually, since these use `window.open` and write raw HTML, we'll convert `m2-logo.jpg` to a base64 string constant and use it as an `<img>` src in the header of each print template
-- Each print file header gets: the M² logo (60px height), centered above the title, with the "M² Training" text below it
-- The logo will be prominent — full-width centered at the top of every printed document
+Wrap all `lazy()` calls in `App.tsx` with a retry helper that attempts to reload a failed chunk up to 3 times before giving up. This fixes the most common cause of this error (stale chunks after deployment).
 
-### Files Modified
-- `src/components/workout/m2LogoBase64.ts` (new — shared base64 logo constant)
-- `src/components/workout/ActiveWorkoutZone.tsx`
-- `src/components/workout/printCommunityWorkout.ts`
-- `src/components/programs/printWorkoutLog.ts`
-- `src/components/nutrition/printNutritionReport.ts`
+### 2. Improve ErrorBoundary with better diagnostics and messaging
 
+- Log the actual error to the console so it's visible in diagnostics
+- Differentiate between chunk errors, Supabase/network errors, and unknown JS errors
+- Show a more helpful message (not
