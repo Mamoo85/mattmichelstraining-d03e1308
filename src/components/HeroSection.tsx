@@ -107,13 +107,7 @@ const HeroSection = () => {
         {/* Below-the-fold lazy sections */}
         <Suspense fallback={null}>
           {/* ─── FORM CHECK CTA ─── */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="mb-8"
-          >
+          <div className="mb-8">
             <div className="bg-gradient-to-br from-primary/10 via-background to-background border border-primary/30 overflow-hidden">
               <div className="p-6 sm:p-8 space-y-4">
                 <div className="flex items-center gap-2">
@@ -140,7 +134,7 @@ const HeroSection = () => {
                 </Link>
               </div>
             </div>
-          </motion.div>
+          </div>
 
           {/* ─── 2. SPORT PICKER ─── */}
           <SportPicker />
