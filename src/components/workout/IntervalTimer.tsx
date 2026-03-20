@@ -278,7 +278,7 @@ const IntervalTimer = ({ onClose }: { onClose: () => void }) => {
         <span className="text-sm font-bold uppercase tracking-[0.3em] text-white/80 mb-1">
           {phaseLabels[phase]}
         </span>
-        {(phase === "prep" || phase === "work" || phase === "rest") && (
+        {phase !== "done" && (
           <span className="text-xs font-mono text-white/60 mb-2">
             Round {String(currentRound).padStart(3, "0")} / {String(config.rounds).padStart(3, "0")}
           </span>
