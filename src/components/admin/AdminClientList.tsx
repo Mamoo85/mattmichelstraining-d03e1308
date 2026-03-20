@@ -23,8 +23,12 @@ import AiAssistButton from "./AiAssistButton";
 const AdminClientList = () => {
   const [search, setSearch] = useState("");
   const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
-  const [eraseConfirmStep, setEraseConfirmStep] = useState(0); // 0=closed, 1=first confirm, 2=second confirm
+  const [eraseConfirmStep, setEraseConfirmStep] = useState(0);
   const [linkSearch, setLinkSearch] = useState("");
+  const [giftType, setGiftType] = useState<"program" | "workout">("program");
+  const [selectedGiftId, setSelectedGiftId] = useState("");
+  const [giftNotes, setGiftNotes] = useState("");
+  const [gifting, setGifting] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: profiles = [], isLoading } = useQuery({
