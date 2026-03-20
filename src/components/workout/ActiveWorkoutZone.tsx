@@ -609,6 +609,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
               onRemove={removeExercise}
               onOpenFormTracker={setFormTrackerExercise}
               onSetCompleted={() => startRestTimer(90)}
+              defaultExpanded={i < 2}
             />
           ))}
 
