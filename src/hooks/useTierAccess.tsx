@@ -24,8 +24,23 @@ export const hasTierAccess = (userTier: TierKey | null, requiredTier: TierKey): 
 };
 
 export const useTierAccess = (featureKey: string) => {
-  const { subscriptionTier } = useAuth();
+  const { user, subscriptionTier } = useAuth();
   const { isAdmin } = useIsAdmin();
+
+  // Check if user is an in-person client (gets basic-tier access)
+  const { data: isInPerson = false } = useQuery({
+    queryKey: ["is-in-person", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("is_in_person")
+        .eq("user_id", user!.id)
+        .single();
+      return data?.is_in_person ?? false;
+    },
+    staleTime: 60_000,
+  });
 
   const { data: features = [] } = useQuery({
     queryKey: ["tier-features"],
@@ -46,13 +61,20 @@ export const useTierAccess = (featureKey: string) => {
   const feature = features.find((f: any) => f.feature_key === featureKey);
   if (!feature) return { hasAccess: false, loading: false };
 
-  // No subscription → check free tier access
-  if (!subscriptionTier) {
+  // Determine effective tier: in-person clients get at least basic-tier access
+  const effectiveTier: TierKey | null = subscriptionTier
+    ? subscriptionTier
+    : isInPerson
+      ? "basic"
+      : null;
+
+  // No subscription and not in-person → check free tier access
+  if (!effectiveTier) {
     return { hasAccess: !!(feature as any).tier_free, loading: false };
   }
 
   // Check current tier AND all lower tiers (inheritance)
-  const userLevel = getTierLevel(subscriptionTier);
+  const userLevel = getTierLevel(effectiveTier);
   for (let i = userLevel; i >= 0; i--) {
     const tierKey = TIER_HIERARCHY[i];
     const col = TIER_COLUMN_MAP[tierKey];
@@ -60,7 +82,7 @@ export const useTierAccess = (featureKey: string) => {
   }
 
   // Also check the user's exact tier column
-  const col = TIER_COLUMN_MAP[subscriptionTier];
+  const col = TIER_COLUMN_MAP[effectiveTier];
   if (!col) return { hasAccess: false, loading: false };
 
   return { hasAccess: !!(feature as any)[col], loading: false };

@@ -40,7 +40,7 @@ const Dashboard = () => {
   const { user, subscribed, subscriptionTier } = useAuth();
   const { trialExpired, isOnTrial, trialDaysLeft } = useTrialStatus();
   const { isAdmin } = useIsAdmin();
-  const [profile, setProfile] = useState<{ full_name: string | null; athlete_name: string | null } | null>(null);
+  const [profile, setProfile] = useState<{ full_name: string | null; athlete_name: string | null; is_in_person: boolean } | null>(null);
   const [activeTab, setActiveTab] = useState("home");
   const [hasPrograms, setHasPrograms] = useState<boolean | null>(null);
   const [hasLogs, setHasLogs] = useState<boolean | null>(null);
@@ -49,11 +49,11 @@ const Dashboard = () => {
     if (!user) return;
     // Fetch profile + activity counts in parallel
     Promise.all([
-      supabase.from("profiles").select("full_name, athlete_name").eq("user_id", user.id).single(),
+      supabase.from("profiles").select("full_name, athlete_name, is_in_person").eq("user_id", user.id).single(),
       supabase.from("user_active_programs").select("id", { count: "exact", head: true }).eq("user_id", user.id),
       supabase.from("progress_logs").select("id", { count: "exact", head: true }).eq("user_id", user.id),
     ]).then(([profileRes, progRes, logRes]) => {
-      if (profileRes.data) setProfile(profileRes.data);
+      if (profileRes.data) setProfile(profileRes.data as any);
       setHasPrograms((progRes.count ?? 0) > 0);
       setHasLogs((logRes.count ?? 0) > 0);
     });
@@ -153,15 +153,15 @@ const Dashboard = () => {
 
       {/* Timer moved to ActiveWorkoutZone */}
 
-      {/* Trial banner */}
-      {isOnTrial && !subscribed && !isAdmin && (
+      {/* Trial banner — hide for in-person clients */}
+      {isOnTrial && !subscribed && !isAdmin && !profile?.is_in_person && (
         <div className="fixed top-16 left-0 right-0 z-40 bg-primary text-primary-foreground text-center py-2 text-xs font-bold uppercase tracking-widest">
           🔥 Trial: {trialDaysLeft} day{trialDaysLeft !== 1 ? "s" : ""} remaining
         </div>
       )}
 
-      {/* Hard paywall */}
-      {trialExpired && !subscribed && !isAdmin && (
+      {/* Hard paywall — skip for in-person clients */}
+      {trialExpired && !subscribed && !isAdmin && !profile?.is_in_person && (
         <TrialPaywallModal open={true} hardLock />
       )}
 

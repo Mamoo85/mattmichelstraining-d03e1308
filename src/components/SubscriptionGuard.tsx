@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useTrialStatus } from "@/hooks/useTrialStatus";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -13,10 +15,25 @@ const SubscriptionGuard = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
   const toasted = useRef(false);
 
-  const loading = authLoading || trialLoading || adminLoading;
+  // Check if user is an in-person client (bypasses paywall like a basic subscriber)
+  const { data: isInPerson = false, isLoading: inPersonLoading } = useQuery({
+    queryKey: ["is-in-person", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("is_in_person")
+        .eq("user_id", user!.id)
+        .single();
+      return data?.is_in_person ?? false;
+    },
+    staleTime: 60_000,
+  });
 
-  // Admins always pass through
-  const bypassed = isAdmin;
+  const loading = authLoading || trialLoading || adminLoading || inPersonLoading;
+
+  // Admins and in-person clients always pass through
+  const bypassed = isAdmin || isInPerson;
   const lockedOut = !bypassed && !subscribed && trialExpired;
 
   useEffect(() => {
