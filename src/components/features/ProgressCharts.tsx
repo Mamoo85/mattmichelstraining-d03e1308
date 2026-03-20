@@ -4,16 +4,16 @@ import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import SectionHeader from "@/components/shared/SectionHeader";
 import { Loader2, TrendingUp } from "lucide-react";
-import { LIFT_CATEGORIES, ALL_LIFTS, getLiftConfig } from "./progress/liftConfig";
-import TronChart from "./progress/TronChart";
-import BodyAvatar from "./progress/BodyAvatar";
-import LogForm from "./progress/LogForm";
-import StatsRow from "./progress/StatsRow";
-import LogHistory from "./progress/LogHistory";
-import RecoveryChart from "./progress/RecoveryChart";
-import AiRecoveryAdvisor from "./progress/AiRecoveryAdvisor";
-import LiftInsights from "./progress/LiftInsights";
-import EmptyStateCard from "./EmptyStateCard";
+import { LIFT_CATEGORIES, ALL_LIFTS, getLiftConfig } from "@/components/progress/liftConfig";
+import TronChart from "@/components/progress/TronChart";
+import BodyAvatar from "@/components/progress/BodyAvatar";
+import LogForm from "@/components/progress/LogForm";
+import StatsRow from "@/components/progress/StatsRow";
+import LogHistory from "@/components/progress/LogHistory";
+import RecoveryChart from "@/components/progress/RecoveryChart";
+import AiRecoveryAdvisor from "@/components/progress/AiRecoveryAdvisor";
+import LiftInsights from "@/components/progress/LiftInsights";
+import EmptyStateCard from "@/components/shared/EmptyStateCard";
 
 interface ProgressLog {
   id: string;

@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Search, ChevronDown, ChevronUp, Heart, Filter } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import SectionHeader from "@/components/shared/SectionHeader";
-import ExerciseVideoEmbed from "./exercise/ExerciseVideoEmbed";
+import ExerciseVideoEmbed from "@/components/exercise/ExerciseVideoEmbed";
 
 interface FixItExercise {
   id: string;

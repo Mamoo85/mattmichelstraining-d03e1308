@@ -3,12 +3,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useFamilyUserIds } from "@/hooks/useFamilyUserIds";
 import { Loader2, Dumbbell, MessageSquare, ShoppingBag, ChevronLeft, ChevronRight, Printer, Play } from "lucide-react";
-import EmptyStateCard from "./EmptyStateCard";
+import EmptyStateCard from "@/components/shared/EmptyStateCard";
 import { Link } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import ActiveProgramView from "./programs/ActiveProgramView";
-import { printWorkoutLog } from "./programs/printWorkoutLog";
+import ActiveProgramView from "@/components/programs/ActiveProgramView";
+import { printWorkoutLog } from "@/components/programs/printWorkoutLog";
 
 interface ProgramExercise {
   name: string;
