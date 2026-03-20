@@ -545,6 +545,26 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
             )}
           </div>
           <div className="flex items-center gap-1">
+            {exercises.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => adaptInputRef.current?.click()}
+                disabled={adaptLoading}
+                className="text-xs gap-1 text-muted-foreground hover:text-primary"
+                title="Adapt to Equipment"
+              >
+                {adaptLoading ? <Loader2 size={14} className="animate-spin" /> : <Camera size={14} />}
+              </Button>
+            )}
+            <input
+              ref={adaptInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={handleAdaptCapture}
+            />
             <Button
               variant="ghost"
               size="sm"
