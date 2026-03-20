@@ -58,8 +58,8 @@ const MACRO_CONFIG = [
 ];
 
 const MacroPill = ({ icon: Icon, label, value, unit, color }: { icon: any; label: string; value: number; unit: string; color: string }) => (
-  <div className={`flex flex-col items-center gap-1 rounded-xl px-3 py-2 ${color}`}>
-    <Icon size={16} className="opacity-80" />
+  <div className={`flex flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 ${color} min-w-0`}>
+    <Icon size={14} className="opacity-80 shrink-0" />
     <span className="text-lg font-bold">{Math.round(value)}</span>
     <span className="text-[10px] uppercase tracking-wider opacity-70">{unit} {label}</span>
   </div>
