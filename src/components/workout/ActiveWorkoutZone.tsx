@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { format } from "date-fns";
-import { Plus, X, CheckCircle, Loader2, CalendarIcon, Dumbbell, Clock, Camera } from "lucide-react";
+import { Plus, X, CheckCircle, Loader2, CalendarIcon, Clock, Camera } from "lucide-react";
+import m2Logo from "@/assets/m2-logo.jpg";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -498,9 +499,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
         {/* Modern Header */}
         <header className="shrink-0 flex items-center justify-between px-4 py-3 bg-gradient-to-b from-background to-background/80 backdrop-blur-sm">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="h-8 w-8 rounded-full bg-primary/15 text-primary flex items-center justify-center">
-              <Dumbbell size={16} />
-            </div>
+            <img src={m2Logo} alt="M² Training" className="h-8 w-8 rounded-full object-cover" />
             <div className="min-w-0">
               <span className="text-sm font-bold text-foreground truncate block leading-tight">
                 {workoutTitle}
@@ -582,9 +581,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
 
           {exercises.length === 0 && !showPicker && (
             <div className="flex flex-col items-center justify-center py-20 text-center space-y-5">
-              <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                <Dumbbell size={28} className="text-primary/40" />
-              </div>
+              <img src={m2Logo} alt="M² Training" className="h-16 w-16 rounded-full object-cover opacity-60" />
               <div>
                 <h3 className="text-lg font-bold text-foreground mb-1">Ready to train</h3>
                 <p className="text-sm text-muted-foreground">Add exercises from the library to start logging.</p>
@@ -617,6 +614,13 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
 
           {showPicker && (
             <ExercisePicker onSelect={addExercise} onCancel={() => setShowPicker(false)} />
+          )}
+
+          {exercises.length > 0 && (
+            <div className="flex flex-col items-center gap-1 py-4 opacity-20">
+              <img src={m2Logo} alt="M²" className="h-6 w-6 rounded-full object-cover" />
+              <span className="text-[9px] font-bold uppercase tracking-[3px] text-muted-foreground">M² Training</span>
+            </div>
           )}
 
           {exercises.length > 0 && (

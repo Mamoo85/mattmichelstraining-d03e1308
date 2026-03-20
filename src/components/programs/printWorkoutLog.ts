@@ -3,6 +3,7 @@
  * Works for both interactive programs (with workout data from DB)
  * and purchased custom programs (with exercise arrays).
  */
+import { M2_LOGO_BASE64 } from "@/components/workout/m2LogoBase64";
 
 interface PrintExercise {
   name: string;
@@ -249,6 +250,7 @@ export const printWorkoutLog = (program: PrintProgramData) => {
   <button class="print-btn" onclick="window.print()">Print / Save PDF</button>
 
   <div class="header">
+    <img src="${M2_LOGO_BASE64}" alt="M² Training" style="width:60px;height:60px;border-radius:50%;object-fit:cover;margin:0 auto 8px;" />
     <h1>${esc(program.title)}</h1>
     <div class="meta">${[program.category, program.sport].filter(Boolean).map(s => esc(s as string)).join(" · ")}</div>
     <div class="brand">M² Training — Matt Michels</div>

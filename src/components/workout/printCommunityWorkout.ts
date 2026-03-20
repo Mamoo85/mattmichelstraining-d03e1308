@@ -1,3 +1,5 @@
+import { M2_LOGO_BASE64 } from "./m2LogoBase64";
+
 interface PrintExerciseData {
   name: string;
   sets: string;
@@ -164,12 +166,13 @@ export const printCommunityWorkout = (data: PrintCommunityWorkoutData) => {
 </head>
 <body>
   <button class="print-btn" onclick="window.print()">Print / Save PDF</button>
-  <div class="header">
-    <h1>${esc(data.title)}</h1>
-    <div class="creator">Created by ${esc(data.creatorName)} · Mattletes Community</div>
-    ${data.description ? `<div class="desc">${esc(data.description)}</div>` : ""}
-    <div class="brand">M² Training — Mattletes Workout Bank</div>
-  </div>
+   <div class="header">
+     <img src="${M2_LOGO_BASE64}" alt="M² Training" style="width:60px;height:60px;border-radius:50%;object-fit:cover;margin:0 auto 8px;" />
+     <h1>${esc(data.title)}</h1>
+     <div class="creator">Created by ${esc(data.creatorName)} · Mattletes Community</div>
+     ${data.description ? `<div class="desc">${esc(data.description)}</div>` : ""}
+     <div class="brand">M² Training — Mattletes Workout Bank</div>
+   </div>
   <div class="name-date">
     <div><label>Athlete Name</label><div class="field"></div></div>
     <div><label>Date</label><div class="field"></div></div>

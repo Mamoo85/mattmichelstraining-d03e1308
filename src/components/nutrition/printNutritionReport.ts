@@ -1,3 +1,4 @@
+import { M2_LOGO_BASE64 } from "@/components/workout/m2LogoBase64";
 import { format } from "date-fns";
 
 interface FoodItem {
@@ -135,6 +136,7 @@ export function printNutritionReport({ logs, goals, userName }: PrintOptions) {
 <body>
   <div class="header">
     <div>
+      <img src="${M2_LOGO_BASE64}" alt="M² Training" style="width:50px;height:50px;border-radius:50%;object-fit:cover;margin-bottom:8px;" />
       <h1>M² NUTRITION REPORT</h1>
       <p class="subtitle">${userName || "Athlete"} — ${today}</p>
     </div>
