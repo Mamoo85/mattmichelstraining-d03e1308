@@ -245,7 +245,7 @@ const Admin = () => {
                 <div className="border-t border-border pt-6"><AdminTeamRosters /></div>
               </div>
             )},
-            { key: "parents", label: "Parent Hub", content: (
+            { key: "parents", label: <span className="flex items-center gap-1">Parent Hub{unreadParentCount > 0 && <Badge variant="destructive" className="text-[8px] px-1.5 py-0 min-w-[18px] h-4">{unreadParentCount}</Badge>}</span>, content: (
               <div className="space-y-8">
                 <AdminParentInbox />
                 <div className="border-t border-border pt-6"><AdminParentReports /></div>
