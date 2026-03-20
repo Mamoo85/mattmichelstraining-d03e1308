@@ -1,6 +1,6 @@
 import { memo, lazy, Suspense, useCallback, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Play, Camera } from "lucide-react";
+import { Play, Camera, UtensilsCrossed } from "lucide-react";
 import MonthlyFocusWidget from "@/components/MonthlyFocusWidget";
 import UpcomingSessions from "@/components/UpcomingSessions";
 import WorkoutScanner from "@/components/workout/WorkoutScanner";
@@ -70,7 +70,16 @@ const DashboardHome = memo(({ isNewUser, onViewPoints, onViewReferrals }: Dashbo
       <p className="text-xs text-muted-foreground">
         Snap a photo of your school workout card or gym whiteboard — it reads your handwriting and logs your session instantly.
       </p>
-      <WorkoutScanner />
+      <div className="grid grid-cols-2 gap-2">
+        <WorkoutScanner />
+        <Link
+          to="/nutrition"
+          className="flex flex-col items-center justify-center gap-1.5 border-2 border-dashed border-border hover:border-primary/40 p-4 transition-colors text-center"
+        >
+          <UtensilsCrossed size={20} className="text-primary" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Scan Food</span>
+        </Link>
+      </div>
       <button
         onClick={handleStartWorkout}
         className="w-full h-10 border-2 border-orange-500 text-orange-400 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest hover:border-orange-400 hover:shadow-[0_0_15px_rgba(249,115,22,0.5)] transition-all mt-2"
@@ -78,18 +87,6 @@ const DashboardHome = memo(({ isNewUser, onViewPoints, onViewReferrals }: Dashbo
         <Play size={14} /> Enter The Portal
       </button>
     </div>
-
-    <Link
-      to="/nutrition"
-      className="block bg-card border border-border p-5 space-y-1 hover:border-primary/40 transition-colors"
-    >
-      <div className="flex items-center gap-2">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Nutrition Scanner</span>
-      </div>
-      <p className="text-xs text-muted-foreground">
-        Snap a photo of your food and get instant calorie & macro estimates.
-      </p>
-    </Link>
 
     {hasPosture === false && (
       <div className="bg-card border border-border p-5 space-y-2">
