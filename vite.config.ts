@@ -19,7 +19,7 @@ function preloadLcpImage(): Plugin {
       if (!bundle) return html; // dev mode — skip
 
       for (const [fileName] of Object.entries(bundle)) {
-        if (fileName.includes("m2-logo") && fileName.endsWith(".jpg")) {
+        if (/m2-logo-[^/]*\.jpg$/.test(fileName) && !fileName.includes("official")) {
           const tag = `<link rel="preload" as="image" href="/${fileName}" fetchpriority="high" />`;
           return html.replace("</head>", `${tag}\n</head>`);
         }
