@@ -106,6 +106,17 @@ const Admin = () => {
     refetchInterval: 30000,
   });
 
+  const { data: trashCount = 0 } = useQuery({
+    queryKey: ["admin-trash-count"],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("admin_trash" as any)
+        .select("id", { count: "exact", head: true });
+      return count ?? 0;
+    },
+    refetchInterval: 60000,
+  });
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
