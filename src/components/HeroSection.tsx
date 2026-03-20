@@ -133,7 +133,7 @@ const HeroSection = () => {
                   </div>
                   <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-foreground leading-tight">
                     Real Coaching Feedback.<br />
-                    <span className="text-primary">Just $15/mo.</span>
+                    <span className="text-primary">Just $12.99/mo.</span>
                   </h2>
                   <p className="text-sm text-muted-foreground max-w-lg leading-relaxed">
                     Upload a couple reps of any lift and Matt will send you a
