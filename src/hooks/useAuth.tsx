@@ -104,11 +104,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     let subscription: { unsubscribe: () => void } | null = null;
+    let initialDone = false;
+
     try {
-      const result = supabase.auth.onAuthStateChange((_event, session) => {
-        setSession(session);
-        setLoading(false);
-        if (session) {
+      // Set up listener FIRST (per Supabase best practice)
+      const result = supabase.auth.onAuthStateChange((_event, newSession) => {
+        setSession(newSession);
+        if (!initialDone) {
+          initialDone = true;
+          setLoading(false);
+        }
+        if (newSession) {
           setTimeout(() => checkSubscription(), 0);
         } else {
           setSubscribed(false);
@@ -119,25 +125,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       subscription = result.data.subscription;
     } catch (e) {
       console.warn("[Auth] onAuthStateChange blocked or failed:", e);
-      setLoading(false);
     }
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-      if (session) checkSubscription();
-    }).catch((e) => {
-      console.warn("[Auth] getSession blocked or failed:", e);
-      setLoading(false);
+    // Fallback: if onAuthStateChange hasn't fired within 2s, resolve loading
+    const fallbackTimer = setTimeout(() => {
+      if (!initialDone) {
+        initialDone = true;
+        setLoading(false);
+      }
+    }, 2000);
+
+    // getSession to pick up existing session
+    supabase.auth.getSession().then(({ data: { session: s } }) => {
+      if (!initialDone) {
+        initialDone = true;
+        setSession(s);
+        setLoading(false);
+        if (s) checkSubscription();
+      }
+    }).catch(() => {
+      if (!initialDone) {
+        initialDone = true;
+        setLoading(false);
+      }
     });
 
-    return () => subscription?.unsubscribe();
+    return () => {
+      clearTimeout(fallbackTimer);
+      subscription?.unsubscribe();
+    };
   }, [checkSubscription]);
 
-  // Auto-refresh every 60s while logged in
+  // Auto-refresh subscription every 5 min while logged in (was 60s)
   useEffect(() => {
     if (!session) return;
-    const interval = setInterval(checkSubscription, 60_000);
+    const interval = setInterval(checkSubscription, 5 * 60_000);
     return () => clearInterval(interval);
   }, [session, checkSubscription]);
 
