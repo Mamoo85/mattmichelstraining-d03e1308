@@ -597,6 +597,25 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
 
         {/* Scrollable content */}
         <main className="flex-1 overflow-y-auto px-4 py-4 space-y-4 pb-[160px]">
+          {/* Adapt to Equipment Banner */}
+          {adaptBanner && (
+            <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/30 px-3 py-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <Camera size={14} className="text-emerald-500 shrink-0" />
+                <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest truncate">{adaptBanner}</span>
+              </div>
+              <button onClick={() => setAdaptBanner(null)} className="text-muted-foreground hover:text-foreground">
+                <X size={12} />
+              </button>
+            </div>
+          )}
+          {adaptLoading && (
+            <div className="flex items-center justify-center gap-2 py-3 bg-muted/50 border border-border">
+              <Loader2 size={14} className="animate-spin text-primary" />
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Analyzing equipment & adapting workout…</span>
+            </div>
+          )}
+
           {exercises.length === 0 && !showPicker && (
             <div className="flex flex-col items-center justify-center py-16 text-center space-y-4">
               <Dumbbell size={32} className="text-muted-foreground/30" />
