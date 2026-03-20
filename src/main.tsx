@@ -2,6 +2,7 @@ import { createRoot } from "react-dom/client";
 import { HelmetProvider } from "react-helmet-async";
 import App from "./App.tsx";
 import "./index.css";
+import "./print.css";
 
 // Global broken-image fallback: replaces broken <img> with branded placeholder
 document.addEventListener("error", (e) => {
