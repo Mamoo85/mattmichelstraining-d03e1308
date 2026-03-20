@@ -24,6 +24,8 @@ interface WorkoutExercise {
   rest?: string;
   tempo?: string;
   notes?: string;
+  the_why?: string;
+  coaching_reference?: string;
 }
 
 interface GeneratedWorkout {
