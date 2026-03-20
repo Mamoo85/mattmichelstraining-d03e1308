@@ -297,7 +297,7 @@ const IntervalTimer = ({ onClose }: { onClose: () => void }) => {
           </span>
         )}
 
-        {!isSetup && !inWarningZone && phase !== "done" && (
+        {!isSetup && !inWarningZone && (
           <div className="w-full px-6 mt-4 space-y-2">
             <div>
               <span className="text-[10px] font-bold uppercase tracking-widest text-white/60">Round Progress</span>
