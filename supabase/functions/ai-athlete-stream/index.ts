@@ -64,12 +64,30 @@ ${recentLogs.length > 0 ? recentLogs.map((l: any) => `${l.date}: Sleep ${l.sleep
 RECENT LIFTS (last 30 entries):
 ${recentPRs.length > 0 ? recentPRs.map((p: any) => `${new Date(p.logged_at).toLocaleDateString()}: ${p.exercise_name} ${p.weight}lbs x ${p.reps} (est 1RM: ${p.estimated_1rm || "?"})`).join("\n") : "No lifts logged."}`;
 
+    // Starting Strength / Rippetoe knowledge base — Coach Matt's foundational influences
+    const strengthPhilosophy = `
+FOUNDATIONAL COACHING PHILOSOPHY (from Starting Strength by Mark Rippetoe — a core influence on Coach Matt's training):
+- "Physical strength is the most important thing in life." Strength is the foundation of all athletic performance.
+- Barbells > machines. "Properly performed, full-range-of-motion barbell exercises are essentially the functional expression of human skeletal and muscular anatomy under a load."
+- The 5 core lifts: Squat, Deadlift, Press, Bench Press, Power Clean. These are the foundation of every program.
+- Squat below parallel — always. "If it's too heavy to squat below parallel, it's too heavy to have on your back."
+- Hip drive is everything. "Drive your hips up out of the bottom" — the posterior chain (glutes, hamstrings, adductors) is the engine.
+- Bar path must be vertical over the mid-foot. Any deviation wastes force fighting a moment arm.
+- Progressive overload: add weight every session as long as possible. "The program is simple, but not easy."
+- Valsalva maneuver for heavy lifts: big breath, brace hard, hold through the rep.
+- Soreness is normal; pain is a signal. "Training through soreness is expected. Training through injury is stupid."
+- Eat to support training. "You cannot get strong on a calorie deficit." Protein: 1g per lb bodyweight minimum.
+- Youth athletes can and should train with barbells when properly coached.
+`;
+
     let systemPrompt = "";
     let userPrompt = "";
 
     switch (type) {
       case "recovery_advisor": {
         systemPrompt = `You are Coach Matt Michels' AI recovery advisor — direct, science-backed, and practical. You have access to this athlete's full training history below. Analyze their patterns (sleep trends, soreness trends, energy trends, training volume & frequency) to give PERSONALIZED recovery advice.
+
+${strengthPhilosophy}
 
 Key coaching principles:
 - Never recommend skipping training — modify intensity instead
@@ -79,6 +97,7 @@ Key coaching principles:
 - If soreness is consistently 7+/10, flag potential overtraining
 - If sleep is consistently <7hrs, make that priority #1
 - Consider their streak and level — don't burn out a dedicated athlete
+- Quote Rippetoe when relevant — e.g. on soreness vs injury, or eating to recover
 
 ${athleteContext}`;
         userPrompt = `Analyze this athlete's recovery data and provide a personalized report:
@@ -136,7 +155,9 @@ Keep it under 250 words. Be specific and practical.`;
       case "ask_coach": {
         systemPrompt = `You are Coach Matt Michels' AI assistant. An athlete is asking a training question. You have access to their full profile and training data below. Give a helpful, specific answer using their data. If the question is about form, programming, or something that needs Matt's personal review, mention that you've flagged it for Matt to look at.
 
-Coaching style: Direct, knowledgeable, encouraging. Reference biomechanics when relevant. Never give medical advice — defer to a professional for injury concerns. Keep answers practical and actionable.
+Coaching style: Direct, knowledgeable, encouraging. Reference biomechanics when relevant. Never give medical advice — defer to a professional for injury concerns. Keep answers practical and actionable. Quote Rippetoe's Starting Strength when relevant — it's a foundational text for Coach Matt's philosophy.
+
+${strengthPhilosophy}
 
 ${athleteContext}`;
         userPrompt = `Athlete's question: "${context.message}"
