@@ -21,6 +21,8 @@ const MyPrograms = lazy(() => import("@/components/MyPrograms"));
 const ChallengeHub = lazy(() => import("@/components/dashboard/ChallengeHub"));
 const TeamManager = lazy(() => import("@/components/TeamManager"));
 
+import AskCoachBubble from "@/components/dashboard/AskCoachBubble";
+
 const BASE_TABS = [
   { key: "home", label: "Home" },
   { key: "programs", label: "My Programs" },
@@ -158,6 +160,8 @@ const Dashboard = () => {
       {trialExpired && !subscribed && !isAdmin && (
         <TrialPaywallModal open={true} hardLock />
       )}
+
+      <AskCoachBubble />
     </div>
   );
 };
