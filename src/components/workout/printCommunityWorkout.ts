@@ -1,3 +1,5 @@
+import { M2_LOGO_BASE64 } from "./m2LogoBase64";
+
 interface PrintExerciseData {
   name: string;
   sets: string;
