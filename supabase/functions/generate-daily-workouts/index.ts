@@ -36,6 +36,9 @@ serve(async (req) => {
 
     const systemPrompt = `You are Coach Matt Michels' AI assistant for M² Performance Training. Generate ${quantity} unique daily workouts.
 
+BANNED EXERCISES — Coach Matt NEVER programs these:
+- Barbell Bent Over Row (any variation). Use Dumbbell Rows, Chest-Supported Rows, Cable Rows, or Seal Rows instead.
+
 WORKOUT STYLE: ${style}
 EQUIPMENT AVAILABLE: ${equipment}
 TARGET AUDIENCE: ${audience}
