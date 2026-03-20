@@ -120,7 +120,7 @@ const CoachMessaging = () => {
             <div className="text-center py-12">
               <p className="text-sm text-muted-foreground">No messages yet. Start a conversation with Matt!</p>
               <p className="text-[10px] text-muted-foreground mt-1">
-                💡 Tip: Use the <Sparkles size={10} className="inline text-primary" /> button for an instant AI answer while you wait for Matt's reply.
+                💡 Tip: Use the <Sparkles size={10} className="inline text-primary" /> button for a quick answer while you wait for Matt's reply.
               </p>
             </div>
           ) : (
