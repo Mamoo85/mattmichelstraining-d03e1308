@@ -581,9 +581,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
 
           {exercises.length === 0 && !showPicker && (
             <div className="flex flex-col items-center justify-center py-20 text-center space-y-5">
-              <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                <Dumbbell size={28} className="text-primary/40" />
-              </div>
+              <img src={m2Logo} alt="M² Training" className="h-16 w-16 rounded-full object-cover opacity-60" />
               <div>
                 <h3 className="text-lg font-bold text-foreground mb-1">Ready to train</h3>
                 <p className="text-sm text-muted-foreground">Add exercises from the library to start logging.</p>
