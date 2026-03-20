@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { RefreshCw, WifiOff, AlertTriangle } from "lucide-react";
+import { safeLocalStorage } from "@/lib/browserStorage";
 
 interface Props {
   children: ReactNode;
@@ -64,8 +65,8 @@ class ErrorBoundary extends Component<Props, State> {
 
   handleClearAndReload = () => {
     try {
-      localStorage.removeItem("m2-query-cache");
-      localStorage.removeItem("m2_offline_queue");
+      safeLocalStorage.removeItem("m2-query-cache");
+      safeLocalStorage.removeItem("m2_offline_queue");
       // Clear all caches
       if ("caches" in window) {
         caches.keys().then((names) => names.forEach((n) => caches.delete(n)));
