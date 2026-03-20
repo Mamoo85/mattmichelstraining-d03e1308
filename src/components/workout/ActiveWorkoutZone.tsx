@@ -499,9 +499,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
         {/* Modern Header */}
         <header className="shrink-0 flex items-center justify-between px-4 py-3 bg-gradient-to-b from-background to-background/80 backdrop-blur-sm">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="h-8 w-8 rounded-full bg-primary/15 text-primary flex items-center justify-center">
-              <Dumbbell size={16} />
-            </div>
+            <img src={m2Logo} alt="M² Training" className="h-8 w-8 rounded-full object-cover" />
             <div className="min-w-0">
               <span className="text-sm font-bold text-foreground truncate block leading-tight">
                 {workoutTitle}
