@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Search, ChevronDown, ChevronUp, Dumbbell, ShoppingBag, Calendar,
   Shield, Clock, Loader2, X, Link2, Unlink, Mail, Trash2, Users, AlertTriangle,
-  Star, Copy, MessageSquare,
+  Star, Copy, MessageSquare, Gift, BookOpen,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -14,13 +14,21 @@ import ConfirmActionModal from "@/components/ConfirmActionModal";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import AiAssistButton from "./AiAssistButton";
 
 const AdminClientList = () => {
   const [search, setSearch] = useState("");
   const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
-  const [eraseConfirmStep, setEraseConfirmStep] = useState(0); // 0=closed, 1=first confirm, 2=second confirm
+  const [eraseConfirmStep, setEraseConfirmStep] = useState(0);
   const [linkSearch, setLinkSearch] = useState("");
+  const [giftType, setGiftType] = useState<"program" | "workout">("program");
+  const [selectedGiftId, setSelectedGiftId] = useState("");
+  const [giftNotes, setGiftNotes] = useState("");
+  const [gifting, setGifting] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: profiles = [], isLoading } = useQuery({
@@ -71,6 +79,120 @@ const AdminClientList = () => {
       return data || [];
     },
   });
+
+  const { data: allPrograms = [] } = useQuery({
+    queryKey: ["admin-all-training-programs"],
+    queryFn: async () => {
+      const { data } = await supabase.from("training_programs").select("id, title, category, level, sport, total_weeks, price").eq("is_active", true).order("title");
+      return data || [];
+    },
+  });
+
+  const { data: allDailyWorkouts = [] } = useQuery({
+    queryKey: ["admin-all-daily-workouts"],
+    queryFn: async () => {
+      const { data } = await supabase.from("daily_workouts").select("id, title, description, target_audience, exercises").eq("is_active", true).order("title");
+      return data || [];
+    },
+  });
+
+  const giftContent = async (targetUserId: string, targetName: string) => {
+    if (!selectedGiftId) { toast.error("Select a program or workout to gift"); return; }
+    setGifting(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      if (giftType === "program") {
+        // Check if already has this program
+        const { data: existing } = await supabase.from("user_active_programs").select("id").eq("user_id", targetUserId).eq("program_id", selectedGiftId).limit(1);
+        if (existing && existing.length > 0) {
+          toast.error("User already has this program");
+          setGifting(false);
+          return;
+        }
+
+        // Insert into user_active_programs
+        const { error: progErr } = await supabase.from("user_active_programs").insert({
+          user_id: targetUserId,
+          program_id: selectedGiftId,
+          status: "active",
+          stripe_session_id: null,
+        });
+        if (progErr) throw progErr;
+
+        // Track in user_content_access
+        const { error: accessErr } = await supabase.from("user_content_access").insert({
+          user_id: targetUserId,
+          program_id: selectedGiftId,
+          access_type: "admin_gift",
+          granted_by: user.id,
+          notes: giftNotes || `Gifted by admin`,
+        });
+        if (accessErr) console.warn("Content access tracking failed:", accessErr);
+
+        // Track in gifted_products
+        const { error: giftErr } = await supabase.from("gifted_products").insert({
+          user_id: targetUserId,
+          gifted_by: user.id,
+          gift_type: "program",
+          product_id: selectedGiftId,
+          notes: giftNotes || null,
+        });
+        if (giftErr) console.warn("Gift tracking failed:", giftErr);
+
+        const prog = allPrograms.find((p: any) => p.id === selectedGiftId);
+        toast.success(`Gifted "${prog?.title}" to ${targetName}`);
+      } else {
+        // Workout gift — copy daily_workouts entry into community_workouts for user
+        const workout = allDailyWorkouts.find((w: any) => w.id === selectedGiftId);
+        if (!workout) throw new Error("Workout not found");
+
+        const { error: insertErr } = await supabase.from("community_workouts").insert({
+          user_id: targetUserId,
+          title: workout.title,
+          description: workout.description || null,
+          creator_name: "Coach Matt",
+          is_public: false,
+          exercises: workout.exercises,
+        });
+        if (insertErr) throw insertErr;
+
+        // Track in user_content_access
+        const { error: accessErr } = await supabase.from("user_content_access").insert({
+          user_id: targetUserId,
+          workout_id: selectedGiftId,
+          access_type: "admin_gift",
+          granted_by: user.id,
+          notes: giftNotes || `Gifted workout by admin`,
+        });
+        if (accessErr) console.warn("Content access tracking failed:", accessErr);
+
+        toast.success(`Gifted workout "${workout.title}" to ${targetName}`);
+      }
+
+      // Send notification
+      await supabase.from("notifications").insert({
+        user_id: targetUserId,
+        type: "gift",
+        title: giftType === "program" ? "🎁 New Program Unlocked!" : "🎁 New Workout Added!",
+        body: giftType === "program"
+          ? `Coach Matt just added a training program to your library. Check it out!`
+          : `Coach Matt just dropped a custom workout into your library. Get after it!`,
+        link: "/dashboard",
+      });
+
+      // Reset form
+      setSelectedGiftId("");
+      setGiftNotes("");
+      queryClient.invalidateQueries({ queryKey: ["admin-all-active-programs"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-all-gifts"] });
+    } catch (err: any) {
+      toast.error(err.message || "Gift failed");
+    } finally {
+      setGifting(false);
+    }
+  };
 
   // Mutations
   const toggleInPerson = useMutation({
@@ -419,8 +541,97 @@ const AdminClientList = () => {
                     </p>
                   </div>
 
+                  {/* ===== GIFT PROGRAM / WORKOUT ===== */}
+                  <div className="bg-secondary/30 border border-border p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Gift size={14} className="text-primary" />
+                      <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Gift Program or Workout</span>
+                    </div>
 
-                  {/* Trial Manipulation */}
+                    {/* Current programs */}
+                    {userPrograms.length > 0 && (
+                      <div className="mb-3">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Current Programs</p>
+                        <div className="flex flex-wrap gap-1">
+                          {userPrograms.map((up: any) => (
+                            <Badge key={up.id} variant="outline" className="text-[9px]">
+                              <BookOpen size={8} className="mr-1" />
+                              {up.training_programs?.title || "Program"}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Gift type toggle */}
+                    <div className="flex gap-1 mb-2">
+                      {(["program", "workout"] as const).map((t) => (
+                        <button
+                          key={t}
+                          onClick={() => { setGiftType(t); setSelectedGiftId(""); }}
+                          className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest border transition-all ${
+                            giftType === t
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-background text-muted-foreground border-border hover:border-primary/50"
+                          }`}
+                        >
+                          {t === "program" ? "📚 Program" : "💪 Workout"}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Selector */}
+                    <Select value={selectedGiftId} onValueChange={setSelectedGiftId}>
+                      <SelectTrigger className="bg-background border-border text-xs mb-2">
+                        <SelectValue placeholder={giftType === "program" ? "Select a program..." : "Select a workout..."} />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-60">
+                        {giftType === "program" ? (
+                          allPrograms.map((prog: any) => (
+                            <SelectItem key={prog.id} value={prog.id}>
+                              <span className="font-bold">{prog.title}</span>
+                              <span className="text-muted-foreground ml-2 text-[10px]">
+                                {prog.category} · {prog.level} · {prog.total_weeks}wk
+                                {prog.price > 0 && ` · $${prog.price}`}
+                              </span>
+                            </SelectItem>
+                          ))
+                        ) : (
+                          allDailyWorkouts.map((w: any) => (
+                            <SelectItem key={w.id} value={w.id}>
+                              <span className="font-bold">{w.title}</span>
+                              <span className="text-muted-foreground ml-2 text-[10px]">
+                                {w.target_audience}
+                              </span>
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+
+                    {/* Notes */}
+                    <Input
+                      value={giftNotes}
+                      onChange={(e) => setGiftNotes(e.target.value)}
+                      placeholder="Optional note (visible in records)..."
+                      className="bg-background text-xs mb-2"
+                    />
+
+                    {/* Gift button */}
+                    <button
+                      onClick={() => giftContent(p.user_id, p.full_name || p.email || "User")}
+                      disabled={gifting || !selectedGiftId}
+                      className="w-full bg-primary text-primary-foreground px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      {gifting ? <Loader2 size={12} className="animate-spin" /> : <Gift size={12} />}
+                      {gifting ? "Gifting…" : `Gift ${giftType === "program" ? "Program" : "Workout"} to ${p.full_name?.split(" ")[0] || "User"}`}
+                    </button>
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      Bypasses Stripe — content is added directly to their library with a notification.
+                    </p>
+                  </div>
+
+
                   <div className="bg-secondary/30 border border-border p-3">
                     <div className="flex items-center gap-2 mb-2">
                       <Clock size={14} className="text-primary" />
