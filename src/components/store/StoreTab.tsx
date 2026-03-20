@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import InteractivePrograms from "./InteractivePrograms";
 import FoundationPrograms from "./FoundationPrograms";
-import MerchSection from "../MerchSection";
+import MerchSection from "@/components/features/MerchSection";
 import GiftCardSection from "./GiftCardSection";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, TIER_DISCOUNTS } from "@/hooks/useAuth";
