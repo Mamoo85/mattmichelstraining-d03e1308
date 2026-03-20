@@ -29,6 +29,17 @@ const HeroSection = () => {
   const showHero = useSectionVisible("hero");
   const showFindUs = useSectionVisible("find_us");
 
+  // Defer below-fold sections until after first paint to improve FCP
+  const [showBelow, setShowBelow] = useState(false);
+  useEffect(() => {
+    const id = requestIdleCallback?.(() => setShowBelow(true)) ??
+      setTimeout(() => setShowBelow(true), 100);
+    return () => {
+      if (typeof id === "number" && "cancelIdleCallback" in window) cancelIdleCallback(id);
+      else clearTimeout(id as ReturnType<typeof setTimeout>);
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       <div
