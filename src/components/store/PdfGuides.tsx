@@ -142,16 +142,11 @@ const PdfGuides = () => {
 
             <div className="mt-auto pt-3">
               <button
-                onClick={(e) => { e.stopPropagation(); openModal(guide); }}
-                disabled={buyingId === guide.id}
-                className="bg-primary text-primary-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-m2 flex items-center gap-1.5 w-full justify-center disabled:opacity-50"
+                disabled
+                className="bg-muted text-muted-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 w-full justify-center cursor-not-allowed opacity-60"
               >
-                {buyingId === guide.id ? (
-                  <Loader2 size={12} className="animate-spin" />
-                ) : (
-                  <FileText size={12} />
-                )}
-                Buy Plan · {guide.price}
+                <FileText size={12} />
+                Coming Soon · {guide.price}
               </button>
             </div>
           </div>
