@@ -230,7 +230,7 @@ const Admin = () => {
           <SubTabs tabs={[
             { key: "athletes", label: "All Users", content: <AdminClientList /> },
             { key: "support", label: <span className="flex items-center gap-1">Support Tickets{pendingSupportCount > 0 && <Badge variant="destructive" className="text-[8px] px-1.5 py-0 min-w-[18px] h-4">{pendingSupportCount}</Badge>}</span>, content: <AdminSupportCopilot /> },
-            { key: "coaching", label: "Coach Review", content: (
+            { key: "coaching", label: <span className="flex items-center gap-1">Coach Review{pendingPostureCount > 0 && <Badge variant="destructive" className="text-[8px] px-1.5 py-0 min-w-[18px] h-4">{pendingPostureCount}</Badge>}</span>, content: (
               <div className="space-y-8">
                 <AdminCoachInbox />
                 <div className="border-t border-border pt-6"><AdminCoachDashboard /></div>
