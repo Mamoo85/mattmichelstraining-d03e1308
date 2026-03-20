@@ -107,6 +107,13 @@ const HeroSection = () => {
                 Enter The Portal
                 <ArrowRight size={14} />
               </Link>
+              <Link
+                to="/about"
+                className="inline-flex items-center gap-2 border-2 border-border text-muted-foreground px-6 py-3 text-xs font-bold uppercase tracking-widest hover:border-primary hover:text-primary transition-all duration-300 w-full sm:w-auto justify-center"
+              >
+                Meet Matt
+                <ArrowRight size={14} />
+              </Link>
             </div>
 
             {/* Audience Router — deferred to avoid loading framer-motion during FCP */}
