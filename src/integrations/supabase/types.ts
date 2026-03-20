@@ -389,6 +389,71 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_program_requests: {
+        Row: {
+          additional_notes: string | null
+          admin_notes: string | null
+          age: string | null
+          created_at: string
+          days_per_week: string | null
+          equipment: string | null
+          experience: string | null
+          generated_program_id: string | null
+          goals: string | null
+          id: string
+          injuries: string | null
+          name: string
+          reviewed_at: string | null
+          sport: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          additional_notes?: string | null
+          admin_notes?: string | null
+          age?: string | null
+          created_at?: string
+          days_per_week?: string | null
+          equipment?: string | null
+          experience?: string | null
+          generated_program_id?: string | null
+          goals?: string | null
+          id?: string
+          injuries?: string | null
+          name: string
+          reviewed_at?: string | null
+          sport?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          additional_notes?: string | null
+          admin_notes?: string | null
+          age?: string | null
+          created_at?: string
+          days_per_week?: string | null
+          equipment?: string | null
+          experience?: string | null
+          generated_program_id?: string | null
+          goals?: string | null
+          id?: string
+          injuries?: string | null
+          name?: string
+          reviewed_at?: string | null
+          sport?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_program_requests_generated_program_id_fkey"
+            columns: ["generated_program_id"]
+            isOneToOne: false
+            referencedRelation: "training_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_workouts: {
         Row: {
           created_at: string
@@ -1434,6 +1499,7 @@ export type Database = {
           daily_fat_goal: number | null
           daily_protein_goal: number | null
           email: string | null
+          free_program_redeemed: boolean
           full_name: string | null
           id: string
           is_in_person: boolean
@@ -1456,6 +1522,7 @@ export type Database = {
           daily_fat_goal?: number | null
           daily_protein_goal?: number | null
           email?: string | null
+          free_program_redeemed?: boolean
           full_name?: string | null
           id?: string
           is_in_person?: boolean
@@ -1478,6 +1545,7 @@ export type Database = {
           daily_fat_goal?: number | null
           daily_protein_goal?: number | null
           email?: string | null
+          free_program_redeemed?: boolean
           full_name?: string | null
           id?: string
           is_in_person?: boolean

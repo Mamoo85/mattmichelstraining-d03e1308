@@ -37,6 +37,7 @@ const AdminMonthlyFocus = lazy(() => import("@/components/admin/AdminMonthlyFocu
 const AdminBiomechanics = lazy(() => import("@/components/admin/AdminBiomechanics"));
 const AdminAiToolkit = lazy(() => import("@/components/admin/AdminAiToolkit"));
 const AdminCoachAiQueue = lazy(() => import("@/components/admin/AdminCoachAiQueue"));
+const AdminCustomRequests = lazy(() => import("@/components/admin/AdminCustomRequests"));
 
 const AdminFinancials = lazy(() => import("@/components/admin/AdminFinancials"));
 const AdminPromotions = lazy(() => import("@/components/admin/AdminPromotions"));
@@ -156,7 +157,19 @@ const Admin = () => {
     refetchInterval: 30000,
   });
 
-  const totalEngineBadge = pendingDraftsCount + pendingAiQueueCount;
+  const { data: pendingCustomCount = 0 } = useQuery({
+    queryKey: ["pending-custom-requests-count"],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("custom_program_requests" as any)
+        .select("id", { count: "exact", head: true })
+        .in("status", ["pending", "ready_for_review"]);
+      return count ?? 0;
+    },
+    refetchInterval: 30000,
+  });
+
+  const totalEngineBadge = pendingDraftsCount + pendingAiQueueCount + pendingCustomCount;
   const totalRosterBadge = pendingSupportCount + unreadParentCount + pendingPostureCount;
 
   const { data: trashCount = 0 } = useQuery({
@@ -276,6 +289,7 @@ const Admin = () => {
             { key: "monthly", label: "Monthly Focus", content: <AdminMonthlyFocus /> },
             { key: "biomechanics", label: "Biomechanics", content: <AdminBiomechanics /> },
             { key: "coach-ai", label: <span className="flex items-center gap-1">Coach AI{pendingDraftsCount > 0 && <Badge variant="destructive" className="text-[8px] px-1.5 py-0 min-w-[18px] h-4">{pendingDraftsCount}</Badge>}</span>, content: <AdminCoachAiQueue /> },
+            { key: "custom-requests", label: <span className="flex items-center gap-1">Custom Requests{pendingCustomCount > 0 && <Badge variant="destructive" className="text-[8px] px-1.5 py-0 min-w-[18px] h-4">{pendingCustomCount}</Badge>}</span>, content: <AdminCustomRequests /> },
           ]} />
         )}
 

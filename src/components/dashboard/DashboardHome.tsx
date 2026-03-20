@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const SharedWorkoutFeed = lazy(() => import("@/components/workout/SharedWorkoutFeed"));
 const WelcomeGiftModal = lazy(() => import("./WelcomeGiftModal"));
+const CustomProgramRequest = lazy(() => import("./CustomProgramRequest"));
 
 interface DashboardHomeProps {
   isNewUser: boolean;
@@ -105,6 +106,10 @@ const DashboardHome = memo(({ isNewUser, onViewPoints, onViewReferrals }: Dashbo
         </button>
       </div>
     )}
+
+    <Suspense fallback={null}>
+      <CustomProgramRequest />
+    </Suspense>
 
     <UpcomingSessions />
     <MonthlyFocusWidget />
