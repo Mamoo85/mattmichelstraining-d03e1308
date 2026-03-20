@@ -60,7 +60,7 @@ const HeroSection = () => {
                 {STATS.map((s) => (
                   <div
                     key={s.label}
-                    className="flex flex-col items-center animate-[fadeInUp_0.4s_ease-out_0.2s_both]"
+                    className="flex flex-col items-center animate-fadeInUp"
                   >
                     <s.icon size={14} className="text-primary mb-1" />
                     <span className="text-lg sm:text-xl font-black text-primary font-mono leading-none">{s.value}</span>
