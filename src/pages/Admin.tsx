@@ -289,7 +289,7 @@ const Admin = () => {
             { key: "monthly", label: "Monthly Focus", content: <AdminMonthlyFocus /> },
             { key: "biomechanics", label: "Biomechanics", content: <AdminBiomechanics /> },
             { key: "coach-ai", label: <span className="flex items-center gap-1">Coach AI{pendingDraftsCount > 0 && <Badge variant="destructive" className="text-[8px] px-1.5 py-0 min-w-[18px] h-4">{pendingDraftsCount}</Badge>}</span>, content: <AdminCoachAiQueue /> },
-            { key: "custom-requests", label: "Custom Requests", content: <AdminCustomRequests /> },
+            { key: "custom-requests", label: <span className="flex items-center gap-1">Custom Requests{pendingCustomCount > 0 && <Badge variant="destructive" className="text-[8px] px-1.5 py-0 min-w-[18px] h-4">{pendingCustomCount}</Badge>}</span>, content: <AdminCustomRequests /> },
           ]} />
         )}
 
