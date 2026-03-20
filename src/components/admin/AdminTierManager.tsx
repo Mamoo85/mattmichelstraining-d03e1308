@@ -11,7 +11,7 @@ import {
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Trash2, Save, ShieldCheck, Zap, Star, Users, Loader2, ChevronDown, Pencil, Eye, Crown, Copy, Link } from "lucide-react";
+import { Plus, Trash2, Save, ShieldCheck, Zap, Star, Users, Loader2, ChevronDown, Pencil, Eye, Copy, Link } from "lucide-react";
 
 const TIERS = [
   { key: "tier_free", label: "Free", icon: Eye, color: "text-muted-foreground" },
