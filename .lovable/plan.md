@@ -1,123 +1,71 @@
 
 
-# RAG Coaching Assistant — Full-Text Search + Admin Approval
+# The Autonomous CMO — Analytics & Strategy Engine
 
-## Overview
-Build an "Ask Coach" floating chat on the dashboard. Uses full-text search (no embedding API needed) to retrieve relevant coaching documents, then generates AI answers via Lovable AI (Gemini Flash). **All AI responses are queued as drafts — only admin-approved answers reach athletes.**
+## What We're Building
 
-## Database Migration
+A weekly automated marketing intelligence system that aggregates site analytics, feeds them through an AI strategy processor, and delivers actionable CMO-grade reports to the admin dashboard.
 
-```sql
--- Coaching documents table (admin-managed knowledge base)
-CREATE TABLE public.coaching_documents (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  title TEXT,
-  content TEXT NOT NULL,
-  search_vector TSVECTOR GENERATED ALWAYS AS (
-    to_tsvector('english', coalesce(title,'') || ' ' || content)
-  ) STORED,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
+**Important adaptation**: Rather than integrating PostHog (which adds a third-party dependency and requires an API key), we'll leverage the **Lovable Analytics API** that's already collecting pageviews, referral sources, device data, and geo data for this project. This gives us the same data without any new SDK or account setup.
 
-CREATE INDEX idx_coaching_docs_search ON public.coaching_documents USING GIN (search_vector);
+---
 
-ALTER TABLE public.coaching_documents ENABLE ROW LEVEL SECURITY;
+## Plan
 
-CREATE POLICY "Authenticated can read coaching docs"
-  ON public.coaching_documents FOR SELECT TO authenticated USING (true);
+### 1. Database: `ai_marketing_reports` Table
 
-CREATE POLICY "Admins manage coaching docs"
-  ON public.coaching_documents FOR ALL TO authenticated
-  USING (public.has_role(auth.uid(), 'admin'))
-  WITH CHECK (public.has_role(auth.uid(), 'admin'));
+Create a new table to store weekly CMO reports with structured JSON output.
 
--- Full-text search function
-CREATE OR REPLACE FUNCTION public.search_coaching_documents(query TEXT, match_count INT DEFAULT 5)
-RETURNS TABLE (id UUID, title TEXT, content TEXT, rank REAL)
-LANGUAGE sql STABLE AS $$
-  SELECT cd.id, cd.title, cd.content,
-    ts_rank(cd.search_vector, plainto_tsquery('english', query)) AS rank
-  FROM public.coaching_documents cd
-  WHERE cd.search_vector @@ plainto_tsquery('english', query)
-  ORDER BY rank DESC
-  LIMIT match_count;
-$$;
-
--- AI draft answers table (admin approval queue)
-CREATE TABLE public.coach_ai_drafts (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  question TEXT NOT NULL,
-  ai_answer TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'pending', -- pending | approved | rejected
-  admin_edit TEXT,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  reviewed_at TIMESTAMPTZ
-);
-
-ALTER TABLE public.coach_ai_drafts ENABLE ROW LEVEL SECURITY;
-
--- Athletes see only their own approved answers
-CREATE POLICY "Athletes see own approved drafts"
-  ON public.coach_ai_drafts FOR SELECT TO authenticated
-  USING (user_id = auth.uid() AND status = 'approved');
-
--- Admins see all
-CREATE POLICY "Admins manage all drafts"
-  ON public.coach_ai_drafts FOR ALL TO authenticated
-  USING (public.has_role(auth.uid(), 'admin'))
-  WITH CHECK (public.has_role(auth.uid(), 'admin'));
-
--- Athletes can insert (ask questions)
-CREATE POLICY "Athletes can ask questions"
-  ON public.coach_ai_drafts FOR INSERT TO authenticated
-  WITH CHECK (user_id = auth.uid());
+```
+- id (uuid, PK)
+- report_week (date) — Monday of the report week
+- raw_analytics (jsonb) — the aggregated analytics snapshot
+- ai_analysis (jsonb) — structured: funnel_bottlenecks, seo_opportunities, ad_campaign_ideas
+- summary_text (text) — readable markdown summary
+- status (text, default 'new') — new / reviewed / actioned
+- created_at (timestamptz)
 ```
 
-## Edge Function — `ask-coach`
+RLS: admin-only read/update via `has_role()`.
 
-- Accepts `{ message }` + auth token
-- Calls `search_coaching_documents` RPC for top-5 matches
-- Sends context + question to Gemini Flash with Coach Matt system prompt
-- **Does NOT stream back to user.** Instead, inserts the AI answer into `coach_ai_drafts` with `status: 'pending'`
-- Returns `{ queued: true }` to the client
-- Registered in `config.toml` with `verify_jwt = false`, validates JWT in code
+### 2. Edge Function: `weekly-cmo-report`
 
-## Frontend Components
+A function that:
+1. Calls the **Lovable Analytics API** (`analytics--read_project_analytics` equivalent via HTTP) to pull the last 7 days of traffic data — pageviews, top pages, referral sources, devices, countries, bounce rates, session durations
+2. Queries internal Supabase tables for business context: subscriber counts by tier, recent signups, churn indicators (inactive users)
+3. Sends the combined data payload to the **Lovable AI Gateway** with a CMO system prompt requesting structured JSON output (funnel_bottlenecks, seo_opportunities, ad_campaign_ideas)
+4. Saves the full report to `ai_marketing_reports`
 
-### 1. `src/components/dashboard/AskCoachBubble.tsx`
-- Floating chat bubble (bottom-right corner) on Dashboard
-- User types question → calls `ask-coach` edge function
-- Shows confirmation: "Your question has been sent to Coach Matt. You'll be notified when he responds."
-- Below the input, shows history of **approved** answers (fetched from `coach_ai_drafts` where `status = 'approved'`)
-- No AI text is ever shown to the user without admin approval
+The system prompt will position the AI as M2's CMO analyzing real traffic data, with instructions to return actionable strategies — not generic advice.
 
-### 2. Admin: `src/components/admin/AdminCoachAiQueue.tsx`
-- New tab/section in Admin dashboard
-- Lists all `pending` drafts with: athlete name, question, AI-generated answer
-- Admin can: **Approve** (as-is), **Edit & Approve** (modify the answer), or **Reject**
-- On approval, updates `status = 'approved'` and inserts a notification for the athlete
-- On reject, updates `status = 'rejected'` (optionally with a note)
+### 3. Scheduled Execution via `pg_cron`
 
-### 3. Admin: Coaching Documents Manager
-- Simple CRUD in Admin dashboard to add/edit/delete coaching documents (title + content)
-- These form the knowledge base the AI searches against
+Set up a weekly cron job (every Monday at 6 AM EST) that calls the edge function automatically, so reports appear without admin action.
 
-## File Changes
+### 4. Admin UI: CMO Dashboard
 
-| File | Action |
-|------|--------|
-| Migration SQL | `coaching_documents` + `coach_ai_drafts` tables + search function |
-| `supabase/functions/ask-coach/index.ts` | New edge function |
-| `supabase/config.toml` | Register `ask-coach` |
-| `src/components/dashboard/AskCoachBubble.tsx` | New floating chat UI |
-| `src/components/admin/AdminCoachAiQueue.tsx` | New admin approval queue |
-| `src/pages/Dashboard.tsx` | Add `<AskCoachBubble />` |
-| `src/pages/Admin.tsx` | Add AI Queue tab + Documents manager |
+Add a **"CMO Reports"** tool to the existing Business Intelligence section in `AdminAiBusinessTools.tsx`:
 
-## Security Summary
-- AI never contacts a user directly — all answers go through `coach_ai_drafts` with `pending` status
-- Only `approved` answers are visible to athletes (enforced by RLS)
-- Admin approval is the only path from AI generation to athlete visibility
-- Coaching documents are admin-only write, authenticated read
+- **Report List**: Shows weekly reports with date, status badge (New/Reviewed/Actioned), and key metrics summary
+- **Report Detail View**: Displays three sections as cards:
+  - **Funnel Bottlenecks** — where users drop off, with suggested fixes
+  - **SEO Opportunities** — content ideas based on traffic patterns
+  - **Ad Campaign Ideas** — copy, targeting, and demographics
+- **Action Bar**: Mark as Reviewed, Save insights to Marketing Drafts, Generate follow-up content
+- **Manual Trigger**: "Run Report Now" button for on-demand analysis
+- **Analytics Snapshot**: Show the raw traffic data (top pages, sources, devices) alongside the AI interpretation
+
+### 5. Wire Into Admin Navigation
+
+Add "CMO Reports" as a new sub-tab under **Site Content → Marketing & AI**, alongside the existing Marketing Drafts and AI Business Tools.
+
+---
+
+## Technical Notes
+
+- **No PostHog needed** — Lovable Analytics already captures pageviews, sources, devices, countries, bounce rates, and session duration for the published site
+- The edge function will use Lovable's project analytics endpoint to pull data server-side
+- AI model: `google/gemini-3-flash-preview` via Lovable AI Gateway with structured tool calling for reliable JSON extraction
+- The `ai-business-intelligence` edge function will get a new `cmo_report` tool case to handle this
+- All reports go through the existing drafts workflow for human oversight
 
