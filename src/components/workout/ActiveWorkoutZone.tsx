@@ -422,6 +422,12 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
     setShowConfirm(true);
   };
 
+  const handleDiscardExit = () => {
+    setShowConfirm(false);
+    localStorage.removeItem("m2-paused-workout");
+    onFinish();
+  };
+
   const handleFinishConfirmed = async () => {
     if (!user) return;
     setShowConfirm(false);
