@@ -115,6 +115,8 @@ export default {
         "pulse-glow": "pulse-glow 2.5s ease-in-out infinite",
         fadeIn: "fadeIn 0.4s ease-out",
         fadeInUp: "fadeInUp 0.4s ease-out 0.2s both",
+        "set-pop": "set-pop 0.4s ease-out",
+        "confetti-burst": "confetti-burst 0.8s ease-out forwards",
       },
     },
   },
