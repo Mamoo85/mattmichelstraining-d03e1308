@@ -23,6 +23,7 @@ import LiveFormTracker from "./LiveFormTracker";
 import ReadinessGate, { calculateAdjustments, type ReadinessResult } from "./ReadinessGate";
 import QuickLogBar from "./QuickLogBar";
 import type { LoggedExerciseData } from "./WorkoutLogger";
+import { safeLocalStorage } from "@/lib/browserStorage";
 
 /* ─── Context types ─── */
 export interface WorkoutZoneContext {
@@ -407,7 +408,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
       resumedDate: date.toISOString(),
       resumed: true,
     };
-    localStorage.setItem("m2-paused-workout", JSON.stringify(state));
+    safeLocalStorage.setItem("m2-paused-workout", JSON.stringify(state));
     toast.info("Workout paused. Resume anytime from your dashboard.");
     onPause?.();
   }, [exercises, sessionNotes, recovery, date, workoutTitle, initialContext, onPause]);
@@ -415,7 +416,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
   const handleFinishClick = async () => {
     if (saving) return;
     if (exercises.length === 0) {
-      localStorage.removeItem("m2-paused-workout");
+      safeLocalStorage.removeItem("m2-paused-workout");
       onFinish();
       return;
     }
@@ -527,7 +528,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
         sessionNotes={sessionNotes}
         recovery={recovery}
         onClose={() => {
-          localStorage.removeItem("m2-paused-workout");
+          safeLocalStorage.removeItem("m2-paused-workout");
           onFinish();
         }}
       />

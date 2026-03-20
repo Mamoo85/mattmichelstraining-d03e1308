@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { safeLocalStorage } from "@/lib/browserStorage";
 
 // Tier mapping: product_id → tier key
 export const TIERS = {
@@ -144,8 +145,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Clear React Query cache + persisted cache to prevent data bleed between users
     const { queryClient } = await import("@/App");
     queryClient.clear();
-    localStorage.removeItem("m2-query-cache");
-    localStorage.removeItem("m2_offline_queue");
+    safeLocalStorage.removeItem("m2-query-cache");
+    safeLocalStorage.removeItem("m2_offline_queue");
     await supabase.auth.signOut();
   };
 

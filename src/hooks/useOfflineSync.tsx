@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, createContext, useContext, ReactNode 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import { safeLocalStorage } from "@/lib/browserStorage";
 
 interface QueuedAction {
   id: string;
@@ -26,14 +27,14 @@ const QUEUE_KEY = "m2_offline_queue";
 
 function loadQueue(): QueuedAction[] {
   try {
-    return JSON.parse(localStorage.getItem(QUEUE_KEY) || "[]");
+    return JSON.parse(safeLocalStorage.getItem(QUEUE_KEY) || "[]");
   } catch {
     return [];
   }
 }
 
 function saveQueue(queue: QueuedAction[]) {
-  localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
+  safeLocalStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
 }
 
 export const OfflineSyncProvider = ({ children }: { children: ReactNode }) => {

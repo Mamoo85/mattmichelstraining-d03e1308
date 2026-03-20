@@ -2,6 +2,7 @@ import { useState, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Gift, Dumbbell, Camera, Loader2, ArrowRight, Sparkles } from "lucide-react";
+import { safeLocalStorage } from "@/lib/browserStorage";
 
 const PostureCapture = lazy(() => import("./PostureCapture"));
 
@@ -19,7 +20,7 @@ const WelcomeGiftModal = ({ open, onClose }: WelcomeGiftModalProps) => {
   const navigate = useNavigate();
 
   const handleDismiss = () => {
-    localStorage.setItem("m2-welcome-gift-seen", "1");
+    safeLocalStorage.setItem("m2-welcome-gift-seen", "1");
     onClose();
   };
 

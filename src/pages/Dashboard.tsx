@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import PwaInstallBanner from "@/components/PwaInstallBanner";
 import StudioCheckIn from "@/components/StudioCheckIn";
+import { safeLocalStorage } from "@/lib/browserStorage";
 
 // Extracted sub-components
 import DashboardHome from "@/components/dashboard/DashboardHome";
@@ -109,7 +110,7 @@ const Dashboard = () => {
         <StudioCheckIn />
 
         {/* Resume workout banner */}
-        {localStorage.getItem("m2-paused-workout") && (
+        {safeLocalStorage.getItem("m2-paused-workout") && (
           <button
             onClick={() => window.dispatchEvent(new Event("resume-workout-zone"))}
             className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground py-3 mb-4 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all animate-pulse"
