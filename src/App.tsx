@@ -76,8 +76,28 @@ export const queryClient = new QueryClient({
   },
 });
 
+// Graceful storage fallback for privacy browsers that block localStorage
+const dummyStorage: Storage = {
+  getItem: () => null,
+  setItem: () => {},
+  removeItem: () => {},
+  clear: () => {},
+  key: () => null,
+  length: 0,
+};
+
+let safeStorage: Storage = dummyStorage;
+try {
+  // Test that localStorage is actually usable (privacy browsers may throw on access)
+  window.localStorage.setItem("__storage_test__", "1");
+  window.localStorage.removeItem("__storage_test__");
+  safeStorage = window.localStorage;
+} catch {
+  console.warn("[M²] localStorage blocked — running without cache persistence");
+}
+
 const persister = createSyncStoragePersister({
-  storage: window.localStorage,
+  storage: safeStorage,
   key: "m2-query-cache",
 });
 

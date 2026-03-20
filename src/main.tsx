@@ -27,6 +27,10 @@ createRoot(document.getElementById("root")!).render(
 // Register service worker after first paint to avoid blocking FCP
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/registerSW.js").catch(() => {});
+    try {
+      navigator.serviceWorker.register("/registerSW.js").catch(() => {});
+    } catch {
+      // Privacy browsers may block SW registration entirely
+    }
   });
 }
