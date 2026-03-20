@@ -55,27 +55,6 @@
     --synth-glow-orange: 0 0 12px hsl(14 100% 57% / 0.4);
   }
 
-  .dark {
-    --background: 0 0% 5%;
-    --foreground: 0 0% 93%;
-    --card: 0 0% 8%;
-    --card-foreground: 0 0% 93%;
-    --popover: 0 0% 8%;
-    --popover-foreground: 0 0% 93%;
-    --primary: 18 82% 50%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 12%;
-    --secondary-foreground: 0 0% 93%;
-    --muted: 0 0% 16%;
-    --muted-foreground: 0 0% 55%;
-    --accent: 0 0% 93%;
-    --accent-foreground: 0 0% 5%;
-    --destructive: 0 70% 45%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 15%;
-    --input: 0 0% 15%;
-    --ring: 18 82% 50%;
-  }
 }
 
 @layer base {
