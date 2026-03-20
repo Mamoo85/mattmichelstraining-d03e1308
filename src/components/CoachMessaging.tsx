@@ -120,7 +120,7 @@ const CoachMessaging = () => {
             <div className="text-center py-12">
               <p className="text-sm text-muted-foreground">No messages yet. Start a conversation with Matt!</p>
               <p className="text-[10px] text-muted-foreground mt-1">
-                💡 Tip: Use the <Sparkles size={10} className="inline text-primary" /> button for an instant AI answer while you wait for Matt's reply.
+                💡 Tip: Use the <Sparkles size={10} className="inline text-primary" /> button for a quick answer while you wait for Matt's reply.
               </p>
             </div>
           ) : (
@@ -146,7 +146,7 @@ const CoachMessaging = () => {
                   <div className="max-w-[85%] p-3 bg-accent/20 border border-accent/30">
                     <div className="flex items-center gap-1.5 mb-1.5">
                       <Sparkles size={10} className="text-accent-foreground" />
-                      <span className="text-[9px] font-bold uppercase tracking-widest text-accent-foreground">AI Quick Answer</span>
+                      <span className="text-[9px] font-bold uppercase tracking-widest text-accent-foreground">Quick Answer</span>
                     </div>
                     <div className="prose prose-sm max-w-none text-foreground text-xs leading-relaxed">
                       <ReactMarkdown>{aiContent}</ReactMarkdown>
@@ -155,7 +155,7 @@ const CoachMessaging = () => {
                       )}
                     </div>
                     <span className="text-[9px] text-muted-foreground mt-1.5 block">
-                      This is an AI-generated answer. Matt will review your message personally.
+                      Matt will review your message and respond personally.
                     </span>
                   </div>
                 </div>
@@ -178,7 +178,7 @@ const CoachMessaging = () => {
               onClick={handleAiQuickAnswer}
               disabled={streaming}
               className="bg-accent text-accent-foreground px-2.5 py-2 hover:opacity-90 transition-m2 disabled:opacity-50"
-              title="Get instant AI answer"
+              title="Get quick answer"
             >
               {streaming ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
             </button>

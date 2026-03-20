@@ -394,7 +394,7 @@ const TrialWelcome = () => {
                 </h2>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed mb-5">
-                Matt builds your program from scratch — no templates, no AI. But first, he needs to see how you move.
+                Matt builds your program from scratch — no templates, no shortcuts. But first, he needs to see how you move.
                 Choose one of the options below to get started. This is <strong className="text-foreground">100% free</strong> as part of your trial.
               </p>
 

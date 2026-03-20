@@ -38,7 +38,7 @@ const FAQ_SCHEMA = {
       name: "What technology does M² Training use?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "M² uses AI-powered posture analysis, velocity-based training tracking, smart nutrition scanning, and an intelligent workout logger — all accessible from your phone with no extra hardware.",
+        text: "M² uses advanced posture analysis, velocity-based training tracking, smart nutrition scanning, and an intelligent workout logger — all accessible from your phone with no extra hardware.",
       },
     },
   ],

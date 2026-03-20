@@ -82,7 +82,7 @@ const AskCoachBubble = () => {
           <div className="flex items-center justify-between px-4 py-3 bg-primary text-primary-foreground">
             <div>
               <p className="text-xs font-bold uppercase tracking-widest">Ask Coach Matt</p>
-              <p className="text-[9px] opacity-70">AI-powered · Admin reviewed</p>
+              <p className="text-[9px] opacity-70">Reviewed by Coach Matt</p>
             </div>
             <button onClick={() => setOpen(false)} className="hover:opacity-70">
               <X size={16} />
@@ -136,7 +136,7 @@ const AskCoachBubble = () => {
             </button>
           </div>
           <p className="text-[8px] text-muted-foreground text-center pb-1.5">
-            AI-powered answers reviewed by Coach Matt before delivery
+            Every answer reviewed by Coach Matt before delivery
           </p>
         </div>
       )}

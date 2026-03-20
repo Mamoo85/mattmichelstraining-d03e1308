@@ -239,7 +239,7 @@ const CustomProgramSection = () => {
       <div className="bg-primary/10 border border-primary/20 p-5">
         <h2 className="text-base font-bold text-foreground mb-2">Your Program. Built by Matt. From Scratch.</h2>
         <p className="text-sm text-muted-foreground leading-relaxed">
-          No templates. No AI. Matt reads your intake, watches your video (if you send one), and builds a
+          No templates. No shortcuts. Matt reads your intake, watches your video (if you send one), and builds a
           100% custom program for your goals, your equipment, and your level. 20 years of doing this — condensed
           into a plan made just for you.
         </p>

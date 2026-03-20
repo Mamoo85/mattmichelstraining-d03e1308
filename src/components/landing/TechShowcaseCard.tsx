@@ -3,9 +3,9 @@ import { motion } from "framer-motion";
 import { Cpu, Zap, Camera, Brain, ArrowRight, ChevronRight } from "lucide-react";
 
 const TECH_ITEMS = [
-  { icon: Camera, label: "AI Posture Analysis", color: "text-[hsl(var(--synth-cyan))]" },
+  { icon: Camera, label: "Posture Analysis", color: "text-[hsl(var(--synth-cyan))]" },
   { icon: Zap, label: "Velocity-Based Training", color: "text-[hsl(var(--synth-orange))]" },
-  { icon: Brain, label: "AI Nutrition Scanner", color: "text-[hsl(var(--synth-pink))]" },
+  { icon: Brain, label: "Nutrition Scanner", color: "text-[hsl(var(--synth-pink))]" },
   { icon: Cpu, label: "Smart Workout Logger", color: "text-primary" },
 ];
 

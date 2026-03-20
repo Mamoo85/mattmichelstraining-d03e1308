@@ -76,7 +76,7 @@ const WelcomeGiftModal = ({ open, onClose }: WelcomeGiftModalProps) => {
             <div>
               <h2 className="text-base font-bold text-foreground uppercase tracking-widest">Free Posture Analysis</h2>
               <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-                Take a quick front and side photo — Coach Matt's AI will analyze your posture and send you a personalized breakdown. <strong>100% free.</strong>
+                Take a quick front and side photo — Coach Matt will analyze your posture and send you a personalized breakdown. <strong>100% free.</strong>
               </p>
             </div>
 

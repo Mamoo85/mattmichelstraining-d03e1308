@@ -16,9 +16,9 @@ const NutritionSneakPeek = () => {
       </div>
 
       <div className="p-4 space-y-3">
-        <h3 className="text-sm font-bold text-foreground">AI Nutrition Tracker</h3>
+        <h3 className="text-sm font-bold text-foreground">Nutrition Scanner</h3>
         <p className="text-[11px] text-muted-foreground leading-relaxed">
-          Snap a photo of your meal. AI counts every calorie and macro instantly — no manual entry.
+          Snap a photo of your meal. Every calorie and macro counted instantly — no manual entry.
         </p>
 
         {/* Blurred mock graph */}

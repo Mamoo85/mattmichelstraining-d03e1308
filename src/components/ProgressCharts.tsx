@@ -160,7 +160,7 @@ const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) =
       {/* Recovery trends — only renders if data exists */}
       {effectiveUserId && <RecoveryChart userId={effectiveUserId} />}
 
-      {/* AI Recovery Advisor */}
+      {/* Recovery Advisor */}
       {effectiveUserId && <AiRecoveryAdvisor userId={effectiveUserId} />}
     </div>
   );

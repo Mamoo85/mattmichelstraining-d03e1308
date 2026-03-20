@@ -24,7 +24,7 @@ const FOUNDATION_PROGRAMS = [
       "Core stability fundamentals",
       "Mobility & flexibility work",
       "No heavy loading — ever",
-      "AI postural assessment included",
+      "Postural assessment included",
     ],
     desc: "The operating system their body will run on for the next decade. Proper form, connective tissue strength, and habits that prevent injury later.",
   },
@@ -42,7 +42,7 @@ const FOUNDATION_PROGRAMS = [
       "Connective tissue development",
       "Injury-proof programming",
       "Work capacity building",
-      "AI postural assessment included",
+      "Postural assessment included",
     ],
     desc: "The phase most programs skip — and where injuries start. Focused on joints, tendons, and connective tissue BEFORE adding load.",
   },
@@ -60,7 +60,7 @@ const FOUNDATION_PROGRAMS = [
       "Competition prep programming",
       "Power development",
       "Advanced mobility protocols",
-      "AI postural assessment included",
+      "Postural assessment included",
     ],
     desc: "Now they're ready. Their body can handle real load because you didn't rush the first two phases.",
   },
@@ -78,7 +78,7 @@ const FOUNDATION_PROGRAMS = [
       "College-ready conditioning",
       "Advanced strength protocols",
       "Recovery & maintenance systems",
-      "AI postural assessment included",
+      "Postural assessment included",
     ],
     desc: "College coaches don't care how strong you were in high school if you're injured by October. This builds durability.",
   },
@@ -284,7 +284,7 @@ const FoundationPrograms = () => {
           </div>
           <div className="flex items-start gap-2">
             <span className="text-primary font-mono font-bold">3</span>
-            <p><strong className="text-foreground">AI postural assessment</strong> — Matt's AI reviews movement via photo/video and personalizes guidance.</p>
+            <p><strong className="text-foreground">Postural assessment</strong> — Matt reviews movement via photo/video and personalizes guidance.</p>
           </div>
         </div>
       </div>

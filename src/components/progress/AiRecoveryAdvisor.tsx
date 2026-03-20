@@ -28,7 +28,7 @@ const AiRecoveryAdvisor = ({ userId }: AiRecoveryAdvisorProps) => {
         <div className="flex items-center gap-2">
           <Heart size={14} className="text-primary" />
           <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-primary">
-            AI Recovery Advisor
+            Recovery Advisor
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -54,7 +54,7 @@ const AiRecoveryAdvisor = ({ userId }: AiRecoveryAdvisorProps) => {
 
       {!content && !streaming && (
         <p className="text-[11px] text-muted-foreground">
-          Log your sleep, soreness, and energy after workouts — then tap "Analyze My Recovery" for personalized recommendations from Coach Matt's AI.
+          Log your sleep, soreness, and energy after workouts — then tap "Analyze My Recovery" for personalized recommendations from Coach Matt.
         </p>
       )}
 

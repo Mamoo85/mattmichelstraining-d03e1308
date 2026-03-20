@@ -116,7 +116,7 @@ const PRODUCTS: Product[] = [
     priceId: "price_1TAvVYD52tPWee46eudNwrb6",
     tag: "CUSTOM · BUILT BY MATT",
     category: "custom",
-    description: "You fill out the intake. Matt reads every word. Then he builds your program from scratch — your goals, your equipment, your level. No templates. No AI. Downloadable and printable as a PDF.",
+    description: "You fill out the intake. Matt reads every word. Then he builds your program from scratch — your goals, your equipment, your level. No templates. No cookie-cutter plans. Downloadable and printable as a PDF.",
     includes: ["Fully custom program", "Coaching cues on every movement", "The WHY behind every choice", "Download & print as PDF", "Matt's guarantee: fix it or refund"],
   },
 ];

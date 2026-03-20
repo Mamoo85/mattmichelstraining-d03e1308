@@ -245,7 +245,7 @@ const WorkoutLoggerDemo = () => (
           { icon: Camera, label: "Form Check" },
           { icon: Zap, label: "Velocity" },
           { icon: MessageCircle, label: "Ask Coach" },
-          { icon: Activity, label: "AI Sub" },
+          { icon: Activity, label: "Smart Sub" },
         ].map((t) => (
           <div key={t.label} className="flex items-center gap-1 bg-secondary/60 px-2 py-1 border border-border text-[8px] font-bold text-foreground">
             <t.icon size={10} className="text-primary" /> {t.label}
@@ -418,7 +418,7 @@ const FEATURES: TechFeature[] = [
     ],
     techSpecs: [
       "200+ exercise library with instructional videos",
-      "OCR workout scanning via AI vision",
+      "OCR workout scanning via computer vision",
       "Voice-to-text notes via SpeechRecognition API",
       "Offline-first: logs sync when reconnected",
     ],
@@ -589,7 +589,7 @@ const TheEdge = () => {
     <div className="min-h-screen bg-background">
       <SEOHead
         title="The M² Edge — Training Technology Suite"
-        description="AI posture analysis, velocity-based training, nutrition scanning, smart workout logging — all running on your phone. Technology that's 5 years ahead."
+        description="Advanced posture analysis, velocity-based training, nutrition scanning, smart workout logging — all running on your phone. Technology that's 5 years ahead."
         path="/the-edge"
       />
       <AppNavbar />
