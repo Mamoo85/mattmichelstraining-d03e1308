@@ -1,71 +1,72 @@
 
 
-# The Autonomous CMO — Analytics & Strategy Engine
+## Workout UI Revamp — Modern Fitness App Redesign
 
-## What We're Building
+### What's Changing
 
-A weekly automated marketing intelligence system that aggregates site analytics, feeds them through an AI strategy processor, and delivers actionable CMO-grade reports to the admin dashboard.
+The current workout zone UI uses flat, boxy cards with hard borders and a utilitarian feel. We're redesigning it to match the sleek, modern aesthetic of apps like Strong, Hevy, and JEFIT — with rounded containers, smooth surfaces, subtle gradients, and better visual hierarchy.
 
-**Important adaptation**: Rather than integrating PostHog (which adds a third-party dependency and requires an API key), we'll leverage the **Lovable Analytics API** that's already collecting pageviews, referral sources, device data, and geo data for this project. This gives us the same data without any new SDK or account setup.
+### Scope
 
----
+**4 components getting redesigned:**
 
-## Plan
+1. **ExerciseCard.tsx** — The core set-logging card
+2. **ActiveWorkoutZone.tsx** — The full-screen workout container, header, and command bar
+3. **RecoveryInput.tsx** — The "How do you feel?" section
+4. **ProtocolTable.tsx** — The coach-assigned protocol view
 
-### 1. Database: `ai_marketing_reports` Table
+### Design Direction
 
-Create a new table to store weekly CMO reports with structured JSON output.
-
+```text
+Current                          →  New
+─────────────────────────────────────────────────
+Hard square borders              →  Rounded-xl containers with subtle shadows
+Flat bg-card backgrounds         →  Gradient surfaces, glass-morphism footer
+Tiny 10px uppercase labels       →  Clean hierarchy with weight on titles
+Boxy grid inputs                 →  Pill-shaped inputs with larger tap targets
+Flat checkmark buttons           →  Animated green fill on completion
+Sharp border-l for coach flag    →  Subtle glow + colored pill badge
+Cramped spacing                  →  Generous padding, breathing room
+Static rest timer bar            →  Circular countdown overlay
+Plain command bar                →  Frosted glass bar with rounded buttons
 ```
-- id (uuid, PK)
-- report_week (date) — Monday of the report week
-- raw_analytics (jsonb) — the aggregated analytics snapshot
-- ai_analysis (jsonb) — structured: funnel_bottlenecks, seo_opportunities, ad_campaign_ideas
-- summary_text (text) — readable markdown summary
-- status (text, default 'new') — new / reviewed / actioned
-- created_at (timestamptz)
-```
 
-RLS: admin-only read/update via `has_role()`.
+### Technical Details
 
-### 2. Edge Function: `weekly-cmo-report`
+**ExerciseCard.tsx:**
+- Rounded-xl container with `shadow-lg` and subtle `bg-gradient-to-b`
+- Exercise number as a colored circle badge instead of plain mono text
+- Set rows: larger `h-12` inputs with `rounded-lg`, alternating subtle row backgrounds
+- Ghost data shown as placeholder text inside inputs (not a separate column) to save width
+- Completed sets get a green background wash + scale animation
+- Coach notes panel uses a card-within-card with rounded corners and primary accent bar
+- "Flag for Coach" becomes a sleek pill toggle at the bottom
+- Add/remove set buttons become rounded pills with icons
 
-A function that:
-1. Calls the **Lovable Analytics API** (`analytics--read_project_analytics` equivalent via HTTP) to pull the last 7 days of traffic data — pageviews, top pages, referral sources, devices, countries, bounce rates, session durations
-2. Queries internal Supabase tables for business context: subscriber counts by tier, recent signups, churn indicators (inactive users)
-3. Sends the combined data payload to the **Lovable AI Gateway** with a CMO system prompt requesting structured JSON output (funnel_bottlenecks, seo_opportunities, ad_campaign_ideas)
-4. Saves the full report to `ai_marketing_reports`
+**ActiveWorkoutZone.tsx:**
+- Header: clean gradient from background to transparent, title centered, action icons as rounded icon buttons
+- Rest timer: circular progress ring overlay instead of a flat bar
+- Command bar footer: frosted glass (`backdrop-blur-xl`), rounded-2xl button group, workout timer as a prominent pill
+- Empty state: larger icon, gradient text, more inviting CTA button with glow
+- QuickLogBar: rounded-full input with integrated mic/send buttons
 
-The system prompt will position the AI as M2's CMO analyzing real traffic data, with instructions to return actionable strategies — not generic advice.
+**RecoveryInput.tsx:**
+- Rounded-xl container
+- Scale selector buttons become rounded pills with emoji indicators instead of numbers
+- Sleep input as a styled slider or rounded input
+- Collapsed summary as colored pills
 
-### 3. Scheduled Execution via `pg_cron`
+**ProtocolTable.tsx:**
+- Replace rigid grid with stacked rounded cards per exercise
+- Each exercise is a mini-card with the name prominent, sets/reps as a badge, notes below
+- Weight input gets a rounded, centered design with "lbs" suffix label
+- Log Session button: full-width rounded-xl with gradient and glow effect
 
-Set up a weekly cron job (every Monday at 6 AM EST) that calls the edge function automatically, so reports appear without admin action.
-
-### 4. Admin UI: CMO Dashboard
-
-Add a **"CMO Reports"** tool to the existing Business Intelligence section in `AdminAiBusinessTools.tsx`:
-
-- **Report List**: Shows weekly reports with date, status badge (New/Reviewed/Actioned), and key metrics summary
-- **Report Detail View**: Displays three sections as cards:
-  - **Funnel Bottlenecks** — where users drop off, with suggested fixes
-  - **SEO Opportunities** — content ideas based on traffic patterns
-  - **Ad Campaign Ideas** — copy, targeting, and demographics
-- **Action Bar**: Mark as Reviewed, Save insights to Marketing Drafts, Generate follow-up content
-- **Manual Trigger**: "Run Report Now" button for on-demand analysis
-- **Analytics Snapshot**: Show the raw traffic data (top pages, sources, devices) alongside the AI interpretation
-
-### 5. Wire Into Admin Navigation
-
-Add "CMO Reports" as a new sub-tab under **Site Content → Marketing & AI**, alongside the existing Marketing Drafts and AI Business Tools.
-
----
-
-## Technical Notes
-
-- **No PostHog needed** — Lovable Analytics already captures pageviews, sources, devices, countries, bounce rates, and session duration for the published site
-- The edge function will use Lovable's project analytics endpoint to pull data server-side
-- AI model: `google/gemini-3-flash-preview` via Lovable AI Gateway with structured tool calling for reliable JSON extraction
-- The `ai-business-intelligence` edge function will get a new `cmo_report` tool case to handle this
-- All reports go through the existing drafts workflow for human oversight
+### Files Modified
+- `src/components/workout/ExerciseCard.tsx`
+- `src/components/workout/ActiveWorkoutZone.tsx`
+- `src/components/workout/RecoveryInput.tsx`
+- `src/components/workout/QuickLogBar.tsx`
+- `src/components/ProtocolTable.tsx`
+- `src/components/workout/WorkoutTimer.tsx`
 
