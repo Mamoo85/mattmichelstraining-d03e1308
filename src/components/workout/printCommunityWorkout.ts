@@ -116,7 +116,7 @@ export const printCommunityWorkout = (data: PrintCommunityWorkoutData) => {
       ${exerciseRows}
     </tbody>
   </table>
-  <div class="footer">Built by M² Training · m2training.lovable.app</div>
+  <div class="footer">Built by M² Training · www.mattmichelstraining.com</div>
 </body>
 </html>`);
   win.document.close();
