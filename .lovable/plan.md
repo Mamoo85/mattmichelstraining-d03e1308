@@ -1,61 +1,123 @@
 
 
-# Add VIP Tier to Access Manager + Feature Audit
+# RAG Coaching Assistant — Full-Text Search + Admin Approval
 
-## What This Does
+## Overview
+Build an "Ask Coach" floating chat on the dashboard. Uses full-text search (no embedding API needed) to retrieve relevant coaching documents, then generates AI answers via Lovable AI (Gemini Flash). **All AI responses are queued as drafts — only admin-approved answers reach athletes.**
 
-1. **Adds a VIP column** to the Tier Access Manager so the admin can toggle which features VIP users can access
-2. **Adds VIP invite link generation** directly in the Tier Manager (admin-only, unique invite links)
-3. **Expands the preset feature list** to cover ALL app features currently missing from the manager
+## Database Migration
 
-## Database Changes
+```sql
+-- Coaching documents table (admin-managed knowledge base)
+CREATE TABLE public.coaching_documents (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT,
+  content TEXT NOT NULL,
+  search_vector TSVECTOR GENERATED ALWAYS AS (
+    to_tsvector('english', coalesce(title,'') || ' ' || content)
+  ) STORED,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
 
-**Migration:** Add `tier_vip` boolean column to `tier_features` table (default `true` — VIP gets everything by default)
+CREATE INDEX idx_coaching_docs_search ON public.coaching_documents USING GIN (search_vector);
 
-The existing `tier_legend` column is unused and will be left as-is (no breaking changes).
+ALTER TABLE public.coaching_documents ENABLE ROW LEVEL SECURITY;
 
-## Changes
+CREATE POLICY "Authenticated can read coaching docs"
+  ON public.coaching_documents FOR SELECT TO authenticated USING (true);
 
-### 1. Database Migration
-- `ALTER TABLE tier_features ADD COLUMN tier_vip boolean NOT NULL DEFAULT true;`
+CREATE POLICY "Admins manage coaching docs"
+  ON public.coaching_documents FOR ALL TO authenticated
+  USING (public.has_role(auth.uid(), 'admin'))
+  WITH CHECK (public.has_role(auth.uid(), 'admin'));
 
-### 2. `src/components/admin/AdminTierManager.tsx`
-- Add VIP to the `TIERS` array with a Crown icon (positioned after Team/Elite)
-- Add VIP invite link generator section at the top: a button that generates a unique invite URL (using the existing VIP flow from `AdminClientList`) and copies it to clipboard
-- **Expand `PRESET_FEATURES`** to include ALL missing features:
-  - `progress_tracking` — Progress Charts & Lift Logging
-  - `nutrition_scanner` — already present
-  - `ai_recovery` — AI Recovery Advisor
-  - `workout_scanner` — Workout Photo Scanner
-  - `shared_feed` — Community Workout Feed
-  - `session_booking` — already present
-  - `posture_capture` — Posture Photo Capture
-  - `lift_insights` — AI Lift Insights
-  - `ask_coach_matt` — Ask Coach Matt (already used in code but missing from presets)
-  - `referral_program` — Referral & Earn Program
-  - `points_leaderboard` — Points & Leaderboard
-  - `gift_sessions` — Gift a Session
-  - `interval_timer` — Interval Timer
-  - `workout_builder` — Custom Workout Builder
-  - `live_form_tracker` — Live Form Tracker
-  - `voice_notes` — Voice Notes
+-- Full-text search function
+CREATE OR REPLACE FUNCTION public.search_coaching_documents(query TEXT, match_count INT DEFAULT 5)
+RETURNS TABLE (id UUID, title TEXT, content TEXT, rank REAL)
+LANGUAGE sql STABLE AS $$
+  SELECT cd.id, cd.title, cd.content,
+    ts_rank(cd.search_vector, plainto_tsquery('english', query)) AS rank
+  FROM public.coaching_documents cd
+  WHERE cd.search_vector @@ plainto_tsquery('english', query)
+  ORDER BY rank DESC
+  LIMIT match_count;
+$$;
 
-### 3. `src/hooks/useTierAccess.tsx`
-- Add `"vip": "tier_vip"` to `TIER_COLUMN_MAP`
-- When checking access for a VIP user (detected via profile `is_vip` flag), check the `tier_vip` column instead of their stored subscription tier
+-- AI draft answers table (admin approval queue)
+CREATE TABLE public.coach_ai_drafts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  question TEXT NOT NULL,
+  ai_answer TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending', -- pending | approved | rejected
+  admin_edit TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  reviewed_at TIMESTAMPTZ
+);
 
-### 4. `src/hooks/useAuth.tsx`
-- Expose `isVip` boolean from the auth context (read from the profile's `is_vip` field)
+ALTER TABLE public.coach_ai_drafts ENABLE ROW LEVEL SECURITY;
 
-### 5. VIP Invite Link Generator (in AdminTierManager)
-- Small card at the top of the Tier Manager with a "Generate VIP Invite Link" button
-- Generates a link like `/auth?ref=vip-{random8chars}` 
-- Copies to clipboard with a toast confirmation
-- Admin can text/email this link manually
+-- Athletes see only their own approved answers
+CREATE POLICY "Athletes see own approved drafts"
+  ON public.coach_ai_drafts FOR SELECT TO authenticated
+  USING (user_id = auth.uid() AND status = 'approved');
 
-## Files Modified
-- **Migration**: New migration for `tier_vip` column
-- `src/components/admin/AdminTierManager.tsx` — VIP column + expanded presets + invite link generator
-- `src/hooks/useTierAccess.tsx` — VIP tier access logic
-- `src/hooks/useAuth.tsx` — Expose `isVip` flag
+-- Admins see all
+CREATE POLICY "Admins manage all drafts"
+  ON public.coach_ai_drafts FOR ALL TO authenticated
+  USING (public.has_role(auth.uid(), 'admin'))
+  WITH CHECK (public.has_role(auth.uid(), 'admin'));
+
+-- Athletes can insert (ask questions)
+CREATE POLICY "Athletes can ask questions"
+  ON public.coach_ai_drafts FOR INSERT TO authenticated
+  WITH CHECK (user_id = auth.uid());
+```
+
+## Edge Function — `ask-coach`
+
+- Accepts `{ message }` + auth token
+- Calls `search_coaching_documents` RPC for top-5 matches
+- Sends context + question to Gemini Flash with Coach Matt system prompt
+- **Does NOT stream back to user.** Instead, inserts the AI answer into `coach_ai_drafts` with `status: 'pending'`
+- Returns `{ queued: true }` to the client
+- Registered in `config.toml` with `verify_jwt = false`, validates JWT in code
+
+## Frontend Components
+
+### 1. `src/components/dashboard/AskCoachBubble.tsx`
+- Floating chat bubble (bottom-right corner) on Dashboard
+- User types question → calls `ask-coach` edge function
+- Shows confirmation: "Your question has been sent to Coach Matt. You'll be notified when he responds."
+- Below the input, shows history of **approved** answers (fetched from `coach_ai_drafts` where `status = 'approved'`)
+- No AI text is ever shown to the user without admin approval
+
+### 2. Admin: `src/components/admin/AdminCoachAiQueue.tsx`
+- New tab/section in Admin dashboard
+- Lists all `pending` drafts with: athlete name, question, AI-generated answer
+- Admin can: **Approve** (as-is), **Edit & Approve** (modify the answer), or **Reject**
+- On approval, updates `status = 'approved'` and inserts a notification for the athlete
+- On reject, updates `status = 'rejected'` (optionally with a note)
+
+### 3. Admin: Coaching Documents Manager
+- Simple CRUD in Admin dashboard to add/edit/delete coaching documents (title + content)
+- These form the knowledge base the AI searches against
+
+## File Changes
+
+| File | Action |
+|------|--------|
+| Migration SQL | `coaching_documents` + `coach_ai_drafts` tables + search function |
+| `supabase/functions/ask-coach/index.ts` | New edge function |
+| `supabase/config.toml` | Register `ask-coach` |
+| `src/components/dashboard/AskCoachBubble.tsx` | New floating chat UI |
+| `src/components/admin/AdminCoachAiQueue.tsx` | New admin approval queue |
+| `src/pages/Dashboard.tsx` | Add `<AskCoachBubble />` |
+| `src/pages/Admin.tsx` | Add AI Queue tab + Documents manager |
+
+## Security Summary
+- AI never contacts a user directly — all answers go through `coach_ai_drafts` with `pending` status
+- Only `approved` answers are visible to athletes (enforced by RLS)
+- Admin approval is the only path from AI generation to athlete visibility
+- Coaching documents are admin-only write, authenticated read
 
