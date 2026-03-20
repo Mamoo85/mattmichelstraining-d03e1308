@@ -5,6 +5,7 @@ import AppNavbar from "@/components/AppNavbar";
 import TechSupportButton from "@/components/TechSupportButton";
 import SupportTicketForm from "@/components/SupportTicketForm";
 import PrivacySettingsCard from "@/components/PrivacySettingsCard";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { Link } from "react-router-dom";
 import {
   User, Trophy, Medal, Award, Save, Loader2, Gift, Search,
