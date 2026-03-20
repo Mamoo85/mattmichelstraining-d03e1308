@@ -1,9 +1,33 @@
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 import { ViteImageOptimizer } from "vite-plugin-image-optimizer";
+
+/**
+ * Injects <link rel="preload"> for the LCP hero image so the browser
+ * can discover it from the initial HTML without waiting for JS.
+ */
+function preloadLcpImage(): Plugin {
+  return {
+    name: "preload-lcp-image",
+    enforce: "post",
+    transformIndexHtml(html, ctx) {
+      // In build mode, find the hashed m2-logo asset in the bundle
+      const bundle = ctx.bundle;
+      if (!bundle) return html; // dev mode — skip
+
+      for (const [fileName] of Object.entries(bundle)) {
+        if (fileName.includes("m2-logo") && fileName.endsWith(".jpg")) {
+          const tag = `<link rel="preload" as="image" href="/${fileName}" fetchpriority="high" />`;
+          return html.replace("</head>", `${tag}\n</head>`);
+        }
+      }
+      return html;
+    },
+  };
+}
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
