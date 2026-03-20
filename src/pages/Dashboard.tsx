@@ -67,8 +67,8 @@ const Dashboard = () => {
     [subscriptionTier, isAdmin]
   );
 
-  const handleViewPoints = useCallback(() => setActiveTab("points"), []);
-  const handleViewReferrals = useCallback(() => setActiveTab("referrals"), []);
+  const handleViewPoints = useCallback(() => setActiveTab("challenge"), []);
+  const handleViewReferrals = useCallback(() => setActiveTab("challenge"), []);
 
   return (
     <div className="min-h-screen bg-background">
