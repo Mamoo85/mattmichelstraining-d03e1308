@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import AiAssistButton from "./AiAssistButton";
 import AdminUserLibrary from "./AdminUserLibrary";
+import AdminProfileEditor from "./AdminProfileEditor";
 
 const AdminClientList = () => {
   const [search, setSearch] = useState("");

@@ -64,7 +64,46 @@ serve(async (req) => {
     });
     if (!roleCheck) throw new Error("Admin access required");
 
-    const { targetUserId, targetEmail, targetName, linkParentId, unlinkChildId, label } = body;
+    const { targetUserId, targetEmail, targetName, linkParentId, unlinkChildId, label, updates } = body;
+
+    // ── Update Profile (admin edits user name, email, role, etc.) ──
+    if (action === "update_profile") {
+      if (!targetUserId) throw new Error("User ID required");
+      if (!updates || typeof updates !== "object") throw new Error("Updates object required");
+
+      // Allowed fields admin can edit on profiles
+      const allowedFields = ["full_name", "athlete_name", "email", "account_role"];
+      const profilePatch: Record<string, any> = { updated_at: new Date().toISOString() };
+      for (const key of allowedFields) {
+        if (key in updates) profilePatch[key] = updates[key];
+      }
+
+      const { error: profileErr } = await supabaseClient
+        .from("profiles")
+        .update(profilePatch)
+        .eq("user_id", targetUserId);
+      if (profileErr) throw new Error(`Profile update failed: ${profileErr.message}`);
+
+      // If email changed, also update the auth user email
+      if (updates.email) {
+        const { error: authErr } = await supabaseClient.auth.admin.updateUserById(targetUserId, {
+          email: updates.email,
+        });
+        if (authErr) console.error("Auth email update failed:", authErr.message);
+      }
+
+      // If full_name changed, update auth user metadata too
+      if (updates.full_name !== undefined) {
+        const { error: metaErr } = await supabaseClient.auth.admin.updateUserById(targetUserId, {
+          user_metadata: { full_name: updates.full_name },
+        });
+        if (metaErr) console.error("Auth metadata update failed:", metaErr.message);
+      }
+
+      return new Response(JSON.stringify({ success: true, message: "Profile updated" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // ── Create In-Person Invite Token ──
     if (action === "create_ip_invite") {
