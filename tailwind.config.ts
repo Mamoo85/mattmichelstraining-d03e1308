@@ -99,6 +99,15 @@ export default {
           from: { opacity: "0", transform: "translateY(10px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
+        "set-pop": {
+          "0%": { transform: "scale(1)" },
+          "40%": { transform: "scale(1.35)", boxShadow: "0 0 16px rgba(16,185,129,0.5)" },
+          "100%": { transform: "scale(1)", boxShadow: "0 0 0px rgba(16,185,129,0)" },
+        },
+        "confetti-burst": {
+          "0%": { transform: "translate(0,0) rotate(0deg)", opacity: "1" },
+          "100%": { transform: "translate(var(--confetti-x), var(--confetti-y)) rotate(var(--confetti-r))", opacity: "0" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
