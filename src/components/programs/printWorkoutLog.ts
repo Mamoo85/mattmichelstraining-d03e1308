@@ -89,7 +89,7 @@ export const printWorkoutLog = (program: PrintProgramData) => {
             ${exerciseRows(day.exercises)}
           </tbody>
         </table>
-        <div class="page-footer">M² Training · m2training.lovable.app</div>
+        <div class="page-footer">M² Training · www.mattmichelstraining.com</div>
       </div>
     `
     )
