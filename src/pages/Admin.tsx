@@ -92,6 +92,18 @@ const Admin = () => {
   const [activeTab, setActiveTab] = useState("roster");
   const { isAdmin, isLoading } = useIsAdmin();
 
+  const { data: pendingDraftsCount = 0 } = useQuery({
+    queryKey: ["pending-coach-drafts-count"],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("coach_ai_drafts")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending");
+      return count ?? 0;
+    },
+    refetchInterval: 30000,
+  });
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
