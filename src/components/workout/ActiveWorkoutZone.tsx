@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { format } from "date-fns";
-import { Plus, X, CheckCircle, Loader2, CalendarIcon, Clock, Camera } from "lucide-react";
+import { Plus, X, CheckCircle, Loader2, CalendarIcon, Clock, Camera, Info, Crosshair, Trash2, Check, MessageSquare, HelpCircle } from "lucide-react";
 import m2Logo from "@/assets/m2-logo.jpg";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
