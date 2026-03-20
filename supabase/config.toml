@@ -44,3 +44,6 @@ verify_jwt = false
 
 [functions.weekly-cmo-report]
 verify_jwt = false
+
+[functions.adapt-workout-vision]
+verify_jwt = false
