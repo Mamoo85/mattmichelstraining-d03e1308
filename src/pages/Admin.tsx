@@ -37,6 +37,7 @@ const AdminMonthlyFocus = lazy(() => import("@/components/admin/AdminMonthlyFocu
 const AdminBiomechanics = lazy(() => import("@/components/admin/AdminBiomechanics"));
 const AdminAiToolkit = lazy(() => import("@/components/admin/AdminAiToolkit"));
 const AdminCoachAiQueue = lazy(() => import("@/components/admin/AdminCoachAiQueue"));
+const AdminCustomRequests = lazy(() => import("@/components/admin/AdminCustomRequests"));
 
 const AdminFinancials = lazy(() => import("@/components/admin/AdminFinancials"));
 const AdminPromotions = lazy(() => import("@/components/admin/AdminPromotions"));
