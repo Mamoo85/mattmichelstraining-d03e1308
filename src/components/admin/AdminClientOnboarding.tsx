@@ -14,6 +14,7 @@ const PRESETS = [
     key: "vip",
     label: "Generate $20 VIP Link",
     desc: "Custom Tier → $19.99/mo forever",
+    detail: "Gives one client the full Custom tier ($99.99/mo) at $19.99/mo for life. Includes personalized programs, biomechanics analysis, and 1-on-1 assessments. Perfect for loyal in-person clients you want to keep at a VIP rate. Single-use — cannot be shared.",
     icon: Crown,
     params: {
       discount_type: "fixed",
@@ -27,6 +28,7 @@ const PRESETS = [
     key: "community",
     label: "Generate Free Basic Link",
     desc: "Basic Tier → $0/mo forever",
+    detail: "Gives one client the Basic tier ($14.99/mo) completely free, forever. Includes portal access, workout logging, unlimited form checks, and the exercise library. Use for young athletes, community members, or anyone you want to give free access to. Single-use — cannot be shared.",
     icon: Users,
     params: {
       discount_type: "percent",
@@ -91,12 +93,12 @@ const AdminClientOnboarding = () => {
           <CardTitle className="text-sm">In-Person Client Onboarding</CardTitle>
         </div>
         <CardDescription className="text-[11px]">
-          Generate a single-use promo link to hand a client on the spot.
+          Generate a single-use Stripe promo link to hand a client on the spot. Each code works once and creates a permanent discount tied to that client's subscription.
         </CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-3">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 gap-2">
           {PRESETS.map((preset) => {
             const Icon = preset.icon;
             const isLoading = loading === preset.key;
@@ -104,7 +106,7 @@ const AdminClientOnboarding = () => {
               <Button
                 key={preset.key}
                 variant="outline"
-                className="h-auto flex flex-col items-start gap-1 p-3 text-left"
+                className="h-auto flex flex-col items-start gap-1.5 p-4 text-left"
                 onClick={() => generatePromo(preset)}
                 disabled={!!loading}
               >
@@ -113,6 +115,7 @@ const AdminClientOnboarding = () => {
                   <span className="text-xs font-bold">{preset.label}</span>
                 </div>
                 <span className="text-[10px] text-muted-foreground">{preset.desc}</span>
+                <span className="text-[10px] text-muted-foreground/70 leading-relaxed">{preset.detail}</span>
               </Button>
             );
           })}
