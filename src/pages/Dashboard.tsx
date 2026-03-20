@@ -140,6 +140,7 @@ const Dashboard = () => {
           {activeTab === "home" && (
             <DashboardHome
               isNewUser={isNewUser}
+              isInPerson={profile?.is_in_person ?? false}
               onViewPoints={handleViewPoints}
               onViewReferrals={handleViewReferrals}
             />

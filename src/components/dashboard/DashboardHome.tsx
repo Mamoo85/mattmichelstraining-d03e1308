@@ -51,13 +51,17 @@ const DashboardHome = memo(({ isNewUser, isInPerson, onViewPoints, onViewReferra
 
   return (
   <div className="space-y-6">
-    <Suspense fallback={null}>
-      {showWelcome && (
-        <WelcomeGiftModal open={showWelcome} onClose={() => setShowWelcome(false)} />
-      )}
-    </Suspense>
+    {/* Welcome modal — never for in-person clients */}
+    {!isInPerson && (
+      <Suspense fallback={null}>
+        {showWelcome && (
+          <WelcomeGiftModal open={showWelcome} onClose={() => setShowWelcome(false)} />
+        )}
+      </Suspense>
+    )}
 
-    {isNewUser && (
+    {/* Empty state CTA — never for in-person clients */}
+    {isNewUser && !isInPerson && (
       <EmptyStateCard
         title="Welcome to M²"
         description="Your training log is empty. Select your starting track and begin Day 1 — Matt will review every session and coach you personally."
@@ -91,7 +95,8 @@ const DashboardHome = memo(({ isNewUser, isInPerson, onViewPoints, onViewReferra
       </button>
     </div>
 
-    {hasPosture === false && (
+    {/* Posture CTA — never for in-person clients */}
+    {!isInPerson && hasPosture === false && (
       <div className="bg-card border border-border p-5 space-y-2">
         <div className="flex items-center gap-2">
           <Camera size={14} className="text-primary" />
