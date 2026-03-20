@@ -305,12 +305,12 @@ const Profile = () => {
               </div>
               <div>
                 <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Store Discount</p>
-                <p className="text-sm font-bold text-primary">{TIER_DISCOUNTS[subscriptionTier]}% off</p>
+                <p className="text-sm font-bold text-primary">{isAdmin ? "100% off" : subscriptionTier ? `${TIER_DISCOUNTS[subscriptionTier]}% off` : "—"}</p>
               </div>
               <div>
                 <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Renews</p>
                 <p className="text-sm font-bold text-foreground">
-                  {subscriptionEnd ? new Date(subscriptionEnd).toLocaleDateString() : "—"}
+                  {isAdmin ? "Never expires" : subscriptionEnd ? new Date(subscriptionEnd).toLocaleDateString() : "—"}
                 </p>
               </div>
             </div>
