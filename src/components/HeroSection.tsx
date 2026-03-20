@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Star, Shield, Trophy, Clock } from "lucide-react";
 
