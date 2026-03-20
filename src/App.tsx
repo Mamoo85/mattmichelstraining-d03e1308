@@ -14,7 +14,7 @@ import SubscriptionGuard from "@/components/SubscriptionGuard";
 import ScrollToTop from "@/components/ScrollToTop";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import OfflineBadge from "@/components/OfflineBadge";
-import AnnouncementBanner from "@/components/AnnouncementBanner";
+const AnnouncementBanner = lazy(() => import("@/components/AnnouncementBanner"));
 const IntervalTimer = lazy(() => import("@/components/workout/IntervalTimer"));
 const ActiveWorkoutZone = lazy(() => import("@/components/workout/ActiveWorkoutZone"));
 
@@ -160,7 +160,7 @@ const App = () => (
             <BrowserRouter>
               <ReferralCaptureWrapper />
               <ScrollToTop />
-              <AnnouncementBanner />
+              <Suspense fallback={null}><AnnouncementBanner /></Suspense>
               <ErrorBoundary>
                 <Suspense fallback={<PageLoader />}>
                   <Routes>

@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Star, Shield, Trophy, Clock } from "lucide-react";
 
@@ -28,6 +28,17 @@ const STATS = [
 const HeroSection = () => {
   const showHero = useSectionVisible("hero");
   const showFindUs = useSectionVisible("find_us");
+
+  // Defer below-fold sections until after first paint to improve FCP
+  const [showBelow, setShowBelow] = useState(false);
+  useEffect(() => {
+    const id = requestIdleCallback?.(() => setShowBelow(true)) ??
+      setTimeout(() => setShowBelow(true), 100);
+    return () => {
+      if (typeof id === "number" && "cancelIdleCallback" in window) cancelIdleCallback(id);
+      else clearTimeout(id as ReturnType<typeof setTimeout>);
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
@@ -104,70 +115,72 @@ const HeroSection = () => {
           </div>
         )}
 
-        {/* Below-the-fold lazy sections */}
-        <Suspense fallback={null}>
-          {/* ─── FORM CHECK CTA ─── */}
-          <div className="mb-8">
-            <div className="bg-gradient-to-br from-primary/10 via-background to-background border border-primary/30 overflow-hidden">
-              <div className="p-6 sm:p-8 space-y-4">
-                <div className="flex items-center gap-2">
-                  <Star size={16} className="text-primary" />
-                  <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-primary">
-                    Unlimited Form Checks
-                  </span>
+        {/* Below-the-fold lazy sections — deferred until after first paint */}
+        {showBelow && (
+          <Suspense fallback={null}>
+            {/* ─── FORM CHECK CTA ─── */}
+            <div className="mb-8">
+              <div className="bg-gradient-to-br from-primary/10 via-background to-background border border-primary/30 overflow-hidden">
+                <div className="p-6 sm:p-8 space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Star size={16} className="text-primary" />
+                    <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-primary">
+                      Unlimited Form Checks
+                    </span>
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-foreground leading-tight">
+                    Real Coaching Feedback.<br />
+                    <span className="text-primary">Just $15/mo.</span>
+                  </h2>
+                  <p className="text-sm text-muted-foreground max-w-lg leading-relaxed">
+                    Upload a couple reps of any lift and Matt will send you a
+                    <strong className="text-foreground"> detailed, personalized reply within 24 hours</strong>.
+                    Unlimited form checks — no cap, no extra fees. For the price of a single
+                    coffee run you get a 20-year veteran coach watching every rep. That's a steal.
+                  </p>
+                  <Link
+                    to="/auth?redirect=/trial-welcome"
+                    className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
+                  >
+                    Try 14 Days Free <ArrowRight size={12} />
+                  </Link>
                 </div>
-                <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-foreground leading-tight">
-                  Real Coaching Feedback.<br />
-                  <span className="text-primary">Just $15/mo.</span>
-                </h2>
-                <p className="text-sm text-muted-foreground max-w-lg leading-relaxed">
-                  Upload a couple reps of any lift and Matt will send you a
-                  <strong className="text-foreground"> detailed, personalized reply within 24 hours</strong>.
-                  Unlimited form checks — no cap, no extra fees. For the price of a single
-                  coffee run you get a 20-year veteran coach watching every rep. That's a steal.
-                </p>
-                <Link
-                  to="/auth?redirect=/trial-welcome"
-                  className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
-                >
-                  Try 14 Days Free <ArrowRight size={12} />
-                </Link>
               </div>
             </div>
-          </div>
 
-          {/* ─── 2. SPORT PICKER ─── */}
-          <SportPicker />
+            {/* ─── 2. SPORT PICKER ─── */}
+            <SportPicker />
 
-          {/* ─── 4. TECH SHOWCASE ─── */}
-          <TechShowcaseCard />
+            {/* ─── 4. TECH SHOWCASE ─── */}
+            <TechShowcaseCard />
 
-          {/* ─── 5. FREE WORKOUT TEASER ─── */}
-          <FreeWorkoutTeaser />
+            {/* ─── 5. FREE WORKOUT TEASER ─── */}
+            <FreeWorkoutTeaser />
 
-          {/* ─── 6. FOR PARENTS ─── */}
-          <ForParentsCTA />
+            {/* ─── 6. FOR PARENTS ─── */}
+            <ForParentsCTA />
 
-          {/* ─── 7. MEMBER PORTAL ─── */}
-          <PortalEntrance />
+            {/* ─── 7. MEMBER PORTAL ─── */}
+            <PortalEntrance />
 
-          {/* ─── 8. MONTHLY FOCUS ─── */}
-          <div className="mb-8">
-            <MonthlyFocus />
-          </div>
+            {/* ─── 8. MONTHLY FOCUS ─── */}
+            <div className="mb-8">
+              <MonthlyFocus />
+            </div>
 
-          {/* ─── 9. THE M² DIFFERENCE ─── */}
-          <M2Difference />
+            {/* ─── 9. THE M² DIFFERENCE ─── */}
+            <M2Difference />
 
-          {/* ─── 11. ATHLETE RESULTS ─── */}
-          <AthleteResults />
+            {/* ─── 11. ATHLETE RESULTS ─── */}
+            <AthleteResults />
 
-          {/* ─── 12. EMAIL CAPTURE ─── */}
-          <EmailCapture />
+            {/* ─── 12. EMAIL CAPTURE ─── */}
+            <EmailCapture />
 
-          {/* ─── 12. FIND US ─── */}
-          {showFindUs && <div className="mb-8"><FindUs /></div>}
-        </Suspense>
+            {/* ─── 12. FIND US ─── */}
+            {showFindUs && <div className="mb-8"><FindUs /></div>}
+          </Suspense>
+        )}
 
         {/* FOOTER */}
         <div className="mt-10 pt-6 border-t border-border text-center">
