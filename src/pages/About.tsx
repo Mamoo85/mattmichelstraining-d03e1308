@@ -254,8 +254,8 @@ const About = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
           <div className="overflow-hidden shadow-m2">
             <img
-              src={mattFamily}
-              alt="Matt with his wife Janelle and son Harrison"
+              src={poiFamily}
+              alt="Matthew Michels, his wife Janelle, and their young son Harrison — Grosse Pointe News"
               className="w-full h-full object-cover"
             />
           </div>
