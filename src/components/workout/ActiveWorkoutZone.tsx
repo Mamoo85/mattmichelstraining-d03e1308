@@ -618,6 +618,10 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
           )}
 
           {exercises.length > 0 && (
+            <ButtonKeyLegend />
+          )}
+
+          {exercises.length > 0 && (
             <div className="flex flex-col items-center gap-1 py-4 opacity-20">
               <img src={m2Logo} alt="M²" className="h-6 w-6 rounded-full object-cover" />
               <span className="text-[9px] font-bold uppercase tracking-[3px] text-muted-foreground">M² Training</span>
