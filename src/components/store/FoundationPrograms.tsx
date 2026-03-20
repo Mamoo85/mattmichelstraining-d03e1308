@@ -42,7 +42,7 @@ const FOUNDATION_PROGRAMS = [
       "Connective tissue development",
       "Injury-proof programming",
       "Work capacity building",
-      "AI postural assessment included",
+      "Postural assessment included",
     ],
     desc: "The phase most programs skip — and where injuries start. Focused on joints, tendons, and connective tissue BEFORE adding load.",
   },
