@@ -84,7 +84,35 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
   const [workoutLogId, setWorkoutLogId] = useState<string | null>(null);
   const [formTrackerExercise, setFormTrackerExercise] = useState<string | null>(null);
   const [showIntervalTimer, setShowIntervalTimer] = useState(false);
+  const [restSeconds, setRestSeconds] = useState(0);
+  const restRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [workoutTitle, setWorkoutTitle] = useState(initialContext?.title || "Workout");
+
+  // Auto rest timer — countdown triggered by set completion
+  const startRestTimer = useCallback((duration = 90) => {
+    if (restRef.current) clearInterval(restRef.current);
+    setRestSeconds(duration);
+    restRef.current = setInterval(() => {
+      setRestSeconds((prev) => {
+        if (prev <= 1) {
+          if (restRef.current) clearInterval(restRef.current);
+          restRef.current = null;
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, []);
+
+  const clearRestTimer = useCallback(() => {
+    if (restRef.current) clearInterval(restRef.current);
+    restRef.current = null;
+    setRestSeconds(0);
+  }, []);
+
+  useEffect(() => {
+    return () => { if (restRef.current) clearInterval(restRef.current); };
+  }, []);
 
   // Check if auto-regulate is enabled for this user
   useEffect(() => {
