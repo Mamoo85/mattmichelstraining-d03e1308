@@ -24,7 +24,7 @@ const FOUNDATION_PROGRAMS = [
       "Core stability fundamentals",
       "Mobility & flexibility work",
       "No heavy loading — ever",
-      "AI postural assessment included",
+      "Postural assessment included",
     ],
     desc: "The operating system their body will run on for the next decade. Proper form, connective tissue strength, and habits that prevent injury later.",
   },
