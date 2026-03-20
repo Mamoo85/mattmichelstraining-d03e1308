@@ -14,6 +14,7 @@ const PRESETS = [
     key: "vip",
     label: "Generate $20 VIP Link",
     desc: "Custom Tier → $19.99/mo forever",
+    detail: "Gives one client the full Custom tier ($99.99/mo) at $19.99/mo for life. Includes personalized programs, biomechanics analysis, and 1-on-1 assessments. Perfect for loyal in-person clients you want to keep at a VIP rate. Single-use — cannot be shared.",
     icon: Crown,
     params: {
       discount_type: "fixed",
@@ -27,6 +28,7 @@ const PRESETS = [
     key: "community",
     label: "Generate Free Basic Link",
     desc: "Basic Tier → $0/mo forever",
+    detail: "Gives one client the Basic tier ($14.99/mo) completely free, forever. Includes portal access, workout logging, unlimited form checks, and the exercise library. Use for young athletes, community members, or anyone you want to give free access to. Single-use — cannot be shared.",
     icon: Users,
     params: {
       discount_type: "percent",
