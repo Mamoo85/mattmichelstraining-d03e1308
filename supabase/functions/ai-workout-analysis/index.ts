@@ -15,12 +15,33 @@ serve(async (req) => {
 
     // Handle point awarding for sharing (server-side only)
     if (body.action === "award_share_points") {
+      // Auth check — verify the caller and use their verified user ID
+      const authHeader = req.headers.get("Authorization");
+      if (!authHeader?.startsWith("Bearer ")) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const anonClient = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_ANON_KEY")!
+      );
+      const { data: { user }, error: authErr } = await anonClient.auth.getUser(
+        authHeader.replace("Bearer ", "")
+      );
+      if (authErr || !user) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       const supabaseAdmin = createClient(
         Deno.env.get("SUPABASE_URL")!,
         Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
       );
+      // Use verified user.id, NOT body.userId, to prevent targeting other accounts
       await supabaseAdmin.rpc("award_points", {
-        _user_id: body.userId,
+        _user_id: user.id,
         _action: "share_workout",
         _points: 25,
         _description: "Shared workout to community",
