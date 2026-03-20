@@ -11,7 +11,7 @@ const TeamYouthPrograms = () => (
   >
     <div className="bg-card shadow-m2 p-5 md:p-6">
       <span className="text-[11px] font-bold uppercase tracking-widest text-primary block mb-2">
-        Team Programs · Online or In-Person
+        Team Programs · 100% Online
       </span>
       <h3 className="text-lg md:text-xl font-bold text-foreground mb-2">
         Full-roster strength programming for any team, any sport, any age.
