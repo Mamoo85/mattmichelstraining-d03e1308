@@ -29,14 +29,9 @@ const QuickLogBar = ({ exercises, onApplyParsed }: QuickLogBarProps) => {
 
   const toggleMic = useCallback(() => {
     if (!speechSupported) return;
-    if (listening) {
-      setListening(false);
-      return;
-    }
+    if (listening) { setListening(false); return; }
 
-    const SR =
-      (window as any).SpeechRecognition ||
-      (window as any).webkitSpeechRecognition;
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     const rec = new SR();
     rec.continuous = false;
     rec.interimResults = false;
@@ -61,7 +56,6 @@ const QuickLogBar = ({ exercises, onApplyParsed }: QuickLogBarProps) => {
       const { data, error } = await supabase.functions.invoke("parse-workout-text", {
         body: { text: trimmed },
       });
-
       if (error) throw error;
 
       const sets: ParsedSet[] = data?.sets;
@@ -82,21 +76,17 @@ const QuickLogBar = ({ exercises, onApplyParsed }: QuickLogBarProps) => {
   }, [text, loading, onApplyParsed]);
 
   return (
-    <div className="flex items-center gap-1.5 bg-card/95 backdrop-blur-sm border border-border rounded-sm px-2 py-1.5 max-w-lg mx-auto w-full">
-      <span className="text-[8px] font-bold uppercase tracking-widest text-primary shrink-0 hidden sm:block">
-        NLP
-      </span>
-
+    <div className="flex items-center gap-2 bg-card/80 backdrop-blur-xl border border-white/[0.08] rounded-full px-3 py-2 max-w-lg mx-auto w-full shadow-lg">
       {/* Mic button */}
       {speechSupported && (
         <button
           type="button"
           onClick={toggleMic}
           className={cn(
-            "h-8 w-8 flex items-center justify-center rounded-sm transition-all shrink-0",
+            "h-8 w-8 flex items-center justify-center rounded-full transition-all shrink-0",
             listening
               ? "bg-destructive text-destructive-foreground animate-pulse"
-              : "bg-muted text-muted-foreground hover:text-foreground"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
           )}
           title={listening ? "Stop recording" : "Voice input"}
         >
@@ -112,7 +102,7 @@ const QuickLogBar = ({ exercises, onApplyParsed }: QuickLogBarProps) => {
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
         placeholder='e.g. "225 for 8 reps"'
-        className="flex-1 min-w-0 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
+        className="flex-1 min-w-0 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/40 outline-none"
         disabled={loading}
       />
 
@@ -121,7 +111,7 @@ const QuickLogBar = ({ exercises, onApplyParsed }: QuickLogBarProps) => {
         <button
           type="button"
           onClick={() => setText("")}
-          className="h-6 w-6 flex items-center justify-center text-muted-foreground hover:text-foreground"
+          className="h-7 w-7 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
         >
           <X size={12} />
         </button>
@@ -133,10 +123,10 @@ const QuickLogBar = ({ exercises, onApplyParsed }: QuickLogBarProps) => {
         onClick={handleSubmit}
         disabled={!text.trim() || loading}
         className={cn(
-          "h-8 w-8 flex items-center justify-center rounded-sm transition-all shrink-0",
+          "h-9 w-9 flex items-center justify-center rounded-full transition-all shrink-0",
           text.trim() && !loading
-            ? "bg-primary text-primary-foreground"
-            : "bg-muted text-muted-foreground"
+            ? "bg-primary text-primary-foreground shadow-[0_0_12px_hsl(var(--primary)/0.4)]"
+            : "text-muted-foreground/40"
         )}
         title="Parse & auto-fill"
       >

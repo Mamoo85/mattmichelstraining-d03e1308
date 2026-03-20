@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import SectionHeader from "./SectionHeader";
 import { Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 interface Exercise {
   id: string;
@@ -87,55 +88,73 @@ const ProtocolTable = () => {
 
   if (exercises.length === 0) {
     return (
-      <div className="bg-card shadow-m2 p-5 text-center">
+      <div className="bg-card/80 rounded-2xl shadow-lg p-8 text-center">
         <p className="text-sm text-muted-foreground">No protocol assigned yet. Matt's building yours.</p>
       </div>
     );
   }
 
   return (
-    <div>
+    <div className="space-y-4">
       <SectionHeader title={protocolTitle || "Today's Program"} timestamp="Log your weights — Matt reviews every session" />
 
-      {/* Header row */}
-      <div className="grid grid-cols-[1fr_80px_80px] md:grid-cols-[1fr_100px_1fr_80px] gap-2 px-3 py-2 bg-muted">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Exercise</span>
-        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Sets × Reps</span>
-        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hidden md:block">Coach Notes</span>
-        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-right">Weight</span>
-      </div>
-
-      {exercises.map((ex) => (
-        <div
-          key={ex.id}
-          className="grid grid-cols-[1fr_80px_80px] md:grid-cols-[1fr_100px_1fr_80px] gap-2 px-3 py-3 bg-card hover:bg-secondary/50 transition-m2 border-b border-border items-center"
-        >
-          <div>
-            <span className="text-sm font-semibold text-foreground">{ex.exercise_name}</span>
-            {/* Show notes inline on mobile only */}
-            {ex.notes && <p className="text-[10px] text-muted-foreground mt-0.5 md:hidden">{ex.notes}</p>}
+      {/* Exercise Cards */}
+      <div className="space-y-3">
+        {exercises.map((ex, i) => (
+          <div
+            key={ex.id}
+            className="rounded-2xl bg-gradient-to-b from-card to-card/80 border border-white/[0.06] shadow-lg overflow-hidden transition-all hover:shadow-xl"
+          >
+            <div className="flex items-center gap-3 p-4">
+              <div className="h-9 w-9 rounded-full bg-primary/15 text-primary flex items-center justify-center text-sm font-bold shrink-0">
+                {i + 1}
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className="text-base font-bold text-foreground block leading-tight">{ex.exercise_name}</span>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-xs font-mono font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full">
+                    {ex.sets}×{ex.reps}
+                  </span>
+                  {ex.rpe && (
+                    <span className="text-[11px] text-muted-foreground">RPE {ex.rpe}</span>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <input
+                  type="number"
+                  placeholder="lbs"
+                  value={weights[ex.id] || ""}
+                  onChange={(e) => setWeights({ ...weights, [ex.id]: e.target.value })}
+                  className={cn(
+                    "bg-background/60 border border-white/[0.08] rounded-xl text-center font-mono text-primary text-sm",
+                    "focus:ring-2 focus:ring-primary/40 outline-none h-12 w-20 transition-all",
+                    "placeholder:text-muted-foreground/30"
+                  )}
+                />
+              </div>
+            </div>
+            {ex.notes && (
+              <div className="px-4 pb-3 -mt-1">
+                <p className="text-[11px] text-muted-foreground leading-relaxed pl-12">{ex.notes}</p>
+              </div>
+            )}
           </div>
-          <span className="text-sm font-mono text-primary">{ex.sets}×{ex.reps}</span>
-          {/* Notes column — desktop only */}
-          <span className="text-[11px] text-muted-foreground hidden md:block leading-snug">{ex.notes || "—"}</span>
-          <input
-            type="number"
-            placeholder="lbs"
-            value={weights[ex.id] || ""}
-            onChange={(e) => setWeights({ ...weights, [ex.id]: e.target.value })}
-            className="bg-background border border-border text-right pr-2 font-mono text-primary text-sm focus:ring-1 focus:ring-primary outline-none h-8 w-full"
-          />
-        </div>
-      ))}
-
-      <div className="flex justify-end mt-4">
-        <button
-          onClick={logSession}
-          className={`bg-primary text-primary-foreground px-6 py-2.5 text-xs font-bold uppercase tracking-widest hover:brightness-110 active:scale-95 transition-transform duration-100 ${logSuccess ? "animate-log-success" : ""}`}
-        >
-          Log Session
-        </button>
+        ))}
       </div>
+
+      <button
+        onClick={logSession}
+        className={cn(
+          "w-full py-4 rounded-2xl text-sm font-bold uppercase tracking-widest transition-all duration-300",
+          "bg-gradient-to-r from-primary to-primary/80 text-primary-foreground",
+          "hover:shadow-[0_0_24px_hsl(var(--primary)/0.4)] hover:brightness-110",
+          "active:scale-[0.98]",
+          logSuccess && "animate-log-success"
+        )}
+      >
+        Log Session
+      </button>
     </div>
   );
 };
