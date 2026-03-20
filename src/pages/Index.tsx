@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import AppNavbar from "@/components/layout/AppNavbar";
-import HeroSection from "@/components/HeroSection";
+import HeroSection from "@/components/features/HeroSection";
 import SEOHead from "@/components/layout/SEOHead";
 
 const ChallengeTeaser = lazy(() => import("@/components/landing/ChallengeTeaser"));

@@ -10,7 +10,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { TimerProvider, useTimer } from "@/hooks/useTimer";
 import { OfflineSyncProvider } from "@/hooks/useOfflineSync";
 import ProtectedRoute from "@/components/layout/ProtectedRoute";
-import SubscriptionGuard from "@/components/SubscriptionGuard";
+import SubscriptionGuard from "@/components/billing/SubscriptionGuard";
 import ScrollToTop from "@/components/layout/ScrollToTop";
 import ErrorBoundary from "@/components/layout/ErrorBoundary";
 import OfflineBadge from "@/components/layout/OfflineBadge";

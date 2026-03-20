@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import AppNavbar from "@/components/layout/AppNavbar";
-import ProgressCharts from "@/components/ProgressCharts";
+import ProgressCharts from "@/components/features/ProgressCharts";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";

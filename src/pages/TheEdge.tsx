@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import SEOHead from "@/components/layout/SEOHead";
 import AppNavbar from "@/components/layout/AppNavbar";
-import TrialCTA from "@/components/TrialCTA";
+import TrialCTA from "@/components/billing/TrialCTA";
 import { useAuth } from "@/hooks/useAuth";
 
 /* ─── Tech Feature Data ─── */

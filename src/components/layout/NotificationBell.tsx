@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import ConfirmActionModal from "@/components/ConfirmActionModal";
+import ConfirmActionModal from "@/components/shared/ConfirmActionModal";
 
 interface Notification {
   id: string;

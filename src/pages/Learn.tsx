@@ -12,7 +12,7 @@ import ReactMarkdown from "react-markdown";
 import AppNavbar from "@/components/layout/AppNavbar";
 import MonthlyFocus from "@/components/landing/MonthlyFocus";
 import { useSectionVisible } from "@/hooks/useSiteContent";
-import TrialCTA from "@/components/TrialCTA";
+import TrialCTA from "@/components/billing/TrialCTA";
 
 /* ── Featured Videos ── */
 const VIDEOS = [

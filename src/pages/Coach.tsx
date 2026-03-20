@@ -1,6 +1,6 @@
 import AppNavbar from "@/components/layout/AppNavbar";
-import CoachMessaging from "@/components/CoachMessaging";
-import PaywallGate from "@/components/PaywallGate";
+import CoachMessaging from "@/components/sessions/CoachMessaging";
+import PaywallGate from "@/components/billing/PaywallGate";
 
 const Coach = () => (
   <div className="min-h-screen bg-background">

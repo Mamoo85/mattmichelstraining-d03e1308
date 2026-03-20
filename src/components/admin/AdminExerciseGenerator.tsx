@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import SectionHeader from "@/components/SectionHeader";
+import SectionHeader from "@/components/shared/SectionHeader";
 
 interface GeneratedExercise {
   title: string;
