@@ -88,6 +88,9 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
   const [restSeconds, setRestSeconds] = useState(0);
   const restRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [workoutTitle, setWorkoutTitle] = useState(initialContext?.title || "Workout");
+  const [adaptLoading, setAdaptLoading] = useState(false);
+  const [adaptBanner, setAdaptBanner] = useState<string | null>(null);
+  const adaptInputRef = useRef<HTMLInputElement>(null);
 
   // Auto rest timer — countdown triggered by set completion
   const startRestTimer = useCallback((duration = 90) => {
