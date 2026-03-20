@@ -141,7 +141,6 @@ const AdminTierManager = () => {
 
   return (
     <div className="space-y-4">
-      <VipInviteGenerator />
 
       <div className="flex items-center justify-between">
         <div>
