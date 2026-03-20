@@ -219,7 +219,15 @@ serve(async (req) => {
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || "";
 
-    // Queue the result for admin approval instead of returning directly
+    // Non-user-facing types skip the approval queue — return directly
+    const SKIP_QUEUE_TYPES = new Set(["ai_copilot", "blog_draft", "generate_ad", "client_summary", "schedule_suggest"]);
+    if (SKIP_QUEUE_TYPES.has(type)) {
+      return new Response(JSON.stringify({ result: content }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Queue the result for admin approval
     const { error: queueError } = await supabaseClient
       .from("ai_action_queue")
       .insert({
@@ -232,7 +240,6 @@ serve(async (req) => {
 
     if (queueError) {
       console.error("Failed to queue AI action:", queueError);
-      // Fall through and return result anyway if queue fails
       return new Response(JSON.stringify({ result: content }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
