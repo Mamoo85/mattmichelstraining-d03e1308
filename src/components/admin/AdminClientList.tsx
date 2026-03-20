@@ -19,6 +19,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import AiAssistButton from "./AiAssistButton";
+import AdminUserLibrary from "./AdminUserLibrary";
 
 const AdminClientList = () => {
   const [search, setSearch] = useState("");
