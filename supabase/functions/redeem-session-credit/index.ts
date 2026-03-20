@@ -202,7 +202,7 @@ serve(async (req) => {
       </div>`;
 
     await sendEmail(user.email, `Session Confirmed — ${dateStr} at ${timeStr}`, emailHtml);
-    await sendEmail(ADMIN_EMAIL, `${sourceLabel.toUpperCase()} SESSION — ${profile?.full_name || user.email} · ${dateStr} ${timeStr} (${typeLabel})`, emailHtml);
+    await sendEmail(ADMIN_EMAILS, `${sourceLabel.toUpperCase()} SESSION — ${profile?.full_name || user.email} · ${dateStr} ${timeStr} (${typeLabel})`, emailHtml);
 
     // Sync to Google Calendar (fire-and-forget)
     try {

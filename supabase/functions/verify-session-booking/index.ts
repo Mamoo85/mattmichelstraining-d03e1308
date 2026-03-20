@@ -124,8 +124,7 @@ serve(async (req) => {
 
     // Send confirmation to client
     await sendEmail(meta.user_email, `Session Confirmed — ${dateStr} at ${timeStr}`, emailHtml);
-    // Send notification to Matt
-    await sendEmail(ADMIN_EMAIL, `NEW SESSION BOOKED — ${meta.user_name || meta.user_email}${guestTag} · ${dateStr} ${timeStr}`, emailHtml);
+    await sendEmail(ADMIN_EMAILS, `NEW SESSION BOOKED — ${meta.user_name || meta.user_email}${guestTag} · ${dateStr} ${timeStr}`, emailHtml);
 
     // Sync to Google Calendar (fire-and-forget)
     try {
