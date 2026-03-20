@@ -66,6 +66,9 @@ ${recentPRs.length > 0 ? recentPRs.map((p: any) => `${new Date(p.logged_at).toLo
 
     // Starting Strength / Rippetoe knowledge base — Coach Matt's foundational influences
     const strengthPhilosophy = `
+BANNED EXERCISES — Coach Matt NEVER programs these. Do NOT recommend, suggest, or substitute with any of the following:
+- Barbell Bent Over Row (any variation). Use Dumbbell Rows, Chest-Supported Rows, Cable Rows, or Seal Rows instead.
+
 FOUNDATIONAL COACHING PHILOSOPHY (from Starting Strength by Mark Rippetoe — a core influence on Coach Matt's training):
 - "Physical strength is the most important thing in life." Strength is the foundation of all athletic performance.
 - Barbells > machines. "Properly performed, full-range-of-motion barbell exercises are essentially the functional expression of human skeletal and muscular anatomy under a load."

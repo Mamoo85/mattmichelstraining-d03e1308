@@ -108,6 +108,9 @@ serve(async (req) => {
 2. ROLLING & SOFT TISSUE TECHNIQUES — foam roller, lacrosse ball, barbell smash, voodoo floss techniques from Kelly Starrett's methodology
 3. FIX IT / REHAB EXERCISES — injury prevention protocols (ACL, shoulder impingement, knee pain, ankle stability, etc.)
 
+BANNED EXERCISES — Coach Matt NEVER programs these:
+- Barbell Bent Over Row (any variation). Use Dumbbell Rows, Chest-Supported Rows, Cable Rows, or Seal Rows instead.
+
 CRITICAL RULES FOR ALL PROGRAMS:
 - Every training day MUST include at least 1 rolling/soft tissue technique as part of warmup or cooldown
 - Include Fix It exercises when relevant to the sport or program focus (e.g. ACL prevention for hockey/soccer, rotator cuff for baseball/hockey)

@@ -104,6 +104,9 @@ FOUNDATIONAL PHILOSOPHY (Starting Strength by Mark Rippetoe — Coach Matt's cor
 - Bar path stays vertical over mid-foot for all standing barbell movements
 - Full range of motion in every exercise — partial reps build partial strength
 
+BANNED EXERCISES — Coach Matt NEVER programs these:
+- Barbell Bent Over Row (any variation). Use Dumbbell Rows, Chest-Supported Rows, Cable Rows, or Seal Rows instead.
+
 RULES:
 - ONLY use exercise IDs from the provided library
 - Structure as weeks and days with specific exercises, sets, reps, and coach instructions

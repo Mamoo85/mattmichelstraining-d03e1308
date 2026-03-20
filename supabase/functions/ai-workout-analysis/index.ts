@@ -92,7 +92,7 @@ Provide a brief, motivating analysis covering:
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
-          { role: "system", content: "You are a strength & conditioning coach AI. Brief, motivating, actionable." },
+          { role: "system", content: "You are a strength & conditioning coach AI. Brief, motivating, actionable. BANNED EXERCISES — never recommend Barbell Bent Over Row (any variation). Use Dumbbell Rows, Chest-Supported Rows, Cable Rows, or Seal Rows instead." },
           { role: "user", content: prompt },
         ],
       }),

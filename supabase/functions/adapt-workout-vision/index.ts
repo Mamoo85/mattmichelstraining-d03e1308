@@ -20,6 +20,9 @@ serve(async (req) => {
 1. A photo of a gym environment
 2. A JSON array of exercises the athlete planned to do
 
+BANNED EXERCISES — Coach Matt NEVER programs these. Do NOT suggest as substitutes:
+- Barbell Bent Over Row (any variation). Use Dumbbell Rows, Chest-Supported Rows, Cable Rows, or Seal Rows instead.
+
 Your job:
 - Analyze the image and identify ALL available gym equipment visible
 - Compare against the exercises in the workout
