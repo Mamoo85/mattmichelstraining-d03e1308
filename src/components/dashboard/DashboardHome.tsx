@@ -68,7 +68,7 @@ const DashboardHome = memo(({ isNewUser, onViewPoints, onViewReferrals }: Dashbo
         <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Quick Log</span>
       </div>
       <p className="text-xs text-muted-foreground">
-        Snap a photo of your school workout card or gym whiteboard — AI reads it and logs your session instantly.
+        Snap a photo of your school workout card or gym whiteboard — it reads your handwriting and logs your session instantly.
       </p>
       <WorkoutScanner />
       <button

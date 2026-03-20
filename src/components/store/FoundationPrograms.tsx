@@ -78,7 +78,7 @@ const FOUNDATION_PROGRAMS = [
       "College-ready conditioning",
       "Advanced strength protocols",
       "Recovery & maintenance systems",
-      "AI postural assessment included",
+      "Postural assessment included",
     ],
     desc: "College coaches don't care how strong you were in high school if you're injured by October. This builds durability.",
   },

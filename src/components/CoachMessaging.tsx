@@ -178,7 +178,7 @@ const CoachMessaging = () => {
               onClick={handleAiQuickAnswer}
               disabled={streaming}
               className="bg-accent text-accent-foreground px-2.5 py-2 hover:opacity-90 transition-m2 disabled:opacity-50"
-              title="Get instant AI answer"
+              title="Get quick answer"
             >
               {streaming ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
             </button>
