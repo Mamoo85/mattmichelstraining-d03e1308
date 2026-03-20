@@ -180,7 +180,7 @@ const About = () => {
             </p>
 
             {/* Stats strip */}
-            <div className="grid grid-cols-4 gap-2 mb-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
               {STATS.map((s) => (
                 <div key={s.label} className="bg-card shadow-m2 p-2.5 text-center">
                   <span className="text-base md:text-lg font-bold text-primary font-mono block">{s.value}</span>

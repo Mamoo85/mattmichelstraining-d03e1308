@@ -58,8 +58,8 @@ const MACRO_CONFIG = [
 ];
 
 const MacroPill = ({ icon: Icon, label, value, unit, color }: { icon: any; label: string; value: number; unit: string; color: string }) => (
-  <div className={`flex flex-col items-center gap-1 rounded-xl px-3 py-2 ${color}`}>
-    <Icon size={16} className="opacity-80" />
+  <div className={`flex flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 ${color} min-w-0`}>
+    <Icon size={14} className="opacity-80 shrink-0" />
     <span className="text-lg font-bold">{Math.round(value)}</span>
     <span className="text-[10px] uppercase tracking-wider opacity-70">{unit} {label}</span>
   </div>
@@ -365,7 +365,7 @@ const Nutrition = () => {
                 {analysis && editableItems.length > 0 && (
                   <div className="space-y-4">
                     {/* Live totals */}
-                    <div className="grid grid-cols-5 gap-2">
+                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                       <MacroPill icon={Flame} label="cal" value={totalCalFromAnalysis} unit="" color="bg-orange-500/10 text-orange-600" />
                       <MacroPill icon={Beef} label="pro" value={totalProtein} unit="g" color="bg-red-500/10 text-red-600" />
                       <MacroPill icon={Wheat} label="carb" value={totalCarbs} unit="g" color="bg-amber-500/10 text-amber-600" />
@@ -396,7 +396,7 @@ const Nutrition = () => {
                               <Trash2 size={14} />
                             </button>
                           </div>
-                          <div className="grid grid-cols-5 gap-1.5">
+                          <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
                             <div className="space-y-0.5">
                               <label className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">Cal</label>
                               <Input
