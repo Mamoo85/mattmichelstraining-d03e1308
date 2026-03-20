@@ -167,7 +167,7 @@ serve(async (req) => {
     let customerId: string | undefined;
     if (customers.data.length > 0) customerId = customers.data[0].id;
 
-    const origin = req.headers.get("origin") || "https://m2training.lovable.app";
+    const origin = req.headers.get("origin") || "https://www.mattmichelstraining.com";
 
     // Always use price_data with the calculated final price for consistency
     const lineItems = [{
