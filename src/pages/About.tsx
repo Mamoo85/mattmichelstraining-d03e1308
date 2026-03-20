@@ -10,8 +10,8 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import m2Logo from "@/assets/m2-logo.jpg";
-import mattFamily from "@/assets/matt-family.jpg";
-import mattTraining from "@/assets/matt-training.jpg";
+import poiFamily from "@/assets/poi-matt-family.jpg";
+import poiTraining from "@/assets/poi-matt-training.jpg";
 
 /* ─── animation helper ─── */
 const fade = (delay: number) => ({
@@ -156,7 +156,7 @@ const About = () => {
           {/* Photo */}
           <div className="md:col-span-2">
             <img
-              src={mattTraining}
+              src={poiTraining}
               alt="Matt Michels — Strength Coach, M² Training"
               className="w-full aspect-[4/5] object-cover shadow-m2"
             />
@@ -254,8 +254,8 @@ const About = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
           <div className="overflow-hidden shadow-m2">
             <img
-              src={mattFamily}
-              alt="Matt with his wife Janelle and son Harrison"
+              src={poiFamily}
+              alt="Matthew Michels, his wife Janelle, and their young son Harrison — Grosse Pointe News"
               className="w-full h-full object-cover"
             />
           </div>
