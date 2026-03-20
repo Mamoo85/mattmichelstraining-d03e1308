@@ -541,8 +541,97 @@ const AdminClientList = () => {
                     </p>
                   </div>
 
+                  {/* ===== GIFT PROGRAM / WORKOUT ===== */}
+                  <div className="bg-secondary/30 border border-border p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Gift size={14} className="text-primary" />
+                      <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Gift Program or Workout</span>
+                    </div>
 
-                  {/* Trial Manipulation */}
+                    {/* Current programs */}
+                    {userPrograms.length > 0 && (
+                      <div className="mb-3">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Current Programs</p>
+                        <div className="flex flex-wrap gap-1">
+                          {userPrograms.map((up: any) => (
+                            <Badge key={up.id} variant="outline" className="text-[9px]">
+                              <BookOpen size={8} className="mr-1" />
+                              {up.training_programs?.title || "Program"}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Gift type toggle */}
+                    <div className="flex gap-1 mb-2">
+                      {(["program", "workout"] as const).map((t) => (
+                        <button
+                          key={t}
+                          onClick={() => { setGiftType(t); setSelectedGiftId(""); }}
+                          className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest border transition-all ${
+                            giftType === t
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-background text-muted-foreground border-border hover:border-primary/50"
+                          }`}
+                        >
+                          {t === "program" ? "📚 Program" : "💪 Workout"}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Selector */}
+                    <Select value={selectedGiftId} onValueChange={setSelectedGiftId}>
+                      <SelectTrigger className="bg-background border-border text-xs mb-2">
+                        <SelectValue placeholder={giftType === "program" ? "Select a program..." : "Select a workout..."} />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-60">
+                        {giftType === "program" ? (
+                          allPrograms.map((prog: any) => (
+                            <SelectItem key={prog.id} value={prog.id}>
+                              <span className="font-bold">{prog.title}</span>
+                              <span className="text-muted-foreground ml-2 text-[10px]">
+                                {prog.category} · {prog.level} · {prog.total_weeks}wk
+                                {prog.price > 0 && ` · $${prog.price}`}
+                              </span>
+                            </SelectItem>
+                          ))
+                        ) : (
+                          allDailyWorkouts.map((w: any) => (
+                            <SelectItem key={w.id} value={w.id}>
+                              <span className="font-bold">{w.title}</span>
+                              <span className="text-muted-foreground ml-2 text-[10px]">
+                                {w.target_audience}
+                              </span>
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+
+                    {/* Notes */}
+                    <Input
+                      value={giftNotes}
+                      onChange={(e) => setGiftNotes(e.target.value)}
+                      placeholder="Optional note (visible in records)..."
+                      className="bg-background text-xs mb-2"
+                    />
+
+                    {/* Gift button */}
+                    <button
+                      onClick={() => giftContent(p.user_id, p.full_name || p.email || "User")}
+                      disabled={gifting || !selectedGiftId}
+                      className="w-full bg-primary text-primary-foreground px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      {gifting ? <Loader2 size={12} className="animate-spin" /> : <Gift size={12} />}
+                      {gifting ? "Gifting…" : `Gift ${giftType === "program" ? "Program" : "Workout"} to ${p.full_name?.split(" ")[0] || "User"}`}
+                    </button>
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      Bypasses Stripe — content is added directly to their library with a notification.
+                    </p>
+                  </div>
+
+
                   <div className="bg-secondary/30 border border-border p-3">
                     <div className="flex items-center gap-2 mb-2">
                       <Clock size={14} className="text-primary" />
