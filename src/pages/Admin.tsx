@@ -229,7 +229,7 @@ const Admin = () => {
         {activeTab === "roster" && (
           <SubTabs tabs={[
             { key: "athletes", label: "All Users", content: <AdminClientList /> },
-            { key: "support", label: "Support Tickets", content: <AdminSupportCopilot /> },
+            { key: "support", label: <span className="flex items-center gap-1">Support Tickets{pendingSupportCount > 0 && <Badge variant="destructive" className="text-[8px] px-1.5 py-0 min-w-[18px] h-4">{pendingSupportCount}</Badge>}</span>, content: <AdminSupportCopilot /> },
             { key: "coaching", label: "Coach Review", content: (
               <div className="space-y-8">
                 <AdminCoachInbox />
