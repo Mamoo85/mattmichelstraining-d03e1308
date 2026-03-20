@@ -155,7 +155,7 @@ const Pricing = () => {
       />
       <AppNavbar />
       <div className="container pt-24 pb-16">
-        {/* ═══════════ In-Person Hero Banner ═══════════ */}
+        {/* ═══════════ Online Training Hero ═══════════ */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -165,24 +165,24 @@ const Pricing = () => {
           <div className="relative p-6 sm:p-8 space-y-4">
             <div className="flex items-center gap-2">
               <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-primary bg-primary/10 border border-primary/20 px-2.5 py-1">
-                Grosse Pointe Park, MI
+                100% Online · Any State
               </span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-foreground leading-tight">
               Train With Matt.<br />
-              <span className="text-primary">In Person. One-on-One.</span>
+              <span className="text-primary">Online. Affordable. Real Coaching.</span>
             </h2>
             <p className="text-sm text-muted-foreground max-w-lg leading-relaxed">
-              Start with a monthly 1-on-1 session. Matt builds your foundation, tracks your movement with
-              <strong className="text-foreground"> advanced biomechanics technology</strong>, and programs
-              everything around what your body actually needs. Add sessions at a discount as you grow.
+              20 years of coaching delivered to your phone. Every plan is month-to-month with a
+              <strong className="text-foreground"> 14-day free trial</strong>. Cancel anytime. Custom members
+              can come train in person at 20% off — or do it all online. Totally up to you.
             </p>
             <div className="flex flex-wrap gap-3 pt-1">
               <Link
-                to="/schedule"
+                to="/auth?redirect=/trial-welcome"
                 className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
               >
-                <Calendar size={14} /> Book Your First Session
+                Start 14-Day Free Trial
               </Link>
               <a
                 href="mailto:matthewmichels4@gmail.com?subject=Training%20Inquiry"
