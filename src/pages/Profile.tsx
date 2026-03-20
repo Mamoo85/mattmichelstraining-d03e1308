@@ -288,7 +288,7 @@ const Profile = () => {
         </div>
 
         {/* Subscription Details */}
-        {subscribed && subscriptionTier && (
+        {(subscribed || isAdmin) && (
           <div className="bg-primary/5 border border-primary/20 p-5 mb-6">
             <div className="flex items-center gap-2 mb-3">
               <Crown size={14} className="text-primary" />
@@ -297,11 +297,11 @@ const Profile = () => {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div>
                 <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Plan</p>
-                <p className="text-sm font-bold text-foreground">{TIERS[subscriptionTier].name}</p>
+                <p className="text-sm font-bold text-foreground">{isAdmin ? "M² Coach" : subscriptionTier ? TIERS[subscriptionTier].name : "Free"}</p>
               </div>
               <div>
                 <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Price</p>
-                <p className="text-sm font-bold text-foreground">{TIERS[subscriptionTier].price}/mo</p>
+                <p className="text-sm font-bold text-foreground">{isAdmin ? "∞" : subscriptionTier ? `${TIERS[subscriptionTier].price}/mo` : "—"}</p>
               </div>
               <div>
                 <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Store Discount</p>

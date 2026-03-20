@@ -220,10 +220,10 @@ const Pricing = () => {
             {cms.page_subtitle || "I train everyone — youth athletes, parents, adults, coaches. Every tier is month-to-month. Cancel anytime. No contracts. Just 20 years of proven strength programming delivered to your phone."}
           </p>
 
-          {subscribed && subscriptionTier && (
+          {(subscribed || isAdmin) && (
             <div className="mt-6 inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-sm text-sm font-bold uppercase tracking-widest">
               <Shield className="w-4 h-4" />
-              You're on {TIERS[subscriptionTier].name}
+              You're on {isAdmin ? "M² Coach" : subscriptionTier ? TIERS[subscriptionTier].name : "Free"}
               {subscriptionEnd && (
                 <span className="text-muted-foreground font-normal normal-case ml-2">
                   · renews {new Date(subscriptionEnd).toLocaleDateString()}
