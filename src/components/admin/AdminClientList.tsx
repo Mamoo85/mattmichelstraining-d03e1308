@@ -19,6 +19,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import AiAssistButton from "./AiAssistButton";
+import AdminUserLibrary from "./AdminUserLibrary";
 
 const AdminClientList = () => {
   const [search, setSearch] = useState("");
@@ -448,6 +449,15 @@ const AdminClientList = () => {
                         <p className="text-xs font-bold text-foreground uppercase">{s.value}</p>
                       </div>
                     ))}
+                  </div>
+
+                  {/* User Library */}
+                  <div className="bg-secondary/30 border border-border p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Dumbbell size={14} className="text-primary" />
+                      <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">User Library</span>
+                    </div>
+                    <AdminUserLibrary userId={p.user_id} />
                   </div>
 
                   {/* Tier Override */}
