@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Search, ChevronDown, ChevronUp, Dumbbell, ShoppingBag, Calendar,
   Shield, Clock, Loader2, X, Link2, Unlink, Mail, Trash2, Users, AlertTriangle,
-  Star, Copy, MessageSquare,
+  Star, Copy, MessageSquare, Gift, BookOpen,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -14,6 +14,10 @@ import ConfirmActionModal from "@/components/ConfirmActionModal";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import AiAssistButton from "./AiAssistButton";
 
 const AdminClientList = () => {
