@@ -223,19 +223,7 @@ const AdminClientList = () => {
     onError: () => toast.error("Failed to update tier"),
   });
 
-  const toggleVipMutation = useMutation({
-    mutationFn: async ({ profileId, value, setBasic }: { profileId: string; value: boolean; setBasic?: boolean }) => {
-      const updates: any = { is_vip: value, updated_at: new Date().toISOString() };
-      if (value && setBasic) updates.subscription_tier = "basic";
-      const { error } = await supabase.from("profiles").update(updates).eq("id", profileId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-clients"] });
-      toast.success("VIP status updated");
-    },
-    onError: () => toast.error("Failed to update VIP status"),
-  });
+  // VIP system removed — tier override via Stripe sync is the single source of truth
 
   const extendTrialMutation = useMutation({
     mutationFn: async ({ profileId, days }: { profileId: string; days: number }) => {
