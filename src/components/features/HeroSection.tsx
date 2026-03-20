@@ -5,19 +5,19 @@ import { ArrowRight, Star, Shield, Trophy, Clock } from "lucide-react";
 import m2Logo from "@/assets/m2-logo.jpg";
 import { useSectionVisible } from "@/hooks/useSiteContent";
 
-const AudienceSelector = lazy(() => import("./landing/AudienceSelector"));
+const AudienceSelector = lazy(() => import("@/components/landing/AudienceSelector"));
 
 // Lazy-load below-the-fold landing sections
-const ForParentsCTA = lazy(() => import("./landing/ForParentsCTA"));
-const M2Difference = lazy(() => import("./landing/M2Difference"));
-const FindUs = lazy(() => import("./landing/FindUs"));
-const PortalEntrance = lazy(() => import("./landing/PortalEntrance"));
-const TechShowcaseCard = lazy(() => import("./landing/TechShowcaseCard"));
-const EmailCapture = lazy(() => import("./landing/EmailCapture"));
-const MonthlyFocus = lazy(() => import("./landing/MonthlyFocus"));
-const SportPicker = lazy(() => import("./landing/SportPicker"));
-const FreeWorkoutTeaser = lazy(() => import("./landing/FreeWorkoutTeaser"));
-const AthleteResults = lazy(() => import("./landing/AthleteResults"));
+const ForParentsCTA = lazy(() => import("@/components/landing/ForParentsCTA"));
+const M2Difference = lazy(() => import("@/components/landing/M2Difference"));
+const FindUs = lazy(() => import("@/components/landing/FindUs"));
+const PortalEntrance = lazy(() => import("@/components/landing/PortalEntrance"));
+const TechShowcaseCard = lazy(() => import("@/components/landing/TechShowcaseCard"));
+const EmailCapture = lazy(() => import("@/components/landing/EmailCapture"));
+const MonthlyFocus = lazy(() => import("@/components/landing/MonthlyFocus"));
+const SportPicker = lazy(() => import("@/components/landing/SportPicker"));
+const FreeWorkoutTeaser = lazy(() => import("@/components/landing/FreeWorkoutTeaser"));
+const AthleteResults = lazy(() => import("@/components/landing/AthleteResults"));
 
 const STATS = [
   { icon: Clock, value: "20+", label: "Years Coaching" },
