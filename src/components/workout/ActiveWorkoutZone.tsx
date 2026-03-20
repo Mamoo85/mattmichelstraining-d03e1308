@@ -274,6 +274,61 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
     setExercises((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
+  // NLP Quick Log: auto-populate parsed sets into exercises
+  const handleQuickLogParsed = useCallback((parsedSets: Array<{ exercise_name: string; weight_lbs: number; reps: number; rpe: number }>) => {
+    setExercises((prev) => {
+      const updated = [...prev];
+
+      for (const parsed of parsedSets) {
+        // Try to match by exercise name (case-insensitive partial match)
+        const matchIdx = parsed.exercise_name
+          ? updated.findIndex((ex) =>
+              ex.exerciseTitle.toLowerCase().includes(parsed.exercise_name.toLowerCase()) ||
+              parsed.exercise_name.toLowerCase().includes(ex.exerciseTitle.toLowerCase())
+            )
+          : -1;
+
+        if (matchIdx >= 0) {
+          // Find the first empty set (weight === 0) or append a new set
+          const ex = updated[matchIdx];
+          const emptySetIdx = ex.sets.findIndex((s) => s.weight === 0 && s.reps === 0);
+          if (emptySetIdx >= 0) {
+            ex.sets[emptySetIdx] = {
+              ...ex.sets[emptySetIdx],
+              weight: parsed.weight_lbs,
+              reps: parsed.reps,
+            };
+          } else {
+            ex.sets.push({
+              set: ex.sets.length + 1,
+              weight: parsed.weight_lbs,
+              reps: parsed.reps,
+            });
+          }
+        } else if (updated.length > 0) {
+          // No name match — fill the first exercise with an empty set
+          const ex = updated[0];
+          const emptySetIdx = ex.sets.findIndex((s) => s.weight === 0 && s.reps === 0);
+          if (emptySetIdx >= 0) {
+            ex.sets[emptySetIdx] = {
+              ...ex.sets[emptySetIdx],
+              weight: parsed.weight_lbs,
+              reps: parsed.reps,
+            };
+          } else {
+            ex.sets.push({
+              set: ex.sets.length + 1,
+              weight: parsed.weight_lbs,
+              reps: parsed.reps,
+            });
+          }
+        }
+      }
+
+      return updated;
+    });
+  }, []);
+
   // Pause handler
   const handlePause = useCallback(() => {
     const state = {
