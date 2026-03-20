@@ -776,14 +776,6 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
         onConfirm={handleFinishConfirmed}
         loading={saving}
         icon={<CheckCircle size={16} />}
-        extraAction={
-          <button
-            onClick={handleDiscardExit}
-            className="w-full py-2.5 text-[10px] font-bold uppercase tracking-widest text-destructive hover:bg-destructive/10 transition-colors"
-          >
-            Discard & Exit
-          </button>
-        }
       />
 
       {formTrackerExercise && (
