@@ -60,7 +60,7 @@ const FOUNDATION_PROGRAMS = [
       "Competition prep programming",
       "Power development",
       "Advanced mobility protocols",
-      "AI postural assessment included",
+      "Postural assessment included",
     ],
     desc: "Now they're ready. Their body can handle real load because you didn't rush the first two phases.",
   },
