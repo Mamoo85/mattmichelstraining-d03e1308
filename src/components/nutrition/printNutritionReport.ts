@@ -1,3 +1,4 @@
+import { M2_LOGO_BASE64 } from "@/components/workout/m2LogoBase64";
 import { format } from "date-fns";
 
 interface FoodItem {
