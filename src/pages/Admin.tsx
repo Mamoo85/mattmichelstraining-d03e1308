@@ -205,9 +205,14 @@ const Admin = () => {
               >
                 <div className="relative">
                   <Icon size={18} />
-                  {tab.key === "engine" && pendingDraftsCount > 0 && (
+                  {tab.key === "engine" && totalEngineBadge > 0 && (
                     <span className="absolute -top-1.5 -right-2.5 bg-destructive text-destructive-foreground text-[8px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">
-                      {pendingDraftsCount}
+                      {totalEngineBadge}
+                    </span>
+                  )}
+                  {tab.key === "roster" && totalRosterBadge > 0 && (
+                    <span className="absolute -top-1.5 -right-2.5 bg-destructive text-destructive-foreground text-[8px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">
+                      {totalRosterBadge}
                     </span>
                   )}
                 </div>
