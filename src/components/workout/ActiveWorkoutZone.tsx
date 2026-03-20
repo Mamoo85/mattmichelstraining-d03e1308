@@ -20,6 +20,7 @@ import PostWorkoutSummary from "./PostWorkoutSummary";
 import WorkoutTimer from "./WorkoutTimer";
 import LiveFormTracker from "./LiveFormTracker";
 import ReadinessGate, { calculateAdjustments, type ReadinessResult } from "./ReadinessGate";
+import QuickLogBar from "./QuickLogBar";
 import type { LoggedExerciseData } from "./WorkoutLogger";
 
 /* ─── Context types ─── */
