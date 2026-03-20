@@ -5,6 +5,7 @@ import AppNavbar from "@/components/AppNavbar";
 import TechSupportButton from "@/components/TechSupportButton";
 import SupportTicketForm from "@/components/SupportTicketForm";
 import PrivacySettingsCard from "@/components/PrivacySettingsCard";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { Link } from "react-router-dom";
 import {
   User, Trophy, Medal, Award, Save, Loader2, Gift, Search,
@@ -28,6 +29,7 @@ interface ProfileData {
 
 const Profile = () => {
   const { user, subscribed, subscriptionTier, subscriptionEnd, checkSubscription } = useAuth();
+  const { isAdmin } = useIsAdmin();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [fullName, setFullName] = useState("");
   const [athleteName, setAthleteName] = useState("");
@@ -213,7 +215,12 @@ const Profile = () => {
               </h1>
               <p className="text-xs text-muted-foreground">{profile?.email}</p>
               <div className="flex items-center gap-2 mt-2 flex-wrap">
-                {subscriptionTier ? (
+                {isAdmin ? (
+                  <Badge className="flex items-center gap-1 text-[10px] uppercase tracking-widest bg-primary text-primary-foreground">
+                    <Crown size={10} />
+                    M² Coach
+                  </Badge>
+                ) : subscriptionTier ? (
                   <Badge className="flex items-center gap-1 text-[10px] uppercase tracking-widest">
                     <Crown size={10} />
                     {TIERS[subscriptionTier].name}
@@ -281,7 +288,7 @@ const Profile = () => {
         </div>
 
         {/* Subscription Details */}
-        {subscribed && subscriptionTier && (
+        {(subscribed || isAdmin) && (
           <div className="bg-primary/5 border border-primary/20 p-5 mb-6">
             <div className="flex items-center gap-2 mb-3">
               <Crown size={14} className="text-primary" />
@@ -290,20 +297,20 @@ const Profile = () => {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div>
                 <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Plan</p>
-                <p className="text-sm font-bold text-foreground">{TIERS[subscriptionTier].name}</p>
+                <p className="text-sm font-bold text-foreground">{isAdmin ? "M² Coach" : subscriptionTier ? TIERS[subscriptionTier].name : "Free"}</p>
               </div>
               <div>
                 <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Price</p>
-                <p className="text-sm font-bold text-foreground">{TIERS[subscriptionTier].price}/mo</p>
+                <p className="text-sm font-bold text-foreground">{isAdmin ? "∞" : subscriptionTier ? `${TIERS[subscriptionTier].price}/mo` : "—"}</p>
               </div>
               <div>
                 <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Store Discount</p>
-                <p className="text-sm font-bold text-primary">{TIER_DISCOUNTS[subscriptionTier]}% off</p>
+                <p className="text-sm font-bold text-primary">{isAdmin ? "100% off" : subscriptionTier ? `${TIER_DISCOUNTS[subscriptionTier]}% off` : "—"}</p>
               </div>
               <div>
                 <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Renews</p>
                 <p className="text-sm font-bold text-foreground">
-                  {subscriptionEnd ? new Date(subscriptionEnd).toLocaleDateString() : "—"}
+                  {isAdmin ? "Never expires" : subscriptionEnd ? new Date(subscriptionEnd).toLocaleDateString() : "—"}
                 </p>
               </div>
             </div>
