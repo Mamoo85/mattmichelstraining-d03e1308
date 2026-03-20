@@ -2,8 +2,11 @@ import { useState, lazy, Suspense } from "react";
 import { Navigate } from "react-router-dom";
 import AppNavbar from "@/components/AppNavbar";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Users, Dumbbell, Landmark, FileText } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 
 /* ── Lazy-load ALL admin sub-components ─────────── */
 const AdminClientList = lazy(() => import("@/components/admin/AdminClientList"));
@@ -66,7 +69,7 @@ const TabLoader = () => (
   </div>
 );
 
-const SubTabs = ({ tabs, defaultTab }: { tabs: { key: string; label: string; content: React.ReactNode }[]; defaultTab?: string }) => (
+const SubTabs = ({ tabs, defaultTab }: { tabs: { key: string; label: string | React.ReactNode; content: React.ReactNode }[]; defaultTab?: string }) => (
   <Tabs defaultValue={defaultTab || tabs[0].key} className="w-full">
     <TabsList className="bg-muted/50 h-auto flex-wrap gap-0.5 mb-4">
       {tabs.map((t) => (
@@ -88,6 +91,18 @@ const SubTabs = ({ tabs, defaultTab }: { tabs: { key: string; label: string; con
 const Admin = () => {
   const [activeTab, setActiveTab] = useState("roster");
   const { isAdmin, isLoading } = useIsAdmin();
+
+  const { data: pendingDraftsCount = 0 } = useQuery({
+    queryKey: ["pending-coach-drafts-count"],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("coach_ai_drafts")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending");
+      return count ?? 0;
+    },
+    refetchInterval: 30000,
+  });
 
   if (isLoading) {
     return (
@@ -122,7 +137,14 @@ const Admin = () => {
                     : "bg-card text-muted-foreground border-border hover:text-foreground hover:border-primary/40"
                 }`}
               >
-                <Icon size={18} />
+                <div className="relative">
+                  <Icon size={18} />
+                  {tab.key === "engine" && pendingDraftsCount > 0 && (
+                    <span className="absolute -top-1.5 -right-2.5 bg-destructive text-destructive-foreground text-[8px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">
+                      {pendingDraftsCount}
+                    </span>
+                  )}
+                </div>
                 <span className="text-[10px] font-bold uppercase tracking-widest">{tab.label}</span>
                 <span className={`text-[9px] ${isActive ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
                   {tab.desc}
@@ -181,7 +203,7 @@ const Admin = () => {
             { key: "recovery", label: "Recovery Map", content: <AdminRecoveryHeatmap /> },
             { key: "monthly", label: "Monthly Focus", content: <AdminMonthlyFocus /> },
             { key: "biomechanics", label: "Biomechanics", content: <AdminBiomechanics /> },
-            { key: "coach-ai", label: "Coach AI", content: <AdminCoachAiQueue /> },
+            { key: "coach-ai", label: <span className="flex items-center gap-1">Coach AI{pendingDraftsCount > 0 && <Badge variant="destructive" className="text-[8px] px-1.5 py-0 min-w-[18px] h-4">{pendingDraftsCount}</Badge>}</span>, content: <AdminCoachAiQueue /> },
           ]} />
         )}
 
