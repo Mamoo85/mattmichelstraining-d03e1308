@@ -25,7 +25,7 @@ const Welcome = () => (
         transition={{ duration: 0.5 }}
         className="text-center mb-8"
       >
-        <img src={m2Logo} alt="M² Training" className="w-20 h-20 object-contain mx-auto mb-3" />
+        <img src={m2Logo} alt="M² Training" className="w-20 mx-auto mb-3 object-contain" />
         <h1 className="text-2xl md:text-3xl font-black tracking-tight text-foreground mb-2">
           You're In. <span className="text-primary">Let's Get to Work.</span>
         </h1>
