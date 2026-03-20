@@ -106,7 +106,7 @@ const AdminClientOnboarding = () => {
               <Button
                 key={preset.key}
                 variant="outline"
-                className="h-auto flex flex-col items-start gap-1 p-3 text-left"
+                className="h-auto flex flex-col items-start gap-1.5 p-4 text-left"
                 onClick={() => generatePromo(preset)}
                 disabled={!!loading}
               >
@@ -115,6 +115,7 @@ const AdminClientOnboarding = () => {
                   <span className="text-xs font-bold">{preset.label}</span>
                 </div>
                 <span className="text-[10px] text-muted-foreground">{preset.desc}</span>
+                <span className="text-[10px] text-muted-foreground/70 leading-relaxed">{preset.detail}</span>
               </Button>
             );
           })}
