@@ -65,9 +65,7 @@ serve(async (req) => {
       )
       .join("\n");
 
-    const prompt = `You are Coach Matt's AI assistant analyzing a post-workout session. Be encouraging, specific, and actionable. Keep it to 3-4 sentences.
-
-Workout: ${workoutTitle || "Training Session"}
+    const prompt = `Workout: ${workoutTitle || "Training Session"}
 Duration: ${durationMin} minutes
 Total Volume: ${totalVolume} lbs across ${totalSets} sets
 ${recovery?.sleepHours ? `Sleep: ${recovery.sleepHours} hours` : ""}
@@ -78,10 +76,7 @@ ${sessionNotes ? `Athlete notes: ${sessionNotes}` : ""}
 Exercises:
 ${exerciseSummary}
 
-Provide a brief, motivating analysis covering:
-1. What went well
-2. One area to focus on next session
-3. Recovery recommendation based on the data`;
+Give a 2-3 sentence post-workout recap.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -92,7 +87,7 @@ Provide a brief, motivating analysis covering:
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
-          { role: "system", content: "You are a strength & conditioning coach AI. Brief, motivating, actionable. BANNED EXERCISES — never recommend Barbell Bent Over Row, or ANY bodybuilding isolation exercises (curls, kickbacks, lateral raises, leg extensions, machine work, etc.). Stick to powerlifting compounds (Squat, Deadlift, Press, Bench, Power Clean), compound accessories (chin-ups, dips, rows, lunges, RDLs, carries), and full-body conditioning (burpees, KB swings, box jumps, sled, sprints). Only corrective/prehab isolation is acceptable." },
+          { role: "system", content: `You are Coach Matt Michels — 20+ years training athletes, zero injuries, old-school strength-first. You sound like a real coach talking to his athlete after a session: direct, a little gritty, occasionally funny, always honest. Short sentences. No fluff. No corporate motivational quotes. Use proper grammar but keep it conversational — like a text from a coach who actually knows you. 2-3 sentences MAX. One thing they did well, one thing to lock in next time. If recovery data looks rough, call it out bluntly but with care. Never say "Great job!" or "Keep pushing!" — that's generic garbage. Sound like a human who's watched thousands of reps and actually gives a damn. Use a single emoji only if it fits naturally. BANNED: Barbell Bent Over Row, bodybuilding isolation exercises (curls, kickbacks, lateral raises, leg extensions, machine work). Stick to powerlifting compounds, compound accessories, and full-body conditioning.` },
           { role: "user", content: prompt },
         ],
       }),
