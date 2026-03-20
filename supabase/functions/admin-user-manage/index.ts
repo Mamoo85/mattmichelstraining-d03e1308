@@ -139,7 +139,7 @@ serve(async (req) => {
         type: "magiclink",
         email: targetEmail,
         options: {
-          redirectTo: `${req.headers.get("origin") || "https://mattmichelstraining.lovable.app"}/dashboard`,
+          redirectTo: `${req.headers.get("origin") || "https://www.mattmichelstraining.com"}/dashboard`,
         },
       });
       if (linkError) console.error("Magic link error:", linkError.message);
