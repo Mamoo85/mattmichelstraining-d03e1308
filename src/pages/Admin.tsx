@@ -137,7 +137,14 @@ const Admin = () => {
                     : "bg-card text-muted-foreground border-border hover:text-foreground hover:border-primary/40"
                 }`}
               >
-                <Icon size={18} />
+                <div className="relative">
+                  <Icon size={18} />
+                  {tab.key === "engine" && pendingDraftsCount > 0 && (
+                    <span className="absolute -top-1.5 -right-2.5 bg-destructive text-destructive-foreground text-[8px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">
+                      {pendingDraftsCount}
+                    </span>
+                  )}
+                </div>
                 <span className="text-[10px] font-bold uppercase tracking-widest">{tab.label}</span>
                 <span className={`text-[9px] ${isActive ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
                   {tab.desc}
