@@ -8,15 +8,16 @@ const corsHeaders = {
 };
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-const ADMIN_EMAIL = "matthew.michels4@gmail.com";
+const ADMIN_EMAILS = ["matthewmichels4@gmail.com", "info@mattmichelstraining.com"];
 
-async function sendEmail(to: string, subject: string, html: string) {
+async function sendEmail(to: string | string[], subject: string, html: string) {
   if (!RESEND_API_KEY) return;
+  const recipients = Array.isArray(to) ? to : [to];
   try {
     await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from: "M² Training <notify@notify.m2training.com>", to: [to], subject, html }),
+      body: JSON.stringify({ from: "M² Training <notify@notify.m2training.com>", to: recipients, subject, html }),
     });
   } catch (e) { console.error("Email error:", e); }
 }
@@ -123,8 +124,7 @@ serve(async (req) => {
 
     // Send confirmation to client
     await sendEmail(meta.user_email, `Session Confirmed — ${dateStr} at ${timeStr}`, emailHtml);
-    // Send notification to Matt
-    await sendEmail(ADMIN_EMAIL, `NEW SESSION BOOKED — ${meta.user_name || meta.user_email}${guestTag} · ${dateStr} ${timeStr}`, emailHtml);
+    await sendEmail(ADMIN_EMAILS, `NEW SESSION BOOKED — ${meta.user_name || meta.user_email}${guestTag} · ${dateStr} ${timeStr}`, emailHtml);
 
     // Sync to Google Calendar (fire-and-forget)
     try {

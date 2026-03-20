@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         from: "M² Training <onboarding@resend.dev>",
-        to: ["matthewmichels4@gmail.com"],
+        to: ["matthewmichels4@gmail.com", "info@mattmichelstraining.com"],
         subject: `📋 New Guide Request from ${email || "anonymous"}`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
