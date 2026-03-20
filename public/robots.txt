@@ -21,4 +21,4 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
-Sitemap: https://m2training.com/sitemap.xml
+Sitemap: https://www.mattmichelstraining.com/sitemap.xml
