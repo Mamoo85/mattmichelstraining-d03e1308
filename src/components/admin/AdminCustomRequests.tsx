@@ -367,11 +367,11 @@ const AdminCustomRequests = () => {
 
       <ConfirmActionModal
         open={!!confirmApprove}
+        onOpenChange={(open) => { if (!open) setConfirmApprove(null); }}
         title="Approve Custom Program"
         description="This will add the generated program to the athlete's library permanently and mark their free coupon as redeemed."
         confirmLabel="Approve & Deliver"
         onConfirm={executeApproval}
-        onCancel={() => setConfirmApprove(null)}
       />
     </div>
   );
