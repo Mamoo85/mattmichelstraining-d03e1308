@@ -69,7 +69,7 @@ const TabLoader = () => (
   </div>
 );
 
-const SubTabs = ({ tabs, defaultTab }: { tabs: { key: string; label: string; content: React.ReactNode }[]; defaultTab?: string }) => (
+const SubTabs = ({ tabs, defaultTab }: { tabs: { key: string; label: string | React.ReactNode; content: React.ReactNode }[]; defaultTab?: string }) => (
   <Tabs defaultValue={defaultTab || tabs[0].key} className="w-full">
     <TabsList className="bg-muted/50 h-auto flex-wrap gap-0.5 mb-4">
       {tabs.map((t) => (
