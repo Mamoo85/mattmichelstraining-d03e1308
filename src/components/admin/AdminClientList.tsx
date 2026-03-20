@@ -451,6 +451,15 @@ const AdminClientList = () => {
                     ))}
                   </div>
 
+                  {/* User Library */}
+                  <div className="bg-secondary/30 border border-border p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Dumbbell size={14} className="text-primary" />
+                      <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">User Library</span>
+                    </div>
+                    <AdminUserLibrary userId={p.user_id} />
+                  </div>
+
                   {/* Tier Override */}
                   <div className="bg-secondary/30 border border-border p-3">
                     <div className="flex items-center justify-between">
