@@ -14,21 +14,23 @@ const CustomProgramRequest = lazy(() => import("./CustomProgramRequest"));
 
 interface DashboardHomeProps {
   isNewUser: boolean;
+  isInPerson: boolean;
   onViewPoints: () => void;
   onViewReferrals: () => void;
 }
 
-const DashboardHome = memo(({ isNewUser, onViewPoints, onViewReferrals }: DashboardHomeProps) => {
+const DashboardHome = memo(({ isNewUser, isInPerson, onViewPoints, onViewReferrals }: DashboardHomeProps) => {
   const { subscribed, user } = useAuth();
   const navigate = useNavigate();
   const [showWelcome, setShowWelcome] = useState(false);
   const [hasPosture, setHasPosture] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if (isNewUser && !localStorage.getItem("m2-welcome-gift-seen")) {
+    // Never show welcome modal for in-person clients
+    if (!isInPerson && isNewUser && !localStorage.getItem("m2-welcome-gift-seen")) {
       setShowWelcome(true);
     }
-  }, [isNewUser]);
+  }, [isNewUser, isInPerson]);
 
   useEffect(() => {
     if (!user) return;
@@ -49,13 +51,17 @@ const DashboardHome = memo(({ isNewUser, onViewPoints, onViewReferrals }: Dashbo
 
   return (
   <div className="space-y-6">
-    <Suspense fallback={null}>
-      {showWelcome && (
-        <WelcomeGiftModal open={showWelcome} onClose={() => setShowWelcome(false)} />
-      )}
-    </Suspense>
+    {/* Welcome modal — never for in-person clients */}
+    {!isInPerson && (
+      <Suspense fallback={null}>
+        {showWelcome && (
+          <WelcomeGiftModal open={showWelcome} onClose={() => setShowWelcome(false)} />
+        )}
+      </Suspense>
+    )}
 
-    {isNewUser && (
+    {/* Empty state CTA — never for in-person clients */}
+    {isNewUser && !isInPerson && (
       <EmptyStateCard
         title="Welcome to M²"
         description="Your training log is empty. Select your starting track and begin Day 1 — Matt will review every session and coach you personally."
@@ -89,7 +95,8 @@ const DashboardHome = memo(({ isNewUser, onViewPoints, onViewReferrals }: Dashbo
       </button>
     </div>
 
-    {hasPosture === false && (
+    {/* Posture CTA — never for in-person clients */}
+    {!isInPerson && hasPosture === false && (
       <div className="bg-card border border-border p-5 space-y-2">
         <div className="flex items-center gap-2">
           <Camera size={14} className="text-primary" />

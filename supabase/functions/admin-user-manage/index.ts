@@ -29,7 +29,84 @@ serve(async (req) => {
     });
     if (!roleCheck) throw new Error("Admin access required");
 
-    const { action, targetUserId, targetEmail, linkParentId, unlinkChildId } = await req.json();
+    const { action, targetUserId, targetEmail, targetName, linkParentId, unlinkChildId } = await req.json();
+
+    // ── Invite In-Person Client ──────────────────────────────────────
+    if (action === "invite_in_person") {
+      if (!targetEmail) throw new Error("Email required");
+
+      // Check if user already exists
+      const { data: existingUsers } = await supabaseClient.auth.admin.listUsers();
+      const existingUser = existingUsers?.users?.find(
+        (u: any) => u.email?.toLowerCase() === targetEmail.toLowerCase()
+      );
+
+      if (existingUser) {
+        // User exists — just flag them as in-person
+        await supabaseClient
+          .from("profiles")
+          .update({ is_in_person: true })
+          .eq("user_id", existingUser.id);
+
+        // Send them a magic link
+        const { error: linkError } = await supabaseClient.auth.admin.generateLink({
+          type: "magiclink",
+          email: targetEmail,
+          options: {
+            redirectTo: `${req.headers.get("origin") || "https://mattmichelstraining.lovable.app"}/dashboard`,
+          },
+        });
+        if (linkError) console.error("Magic link error:", linkError.message);
+
+        return new Response(JSON.stringify({
+          success: true,
+          message: `${targetEmail} flagged as in-person client (existing account)`,
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // New user — create account with auto-confirm, then flag profile
+      const tempPassword = crypto.randomUUID();
+      const { data: newUser, error: createError } = await supabaseClient.auth.admin.createUser({
+        email: targetEmail,
+        password: tempPassword,
+        email_confirm: true,
+        user_metadata: {
+          full_name: targetName || "",
+          account_role: "independent_adult",
+        },
+      });
+      if (createError) throw new Error(`Account creation failed: ${createError.message}`);
+
+      // Flag as in-person on their profile (trigger creates profile on signup)
+      // Small delay to let the trigger fire
+      await new Promise((r) => setTimeout(r, 500));
+      await supabaseClient
+        .from("profiles")
+        .update({
+          is_in_person: true,
+          full_name: targetName || null,
+        })
+        .eq("user_id", newUser.user.id);
+
+      // Send magic link so they can sign in without knowing the temp password
+      const { error: linkError } = await supabaseClient.auth.admin.generateLink({
+        type: "magiclink",
+        email: targetEmail,
+        options: {
+          redirectTo: `${req.headers.get("origin") || "https://mattmichelstraining.lovable.app"}/dashboard`,
+        },
+      });
+      if (linkError) console.error("Magic link error:", linkError.message);
+
+      return new Response(JSON.stringify({
+        success: true,
+        message: `Invite sent to ${targetEmail} — account created with Basic access`,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     if (action === "send_magic_link") {
       if (!targetEmail) throw new Error("Email required");
@@ -51,7 +128,6 @@ serve(async (req) => {
     if (action === "erase_user_data") {
       if (!targetUserId) throw new Error("User ID required");
 
-      // Delete all user data across tables (order matters for foreign keys)
       const tables = [
         "logged_exercises",
         "workout_logs",
@@ -83,13 +159,9 @@ serve(async (req) => {
         await supabaseClient.from(table).delete().eq("user_id", targetUserId);
       }
 
-      // Also clean parent_child_links where they are a parent
       await supabaseClient.from("parent_child_links").delete().eq("parent_user_id", targetUserId);
-
-      // Delete profile
       await supabaseClient.from("profiles").delete().eq("user_id", targetUserId);
 
-      // Delete auth user
       const { error: deleteError } = await supabaseClient.auth.admin.deleteUser(targetUserId);
       if (deleteError) console.error("Auth user delete error:", deleteError.message);
 

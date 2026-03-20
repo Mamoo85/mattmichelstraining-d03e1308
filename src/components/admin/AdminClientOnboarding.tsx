@@ -1,88 +1,45 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Copy, Check, Loader2, UserPlus, Crown, Users } from "lucide-react";
+import { Copy, Check, Loader2, UserPlus, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
-const PUBLISHED_DOMAIN = "https://m2training.lovable.app";
-
-// Custom tier: $49.99 → $19.99 = $30.00 off, forever
-// Basic tier: $12.99 → free = 100% off, forever
-const PRESETS = [
-  {
-    key: "vip",
-    label: "Generate $20 VIP Link",
-    desc: "Custom Tier → $19.99/mo forever",
-    detail: "Gives one client the full Custom tier ($49.99/mo) at $19.99/mo for life. Includes custom 8-week programs, online coaching, and 20% off in-person training. Perfect for loyal clients you want to keep at a VIP rate. Single-use — cannot be shared.",
-    icon: Crown,
-    params: {
-      discount_type: "fixed",
-      discount_value: 30,
-      duration: "forever",
-      max_redemptions: 1,
-    },
-    codePrefix: "VIP",
-  },
-  {
-    key: "community",
-    label: "Generate Free Basic Link",
-    desc: "Basic Tier → $0/mo forever",
-    detail: "Gives one client the Basic tier ($12.99/mo) completely free, forever. Includes portal access, workout logging, unlimited form checks, and the exercise library. Use for young athletes, community members, or anyone you want to give free access to. Single-use — cannot be shared.",
-    icon: Users,
-    params: {
-      discount_type: "percent",
-      discount_value: 100,
-      duration: "forever",
-      max_redemptions: 1,
-    },
-    codePrefix: "COMM",
-  },
-] as const;
-
 const AdminClientOnboarding = () => {
-  const [generatedUrl, setGeneratedUrl] = useState<string | null>(null);
-  const [generatedCode, setGeneratedCode] = useState<string | null>(null);
-  const [loading, setLoading] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<{ email: string; message: string } | null>(null);
 
-  const generatePromo = async (preset: (typeof PRESETS)[number]) => {
-    setLoading(preset.key);
-    setGeneratedUrl(null);
-    setGeneratedCode(null);
-    setCopied(false);
+  const handleInvite = async () => {
+    if (!email.trim()) {
+      toast({ title: "Enter an email address", variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    setResult(null);
 
     try {
-      const uniqueCode = `${preset.codePrefix}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-
-      const { data, error } = await supabase.functions.invoke("create-stripe-promo", {
+      const { data, error } = await supabase.functions.invoke("admin-user-manage", {
         body: {
-          code: uniqueCode,
-          ...preset.params,
+          action: "invite_in_person",
+          targetEmail: email.trim(),
+          targetName: name.trim() || null,
         },
       });
 
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
 
-      const code = data?.code || uniqueCode;
-      const url = `${PUBLISHED_DOMAIN}/pricing?promo=${code}`;
-      setGeneratedUrl(url);
-      setGeneratedCode(code);
-      toast({ title: "Promo link generated", description: `Code: ${code}` });
+      setResult({ email: email.trim(), message: data?.message || "Invite sent" });
+      toast({ title: "In-person client invited", description: `${email.trim()} is set up with Basic access.` });
+      setEmail("");
+      setName("");
     } catch (e: any) {
-      toast({ title: "Failed to generate promo", description: e.message, variant: "destructive" });
+      toast({ title: "Failed to invite", description: e.message, variant: "destructive" });
     } finally {
-      setLoading(null);
+      setLoading(false);
     }
-  };
-
-  const copyToClipboard = async () => {
-    if (!generatedUrl) return;
-    await navigator.clipboard.writeText(generatedUrl);
-    setCopied(true);
-    toast({ title: "Copied to clipboard" });
-    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -90,54 +47,50 @@ const AdminClientOnboarding = () => {
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
           <UserPlus size={16} className="text-primary" />
-          <CardTitle className="text-sm">In-Person Client Onboarding</CardTitle>
+          <CardTitle className="text-sm">In-Person Client Invite</CardTitle>
         </div>
         <CardDescription className="text-[11px]">
-          Generate a single-use Stripe promo link to hand a client on the spot. Each code works once and creates a permanent discount tied to that client's subscription.
+          Enter a client's email to instantly give them Basic-tier portal access. They'll get a magic link to sign in — no signup friction, no popups, no trial banners.
         </CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-3">
-        <div className="grid grid-cols-1 gap-2">
-          {PRESETS.map((preset) => {
-            const Icon = preset.icon;
-            const isLoading = loading === preset.key;
-            return (
-              <Button
-                key={preset.key}
-                variant="outline"
-                className="h-auto flex flex-col items-start gap-1.5 p-4 text-left"
-                onClick={() => generatePromo(preset)}
-                disabled={!!loading}
-              >
-                <div className="flex items-center gap-2">
-                  {isLoading ? <Loader2 size={14} className="animate-spin" /> : <Icon size={14} />}
-                  <span className="text-xs font-bold">{preset.label}</span>
-                </div>
-                <span className="text-[10px] text-muted-foreground">{preset.desc}</span>
-                <span className="text-[10px] text-muted-foreground/70 leading-relaxed">{preset.detail}</span>
-              </Button>
-            );
-          })}
+        <div>
+          <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Client Email</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="athlete@example.com"
+            className="w-full bg-muted border border-border px-3 py-2.5 text-sm text-foreground focus:ring-1 focus:ring-primary outline-none"
+          />
+        </div>
+        <div>
+          <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Name (optional)</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="First Last"
+            className="w-full bg-muted border border-border px-3 py-2.5 text-sm text-foreground focus:ring-1 focus:ring-primary outline-none"
+          />
         </div>
 
-        {generatedUrl && (
-          <div className="space-y-2 animate-in fade-in-50 slide-in-from-bottom-2 duration-200">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-              Ready — Code: {generatedCode}
+        <Button
+          onClick={handleInvite}
+          disabled={loading || !email.trim()}
+          className="w-full"
+        >
+          {loading ? <Loader2 size={14} className="animate-spin mr-2" /> : <Send size={14} className="mr-2" />}
+          Send In-Person Invite
+        </Button>
+
+        {result && (
+          <div className="bg-primary/10 border border-primary/20 p-3 animate-in fade-in-50 slide-in-from-bottom-2 duration-200">
+            <p className="text-xs font-bold text-foreground">✓ {result.message}</p>
+            <p className="text-[10px] text-muted-foreground mt-1">
+              {result.email} now has Basic access. They'll receive a magic link to sign in.
             </p>
-            <div className="flex items-stretch gap-1.5">
-              <input
-                type="text"
-                readOnly
-                value={generatedUrl}
-                className="flex-1 bg-muted border border-border px-3 py-2 text-xs font-mono rounded-md select-all focus:outline-none focus:ring-1 focus:ring-primary"
-                onClick={(e) => (e.target as HTMLInputElement).select()}
-              />
-              <Button size="sm" variant="secondary" onClick={copyToClipboard} className="px-3">
-                {copied ? <Check size={14} /> : <Copy size={14} />}
-              </Button>
-            </div>
           </div>
         )}
       </CardContent>
