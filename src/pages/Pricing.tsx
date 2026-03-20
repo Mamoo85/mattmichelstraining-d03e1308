@@ -212,7 +212,7 @@ const Pricing = () => {
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-foreground mb-4"
+            className="text-2xl sm:text-4xl md:text-5xl font-black uppercase tracking-tighter text-foreground mb-4"
           >
             {cms.page_heading || cms.page_title || "Your Coach. Your Corner. Any Age."}
           </motion.h1>
