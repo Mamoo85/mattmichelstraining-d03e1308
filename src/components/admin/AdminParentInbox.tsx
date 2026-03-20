@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import ConfirmActionModal from "@/components/ConfirmActionModal";
 import {
   Loader2,
   Inbox,
@@ -12,6 +14,7 @@ import {
   Send,
   ChevronDown,
   ChevronUp,
+  Trash2,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -50,6 +53,7 @@ const SENTIMENT_CONFIG: Record<string, { icon: React.ReactNode; label: string; c
 };
 
 const AdminParentInbox = () => {
+  const { user } = useAuth();
   const [messages, setMessages] = useState<ParentMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -57,12 +61,14 @@ const AdminParentInbox = () => {
   const [replying, setReplying] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "urgent" | "unread">("all");
   const [childNames, setChildNames] = useState<Record<string, string>>({});
+  const [deleteTarget, setDeleteTarget] = useState<ParentMessage | null>(null);
 
   const fetchMessages = async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("parent_inbox")
       .select("*")
+      .eq("is_deleted", false)
       .order("is_urgent", { ascending: false })
       .order("created_at", { ascending: false });
 
@@ -71,7 +77,6 @@ const AdminParentInbox = () => {
     } else if (data) {
       setMessages(data as ParentMessage[]);
 
-      // Resolve child names
       const childIds = [...new Set(data.filter((m: any) => m.child_user_id).map((m: any) => m.child_user_id))];
       if (childIds.length > 0) {
         const { data: profiles } = await supabase
@@ -105,7 +110,6 @@ const AdminParentInbox = () => {
 
     setReplying(msg.id);
     try {
-      // Store reply in DB
       await supabase
         .from("parent_inbox")
         .update({ admin_reply: text, replied_at: new Date().toISOString(), is_read: true })
@@ -123,6 +127,26 @@ const AdminParentInbox = () => {
     } finally {
       setReplying(null);
     }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget || !user) return;
+
+    // Move to trash
+    await supabase.from("admin_trash" as any).insert({
+      original_table: "parent_inbox",
+      original_id: deleteTarget.id,
+      deleted_by: user.id,
+      original_data: deleteTarget as any,
+      label: `Parent message: ${deleteTarget.subject || deleteTarget.parent_email}`,
+    });
+
+    // Soft-delete
+    await supabase.from("parent_inbox").update({ is_deleted: true } as any).eq("id", deleteTarget.id);
+
+    setMessages((prev) => prev.filter((m) => m.id !== deleteTarget.id));
+    setDeleteTarget(null);
+    toast({ title: "Moved to trash", description: "Can be restored within 30 days." });
   };
 
   const filtered = messages.filter((m) => {
@@ -306,14 +330,23 @@ const AdminParentInbox = () => {
                         >
                           Open in Email Client →
                         </a>
-                        <button
-                          onClick={() => sendReply(msg)}
-                          disabled={!replyText[msg.id]?.trim() || replying === msg.id}
-                          className="bg-primary text-primary-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-m2 flex items-center gap-2 disabled:opacity-50"
-                        >
-                          {replying === msg.id ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
-                          Save Reply
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setDeleteTarget(msg)}
+                            className="flex items-center gap-1.5 border border-destructive/30 text-destructive px-3 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-destructive/10 transition-m2"
+                          >
+                            <Trash2 size={12} />
+                            Delete
+                          </button>
+                          <button
+                            onClick={() => sendReply(msg)}
+                            disabled={!replyText[msg.id]?.trim() || replying === msg.id}
+                            className="bg-primary text-primary-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-m2 flex items-center gap-2 disabled:opacity-50"
+                          >
+                            {replying === msg.id ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
+                            Save Reply
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -323,6 +356,15 @@ const AdminParentInbox = () => {
           })}
         </div>
       )}
+
+      <ConfirmActionModal
+        open={!!deleteTarget}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        onConfirm={handleDelete}
+        title="Delete Message"
+        description={`Move this message from ${deleteTarget?.parent_name || deleteTarget?.parent_email} to trash? It can be restored within 30 days.`}
+        confirmLabel="Move to Trash"
+      />
     </div>
   );
 };

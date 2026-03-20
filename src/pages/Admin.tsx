@@ -4,7 +4,7 @@ import AppNavbar from "@/components/AppNavbar";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Users, Dumbbell, Landmark, FileText } from "lucide-react";
+import { Loader2, Users, Dumbbell, Landmark, FileText, Trash2 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 
@@ -56,6 +56,7 @@ const AdminSendHistory = lazy(() => import("@/components/admin/AdminSendHistory"
 const AdminMarketingDrafts = lazy(() => import("@/components/admin/AdminMarketingDrafts"));
 const AdminAiBusinessTools = lazy(() => import("@/components/admin/AdminAiBusinessTools"));
 const AdminCmoReports = lazy(() => import("@/components/admin/AdminCmoReports"));
+const AdminTrash = lazy(() => import("@/components/admin/AdminTrash"));
 
 const MASTER_TABS = [
   { key: "roster", label: "The Roster", icon: Users, desc: "Users · Support · Families" },
@@ -103,6 +104,17 @@ const Admin = () => {
       return count ?? 0;
     },
     refetchInterval: 30000,
+  });
+
+  const { data: trashCount = 0 } = useQuery({
+    queryKey: ["admin-trash-count"],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("admin_trash" as any)
+        .select("id", { count: "exact", head: true });
+      return count ?? 0;
+    },
+    refetchInterval: 60000,
   });
 
   if (isLoading) {
@@ -219,6 +231,7 @@ const Admin = () => {
             { key: "stripe-products", label: "Stripe Products", content: <AdminStripeProducts /> },
             { key: "churn", label: "Churn Radar", content: <AdminChurnRadar /> },
             { key: "catalog", label: "Service Catalog", content: <AdminServiceCatalog /> },
+            { key: "trash", label: <span className="flex items-center gap-1"><Trash2 size={11} /> Trash{trashCount > 0 && <Badge variant="secondary" className="text-[8px] px-1.5 py-0 min-w-[18px] h-4">{trashCount}</Badge>}</span>, content: <AdminTrash /> },
           ]} />
         )}
 

@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_trash: {
+        Row: {
+          deleted_at: string
+          deleted_by: string
+          expires_at: string
+          id: string
+          label: string
+          original_data: Json
+          original_id: string
+          original_table: string
+        }
+        Insert: {
+          deleted_at?: string
+          deleted_by: string
+          expires_at?: string
+          id?: string
+          label?: string
+          original_data?: Json
+          original_id: string
+          original_table: string
+        }
+        Update: {
+          deleted_at?: string
+          deleted_by?: string
+          expires_at?: string
+          id?: string
+          label?: string
+          original_data?: Json
+          original_id?: string
+          original_table?: string
+        }
+        Relationships: []
+      }
       ai_action_queue: {
         Row: {
           action_type: string
@@ -1092,6 +1125,7 @@ export type Database = {
           body: string | null
           created_at: string
           id: string
+          is_deleted: boolean
           is_read: boolean
           link: string | null
           title: string
@@ -1102,6 +1136,7 @@ export type Database = {
           body?: string | null
           created_at?: string
           id?: string
+          is_deleted?: boolean
           is_read?: boolean
           link?: string | null
           title: string
@@ -1112,6 +1147,7 @@ export type Database = {
           body?: string | null
           created_at?: string
           id?: string
+          is_deleted?: boolean
           is_read?: boolean
           link?: string | null
           title?: string
@@ -1196,6 +1232,7 @@ export type Database = {
           child_user_id: string | null
           created_at: string
           id: string
+          is_deleted: boolean
           is_read: boolean
           is_urgent: boolean
           parent_email: string
@@ -1211,6 +1248,7 @@ export type Database = {
           child_user_id?: string | null
           created_at?: string
           id?: string
+          is_deleted?: boolean
           is_read?: boolean
           is_urgent?: boolean
           parent_email: string
@@ -1226,6 +1264,7 @@ export type Database = {
           child_user_id?: string | null
           created_at?: string
           id?: string
+          is_deleted?: boolean
           is_read?: boolean
           is_urgent?: boolean
           parent_email?: string
