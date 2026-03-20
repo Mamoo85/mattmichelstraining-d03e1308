@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, useEffect, memo } from "react";
+import { lazy, Suspense, useState, useEffect, memo, useCallback } from "react";
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
@@ -16,10 +16,6 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import OfflineBadge from "@/components/OfflineBadge";
 import { safeLocalStorage } from "@/lib/browserStorage";
 
-import { useTimer } from "@/hooks/useTimer";
-import { useAuth } from "@/hooks/useAuth";
-import { useReferralCapture } from "@/hooks/useReferral";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { Loader2 } from "lucide-react";
 
 // Retry wrapper for lazy imports — retries up to 3 times on chunk load failure
@@ -40,8 +36,8 @@ const AnnouncementBanner = lazyRetry(() => import("@/components/AnnouncementBann
 const IntervalTimer = lazyRetry(() => import("@/components/workout/IntervalTimer"));
 const ActiveWorkoutZone = lazyRetry(() => import("@/components/workout/ActiveWorkoutZone"));
 
-// Lazy-load all pages for code-splitting
-import Index from "./pages/Index";
+// Lazy-load ALL pages including Index for faster initial JS parse
+const Index = lazyRetry(() => import("./pages/Index"));
 const Dashboard = lazyRetry(() => import("./pages/Dashboard"));
 const Coach = lazyRetry(() => import("./pages/Coach"));
 const Shop = lazyRetry(() => import("./pages/Shop"));
@@ -100,45 +96,40 @@ const GlobalTimer = memo(() => {
 GlobalTimer.displayName = "GlobalTimer";
 
 const ActiveWorkoutWrapper = () => {
-  const { user } = useAuth();
-  const { setPortalActive } = useTimer();
+  // Import inline to avoid pulling these into the top-level module graph
+  const [authMod, setAuthMod] = useState<any>(null);
+  const [timerMod, setTimerMod] = useState<any>(null);
+  useEffect(() => {
+    import("@/hooks/useAuth").then(m => setAuthMod(m));
+    import("@/hooks/useTimer").then(m => setTimerMod(m));
+  }, []);
   const [zoneOpen, setZoneOpen] = useState(false);
   const [zoneContext, setZoneContext] = useState<any>(null);
-  const [hasPaused, setHasPaused] = useState(
-    () => !!safeLocalStorage.getItem("m2-paused-workout")
-  );
 
-  // Listen for open event with context
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent).detail || null;
       setZoneContext(detail);
       setZoneOpen(true);
-      setHasPaused(false);
-      setPortalActive(true);
     };
-    window.addEventListener("open-workout-zone", handler);
-    return () => window.removeEventListener("open-workout-zone", handler);
-  }, []);
-
-  // Listen for resume event
-  useEffect(() => {
-    const handler = () => {
+    const resumeHandler = () => {
       const saved = safeLocalStorage.getItem("m2-paused-workout");
       if (saved) {
         try {
           setZoneContext(JSON.parse(saved));
           setZoneOpen(true);
-          setHasPaused(false);
-          setPortalActive(true);
         } catch {}
       }
     };
-    window.addEventListener("resume-workout-zone", handler);
-    return () => window.removeEventListener("resume-workout-zone", handler);
+    window.addEventListener("open-workout-zone", handler);
+    window.addEventListener("resume-workout-zone", resumeHandler);
+    return () => {
+      window.removeEventListener("open-workout-zone", handler);
+      window.removeEventListener("resume-workout-zone", resumeHandler);
+    };
   }, []);
 
-  if (!user || !zoneOpen) return null;
+  if (!zoneOpen) return null;
   return (
     <Suspense fallback={null}>
       <ActiveWorkoutZone
@@ -146,24 +137,15 @@ const ActiveWorkoutWrapper = () => {
         onFinish={() => {
           setZoneOpen(false);
           setZoneContext(null);
-          setHasPaused(false);
           setPortalActive(false);
           safeLocalStorage.removeItem("m2-paused-workout");
         }}
-        onPause={() => {
-          setZoneOpen(false);
-          setHasPaused(true);
-          setPortalActive(false);
-        }}
+        onPause={() => { setZoneOpen(false); }}
       />
     </Suspense>
   );
 };
 
-const ReferralCaptureWrapper = () => {
-  useReferralCapture();
-  return null;
-};
 
 const App = () => (
   <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, maxAge: 24 * 60 * 60_000 }}>
