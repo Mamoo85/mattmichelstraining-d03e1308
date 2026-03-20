@@ -14,9 +14,6 @@ import SubscriptionGuard from "@/components/SubscriptionGuard";
 import ScrollToTop from "@/components/ScrollToTop";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import OfflineBadge from "@/components/OfflineBadge";
-const AnnouncementBanner = lazy(() => import("@/components/AnnouncementBanner"));
-const IntervalTimer = lazy(() => import("@/components/workout/IntervalTimer"));
-const ActiveWorkoutZone = lazy(() => import("@/components/workout/ActiveWorkoutZone"));
 
 import { useTimer } from "@/hooks/useTimer";
 import { useAuth } from "@/hooks/useAuth";
@@ -24,27 +21,45 @@ import { useReferralCapture } from "@/hooks/useReferral";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Loader2 } from "lucide-react";
 
+// Retry wrapper for lazy imports — retries up to 3 times on chunk load failure
+function lazyRetry(importFn: () => Promise<any>, retries = 3): ReturnType<typeof lazy> {
+  return lazy(() =>
+    importFn().catch((err: Error) => {
+      if (retries > 0 && /loading chunk|failed to fetch dynamically imported module|import|loading css chunk/i.test(err.message)) {
+        return new Promise((resolve) => setTimeout(resolve, 1000)).then(() =>
+          lazyRetry(importFn, retries - 1) as any
+        );
+      }
+      throw err;
+    })
+  );
+}
+
+const AnnouncementBanner = lazyRetry(() => import("@/components/AnnouncementBanner"));
+const IntervalTimer = lazyRetry(() => import("@/components/workout/IntervalTimer"));
+const ActiveWorkoutZone = lazyRetry(() => import("@/components/workout/ActiveWorkoutZone"));
+
 // Lazy-load all pages for code-splitting
 import Index from "./pages/Index";
-const Dashboard = lazy(() => import("./pages/Dashboard"));
-const Coach = lazy(() => import("./pages/Coach"));
-const Shop = lazy(() => import("./pages/Shop"));
-const ForParents = lazy(() => import("./pages/ForParents"));
-const Welcome = lazy(() => import("./pages/Welcome"));
-const Auth = lazy(() => import("./pages/Auth"));
-const Admin = lazy(() => import("./pages/Admin"));
-const Pricing = lazy(() => import("./pages/Pricing"));
-const About = lazy(() => import("./pages/About"));
-const Profile = lazy(() => import("./pages/Profile"));
-const Schedule = lazy(() => import("./pages/Schedule"));
-const Progress = lazy(() => import("./pages/Progress"));
-const Merch = lazy(() => import("./pages/Merch"));
-const Learn = lazy(() => import("./pages/Learn"));
-const TrialWelcome = lazy(() => import("./pages/TrialWelcome"));
-const NotFound = lazy(() => import("./pages/NotFound"));
-const Install = lazy(() => import("./pages/Install"));
-const Nutrition = lazy(() => import("./pages/Nutrition"));
-const TheEdge = lazy(() => import("./pages/TheEdge"));
+const Dashboard = lazyRetry(() => import("./pages/Dashboard"));
+const Coach = lazyRetry(() => import("./pages/Coach"));
+const Shop = lazyRetry(() => import("./pages/Shop"));
+const ForParents = lazyRetry(() => import("./pages/ForParents"));
+const Welcome = lazyRetry(() => import("./pages/Welcome"));
+const Auth = lazyRetry(() => import("./pages/Auth"));
+const Admin = lazyRetry(() => import("./pages/Admin"));
+const Pricing = lazyRetry(() => import("./pages/Pricing"));
+const About = lazyRetry(() => import("./pages/About"));
+const Profile = lazyRetry(() => import("./pages/Profile"));
+const Schedule = lazyRetry(() => import("./pages/Schedule"));
+const Progress = lazyRetry(() => import("./pages/Progress"));
+const Merch = lazyRetry(() => import("./pages/Merch"));
+const Learn = lazyRetry(() => import("./pages/Learn"));
+const TrialWelcome = lazyRetry(() => import("./pages/TrialWelcome"));
+const NotFound = lazyRetry(() => import("./pages/NotFound"));
+const Install = lazyRetry(() => import("./pages/Install"));
+const Nutrition = lazyRetry(() => import("./pages/Nutrition"));
+const TheEdge = lazyRetry(() => import("./pages/TheEdge"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
