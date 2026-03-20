@@ -396,7 +396,7 @@ const Nutrition = () => {
                               <Trash2 size={14} />
                             </button>
                           </div>
-                          <div className="grid grid-cols-5 gap-1.5">
+                          <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
                             <div className="space-y-0.5">
                               <label className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">Cal</label>
                               <Input
