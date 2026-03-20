@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Download, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { safeSessionStorage } from "@/lib/browserStorage";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -13,7 +14,7 @@ const PwaInstallBanner = () => {
 
   useEffect(() => {
     // Check if already dismissed this session
-    if (sessionStorage.getItem("pwa-banner-dismissed")) {
+    if (safeSessionStorage.getItem("pwa-banner-dismissed")) {
       setDismissed(true);
     }
 
@@ -41,7 +42,7 @@ const PwaInstallBanner = () => {
 
   const handleDismiss = () => {
     setDismissed(true);
-    sessionStorage.setItem("pwa-banner-dismissed", "1");
+    safeSessionStorage.setItem("pwa-banner-dismissed", "1");
   };
 
   return (

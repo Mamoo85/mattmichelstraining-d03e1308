@@ -14,6 +14,7 @@ import SubscriptionGuard from "@/components/SubscriptionGuard";
 import ScrollToTop from "@/components/ScrollToTop";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import OfflineBadge from "@/components/OfflineBadge";
+import { safeLocalStorage } from "@/lib/browserStorage";
 
 import { useTimer } from "@/hooks/useTimer";
 import { useAuth } from "@/hooks/useAuth";
@@ -76,28 +77,8 @@ export const queryClient = new QueryClient({
   },
 });
 
-// Graceful storage fallback for privacy browsers that block localStorage
-const dummyStorage: Storage = {
-  getItem: () => null,
-  setItem: () => {},
-  removeItem: () => {},
-  clear: () => {},
-  key: () => null,
-  length: 0,
-};
-
-let safeStorage: Storage = dummyStorage;
-try {
-  // Test that localStorage is actually usable (privacy browsers may throw on access)
-  window.localStorage.setItem("__storage_test__", "1");
-  window.localStorage.removeItem("__storage_test__");
-  safeStorage = window.localStorage;
-} catch {
-  console.warn("[M²] localStorage blocked — running without cache persistence");
-}
-
 const persister = createSyncStoragePersister({
-  storage: safeStorage,
+  storage: safeLocalStorage,
   key: "m2-query-cache",
 });
 
@@ -124,7 +105,7 @@ const ActiveWorkoutWrapper = () => {
   const [zoneOpen, setZoneOpen] = useState(false);
   const [zoneContext, setZoneContext] = useState<any>(null);
   const [hasPaused, setHasPaused] = useState(
-    () => !!localStorage.getItem("m2-paused-workout")
+    () => !!safeLocalStorage.getItem("m2-paused-workout")
   );
 
   // Listen for open event with context
@@ -143,7 +124,7 @@ const ActiveWorkoutWrapper = () => {
   // Listen for resume event
   useEffect(() => {
     const handler = () => {
-      const saved = localStorage.getItem("m2-paused-workout");
+      const saved = safeLocalStorage.getItem("m2-paused-workout");
       if (saved) {
         try {
           setZoneContext(JSON.parse(saved));
@@ -167,7 +148,7 @@ const ActiveWorkoutWrapper = () => {
           setZoneContext(null);
           setHasPaused(false);
           setPortalActive(false);
-          localStorage.removeItem("m2-paused-workout");
+          safeLocalStorage.removeItem("m2-paused-workout");
         }}
         onPause={() => {
           setZoneOpen(false);

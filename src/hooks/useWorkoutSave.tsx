@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { LoggedExerciseData } from "@/components/workout/WorkoutLogger";
 import type { RecoveryData } from "@/components/workout/RecoveryInput";
+import { safeLocalStorage } from "@/lib/browserStorage";
 
 interface SaveParams {
   userId: string;
@@ -58,7 +59,7 @@ export function useWorkoutSave() {
         }
       }
 
-      localStorage.removeItem("m2-paused-workout");
+      safeLocalStorage.removeItem("m2-paused-workout");
       return log.id;
     } catch (err: any) {
       toast.error(err?.message || "Something went wrong saving your workout");

@@ -7,6 +7,7 @@ import WorkoutScanner from "@/components/workout/WorkoutScanner";
 import EmptyStateCard from "@/components/EmptyStateCard";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { safeLocalStorage } from "@/lib/browserStorage";
 
 const SharedWorkoutFeed = lazy(() => import("@/components/workout/SharedWorkoutFeed"));
 const WelcomeGiftModal = lazy(() => import("./WelcomeGiftModal"));
@@ -27,7 +28,7 @@ const DashboardHome = memo(({ isNewUser, isInPerson, onViewPoints, onViewReferra
 
   useEffect(() => {
     // Never show welcome modal for in-person clients
-    if (!isInPerson && isNewUser && !localStorage.getItem("m2-welcome-gift-seen")) {
+    if (!isInPerson && isNewUser && !safeLocalStorage.getItem("m2-welcome-gift-seen")) {
       setShowWelcome(true);
     }
   }, [isNewUser, isInPerson]);
