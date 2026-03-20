@@ -245,7 +245,7 @@ const WorkoutLoggerDemo = () => (
           { icon: Camera, label: "Form Check" },
           { icon: Zap, label: "Velocity" },
           { icon: MessageCircle, label: "Ask Coach" },
-          { icon: Activity, label: "AI Sub" },
+          { icon: Activity, label: "Smart Sub" },
         ].map((t) => (
           <div key={t.label} className="flex items-center gap-1 bg-secondary/60 px-2 py-1 border border-border text-[8px] font-bold text-foreground">
             <t.icon size={10} className="text-primary" /> {t.label}
