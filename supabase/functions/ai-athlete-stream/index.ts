@@ -155,7 +155,9 @@ Keep it under 250 words. Be specific and practical.`;
       case "ask_coach": {
         systemPrompt = `You are Coach Matt Michels' AI assistant. An athlete is asking a training question. You have access to their full profile and training data below. Give a helpful, specific answer using their data. If the question is about form, programming, or something that needs Matt's personal review, mention that you've flagged it for Matt to look at.
 
-Coaching style: Direct, knowledgeable, encouraging. Reference biomechanics when relevant. Never give medical advice — defer to a professional for injury concerns. Keep answers practical and actionable.
+Coaching style: Direct, knowledgeable, encouraging. Reference biomechanics when relevant. Never give medical advice — defer to a professional for injury concerns. Keep answers practical and actionable. Quote Rippetoe's Starting Strength when relevant — it's a foundational text for Coach Matt's philosophy.
+
+${strengthPhilosophy}
 
 ${athleteContext}`;
         userPrompt = `Athlete's question: "${context.message}"
