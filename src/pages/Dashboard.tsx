@@ -82,7 +82,11 @@ const Dashboard = () => {
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <h2 className="text-base sm:text-lg font-bold text-foreground truncate">Welcome back, {athleteDisplay}</h2>
-              {subscriptionTier ? (
+              {isAdmin ? (
+                <Badge className="flex items-center gap-1 text-[10px] uppercase tracking-widest shrink-0 bg-primary text-primary-foreground">
+                  <Crown size={10} /> M² Coach
+                </Badge>
+              ) : subscriptionTier ? (
                 <Badge className="flex items-center gap-1 text-[10px] uppercase tracking-widest shrink-0">
                   <Crown size={10} /> {TIERS[subscriptionTier].name}
                 </Badge>
