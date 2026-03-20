@@ -56,6 +56,7 @@ const AdminSendHistory = lazy(() => import("@/components/admin/AdminSendHistory"
 const AdminMarketingDrafts = lazy(() => import("@/components/admin/AdminMarketingDrafts"));
 const AdminAiBusinessTools = lazy(() => import("@/components/admin/AdminAiBusinessTools"));
 const AdminCmoReports = lazy(() => import("@/components/admin/AdminCmoReports"));
+const AdminTrash = lazy(() => import("@/components/admin/AdminTrash"));
 
 const MASTER_TABS = [
   { key: "roster", label: "The Roster", icon: Users, desc: "Users · Support · Families" },
