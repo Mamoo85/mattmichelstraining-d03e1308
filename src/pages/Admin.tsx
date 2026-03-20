@@ -107,6 +107,58 @@ const Admin = () => {
     refetchInterval: 30000,
   });
 
+  const { data: pendingAiQueueCount = 0 } = useQuery({
+    queryKey: ["pending-ai-queue-count"],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("ai_action_queue")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending");
+      return count ?? 0;
+    },
+    refetchInterval: 30000,
+  });
+
+  const { data: pendingSupportCount = 0 } = useQuery({
+    queryKey: ["pending-support-count"],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("support_tickets")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "open");
+      return count ?? 0;
+    },
+    refetchInterval: 30000,
+  });
+
+  const { data: unreadParentCount = 0 } = useQuery({
+    queryKey: ["unread-parent-inbox-count"],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("parent_inbox")
+        .select("id", { count: "exact", head: true })
+        .eq("is_read", false)
+        .eq("is_deleted", false);
+      return count ?? 0;
+    },
+    refetchInterval: 30000,
+  });
+
+  const { data: pendingPostureCount = 0 } = useQuery({
+    queryKey: ["pending-posture-count"],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("posture_requests")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending");
+      return count ?? 0;
+    },
+    refetchInterval: 30000,
+  });
+
+  const totalEngineBadge = pendingDraftsCount + pendingAiQueueCount;
+  const totalRosterBadge = pendingSupportCount + unreadParentCount + pendingPostureCount;
+
   const { data: trashCount = 0 } = useQuery({
     queryKey: ["admin-trash-count"],
     queryFn: async () => {
@@ -153,9 +205,14 @@ const Admin = () => {
               >
                 <div className="relative">
                   <Icon size={18} />
-                  {tab.key === "engine" && pendingDraftsCount > 0 && (
+                  {tab.key === "engine" && totalEngineBadge > 0 && (
                     <span className="absolute -top-1.5 -right-2.5 bg-destructive text-destructive-foreground text-[8px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">
-                      {pendingDraftsCount}
+                      {totalEngineBadge}
+                    </span>
+                  )}
+                  {tab.key === "roster" && totalRosterBadge > 0 && (
+                    <span className="absolute -top-1.5 -right-2.5 bg-destructive text-destructive-foreground text-[8px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">
+                      {totalRosterBadge}
                     </span>
                   )}
                 </div>
@@ -172,8 +229,8 @@ const Admin = () => {
         {activeTab === "roster" && (
           <SubTabs tabs={[
             { key: "athletes", label: "All Users", content: <AdminClientList /> },
-            { key: "support", label: "Support Tickets", content: <AdminSupportCopilot /> },
-            { key: "coaching", label: "Coach Review", content: (
+            { key: "support", label: <span className="flex items-center gap-1">Support Tickets{pendingSupportCount > 0 && <Badge variant="destructive" className="text-[8px] px-1.5 py-0 min-w-[18px] h-4">{pendingSupportCount}</Badge>}</span>, content: <AdminSupportCopilot /> },
+            { key: "coaching", label: <span className="flex items-center gap-1">Coach Review{pendingPostureCount > 0 && <Badge variant="destructive" className="text-[8px] px-1.5 py-0 min-w-[18px] h-4">{pendingPostureCount}</Badge>}</span>, content: (
               <div className="space-y-8">
                 <AdminCoachInbox />
                 <div className="border-t border-border pt-6"><AdminCoachDashboard /></div>
@@ -188,7 +245,7 @@ const Admin = () => {
                 <div className="border-t border-border pt-6"><AdminTeamRosters /></div>
               </div>
             )},
-            { key: "parents", label: "Parent Hub", content: (
+            { key: "parents", label: <span className="flex items-center gap-1">Parent Hub{unreadParentCount > 0 && <Badge variant="destructive" className="text-[8px] px-1.5 py-0 min-w-[18px] h-4">{unreadParentCount}</Badge>}</span>, content: (
               <div className="space-y-8">
                 <AdminParentInbox />
                 <div className="border-t border-border pt-6"><AdminParentReports /></div>
@@ -213,7 +270,7 @@ const Admin = () => {
             { key: "batch", label: "AI Workouts", content: <AdminBatchGenerator /> },
             { key: "exercise-gen", label: "AI Exercises", content: <AdminExerciseGenerator /> },
             { key: "ai-programs", label: "AI Programs", content: <AdminProgramCreator /> },
-            { key: "ai-queue", label: "AI Queue", content: <AdminAiQueue /> },
+            { key: "ai-queue", label: <span className="flex items-center gap-1">AI Queue{pendingAiQueueCount > 0 && <Badge variant="destructive" className="text-[8px] px-1.5 py-0 min-w-[18px] h-4">{pendingAiQueueCount}</Badge>}</span>, content: <AdminAiQueue /> },
             { key: "ai-toolkit", label: "AI Toolkit", content: <AdminAiToolkit /> },
             { key: "recovery", label: "Recovery Map", content: <AdminRecoveryHeatmap /> },
             { key: "monthly", label: "Monthly Focus", content: <AdminMonthlyFocus /> },
