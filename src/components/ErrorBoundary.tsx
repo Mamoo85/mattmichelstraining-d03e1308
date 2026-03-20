@@ -117,6 +117,9 @@ class ErrorBoundary extends Component<Props, State> {
               Clear cache &amp; reload
             </button>
           </div>
+          <p className="text-[11px] text-muted-foreground/70 leading-snug pt-2">
+            If you're using a privacy browser or opened this from a social media app, tap the menu (⋮ or ⋯) and select <strong>"Open in Chrome"</strong> or <strong>"Open in Safari"</strong>.
+          </p>
         </div>
       </div>
     );
