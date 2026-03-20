@@ -11,7 +11,7 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-const PRICING_URL = "https://m2training.lovable.app/pricing";
+const PRICING_URL = "https://www.mattmichelstraining.com/pricing";
 
 const EMAIL_HTML = `
 <div style="font-family: Georgia, 'Times New Roman', serif; max-width: 580px; margin: 0 auto; padding: 20px; color: #1a1a1a; line-height: 1.7;">

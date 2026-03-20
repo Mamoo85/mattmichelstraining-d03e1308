@@ -104,7 +104,7 @@ serve(async (req) => {
           type: "magiclink",
           email: targetEmail,
           options: {
-            redirectTo: `${req.headers.get("origin") || "https://mattmichelstraining.lovable.app"}/dashboard`,
+             redirectTo: `${req.headers.get("origin") || "https://www.mattmichelstraining.com"}/dashboard`,
           },
         });
         if (linkError) console.error("Magic link error:", linkError.message);
@@ -139,7 +139,7 @@ serve(async (req) => {
         type: "magiclink",
         email: targetEmail,
         options: {
-          redirectTo: `${req.headers.get("origin") || "https://mattmichelstraining.lovable.app"}/dashboard`,
+          redirectTo: `${req.headers.get("origin") || "https://www.mattmichelstraining.com"}/dashboard`,
         },
       });
       if (linkError) console.error("Magic link error:", linkError.message);
@@ -159,7 +159,7 @@ serve(async (req) => {
         type: "magiclink",
         email: targetEmail,
         options: {
-          redirectTo: `${req.headers.get("origin") || Deno.env.get("SUPABASE_URL")?.replace(".supabase.co", ".lovable.app")}/dashboard`,
+          redirectTo: `${req.headers.get("origin") || "https://www.mattmichelstraining.com"}/dashboard`,
         },
       });
       if (error) throw new Error(`Magic link failed: ${error.message}`);

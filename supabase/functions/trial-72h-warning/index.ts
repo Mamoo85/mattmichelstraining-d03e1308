@@ -11,7 +11,7 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-const PROFILE_URL = "https://m2training.lovable.app/profile";
+const PROFILE_URL = "https://www.mattmichelstraining.com/profile";
 
 const logStep = (step: string, details?: any) => {
   const d = details ? ` - ${JSON.stringify(details)}` : "";

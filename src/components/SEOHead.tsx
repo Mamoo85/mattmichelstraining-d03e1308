@@ -22,8 +22,8 @@ interface SEOHeadProps {
   noindex?: boolean;
 }
 
-const SITE_URL = "https://m2training.com";
-const DEFAULT_OG = "https://m2training.lovable.app/pwa-512x512.png";
+const SITE_URL = "https://www.mattmichelstraining.com";
+const DEFAULT_OG = "https://www.mattmichelstraining.com/pwa-512x512.png";
 
 const SEOHead = ({
   title,

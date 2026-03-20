@@ -53,7 +53,7 @@ serve(async (req) => {
       }
     }
 
-    const origin = req.headers.get("origin") || "https://m2training.lovable.app";
+    const origin = req.headers.get("origin") || "https://www.mattmichelstraining.com";
 
     const sessionMetadata: Record<string, string> = { priceId };
     if (extraMetadata && typeof extraMetadata === "object") {

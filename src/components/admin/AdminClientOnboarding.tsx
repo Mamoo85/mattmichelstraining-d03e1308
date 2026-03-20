@@ -5,7 +5,7 @@ import { Copy, Check, Loader2, UserPlus, LinkIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
-const PUBLISHED_DOMAIN = "https://mattmichelstraining.lovable.app";
+const PUBLISHED_DOMAIN = "https://www.mattmichelstraining.com";
 
 const AdminClientOnboarding = () => {
   const [label, setLabel] = useState("");

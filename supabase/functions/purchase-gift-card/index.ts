@@ -73,7 +73,7 @@ serve(async (req) => {
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     const customerId = customers.data.length > 0 ? customers.data[0].id : undefined;
 
-    const origin = req.headers.get("origin") || "https://m2training.lovable.app";
+    const origin = req.headers.get("origin") || "https://www.mattmichelstraining.com";
     const giftCode = generateCode();
 
     const sessionParams: any = {
@@ -174,7 +174,7 @@ serve(async (req) => {
               Authorization: `Bearer ${resendApiKey}`,
             },
             body: JSON.stringify({
-              from: "M² Training <noreply@m2training.lovable.app>",
+              from: "M² Training <noreply@mattmichelstraining.com>",
               to: [email.to],
               subject: email.subject,
               html: emailHtml,
