@@ -3,6 +3,7 @@
  * Works for both interactive programs (with workout data from DB)
  * and purchased custom programs (with exercise arrays).
  */
+import { M2_LOGO_BASE64 } from "@/components/workout/m2LogoBase64";
 
 interface PrintExercise {
   name: string;
