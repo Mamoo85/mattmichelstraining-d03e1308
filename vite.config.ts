@@ -49,7 +49,7 @@ export default defineConfig(({ mode }) => ({
     }),
     VitePWA({
       registerType: "autoUpdate",
-      injectRegister: null,
+      injectRegister: false,
       includeAssets: ["favicon.ico", "robots.txt"],
       workbox: {
         navigateFallbackDenylist: [/^\/~oauth/],
