@@ -64,7 +64,6 @@ interface TierFeature {
   tier_foundation: boolean;
   tier_custom: boolean;
   tier_team_elite: boolean;
-  tier_vip: boolean;
   sort_order: number;
 }
 
