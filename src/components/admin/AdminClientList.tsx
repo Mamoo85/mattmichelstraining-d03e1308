@@ -485,7 +485,7 @@ const AdminClientList = () => {
                     </div>
                     <button
                       onClick={() => {
-                        const link = `${window.location.origin}/auth?ref=vip`;
+                        const link = `${window.location.origin}/auth`;
                         navigator.clipboard.writeText(link);
                         toast.success("Invite link copied! Paste it into a text message.");
                       }}
@@ -495,7 +495,7 @@ const AdminClientList = () => {
                       Copy Invite Link for SMS
                     </button>
                     <p className="text-[10px] text-muted-foreground mt-1">
-                      Generates a signup link you can text to in-person clients. Mark them as VIP after they sign up.
+                      Send this to clients so they can create an account.
                     </p>
                   </div>
 
