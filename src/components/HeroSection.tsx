@@ -1,11 +1,11 @@
 import { lazy, Suspense } from "react";
-import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowRight, Star, Shield, Trophy, Clock } from "lucide-react";
 
 import m2Logo from "@/assets/m2-logo.jpg";
 import { useSectionVisible } from "@/hooks/useSiteContent";
-import AudienceSelector from "./landing/AudienceSelector";
+
+const AudienceSelector = lazy(() => import("./landing/AudienceSelector"));
 
 // Lazy-load below-the-fold landing sections
 const ForParentsCTA = lazy(() => import("./landing/ForParentsCTA"));
