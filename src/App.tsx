@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, useEffect, memo, useCallback } from "react";
+import { lazy, Suspense, useState, useEffect, memo } from "react";
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
@@ -7,13 +7,15 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
-import { TimerProvider } from "@/hooks/useTimer";
+import { TimerProvider, useTimer } from "@/hooks/useTimer";
 import { OfflineSyncProvider } from "@/hooks/useOfflineSync";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import SubscriptionGuard from "@/components/SubscriptionGuard";
 import ScrollToTop from "@/components/ScrollToTop";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import OfflineBadge from "@/components/OfflineBadge";
+import { useAuth } from "@/hooks/useAuth";
+import { useReferralCapture } from "@/hooks/useReferral";
 import { safeLocalStorage } from "@/lib/browserStorage";
 
 import { Loader2 } from "lucide-react";
@@ -96,13 +98,8 @@ const GlobalTimer = memo(() => {
 GlobalTimer.displayName = "GlobalTimer";
 
 const ActiveWorkoutWrapper = () => {
-  // Import inline to avoid pulling these into the top-level module graph
-  const [authMod, setAuthMod] = useState<any>(null);
-  const [timerMod, setTimerMod] = useState<any>(null);
-  useEffect(() => {
-    import("@/hooks/useAuth").then(m => setAuthMod(m));
-    import("@/hooks/useTimer").then(m => setTimerMod(m));
-  }, []);
+  const { user } = useAuth();
+  const { setPortalActive } = useTimer();
   const [zoneOpen, setZoneOpen] = useState(false);
   const [zoneContext, setZoneContext] = useState<any>(null);
 
@@ -129,7 +126,7 @@ const ActiveWorkoutWrapper = () => {
     };
   }, []);
 
-  if (!zoneOpen) return null;
+  if (!user || !zoneOpen) return null;
   return (
     <Suspense fallback={null}>
       <ActiveWorkoutZone
@@ -140,12 +137,16 @@ const ActiveWorkoutWrapper = () => {
           setPortalActive(false);
           safeLocalStorage.removeItem("m2-paused-workout");
         }}
-        onPause={() => { setZoneOpen(false); }}
+        onPause={() => { setZoneOpen(false); setPortalActive(false); }}
       />
     </Suspense>
   );
 };
 
+const ReferralCaptureWrapper = () => {
+  useReferralCapture();
+  return null;
+};
 
 const App = () => (
   <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, maxAge: 24 * 60 * 60_000 }}>
