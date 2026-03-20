@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ShoppingBag, FileText, Loader2 } from "lucide-react";
-import SectionHeader from "./SectionHeader";
+import SectionHeader from "@/components/shared/SectionHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";

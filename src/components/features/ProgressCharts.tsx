@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import SectionHeader from "./SectionHeader";
+import SectionHeader from "@/components/shared/SectionHeader";
 import { Loader2, TrendingUp } from "lucide-react";
 import { LIFT_CATEGORIES, ALL_LIFTS, getLiftConfig } from "./progress/liftConfig";
 import TronChart from "./progress/TronChart";

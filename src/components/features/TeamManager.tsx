@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import { Users, Plus, Trash2, Loader2, Edit2, Check, X, UserPlus, Shield } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import SectionHeader from "./SectionHeader";
+import SectionHeader from "@/components/shared/SectionHeader";
 
 interface Roster {
   id: string;
