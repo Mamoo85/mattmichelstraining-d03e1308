@@ -55,6 +55,7 @@ const AdminNewsletterComposer = lazy(() => import("@/components/admin/AdminNewsl
 const AdminSendHistory = lazy(() => import("@/components/admin/AdminSendHistory"));
 const AdminMarketingDrafts = lazy(() => import("@/components/admin/AdminMarketingDrafts"));
 const AdminAiBusinessTools = lazy(() => import("@/components/admin/AdminAiBusinessTools"));
+const AdminCmoReports = lazy(() => import("@/components/admin/AdminCmoReports"));
 
 const MASTER_TABS = [
   { key: "roster", label: "The Roster", icon: Users, desc: "Users · Support · Families" },
@@ -238,6 +239,7 @@ const Admin = () => {
                 <div className="border-t border-border pt-6"><AdminAiBusinessTools /></div>
               </div>
             )},
+            { key: "cmo", label: "CMO Reports", content: <AdminCmoReports /> },
           ]} />
         )}
       </div>

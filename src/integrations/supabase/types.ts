@@ -53,6 +53,36 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_marketing_reports: {
+        Row: {
+          ai_analysis: Json | null
+          created_at: string | null
+          id: string
+          raw_analytics: Json | null
+          report_week: string
+          status: string
+          summary_text: string | null
+        }
+        Insert: {
+          ai_analysis?: Json | null
+          created_at?: string | null
+          id?: string
+          raw_analytics?: Json | null
+          report_week: string
+          status?: string
+          summary_text?: string | null
+        }
+        Update: {
+          ai_analysis?: Json | null
+          created_at?: string | null
+          id?: string
+          raw_analytics?: Json | null
+          report_week?: string
+          status?: string
+          summary_text?: string | null
+        }
+        Relationships: []
+      }
       challenge_entries: {
         Row: {
           id: string

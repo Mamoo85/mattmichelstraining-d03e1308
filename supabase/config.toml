@@ -41,3 +41,6 @@ verify_jwt = false
 
 [functions.ask-coach]
 verify_jwt = false
+
+[functions.weekly-cmo-report]
+verify_jwt = false
