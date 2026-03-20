@@ -108,10 +108,12 @@ const HeroSection = () => {
               </Link>
             </div>
 
-            {/* Audience Router */}
-            <Suspense fallback={null}>
-              <AudienceSelector />
-            </Suspense>
+            {/* Audience Router — deferred to avoid loading framer-motion during FCP */}
+            {showBelow && (
+              <Suspense fallback={null}>
+                <AudienceSelector />
+              </Suspense>
+            )}
           </div>
         )}
 
