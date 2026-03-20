@@ -558,6 +558,13 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
           )}
         </main>
 
+        {/* Quick Log NLP Bar */}
+        {exercises.length > 0 && (
+          <div className="fixed bottom-[72px] left-0 right-0 z-50 px-4 pb-1">
+            <QuickLogBar exercises={exercises} onApplyParsed={handleQuickLogParsed} />
+          </div>
+        )}
+
         {/* Command Bar */}
         <footer className="fixed bottom-0 w-full z-50 bg-background/95 backdrop-blur-md border-t border-border px-4 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
           {/* Rest Timer Banner */}
