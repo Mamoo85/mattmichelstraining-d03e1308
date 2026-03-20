@@ -270,7 +270,7 @@ const IntervalTimer = ({ onClose }: { onClose: () => void }) => {
   })();
 
   return (
-    <div className="fixed inset-0 z-[60] flex flex-col animate-slide-in-right" style={{ animationDuration: "0.25s" }}>
+    <div className="fixed inset-0 z-[110] flex flex-col animate-slide-in-right" style={{ animationDuration: "0.25s" }}>
       {/* ── HEADER BAR — thick tap target ── */}
       <button
         onClick={onClose}
