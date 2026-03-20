@@ -216,7 +216,7 @@ const Auth = () => {
                     <>
                       <p className="text-xs font-bold text-foreground mb-1">Parent + Athlete Account</p>
                       <p className="text-xs text-muted-foreground">
-                        Create your parent account and your athlete's account together. One subscription covers both. After trial, defaults to Foundation ($39.99/mo).
+                        Create your parent account and your athlete's account together. One subscription covers both. After trial, defaults to Foundation ($19.99/mo).
                       </p>
                     </>
                   ) : (

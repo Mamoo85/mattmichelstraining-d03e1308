@@ -6,7 +6,7 @@ import { ArrowRight, ChevronRight, GraduationCap } from "lucide-react";
 const MEMBERSHIP_TIERS = [
   {
     name: "Basic",
-    price: "$14.99/mo",
+    price: "$12.99/mo",
     highlights: [
       "Full exercise library access (200+ exercises)",
       "10 pre-loaded training workouts",
@@ -19,7 +19,7 @@ const MEMBERSHIP_TIERS = [
   },
   {
     name: "Foundation",
-    price: "$39.99/mo",
+    price: "$19.99/mo",
     highlights: [
       "Everything in Basic",
       "8-week periodized training blocks",
@@ -32,12 +32,12 @@ const MEMBERSHIP_TIERS = [
   },
   {
     name: "Custom",
-    price: "$99.99/mo",
+    price: "$49.99/mo",
     highlights: [
       "Everything in Foundation",
-      "In-person or online movement assessment (optional)",
-      "Advanced biomechanics tracking",
-      "Priority coach messaging",
+      "Custom 8-week program for any age, any goal",
+      "20% off in-person training (optional)",
+      "Priority coach messaging & help every step",
     ],
     cta: "Start 14-Day Free Trial",
     link: "/auth?redirect=/trial-welcome",

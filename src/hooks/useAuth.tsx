@@ -5,32 +5,32 @@ import { supabase } from "@/integrations/supabase/client";
 // Tier mapping: product_id → tier key
 export const TIERS = {
   basic: {
-    product_id: "prod_UAlStH84vrByST",
-    price_id: "price_1TCPvZD52tPWee46bA8lKVBA",
+    product_id: "prod_UBI78IQsBpyfNw",
+    price_id: "price_1TCvWxD52tPWee46Mhmf2mEs",
     name: "M² Basic",
-    price: "$14.99",
-    priceNum: 14.99,
+    price: "$12.99",
+    priceNum: 12.99,
   },
   foundation: {
-    product_id: "prod_UAlTgNGJWmREZL",
-    price_id: "price_1TCPwUD52tPWee46mjJXqu9b",
+    product_id: "prod_UBI7Wdb3liTxiF",
+    price_id: "price_1TCvXOD52tPWee46dgedK3Ky",
     name: "M² Foundation",
-    price: "$39.99",
-    priceNum: 39.99,
+    price: "$19.99",
+    priceNum: 19.99,
   },
   custom: {
-    product_id: "prod_UAlTkDlrDfDije",
-    price_id: "price_1TCPwuD52tPWee46MpjphmuR",
+    product_id: "prod_UBI8SV9Fa6CibX",
+    price_id: "price_1TCvXrD52tPWee46jNJ6sSZ9",
     name: "M² Custom",
-    price: "$99.99",
-    priceNum: 99.99,
+    price: "$49.99",
+    priceNum: 49.99,
   },
   team_elite: {
-    product_id: "prod_UAlUIuvjHBjtNL",
-    price_id: "price_1TCPxJD52tPWee46WeEgLPli",
+    product_id: "prod_UBI8mP9jA5rV3U",
+    price_id: "price_1TCvYED52tPWee46oJ5hfI5X",
     name: "M² Team/Elite",
-    price: "$149.99",
-    priceNum: 149.99,
+    price: "$99.99",
+    priceNum: 99.99,
   },
 } as const;
 
