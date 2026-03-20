@@ -28,7 +28,7 @@ const AiRecoveryAdvisor = ({ userId }: AiRecoveryAdvisorProps) => {
         <div className="flex items-center gap-2">
           <Heart size={14} className="text-primary" />
           <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-primary">
-            AI Recovery Advisor
+            Recovery Advisor
           </span>
         </div>
         <div className="flex items-center gap-2">
