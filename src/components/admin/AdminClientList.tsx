@@ -473,33 +473,7 @@ const AdminClientList = () => {
                       </select>
                     </div>
                     <p className="text-[10px] text-muted-foreground mt-1">
-                      {(p as any).is_vip
-                        ? "VIP — tier is locked from Stripe sync."
-                        : "Warning: Stripe sync will overwrite this unless VIP is enabled."}
-                    </p>
-                  </div>
-
-                  {/* VIP Toggle */}
-                  <div className="bg-secondary/30 border border-border p-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Star size={14} className="text-primary" />
-                        <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">VIP In-Person Client</span>
-                      </div>
-                      <Switch
-                        checked={!!(p as any).is_vip}
-                        onCheckedChange={(checked) => {
-                          toggleVipMutation.mutate({
-                            profileId: p.id,
-                            value: checked,
-                            setBasic: checked && (!p.subscription_tier || p.subscription_tier === "free"),
-                          });
-                          setSelectedProfile({ ...p, is_vip: checked, subscription_tier: checked && (!p.subscription_tier || p.subscription_tier === "free") ? "basic" : p.subscription_tier });
-                        }}
-                      />
-                    </div>
-                    <p className="text-[10px] text-muted-foreground mt-1">
-                      VIP clients get free access at their assigned tier. Stripe sync is disabled for VIP users.
+                      Warning: Stripe sync will overwrite this on next check.
                     </p>
                   </div>
 
