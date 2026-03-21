@@ -103,6 +103,16 @@ const AdminProgressLogger = () => {
     return allLiftNames.filter((e) => e.toLowerCase().includes(q));
   }, [allLiftNames, exerciseName]);
 
+  const handleVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > MAX_VIDEO_SIZE) {
+      toast({ title: "Video too large", description: "Max 10MB.", variant: "destructive" });
+      return;
+    }
+    setVideoFile(file);
+  };
+
   const handleSubmit = async () => {
     if (!selectedUser) { toast({ title: "Select a user", variant: "destructive" }); return; }
     if (!exerciseName.trim()) { toast({ title: "Enter exercise name", variant: "destructive" }); return; }
@@ -114,21 +124,53 @@ const AdminProgressLogger = () => {
 
     setSaving(true);
     try {
-      const { error } = await supabase.from("progress_logs").insert({
+      const { data: logData, error } = await supabase.from("progress_logs").insert({
         user_id: selectedUser.user_id,
         exercise_name: exerciseName.trim(),
         weight: w,
         reps: r,
         estimated_1rm: estimated1rm,
         logged_at: logDate.toISOString(),
-      });
+      }).select("id").single();
       if (error) throw error;
+
+      // Upload video if attached
+      if (videoFile && logData?.id) {
+        const ext = videoFile.name.split(".").pop() || "mp4";
+        const path = `${selectedUser.user_id}/${logData.id}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("lift_videos")
+          .upload(path, videoFile, { contentType: videoFile.type });
+        if (!upErr) {
+          await supabase.from("lift_videos" as any).insert({
+            progress_log_id: logData.id,
+            user_id: selectedUser.user_id,
+            video_path: path,
+            status: "pending_review",
+          });
+          // Auto AI analysis
+          supabase.functions.invoke("ai-video-form-review", {
+            body: {
+              videoUrl: `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/lift_videos/${path}`,
+              exerciseName: exerciseName.trim(),
+              athleteName: displayName(selectedUser),
+            },
+          }).then(async (res) => {
+            if (res.data?.review) {
+              await supabase.from("lift_videos" as any)
+                .update({ ai_analysis: res.data.review })
+                .eq("progress_log_id", logData.id);
+            }
+          }).catch(() => {});
+        }
+        setVideoFile(null);
+        if (videoInputRef.current) videoInputRef.current.value = "";
+      }
 
       toast({ title: "Lift logged", description: `${exerciseName} · ${w}lbs × ${r} for ${displayName(selectedUser)}` });
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 1500);
 
-      // Reset form but keep user selected
       setExerciseName("");
       setWeight("");
       setReps("");
