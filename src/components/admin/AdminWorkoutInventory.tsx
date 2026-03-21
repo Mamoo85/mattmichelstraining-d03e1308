@@ -54,7 +54,7 @@ const AdminWorkoutInventory = () => {
     const { data } = await supabase
       .from("community_workouts")
       .select("*")
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false }) as { data: any[] | null };
     setWorkouts((data as CommunityWorkout[]) || []);
     setLoading(false);
   };
