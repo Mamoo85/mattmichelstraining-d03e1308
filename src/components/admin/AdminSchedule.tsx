@@ -44,6 +44,7 @@ type Booking = {
 };
 
 const WEEK_OPTIONS = [2, 3, 4, 5, 6];
+const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const DEFAULT_OPEN_TIMES = [
   "06:00:00", "06:30:00", "07:00:00", "07:30:00",
