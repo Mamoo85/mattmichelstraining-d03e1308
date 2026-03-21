@@ -6,11 +6,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { format, addDays, startOfDay } from "date-fns";
-import { Loader2, Clock, DollarSign, Info, Calendar, CheckCircle, Video, MapPin, Ticket, Gift, Zap } from "lucide-react";
+import { Loader2, Clock, DollarSign, Info, Calendar, CheckCircle, Video, MapPin, Ticket, Gift, Zap, ArrowRight, Cpu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import velocityDemoImg from "@/assets/velocity-demo.jpg";
 const DoNotPressButton = lazy(() => import("@/components/landing/DoNotPressButton"));
+const ForParentsCTA = lazy(() => import("@/components/landing/ForParentsCTA"));
 
 const formatTime12 = (t: string) => {
   const [hStr, mStr] = t.split(":");
