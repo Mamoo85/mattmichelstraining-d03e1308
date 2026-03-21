@@ -216,30 +216,23 @@ const AdminProgressLogger = () => {
             Log Lift for {displayName(selectedUser)}
           </p>
 
-          {/* Exercise Name with autocomplete */}
-          <div className="relative">
+          {/* Exercise select — grouped by lift category */}
+          <div>
             <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Exercise</label>
-            <input
+            <select
               value={exerciseName}
-              onChange={(e) => { setExerciseName(e.target.value); setShowExerciseDropdown(true); }}
-              onFocus={() => setShowExerciseDropdown(true)}
-              onBlur={() => setTimeout(() => setShowExerciseDropdown(false), 200)}
-              placeholder="e.g. Back Squat, Bench Press…"
+              onChange={(e) => setExerciseName(e.target.value)}
               className="w-full bg-background border border-border px-3 py-3 text-sm text-foreground focus:ring-1 focus:ring-primary outline-none"
-            />
-            {showExerciseDropdown && filteredExercises.length > 0 && (
-              <div className="absolute z-40 w-full mt-1 bg-card border border-border shadow-lg max-h-48 overflow-y-auto">
-                {filteredExercises.map((ex) => (
-                  <button
-                    key={ex}
-                    onMouseDown={() => { setExerciseName(ex); setShowExerciseDropdown(false); }}
-                    className="w-full text-left px-3 py-2 text-xs text-foreground hover:bg-muted/50 transition-colors"
-                  >
-                    {ex}
-                  </button>
-                ))}
-              </div>
-            )}
+            >
+              <option value="">Select a lift…</option>
+              {LIFT_CATEGORIES.map((cat) => (
+                <optgroup key={cat.label} label={cat.label}>
+                  {cat.lifts.map((lift) => (
+                    <option key={lift.name} value={lift.name}>{lift.name}</option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
           </div>
 
           {/* Weight, Reps, Date row */}
