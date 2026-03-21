@@ -204,6 +204,26 @@ const Admin = () => {
           <p className="text-xs text-muted-foreground">Manage everything from one place</p>
         </div>
 
+        {/* Big Log Lifts button */}
+        <button
+          onClick={() => setActiveTab("log-lifts")}
+          className={cn(
+            "w-full mb-4 py-4 flex items-center justify-center gap-3 text-sm font-bold uppercase tracking-widest transition-all border",
+            activeTab === "log-lifts"
+              ? "bg-primary text-primary-foreground border-primary shadow-lg"
+              : "bg-card text-foreground border-primary/40 hover:bg-primary/10 hover:border-primary"
+          )}
+        >
+          <ClipboardList size={20} />
+          Log Athlete Lifts
+        </button>
+
+        {activeTab === "log-lifts" && (
+          <Suspense fallback={<TabLoader />}>
+            <AdminProgressLogger />
+          </Suspense>
+        )}
+
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6">
           {MASTER_TABS.map((tab) => {
             const Icon = tab.icon;
