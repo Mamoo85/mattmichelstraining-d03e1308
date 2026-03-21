@@ -59,6 +59,7 @@ const NotFound = lazyRetry(() => import("./pages/NotFound"));
 const Install = lazyRetry(() => import("./pages/Install"));
 const Nutrition = lazyRetry(() => import("./pages/Nutrition"));
 const TheEdge = lazyRetry(() => import("./pages/TheEdge"));
+const MatrixEasterEgg = lazyRetry(() => import("./pages/MatrixEasterEgg"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
