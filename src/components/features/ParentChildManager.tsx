@@ -309,9 +309,9 @@ const ParentChildManager = () => {
       {links.length === 0 && !showForm ? (
         <div className="bg-card shadow-m2 p-6 text-center">
           <Users size={32} className="mx-auto text-muted-foreground mb-3" />
-          <p className="text-sm text-muted-foreground mb-2">No linked child accounts yet</p>
+          <p className="text-sm text-muted-foreground mb-2">No athletes in your Family Pack yet</p>
           <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-            Send your athlete an invite link or create their account directly.
+            Add your athlete to your Family Pack — send an invite link or create their account directly.
           </p>
         </div>
       ) : (

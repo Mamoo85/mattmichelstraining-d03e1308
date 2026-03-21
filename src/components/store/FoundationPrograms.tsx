@@ -278,9 +278,9 @@ const FoundationPrograms = () => {
             <span className="text-primary font-mono font-bold">1</span>
             <p><strong className="text-foreground">Book in-person or buy online</strong> — program loads into the portal instantly. Your child can access it on their phone.</p>
           </div>
-          <div className="flex items-start gap-2">
+           <div className="flex items-start gap-2">
             <span className="text-primary font-mono font-bold">2</span>
-            <p><strong className="text-foreground">Create a child account</strong> — link it to yours so you can monitor progress alongside Matt.</p>
+            <p><strong className="text-foreground">Add to your Family Pack</strong> — link your athlete's account so you can monitor progress alongside Matt.</p>
           </div>
           <div className="flex items-start gap-2">
             <span className="text-primary font-mono font-bold">3</span>
