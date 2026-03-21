@@ -312,7 +312,7 @@ const FreeAiGenerator = () => {
                   className="w-full sm:w-auto font-bold gap-2"
                 >
                   {emailSent ? (
-                    <><CheckCircle2 size={16} className="text-green-500" /> Workout Sent!</>
+                    <><CheckCircle2 size={16} className="text-primary" /> Workout Sent!</>
                   ) : (
                     <><Mail size={16} /> Email This to Me</>
                   )}
