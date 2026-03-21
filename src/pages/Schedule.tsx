@@ -545,6 +545,7 @@ const Schedule = () => {
           </div>
         )}
 
+      <Suspense fallback={null}><DoNotPressButton /></Suspense>
       </div>
     </div>
   );

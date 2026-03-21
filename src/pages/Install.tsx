@@ -187,6 +187,7 @@ const Install = () => {
           </div>
         </div>
       </main>
+      <Suspense fallback={null}><DoNotPressButton /></Suspense>
     </>
   );
 };

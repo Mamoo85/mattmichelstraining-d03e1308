@@ -208,6 +208,7 @@ const Merch = () => (
       </section>
 
       {/* Footer spacing */}
+      <Suspense fallback={null}><DoNotPressButton /></Suspense>
       <div className="h-8" />
     </div>
   </div>
