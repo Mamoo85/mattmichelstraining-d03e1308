@@ -44,13 +44,13 @@ const TIER_CARDS: {
     icon: Star,
     features: [
       "Everything in Basic, plus…",
-      "Structured 8-week training program (updated monthly)",
+      "Structured 8-week training program (updated bi-monthly)",
       "Injury recovery video library ('Fix It' guides)",
       "Flag exercises for Coach Matt's personal feedback",
       "Real programming — not random workouts",
     ],
     cta: "Go Foundation",
-    subtitle: "A real training plan that progresses with you every month.",
+    subtitle: "A real 8-week training plan that updates every cycle.",
   },
   {
     key: "custom",
