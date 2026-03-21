@@ -66,7 +66,7 @@ const AdminStripeProducts = () => {
       const prompt = `Write a concise, clear Stripe product description (1-2 sentences, no jargon) for a fitness training membership called "${product.name}". Current description: "${product.description}". Make it benefit-focused and easy to understand for parents, athletes, and coaches. Return ONLY the description text, nothing else.`;
 
       const response = await supabase.functions.invoke("ai-admin-assist", {
-        body: { prompt, context: "stripe_product_description" },
+        body: { type: "stripe_product_description", context: { prompt } },
       });
 
       if (response.error) throw response.error;
