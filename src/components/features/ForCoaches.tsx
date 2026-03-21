@@ -22,8 +22,8 @@ const ForCoaches = () => (
         </div>
         <div className="bg-muted p-3">
           <Target size={16} className="text-primary mb-2" />
-          <h4 className="text-xs font-bold text-foreground mb-1">Zero Injuries</h4>
-          <p className="text-[11px] text-muted-foreground">20+ years. Work capacity and joint health first.</p>
+          <h4 className="text-xs font-bold text-foreground mb-1">Built to Last</h4>
+          <p className="text-[11px] text-muted-foreground">20+ years. Every athlete sent back stronger than they came in.</p>
         </div>
         <div className="bg-muted p-3">
           <Award size={16} className="text-primary mb-2" />

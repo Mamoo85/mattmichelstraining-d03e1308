@@ -31,7 +31,7 @@ const FEATURES = [
 
 const VALUE_POINTS = [
   { icon: User, text: "Matt personally reviews every athlete's logs" },
-  { icon: Shield, text: "20 years. 50+ college athletes. Zero injuries." },
+  { icon: Shield, text: "20 years. 50+ college athletes. Every one still playing." },
   { icon: Zap, text: "Programs built for your sport, level, and equipment" },
 ];
 

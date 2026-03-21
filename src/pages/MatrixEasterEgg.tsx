@@ -5,15 +5,15 @@ import { ArrowLeft, Calendar, Dumbbell, Camera, Brain, Zap, Heart, BookOpen } fr
 const FULL_TEXT = "Congratulations, you have passed the test.";
 const BLINK_DURATION = 2400;
 const TYPE_SPEED = 55;
-const RAIN_DURATION = 4000; // rain plays for 4s before CTA fades in
+const RAIN_DURATION = 4000;
 
 const FEATURES = [
-  { icon: Dumbbell, title: "200+ Exercise Library", desc: "Every exercise Coach Matt prescribes — with video, cues, and 'the why' behind each one." },
-  { icon: Brain, title: "AI Nutrition Scanner", desc: "Snap a photo of your plate. Instant macros. No guessing, no MyFitnessPal headaches." },
-  { icon: Camera, title: "Posture Analysis", desc: "Front and side photos → AI-powered breakdown of exactly what's off and how to fix it." },
-  { icon: Heart, title: "Fix It Recovery Library", desc: "Matt's personal rehab playbook. The same protocols he uses with D1 athletes and weekend warriors." },
-  { icon: Zap, title: "Smart Workout Logger", desc: "Track sets, reps, velocity. Auto-regulate intensity. Your workouts actually adapt to how you feel." },
-  { icon: BookOpen, title: "Monthly Focus Plans", desc: "A new training focus every month with exercises, biomechanics tips, and community challenges." },
+  { icon: Camera, title: "Snap → Fix", desc: "Take a photo mid-set. The AI sees what's off and rewrites your next workout around it. Your program adapts to YOU, not the other way around." },
+  { icon: Heart, title: "Fix It Library", desc: "Matt's personal recovery playbook — the same protocols that keep his athletes on the field instead of on the bench." },
+  { icon: Brain, title: "AI Nutrition Scanner", desc: "Point your phone at your plate. Instant macros. No barcode scanning, no food diary busywork." },
+  { icon: Dumbbell, title: "200+ Exercise Vault", desc: "Every exercise Matt prescribes — with video, coaching cues, and the 'why' behind each rep." },
+  { icon: Zap, title: "Smart Logger", desc: "Tracks your sets, reps, and velocity. Auto-adjusts intensity based on how you actually feel that day." },
+  { icon: BookOpen, title: "Monthly Focus", desc: "New training theme every month. Biomechanics breakdowns, community challenges, and structured progressions." },
 ];
 
 const MATRIX_CHARS = "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -58,11 +58,9 @@ const MatrixRain = ({ active }: { active: boolean }) => {
         const char = MATRIX_CHARS[Math.floor(Math.random() * MATRIX_CHARS.length)];
         const x = i * fontSize;
 
-        // Lead character is bright white-green
         ctx.fillStyle = "#AAFFAA";
         ctx.fillText(char, x, y * fontSize);
 
-        // Trail characters are classic green
         if (Math.random() > 0.98) {
           ctx.fillStyle = "#00FF41";
         } else {
@@ -116,7 +114,6 @@ const useMatrixAudio = () => {
 
       const oscillators: OscillatorNode[] = [];
 
-      // Deep drone
       const drone = ctx.createOscillator();
       drone.type = "sawtooth";
       drone.frequency.setValueAtTime(55, ctx.currentTime);
@@ -129,7 +126,6 @@ const useMatrixAudio = () => {
       drone.start();
       oscillators.push(drone);
 
-      // Eerie pad
       const pad = ctx.createOscillator();
       pad.type = "sine";
       pad.frequency.setValueAtTime(220, ctx.currentTime);
@@ -140,13 +136,11 @@ const useMatrixAudio = () => {
       pad.start();
       oscillators.push(pad);
 
-      // High shimmer
       const shimmer = ctx.createOscillator();
       shimmer.type = "sine";
       shimmer.frequency.setValueAtTime(880, ctx.currentTime);
       const shimmerGain = ctx.createGain();
       shimmerGain.gain.setValueAtTime(0.02, ctx.currentTime);
-      // LFO for shimmer
       const lfo = ctx.createOscillator();
       lfo.frequency.setValueAtTime(0.5, ctx.currentTime);
       const lfoGain = ctx.createGain();
@@ -186,13 +180,11 @@ const MatrixEasterEgg = () => {
   const ctaRef = useRef<HTMLDivElement>(null);
   const { start: startAudio, stop: stopAudio } = useMatrixAudio();
 
-  // Phase 1: blink cursor
   useEffect(() => {
     const t = setTimeout(() => setPhase("type"), BLINK_DURATION);
     return () => clearTimeout(t);
   }, []);
 
-  // Phase 2: typewriter
   useEffect(() => {
     if (phase !== "type") return;
     let i = 0;
@@ -207,7 +199,6 @@ const MatrixEasterEgg = () => {
     return () => clearInterval(iv);
   }, [phase]);
 
-  // Phase 3: matrix rain
   useEffect(() => {
     if (phase !== "rain") return;
     startAudio();
@@ -221,22 +212,18 @@ const MatrixEasterEgg = () => {
     return () => clearTimeout(fadeTimer);
   }, [phase, startAudio]);
 
-  // Stop audio when leaving page
   useEffect(() => {
     return () => stopAudio();
   }, [stopAudio]);
 
-  // Scroll to CTA when it appears
   useEffect(() => {
     if (showCta && ctaRef.current) {
       setTimeout(() => ctaRef.current?.scrollIntoView({ behavior: "smooth" }), 600);
     }
   }, [showCta]);
 
-  const rainActive = phase === "rain" || (phase === "cta" && !rainFading);
-
   return (
-    <div className="min-h-screen bg-black text-[#00FF41] selection:bg-[#00FF41]/20">
+    <div className="min-h-screen bg-black text-[#33FF33] selection:bg-[#33FF33]/20 crt-screen">
       {/* Matrix Rain Canvas */}
       <MatrixRain active={phase === "rain" || phase === "cta"} />
 
@@ -250,26 +237,40 @@ const MatrixEasterEgg = () => {
       {/* Back button */}
       <Link
         to="/"
-        className="fixed top-4 right-4 z-50 flex items-center gap-1.5 text-[#00FF41]/60 hover:text-[#00FF41] text-xs font-mono transition-colors"
+        className="fixed top-4 right-4 z-50 flex items-center gap-1.5 text-[#33FF33]/60 hover:text-[#33FF33] text-xs font-mono transition-colors"
       >
         <ArrowLeft size={14} />
-        Back to safety
+        [ESC] EXIT
       </Link>
 
-      {/* Matrix terminal */}
+      {/* CRT bezel frame */}
+      <div className="fixed inset-0 z-[5] pointer-events-none border-[12px] md:border-[20px] border-[#1a1a1a] rounded-[8px] shadow-[inset_0_0_60px_rgba(0,0,0,0.8)]" />
+
+      {/* Terminal phase */}
       <div className={`min-h-screen flex items-center justify-center px-6 relative z-30 transition-opacity duration-1000 ${
         phase === "rain" || phase === "cta" ? "opacity-0 pointer-events-none" : ""
       }`}>
-        <div className="font-mono text-xl md:text-3xl lg:text-4xl text-center max-w-3xl">
-          {phase === "blink" && (
-            <span className="inline-block w-3 h-7 md:h-9 bg-[#00FF41] animate-[cursor-blink_0.8s_step-end_infinite]" />
-          )}
-          {phase !== "blink" && (
-            <>
-              {typed}
-              <span className="inline-block w-3 h-7 md:h-9 bg-[#00FF41] align-middle ml-0.5 animate-[cursor-blink_0.8s_step-end_infinite]" />
-            </>
-          )}
+        <div className="max-w-3xl w-full">
+          {/* Terminal header bar */}
+          <div className="flex items-center gap-2 mb-4 px-2">
+            <div className="w-2.5 h-2.5 rounded-full bg-red-500/80" />
+            <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/80" />
+            <div className="w-2.5 h-2.5 rounded-full bg-green-500/80" />
+            <span className="font-mono text-[10px] text-[#33FF33]/40 ml-2 tracking-wider">m2training@system:~</span>
+          </div>
+          <div className="border border-[#33FF33]/20 bg-black/90 p-6 md:p-10">
+            <div className="font-mono text-xl md:text-3xl lg:text-4xl text-center">
+              {phase === "blink" && (
+                <span className="inline-block w-3 h-7 md:h-9 bg-[#33FF33] animate-[cursor-blink_0.8s_step-end_infinite]" />
+              )}
+              {phase !== "blink" && (
+                <>
+                  {typed}
+                  <span className="inline-block w-3 h-7 md:h-9 bg-[#33FF33] align-middle ml-0.5 animate-[cursor-blink_0.8s_step-end_infinite]" />
+                </>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -281,78 +282,94 @@ const MatrixEasterEgg = () => {
         }`}
       >
         <div className="max-w-2xl mx-auto px-5 pb-20">
-          {/* Matt's note */}
-          <div className="border border-[#00FF41]/30 bg-black/80 backdrop-blur-none p-6 md:p-8 mb-10">
-            <p className="text-[#00FF41]/60 text-[10px] font-mono uppercase tracking-widest mb-3">
-              Encrypted message from Coach Matt
+          {/* Matt's note — rewritten */}
+          <div className="border border-[#33FF33]/30 bg-black/90 p-6 md:p-8 mb-10 shadow-[0_0_20px_rgba(51,255,51,0.05)]">
+            <p className="text-[#33FF33]/50 text-[10px] font-mono uppercase tracking-[0.3em] mb-4">
+              ▌ incoming_transmission // coach_matt
             </p>
-            <p className="text-[#00FF41] font-mono text-sm md:text-base leading-relaxed mb-4">
-              "You weren't supposed to press that. But since you're clearly the rebellious type… respect.
+            <p className="text-[#33FF33] font-mono text-sm md:text-base leading-relaxed mb-4">
+              &gt; You weren't supposed to press that.
+              <br />&gt; But since you did… I like you already.
             </p>
-            <p className="text-[#00FF41] font-mono text-sm md:text-base leading-relaxed mb-4">
-              Here's the deal: for less than the cost of a single protein shake per week, you get my entire 20+ year playbook. The same exercises I give D1 athletes. The same recovery protocols that have kept my injury count at exactly zero. AI that scans your food and analyzes your posture while you're still in your pajamas.
+            <p className="text-[#33FF33]/90 font-mono text-sm md:text-base leading-relaxed mb-4">
+              Here's what I actually do: I fix people. A shoulder that clicks when you reach overhead. A hip that locks up every deadlift day. A knee that's been lying to you since sophomore year. I've been untangling that stuff for 20 years.
             </p>
-            <p className="text-[#00FF41] font-mono text-sm md:text-base leading-relaxed">
-              And when things get real — a shoulder that won't cooperate, a knee that's been gaslighting you for years — you can come see me in person. Pop in once or twice a month. I'll fix what the app can't."
+            <p className="text-[#33FF33]/90 font-mono text-sm md:text-base leading-relaxed mb-4">
+              And now the app does something wild — you take a photo of your form mid-set, and it rewrites your next workout around what it sees. Your program literally adapts to your body. That's not a gimmick. That's the future of training, and it's $12.99 a month.
+            </p>
+            <p className="text-[#33FF33] font-mono text-sm md:text-base leading-relaxed font-bold">
+              &gt; When the app isn't enough, come see me in person.
+              <br />&gt; I'll put my hands on the problem and we'll sort it out.
             </p>
           </div>
 
           {/* Feature grid */}
-          <h3 className="text-[#00FF41] font-mono text-xs uppercase tracking-widest mb-5 text-center">
-            What $12.99/mo unlocks
+          <h3 className="text-[#33FF33]/60 font-mono text-[10px] uppercase tracking-[0.3em] mb-5 text-center">
+            ┌── SYSTEM.UNLOCKED ──┐
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-10">
             {FEATURES.map((f) => (
               <div
                 key={f.title}
-                className="border border-[#00FF41]/20 bg-black/70 p-4 hover:border-[#00FF41]/40 transition-colors"
+                className="border border-[#33FF33]/15 bg-black/80 p-4 hover:border-[#33FF33]/40 hover:bg-[#33FF33]/[0.03] transition-colors"
               >
                 <div className="flex items-center gap-2 mb-2">
-                  <f.icon size={16} className="text-[#00FF41] flex-shrink-0" />
-                  <span className="font-mono text-xs font-bold text-[#00FF41]">{f.title}</span>
+                  <f.icon size={14} className="text-[#33FF33] flex-shrink-0" />
+                  <span className="font-mono text-xs font-bold text-[#33FF33]">{f.title}</span>
                 </div>
-                <p className="font-mono text-[11px] text-[#00FF41]/70 leading-relaxed">{f.desc}</p>
+                <p className="font-mono text-[11px] text-[#33FF33]/60 leading-relaxed">{f.desc}</p>
               </div>
             ))}
           </div>
 
-          {/* Pain hook */}
-          <div className="border-l-2 border-[#00FF41]/40 pl-4 mb-10">
-            <p className="font-mono text-sm text-[#00FF41]/80 leading-relaxed">
-              Everybody's got something that hurts. A shoulder that clicks. A hip that locks up on deadlifts. A knee that's been lying to you since high school.
+          {/* Healer hook */}
+          <div className="border-l-2 border-[#33FF33]/30 pl-4 mb-10">
+            <p className="font-mono text-sm text-[#33FF33]/70 leading-relaxed">
+              Everybody's got something. That thing that flares up Monday and you pretend doesn't exist by Wednesday. The thing you've been "managing" for three years.
             </p>
-            <p className="font-mono text-sm text-[#00FF41] leading-relaxed mt-3 font-bold">
-              I've spent 20+ years fixing people. Zero injuries. 50+ college athletes sent to the next level. This membership is your all-access pass to my playbook — use it from your couch, or come see me when you need the real thing.
+            <p className="font-mono text-sm text-[#33FF33] leading-relaxed mt-3 font-bold">
+              Stop managing it. Let me fix it. That's literally what I do.
             </p>
           </div>
 
           {/* Primary CTA */}
-          <div className="text-center mb-12">
+          <div className="text-center mb-10">
             <Link
               to="/auth?redirect=/trial-welcome"
-              className="inline-block bg-[#00FF41] text-black font-mono font-black text-sm md:text-base uppercase tracking-widest px-8 py-4 hover:bg-[#33FF66] hover:shadow-[0_0_30px_rgba(0,255,65,0.4)] transition-all duration-300"
+              className="inline-block bg-[#33FF33] text-black font-mono font-black text-sm md:text-base uppercase tracking-widest px-8 py-4 hover:bg-[#66FF66] hover:shadow-[0_0_40px_rgba(51,255,51,0.4)] transition-all duration-300"
             >
               Start My 14-Day Free Trial
             </Link>
-            <p className="font-mono text-[10px] text-[#00FF41]/50 mt-2">
+            <p className="font-mono text-[10px] text-[#33FF33]/40 mt-2">
               Credit card required · Cancel anytime · $12.99/mo after trial
             </p>
           </div>
 
-          {/* Divider */}
-          <div className="flex items-center gap-4 mb-10">
-            <div className="flex-1 h-px bg-[#00FF41]/20" />
-            <p className="font-mono text-xs text-[#00FF41]/60 uppercase tracking-widest whitespace-nowrap">
-              Or just let me prove it
+          {/* I'LL PROVE IT divider */}
+          <div className="flex items-center gap-4 mb-6">
+            <div className="flex-1 h-px bg-[#33FF33]/20" />
+            <div className="flex-1 h-px bg-[#33FF33]/20" />
+          </div>
+
+          <div className="text-center mb-6">
+            <p className="font-mono text-2xl md:text-3xl font-black text-[#33FF33] tracking-tight animate-[pulse_2s_ease-in-out_infinite]">
+              I'LL PROVE IT.
             </p>
-            <div className="flex-1 h-px bg-[#00FF41]/20" />
+            <p className="font-mono text-xs text-[#33FF33]/50 mt-2">
+              Book one session. If I can't find the thing everyone else missed, you owe me nothing.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-4 mb-10">
+            <div className="flex-1 h-px bg-[#33FF33]/20" />
+            <div className="flex-1 h-px bg-[#33FF33]/20" />
           </div>
 
           {/* Schedule CTA */}
           <div className="text-center mb-16">
             <Link
               to="/schedule"
-              className="inline-flex items-center gap-2 border-2 border-[#00FF41] text-[#00FF41] font-mono font-black text-base md:text-lg uppercase tracking-widest px-10 py-5 hover:bg-[#00FF41] hover:text-black transition-all duration-300 hover:shadow-[0_0_40px_rgba(0,255,65,0.3)]"
+              className="inline-flex items-center gap-2 border-2 border-[#33FF33] text-[#33FF33] font-mono font-black text-base md:text-lg uppercase tracking-widest px-10 py-5 hover:bg-[#33FF33] hover:text-black transition-all duration-300 hover:shadow-[0_0_40px_rgba(51,255,51,0.3)]"
             >
               <Calendar size={20} />
               SCHEDULE NOW
@@ -363,19 +380,44 @@ const MatrixEasterEgg = () => {
           <div className="text-center pb-8">
             <Link
               to="/"
-              className="font-mono text-xs text-[#00FF41]/40 hover:text-[#00FF41]/70 transition-colors"
+              className="font-mono text-xs text-[#33FF33]/30 hover:text-[#33FF33]/60 transition-colors"
             >
-              ← Return to the real world
+              ← return_to_reality
             </Link>
           </div>
         </div>
       </div>
 
-      {/* Cursor blink keyframes */}
+      {/* CRT styles */}
       <style>{`
         @keyframes cursor-blink {
           0%, 100% { opacity: 1; }
           50% { opacity: 0; }
+        }
+        .crt-screen {
+          background: radial-gradient(ellipse at center, #0a0a0a 0%, #000000 80%);
+        }
+        .crt-screen::before {
+          content: "";
+          position: fixed;
+          inset: 0;
+          z-index: 55;
+          pointer-events: none;
+          background: repeating-linear-gradient(
+            0deg,
+            rgba(0, 0, 0, 0) 0px,
+            rgba(0, 0, 0, 0) 1px,
+            rgba(0, 0, 0, 0.15) 1px,
+            rgba(0, 0, 0, 0.15) 2px
+          );
+        }
+        .crt-screen::after {
+          content: "";
+          position: fixed;
+          inset: 0;
+          z-index: 54;
+          pointer-events: none;
+          background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.4) 100%);
         }
       `}</style>
     </div>
