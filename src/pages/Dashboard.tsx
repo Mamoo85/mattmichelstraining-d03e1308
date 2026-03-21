@@ -170,7 +170,7 @@ const Dashboard = () => {
         <TrialPaywallModal open={true} hardLock />
       )}
 
-      <AskCoachBubble />
+      <DualFab />
     </div>
   );
 };
