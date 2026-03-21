@@ -21,11 +21,13 @@ import { lazy, Suspense } from "react";
 const MyPrograms = lazy(() => import("@/components/features/MyPrograms"));
 const ChallengeHub = lazy(() => import("@/components/dashboard/ChallengeHub"));
 const TeamManager = lazy(() => import("@/components/features/TeamManager"));
+const ProgressCharts = lazy(() => import("@/components/features/ProgressCharts"));
 
 import AskCoachBubble from "@/components/dashboard/AskCoachBubble";
 
 const BASE_TABS = [
   { key: "home", label: "Home" },
+  { key: "progress", label: "Progress" },
   { key: "programs", label: "My Programs" },
   { key: "workouts", label: "Workouts" },
   { key: "challenge", label: "Challenge" },
@@ -146,6 +148,7 @@ const Dashboard = () => {
               onViewReferrals={handleViewReferrals}
             />
           )}
+          {activeTab === "progress" && <ProgressCharts />}
           {activeTab === "programs" && <MyPrograms />}
           {activeTab === "workouts" && <WorkoutsTab />}
           {activeTab === "challenge" && <ChallengeHub />}
