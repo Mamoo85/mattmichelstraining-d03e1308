@@ -3,11 +3,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Upload, Trash2, Image, Video, Music, Filter, CheckSquare, Wand2, Loader2, X } from "lucide-react";
+import { Upload, Trash2, Image, Video, Music, Filter, CheckSquare, Wand2, Loader2, X, FolderDown, Sparkles } from "lucide-react";
 import AiMediaStudio from "./AiMediaStudio";
 
 interface MediaFile {
@@ -29,15 +28,16 @@ const AdminMediaVault = () => {
   const [filter, setFilter] = useState("all");
   const [showStudio, setShowStudio] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [importing, setImporting] = useState(false);
 
   const { data: files = [], isLoading } = useQuery({
     queryKey: ["admin-media-files", filter],
     queryFn: async () => {
-      let q = supabase.from("admin_media_files" as any).select("*").order("created_at", { ascending: false });
+      let q = supabase.from("admin_media_files").select("*").order("created_at", { ascending: false });
       if (filter !== "all") q = q.eq("file_type", filter);
       const { data, error } = await q;
       if (error) throw error;
-      return (data || []) as unknown as MediaFile[];
+      return (data || []) as MediaFile[];
     },
   });
 
@@ -48,7 +48,7 @@ const AdminMediaVault = () => {
         await supabase.storage.from("admin_media").remove([f.file_path]);
       }
       for (const id of ids) {
-        await supabase.from("admin_media_files" as any).delete().eq("id", id);
+        await supabase.from("admin_media_files").delete().eq("id", id);
       }
     },
     onSuccess: () => {
@@ -75,7 +75,7 @@ const AdminMediaVault = () => {
         const { error: uploadErr } = await supabase.storage.from("admin_media").upload(filePath, file, { upsert: true });
         if (uploadErr) { toast.error(`Failed to upload ${file.name}`); continue; }
 
-        await supabase.from("admin_media_files" as any).insert({
+        await supabase.from("admin_media_files").insert({
           file_path: filePath,
           file_name: file.name,
           file_type: fileType,
@@ -93,6 +93,106 @@ const AdminMediaVault = () => {
     } finally {
       setUploading(false);
       e.target.value = "";
+    }
+  }, [qc]);
+
+  // Import files from other storage buckets into the media vault
+  const handleImportFromBuckets = useCallback(async () => {
+    setImporting(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not logged in");
+
+      const buckets = ["form_checks", "form-check-videos", "lift_videos", "biomechanics_media", "ai_generated_media"];
+      let imported = 0;
+
+      // Get existing file paths to avoid duplicates
+      const { data: existingFiles } = await supabase.from("admin_media_files").select("file_name");
+      const existingNames = new Set((existingFiles || []).map(f => f.file_name));
+
+      for (const bucket of buckets) {
+        try {
+          const { data: bucketFiles } = await supabase.storage.from(bucket).list("", { limit: 100 });
+          if (!bucketFiles?.length) continue;
+
+          // List recursively — check folders too
+          for (const item of bucketFiles) {
+            if (item.id === null) {
+              // It's a folder, list its contents
+              const { data: subFiles } = await supabase.storage.from(bucket).list(item.name, { limit: 100 });
+              if (!subFiles?.length) continue;
+              for (const sub of subFiles) {
+                if (sub.id === null) continue;
+                const fullPath = `${item.name}/${sub.name}`;
+                const fileName = `[${bucket}] ${sub.name}`;
+                if (existingNames.has(fileName)) continue;
+
+                const fileType = sub.name.match(/\.(mp4|mov|webm|avi)$/i) ? "video"
+                  : sub.name.match(/\.(mp3|wav|m4a|ogg)$/i) ? "audio" : "image";
+
+                const publicUrl = supabase.storage.from(bucket).getPublicUrl(fullPath).data.publicUrl;
+
+                // Copy file to admin_media bucket
+                const resp = await fetch(publicUrl);
+                if (!resp.ok) continue;
+                const blob = await resp.blob();
+                const destPath = `${user.id}/imported_${Date.now()}_${sub.name}`;
+
+                const { error: upErr } = await supabase.storage.from("admin_media").upload(destPath, blob, { upsert: true });
+                if (upErr) continue;
+
+                await supabase.from("admin_media_files").insert({
+                  file_path: destPath,
+                  file_name: fileName,
+                  file_type: fileType,
+                  file_size: sub.metadata?.size || 0,
+                  uploaded_by: user.id,
+                  tags: [bucket],
+                  metadata: { source_bucket: bucket, original_path: fullPath },
+                });
+                imported++;
+                existingNames.add(fileName);
+              }
+            } else {
+              const fileName = `[${bucket}] ${item.name}`;
+              if (existingNames.has(fileName)) continue;
+
+              const fileType = item.name.match(/\.(mp4|mov|webm|avi)$/i) ? "video"
+                : item.name.match(/\.(mp3|wav|m4a|ogg)$/i) ? "audio" : "image";
+
+              const publicUrl = supabase.storage.from(bucket).getPublicUrl(item.name).data.publicUrl;
+              const resp = await fetch(publicUrl);
+              if (!resp.ok) continue;
+              const blob = await resp.blob();
+              const destPath = `${user.id}/imported_${Date.now()}_${item.name}`;
+
+              const { error: upErr } = await supabase.storage.from("admin_media").upload(destPath, blob, { upsert: true });
+              if (upErr) continue;
+
+              await supabase.from("admin_media_files").insert({
+                file_path: destPath,
+                file_name: fileName,
+                file_type: fileType,
+                file_size: item.metadata?.size || 0,
+                uploaded_by: user.id,
+                tags: [bucket],
+                metadata: { source_bucket: bucket, original_path: item.name },
+              });
+              imported++;
+              existingNames.add(fileName);
+            }
+          }
+        } catch {
+          // Skip buckets we can't access
+        }
+      }
+
+      qc.invalidateQueries({ queryKey: ["admin-media-files"] });
+      toast.success(imported > 0 ? `Imported ${imported} file(s) from storage` : "No new files found to import");
+    } catch (err: any) {
+      toast.error(err.message || "Import failed");
+    } finally {
+      setImporting(false);
     }
   }, [qc]);
 
@@ -130,6 +230,22 @@ const AdminMediaVault = () => {
 
   return (
     <div className="space-y-4">
+      {/* AI Studio banner — always visible */}
+      <Card className="p-4 border-primary/30 bg-gradient-to-r from-primary/5 to-transparent">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <Sparkles size={18} className="text-primary" />
+            <div>
+              <h3 className="text-sm font-bold">AI Creative Studio</h3>
+              <p className="text-[10px] text-muted-foreground">Select images below, then generate branded social media graphics with AI</p>
+            </div>
+          </div>
+          <Button size="sm" className="gap-1.5" onClick={() => setShowStudio(true)} disabled={selectedIds.size === 0}>
+            <Wand2 size={14} /> {selectedIds.size > 0 ? `Open Studio (${selectedIds.size} selected)` : "Select images first"}
+          </Button>
+        </div>
+      </Card>
+
       <div className="flex flex-wrap items-center gap-2">
         <label className="cursor-pointer">
           <input type="file" multiple accept="image/*,video/*,audio/*" className="hidden" onChange={handleUpload} disabled={uploading} />
@@ -137,6 +253,11 @@ const AdminMediaVault = () => {
             <span className="gap-1.5">{uploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />} Upload Media</span>
           </Button>
         </label>
+
+        <Button variant="outline" size="sm" className="gap-1.5" onClick={handleImportFromBuckets} disabled={importing}>
+          {importing ? <Loader2 size={14} className="animate-spin" /> : <FolderDown size={14} />}
+          {importing ? "Importing..." : "Import from Storage"}
+        </Button>
 
         <div className="flex gap-1 ml-auto">
           {FILE_TYPE_FILTERS.map(f => (
@@ -168,7 +289,11 @@ const AdminMediaVault = () => {
         <Card className="p-8 text-center text-muted-foreground">
           <Upload size={32} className="mx-auto mb-2 opacity-40" />
           <p className="text-sm font-medium">No media yet</p>
-          <p className="text-xs">Upload photos, videos, or audio to get started</p>
+          <p className="text-xs mb-3">Upload photos, videos, or audio — or import existing files from your other storage buckets</p>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={handleImportFromBuckets} disabled={importing}>
+            {importing ? <Loader2 size={14} className="animate-spin" /> : <FolderDown size={14} />}
+            {importing ? "Importing..." : "Import from Storage"}
+          </Button>
         </Card>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
