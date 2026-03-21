@@ -462,7 +462,6 @@ const AdminWorkoutInventory = () => {
         description={`Remove "${deleteTarget?.title}"? This cannot be undone.`}
         confirmLabel="Delete"
       />
-      />
     </div>
   );
 };
