@@ -1,43 +1,49 @@
 
 
-## Plan: Timer Enhancements, AI Queue Fix, and Domain Clarification
+# "DO NOT PRESS" Easter Egg — Revised Plan
 
-### 1. Interval Timer — Visual & Feature Upgrades
+## Key Change from Previous Plan
+Make the button **eye-catching and impossible to miss** — not buried or tiny. It should feel like reverse psychology marketing: obviously tempting, not actually hidden.
 
-**A. Inner Round Warning Sound**
-Add a configurable "warning" setting (default: 10 seconds) that plays a distinct alert beep partway through each work phase — alerting the user that the round is about to end. New config field `warning` added to `TimerConfig`. In the `tick()` function, when `phase === "work"` and `secondsLeft === warning`, fire a new `warningBeep()` sound + vibration.
+## New Files
 
-**B. Sound Picker Dropdown (~20 options)**
-Add a sound theme selector to the setup screen. Each theme defines different frequencies/patterns for countdown, work, rest, warning, and complete sounds. Themes include: Classic Beep, Boxing Bell, Whistle, Air Horn, Buzzer, Digital Chime, Military, Arcade, Zen Bowl, Stadium Horn, Double Tap, Siren Pulse, Xylophone, Drum Roll, Synth Wave, Metal Clang, Cricket, Foghorn, Laser, and Sonar Ping. All synthesized via Web Audio API (no external files needed). Stored as a `soundTheme` state with a `<select>` dropdown in the controls area.
+### 1. `src/components/landing/DoNotPressButton.tsx`
+A full-width section (not a tiny footer link) with:
+- Black background strip with animated red/orange pulsing border
+- Large text: **"⚠️ DO NOT PRESS THIS BUTTON ⚠️"**
+- Animated glow effect, slight shake on hover
+- Centered, padded, styled like a dare — users will absolutely press it
+- Links to `/matrix`
 
-**C. Completion Screen — Coach Matt Motivational Messaging**
-Replace the simple "All X rounds complete" text with a richer done screen featuring:
-- Randomized "atta boy" messages in Coach Matt's voice (e.g., "Beast mode. That's how it's done.", "Crushed it. No shortcuts, no excuses.")
-- A training philosophy callout: "Next session — flip the script. Go from endurance to strength. Balance builds champions."
-- M2 logo displayed on the completion screen
+### 2. `src/pages/MatrixEasterEgg.tsx`
+Full-screen black page:
+- **Phase 1**: Green cursor blinks 3 times
+- **Phase 2**: Typewriter types "Congratulations, you have passed the test."
+- **Phase 3** (2s after typing ends): CTA content fades in as a scrollable section
 
-**D. Minor Visual Polish**
-- Keep the existing dark theme with orange accent
-- Ensure the M2 logo appears in the header bar
-- Keep the existing layout largely the same — it's already solid
+CTA content (Matrix black aesthetic, green + orange accents):
+- **Matt's note**: "You weren't supposed to press that. But since you're clearly the rebellious type... respect. Here's what $12.99/mo actually gets you."
+- **Tech showcase cards**: Exercise Library (200+), AI Nutrition Scanner, Posture Analysis, Fix It Recovery Library, Smart Workout Logger, Monthly Focus — each with icon and one-liner
+- **Pain hook**: "Everybody's got something that hurts. A shoulder that clicks. A knee that's been lying to you for years. I've spent 20+ years fixing people — zero injuries, 50+ college athletes sent to the next level. This membership is your all-access pass to my playbook."
+- **Primary CTA button**: "Start My 14-Day Free Trial" → `/auth?redirect=/trial-welcome`
+- **Divider**: "Or just let me prove it."
+- **Secondary CTA**: Big "SCHEDULE NOW" → `/schedule`
+- **"← Back to safety"** link at top-right
 
-### 2. AI Copilot Queue — Auto-Approve Non-User-Facing Results
+## Modified Files
 
-The "AI_COPILOT" entries in the approval queue are from the admin-only performance analysis tool. It analyzes athlete data for stagnation and ghost trials. Since this is purely an admin insight tool (not sent to users), these results should NOT be queued for approval.
+### 3. `src/App.tsx`
+- Add lazy import + route: `/matrix` → `MatrixEasterEgg`
 
-**Fix**: In `supabase/functions/ai-admin-assist/index.ts`, add `ai_copilot` to a list of action types that skip the queue and return results directly. This prevents empty/confusing queue entries. Other admin-only types like `blog_draft`, `generate_ad`, `client_summary` will also be auto-returned since you review them manually in their respective UI panels anyway.
+### 4. Add `<DoNotPressButton />` to these public pages
+`Index.tsx`, `About.tsx`, `Pricing.tsx`, `Shop.tsx`, `ForParents.tsx`, `Schedule.tsx`, `Merch.tsx`, `Learn.tsx`, `TheEdge.tsx`, `Install.tsx`
 
-### 3. Domain Clarification
+Excluded: Auth, Dashboard, Profile, Progress, Nutrition, Admin, Coach, TrialWelcome, Welcome, NotFound
 
-The screenshot shows the invite link going to `mattmichelstraining.lovable.app` — this is the default staging subdomain. If you own `mattmichelstraining.com`, connecting that custom domain would be more professional and trustworthy for clients. You can set this up in Project Settings → Domains. The `.lovable.app` URL will continue to work but would redirect to your custom domain once configured. I'll include a note about this in my response but no code changes needed.
-
-### Files to Modify
-- **`src/components/workout/useTimerAudio.ts`** — Add `warningBeep()` export + sound theme system with ~20 synthesized themes
-- **`src/components/workout/IntervalTimer.tsx`** — Add warning config, sound theme dropdown, richer done screen with Coach Matt messaging and logo
-- **`supabase/functions/ai-admin-assist/index.ts`** — Skip queue for `ai_copilot`, `blog_draft`, `generate_ad`, `client_summary`, `schedule_suggest` action types (return directly)
-
-### Technical Details
-- Sound themes are pure Web Audio API synthesis — different oscillator frequencies, waveforms, and timing patterns per theme. No external audio files.
-- Warning alert triggers at a configurable number of seconds before the work phase ends.
-- The AI queue bypass uses a simple `Set` check before the insert logic — types in the skip list return `{ result }` instead of `{ queued: true, result }`.
+## Technical Details
+- Typewriter: `setInterval` revealing one character at a time, monospace font, `#00FF41` green
+- Cursor blink: CSS keyframes with `step-end`
+- CTA fade-in: CSS opacity transition triggered by state
+- Button glow: `box-shadow` animation with red/orange pulse, `@keyframes`
+- Fully responsive single-column layout
 
