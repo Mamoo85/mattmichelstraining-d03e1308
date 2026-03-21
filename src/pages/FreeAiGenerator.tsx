@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Dumbbell, Loader2, Zap, ChevronRight, ArrowRight, Sparkles } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Dumbbell, Loader2, Zap, ChevronRight, ArrowRight, Sparkles, Lock, ShieldAlert } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,11 @@ import { useNavigate } from "react-router-dom";
 import SEOHead from "@/components/layout/SEOHead";
 import AppNavbar from "@/components/layout/AppNavbar";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/hooks/useAuth";
+import { safeLocalStorage } from "@/lib/browserStorage";
+
+const GENERATION_LIMIT = 3;
+const STORAGE_KEY = "m2_ai_generations_count";
 
 const EXPERIENCE = [
   { value: "beginner", label: "Beginner (0-6 months)" },
@@ -41,6 +46,7 @@ interface GeneratedProgram {
 
 const FreeAiGenerator = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [experience, setExperience] = useState("");
   const [goal, setGoal] = useState("");
   const [daysPerWeek, setDaysPerWeek] = useState("3");
@@ -49,6 +55,15 @@ const FreeAiGenerator = () => {
   const [program, setProgram] = useState<GeneratedProgram | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
+  const [genCount, setGenCount] = useState(0);
+
+  // Load generation count from localStorage
+  useEffect(() => {
+    const stored = safeLocalStorage.getItem(STORAGE_KEY);
+    if (stored) setGenCount(parseInt(stored, 10) || 0);
+  }, []);
+
+  const isLimitReached = !user && genCount >= GENERATION_LIMIT;
 
   const handleGenerate = async () => {
     if (!experience || !goal || !equipment) return;
@@ -71,6 +86,12 @@ const FreeAiGenerator = () => {
       }
       const data = await resp.json();
       setProgram(data);
+      // Increment generation counter for non-authenticated users
+      if (!user) {
+        const newCount = genCount + 1;
+        setGenCount(newCount);
+        safeLocalStorage.setItem(STORAGE_KEY, String(newCount));
+      }
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -184,17 +205,45 @@ const FreeAiGenerator = () => {
 
                 {error && <p className="text-destructive text-xs text-center">{error}</p>}
 
+                {/* Rate limit lockout banner */}
+                {isLimitReached && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="bg-destructive/10 border-2 border-destructive/40 rounded-lg p-5 text-center space-y-3"
+                  >
+                    <ShieldAlert size={28} className="text-destructive mx-auto" />
+                    <p className="text-sm font-bold text-foreground">
+                      You've maxed out your free AI generations.
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      To continue building custom programs and actually track your weights, create your free M² Portal account now.
+                    </p>
+                    <Button
+                      onClick={() => navigate("/auth?mode=signup")}
+                      className="w-full h-12 font-black uppercase tracking-wider text-sm"
+                      size="lg"
+                    >
+                      Create Free Account <ArrowRight size={16} />
+                    </Button>
+                  </motion.div>
+                )}
+
                 <Button
                   onClick={handleGenerate}
-                  disabled={loading || !experience || !goal || !equipment}
+                  disabled={loading || !experience || !goal || !equipment || isLimitReached}
                   className="w-full h-14 text-base font-black uppercase tracking-wider relative overflow-hidden group"
                   size="lg"
                 >
-                  {loading ? (
+                  {isLimitReached ? (
+                    <span className="flex items-center gap-2">
+                      <Lock size={18} /> Free Limit Reached ({GENERATION_LIMIT}/{GENERATION_LIMIT})
+                    </span>
+                  ) : loading ? (
                     <span className="flex items-center gap-2"><Loader2 className="animate-spin" size={18} /> Building Your Program...</span>
                   ) : (
                     <span className="flex items-center gap-2">
-                      <Sparkles size={18} /> Generate Free Workout
+                      <Sparkles size={18} /> Generate Free Workout{!user && ` (${genCount}/${GENERATION_LIMIT})`}
                     </span>
                   )}
                   <span className="absolute inset-0 bg-gradient-to-r from-primary via-primary/80 to-primary opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10" />
