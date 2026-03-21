@@ -250,17 +250,32 @@ const AdminSchedule = () => {
 
         {bulkWeeks && (
           <div className="space-y-3 border-t border-border pt-3">
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={skipWeekends}
-                onChange={e => setSkipWeekends(e.target.checked)}
-                className="accent-primary"
-                id="skip-weekends"
-              />
-              <label htmlFor="skip-weekends" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground cursor-pointer">
-                Skip Weekends
-              </label>
+            <div>
+              <div className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-2">
+                Days of the week ({selectedDays.length} selected)
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {DAY_LABELS.map((label, idx) => {
+                  const active = selectedDays.includes(idx);
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() =>
+                        setSelectedDays(prev =>
+                          active ? prev.filter(d => d !== idx) : [...prev, idx].sort()
+                        )
+                      }
+                      className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-m2 border ${
+                        active
+                          ? "bg-primary/20 border-primary/40 text-primary"
+                          : "bg-muted border-border text-muted-foreground hover:border-primary/30"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <div>
