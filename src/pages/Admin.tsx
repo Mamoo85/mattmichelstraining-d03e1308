@@ -1,10 +1,11 @@
 import { useState, lazy, Suspense } from "react";
 import { Navigate } from "react-router-dom";
+import { cn } from "@/lib/utils";
 import AppNavbar from "@/components/layout/AppNavbar";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Users, Dumbbell, Landmark, FileText, Trash2 } from "lucide-react";
+import { Loader2, Users, Dumbbell, Landmark, FileText, Trash2, ClipboardList } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 
@@ -60,6 +61,7 @@ const AdminAiBusinessTools = lazy(() => import("@/components/admin/AdminAiBusine
 const AdminCmoReports = lazy(() => import("@/components/admin/AdminCmoReports"));
 const AdminTrash = lazy(() => import("@/components/admin/AdminTrash"));
 const AdminMediaVault = lazy(() => import("@/components/admin/AdminMediaVault"));
+const AdminProgressLogger = lazy(() => import("@/components/admin/AdminProgressLogger"));
 
 const MASTER_TABS = [
   { key: "roster", label: "The Roster", icon: Users, desc: "Users · Support · Families" },
@@ -202,6 +204,26 @@ const Admin = () => {
           <h1 className="text-lg font-bold text-foreground tracking-display">Command Center</h1>
           <p className="text-xs text-muted-foreground">Manage everything from one place</p>
         </div>
+
+        {/* Big Log Lifts button */}
+        <button
+          onClick={() => setActiveTab("log-lifts")}
+          className={cn(
+            "w-full mb-4 py-4 flex items-center justify-center gap-3 text-sm font-bold uppercase tracking-widest transition-all border",
+            activeTab === "log-lifts"
+              ? "bg-primary text-primary-foreground border-primary shadow-lg"
+              : "bg-card text-foreground border-primary/40 hover:bg-primary/10 hover:border-primary"
+          )}
+        >
+          <ClipboardList size={20} />
+          Log Athlete Lifts
+        </button>
+
+        {activeTab === "log-lifts" && (
+          <Suspense fallback={<TabLoader />}>
+            <AdminProgressLogger />
+          </Suspense>
+        )}
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6">
           {MASTER_TABS.map((tab) => {
