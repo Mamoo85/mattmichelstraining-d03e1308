@@ -63,7 +63,7 @@ const AdminSchedule = () => {
   const [bulkWeeks, setBulkWeeks] = useState<number | null>(null);
   const [bulkLoading, setBulkLoading] = useState(false);
   const [bulkTimes, setBulkTimes] = useState<string[]>(DEFAULT_OPEN_TIMES);
-  const [skipWeekends, setSkipWeekends] = useState(true);
+  const [selectedDays, setSelectedDays] = useState<number[]>([1, 2, 3, 4, 5]);
   const { toast } = useToast();
 
   const dateStr = format(selectedDate, "yyyy-MM-dd");
