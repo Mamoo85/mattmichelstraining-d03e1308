@@ -1,5 +1,6 @@
 import { useState, lazy, Suspense } from "react";
 import { Navigate } from "react-router-dom";
+import { cn } from "@/lib/utils";
 import AppNavbar from "@/components/layout/AppNavbar";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useQuery } from "@tanstack/react-query";
