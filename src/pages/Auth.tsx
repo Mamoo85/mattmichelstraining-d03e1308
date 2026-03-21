@@ -26,7 +26,7 @@ const Auth = () => {
       if (ipToken) {
         try {
           const { data, error } = await supabase.functions.invoke("admin-user-manage", {
-            body: { action: "redeem_ip_invite", token: ipToken, userId: user.id },
+            body: { action: "redeem_ip_invite", token: ipToken },
           });
           if (error) throw error;
           if (data?.error) throw new Error(data.error);
