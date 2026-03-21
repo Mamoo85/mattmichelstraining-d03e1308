@@ -128,7 +128,18 @@
 </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Static hero shell — paints before React, replaced on mount -->
+      <div id="hero-shell" style="min-height:100vh;background:hsl(0 0% 5%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding-top:5rem">
+        <img src="/assets/m2-logo-placeholder.jpg" alt="M² Training" width="224" height="224" fetchpriority="high" decoding="sync" style="width:144px;height:144px;object-fit:contain;mix-blend-mode:lighten" />
+        <div style="display:flex;gap:2rem;margin-top:1rem">
+          <div style="text-align:center"><span style="color:hsl(17 84% 50%);font-size:1.125rem;font-weight:900;font-family:'Geist Mono',monospace">20+</span><br/><span style="color:hsl(0 0% 55%);font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:0.2em">Years Coaching</span></div>
+          <div style="text-align:center"><span style="color:hsl(17 84% 50%);font-size:1.125rem;font-weight:900;font-family:'Geist Mono',monospace">50+</span><br/><span style="color:hsl(0 0% 55%);font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:0.2em">College Athletes</span></div>
+          <div style="text-align:center"><span style="color:hsl(17 84% 50%);font-size:1.125rem;font-weight:900;font-family:'Geist Mono',monospace">Zero</span><br/><span style="color:hsl(0 0% 55%);font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:0.2em">Injuries</span></div>
+        </div>
+        <h1 style="color:hsl(0 0% 93%);font-size:1.5rem;font-weight:700;text-align:center;margin-top:1rem;line-height:1.4">Real strength. Zero gimmicks.<br/><span style="color:hsl(17 84% 50%)">Real coaching. Real results.</span></h1>
+      </div>
+    </div>
     <noscript>
       <h1>M² Training — Youth Strength Coach</h1>
       <p>In-person youth strength training in Grosse Pointe Park, MI. Online programs anywhere. 20+ years coaching experience, 50+ college athletes developed, zero injuries. Custom programs from $20, monthly coaching from $14.99/mo.</p>
