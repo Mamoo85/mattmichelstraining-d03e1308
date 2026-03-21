@@ -226,7 +226,7 @@ serve(async (req) => {
     const content = data.choices?.[0]?.message?.content || "";
 
     // Non-user-facing types skip the approval queue — return directly
-    const SKIP_QUEUE_TYPES = new Set(["ai_copilot", "blog_draft", "generate_ad", "client_summary", "schedule_suggest"]);
+    const SKIP_QUEUE_TYPES = new Set(["ai_copilot", "blog_draft", "generate_ad", "client_summary", "schedule_suggest", "stripe_product_description", "promo_suggest"]);
     if (SKIP_QUEUE_TYPES.has(type)) {
       return new Response(JSON.stringify({ result: content }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
