@@ -1,52 +1,21 @@
 
 
-## Dual FAB: Hold-and-Slide to Timer or Coach Chat
+## Bulk Open Slots: Per-Day-of-Week Selection
 
-Replace the current floating "Ask Coach Matt" bubble with a single FAB that reveals two radial options on long-press. The user holds the button, then slides their finger/cursor to either the **Timer** icon or the **Chat** icon to activate one.
+Change the bulk populate UI so instead of just a "Skip Weekends" checkbox, the admin picks exactly which days of the week to open slots for (e.g., only Mondays, or Mon+Wed+Fri).
 
-### How It Works (UX)
+### Changes to `src/components/admin/AdminSchedule.tsx`
 
-```text
-       (resting state)
-           [M²]          ← single FAB, bottom-right
+1. **Replace `skipWeekends` boolean** with `selectedDays: number[]` state (0=Sun, 1=Mon, ... 6=Sat), defaulting to weekdays `[1,2,3,4,5]`.
 
-       (long-press / hold)
-    [⏱ Timer]            ← slides up-left
-           [M²]          ← origin, pulsing
-    [💬 Chat]            ← slides up-right
+2. **Replace the "Skip Weekends" checkbox** with a row of 7 day-of-week toggle buttons (Sun–Sat). Each toggles its day number in/out of the `selectedDays` array. Styled like the existing time-slot toggle chips.
 
-  User drags toward one → that feature activates
-  Release without target → menu closes
-```
+3. **Update `bulkPopulate()`** to filter days using `selectedDays` instead of the weekend check:
+   ```
+   const days = allDays.filter(d => selectedDays.includes(d.getDay()));
+   ```
 
-### Technical Plan
+4. **Update the confirm dialog and button label** to reflect the selected days (e.g., "Open 4 slots/day on Mon for 6 weeks").
 
-**1. Create `DualFab.tsx`** (`src/components/dashboard/DualFab.tsx`)
-- Single floating button (bottom-right, `fixed`, same position as current `AskCoachBubble`)
-- On `pointerdown` + 300ms hold, expand two arc options (Timer icon top-left, Chat icon top-right) with a spring animation
-- Track `pointermove` to highlight whichever option the pointer is nearest
-- On `pointerup`:
-  - If over Timer → call `toggleTimer()` from the existing `useTimer` hook (opens the global `IntervalTimer`)
-  - If over Chat → set state to open the existing `AskCoachBubble` chat panel inline
-  - If over neither → collapse menu, no action
-- Tap (no hold) → default to opening the coach chat (preserves current quick-tap behavior)
-- Uses CSS transforms + transitions for the radial reveal — no animation library needed
-- Haptic feedback via `navigator.vibrate` on expand and selection (already used in IntervalTimer)
-
-**2. Inline the chat panel from `AskCoachBubble`**
-- Extract the chat panel JSX from `AskCoachBubble` into the `DualFab` component (or render `AskCoachBubble`'s panel conditionally)
-- Keep all existing chat logic (fetch drafts, send question, display approved answers) unchanged
-
-**3. Update `Dashboard.tsx`**
-- Replace `<AskCoachBubble />` with `<DualFab />`
-- Import `useTimer` is already available via context in the tree
-
-**4. Files changed**
-| File | Change |
-|---|---|
-| `src/components/dashboard/DualFab.tsx` | New — dual FAB with hold-and-slide gesture |
-| `src/components/dashboard/AskCoachBubble.tsx` | Export the chat panel as a separate sub-component, or keep and render from DualFab |
-| `src/pages/Dashboard.tsx` | Swap `AskCoachBubble` → `DualFab` |
-
-No changes to `IntervalTimer`, `useTimer`, or `App.tsx` — the FAB just calls the existing `toggleTimer()` to open the global timer overlay.
+No other files change. All existing logic (upsert, chunking, time selection) stays the same.
 
