@@ -1,4 +1,4 @@
-import { memo, useState, useCallback, useRef, useEffect } from "react";
+import { memo, useState, useCallback, useRef, useEffect, lazy, Suspense } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Dumbbell, ShoppingBag, Home, Menu, X, LogIn, LogOut, Shield,
@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useTimer } from "@/hooks/useTimer";
 import m2Logo from "@/assets/m2-logo.jpg";
-import NotificationBell from "./NotificationBell";
+const NotificationBell = lazy(() => import("./NotificationBell"));
 
 const primaryNav = [
   { to: "/", label: "HOME", icon: Home },
@@ -141,7 +141,7 @@ const AppNavbar = () => {
             App
           </Link>
 
-          {user && <NotificationBell />}
+          {user && <Suspense fallback={null}><NotificationBell /></Suspense>}
 
           {user ? (
             <button
@@ -171,7 +171,7 @@ const AppNavbar = () => {
             <Download size={13} />
             App
           </Link>
-          {user && <NotificationBell />}
+          {user && <Suspense fallback={null}><NotificationBell /></Suspense>}
           <button className="p-2 text-muted-foreground" onClick={() => setMobileOpen(!mobileOpen)} aria-label={mobileOpen ? "Close menu" : "Open menu"}>
             {mobileOpen ? <X size={22} /> : <Menu size={22} />}
           </button>

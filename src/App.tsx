@@ -3,8 +3,9 @@ import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { Toaster } from "@/components/ui/toaster";
+// Defer toast providers — only triggered on user action, not needed for FCP
+const Sonner = lazyRetry(() => import("@/components/ui/sonner").then(m => ({ default: m.Toaster })));
+const Toaster = lazyRetry(() => import("@/components/ui/toaster").then(m => ({ default: m.Toaster })));
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
 import { TimerProvider, useTimer } from "@/hooks/useTimer";
@@ -155,8 +156,8 @@ const App = () => (
       <TimerProvider>
         <OfflineSyncProvider>
           <TooltipProvider>
-            <Toaster />
-            <Sonner />
+            <Suspense fallback={null}><Toaster /></Suspense>
+            <Suspense fallback={null}><Sonner /></Suspense>
             <BrowserRouter>
               <ReferralCaptureWrapper />
               <ScrollToTop />
