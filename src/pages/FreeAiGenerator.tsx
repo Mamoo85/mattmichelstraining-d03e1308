@@ -46,6 +46,7 @@ interface GeneratedProgram {
 
 const FreeAiGenerator = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [experience, setExperience] = useState("");
   const [goal, setGoal] = useState("");
   const [daysPerWeek, setDaysPerWeek] = useState("3");
@@ -54,6 +55,15 @@ const FreeAiGenerator = () => {
   const [program, setProgram] = useState<GeneratedProgram | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
+  const [genCount, setGenCount] = useState(0);
+
+  // Load generation count from localStorage
+  useEffect(() => {
+    const stored = safeLocalStorage.getItem(STORAGE_KEY);
+    if (stored) setGenCount(parseInt(stored, 10) || 0);
+  }, []);
+
+  const isLimitReached = !user && genCount >= GENERATION_LIMIT;
 
   const handleGenerate = async () => {
     if (!experience || !goal || !equipment) return;
