@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import AppNavbar from "@/components/layout/AppNavbar";
 import SEOHead from "@/components/layout/SEOHead";
