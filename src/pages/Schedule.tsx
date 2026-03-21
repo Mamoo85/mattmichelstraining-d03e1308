@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import SEOHead from "@/components/layout/SEOHead";
 import AppNavbar from "@/components/layout/AppNavbar";
