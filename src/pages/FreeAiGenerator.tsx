@@ -92,6 +92,7 @@ const FreeAiGenerator = () => {
         setGenCount(newCount);
         safeLocalStorage.setItem(STORAGE_KEY, String(newCount));
       }
+    } catch (e: any) {
       setError(e.message);
     } finally {
       setLoading(false);
