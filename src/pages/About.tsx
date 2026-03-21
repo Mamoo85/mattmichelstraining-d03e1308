@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import m2Logo from "@/assets/m2-logo.jpg";
 import poiFamily from "@/assets/poi-matt-family.jpg";
 import poiTraining from "@/assets/poi-matt-training.jpg";
+const DoNotPressButton = lazy(() => import("@/components/landing/DoNotPressButton"));
 
 /* ─── animation helper ─── */
 const fade = (delay: number) => ({
