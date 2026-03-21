@@ -1151,6 +1151,33 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_leads: {
+        Row: {
+          created_at: string
+          email: string
+          first_name: string | null
+          id: string
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          first_name?: string | null
+          id?: string
+          source?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          first_name?: string | null
+          id?: string
+          source?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       master_templates: {
         Row: {
           ai_findings: Json | null
