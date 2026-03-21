@@ -108,6 +108,11 @@ export default {
           "0%": { transform: "translate(0,0) rotate(0deg)", opacity: "1" },
           "100%": { transform: "translate(var(--confetti-x), var(--confetti-y)) rotate(var(--confetti-r))", opacity: "0" },
         },
+        "shake": {
+          "0%, 100%": { transform: "translateX(0)" },
+          "25%": { transform: "translateX(-4px)" },
+          "75%": { transform: "translateX(4px)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
