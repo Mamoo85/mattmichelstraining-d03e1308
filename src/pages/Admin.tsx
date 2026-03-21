@@ -327,7 +327,9 @@ const Admin = () => {
               </div>
             )},
             { key: "cmo", label: "CMO Reports", content: <AdminCmoReports /> },
+            { key: "media-vault", label: "Media Vault", content: <AdminMediaVault /> },
           ]} />
+        )}
         )}
       </div>
     </div>
