@@ -25,6 +25,7 @@ interface RecentLog {
 }
 
 const AdminProgressLogger = () => {
+  const { user } = useAuth();
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [loadingProfiles, setLoadingProfiles] = useState(true);
   const [userSearch, setUserSearch] = useState("");
@@ -45,6 +46,11 @@ const AdminProgressLogger = () => {
   // Recent logs for selected user
   const [recentLogs, setRecentLogs] = useState<RecentLog[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
+
+  // Video state
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
+  const MAX_VIDEO_SIZE = 10 * 1024 * 1024;
 
   useEffect(() => {
     const loadProfiles = async () => {
