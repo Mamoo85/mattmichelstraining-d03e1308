@@ -57,6 +57,8 @@ const FreeAiGenerator = () => {
   const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [genCount, setGenCount] = useState(0);
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
   // Load generation count from localStorage
   useEffect(() => {
