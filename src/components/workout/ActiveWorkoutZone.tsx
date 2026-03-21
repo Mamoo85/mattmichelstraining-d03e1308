@@ -571,6 +571,18 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
     );
   }
 
+  // PR celebration phase
+  if (phase === "pr" && detectedPRs.length > 0) {
+    return (
+      <PRCelebrationModal
+        prs={detectedPRs}
+        athleteName={athleteDisplayName}
+        date={date}
+        onClose={() => setPhase("summary")}
+      />
+    );
+  }
+
   // Summary phase
   if (phase === "summary" && workoutLogId) {
     return (
