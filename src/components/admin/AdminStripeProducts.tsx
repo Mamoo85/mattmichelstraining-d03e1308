@@ -228,7 +228,6 @@ const AdminStripeProducts = () => {
           confirmLabel={deleting ? "Archiving…" : "Archive Product"}
           onConfirm={handleArchive}
           onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
-          variant="destructive"
         />
       )}
     </div>
