@@ -22,6 +22,19 @@ interface MediaFile {
 const FILE_TYPE_ICONS: Record<string, typeof Image> = { image: Image, video: Video, audio: Music };
 const FILE_TYPE_FILTERS = ["all", "image", "video", "audio"];
 
+const getFileType = (file: Pick<File, "type" | "name">) => {
+  if (file.type.startsWith("video")) return "video";
+  if (file.type.startsWith("audio")) return "audio";
+
+  const lowerName = file.name.toLowerCase();
+  if (lowerName.match(/\.(mp4|mov|webm|avi|m4v)$/i)) return "video";
+  if (lowerName.match(/\.(mp3|wav|m4a|ogg|aac)$/i)) return "audio";
+  return "image";
+};
+
+const sanitizeFileName = (fileName: string) =>
+  fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
+
 const AdminMediaVault = () => {
   const qc = useQueryClient();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -29,6 +42,7 @@ const AdminMediaVault = () => {
   const [showStudio, setShowStudio] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   const { data: files = [], isLoading } = useQuery({
     queryKey: ["admin-media-files", filter],
@@ -59,23 +73,36 @@ const AdminMediaVault = () => {
     onError: () => toast.error("Delete failed"),
   });
 
-  const handleUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const inputFiles = e.target.files;
-    if (!inputFiles?.length) return;
+  const uploadFiles = useCallback(async (inputFiles: File[]) => {
+    if (!inputFiles.length) return;
     setUploading(true);
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not logged in");
 
-      for (const file of Array.from(inputFiles)) {
-        const fileType = file.type.startsWith("video") ? "video" : file.type.startsWith("audio") ? "audio" : "image";
-        const filePath = `${user.id}/${Date.now()}_${file.name}`;
+      let uploadedCount = 0;
+      const failures: string[] = [];
 
-        const { error: uploadErr } = await supabase.storage.from("admin_media").upload(filePath, file, { upsert: true });
-        if (uploadErr) { toast.error(`Failed to upload ${file.name}`); continue; }
+      for (const file of inputFiles) {
+        if (file.size === 0) {
+          failures.push(`${file.name}: empty or unsupported cloud file`);
+          continue;
+        }
 
-        await supabase.from("admin_media_files").insert({
+        const fileType = getFileType(file);
+        const filePath = `${user.id}/${crypto.randomUUID()}_${sanitizeFileName(file.name)}`;
+
+        const { error: uploadErr } = await supabase.storage.from("admin_media").upload(filePath, file, {
+          upsert: false,
+          contentType: file.type || undefined,
+        });
+        if (uploadErr) {
+          failures.push(`${file.name}: ${uploadErr.message}`);
+          continue;
+        }
+
+        const { error: insertErr } = await supabase.from("admin_media_files").insert({
           file_path: filePath,
           file_name: file.name,
           file_type: fileType,
@@ -84,17 +111,58 @@ const AdminMediaVault = () => {
           tags: [],
           metadata: { contentType: file.type },
         });
+
+        if (insertErr) {
+          await supabase.storage.from("admin_media").remove([filePath]);
+          failures.push(`${file.name}: ${insertErr.message}`);
+          continue;
+        }
+
+        uploadedCount += 1;
       }
 
-      qc.invalidateQueries({ queryKey: ["admin-media-files"] });
-      toast.success(`Uploaded ${inputFiles.length} file(s)`);
+      if (uploadedCount > 0) {
+        qc.invalidateQueries({ queryKey: ["admin-media-files"] });
+        toast.success(`Uploaded ${uploadedCount} file(s)`);
+      }
+
+      if (failures.length > 0) {
+        toast.error(failures[0]);
+      }
+
+      if (uploadedCount === 0 && failures.length === 0) {
+        toast.error("No files were uploaded");
+      }
     } catch (err: any) {
       toast.error(err.message || "Upload failed");
     } finally {
       setUploading(false);
-      e.target.value = "";
     }
   }, [qc]);
+
+  const handleUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputFiles = e.target.files;
+    if (!inputFiles?.length) return;
+    await uploadFiles(Array.from(inputFiles));
+    e.target.value = "";
+  }, [uploadFiles]);
+
+  const handleDrop = useCallback(async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const droppedFiles = Array.from(e.dataTransfer.files || []);
+    await uploadFiles(droppedFiles);
+  }, [uploadFiles]);
+
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  }, []);
 
   // Import files from other storage buckets into the media vault
   const handleImportFromBuckets = useCallback(async () => {
@@ -243,6 +311,23 @@ const AdminMediaVault = () => {
           <Button size="sm" className="gap-1.5" onClick={() => setShowStudio(true)} disabled={selectedIds.size === 0}>
             <Wand2 size={14} /> {selectedIds.size > 0 ? `Open Studio (${selectedIds.size} selected)` : "Select images first"}
           </Button>
+        </div>
+      </Card>
+
+      <Card
+        className={`p-5 border-2 border-dashed transition-colors ${
+          isDragOver ? "border-primary bg-primary/5" : "border-border bg-muted/20"
+        }`}
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+      >
+        <div className="flex flex-col items-center justify-center gap-2 text-center">
+          <Upload size={24} className={isDragOver ? "text-primary" : "text-muted-foreground"} />
+          <div>
+            <p className="text-sm font-medium">Drop media here to upload</p>
+            <p className="text-xs text-muted-foreground">Drag files from Google Drive, your desktop, or tap Upload Media below</p>
+          </div>
         </div>
       </Card>
 
