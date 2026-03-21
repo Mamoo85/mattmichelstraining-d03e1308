@@ -77,7 +77,7 @@ export default defineConfig(({ mode }) => ({
       injectRegister: false,
       includeAssets: ["favicon.ico", "robots.txt"],
       workbox: {
-        navigateFallbackDenylist: [/^\/~oauth/],
+        navigateFallbackDenylist: [/^\/~oauth/, /[?#].*access_token/, /[?#].*type=recovery/],
         globPatterns: ["**/*.{js,css,html,ico,png,jpg,svg,woff2}"],
       },
       manifest: {
