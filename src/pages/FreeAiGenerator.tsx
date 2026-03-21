@@ -303,6 +303,22 @@ const FreeAiGenerator = () => {
                 ))}
               </div>
 
+              {/* Email / Save Button */}
+              <div className="flex flex-col sm:flex-row items-center gap-3 max-w-md mx-auto mb-6">
+                <Button
+                  variant={emailSent ? "secondary" : "outline"}
+                  onClick={() => !emailSent && setEmailModalOpen(true)}
+                  disabled={emailSent}
+                  className="w-full sm:w-auto font-bold gap-2"
+                >
+                  {emailSent ? (
+                    <><CheckCircle2 size={16} className="text-green-500" /> Workout Sent!</>
+                  ) : (
+                    <><Mail size={16} /> Email This to Me</>
+                  )}
+                </Button>
+              </div>
+
               {/* Upsell CTA */}
               <div className="bg-gradient-to-br from-primary/20 via-card to-primary/10 border-2 border-primary/40 rounded-lg p-6 md:p-8 text-center mb-6">
                 <h3 className="text-lg md:text-xl font-black text-foreground mb-2">
@@ -331,7 +347,7 @@ const FreeAiGenerator = () => {
               </div>
 
               <button
-                onClick={() => setProgram(null)}
+                onClick={() => { setProgram(null); setEmailSent(false); }}
                 className="text-xs font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-colors mx-auto block"
               >
                 ← Generate Another Workout
