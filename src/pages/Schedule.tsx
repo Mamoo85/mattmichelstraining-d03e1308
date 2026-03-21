@@ -6,11 +6,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { format, addDays, startOfDay } from "date-fns";
-import { Loader2, Clock, DollarSign, Info, Calendar, CheckCircle, Video, MapPin, Ticket, Gift, Zap } from "lucide-react";
+import { Loader2, Clock, DollarSign, Info, Calendar, CheckCircle, Video, MapPin, Ticket, Gift, Zap, ArrowRight, Cpu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import velocityDemoImg from "@/assets/velocity-demo.jpg";
 const DoNotPressButton = lazy(() => import("@/components/landing/DoNotPressButton"));
+const ForParentsCTA = lazy(() => import("@/components/landing/ForParentsCTA"));
 
 const formatTime12 = (t: string) => {
   const [hStr, mStr] = t.split(":");
@@ -544,6 +546,40 @@ const Schedule = () => {
             </Link>
           </div>
         )}
+
+        {/* Velocity Tech Sneak Peek */}
+        <div className="mt-12 mb-8">
+          <Link to="/the-edge" className="block group">
+            <div className="relative overflow-hidden border border-border hover:border-primary/40 transition-all duration-300">
+              <img src={velocityDemoImg} alt="Velocity-based training with real-time speed tracking" className="w-full h-48 sm:h-56 object-cover" loading="lazy" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-transparent" />
+              <div className="absolute bottom-0 inset-x-0 p-5">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <div className="flex items-center gap-1 bg-primary/20 backdrop-blur-sm px-2 py-0.5">
+                    <Zap size={10} className="text-primary" />
+                    <span className="text-[8px] font-bold uppercase tracking-widest text-primary">Velocity Tracking</span>
+                  </div>
+                  <div className="flex items-center gap-1 bg-muted/80 backdrop-blur-sm px-2 py-0.5">
+                    <Cpu size={10} className="text-muted-foreground" />
+                    <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground">M² Edge Tech</span>
+                  </div>
+                </div>
+                <h3 className="text-sm font-black uppercase tracking-tight text-foreground mb-1 group-hover:text-primary transition-colors">
+                  Track Every Rep's Speed in Real Time
+                </h3>
+                <p className="text-[11px] text-muted-foreground leading-relaxed mb-2 max-w-md">
+                  Your phone's camera measures bar velocity, counts reps, and shows concentric/eccentric phases live. No extra hardware — just elite training tech.
+                </p>
+                <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary group-hover:gap-2.5 transition-all">
+                  Explore The M² Edge <ArrowRight size={10} />
+                </span>
+              </div>
+            </div>
+          </Link>
+        </div>
+
+        {/* Parents CTA */}
+        <Suspense fallback={null}><ForParentsCTA /></Suspense>
 
       <Suspense fallback={null}><DoNotPressButton /></Suspense>
       </div>
