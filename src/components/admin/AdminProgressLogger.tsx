@@ -88,11 +88,13 @@ const AdminProgressLogger = () => {
     ).slice(0, 20);
   }, [profiles, userSearch]);
 
+  const allLiftNames = useMemo(() => ALL_LIFTS.map((l) => l.name), []);
+
   const filteredExercises = useMemo(() => {
-    if (!exerciseName.trim()) return exerciseOptions.slice(0, 15);
+    if (!exerciseName.trim()) return allLiftNames;
     const q = exerciseName.toLowerCase();
-    return exerciseOptions.filter((e) => e.toLowerCase().includes(q)).slice(0, 15);
-  }, [exerciseOptions, exerciseName]);
+    return allLiftNames.filter((e) => e.toLowerCase().includes(q));
+  }, [allLiftNames, exerciseName]);
 
   const handleSubmit = async () => {
     if (!selectedUser) { toast({ title: "Select a user", variant: "destructive" }); return; }
