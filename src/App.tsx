@@ -83,7 +83,7 @@ const persister = createSyncStoragePersister({
 
 const PageLoader = () => (
   <div className="min-h-screen bg-background flex items-center justify-center">
-    <Loader2 className="animate-spin text-primary" size={24} />
+    <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
   </div>
 );
 
