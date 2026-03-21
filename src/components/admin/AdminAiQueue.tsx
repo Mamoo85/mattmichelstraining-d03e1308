@@ -234,6 +234,28 @@ const AdminAiQueue = () => {
         .eq("id", item.context.messageId);
     }
 
+    // For promo suggestions, create the promos in the DB
+    if (item.action_type === "promo_suggest") {
+      try {
+        const cleaned = text.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+        const promos = JSON.parse(cleaned);
+        if (Array.isArray(promos)) {
+          for (const promo of promos) {
+            await supabase.from("promotions").insert({
+              code: (promo.code || "").trim().toUpperCase(),
+              description: promo.description || "",
+              discount_type: promo.discount_type || "percent",
+              discount_value: promo.discount_value || 0,
+              applies_to: promo.applies_to || "all",
+            });
+          }
+          toast({ title: "Promotions created", description: `${promos.length} promo codes added to the database.` });
+        }
+      } catch {
+        toast({ title: "Couldn't auto-create promos", description: "Approved but failed to parse — create manually.", variant: "destructive" });
+      }
+    }
+
     // Admin-only actions (newsletter, site content, etc.) just get the text copied
     if (["newsletter", "site_content", "batch_site_content", "blog_draft"].includes(item.action_type)) {
       try {

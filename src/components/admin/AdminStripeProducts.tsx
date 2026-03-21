@@ -92,7 +92,8 @@ const AdminStripeProducts = () => {
       });
 
       if (response.error) throw response.error;
-      const aiText = response.data?.reply || response.data?.text || "";
+      if (response.data?.error) throw new Error(response.data.error);
+      const aiText = response.data?.result || response.data?.reply || response.data?.text || "";
       if (aiText) {
         if (editingId === product.id) {
           setEditDesc(aiText.trim());
