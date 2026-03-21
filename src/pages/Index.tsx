@@ -62,6 +62,9 @@ const Index = () => (
       <Suspense fallback={null}>
         <ChallengeTeaser />
       </Suspense>
+      <Suspense fallback={null}>
+        <DoNotPressButton />
+      </Suspense>
     </div>
   </div>
 );

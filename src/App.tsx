@@ -175,6 +175,7 @@ const App = () => (
                     <Route path="/merch" element={<Merch />} />
                     <Route path="/learn" element={<Learn />} />
                     <Route path="/the-edge" element={<TheEdge />} />
+                    <Route path="/matrix" element={<MatrixEasterEgg />} />
                     <Route path="/install" element={<Install />} />
                     <Route path="/coach" element={<ProtectedRoute><SubscriptionGuard><Coach /></SubscriptionGuard></ProtectedRoute>} />
                     <Route path="/trial-welcome" element={<ProtectedRoute><TrialWelcome /></ProtectedRoute>} />

@@ -63,6 +63,7 @@ const ForParents = () => {
           <TechShowcaseCard />
         </motion.div>
 
+        <Suspense fallback={null}><DoNotPressButton /></Suspense>
         <div className="pt-6 border-t border-border text-center">
           <p className="text-xs text-muted-foreground">
             © {new Date().getFullYear()} M² Training · Youth Strength Training · Grosse Pointe Park, MI ·{" "}
