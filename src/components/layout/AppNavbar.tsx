@@ -141,7 +141,7 @@ const AppNavbar = () => {
             App
           </Link>
 
-          {user && <NotificationBell />}
+          {user && <Suspense fallback={null}><NotificationBell /></Suspense>}
 
           {user ? (
             <button
