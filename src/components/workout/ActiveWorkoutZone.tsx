@@ -18,6 +18,7 @@ import ConfirmActionModal from "@/components/shared/ConfirmActionModal";
 import InterceptGateway from "./InterceptGateway";
 import IntervalTimer from "./IntervalTimer";
 import PostWorkoutSummary from "./PostWorkoutSummary";
+import PRCelebrationModal, { type DetectedPR } from "./PRCelebrationModal";
 import WorkoutTimer from "./WorkoutTimer";
 import LiveFormTracker from "./LiveFormTracker";
 import ReadinessGate, { calculateAdjustments, type ReadinessResult } from "./ReadinessGate";
@@ -95,9 +96,11 @@ const ButtonKeyLegend = () => {
 const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZoneProps) => {
   const { user } = useAuth();
   const hasInitialContent = !!(initialContext?.exercises?.length || initialContext?.resumed);
-  const [phase, setPhase] = useState<"intercept" | "readiness" | "active" | "summary">(
+  const [phase, setPhase] = useState<"intercept" | "readiness" | "active" | "pr" | "summary">(
     hasInitialContent ? "readiness" : "intercept"
   );
+  const [detectedPRs, setDetectedPRs] = useState<DetectedPR[]>([]);
+  const [athleteDisplayName, setAthleteDisplayName] = useState("Athlete");
   const [readinessResult, setReadinessResult] = useState<ReadinessResult | null>(null);
   const [autoRegulateEnabled, setAutoRegulateEnabled] = useState<boolean | null>(null);
   const [date, setDate] = useState<Date>(
@@ -413,6 +416,62 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
     onPause?.();
   }, [exercises, sessionNotes, recovery, date, workoutTitle, initialContext, onPause]);
 
+  // PR detection: check progress_logs for previous bests
+  const detectPRs = useCallback(async (loggedExercises: LoggedExerciseData[]): Promise<DetectedPR[]> => {
+    if (!user) return [];
+    const prs: DetectedPR[] = [];
+
+    for (const ex of loggedExercises) {
+      const maxWeight = Math.max(...ex.sets.map(s => s.weight || 0));
+      const maxVolume = Math.max(...ex.sets.map(s => (s.weight || 0) * (s.reps || 0)));
+      const bestRepsAtMax = Math.max(...ex.sets.filter(s => s.weight === maxWeight).map(s => s.reps || 0));
+
+      if (maxWeight <= 0) continue;
+
+      // Query previous best for this exercise
+      const { data: prevLogs } = await supabase
+        .from("progress_logs")
+        .select("weight, reps")
+        .eq("user_id", user.id)
+        .eq("exercise_name", ex.exerciseTitle)
+        .order("weight", { ascending: false })
+        .limit(1);
+
+      const prevBest = prevLogs?.[0]?.weight || 0;
+
+      if (maxWeight > prevBest) {
+        prs.push({
+          exerciseTitle: ex.exerciseTitle,
+          weight: maxWeight,
+          reps: bestRepsAtMax,
+          prType: "weight",
+          previousBest: prevBest || undefined,
+        });
+      }
+    }
+    return prs;
+  }, [user]);
+
+  // Fetch athlete display name
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("profiles").select("athlete_name, full_name").eq("user_id", user.id).single()
+      .then(({ data }) => {
+        if (data) setAthleteDisplayName((data as any).athlete_name || (data as any).full_name || "Athlete");
+      });
+  }, [user]);
+
+  const finishWithPRCheck = useCallback(async (logId: string) => {
+    setWorkoutLogId(logId);
+    const prs = await detectPRs(exercises);
+    if (prs.length > 0) {
+      setDetectedPRs(prs);
+      setPhase("pr");
+    } else {
+      setPhase("summary");
+    }
+  }, [exercises, detectPRs]);
+
   const handleFinishClick = async () => {
     if (saving) return;
     if (exercises.length === 0) {
@@ -420,7 +479,6 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
       onFinish();
       return;
     }
-    // Auto-save progress on exit
     if (!user) return;
     const logId = await saveWorkout({
       userId: user.id,
@@ -430,10 +488,8 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
       recovery,
     });
     if (logId) {
-      setWorkoutLogId(logId);
-      setPhase("summary");
+      await finishWithPRCheck(logId);
     } else {
-      // Save failed — still exit but preserve in localStorage
       onFinish();
     }
   };
@@ -451,8 +507,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
     });
 
     if (logId) {
-      setWorkoutLogId(logId);
-      setPhase("summary");
+      await finishWithPRCheck(logId);
     }
   };
 
@@ -513,6 +568,18 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
       <div className="fixed inset-0 z-[100] bg-background flex items-center justify-center">
         <Loader2 size={24} className="animate-spin text-primary" />
       </div>
+    );
+  }
+
+  // PR celebration phase
+  if (phase === "pr" && detectedPRs.length > 0) {
+    return (
+      <PRCelebrationModal
+        prs={detectedPRs}
+        athleteName={athleteDisplayName}
+        date={date}
+        onClose={() => setPhase("summary")}
+      />
     );
   }
 
