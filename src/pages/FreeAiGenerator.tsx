@@ -204,17 +204,45 @@ const FreeAiGenerator = () => {
 
                 {error && <p className="text-destructive text-xs text-center">{error}</p>}
 
+                {/* Rate limit lockout banner */}
+                {isLimitReached && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="bg-destructive/10 border-2 border-destructive/40 rounded-lg p-5 text-center space-y-3"
+                  >
+                    <ShieldAlert size={28} className="text-destructive mx-auto" />
+                    <p className="text-sm font-bold text-foreground">
+                      You've maxed out your free AI generations.
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      To continue building custom programs and actually track your weights, create your free M² Portal account now.
+                    </p>
+                    <Button
+                      onClick={() => navigate("/auth?mode=signup")}
+                      className="w-full h-12 font-black uppercase tracking-wider text-sm"
+                      size="lg"
+                    >
+                      Create Free Account <ArrowRight size={16} />
+                    </Button>
+                  </motion.div>
+                )}
+
                 <Button
                   onClick={handleGenerate}
-                  disabled={loading || !experience || !goal || !equipment}
+                  disabled={loading || !experience || !goal || !equipment || isLimitReached}
                   className="w-full h-14 text-base font-black uppercase tracking-wider relative overflow-hidden group"
                   size="lg"
                 >
-                  {loading ? (
+                  {isLimitReached ? (
+                    <span className="flex items-center gap-2">
+                      <Lock size={18} /> Free Limit Reached ({GENERATION_LIMIT}/{GENERATION_LIMIT})
+                    </span>
+                  ) : loading ? (
                     <span className="flex items-center gap-2"><Loader2 className="animate-spin" size={18} /> Building Your Program...</span>
                   ) : (
                     <span className="flex items-center gap-2">
-                      <Sparkles size={18} /> Generate Free Workout
+                      <Sparkles size={18} /> Generate Free Workout{!user && ` (${genCount}/${GENERATION_LIMIT})`}
                     </span>
                   )}
                   <span className="absolute inset-0 bg-gradient-to-r from-primary via-primary/80 to-primary opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10" />
