@@ -107,7 +107,7 @@ const Auth = () => {
         password,
         options: {
           emailRedirectTo: window.location.origin,
-          data: { full_name: fullName, athlete_name: signupRole === "self" ? athleteName : "", account_role: accountRole },
+          data: { full_name: `${firstName.trim()} ${lastName.trim()}`, athlete_name: signupRole === "self" ? athleteName : "", account_role: accountRole },
         },
       });
       if (signUpError) {
