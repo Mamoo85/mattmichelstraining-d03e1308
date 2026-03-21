@@ -281,12 +281,11 @@ const CommunityWorkoutBank = ({ onCreateNew }: CommunityWorkoutBankProps) => {
       {/* Delete confirmation */}
       <ConfirmActionModal
         open={!!deleteTarget}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
         title="Delete Workout"
         description={`Delete "${deleteTarget?.title}"? This cannot be undone.`}
         confirmLabel="Delete"
-        variant="destructive"
         onConfirm={handleDelete}
-        onCancel={() => setDeleteTarget(null)}
       />
     </div>
   );
