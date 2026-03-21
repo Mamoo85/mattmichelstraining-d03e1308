@@ -43,7 +43,7 @@ const AboutPhilosophy = () => (
       <p className="text-sm text-foreground text-balance leading-relaxed">
         His athletes don't just get strong. They go on to achieve things that
         <span className="text-primary font-semibold"> far exceed every expectation</span> —
-        including Matt's own. 50+ college athletes. Zero injuries. Every single one of them trained the right way,
+        including Matt's own. 50+ college athletes — and not a single one sidelined on his watch. Every one of them trained the right way,
         at the right pace, with the right recovery.
       </p>
 

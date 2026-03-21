@@ -22,7 +22,7 @@ const AthleteResults = lazy(() => import("@/components/landing/AthleteResults"))
 const STATS = [
   { icon: Clock, value: "20+", label: "Years Coaching" },
   { icon: Trophy, value: "50+", label: "College Athletes" },
-  { icon: Shield, value: "Zero", label: "Injuries" },
+  { icon: Shield, value: "100%", label: "Durability" },
 ];
 
 const HeroSection = () => {

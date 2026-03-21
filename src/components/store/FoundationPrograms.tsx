@@ -342,7 +342,7 @@ const FoundationPrograms = () => {
         <div className="flex items-start gap-3">
           <Shield size={20} className="text-primary flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm text-foreground font-bold mb-1">Matt's record: Zero injuries. Twenty years.</p>
+            <p className="text-sm text-foreground font-bold mb-1">Matt's record: Twenty years. Every kid went home better than they came in.</p>
             <p className="text-xs text-muted-foreground leading-relaxed">
               Every program includes mobility, core stability, strength, balance, coordination, and targeted recovery.
               Your child learns how to take care of their body for the rest of their life — not just this season.
