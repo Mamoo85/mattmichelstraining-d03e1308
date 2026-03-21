@@ -64,7 +64,7 @@ const LogForm = ({ activeLift, repMax, effectiveUserId, onLogged }: LogFormProps
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > MAX_VIDEO_SIZE) {
-      toast({ title: "Video too large", description: "Max 10MB. Try a shorter clip.", variant: "destructive" });
+      toast({ title: "Video too large", description: "Max 5MB. Trim or compress your clip.", variant: "destructive" });
       return;
     }
     setVideoFile(file);

@@ -325,6 +325,9 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
         </div>
       )}
 
+      {/* Hidden file input for late video uploads */}
+      <input ref={lateVideoInputRef} type="file" accept="video/*" capture="environment" className="hidden" onChange={handleLateVideoUpload} />
+
       {/* Video playback modal */}
       <Dialog open={!!playingVideo} onOpenChange={() => setPlayingVideo(null)}>
         <DialogContent className="max-w-2xl p-2">
