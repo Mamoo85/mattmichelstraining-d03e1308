@@ -172,7 +172,7 @@ const ParentChildManager = () => {
           className="flex items-center gap-1.5 bg-primary text-primary-foreground px-3 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
         >
           <UserPlus size={12} />
-          Add Child
+          Add Athlete
         </button>
       </div>
 
