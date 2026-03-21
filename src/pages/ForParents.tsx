@@ -10,6 +10,7 @@ import TechShowcaseCard from "@/components/landing/TechShowcaseCard";
 import ForParentsHero from "@/components/landing/ForParentsHero";
 import MembershipTiers from "@/components/landing/MembershipTiers";
 import { BenefitsGrid, ParentPortalSection } from "@/components/landing/ParentChildBenefits";
+const DoNotPressButton = lazy(() => import("@/components/landing/DoNotPressButton"));
 
 const fade = (delay: number) => ({
   initial: { opacity: 0, y: 20 },
