@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import AppNavbar from "@/components/layout/AppNavbar";
 import SEOHead from "@/components/layout/SEOHead";
 import { motion } from "framer-motion";
