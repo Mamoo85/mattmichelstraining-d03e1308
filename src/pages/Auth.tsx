@@ -69,7 +69,8 @@ const Auth = () => {
   const [signupRole, setSignupRole] = useState<SignupRole>("self");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [athleteName, setAthleteName] = useState("");
   // Parent flow: child fields
   const [childEmail, setChildEmail] = useState("");
