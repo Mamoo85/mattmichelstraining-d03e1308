@@ -227,7 +227,7 @@ const AdminStripeProducts = () => {
           description="This will deactivate the product in Stripe. It won't delete payment history — you can reactivate it from the Stripe dashboard later."
           confirmLabel={deleting ? "Archiving…" : "Archive Product"}
           onConfirm={handleArchive}
-          onCancel={() => setDeleteTarget(null)}
+          onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
           variant="destructive"
         />
       )}
