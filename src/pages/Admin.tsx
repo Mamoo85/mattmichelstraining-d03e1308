@@ -173,7 +173,19 @@ const Admin = () => {
     refetchInterval: 30000,
   });
 
-  const totalEngineBadge = pendingDraftsCount + pendingAiQueueCount + pendingCustomCount;
+  const { data: pendingLiftVideosCount = 0 } = useQuery({
+    queryKey: ["pending-lift-videos-count"],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("lift_videos" as any)
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending_review");
+      return count ?? 0;
+    },
+    refetchInterval: 30000,
+  });
+
+  const totalEngineBadge = pendingDraftsCount + pendingAiQueueCount + pendingCustomCount + pendingLiftVideosCount;
   const totalRosterBadge = pendingSupportCount + unreadParentCount + pendingPostureCount;
 
   const { data: trashCount = 0 } = useQuery({
