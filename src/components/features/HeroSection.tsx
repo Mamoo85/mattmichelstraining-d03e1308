@@ -59,8 +59,8 @@ const HeroSection = () => {
               <img
                 src={m2Logo}
                 alt="M² Training"
-                width={224}
-                height={224}
+                width={256}
+                height={256}
                 fetchPriority="high"
                 decoding="sync"
                 className="w-36 md:w-48 lg:w-56 h-auto object-contain mb-4"
