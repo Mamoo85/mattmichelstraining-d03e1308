@@ -96,9 +96,11 @@ const ButtonKeyLegend = () => {
 const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZoneProps) => {
   const { user } = useAuth();
   const hasInitialContent = !!(initialContext?.exercises?.length || initialContext?.resumed);
-  const [phase, setPhase] = useState<"intercept" | "readiness" | "active" | "summary">(
+  const [phase, setPhase] = useState<"intercept" | "readiness" | "active" | "pr" | "summary">(
     hasInitialContent ? "readiness" : "intercept"
   );
+  const [detectedPRs, setDetectedPRs] = useState<DetectedPR[]>([]);
+  const [athleteDisplayName, setAthleteDisplayName] = useState("Athlete");
   const [readinessResult, setReadinessResult] = useState<ReadinessResult | null>(null);
   const [autoRegulateEnabled, setAutoRegulateEnabled] = useState<boolean | null>(null);
   const [date, setDate] = useState<Date>(
