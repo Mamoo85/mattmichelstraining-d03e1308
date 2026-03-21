@@ -50,7 +50,7 @@ const AdminProgressLogger = () => {
   // Video state
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
-  const MAX_VIDEO_SIZE = 10 * 1024 * 1024;
+  const MAX_VIDEO_SIZE = 5 * 1024 * 1024; // 5MB
 
   useEffect(() => {
     const loadProfiles = async () => {

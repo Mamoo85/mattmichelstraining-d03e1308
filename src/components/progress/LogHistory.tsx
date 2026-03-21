@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { format } from "date-fns";
-import { Pencil, Trash2, X, Check, Loader2, CalendarIcon, ChevronDown, ChevronRight, Video, Clock, CheckCircle } from "lucide-react";
+import { Pencil, Trash2, X, Check, Loader2, CalendarIcon, ChevronDown, ChevronRight, Video, Clock, CheckCircle, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -42,6 +42,8 @@ interface LogHistoryProps {
 }
 
 const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryProps) => {
+  const MAX_VIDEO_SIZE = 5 * 1024 * 1024; // 5MB
+
   const [showHistory, setShowHistory] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editWeight, setEditWeight] = useState("");
@@ -52,6 +54,9 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
   const [coachNotes, setCoachNotes] = useState<CoachNote[]>([]);
   const [liftVideos, setLiftVideos] = useState<LiftVideo[]>([]);
   const [playingVideo, setPlayingVideo] = useState<{ url: string; exercise: string } | null>(null);
+  const [uploadingVideoLogId, setUploadingVideoLogId] = useState<string | null>(null);
+  const lateVideoInputRef = useRef<HTMLInputElement>(null);
+  const pendingLogIdRef = useRef<string | null>(null);
 
   const fetchNotes = async () => {
     if (logs.length === 0) return;
@@ -131,6 +136,49 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
     if (data?.signedUrl) {
       setPlayingVideo({ url: data.signedUrl, exercise: "Lift Video" });
     }
+  };
+
+  const triggerLateUpload = (logId: string) => {
+    pendingLogIdRef.current = logId;
+    lateVideoInputRef.current?.click();
+  };
+
+  const handleLateVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    const logId = pendingLogIdRef.current;
+    if (!file || !logId) return;
+    if (file.size > MAX_VIDEO_SIZE) {
+      toast({ title: "Video too large", description: "Max 5MB. Trim or compress your clip.", variant: "destructive" });
+      if (lateVideoInputRef.current) lateVideoInputRef.current.value = "";
+      return;
+    }
+    setUploadingVideoLogId(logId);
+    try {
+      const ext = file.name.split(".").pop() || "mp4";
+      const path = `${effectiveUserId}/${logId}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("lift_videos").upload(path, file, { contentType: file.type });
+      if (upErr) throw upErr;
+      await supabase.from("lift_videos" as any).insert({
+        progress_log_id: logId,
+        user_id: effectiveUserId,
+        video_path: path,
+        status: "pending_review",
+      });
+      supabase.functions.invoke("ai-video-form-review", {
+        body: { videoUrl: `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/lift_videos/${path}`, exerciseName: "Lift", athleteName: "Athlete" },
+      }).then(async (res) => {
+        if (res.data?.review) {
+          await supabase.from("lift_videos" as any).update({ ai_analysis: res.data.review }).eq("progress_log_id", logId);
+        }
+      }).catch(() => {});
+      toast({ title: "Video submitted for review" });
+      await fetchVideos();
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+    }
+    setUploadingVideoLogId(null);
+    if (lateVideoInputRef.current) lateVideoInputRef.current.value = "";
+    pendingLogIdRef.current = null;
   };
 
   if (logs.length === 0) return null;
@@ -221,8 +269,8 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
                         </span>
                       )}
 
-                      {/* Video indicator */}
-                      {video && (
+                      {/* Video indicator or late upload */}
+                      {video ? (
                         <button
                           onClick={() => playVideo(video)}
                           className={cn(
@@ -238,6 +286,16 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
                           {video.status === "approved" ? <CheckCircle size={10} /> : <Clock size={10} />}
                           <Video size={10} />
                           {video.status === "pending_review" && "Review"}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => triggerLateUpload(log.id)}
+                          disabled={uploadingVideoLogId === log.id}
+                          className="h-6 px-1.5 flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider border border-dashed border-border text-muted-foreground hover:text-primary hover:border-primary/40 rounded transition-all disabled:opacity-50"
+                          title="Attach video proof"
+                        >
+                          {uploadingVideoLogId === log.id ? <Loader2 size={10} className="animate-spin" /> : <Upload size={10} />}
+                          <Video size={10} />
                         </button>
                       )}
 
@@ -266,6 +324,9 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
           })}
         </div>
       )}
+
+      {/* Hidden file input for late video uploads */}
+      <input ref={lateVideoInputRef} type="file" accept="video/*" capture="environment" className="hidden" onChange={handleLateVideoUpload} />
 
       {/* Video playback modal */}
       <Dialog open={!!playingVideo} onOpenChange={() => setPlayingVideo(null)}>

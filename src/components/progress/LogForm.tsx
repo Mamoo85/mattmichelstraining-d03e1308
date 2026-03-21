@@ -40,7 +40,7 @@ function parseSpokenSet(text: string): { weight?: string; reps?: string } {
   return { weight, reps };
 }
 
-const MAX_VIDEO_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_VIDEO_SIZE = 5 * 1024 * 1024; // 5MB — optimized for low storage
 
 const LogForm = ({ activeLift, repMax, effectiveUserId, onLogged }: LogFormProps) => {
   const { user, subscriptionTier } = useAuth();
@@ -64,7 +64,7 @@ const LogForm = ({ activeLift, repMax, effectiveUserId, onLogged }: LogFormProps
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > MAX_VIDEO_SIZE) {
-      toast({ title: "Video too large", description: "Max 10MB. Try a shorter clip.", variant: "destructive" });
+      toast({ title: "Video too large", description: "Max 5MB. Trim or compress your clip.", variant: "destructive" });
       return;
     }
     setVideoFile(file);
