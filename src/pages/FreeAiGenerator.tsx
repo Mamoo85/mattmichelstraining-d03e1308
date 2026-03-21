@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Dumbbell, Loader2, Zap, ChevronRight, ArrowRight, Sparkles } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Dumbbell, Loader2, Zap, ChevronRight, ArrowRight, Sparkles, Lock, ShieldAlert } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,11 @@ import { useNavigate } from "react-router-dom";
 import SEOHead from "@/components/layout/SEOHead";
 import AppNavbar from "@/components/layout/AppNavbar";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/hooks/useAuth";
+import { safeLocalStorage } from "@/lib/browserStorage";
+
+const GENERATION_LIMIT = 3;
+const STORAGE_KEY = "m2_ai_generations_count";
 
 const EXPERIENCE = [
   { value: "beginner", label: "Beginner (0-6 months)" },
