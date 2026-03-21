@@ -179,6 +179,7 @@ const App = () => (
                     <Route path="/the-edge" element={<TheEdge />} />
                     <Route path="/matrix" element={<MatrixEasterEgg />} />
                     <Route path="/install" element={<Install />} />
+                    <Route path="/free-ai-generator" element={<FreeAiGenerator />} />
                     <Route path="/coach" element={<ProtectedRoute><SubscriptionGuard><Coach /></SubscriptionGuard></ProtectedRoute>} />
                     <Route path="/trial-welcome" element={<ProtectedRoute><TrialWelcome /></ProtectedRoute>} />
                     <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
