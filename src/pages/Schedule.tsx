@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import SEOHead from "@/components/layout/SEOHead";
 import AppNavbar from "@/components/layout/AppNavbar";
@@ -10,6 +10,7 @@ import { Loader2, Clock, DollarSign, Info, Calendar, CheckCircle, Video, MapPin,
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+const DoNotPressButton = lazy(() => import("@/components/landing/DoNotPressButton"));
 
 const formatTime12 = (t: string) => {
   const [hStr, mStr] = t.split(":");
@@ -544,6 +545,7 @@ const Schedule = () => {
           </div>
         )}
 
+      <Suspense fallback={null}><DoNotPressButton /></Suspense>
       </div>
     </div>
   );

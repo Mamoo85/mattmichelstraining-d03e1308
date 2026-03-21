@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import SEOHead from "@/components/layout/SEOHead";
 import AppNavbar from "@/components/layout/AppNavbar";
 import StoreGettingStarted from "@/components/store/StoreGettingStarted";
@@ -6,6 +6,7 @@ import StoreTab from "@/components/store/StoreTab";
 import ExerciseLibrary from "@/components/features/ExerciseLibrary";
 import FixItLibrary from "@/components/features/FixItLibrary";
 import PaywallGate from "@/components/billing/PaywallGate";
+const DoNotPressButton = lazy(() => import("@/components/landing/DoNotPressButton"));
 
 const TABS = [
   { key: "start", label: "How It Works" },
@@ -63,6 +64,7 @@ const Shop = () => {
             <FixItLibrary />
           </PaywallGate>
         )}
+        <Suspense fallback={null}><DoNotPressButton /></Suspense>
       </div>
     </div>
   );

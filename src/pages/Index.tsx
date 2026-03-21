@@ -4,6 +4,7 @@ import HeroSection from "@/components/features/HeroSection";
 import SEOHead from "@/components/layout/SEOHead";
 
 const ChallengeTeaser = lazy(() => import("@/components/landing/ChallengeTeaser"));
+const DoNotPressButton = lazy(() => import("@/components/landing/DoNotPressButton"));
 
 const FAQ_SCHEMA = {
   "@context": "https://schema.org",
@@ -60,6 +61,9 @@ const Index = () => (
     <div className="container py-12 max-w-xl mx-auto">
       <Suspense fallback={null}>
         <ChallengeTeaser />
+      </Suspense>
+      <Suspense fallback={null}>
+        <DoNotPressButton />
       </Suspense>
     </div>
   </div>

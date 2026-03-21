@@ -1,8 +1,10 @@
+import { lazy, Suspense } from "react";
 import { motion } from "framer-motion";
 import SEOHead from "@/components/layout/SEOHead";
 import { ExternalLink, ShoppingBag, ArrowRight, Ruler, Truck, RotateCcw, Star } from "lucide-react";
 import AppNavbar from "@/components/layout/AppNavbar";
 import { Link } from "react-router-dom";
+const DoNotPressButton = lazy(() => import("@/components/landing/DoNotPressButton"));
 
 import merchTee from "@/assets/merch-classic-tee.png";
 import merchLongSleeve from "@/assets/merch-long-sleeve.png";
@@ -206,6 +208,7 @@ const Merch = () => (
       </section>
 
       {/* Footer spacing */}
+      <Suspense fallback={null}><DoNotPressButton /></Suspense>
       <div className="h-8" />
     </div>
   </div>

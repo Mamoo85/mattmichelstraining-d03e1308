@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { motion } from "framer-motion";
 import SEOHead from "@/components/layout/SEOHead";
 import { Check, X as XIcon, Star, Zap, Shield, Crown, Users, ArrowRight, Loader2, Tag, ChevronDown, ChevronUp, Calendar } from "lucide-react";
@@ -12,6 +12,7 @@ import { toast } from "@/hooks/use-toast";
 import { useContentMap } from "@/hooks/useSiteContent";
 import TrialCTA from "@/components/billing/TrialCTA";
 import { getStoredReferralCode, clearStoredReferralCode } from "@/hooks/useReferral";
+const DoNotPressButton = lazy(() => import("@/components/landing/DoNotPressButton"));
 
 import CheckoutConfirmationModal, { type CheckoutProductType } from "@/components/billing/CheckoutConfirmationModal";
 
@@ -440,6 +441,7 @@ const Pricing = () => {
           productPrice={modalTier ? (TIERS[modalTier.key].price + "/mo") : ""}
           productType={modalTier?.key as CheckoutProductType || "foundation"}
         />
+        <Suspense fallback={null}><DoNotPressButton /></Suspense>
       </div>
     </div>
   );

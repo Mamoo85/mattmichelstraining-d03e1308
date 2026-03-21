@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { Download, Share, PlusSquare, MoreVertical, CheckCircle2 } from "lucide-react";
 import m2Logo from "@/assets/m2-logo.jpg";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import AppNavbar from "@/components/layout/AppNavbar";
 import SEOHead from "@/components/layout/SEOHead";
+const DoNotPressButton = lazy(() => import("@/components/landing/DoNotPressButton"));
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -186,6 +187,7 @@ const Install = () => {
           </div>
         </div>
       </main>
+      <Suspense fallback={null}><DoNotPressButton /></Suspense>
     </>
   );
 };

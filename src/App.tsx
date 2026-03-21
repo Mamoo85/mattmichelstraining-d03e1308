@@ -59,6 +59,7 @@ const NotFound = lazyRetry(() => import("./pages/NotFound"));
 const Install = lazyRetry(() => import("./pages/Install"));
 const Nutrition = lazyRetry(() => import("./pages/Nutrition"));
 const TheEdge = lazyRetry(() => import("./pages/TheEdge"));
+const MatrixEasterEgg = lazyRetry(() => import("./pages/MatrixEasterEgg"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -174,6 +175,7 @@ const App = () => (
                     <Route path="/merch" element={<Merch />} />
                     <Route path="/learn" element={<Learn />} />
                     <Route path="/the-edge" element={<TheEdge />} />
+                    <Route path="/matrix" element={<MatrixEasterEgg />} />
                     <Route path="/install" element={<Install />} />
                     <Route path="/coach" element={<ProtectedRoute><SubscriptionGuard><Coach /></SubscriptionGuard></ProtectedRoute>} />
                     <Route path="/trial-welcome" element={<ProtectedRoute><TrialWelcome /></ProtectedRoute>} />

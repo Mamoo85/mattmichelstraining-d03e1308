@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -10,6 +10,7 @@ import SEOHead from "@/components/layout/SEOHead";
 import AppNavbar from "@/components/layout/AppNavbar";
 import TrialCTA from "@/components/billing/TrialCTA";
 import { useAuth } from "@/hooks/useAuth";
+const DoNotPressButton = lazy(() => import("@/components/landing/DoNotPressButton"));
 
 /* ─── Tech Feature Data ─── */
 interface TechFeature {
@@ -651,6 +652,7 @@ const TheEdge = () => {
           <section className="mt-10">
             <TrialCTA variant="comparison" />
           </section>
+          <Suspense fallback={null}><DoNotPressButton /></Suspense>
         </motion.div>
       </div>
     </div>

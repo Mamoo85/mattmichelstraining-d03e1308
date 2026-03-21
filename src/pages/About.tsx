@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import AppNavbar from "@/components/layout/AppNavbar";
 import SEOHead from "@/components/layout/SEOHead";
@@ -12,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import m2Logo from "@/assets/m2-logo.jpg";
 import poiFamily from "@/assets/poi-matt-family.jpg";
 import poiTraining from "@/assets/poi-matt-training.jpg";
+const DoNotPressButton = lazy(() => import("@/components/landing/DoNotPressButton"));
 
 /* ─── animation helper ─── */
 const fade = (delay: number) => ({
@@ -398,6 +400,7 @@ const About = () => {
         </div>
       </motion.div>
 
+      <Suspense fallback={null}><DoNotPressButton /></Suspense>
       {/* FOOTER */}
       <div className="pt-6 border-t border-border text-center">
         <p className="text-xs text-muted-foreground">

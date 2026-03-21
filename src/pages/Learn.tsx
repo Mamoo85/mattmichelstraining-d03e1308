@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import SEOHead from "@/components/layout/SEOHead";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -13,6 +13,7 @@ import AppNavbar from "@/components/layout/AppNavbar";
 import MonthlyFocus from "@/components/landing/MonthlyFocus";
 import { useSectionVisible } from "@/hooks/useSiteContent";
 import TrialCTA from "@/components/billing/TrialCTA";
+const DoNotPressButton = lazy(() => import("@/components/landing/DoNotPressButton"));
 
 /* ── Featured Videos ── */
 const VIDEOS = [
@@ -463,6 +464,7 @@ const Learn = () => {
         <section className="mb-10">
           <TrialCTA variant="comparison" />
         </section>
+        <Suspense fallback={null}><DoNotPressButton /></Suspense>
 
       </motion.div>
     </div>

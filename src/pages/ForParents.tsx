@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import AppNavbar from "@/components/layout/AppNavbar";
 import SEOHead from "@/components/layout/SEOHead";
 import { motion } from "framer-motion";
@@ -9,6 +10,7 @@ import TechShowcaseCard from "@/components/landing/TechShowcaseCard";
 import ForParentsHero from "@/components/landing/ForParentsHero";
 import MembershipTiers from "@/components/landing/MembershipTiers";
 import { BenefitsGrid, ParentPortalSection } from "@/components/landing/ParentChildBenefits";
+const DoNotPressButton = lazy(() => import("@/components/landing/DoNotPressButton"));
 
 const fade = (delay: number) => ({
   initial: { opacity: 0, y: 20 },
@@ -61,6 +63,7 @@ const ForParents = () => {
           <TechShowcaseCard />
         </motion.div>
 
+        <Suspense fallback={null}><DoNotPressButton /></Suspense>
         <div className="pt-6 border-t border-border text-center">
           <p className="text-xs text-muted-foreground">
             © {new Date().getFullYear()} M² Training · Youth Strength Training · Grosse Pointe Park, MI ·{" "}
