@@ -181,6 +181,8 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
     pendingLogIdRef.current = null;
   };
 
+  if (logs.length === 0) return null;
+
   const notesForLog = (logId: string) => coachNotes.filter((n) => n.progress_log_id === logId);
   const videoForLog = (logId: string) => liftVideos.find((v) => v.progress_log_id === logId);
   const totalNotes = coachNotes.length;
