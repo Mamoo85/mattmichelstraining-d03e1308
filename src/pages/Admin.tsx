@@ -59,6 +59,7 @@ const AdminMarketingDrafts = lazy(() => import("@/components/admin/AdminMarketin
 const AdminAiBusinessTools = lazy(() => import("@/components/admin/AdminAiBusinessTools"));
 const AdminCmoReports = lazy(() => import("@/components/admin/AdminCmoReports"));
 const AdminTrash = lazy(() => import("@/components/admin/AdminTrash"));
+const AdminMediaVault = lazy(() => import("@/components/admin/AdminMediaVault"));
 
 const MASTER_TABS = [
   { key: "roster", label: "The Roster", icon: Users, desc: "Users · Support · Families" },
@@ -326,6 +327,7 @@ const Admin = () => {
               </div>
             )},
             { key: "cmo", label: "CMO Reports", content: <AdminCmoReports /> },
+            { key: "media-vault", label: "Media Vault", content: <AdminMediaVault /> },
           ]} />
         )}
       </div>
