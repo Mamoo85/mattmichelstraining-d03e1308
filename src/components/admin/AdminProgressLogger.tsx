@@ -328,6 +328,37 @@ const AdminProgressLogger = () => {
             </div>
           </div>
 
+          {/* Video attachment */}
+          <div className="flex items-center gap-2">
+            <input
+              ref={videoInputRef}
+              type="file"
+              accept="video/*"
+              capture="environment"
+              className="hidden"
+              onChange={handleVideoSelect}
+            />
+            <button
+              type="button"
+              onClick={() => videoInputRef.current?.click()}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-2 text-[10px] font-bold uppercase tracking-widest border transition-all",
+                videoFile
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-muted text-muted-foreground border-border hover:text-primary hover:border-primary"
+              )}
+            >
+              <Video size={12} /> {videoFile ? "Video Attached" : "Attach Video"}
+            </button>
+            {videoFile && (
+              <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                <span>{videoFile.name} ({(videoFile.size / 1024 / 1024).toFixed(1)}MB)</span>
+                <button onClick={() => { setVideoFile(null); if (videoInputRef.current) videoInputRef.current.value = ""; }}
+                  className="text-destructive hover:opacity-80"><X size={12} /></button>
+              </div>
+            )}
+          </div>
+
           {/* Submit */}
           <button
             onClick={handleSubmit}
