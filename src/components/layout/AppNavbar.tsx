@@ -1,4 +1,4 @@
-import { memo, useState, useCallback, useRef, useEffect } from "react";
+import { memo, useState, useCallback, useRef, useEffect, lazy, Suspense } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Dumbbell, ShoppingBag, Home, Menu, X, LogIn, LogOut, Shield,
@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useTimer } from "@/hooks/useTimer";
 import m2Logo from "@/assets/m2-logo.jpg";
-import NotificationBell from "./NotificationBell";
+const NotificationBell = lazy(() => import("./NotificationBell"));
 
 const primaryNav = [
   { to: "/", label: "HOME", icon: Home },
