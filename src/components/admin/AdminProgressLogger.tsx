@@ -57,16 +57,6 @@ const AdminProgressLogger = () => {
     loadProfiles();
   }, []);
 
-  useEffect(() => {
-    const loadExercises = async () => {
-      const { data } = await supabase
-        .from("exercise_library")
-        .select("title")
-        .order("title");
-      setExerciseOptions((data || []).map((e: any) => e.title));
-    };
-    loadExercises();
-  }, []);
 
   useEffect(() => {
     if (!selectedUser) { setRecentLogs([]); return; }
