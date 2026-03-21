@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { Download, Share, PlusSquare, MoreVertical, CheckCircle2 } from "lucide-react";
 import m2Logo from "@/assets/m2-logo.jpg";
 import { Button } from "@/components/ui/button";
