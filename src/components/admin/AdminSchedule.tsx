@@ -44,6 +44,7 @@ type Booking = {
 };
 
 const WEEK_OPTIONS = [2, 3, 4, 5, 6];
+const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const DEFAULT_OPEN_TIMES = [
   "06:00:00", "06:30:00", "07:00:00", "07:30:00",
@@ -62,7 +63,7 @@ const AdminSchedule = () => {
   const [bulkWeeks, setBulkWeeks] = useState<number | null>(null);
   const [bulkLoading, setBulkLoading] = useState(false);
   const [bulkTimes, setBulkTimes] = useState<string[]>(DEFAULT_OPEN_TIMES);
-  const [skipWeekends, setSkipWeekends] = useState(true);
+  const [selectedDays, setSelectedDays] = useState<number[]>([1, 2, 3, 4, 5]);
   const { toast } = useToast();
 
   const dateStr = format(selectedDate, "yyyy-MM-dd");
@@ -130,15 +131,14 @@ const AdminSchedule = () => {
   };
 
   const bulkPopulate = async (weeks: number) => {
-    if (!confirm(`Open slots for the next ${weeks} weeks (${bulkTimes.length} time slots/day, ${skipWeekends ? "weekdays only" : "all days"})? This won't overwrite existing booked slots.`)) return;
+    const dayNames = selectedDays.map(d => DAY_LABELS[d]).join(", ");
+    if (!confirm(`Open slots for the next ${weeks} weeks (${bulkTimes.length} time slots/day on ${dayNames})? This won't overwrite existing booked slots.`)) return;
     setBulkLoading(true);
     try {
       const startDate = startOfDay(new Date());
       const endDate = addDays(startDate, weeks * 7 - 1);
       const allDays = eachDayOfInterval({ start: startDate, end: endDate });
-      const days = skipWeekends
-        ? allDays.filter(d => d.getDay() !== 0 && d.getDay() !== 6)
-        : allDays;
+      const days = allDays.filter(d => selectedDays.includes(d.getDay()));
 
       const rows = days.flatMap(day =>
         bulkTimes.map(time => ({
@@ -250,17 +250,32 @@ const AdminSchedule = () => {
 
         {bulkWeeks && (
           <div className="space-y-3 border-t border-border pt-3">
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={skipWeekends}
-                onChange={e => setSkipWeekends(e.target.checked)}
-                className="accent-primary"
-                id="skip-weekends"
-              />
-              <label htmlFor="skip-weekends" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground cursor-pointer">
-                Skip Weekends
-              </label>
+            <div>
+              <div className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-2">
+                Days of the week ({selectedDays.length} selected)
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {DAY_LABELS.map((label, idx) => {
+                  const active = selectedDays.includes(idx);
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() =>
+                        setSelectedDays(prev =>
+                          active ? prev.filter(d => d !== idx) : [...prev, idx].sort()
+                        )
+                      }
+                      className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-m2 border ${
+                        active
+                          ? "bg-primary/20 border-primary/40 text-primary"
+                          : "bg-muted border-border text-muted-foreground hover:border-primary/30"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <div>
@@ -294,11 +309,11 @@ const AdminSchedule = () => {
             <div className="flex items-center gap-3">
               <Button
                 onClick={() => bulkPopulate(bulkWeeks)}
-                disabled={bulkLoading || bulkTimes.length === 0}
+                disabled={bulkLoading || bulkTimes.length === 0 || selectedDays.length === 0}
                 className="text-[10px] font-bold uppercase tracking-widest"
               >
                 {bulkLoading ? <Loader2 size={12} className="animate-spin mr-1" /> : <CalendarPlus size={12} className="mr-1" />}
-                Open {bulkTimes.length} slots/day for {bulkWeeks} weeks
+                Open {bulkTimes.length} slots/day on {selectedDays.map(d => DAY_LABELS[d]).join(", ")} for {bulkWeeks} weeks
               </Button>
               <button
                 onClick={() => setBulkWeeks(null)}
