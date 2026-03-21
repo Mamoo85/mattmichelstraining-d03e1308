@@ -165,7 +165,7 @@ const ParentChildManager = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Users size={18} className="text-primary" />
-          <h3 className="text-sm font-bold text-foreground uppercase tracking-widest">Linked Child Accounts</h3>
+          <h3 className="text-sm font-bold text-foreground uppercase tracking-widest">Family Pack</h3>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
