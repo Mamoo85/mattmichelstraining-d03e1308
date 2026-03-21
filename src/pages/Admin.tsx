@@ -27,7 +27,7 @@ const AdminSchedule = lazy(() => import("@/components/admin/AdminSchedule"));
 
 const AdminPrograms = lazy(() => import("@/components/admin/AdminPrograms"));
 const AdminExerciseLibrary = lazy(() => import("@/components/admin/AdminExerciseLibrary"));
-const AdminProtocols = lazy(() => import("@/components/admin/AdminProtocols"));
+const AdminWorkoutInventory = lazy(() => import("@/components/admin/AdminWorkoutInventory"));
 const AdminBatchGenerator = lazy(() => import("@/components/admin/AdminBatchGenerator"));
 const AdminExerciseGenerator = lazy(() => import("@/components/admin/AdminExerciseGenerator"));
 const AdminProgramCreator = lazy(() => import("@/components/admin/AdminProgramCreator"));
@@ -280,7 +280,7 @@ const Admin = () => {
           <SubTabs tabs={[
             { key: "programs", label: "Programs", content: <AdminPrograms /> },
             { key: "exercises", label: "Exercise Library", content: <AdminExerciseLibrary /> },
-            { key: "protocols", label: "Protocols", content: <AdminProtocols /> },
+            { key: "workouts", label: "Workouts", content: <AdminWorkoutInventory /> },
             { key: "batch", label: "AI Workouts", content: <AdminBatchGenerator /> },
             { key: "exercise-gen", label: "AI Exercises", content: <AdminExerciseGenerator /> },
             { key: "ai-programs", label: "AI Programs", content: <AdminProgramCreator /> },
