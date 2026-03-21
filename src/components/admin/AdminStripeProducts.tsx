@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Save, Sparkles, RefreshCw, Pencil, Check, X } from "lucide-react";
+import { Loader2, Save, Sparkles, RefreshCw, Pencil, Check, X, Trash2 } from "lucide-react";
+import ConfirmActionModal from "@/components/shared/ConfirmActionModal";
 
 interface StripeProduct {
   id: string;
@@ -17,6 +18,8 @@ const AdminStripeProducts = () => {
   const [editDesc, setEditDesc] = useState("");
   const [saving, setSaving] = useState(false);
   const [aiLoading, setAiLoading] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<StripeProduct | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ["stripe-products"],
@@ -57,6 +60,25 @@ const AdminStripeProducts = () => {
       toast.error(err.message || "Failed to update");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleArchive = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("update-stripe-product", {
+        body: { action: "archive", product_id: deleteTarget.id },
+      });
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+      toast.success(`"${deleteTarget.name}" archived in Stripe`);
+      qc.invalidateQueries({ queryKey: ["stripe-products"] });
+      setDeleteTarget(null);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to archive");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -183,6 +205,13 @@ const AdminStripeProducts = () => {
                     >
                       <Pencil size={14} />
                     </button>
+                    <button
+                      onClick={() => setDeleteTarget(p)}
+                      className="p-1.5 text-muted-foreground hover:text-destructive transition-colors"
+                      title="Archive / Delete"
+                    >
+                      <Trash2 size={14} />
+                    </button>
                   </div>
                 </div>
               )}
@@ -190,6 +219,18 @@ const AdminStripeProducts = () => {
           );
         })}
       </div>
+
+      {deleteTarget && (
+        <ConfirmActionModal
+          open={!!deleteTarget}
+          title={`Archive "${deleteTarget.name}"?`}
+          description="This will deactivate the product in Stripe. It won't delete payment history — you can reactivate it from the Stripe dashboard later."
+          confirmLabel={deleting ? "Archiving…" : "Archive Product"}
+          onConfirm={handleArchive}
+          onCancel={() => setDeleteTarget(null)}
+          variant="destructive"
+        />
+      )}
     </div>
   );
 };

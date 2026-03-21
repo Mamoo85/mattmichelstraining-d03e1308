@@ -63,7 +63,17 @@ serve(async (req) => {
       });
     }
 
-    throw new Error("Invalid action. Use 'list' or 'update'.");
+    if (action === "archive") {
+      if (!product_id) throw new Error("product_id required");
+      // Archive (deactivate) the product in Stripe
+      await stripe.products.update(product_id, { active: false });
+      console.log(`[UPDATE-STRIPE-PRODUCT] Archived ${product_id}`);
+      return new Response(JSON.stringify({ success: true, archived: product_id }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    throw new Error("Invalid action. Use 'list', 'update', or 'archive'.");
   } catch (error: any) {
     console.error("[UPDATE-STRIPE-PRODUCT] Error:", error.message);
     return new Response(JSON.stringify({ error: error.message }), {
