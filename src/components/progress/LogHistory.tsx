@@ -138,7 +138,48 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
     }
   };
 
-  if (logs.length === 0) return null;
+  const triggerLateUpload = (logId: string) => {
+    pendingLogIdRef.current = logId;
+    lateVideoInputRef.current?.click();
+  };
+
+  const handleLateVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    const logId = pendingLogIdRef.current;
+    if (!file || !logId) return;
+    if (file.size > MAX_VIDEO_SIZE) {
+      toast({ title: "Video too large", description: "Max 5MB. Trim or compress your clip.", variant: "destructive" });
+      if (lateVideoInputRef.current) lateVideoInputRef.current.value = "";
+      return;
+    }
+    setUploadingVideoLogId(logId);
+    try {
+      const ext = file.name.split(".").pop() || "mp4";
+      const path = `${effectiveUserId}/${logId}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("lift_videos").upload(path, file, { contentType: file.type });
+      if (upErr) throw upErr;
+      await supabase.from("lift_videos" as any).insert({
+        progress_log_id: logId,
+        user_id: effectiveUserId,
+        video_path: path,
+        status: "pending_review",
+      });
+      supabase.functions.invoke("ai-video-form-review", {
+        body: { videoUrl: `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/lift_videos/${path}`, exerciseName: "Lift", athleteName: "Athlete" },
+      }).then(async (res) => {
+        if (res.data?.review) {
+          await supabase.from("lift_videos" as any).update({ ai_analysis: res.data.review }).eq("progress_log_id", logId);
+        }
+      }).catch(() => {});
+      toast({ title: "Video submitted for review" });
+      await fetchVideos();
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+    }
+    setUploadingVideoLogId(null);
+    if (lateVideoInputRef.current) lateVideoInputRef.current.value = "";
+    pendingLogIdRef.current = null;
+  };
 
   const notesForLog = (logId: string) => coachNotes.filter((n) => n.progress_log_id === logId);
   const videoForLog = (logId: string) => liftVideos.find((v) => v.progress_log_id === logId);
