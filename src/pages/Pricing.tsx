@@ -12,6 +12,7 @@ import { toast } from "@/hooks/use-toast";
 import { useContentMap } from "@/hooks/useSiteContent";
 import TrialCTA from "@/components/billing/TrialCTA";
 import { getStoredReferralCode, clearStoredReferralCode } from "@/hooks/useReferral";
+const DoNotPressButton = lazy(() => import("@/components/landing/DoNotPressButton"));
 
 import CheckoutConfirmationModal, { type CheckoutProductType } from "@/components/billing/CheckoutConfirmationModal";
 

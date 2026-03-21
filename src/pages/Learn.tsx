@@ -13,6 +13,7 @@ import AppNavbar from "@/components/layout/AppNavbar";
 import MonthlyFocus from "@/components/landing/MonthlyFocus";
 import { useSectionVisible } from "@/hooks/useSiteContent";
 import TrialCTA from "@/components/billing/TrialCTA";
+const DoNotPressButton = lazy(() => import("@/components/landing/DoNotPressButton"));
 
 /* ── Featured Videos ── */
 const VIDEOS = [

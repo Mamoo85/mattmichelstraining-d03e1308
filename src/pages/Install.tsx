@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import AppNavbar from "@/components/layout/AppNavbar";
 import SEOHead from "@/components/layout/SEOHead";
+const DoNotPressButton = lazy(() => import("@/components/landing/DoNotPressButton"));
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;

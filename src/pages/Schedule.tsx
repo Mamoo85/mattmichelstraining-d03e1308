@@ -10,6 +10,7 @@ import { Loader2, Clock, DollarSign, Info, Calendar, CheckCircle, Video, MapPin,
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+const DoNotPressButton = lazy(() => import("@/components/landing/DoNotPressButton"));
 
 const formatTime12 = (t: string) => {
   const [hStr, mStr] = t.split(":");

@@ -400,6 +400,7 @@ const About = () => {
         </div>
       </motion.div>
 
+      <Suspense fallback={null}><DoNotPressButton /></Suspense>
       {/* FOOTER */}
       <div className="pt-6 border-t border-border text-center">
         <p className="text-xs text-muted-foreground">
