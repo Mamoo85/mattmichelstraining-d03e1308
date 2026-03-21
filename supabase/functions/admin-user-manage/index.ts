@@ -19,10 +19,17 @@ serve(async (req) => {
     const body = await req.json();
     const { action } = body;
 
-    // ── Redeem In-Person Invite (no admin auth needed — called by the signing-up user) ──
+    // ── Redeem In-Person Invite (called by the signing-up user — verify their JWT) ──
     if (action === "redeem_ip_invite") {
-      const { token, userId } = body;
-      if (!token || !userId) throw new Error("Token and userId required");
+      const { token } = body;
+      if (!token) throw new Error("Token required");
+
+      // Verify the caller's identity via JWT
+      const authHeader = req.headers.get("Authorization");
+      if (!authHeader?.startsWith("Bearer ")) throw new Error("Not authenticated");
+      const { data: callerData, error: callerError } = await supabaseClient.auth.getUser(authHeader.replace("Bearer ", ""));
+      if (callerError || !callerData.user) throw new Error("Auth failed");
+      const callerUserId = callerData.user.id;
 
       // Look up the token using service role (bypasses RLS)
       const { data: invite, error: inviteErr } = await supabaseClient
@@ -34,16 +41,16 @@ serve(async (req) => {
       if (inviteErr || !invite) throw new Error("Invalid invite link");
       if (invite.is_used) throw new Error("This invite link has already been used");
 
-      // Flag the user's profile as in-person
+      // Flag the caller's own profile as in-person (NOT a body-supplied userId)
       await supabaseClient
         .from("profiles")
         .update({ is_in_person: true })
-        .eq("user_id", userId);
+        .eq("user_id", callerUserId);
 
       // Mark token as used
       await supabaseClient
         .from("in_person_invite_tokens")
-        .update({ is_used: true, used_at: new Date().toISOString(), used_by: userId })
+        .update({ is_used: true, used_at: new Date().toISOString(), used_by: callerUserId })
         .eq("id", invite.id);
 
       return new Response(JSON.stringify({ success: true, message: "Welcome! You're set up as an in-person client." }), {
