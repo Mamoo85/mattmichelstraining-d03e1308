@@ -62,6 +62,7 @@ const AdminCmoReports = lazy(() => import("@/components/admin/AdminCmoReports"))
 const AdminTrash = lazy(() => import("@/components/admin/AdminTrash"));
 const AdminMediaVault = lazy(() => import("@/components/admin/AdminMediaVault"));
 const AdminProgressLogger = lazy(() => import("@/components/admin/AdminProgressLogger"));
+const AdminLiftVideoReview = lazy(() => import("@/components/admin/AdminLiftVideoReview"));
 
 const MASTER_TABS = [
   { key: "roster", label: "The Roster", icon: Users, desc: "Users · Support · Families" },
@@ -172,7 +173,19 @@ const Admin = () => {
     refetchInterval: 30000,
   });
 
-  const totalEngineBadge = pendingDraftsCount + pendingAiQueueCount + pendingCustomCount;
+  const { data: pendingLiftVideosCount = 0 } = useQuery({
+    queryKey: ["pending-lift-videos-count"],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("lift_videos" as any)
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending_review");
+      return count ?? 0;
+    },
+    refetchInterval: 30000,
+  });
+
+  const totalEngineBadge = pendingDraftsCount + pendingAiQueueCount + pendingCustomCount + pendingLiftVideosCount;
   const totalRosterBadge = pendingSupportCount + unreadParentCount + pendingPostureCount;
 
   const { data: trashCount = 0 } = useQuery({
@@ -313,6 +326,7 @@ const Admin = () => {
             { key: "biomechanics", label: "Biomechanics", content: <AdminBiomechanics /> },
             { key: "coach-ai", label: <span className="flex items-center gap-1">Coach AI{pendingDraftsCount > 0 && <Badge variant="destructive" className="text-[8px] px-1.5 py-0 min-w-[18px] h-4">{pendingDraftsCount}</Badge>}</span>, content: <AdminCoachAiQueue /> },
             { key: "custom-requests", label: <span className="flex items-center gap-1">Custom Requests{pendingCustomCount > 0 && <Badge variant="destructive" className="text-[8px] px-1.5 py-0 min-w-[18px] h-4">{pendingCustomCount}</Badge>}</span>, content: <AdminCustomRequests /> },
+            { key: "lift-videos", label: <span className="flex items-center gap-1">Lift Videos{pendingLiftVideosCount > 0 && <Badge variant="destructive" className="text-[8px] px-1.5 py-0 min-w-[18px] h-4">{pendingLiftVideosCount}</Badge>}</span>, content: <AdminLiftVideoReview /> },
           ]} />
         )}
 

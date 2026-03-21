@@ -1011,6 +1011,53 @@ export type Database = {
           },
         ]
       }
+      lift_videos: {
+        Row: {
+          admin_notes: string | null
+          ai_analysis: string | null
+          created_at: string
+          id: string
+          progress_log_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["lift_video_status"]
+          user_id: string
+          video_path: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          ai_analysis?: string | null
+          created_at?: string
+          id?: string
+          progress_log_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["lift_video_status"]
+          user_id: string
+          video_path: string
+        }
+        Update: {
+          admin_notes?: string | null
+          ai_analysis?: string | null
+          created_at?: string
+          id?: string
+          progress_log_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["lift_video_status"]
+          user_id?: string
+          video_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lift_videos_progress_log_id_fkey"
+            columns: ["progress_log_id"]
+            isOneToOne: false
+            referencedRelation: "progress_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       logged_exercises: {
         Row: {
           client_notes: string | null
@@ -3134,6 +3181,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user" | "parent" | "child"
+      lift_video_status: "pending_review" | "approved" | "rejected" | "archived"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3262,6 +3310,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user", "parent", "child"],
+      lift_video_status: ["pending_review", "approved", "rejected", "archived"],
     },
   },
 } as const

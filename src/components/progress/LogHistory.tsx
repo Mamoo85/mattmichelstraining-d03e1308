@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { Pencil, Trash2, X, Check, Loader2, CalendarIcon, ChevronDown, ChevronRight } from "lucide-react";
+import { Pencil, Trash2, X, Check, Loader2, CalendarIcon, ChevronDown, ChevronRight, Video, Clock, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import CoachNotesBadge from "./CoachNotesBadge";
@@ -25,6 +26,14 @@ interface CoachNote {
   created_at: string;
 }
 
+interface LiftVideo {
+  id: string;
+  progress_log_id: string;
+  video_path: string;
+  status: string;
+  ai_analysis: string | null;
+}
+
 interface LogHistoryProps {
   logs: ProgressLog[];
   isAdmin: boolean;
@@ -33,7 +42,6 @@ interface LogHistoryProps {
 }
 
 const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryProps) => {
-  // Default open so athletes always see their history + coach notes
   const [showHistory, setShowHistory] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editWeight, setEditWeight] = useState("");
@@ -42,6 +50,8 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [coachNotes, setCoachNotes] = useState<CoachNote[]>([]);
+  const [liftVideos, setLiftVideos] = useState<LiftVideo[]>([]);
+  const [playingVideo, setPlayingVideo] = useState<{ url: string; exercise: string } | null>(null);
 
   const fetchNotes = async () => {
     if (logs.length === 0) return;
@@ -54,8 +64,19 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
     if (data) setCoachNotes(data as unknown as CoachNote[]);
   };
 
+  const fetchVideos = async () => {
+    if (logs.length === 0) return;
+    const logIds = logs.map((l) => l.id);
+    const { data } = await supabase
+      .from("lift_videos" as any)
+      .select("id, progress_log_id, video_path, status, ai_analysis")
+      .in("progress_log_id", logIds);
+    if (data) setLiftVideos(data as unknown as LiftVideo[]);
+  };
+
   useEffect(() => {
     fetchNotes();
+    fetchVideos();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [logs]);
 
@@ -66,9 +87,7 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
     setEditDate(new Date(log.logged_at));
   };
 
-  const cancelEdit = () => {
-    setEditingId(null);
-  };
+  const cancelEdit = () => { setEditingId(null); };
 
   const handleUpdate = async (id: string) => {
     const weight = parseFloat(editWeight);
@@ -105,9 +124,19 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
     setDeletingId(null);
   };
 
+  const playVideo = async (video: LiftVideo) => {
+    // For admin: always play. For user: only if approved
+    if (!isAdmin && video.status !== "approved") return;
+    const { data } = await supabase.storage.from("lift_videos").createSignedUrl(video.video_path, 300);
+    if (data?.signedUrl) {
+      setPlayingVideo({ url: data.signedUrl, exercise: "Lift Video" });
+    }
+  };
+
   if (logs.length === 0) return null;
 
   const notesForLog = (logId: string) => coachNotes.filter((n) => n.progress_log_id === logId);
+  const videoForLog = (logId: string) => liftVideos.find((v) => v.progress_log_id === logId);
   const totalNotes = coachNotes.length;
 
   return (
@@ -129,6 +158,7 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
             const isEditing = editingId === log.id;
             const isDeleting = deletingId === log.id;
             const logNotes = notesForLog(log.id);
+            const video = videoForLog(log.id);
             const prevLog = idx < logs.length - 1 ? [...logs].reverse()[idx + 1] : null;
             const weightDiff = prevLog ? log.weight - prevLog.weight : 0;
 
@@ -155,31 +185,18 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
                           />
                         </PopoverContent>
                       </Popover>
-                      <input
-                        type="number"
-                        value={editWeight}
-                        onChange={(e) => setEditWeight(e.target.value)}
-                        className="bg-background border border-border text-right pr-2 font-mono text-primary text-xs focus:ring-1 focus:ring-primary outline-none h-8 w-20"
-                      />
+                      <input type="number" value={editWeight} onChange={(e) => setEditWeight(e.target.value)}
+                        className="bg-background border border-border text-right pr-2 font-mono text-primary text-xs focus:ring-1 focus:ring-primary outline-none h-8 w-20" />
                       <span className="text-[10px] text-muted-foreground">lbs ×</span>
-                      <input
-                        type="number"
-                        value={editReps}
-                        onChange={(e) => setEditReps(e.target.value)}
-                        className="bg-background border border-border text-right pr-2 font-mono text-primary text-xs focus:ring-1 focus:ring-primary outline-none h-8 w-14"
-                      />
+                      <input type="number" value={editReps} onChange={(e) => setEditReps(e.target.value)}
+                        className="bg-background border border-border text-right pr-2 font-mono text-primary text-xs focus:ring-1 focus:ring-primary outline-none h-8 w-14" />
                       <div className="flex gap-1 ml-auto">
-                        <button
-                          onClick={() => handleUpdate(log.id)}
-                          disabled={saving}
-                          className="h-8 w-8 flex items-center justify-center bg-primary text-primary-foreground hover:opacity-90 transition-all disabled:opacity-50"
-                        >
+                        <button onClick={() => handleUpdate(log.id)} disabled={saving}
+                          className="h-8 w-8 flex items-center justify-center bg-primary text-primary-foreground hover:opacity-90 transition-all disabled:opacity-50">
                           {saving ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
                         </button>
-                        <button
-                          onClick={cancelEdit}
-                          className="h-8 w-8 flex items-center justify-center bg-muted text-muted-foreground hover:text-foreground transition-all"
-                        >
+                        <button onClick={cancelEdit}
+                          className="h-8 w-8 flex items-center justify-center bg-muted text-muted-foreground hover:text-foreground transition-all">
                           <X size={12} />
                         </button>
                       </div>
@@ -197,31 +214,40 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
                       <span className="text-[10px] text-primary font-mono ml-1">
                         est. {log.estimated_1rm} 1RM
                       </span>
-                      {/* Show session-over-session change */}
                       {prevLog && weightDiff !== 0 && (
-                        <span
-                          className="text-[9px] font-mono font-bold"
-                          style={{
-                            color: weightDiff > 0 ? "hsl(var(--primary))" : "hsl(var(--destructive))",
-                          }}
-                        >
+                        <span className="text-[9px] font-mono font-bold"
+                          style={{ color: weightDiff > 0 ? "hsl(var(--primary))" : "hsl(var(--destructive))" }}>
                           {weightDiff > 0 ? "↑" : "↓"}{Math.abs(weightDiff)}
                         </span>
                       )}
-                      <div className="flex gap-1 ml-auto">
+
+                      {/* Video indicator */}
+                      {video && (
                         <button
-                          onClick={() => startEdit(log)}
-                          className="h-7 w-7 flex items-center justify-center text-muted-foreground hover:text-primary transition-all"
-                          title="Edit"
+                          onClick={() => playVideo(video)}
+                          className={cn(
+                            "h-6 px-1.5 flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider border rounded transition-all",
+                            video.status === "approved"
+                              ? "border-primary/40 text-primary bg-primary/10 hover:bg-primary/20 animate-pulse"
+                              : video.status === "pending_review"
+                                ? "border-yellow-500/40 text-yellow-600 bg-yellow-500/10"
+                                : "border-muted text-muted-foreground"
+                          )}
+                          title={video.status === "approved" ? "Watch video" : "Under review"}
                         >
+                          {video.status === "approved" ? <CheckCircle size={10} /> : <Clock size={10} />}
+                          <Video size={10} />
+                          {video.status === "pending_review" && "Review"}
+                        </button>
+                      )}
+
+                      <div className="flex gap-1 ml-auto">
+                        <button onClick={() => startEdit(log)}
+                          className="h-7 w-7 flex items-center justify-center text-muted-foreground hover:text-primary transition-all" title="Edit">
                           <Pencil size={12} />
                         </button>
-                        <button
-                          onClick={() => handleDelete(log.id)}
-                          disabled={isDeleting}
-                          className="h-7 w-7 flex items-center justify-center text-muted-foreground hover:text-destructive transition-all disabled:opacity-50"
-                          title="Delete"
-                        >
+                        <button onClick={() => handleDelete(log.id)} disabled={isDeleting}
+                          className="h-7 w-7 flex items-center justify-center text-muted-foreground hover:text-destructive transition-all disabled:opacity-50" title="Delete">
                           {isDeleting ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
                         </button>
                       </div>
@@ -229,16 +255,9 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
                   )}
                 </div>
 
-                {/* Coach Notes — always visible, no toggle */}
                 {!isEditing && (
                   <>
-                    <CoachNotesBadge
-                      logId={log.id}
-                      userId={effectiveUserId}
-                      notes={logNotes}
-                      isAdmin={isAdmin}
-                      onRefresh={fetchNotes}
-                    />
+                    <CoachNotesBadge logId={log.id} userId={effectiveUserId} notes={logNotes} isAdmin={isAdmin} onRefresh={fetchNotes} />
                     <LiftChat logId={log.id} userId={effectiveUserId} />
                   </>
                 )}
@@ -247,6 +266,22 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
           })}
         </div>
       )}
+
+      {/* Video playback modal */}
+      <Dialog open={!!playingVideo} onOpenChange={() => setPlayingVideo(null)}>
+        <DialogContent className="max-w-2xl p-2">
+          <DialogTitle className="sr-only">Lift Video</DialogTitle>
+          {playingVideo && (
+            <video
+              src={playingVideo.url}
+              controls
+              autoPlay
+              preload="none"
+              className="w-full rounded"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -1,12 +1,13 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Plus, Loader2, Calendar, Check, ChevronDown } from "lucide-react";
+import { Search, Plus, Loader2, Calendar, Check, ChevronDown, Video, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { LIFT_CATEGORIES, ALL_LIFTS } from "@/components/progress/liftConfig";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 
 interface UserProfile {
   user_id: string;
@@ -24,6 +25,7 @@ interface RecentLog {
 }
 
 const AdminProgressLogger = () => {
+  const { user } = useAuth();
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [loadingProfiles, setLoadingProfiles] = useState(true);
   const [userSearch, setUserSearch] = useState("");
@@ -44,6 +46,11 @@ const AdminProgressLogger = () => {
   // Recent logs for selected user
   const [recentLogs, setRecentLogs] = useState<RecentLog[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
+
+  // Video state
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
+  const MAX_VIDEO_SIZE = 10 * 1024 * 1024;
 
   useEffect(() => {
     const loadProfiles = async () => {
@@ -96,6 +103,16 @@ const AdminProgressLogger = () => {
     return allLiftNames.filter((e) => e.toLowerCase().includes(q));
   }, [allLiftNames, exerciseName]);
 
+  const handleVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > MAX_VIDEO_SIZE) {
+      toast({ title: "Video too large", description: "Max 10MB.", variant: "destructive" });
+      return;
+    }
+    setVideoFile(file);
+  };
+
   const handleSubmit = async () => {
     if (!selectedUser) { toast({ title: "Select a user", variant: "destructive" }); return; }
     if (!exerciseName.trim()) { toast({ title: "Enter exercise name", variant: "destructive" }); return; }
@@ -107,21 +124,53 @@ const AdminProgressLogger = () => {
 
     setSaving(true);
     try {
-      const { error } = await supabase.from("progress_logs").insert({
+      const { data: logData, error } = await supabase.from("progress_logs").insert({
         user_id: selectedUser.user_id,
         exercise_name: exerciseName.trim(),
         weight: w,
         reps: r,
         estimated_1rm: estimated1rm,
         logged_at: logDate.toISOString(),
-      });
+      }).select("id").single();
       if (error) throw error;
+
+      // Upload video if attached
+      if (videoFile && logData?.id) {
+        const ext = videoFile.name.split(".").pop() || "mp4";
+        const path = `${selectedUser.user_id}/${logData.id}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("lift_videos")
+          .upload(path, videoFile, { contentType: videoFile.type });
+        if (!upErr) {
+          await supabase.from("lift_videos" as any).insert({
+            progress_log_id: logData.id,
+            user_id: selectedUser.user_id,
+            video_path: path,
+            status: "pending_review",
+          });
+          // Auto AI analysis
+          supabase.functions.invoke("ai-video-form-review", {
+            body: {
+              videoUrl: `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/lift_videos/${path}`,
+              exerciseName: exerciseName.trim(),
+              athleteName: displayName(selectedUser),
+            },
+          }).then(async (res) => {
+            if (res.data?.review) {
+              await supabase.from("lift_videos" as any)
+                .update({ ai_analysis: res.data.review })
+                .eq("progress_log_id", logData.id);
+            }
+          }).catch(() => {});
+        }
+        setVideoFile(null);
+        if (videoInputRef.current) videoInputRef.current.value = "";
+      }
 
       toast({ title: "Lift logged", description: `${exerciseName} · ${w}lbs × ${r} for ${displayName(selectedUser)}` });
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 1500);
 
-      // Reset form but keep user selected
       setExerciseName("");
       setWeight("");
       setReps("");
@@ -277,6 +326,37 @@ const AdminProgressLogger = () => {
                 </PopoverContent>
               </Popover>
             </div>
+          </div>
+
+          {/* Video attachment */}
+          <div className="flex items-center gap-2">
+            <input
+              ref={videoInputRef}
+              type="file"
+              accept="video/*"
+              capture="environment"
+              className="hidden"
+              onChange={handleVideoSelect}
+            />
+            <button
+              type="button"
+              onClick={() => videoInputRef.current?.click()}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-2 text-[10px] font-bold uppercase tracking-widest border transition-all",
+                videoFile
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-muted text-muted-foreground border-border hover:text-primary hover:border-primary"
+              )}
+            >
+              <Video size={12} /> {videoFile ? "Video Attached" : "Attach Video"}
+            </button>
+            {videoFile && (
+              <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                <span>{videoFile.name} ({(videoFile.size / 1024 / 1024).toFixed(1)}MB)</span>
+                <button onClick={() => { setVideoFile(null); if (videoInputRef.current) videoInputRef.current.value = ""; }}
+                  className="text-destructive hover:opacity-80"><X size={12} /></button>
+              </div>
+            )}
           </div>
 
           {/* Submit */}
