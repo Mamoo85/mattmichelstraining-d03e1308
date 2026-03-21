@@ -15,7 +15,7 @@ const EmailCapture = () => {
       </h3>
       <p className="text-xs text-muted-foreground mb-4 max-w-lg leading-relaxed">
         Full access to the exercise library, structured workouts, progress tracking,
-        and real coaching feedback. No credit card tricks — cancel anytime.
+        and real coaching feedback. Cancel anytime — $12.99/mo after trial.
       </p>
       <Link
         to="/auth?redirect=/trial-welcome"
