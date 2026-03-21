@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
@@ -82,6 +82,23 @@ const Auth = () => {
   const [success, setSuccess] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
 
+  const buildAuthRedirectUrl = useCallback((fallbackPath: string) => {
+    const redirect = searchParams.get("redirect") || fallbackPath;
+    const url = new URL("/auth", window.location.origin);
+
+    url.searchParams.set("redirect", redirect);
+
+    if (inviteToken) {
+      url.searchParams.set("invite", inviteToken);
+    }
+
+    if (ipToken) {
+      url.searchParams.set("ip", ipToken);
+    }
+
+    return url.toString();
+  }, [inviteToken, ipToken, searchParams]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -91,7 +108,7 @@ const Auth = () => {
     if (mode === "magic") {
       const { error } = await supabase.auth.signInWithOtp({
         email,
-        options: { emailRedirectTo: window.location.origin },
+        options: { emailRedirectTo: buildAuthRedirectUrl("/dashboard") },
       });
       if (error) setError(error.message);
       else setSuccess("Check your inbox — tap the link to log in instantly.");
@@ -106,7 +123,7 @@ const Auth = () => {
         email,
         password,
         options: {
-          emailRedirectTo: window.location.origin,
+          emailRedirectTo: buildAuthRedirectUrl("/welcome"),
           data: { full_name: `${firstName.trim()} ${lastName.trim()}`, athlete_name: signupRole === "self" ? athleteName : "", account_role: accountRole },
         },
       });
