@@ -330,7 +330,6 @@ const Admin = () => {
             { key: "media-vault", label: "Media Vault", content: <AdminMediaVault /> },
           ]} />
         )}
-        )}
       </div>
     </div>
   );
