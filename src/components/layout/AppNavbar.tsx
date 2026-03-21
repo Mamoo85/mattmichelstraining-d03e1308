@@ -171,7 +171,7 @@ const AppNavbar = () => {
             <Download size={13} />
             App
           </Link>
-          {user && <NotificationBell />}
+          {user && <Suspense fallback={null}><NotificationBell /></Suspense>}
           <button className="p-2 text-muted-foreground" onClick={() => setMobileOpen(!mobileOpen)} aria-label={mobileOpen ? "Close menu" : "Open menu"}>
             {mobileOpen ? <X size={22} /> : <Menu size={22} />}
           </button>

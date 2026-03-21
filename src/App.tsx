@@ -156,8 +156,8 @@ const App = () => (
       <TimerProvider>
         <OfflineSyncProvider>
           <TooltipProvider>
-            <Toaster />
-            <Sonner />
+            <Suspense fallback={null}><Toaster /></Suspense>
+            <Suspense fallback={null}><Sonner /></Suspense>
             <BrowserRouter>
               <ReferralCaptureWrapper />
               <ScrollToTop />
