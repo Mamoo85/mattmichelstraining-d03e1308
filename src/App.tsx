@@ -190,7 +190,7 @@ const App = () => (
               </ErrorBoundary>
               <GlobalTimer />
               <ActiveWorkoutWrapper />
-              <OfflineBadge />
+              <Suspense fallback={null}><OfflineBadge /></Suspense>
             </BrowserRouter>
           </TooltipProvider>
         </OfflineSyncProvider>
