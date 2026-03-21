@@ -6,6 +6,7 @@ import StoreTab from "@/components/store/StoreTab";
 import ExerciseLibrary from "@/components/features/ExerciseLibrary";
 import FixItLibrary from "@/components/features/FixItLibrary";
 import PaywallGate from "@/components/billing/PaywallGate";
+const DoNotPressButton = lazy(() => import("@/components/landing/DoNotPressButton"));
 
 const TABS = [
   { key: "start", label: "How It Works" },
