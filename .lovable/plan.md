@@ -1,49 +1,26 @@
 
 
-# "DO NOT PRESS" Easter Egg — Revised Plan
+# Apple Auth Resilience & Error Tracing
 
-## Key Change from Previous Plan
-Make the button **eye-catching and impossible to miss** — not buried or tiny. It should feel like reverse psychology marketing: obviously tempting, not actually hidden.
+## Changes — `src/pages/Auth.tsx`
 
-## New Files
+### 1. Add `appleError` state
+Add a dedicated `const [appleError, setAppleError] = useState(false);` to track whether Apple sign-in specifically failed (distinct from the general `error` state).
 
-### 1. `src/components/landing/DoNotPressButton.tsx`
-A full-width section (not a tiny footer link) with:
-- Black background strip with animated red/orange pulsing border
-- Large text: **"⚠️ DO NOT PRESS THIS BUTTON ⚠️"**
-- Animated glow effect, slight shake on hover
-- Centered, padded, styled like a dare — users will absolutely press it
-- Links to `/matrix`
+### 2. Enhanced `handleAppleSignIn` error handling
+- Extract `error.message`, `error.status`, and `error.code` from the result for detailed console logging
+- Log structured diagnostic info: `[APPLE-AUTH] status: X, code: Y, message: Z`
+- Display the specific error message to the user (not a generic fallback)
+- Set `appleError` to `true` on failure, `false` on retry start
 
-### 2. `src/pages/MatrixEasterEgg.tsx`
-Full-screen black page:
-- **Phase 1**: Green cursor blinks 3 times
-- **Phase 2**: Typewriter types "Congratulations, you have passed the test."
-- **Phase 3** (2s after typing ends): CTA content fades in as a scrollable section
+### 3. "Hide My Email" fallback note
+After the Apple Sign-In button, conditionally render a small hint when `appleError` is `true`:
+> "Note: If you selected 'Hide My Email' and cannot log in, please use the Email Link option below."
 
-CTA content (Matrix black aesthetic, green + orange accents):
-- **Matt's note**: "You weren't supposed to press that. But since you're clearly the rebellious type... respect. Here's what $12.99/mo actually gets you."
-- **Tech showcase cards**: Exercise Library (200+), AI Nutrition Scanner, Posture Analysis, Fix It Recovery Library, Smart Workout Logger, Monthly Focus — each with icon and one-liner
-- **Pain hook**: "Everybody's got something that hurts. A shoulder that clicks. A knee that's been lying to you for years. I've spent 20+ years fixing people — zero injuries, 50+ college athletes sent to the next level. This membership is your all-access pass to my playbook."
-- **Primary CTA button**: "Start My 14-Day Free Trial" → `/auth?redirect=/trial-welcome`
-- **Divider**: "Or just let me prove it."
-- **Secondary CTA**: Big "SCHEDULE NOW" → `/schedule`
-- **"← Back to safety"** link at top-right
+### 4. Safari window handling
+The `lovable.auth.signInWithOAuth` wrapper doesn't accept `skipBrowserRedirect` — it's managed by `@lovable.dev/cloud-auth-js`. However, we can pass `skipBrowserRedirect: "false"` via `extraParams` to ensure it reaches the underlying provider config. This will be added to the OAuth call options.
 
-## Modified Files
+### Technical detail
 
-### 3. `src/App.tsx`
-- Add lazy import + route: `/matrix` → `MatrixEasterEgg`
-
-### 4. Add `<DoNotPressButton />` to these public pages
-`Index.tsx`, `About.tsx`, `Pricing.tsx`, `Shop.tsx`, `ForParents.tsx`, `Schedule.tsx`, `Merch.tsx`, `Learn.tsx`, `TheEdge.tsx`, `Install.tsx`
-
-Excluded: Auth, Dashboard, Profile, Progress, Nutrition, Admin, Coach, TrialWelcome, Welcome, NotFound
-
-## Technical Details
-- Typewriter: `setInterval` revealing one character at a time, monospace font, `#00FF41` green
-- Cursor blink: CSS keyframes with `step-end`
-- CTA fade-in: CSS opacity transition triggered by state
-- Button glow: `box-shadow` animation with red/orange pulse, `@keyframes`
-- Fully responsive single-column layout
+All changes are confined to `src/pages/Auth.tsx`. The `src/integrations/lovable/index.ts` file is auto-generated and will not be modified.
 
