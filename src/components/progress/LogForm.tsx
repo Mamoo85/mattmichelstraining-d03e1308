@@ -40,7 +40,7 @@ function parseSpokenSet(text: string): { weight?: string; reps?: string } {
   return { weight, reps };
 }
 
-const MAX_VIDEO_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_VIDEO_SIZE = 5 * 1024 * 1024; // 5MB — optimized for low storage
 
 const LogForm = ({ activeLift, repMax, effectiveUserId, onLogged }: LogFormProps) => {
   const { user, subscriptionTier } = useAuth();

@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { format } from "date-fns";
-import { Pencil, Trash2, X, Check, Loader2, CalendarIcon, ChevronDown, ChevronRight, Video, Clock, CheckCircle } from "lucide-react";
+import { Pencil, Trash2, X, Check, Loader2, CalendarIcon, ChevronDown, ChevronRight, Video, Clock, CheckCircle, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
