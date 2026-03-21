@@ -33,6 +33,26 @@ function preloadLcpImage(): Plugin {
   };
 }
 
+/**
+ * Converts render-blocking CSS <link rel="stylesheet"> tags into
+ * non-blocking preload links with an onload swap, so the browser
+ * can paint the inlined critical CSS first.
+ */
+function asyncCss(): Plugin {
+  return {
+    name: "async-css",
+    enforce: "post",
+    transformIndexHtml(html) {
+      // Match Vite-injected stylesheet links (hashed assets only)
+      return html.replace(
+        /<link rel="stylesheet" crossorigin href="(\/assets\/[^"]+\.css)">/g,
+        (_match, href) =>
+          `<link rel="preload" as="style" href="${href}" onload="this.onload=null;this.rel='stylesheet'">\n<noscript><link rel="stylesheet" href="${href}"></noscript>`
+      );
+    },
+  };
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
