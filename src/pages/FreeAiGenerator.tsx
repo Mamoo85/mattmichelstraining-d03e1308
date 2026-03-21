@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Dumbbell, Loader2, Zap, ChevronRight, ArrowRight, Sparkles, Lock, ShieldAlert } from "lucide-react";
+import { Dumbbell, Loader2, Zap, ChevronRight, ArrowRight, Sparkles, Lock, ShieldAlert, Mail, CheckCircle2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
