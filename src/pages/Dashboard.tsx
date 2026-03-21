@@ -23,7 +23,7 @@ const ChallengeHub = lazy(() => import("@/components/dashboard/ChallengeHub"));
 const TeamManager = lazy(() => import("@/components/features/TeamManager"));
 const ProgressCharts = lazy(() => import("@/components/features/ProgressCharts"));
 
-import AskCoachBubble from "@/components/dashboard/AskCoachBubble";
+import DualFab from "@/components/dashboard/DualFab";
 
 const BASE_TABS = [
   { key: "home", label: "Home" },
@@ -170,7 +170,7 @@ const Dashboard = () => {
         <TrialPaywallModal open={true} hardLock />
       )}
 
-      <AskCoachBubble />
+      <DualFab />
     </div>
   );
 };
