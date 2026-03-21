@@ -3,9 +3,9 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { LogIn, BarChart3, Dumbbell, MessageSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import portalPrograms from "@/assets/portal-programs.png";
-import portalChat from "@/assets/portal-chat.png";
-import portalProgress from "@/assets/portal-progress.png";
+import portalPrograms from "@/assets/portal-programs.jpg";
+import portalChat from "@/assets/portal-chat.jpg";
+import portalProgress from "@/assets/portal-progress.jpg";
 
 const PILLS = [
   { icon: BarChart3, label: "Track Progress" },

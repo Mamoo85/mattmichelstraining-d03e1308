@@ -5,7 +5,7 @@ import { useNavigate, Link } from "react-router-dom";
 import sneakAthlete from "@/assets/sneak-athlete.jpg";
 import sneakCoach from "@/assets/sneak-coach.jpg";
 import sneakParent from "@/assets/sneak-parent.jpg";
-import portalProgress from "@/assets/portal-progress.png";
+import portalProgress from "@/assets/portal-progress.jpg";
 
 const AUDIENCES = [
   {
