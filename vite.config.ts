@@ -19,9 +19,13 @@ function preloadLcpImage(): Plugin {
       if (!bundle) return html; // dev mode — skip
 
       for (const [fileName] of Object.entries(bundle)) {
-        if (/m2-logo-[^/]*\.jpg$/.test(fileName) && !fileName.includes("official")) {
-          const tag = `<link rel="preload" as="image" href="/${fileName}" fetchpriority="high" />`;
-          return html.replace("</head>", `${tag}\n</head>`);
+        if (/m2-logo-[^/]*\.jpg$/.test(fileName) && !fileName.includes("official") && !fileName.includes("placeholder")) {
+          const hashedPath = `/${fileName}`;
+          const tag = `<link rel="preload" as="image" href="${hashedPath}" fetchpriority="high" />`;
+          // Also replace the static hero shell placeholder src with the hashed asset
+          let result = html.replace("</head>", `${tag}\n</head>`);
+          result = result.replace("/assets/m2-logo-placeholder.jpg", hashedPath);
+          return result;
         }
       }
       return html;
