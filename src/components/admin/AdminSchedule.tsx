@@ -131,15 +131,14 @@ const AdminSchedule = () => {
   };
 
   const bulkPopulate = async (weeks: number) => {
-    if (!confirm(`Open slots for the next ${weeks} weeks (${bulkTimes.length} time slots/day, ${skipWeekends ? "weekdays only" : "all days"})? This won't overwrite existing booked slots.`)) return;
+    const dayNames = selectedDays.map(d => DAY_LABELS[d]).join(", ");
+    if (!confirm(`Open slots for the next ${weeks} weeks (${bulkTimes.length} time slots/day on ${dayNames})? This won't overwrite existing booked slots.`)) return;
     setBulkLoading(true);
     try {
       const startDate = startOfDay(new Date());
       const endDate = addDays(startDate, weeks * 7 - 1);
       const allDays = eachDayOfInterval({ start: startDate, end: endDate });
-      const days = skipWeekends
-        ? allDays.filter(d => d.getDay() !== 0 && d.getDay() !== 6)
-        : allDays;
+      const days = allDays.filter(d => selectedDays.includes(d.getDay()));
 
       const rows = days.flatMap(day =>
         bulkTimes.map(time => ({
