@@ -179,6 +179,12 @@ serve(async (req) => {
         break;
       }
 
+      case "stripe_product_description": {
+        systemPrompt = `You are a concise copywriter for a fitness training business. Write benefit-focused product descriptions that are clear and easy to understand for parents, athletes, and coaches. No jargon. 1-2 sentences only.`;
+        userPrompt = context.prompt || "Write a product description.";
+        break;
+      }
+
       default:
         throw new Error(`Unknown assist type: ${type}`);
     }
