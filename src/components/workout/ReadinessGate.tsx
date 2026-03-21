@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import portalProgress from "@/assets/portal-progress.png";
+import portalProgress from "@/assets/portal-progress.jpg";
 
 interface ReadinessResult {
   hoursSlept: number;
