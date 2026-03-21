@@ -356,6 +356,15 @@ const FreeAiGenerator = () => {
           )}
         </AnimatePresence>
       </main>
+
+      {program && (
+        <EmailWorkoutModal
+          open={emailModalOpen}
+          onOpenChange={setEmailModalOpen}
+          program={program}
+          onSent={() => setEmailSent(true)}
+        />
+      )}
     </>
   );
 };
