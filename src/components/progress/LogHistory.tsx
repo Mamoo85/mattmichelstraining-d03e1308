@@ -42,6 +42,8 @@ interface LogHistoryProps {
 }
 
 const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryProps) => {
+  const MAX_VIDEO_SIZE = 5 * 1024 * 1024; // 5MB
+
   const [showHistory, setShowHistory] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editWeight, setEditWeight] = useState("");
@@ -52,6 +54,9 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
   const [coachNotes, setCoachNotes] = useState<CoachNote[]>([]);
   const [liftVideos, setLiftVideos] = useState<LiftVideo[]>([]);
   const [playingVideo, setPlayingVideo] = useState<{ url: string; exercise: string } | null>(null);
+  const [uploadingVideoLogId, setUploadingVideoLogId] = useState<string | null>(null);
+  const lateVideoInputRef = useRef<HTMLInputElement>(null);
+  const pendingLogIdRef = useRef<string | null>(null);
 
   const fetchNotes = async () => {
     if (logs.length === 0) return;
