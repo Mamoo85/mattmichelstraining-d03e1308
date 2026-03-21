@@ -44,13 +44,13 @@ const TIER_CARDS: {
     icon: Star,
     features: [
       "Everything in Basic, plus…",
-      "Structured 8-week training program (updated monthly)",
+      "Structured 8-week training program (updated bi-monthly)",
       "Injury recovery video library ('Fix It' guides)",
       "Flag exercises for Coach Matt's personal feedback",
       "Real programming — not random workouts",
     ],
     cta: "Go Foundation",
-    subtitle: "A real training plan that progresses with you every month.",
+    subtitle: "A real 8-week training plan that updates every cycle.",
   },
   {
     key: "custom",
@@ -59,6 +59,7 @@ const TIER_CARDS: {
     features: [
       "Everything in Foundation, plus…",
       "Custom 8-week program built by Matt — any age, any goal",
+      "🎁 FREE Family Pack — add your child at no extra cost",
       "Help every single step of the way",
       "20% off in-person training if you want to learn it first (optional)",
       "Direct message Coach Matt anytime",
@@ -66,7 +67,7 @@ const TIER_CARDS: {
     ],
     cta: "Go Custom",
     subtitle: "Your own 8-week program from a 20-year coaching vet. Come in or do it all online — totally up to you.",
-    badge: "20% Off In-Person Sessions (Optional — Train Online or In Person)",
+    badge: "FREE Family Pack Included · 20% Off In-Person Sessions",
   },
   {
     key: "team_elite",
@@ -396,27 +397,27 @@ const Pricing = () => {
           })}
         </div>
 
-        {/* Youth Development callout — sits below the 4-column grid */}
+        {/* Family Pack callout — sits below the 4-column grid */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="mt-6 max-w-7xl mx-auto bg-card border-2 border-border p-6 flex flex-col md:flex-row items-start md:items-center gap-4"
+          className="mt-6 max-w-7xl mx-auto bg-card border-2 border-primary/30 p-6 flex flex-col md:flex-row items-start md:items-center gap-4"
         >
           <Shield className="w-8 h-8 text-primary shrink-0" />
           <div className="flex-1 min-w-0">
             <h3 className="text-base font-black uppercase tracking-tight text-foreground mb-1">
-              Youth Development — Parents Start Here
+              🎁 Family Pack — Free With Custom Membership
             </h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Same Foundation features at the same price — designed for families. Free postural assessment, parent account with child invite link, monitor workouts & progress, age-appropriate programming.
+              Every Custom membership includes a <strong className="text-foreground">free child membership</strong>. Your athlete gets their own account with age-appropriate programming, postural assessment, and full progress monitoring — all under your plan. To maintain our 100% durability record, Family Pack is exclusively available at the Custom level. <strong className="text-foreground">14-day free trial available.</strong>
             </p>
           </div>
           <Link
             to={user ? "/trial-welcome?path=parent" : "/auth?redirect=/trial-welcome?path=parent"}
-            className="shrink-0 bg-foreground text-background px-5 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:bg-foreground/90 transition-colors flex items-center gap-2"
+            className="shrink-0 bg-primary text-primary-foreground px-5 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-colors flex items-center gap-2"
           >
-            Start Parent Trial <ArrowRight className="w-3.5 h-3.5" />
+            Start Custom Trial <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </motion.div>
 

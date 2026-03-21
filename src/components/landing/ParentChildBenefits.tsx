@@ -53,10 +53,9 @@ const ParentPortalSection = ({ user }: { user: any }) => {
     <motion.div {...fade(0.3)} className="mb-12" id="parent-portal">
       <div className="bg-card shadow-m2 p-6 text-center">
         <Users size={32} className="mx-auto text-primary mb-3" />
-        <h3 className="text-sm font-bold text-foreground mb-2">Parent Portal — Link Your Child's Account</h3>
+        <h3 className="text-sm font-bold text-foreground mb-2">Family Pack — Add Your Athlete</h3>
         <p className="text-xs text-muted-foreground mb-4 max-w-md mx-auto">
-          Sign in or create a free account to set up a linked child account.
-          Monitor their progress, flag questions for Matt, and track their development — all from your dashboard.
+          Custom members get a free Family Pack — add your athlete's account and monitor their progress, flag questions for Matt, and track their development from your dashboard. 14-day free trial available.
         </p>
         <Link
           to="/auth?redirect=/for-parents"

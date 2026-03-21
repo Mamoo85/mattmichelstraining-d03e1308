@@ -194,18 +194,18 @@ const TrialWelcome = () => {
                 charge="$12.99/mo after trial"
                 desc="Exercise library, monthly focus, challenges, and workout logging."
                 badge={null}
-                warning="No child invite · No custom program"
+                warning="No Family Pack · No custom program"
               />
               <TrialPathCard
                 selected={selectedPath === "parent"}
                 onClick={() => setSelectedPath("parent")}
                 icon={Users}
-                title="Parent / Youth Dev"
-                charge="$19.99/mo (Foundation) after trial"
-                desc="Everything in Basic + custom programming, Fix It library, coach form review, and child invite links."
-                badge="Includes child linking"
+                title="Parent / Family Pack"
+                charge="$49.99/mo (Custom) after trial"
+                desc="Everything in Foundation + custom program from Matt + FREE child membership. 100% durability record maintained."
+                badge="🎁 Family Pack Included"
                 warning={null}
-                bonus="Free postural assessment"
+                bonus="Free postural assessment for parent & child"
               />
               <TrialPathCard
                 selected={selectedPath === "foundation"}
@@ -215,7 +215,7 @@ const TrialWelcome = () => {
                 charge="$19.99/mo (Foundation) after trial"
                 desc="Everything in Basic + 8-week periodized training, Fix It library, and direct coach form review."
                 badge={null}
-                warning="No child invite on this plan"
+                warning="Family Pack available at Custom level"
                 bonus="Free postural assessment"
               />
             </div>

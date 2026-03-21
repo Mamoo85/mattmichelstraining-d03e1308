@@ -165,14 +165,14 @@ const ParentChildManager = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Users size={18} className="text-primary" />
-          <h3 className="text-sm font-bold text-foreground uppercase tracking-widest">Linked Child Accounts</h3>
+          <h3 className="text-sm font-bold text-foreground uppercase tracking-widest">Family Pack</h3>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
           className="flex items-center gap-1.5 bg-primary text-primary-foreground px-3 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
         >
           <UserPlus size={12} />
-          Add Child
+          Add Athlete
         </button>
       </div>
 
@@ -309,9 +309,9 @@ const ParentChildManager = () => {
       {links.length === 0 && !showForm ? (
         <div className="bg-card shadow-m2 p-6 text-center">
           <Users size={32} className="mx-auto text-muted-foreground mb-3" />
-          <p className="text-sm text-muted-foreground mb-2">No linked child accounts yet</p>
+          <p className="text-sm text-muted-foreground mb-2">No athletes in your Family Pack yet</p>
           <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-            Send your athlete an invite link or create their account directly.
+            Add your athlete to your Family Pack — send an invite link or create their account directly.
           </p>
         </div>
       ) : (
