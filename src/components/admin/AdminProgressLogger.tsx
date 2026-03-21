@@ -1,12 +1,13 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Plus, Loader2, Calendar, Check, ChevronDown } from "lucide-react";
+import { Search, Plus, Loader2, Calendar, Check, ChevronDown, Video, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { LIFT_CATEGORIES, ALL_LIFTS } from "@/components/progress/liftConfig";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 
 interface UserProfile {
   user_id: string;
