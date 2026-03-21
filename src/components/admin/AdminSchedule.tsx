@@ -313,7 +313,7 @@ const AdminSchedule = () => {
                 className="text-[10px] font-bold uppercase tracking-widest"
               >
                 {bulkLoading ? <Loader2 size={12} className="animate-spin mr-1" /> : <CalendarPlus size={12} className="mr-1" />}
-                Open {bulkTimes.length} slots/day for {bulkWeeks} weeks
+                Open {bulkTimes.length} slots/day on {selectedDays.map(d => DAY_LABELS[d]).join(", ")} for {bulkWeeks} weeks
               </Button>
               <button
                 onClick={() => setBulkWeeks(null)}
