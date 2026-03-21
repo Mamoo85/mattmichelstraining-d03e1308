@@ -461,7 +461,7 @@ const AdminWorkoutInventory = () => {
         title="Delete Workout"
         description={`Remove "${deleteTarget?.title}"? This cannot be undone.`}
         confirmLabel="Delete"
-        variant="destructive"
+      />
       />
     </div>
   );
