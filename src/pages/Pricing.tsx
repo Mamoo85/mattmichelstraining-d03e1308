@@ -59,6 +59,7 @@ const TIER_CARDS: {
     features: [
       "Everything in Foundation, plus…",
       "Custom 8-week program built by Matt — any age, any goal",
+      "🎁 FREE Family Pack — add your child at no extra cost",
       "Help every single step of the way",
       "20% off in-person training if you want to learn it first (optional)",
       "Direct message Coach Matt anytime",
@@ -66,7 +67,7 @@ const TIER_CARDS: {
     ],
     cta: "Go Custom",
     subtitle: "Your own 8-week program from a 20-year coaching vet. Come in or do it all online — totally up to you.",
-    badge: "20% Off In-Person Sessions (Optional — Train Online or In Person)",
+    badge: "FREE Family Pack Included · 20% Off In-Person Sessions",
   },
   {
     key: "team_elite",
