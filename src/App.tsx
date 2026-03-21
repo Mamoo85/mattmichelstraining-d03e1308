@@ -18,7 +18,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useReferralCapture } from "@/hooks/useReferral";
 import { safeLocalStorage } from "@/lib/browserStorage";
 
-import { Loader2 } from "lucide-react";
+// CSS-only spinner — avoids pulling lucide-react into the entry chunk
 
 // Retry wrapper for lazy imports — retries up to 3 times on chunk load failure
 function lazyRetry(importFn: () => Promise<any>, retries = 3): ReturnType<typeof lazy> {
@@ -83,7 +83,7 @@ const persister = createSyncStoragePersister({
 
 const PageLoader = () => (
   <div className="min-h-screen bg-background flex items-center justify-center">
-    <Loader2 className="animate-spin text-primary" size={24} />
+    <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
   </div>
 );
 
