@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import SEOHead from "@/components/layout/SEOHead";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
