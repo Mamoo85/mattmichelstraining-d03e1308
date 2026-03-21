@@ -269,8 +269,8 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
                         </span>
                       )}
 
-                      {/* Video indicator */}
-                      {video && (
+                      {/* Video indicator or late upload */}
+                      {video ? (
                         <button
                           onClick={() => playVideo(video)}
                           className={cn(
@@ -286,6 +286,16 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
                           {video.status === "approved" ? <CheckCircle size={10} /> : <Clock size={10} />}
                           <Video size={10} />
                           {video.status === "pending_review" && "Review"}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => triggerLateUpload(log.id)}
+                          disabled={uploadingVideoLogId === log.id}
+                          className="h-6 px-1.5 flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider border border-dashed border-border text-muted-foreground hover:text-primary hover:border-primary/40 rounded transition-all disabled:opacity-50"
+                          title="Attach video proof"
+                        >
+                          {uploadingVideoLogId === log.id ? <Loader2 size={10} className="animate-spin" /> : <Upload size={10} />}
+                          <Video size={10} />
                         </button>
                       )}
 
