@@ -1,11 +1,11 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Calendar, Dumbbell, Camera, Brain, Zap, Heart, BookOpen } from "lucide-react";
 
 const FULL_TEXT = "Congratulations, you have passed the test.";
-const BLINK_DURATION = 2400; // 3 blinks at ~800ms each
+const BLINK_DURATION = 2400;
 const TYPE_SPEED = 55;
-const CTA_DELAY = 2000;
+const RAIN_DURATION = 4000; // rain plays for 4s before CTA fades in
 
 const FEATURES = [
   { icon: Dumbbell, title: "200+ Exercise Library", desc: "Every exercise Coach Matt prescribes — with video, cues, and 'the why' behind each one." },
@@ -16,11 +16,175 @@ const FEATURES = [
   { icon: BookOpen, title: "Monthly Focus Plans", desc: "A new training focus every month with exercises, biomechanics tips, and community challenges." },
 ];
 
+const MATRIX_CHARS = "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+/* ── Matrix Rain Canvas ────────────────────────────── */
+const MatrixRain = ({ active }: { active: boolean }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animRef = useRef<number>(0);
+  const columnsRef = useRef<number[]>([]);
+
+  useEffect(() => {
+    if (!active) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d")!;
+    const fontSize = 14;
+    let w = window.innerWidth;
+    let h = window.innerHeight;
+    canvas.width = w;
+    canvas.height = h;
+
+    const cols = Math.floor(w / fontSize);
+    columnsRef.current = Array(cols).fill(0).map(() => Math.random() * -50);
+
+    const handleResize = () => {
+      w = window.innerWidth;
+      h = window.innerHeight;
+      canvas.width = w;
+      canvas.height = h;
+      const newCols = Math.floor(w / fontSize);
+      columnsRef.current = Array(newCols).fill(0).map(() => Math.random() * -50);
+    };
+    window.addEventListener("resize", handleResize);
+
+    const draw = () => {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+      ctx.fillRect(0, 0, w, h);
+      ctx.font = `${fontSize}px monospace`;
+
+      columnsRef.current.forEach((y, i) => {
+        const char = MATRIX_CHARS[Math.floor(Math.random() * MATRIX_CHARS.length)];
+        const x = i * fontSize;
+
+        // Lead character is bright white-green
+        ctx.fillStyle = "#AAFFAA";
+        ctx.fillText(char, x, y * fontSize);
+
+        // Trail characters are classic green
+        if (Math.random() > 0.98) {
+          ctx.fillStyle = "#00FF41";
+        } else {
+          ctx.fillStyle = `rgba(0, 255, 65, ${0.3 + Math.random() * 0.5})`;
+        }
+        ctx.fillText(char, x, y * fontSize);
+
+        if (y * fontSize > h && Math.random() > 0.975) {
+          columnsRef.current[i] = 0;
+        } else {
+          columnsRef.current[i] = y + 1;
+        }
+      });
+
+      animRef.current = requestAnimationFrame(draw);
+    };
+
+    draw();
+
+    return () => {
+      cancelAnimationFrame(animRef.current);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [active]);
+
+  if (!active) return null;
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="fixed inset-0 z-10 pointer-events-none"
+      style={{ opacity: 1 }}
+    />
+  );
+};
+
+/* ── Matrix Ambient Synth ──────────────────────────── */
+const useMatrixAudio = () => {
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const nodesRef = useRef<{ gain: GainNode; oscillators: OscillatorNode[] } | null>(null);
+
+  const start = useCallback(() => {
+    try {
+      const ctx = new AudioContext();
+      audioCtxRef.current = ctx;
+
+      const masterGain = ctx.createGain();
+      masterGain.gain.setValueAtTime(0, ctx.currentTime);
+      masterGain.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 1.5);
+      masterGain.connect(ctx.destination);
+
+      const oscillators: OscillatorNode[] = [];
+
+      // Deep drone
+      const drone = ctx.createOscillator();
+      drone.type = "sawtooth";
+      drone.frequency.setValueAtTime(55, ctx.currentTime);
+      const droneGain = ctx.createGain();
+      droneGain.gain.setValueAtTime(0.3, ctx.currentTime);
+      const droneFilter = ctx.createBiquadFilter();
+      droneFilter.type = "lowpass";
+      droneFilter.frequency.setValueAtTime(200, ctx.currentTime);
+      drone.connect(droneFilter).connect(droneGain).connect(masterGain);
+      drone.start();
+      oscillators.push(drone);
+
+      // Eerie pad
+      const pad = ctx.createOscillator();
+      pad.type = "sine";
+      pad.frequency.setValueAtTime(220, ctx.currentTime);
+      pad.frequency.linearRampToValueAtTime(233, ctx.currentTime + 4);
+      const padGain = ctx.createGain();
+      padGain.gain.setValueAtTime(0.08, ctx.currentTime);
+      pad.connect(padGain).connect(masterGain);
+      pad.start();
+      oscillators.push(pad);
+
+      // High shimmer
+      const shimmer = ctx.createOscillator();
+      shimmer.type = "sine";
+      shimmer.frequency.setValueAtTime(880, ctx.currentTime);
+      const shimmerGain = ctx.createGain();
+      shimmerGain.gain.setValueAtTime(0.02, ctx.currentTime);
+      // LFO for shimmer
+      const lfo = ctx.createOscillator();
+      lfo.frequency.setValueAtTime(0.5, ctx.currentTime);
+      const lfoGain = ctx.createGain();
+      lfoGain.gain.setValueAtTime(0.015, ctx.currentTime);
+      lfo.connect(lfoGain).connect(shimmerGain.gain);
+      lfo.start();
+      shimmer.connect(shimmerGain).connect(masterGain);
+      shimmer.start();
+      oscillators.push(shimmer, lfo);
+
+      nodesRef.current = { gain: masterGain, oscillators };
+    } catch {
+      // Web Audio not available
+    }
+  }, []);
+
+  const stop = useCallback(() => {
+    if (!nodesRef.current || !audioCtxRef.current) return;
+    const ctx = audioCtxRef.current;
+    const { gain, oscillators } = nodesRef.current;
+    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 2);
+    setTimeout(() => {
+      oscillators.forEach((o) => { try { o.stop(); } catch {} });
+      ctx.close();
+    }, 2500);
+  }, []);
+
+  return { start, stop };
+};
+
+/* ── Main Component ────────────────────────────────── */
 const MatrixEasterEgg = () => {
-  const [phase, setPhase] = useState<"blink" | "type" | "cta">("blink");
+  const [phase, setPhase] = useState<"blink" | "type" | "rain" | "cta">("blink");
   const [typed, setTyped] = useState("");
   const [showCta, setShowCta] = useState(false);
+  const [rainFading, setRainFading] = useState(false);
   const ctaRef = useRef<HTMLDivElement>(null);
+  const { start: startAudio, stop: stopAudio } = useMatrixAudio();
 
   // Phase 1: blink cursor
   useEffect(() => {
@@ -37,24 +201,52 @@ const MatrixEasterEgg = () => {
       setTyped(FULL_TEXT.slice(0, i));
       if (i >= FULL_TEXT.length) {
         clearInterval(iv);
-        setTimeout(() => {
-          setPhase("cta");
-          setShowCta(true);
-        }, CTA_DELAY);
+        setTimeout(() => setPhase("rain"), 1200);
       }
     }, TYPE_SPEED);
     return () => clearInterval(iv);
   }, [phase]);
 
+  // Phase 3: matrix rain
+  useEffect(() => {
+    if (phase !== "rain") return;
+    startAudio();
+
+    const fadeTimer = setTimeout(() => {
+      setRainFading(true);
+      setShowCta(true);
+      setPhase("cta");
+    }, RAIN_DURATION);
+
+    return () => clearTimeout(fadeTimer);
+  }, [phase, startAudio]);
+
+  // Stop audio when leaving page
+  useEffect(() => {
+    return () => stopAudio();
+  }, [stopAudio]);
+
   // Scroll to CTA when it appears
   useEffect(() => {
     if (showCta && ctaRef.current) {
-      setTimeout(() => ctaRef.current?.scrollIntoView({ behavior: "smooth" }), 300);
+      setTimeout(() => ctaRef.current?.scrollIntoView({ behavior: "smooth" }), 600);
     }
   }, [showCta]);
 
+  const rainActive = phase === "rain" || (phase === "cta" && !rainFading);
+
   return (
     <div className="min-h-screen bg-black text-[#00FF41] selection:bg-[#00FF41]/20">
+      {/* Matrix Rain Canvas */}
+      <MatrixRain active={phase === "rain" || phase === "cta"} />
+
+      {/* Rain fade-out overlay */}
+      <div
+        className={`fixed inset-0 z-20 bg-black pointer-events-none transition-opacity duration-[3000ms] ${
+          rainFading ? "opacity-100" : "opacity-0"
+        }`}
+      />
+
       {/* Back button */}
       <Link
         to="/"
@@ -65,7 +257,9 @@ const MatrixEasterEgg = () => {
       </Link>
 
       {/* Matrix terminal */}
-      <div className="min-h-screen flex items-center justify-center px-6">
+      <div className={`min-h-screen flex items-center justify-center px-6 relative z-30 transition-opacity duration-1000 ${
+        phase === "rain" || phase === "cta" ? "opacity-0 pointer-events-none" : ""
+      }`}>
         <div className="font-mono text-xl md:text-3xl lg:text-4xl text-center max-w-3xl">
           {phase === "blink" && (
             <span className="inline-block w-3 h-7 md:h-9 bg-[#00FF41] animate-[cursor-blink_0.8s_step-end_infinite]" />
@@ -79,14 +273,16 @@ const MatrixEasterEgg = () => {
         </div>
       </div>
 
-      {/* CTA section */}
+      {/* CTA section — fades in over the rain */}
       <div
         ref={ctaRef}
-        className={`transition-all duration-1000 ${showCta ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none"}`}
+        className={`relative z-30 transition-all duration-[2000ms] ease-out ${
+          showCta ? "opacity-100 translate-y-0" : "opacity-0 translate-y-16 pointer-events-none"
+        }`}
       >
         <div className="max-w-2xl mx-auto px-5 pb-20">
           {/* Matt's note */}
-          <div className="border border-[#00FF41]/30 bg-[#00FF41]/5 p-6 md:p-8 mb-10">
+          <div className="border border-[#00FF41]/30 bg-black/80 backdrop-blur-none p-6 md:p-8 mb-10">
             <p className="text-[#00FF41]/60 text-[10px] font-mono uppercase tracking-widest mb-3">
               Encrypted message from Coach Matt
             </p>
@@ -109,7 +305,7 @@ const MatrixEasterEgg = () => {
             {FEATURES.map((f) => (
               <div
                 key={f.title}
-                className="border border-[#00FF41]/20 bg-[#00FF41]/5 p-4 hover:border-[#00FF41]/40 transition-colors"
+                className="border border-[#00FF41]/20 bg-black/70 p-4 hover:border-[#00FF41]/40 transition-colors"
               >
                 <div className="flex items-center gap-2 mb-2">
                   <f.icon size={16} className="text-[#00FF41] flex-shrink-0" />
@@ -180,11 +376,6 @@ const MatrixEasterEgg = () => {
         @keyframes cursor-blink {
           0%, 100% { opacity: 1; }
           50% { opacity: 0; }
-        }
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-4px); }
-          75% { transform: translateX(4px); }
         }
       `}</style>
     </div>
