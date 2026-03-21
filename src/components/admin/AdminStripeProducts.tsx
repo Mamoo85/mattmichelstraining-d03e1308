@@ -132,7 +132,7 @@ const AdminStripeProducts = () => {
         </button>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-3 max-h-[65vh] overflow-y-auto pr-1">
         {products.map((p) => {
           const isEditing = editingId === p.id;
 
