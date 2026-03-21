@@ -86,7 +86,12 @@ const FreeAiGenerator = () => {
       }
       const data = await resp.json();
       setProgram(data);
-    } catch (e: any) {
+      // Increment generation counter for non-authenticated users
+      if (!user) {
+        const newCount = genCount + 1;
+        setGenCount(newCount);
+        safeLocalStorage.setItem(STORAGE_KEY, String(newCount));
+      }
       setError(e.message);
     } finally {
       setLoading(false);
