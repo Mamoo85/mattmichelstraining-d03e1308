@@ -26,6 +26,7 @@ import AskCoachBubble from "@/components/dashboard/AskCoachBubble";
 
 const BASE_TABS = [
   { key: "home", label: "Home" },
+  { key: "progress", label: "Progress" },
   { key: "programs", label: "My Programs" },
   { key: "workouts", label: "Workouts" },
   { key: "challenge", label: "Challenge" },
