@@ -309,7 +309,7 @@ const AdminSchedule = () => {
             <div className="flex items-center gap-3">
               <Button
                 onClick={() => bulkPopulate(bulkWeeks)}
-                disabled={bulkLoading || bulkTimes.length === 0}
+                disabled={bulkLoading || bulkTimes.length === 0 || selectedDays.length === 0}
                 className="text-[10px] font-bold uppercase tracking-widest"
               >
                 {bulkLoading ? <Loader2 size={12} className="animate-spin mr-1" /> : <CalendarPlus size={12} className="mr-1" />}
