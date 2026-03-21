@@ -441,6 +441,7 @@ const Pricing = () => {
           productPrice={modalTier ? (TIERS[modalTier.key].price + "/mo") : ""}
           productType={modalTier?.key as CheckoutProductType || "foundation"}
         />
+        <Suspense fallback={null}><DoNotPressButton /></Suspense>
       </div>
     </div>
   );
