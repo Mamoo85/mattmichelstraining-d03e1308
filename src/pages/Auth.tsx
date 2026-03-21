@@ -175,37 +175,6 @@ const Auth = () => {
     }
   };
 
-  const handleAppleSignIn = async () => {
-    setAppleLoading(true);
-    setError("");
-    setSuccess("");
-    console.log("[APPLE-AUTH] Starting Apple sign-in, origin:", window.location.origin);
-    try {
-      const result = await lovable.auth.signInWithOAuth("apple", {
-        redirect_uri: window.location.origin,
-      });
-      console.log("[APPLE-AUTH] Result:", JSON.stringify(result, null, 2));
-      if (result?.error) {
-        const msg = result.error.message || "Apple sign-in failed";
-        console.error("[APPLE-AUTH] Error:", msg);
-        if (msg.toLowerCase().includes("interrupted") || msg.toLowerCase().includes("popup")) {
-          setError("Sign-in was interrupted. Please try again — make sure popups aren't blocked.");
-        } else {
-          setError(msg);
-        }
-      }
-    } catch (e: any) {
-      console.error("[APPLE-AUTH] Catch:", e);
-      const msg = e.message || "Apple sign-in failed";
-      if (msg.toLowerCase().includes("interrupted") || msg.toLowerCase().includes("popup")) {
-        setError("Connection interrupted. Check your internet and try again.");
-      } else {
-        setError(msg);
-      }
-    } finally {
-      setAppleLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-[100dvh] bg-background flex items-center justify-center px-4 overflow-y-auto pb-safe">
