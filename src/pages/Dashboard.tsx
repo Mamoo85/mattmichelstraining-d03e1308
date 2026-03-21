@@ -148,6 +148,7 @@ const Dashboard = () => {
               onViewReferrals={handleViewReferrals}
             />
           )}
+          {activeTab === "progress" && <ProgressCharts />}
           {activeTab === "programs" && <MyPrograms />}
           {activeTab === "workouts" && <WorkoutsTab />}
           {activeTab === "challenge" && <ChallengeHub />}
