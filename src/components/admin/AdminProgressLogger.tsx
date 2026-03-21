@@ -38,8 +38,7 @@ const AdminProgressLogger = () => {
   const [saving, setSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  // Exercise autocomplete
-  const [exerciseOptions, setExerciseOptions] = useState<string[]>([]);
+  // Exercise dropdown from liftConfig
   const [showExerciseDropdown, setShowExerciseDropdown] = useState(false);
 
   // Recent logs for selected user
