@@ -456,7 +456,7 @@ const AdminWorkoutInventory = () => {
       {/* Delete confirmation */}
       <ConfirmActionModal
         open={!!deleteTarget}
-        onClose={() => setDeleteTarget(null)}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
         onConfirm={deleteWorkout}
         title="Delete Workout"
         description={`Remove "${deleteTarget?.title}"? This cannot be undone.`}
