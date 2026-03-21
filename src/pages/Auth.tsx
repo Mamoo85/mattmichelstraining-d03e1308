@@ -69,7 +69,8 @@ const Auth = () => {
   const [signupRole, setSignupRole] = useState<SignupRole>("self");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [athleteName, setAthleteName] = useState("");
   // Parent flow: child fields
   const [childEmail, setChildEmail] = useState("");
@@ -106,7 +107,7 @@ const Auth = () => {
         password,
         options: {
           emailRedirectTo: window.location.origin,
-          data: { full_name: fullName, athlete_name: signupRole === "self" ? athleteName : "", account_role: accountRole },
+          data: { full_name: `${firstName.trim()} ${lastName.trim()}`, athlete_name: signupRole === "self" ? athleteName : "", account_role: accountRole },
         },
       });
       if (signUpError) {
@@ -300,17 +301,31 @@ const Auth = () => {
         <form onSubmit={handleSubmit} className="space-y-3">
           {mode === "signup" && (
             <>
-              <div>
-                <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">
-                  {signupRole === "parent" ? "Parent / Guardian Name" : "Your Name"}
-                </label>
-                <input
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="w-full bg-card border border-border px-3 py-3 text-sm text-foreground focus:ring-1 focus:ring-primary outline-none"
-                  required
-                />
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">
+                    First Name
+                  </label>
+                  <input
+                    type="text"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    className="w-full bg-card border border-border px-3 py-3 text-sm text-foreground focus:ring-1 focus:ring-primary outline-none"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">
+                    Last Name
+                  </label>
+                  <input
+                    type="text"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    className="w-full bg-card border border-border px-3 py-3 text-sm text-foreground focus:ring-1 focus:ring-primary outline-none"
+                    required
+                  />
+                </div>
               </div>
               {signupRole === "self" && (
                 <div>
