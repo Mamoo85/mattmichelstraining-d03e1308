@@ -282,7 +282,7 @@ const MatrixEasterEgg = () => {
         }`}
       >
         <div className="max-w-2xl mx-auto px-5 pb-20">
-          {/* Matt's note — rewritten */}
+          {/* Matt's personal note */}
           <div className="border border-[#33FF33]/30 bg-black/90 p-6 md:p-8 mb-10 shadow-[0_0_20px_rgba(51,255,51,0.05)]">
             <p className="text-[#33FF33]/50 text-[10px] font-mono uppercase tracking-[0.3em] mb-4">
               ▌ incoming_transmission // coach_matt
@@ -292,20 +292,23 @@ const MatrixEasterEgg = () => {
               <br />&gt; But since you did… I like you already.
             </p>
             <p className="text-[#33FF33]/90 font-mono text-sm md:text-base leading-relaxed mb-4">
-              Here's what I actually do: I fix people. A shoulder that clicks when you reach overhead. A hip that locks up every deadlift day. A knee that's been lying to you since sophomore year. I've been untangling that stuff for 20 years.
+              Look — for $12.99 a month you get everything I use with my in-person clients. The same exercise library. The same recovery protocols. The same "Fix It" playbook I've spent 20 years building. You can literally point your phone at your plate and get instant macros, or snap a photo of your form mid-set and the app rewrites your next workout around what it sees. Your program adapts to YOUR body. That's not a gimmick — that's the future of training and you'd have it in your pocket.
             </p>
             <p className="text-[#33FF33]/90 font-mono text-sm md:text-base leading-relaxed mb-4">
-              And now the app does something wild — you take a photo of your form mid-set, and it rewrites your next workout around what it sees. Your program literally adapts to your body. That's not a gimmick. That's the future of training, and it's $12.99 a month.
+              Here's the thing nobody wants to admit: everybody's got something. That shoulder that clicks when you reach overhead. That hip that locks up every deadlift day. That knee you've been "managing" for three years. You're not managing it. You're ignoring it. And it's getting worse.
+            </p>
+            <p className="text-[#33FF33]/90 font-mono text-sm md:text-base leading-relaxed mb-4">
+              I'm literally known for fixing people. That's what I do. And with the membership, you get full access to every protocol, every method, every weird trick I've picked up over two decades of putting athletes back together. Use them on your own, follow along in the app — and when you really need hands on it, come see me once or twice a month in person. That's the move.
             </p>
             <p className="text-[#33FF33] font-mono text-sm md:text-base leading-relaxed font-bold">
-              &gt; When the app isn't enough, come see me in person.
-              <br />&gt; I'll put my hands on the problem and we'll sort it out.
+              &gt; It's the perfect setup if you can't commit to a set schedule
+              <br />&gt; but still want a coach who actually gives a damn.
             </p>
           </div>
 
           {/* Feature grid */}
           <h3 className="text-[#33FF33]/60 font-mono text-[10px] uppercase tracking-[0.3em] mb-5 text-center">
-            ┌── SYSTEM.UNLOCKED ──┐
+            ┌── WHAT YOU GET ──┐
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-10">
             {FEATURES.map((f) => (
@@ -322,18 +325,8 @@ const MatrixEasterEgg = () => {
             ))}
           </div>
 
-          {/* Healer hook */}
-          <div className="border-l-2 border-[#33FF33]/30 pl-4 mb-10">
-            <p className="font-mono text-sm text-[#33FF33]/70 leading-relaxed">
-              Everybody's got something. That thing that flares up Monday and you pretend doesn't exist by Wednesday. The thing you've been "managing" for three years.
-            </p>
-            <p className="font-mono text-sm text-[#33FF33] leading-relaxed mt-3 font-bold">
-              Stop managing it. Let me fix it. That's literally what I do.
-            </p>
-          </div>
-
           {/* Primary CTA */}
-          <div className="text-center mb-10">
+          <div className="text-center mb-12">
             <Link
               to="/auth?redirect=/trial-welcome"
               className="inline-block bg-[#33FF33] text-black font-mono font-black text-sm md:text-base uppercase tracking-widest px-8 py-4 hover:bg-[#66FF66] hover:shadow-[0_0_40px_rgba(51,255,51,0.4)] transition-all duration-300"
@@ -345,13 +338,23 @@ const MatrixEasterEgg = () => {
             </p>
           </div>
 
-          {/* I'LL PROVE IT divider */}
-          <div className="flex items-center gap-4 mb-6">
+          {/* Transition — personal, then prove it */}
+          <div className="border-l-2 border-[#33FF33]/30 pl-4 mb-8">
+            <p className="font-mono text-sm text-[#33FF33]/80 leading-relaxed">
+              If you don't believe me — and honestly, why would you, you just met me on a secret page you weren't supposed to find —
+            </p>
+            <p className="font-mono text-sm text-[#33FF33] leading-relaxed mt-3 font-bold">
+              then let me prove it.
+            </p>
+          </div>
+
+          {/* I'LL PROVE IT */}
+          <div className="flex items-center gap-4 mb-4">
             <div className="flex-1 h-px bg-[#33FF33]/20" />
             <div className="flex-1 h-px bg-[#33FF33]/20" />
           </div>
 
-          <div className="text-center mb-6">
+          <div className="text-center mb-4">
             <p className="font-mono text-2xl md:text-3xl font-black text-[#33FF33] tracking-tight animate-[pulse_2s_ease-in-out_infinite]">
               I'LL PROVE IT.
             </p>
@@ -360,7 +363,7 @@ const MatrixEasterEgg = () => {
             </p>
           </div>
 
-          <div className="flex items-center gap-4 mb-10">
+          <div className="flex items-center gap-4 mb-8">
             <div className="flex-1 h-px bg-[#33FF33]/20" />
             <div className="flex-1 h-px bg-[#33FF33]/20" />
           </div>
