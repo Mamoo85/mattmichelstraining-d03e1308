@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_media_files: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          file_type: string
+          id: string
+          metadata: Json | null
+          tags: string[] | null
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          file_type?: string
+          id?: string
+          metadata?: Json | null
+          tags?: string[] | null
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          file_type?: string
+          id?: string
+          metadata?: Json | null
+          tags?: string[] | null
+          uploaded_by?: string
+        }
+        Relationships: []
+      }
       admin_trash: {
         Row: {
           deleted_at: string
@@ -113,6 +149,48 @@ export type Database = {
           report_week?: string
           status?: string
           summary_text?: string | null
+        }
+        Relationships: []
+      }
+      ai_media_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          created_by: string
+          error_message: string | null
+          id: string
+          parameters: Json | null
+          prompt: string
+          result_path: string | null
+          result_url: string | null
+          source_file_ids: string[]
+          status: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          created_by: string
+          error_message?: string | null
+          id?: string
+          parameters?: Json | null
+          prompt: string
+          result_path?: string | null
+          result_url?: string | null
+          source_file_ids?: string[]
+          status?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          error_message?: string | null
+          id?: string
+          parameters?: Json | null
+          prompt?: string
+          result_path?: string | null
+          result_url?: string | null
+          source_file_ids?: string[]
+          status?: string
         }
         Relationships: []
       }
