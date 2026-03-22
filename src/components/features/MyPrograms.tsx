@@ -33,6 +33,10 @@ interface ActiveProgram {
   program_id: string;
   start_date: string;
   status: string;
+  current_week?: number;
+  current_day?: number;
+  block_number?: number;
+  completed_days?: Array<{ week: number; day: number }>;
   program: {
     id: string;
     title: string;
