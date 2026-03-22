@@ -75,7 +75,7 @@ const MyPrograms = () => {
       // Fetch interactive programs for user AND linked family members
       const { data: active } = await supabase
         .from("user_active_programs")
-        .select("id, program_id, start_date, status, training_programs(id, title, description, category, sport)")
+        .select("id, program_id, start_date, status, current_week, current_day, block_number, completed_days, training_programs(id, title, description, category, sport)")
         .in("user_id", familyIds)
         .order("created_at", { ascending: false });
 
