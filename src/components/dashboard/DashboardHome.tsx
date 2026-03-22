@@ -120,6 +120,8 @@ const DashboardHome = memo(({ isNewUser, isInPerson, onViewPoints, onViewReferra
       <CustomProgramRequest />
     </Suspense>
 
+    <AnnualUpsellCard />
+
     <UpcomingSessions />
     <MonthlyFocusWidget />
 
