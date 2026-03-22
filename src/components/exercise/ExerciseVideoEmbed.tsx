@@ -34,8 +34,10 @@ const ExerciseVideoEmbed = ({ videoUrl, exerciseTitle }: ExerciseVideoEmbedProps
 
   const youtubeId = getYouTubeId(videoUrl);
   const vimeoId = getVimeoId(videoUrl);
+  const isDirectVideo = !youtubeId && !vimeoId;
 
-  if (!youtubeId && !vimeoId) return null;
+  // If it's not YouTube, Vimeo, or a direct video URL, don't render
+  if (!youtubeId && !vimeoId && !videoUrl.match(/\.(mp4|webm|mov|ogg)(\?|$)/i) && !videoUrl.includes("/storage/")) return null;
 
   const thumbnailUrl = youtubeId
     ? `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`
@@ -43,7 +45,9 @@ const ExerciseVideoEmbed = ({ videoUrl, exerciseTitle }: ExerciseVideoEmbedProps
 
   const embedUrl = youtubeId
     ? `https://www.youtube-nocookie.com/embed/${youtubeId}?rel=0&modestbranding=1&showinfo=0&iv_load_policy=3`
-    : `https://player.vimeo.com/video/${vimeoId}?byline=0&portrait=0&title=0`;
+    : vimeoId
+    ? `https://player.vimeo.com/video/${vimeoId}?byline=0&portrait=0&title=0`
+    : null;
 
   return (
     <motion.div
@@ -62,70 +66,90 @@ const ExerciseVideoEmbed = ({ videoUrl, exerciseTitle }: ExerciseVideoEmbedProps
           </span>
         </div>
 
-        <AnimatePresence mode="wait">
-          {!showVideo ? (
-            <motion.button
-              key="thumbnail"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-              transition={{ duration: 0.3 }}
-              onClick={() => setShowVideo(true)}
-              className="relative w-full aspect-video bg-muted overflow-hidden group cursor-pointer"
-              aria-label={`Play form video for ${exerciseTitle}`}
-            >
-              {thumbnailUrl && (
-                <img
-                  src={thumbnailUrl}
-                  alt={`${exerciseTitle} form video thumbnail`}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+        {isDirectVideo ? (
+          /* Direct video file (uploaded by admin) */
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="relative w-full aspect-video bg-black"
+          >
+            <video
+              src={videoUrl}
+              controls
+              preload="metadata"
+              className="w-full h-full object-contain"
+              playsInline
+            />
+          </motion.div>
+        ) : (
+          <AnimatePresence mode="wait">
+            {!showVideo ? (
+              <motion.button
+                key="thumbnail"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ duration: 0.3 }}
+                onClick={() => setShowVideo(true)}
+                className="relative w-full aspect-video bg-muted overflow-hidden group cursor-pointer"
+                aria-label={`Play form video for ${exerciseTitle}`}
+              >
+                {thumbnailUrl && (
+                  <img
+                    src={thumbnailUrl}
+                    alt={`${exerciseTitle} form video thumbnail`}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    loading="lazy"
+                  />
+                )}
+                <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+                  <motion.div
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="w-12 h-12 rounded-full bg-primary/90 backdrop-blur-sm flex items-center justify-center shadow-lg"
+                  >
+                    <Play size={20} className="text-primary-foreground ml-0.5" fill="currentColor" />
+                  </motion.div>
+                </div>
+                <div className="absolute bottom-2 left-2 right-2">
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-white/80 bg-black/50 px-2 py-1 backdrop-blur-sm">
+                    Watch: Proper Form
+                  </span>
+                </div>
+              </motion.button>
+            ) : (
+              <motion.div
+                key="player"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+                className="relative w-full aspect-video bg-black"
+              >
+                <iframe
+                  src={embedUrl!}
+                  title={`${exerciseTitle} form video`}
+                  className="absolute inset-0 w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
                   loading="lazy"
                 />
-              )}
-              <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
-                <motion.div
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="w-12 h-12 rounded-full bg-primary/90 backdrop-blur-sm flex items-center justify-center shadow-lg"
-                >
-                  <Play size={20} className="text-primary-foreground ml-0.5" fill="currentColor" />
-                </motion.div>
-              </div>
-              <div className="absolute bottom-2 left-2 right-2">
-                <span className="text-[9px] font-bold uppercase tracking-widest text-white/80 bg-black/50 px-2 py-1 backdrop-blur-sm">
-                  Watch: Proper Form
-                </span>
-              </div>
-            </motion.button>
-          ) : (
-            <motion.div
-              key="player"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className="relative w-full aspect-video bg-black"
-            >
-              <iframe
-                src={embedUrl}
-                title={`${exerciseTitle} form video`}
-                className="absolute inset-0 w-full h-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                loading="lazy"
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        )}
 
-        <a
-          href={videoUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1 mt-2 text-[9px] font-bold uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors"
-        >
-          <ExternalLink size={9} />
-          Open on {youtubeId ? "YouTube" : "Vimeo"}
-        </a>
+        {!isDirectVideo && (
+          <a
+            href={videoUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 mt-2 text-[9px] font-bold uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors"
+          >
+            <ExternalLink size={9} />
+            Open on {youtubeId ? "YouTube" : "Vimeo"}
+          </a>
+        )}
       </div>
     </motion.div>
   );
