@@ -53,6 +53,7 @@ const Shop = () => {
           ))}
         </div>
 
+        <Suspense fallback={null}><FirstMonthPromo /></Suspense>
         {activeTab === "start" && <StoreGettingStarted />}
         {activeTab === "store" && <StoreTab />}
         {activeTab === "library" && (
