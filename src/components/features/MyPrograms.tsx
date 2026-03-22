@@ -271,7 +271,7 @@ const MyPrograms = () => {
                 </div>
                 <div className="border-t border-border px-4 py-2 flex items-center justify-between">
                   <span className="text-[10px] text-muted-foreground font-mono">
-                    Started {format(new Date(ap.start_date), "MMM d, yyyy")}
+                    Wk {ap.current_week ?? 1}/8 · Day {ap.current_day ?? 1}
                   </span>
                   <div className="flex items-center gap-3">
                     <button

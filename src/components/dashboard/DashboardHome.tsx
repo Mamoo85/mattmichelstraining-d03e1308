@@ -121,6 +121,7 @@ const DashboardHome = memo(({ isNewUser, isInPerson, onViewPoints, onViewReferra
       <CustomProgramRequest />
     </Suspense>
 
+    <TodaysTrainingCard />
     <AnnualUpsellCard />
 
     <UpcomingSessions />
