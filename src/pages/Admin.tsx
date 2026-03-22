@@ -63,6 +63,7 @@ const AdminTrash = lazy(() => import("@/components/admin/AdminTrash"));
 const AdminMediaVault = lazy(() => import("@/components/admin/AdminMediaVault"));
 const AdminProgressLogger = lazy(() => import("@/components/admin/AdminProgressLogger"));
 const AdminLiftVideoReview = lazy(() => import("@/components/admin/AdminLiftVideoReview"));
+const AdminProveItReview = lazy(() => import("@/components/admin/AdminProveItReview"));
 const AdminSeoGenerator = lazy(() => import("@/components/admin/AdminSeoGenerator"));
 
 const MASTER_TABS = [

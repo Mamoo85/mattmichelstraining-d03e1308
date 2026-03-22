@@ -195,6 +195,7 @@ const Dashboard = () => {
       )}
 
       <DualFab />
+      <PortalOnboarding />
     </div>
   );
 };

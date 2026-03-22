@@ -216,6 +216,7 @@ const App = () => (
               </ErrorBoundary>
               <GlobalTimer />
               <ActiveWorkoutWrapper />
+              <ProveItWrapper />
               <Suspense fallback={null}><OfflineBadge /></Suspense>
             </BrowserRouter>
           </TooltipProvider>
