@@ -38,6 +38,7 @@ function lazyRetry(importFn: () => Promise<any>, retries = 3): ReturnType<typeof
 const AnnouncementBanner = lazyRetry(() => import("@/components/layout/AnnouncementBanner"));
 const IntervalTimer = lazyRetry(() => import("@/components/workout/IntervalTimer"));
 const ActiveWorkoutZone = lazyRetry(() => import("@/components/workout/ActiveWorkoutZone"));
+const ProveItZone = lazyRetry(() => import("@/components/workout/ProveItZone"));
 
 // Lazy-load ALL pages including Index for faster initial JS parse
 const Index = lazyRetry(() => import("./pages/Index"));
@@ -153,6 +154,24 @@ const ReferralCaptureWrapper = () => {
   return null;
 };
 
+const ProveItWrapper = () => {
+  const { user } = useAuth();
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setOpen(true);
+    window.addEventListener("open-prove-it-zone", handler);
+    return () => window.removeEventListener("open-prove-it-zone", handler);
+  }, []);
+
+  if (!user || !open) return null;
+  return (
+    <Suspense fallback={null}>
+      <ProveItZone onClose={() => setOpen(false)} />
+    </Suspense>
+  );
+};
+
 const App = () => (
   <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, maxAge: 24 * 60 * 60_000 }}>
     <AuthProvider>
@@ -197,6 +216,7 @@ const App = () => (
               </ErrorBoundary>
               <GlobalTimer />
               <ActiveWorkoutWrapper />
+              <ProveItWrapper />
               <Suspense fallback={null}><OfflineBadge /></Suspense>
             </BrowserRouter>
           </TooltipProvider>

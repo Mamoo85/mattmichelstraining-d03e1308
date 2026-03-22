@@ -5,7 +5,7 @@ import TrialPaywallModal from "@/components/billing/TrialPaywallModal";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
-import { Loader2, Crown, User, Dumbbell, Play } from "lucide-react";
+import { Loader2, Crown, User, Dumbbell, Play, Trophy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import PwaInstallBanner from "@/components/layout/PwaInstallBanner";
@@ -24,6 +24,7 @@ const TeamManager = lazy(() => import("@/components/features/TeamManager"));
 const ProgressCharts = lazy(() => import("@/components/features/ProgressCharts"));
 
 import DualFab from "@/components/dashboard/DualFab";
+import PortalOnboarding from "@/components/dashboard/PortalOnboarding";
 
 const BASE_TABS = [
   { key: "home", label: "Home" },
@@ -156,20 +157,28 @@ const Dashboard = () => {
           {activeTab === "team" && <TeamManager />}
         </Suspense>
 
-        {/* Persistent "Enter The Portal" button — always visible */}
+        {/* Persistent bottom buttons */}
         <div className="fixed bottom-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-md border-t border-border px-4 py-3 safe-bottom">
-          <button
-            onClick={() => {
-              if (!subscribed && hasPrograms === false && hasLogs === false && !isAdmin) {
-                navigate("/pricing");
-                return;
-              }
-              window.dispatchEvent(new CustomEvent("open-workout-zone", { detail: null }));
-            }}
-            className="w-full h-12 bg-primary text-primary-foreground flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all shadow-[0_0_20px_rgba(249,115,22,0.3)]"
-          >
-            <Dumbbell size={16} /> Enter The Portal
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                if (!subscribed && hasPrograms === false && hasLogs === false && !isAdmin) {
+                  navigate("/pricing");
+                  return;
+                }
+                window.dispatchEvent(new CustomEvent("open-workout-zone", { detail: null }));
+              }}
+              className="flex-1 h-12 bg-primary text-primary-foreground flex items-center justify-center gap-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all"
+            >
+              <Dumbbell size={14} /> Enter The Portal
+            </button>
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent("open-prove-it-zone"))}
+              className="flex-1 h-12 bg-card border border-primary text-primary flex items-center justify-center gap-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest hover:bg-primary hover:text-primary-foreground transition-all"
+            >
+              <Trophy size={14} /> Attempting New Best
+            </button>
+          </div>
         </div>
       </div>
 
@@ -186,6 +195,7 @@ const Dashboard = () => {
       )}
 
       <DualFab />
+      <PortalOnboarding />
     </div>
   );
 };

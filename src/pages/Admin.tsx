@@ -63,6 +63,7 @@ const AdminTrash = lazy(() => import("@/components/admin/AdminTrash"));
 const AdminMediaVault = lazy(() => import("@/components/admin/AdminMediaVault"));
 const AdminProgressLogger = lazy(() => import("@/components/admin/AdminProgressLogger"));
 const AdminLiftVideoReview = lazy(() => import("@/components/admin/AdminLiftVideoReview"));
+const AdminProveItReview = lazy(() => import("@/components/admin/AdminProveItReview"));
 const AdminSeoGenerator = lazy(() => import("@/components/admin/AdminSeoGenerator"));
 
 const MASTER_TABS = [
@@ -174,7 +175,7 @@ const Admin = () => {
     refetchInterval: 30000,
   });
 
-  const { data: pendingLiftVideosCount = 0 } = useQuery({
+   const { data: pendingLiftVideosCount = 0 } = useQuery({
     queryKey: ["pending-lift-videos-count"],
     queryFn: async () => {
       const { count } = await supabase
@@ -186,7 +187,19 @@ const Admin = () => {
     refetchInterval: 30000,
   });
 
-  const totalEngineBadge = pendingDraftsCount + pendingAiQueueCount + pendingCustomCount + pendingLiftVideosCount;
+  const { data: pendingProveItCount = 0 } = useQuery({
+    queryKey: ["pending-prove-it-count"],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("pr_submissions" as any)
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending");
+      return count ?? 0;
+    },
+    refetchInterval: 30000,
+  });
+
+  const totalEngineBadge = pendingDraftsCount + pendingAiQueueCount + pendingCustomCount + pendingLiftVideosCount + pendingProveItCount;
   const totalRosterBadge = pendingSupportCount + unreadParentCount + pendingPostureCount;
 
   const { data: trashCount = 0 } = useQuery({
@@ -328,6 +341,7 @@ const Admin = () => {
             { key: "coach-ai", label: <span className="flex items-center gap-1">Coach AI{pendingDraftsCount > 0 && <Badge variant="destructive" className="text-[8px] px-1.5 py-0 min-w-[18px] h-4">{pendingDraftsCount}</Badge>}</span>, content: <AdminCoachAiQueue /> },
             { key: "custom-requests", label: <span className="flex items-center gap-1">Custom Requests{pendingCustomCount > 0 && <Badge variant="destructive" className="text-[8px] px-1.5 py-0 min-w-[18px] h-4">{pendingCustomCount}</Badge>}</span>, content: <AdminCustomRequests /> },
             { key: "lift-videos", label: <span className="flex items-center gap-1">Lift Videos{pendingLiftVideosCount > 0 && <Badge variant="destructive" className="text-[8px] px-1.5 py-0 min-w-[18px] h-4">{pendingLiftVideosCount}</Badge>}</span>, content: <AdminLiftVideoReview /> },
+            { key: "prove-it", label: <span className="flex items-center gap-1">Prove It{pendingProveItCount > 0 && <Badge variant="destructive" className="text-[8px] px-1.5 py-0 min-w-[18px] h-4">{pendingProveItCount}</Badge>}</span>, content: <AdminProveItReview /> },
           ]} />
         )}
 

@@ -1643,6 +1643,54 @@ export type Database = {
         }
         Relationships: []
       }
+      pr_submissions: {
+        Row: {
+          admin_notes: string | null
+          exercise_name: string
+          id: string
+          media_consent: boolean
+          rep_max: number
+          reps: number
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submitted_at: string
+          user_id: string
+          video_path: string
+          weight: number
+        }
+        Insert: {
+          admin_notes?: string | null
+          exercise_name: string
+          id?: string
+          media_consent?: boolean
+          rep_max?: number
+          reps?: number
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          user_id: string
+          video_path: string
+          weight: number
+        }
+        Update: {
+          admin_notes?: string | null
+          exercise_name?: string
+          id?: string
+          media_consent?: boolean
+          rep_max?: number
+          reps?: number
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          user_id?: string
+          video_path?: string
+          weight?: number
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           category: string
