@@ -348,10 +348,13 @@ const FreeAiGenerator = () => {
 
               <button
                 onClick={() => { setProgram(null); setEmailSent(false); }}
-                className="text-xs font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-colors mx-auto block"
+                className="text-xs font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-colors mx-auto block mb-10"
               >
                 ← Generate Another Workout
               </button>
+
+              {/* Tech Marketing Showcase */}
+              <TechShowcaseMarketing variant="full" />
             </motion.section>
           )}
         </AnimatePresence>
