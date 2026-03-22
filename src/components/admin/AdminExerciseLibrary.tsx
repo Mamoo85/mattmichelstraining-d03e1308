@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Plus, Pencil, Trash2, X, Dumbbell, Loader2, Sparkles } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, X, Dumbbell, Loader2, Sparkles, Upload, Video, Link as LinkIcon } from "lucide-react";
 import { toast } from "sonner";
 import AiAssistButton from "./AiAssistButton";
 
