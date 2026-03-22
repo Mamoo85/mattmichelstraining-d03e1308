@@ -277,7 +277,7 @@ const FreeAiGenerator = () => {
                 </Button>
 
                 <p className="text-[10px] text-muted-foreground text-center">
-                  Powered by Coach Matt's sports-science methodology • Starting Strength & Supple Leopard principles
+                  Powered by Coach Matt's 20+ years of sports-science methodology
                 </p>
               </div>
             </motion.section>
