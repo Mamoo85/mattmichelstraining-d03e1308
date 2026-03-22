@@ -193,7 +193,6 @@ const Dashboard = () => {
         <TrialPaywallModal open={true} hardLock />
       )}
 
-      <DualFab />
       <PortalOnboarding />
     </div>
   );

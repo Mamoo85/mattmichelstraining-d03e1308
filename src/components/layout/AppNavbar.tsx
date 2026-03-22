@@ -57,17 +57,10 @@ const AppNavbar = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm shadow-m2">
       <div className="container flex items-center justify-between h-14">
-        {/* Logo / Timer toggle */}
-        <button
-          onClick={toggleTimer}
-          className={`flex items-center gap-1.5 group transition-m2 shrink-0 ${timerOpen ? "opacity-80" : ""}`}
-          title={timerOpen ? "Close Timer" : "Open Timer"}
-        >
-          <img src={m2Logo} alt="M² Timer" className="w-9 h-9 object-contain" />
-          <span className={`text-[10px] font-bold uppercase tracking-widest ${timerOpen ? "text-primary" : "text-muted-foreground group-hover:text-primary"} transition-m2`}>
-            {timerOpen ? "✕ Close" : "Timer"}
-          </span>
-        </button>
+        {/* Logo */}
+        <Link to="/" className="flex items-center gap-1.5 group transition-m2 shrink-0">
+          <img src={m2Logo} alt="M² Training" className="w-9 h-9 object-contain" />
+        </Link>
 
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-0.5">
