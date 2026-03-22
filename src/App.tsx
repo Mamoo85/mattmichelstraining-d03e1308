@@ -204,7 +204,7 @@ const App = () => (
                   </Routes>
                 </Suspense>
               </ErrorBoundary>
-              <GlobalTimer />
+              
               <ActiveWorkoutWrapper />
               <ProveItWrapper />
               <Suspense fallback={null}><OfflineBadge /></Suspense>
