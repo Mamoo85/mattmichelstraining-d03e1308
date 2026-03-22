@@ -337,9 +337,24 @@ const Pricing = () => {
                   <p className="text-[10px] text-muted-foreground mb-1 leading-tight">{card.subtitle}</p>
                 )}
                 <div className="flex items-baseline gap-1 mt-1 mb-1.5">
-                  <span className="text-2xl font-black text-foreground">{tier.price}</span>
-                  <span className="text-muted-foreground text-xs">/mo</span>
+                  {billingCycle === "annual" ? (
+                    <>
+                      <span className="text-2xl font-black text-foreground">{annual.monthlyEquiv}</span>
+                      <span className="text-muted-foreground text-xs">/mo</span>
+                      <span className="text-[10px] text-muted-foreground line-through ml-1">{tier.price}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-2xl font-black text-foreground">{tier.price}</span>
+                      <span className="text-muted-foreground text-xs">/mo</span>
+                    </>
+                  )}
                 </div>
+                {billingCycle === "annual" && (
+                  <p className="text-[10px] text-primary font-bold mb-1">
+                    {annual.price}/yr · 2 months free
+                  </p>
+                )}
                 <div className="flex items-center gap-1.5 mb-2 text-[10px] font-bold uppercase tracking-widest text-primary">
                   <Tag className="w-3 h-3" />
                   {TIER_DISCOUNTS[card.key]}% off store
