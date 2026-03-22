@@ -34,11 +34,67 @@ const Welcome = () => (
         </p>
       </motion.div>
 
-      {/* PRIMARY CTA — big, unmissable */}
+      {/* CREDIBILITY — compact row */}
       <motion.div
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1, duration: 0.4 }}
+        className="grid grid-cols-2 gap-2 mb-8"
+      >
+        {[
+          "20+ years training experience",
+          "50+ college athletes · 100% durability",
+          "Tested, proven programs",
+          "One app — everything you need",
+        ].map((p) => (
+          <div key={p} className="flex items-start gap-2 bg-card border border-border p-3">
+            <CheckCircle2 size={12} className="text-primary flex-shrink-0 mt-0.5" />
+            <span className="text-[11px] text-foreground leading-snug font-medium">{p}</span>
+          </div>
+        ))}
+      </motion.div>
+
+      {/* WHAT'S INCLUDED */}
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15, duration: 0.4 }}
+        className="space-y-3 mb-8"
+      >
+        <h2 className="text-xs font-black uppercase tracking-widest text-primary text-center">
+          What's Inside Your Portal
+        </h2>
+
+        <div className="flex items-center gap-4 bg-card border border-border p-4">
+          <Shield size={20} className="text-primary flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <span className="text-sm font-bold text-foreground block">Parent? Link Your Child's Account</span>
+            <span className="text-[11px] text-muted-foreground">Track workouts, message Coach Matt, video form checks</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4 bg-card border border-border p-4">
+          <Dumbbell size={20} className="text-primary flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <span className="text-sm font-bold text-foreground block">Programs Built by Matt</span>
+            <span className="text-[11px] text-muted-foreground">Sport-specific or foundation. Real coaching, not an algorithm.</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4 bg-card border border-border p-4">
+          <Zap size={20} className="text-primary flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <span className="text-sm font-bold text-foreground block">All Technology Included</span>
+            <span className="text-[11px] text-muted-foreground">Posture analysis, velocity tracking, nutrition scanning — in the app</span>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* PRIMARY CTA — 2nd-to-last */}
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.4 }}
         className="mb-8"
       >
         <Link
@@ -52,77 +108,6 @@ const Welcome = () => (
         <p className="text-[10px] text-muted-foreground text-center mt-2">
           6 sessions · warmup → strength → rolling → mobility · Coach Matt reviews every log
         </p>
-      </motion.div>
-
-      {/* CREDIBILITY — compact row */}
-      <motion.div
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15, duration: 0.4 }}
-        className="grid grid-cols-2 gap-2 mb-8"
-      >
-        {[
-          "20+ years training experience",
-          "50+ college athletes · 0 injuries",
-          "Tested, proven programs",
-          "One app — everything you need",
-        ].map((p) => (
-          <div key={p} className="flex items-start gap-2 bg-card border border-border p-3">
-            <CheckCircle2 size={12} className="text-primary flex-shrink-0 mt-0.5" />
-            <span className="text-[11px] text-foreground leading-snug font-medium">{p}</span>
-          </div>
-        ))}
-      </motion.div>
-
-      {/* WHAT'S NEXT — three clear paths */}
-      <motion.div
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.4 }}
-        className="space-y-3 mb-8"
-      >
-        <h2 className="text-xs font-black uppercase tracking-widest text-primary text-center">
-          What You Can Do Right Now
-        </h2>
-
-        {/* Parent CTA */}
-        <Link
-          to="/for-parents"
-          className="flex items-center gap-4 bg-primary/10 border-2 border-primary/30 p-4 hover:border-primary/60 transition-colors group"
-        >
-          <Shield size={20} className="text-primary flex-shrink-0" />
-          <div className="flex-1 min-w-0">
-            <span className="text-sm font-bold text-foreground block">Parent? Link Your Child's Account</span>
-            <span className="text-[11px] text-muted-foreground">Track workouts, message Coach Matt, video form checks</span>
-          </div>
-          <ArrowRight size={16} className="text-primary flex-shrink-0 group-hover:translate-x-1 transition-transform" />
-        </Link>
-
-        {/* Shop Programs */}
-        <Link
-          to="/shop"
-          className="flex items-center gap-4 bg-card border border-border p-4 hover:border-primary/40 transition-colors group"
-        >
-          <Dumbbell size={20} className="text-primary flex-shrink-0" />
-          <div className="flex-1 min-w-0">
-            <span className="text-sm font-bold text-foreground block">Grab a Custom Program — from $20</span>
-            <span className="text-[11px] text-muted-foreground">Sport-specific or foundation. Built by Matt, not an algorithm.</span>
-          </div>
-          <ArrowRight size={16} className="text-muted-foreground flex-shrink-0 group-hover:translate-x-1 transition-transform" />
-        </Link>
-
-        {/* Upgrade */}
-        <Link
-          to="/pricing"
-          className="flex items-center gap-4 bg-card border border-border p-4 hover:border-primary/40 transition-colors group"
-        >
-          <Zap size={20} className="text-primary flex-shrink-0" />
-          <div className="flex-1 min-w-0">
-            <span className="text-sm font-bold text-foreground block">Upgrade to Full Membership</span>
-            <span className="text-[11px] text-muted-foreground">Starting at $12.99/mo — less than a gym membership</span>
-          </div>
-          <ArrowRight size={16} className="text-muted-foreground flex-shrink-0 group-hover:translate-x-1 transition-transform" />
-        </Link>
       </motion.div>
 
       {/* FOOTER */}
