@@ -782,6 +782,24 @@ export type Database = {
           },
         ]
       }
+      free_generation_log: {
+        Row: {
+          created_at: string
+          id: string
+          ip_address: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip_address: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip_address?: string
+        }
+        Relationships: []
+      }
       gift_cards: {
         Row: {
           code: string
