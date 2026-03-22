@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Star, Shield, Trophy, Clock } from "lucide-react";
+import { ArrowRight, Shield, Trophy, Clock } from "lucide-react";
 
 import m2Logo from "@/assets/m2-logo.jpg";
 import { useSectionVisible } from "@/hooks/useSiteContent";
