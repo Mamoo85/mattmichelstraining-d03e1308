@@ -17,7 +17,7 @@ interface Milestone {
   achieved: boolean;
 }
 
-const StudioCheckIn = () => {
+const StudioCheckIn = ({ onOpenWorkouts }: { onOpenWorkouts?: () => void }) => {
   const { user } = useAuth();
   const [checkins, setCheckins] = useState<CheckIn[]>([]);
   const [loading, setLoading] = useState(true);
