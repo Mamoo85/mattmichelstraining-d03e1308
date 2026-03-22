@@ -8,16 +8,13 @@ import { useSectionVisible } from "@/hooks/useSiteContent";
 const AudienceSelector = lazy(() => import("@/components/landing/AudienceSelector"));
 
 // Lazy-load below-the-fold landing sections
-const ForParentsCTA = lazy(() => import("@/components/landing/ForParentsCTA"));
-const M2Difference = lazy(() => import("@/components/landing/M2Difference"));
 const FindUs = lazy(() => import("@/components/landing/FindUs"));
 const PortalEntrance = lazy(() => import("@/components/landing/PortalEntrance"));
-const TechShowcaseCard = lazy(() => import("@/components/landing/TechShowcaseCard"));
 const EmailCapture = lazy(() => import("@/components/landing/EmailCapture"));
 const MonthlyFocus = lazy(() => import("@/components/landing/MonthlyFocus"));
 const SportPicker = lazy(() => import("@/components/landing/SportPicker"));
-const FreeWorkoutTeaser = lazy(() => import("@/components/landing/FreeWorkoutTeaser"));
 const AthleteResults = lazy(() => import("@/components/landing/AthleteResults"));
+const M2Difference = lazy(() => import("@/components/landing/M2Difference"));
 
 const STATS = [
   { icon: Clock, value: "20+", label: "Years Coaching" },
