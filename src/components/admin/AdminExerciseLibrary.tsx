@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Plus, Pencil, Trash2, X, Dumbbell, Loader2, Sparkles } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, X, Dumbbell, Loader2, Sparkles, Upload, Video, Link as LinkIcon } from "lucide-react";
 import { toast } from "sonner";
 import AiAssistButton from "./AiAssistButton";
 
@@ -40,6 +40,8 @@ const AdminExerciseLibrary = () => {
   const [editing, setEditing] = useState<Exercise>(EMPTY);
   const [saving, setSaving] = useState(false);
   const [sportInput, setSportInput] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
   // Collect all unique sports across exercises for global tag suggestions
   const allSports = useMemo(() => {
@@ -128,6 +130,33 @@ const AdminExerciseLibrary = () => {
       [field]: prev[field].includes(tag) ? prev[field].filter((t) => t !== tag) : [...prev[field], tag],
     }));
   };
+
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 50 * 1024 * 1024) { toast.error("Video must be under 50 MB"); return; }
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || "mp4";
+      const path = `${crypto.randomUUID()}.${ext}`;
+      // Delete old uploaded video if replacing
+      if (editing.video_url.includes("exercise_videos/")) {
+        const oldPath = editing.video_url.split("exercise_videos/")[1];
+        if (oldPath) await supabase.storage.from("exercise_videos").remove([oldPath]);
+      }
+      const { error } = await supabase.storage.from("exercise_videos").upload(path, file, { contentType: file.type });
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from("exercise_videos").getPublicUrl(path);
+      setEditing((prev) => ({ ...prev, video_url: urlData.publicUrl }));
+      toast.success("Video uploaded");
+    } catch (err: any) {
+      toast.error(err.message || "Upload failed");
+    } finally {
+      setUploading(false);
+      if (videoInputRef.current) videoInputRef.current.value = "";
+    }
+  };
+
 
   const addSportTag = () => {
     const val = sportInput.trim();
@@ -250,11 +279,65 @@ const AdminExerciseLibrary = () => {
               className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground mb-3 outline-none focus:ring-1 focus:ring-primary"
             />
 
-            {/* Video URL */}
-            <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Video URL (YouTube/Vimeo)</label>
+            {/* Video Section */}
+            <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Exercise Video</label>
+            
+            {/* Current video preview */}
+            {editing.video_url && (
+              <div className="mb-2 bg-background border border-border p-2">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-primary flex items-center gap-1">
+                    <Video size={10} /> Current Video
+                  </span>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      // If it's a storage URL, delete the file
+                      if (editing.video_url.includes("exercise_videos/")) {
+                        const path = editing.video_url.split("exercise_videos/")[1];
+                        if (path) {
+                          await supabase.storage.from("exercise_videos").remove([path]);
+                        }
+                      }
+                      setEditing({ ...editing, video_url: "" });
+                      toast.success("Video removed");
+                    }}
+                    className="text-[9px] font-bold uppercase tracking-widest text-destructive hover:opacity-70 transition-m2 flex items-center gap-1"
+                  >
+                    <Trash2 size={10} /> Remove
+                  </button>
+                </div>
+                {editing.video_url.includes("youtube") || editing.video_url.includes("youtu.be") || editing.video_url.includes("vimeo") ? (
+                  <p className="text-xs text-muted-foreground truncate"><LinkIcon size={10} className="inline mr-1" />{editing.video_url}</p>
+                ) : (
+                  <video src={editing.video_url} controls preload="metadata" className="w-full max-h-40 object-contain bg-black" />
+                )}
+              </div>
+            )}
+
+            {/* Upload or paste URL */}
+            <div className="flex gap-2 mb-1">
+              <button
+                type="button"
+                onClick={() => videoInputRef.current?.click()}
+                disabled={uploading}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest hover:bg-primary/20 disabled:opacity-50 transition-m2"
+              >
+                {uploading ? <Loader2 size={12} className="animate-spin" /> : <Upload size={12} />}
+                {uploading ? "Uploading…" : "Upload Video"}
+              </button>
+              <input
+                ref={videoInputRef}
+                type="file"
+                accept="video/*"
+                className="hidden"
+                onChange={handleVideoUpload}
+              />
+            </div>
+            <div className="text-[9px] text-muted-foreground mb-1">Or paste a YouTube / Vimeo URL:</div>
             <input
               type="url"
-              value={editing.video_url}
+              value={editing.video_url.includes("exercise_videos/") ? "" : editing.video_url}
               onChange={(e) => setEditing({ ...editing, video_url: e.target.value })}
               placeholder="https://youtube.com/watch?v=..."
               className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground mb-3 outline-none focus:ring-1 focus:ring-primary"
