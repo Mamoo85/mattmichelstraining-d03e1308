@@ -97,6 +97,7 @@ const Pricing = () => {
   const [promoApplied, setPromoApplied] = useState(false);
   const [expandedTiers, setExpandedTiers] = useState<Record<string, boolean>>({});
   const [modalTier, setModalTier] = useState<{ key: TierKey; label: string } | null>(null);
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
 
   const handleCheckout = async (tierKey: TierKey) => {
     if (!user) {
