@@ -307,14 +307,15 @@ const TheEdge = () => (
           </div>
           <h1 className="text-2xl md:text-4xl font-black uppercase tracking-tight text-foreground mb-3">
             Training Technology<br />
-            <span className="text-primary">5 Years Ahead</span>
+            <span className="text-primary">Built Into Your App</span>
           </h1>
           <p className="text-sm text-muted-foreground max-w-xl mx-auto leading-relaxed mb-2">
-            Matt's two passions — computer engineering and exercise science — fused into a platform
-            no other trainer can match. Real gym. Real trainer. Real location. Technology that gives you an unfair advantage.
+            Every feature below lives inside the M² member app — no extra downloads, no extra hardware, no extra cost.
+            Just open your phone and it's all there. Matt's two passions — computer engineering and exercise science —
+            fused into one platform no other trainer can match.
           </p>
-          <p className="text-xs text-foreground font-bold">
-            No searching for old videos. Type any topic → get Coach Matt's proven answer instantly.
+          <p className="text-xs text-primary font-bold">
+            All technology included free with every membership tier — starting at $12.99/mo.
           </p>
         </div>
 
