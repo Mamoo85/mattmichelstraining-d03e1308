@@ -263,7 +263,7 @@ const AdminProveItReview = () => {
         confirmLabel="Reject"
         destructive
         onConfirm={handleReject}
-        isLoading={processing === rejectId}
+        loading={processing === rejectId}
       >
         <textarea
           value={rejectNote}
