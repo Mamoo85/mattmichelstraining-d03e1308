@@ -2933,7 +2933,11 @@ export type Database = {
       }
       user_active_programs: {
         Row: {
+          block_number: number
+          completed_days: Json
           created_at: string
+          current_day: number
+          current_week: number
           id: string
           program_id: string
           start_date: string
@@ -2942,7 +2946,11 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          block_number?: number
+          completed_days?: Json
           created_at?: string
+          current_day?: number
+          current_week?: number
           id?: string
           program_id: string
           start_date?: string
@@ -2951,7 +2959,11 @@ export type Database = {
           user_id: string
         }
         Update: {
+          block_number?: number
+          completed_days?: Json
           created_at?: string
+          current_day?: number
+          current_week?: number
           id?: string
           program_id?: string
           start_date?: string
