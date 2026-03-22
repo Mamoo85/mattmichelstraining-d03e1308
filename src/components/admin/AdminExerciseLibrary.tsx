@@ -40,6 +40,8 @@ const AdminExerciseLibrary = () => {
   const [editing, setEditing] = useState<Exercise>(EMPTY);
   const [saving, setSaving] = useState(false);
   const [sportInput, setSportInput] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
   // Collect all unique sports across exercises for global tag suggestions
   const allSports = useMemo(() => {
