@@ -84,8 +84,8 @@ const DashboardHome = memo(({ isNewUser, isInPerson, onViewPoints, onViewReferra
       </div>
     </div>
 
-    {/* Posture CTA — never for in-person clients */}
-    {!isInPerson && hasPosture === false && (
+    {/* Posture CTA — never for in-person clients, only if never submitted AND never dismissed the welcome modal */}
+    {!isInPerson && hasPosture === false && !safeLocalStorage.getItem("m2-welcome-gift-seen") && (
       <div className="bg-card border border-border p-5 space-y-2">
         <div className="flex items-center gap-2">
           <Camera size={14} className="text-primary" />
