@@ -126,14 +126,14 @@ const HeroSection = () => {
           </div>
         )}
 
-        {/* ─── FORM CHECK CTA — rendered immediately to avoid CLS ─── */}
+        {/* ─── COACHING CTA ─── */}
         <div className="mb-8">
           <div className="bg-gradient-to-br from-primary/10 via-background to-background border border-primary/30 overflow-hidden">
             <div className="p-6 sm:p-8 space-y-4">
               <div className="flex items-center gap-2">
                 <Star size={16} className="text-primary" />
                 <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-primary">
-                  Unlimited Form Checks
+                  Real Coaching
                 </span>
               </div>
               <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-foreground leading-tight">
@@ -143,8 +143,7 @@ const HeroSection = () => {
               <p className="text-sm text-muted-foreground max-w-lg leading-relaxed">
                 Upload a couple reps of any lift and Matt will send you a
                 <strong className="text-foreground"> detailed, personalized reply within 24 hours</strong>.
-                Unlimited form checks — no cap, no extra fees. For the price of a single
-                coffee run you get a 20-year veteran coach watching every rep. That's a steal.
+                For the price of a single coffee run you get a 20-year veteran coach watching every rep. That's a steal.
               </p>
               <Link
                 to="/auth?redirect=/trial-welcome"
