@@ -13,7 +13,7 @@ import EmailWorkoutModal from "@/components/generator/EmailWorkoutModal";
 import TechShowcaseMarketing from "@/components/landing/TechShowcaseMarketing";
 import GymPhotoUpload from "@/components/generator/GymPhotoUpload";
 
-const GENERATION_LIMIT = 3;
+const GENERATION_LIMIT = 1;
 const STORAGE_KEY = "m2_ai_generations_count";
 
 const EXPERIENCE = [
@@ -94,6 +94,11 @@ const FreeAiGenerator = () => {
       });
       if (!resp.ok) {
         const d = await resp.json().catch(() => ({}));
+        if (d.limit_reached) {
+          // Server confirmed limit — sync local state
+          setGenCount(GENERATION_LIMIT);
+          safeLocalStorage.setItem(STORAGE_KEY, String(GENERATION_LIMIT));
+        }
         throw new Error(d.error || "Generation failed. Try again.");
       }
       const data = await resp.json();
