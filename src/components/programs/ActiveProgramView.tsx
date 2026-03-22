@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Loader2, ChevronDown, ChevronRight, Dumbbell, Info, Printer, CheckCircle2 } from "lucide-react";
+import { Loader2, ChevronDown, ChevronRight, Dumbbell, Info, Printer, CheckCircle2, Play } from "lucide-react";
 import ExerciseVideoEmbed from "../exercise/ExerciseVideoEmbed";
 import AskCoachMatt from "./AskCoachMatt";
 import CoachCheckIn from "./CoachCheckIn";
@@ -234,6 +234,25 @@ const ActiveProgramView = ({ activeProgram }: ActiveProgramProps) => {
           </div>
           <Progress value={progressPct} className="h-2" />
         </div>
+        {/* Start Workout CTA */}
+        {selectedDay !== null && dayExercises.length > 0 && (
+          <button
+            onClick={() => {
+              window.dispatchEvent(
+                new CustomEvent("open-workout-zone", {
+                  detail: {
+                    title: `${activeProgram.program.title} – Wk ${selectedWeek} Day ${selectedDay}`,
+                    source: "program",
+                    programId: activeProgram.program_id,
+                  },
+                })
+              );
+            }}
+            className="w-full h-11 mt-3 bg-primary text-primary-foreground flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all"
+          >
+            <Play size={14} /> Start Workout – Wk {selectedWeek} Day {selectedDay}
+          </button>
+        )}
       </div>
 
       {/* Week selector */}

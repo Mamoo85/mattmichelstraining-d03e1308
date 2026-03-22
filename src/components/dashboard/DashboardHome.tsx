@@ -1,6 +1,6 @@
-import { memo, lazy, Suspense, useCallback, useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Play, Camera, UtensilsCrossed } from "lucide-react";
+import { memo, lazy, Suspense, useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { Camera, UtensilsCrossed } from "lucide-react";
 import MonthlyFocusWidget from "@/components/features/MonthlyFocusWidget";
 import UpcomingSessions from "@/components/sessions/UpcomingSessions";
 import WorkoutScanner from "@/components/workout/WorkoutScanner";
@@ -24,7 +24,6 @@ interface DashboardHomeProps {
 
 const DashboardHome = memo(({ isNewUser, isInPerson, onViewPoints, onViewReferrals }: DashboardHomeProps) => {
   const { subscribed, user } = useAuth();
-  const navigate = useNavigate();
   const [showWelcome, setShowWelcome] = useState(false);
   const [hasPosture, setHasPosture] = useState<boolean | null>(null);
 
@@ -44,13 +43,6 @@ const DashboardHome = memo(({ isNewUser, isInPerson, onViewPoints, onViewReferra
       .then(({ count }) => setHasPosture((count ?? 0) > 0));
   }, [user]);
 
-  const handleStartWorkout = useCallback(() => {
-    if (!subscribed && isNewUser) {
-      navigate("/pricing");
-      return;
-    }
-    window.dispatchEvent(new CustomEvent("open-workout-zone", { detail: null }));
-  }, [subscribed, isNewUser, navigate]);
 
   return (
   <div className="space-y-6">
@@ -90,12 +82,6 @@ const DashboardHome = memo(({ isNewUser, isInPerson, onViewPoints, onViewReferra
           <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Scan Food</span>
         </Link>
       </div>
-      <button
-        onClick={handleStartWorkout}
-        className="w-full h-10 border-2 border-orange-500 text-orange-400 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest hover:border-orange-400 hover:shadow-[0_0_15px_rgba(249,115,22,0.5)] transition-all mt-2"
-      >
-        <Play size={14} /> Enter The Portal
-      </button>
     </div>
 
     {/* Posture CTA — never for in-person clients */}

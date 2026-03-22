@@ -4,7 +4,7 @@ import { useTrialStatus } from "@/hooks/useTrialStatus";
 import TrialPaywallModal from "@/components/billing/TrialPaywallModal";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Loader2, Crown, User, Dumbbell, Play } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -43,6 +43,7 @@ const Dashboard = () => {
   const { user, subscribed, subscriptionTier } = useAuth();
   const { trialExpired, isOnTrial, trialDaysLeft } = useTrialStatus();
   const { isAdmin } = useIsAdmin();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<{ full_name: string | null; athlete_name: string | null; is_in_person: boolean } | null>(null);
   const [activeTab, setActiveTab] = useState("home");
   const [hasPrograms, setHasPrograms] = useState<boolean | null>(null);
@@ -79,7 +80,7 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background">
       <AppNavbar />
       <PwaInstallBanner />
-      <div className="container pt-20 pb-12 px-4 sm:px-6">
+      <div className="container pt-20 pb-24 px-4 sm:px-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
           <div className="min-w-0">
@@ -154,9 +155,23 @@ const Dashboard = () => {
           {activeTab === "challenge" && <ChallengeHub />}
           {activeTab === "team" && <TeamManager />}
         </Suspense>
-      </div>
 
-      {/* Timer moved to ActiveWorkoutZone */}
+        {/* Persistent "Enter The Portal" button — always visible */}
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-md border-t border-border px-4 py-3 safe-bottom">
+          <button
+            onClick={() => {
+              if (!subscribed && hasPrograms === false && hasLogs === false && !isAdmin) {
+                navigate("/pricing");
+                return;
+              }
+              window.dispatchEvent(new CustomEvent("open-workout-zone", { detail: null }));
+            }}
+            className="w-full h-12 bg-primary text-primary-foreground flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all shadow-[0_0_20px_rgba(249,115,22,0.3)]"
+          >
+            <Dumbbell size={16} /> Enter The Portal
+          </button>
+        </div>
+      </div>
 
       {/* Trial banner — hide for in-person clients */}
       {isOnTrial && !subscribed && !isAdmin && !profile?.is_in_person && (
