@@ -359,6 +359,35 @@ const TipCard = ({ tip }: { tip: typeof TIPS[0] }) => {
   );
 };
 
+/* ── FAQ Card ── */
+const FaqCard = ({ item }: { item: { q: string; a: string } }) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="bg-card shadow-m2">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between p-4 text-left hover:bg-accent/10 transition-m2"
+      >
+        <span className="text-sm font-bold text-foreground pr-3">{item.q}</span>
+        {open ? (
+          <ChevronUp size={14} className="text-muted-foreground shrink-0" />
+        ) : (
+          <ChevronDown size={14} className="text-muted-foreground shrink-0" />
+        )}
+      </button>
+      {open && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          className="px-4 pb-4"
+        >
+          <p className="text-xs text-muted-foreground leading-relaxed">{item.a}</p>
+        </motion.div>
+      )}
+    </div>
+  );
+};
+
 /* ── Page ── */
 const Learn = () => {
   const showFeaturedVideos = useSectionVisible("featured_videos");
