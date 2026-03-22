@@ -57,49 +57,89 @@ function buildEmailHtml(firstName: string, program: WorkoutProgram): string {
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a14;">
 <tr><td align="center" style="padding:24px 16px;">
   <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;">
-    <!-- Header -->
-    <tr><td style="text-align:center;padding:24px 0;">
-      <div style="font-size:28px;font-weight:900;color:#f97316;letter-spacing:2px;">M²</div>
-      <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:3px;">TRAINING</div>
+    <!-- Header Bar -->
+    <tr><td style="background:#f97316;padding:3px 0;"></td></tr>
+    <tr><td style="text-align:center;padding:28px 0 16px;background:#0f0f1a;">
+      <div style="font-size:36px;font-weight:900;color:#f97316;letter-spacing:3px;line-height:1;">M²</div>
+      <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:4px;margin-top:4px;">TRAINING</div>
+      <div style="width:40px;height:2px;background:#f97316;margin:12px auto 0;"></div>
     </td></tr>
 
     <!-- Greeting -->
-    <tr><td style="padding:16px 0;color:#fff;font-size:16px;">
+    <tr><td style="padding:24px 24px 8px;color:#fff;font-size:18px;font-weight:bold;background:#0f0f1a;">
       Hey ${firstName || "there"} 👋
     </td></tr>
-    <tr><td style="padding:0 0 24px;color:#ccc;font-size:14px;line-height:1.6;">
-      Here's the custom workout you generated with Coach Matt's AI. Save this email — it's your Week 1 baseline.
+    <tr><td style="padding:0 24px 24px;color:#ccc;font-size:14px;line-height:1.6;background:#0f0f1a;">
+      Here's the custom workout you generated with Coach Matt's system. Save this email — it's your Week 1 baseline.
     </td></tr>
 
     <!-- Program Title -->
-    <tr><td style="padding:16px;background:#1a1a2e;border:1px solid #333;border-radius:8px;margin-bottom:16px;">
-      <strong style="color:#f97316;font-size:16px;">🏋️ ${program.title}</strong><br/>
-      <span style="color:#999;font-size:13px;">${program.description}</span>
+    <tr><td style="padding:0 24px 16px;background:#0f0f1a;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#1a1a2e;border:1px solid #333;border-radius:8px;">
+        <tr><td style="padding:16px;">
+          <strong style="color:#f97316;font-size:16px;">🏋️ ${program.title}</strong><br/>
+          <span style="color:#999;font-size:13px;line-height:1.5;">${program.description}</span>
+        </td></tr>
+      </table>
     </td></tr>
 
-    <tr><td style="height:16px;"></td></tr>
-
     <!-- Days -->
-    <tr><td>${daysHtml}</td></tr>
+    <tr><td style="padding:0 24px;background:#0f0f1a;">${daysHtml}</td></tr>
+
+    <!-- Tech Showcase -->
+    <tr><td style="padding:24px;background:#0f0f1a;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,#1a1a2e,#0f0f1a);border:1px solid #f9731633;border-radius:8px;">
+        <tr><td style="padding:24px;text-align:center;">
+          <div style="font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:3px;color:#f97316;margin-bottom:8px;">M² Technology Suite</div>
+          <div style="font-size:16px;font-weight:900;color:#fff;margin-bottom:12px;">This Workout Is Just the Beginning.</div>
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td width="50%" style="padding:6px;text-align:center;vertical-align:top;">
+                <div style="font-size:11px;font-weight:bold;color:#00d4ff;">📸 Posture Analysis</div>
+                <div style="font-size:10px;color:#888;margin-top:2px;">Full skeletal scan from your phone</div>
+              </td>
+              <td width="50%" style="padding:6px;text-align:center;vertical-align:top;">
+                <div style="font-size:11px;font-weight:bold;color:#f97316;">⚡ Velocity Tracking</div>
+                <div style="font-size:10px;color:#888;margin-top:2px;">Real-time bar speed every rep</div>
+              </td>
+            </tr>
+            <tr>
+              <td width="50%" style="padding:6px;text-align:center;vertical-align:top;">
+                <div style="font-size:11px;font-weight:bold;color:#e040fb;">🍽️ Nutrition Scanner</div>
+                <div style="font-size:10px;color:#888;margin-top:2px;">Snap a photo, get every macro</div>
+              </td>
+              <td width="50%" style="padding:6px;text-align:center;vertical-align:top;">
+                <div style="font-size:11px;font-weight:bold;color:#f97316;">📊 Smart Logger</div>
+                <div style="font-size:10px;color:#888;margin-top:2px;">HD demos + 1-tap weight logging</div>
+              </td>
+            </tr>
+          </table>
+          <div style="margin-top:16px;font-size:11px;color:#ccc;">20+ years of expertise. All for <strong style="color:#f97316;">$12.99/mo</strong>.</div>
+        </td></tr>
+      </table>
+    </td></tr>
 
     <!-- CTA -->
-    <tr><td style="padding:32px 0;text-align:center;">
-      <div style="background:linear-gradient(135deg,#f9731620,#0a0a14,#f9731610);border:2px solid #f9731666;border-radius:12px;padding:32px 24px;">
-        <div style="color:#fff;font-size:18px;font-weight:900;margin-bottom:8px;">This Is Just Week 1.</div>
+    <tr><td style="padding:16px 24px 32px;text-align:center;background:#0f0f1a;">
+      <div style="background:linear-gradient(135deg,#f9731620,#0f0f1a,#f9731610);border:2px solid #f9731666;border-radius:12px;padding:32px 24px;">
+        <div style="color:#fff;font-size:18px;font-weight:900;margin-bottom:8px;">Load This Into the M² Portal</div>
         <div style="color:#999;font-size:13px;margin-bottom:20px;line-height:1.5;">
-          Load this routine into the M² Portal for live weight tracking, progressive overload, and form analysis from Coach Matt.
+          Track your weights, get progressive overload, and direct feedback from Coach Matt — a real trainer in Grosse Pointe, MI.
         </div>
-        <a href="https://mattmichelstraining.lovable.app/auth?mode=signup"
+        <a href="https://mattmichelstraining.lovable.app/auth?mode=signup&trial=true"
            style="display:inline-block;background:#f97316;color:#fff;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:1px;padding:14px 32px;border-radius:8px;text-decoration:none;">
-          Load Into M² Portal →
+          Start Free Trial →
         </a>
-        <div style="color:#666;font-size:11px;margin-top:12px;">14-day free trial • $12.99/mo after • Cancel anytime</div>
+        <div style="color:#666;font-size:11px;margin-top:12px;">14-day free trial • Credit card required • Cancel anytime</div>
       </div>
     </td></tr>
 
     <!-- Footer -->
-    <tr><td style="text-align:center;padding:24px 0;border-top:1px solid #222;">
-      <span style="color:#555;font-size:11px;">© M² Training | Matt Michel Strength & Conditioning</span>
+    <tr><td style="background:#0a0a14;padding:24px;text-align:center;border-top:1px solid #222;">
+      <div style="font-size:18px;font-weight:900;color:#f97316;letter-spacing:2px;">M²</div>
+      <div style="font-size:9px;color:#555;text-transform:uppercase;letter-spacing:3px;margin-top:2px;">TRAINING</div>
+      <div style="font-size:10px;color:#444;margin-top:8px;">Matt Michel Strength & Conditioning</div>
+      <div style="font-size:10px;color:#444;">Grosse Pointe, MI</div>
     </td></tr>
   </table>
 </td></tr>
@@ -123,7 +163,6 @@ serve(async (req) => {
       );
     }
 
-    // Insert lead into marketing_leads (upsert)
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -136,7 +175,6 @@ serve(async (req) => {
         { onConflict: "email,source" }
       );
 
-    // Send email via Resend
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
     if (!RESEND_API_KEY) {
       throw new Error("RESEND_API_KEY not configured");
