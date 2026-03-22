@@ -158,6 +158,7 @@ const AdminExerciseLibrary = () => {
   };
 
 
+  const addSportTag = () => {
     const val = sportInput.trim();
     if (!val || editing.sport.includes(val)) return;
     setEditing((prev) => ({ ...prev, sport: [...prev.sport, val] }));
