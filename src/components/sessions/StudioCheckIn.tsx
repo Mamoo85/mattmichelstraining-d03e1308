@@ -358,7 +358,7 @@ const StudioCheckIn = ({ onOpenWorkouts }: { onOpenWorkouts?: () => void }) => {
 
       {/* Workout portal button — always visible */}
       <button
-        onClick={onOpenWorkouts}
+        onClick={() => window.dispatchEvent(new CustomEvent("open-workout-zone", { detail: null }))}
         className="w-full bg-primary text-primary-foreground py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all"
       >
         <span className="inline-flex items-center justify-center gap-2">
