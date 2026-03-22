@@ -291,8 +291,8 @@ const TrialCTABlock = () => (
 const TheEdge = () => (
   <div className="min-h-screen bg-background">
     <SEOHead
-      title="M² Technology — Training Tech That's 5 Years Ahead"
-      description="Advanced posture analysis, velocity-based training, nutrition scanning, smart workout logging, instant knowledge search — all on your phone for $12.99/mo. 14-day free trial."
+      title="M² Technology — Advanced Training Tech Built Into Your App"
+      description="Posture analysis, velocity tracking, nutrition scanning, smart workout logging — all built into the M² member app. Included free with every membership starting at $12.99/mo."
       path="/the-edge"
     />
     <AppNavbar />

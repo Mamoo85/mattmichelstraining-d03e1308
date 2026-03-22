@@ -38,10 +38,13 @@ const TechShowcaseCard = () => (
           </div>
 
           <h2 className="text-lg md:text-xl font-black uppercase tracking-tight text-foreground mb-2 group-hover:text-primary transition-colors">
-            Training Technology That's 5 Years Ahead
+            Training Tech Built Into Your App
           </h2>
-          <p className="text-xs text-muted-foreground leading-relaxed mb-4 max-w-lg">
-            Advanced posture analysis, real-time velocity tracking, instant nutrition scanning, and smart workout logging — all running on your phone. No extra hardware needed.
+          <p className="text-xs text-muted-foreground leading-relaxed mb-1 max-w-lg">
+            Advanced posture analysis, real-time velocity tracking, instant nutrition scanning, and smart workout logging — all built into the M² member app. No extra downloads or hardware.
+          </p>
+          <p className="text-[10px] text-primary font-bold mb-4">
+            Included free with every membership.
           </p>
 
           {/* Tech pills */}
