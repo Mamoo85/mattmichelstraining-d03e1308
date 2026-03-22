@@ -23,7 +23,6 @@ const ChallengeHub = lazy(() => import("@/components/dashboard/ChallengeHub"));
 const TeamManager = lazy(() => import("@/components/features/TeamManager"));
 const ProgressCharts = lazy(() => import("@/components/features/ProgressCharts"));
 
-import DualFab from "@/components/dashboard/DualFab";
 import PortalOnboarding from "@/components/dashboard/PortalOnboarding";
 
 const BASE_TABS = [
