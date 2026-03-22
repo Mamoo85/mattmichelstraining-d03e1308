@@ -107,7 +107,7 @@ const Pricing = () => {
 
     setLoadingTier(tierKey);
     try {
-      const body: any = { priceId: TIERS[tierKey].price_id };
+      const body: any = { priceId: billingCycle === "annual" ? ANNUAL_TIERS[tierKey].price_id : TIERS[tierKey].price_id };
       if (promoCode.trim()) {
         body.promoCode = promoCode.trim();
       }
