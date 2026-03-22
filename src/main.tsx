@@ -2,7 +2,11 @@ import { createRoot } from "react-dom/client";
 import { HelmetProvider } from "react-helmet-async";
 import App from "./App.tsx";
 import "./index.css";
-import "./print.css";
+
+// Defer print stylesheet — it's only needed for printing, not for FCP
+if (typeof window !== "undefined") {
+  window.addEventListener("load", () => import("./print.css"), { once: true });
+}
 
 // Global broken-image fallback: replaces broken <img> with branded placeholder
 document.addEventListener("error", (e) => {
