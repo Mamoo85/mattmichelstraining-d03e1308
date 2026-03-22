@@ -72,7 +72,7 @@ const FreeAiGenerator = () => {
   const isLimitReached = !user && genCount >= GENERATION_LIMIT;
 
   const handleGenerate = async () => {
-    if (!experience || !goal || !equipment) return;
+    if (!experience || !goal || (!equipment && !gymImageBase64)) return;
     setLoading(true);
     setError(null);
     setProgram(null);
@@ -84,7 +84,13 @@ const FreeAiGenerator = () => {
           "Content-Type": "application/json",
           apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         },
-        body: JSON.stringify({ experience, goal, daysPerWeek, equipment }),
+        body: JSON.stringify({
+          experience,
+          goal,
+          daysPerWeek,
+          equipment: gymImageBase64 ? undefined : equipment,
+          gymImageBase64: gymImageBase64 || undefined,
+        }),
       });
       if (!resp.ok) {
         const d = await resp.json().catch(() => ({}));
