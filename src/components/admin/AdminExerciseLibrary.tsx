@@ -131,7 +131,33 @@ const AdminExerciseLibrary = () => {
     }));
   };
 
-  const addSportTag = () => {
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 50 * 1024 * 1024) { toast.error("Video must be under 50 MB"); return; }
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || "mp4";
+      const path = `${crypto.randomUUID()}.${ext}`;
+      // Delete old uploaded video if replacing
+      if (editing.video_url.includes("exercise_videos/")) {
+        const oldPath = editing.video_url.split("exercise_videos/")[1];
+        if (oldPath) await supabase.storage.from("exercise_videos").remove([oldPath]);
+      }
+      const { error } = await supabase.storage.from("exercise_videos").upload(path, file, { contentType: file.type });
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from("exercise_videos").getPublicUrl(path);
+      setEditing((prev) => ({ ...prev, video_url: urlData.publicUrl }));
+      toast.success("Video uploaded");
+    } catch (err: any) {
+      toast.error(err.message || "Upload failed");
+    } finally {
+      setUploading(false);
+      if (videoInputRef.current) videoInputRef.current.value = "";
+    }
+  };
+
+
     const val = sportInput.trim();
     if (!val || editing.sport.includes(val)) return;
     setEditing((prev) => ({ ...prev, sport: [...prev.sport, val] }));
