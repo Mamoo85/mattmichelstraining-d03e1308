@@ -5,7 +5,7 @@ import { Check, X as XIcon, Star, Zap, Shield, Crown, Users, ArrowRight, Loader2
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import AppNavbar from "@/components/layout/AppNavbar";
-import { useAuth, TIERS, TierKey, TIER_DISCOUNTS } from "@/hooks/useAuth";
+import { useAuth, TIERS, ANNUAL_TIERS, TierKey, TIER_DISCOUNTS } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
