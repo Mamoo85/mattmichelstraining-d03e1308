@@ -13,7 +13,7 @@ import EmailWorkoutModal from "@/components/generator/EmailWorkoutModal";
 import TechShowcaseMarketing from "@/components/landing/TechShowcaseMarketing";
 import GymPhotoUpload from "@/components/generator/GymPhotoUpload";
 
-const GENERATION_LIMIT = 3;
+const GENERATION_LIMIT = 1;
 const STORAGE_KEY = "m2_ai_generations_count";
 
 const EXPERIENCE = [
