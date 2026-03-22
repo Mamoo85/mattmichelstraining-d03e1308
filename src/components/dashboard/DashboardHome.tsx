@@ -43,13 +43,6 @@ const DashboardHome = memo(({ isNewUser, isInPerson, onViewPoints, onViewReferra
       .then(({ count }) => setHasPosture((count ?? 0) > 0));
   }, [user]);
 
-  const handleStartWorkout = useCallback(() => {
-    if (!subscribed && isNewUser) {
-      navigate("/pricing");
-      return;
-    }
-    window.dispatchEvent(new CustomEvent("open-workout-zone", { detail: null }));
-  }, [subscribed, isNewUser, navigate]);
 
   return (
   <div className="space-y-6">
