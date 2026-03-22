@@ -57,6 +57,11 @@ const ForParents = () => {
 
         <ForParentsHero cms={cms} />
         <MembershipTiers />
+
+        <motion.div {...fade(0.2)} className="mb-12">
+          <BringAFriendCard />
+        </motion.div>
+
         <BenefitsGrid />
         <ParentPortalSection user={user} />
 
