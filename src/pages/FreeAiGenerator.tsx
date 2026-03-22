@@ -175,6 +175,18 @@ const FreeAiGenerator = () => {
               className="max-w-lg mx-auto px-4"
             >
               <div className="bg-card border border-border rounded-lg p-6 shadow-lg space-y-5">
+                {/* Gym Photo Upload — above dropdowns */}
+                <GymPhotoUpload onImageChange={setGymImageBase64} />
+
+                {/* Divider */}
+                {!gymImageBase64 && (
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 h-px bg-border" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">or select manually</span>
+                    <div className="flex-1 h-px bg-border" />
+                  </div>
+                )}
+
                 <div>
                   <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1.5">Experience Level *</label>
                   <Select value={experience} onValueChange={setExperience}>
@@ -205,15 +217,18 @@ const FreeAiGenerator = () => {
                   </Select>
                 </div>
 
-                <div>
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1.5">Available Equipment *</label>
-                  <Select value={equipment} onValueChange={setEquipment}>
-                    <SelectTrigger><SelectValue placeholder="What do you have access to?" /></SelectTrigger>
-                    <SelectContent>
-                      {EQUIPMENT.map(e => <SelectItem key={e.value} value={e.value}>{e.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
+                {/* Equipment dropdown — hidden when photo is attached */}
+                {!gymImageBase64 && (
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1.5">Available Equipment *</label>
+                    <Select value={equipment} onValueChange={setEquipment}>
+                      <SelectTrigger><SelectValue placeholder="What do you have access to?" /></SelectTrigger>
+                      <SelectContent>
+                        {EQUIPMENT.map(e => <SelectItem key={e.value} value={e.value}>{e.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
 
                 {error && <p className="text-destructive text-xs text-center">{error}</p>}
 
