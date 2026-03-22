@@ -6,6 +6,7 @@ import UpcomingSessions from "@/components/sessions/UpcomingSessions";
 import WorkoutScanner from "@/components/workout/WorkoutScanner";
 import EmptyStateCard from "@/components/shared/EmptyStateCard";
 import AnnualUpsellCard from "@/components/pricing/AnnualUpsellCard";
+import TodaysTrainingCard from "@/components/programs/TodaysTrainingCard";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { safeLocalStorage } from "@/lib/browserStorage";
@@ -120,6 +121,7 @@ const DashboardHome = memo(({ isNewUser, isInPerson, onViewPoints, onViewReferra
       <CustomProgramRequest />
     </Suspense>
 
+    <TodaysTrainingCard />
     <AnnualUpsellCard />
 
     <UpcomingSessions />

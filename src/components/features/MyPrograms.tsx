@@ -33,6 +33,10 @@ interface ActiveProgram {
   program_id: string;
   start_date: string;
   status: string;
+  current_week?: number;
+  current_day?: number;
+  block_number?: number;
+  completed_days?: Array<{ week: number; day: number }>;
   program: {
     id: string;
     title: string;
@@ -75,7 +79,7 @@ const MyPrograms = () => {
       // Fetch interactive programs for user AND linked family members
       const { data: active } = await supabase
         .from("user_active_programs")
-        .select("id, program_id, start_date, status, training_programs(id, title, description, category, sport)")
+        .select("id, program_id, start_date, status, current_week, current_day, block_number, completed_days, training_programs(id, title, description, category, sport)")
         .in("user_id", familyIds)
         .order("created_at", { ascending: false });
 
@@ -257,7 +261,7 @@ const MyPrograms = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-0.5">
-                        {ap.program.category}{ap.program.sport ? ` · ${ap.program.sport}` : ""}
+                        {ap.block_number && ap.block_number > 1 ? `Block ${ap.block_number} · ` : ""}{ap.program.category}{ap.program.sport ? ` · ${ap.program.sport}` : ""}
                       </span>
                       <h3 className="text-sm font-bold text-foreground">{ap.program.title}</h3>
                       <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">{ap.program.description}</p>
@@ -267,7 +271,7 @@ const MyPrograms = () => {
                 </div>
                 <div className="border-t border-border px-4 py-2 flex items-center justify-between">
                   <span className="text-[10px] text-muted-foreground font-mono">
-                    Started {format(new Date(ap.start_date), "MMM d, yyyy")}
+                    Wk {ap.current_week ?? 1}/8 · Day {ap.current_day ?? 1}
                   </span>
                   <div className="flex items-center gap-3">
                     <button
