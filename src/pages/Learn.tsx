@@ -476,10 +476,7 @@ const Learn = () => {
           </div>
         </section>
 
-        {/* ── Trial CTA ── */}
-        <section className="mb-10">
-          <TrialCTA variant="comparison" />
-        </section>
+        {/* Do Not Press easter egg */}
         <Suspense fallback={null}><DoNotPressButton /></Suspense>
 
       </motion.div>
