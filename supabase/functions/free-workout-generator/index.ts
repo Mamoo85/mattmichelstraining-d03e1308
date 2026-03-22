@@ -213,6 +213,13 @@ Generate exactly ${daysPerWeek} training days. Keep each day to 6-8 exercises ac
 
     const program = JSON.parse(toolCall.function.arguments);
 
+    // Log the free generation for anonymous users
+    if (!isAuthenticated) {
+      await supabaseClient
+        .from("free_generation_log")
+        .insert({ ip_address: clientIp });
+    }
+
     return new Response(JSON.stringify(program), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

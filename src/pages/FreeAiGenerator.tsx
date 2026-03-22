@@ -94,6 +94,11 @@ const FreeAiGenerator = () => {
       });
       if (!resp.ok) {
         const d = await resp.json().catch(() => ({}));
+        if (d.limit_reached) {
+          // Server confirmed limit — sync local state
+          setGenCount(GENERATION_LIMIT);
+          safeLocalStorage.setItem(STORAGE_KEY, String(GENERATION_LIMIT));
+        }
         throw new Error(d.error || "Generation failed. Try again.");
       }
       const data = await resp.json();
