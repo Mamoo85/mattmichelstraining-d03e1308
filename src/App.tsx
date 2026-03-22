@@ -36,7 +36,7 @@ function lazyRetry(importFn: () => Promise<any>, retries = 3): ReturnType<typeof
 }
 
 const AnnouncementBanner = lazyRetry(() => import("@/components/layout/AnnouncementBanner"));
-const IntervalTimer = lazyRetry(() => import("@/components/workout/IntervalTimer"));
+
 const ActiveWorkoutZone = lazyRetry(() => import("@/components/workout/ActiveWorkoutZone"));
 const ProveItZone = lazyRetry(() => import("@/components/workout/ProveItZone"));
 
