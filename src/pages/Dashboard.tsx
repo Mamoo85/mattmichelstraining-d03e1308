@@ -155,9 +155,23 @@ const Dashboard = () => {
           {activeTab === "challenge" && <ChallengeHub />}
           {activeTab === "team" && <TeamManager />}
         </Suspense>
-      </div>
 
-      {/* Timer moved to ActiveWorkoutZone */}
+        {/* Persistent "Enter The Portal" button — always visible */}
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-md border-t border-border px-4 py-3 safe-bottom">
+          <button
+            onClick={() => {
+              if (!subscribed && hasPrograms === false && hasLogs === false && !isAdmin) {
+                navigate("/pricing");
+                return;
+              }
+              window.dispatchEvent(new CustomEvent("open-workout-zone", { detail: null }));
+            }}
+            className="w-full h-12 bg-primary text-primary-foreground flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all shadow-[0_0_20px_rgba(249,115,22,0.3)]"
+          >
+            <Dumbbell size={16} /> Enter The Portal
+          </button>
+        </div>
+      </div>
 
       {/* Trial banner — hide for in-person clients */}
       {isOnTrial && !subscribed && !isAdmin && !profile?.is_in_person && (
