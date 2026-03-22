@@ -261,7 +261,7 @@ const MyPrograms = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-0.5">
-                        {ap.program.category}{ap.program.sport ? ` · ${ap.program.sport}` : ""}
+                        {ap.block_number && ap.block_number > 1 ? `Block ${ap.block_number} · ` : ""}{ap.program.category}{ap.program.sport ? ` · ${ap.program.sport}` : ""}
                       </span>
                       <h3 className="text-sm font-bold text-foreground">{ap.program.title}</h3>
                       <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">{ap.program.description}</p>
