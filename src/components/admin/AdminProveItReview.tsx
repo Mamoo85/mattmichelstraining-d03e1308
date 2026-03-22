@@ -261,7 +261,7 @@ const AdminProveItReview = () => {
         title="Reject PR Submission"
         description="Add a note explaining why this PR was rejected (optional)."
         confirmLabel="Reject"
-        variant="destructive"
+        confirmVariant="destructive"
         onConfirm={handleReject}
         isLoading={processing === rejectId}
       >
