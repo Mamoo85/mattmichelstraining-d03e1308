@@ -360,9 +360,11 @@ const StudioCheckIn = () => {
       {/* Portal button — always visible */}
       <Link
         to="/dashboard"
-        className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all"
+        className="block w-full text-center bg-primary text-primary-foreground py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all"
       >
-        <LogIn size={14} /> Enter The Portal
+        <span className="inline-flex items-center justify-center gap-2">
+          <LogIn size={14} /> Enter The Portal
+        </span>
       </Link>
 
       {/* Toggle milestones if hidden and there are some */}
