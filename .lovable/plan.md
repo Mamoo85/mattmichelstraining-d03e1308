@@ -1,61 +1,54 @@
 
 
-# Tighten the Program Delivery System
+# Condense Membership Copy & Update Custom/Team Tiers Sitewide
 
-## The Problem
-Right now, the program experience is a flat week/day picker. There's no sense of progression, no "you are here" indicator, no automatic next-workout flow, and no structured 8-week block cycle. It doesn't feel like a system — it feels like a spreadsheet.
+## What Changes
 
-## What We'll Build
+**Custom tier** — stripped down to two value props: free online assessment + custom programming. Local members get 20% off every in-person session where Matt teaches them their custom workout personally. Private sessions are extra (not included).
 
-### 1. Track Progress in the Database
-Add `current_week` and `current_day` columns to `user_active_programs`, plus a `block_number` (defaults to 1). When an athlete completes a day, the system auto-advances them to the next day/week. After week 8, the block increments and weeks reset — the subscriber stays, the program evolves.
+**Team/Elite tier** — add "optional 30-min monthly video chat" as a feature.
 
-Migration adds:
-- `current_week` (int, default 1)
-- `current_day` (int, default 1)  
-- `block_number` (int, default 1)
-- `completed_days` (jsonb, default '[]') — stores completed week/day pairs
+**All tiers** — condense bullet points. Kill the "Everything in X" stacking pattern. Each tier states only what it adds. Shorter, punchier copy.
 
-### 2. Program Progress Card on Dashboard Home
-Replace the generic empty state with a **"Today's Training"** card that shows:
-- Program name + block/week label (e.g. "Block 1 · Week 3 of 8")
-- A compact progress bar (days completed out of total)
-- A single "Start Day X" button that launches directly into the correct day
-- "Last session: 2 days ago" timestamp from progress_logs
+## Files to Edit
 
-This is the first thing the athlete sees. One tap to train.
+### 1. `src/pages/Pricing.tsx` (TIER_CARDS array, lines 29-86)
+- **Basic**: 3-4 short bullets (exercise library, daily workouts, monthly challenges, progress logging)
+- **Foundation**: 3-4 bullets (8-week training blocks, Fix It library, coach form feedback, real programming)
+- **Custom**: "Free online assessment", "Custom program built by Matt", "Local? 20% off every session — Matt teaches you the program in person", "Direct message Coach Matt", remove Family Pack / gift session bullets. Subtitle updated.
+- **Team/Elite**: Add "Optional 30-min video chat monthly", keep roster/team management bullets condensed. Remove "Everything in Custom" stacking.
+- Update `badge` on Custom to reflect "Free Assessment · 20% Off In-Person (Private Sessions Extra)"
+- Update Family Pack callout below grid (lines 446-467) to note "Private sessions extra"
 
-### 3. Rework ActiveProgramView with Progression
-- Auto-select the current week and day based on `current_week` / `current_day`
-- Completed days get a checkmark badge; future days are accessible but dimmed
-- After finishing a workout (logging via the Workout Zone or Log Session), mark that day complete and advance the pointer
-- At week 8 completion, show a "Block Complete" celebration and auto-increment to Block 2
+### 2. `src/components/landing/MembershipTiers.tsx` (For Parents page)
+- Same condensed copy for Basic/Foundation/Custom
+- Custom highlights: "Free online assessment", "Custom program from Matt", "Near GPP? 20% off sessions — learn your workout in person", "(Private sessions extra)"
 
-### 4. Coach Check-In Prompts
-At weeks 2, 4, and 7, inject a small "Coach Check-In" card below the day's exercises:
-- Week 2: "How's the weight feeling? Send Matt a quick note"
-- Week 4: "Halfway mark — request a form review"
-- Week 7: "Next block starts soon — request program adjustments"
+### 3. `src/components/billing/TrialPaywallModal.tsx` (lines 15-38)
+- Condense perks arrays for all 3 tiers
+- Custom: "Free online assessment", "Custom program", "20% off in-person sessions (private sessions extra)"
 
-These link to the existing Ask Coach Matt component. No new backend needed — just strategic placement that makes the coaching relationship feel active.
+### 4. `src/pages/TrialWelcome.tsx` (lines 190-220)
+- Update `desc` strings for parent/custom paths
+- Custom: "Free assessment + custom program from Matt. Local? 20% off every session. (Private sessions extra)"
 
-### 5. Block Transition Flow
-When `current_week` exceeds `total_weeks` (8):
-- Show a summary card: sessions completed, estimated 1RM improvements (pulled from progress_logs)
-- "Start Block 2" button that resets week/day to 1 and increments block_number
-- This is the retention hook — the subscriber sees tangible progress and a clear reason to keep going
+### 5. `supabase/functions/trial-day6-email/index.ts` (lines 42-47)
+- Update email copy with correct prices ($12.99, $19.99, $49.99, $99.99) and condensed descriptions
+- Custom: "Custom program + free assessment. 20% off in-person. (Private sessions extra)"
+- Team: add "optional monthly video chat"
 
-## Files Changed
+### 6. `src/components/landing/BringAFriendCard.tsx`
+- No structural change needed — referral card is fine as-is
 
-| File | Change |
-|---|---|
-| Migration (new) | Add `current_week`, `current_day`, `block_number`, `completed_days` to `user_active_programs` |
-| `src/components/dashboard/DashboardHome.tsx` | Add "Today's Training" card fetching active program + progress |
-| `src/components/programs/ActiveProgramView.tsx` | Auto-select current week/day, checkmarks on completed days, day-complete handler |
-| `src/components/programs/BlockCompleteSummary.tsx` (new) | End-of-block celebration + "Start Next Block" CTA |
-| `src/components/programs/CoachCheckIn.tsx` (new) | Small prompt card shown at weeks 2, 4, 7 |
-| `src/components/features/MyPrograms.tsx` | Pass `current_week`/`current_day` to ActiveProgramView, show block number in list |
+### 7. Stripe Product Descriptions
+- Audit Stripe product descriptions for Custom and Team/Elite to match new copy (via stripe tools)
 
-## What This Does for Retention
-The subscriber now sees: a progress bar that fills, a coach who checks in at specific milestones, a block that completes and resets into the next phase. It stops feeling like "I'm paying for access to exercises" and starts feeling like "I'm in a system that's moving me forward."
+## Copy Direction (condensed)
+
+| Tier | Bullets |
+|------|---------|
+| **Basic** | Exercise library (200+) · 10 daily workouts · Monthly challenges · Progress logging |
+| **Foundation** | 8-week training blocks · Fix It recovery library · Coach form feedback · Real programming, not random workouts |
+| **Custom** | Free online assessment · Custom program built by Matt · 20% off every in-person session (Matt teaches you your workout) · Direct coach messaging · (Private sessions extra) |
+| **Team/Elite** | Full-season team programming · Roster management · Bulk workout assignment · Optional 30-min video chat monthly |
 
