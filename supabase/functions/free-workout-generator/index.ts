@@ -19,6 +19,40 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
+    // --- Server-side free generation limit (1 per IP for anonymous) ---
+    const clientIp =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      req.headers.get("cf-connecting-ip") ||
+      "unknown";
+
+    const authHeader = req.headers.get("Authorization");
+    let isAuthenticated = false;
+    if (authHeader?.startsWith("Bearer ")) {
+      const token = authHeader.replace("Bearer ", "");
+      // Only count as authenticated if it's a real user JWT, not the anon key
+      if (token !== Deno.env.get("SUPABASE_ANON_KEY")) {
+        const { data: userData } = await supabaseClient.auth.getUser(token);
+        if (userData?.user) isAuthenticated = true;
+      }
+    }
+
+    if (!isAuthenticated) {
+      const { count, error: countErr } = await supabaseClient
+        .from("free_generation_log")
+        .select("id", { count: "exact", head: true })
+        .eq("ip_address", clientIp);
+
+      if (!countErr && (count ?? 0) >= 1) {
+        return new Response(
+          JSON.stringify({
+            error: "You've used your free generation. Create a free account to unlock more workouts!",
+            limit_reached: true,
+          }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
     const { experience, goal, daysPerWeek, equipment, gymImageBase64 } = await req.json();
 
     if (!experience || !goal || !daysPerWeek) {
