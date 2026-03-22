@@ -250,11 +250,65 @@ const AdminExerciseLibrary = () => {
               className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground mb-3 outline-none focus:ring-1 focus:ring-primary"
             />
 
-            {/* Video URL */}
-            <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Video URL (YouTube/Vimeo)</label>
+            {/* Video Section */}
+            <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Exercise Video</label>
+            
+            {/* Current video preview */}
+            {editing.video_url && (
+              <div className="mb-2 bg-background border border-border p-2">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-primary flex items-center gap-1">
+                    <Video size={10} /> Current Video
+                  </span>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      // If it's a storage URL, delete the file
+                      if (editing.video_url.includes("exercise_videos/")) {
+                        const path = editing.video_url.split("exercise_videos/")[1];
+                        if (path) {
+                          await supabase.storage.from("exercise_videos").remove([path]);
+                        }
+                      }
+                      setEditing({ ...editing, video_url: "" });
+                      toast.success("Video removed");
+                    }}
+                    className="text-[9px] font-bold uppercase tracking-widest text-destructive hover:opacity-70 transition-m2 flex items-center gap-1"
+                  >
+                    <Trash2 size={10} /> Remove
+                  </button>
+                </div>
+                {editing.video_url.includes("youtube") || editing.video_url.includes("youtu.be") || editing.video_url.includes("vimeo") ? (
+                  <p className="text-xs text-muted-foreground truncate"><LinkIcon size={10} className="inline mr-1" />{editing.video_url}</p>
+                ) : (
+                  <video src={editing.video_url} controls preload="metadata" className="w-full max-h-40 object-contain bg-black" />
+                )}
+              </div>
+            )}
+
+            {/* Upload or paste URL */}
+            <div className="flex gap-2 mb-1">
+              <button
+                type="button"
+                onClick={() => videoInputRef.current?.click()}
+                disabled={uploading}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest hover:bg-primary/20 disabled:opacity-50 transition-m2"
+              >
+                {uploading ? <Loader2 size={12} className="animate-spin" /> : <Upload size={12} />}
+                {uploading ? "Uploading…" : "Upload Video"}
+              </button>
+              <input
+                ref={videoInputRef}
+                type="file"
+                accept="video/*"
+                className="hidden"
+                onChange={handleVideoUpload}
+              />
+            </div>
+            <div className="text-[9px] text-muted-foreground mb-1">Or paste a YouTube / Vimeo URL:</div>
             <input
               type="url"
-              value={editing.video_url}
+              value={editing.video_url.includes("exercise_videos/") ? "" : editing.video_url}
               onChange={(e) => setEditing({ ...editing, video_url: e.target.value })}
               placeholder="https://youtube.com/watch?v=..."
               className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground mb-3 outline-none focus:ring-1 focus:ring-primary"
