@@ -1,7 +1,7 @@
 import { useState, lazy, Suspense } from "react";
 import { motion } from "framer-motion";
 import SEOHead from "@/components/layout/SEOHead";
-import { Check, X as XIcon, Star, Zap, Shield, Crown, Users, ArrowRight, Loader2, Tag, ChevronDown, ChevronUp, Calendar } from "lucide-react";
+import { Check, X as XIcon, Star, Zap, Shield, Crown, Users, ArrowRight, Loader2, Tag, ChevronDown, ChevronUp, Calendar, CalendarDays } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import AppNavbar from "@/components/layout/AppNavbar";
