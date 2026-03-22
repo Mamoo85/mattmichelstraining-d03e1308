@@ -260,7 +260,7 @@ const Pricing = () => {
         )}
 
         {/* Billing cycle toggle */}
-        <div className="flex items-center justify-center gap-3 mb-8">
+        <div className="flex flex-wrap items-center justify-center gap-3 mb-8">
           <button
             onClick={() => setBillingCycle("monthly")}
             className={`px-4 py-2 text-xs font-bold uppercase tracking-widest transition-all ${
@@ -279,9 +279,9 @@ const Pricing = () => {
                 : "border border-border text-muted-foreground hover:text-foreground"
             }`}
           >
-            <CalendarDays size={14} />
+            <CalendarDays size={14} className="shrink-0" />
             Annual
-            <span className="text-[8px] bg-primary text-primary-foreground px-1.5 py-0.5 font-bold">
+            <span className="text-[8px] bg-primary text-primary-foreground px-1.5 py-0.5 font-bold whitespace-nowrap">
               Save 17%
             </span>
           </button>

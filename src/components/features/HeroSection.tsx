@@ -140,8 +140,8 @@ const HeroSection = () => {
 
         {/* FOOTER */}
         <div className="mt-10 pt-6 border-t border-border text-center">
-          <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} <span className="font-brand text-sm text-foreground">M² Training</span> · Grosse Pointe Park, MI · Strength done right since 2004.
+          <p className="text-xs text-muted-foreground break-words">
+            © {new Date().getFullYear()} <span className="font-brand text-sm text-foreground">M²&nbsp;Training</span> · Grosse Pointe Park, MI · Strength done right since 2004.
           </p>
         </div>
       </div>

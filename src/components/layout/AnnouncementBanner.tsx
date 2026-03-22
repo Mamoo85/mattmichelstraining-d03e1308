@@ -21,10 +21,10 @@ const AnnouncementBanner = () => {
   if (!data?.enabled || !data.text) return null;
 
   return (
-    <div className="bg-primary text-primary-foreground text-center py-2 px-4 fixed top-0 left-0 right-0 z-[60]">
-      <div className="flex items-center justify-center gap-2">
-        <Megaphone size={12} />
-        <span className="text-[11px] font-bold uppercase tracking-widest">{data.text}</span>
+    <div className="bg-primary text-primary-foreground text-center py-2 px-4 fixed top-0 left-0 right-0 z-[60] overflow-hidden">
+      <div className="flex items-center justify-center gap-2 max-w-full">
+        <Megaphone size={12} className="shrink-0" />
+        <span className="text-[11px] font-bold uppercase tracking-widest truncate">{data.text}</span>
       </div>
     </div>
   );
