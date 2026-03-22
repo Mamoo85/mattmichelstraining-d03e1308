@@ -171,7 +171,7 @@ const TechShowcaseMarketing = ({ variant = "full" }: Props) => {
               All of This. <span className="text-primary">$12.99/mo.</span>
             </p>
             <p className="text-xs text-muted-foreground mb-4">
-              Less than a gym membership. More technology than any trainer on the planet.
+              All technology is built into the M² member app — included free with every membership.
             </p>
             <Button asChild size="lg" className="w-full h-12 font-black uppercase tracking-wider text-sm">
               <Link to="/auth?mode=signup&trial=true">
