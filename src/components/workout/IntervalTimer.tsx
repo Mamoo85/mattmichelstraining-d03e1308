@@ -26,21 +26,146 @@ const PRESETS: { label: string; config: TimerConfig }[] = [
   { label: "Boxing", config: { prep: 10, work: 180, rest: 60, rounds: 12, warning: 10 } },
 ];
 
-const phaseColors: Record<Phase, string> = {
-  idle: "bg-card",
-  prep: "bg-yellow-600",
-  work: "bg-green-700",
-  rest: "bg-red-700",
-  done: "bg-primary",
-};
+/* ── Random visual skins ── */
+interface TimerSkin {
+  name: string;
+  icon: string;
+  idle: string;
+  prep: string;
+  work: string;
+  rest: string;
+  done: string;
+  accent: string;
+  headerBg: string;
+  controlsBg: string;
+}
 
-const phaseLabels: Record<Phase, string> = {
-  idle: "READY",
-  prep: "PREP",
-  work: "WORK",
-  rest: "REST",
-  done: "DONE!",
-};
+const SKINS: TimerSkin[] = [
+  {
+    name: "M² Performance",
+    icon: "🏋️",
+    idle: "bg-[hsl(0,0%,7%)]",
+    prep: "bg-yellow-600",
+    work: "bg-green-700",
+    rest: "bg-red-700",
+    done: "bg-primary",
+    accent: "text-primary",
+    headerBg: "bg-card",
+    controlsBg: "bg-background",
+  },
+  {
+    name: "Wild Tiger",
+    icon: "🐯",
+    idle: "bg-gradient-to-b from-amber-900 to-orange-950",
+    prep: "bg-gradient-to-b from-amber-700 to-amber-900",
+    work: "bg-gradient-to-b from-orange-600 to-red-900",
+    rest: "bg-gradient-to-b from-amber-800 to-yellow-950",
+    done: "bg-gradient-to-b from-amber-500 to-orange-700",
+    accent: "text-amber-400",
+    headerBg: "bg-amber-950",
+    controlsBg: "bg-amber-950/90",
+  },
+  {
+    name: "Wolf Pack",
+    icon: "🐺",
+    idle: "bg-gradient-to-b from-slate-800 to-slate-950",
+    prep: "bg-gradient-to-b from-slate-600 to-slate-800",
+    work: "bg-gradient-to-b from-blue-800 to-slate-900",
+    rest: "bg-gradient-to-b from-slate-700 to-gray-900",
+    done: "bg-gradient-to-b from-blue-600 to-indigo-900",
+    accent: "text-blue-400",
+    headerBg: "bg-slate-900",
+    controlsBg: "bg-slate-950/90",
+  },
+  {
+    name: "Deep Space",
+    icon: "🚀",
+    idle: "bg-gradient-to-b from-indigo-950 to-black",
+    prep: "bg-gradient-to-b from-violet-900 to-indigo-950",
+    work: "bg-gradient-to-b from-cyan-800 to-blue-950",
+    rest: "bg-gradient-to-b from-indigo-800 to-violet-950",
+    done: "bg-gradient-to-b from-cyan-500 to-blue-800",
+    accent: "text-cyan-400",
+    headerBg: "bg-indigo-950",
+    controlsBg: "bg-[hsl(240,50%,5%)]",
+  },
+  {
+    name: "Cherry Blossom",
+    icon: "🌸",
+    idle: "bg-gradient-to-b from-pink-900 to-rose-950",
+    prep: "bg-gradient-to-b from-pink-700 to-rose-800",
+    work: "bg-gradient-to-b from-rose-600 to-pink-900",
+    rest: "bg-gradient-to-b from-pink-800 to-fuchsia-950",
+    done: "bg-gradient-to-b from-pink-500 to-rose-700",
+    accent: "text-pink-400",
+    headerBg: "bg-rose-950",
+    controlsBg: "bg-rose-950/90",
+  },
+  {
+    name: "Eagle Eye",
+    icon: "🦅",
+    idle: "bg-gradient-to-b from-stone-800 to-stone-950",
+    prep: "bg-gradient-to-b from-amber-800 to-stone-900",
+    work: "bg-gradient-to-b from-emerald-800 to-stone-900",
+    rest: "bg-gradient-to-b from-stone-700 to-stone-900",
+    done: "bg-gradient-to-b from-amber-600 to-stone-800",
+    accent: "text-amber-500",
+    headerBg: "bg-stone-900",
+    controlsBg: "bg-stone-950/90",
+  },
+  {
+    name: "Cobra Strike",
+    icon: "🐍",
+    idle: "bg-gradient-to-b from-emerald-950 to-black",
+    prep: "bg-gradient-to-b from-lime-800 to-emerald-950",
+    work: "bg-gradient-to-b from-green-700 to-emerald-950",
+    rest: "bg-gradient-to-b from-teal-800 to-emerald-950",
+    done: "bg-gradient-to-b from-lime-500 to-green-800",
+    accent: "text-lime-400",
+    headerBg: "bg-emerald-950",
+    controlsBg: "bg-emerald-950/90",
+  },
+  {
+    name: "Supernova",
+    icon: "✨",
+    idle: "bg-gradient-to-b from-purple-950 to-black",
+    prep: "bg-gradient-to-b from-fuchsia-800 to-purple-950",
+    work: "bg-gradient-to-b from-orange-600 to-red-950",
+    rest: "bg-gradient-to-b from-violet-800 to-purple-950",
+    done: "bg-gradient-to-b from-fuchsia-500 to-purple-800",
+    accent: "text-fuchsia-400",
+    headerBg: "bg-purple-950",
+    controlsBg: "bg-purple-950/90",
+  },
+  {
+    name: "Arctic Wolf",
+    icon: "❄️",
+    idle: "bg-gradient-to-b from-sky-900 to-slate-950",
+    prep: "bg-gradient-to-b from-sky-700 to-blue-900",
+    work: "bg-gradient-to-b from-teal-700 to-sky-950",
+    rest: "bg-gradient-to-b from-blue-800 to-slate-950",
+    done: "bg-gradient-to-b from-sky-400 to-blue-700",
+    accent: "text-sky-400",
+    headerBg: "bg-sky-950",
+    controlsBg: "bg-slate-950/90",
+  },
+  {
+    name: "Sunflower Power",
+    icon: "🌻",
+    idle: "bg-gradient-to-b from-yellow-800 to-amber-950",
+    prep: "bg-gradient-to-b from-yellow-600 to-amber-800",
+    work: "bg-gradient-to-b from-lime-700 to-green-900",
+    rest: "bg-gradient-to-b from-orange-700 to-amber-900",
+    done: "bg-gradient-to-b from-yellow-500 to-amber-700",
+    accent: "text-yellow-400",
+    headerBg: "bg-amber-950",
+    controlsBg: "bg-amber-950/90",
+  },
+];
+
+function getRandomSkin(): TimerSkin {
+  return SKINS[Math.floor(Math.random() * SKINS.length)];
+}
 
 const COACH_MESSAGES = [
   "Beast mode. That's how it's done. 🔥",
@@ -110,6 +235,7 @@ const IntervalTimer = ({ onClose, initialConfig }: IntervalTimerProps) => {
   const [volume, setVolume] = useState(() => getMasterVolume() * 100);
   const [coachMsg] = useState(() => COACH_MESSAGES[Math.floor(Math.random() * COACH_MESSAGES.length)]);
   const [warningFired, setWarningFired] = useState(false);
+  const [skin] = useState<TimerSkin>(() => getRandomSkin());
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const targetTimeRef = useRef(0);
@@ -253,14 +379,19 @@ const IntervalTimer = ({ onClose, initialConfig }: IntervalTimerProps) => {
 
   const inWarningZone = phase === "work" && config.warning > 0 && secondsLeft <= config.warning && secondsLeft > 0;
 
+  const skinPhase = skin[phase];
+
   return (
     <div className="fixed inset-0 z-[110] flex flex-col animate-slide-in-right" style={{ animationDuration: "0.25s" }}>
       {/* Header */}
       <button onClick={onClose}
-        className="flex items-center justify-between px-4 bg-card border-b border-border shrink-0"
+        className={cn("flex items-center justify-between px-4 border-b border-white/10 shrink-0", skin.headerBg)}
         style={{ minHeight: 56 }}>
-        <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground">Interval Timer</span>
-        <span className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+        <span className="flex items-center gap-2">
+          <span className="text-lg">{skin.icon}</span>
+          <span className={cn("text-[10px] font-bold uppercase tracking-[0.3em]", skin.accent)}>{skin.name}</span>
+        </span>
+        <span className="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
           <span className="text-xs font-bold uppercase tracking-widest">Exit</span>
           <X size={22} />
         </span>
@@ -268,8 +399,8 @@ const IntervalTimer = ({ onClose, initialConfig }: IntervalTimerProps) => {
 
       {/* Timer display */}
       <div className={cn(
-        "flex-1 flex flex-col items-center justify-center relative transition-colors duration-300",
-        phaseColors[phase],
+        "flex-1 flex flex-col items-center justify-center relative transition-all duration-500",
+        skinPhase,
         inWarningZone && "animate-pulse"
       )}>
         {inWarningZone && (
@@ -277,7 +408,7 @@ const IntervalTimer = ({ onClose, initialConfig }: IntervalTimerProps) => {
         )}
 
         <span className="text-sm font-bold uppercase tracking-[0.3em] text-white/80 mb-1">
-          {phaseLabels[phase]}
+          {phase === "idle" ? "READY" : phase === "prep" ? "PREP" : phase === "work" ? "WORK" : phase === "rest" ? "REST" : "DONE!"}
         </span>
         {phase !== "done" && (
           <span className="text-xs font-mono text-white/60 mb-2">
@@ -309,7 +440,7 @@ const IntervalTimer = ({ onClose, initialConfig }: IntervalTimerProps) => {
             <div>
               <span className="text-[10px] font-bold uppercase tracking-widest text-white/60">Total Workout</span>
               <div className="w-full h-2 bg-black/30 mt-1 overflow-hidden">
-                <div className="h-full bg-primary transition-all duration-300" style={{ width: `${totalProgress}%` }} />
+                <div className="h-full bg-white/50 transition-all duration-300" style={{ width: `${totalProgress}%` }} />
               </div>
             </div>
           </div>
@@ -318,7 +449,7 @@ const IntervalTimer = ({ onClose, initialConfig }: IntervalTimerProps) => {
         {/* Completion screen */}
         {phase === "done" && (
           <div className="flex flex-col items-center text-center px-6 max-w-sm">
-            <span className="text-5xl mb-3">🔥</span>
+            <span className="text-5xl mb-3">{skin.icon}</span>
             <span className="text-2xl font-black text-white uppercase tracking-wide mb-2">
               All {config.rounds} Rounds Complete
             </span>
@@ -337,7 +468,7 @@ const IntervalTimer = ({ onClose, initialConfig }: IntervalTimerProps) => {
       </div>
 
       {/* Controls */}
-      <div className="bg-background p-4 space-y-3 overflow-y-auto max-h-[55vh]">
+      <div className={cn("p-4 space-y-3 overflow-y-auto max-h-[55vh]", skin.controlsBg)}>
         {isSetup && (
           <>
             <div className="grid grid-cols-2 gap-3">
@@ -347,16 +478,16 @@ const IntervalTimer = ({ onClose, initialConfig }: IntervalTimerProps) => {
                 { key: "rest" as const, label: "Rest", isTime: true },
                 { key: "rounds" as const, label: "Rounds", isTime: false },
               ]).map(({ key, label, isTime }) => (
-                <div key={key} className="bg-card border border-border p-3 flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{label}</span>
+                <div key={key} className="bg-white/5 border border-white/10 p-3 flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-white/50">{label}</span>
                   <div className="flex items-center gap-1">
                     <button onClick={() => adjust(key, isTime && config[key] >= 30 ? -5 : -1)}
-                      className="w-10 h-10 flex items-center justify-center bg-muted text-foreground hover:bg-muted-foreground/20 transition-colors active:scale-95">
+                      className="w-10 h-10 flex items-center justify-center bg-white/10 text-white hover:bg-white/20 transition-colors active:scale-95">
                       <Minus size={18} />
                     </button>
                     <EditableValue value={config[key]} onChange={(v) => setField(key, v)} isTime={isTime} disabled={running} />
                     <button onClick={() => adjust(key, isTime && config[key] >= 25 ? 5 : 1)}
-                      className="w-10 h-10 flex items-center justify-center bg-muted text-foreground hover:bg-muted-foreground/20 transition-colors active:scale-95">
+                      className="w-10 h-10 flex items-center justify-center bg-white/10 text-white hover:bg-white/20 transition-colors active:scale-95">
                       <Plus size={18} />
                     </button>
                   </div>
@@ -365,49 +496,38 @@ const IntervalTimer = ({ onClose, initialConfig }: IntervalTimerProps) => {
             </div>
 
             {/* Warning time */}
-            <div className="bg-card border border-border p-3 flex items-center justify-between">
+            <div className="bg-white/5 border border-white/10 p-3 flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <span className="text-yellow-500 text-sm">⚡</span>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Warning (sec before end)</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-white/50">Warning</span>
               </div>
               <div className="flex items-center gap-1">
                 <button onClick={() => adjust("warning", -1)}
-                  className="w-10 h-10 flex items-center justify-center bg-muted text-foreground hover:bg-muted-foreground/20 transition-colors active:scale-95">
+                  className="w-10 h-10 flex items-center justify-center bg-white/10 text-white hover:bg-white/20 transition-colors active:scale-95">
                   <Minus size={18} />
                 </button>
                 <EditableValue value={config.warning} onChange={(v) => setField("warning", v)} isTime={false} disabled={running} />
                 <button onClick={() => adjust("warning", 1)}
-                  className="w-10 h-10 flex items-center justify-center bg-muted text-foreground hover:bg-muted-foreground/20 transition-colors active:scale-95">
+                  className="w-10 h-10 flex items-center justify-center bg-white/10 text-white hover:bg-white/20 transition-colors active:scale-95">
                   <Plus size={18} />
                 </button>
               </div>
             </div>
 
-            {/* Volume */}
-            <div className="bg-card border border-border p-3 space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <Volume2 size={14} className="text-primary" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Volume</span>
-                </div>
-                <span className="font-mono text-sm font-bold text-foreground tabular-nums">{Math.round(volume)}%</span>
-              </div>
+            {/* Volume — compact inline */}
+            <div className="bg-white/5 border border-white/10 p-3 flex items-center gap-3">
+              <Volume2 size={14} className={skin.accent} />
               <input type="range" min={0} max={200} step={5} value={volume}
                 onChange={(e) => { const v = Number(e.target.value); setVolume(v); setMasterVolume(v / 100); }}
-                className="w-full h-3 accent-primary cursor-pointer" />
-              <div className="flex items-center justify-between text-[9px] font-mono text-muted-foreground">
-                <span>MUTE</span><span>100%</span><span>200% BOOST</span>
-              </div>
-              <button onClick={testBeep}
-                className="w-full py-2 bg-muted text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground hover:bg-muted-foreground/20 transition-colors border border-border">
-                🔊 Test Sound
-              </button>
+                className="flex-1 h-2 accent-white/70 cursor-pointer" />
+              <span className="font-mono text-xs font-bold text-white/60 tabular-nums w-10 text-right">{Math.round(volume)}%</span>
+              <button onClick={testBeep} className="text-white/40 hover:text-white/80 transition-colors text-xs">🔊</button>
             </div>
 
             <div className="flex gap-2">
               {PRESETS.map((p) => (
                 <button key={p.label} onClick={() => setConfig(p.config)}
-                  className="flex-1 py-3 bg-secondary text-secondary-foreground text-xs font-bold uppercase tracking-widest hover:bg-muted transition-colors border border-border">
+                  className="flex-1 py-3 bg-white/10 text-white/80 text-xs font-bold uppercase tracking-widest hover:bg-white/20 transition-colors border border-white/10">
                   {p.label}
                 </button>
               ))}
@@ -430,7 +550,7 @@ const IntervalTimer = ({ onClose, initialConfig }: IntervalTimerProps) => {
             </button>
           )}
           <button onClick={resetTimer}
-            className="h-16 px-6 bg-muted text-muted-foreground text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:text-foreground transition-colors">
+            className="h-16 px-6 bg-white/10 text-white/60 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:text-white transition-colors">
             <RotateCcw size={18} />
             RESET
           </button>

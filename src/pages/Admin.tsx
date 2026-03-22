@@ -39,7 +39,6 @@ const AdminBiomechanics = lazy(() => import("@/components/admin/AdminBiomechanic
 const AdminAiToolkit = lazy(() => import("@/components/admin/AdminAiToolkit"));
 const AdminCoachAiQueue = lazy(() => import("@/components/admin/AdminCoachAiQueue"));
 const AdminCustomRequests = lazy(() => import("@/components/admin/AdminCustomRequests"));
-const AdminAiTimerGenerator = lazy(() => import("@/components/admin/AdminAiTimerGenerator"));
 
 const AdminFinancials = lazy(() => import("@/components/admin/AdminFinancials"));
 const AdminPromotions = lazy(() => import("@/components/admin/AdminPromotions"));
@@ -323,7 +322,6 @@ const Admin = () => {
             { key: "ai-programs", label: "AI Programs", content: <AdminProgramCreator /> },
             { key: "ai-queue", label: <span className="flex items-center gap-1">AI Queue{pendingAiQueueCount > 0 && <Badge variant="destructive" className="text-[8px] px-1.5 py-0 min-w-[18px] h-4">{pendingAiQueueCount}</Badge>}</span>, content: <AdminAiQueue /> },
             { key: "ai-toolkit", label: "AI Toolkit", content: <AdminAiToolkit /> },
-            { key: "ai-timer", label: "AI Timers", content: <AdminAiTimerGenerator /> },
             { key: "recovery", label: "Recovery Map", content: <AdminRecoveryHeatmap /> },
             { key: "monthly", label: "Monthly Focus", content: <AdminMonthlyFocus /> },
             { key: "biomechanics", label: "Biomechanics", content: <AdminBiomechanics /> },
