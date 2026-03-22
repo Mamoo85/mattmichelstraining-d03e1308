@@ -90,12 +90,6 @@ const DashboardHome = memo(({ isNewUser, isInPerson, onViewPoints, onViewReferra
           <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Scan Food</span>
         </Link>
       </div>
-      <button
-        onClick={handleStartWorkout}
-        className="w-full h-10 border-2 border-orange-500 text-orange-400 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest hover:border-orange-400 hover:shadow-[0_0_15px_rgba(249,115,22,0.5)] transition-all mt-2"
-      >
-        <Play size={14} /> Enter The Portal
-      </button>
     </div>
 
     {/* Posture CTA — never for in-person clients */}
