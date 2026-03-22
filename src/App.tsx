@@ -62,6 +62,7 @@ const Nutrition = lazyRetry(() => import("./pages/Nutrition"));
 const TheEdge = lazyRetry(() => import("./pages/TheEdge"));
 const MatrixEasterEgg = lazyRetry(() => import("./pages/MatrixEasterEgg"));
 const FreeAiGenerator = lazyRetry(() => import("./pages/FreeAiGenerator"));
+const SEOLandingPage = lazyRetry(() => import("./pages/SEOLandingPage"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -180,6 +181,7 @@ const App = () => (
                     <Route path="/matrix" element={<MatrixEasterEgg />} />
                     <Route path="/install" element={<Install />} />
                     <Route path="/free-ai-generator" element={<FreeAiGenerator />} />
+                    <Route path="/training/:slug" element={<SEOLandingPage />} />
                     <Route path="/coach" element={<ProtectedRoute><SubscriptionGuard><Coach /></SubscriptionGuard></ProtectedRoute>} />
                     <Route path="/trial-welcome" element={<ProtectedRoute><TrialWelcome /></ProtectedRoute>} />
                     <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
