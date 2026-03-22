@@ -272,11 +272,11 @@ const FeatureSection = ({ feature, index }: { feature: TechFeature; index: numbe
 const TrialCTABlock = () => (
   <div className="bg-gradient-to-br from-primary/20 via-card to-primary/10 border-2 border-primary/40 p-6 md:p-8 text-center">
     <h3 className="text-lg md:text-xl font-black text-foreground mb-1">
-      All of This. <span className="text-primary">$12.99/mo.</span>
+      All of This. <span className="text-primary">Inside Your App.</span>
     </h3>
     <p className="text-xs text-muted-foreground max-w-md mx-auto mb-4">
-      Less than a gym membership. More technology than any trainer on the planet.
-      20+ years of the best information at your fingertips.
+      Every feature on this page is included free with any M² membership — no add-ons, no upsells.
+      Just open the app and start training smarter.
     </p>
     <Button asChild size="lg" className="h-12 font-black uppercase tracking-wider text-sm px-8">
       <Link to="/auth?mode=signup&trial=true">
