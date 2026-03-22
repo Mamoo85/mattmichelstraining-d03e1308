@@ -62,6 +62,7 @@ const Nutrition = lazyRetry(() => import("./pages/Nutrition"));
 const TheEdge = lazyRetry(() => import("./pages/TheEdge"));
 const MatrixEasterEgg = lazyRetry(() => import("./pages/MatrixEasterEgg"));
 const FreeAiGenerator = lazyRetry(() => import("./pages/FreeAiGenerator"));
+const SEOLandingPage = lazyRetry(() => import("./pages/SEOLandingPage"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
