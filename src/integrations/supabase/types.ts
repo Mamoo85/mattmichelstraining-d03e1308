@@ -2190,6 +2190,39 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_landing_pages: {
+        Row: {
+          created_at: string
+          h1_heading: string
+          id: string
+          main_content: string
+          meta_description: string
+          page_title: string
+          slug: string
+          target_audience: string
+        }
+        Insert: {
+          created_at?: string
+          h1_heading?: string
+          id?: string
+          main_content?: string
+          meta_description?: string
+          page_title: string
+          slug: string
+          target_audience?: string
+        }
+        Update: {
+          created_at?: string
+          h1_heading?: string
+          id?: string
+          main_content?: string
+          meta_description?: string
+          page_title?: string
+          slug?: string
+          target_audience?: string
+        }
+        Relationships: []
+      }
       service_catalog: {
         Row: {
           category: string
