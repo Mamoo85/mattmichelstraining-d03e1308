@@ -2,9 +2,6 @@ import { motion } from "framer-motion";
 import portalPrograms from "@/assets/portal-programs.jpg";
 import portalChat from "@/assets/portal-chat.jpg";
 import portalProgress from "@/assets/portal-progress.jpg";
-import portalPrograms from "@/assets/portal-programs.jpg";
-import portalChat from "@/assets/portal-chat.jpg";
-import portalProgress from "@/assets/portal-progress.jpg";
 
 const FEATURES = [
   {
