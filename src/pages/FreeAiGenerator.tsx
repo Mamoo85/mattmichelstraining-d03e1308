@@ -258,7 +258,7 @@ const FreeAiGenerator = () => {
 
                 <Button
                   onClick={handleGenerate}
-                  disabled={loading || !experience || !goal || !equipment || isLimitReached}
+                  disabled={loading || !experience || !goal || (!equipment && !gymImageBase64) || isLimitReached}
                   className="w-full h-14 text-base font-black uppercase tracking-wider relative overflow-hidden group"
                   size="lg"
                 >
