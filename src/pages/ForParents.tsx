@@ -9,6 +9,7 @@ import { Calendar, MapPin } from "lucide-react";
 import TechShowcaseCard from "@/components/landing/TechShowcaseCard";
 import ForParentsHero from "@/components/landing/ForParentsHero";
 import MembershipTiers from "@/components/landing/MembershipTiers";
+import BringAFriendCard from "@/components/landing/BringAFriendCard";
 import { BenefitsGrid, ParentPortalSection } from "@/components/landing/ParentChildBenefits";
 const DoNotPressButton = lazy(() => import("@/components/landing/DoNotPressButton"));
 
@@ -56,6 +57,11 @@ const ForParents = () => {
 
         <ForParentsHero cms={cms} />
         <MembershipTiers />
+
+        <motion.div {...fade(0.2)} className="mb-12">
+          <BringAFriendCard />
+        </motion.div>
+
         <BenefitsGrid />
         <ParentPortalSection user={user} />
 

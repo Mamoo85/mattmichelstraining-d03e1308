@@ -35,6 +35,40 @@ export const TIERS = {
   },
 } as const;
 
+// Annual pricing (2 months free = 10 months price)
+export const ANNUAL_TIERS: Record<TierKey, { price_id: string; product_id: string; price: string; priceNum: number; monthlyEquiv: string }> = {
+  basic: {
+    product_id: "prod_UC3NyJRutYTL87",
+    price_id: "price_1TDfH3D52tPWee4668pIobVk",
+    price: "$129.90",
+    priceNum: 129.90,
+    monthlyEquiv: "$10.83",
+  },
+  foundation: {
+    product_id: "prod_UC3OvNMcgtPafc",
+    price_id: "price_1TDfHPD52tPWee46Gk18jY4m",
+    price: "$199.90",
+    priceNum: 199.90,
+    monthlyEquiv: "$16.66",
+  },
+  custom: {
+    product_id: "prod_UC3ONcP6ZoWtdM",
+    price_id: "price_1TDfHjD52tPWee46PQkctivf",
+    price: "$499.90",
+    priceNum: 499.90,
+    monthlyEquiv: "$41.66",
+  },
+  team_elite: {
+    product_id: "prod_UC3OtnhWc3wNQc",
+    price_id: "price_1TDfI3D52tPWee46F6XteV0s",
+    price: "$999.90",
+    priceNum: 999.90,
+    monthlyEquiv: "$83.33",
+  },
+};
+
+export const FIRST_MONTH_COUPON_ID = "JJwqu21q";
+
 export type TierKey = keyof typeof TIERS;
 
 // Tier-based store discounts (more aggressive)

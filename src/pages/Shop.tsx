@@ -7,6 +7,7 @@ import ExerciseLibrary from "@/components/features/ExerciseLibrary";
 import FixItLibrary from "@/components/features/FixItLibrary";
 import PaywallGate from "@/components/billing/PaywallGate";
 const DoNotPressButton = lazy(() => import("@/components/landing/DoNotPressButton"));
+const FirstMonthPromo = lazy(() => import("@/components/landing/FirstMonthPromo"));
 
 const TABS = [
   { key: "start", label: "How It Works" },
@@ -52,6 +53,7 @@ const Shop = () => {
           ))}
         </div>
 
+        <Suspense fallback={null}><FirstMonthPromo /></Suspense>
         {activeTab === "start" && <StoreGettingStarted />}
         {activeTab === "store" && <StoreTab />}
         {activeTab === "library" && (

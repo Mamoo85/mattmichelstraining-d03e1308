@@ -1,11 +1,11 @@
 import { useState, lazy, Suspense } from "react";
 import { motion } from "framer-motion";
 import SEOHead from "@/components/layout/SEOHead";
-import { Check, X as XIcon, Star, Zap, Shield, Crown, Users, ArrowRight, Loader2, Tag, ChevronDown, ChevronUp, Calendar } from "lucide-react";
+import { Check, X as XIcon, Star, Zap, Shield, Crown, Users, ArrowRight, Loader2, Tag, ChevronDown, ChevronUp, Calendar, CalendarDays } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import AppNavbar from "@/components/layout/AppNavbar";
-import { useAuth, TIERS, TierKey, TIER_DISCOUNTS } from "@/hooks/useAuth";
+import { useAuth, TIERS, ANNUAL_TIERS, TierKey, TIER_DISCOUNTS } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -97,6 +97,7 @@ const Pricing = () => {
   const [promoApplied, setPromoApplied] = useState(false);
   const [expandedTiers, setExpandedTiers] = useState<Record<string, boolean>>({});
   const [modalTier, setModalTier] = useState<{ key: TierKey; label: string } | null>(null);
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
 
   const handleCheckout = async (tierKey: TierKey) => {
     if (!user) {
@@ -106,7 +107,7 @@ const Pricing = () => {
 
     setLoadingTier(tierKey);
     try {
-      const body: any = { priceId: TIERS[tierKey].price_id };
+      const body: any = { priceId: billingCycle === "annual" ? ANNUAL_TIERS[tierKey].price_id : TIERS[tierKey].price_id };
       if (promoCode.trim()) {
         body.promoCode = promoCode.trim();
       }
@@ -265,10 +266,39 @@ const Pricing = () => {
           </div>
         )}
 
+        {/* Billing cycle toggle */}
+        <div className="flex items-center justify-center gap-3 mb-8">
+          <button
+            onClick={() => setBillingCycle("monthly")}
+            className={`px-4 py-2 text-xs font-bold uppercase tracking-widest transition-all ${
+              billingCycle === "monthly"
+                ? "bg-foreground text-background"
+                : "border border-border text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Monthly
+          </button>
+          <button
+            onClick={() => setBillingCycle("annual")}
+            className={`px-4 py-2 text-xs font-bold uppercase tracking-widest transition-all flex items-center gap-2 ${
+              billingCycle === "annual"
+                ? "bg-foreground text-background"
+                : "border border-border text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <CalendarDays size={14} />
+            Annual
+            <span className="text-[8px] bg-primary text-primary-foreground px-1.5 py-0.5 font-bold">
+              Save 17%
+            </span>
+          </button>
+        </div>
+
         {/* Tier grid — 4 columns on desktop */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-7xl mx-auto">
           {TIER_CARDS.map((card, i) => {
             const tier = TIERS[card.key];
+            const annual = ANNUAL_TIERS[card.key];
             const isCurrentPlan = subscriptionTier === card.key;
             const Icon = card.icon;
             const cmsFeatures = cms[`${card.key}_features`];
@@ -307,9 +337,24 @@ const Pricing = () => {
                   <p className="text-[10px] text-muted-foreground mb-1 leading-tight">{card.subtitle}</p>
                 )}
                 <div className="flex items-baseline gap-1 mt-1 mb-1.5">
-                  <span className="text-2xl font-black text-foreground">{tier.price}</span>
-                  <span className="text-muted-foreground text-xs">/mo</span>
+                  {billingCycle === "annual" ? (
+                    <>
+                      <span className="text-2xl font-black text-foreground">{annual.monthlyEquiv}</span>
+                      <span className="text-muted-foreground text-xs">/mo</span>
+                      <span className="text-[10px] text-muted-foreground line-through ml-1">{tier.price}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-2xl font-black text-foreground">{tier.price}</span>
+                      <span className="text-muted-foreground text-xs">/mo</span>
+                    </>
+                  )}
                 </div>
+                {billingCycle === "annual" && (
+                  <p className="text-[10px] text-primary font-bold mb-1">
+                    {annual.price}/yr · 2 months free
+                  </p>
+                )}
                 <div className="flex items-center gap-1.5 mb-2 text-[10px] font-bold uppercase tracking-widest text-primary">
                   <Tag className="w-3 h-3" />
                   {TIER_DISCOUNTS[card.key]}% off store
@@ -438,8 +483,8 @@ const Pricing = () => {
             setModalTier(null);
           }}
           loading={!!loadingTier}
-          productName={modalTier ? (TIERS[modalTier.key].name + " Subscription") : ""}
-          productPrice={modalTier ? (TIERS[modalTier.key].price + "/mo") : ""}
+          productName={modalTier ? (TIERS[modalTier.key].name + (billingCycle === "annual" ? " Annual" : "") + " Subscription") : ""}
+          productPrice={modalTier ? (billingCycle === "annual" ? ANNUAL_TIERS[modalTier.key].price + "/yr" : TIERS[modalTier.key].price + "/mo") : ""}
           productType={modalTier?.key as CheckoutProductType || "foundation"}
         />
         <Suspense fallback={null}><DoNotPressButton /></Suspense>

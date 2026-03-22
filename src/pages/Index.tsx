@@ -5,6 +5,7 @@ import SEOHead from "@/components/layout/SEOHead";
 
 const ChallengeTeaser = lazy(() => import("@/components/landing/ChallengeTeaser"));
 const DoNotPressButton = lazy(() => import("@/components/landing/DoNotPressButton"));
+const FirstMonthPromo = lazy(() => import("@/components/landing/FirstMonthPromo"));
 
 const FAQ_SCHEMA = {
   "@context": "https://schema.org",
@@ -58,7 +59,10 @@ const Index = () => (
     />
     <AppNavbar />
     <HeroSection />
-    <div className="container py-12 max-w-xl mx-auto">
+    <div className="container py-12 max-w-xl mx-auto space-y-8">
+      <Suspense fallback={null}>
+        <FirstMonthPromo />
+      </Suspense>
       <Suspense fallback={null}>
         <ChallengeTeaser />
       </Suspense>
