@@ -20,25 +20,52 @@ const logStep = (step: string, details?: any) => {
 
 function buildEmailHtml(name: string, tierName: string, tierPrice: string): string {
   return `
-<div style="font-family: Georgia, 'Times New Roman', serif; max-width: 580px; margin: 0 auto; padding: 20px; color: #1a1a1a; line-height: 1.7;">
-  <p>Hey ${name || "there"} —</p>
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#0a0a14;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a14;">
+<tr><td align="center" style="padding:24px 16px;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width:580px;">
+    <!-- M² Header -->
+    <tr><td style="background:#f97316;padding:3px 0;"></td></tr>
+    <tr><td style="text-align:center;padding:24px 0 16px;background:#0f0f1a;">
+      <div style="font-size:32px;font-weight:900;color:#f97316;letter-spacing:3px;">M²</div>
+      <div style="font-size:9px;color:#888;text-transform:uppercase;letter-spacing:4px;margin-top:2px;">TRAINING</div>
+      <div style="width:40px;height:2px;background:#f97316;margin:10px auto 0;"></div>
+    </td></tr>
 
-  <p>Quick heads-up: your <strong>14-day free trial ends in 3 days</strong>.</p>
+    <!-- Body -->
+    <tr><td style="padding:24px;background:#0f0f1a;color:#ccc;font-size:15px;line-height:1.7;">
+      <p style="color:#fff;font-size:17px;font-weight:bold;margin-top:0;">Hey ${name || "there"} —</p>
 
-  <p>When it does, you'll automatically start the <strong>${tierName} membership at ${tierPrice}/month</strong>. That's the plan you selected when you started your trial. Your card on file will be charged on day 15.</p>
+      <p>Quick heads-up: your <strong style="color:#f97316;">14-day free trial ends in 3 days</strong>.</p>
 
-  <p><strong>Want to change plans or cancel?</strong> No hard feelings. You can switch tiers or cancel anytime from your profile — just click the link below before your trial ends.</p>
+      <p>When it does, you'll automatically start the <strong style="color:#fff;">${tierName} membership at ${tierPrice}/month</strong>. That's the plan you selected when you started your trial. Your card on file will be charged on day 15.</p>
 
-  <p style="text-align: center; margin: 30px 0;">
-    <a href="${PROFILE_URL}" style="display: inline-block; background-color: #1a1a1a; color: #ffffff; padding: 14px 28px; text-decoration: none; font-size: 14px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase;">Manage My Subscription</a>
-  </p>
+      <p><strong style="color:#fff;">Want to change plans or cancel?</strong> No hard feelings. You can switch tiers or cancel anytime from your profile — just click the link below before your trial ends.</p>
 
-  <p>If you do nothing, your membership starts automatically and you keep everything — your logs, your programs, and Coach Matt's eyes on your training.</p>
+      <p style="text-align:center;margin:30px 0;">
+        <a href="${PROFILE_URL}" style="display:inline-block;background:#f97316;color:#fff;padding:14px 28px;text-decoration:none;font-size:14px;font-weight:900;letter-spacing:2px;text-transform:uppercase;border-radius:6px;">Manage My Subscription</a>
+      </p>
 
-  <p>See you in the portal,</p>
-  <p style="margin-bottom: 0;"><strong>Matt Michels</strong></p>
-  <p style="margin-top: 4px; color: #666; font-size: 14px;">M² Training</p>
-</div>
+      <p>If you do nothing, your membership starts automatically and you keep everything — your logs, your programs, and Coach Matt's eyes on your training.</p>
+
+      <p>See you in the portal,</p>
+      <p style="margin-bottom:0;color:#fff;"><strong>Matt Michels</strong></p>
+      <p style="margin-top:4px;color:#f97316;font-size:13px;font-weight:bold;">M² Training · Grosse Pointe, MI</p>
+    </td></tr>
+
+    <!-- Footer -->
+    <tr><td style="background:#0a0a14;padding:20px;text-align:center;border-top:1px solid #222;">
+      <div style="font-size:16px;font-weight:900;color:#f97316;letter-spacing:2px;">M²</div>
+      <div style="font-size:10px;color:#444;margin-top:4px;">Matt Michel Strength & Conditioning</div>
+    </td></tr>
+  </table>
+</td></tr>
+</table>
+</body>
+</html>
 `;
 }
 

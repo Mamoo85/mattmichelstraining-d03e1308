@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
 import { safeLocalStorage } from "@/lib/browserStorage";
 import EmailWorkoutModal from "@/components/generator/EmailWorkoutModal";
+import TechShowcaseMarketing from "@/components/landing/TechShowcaseMarketing";
 
 const GENERATION_LIMIT = 3;
 const STORAGE_KEY = "m2_ai_generations_count";
@@ -348,10 +349,13 @@ const FreeAiGenerator = () => {
 
               <button
                 onClick={() => { setProgram(null); setEmailSent(false); }}
-                className="text-xs font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-colors mx-auto block"
+                className="text-xs font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-colors mx-auto block mb-10"
               >
                 ← Generate Another Workout
               </button>
+
+              {/* Tech Marketing Showcase */}
+              <TechShowcaseMarketing variant="full" />
             </motion.section>
           )}
         </AnimatePresence>
