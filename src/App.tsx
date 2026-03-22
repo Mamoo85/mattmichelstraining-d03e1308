@@ -154,6 +154,24 @@ const ReferralCaptureWrapper = () => {
   return null;
 };
 
+const ProveItWrapper = () => {
+  const { user } = useAuth();
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setOpen(true);
+    window.addEventListener("open-prove-it-zone", handler);
+    return () => window.removeEventListener("open-prove-it-zone", handler);
+  }, []);
+
+  if (!user || !open) return null;
+  return (
+    <Suspense fallback={null}>
+      <ProveItZone onClose={() => setOpen(false)} />
+    </Suspense>
+  );
+};
+
 const App = () => (
   <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, maxAge: 24 * 60 * 60_000 }}>
     <AuthProvider>
