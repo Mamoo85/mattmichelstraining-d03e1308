@@ -75,6 +75,42 @@ const TIPS = [
   },
 ];
 
+/* ── FAQ ── */
+const FAQ = [
+  {
+    q: "Why does training at M2 cost more than a standard gym membership?",
+    a: "At a big-box gym, you're paying for access to equipment; at M2, you're paying for a professional coach and a systematic plan built for your specific goals. We deliver elite-level programming, constant movement correction, and a culture of accountability that you simply won't find at a $20-a-month facility.",
+  },
+  {
+    q: "What is the minimum age to start training at M2?",
+    a: "We primarily work with dedicated athletes ages 10 to 18, though we do take on collegiate and professional clients. We focus on building a foundation of proper mechanics and injury prevention early on, ensuring young athletes develop the right habits before they ever load up a heavy barbell.",
+  },
+  {
+    q: "How long does it take to see real results in speed and strength?",
+    a: "Most athletes see \"neurological\" gains—better coordination and confidence—within the first two weeks. For significant, permanent changes in explosive power and top-end speed, we look for a consistent commitment over a 12-to-16-week training block.",
+  },
+  {
+    q: "My athlete is in-season right now. Is it too much to add strength training?",
+    a: "In-season is actually the most critical time to be here! We shift the focus to \"maintenance and durability,\" meaning we reduce the volume so they stay strong and resilient without wearing them out for game day. If you stop training in-season, you're losing the competitive edge you worked all summer to build.",
+  },
+  {
+    q: "How many days a week do I need to commit to see progress?",
+    a: "For most of our athletes, the \"sweet spot\" is 2 to 3 sessions per week. This allows enough frequency to build skill and strength while still leaving plenty of time for team practices, schoolwork, and essential recovery.",
+  },
+  {
+    q: "Is strength training safe for younger athletes?",
+    a: "Absolutely—when it's done right. We prioritize \"perfect practice,\" meaning we won't add weight to a movement until the athlete has mastered the bodyweight mechanics. Study after study shows that supervised strength training is one of the best ways to prevent injuries on the field or court.",
+  },
+  {
+    q: "What happens if we have to miss a session due to a game or school event?",
+    a: "We know life as a student-athlete is hectic, so we offer flexible scheduling through our app. As long as you give us 24 hours' notice, you can easily reschedule your session to another day that week so you never fall behind on your program.",
+  },
+  {
+    q: "Do I have to sign a long-term contract?",
+    a: "We aren't interested in locking people into something that doesn't work for them, but we do ask for a commitment to the process. We offer monthly memberships because athletic development isn't a \"quick fix\"—it's an investment in your long-term performance.",
+  },
+];
+
 /* ── Topic Cards (existing) ── */
 const TOPICS = [
   {
