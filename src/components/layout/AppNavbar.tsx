@@ -22,7 +22,6 @@ const primaryNav = [
 const secondaryNav = [
   { to: "/about", label: "ABOUT", icon: User },
   { to: "/for-parents", label: "PARENTS", icon: Users },
-  { to: "/learn", label: "LEARN", icon: BookOpen },
   { to: "/pricing", label: "PRICING", icon: CreditCard },
 ];
 
