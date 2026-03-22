@@ -175,7 +175,7 @@ const Admin = () => {
     refetchInterval: 30000,
   });
 
-  const { data: pendingLiftVideosCount = 0 } = useQuery({
+   const { data: pendingLiftVideosCount = 0 } = useQuery({
     queryKey: ["pending-lift-videos-count"],
     queryFn: async () => {
       const { count } = await supabase
@@ -187,7 +187,19 @@ const Admin = () => {
     refetchInterval: 30000,
   });
 
-  const totalEngineBadge = pendingDraftsCount + pendingAiQueueCount + pendingCustomCount + pendingLiftVideosCount;
+  const { data: pendingProveItCount = 0 } = useQuery({
+    queryKey: ["pending-prove-it-count"],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("pr_submissions" as any)
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending");
+      return count ?? 0;
+    },
+    refetchInterval: 30000,
+  });
+
+  const totalEngineBadge = pendingDraftsCount + pendingAiQueueCount + pendingCustomCount + pendingLiftVideosCount + pendingProveItCount;
   const totalRosterBadge = pendingSupportCount + unreadParentCount + pendingPostureCount;
 
   const { data: trashCount = 0 } = useQuery({
