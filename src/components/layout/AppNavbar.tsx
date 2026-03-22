@@ -15,6 +15,7 @@ const primaryNav = [
   { to: "/dashboard", label: "PORTAL", icon: Dumbbell },
   { to: "/shop", label: "SHOP", icon: ShoppingBag },
   { to: "/schedule", label: "SCHEDULE", icon: CalendarClock },
+  { to: "/the-edge", label: "TECHNOLOGY", icon: Cpu },
 ];
 
 const secondaryNav = [
