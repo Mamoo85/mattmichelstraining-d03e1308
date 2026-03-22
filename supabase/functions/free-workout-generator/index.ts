@@ -19,10 +19,18 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    const { experience, goal, daysPerWeek, equipment } = await req.json();
+    const { experience, goal, daysPerWeek, equipment, gymImageBase64 } = await req.json();
 
-    if (!experience || !goal || !daysPerWeek || !equipment) {
-      return new Response(JSON.stringify({ error: "All fields are required." }), {
+    if (!experience || !goal || !daysPerWeek) {
+      return new Response(JSON.stringify({ error: "Experience, goal, and days per week are required." }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // If no image AND no equipment selection, require at least one
+    if (!equipment && !gymImageBase64) {
+      return new Response(JSON.stringify({ error: "Provide equipment selection or a gym photo." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -36,6 +44,18 @@ serve(async (req) => {
 
     const exerciseNames = (exercises || []).map(e => `${e.title} (${e.level}, ${e.equipment_needed})`).join("\n");
 
+    const hasImage = !!gymImageBase64;
+
+    const visionClause = hasImage
+      ? `\n\nIMPORTANT — VISION MODE:
+The user has provided a photograph of their workout environment. You MUST:
+1. Scan the image and identify ALL available fitness equipment visible.
+2. Build the workout program utilizing ONLY the equipment you can see in this image.
+3. Do NOT prescribe exercises requiring equipment that is NOT visible (e.g., do not prescribe barbell back squats if only dumbbells are visible).
+4. If you cannot clearly identify equipment, default to bodyweight alternatives.
+5. List the equipment you detected in the workout description.`
+      : `\n- Equipment: ${equipment}`;
+
     const systemPrompt = `You are Coach Matt's workout builder. You follow Starting Strength (Rippetoe) and Becoming a Supple Leopard (Starrett) principles ONLY.
 
 RULES:
@@ -44,8 +64,7 @@ RULES:
 - Each day follows 5 phases: 1. Rolling/Soft Tissue, 2. Dynamic Warmup, 3. Main Work, 4. Finisher/Conditioning, 5. Cooldown
 - Experience: ${experience}
 - Goal: ${goal}
-- Days per week: ${daysPerWeek}
-- Equipment: ${equipment}
+- Days per week: ${daysPerWeek}${visionClause}
 
 AVAILABLE EXERCISES (use these names when possible):
 ${exerciseNames}
@@ -53,7 +72,7 @@ ${exerciseNames}
 Return a JSON object with this structure:
 {
   "title": "program name",
-  "description": "one sentence overview",
+  "description": "one sentence overview${hasImage ? " — start with: Equipment detected: [list]" : ""}",
   "days": [
     {
       "dayLabel": "Day 1 - Focus Area",
@@ -66,6 +85,21 @@ Return a JSON object with this structure:
 
 Generate exactly ${daysPerWeek} training days. Keep each day to 6-8 exercises across all phases. Make it challenging but appropriate for the experience level.`;
 
+    // Build messages with optional image
+    const userContent: any[] = [];
+
+    if (hasImage) {
+      userContent.push({
+        type: "image_url",
+        image_url: { url: `data:image/jpeg;base64,${gymImageBase64}` },
+      });
+    }
+
+    userContent.push({
+      type: "text",
+      text: `Create a ${daysPerWeek}-day workout program for someone with ${experience} experience, goal: ${goal}${hasImage ? ". Use ONLY equipment visible in the photo." : `, equipment: ${equipment}.`}`,
+    });
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -73,10 +107,10 @@ Generate exactly ${daysPerWeek} training days. Keep each day to 6-8 exercises ac
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: hasImage ? "google/gemini-2.5-flash" : "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: `Create a ${daysPerWeek}-day workout program for someone with ${experience} experience, goal: ${goal}, equipment: ${equipment}.` },
+          { role: "user", content: userContent },
         ],
         tools: [
           {

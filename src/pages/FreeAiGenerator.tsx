@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Dumbbell, Loader2, Zap, ChevronRight, ArrowRight, Sparkles, Lock, ShieldAlert, Mail, CheckCircle2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { safeLocalStorage } from "@/lib/browserStorage";
 import EmailWorkoutModal from "@/components/generator/EmailWorkoutModal";
 import TechShowcaseMarketing from "@/components/landing/TechShowcaseMarketing";
+import GymPhotoUpload from "@/components/generator/GymPhotoUpload";
 
 const GENERATION_LIMIT = 3;
 const STORAGE_KEY = "m2_ai_generations_count";
