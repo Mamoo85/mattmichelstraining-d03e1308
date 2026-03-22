@@ -70,32 +70,13 @@ const M2Difference = () => (
     </div>
 
     {/* The pitch */}
-    <div className="bg-card shadow-m2 border-l-4 border-primary p-5 mb-5">
+    <div className="bg-card shadow-m2 border-l-4 border-primary p-5">
       <p className="text-sm text-muted-foreground leading-relaxed">
         <span className="text-foreground font-bold">Matt personally reviews every athlete's logs.</span> Custom
         programs start at <span className="text-primary font-bold">$20</span>. Monthly coaching
         from <span className="text-primary font-bold">$12.99/mo</span>. The same coach whether you're
         in Grosse Pointe or across the country.
       </p>
-    </div>
-
-    {/* Dual CTAs */}
-    <div className="flex flex-col sm:flex-row gap-3">
-      <Link
-        to="/shop"
-        className="inline-flex items-center justify-center gap-2 flex-1 bg-primary text-primary-foreground px-5 py-3.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
-      >
-        <Star size={14} />
-        Browse Programs
-        <ArrowRight size={14} />
-      </Link>
-      <Link
-        to="/pricing"
-        className="inline-flex items-center justify-center gap-2 flex-1 border-2 border-primary/40 text-primary px-5 py-3.5 text-xs font-bold uppercase tracking-widest hover:bg-primary/10 transition-m2"
-      >
-        Compare Monthly Plans
-        <ArrowRight size={14} />
-      </Link>
     </div>
   </motion.div>
 );
