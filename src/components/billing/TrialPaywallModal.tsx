@@ -18,7 +18,7 @@ const TIER_OPTIONS = [
     name: "M² Basic",
     price: "$12.99/mo",
     icon: Star,
-    perks: ["Exercise library + daily workouts", "Workout logging & tracking", "Challenges & leaderboard", "10% off programs"],
+    perks: ["200+ exercise library", "10 daily workouts", "Challenges & leaderboard", "Progress logging"],
   },
   {
     key: "foundation" as const,
@@ -26,14 +26,14 @@ const TIER_OPTIONS = [
     price: "$19.99/mo",
     icon: Trophy,
     highlight: true,
-    perks: ["Everything in Basic", "8-week periodized training", "Fix It recovery library", "Flag Coach Matt", "15% off programs"],
+    perks: ["8-week training blocks", "Fix It recovery library", "Coach form feedback", "Real programming"],
   },
   {
     key: "custom" as const,
     name: "M² Custom",
     price: "$49.99/mo",
     icon: Zap,
-    perks: ["Everything in Foundation", "Custom 8-week program — any age, any goal", "20% off in-person training (optional)", "Gift a session", "20% off programs"],
+    perks: ["Free online assessment", "Custom program from Matt", "20% off in-person sessions", "Direct coach messaging · Private sessions extra"],
   },
 ];
 

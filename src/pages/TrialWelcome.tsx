@@ -192,9 +192,9 @@ const TrialWelcome = () => {
                 icon={User}
                 title="Basic Trial"
                 charge="$12.99/mo after trial"
-                desc="Exercise library, monthly focus, challenges, and workout logging."
+                desc="200+ exercises, daily workouts, challenges, and progress logging."
                 badge={null}
-                warning="No Family Pack · No custom program"
+                warning="No custom program"
               />
               <TrialPathCard
                 selected={selectedPath === "parent"}
@@ -202,10 +202,10 @@ const TrialWelcome = () => {
                 icon={Users}
                 title="Parent / Family Pack"
                 charge="$49.99/mo (Custom) after trial"
-                desc="Everything in Foundation + custom program from Matt + FREE child membership. 100% durability record maintained."
+                desc="Free assessment + custom program from Matt + FREE child membership. Private sessions extra."
                 badge="🎁 Family Pack Included"
                 warning={null}
-                bonus="Free postural assessment for parent & child"
+                bonus="Free online assessment for parent & child"
               />
               <TrialPathCard
                 selected={selectedPath === "foundation"}
@@ -213,10 +213,10 @@ const TrialWelcome = () => {
                 icon={Star}
                 title="Adult Foundation Trial"
                 charge="$19.99/mo (Foundation) after trial"
-                desc="Everything in Basic + 8-week periodized training, Fix It library, and direct coach form review."
+                desc="8-week training blocks, Fix It recovery library, and coach form feedback."
                 badge={null}
                 warning="Family Pack available at Custom level"
-                bonus="Free postural assessment"
+                bonus="Free online assessment"
               />
             </div>
 
