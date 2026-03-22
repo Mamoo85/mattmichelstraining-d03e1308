@@ -350,6 +350,22 @@ const Learn = () => {
     <AppNavbar />
     <div className="container pt-20 pb-12 px-4 sm:px-6">
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
+        {/* Member feature callout */}
+        <div className="mb-6 bg-primary/5 border border-primary/20 p-4 rounded-sm">
+          <div className="flex items-center gap-2 mb-1.5">
+            <Dumbbell size={14} className="text-primary" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-primary">
+              M² Members
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Members get access to the full exercise video library, structured programs, AI workout tools,
+            posture analysis, nutrition tracking, and direct coaching — all inside the{" "}
+            <Link to="/dashboard" className="text-primary font-bold hover:underline">Member Portal</Link>.
+            Everything below is free for everyone.
+          </p>
+        </div>
+
         {/* Hero */}
         <div className="mb-10">
           <div className="flex items-center gap-2 mb-2">
