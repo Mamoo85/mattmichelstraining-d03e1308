@@ -63,6 +63,7 @@ const TheEdge = lazyRetry(() => import("./pages/TheEdge"));
 const MatrixEasterEgg = lazyRetry(() => import("./pages/MatrixEasterEgg"));
 const FreeAiGenerator = lazyRetry(() => import("./pages/FreeAiGenerator"));
 const SEOLandingPage = lazyRetry(() => import("./pages/SEOLandingPage"));
+const DynamicSitemap = lazyRetry(() => import("./pages/DynamicSitemap"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
