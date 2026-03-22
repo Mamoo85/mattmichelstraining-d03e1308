@@ -1,6 +1,6 @@
-import { memo, lazy, Suspense, useCallback, useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Play, Camera, UtensilsCrossed } from "lucide-react";
+import { memo, lazy, Suspense, useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { Camera, UtensilsCrossed } from "lucide-react";
 import MonthlyFocusWidget from "@/components/features/MonthlyFocusWidget";
 import UpcomingSessions from "@/components/sessions/UpcomingSessions";
 import WorkoutScanner from "@/components/workout/WorkoutScanner";
