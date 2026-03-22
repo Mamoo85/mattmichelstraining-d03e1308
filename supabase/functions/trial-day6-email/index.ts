@@ -40,10 +40,10 @@ const EMAIL_HTML = `
       <p><strong style="color:#f97316;">Tomorrow, your 14-day free trial expires and your selected plan begins.</strong> If you want to change your tier or review what you're getting, here are your options:</p>
 
       <ol style="padding-left:20px;">
-        <li style="margin-bottom:8px;"><strong style="color:#fff;">M² Basic ($14.99/mo)</strong> — Exercise library, daily workouts, workout logging, challenges & leaderboard.</li>
-        <li style="margin-bottom:8px;"><strong style="color:#fff;">M² Foundation ($39.99/mo)</strong> — Everything in Basic + 8-week periodized training, Fix It recovery library, and Flag Coach Matt.</li>
-        <li style="margin-bottom:8px;"><strong style="color:#fff;">M² Custom ($99.99/mo)</strong> — Everything in Foundation + custom programming, AI builder, in-person or online session (optional), and a gifted session.</li>
-        <li style="margin-bottom:8px;"><strong style="color:#fff;">M² Team/Elite ($149.99/mo)</strong> — Full team performance periodization with roster management.</li>
+        <li style="margin-bottom:8px;"><strong style="color:#fff;">M² Basic ($12.99/mo)</strong> — 200+ exercise library, daily workouts, challenges & progress logging.</li>
+        <li style="margin-bottom:8px;"><strong style="color:#fff;">M² Foundation ($19.99/mo)</strong> — 8-week training blocks, Fix It recovery library, coach form feedback.</li>
+        <li style="margin-bottom:8px;"><strong style="color:#fff;">M² Custom ($49.99/mo)</strong> — Free online assessment, custom program from Matt, 20% off in-person sessions. Private sessions extra.</li>
+        <li style="margin-bottom:8px;"><strong style="color:#fff;">M² Team/Elite ($99.99/mo)</strong> — Full-season team programming, roster management, optional 30-min video chat monthly.</li>
       </ol>
 
       <p>Don't lose the momentum you built this week.</p>

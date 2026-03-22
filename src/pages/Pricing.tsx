@@ -448,7 +448,7 @@ const Pricing = () => {
               🎁 Family Pack — Free With Custom Membership
             </h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Every Custom membership includes a <strong className="text-foreground">free child membership</strong>. Your athlete gets their own account with age-appropriate programming, postural assessment, and full progress monitoring — all under your plan. To maintain our 100% durability record, Family Pack is exclusively available at the Custom level. <strong className="text-foreground">14-day free trial available.</strong>
+              Every Custom membership includes a <strong className="text-foreground">free child membership</strong>. Your athlete gets their own account with age-appropriate programming and full progress monitoring — all under your plan. <strong className="text-foreground">Private sessions extra. 14-day free trial available.</strong>
             </p>
           </div>
           <Link
