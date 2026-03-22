@@ -39,6 +39,7 @@ const AdminBiomechanics = lazy(() => import("@/components/admin/AdminBiomechanic
 const AdminAiToolkit = lazy(() => import("@/components/admin/AdminAiToolkit"));
 const AdminCoachAiQueue = lazy(() => import("@/components/admin/AdminCoachAiQueue"));
 const AdminCustomRequests = lazy(() => import("@/components/admin/AdminCustomRequests"));
+const AdminAiTimerGenerator = lazy(() => import("@/components/admin/AdminAiTimerGenerator"));
 
 const AdminFinancials = lazy(() => import("@/components/admin/AdminFinancials"));
 const AdminPromotions = lazy(() => import("@/components/admin/AdminPromotions"));
