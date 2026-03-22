@@ -110,7 +110,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <StudioCheckIn />
+        <StudioCheckIn onOpenWorkouts={() => setActiveTab("workouts")} />
 
         {/* Resume workout banner */}
         {safeLocalStorage.getItem("m2-paused-workout") && (
