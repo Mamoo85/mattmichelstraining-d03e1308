@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
-import { MapPin, Share2, Flame, CalendarCheck, Trophy, Loader2, Check } from "lucide-react";
+import { Link } from "react-router-dom";
+import { MapPin, Share2, Flame, CalendarCheck, Trophy, Loader2, Check, LogIn } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -355,6 +356,14 @@ const StudioCheckIn = () => {
           </div>
         </div>
       )}
+
+      {/* Portal button — always visible */}
+      <Link
+        to="/dashboard"
+        className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all"
+      >
+        <LogIn size={14} /> Enter The Portal
+      </Link>
 
       {/* Toggle milestones if hidden and there are some */}
       {!showMilestones && milestones.length > 0 && totalDays > 0 && (
