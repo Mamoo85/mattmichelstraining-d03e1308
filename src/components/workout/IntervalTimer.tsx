@@ -442,4 +442,3 @@ const IntervalTimer = ({ onClose, initialConfig }: IntervalTimerProps) => {
 
 export default IntervalTimer;
 export { PRESETS };
-export type { TimerConfig };
