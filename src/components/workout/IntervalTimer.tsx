@@ -1,10 +1,9 @@
-import { useState, useRef, useCallback, useEffect } from "react";
-import { X, Minus, Plus, Play, Pause, RotateCcw, Volume2, Music } from "lucide-react";
+import { useState, useRef, useCallback, useEffect, forwardRef } from "react";
+import { X, Minus, Plus, Play, Pause, RotateCcw, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   countdownBeep, workBeep, restBeep, warningBeep, completeChime,
-  setMasterVolume, getMasterVolume, setSoundTheme, getSoundTheme,
-  testBeep, SOUND_THEMES,
+  setMasterVolume, getMasterVolume, testBeep,
 } from "./useTimerAudio";
 
 function vibrate(pattern: number | number[]) {
@@ -13,7 +12,7 @@ function vibrate(pattern: number | number[]) {
 
 type Phase = "idle" | "prep" | "work" | "rest" | "done";
 
-interface TimerConfig {
+export interface TimerConfig {
   prep: number;
   work: number;
   rest: number;
@@ -63,9 +62,9 @@ function formatTime(s: number): string {
 }
 
 /* ── Editable number field ── */
-function EditableValue({ value, onChange, isTime, disabled }: {
+const EditableValue = forwardRef<HTMLButtonElement, {
   value: number; onChange: (v: number) => void; isTime?: boolean; disabled?: boolean;
-}) {
+}>(({ value, onChange, isTime, disabled }, _ref) => {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -94,16 +93,21 @@ function EditableValue({ value, onChange, isTime, disabled }: {
       {isTime ? formatTime(value) : value}
     </button>
   );
+});
+EditableValue.displayName = "EditableValue";
+
+interface IntervalTimerProps {
+  onClose: () => void;
+  initialConfig?: TimerConfig;
 }
 
-const IntervalTimer = ({ onClose }: { onClose: () => void }) => {
-  const [config, setConfig] = useState<TimerConfig>({ prep: 5, work: 45, rest: 15, rounds: 5, warning: 10 });
+const IntervalTimer = ({ onClose, initialConfig }: IntervalTimerProps) => {
+  const [config, setConfig] = useState<TimerConfig>(initialConfig ?? { prep: 5, work: 45, rest: 15, rounds: 5, warning: 10 });
   const [phase, setPhase] = useState<Phase>("idle");
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [currentRound, setCurrentRound] = useState(0);
   const [running, setRunning] = useState(false);
   const [volume, setVolume] = useState(() => getMasterVolume() * 100);
-  const [soundTheme, setSoundThemeState] = useState(() => getSoundTheme());
   const [coachMsg] = useState(() => COACH_MESSAGES[Math.floor(Math.random() * COACH_MESSAGES.length)]);
   const [warningFired, setWarningFired] = useState(false);
 
@@ -162,7 +166,6 @@ const IntervalTimer = ({ onClose }: { onClose: () => void }) => {
       return;
     }
 
-    // Inner round warning
     if (p === "work" && c.warning > 0 && s === c.warning && !warningFiredRef.current) {
       warningBeep(); vibrate(200);
       warningFiredRef.current = true;
@@ -248,7 +251,6 @@ const IntervalTimer = ({ onClose }: { onClose: () => void }) => {
     return (inRound / roundTotal) * 100;
   })();
 
-  // Warning zone indicator
   const inWarningZone = phase === "work" && config.warning > 0 && secondsLeft <= config.warning && secondsLeft > 0;
 
   return (
@@ -270,7 +272,6 @@ const IntervalTimer = ({ onClose }: { onClose: () => void }) => {
         phaseColors[phase],
         inWarningZone && "animate-pulse"
       )}>
-        {/* Warning zone ring */}
         {inWarningZone && (
           <div className="absolute inset-0 border-4 border-yellow-400/60 pointer-events-none animate-pulse" />
         )}
@@ -314,7 +315,7 @@ const IntervalTimer = ({ onClose }: { onClose: () => void }) => {
           </div>
         )}
 
-        {/* ── Completion screen ── */}
+        {/* Completion screen */}
         {phase === "done" && (
           <div className="flex flex-col items-center text-center px-6 max-w-sm">
             <span className="text-5xl mb-3">🔥</span>
@@ -382,43 +383,25 @@ const IntervalTimer = ({ onClose }: { onClose: () => void }) => {
               </div>
             </div>
 
-            {/* Sound theme + Volume */}
-            <div className="grid grid-cols-1 gap-3">
-              <div className="bg-card border border-border p-3 space-y-2">
+            {/* Volume */}
+            <div className="bg-card border border-border p-3 space-y-2">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
-                  <Music size={14} className="text-primary" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Sound Theme</span>
+                  <Volume2 size={14} className="text-primary" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Volume</span>
                 </div>
-                <select value={soundTheme} onChange={(e) => {
-                  setSoundThemeState(e.target.value);
-                  setSoundTheme(e.target.value);
-                }}
-                  className="w-full bg-muted text-foreground text-sm font-bold border border-border p-2 min-h-[44px]">
-                  {SOUND_THEMES.map((t) => (
-                    <option key={t.id} value={t.id}>{t.label}</option>
-                  ))}
-                </select>
-                <button onClick={testBeep}
-                  className="w-full py-2 bg-muted text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground hover:bg-muted-foreground/20 transition-colors border border-border">
-                  🔊 Preview Sound
-                </button>
+                <span className="font-mono text-sm font-bold text-foreground tabular-nums">{Math.round(volume)}%</span>
               </div>
-
-              <div className="bg-card border border-border p-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <Volume2 size={14} className="text-primary" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Volume</span>
-                  </div>
-                  <span className="font-mono text-sm font-bold text-foreground tabular-nums">{Math.round(volume)}%</span>
-                </div>
-                <input type="range" min={0} max={200} step={5} value={volume}
-                  onChange={(e) => { const v = Number(e.target.value); setVolume(v); setMasterVolume(v / 100); }}
-                  className="w-full h-3 accent-primary cursor-pointer" />
-                <div className="flex items-center justify-between text-[9px] font-mono text-muted-foreground">
-                  <span>MUTE</span><span>100%</span><span>200% BOOST</span>
-                </div>
+              <input type="range" min={0} max={200} step={5} value={volume}
+                onChange={(e) => { const v = Number(e.target.value); setVolume(v); setMasterVolume(v / 100); }}
+                className="w-full h-3 accent-primary cursor-pointer" />
+              <div className="flex items-center justify-between text-[9px] font-mono text-muted-foreground">
+                <span>MUTE</span><span>100%</span><span>200% BOOST</span>
               </div>
+              <button onClick={testBeep}
+                className="w-full py-2 bg-muted text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground hover:bg-muted-foreground/20 transition-colors border border-border">
+                🔊 Test Sound
+              </button>
             </div>
 
             <div className="flex gap-2">
@@ -458,3 +441,5 @@ const IntervalTimer = ({ onClose }: { onClose: () => void }) => {
 };
 
 export default IntervalTimer;
+export { PRESETS };
+export type { TimerConfig };
