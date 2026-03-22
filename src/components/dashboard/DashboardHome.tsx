@@ -24,7 +24,6 @@ interface DashboardHomeProps {
 
 const DashboardHome = memo(({ isNewUser, isInPerson, onViewPoints, onViewReferrals }: DashboardHomeProps) => {
   const { subscribed, user } = useAuth();
-  const navigate = useNavigate();
   const [showWelcome, setShowWelcome] = useState(false);
   const [hasPosture, setHasPosture] = useState<boolean | null>(null);
 
