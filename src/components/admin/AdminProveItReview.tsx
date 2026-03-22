@@ -259,19 +259,22 @@ const AdminProveItReview = () => {
         open={!!rejectId}
         onOpenChange={(open) => { if (!open) { setRejectId(null); setRejectNote(""); } }}
         title="Reject PR Submission"
-        description="Add a note explaining why this PR was rejected (optional)."
+        description={
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground">Add a note explaining why this PR was rejected (optional).</p>
+            <textarea
+              value={rejectNote}
+              onChange={(e) => setRejectNote(e.target.value)}
+              placeholder="e.g., Depth not reached, video unclear..."
+              className="w-full p-3 bg-background border border-border text-xs text-foreground min-h-[80px] focus:border-primary focus:outline-none"
+            />
+          </div>
+        }
         confirmLabel="Reject"
         destructive
         onConfirm={handleReject}
         loading={processing === rejectId}
-      >
-        <textarea
-          value={rejectNote}
-          onChange={(e) => setRejectNote(e.target.value)}
-          placeholder="e.g., Depth not reached, video unclear..."
-          className="w-full p-3 bg-background border border-border text-xs text-foreground min-h-[80px] focus:border-primary focus:outline-none"
-        />
-      </ConfirmActionModal>
+      />
     </div>
   );
 };
