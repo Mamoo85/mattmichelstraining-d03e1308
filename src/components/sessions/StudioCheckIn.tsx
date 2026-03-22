@@ -356,15 +356,15 @@ const StudioCheckIn = ({ onOpenWorkouts }: { onOpenWorkouts?: () => void }) => {
         </div>
       )}
 
-      {/* Portal button — always visible */}
-      <Link
-        to="/dashboard"
-        className="block w-full text-center bg-primary text-primary-foreground py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all"
+      {/* Workout portal button — always visible */}
+      <button
+        onClick={onOpenWorkouts}
+        className="w-full bg-primary text-primary-foreground py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all"
       >
         <span className="inline-flex items-center justify-center gap-2">
-          <LogIn size={14} /> Enter The Portal
+          <LogIn size={14} /> Open Workout Portal
         </span>
-      </Link>
+      </button>
 
       {/* Toggle milestones if hidden and there are some */}
       {!showMilestones && milestones.length > 0 && totalDays > 0 && (
