@@ -54,6 +54,7 @@ const FreeAiGenerator = () => {
   const [goal, setGoal] = useState("");
   const [daysPerWeek, setDaysPerWeek] = useState("3");
   const [equipment, setEquipment] = useState("");
+  const [gymImageBase64, setGymImageBase64] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [program, setProgram] = useState<GeneratedProgram | null>(null);
   const [error, setError] = useState<string | null>(null);
