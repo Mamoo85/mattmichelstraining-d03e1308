@@ -266,10 +266,39 @@ const Pricing = () => {
           </div>
         )}
 
+        {/* Billing cycle toggle */}
+        <div className="flex items-center justify-center gap-3 mb-8">
+          <button
+            onClick={() => setBillingCycle("monthly")}
+            className={`px-4 py-2 text-xs font-bold uppercase tracking-widest transition-all ${
+              billingCycle === "monthly"
+                ? "bg-foreground text-background"
+                : "border border-border text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Monthly
+          </button>
+          <button
+            onClick={() => setBillingCycle("annual")}
+            className={`px-4 py-2 text-xs font-bold uppercase tracking-widest transition-all flex items-center gap-2 ${
+              billingCycle === "annual"
+                ? "bg-foreground text-background"
+                : "border border-border text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <CalendarDays size={14} />
+            Annual
+            <span className="text-[8px] bg-primary text-primary-foreground px-1.5 py-0.5 font-bold">
+              Save 17%
+            </span>
+          </button>
+        </div>
+
         {/* Tier grid — 4 columns on desktop */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-7xl mx-auto">
           {TIER_CARDS.map((card, i) => {
             const tier = TIERS[card.key];
+            const annual = ANNUAL_TIERS[card.key];
             const isCurrentPlan = subscriptionTier === card.key;
             const Icon = card.icon;
             const cmsFeatures = cms[`${card.key}_features`];
