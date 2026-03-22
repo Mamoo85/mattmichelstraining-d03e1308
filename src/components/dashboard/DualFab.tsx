@@ -84,8 +84,8 @@ const DualFab = () => {
     isPointerDownRef.current = false;
 
     if (!didExpandRef.current) {
-      // Quick tap → open chat
-      setChatOpen(true);
+      // Quick tap → open timer
+      toggleTimer();
       return;
     }
 
