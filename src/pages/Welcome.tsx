@@ -4,12 +4,8 @@ import {
   ArrowRight,
   Shield,
   Dumbbell,
-  Users,
   Zap,
   CheckCircle2,
-  Eye,
-  MessageCircle,
-  Video,
 } from "lucide-react";
 import AppNavbar from "@/components/layout/AppNavbar";
 import m2Logo from "@/assets/m2-logo.jpg";
