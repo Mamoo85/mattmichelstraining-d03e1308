@@ -49,10 +49,10 @@ const MonthlyFocus = () => {
       transition={{ duration: 0.5, delay: 0.3 }}
       className="mb-10"
     >
-      <div className="flex items-center gap-3 mb-4">
-        <div className="w-1 h-8 bg-primary rounded-full" />
-        <Flame size={20} className="text-primary" />
-        <h2 className="text-xl md:text-2xl font-black uppercase tracking-tight text-foreground">
+      <div className="flex items-center gap-3 mb-4 min-w-0">
+        <div className="w-1 h-8 bg-primary rounded-full shrink-0" />
+        <Flame size={20} className="text-primary shrink-0" />
+        <h2 className="text-xl md:text-2xl font-black uppercase tracking-tight text-foreground truncate">
           Monthly Focus
         </h2>
       </div>

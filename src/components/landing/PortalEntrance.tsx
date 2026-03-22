@@ -54,7 +54,7 @@ const PortalEntrance = () => {
       {/* Quick-access button */}
       <Link
         to="/dashboard"
-        className={`relative flex items-center justify-center gap-3 w-full bg-card border-2 px-5 py-4 transition-m2 group mb-4 ${
+        className={`relative flex items-center justify-center gap-3 w-full bg-card border-2 px-5 py-4 transition-m2 group mb-4 overflow-hidden ${
           loggedIn
             ? "border-primary shadow-[0_0_16px_-4px_hsl(var(--primary)/0.5)] animate-[pulse-glow_2.5s_ease-in-out_infinite]"
             : "border-primary/30 hover:border-primary"

@@ -335,7 +335,7 @@ const Schedule = () => {
         {/* Elite Credit Banner */}
         {user && isElite && hasCredit && !loadingCredit && (
           <div className="bg-accent/20 border border-accent p-3 mb-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-2">
                 <Ticket size={14} className="text-accent-foreground" />
                 <div>
@@ -363,7 +363,7 @@ const Schedule = () => {
         {/* Gift banner */}
         {user && hasGift && !useCredit && (
           <div className="bg-accent/20 border border-accent p-3 mb-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-2">
                 <Gift size={14} className="text-accent-foreground" />
                 <div>
