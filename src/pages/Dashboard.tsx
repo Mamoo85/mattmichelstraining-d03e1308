@@ -43,6 +43,7 @@ const Dashboard = () => {
   const { user, subscribed, subscriptionTier } = useAuth();
   const { trialExpired, isOnTrial, trialDaysLeft } = useTrialStatus();
   const { isAdmin } = useIsAdmin();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<{ full_name: string | null; athlete_name: string | null; is_in_person: boolean } | null>(null);
   const [activeTab, setActiveTab] = useState("home");
   const [hasPrograms, setHasPrograms] = useState<boolean | null>(null);
