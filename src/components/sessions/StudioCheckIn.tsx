@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
-import { MapPin, Share2, Flame, CalendarCheck, Trophy, Loader2, Check } from "lucide-react";
+import { Link } from "react-router-dom";
+import { MapPin, Share2, Flame, CalendarCheck, Trophy, Loader2, Check, LogIn } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
