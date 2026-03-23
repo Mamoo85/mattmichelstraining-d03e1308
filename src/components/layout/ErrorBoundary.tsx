@@ -54,10 +54,17 @@ class ErrorBoundary extends Component<Props, State> {
     console.error("[ErrorBoundary]", error.message, error.stack);
     console.error("[ErrorBoundary] Component stack:", info.componentStack);
 
-    // Auto-retry chunk errors once by reloading
-    if (this.state.errorKind === "chunk" && !this.state.autoRetried) {
+    // Auto-retry once for ALL error types by reloading — most transient
+    // errors (chunk, network, timing) resolve on a fresh load.
+    const retryKey = "m2-eb-retried";
+    const alreadyRetried = safeSessionStorage.getItem(retryKey);
+    if (!alreadyRetried) {
+      safeSessionStorage.setItem(retryKey, "1");
       this.setState({ autoRetried: true });
       setTimeout(() => window.location.reload(), 1500);
+    } else {
+      // Clear the flag so a future session can retry again
+      safeSessionStorage.removeItem(retryKey);
     }
   }
 
