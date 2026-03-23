@@ -47,7 +47,7 @@ const AppNavbar = () => {
   }, [moreOpen]);
 
   // Close more dropdown on route change
-  useEffect(() => { setMoreOpen(false); setMobileOpen(false); }, [location.pathname]);
+  useEffect(() => { setMoreOpen(false); }, [location.pathname]);
 
   if (portalActive) return null;
 
