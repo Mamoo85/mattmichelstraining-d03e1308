@@ -160,6 +160,12 @@ const Dashboard = () => {
         <div className="fixed bottom-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-md border-t border-border px-4 py-3 safe-bottom">
           <div className="flex gap-2">
             <button
+              onClick={() => window.dispatchEvent(new CustomEvent("open-prove-it-zone"))}
+              className="flex-1 h-12 bg-primary text-primary-foreground flex items-center justify-center gap-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all"
+            >
+              <Trophy size={14} /> Attempting New Best
+            </button>
+            <button
               onClick={() => {
                 if (!subscribed && hasPrograms === false && hasLogs === false && !isAdmin) {
                   navigate("/pricing");
@@ -167,15 +173,9 @@ const Dashboard = () => {
                 }
                 window.dispatchEvent(new CustomEvent("open-workout-zone", { detail: null }));
               }}
-              className="flex-1 h-12 bg-primary text-primary-foreground flex items-center justify-center gap-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all"
-            >
-              <Dumbbell size={14} /> Enter The Portal
-            </button>
-            <button
-              onClick={() => window.dispatchEvent(new CustomEvent("open-prove-it-zone"))}
               className="flex-1 h-12 bg-card border border-primary text-primary flex items-center justify-center gap-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest hover:bg-primary hover:text-primary-foreground transition-all"
             >
-              <Trophy size={14} /> Attempting New Best
+              <Dumbbell size={14} /> Enter The Portal
             </button>
           </div>
         </div>
