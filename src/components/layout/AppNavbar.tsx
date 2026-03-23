@@ -25,7 +25,7 @@ const secondaryNav = [
   { to: "/pricing", label: "PRICING", icon: CreditCard },
 ];
 
-const allNav = [...primaryNav, ...secondaryNav];
+
 
 const AppNavbar = () => {
   const location = useLocation();
