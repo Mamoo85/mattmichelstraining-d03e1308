@@ -3,9 +3,15 @@ import { HelmetProvider } from "react-helmet-async";
 import App from "./App.tsx";
 import "./index.css";
 
-// Defer print stylesheet — it's only needed for printing, not for FCP
+// Defer print stylesheet — inject as <link media="print"> to avoid JS→CSS dependency chain
 if (typeof window !== "undefined") {
-  window.addEventListener("load", () => import("./print.css"), { once: true });
+  window.addEventListener("load", () => {
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = "/print.css";
+    link.media = "print";
+    document.head.appendChild(link);
+  }, { once: true });
 }
 
 // Polyfill crypto.randomUUID for Safari < 15.4 and insecure contexts
