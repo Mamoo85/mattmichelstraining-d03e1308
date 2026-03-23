@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, useEffect } from "react";
+import { lazy, Suspense, useState } from "react";
 import WheelSlogan from "@/components/features/WheelSlogan";
 import { Link } from "react-router-dom";
 import { ArrowRight, Shield, Trophy, Clock } from "lucide-react";
@@ -27,12 +27,7 @@ const HeroSection = () => {
   const showFindUs = useSectionVisible("find_us");
 
   // Defer below-fold sections until after first paint to improve FCP
-  const [showBelow, setShowBelow] = useState(false);
-  useEffect(() => {
-    // Safari doesn't support requestIdleCallback — always use setTimeout
-    const t = setTimeout(() => setShowBelow(true), 100);
-    return () => clearTimeout(t);
-  }, []);
+  const [showBelow, setShowBelow] = useState(true);
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
