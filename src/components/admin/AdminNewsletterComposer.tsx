@@ -14,7 +14,7 @@ const TEMPLATES = [
   {
     name: "Injury Prevention Focus",
     subject: "M² Training: How to Prevent [Injury Type]",
-    body: `Parents & Athletes,\n\nI've seen this injury hundreds of times. Here's what most people get wrong — and how to fix it.\n\n**The Problem:**\n[Describe the common injury pattern]\n\n**Why It Happens (The Kinesiology):**\n[Explain the WHY — this is what makes your content unique]\n\n**The Fix:**\n[3-4 specific exercises or protocols]\n\n**When to See a Professional:**\n[Clear guidance on when training alone isn't enough]\n\nStay healthy,\nMatt Michels\nM² Training`,
+    body: `Parents & Athletes,\n\nI've seen this injury hundreds of times. Here's what most people get wrong — and how to fix it.\n\n**The Problem:**\n[Describe the common injury pattern]\n\n**Why It Happens (The Science):**\n[Explain the WHY — this is what makes your content unique]\n\n**The Fix:**\n[3-4 specific exercises or protocols]\n\n**When to See a Professional:**\n[Clear guidance on when training alone isn't enough]\n\nStay healthy,\nMatt Michels\nM² Training`,
   },
   {
     name: "Sport-Specific Breakdown",
