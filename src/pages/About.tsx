@@ -88,6 +88,34 @@ const FALLBACK_TESTIMONIALS = [
     author_role: "Parents · St. Clair Shores",
     author_initials: "LT",
   },
+  {
+    id: "ar1",
+    quote: "Went from JV backup to varsity starter after one off-season with Matt.",
+    author_name: "Sophomore, Baseball",
+    author_role: "JV → Varsity",
+    author_initials: "BB",
+  },
+  {
+    id: "ar2",
+    quote: "The strength gains got college coaches' attention. Committed junior year.",
+    author_name: "Senior, Lacrosse",
+    author_role: "D1 Commit",
+    author_initials: "LC",
+  },
+  {
+    id: "ar3",
+    quote: "Throwing harder and staying healthy for the first full season in 3 years.",
+    author_name: "Junior, Baseball",
+    author_role: "+4 mph Velo",
+    author_initials: "JB",
+  },
+  {
+    id: "ar4",
+    quote: "Outworked everyone on the field. Matt's program gave me that edge.",
+    author_name: "Senior, Soccer",
+    author_role: "All-State",
+    author_initials: "SC",
+  },
 ];
 
 const FALLBACK_STATS = [
