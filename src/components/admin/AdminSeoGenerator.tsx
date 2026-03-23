@@ -394,12 +394,12 @@ const AdminSeoGenerator = () => {
       {deleteTarget && (
         <ConfirmActionModal
           open={!!deleteTarget}
-          onCancel={() => setDeleteTarget(null)}
+          onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
           onConfirm={handleDelete}
           title="Delete SEO Page"
           description={`Permanently remove /training/${deleteTarget.slug}? This cannot be undone.`}
           confirmLabel="Delete"
-          variant="destructive"
+          destructive
         />
       )}
     </div>
