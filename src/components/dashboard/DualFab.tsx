@@ -126,7 +126,7 @@ const DualFab = () => {
         <div className="fixed inset-0 z-[49]" />
       )}
 
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-16 left-6 z-50">
         {/* Radial options */}
         {OPTIONS.map((opt, i) => {
           const pos = positions[i];
