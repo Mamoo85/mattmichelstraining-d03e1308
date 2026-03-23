@@ -1,14 +1,22 @@
 
 
-## Plan: Tetris-Style Splash Screen Logo Animation
+# Remove All Mentions of "Kinesiology" Sitewide
 
-### What It Does
+## Summary
+Remove every reference to the word "kinesiology" across the entire codebase — frontend components, admin templates, and backend edge function prompts.
 
-When a user opens the app, a full-screen splash animation plays for ~3 seconds. The M² Training logo image breaks into grid tiles that fall into place like Tetris pieces — dropping from random positions/rotations and snapping into a grid to reveal the complete logo. Once assembled, a shine/gloss effect sweeps across, then the splash fades away to reveal the app.
+## Changes
 
-### How It Works
+### 1. `src/components/features/ShopGrid.tsx` (line ~97)
+- Change: `"Safe, effective exercises backed by kinesiology."` → `"Safe, effective exercises backed by 20+ years of coaching experience."`
 
-1. **New component: `src/components/layout/SplashScreen.tsx`**
-   - Full-screen black overlay (`z-[9999]`) covering the entire viewport
-   - Displays the actual `m2-logo.jpg` image, but the animation is done by showing it through a CSS clip-path grid (or via a canvas approach)
-   - **Simpler approach**: Use a grid of ~25 `div` tiles (5x5), each showing a portion of the logo via `background-image` + `background-position`. Each tile starts off-screen at a random position/rotation, then animates into its correct
+### 2. `src/components/features/ExerciseLibrary.tsx` (lines ~97-98)
+- Change: `"the kinesiology and physics behind the movement"` → `"the biomechanics and physics behind the movement"`
+
+### 3. `src/components/admin/AdminNewsletterComposer.tsx` (line ~17)
+- Change: `"Why It Happens (The Kinesiology):"` → `"Why It Happens (The Science):"`
+
+### 4. `supabase/functions/ai-admin-assist/index.ts`
+- Line ~93 (newsletter prompt): `"You reference kinesiology, biomechanics"` → `"You reference biomechanics"`
+- Line ~171 (blog_draft prompt): `"biomechanics, kinesiology"` → `"biomechanics, movement science"`
+
