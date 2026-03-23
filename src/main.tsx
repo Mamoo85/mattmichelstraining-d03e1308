@@ -3,12 +3,12 @@ import { HelmetProvider } from "react-helmet-async";
 import App from "./App.tsx";
 import "./index.css";
 
-// Defer print stylesheet — inject as <link> to avoid JS→CSS dependency chain
+// Defer print stylesheet — inject as <link media="print"> to avoid JS→CSS dependency chain
 if (typeof window !== "undefined") {
   window.addEventListener("load", () => {
     const link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = "/src/print.css";
+    link.href = "/print.css";
     link.media = "print";
     document.head.appendChild(link);
   }, { once: true });
