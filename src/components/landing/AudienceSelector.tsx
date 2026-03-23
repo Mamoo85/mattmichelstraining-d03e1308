@@ -1,7 +1,6 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Users, Dumbbell, GraduationCap, ArrowRight, X, Sparkles, HeartPulse } from "lucide-react";
-import { useNavigate, Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Shield, Users, Dumbbell, GraduationCap, ArrowRight, HeartPulse } from "lucide-react";
+import { Link } from "react-router-dom";
 import sneakAthlete from "@/assets/sneak-athlete.jpg";
 import sneakCoach from "@/assets/sneak-coach.jpg";
 import sneakParent from "@/assets/sneak-parent.jpg";
@@ -12,146 +11,81 @@ const AUDIENCES = [
     label: "I Want to Train",
     icon: HeartPulse,
     route: "/shop",
-    desc: "Get faster. Get stronger. Dominate your season. Programs for every sport and level.",
     peek: sneakAthlete,
-    peekAlt: "Training programs and workout builder",
+    desc: "Get faster. Get stronger. Dominate your season.",
     cta: "Browse Programs",
-    peekCaption: "Your playbook for getting recruited, making varsity, or just being the hardest worker on the field.",
   },
   {
     label: "I'm a Parent",
     icon: Shield,
     route: "/for-parents",
-    desc: "Monitor every rep. Message Coach Matt. Zero guesswork.",
     peek: sneakParent,
-    peekAlt: "Parent monitoring dashboard showing recovery metrics",
+    desc: "Monitor every rep. Message Coach Matt.",
     cta: "See How It Works",
-    peekCaption: "Track your athlete's workouts, recovery, and progress — all from your phone.",
   },
   {
     label: "I'm a Coach",
     icon: Users,
     route: "/pricing",
-    desc: "Full-roster strength programs. Any sport. Any state.",
     peek: sneakCoach,
-    peekAlt: "Team strength program dashboard with roster progress",
-    cta: "See Team Programs",
-    peekCaption: "Matt builds the S&C program for your entire roster — delivered online, ready to implement.",
+    desc: "Full-roster strength programs. Any sport.",
+    cta: "Team Programs",
   },
   {
     label: "Current Member",
     icon: GraduationCap,
     route: "/dashboard",
-    desc: "Your portal is waiting. Log in and get to work.",
     peek: portalProgress,
-    peekAlt: "Member training portal with progress tracking",
+    desc: "Your portal is waiting. Get to work.",
     cta: "Enter Portal",
-    peekCaption: "Your programs, logs, and Coach Matt — all in one place.",
   },
 ];
 
-const AudienceSelector = () => {
-  const navigate = useNavigate();
-  const [expanded, setExpanded] = useState<number | null>(null);
+const AudienceSelector = () => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.5, delay: 0.15 }}
+    className="mb-10"
+  >
+    <div className="flex items-center gap-3 mb-4">
+      <span className="text-[10px] font-bold uppercase tracking-widest text-primary">
+        What brings you here?
+      </span>
+      <div className="h-px flex-1 bg-gradient-to-r from-primary/40 to-transparent" />
+    </div>
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.15 }}
-      className="mb-10"
-    >
-      {/* Bold header */}
-      <div className="flex items-center justify-center gap-3 mb-4">
-        <div className="h-px flex-1 bg-gradient-to-r from-transparent to-primary/40" />
-        <div className="flex items-center gap-2">
-          <Sparkles size={14} className="text-primary" />
-          <h2 className="text-sm md:text-base font-bold uppercase tracking-widest text-primary">
-            What brings you here?
-          </h2>
-          <Sparkles size={14} className="text-primary" />
-        </div>
-        <div className="h-px flex-1 bg-gradient-to-l from-transparent to-primary/40" />
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {AUDIENCES.map((a, i) => (
-          <div key={a.label} className="relative">
-            {/* Main card */}
-            <button
-              onClick={() => setExpanded(expanded === i ? null : i)}
-              className={`w-full bg-card shadow-m2 p-4 text-left border-2 transition-m2 group ${
-                expanded === i
-                  ? "border-primary ring-2 ring-primary/20"
-                  : "border-transparent hover:border-primary/40"
-              }`}
-            >
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 bg-primary/10 border border-primary/30 flex items-center justify-center shrink-0">
-                  <a.icon size={18} className="text-primary group-hover:scale-110 transition-transform" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <span className="text-xs font-bold text-foreground block mb-0.5 group-hover:text-primary transition-m2">
-                    {a.label}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground leading-relaxed block">
-                    {a.desc}
-                  </span>
-                </div>
-                <ArrowRight
-                  size={14}
-                  className={`text-muted-foreground mt-1 transition-transform ${
-                    expanded === i ? "rotate-90 text-primary" : "group-hover:translate-x-0.5"
-                  }`}
-                />
-              </div>
-            </button>
-
-            {/* Sneak peek expand */}
-            <AnimatePresence>
-              {expanded === i && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="overflow-hidden"
-                >
-                  <div className="bg-card border-2 border-t-0 border-primary/30 p-3">
-                    {/* Screenshot */}
-                    <div className="relative overflow-hidden mb-3 bg-background">
-                      <img
-                        src={a.peek}
-                        alt={a.peekAlt}
-                        className="w-full h-40 object-cover object-top"
-                        loading="lazy"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
-                      <span className="absolute bottom-2 left-2 text-[9px] font-bold uppercase tracking-widest text-primary bg-background/80 px-2 py-1">
-                        Sneak Peek
-                      </span>
-                    </div>
-                    {/* Caption */}
-                    <p className="text-[11px] text-muted-foreground leading-relaxed mb-3">
-                      {a.peekCaption}
-                    </p>
-                    {/* CTA */}
-                    <Link
-                      to={a.route}
-                      className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-m2 w-full justify-center"
-                    >
-                      {a.cta}
-                      <ArrowRight size={12} />
-                    </Link>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+    {/* Horizontal scroll row of tall image cards */}
+    <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-4 sm:overflow-visible">
+      {AUDIENCES.map((a) => (
+        <Link
+          key={a.label}
+          to={a.route}
+          className="group relative overflow-hidden rounded-lg ring-1 ring-white/5 hover:ring-primary/40 transition-all shrink-0 w-[160px] sm:w-auto snap-start"
+        >
+          <div className="aspect-[3/4] overflow-hidden">
+            <img
+              src={a.peek}
+              alt={a.label}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              loading="lazy"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
           </div>
-        ))}
-      </div>
-    </motion.div>
-  );
-};
+          <div className="absolute bottom-0 inset-x-0 p-3">
+            <div className="flex items-center gap-1.5 mb-1">
+              <a.icon size={14} className="text-primary" />
+              <span className="text-xs font-bold text-foreground">{a.label}</span>
+            </div>
+            <p className="text-[10px] text-muted-foreground leading-snug mb-2">{a.desc}</p>
+            <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest text-primary group-hover:gap-1.5 transition-all">
+              {a.cta} <ArrowRight size={9} />
+            </span>
+          </div>
+        </Link>
+      ))}
+    </div>
+  </motion.div>
+);
 
 export default AudienceSelector;
