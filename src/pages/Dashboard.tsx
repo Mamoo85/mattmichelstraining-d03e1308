@@ -80,7 +80,7 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background">
       <AppNavbar />
       <PwaInstallBanner />
-      <div className="container pt-20 pb-24 px-4 sm:px-6">
+      <div className="container pt-20 pb-40 md:pb-24 px-4 sm:px-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
           <div className="min-w-0">
@@ -156,8 +156,8 @@ const Dashboard = () => {
           {activeTab === "team" && <TeamManager />}
         </Suspense>
 
-        {/* Persistent bottom buttons */}
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-md border-t border-border px-4 py-3 safe-bottom">
+        {/* Persistent bottom buttons — sits above BottomTabBar (h-14) */}
+        <div className="fixed bottom-14 left-0 right-0 z-40 bg-background/80 backdrop-blur-md border-t border-border px-4 py-3 md:bottom-0 md:safe-bottom">
           <div className="flex gap-2">
             <button
               onClick={() => window.dispatchEvent(new CustomEvent("open-prove-it-zone"))}

@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import { useTimer } from "@/hooks/useTimer";
+
 import {
   Sheet,
   SheetContent,
@@ -33,7 +33,7 @@ const BottomTabBar = () => {
   const location = useLocation();
   const { user, signOut } = useAuth();
   const { isAdmin } = useIsAdmin();
-  const { portalActive } = useTimer();
+  
   const [moreOpen, setMoreOpen] = useState(false);
 
   const handleSignOut = useCallback(() => {
@@ -41,17 +41,14 @@ const BottomTabBar = () => {
     setMoreOpen(false);
   }, [signOut]);
 
-  // Hide on desktop, during active workout portal, and on dashboard (has its own bottom bar)
-  if (portalActive) return null;
-  const isDashboard = location.pathname === "/dashboard";
-  if (isDashboard) return null;
+  // Always visible on mobile — never hide
 
   const isMoreActive = MORE_LINKS.some((l) => location.pathname === l.to) ||
     location.pathname === "/admin" || location.pathname === "/auth";
 
   return (
     <>
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border safe-bottom">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[100] bg-background/95 backdrop-blur-md border-t border-border safe-bottom">
         <div className="flex items-stretch justify-around h-14">
           {TABS.map(({ to, label, icon: Icon }) => {
             const active = location.pathname === to;
