@@ -224,13 +224,6 @@ const AppNavbar = () => {
         </div>
       )}
     </nav>
-
-    {timerOpen && (
-      <Suspense fallback={null}>
-        <IntervalTimer onClose={closeTimer} />
-      </Suspense>
-    )}
-    </>
   );
 };
 
