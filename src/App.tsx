@@ -15,6 +15,7 @@ const SubscriptionGuard = lazyRetry(() => import("@/components/billing/Subscript
 import ScrollToTop from "@/components/layout/ScrollToTop";
 import ErrorBoundary from "@/components/layout/ErrorBoundary";
 const OfflineBadge = lazyRetry(() => import("@/components/layout/OfflineBadge"));
+import SplashScreen from "@/components/layout/SplashScreen";
 import { useAuth } from "@/hooks/useAuth";
 import { useReferralCapture } from "@/hooks/useReferral";
 import { safeLocalStorage } from "@/lib/browserStorage";
