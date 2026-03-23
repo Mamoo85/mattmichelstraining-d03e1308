@@ -156,73 +156,22 @@ const AppNavbar = () => {
           )}
         </div>
 
-        {/* Mobile: bell + hamburger */}
-        <div className="md:hidden flex items-center gap-1">
-          <Link
-            to="/install"
-            className="flex items-center gap-1 px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest rounded-sm bg-primary/10 text-primary"
-          >
-            <Download size={13} />
-            App
-          </Link>
+        {/* Mobile: bell + avatar — hamburger removed, bottom tab bar replaces it */}
+        <div className="md:hidden flex items-center gap-2">
           {user && <Suspense fallback={null}><NotificationBell /></Suspense>}
-          <button className="p-2 text-muted-foreground" onClick={() => setMobileOpen(!mobileOpen)} aria-label={mobileOpen ? "Close menu" : "Open menu"}>
-            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile menu */}
-      {mobileOpen && (
-        <div className="md:hidden bg-background shadow-m2 border-t border-border">
-          {allNav.map(({ to, label, icon: Icon }) => {
-            const active = location.pathname === to;
-            return (
-              <Link
-                key={to}
-                to={to}
-                onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-2 px-4 py-3.5 text-sm font-bold uppercase tracking-widest transition-m2 ${
-                  active ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <Icon size={16} />
-                {label}
-              </Link>
-            );
-          })}
-          {isAdmin && (
-            <Link
-              to="/admin"
-              onClick={() => setMobileOpen(false)}
-              className={`flex items-center gap-2 px-4 py-3.5 text-sm font-bold uppercase tracking-widest transition-m2 ${
-                location.pathname === "/admin" ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Shield size={16} />
-              ADMIN
-            </Link>
-          )}
           {user ? (
-            <button
-              onClick={() => { signOut(); setMobileOpen(false); }}
-              className="flex items-center gap-2 px-4 py-3.5 text-sm font-bold uppercase tracking-widest text-muted-foreground w-full"
-            >
-              <LogOut size={16} />
-              LOGOUT
-            </button>
+            <Link to="/profile" className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center">
+              <User size={16} className="text-primary" />
+            </Link>
           ) : (
             <Link
               to="/auth"
-              onClick={() => setMobileOpen(false)}
-              className="flex items-center gap-2 px-4 py-3.5 text-sm font-bold uppercase tracking-widest text-primary"
+              className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-widest text-primary"
             >
-              <LogIn size={16} />
-              LOGIN
+              <LogIn size={14} />
             </Link>
           )}
         </div>
-      )}
     </nav>
   );
 };
