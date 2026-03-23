@@ -48,7 +48,7 @@ const BottomTabBar = () => {
 
   return (
     <>
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border safe-bottom">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[100] bg-background/95 backdrop-blur-md border-t border-border safe-bottom">
         <div className="flex items-stretch justify-around h-14">
           {TABS.map(({ to, label, icon: Icon }) => {
             const active = location.pathname === to;

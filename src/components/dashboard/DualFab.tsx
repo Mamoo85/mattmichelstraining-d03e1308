@@ -37,6 +37,7 @@ const DualFab = () => {
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [dragging, setDragging] = useState(false);
+  // Default position accounts for bottom tab bar height (h-14 = 56px + safe area)
   const [pos, setPos] = useState<Vec2>(() => getSavedPosition() || { x: 16, y: 72 });
 
   const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
