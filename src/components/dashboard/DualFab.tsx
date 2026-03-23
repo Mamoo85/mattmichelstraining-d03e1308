@@ -239,12 +239,12 @@ const DualFab = () => {
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerCancel}
-          className={`relative w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center select-none touch-none transition-all duration-200 ${
+          className={`relative w-11 h-11 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center select-none touch-none transition-all duration-200 ${
             expanded ? "scale-90 ring-2 ring-primary/40 ring-offset-2 ring-offset-background" : "hover:opacity-90"
           } ${dragging ? "scale-110 shadow-2xl" : ""}`}
           aria-label="Training tools — tap for timer, hold for options, drag to move"
         >
-          <Dumbbell size={22} className={expanded ? "animate-pulse" : ""} />
+          <Dumbbell size={18} className={expanded ? "animate-pulse" : ""} />
         </button>
       </div>
     </>
