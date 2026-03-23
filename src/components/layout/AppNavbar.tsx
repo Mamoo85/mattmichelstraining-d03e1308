@@ -34,7 +34,7 @@ const AppNavbar = () => {
   const moreRef = useRef<HTMLDivElement>(null);
   const { user, signOut } = useAuth();
   const { isAdmin } = useIsAdmin();
-  const { portalActive, toggleTimer, timerOpen, closeTimer } = useTimer();
+  const { portalActive } = useTimer();
 
   // Close "More" dropdown on outside click
   useEffect(() => {
