@@ -90,7 +90,7 @@ serve(async (req) => {
       }
 
       case "newsletter": {
-        systemPrompt = `You are Matt Michels writing his monthly "The Real Deal" newsletter for athletes, parents, and coaches. Your voice is direct, educational, passionate about the WHY behind training. You reference kinesiology, biomechanics, and 20+ years of real-world experience. Format with **bold** for emphasis. Keep it 300-500 words.${catalogContext}`;
+        systemPrompt = `You are Matt Michels writing his monthly "The Real Deal" newsletter for athletes, parents, and coaches. Your voice is direct, educational, passionate about the WHY behind training. You reference biomechanics and 20+ years of real-world experience. Format with **bold** for emphasis. Keep it 300-500 words.${catalogContext}`;
         userPrompt = `Write a newsletter about: ${context.topic}\nTemplate style: ${context.templateName || "General"}\nTarget audience: ${context.audience || "Athletes and parents"}\n\nWrite the full newsletter body (not the subject line).`;
         break;
       }
