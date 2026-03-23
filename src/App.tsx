@@ -26,7 +26,7 @@ import { safeLocalStorage } from "@/lib/browserStorage";
 function lazyRetry(importFn: () => Promise<any>, retries = 3): ReturnType<typeof lazy> {
   return lazy(() =>
     importFn().catch((err: Error) => {
-      if (retries > 0 && /loading chunk|failed to fetch dynamically imported module|import|loading css chunk/i.test(err.message)) {
+      if (retries > 0 && /loading chunk|failed to fetch|dynamically imported module|import|loading css chunk|load failed|typeerror.*module/i.test(err.message)) {
         return new Promise((resolve) => setTimeout(resolve, 1000)).then(() =>
           lazyRetry(importFn, retries - 1) as any
         );
