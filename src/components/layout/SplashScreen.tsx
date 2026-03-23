@@ -3,7 +3,7 @@ import { safeSessionStorage } from "@/lib/browserStorage";
 import logoSplash from "@/assets/m2-logo-splash.jpg";
 
 const SESSION_KEY = "m2-splash-shown";
-const DISPLAY_MS = 2000;
+const DISPLAY_MS = 1400;
 
 const SplashScreen = () => {
   const [show, setShow] = useState(() => !safeSessionStorage.getItem(SESSION_KEY));
