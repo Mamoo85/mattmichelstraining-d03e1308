@@ -282,6 +282,16 @@ const AdminSeoGenerator = () => {
               )}
             </Button>
             <Button
+              variant="secondary"
+              onClick={randomizeTopic}
+              disabled={generating}
+              className="text-xs font-bold uppercase tracking-widest"
+              title="Randomize topic"
+            >
+              <Shuffle size={14} className="mr-1" />
+              Random
+            </Button>
+            <Button
               variant="outline"
               onClick={() => setBulkOpen(true)}
               className="text-xs font-bold uppercase tracking-widest"
