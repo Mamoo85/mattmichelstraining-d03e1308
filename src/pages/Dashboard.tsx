@@ -156,8 +156,8 @@ const Dashboard = () => {
           {activeTab === "team" && <TeamManager />}
         </Suspense>
 
-        {/* Persistent bottom buttons */}
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-md border-t border-border px-4 py-3 safe-bottom">
+        {/* Persistent bottom buttons — sits above BottomTabBar (h-14) */}
+        <div className="fixed bottom-14 left-0 right-0 z-40 bg-background/80 backdrop-blur-md border-t border-border px-4 py-3 md:bottom-0 md:safe-bottom">
           <div className="flex gap-2">
             <button
               onClick={() => window.dispatchEvent(new CustomEvent("open-prove-it-zone"))}
