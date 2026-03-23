@@ -7,6 +7,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useTimer } from "@/hooks/useTimer";
+const { toggleTimer: _discoverToggle } = {} as any; // removed to avoid unused
 import m2Logo from "@/assets/m2-logo.jpg";
 const NotificationBell = lazy(() => import("./NotificationBell"));
 
