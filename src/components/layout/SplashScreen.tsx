@@ -24,6 +24,8 @@ const SplashScreen = () => {
       <img
         src={logoSplash}
         alt="M² Training"
+        fetchPriority="high"
+        decoding="sync"
         className="w-64 h-64 object-contain drop-shadow-[0_0_40px_hsl(var(--primary)/0.4)]"
         style={{ filter: "contrast(1.05) brightness(1.08)" }}
       />
