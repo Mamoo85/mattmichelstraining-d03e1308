@@ -40,6 +40,7 @@ const AnnouncementBanner = lazyRetry(() => import("@/components/layout/Announcem
 
 const ActiveWorkoutZone = lazyRetry(() => import("@/components/workout/ActiveWorkoutZone"));
 const ProveItZone = lazyRetry(() => import("@/components/workout/ProveItZone"));
+const DualFab = lazyRetry(() => import("@/components/dashboard/DualFab"));
 
 // Lazy-load ALL pages including Index for faster initial JS parse
 const Index = lazyRetry(() => import("./pages/Index"));
@@ -209,6 +210,7 @@ const App = () => (
               
               <ActiveWorkoutWrapper />
               <ProveItWrapper />
+              <Suspense fallback={null}><DualFab /></Suspense>
               <Suspense fallback={null}><OfflineBadge /></Suspense>
             </BrowserRouter>
           </TooltipProvider>
