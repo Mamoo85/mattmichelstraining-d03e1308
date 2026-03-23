@@ -171,6 +171,13 @@ const AdminSeoGenerator = () => {
     setForm({ keyword: seed.keyword, location: seed.location, target_audience: seed.audience });
   };
 
+  /* ── Randomize topic ── */
+  const randomizeTopic = () => {
+    const available = SEED_KEYWORDS.filter((s) => s.keyword !== form.keyword);
+    const pick = available[Math.floor(Math.random() * available.length)] || SEED_KEYWORDS[0];
+    useSeed(pick);
+  };
+
   /* ── Filtered pages ── */
   const filtered = searchTerm
     ? pages.filter((p) =>
