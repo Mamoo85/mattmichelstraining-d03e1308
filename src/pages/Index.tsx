@@ -71,7 +71,7 @@ const Index = () => (
         <DoNotPressButton />
       </Suspense>
     </div>
-    <DualFab />
+    
   </div>
 );
 
