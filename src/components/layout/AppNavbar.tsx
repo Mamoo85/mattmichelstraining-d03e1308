@@ -29,7 +29,6 @@ const secondaryNav = [
 
 const AppNavbar = () => {
   const location = useLocation();
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const moreRef = useRef<HTMLDivElement>(null);
   const { user, signOut } = useAuth();
