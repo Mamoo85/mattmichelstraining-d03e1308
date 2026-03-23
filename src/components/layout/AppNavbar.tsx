@@ -10,7 +10,6 @@ import { useTimer } from "@/hooks/useTimer";
 import m2Logo from "@/assets/m2-logo.jpg";
 const NotificationBell = lazy(() => import("./NotificationBell"));
 const IntervalTimer = lazy(() => import("@/components/workout/IntervalTimer"));
-const NotificationBell = lazy(() => import("./NotificationBell"));
 
 const primaryNav = [
   { to: "/", label: "HOME", icon: Home },
