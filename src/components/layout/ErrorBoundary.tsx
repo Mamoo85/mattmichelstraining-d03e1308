@@ -89,12 +89,12 @@ class ErrorBoundary extends Component<Props, State> {
     const msg = MESSAGES[errorKind];
     const Icon = errorKind === "network" ? WifiOff : errorKind === "chunk" ? RefreshCw : AlertTriangle;
 
-    if (errorKind === "chunk" && !autoRetried) {
+    if (!autoRetried && safeSessionStorage.getItem("m2-eb-retried") === "1") {
       return (
         <div className="min-h-screen bg-background flex items-center justify-center p-6">
           <div className="text-center max-w-sm space-y-3">
             <RefreshCw className="w-8 h-8 text-primary mx-auto animate-spin" />
-            <p className="text-sm text-muted-foreground">Updating…</p>
+            <p className="text-sm text-muted-foreground">Reloading…</p>
           </div>
         </div>
       );
