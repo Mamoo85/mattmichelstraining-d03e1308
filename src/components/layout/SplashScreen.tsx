@@ -10,7 +10,7 @@ const dropVariant = (delay: number) => ({
   animate: {
     y: 0,
     opacity: 1,
-    transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1], delay },
+    transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] as [number, number, number, number], delay },
   },
 });
 
@@ -19,7 +19,7 @@ const slideVariant = {
   animate: {
     x: 0,
     opacity: 1,
-    transition: { duration: 0.5, ease: "easeOut", delay: 0.7 },
+    transition: { duration: 0.5, ease: "easeOut" as const, delay: 0.7 },
   },
 };
 
