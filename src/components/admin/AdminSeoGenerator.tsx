@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { ConfirmActionModal } from "@/components/shared/ConfirmActionModal";
+import ConfirmActionModal from "@/components/shared/ConfirmActionModal";
 
 /* ── Types ── */
 interface SeoPage {
