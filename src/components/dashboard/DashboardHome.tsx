@@ -1,9 +1,8 @@
 import { memo, lazy, Suspense, useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { Camera, UtensilsCrossed } from "lucide-react";
+import { Camera } from "lucide-react";
 import MonthlyFocusWidget from "@/components/features/MonthlyFocusWidget";
 import UpcomingSessions from "@/components/sessions/UpcomingSessions";
-import WorkoutScanner from "@/components/workout/WorkoutScanner";
+import EmptyStateCard from "@/components/shared/EmptyStateCard";
 import EmptyStateCard from "@/components/shared/EmptyStateCard";
 import AnnualUpsellCard from "@/components/pricing/AnnualUpsellCard";
 import TodaysTrainingCard from "@/components/programs/TodaysTrainingCard";
