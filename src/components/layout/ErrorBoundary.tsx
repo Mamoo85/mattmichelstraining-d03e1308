@@ -1,6 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { RefreshCw, WifiOff, AlertTriangle } from "lucide-react";
-import { safeLocalStorage } from "@/lib/browserStorage";
+import { safeLocalStorage, safeSessionStorage } from "@/lib/browserStorage";
 
 interface Props {
   children: ReactNode;
@@ -54,10 +54,17 @@ class ErrorBoundary extends Component<Props, State> {
     console.error("[ErrorBoundary]", error.message, error.stack);
     console.error("[ErrorBoundary] Component stack:", info.componentStack);
 
-    // Auto-retry chunk errors once by reloading
-    if (this.state.errorKind === "chunk" && !this.state.autoRetried) {
+    // Auto-retry once for ALL error types by reloading — most transient
+    // errors (chunk, network, timing) resolve on a fresh load.
+    const retryKey = "m2-eb-retried";
+    const alreadyRetried = safeSessionStorage.getItem(retryKey);
+    if (!alreadyRetried) {
+      safeSessionStorage.setItem(retryKey, "1");
       this.setState({ autoRetried: true });
       setTimeout(() => window.location.reload(), 1500);
+    } else {
+      // Clear the flag so a future session can retry again
+      safeSessionStorage.removeItem(retryKey);
     }
   }
 
@@ -82,12 +89,12 @@ class ErrorBoundary extends Component<Props, State> {
     const msg = MESSAGES[errorKind];
     const Icon = errorKind === "network" ? WifiOff : errorKind === "chunk" ? RefreshCw : AlertTriangle;
 
-    if (errorKind === "chunk" && !autoRetried) {
+    if (!autoRetried && safeSessionStorage.getItem("m2-eb-retried") === "1") {
       return (
         <div className="min-h-screen bg-background flex items-center justify-center p-6">
           <div className="text-center max-w-sm space-y-3">
             <RefreshCw className="w-8 h-8 text-primary mx-auto animate-spin" />
-            <p className="text-sm text-muted-foreground">Updating…</p>
+            <p className="text-sm text-muted-foreground">Reloading…</p>
           </div>
         </div>
       );
