@@ -65,51 +65,57 @@ const SplashScreen = () => {
             transition={{ delay: 1.0, duration: 1.5, ease: "easeOut" }}
           />
 
-          {/* M² letterform — 160×160 container */}
-          <div className="relative" style={{ width: 160, height: 160 }}>
-            {/* Left vertical bar of M */}
+          {/* M² letterform — 160×180 container (extra height for superscript) */}
+          <div className="relative" style={{ width: 160, height: 180 }}>
+            {/* Left vertical bar of M — orange */}
             <motion.div
               {...dropVariant(0.1)}
-              className="absolute bottom-0 left-0"
+              className="absolute"
               style={{
+                left: 0,
+                top: 20,
                 width: 40,
                 height: 160,
-                background: "hsl(var(--foreground))",
-                boxShadow: "0 0 20px hsl(var(--foreground) / 0.15)",
+                background: "hsl(var(--primary))",
+                boxShadow: "0 0 20px hsl(var(--primary) / 0.3)",
               }}
             />
 
-            {/* Right vertical bar of M */}
+            {/* Right vertical bar of M — orange */}
             <motion.div
               {...dropVariant(0.3)}
-              className="absolute bottom-0"
+              className="absolute"
               style={{
-                right: 40,
+                left: 80,
+                top: 20,
                 width: 40,
                 height: 160,
-                background: "hsl(var(--foreground))",
-                boxShadow: "0 0 20px hsl(var(--foreground) / 0.15)",
+                background: "hsl(var(--primary))",
+                boxShadow: "0 0 20px hsl(var(--primary) / 0.3)",
               }}
             />
 
-            {/* Top crossbar (primary/red) */}
+            {/* Top crossbar — orange */}
             <motion.div
               {...dropVariant(0.5)}
-              className="absolute top-0 z-10"
+              className="absolute z-10"
               style={{
                 left: 40,
-                width: 80,
+                top: 20,
+                width: 40,
                 height: 40,
                 background: "hsl(var(--primary))",
                 boxShadow: "0 0 24px hsl(var(--primary) / 0.4)",
               }}
             />
 
-            {/* Superscript "2" block */}
+            {/* Superscript "2" — top right */}
             <motion.div
               {...slideVariant}
-              className="absolute bottom-0 right-0 z-10 flex items-center justify-center"
+              className="absolute z-10 flex items-center justify-center"
               style={{
+                right: 0,
+                top: 0,
                 width: 40,
                 height: 40,
                 background: "hsl(var(--primary))",
