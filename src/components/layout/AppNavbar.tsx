@@ -9,6 +9,7 @@ import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useTimer } from "@/hooks/useTimer";
 import m2Logo from "@/assets/m2-logo.jpg";
 const NotificationBell = lazy(() => import("./NotificationBell"));
+const IntervalTimer = lazy(() => import("@/components/workout/IntervalTimer"));
 
 const primaryNav = [
   { to: "/", label: "HOME", icon: Home },
@@ -33,7 +34,7 @@ const AppNavbar = () => {
   const moreRef = useRef<HTMLDivElement>(null);
   const { user, signOut } = useAuth();
   const { isAdmin } = useIsAdmin();
-  const { portalActive, toggleTimer } = useTimer();
+  const { portalActive, toggleTimer, timerOpen, closeTimer } = useTimer();
 
   // Close "More" dropdown on outside click
   useEffect(() => {
@@ -54,21 +55,24 @@ const AppNavbar = () => {
   const isSecondaryActive = secondaryNav.some((n) => location.pathname === n.to);
 
   return (
+    <>
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm shadow-m2">
       <div className="container flex items-center justify-between h-14">
         {/* Logo */}
-        <div className="flex items-center gap-2 shrink-0">
-          <Link to="/" className="flex items-center gap-1.5 group transition-m2 shrink-0">
-            <img src={m2Logo} alt="M² Training" className="w-9 h-9 object-contain" />
-          </Link>
-          <button
-            onClick={toggleTimer}
-            className="flex items-center justify-center w-8 h-8 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-m2"
-            aria-label="Timer"
-          >
-            <Timer size={16} />
-          </button>
-        </div>
+        <Link to="/" className="flex items-center gap-1.5 group transition-m2 shrink-0">
+          <img src={m2Logo} alt="M² Training" className="w-9 h-9 object-contain" />
+        </Link>
+
+        {/* Center timer button */}
+        <button
+          onClick={toggleTimer}
+          className={`flex items-center justify-center w-9 h-9 rounded-full transition-m2 ${
+            timerOpen ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary hover:bg-primary/20"
+          }`}
+          aria-label="Timer"
+        >
+          <Timer size={17} />
+        </button>
 
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-0.5">
@@ -232,6 +236,13 @@ const AppNavbar = () => {
         </div>
       )}
     </nav>
+
+    {timerOpen && (
+      <Suspense fallback={null}>
+        <IntervalTimer onClose={closeTimer} />
+      </Suspense>
+    )}
+    </>
   );
 };
 
