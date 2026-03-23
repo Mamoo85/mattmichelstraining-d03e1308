@@ -4,7 +4,7 @@ import { toast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Loader2, Rocket, Plus, Trash2, ExternalLink, Search,
-  Globe, FileText, BarChart3, Flame, X,
+  Globe, FileText, BarChart3, Flame, X, Shuffle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -171,6 +171,13 @@ const AdminSeoGenerator = () => {
     setForm({ keyword: seed.keyword, location: seed.location, target_audience: seed.audience });
   };
 
+  /* ── Randomize topic ── */
+  const randomizeTopic = () => {
+    const available = SEED_KEYWORDS.filter((s) => s.keyword !== form.keyword);
+    const pick = available[Math.floor(Math.random() * available.length)] || SEED_KEYWORDS[0];
+    useSeed(pick);
+  };
+
   /* ── Filtered pages ── */
   const filtered = searchTerm
     ? pages.filter((p) =>
@@ -273,6 +280,16 @@ const AdminSeoGenerator = () => {
                   Generate Page
                 </>
               )}
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={randomizeTopic}
+              disabled={generating}
+              className="text-xs font-bold uppercase tracking-widest"
+              title="Randomize topic"
+            >
+              <Shuffle size={14} className="mr-1" />
+              Random
             </Button>
             <Button
               variant="outline"
