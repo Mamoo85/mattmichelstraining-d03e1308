@@ -1,6 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { RefreshCw, WifiOff, AlertTriangle } from "lucide-react";
-import { safeLocalStorage } from "@/lib/browserStorage";
+import { safeLocalStorage, safeSessionStorage } from "@/lib/browserStorage";
 
 interface Props {
   children: ReactNode;
