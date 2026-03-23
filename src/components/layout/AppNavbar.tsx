@@ -172,6 +172,7 @@ const AppNavbar = () => {
             </Link>
           )}
         </div>
+      </div>
     </nav>
   );
 };
