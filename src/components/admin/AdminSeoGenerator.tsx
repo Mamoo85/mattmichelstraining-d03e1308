@@ -4,7 +4,7 @@ import { toast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Loader2, Rocket, Plus, Trash2, ExternalLink, Search,
-  Globe, FileText, BarChart3, Flame, X,
+  Globe, FileText, BarChart3, Flame, X, Shuffle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
