@@ -3,7 +3,6 @@ import { Camera } from "lucide-react";
 import MonthlyFocusWidget from "@/components/features/MonthlyFocusWidget";
 import UpcomingSessions from "@/components/sessions/UpcomingSessions";
 import EmptyStateCard from "@/components/shared/EmptyStateCard";
-import EmptyStateCard from "@/components/shared/EmptyStateCard";
 import AnnualUpsellCard from "@/components/pricing/AnnualUpsellCard";
 import TodaysTrainingCard from "@/components/programs/TodaysTrainingCard";
 import { useAuth } from "@/hooks/useAuth";
