@@ -80,7 +80,7 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background">
       <AppNavbar />
       <PwaInstallBanner />
-      <div className="container pt-20 pb-24 px-4 sm:px-6">
+      <div className="container pt-20 pb-40 md:pb-24 px-4 sm:px-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
           <div className="min-w-0">
