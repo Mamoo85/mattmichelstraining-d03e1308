@@ -87,7 +87,7 @@ const BottomTabBar = () => {
 
       {/* More sheet */}
       <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
-        <SheetContent side="bottom" className="bg-background border-t border-border rounded-t-2xl px-0 pb-8">
+        <SheetContent side="bottom" className="bg-background border-t border-border rounded-t-2xl px-0 pb-20">
           <SheetHeader className="px-5 pb-3 border-b border-border">
             <SheetTitle className="text-xs font-bold uppercase tracking-widest text-foreground">More</SheetTitle>
           </SheetHeader>
