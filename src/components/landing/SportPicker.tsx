@@ -23,21 +23,30 @@ const SportPicker = () => (
     transition={{ duration: 0.5 }}
     className="mb-10"
   >
-    <div className="mb-4">
-      <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-1">
-        Built for your sport
-      </span>
-      <h2 className="text-lg md:text-xl font-black uppercase tracking-tight text-foreground">
-        What do you play?
-      </h2>
+    <div className="flex items-end justify-between mb-4">
+      <div>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-1">
+          Built for your sport
+        </span>
+        <h2 className="text-lg md:text-xl font-black uppercase tracking-tight text-foreground">
+          What do you play?
+        </h2>
+      </div>
+      <Link
+        to="/shop"
+        className="text-[10px] font-bold uppercase tracking-widest text-primary hover:gap-2 transition-all flex items-center gap-1 shrink-0"
+      >
+        See All <ArrowRight size={10} />
+      </Link>
     </div>
 
-    <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
+    {/* Horizontal scroll row */}
+    <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory -mx-4 px-4 sm:mx-0 sm:px-0">
       {SPORTS.map((s) => (
         <Link
           key={s.name}
           to="/shop"
-          className="group relative overflow-hidden bg-card border border-border hover:border-primary/60 transition-all"
+          className="group relative overflow-hidden bg-card rounded-lg ring-1 ring-white/5 hover:ring-primary/40 transition-all shrink-0 w-[140px] sm:w-[160px] snap-start"
         >
           <div className="aspect-[3/4] overflow-hidden">
             <img
@@ -51,7 +60,7 @@ const SportPicker = () => (
             />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
           </div>
-          <div className="absolute bottom-0 inset-x-0 p-2">
+          <div className="absolute bottom-0 inset-x-0 p-2.5">
             <span className="text-xs font-black uppercase tracking-tight text-foreground block leading-tight">
               {s.name}
             </span>
@@ -65,7 +74,7 @@ const SportPicker = () => (
 
     <Link
       to="/shop"
-      className="flex items-center justify-center gap-2 mt-3 text-[10px] font-bold uppercase tracking-widest text-primary hover:gap-3 transition-all"
+      className="flex items-center justify-center gap-2 mt-3 text-[10px] font-bold uppercase tracking-widest text-primary hover:gap-3 transition-all md:hidden"
     >
       Don't see your sport? We train everything <ArrowRight size={10} />
     </Link>
