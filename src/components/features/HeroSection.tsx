@@ -91,7 +91,7 @@ const HeroSection = () => {
                 to="/schedule"
                 className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3.5 text-xs font-bold uppercase tracking-widest rounded-lg hover:opacity-90 transition-m2 w-full sm:w-auto justify-center"
               >
-                Start Training
+                Schedule Here
                 <ArrowRight size={14} />
               </Link>
               <Link
@@ -99,6 +99,13 @@ const HeroSection = () => {
                 className="inline-flex items-center gap-2 border-2 border-primary text-primary px-6 py-3.5 text-xs font-bold uppercase tracking-widest rounded-lg hover:bg-primary/10 hover:shadow-[0_0_20px_rgba(249,115,22,0.35)] transition-all duration-300 w-full sm:w-auto justify-center"
               >
                 Enter The Portal
+                <ArrowRight size={14} />
+              </Link>
+              <Link
+                to="/about"
+                className="inline-flex items-center gap-2 border-2 border-border text-muted-foreground px-6 py-3.5 text-xs font-bold uppercase tracking-widest rounded-lg hover:border-primary hover:text-primary transition-all duration-300 w-full sm:w-auto justify-center"
+              >
+                Meet Matt
                 <ArrowRight size={14} />
               </Link>
             </div>

@@ -26,7 +26,6 @@ const MORE_LINKS = [
   { to: "/for-parents", label: "Parents", icon: Users },
   { to: "/pricing", label: "Pricing", icon: CreditCard },
   { to: "/the-edge", label: "Technology", icon: Cpu },
-  { to: "/learn", label: "Learn", icon: BookOpen },
   { to: "/install", label: "Install App", icon: Download },
 ];
 
