@@ -41,10 +41,7 @@ const BottomTabBar = () => {
     setMoreOpen(false);
   }, [signOut]);
 
-  // Hide on desktop, during active workout portal, and on dashboard (has its own bottom bar)
-  if (portalActive) return null;
-  const isDashboard = location.pathname === "/dashboard";
-  if (isDashboard) return null;
+  // Always visible on mobile — never hide
 
   const isMoreActive = MORE_LINKS.some((l) => location.pathname === l.to) ||
     location.pathname === "/admin" || location.pathname === "/auth";
