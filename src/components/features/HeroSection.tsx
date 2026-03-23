@@ -81,9 +81,10 @@ const HeroSection = () => {
 
               <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold tracking-display text-foreground leading-snug mb-3">
                 Real strength. Zero gimmicks.
-                <br />
-                <WheelSlogan />
               </h1>
+              <div className="text-xl md:text-3xl lg:text-4xl font-bold tracking-display mb-3">
+                <WheelSlogan />
+              </div>
               <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto leading-relaxed">
                 In-person training in Grosse Pointe. Online programs anywhere.
                 Ages 12 to 60+. The same coach either way.
