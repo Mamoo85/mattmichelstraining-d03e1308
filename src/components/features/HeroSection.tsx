@@ -1,4 +1,5 @@
 import { lazy, Suspense, useState, useEffect } from "react";
+import WheelSlogan from "@/components/features/WheelSlogan";
 import { Link } from "react-router-dom";
 import { ArrowRight, Shield, Trophy, Clock } from "lucide-react";
 
