@@ -9,6 +9,10 @@ const SplashScreen = () => {
   const [show, setShow] = useState(() => !safeSessionStorage.getItem(SESSION_KEY));
 
   useEffect(() => {
+    // Remove the static HTML splash shell injected by Vite plugin
+    const shell = document.getElementById("splash-shell");
+    if (shell) shell.remove();
+
     if (!show) return;
     safeSessionStorage.setItem(SESSION_KEY, "1");
     const t = setTimeout(() => setShow(false), DISPLAY_MS);
