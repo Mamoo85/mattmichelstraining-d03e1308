@@ -1,4 +1,5 @@
 import { lazy, Suspense, useState, useEffect } from "react";
+import WheelSlogan from "@/components/features/WheelSlogan";
 import { Link } from "react-router-dom";
 import { ArrowRight, Shield, Trophy, Clock } from "lucide-react";
 
@@ -81,7 +82,7 @@ const HeroSection = () => {
               <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold tracking-display text-foreground leading-snug mb-3">
                 Real strength. Zero gimmicks.
                 <br />
-                <span className="text-primary">Real coaching. Real results.</span>
+                <WheelSlogan />
               </h1>
               <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto leading-relaxed">
                 In-person training in Grosse Pointe. Online programs anywhere.
