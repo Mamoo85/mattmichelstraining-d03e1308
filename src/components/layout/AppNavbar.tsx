@@ -55,24 +55,12 @@ const AppNavbar = () => {
   const isSecondaryActive = secondaryNav.some((n) => location.pathname === n.to);
 
   return (
-    <>
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm shadow-m2">
       <div className="container flex items-center justify-between h-14">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-1.5 group transition-m2 shrink-0">
           <img src={m2Logo} alt="M² Training" className="w-9 h-9 object-contain" />
         </Link>
-
-        {/* Center timer button */}
-        <button
-          onClick={toggleTimer}
-          className={`flex items-center justify-center w-9 h-9 rounded-full transition-m2 ${
-            timerOpen ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary hover:bg-primary/20"
-          }`}
-          aria-label="Timer"
-        >
-          <Timer size={17} />
-        </button>
 
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-0.5">
