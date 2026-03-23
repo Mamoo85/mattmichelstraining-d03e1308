@@ -46,7 +46,6 @@ function preloadLcpImage(): Plugin {
       }
 
       return result;
-      return html;
     },
   };
 }
