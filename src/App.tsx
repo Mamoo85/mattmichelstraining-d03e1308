@@ -165,6 +165,7 @@ const ProveItWrapper = () => {
 
 const App = () => (
   <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, maxAge: 24 * 60 * 60_000 }}>
+    <SplashScreen />
     <AuthProvider>
       <TimerProvider>
         <OfflineSyncProvider>
