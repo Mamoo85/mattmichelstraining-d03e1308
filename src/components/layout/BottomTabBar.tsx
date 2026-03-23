@@ -33,7 +33,7 @@ const BottomTabBar = () => {
   const location = useLocation();
   const { user, signOut } = useAuth();
   const { isAdmin } = useIsAdmin();
-  const { portalActive } = useTimer();
+  
   const [moreOpen, setMoreOpen] = useState(false);
 
   const handleSignOut = useCallback(() => {
