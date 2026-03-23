@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect, forwardRef } from "react";
-import { X, Minus, Plus, Play, Pause, RotateCcw, Volume2 } from "lucide-react";
+import { X, Play, Pause, RotateCcw, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   countdownBeep, workBeep, restBeep, warningBeep, completeChime,
@@ -36,149 +36,21 @@ interface TimerSkin {
   rest: string;
   done: string;
   accent: string;
-  headerBg: string;
-  controlsBg: string;
+  ring: string;
 }
 
 const SKINS: TimerSkin[] = [
-  {
-    name: "M² Performance",
-    icon: "🏋️",
-    idle: "bg-[hsl(0,0%,7%)]",
-    prep: "bg-yellow-600",
-    work: "bg-green-700",
-    rest: "bg-red-700",
-    done: "bg-primary",
-    accent: "text-primary",
-    headerBg: "bg-card",
-    controlsBg: "bg-background",
-  },
-  {
-    name: "Wild Tiger",
-    icon: "🐯",
-    idle: "bg-gradient-to-b from-amber-900 to-orange-950",
-    prep: "bg-gradient-to-b from-amber-700 to-amber-900",
-    work: "bg-gradient-to-b from-orange-600 to-red-900",
-    rest: "bg-gradient-to-b from-amber-800 to-yellow-950",
-    done: "bg-gradient-to-b from-amber-500 to-orange-700",
-    accent: "text-amber-400",
-    headerBg: "bg-amber-950",
-    controlsBg: "bg-amber-950/90",
-  },
-  {
-    name: "Wolf Pack",
-    icon: "🐺",
-    idle: "bg-gradient-to-b from-slate-800 to-slate-950",
-    prep: "bg-gradient-to-b from-slate-600 to-slate-800",
-    work: "bg-gradient-to-b from-blue-800 to-slate-900",
-    rest: "bg-gradient-to-b from-slate-700 to-gray-900",
-    done: "bg-gradient-to-b from-blue-600 to-indigo-900",
-    accent: "text-blue-400",
-    headerBg: "bg-slate-900",
-    controlsBg: "bg-slate-950/90",
-  },
-  {
-    name: "Deep Space",
-    icon: "🚀",
-    idle: "bg-gradient-to-b from-indigo-950 to-black",
-    prep: "bg-gradient-to-b from-violet-900 to-indigo-950",
-    work: "bg-gradient-to-b from-cyan-800 to-blue-950",
-    rest: "bg-gradient-to-b from-indigo-800 to-violet-950",
-    done: "bg-gradient-to-b from-cyan-500 to-blue-800",
-    accent: "text-cyan-400",
-    headerBg: "bg-indigo-950",
-    controlsBg: "bg-[hsl(240,50%,5%)]",
-  },
-  {
-    name: "Cherry Blossom",
-    icon: "🌸",
-    idle: "bg-gradient-to-b from-pink-900 to-rose-950",
-    prep: "bg-gradient-to-b from-pink-700 to-rose-800",
-    work: "bg-gradient-to-b from-rose-600 to-pink-900",
-    rest: "bg-gradient-to-b from-pink-800 to-fuchsia-950",
-    done: "bg-gradient-to-b from-pink-500 to-rose-700",
-    accent: "text-pink-400",
-    headerBg: "bg-rose-950",
-    controlsBg: "bg-rose-950/90",
-  },
-  {
-    name: "Eagle Eye",
-    icon: "🦅",
-    idle: "bg-gradient-to-b from-stone-800 to-stone-950",
-    prep: "bg-gradient-to-b from-amber-800 to-stone-900",
-    work: "bg-gradient-to-b from-emerald-800 to-stone-900",
-    rest: "bg-gradient-to-b from-stone-700 to-stone-900",
-    done: "bg-gradient-to-b from-amber-600 to-stone-800",
-    accent: "text-amber-500",
-    headerBg: "bg-stone-900",
-    controlsBg: "bg-stone-950/90",
-  },
-  {
-    name: "Cobra Strike",
-    icon: "🐍",
-    idle: "bg-gradient-to-b from-emerald-950 to-black",
-    prep: "bg-gradient-to-b from-lime-800 to-emerald-950",
-    work: "bg-gradient-to-b from-green-700 to-emerald-950",
-    rest: "bg-gradient-to-b from-teal-800 to-emerald-950",
-    done: "bg-gradient-to-b from-lime-500 to-green-800",
-    accent: "text-lime-400",
-    headerBg: "bg-emerald-950",
-    controlsBg: "bg-emerald-950/90",
-  },
-  {
-    name: "Supernova",
-    icon: "✨",
-    idle: "bg-gradient-to-b from-purple-950 to-black",
-    prep: "bg-gradient-to-b from-fuchsia-800 to-purple-950",
-    work: "bg-gradient-to-b from-orange-600 to-red-950",
-    rest: "bg-gradient-to-b from-violet-800 to-purple-950",
-    done: "bg-gradient-to-b from-fuchsia-500 to-purple-800",
-    accent: "text-fuchsia-400",
-    headerBg: "bg-purple-950",
-    controlsBg: "bg-purple-950/90",
-  },
-  {
-    name: "Arctic Wolf",
-    icon: "❄️",
-    idle: "bg-gradient-to-b from-sky-900 to-slate-950",
-    prep: "bg-gradient-to-b from-sky-700 to-blue-900",
-    work: "bg-gradient-to-b from-teal-700 to-sky-950",
-    rest: "bg-gradient-to-b from-blue-800 to-slate-950",
-    done: "bg-gradient-to-b from-sky-400 to-blue-700",
-    accent: "text-sky-400",
-    headerBg: "bg-sky-950",
-    controlsBg: "bg-slate-950/90",
-  },
-  {
-    name: "Sunflower Power",
-    icon: "🌻",
-    idle: "bg-gradient-to-b from-yellow-800 to-amber-950",
-    prep: "bg-gradient-to-b from-yellow-600 to-amber-800",
-    work: "bg-gradient-to-b from-lime-700 to-green-900",
-    rest: "bg-gradient-to-b from-orange-700 to-amber-900",
-    done: "bg-gradient-to-b from-yellow-500 to-amber-700",
-    accent: "text-yellow-400",
-    headerBg: "bg-amber-950",
-    controlsBg: "bg-amber-950/90",
-  },
+  { name: "M² Performance", icon: "🏋️", idle: "#0d0d0d", prep: "#92400e", work: "#15803d", rest: "#b91c1c", done: "#ea580c", accent: "#f97316", ring: "#f97316" },
+  { name: "Wild Tiger", icon: "🐯", idle: "#1c1208", prep: "#92400e", work: "#c2410c", rest: "#78350f", done: "#d97706", accent: "#fbbf24", ring: "#f59e0b" },
+  { name: "Deep Space", icon: "🚀", idle: "#030318", prep: "#4c1d95", work: "#155e75", rest: "#312e81", done: "#0891b2", accent: "#22d3ee", ring: "#06b6d4" },
+  { name: "Cobra Strike", icon: "🐍", idle: "#022c22", prep: "#3f6212", work: "#166534", rest: "#134e4a", done: "#65a30d", accent: "#a3e635", ring: "#84cc16" },
+  { name: "Supernova", icon: "✨", idle: "#1a0526", prep: "#86198f", work: "#c2410c", rest: "#581c87", done: "#d946ef", accent: "#e879f9", ring: "#d946ef" },
+  { name: "Arctic Wolf", icon: "❄️", idle: "#0c1929", prep: "#0369a1", work: "#0f766e", rest: "#1e3a5f", done: "#0ea5e9", accent: "#7dd3fc", ring: "#38bdf8" },
 ];
 
 function getRandomSkin(): TimerSkin {
   return SKINS[Math.floor(Math.random() * SKINS.length)];
 }
-
-const COACH_MESSAGES = [
-  "Beast mode. That's how it's done. 🔥",
-  "Crushed it. No shortcuts, no excuses.",
-  "That's the work right there. Earned, not given.",
-  "Another one in the bank. You're building something.",
-  "Nothing worth having comes easy. You just proved it.",
-  "Relentless. That's your superpower.",
-  "Champions train when nobody's watching. You just did.",
-  "The grind doesn't lie. Neither do your results.",
-  "You showed up. You finished. That's 90% of the battle.",
-  "One more session stronger than yesterday. Keep stacking.",
-];
 
 function formatTime(s: number): string {
   const m = Math.floor(s / 60);
@@ -186,7 +58,7 @@ function formatTime(s: number): string {
   return `${m.toString().padStart(2, "0")}:${sec.toString().padStart(2, "0")}`;
 }
 
-/* ── Editable number field ── */
+/* ── Inline editable value ── */
 const EditableValue = forwardRef<HTMLButtonElement, {
   value: number; onChange: (v: number) => void; isTime?: boolean; disabled?: boolean;
 }>(({ value, onChange, isTime, disabled }, _ref) => {
@@ -208,13 +80,13 @@ const EditableValue = forwardRef<HTMLButtonElement, {
       <input ref={inputRef} type="number" inputMode="numeric" value={draft}
         onChange={(e) => setDraft(e.target.value)} onBlur={commit}
         onKeyDown={(e) => e.key === "Enter" && commit()}
-        className="font-mono text-lg font-bold text-foreground w-16 text-center tabular-nums bg-background border border-primary outline-none px-1 py-0.5 min-h-[44px]"
+        className="font-mono text-sm font-bold text-white w-12 text-center bg-white/10 border border-white/30 outline-none px-1 py-1 rounded"
       />
     );
   }
   return (
     <button onClick={startEdit}
-      className="font-mono text-lg font-bold text-foreground w-16 text-center tabular-nums hover:text-primary transition-colors cursor-text min-h-[44px] min-w-[44px]">
+      className="font-mono text-sm font-bold text-white w-12 text-center hover:text-white/60 transition-colors cursor-text tabular-nums">
       {isTime ? formatTime(value) : value}
     </button>
   );
@@ -233,7 +105,6 @@ const IntervalTimer = ({ onClose, initialConfig }: IntervalTimerProps) => {
   const [currentRound, setCurrentRound] = useState(0);
   const [running, setRunning] = useState(false);
   const [volume, setVolume] = useState(() => getMasterVolume() * 100);
-  const [coachMsg] = useState(() => COACH_MESSAGES[Math.floor(Math.random() * COACH_MESSAGES.length)]);
   const [warningFired, setWarningFired] = useState(false);
   const [skin] = useState<TimerSkin>(() => getRandomSkin());
 
@@ -352,7 +223,7 @@ const IntervalTimer = ({ onClose, initialConfig }: IntervalTimerProps) => {
   const isSetup = phase === "idle" || phase === "done";
   const displayTime = isSetup ? formatTime(config.work) : formatTime(secondsLeft);
 
-  // Progress
+  // Progress ring
   const totalWorkoutSeconds = config.rounds * (config.work + config.rest) + config.prep;
   const elapsedSeconds = (() => {
     if (phase === "idle") return 0;
@@ -367,192 +238,159 @@ const IntervalTimer = ({ onClose, initialConfig }: IntervalTimerProps) => {
     }
     return elapsed;
   })();
-  const totalProgress = totalWorkoutSeconds > 0 ? (elapsedSeconds / totalWorkoutSeconds) * 100 : 0;
-
-  const roundProgress = (() => {
-    if (phase === "prep" || phase === "idle" || phase === "done") return 0;
-    const roundTotal = config.work + config.rest;
-    if (roundTotal === 0) return 0;
-    const inRound = phase === "work" ? (config.work - secondsLeft) : (config.work + config.rest - secondsLeft);
-    return (inRound / roundTotal) * 100;
-  })();
+  const totalProgress = totalWorkoutSeconds > 0 ? (elapsedSeconds / totalWorkoutSeconds) : 0;
 
   const inWarningZone = phase === "work" && config.warning > 0 && secondsLeft <= config.warning && secondsLeft > 0;
 
-  const skinPhase = skin[phase];
+  const phaseColor = phase === "work" ? skin.accent : phase === "rest" ? "#ef4444" : phase === "prep" ? "#eab308" : skin.accent;
+  const phaseLabel = phase === "idle" ? "READY" : phase === "prep" ? "GET READY" : phase === "work" ? "WORK" : phase === "rest" ? "REST" : "COMPLETE";
+
+  // SVG ring
+  const RING_R = 110;
+  const RING_C = 2 * Math.PI * RING_R;
+  const ringOffset = RING_C * (1 - totalProgress);
 
   return (
-    <div className="fixed inset-0 z-[110] flex flex-col animate-slide-in-right" style={{ animationDuration: "0.25s" }}>
-      {/* Header */}
-      <button onClick={onClose}
-        className={cn("flex items-center justify-between px-4 border-b border-white/10 shrink-0", skin.headerBg)}
-        style={{ minHeight: 56 }}>
-        <span className="flex items-center gap-2">
-          <span className="text-lg">{skin.icon}</span>
-          <span className={cn("text-[10px] font-bold uppercase tracking-[0.3em]", skin.accent)}>{skin.name}</span>
-        </span>
-        <span className="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
-          <span className="text-xs font-bold uppercase tracking-widest">Exit</span>
-          <X size={22} />
-        </span>
-      </button>
-
-      {/* Timer display */}
-      <div className={cn(
-        "flex-1 flex flex-col items-center justify-center relative transition-all duration-500",
-        skinPhase,
-        inWarningZone && "animate-pulse"
-      )}>
-        {inWarningZone && (
-          <div className="absolute inset-0 border-4 border-yellow-400/60 pointer-events-none animate-pulse" />
-        )}
-
-        <span className="text-sm font-bold uppercase tracking-[0.3em] text-white/80 mb-1">
-          {phase === "idle" ? "READY" : phase === "prep" ? "PREP" : phase === "work" ? "WORK" : phase === "rest" ? "REST" : "DONE!"}
-        </span>
-        {phase !== "done" && (
-          <span className="text-xs font-mono text-white/60 mb-2">
-            Round {String(currentRound).padStart(3, "0")} / {String(config.rounds).padStart(3, "0")}
-          </span>
-        )}
-
-        <span className={cn(
-          "font-mono text-[min(30vw,160px)] leading-none font-black text-white tabular-nums drop-shadow-lg",
-          inWarningZone && "text-yellow-300"
-        )}>
-          {phase === "done" ? "" : displayTime}
-        </span>
-
-        {inWarningZone && (
-          <span className="text-xs font-bold uppercase tracking-widest text-yellow-300 mt-2 animate-pulse">
-            ⚡ {secondsLeft}s remaining
-          </span>
-        )}
-
-        {!isSetup && !inWarningZone && (
-          <div className="w-full px-6 mt-4 space-y-2">
-            <div>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-white/60">Round Progress</span>
-              <div className="w-full h-2 bg-black/30 mt-1 overflow-hidden">
-                <div className="h-full bg-white/70 transition-all duration-300" style={{ width: `${roundProgress}%` }} />
-              </div>
-            </div>
-            <div>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-white/60">Total Workout</span>
-              <div className="w-full h-2 bg-black/30 mt-1 overflow-hidden">
-                <div className="h-full bg-white/50 transition-all duration-300" style={{ width: `${totalProgress}%` }} />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Completion screen */}
-        {phase === "done" && (
-          <div className="flex flex-col items-center text-center px-6 max-w-sm">
-            <span className="text-5xl mb-3">{skin.icon}</span>
-            <span className="text-2xl font-black text-white uppercase tracking-wide mb-2">
-              All {config.rounds} Rounds Complete
-            </span>
-            <p className="text-base font-bold text-white/90 mb-4 italic">
-              "{coachMsg}"
-            </p>
-            <div className="bg-black/30 border border-white/20 p-4 space-y-2">
-              <p className="text-xs font-bold uppercase tracking-widest text-white/60">Coach Matt Says</p>
-              <p className="text-sm text-white/90 leading-relaxed">
-                Next session — flip the script. Go from endurance to strength, or strength to endurance. 
-                Balance builds champions. That's the M² way.
-              </p>
-            </div>
-          </div>
-        )}
+    <div
+      className="fixed inset-0 z-[110] flex flex-col overflow-hidden"
+      style={{ background: skin[phase === "done" ? "done" : phase === "idle" ? "idle" : phase] || skin.idle }}
+    >
+      {/* Top bar */}
+      <div className="flex items-center justify-between px-4 h-12 shrink-0">
+        <div className="flex items-center gap-2">
+          <span className="text-base">{skin.icon}</span>
+          <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/50">{skin.name}</span>
+        </div>
+        <button onClick={onClose} className="w-8 h-8 flex items-center justify-center text-white/40 hover:text-white transition-colors">
+          <X size={20} />
+        </button>
       </div>
 
-      {/* Controls */}
-      <div className={cn("p-4 space-y-3 overflow-y-auto max-h-[55vh]", skin.controlsBg)}>
+      {/* Main timer area */}
+      <div className="flex-1 flex flex-col items-center justify-center relative min-h-0">
+        {/* Progress ring */}
+        <div className="relative">
+          <svg width="260" height="260" viewBox="0 0 260 260" className="drop-shadow-lg">
+            {/* Track */}
+            <circle cx="130" cy="130" r={RING_R} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="6" />
+            {/* Progress */}
+            <circle
+              cx="130" cy="130" r={RING_R} fill="none"
+              stroke={phaseColor}
+              strokeWidth="6"
+              strokeLinecap="round"
+              strokeDasharray={RING_C}
+              strokeDashoffset={ringOffset}
+              transform="rotate(-90 130 130)"
+              className="transition-all duration-300"
+              style={{ filter: `drop-shadow(0 0 8px ${phaseColor}50)` }}
+            />
+          </svg>
+
+          {/* Center content */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span
+              className="text-[10px] font-bold uppercase tracking-[0.3em] mb-1"
+              style={{ color: phaseColor }}
+            >
+              {phaseLabel}
+            </span>
+
+            {phase !== "done" ? (
+              <>
+                <span
+                  className={cn(
+                    "font-mono text-6xl font-black text-white tabular-nums leading-none",
+                    inWarningZone && "animate-pulse"
+                  )}
+                  style={inWarningZone ? { color: "#fbbf24" } : undefined}
+                >
+                  {displayTime}
+                </span>
+                <span className="font-mono text-xs text-white/40 mt-2 tabular-nums">
+                  {currentRound > 0 ? `${currentRound} / ${config.rounds}` : `${config.rounds} rounds`}
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="text-4xl mb-1">{skin.icon}</span>
+                <span className="text-sm font-black text-white uppercase tracking-wide">
+                  {config.rounds} Rounds Done
+                </span>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Controls — compact, single viewport */}
+      <div className="shrink-0 px-4 pb-4 pt-2 space-y-2">
+        {/* Config row — only in setup */}
         {isSetup && (
           <>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="flex gap-1.5">
               {([
-                { key: "prep" as const, label: "Prep", isTime: true },
-                { key: "work" as const, label: "Work", isTime: true },
-                { key: "rest" as const, label: "Rest", isTime: true },
-                { key: "rounds" as const, label: "Rounds", isTime: false },
+                { key: "prep" as const, label: "PREP", isTime: true },
+                { key: "work" as const, label: "WORK", isTime: true },
+                { key: "rest" as const, label: "REST", isTime: true },
+                { key: "rounds" as const, label: "RND", isTime: false },
               ]).map(({ key, label, isTime }) => (
-                <div key={key} className="bg-white/5 border border-white/10 p-3 flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-white/50">{label}</span>
-                  <div className="flex items-center gap-1">
-                    <button onClick={() => adjust(key, isTime && config[key] >= 30 ? -5 : -1)}
-                      className="w-10 h-10 flex items-center justify-center bg-white/10 text-white hover:bg-white/20 transition-colors active:scale-95">
-                      <Minus size={18} />
-                    </button>
+                <div key={key} className="flex-1 flex flex-col items-center gap-1 bg-white/5 rounded-lg py-2">
+                  <span className="text-[8px] font-bold uppercase tracking-widest text-white/30">{label}</span>
+                  <div className="flex items-center gap-0.5">
+                    <button
+                      onClick={() => adjust(key, isTime && config[key] >= 30 ? -5 : -1)}
+                      className="w-7 h-7 flex items-center justify-center text-white/40 hover:text-white text-lg font-bold"
+                    >−</button>
                     <EditableValue value={config[key]} onChange={(v) => setField(key, v)} isTime={isTime} disabled={running} />
-                    <button onClick={() => adjust(key, isTime && config[key] >= 25 ? 5 : 1)}
-                      className="w-10 h-10 flex items-center justify-center bg-white/10 text-white hover:bg-white/20 transition-colors active:scale-95">
-                      <Plus size={18} />
-                    </button>
+                    <button
+                      onClick={() => adjust(key, isTime && config[key] >= 25 ? 5 : 1)}
+                      className="w-7 h-7 flex items-center justify-center text-white/40 hover:text-white text-lg font-bold"
+                    >+</button>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Warning time */}
-            <div className="bg-white/5 border border-white/10 p-3 flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <span className="text-yellow-500 text-sm">⚡</span>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-white/50">Warning</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <button onClick={() => adjust("warning", -1)}
-                  className="w-10 h-10 flex items-center justify-center bg-white/10 text-white hover:bg-white/20 transition-colors active:scale-95">
-                  <Minus size={18} />
-                </button>
-                <EditableValue value={config.warning} onChange={(v) => setField("warning", v)} isTime={false} disabled={running} />
-                <button onClick={() => adjust("warning", 1)}
-                  className="w-10 h-10 flex items-center justify-center bg-white/10 text-white hover:bg-white/20 transition-colors active:scale-95">
-                  <Plus size={18} />
-                </button>
-              </div>
-            </div>
-
-            {/* Volume — compact inline */}
-            <div className="bg-white/5 border border-white/10 p-3 flex items-center gap-3">
-              <Volume2 size={14} className={skin.accent} />
-              <input type="range" min={0} max={200} step={5} value={volume}
-                onChange={(e) => { const v = Number(e.target.value); setVolume(v); setMasterVolume(v / 100); }}
-                className="flex-1 h-2 accent-white/70 cursor-pointer" />
-              <span className="font-mono text-xs font-bold text-white/60 tabular-nums w-10 text-right">{Math.round(volume)}%</span>
-              <button onClick={testBeep} className="text-white/40 hover:text-white/80 transition-colors text-xs">🔊</button>
-            </div>
-
-            <div className="flex gap-2">
+            {/* Presets + volume in one row */}
+            <div className="flex items-center gap-1.5">
               {PRESETS.map((p) => (
                 <button key={p.label} onClick={() => setConfig(p.config)}
-                  className="flex-1 py-3 bg-white/10 text-white/80 text-xs font-bold uppercase tracking-widest hover:bg-white/20 transition-colors border border-white/10">
+                  className="flex-1 py-2 bg-white/5 text-white/50 text-[9px] font-bold uppercase tracking-widest hover:bg-white/10 hover:text-white transition-colors rounded-lg">
                   {p.label}
                 </button>
               ))}
+              <div className="flex items-center gap-1.5 bg-white/5 rounded-lg px-2 py-2">
+                <Volume2 size={12} className="text-white/30" />
+                <input type="range" min={0} max={200} step={5} value={volume}
+                  onChange={(e) => { const v = Number(e.target.value); setVolume(v); setMasterVolume(v / 100); }}
+                  className="w-12 h-1 accent-white/50 cursor-pointer" />
+                <button onClick={testBeep} className="text-[10px] text-white/30 hover:text-white/60">🔊</button>
+              </div>
             </div>
           </>
         )}
 
+        {/* Action buttons */}
         <div className="flex gap-2">
           {!running ? (
             <button onClick={startTimer}
-              className="flex-1 h-16 bg-green-700 text-white text-sm font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-green-600 transition-colors active:scale-[0.98]">
-              <Play size={22} fill="white" />
-              {phase === "done" ? "RESTART" : "START"}
+              className="flex-1 h-14 rounded-xl text-white text-sm font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-[0.97]"
+              style={{ background: phaseColor, boxShadow: `0 0 20px ${phaseColor}40` }}
+            >
+              <Play size={18} fill="white" />
+              {phase === "done" ? "AGAIN" : "START"}
             </button>
           ) : (
             <button onClick={pauseTimer}
-              className="flex-1 h-16 bg-yellow-600 text-white text-sm font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-yellow-500 transition-colors active:scale-[0.98]">
-              <Pause size={22} fill="white" />
+              className="flex-1 h-14 rounded-xl bg-yellow-600 text-white text-sm font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-yellow-500 transition-all active:scale-[0.97]">
+              <Pause size={18} fill="white" />
               PAUSE
             </button>
           )}
           <button onClick={resetTimer}
-            className="h-16 px-6 bg-white/10 text-white/60 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:text-white transition-colors">
+            className="h-14 w-14 rounded-xl bg-white/10 text-white/50 flex items-center justify-center hover:text-white hover:bg-white/15 transition-colors">
             <RotateCcw size={18} />
-            RESET
           </button>
         </div>
       </div>
