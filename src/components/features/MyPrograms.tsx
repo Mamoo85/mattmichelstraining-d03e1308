@@ -248,6 +248,26 @@ const MyPrograms = () => {
 
   return (
     <div className="space-y-6">
+      {/* Quick Log */}
+      <div className="bg-card border border-border p-5 space-y-3">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Quick Log</span>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Snap a photo of your school workout card or gym whiteboard — it reads your handwriting and logs your session instantly.
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          <WorkoutScanner />
+          <Link
+            to="/nutrition"
+            className="flex flex-col items-center justify-center gap-1.5 border-2 border-dashed border-border hover:border-primary/40 p-4 transition-colors text-center"
+          >
+            <UtensilsCrossed size={20} className="text-primary" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Scan Food</span>
+          </Link>
+        </div>
+      </div>
+
       {/* Active Interactive Programs */}
       {currentInteractive.length > 0 && (
         <div>
