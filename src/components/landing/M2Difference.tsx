@@ -47,7 +47,7 @@ const M2Difference = () => (
         to="/the-edge"
         className="text-[10px] font-bold uppercase tracking-widest text-primary hover:gap-2 transition-all flex items-center gap-1 shrink-0 hidden sm:flex"
       >
-        Learn More <ArrowRight size={10} />
+        Explore M² Training Technology <ArrowRight size={10} />
       </Link>
     </div>
 
