@@ -22,7 +22,7 @@ const SLIDES: SlideData[] = [
     title: "Welcome to the M² Portal",
     subtitle: "Everything you need to train smarter, prove yourself, and get stronger — all in one place.",
     bullets: [
-      { icon: <Sparkles size={14} />, text: "AI-powered workouts built for you" },
+      { icon: <Dumbbell size={14} />, text: "Structured workouts and programs built for you" },
       { icon: <Trophy size={14} />, text: "Submit PR attempts with video proof" },
       { icon: <Users size={14} />, text: "Compete with friends on leaderboards" },
       { icon: <Target size={14} />, text: "Monthly challenges keep you locked in" },
@@ -58,7 +58,7 @@ const SLIDES: SlideData[] = [
       { icon: <Dumbbell size={14} />, text: "View your active programs and weekly blocks" },
       { icon: <Target size={14} />, text: "Log weights and reps directly in your program" },
       { icon: <Zap size={14} />, text: "Tap any day to launch it in the Workout Portal" },
-      { icon: <Sparkles size={14} />, text: "Request a custom program built just for you" },
+      { icon: <Dumbbell size={14} />, text: "Request a custom program built just for you" },
     ],
   },
   {
@@ -66,7 +66,7 @@ const SLIDES: SlideData[] = [
     title: "Workouts Tab",
     subtitle: "Build, browse, and share workouts.",
     bullets: [
-      { icon: <Sparkles size={14} />, text: "Smart Build — AI creates a workout from your goals" },
+      { icon: <Zap size={14} />, text: "Smart Build — creates a workout from your goals" },
       { icon: <Dumbbell size={14} />, text: "Manual Build — pick exercises yourself" },
       { icon: <Users size={14} />, text: "Community Bank — browse & use workouts from others" },
       { icon: <Share2 size={14} />, text: "Share your workouts to earn points" },
@@ -101,19 +101,8 @@ const SLIDES: SlideData[] = [
     bullets: [
       { icon: <Dumbbell size={14} />, text: "Tap \"Enter The Portal\" to launch your active workout" },
       { icon: <Timer size={14} />, text: "Built-in interval timer — tap the ⚡ button anytime" },
-      { icon: <MessageCircle size={14} />, text: "Hold the button for instant Ask Coach chat" },
-      { icon: <BarChart3 size={14} />, text: "Log sets, reps, and weights in real time" },
-    ],
-  },
-  {
-    icon: <Users size={28} className="text-primary" />,
-    title: "Invite, Compete, Dominate",
-    subtitle: "You don't need to be the strongest — you just have to try. We'll all get stronger together.",
-    bullets: [
-      { icon: <Share2 size={14} />, text: "Invite friends with your referral code" },
-      { icon: <Gift size={14} />, text: "Earn gift cards toward in-person sessions with Matt" },
-      { icon: <Users size={14} />, text: "Share workouts and compete on challenges together" },
-      { icon: <Trophy size={14} />, text: "Build a community based on strength, toughness & bravery" },
+      { icon: <Zap size={14} />, text: "Smart food scanner — snap a photo, get your macros" },
+      { icon: <BarChart3 size={14} />, text: "Workout adjuster — swap exercises based on your equipment" },
     ],
   },
 ];
