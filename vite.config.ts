@@ -126,7 +126,7 @@ export default defineConfig(({ mode }) => ({
         },
       },
     },
-    target: "esnext",
+    target: ["es2020", "safari14"],
     minify: "esbuild",
   },
 }));

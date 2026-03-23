@@ -17,7 +17,7 @@ interface State {
 function classifyError(error: Error): ErrorKind {
   const msg = error.message?.toLowerCase() ?? "";
   if (
-    /loading chunk|failed to fetch dynamically imported module|import|loading css chunk/i.test(msg)
+    /loading chunk|failed to fetch dynamically imported module|import|loading css chunk|load failed|typeerror.*module/i.test(msg)
   ) {
     return "chunk";
   }

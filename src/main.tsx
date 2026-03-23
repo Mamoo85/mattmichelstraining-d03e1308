@@ -8,6 +8,14 @@ if (typeof window !== "undefined") {
   window.addEventListener("load", () => import("./print.css"), { once: true });
 }
 
+// Polyfill crypto.randomUUID for Safari < 15.4 and insecure contexts
+if (typeof globalThis.crypto !== "undefined" && typeof globalThis.crypto.randomUUID !== "function") {
+  (globalThis.crypto as any).randomUUID = () =>
+    "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (c: string) =>
+      (+c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (+c / 4)))).toString(16)
+    );
+}
+
 // Global broken-image fallback: replaces broken <img> with branded placeholder
 document.addEventListener("error", (e) => {
   const target = e.target as HTMLElement;

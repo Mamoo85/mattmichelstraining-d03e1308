@@ -29,12 +29,9 @@ const HeroSection = () => {
   // Defer below-fold sections until after first paint to improve FCP
   const [showBelow, setShowBelow] = useState(false);
   useEffect(() => {
-    const id = requestIdleCallback?.(() => setShowBelow(true)) ??
-      setTimeout(() => setShowBelow(true), 100);
-    return () => {
-      if (typeof id === "number" && "cancelIdleCallback" in window) cancelIdleCallback(id);
-      else clearTimeout(id as ReturnType<typeof setTimeout>);
-    };
+    // Safari doesn't support requestIdleCallback — always use setTimeout
+    const t = setTimeout(() => setShowBelow(true), 100);
+    return () => clearTimeout(t);
   }, []);
 
   return (
