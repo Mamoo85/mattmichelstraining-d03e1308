@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import { useTimer } from "@/hooks/useTimer";
+
 import {
   Sheet,
   SheetContent,
