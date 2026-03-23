@@ -1,9 +1,7 @@
 import { memo, lazy, Suspense, useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { Camera, UtensilsCrossed } from "lucide-react";
+import { Camera } from "lucide-react";
 import MonthlyFocusWidget from "@/components/features/MonthlyFocusWidget";
 import UpcomingSessions from "@/components/sessions/UpcomingSessions";
-import WorkoutScanner from "@/components/workout/WorkoutScanner";
 import EmptyStateCard from "@/components/shared/EmptyStateCard";
 import AnnualUpsellCard from "@/components/pricing/AnnualUpsellCard";
 import TodaysTrainingCard from "@/components/programs/TodaysTrainingCard";
@@ -65,24 +63,6 @@ const DashboardHome = memo(({ isNewUser, isInPerson, onViewPoints, onViewReferra
       />
     )}
 
-    <div className="bg-card border border-border p-5 space-y-3">
-      <div className="flex items-center gap-2">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Quick Log</span>
-      </div>
-      <p className="text-xs text-muted-foreground">
-        Snap a photo of your school workout card or gym whiteboard — it reads your handwriting and logs your session instantly.
-      </p>
-      <div className="grid grid-cols-2 gap-2">
-        <WorkoutScanner />
-        <Link
-          to="/nutrition"
-          className="flex flex-col items-center justify-center gap-1.5 border-2 border-dashed border-border hover:border-primary/40 p-4 transition-colors text-center"
-        >
-          <UtensilsCrossed size={20} className="text-primary" />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Scan Food</span>
-        </Link>
-      </div>
-    </div>
 
     {/* Posture CTA — never for in-person clients, only if never submitted AND never dismissed the welcome modal */}
     {!isInPerson && hasPosture === false && !safeLocalStorage.getItem("m2-welcome-gift-seen") && (
