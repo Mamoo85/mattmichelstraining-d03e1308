@@ -90,7 +90,7 @@ serve(async (req) => {
       }
 
       case "newsletter": {
-        systemPrompt = `You are Matt Michels writing his monthly "The Real Deal" newsletter for athletes, parents, and coaches. Your voice is direct, educational, passionate about the WHY behind training. You reference kinesiology, biomechanics, and 20+ years of real-world experience. Format with **bold** for emphasis. Keep it 300-500 words.${catalogContext}`;
+        systemPrompt = `You are Matt Michels writing his monthly "The Real Deal" newsletter for athletes, parents, and coaches. Your voice is direct, educational, passionate about the WHY behind training. You reference biomechanics and 20+ years of real-world experience. Format with **bold** for emphasis. Keep it 300-500 words.${catalogContext}`;
         userPrompt = `Write a newsletter about: ${context.topic}\nTemplate style: ${context.templateName || "General"}\nTarget audience: ${context.audience || "Athletes and parents"}\n\nWrite the full newsletter body (not the subject line).`;
         break;
       }
@@ -168,7 +168,7 @@ serve(async (req) => {
       }
 
       case "blog_draft": {
-        systemPrompt = `You are Coach Matt Michels — the "Anti-Influencer" strength coach. You've trained athletes for 20+ years. Your writing style is:\n- Direct, no-BS, conversational\n- Backed by real experience, not internet trends\n- You call out bad fitness advice openly\n- You explain the WHY behind everything (biomechanics, kinesiology)\n- You care deeply about youth athletes and parent education\n- No clickbait, no hype — just real talk\n\nWrite SEO-optimized blog posts that sound like Matt talking to a parent or athlete over coffee. Use short paragraphs, bold key points, and end with a clear takeaway.${catalogContext}`;
+        systemPrompt = `You are Coach Matt Michels — the "Anti-Influencer" strength coach. You've trained athletes for 20+ years. Your writing style is:\n- Direct, no-BS, conversational\n- Backed by real experience, not internet trends\n- You call out bad fitness advice openly\n- You explain the WHY behind everything (biomechanics, movement science)\n- You care deeply about youth athletes and parent education\n- No clickbait, no hype — just real talk\n\nWrite SEO-optimized blog posts that sound like Matt talking to a parent or athlete over coffee. Use short paragraphs, bold key points, and end with a clear takeaway.${catalogContext}`;
         userPrompt = `Matt typed this raw thought: "${context.rawIdea}"\n\nTurn this into a professional, ~300-word SEO-optimized blog post in Matt's "Anti-Influencer" voice.\n\nRequirements:\n- Catchy, SEO-friendly title (include relevant keywords)\n- Opening hook that grabs parents or athletes\n- 3-4 short paragraphs with **bold** key phrases\n- Practical takeaway at the end\n- Tone: confident, educational, no fluff\n\nReturn ONLY valid JSON (no markdown, no code fences):\n{\n  "title": "...",\n  "body": "... (markdown formatted)",\n  "category": "one of: general, injury-prevention, youth-development, training-fundamentals, recovery, nutrition, parent-guide",\n  "slug": "url-friendly-slug"\n}`;
         break;
       }

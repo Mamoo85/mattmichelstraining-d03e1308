@@ -94,7 +94,7 @@ const PRODUCTS: Product[] = [
     priceId: "price_1TBWTmD52tPWee46FaB1wcFz",
     tag: "4-WEEK PROGRAM",
     category: "wellness",
-    description: "Safe, effective exercises backed by kinesiology. Written for the moms who asked 'what can I do now?'",
+    description: "Safe, effective exercises backed by 20+ years of coaching experience. Written for the moms who asked 'what can I do now?'",
     includes: ["Full 4-week program", "Trimester guidance", "Post-partum rebuilding protocol", "The WHY behind each movement", "Download & print as PDF"],
   },
   {

@@ -94,7 +94,7 @@ const ExerciseLibrary = () => {
       <div className="bg-primary/10 border border-primary/20 shadow-m2 p-4 mb-6">
         <p className="text-sm text-foreground text-balance leading-relaxed">
           Zero filler, zero &lsquo;bad&rsquo; exercises. Every entry details the{" "}
-          <span className="text-primary font-bold">WHY</span> — the kinesiology
+          <span className="text-primary font-bold">WHY</span> — the biomechanics
           and physics behind the movement.
         </p>
         <span className="text-[10px] font-mono text-primary mt-2 block">
