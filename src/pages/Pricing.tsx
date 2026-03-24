@@ -53,11 +53,11 @@ const TIER_CARDS: {
     icon: Star,
     highlight: true,
     headline: "YouTube Can't Watch You Squat. I Can.",
-    pitch: "An article can't tell you why your back hurts. I will. Complete an assessment, and I build your custom 4-week block. Send me two video form-checks every week. I critique your mechanics, fix weak points, and keep you safe.",
+    pitch: "Straight up, this is the program you get when you want a professional to build you a workout program to do at your own gym, at school, or at home. This is the one you do when you can't budget twice a week personal training, but you can do once a month. Complete an assessment, and I build your custom 4-week block. Send me two video form-checks every week. I critique your mechanics, fix weak points, and keep you safe.",
     features: [
       "Everything in Foundation",
       "Full movement assessment",
-      "Custom 4-week training block",
+      "Custom 4-week training block built by Matt",
       "2 weekly video form-checks",
       "Direct coach feedback on mechanics",
       "Program adjusted every cycle",
