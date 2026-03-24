@@ -188,12 +188,12 @@ const AdminUserGeneratedWorkouts = () => {
 
       <ConfirmActionModal
         open={!!deleteTarget}
-        onClose={() => setDeleteTarget(null)}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
         onConfirm={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
         title="Delete Generated Workout"
         description={`Delete "${deleteTarget?.title}"? This cannot be undone.`}
         confirmLabel="Delete"
-        variant="destructive"
+        destructive
         loading={deleteMutation.isPending}
       />
     </div>
