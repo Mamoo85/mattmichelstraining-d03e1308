@@ -61,6 +61,11 @@ const AiWorkoutSuggest = memo(({ onDone, initialPath }: { onDone: () => void; in
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setWorkout(data);
+      if (data?.isTimedCircuit && data?.timerConfig) {
+        setEditTimerConfig({ ...data.timerConfig });
+      } else {
+        setEditTimerConfig(null);
+      }
     } catch (e: any) {
       toast({ title: "Generation failed", description: e.message, variant: "destructive" });
     }
