@@ -40,10 +40,9 @@ const EMAIL_HTML = `
       <p><strong style="color:#f97316;">Tomorrow, your 14-day free trial expires and your selected plan begins.</strong> If you want to change your tier or review what you're getting, here are your options:</p>
 
       <ol style="padding-left:20px;">
-        <li style="margin-bottom:8px;"><strong style="color:#fff;">M² Basic ($12.99/mo)</strong> — 200+ exercise library, daily workouts, challenges & progress logging.</li>
-        <li style="margin-bottom:8px;"><strong style="color:#fff;">M² Foundation ($19.99/mo)</strong> — 8-week training blocks, Fix It recovery library, coach form feedback.</li>
-        <li style="margin-bottom:8px;"><strong style="color:#fff;">M² Custom ($49.99/mo)</strong> — Free online assessment, custom program from Matt, 20% off in-person sessions. Private sessions extra.</li>
-        <li style="margin-bottom:8px;"><strong style="color:#fff;">M² Team/Elite ($99.99/mo)</strong> — Full-season team programming, roster management, optional 30-min video chat monthly.</li>
+        <li style="margin-bottom:8px;"><strong style="color:#fff;">The Foundation ($19.99/mo)</strong> — Full M² App, 85+ exercise library, Fix It rehab library, AI Generator, and progress logging.</li>
+        <li style="margin-bottom:8px;"><strong style="color:#fff;">Pro · Semi-Custom ($149.99/mo)</strong> — Movement assessment, custom 4-week block, 2 weekly video form-checks, direct coach feedback.</li>
+        <li style="margin-bottom:8px;"><strong style="color:#fff;">Elite · 1-on-1 ($349.99/mo)</strong> — Live video assessment, bespoke weekly programming, daily direct messaging with Matt.</li>
       </ol>
 
       <p>Don't lose the momentum you built this week.</p>
