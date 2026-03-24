@@ -73,6 +73,7 @@ const WebDesignAgency = lazyRetry(() => import("./pages/WebDesignAgency"));
 const LandscapeMockup = lazyRetry(() => import("./pages/LandscapeMockup"));
 const PlumberMockup = lazyRetry(() => import("./pages/PlumberMockup"));
 const ElectricianMockup = lazyRetry(() => import("./pages/ElectricianMockup"));
+const LawyerMockup = lazyRetry(() => import("./pages/LawyerMockup"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -206,6 +207,7 @@ const App = () => (
                     <Route path="/demo-landscaping" element={<LandscapeMockup />} />
                     <Route path="/demo-plumber" element={<PlumberMockup />} />
                     <Route path="/demo-electrician" element={<ElectricianMockup />} />
+                    <Route path="/demo-lawyer" element={<LawyerMockup />} />
                     <Route path="/coach" element={<ProtectedRoute><SubscriptionGuard><Coach /></SubscriptionGuard></ProtectedRoute>} />
                     <Route path="/trial-welcome" element={<ProtectedRoute><TrialWelcome /></ProtectedRoute>} />
                     <Route path="/assessment" element={<ProtectedRoute><Assessment /></ProtectedRoute>} />
