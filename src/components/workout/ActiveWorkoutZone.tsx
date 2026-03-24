@@ -795,7 +795,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
 
         {/* Quick Log NLP Bar */}
         {exercises.length > 0 && (
-          <div className="fixed bottom-[80px] left-0 right-0 z-50 px-4 pb-1">
+          <div className="fixed bottom-[116px] left-0 right-0 z-40 px-4 pb-1">
             <QuickLogBar exercises={exercises} onApplyParsed={handleQuickLogParsed} />
           </div>
         )}
