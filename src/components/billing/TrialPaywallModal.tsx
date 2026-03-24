@@ -4,6 +4,7 @@ import { X, ArrowRight, Loader2, Lock, Star, Trophy, Zap, Percent } from "lucide
 import { useAuth, TIERS } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useExerciseCount } from "@/hooks/useExerciseCount";
 
 interface TrialPaywallModalProps {
   open: boolean;
