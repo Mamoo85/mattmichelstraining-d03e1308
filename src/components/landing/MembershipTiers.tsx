@@ -2,13 +2,15 @@ import { memo } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowRight, ChevronRight, GraduationCap } from "lucide-react";
+import { useExerciseCount } from "@/hooks/useExerciseCount";
 
 const MEMBERSHIP_TIERS = [
   {
     name: "The Foundation",
     price: "$19.99/mo",
+    highlightKey: "exercise" as const,
     highlights: [
-      "Full M² App + 85+ exercise library",
+      "Full M² App + {count}+ exercise library",
       "Fix It rehab library",
       "AI Workout Generator",
       "Progress logging & tracking",
