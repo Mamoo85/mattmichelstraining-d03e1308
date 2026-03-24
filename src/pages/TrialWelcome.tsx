@@ -201,8 +201,8 @@ const TrialWelcome = () => {
                 onClick={() => setSelectedPath("parent")}
                 icon={Users}
                 title="Parent / Family Pack"
-                charge="$49.99/mo (Custom) after trial"
-                desc="Free assessment + custom program from Matt + FREE child membership. Private sessions extra."
+                charge="$149.99/mo (Pro) after trial"
+                desc="Free assessment + custom program from Matt + FREE child membership."
                 badge="🎁 Family Pack Included"
                 warning={null}
                 bonus="Free online assessment for parent & child"
