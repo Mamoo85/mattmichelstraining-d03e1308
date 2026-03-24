@@ -1,11 +1,12 @@
 import { useState, memo } from "react";
-import { Sparkles, Loader2, Dumbbell, Play, Save, Share2, ArrowLeft, Wrench } from "lucide-react";
+import { Sparkles, Loader2, Dumbbell, Play, Save, Share2, ArrowLeft, Wrench, Printer, Timer, Minus, Plus } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import GymPhotoUpload from "@/components/generator/GymPhotoUpload";
 import { motion, AnimatePresence } from "framer-motion";
+import { printCommunityWorkout } from "./printCommunityWorkout";
 
 interface GeneratedExercise {
   title: string;
@@ -16,10 +17,19 @@ interface GeneratedExercise {
   exerciseId?: string;
 }
 
+interface TimerConfigData {
+  work: number;
+  rest: number;
+  rounds: number;
+  prep: number;
+}
+
 interface GeneratedWorkout {
   title: string;
   description: string;
   exercises: GeneratedExercise[];
+  isTimedCircuit?: boolean;
+  timerConfig?: TimerConfigData;
 }
 
 type Path = null | "workout" | "fixit";
@@ -32,7 +42,8 @@ const AiWorkoutSuggest = memo(({ onDone, initialPath }: { onDone: () => void; in
   const [generating, setGenerating] = useState(false);
   const [workout, setWorkout] = useState<GeneratedWorkout | null>(null);
   const [saving, setSaving] = useState(false);
-  const [shareToBank, setShareToBank] = useState(true);
+  const [shareToBank, setShareToBank] = useState(false);
+  const [editTimerConfig, setEditTimerConfig] = useState<TimerConfigData | null>(null);
 
   const handleGenerate = async () => {
     if (!userText.trim()) return;
@@ -50,6 +61,11 @@ const AiWorkoutSuggest = memo(({ onDone, initialPath }: { onDone: () => void; in
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setWorkout(data);
+      if (data?.isTimedCircuit && data?.timerConfig) {
+        setEditTimerConfig({ ...data.timerConfig });
+      } else {
+        setEditTimerConfig(null);
+      }
     } catch (e: any) {
       toast({ title: "Generation failed", description: e.message, variant: "destructive" });
     }
@@ -86,13 +102,32 @@ const AiWorkoutSuggest = memo(({ onDone, initialPath }: { onDone: () => void; in
     setSaving(false);
   };
 
+  const handlePrint = () => {
+    if (!workout) return;
+    printCommunityWorkout({
+      title: workout.title,
+      creatorName: "Coach Matt AI",
+      description: workout.description,
+      exercises: workout.exercises.map((ex) => ({
+        name: ex.title,
+        sets: ex.sets,
+        reps: ex.reps,
+        notes: ex.notes || "",
+      })),
+    });
+  };
+
   const handleStart = () => {
     if (!workout) return;
+    const tc = editTimerConfig || workout.timerConfig;
+    const isCircuit = !!(workout.isTimedCircuit && tc);
     window.dispatchEvent(
       new CustomEvent("open-workout-zone", {
         detail: {
           title: workout.title,
           source: "ai-suggest",
+          isTimedCircuit: isCircuit,
+          timerConfig: isCircuit ? tc : undefined,
           exercises: workout.exercises.map((ex) => ({
             exerciseTitle: ex.title,
             prescribedSets: parseInt(ex.sets) || 3,
@@ -275,15 +310,59 @@ const AiWorkoutSuggest = memo(({ onDone, initialPath }: { onDone: () => void; in
               </div>
             </div>
 
-            {/* Regenerate */}
-            <button
-              onClick={handleGenerate}
-              disabled={generating}
-              className="w-full h-10 border border-border text-muted-foreground flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:border-primary/40 hover:text-foreground transition-all disabled:opacity-50"
-            >
-              {generating ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
-              Regenerate
-            </button>
+            {/* Timed Circuit Config */}
+            {workout.isTimedCircuit && editTimerConfig && (
+              <div className="bg-muted/50 border border-primary/30 p-3 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Timer size={14} className="text-primary" />
+                  <span className="text-xs font-bold uppercase tracking-widest text-primary">Timed Circuit</span>
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                  {([
+                    { key: "work" as const, label: "Work (s)" },
+                    { key: "rest" as const, label: "Rest (s)" },
+                    { key: "rounds" as const, label: "Rounds" },
+                    { key: "prep" as const, label: "Prep (s)" },
+                  ]).map(({ key, label }) => (
+                    <div key={key} className="flex flex-col items-center gap-1">
+                      <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground">{label}</span>
+                      <div className="flex items-center gap-0.5">
+                        <button
+                          onClick={() => setEditTimerConfig(c => c ? { ...c, [key]: Math.max(key === "rounds" ? 1 : 0, c[key] - (key === "rounds" ? 1 : 5)) } : c)}
+                          className="w-6 h-6 flex items-center justify-center text-muted-foreground hover:text-foreground"
+                        ><Minus size={10} /></button>
+                        <span className="text-xs font-mono font-bold text-foreground w-8 text-center">{editTimerConfig[key]}</span>
+                        <button
+                          onClick={() => setEditTimerConfig(c => c ? { ...c, [key]: c[key] + (key === "rounds" ? 1 : 5) } : c)}
+                          className="w-6 h-6 flex items-center justify-center text-muted-foreground hover:text-foreground"
+                        ><Plus size={10} /></button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[9px] text-muted-foreground text-center">
+                  {editTimerConfig.work}s work / {editTimerConfig.rest}s rest × {editTimerConfig.rounds} rounds
+                </p>
+              </div>
+            )}
+
+            {/* Regenerate + Print */}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={handleGenerate}
+                disabled={generating}
+                className="h-10 border border-border text-muted-foreground flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:border-primary/40 hover:text-foreground transition-all disabled:opacity-50"
+              >
+                {generating ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+                Regenerate
+              </button>
+              <button
+                onClick={handlePrint}
+                className="h-10 border border-border text-muted-foreground flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:border-primary/40 hover:text-foreground transition-all"
+              >
+                <Printer size={12} /> Print PDF
+              </button>
+            </div>
 
             {/* Share toggle */}
             <div className="flex items-center gap-3 bg-muted p-3">

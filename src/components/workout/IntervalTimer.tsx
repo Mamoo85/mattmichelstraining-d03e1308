@@ -96,9 +96,11 @@ EditableValue.displayName = "EditableValue";
 interface IntervalTimerProps {
   onClose: () => void;
   initialConfig?: TimerConfig;
+  exercises?: string[];
+  isCircuit?: boolean;
 }
 
-const IntervalTimer = ({ onClose, initialConfig }: IntervalTimerProps) => {
+const IntervalTimer = ({ onClose, initialConfig, exercises: circuitExercises, isCircuit }: IntervalTimerProps) => {
   const [config, setConfig] = useState<TimerConfig>(initialConfig ?? { prep: 5, work: 45, rest: 15, rounds: 5, warning: 10 });
   const [phase, setPhase] = useState<Phase>("idle");
   const [secondsLeft, setSecondsLeft] = useState(0);
@@ -298,6 +300,13 @@ const IntervalTimer = ({ onClose, initialConfig }: IntervalTimerProps) => {
 
             {phase !== "done" ? (
               <>
+                {/* Circuit exercise name */}
+                {isCircuit && circuitExercises && circuitExercises.length > 0 && currentRound > 0 && (
+                  <span className="text-xs font-black text-white uppercase tracking-wide text-center px-4 mb-1 max-w-[200px] leading-tight">
+                    {circuitExercises[(currentRound - 1) % circuitExercises.length]}
+                  </span>
+                )}
+
                 <span
                   className={cn(
                     "font-mono text-6xl font-black text-white tabular-nums leading-none",
@@ -307,6 +316,14 @@ const IntervalTimer = ({ onClose, initialConfig }: IntervalTimerProps) => {
                 >
                   {displayTime}
                 </span>
+
+                {/* Next exercise during rest */}
+                {isCircuit && circuitExercises && phase === "rest" && currentRound < config.rounds && (
+                  <span className="text-[10px] text-white/50 mt-1 uppercase tracking-wide">
+                    Next: {circuitExercises[currentRound % circuitExercises.length]}
+                  </span>
+                )}
+
                 <span className="font-mono text-xs text-white/40 mt-2 tabular-nums">
                   {currentRound > 0 ? `${currentRound} / ${config.rounds}` : `${config.rounds} rounds`}
                 </span>
@@ -352,6 +369,21 @@ const IntervalTimer = ({ onClose, initialConfig }: IntervalTimerProps) => {
               ))}
             </div>
 
+            {/* Circuit exercise list */}
+            {isCircuit && circuitExercises && circuitExercises.length > 0 && (
+              <div className="bg-white/5 rounded-lg p-2">
+                <span className="text-[8px] font-bold uppercase tracking-widest text-white/30 block mb-1">Circuit Exercises</span>
+                <div className="space-y-0.5">
+                  {circuitExercises.map((ex, i) => (
+                    <div key={i} className="flex items-center gap-2 text-[10px] text-white/70">
+                      <span className="text-white/30 font-mono w-4 text-right">{i + 1}.</span>
+                      <span>{ex}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Presets + volume in one row */}
             <div className="flex items-center gap-1.5">
               {PRESETS.map((p) => (
@@ -369,6 +401,22 @@ const IntervalTimer = ({ onClose, initialConfig }: IntervalTimerProps) => {
               </div>
             </div>
           </>
+        )}
+
+        {/* +/- round buttons when paused mid-circuit */}
+        {!isSetup && !running && isCircuit && (
+          <div className="flex items-center justify-center gap-3 bg-white/5 rounded-lg py-2">
+            <span className="text-[9px] font-bold uppercase tracking-widest text-white/40">Rounds</span>
+            <button
+              onClick={() => setConfig(c => ({ ...c, rounds: Math.max(currentRound, c.rounds - 1) }))}
+              className="w-8 h-8 flex items-center justify-center text-white/50 hover:text-white bg-white/10 rounded-lg text-lg font-bold"
+            >−</button>
+            <span className="font-mono text-sm font-bold text-white w-8 text-center">{config.rounds}</span>
+            <button
+              onClick={() => setConfig(c => ({ ...c, rounds: c.rounds + 1 }))}
+              className="w-8 h-8 flex items-center justify-center text-white/50 hover:text-white bg-white/10 rounded-lg text-lg font-bold"
+            >+</button>
+          </div>
         )}
 
         {/* Action buttons */}

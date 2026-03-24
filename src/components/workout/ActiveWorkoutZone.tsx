@@ -29,8 +29,10 @@ import { safeLocalStorage } from "@/lib/browserStorage";
 /* ─── Context types ─── */
 export interface WorkoutZoneContext {
   title?: string;
-  source?: "program" | "community" | "custom" | "manual";
+  source?: "program" | "community" | "custom" | "manual" | "ai-suggest";
   programId?: string;
+  isTimedCircuit?: boolean;
+  timerConfig?: { work: number; rest: number; rounds: number; prep: number };
   // Pre-populated exercises from programs/community
   exercises?: Array<{
     exerciseId?: string;
@@ -118,7 +120,9 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
   );
   const [workoutLogId, setWorkoutLogId] = useState<string | null>(null);
   const [formTrackerExercise, setFormTrackerExercise] = useState<string | null>(null);
-  const [showIntervalTimer, setShowIntervalTimer] = useState(false);
+  const [showIntervalTimer, setShowIntervalTimer] = useState(
+    !!(initialContext?.isTimedCircuit && initialContext?.timerConfig)
+  );
   const [restSeconds, setRestSeconds] = useState(0);
   const restRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [workoutTitle, setWorkoutTitle] = useState(initialContext?.title || "Workout");
@@ -881,7 +885,18 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
       )}
 
       {showIntervalTimer && (
-        <IntervalTimer onClose={() => setShowIntervalTimer(false)} />
+        <IntervalTimer
+          onClose={() => setShowIntervalTimer(false)}
+          initialConfig={initialContext?.timerConfig ? {
+            prep: initialContext.timerConfig.prep,
+            work: initialContext.timerConfig.work,
+            rest: initialContext.timerConfig.rest,
+            rounds: initialContext.timerConfig.rounds,
+            warning: 5,
+          } : undefined}
+          exercises={initialContext?.isTimedCircuit ? exercises.map(e => e.exerciseTitle) : undefined}
+          isCircuit={initialContext?.isTimedCircuit}
+        />
       )}
     </>
   );

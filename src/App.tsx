@@ -2,7 +2,7 @@ import { lazy, Suspense, useState, useEffect, memo } from "react";
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 // Defer toast providers — only triggered on user action, not needed for FCP
 const Sonner = lazyRetry(() => import("@/components/ui/sonner").then(m => ({ default: m.Toaster })));
 const Toaster = lazyRetry(() => import("@/components/ui/toaster").then(m => ({ default: m.Toaster })));
@@ -172,6 +172,20 @@ const ProveItWrapper = () => {
   );
 };
 
+const DUAL_FAB_ROUTES = ["/dashboard", "/progress", "/coach", "/nutrition", "/profile", "/schedule"];
+
+const DualFabWrapper = () => {
+  const { user } = useAuth();
+  const { pathname } = useLocation();
+
+  if (!user || !DUAL_FAB_ROUTES.includes(pathname)) return null;
+  return (
+    <Suspense fallback={null}>
+      <DualFab />
+    </Suspense>
+  );
+};
+
 const App = () => (
   <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, maxAge: 24 * 60 * 60_000 }}>
     <SplashScreen />
@@ -225,6 +239,7 @@ const App = () => (
               
               <ActiveWorkoutWrapper />
               <ProveItWrapper />
+              <DualFabWrapper />
               
               <Suspense fallback={null}><BottomTabBar /></Suspense>
               <Suspense fallback={null}><OfflineBadge /></Suspense>

@@ -27,6 +27,14 @@ RULES:
 - If the user doesn't mention how many days, default to 3.
 - If the user doesn't mention equipment, assume full gym (barbell, rack, dumbbells).${visionClause}
 
+TIMED CIRCUIT DETECTION:
+If the user requests a "timed circuit", "AMRAP", "EMOM", mentions specific work/rest intervals (e.g. "45 on 15 off"), or asks for a time-based workout (e.g. "15 min circuit"), you MUST:
+1. Set isTimedCircuit to true
+2. Provide a timerConfig with work seconds, rest seconds, rounds, and prep (default 10)
+3. Infer timing from their language: "Tabata" = 20/10/8, "EMOM" = 60/0/10, "45 on 15 off" = 45/15/rounds
+4. If they mention total time (e.g. "15 min"), calculate rounds = totalMinutes * 60 / (work + rest)
+5. Skip Rolling/Soft Tissue and Cooldown phases — circuit exercises only
+
 USER INPUT: "${userText}"
 
 AVAILABLE EXERCISES (use these names when possible):
@@ -36,6 +44,8 @@ Return a JSON object with this structure:
 {
   "title": "program name",
   "description": "one sentence overview${hasImage ? " — start with: Equipment detected: [list]" : ""}",
+  "isTimedCircuit": false,
+  "timerConfig": null,
   "days": [
     {
       "dayLabel": "Day 1 - Focus Area",
@@ -206,12 +216,24 @@ serve(async (req) => {
           type: "function",
           function: {
             name: "create_program",
-            description: "Create a multi-day workout program or corrective protocol",
+            description: "Create a multi-day workout program or corrective protocol. If the user requests a timed circuit, set isTimedCircuit=true and provide timerConfig.",
             parameters: {
               type: "object",
               properties: {
                 title: { type: "string" },
                 description: { type: "string" },
+                isTimedCircuit: { type: "boolean", description: "True if this is a timed interval/circuit workout" },
+                timerConfig: {
+                  type: "object",
+                  description: "Timer config for timed circuits only",
+                  properties: {
+                    work: { type: "number" },
+                    rest: { type: "number" },
+                    rounds: { type: "number" },
+                    prep: { type: "number" },
+                  },
+                  required: ["work", "rest", "rounds", "prep"],
+                },
                 days: {
                   type: "array",
                   items: {
