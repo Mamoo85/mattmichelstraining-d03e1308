@@ -614,16 +614,38 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
         <header className="shrink-0 flex items-center justify-between px-4 py-3 bg-gradient-to-b from-background to-background/80 backdrop-blur-sm">
           <div className="flex items-center gap-3 min-w-0">
             <img src={m2Logo} alt="M² Training" className="h-8 w-8 rounded-full object-cover" />
-            <div className="min-w-0">
-              <span className="text-sm font-bold text-foreground truncate block leading-tight">
-                {workoutTitle}
-              </span>
-              {readinessResult && readinessResult.weightAdjustmentPct !== 0 && (
-                <span className="text-[10px] font-medium text-primary">
-                  {Math.abs(readinessResult.weightAdjustmentPct)}% adjusted
-                </span>
+            <div className="min-w-0 flex items-center gap-1.5">
+              {editingTitle ? (
+                <input
+                  ref={titleInputRef}
+                  type="text"
+                  value={workoutTitle}
+                  onChange={(e) => setWorkoutTitle(e.target.value)}
+                  onBlur={() => setEditingTitle(false)}
+                  onKeyDown={(e) => { if (e.key === "Enter") setEditingTitle(false); }}
+                  autoFocus
+                  className="text-sm font-bold text-foreground bg-muted/50 border border-border rounded-lg px-2 py-0.5 outline-none focus:ring-2 focus:ring-primary/40 w-full max-w-[160px]"
+                />
+              ) : (
+                <>
+                  <span className="text-sm font-bold text-foreground truncate block leading-tight">
+                    {workoutTitle}
+                  </span>
+                  <button
+                    onClick={() => setEditingTitle(true)}
+                    className="shrink-0 h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                    title="Edit title"
+                  >
+                    <Pencil size={12} />
+                  </button>
+                </>
               )}
             </div>
+            {readinessResult && readinessResult.weightAdjustmentPct !== 0 && (
+              <span className="text-[10px] font-medium text-primary ml-11">
+                {Math.abs(readinessResult.weightAdjustmentPct)}% adjusted
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-1">
             {exercises.length > 0 && (
