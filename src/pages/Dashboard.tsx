@@ -67,7 +67,7 @@ const Dashboard = () => {
   const isNewUser = hasPrograms === false && hasLogs === false;
 
   const tabs = useMemo(() =>
-    subscriptionTier === "team_elite" || isAdmin
+    subscriptionTier === "elite" || isAdmin
       ? [...BASE_TABS, { key: "team", label: "Team" } as const]
       : BASE_TABS,
     [subscriptionTier, isAdmin]
