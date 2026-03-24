@@ -283,7 +283,7 @@ const TrialCTABlock = () => (
         Start Your 14-Day Free Trial <ArrowRight size={16} />
       </Link>
     </Button>
-    <p className="text-[10px] text-muted-foreground mt-2">Credit card required • $12.99/mo after trial • Cancel anytime</p>
+    <p className="text-[10px] text-muted-foreground mt-2">Credit card required • $19.99/mo after trial • Cancel anytime</p>
   </div>
 );
 
