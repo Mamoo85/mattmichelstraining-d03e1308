@@ -362,7 +362,10 @@ const Pricing = () => {
             const isCurrentPlan = subscriptionTier === card.key;
             const Icon = card.icon;
             const cmsFeatures = cms[`${card.key}_features`];
-            const features = cmsFeatures ? cmsFeatures.split("|").map((f: string) => f.trim()) : card.features;
+            const rawFeatures = cmsFeatures ? cmsFeatures.split("|").map((f: string) => f.trim()) : card.features;
+            const features = card.key === "foundation"
+              ? rawFeatures.map((f: string) => f === "Exercise video library" ? `${exerciseCount}+ exercise video library` : f)
+              : rawFeatures;
 
             return (
               <motion.div

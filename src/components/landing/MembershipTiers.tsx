@@ -104,7 +104,8 @@ const MembershipTiers = memo(() => {
       <Link to="/pricing" className="text-primary hover:opacity-80 transition-m2">View full plan comparison →</Link>
     </p>
   </motion.div>
-));
+  );
+});
 
 MembershipTiers.displayName = "MembershipTiers";
 

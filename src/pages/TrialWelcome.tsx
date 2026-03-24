@@ -193,7 +193,7 @@ const TrialWelcome = () => {
                 icon={User}
                 title="Foundation Trial"
                 charge="$19.99/mo after trial"
-                desc="Full M² App, 85+ exercise library, Fix It rehab library, AI Generator, and progress logging."
+                desc={`Full M² App, ${exerciseCount}+ exercise library, Fix It rehab library, AI Generator, and progress logging.`}
                 badge={null}
                 warning={null}
               />

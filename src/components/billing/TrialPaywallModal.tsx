@@ -19,7 +19,7 @@ const TIER_OPTIONS = [
     name: "The Foundation",
     price: "$19.99/mo",
     icon: Star,
-    perks: ["Full M² App + 85+ exercise library", "Fix It rehab library", "AI Workout Generator", "Progress logging & tracking"],
+    perks: ["Full M² App + {count}+ exercise library", "Fix It rehab library", "AI Workout Generator", "Progress logging & tracking"],
   },
   {
     key: "pro" as const,
