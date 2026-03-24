@@ -547,6 +547,13 @@ const Pricing = () => {
           </motion.div>
         </div>
 
+        {/* AI Generator Showcase */}
+        <div className="mt-12 max-w-3xl mx-auto">
+          <Suspense fallback={null}>
+            <AiGeneratorShowcase />
+          </Suspense>
+        </div>
+
         {/* Dynamic Feature Comparison Table */}
         <TierComparisonTable />
 
