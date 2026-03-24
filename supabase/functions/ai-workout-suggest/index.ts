@@ -6,6 +6,72 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+function buildOpenWorkoutPrompt(userPrompt: string, exerciseNames: string) {
+  return `You are Coach Matt — a strength and conditioning coach who follows Starting Strength (Rippetoe) and Becoming a Supple Leopard (Starrett) principles ONLY.
+
+You are doing a quick pre-workout check-in, just like you would in person. The athlete has told you how they feel today. Your job:
+
+1. LISTEN to what they said — if something hurts or is tight, INCLUDE corrective work (rolling, mobility) at the start of the workout.
+2. Build a SINGLE training session (not a program) tailored to right now.
+3. The workout should follow this flow:
+   - Phase 1: Rolling/Soft Tissue (if needed based on their check-in)
+   - Phase 2: Dynamic Warmup / Mobility
+   - Phase 3: Main Work (compound movements)
+   - Phase 4: Finisher / Conditioning
+   - Phase 5: Cooldown
+4. Keep it to 6-10 exercises total across all phases.
+5. If they mention time constraints, respect them.
+
+RULES:
+- NO machines, NO Smith machine, NO leg press, NO isolation curls, NO lat raises, NO flyes
+- Focus on compound movements: squat, deadlift, press, bench press, power clean, rows
+- If they mention pain/tightness, address it with corrective work FIRST
+- Infer experience level, goals, and equipment from their message
+- Default to barbell + rack + dumbbells if not mentioned
+
+ATHLETE CHECK-IN: "${userPrompt}"
+
+AVAILABLE EXERCISES (use these exact names when possible):
+${exerciseNames}
+
+Return a JSON object with this exact structure:
+{
+  "title": "workout name",
+  "description": "one sentence overview addressing their check-in",
+  "exercises": [
+    { "title": "exact exercise name from library", "sets": "3", "reps": "10", "notes": "brief coaching cue" }
+  ]
+}
+
+Make it feel personal — like Coach Matt actually heard them and built this just for them.`;
+}
+
+function buildStructuredPrompt(goal: string, audience: string, style: string, exerciseNames: string) {
+  return `You are Coach Matt's workout builder assistant. You follow Starting Strength (Rippetoe) and Becoming a Supple Leopard (Starrett) principles ONLY.
+
+RULES:
+- NO machines, NO Smith machine, NO leg press, NO isolation curls, NO lat raises, NO flyes
+- Focus on compound movements: squat, deadlift, press, bench press, power clean, rows (pendlay only)
+- Include warmup, mobility work, and core work
+- Keep it simple and fun for ${audience || "general fitness"}
+- Style: ${style || "balanced strength and conditioning"}
+- Goal: ${goal || "general fitness"}
+
+AVAILABLE EXERCISES (use ONLY these exact names):
+${exerciseNames}
+
+Return a JSON object with this exact structure:
+{
+  "title": "workout name",
+  "description": "one sentence description",
+  "exercises": [
+    { "title": "exact exercise name from library", "sets": "3", "reps": "10", "notes": "brief coaching cue" }
+  ]
+}
+
+Keep it to 5-8 exercises. Make it fun and appropriate for the audience. Include a mix of strength and conditioning.`;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -44,39 +110,25 @@ serve(async (req) => {
       });
     }
 
-    const { goal, audience, style } = await req.json();
+    const body = await req.json();
+    const { goal, audience, style, prompt, mode } = body;
+    const isOpenWorkout = mode === "open-workout" && !!prompt;
 
     // Get exercise library for context
     const { data: exercises } = await supabaseClient
       .from("exercise_library")
-      .select("id, title, level, equipment_needed, focus_area, sport")
+      .select("id, title, level, equipment_needed, focus_area, sport, is_fix_it")
       .limit(200);
 
-    const exerciseNames = (exercises || []).map(e => `${e.title} (${e.level}, ${e.equipment_needed})`).join("\n");
+    const exerciseNames = (exercises || []).map(e => `${e.title} (${e.level}, ${e.equipment_needed}${e.is_fix_it ? ', fix-it' : ''})`).join("\n");
 
-    const systemPrompt = `You are Coach Matt's workout builder assistant. You follow Starting Strength (Rippetoe) and Becoming a Supple Leopard (Starrett) principles ONLY.
+    const systemPrompt = isOpenWorkout
+      ? buildOpenWorkoutPrompt(prompt, exerciseNames)
+      : buildStructuredPrompt(goal, audience, style, exerciseNames);
 
-RULES:
-- NO machines, NO Smith machine, NO leg press, NO isolation curls, NO lat raises, NO flyes
-- Focus on compound movements: squat, deadlift, press, bench press, power clean, rows (pendlay only)
-- Include warmup, mobility work, and core work
-- Keep it simple and fun for ${audience || "general fitness"}
-- Style: ${style || "balanced strength and conditioning"}
-- Goal: ${goal || "general fitness"}
-
-AVAILABLE EXERCISES (use ONLY these exact names):
-${exerciseNames}
-
-Return a JSON object with this exact structure:
-{
-  "title": "workout name",
-  "description": "one sentence description",
-  "exercises": [
-    { "title": "exact exercise name from library", "sets": "3", "reps": "10", "notes": "brief coaching cue" }
-  ]
-}
-
-Keep it to 5-8 exercises. Make it fun and appropriate for the audience. Include a mix of strength and conditioning.`;
+    const userMessage = isOpenWorkout
+      ? prompt
+      : `Create a ${style || "fun"} workout for ${audience || "general fitness"}. Goal: ${goal || "get stronger and have fun"}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -85,17 +137,17 @@ Keep it to 5-8 exercises. Make it fun and appropriate for the audience. Include 
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: `Create a ${style || "fun"} workout for ${audience || "general fitness"}. Goal: ${goal || "get stronger and have fun"}` },
+          { role: "user", content: userMessage },
         ],
         tools: [
           {
             type: "function",
             function: {
               name: "create_workout",
-              description: "Create a workout plan with exercises",
+              description: "Create a single workout session with exercises",
               parameters: {
                 type: "object",
                 properties: {

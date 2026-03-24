@@ -7,6 +7,7 @@ import { useMinTier } from "@/hooks/useTierAccess";
 import { useFamilyUserIds } from "@/hooks/useFamilyUserIds";
 import { toast } from "sonner";
 import type { WorkoutZoneContext } from "./ActiveWorkoutZone";
+import OpenWorkoutAI from "./OpenWorkoutAI";
 
 interface InterceptGatewayProps {
   onSelect: (context: WorkoutZoneContext) => void;
@@ -49,6 +50,7 @@ const InterceptGateway = ({ onSelect, onExit }: InterceptGatewayProps) => {
   const [personalWorkouts, setPersonalWorkouts] = useState<CommunityWorkout[]>([]);
   const [masterTemplates, setMasterTemplates] = useState<CommunityWorkout[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAiGenerator, setShowAiGenerator] = useState(false);
 
   // Week/Day picker state
   const [pickingProgram, setPickingProgram] = useState<ActiveProgramEntry | null>(null);
@@ -188,6 +190,24 @@ const InterceptGateway = ({ onSelect, onExit }: InterceptGatewayProps) => {
   };
 
   const handleFreestyle = () => {
+    setShowAiGenerator(true);
+  };
+
+  const handleAiWorkoutStart = (workout: { title: string; description: string; exercises: Array<{ title: string; sets: string; reps: string; notes?: string; exerciseId?: string }> }) => {
+    onSelect({
+      title: workout.title,
+      source: "custom",
+      exercises: workout.exercises.map((ex) => ({
+        exerciseId: ex.exerciseId || "",
+        exerciseTitle: ex.title,
+        prescribedSets: parseInt(ex.sets) || 3,
+        prescribedReps: parseInt(ex.reps) || 10,
+        notes: ex.notes || "",
+      })),
+    });
+  };
+
+  const handleAiSkip = () => {
     onSelect({ title: "Open Workout", source: "manual" });
   };
 
@@ -196,6 +216,17 @@ const InterceptGateway = ({ onSelect, onExit }: InterceptGatewayProps) => {
   const daysForWeek = selectedWeek !== null
     ? weekDays.filter((wd) => wd.week_number === selectedWeek).map((wd) => wd.day_number).sort((a, b) => a - b)
     : [];
+
+  // ── AI Generator Sub-screen ──
+  if (showAiGenerator) {
+    return (
+      <OpenWorkoutAI
+        onStart={handleAiWorkoutStart}
+        onSkip={handleAiSkip}
+        onBack={() => setShowAiGenerator(false)}
+      />
+    );
+  }
 
   // ── Week/Day Picker Sub-screen ──
   if (pickingProgram) {
