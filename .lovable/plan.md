@@ -1,49 +1,66 @@
 
 
-## AI Brain Simulator — Implementation Plan
+## AI Generator Simplification — Implementation Plan
 
 ### What We're Building
-A self-running animated demo component (`AIBrainSimulator`) that showcases two AI features via a mock chat interface with typing animations, processing states, and generated output — placed prominently on TheEdge.tsx between the hero/CTA and the quick nav.
+Replace the dropdown-heavy generator UI with a clean two-path interface ("Build a Workout" / "Fix a Pain Point"), each leading to a single textarea + optional image upload. Update the edge function to accept unstructured natural language and infer all parameters.
 
 ### Files to Change
 
-#### 1. New: `src/components/landing/AIBrainSimulator.tsx`
-A large, self-contained component with two tabs: **The Fix It Engine** and **The Smart Garage Gym**.
+#### 1. Edit: `src/pages/FreeAiGenerator.tsx`
+**Remove:** All `Select` dropdowns, `EXPERIENCE`, `GOALS`, `DAYS`, `EQUIPMENT` constants, and their state variables (`experience`, `goal`, `daysPerWeek`, `equipment`).
 
-**Core mechanics:**
-- `useEffect` timer chain drives a 3-phase animation: Input → Processing → Output
-- Phase state machine: `idle` → `typing` → `processing` → `output`
-- Resets and replays when switching tabs
-- All content is hardcoded (no API calls)
+**Add — Fork UI (initial state):**
+- New state: `path: null | "workout" | "fixit"` and `userText: string`
+- When `path === null`, render two large styled buttons side by side:
+  - `🏋️‍♂️ Build a Workout` → sets path to "workout"
+  - `🩹 Fix a Pain Point` → sets path to "fixit"
+- Styled as large cards with icons, dark bg, primary border on hover, framer-motion entrance
 
-**Tab 1 — The Fix It Engine:**
-- Mock chat input bar with a typing animation (character-by-character reveal via `setInterval`) displaying: *"My right shoulder hurts when I put on my shirt in the morning."*
-- Processing overlay with sequential status lines: "Cross-referencing injury history..." → "Scanning 85+ rehab protocols..." → "Building corrective program..."
-- Output: A styled card titled **"Anterior Shoulder Impingement Protocol"** with 3 phases (Tissue Release, Mobility, Isometric Loading) — each with 2-3 exercises
-- Action bar with two mock buttons: `[+ Save to My Library]` and `[Print PDF]`
+**Path A — "workout":**
+- `<GymPhotoUpload />` with label "Snap a picture of your gym equipment (or skip)"
+- Single `<Textarea>` — placeholder: "Tell me about yourself. (e.g., I'm 35, been lifting for a year, want to get stronger, and I only have 3 days a week)."
+- Giant "Generate Program" button
+- Validation: require `userText` to be non-empty
 
-**Tab 2 — The Smart Garage Gym:**
-- Mock image upload thumbnail (a placeholder/gradient representing a garage gym with equipment labels: Barbell, Flat Bench, 300lb Plates)
-- System context badge: "Advanced (4+ years) · No injuries · Goal: Raw Strength"
-- Processing lines: "Analyzing equipment..." → "Scaling wave-loading percentages..." → "Generating 3-day split..."
-- Output: A 3-day heavy split (Day 1: Squat/Press, Day 2: Deadlift/Row, Day 3: Bench/Accessories) using only barbell + bench + plates
+**Path B — "fixit":**
+- Single `<Textarea>` — placeholder: "Where does it hurt and when does it happen? (e.g., My lower back tightens up during heavy squats)."
+- Giant "Generate Rehab Protocol" button
+- No image upload
+- Validation: require `userText` to be non-empty
 
-**Styling:**
-- Framer Motion `AnimatePresence` for all phase transitions
-- Dark card with `synth-bg` background, glowing cyan/pink accents
-- Tab switcher styled as pill toggles with `synth-cyan` active indicator
-- Mock chat window chrome (dots in top-left corner, title bar)
-- Typing cursor blink animation via CSS
+**handleGenerate update:**
+- Send `{ path, userText, gymImageBase64 }` instead of old structured fields
+- Keep all existing result rendering, rate limiting, email modal logic unchanged
 
-#### 2. Edit: `src/pages/TheEdge.tsx`
-- Lazy import `AIBrainSimulator`
-- Insert `<Suspense><AIBrainSimulator /></Suspense>` between the Top CTA block and the Quick Nav section (around line 327)
-- Add a small heading above it: "See the AI in Action" with Brain icon
+**Back button:** Small "← Back" link to return to fork from either path
+
+#### 2. Edit: `supabase/functions/free-workout-generator/index.ts`
+**Input handling:**
+- Accept new fields: `{ path, userText, gymImageBase64 }` alongside legacy fields for backward compatibility
+- Remove strict validation for `experience`, `goal`, `daysPerWeek` when `path` + `userText` are provided
+
+**System prompt — Path "workout":**
+- Instruct AI to infer experience level, goals, training days, and equipment from the user's natural language input
+- Keep existing 5-phase structure, compound movement rules, exercise library context
+- If image provided, keep existing vision mode clause
+- Default to 3 days/week if not mentioned
+
+**System prompt — Path "fixit":**
+- New rehab-focused prompt: infer the injury/pain pattern from natural language
+- Output a corrective protocol with phases: Tissue Release, Mobility, Isometric/Corrective Loading
+- Same JSON output structure (title, description, days) but days represent protocol phases instead
+
+**Tool call schema:** Keep identical `create_program` schema — works for both paths
+
+### Styling Notes
+- Fork buttons: `bg-card border-2 border-border hover:border-primary` with large icon, bold label, subtle description
+- Textarea: taller (h-28), dark bg, clean border
+- Generate button: full-width, h-14, primary bg, uppercase tracking
+- Add a subtle "← Choose different path" back link above the textarea
 
 ### Technical Notes
-- No database queries, no auth — purely visual/animated
-- The typing effect uses a `useEffect` + `setInterval` incrementing a character index
-- Processing phase uses staggered `setTimeout` for each status line
-- Component auto-plays on mount; tab switch resets the animation
-- Uses existing design tokens (`synth-cyan`, `synth-pink`, `synth-orange`, `synth-bg`)
+- GymPhotoUpload component reused as-is
+- All rate limiting, email modal, upsell CTA, TechShowcaseMarketing remain unchanged
+- Edge function maintains backward compatibility with old structured fields
 
