@@ -100,6 +100,7 @@ const FAQ_ITEMS = [
 ];
 
 const Pricing = () => {
+  const exerciseCount = useExerciseCount();
   const { user, subscribed, subscriptionTier, subscriptionEnd } = useAuth();
   const { isAdmin } = useIsAdmin();
   const { content: cms } = useContentMap("pricing_page");
