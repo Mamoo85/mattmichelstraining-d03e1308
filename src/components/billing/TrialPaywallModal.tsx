@@ -40,6 +40,7 @@ const TIER_OPTIONS = [
 
 const TrialPaywallModal = ({ open, onClose, hardLock }: TrialPaywallModalProps) => {
   const { user } = useAuth();
+  const exerciseCount = useExerciseCount();
   const navigate = useNavigate();
   const [loading, setLoading] = useState<string | null>(null);
 
