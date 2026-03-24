@@ -6,70 +6,92 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-function buildOpenWorkoutPrompt(userPrompt: string, exerciseNames: string) {
-  return `You are Coach Matt — a strength and conditioning coach who follows Starting Strength (Rippetoe) and Becoming a Supple Leopard (Starrett) principles ONLY.
+function buildDualPathWorkoutPrompt(userText: string, hasImage: boolean, exerciseNames: string) {
+  const visionClause = hasImage
+    ? `\n\nIMPORTANT — VISION MODE:
+The user has provided a photograph of their workout environment. You MUST:
+1. Scan the image and identify ALL available fitness equipment visible.
+2. Build the workout program utilizing ONLY the equipment you can see in this image.
+3. Do NOT prescribe exercises requiring equipment that is NOT visible.
+4. If you cannot clearly identify equipment, default to bodyweight alternatives.
+5. List the equipment you detected in the workout description.`
+    : "";
 
-You are doing a quick pre-workout check-in, just like you would in person. The athlete has told you how they feel today. Your job:
-
-1. LISTEN to what they said — if something hurts or is tight, INCLUDE corrective work (rolling, mobility) at the start of the workout.
-2. Build a SINGLE training session (not a program) tailored to right now.
-3. The workout should follow this flow:
-   - Phase 1: Rolling/Soft Tissue (if needed based on their check-in)
-   - Phase 2: Dynamic Warmup / Mobility
-   - Phase 3: Main Work (compound movements)
-   - Phase 4: Finisher / Conditioning
-   - Phase 5: Cooldown
-4. Keep it to 6-10 exercises total across all phases.
-5. If they mention time constraints, respect them.
+  return `You are Coach Matt's workout builder. You follow Starting Strength (Rippetoe) and Becoming a Supple Leopard (Starrett) principles ONLY.
 
 RULES:
 - NO machines, NO Smith machine, NO leg press, NO isolation curls, NO lat raises, NO flyes
 - Focus on compound movements: squat, deadlift, press, bench press, power clean, rows
+- The workout follows 5 phases: 1. Rolling/Soft Tissue, 2. Dynamic Warmup, 3. Main Work, 4. Finisher/Conditioning, 5. Cooldown
+- You must INFER the user's experience level, goals, training days per week, and available equipment strictly from their natural language input.
+- If the user doesn't mention how many days, default to 3.
+- If the user doesn't mention equipment, assume full gym (barbell, rack, dumbbells).${visionClause}
+
+USER INPUT: "${userText}"
+
+AVAILABLE EXERCISES (use these exact names when possible):
+${exerciseNames}
+
+Keep each session to 6-10 exercises across all phases. Make it challenging but appropriate for the inferred experience level.`;
+}
+
+function buildDualPathFixitPrompt(userText: string, exerciseNames: string) {
+  return `You are Coach Matt's Fix It Engine — a corrective exercise specialist following Becoming a Supple Leopard (Starrett) and Starting Strength (Rippetoe) principles.
+
+The user is describing a pain point or movement dysfunction. Your job is to:
+1. INFER the likely biomechanical issue from their natural language description.
+2. Build a corrective protocol with exercises tagged by phase:
+   - Phase: Tissue Release (lacrosse ball, foam roller, etc.)
+   - Phase: Mobility (stretches, banded distractions, active ROM)
+   - Phase: Isometric/Corrective Loading (light loading patterns to reinforce correct positions)
+
+RULES:
+- Each phase should have 2-3 exercises
+- Focus on the ROOT CAUSE, not just the symptom
+- Use exercises from the library when possible
+- Be specific with coaching cues
+
+USER INPUT: "${userText}"
+
+AVAILABLE EXERCISES (use these names when possible):
+${exerciseNames}
+
+Title the protocol after the issue (e.g., "Anterior Shoulder Impingement Protocol").`;
+}
+
+function buildOpenWorkoutPrompt(userPrompt: string, exerciseNames: string) {
+  return `You are Coach Matt — a strength and conditioning coach who follows Starting Strength (Rippetoe) and Becoming a Supple Leopard (Starrett) principles ONLY.
+
+You are doing a quick pre-workout check-in. The athlete has told you how they feel today. Your job:
+1. LISTEN to what they said — if something hurts or is tight, INCLUDE corrective work at the start.
+2. Build a SINGLE training session tailored to right now.
+3. Flow: Rolling/Soft Tissue → Dynamic Warmup → Main Work → Finisher → Cooldown
+4. Keep it to 6-10 exercises total.
+
+RULES:
+- NO machines, NO Smith machine, NO leg press, NO isolation curls, NO lat raises, NO flyes
+- Compound movements: squat, deadlift, press, bench press, power clean, rows
 - If they mention pain/tightness, address it with corrective work FIRST
-- Infer experience level, goals, and equipment from their message
-- Default to barbell + rack + dumbbells if not mentioned
 
 ATHLETE CHECK-IN: "${userPrompt}"
 
 AVAILABLE EXERCISES (use these exact names when possible):
 ${exerciseNames}
 
-Return a JSON object with this exact structure:
-{
-  "title": "workout name",
-  "description": "one sentence overview addressing their check-in",
-  "exercises": [
-    { "title": "exact exercise name from library", "sets": "3", "reps": "10", "notes": "brief coaching cue" }
-  ]
-}
-
-Make it feel personal — like Coach Matt actually heard them and built this just for them.`;
+Make it feel personal — like Coach Matt actually heard them.`;
 }
 
 function buildStructuredPrompt(goal: string, audience: string, style: string, exerciseNames: string) {
-  return `You are Coach Matt's workout builder assistant. You follow Starting Strength (Rippetoe) and Becoming a Supple Leopard (Starrett) principles ONLY.
-
+  return `You are Coach Matt's workout builder. Starting Strength + Supple Leopard principles ONLY.
 RULES:
 - NO machines, NO Smith machine, NO leg press, NO isolation curls, NO lat raises, NO flyes
-- Focus on compound movements: squat, deadlift, press, bench press, power clean, rows (pendlay only)
-- Include warmup, mobility work, and core work
-- Keep it simple and fun for ${audience || "general fitness"}
-- Style: ${style || "balanced strength and conditioning"}
-- Goal: ${goal || "general fitness"}
+- Include warmup, mobility, core work
+- Audience: ${audience || "general fitness"} | Style: ${style || "balanced"} | Goal: ${goal || "general fitness"}
 
 AVAILABLE EXERCISES (use ONLY these exact names):
 ${exerciseNames}
 
-Return a JSON object with this exact structure:
-{
-  "title": "workout name",
-  "description": "one sentence description",
-  "exercises": [
-    { "title": "exact exercise name from library", "sets": "3", "reps": "10", "notes": "brief coaching cue" }
-  ]
-}
-
-Keep it to 5-8 exercises. Make it fun and appropriate for the audience. Include a mix of strength and conditioning.`;
+Keep it to 5-8 exercises. Fun and appropriate.`;
 }
 
 serve(async (req) => {
@@ -91,7 +113,6 @@ serve(async (req) => {
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
     if (userError || !userData.user) throw new Error("Auth failed");
 
-    // Check subscription
     const { data: profile } = await supabaseClient
       .from("profiles")
       .select("subscription_tier, is_in_person")
@@ -111,10 +132,11 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { goal, audience, style, prompt, mode } = body;
+    const { goal, audience, style, prompt, mode, path, userText, gymImageBase64 } = body;
+
+    const isDualPath = mode === "dual-path" && !!path && !!userText;
     const isOpenWorkout = mode === "open-workout" && !!prompt;
 
-    // Get exercise library for context
     const { data: exercises } = await supabaseClient
       .from("exercise_library")
       .select("id, title, level, equipment_needed, focus_area, sport, is_fix_it")
@@ -122,13 +144,29 @@ serve(async (req) => {
 
     const exerciseNames = (exercises || []).map(e => `${e.title} (${e.level}, ${e.equipment_needed}${e.is_fix_it ? ', fix-it' : ''})`).join("\n");
 
-    const systemPrompt = isOpenWorkout
-      ? buildOpenWorkoutPrompt(prompt, exerciseNames)
-      : buildStructuredPrompt(goal, audience, style, exerciseNames);
+    const hasImage = !!gymImageBase64;
+    let systemPrompt: string;
+    let userMessage: string;
 
-    const userMessage = isOpenWorkout
-      ? prompt
-      : `Create a ${style || "fun"} workout for ${audience || "general fitness"}. Goal: ${goal || "get stronger and have fun"}`;
+    if (isDualPath) {
+      systemPrompt = path === "fixit"
+        ? buildDualPathFixitPrompt(userText, exerciseNames)
+        : buildDualPathWorkoutPrompt(userText, hasImage, exerciseNames);
+      userMessage = userText;
+    } else if (isOpenWorkout) {
+      systemPrompt = buildOpenWorkoutPrompt(prompt, exerciseNames);
+      userMessage = prompt;
+    } else {
+      systemPrompt = buildStructuredPrompt(goal, audience, style, exerciseNames);
+      userMessage = `Create a ${style || "fun"} workout for ${audience || "general fitness"}. Goal: ${goal || "get stronger and have fun"}`;
+    }
+
+    // Build messages with optional image
+    const userContent: any[] = [];
+    if (hasImage) {
+      userContent.push({ type: "image_url", image_url: { url: `data:image/jpeg;base64,${gymImageBase64}` } });
+    }
+    userContent.push({ type: "text", text: userMessage });
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -140,14 +178,14 @@ serve(async (req) => {
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: userMessage },
+          { role: "user", content: userContent },
         ],
         tools: [
           {
             type: "function",
             function: {
               name: "create_workout",
-              description: "Create a single workout session with exercises",
+              description: "Create a workout session or corrective protocol with exercises",
               parameters: {
                 type: "object",
                 properties: {
@@ -162,6 +200,7 @@ serve(async (req) => {
                         sets: { type: "string" },
                         reps: { type: "string" },
                         notes: { type: "string" },
+                        phase: { type: "string" },
                       },
                       required: ["title", "sets", "reps"],
                     },
@@ -178,15 +217,13 @@ serve(async (req) => {
 
     if (!response.ok) {
       if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Too many requests. Try again in a moment." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        return new Response(JSON.stringify({ error: "High demand — please try again in a moment." }), {
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (response.status === 402) {
         return new Response(JSON.stringify({ error: "AI credits exhausted. Please try again later." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       const text = await response.text();
