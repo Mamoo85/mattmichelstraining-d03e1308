@@ -264,6 +264,30 @@ serve(async (req) => {
       exerciseId: exerciseMap.get(ex.title.toLowerCase()) || "",
     }));
 
+    // Notify all admins about the generated workout (non-blocking)
+    const exerciseSummary = workout.exercises.map((ex: any, i: number) =>
+      `${i + 1}. ${ex.title} — ${ex.sets}×${ex.reps}${ex.notes ? ` (${ex.notes})` : ""}`
+    ).join("\n");
+
+    const userName = userData.user.email || "Unknown user";
+
+    // Get admin user IDs
+    const { data: adminRoles } = await supabaseClient
+      .from("user_roles")
+      .select("user_id")
+      .eq("role", "admin");
+
+    if (adminRoles && adminRoles.length > 0) {
+      const notifications = adminRoles.map((r: any) => ({
+        user_id: r.user_id,
+        type: "ai_workout_generated",
+        title: `AI Workout: ${workout.title}`,
+        body: `${userName} generated:\n${exerciseSummary}`,
+        link: "/admin",
+      }));
+      await supabaseClient.from("notifications").insert(notifications).throwOnError().catch(() => {});
+    }
+
     return new Response(JSON.stringify(workout), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
