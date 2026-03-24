@@ -1,11 +1,12 @@
-import { memo, useState, useCallback } from "react";
+import { memo, useState, useCallback, lazy, Suspense } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Home, Dumbbell, ShoppingBag, CalendarClock, MoreHorizontal,
-  User, Users, CreditCard, Cpu, Download, LogIn, LogOut, Shield,
+  User, Users, CreditCard, Cpu, Download, LogIn, LogOut, Shield, Timer,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { useTimer } from "@/hooks/useTimer";
 
 import {
   Sheet,
@@ -13,6 +14,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+
+const IntervalTimer = lazy(() => import("@/components/workout/IntervalTimer"));
 
 const TABS = [
   { to: "/", label: "Home", icon: Home },
@@ -33,6 +36,7 @@ const BottomTabBar = () => {
   const location = useLocation();
   const { user, signOut } = useAuth();
   const { isAdmin } = useIsAdmin();
+  const { toggleTimer, timerOpen, closeTimer } = useTimer();
   
   const [moreOpen, setMoreOpen] = useState(false);
 
@@ -41,13 +45,22 @@ const BottomTabBar = () => {
     setMoreOpen(false);
   }, [signOut]);
 
-  // Always visible on mobile — never hide
+  const handleTimerClick = useCallback(() => {
+    setMoreOpen(false);
+    toggleTimer();
+  }, [toggleTimer]);
 
   const isMoreActive = MORE_LINKS.some((l) => location.pathname === l.to) ||
     location.pathname === "/admin" || location.pathname === "/auth";
 
   return (
     <>
+      {timerOpen && (
+        <Suspense fallback={null}>
+          <IntervalTimer onClose={closeTimer} />
+        </Suspense>
+      )}
+
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[100] bg-background/95 backdrop-blur-md border-t border-border safe-bottom">
         <div className="flex items-stretch justify-around h-14">
           {TABS.map(({ to, label, icon: Icon }) => {
@@ -92,6 +105,15 @@ const BottomTabBar = () => {
             <SheetTitle className="text-xs font-bold uppercase tracking-widest text-foreground">More</SheetTitle>
           </SheetHeader>
           <div className="pt-2">
+            {/* Timer button */}
+            <button
+              onClick={handleTimerClick}
+              className="flex items-center gap-3 px-5 py-3.5 transition-colors text-foreground hover:bg-muted w-full"
+            >
+              <Timer size={18} strokeWidth={1.5} className="text-muted-foreground" />
+              <span className="text-sm font-semibold">Interval Timer</span>
+            </button>
+
             {MORE_LINKS.map(({ to, label, icon: Icon }) => {
               const active = location.pathname === to;
               return (
