@@ -175,10 +175,10 @@ const Dashboard = () => {
             </button>
             <Suspense fallback={<TabLoader />}>
               {generatorView === "workout" && (
-                <AiWorkoutSuggest onDone={() => setGeneratorView(null)} />
+                <AiWorkoutSuggest onDone={() => setGeneratorView(null)} initialPath="workout" />
               )}
               {generatorView === "fixit" && (
-                <FixItLibrary />
+                <AiWorkoutSuggest onDone={() => setGeneratorView(null)} initialPath="fixit" />
               )}
             </Suspense>
           </div>
