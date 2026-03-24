@@ -217,6 +217,17 @@ const InterceptGateway = ({ onSelect, onExit }: InterceptGatewayProps) => {
     ? weekDays.filter((wd) => wd.week_number === selectedWeek).map((wd) => wd.day_number).sort((a, b) => a - b)
     : [];
 
+  // ── AI Generator Sub-screen ──
+  if (showAiGenerator) {
+    return (
+      <OpenWorkoutAI
+        onStart={handleAiWorkoutStart}
+        onSkip={handleAiSkip}
+        onBack={() => setShowAiGenerator(false)}
+      />
+    );
+  }
+
   // ── Week/Day Picker Sub-screen ──
   if (pickingProgram) {
     return (
