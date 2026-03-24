@@ -521,6 +521,9 @@ const Profile = () => {
           </div>
         </div>
 
+        {/* Free Posture Analysis */}
+        <PostureAnalysisCard />
+
         {/* Privacy Settings */}
         <PrivacySettingsCard />
 
