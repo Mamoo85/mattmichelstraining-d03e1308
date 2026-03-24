@@ -290,12 +290,12 @@ const InterceptGateway = ({ onSelect, onExit }: InterceptGatewayProps) => {
       </header>
 
       <main className="flex-1 overflow-y-auto px-4 py-4 space-y-6 pb-24">
-        {/* Freestyle */}
+        {/* Open Workout */}
         <button
           onClick={handleFreestyle}
           className="w-full h-12 border-2 border-primary text-primary flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest hover:bg-primary hover:text-primary-foreground transition-all"
         >
-          <Zap size={14} /> Freestyle Session
+          <Zap size={14} /> Open Workout
         </button>
 
         {loading ? (

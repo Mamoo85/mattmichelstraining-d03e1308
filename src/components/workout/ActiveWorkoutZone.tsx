@@ -826,10 +826,10 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
             <button
               onClick={handleFinishClick}
               disabled={saving}
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-bold uppercase tracking-wide border border-white/[0.1] text-foreground hover:bg-muted/50 transition-all active:scale-95"
+              className="flex items-center gap-1.5 px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wide border-2 border-destructive/60 text-destructive hover:bg-destructive hover:text-destructive-foreground transition-all active:scale-95"
             >
               {saving ? <Loader2 size={14} className="animate-spin" /> : <X size={14} />}
-              Exit
+              Exit Workout
             </button>
           </div>
         </footer>
