@@ -17,10 +17,19 @@ interface GeneratedExercise {
   exerciseId?: string;
 }
 
+interface TimerConfigData {
+  work: number;
+  rest: number;
+  rounds: number;
+  prep: number;
+}
+
 interface GeneratedWorkout {
   title: string;
   description: string;
   exercises: GeneratedExercise[];
+  isTimedCircuit?: boolean;
+  timerConfig?: TimerConfigData;
 }
 
 type Path = null | "workout" | "fixit";
