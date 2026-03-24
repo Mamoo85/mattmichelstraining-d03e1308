@@ -1,36 +1,30 @@
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
+import { Zap, Battery, Lightbulb, Shield, Star, Award, CheckCircle, FileCheck, Phone } from "lucide-react";
 import heroImg from "@/assets/demo-electrician-hero.jpg";
+import { RevealSection } from "@/hooks/useInView";
 
 const BRAND = "[BUSINESS NAME]";
 const PHONE = "(313) 555-0247";
 
 const services = [
-  {
-    title: "Panel Upgrades",
-    desc: "Older Grosse Pointe homes need modern panels. We upgrade safely to handle today's electrical loads.",
-    icon: "⚡",
-  },
-  {
-    title: "Generator Installation",
-    desc: "Whole-home standby generators so you never lose power—installed and permitted correctly.",
-    icon: "🔋",
-  },
-  {
-    title: "Smart Home & Lighting",
-    desc: "Recessed lighting, dimmers, smart switches, and EV charger installs done right the first time.",
-    icon: "💡",
-  },
+  { title: "Panel Upgrades", desc: "Older Grosse Pointe homes need modern panels. We upgrade safely to handle today's electrical loads.", Icon: Zap },
+  { title: "Generator Installation", desc: "Whole-home standby generators so you never lose power—installed and permitted correctly.", Icon: Battery },
+  { title: "Smart Home & Lighting", desc: "Recessed lighting, dimmers, smart switches, and EV charger installs done right the first time.", Icon: Lightbulb },
+];
+
+const credentials = [
+  { value: "Master", label: "Electrician", Icon: Award },
+  { value: "20+", label: "Years in Business", Icon: CheckCircle },
+  { value: "2,000+", label: "Jobs Completed", Icon: Zap },
+  { value: "4.9", label: "Google Rating", Icon: Star },
 ];
 
 const ElectricianMockup = () => {
   const [form, setForm] = useState({ name: "", phone: "", address: "", details: "" });
   const [sent, setSent] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSent(true);
-  };
+  const cautionStripe = "repeating-linear-gradient(135deg, #facc15 0px, #facc15 10px, #1e1e24 10px, #1e1e24 20px)";
 
   return (
     <div style={{ fontFamily: "'Inter', system-ui, sans-serif", color: "#e2e8f0", background: "#1e1e24" }}>
@@ -40,111 +34,137 @@ const ElectricianMockup = () => {
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
+      {/* Sticky Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 md:px-8 py-3" style={{ background: "rgba(30,30,36,.95)", backdropFilter: "blur(10px)", borderBottom: "1px solid rgba(250,204,21,.15)" }}>
+        <span className="text-sm font-bold tracking-wide"><span style={{ color: "#facc15" }}>⚡</span> {BRAND} <span style={{ color: "#facc15" }}>ELECTRIC</span></span>
+        <a href={`tel:${PHONE.replace(/\D/g, "")}`} className="flex items-center gap-2 text-sm font-bold px-4 py-2 rounded-lg" style={{ background: "#facc15", color: "#1e1e24" }}>
+          <Phone size={14} /> Call Now
+        </a>
+      </header>
+
       {/* Hero */}
-      <section className="relative flex flex-col items-center justify-center text-center px-6" style={{ minHeight: "88vh" }}>
+      <section className="relative flex flex-col items-center justify-center text-center px-6 pt-16" style={{ minHeight: "90vh" }}>
         <div className="absolute inset-0 z-0">
           <img src={heroImg} alt="Professional electrical panel" className="w-full h-full object-cover" />
-          <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(30,30,36,.80), rgba(30,30,36,.93))" }} />
+          <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(30,30,36,.80), rgba(30,30,36,.95))" }} />
         </div>
         <div className="relative z-10 max-w-3xl mx-auto">
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight mb-3" style={{ color: "#facc15" }}>
-            {BRAND} ELECTRIC
+          <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest mb-6 px-4 py-2 rounded-full" style={{ background: "rgba(250,204,21,.1)", color: "#facc15", border: "1px solid rgba(250,204,21,.25)" }}>
+            <FileCheck size={14} /> Permit Pulled on Every Job
+          </div>
+          <h1 className="text-4xl md:text-7xl font-extrabold tracking-tight leading-[1.1] mb-3" style={{ color: "#facc15" }}>
+            {BRAND}<br /><span className="text-white">ELECTRIC</span>
           </h1>
-          <p className="text-lg md:text-xl text-white/70 mb-10 max-w-xl mx-auto">
+          <p className="text-lg md:text-xl text-white/60 mb-10 max-w-xl mx-auto">
             Safe, Code-Compliant Electrical Work for East Side Homes &amp; Businesses.
           </p>
-          <a
-            href="#quote-form"
-            className="inline-block text-lg font-extrabold px-10 py-4 rounded-xl shadow-2xl transition-transform hover:scale-105"
-            style={{ background: "#facc15", color: "#1e1e24", boxShadow: "0 0 24px rgba(250,204,21,.35)" }}
-          >
-            ⚡ Get a Free Estimate
+          <a href="#quote-form" className="inline-flex items-center gap-3 text-lg font-extrabold px-10 py-4 rounded-xl transition-transform hover:scale-105" style={{ background: "#facc15", color: "#1e1e24", boxShadow: "0 0 30px rgba(250,204,21,.3)" }}>
+            <Zap size={20} /> Get a Free Estimate
           </a>
         </div>
       </section>
 
-      {/* Services */}
-      <section className="py-20 px-6" style={{ background: "#26262e" }}>
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12" style={{ color: "#facc15" }}>
-            Our Services
-          </h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            {services.map((s) => (
-              <div
-                key={s.title}
-                className="rounded-xl p-8 transition-shadow hover:shadow-lg"
-                style={{ background: "#1e1e24", border: "1px solid #3a3a44" }}
-              >
-                <div className="text-4xl mb-4">{s.icon}</div>
-                <h3 className="text-xl font-bold mb-2 text-white">{s.title}</h3>
-                <p style={{ color: "#94a3b8" }}>{s.desc}</p>
+      {/* Caution Stripe Divider */}
+      <div style={{ height: 6, background: cautionStripe, opacity: 0.35 }} />
+
+      {/* Credentials */}
+      <RevealSection className="py-12 px-6" style={{ background: "#26262e" }}>
+        <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6">
+          {credentials.map(c => (
+            <div key={c.label} className="text-center">
+              <c.Icon size={20} className="mx-auto mb-2" style={{ color: "#facc15" }} />
+              <div className="text-2xl md:text-3xl font-extrabold text-white">{c.value}</div>
+              <div className="text-xs text-white/50 uppercase tracking-wider mt-1">{c.label}</div>
+            </div>
+          ))}
+        </div>
+      </RevealSection>
+
+      {/* Services — Horizontal Cards */}
+      <RevealSection className="py-20 px-6" style={{ background: "#1e1e24" }}>
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-14" style={{ color: "#facc15" }}>Our Services</h2>
+          <div className="space-y-6">
+            {services.map(s => (
+              <div key={s.title} className="flex items-start gap-6 rounded-xl p-6 md:p-8 transition-shadow hover:shadow-lg" style={{ background: "#26262e", border: "1px solid #3a3a44" }}>
+                <div className="flex-shrink-0 w-14 h-14 rounded-lg flex items-center justify-center" style={{ background: "rgba(250,204,21,.1)" }}>
+                  <s.Icon size={26} style={{ color: "#facc15" }} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold mb-1 text-white">{s.title}</h3>
+                  <p className="text-sm leading-relaxed" style={{ color: "#94a3b8" }}>{s.desc}</p>
+                </div>
               </div>
             ))}
           </div>
         </div>
-      </section>
+      </RevealSection>
+
+      {/* Caution Stripe Divider */}
+      <div style={{ height: 6, background: cautionStripe, opacity: 0.35 }} />
 
       {/* Trust */}
-      <section className="py-16 px-6" style={{ background: "#1e1e24" }}>
+      <RevealSection className="py-16 px-6" style={{ background: "#26262e" }}>
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-3xl font-bold mb-6" style={{ color: "#facc15" }}>Why Choose Us?</h2>
           <p className="text-lg leading-relaxed" style={{ color: "#94a3b8" }}>
-            Don't trust your home's safety to a handyman.&nbsp;
-            <span className="font-semibold text-white">Master Electrician on every job.</span> Fully licensed, insured, and pulling proper permits every time.
+            Don't trust your home's safety to a handyman.{" "}
+            <span className="font-semibold text-white">Master Electrician on every job.</span>{" "}
+            Fully licensed, insured, and pulling proper permits every time.
           </p>
         </div>
-      </section>
+      </RevealSection>
+
+      {/* Social Proof */}
+      <RevealSection className="py-12 px-6" style={{ background: "#1e1e24" }}>
+        <div className="max-w-3xl mx-auto text-center">
+          <div className="flex justify-center gap-1 mb-3">
+            {[...Array(5)].map((_, i) => <Star key={i} size={20} fill="#facc15" color="#facc15" />)}
+          </div>
+          <p className="italic text-base text-white/70 mb-2">"Had our 1920s panel replaced. They were professional, clean, and handled all the permits. Will absolutely use again."</p>
+          <p className="text-sm" style={{ color: "#475569" }}>— Homeowner, Grosse Pointe Farms</p>
+        </div>
+      </RevealSection>
+
+      {/* Badges */}
+      <div className="flex flex-wrap justify-center gap-3 py-8 px-6" style={{ background: "#26262e" }}>
+        {["Master Licensed", "Fully Insured", "Code Compliant", "Permit on File"].map(b => (
+          <span key={b} className="inline-flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-full" style={{ background: "rgba(250,204,21,.08)", color: "#facc15", border: "1px solid rgba(250,204,21,.2)" }}>
+            <Shield size={12} /> {b}
+          </span>
+        ))}
+      </div>
 
       {/* Footer / Quote Form */}
       <footer id="quote-form" className="px-6 py-16" style={{ background: "#16161c", color: "#94a3b8" }}>
         <div className="max-w-2xl mx-auto">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-white mb-8">Request a Fast Quote</h2>
-
           {sent ? (
-            <p className="text-center text-lg" style={{ color: "#facc15" }}>
-              ⚡ Got it! We'll get back to you shortly with your estimate.
-            </p>
+            <p className="text-center text-lg" style={{ color: "#facc15" }}>⚡ Got it! We'll get back to you shortly with your estimate.</p>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={(e) => { e.preventDefault(); setSent(true); }} className="space-y-4">
               {[
                 { name: "name" as const, placeholder: "Your Name", type: "text" },
                 { name: "phone" as const, placeholder: "Phone Number", type: "tel" },
                 { name: "address" as const, placeholder: "Property Address", type: "text" },
-              ].map((f) => (
-                <input
-                  key={f.name}
-                  required
-                  type={f.type}
-                  placeholder={f.placeholder}
-                  value={form[f.name]}
-                  onChange={(e) => setForm((p) => ({ ...p, [f.name]: e.target.value }))}
+              ].map(f => (
+                <input key={f.name} required type={f.type} placeholder={f.placeholder} value={form[f.name]}
+                  onChange={e => setForm(p => ({ ...p, [f.name]: e.target.value }))}
                   className="w-full rounded-lg px-4 py-3 text-base outline-none focus:ring-2"
                   style={{ background: "#1e1e24", border: "1px solid #3a3a44", color: "#f1f5f9", "--tw-ring-color": "rgba(250,204,21,.4)" } as React.CSSProperties}
                 />
               ))}
-              <textarea
-                required
-                placeholder="Describe the electrical work needed"
-                value={form.details}
-                onChange={(e) => setForm((p) => ({ ...p, details: e.target.value }))}
-                rows={4}
+              <textarea required placeholder="Describe the electrical work needed" value={form.details}
+                onChange={e => setForm(p => ({ ...p, details: e.target.value }))} rows={4}
                 className="w-full rounded-lg px-4 py-3 text-base outline-none resize-none focus:ring-2"
                 style={{ background: "#1e1e24", border: "1px solid #3a3a44", color: "#f1f5f9", "--tw-ring-color": "rgba(250,204,21,.4)" } as React.CSSProperties}
               />
-              <button
-                type="submit"
-                className="w-full font-bold text-lg py-3 rounded-lg transition-opacity hover:opacity-90"
-                style={{ background: "#facc15", color: "#1e1e24" }}
-              >
+              <button type="submit" className="w-full font-bold text-lg py-3 rounded-lg transition-opacity hover:opacity-90" style={{ background: "#facc15", color: "#1e1e24" }}>
                 Submit Quote Request
               </button>
             </form>
           )}
-
-          <p className="text-center text-sm mt-10" style={{ color: "#475569" }}>
-            © 2026 {BRAND}. All rights reserved.
-          </p>
+          <p className="text-center text-sm mt-10" style={{ color: "#475569" }}>© 2026 {BRAND}. All rights reserved.</p>
         </div>
       </footer>
     </div>
