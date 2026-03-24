@@ -290,6 +290,40 @@ const Profile = () => {
           )}
         </div>
 
+        {/* Tab Bar */}
+        <div className="flex border-b border-border mb-6">
+          <button
+            onClick={() => setActiveTab("profile")}
+            className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-widest transition-all border-b-2 flex items-center justify-center gap-1.5 ${
+              activeTab === "profile"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <User size={12} /> Profile
+          </button>
+          <button
+            onClick={() => setActiveTab("history")}
+            className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-widest transition-all border-b-2 flex items-center justify-center gap-1.5 ${
+              activeTab === "history"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Brain size={12} /> Training History
+          </button>
+        </div>
+
+        {activeTab === "history" ? (
+          <Suspense fallback={
+            <div className="flex justify-center py-20">
+              <Loader2 size={24} className="animate-spin text-primary" />
+            </div>
+          }>
+            <TrainingHistory />
+          </Suspense>
+        ) : (
+        <>
         {/* Subscription Details */}
         {(subscribed || isAdmin) && (
           <div className="bg-primary/5 border border-primary/20 p-5 mb-6">
