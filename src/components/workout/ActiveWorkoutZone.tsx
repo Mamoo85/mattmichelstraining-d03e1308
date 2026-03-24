@@ -609,7 +609,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
 
   return (
     <>
-      <div className="fixed inset-0 z-[100] bg-background flex flex-col">
+      <div className="fixed inset-0 z-[110] bg-background flex flex-col">
         {/* Modern Header */}
         <header className="shrink-0 flex items-center justify-between px-4 py-3 bg-gradient-to-b from-background to-background/80 backdrop-blur-sm">
           <div className="flex items-center gap-3 min-w-0">
