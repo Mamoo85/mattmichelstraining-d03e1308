@@ -16,6 +16,7 @@ import { getStoredReferralCode, clearStoredReferralCode } from "@/hooks/useRefer
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 const DoNotPressButton = lazy(() => import("@/components/landing/DoNotPressButton"));
 const AiGeneratorShowcase = lazy(() => import("@/components/landing/AiGeneratorShowcase"));
+const ProveItShowcase = lazy(() => import("@/components/landing/ProveItShowcase"));
 
 import CheckoutConfirmationModal, { type CheckoutProductType } from "@/components/billing/CheckoutConfirmationModal";
 
