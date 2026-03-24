@@ -49,6 +49,7 @@ const OnlineServices = () => {
       <ArrowRight size={14} />
     </Link>
   </motion.div>
-);
+  );
+};
 
 export default OnlineServices;
