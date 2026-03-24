@@ -281,8 +281,8 @@ const FreeAiGenerator = () => {
                   <span className="absolute inset-0 bg-gradient-to-r from-primary via-primary/80 to-primary opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10" />
                 </Button>
 
-                <p className="text-[10px] text-muted-foreground text-center">
-                  Powered by Coach Matt's 20+ years of sports-science methodology
+                <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
+                  I built this AI engine myself and tested it a million times. It is fueled exclusively by my 20 years of in-the-trenches sports science data. No generic internet fluff. I guarantee its effectiveness. — Coach Matt
                 </p>
               </div>
             </motion.section>
