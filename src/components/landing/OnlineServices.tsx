@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowRight, Wifi } from "lucide-react";
 import SectionHeader from "@/components/shared/SectionHeader";
+import { useExerciseCount } from "@/hooks/useExerciseCount";
 
 const OnlineServices = () => (
   <motion.div
