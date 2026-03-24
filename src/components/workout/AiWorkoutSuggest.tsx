@@ -42,7 +42,7 @@ const AiWorkoutSuggest = memo(({ onDone, initialPath }: { onDone: () => void; in
   const [generating, setGenerating] = useState(false);
   const [workout, setWorkout] = useState<GeneratedWorkout | null>(null);
   const [saving, setSaving] = useState(false);
-  const [shareToBank, setShareToBank] = useState(false);
+  
   const [editTimerConfig, setEditTimerConfig] = useState<TimerConfigData | null>(null);
 
   const handleGenerate = async () => {
