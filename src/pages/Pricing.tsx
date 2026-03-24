@@ -189,8 +189,8 @@ const Pricing = () => {
               <span className="text-primary">Online. Expert. Real Coaching.</span>
             </h2>
             <p className="text-sm text-muted-foreground max-w-lg leading-relaxed">
-              20 years of coaching delivered to your phone. Every plan is month-to-month with a
-              <strong className="text-foreground"> 14-day free trial</strong>. Cancel anytime. No contracts.
+              20 years of coaching delivered to your phone. The Foundation tier includes a
+              <strong className="text-foreground"> 14-day free trial</strong> of the full M² App. All plans are month-to-month. Cancel anytime. No contracts.
             </p>
             <div className="flex flex-wrap gap-3 pt-1">
               <Link
