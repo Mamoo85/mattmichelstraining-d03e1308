@@ -98,7 +98,7 @@ const AiWorkoutSuggest = memo(({ onDone, initialPath }: { onDone: () => void; in
     if (error) {
       toast({ title: "Save failed", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: shareToBank ? "Shared to bank! 🎉 +30 M² Points" : "Saved! 💪" });
+      toast({ title: path === "fixit" ? "Protocol saved to Fix It! 💪" : "Workout saved! 💪" });
       onDone();
     }
     setSaving(false);

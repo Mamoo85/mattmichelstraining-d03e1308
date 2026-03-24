@@ -88,6 +88,7 @@ const WorkoutBuilder = ({ onSaved, onClose }: WorkoutBuilderProps) => {
       creator_name: creatorName.trim() || "Anonymous",
       exercises: exerciseData as any,
       is_public: shareToBank,
+      source_type: "manual",
     });
 
     if (error) {
