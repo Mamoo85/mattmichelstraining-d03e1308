@@ -125,6 +125,8 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
   const [adaptLoading, setAdaptLoading] = useState(false);
   const [adaptBanner, setAdaptBanner] = useState<string | null>(null);
   const adaptInputRef = useRef<HTMLInputElement>(null);
+  const [editingTitle, setEditingTitle] = useState(false);
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   // Auto rest timer
   const startRestTimer = useCallback((duration = 90) => {
