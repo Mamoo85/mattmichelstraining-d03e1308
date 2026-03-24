@@ -102,13 +102,32 @@ const AiWorkoutSuggest = memo(({ onDone, initialPath }: { onDone: () => void; in
     setSaving(false);
   };
 
+  const handlePrint = () => {
+    if (!workout) return;
+    printCommunityWorkout({
+      title: workout.title,
+      creatorName: "Coach Matt AI",
+      description: workout.description,
+      exercises: workout.exercises.map((ex) => ({
+        name: ex.title,
+        sets: ex.sets,
+        reps: ex.reps,
+        notes: ex.notes || "",
+      })),
+    });
+  };
+
   const handleStart = () => {
     if (!workout) return;
+    const tc = editTimerConfig || workout.timerConfig;
+    const isCircuit = !!(workout.isTimedCircuit && tc);
     window.dispatchEvent(
       new CustomEvent("open-workout-zone", {
         detail: {
           title: workout.title,
           source: "ai-suggest",
+          isTimedCircuit: isCircuit,
+          timerConfig: isCircuit ? tc : undefined,
           exercises: workout.exercises.map((ex) => ({
             exerciseTitle: ex.title,
             prescribedSets: parseInt(ex.sets) || 3,
