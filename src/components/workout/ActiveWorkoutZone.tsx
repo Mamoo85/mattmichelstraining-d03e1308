@@ -885,7 +885,18 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
       )}
 
       {showIntervalTimer && (
-        <IntervalTimer onClose={() => setShowIntervalTimer(false)} />
+        <IntervalTimer
+          onClose={() => setShowIntervalTimer(false)}
+          initialConfig={initialContext?.timerConfig ? {
+            prep: initialContext.timerConfig.prep,
+            work: initialContext.timerConfig.work,
+            rest: initialContext.timerConfig.rest,
+            rounds: initialContext.timerConfig.rounds,
+            warning: 5,
+          } : undefined}
+          exercises={initialContext?.isTimedCircuit ? exercises.map(e => e.exerciseTitle) : undefined}
+          isCircuit={initialContext?.isTimedCircuit}
+        />
       )}
     </>
   );
