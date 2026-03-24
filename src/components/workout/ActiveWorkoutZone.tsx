@@ -29,8 +29,10 @@ import { safeLocalStorage } from "@/lib/browserStorage";
 /* ─── Context types ─── */
 export interface WorkoutZoneContext {
   title?: string;
-  source?: "program" | "community" | "custom" | "manual";
+  source?: "program" | "community" | "custom" | "manual" | "ai-suggest";
   programId?: string;
+  isTimedCircuit?: boolean;
+  timerConfig?: { work: number; rest: number; rounds: number; prep: number };
   // Pre-populated exercises from programs/community
   exercises?: Array<{
     exerciseId?: string;
