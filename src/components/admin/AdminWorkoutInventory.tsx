@@ -51,9 +51,11 @@ const AdminWorkoutInventory = () => {
   const [batchResults, setBatchResults] = useState<any[]>([]);
 
   const fetchWorkouts = async () => {
+    // Exclude per-user seeded welcome workouts — those are personal copies, not inventory items
     const { data } = await supabase
       .from("community_workouts")
       .select("*")
+      .neq("source_type", "coach_seeded")
       .order("created_at", { ascending: false }) as { data: any[] | null };
     setWorkouts((data as CommunityWorkout[]) || []);
     setLoading(false);
