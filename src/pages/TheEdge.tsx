@@ -315,7 +315,7 @@ const TheEdge = () => (
             fused into one platform no other trainer can match.
           </p>
           <p className="text-xs text-primary font-bold">
-            All technology included free with every membership tier — starting at $12.99/mo.
+            All technology included free with every membership tier — starting at $19.99/mo.
           </p>
         </div>
 

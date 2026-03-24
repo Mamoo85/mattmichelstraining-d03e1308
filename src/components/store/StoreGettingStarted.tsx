@@ -123,9 +123,9 @@ const StoreGettingStarted = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="bg-card shadow-m2 p-4 flex gap-3 border border-primary/20">
-            <div className="text-primary font-mono font-bold text-lg leading-none mt-0.5">$12.99</div>
+             <div className="text-primary font-mono font-bold text-lg leading-none mt-0.5">$19.99</div>
             <div>
-              <p className="text-xs font-bold text-foreground">M² Basic <span className="text-[8px] bg-muted text-muted-foreground px-1.5 py-0.5 uppercase ml-1">Starting</span></p>
+              <p className="text-xs font-bold text-foreground">The Foundation <span className="text-[8px] bg-muted text-muted-foreground px-1.5 py-0.5 uppercase ml-1">Starting</span></p>
               <p className="text-[11px] text-muted-foreground">Full 200+ exercise library, workout logging, challenges, monthly focus plans.</p>
             </div>
           </div>

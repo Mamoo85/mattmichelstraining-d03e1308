@@ -334,7 +334,7 @@ const MatrixEasterEgg = () => {
               Start My 14-Day Free Trial
             </Link>
             <p className="font-mono text-[10px] text-[#33FF33]/40 mt-2">
-              Credit card required · Cancel anytime · $12.99/mo after trial
+              Credit card required · Cancel anytime · $19.99/mo after trial
             </p>
           </div>
 

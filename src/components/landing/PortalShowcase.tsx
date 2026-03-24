@@ -114,7 +114,7 @@ const PortalShowcase = () => (
         to="/pricing"
         className="inline-flex items-center justify-center gap-2 flex-1 border-2 border-primary/40 text-primary px-5 py-3.5 text-xs font-bold uppercase tracking-widest hover:bg-primary/10 transition-m2"
       >
-        Monthly Plans from $12.99
+        Monthly Plans from $19.99
         <ArrowRight size={14} />
       </Link>
     </div>

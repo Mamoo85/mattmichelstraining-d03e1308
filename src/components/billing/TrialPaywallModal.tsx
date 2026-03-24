@@ -42,7 +42,7 @@ const TrialPaywallModal = ({ open, onClose, hardLock }: TrialPaywallModalProps) 
   const navigate = useNavigate();
   const [loading, setLoading] = useState<string | null>(null);
 
-  const handleCheckout = async (tierKey: "basic" | "foundation" | "custom") => {
+  const handleCheckout = async (tierKey: "foundation" | "pro" | "elite") => {
     if (!user) {
       navigate("/auth");
       return;
