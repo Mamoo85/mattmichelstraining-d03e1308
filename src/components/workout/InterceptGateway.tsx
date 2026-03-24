@@ -50,6 +50,15 @@ const InterceptGateway = ({ onSelect, onExit }: InterceptGatewayProps) => {
   const [personalWorkouts, setPersonalWorkouts] = useState<CommunityWorkout[]>([]);
   const [masterTemplates, setMasterTemplates] = useState<CommunityWorkout[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAiGenerator, setShowAiGenerator] = useState(false);
+  const navigate = useNavigate();
+  const hasTemplateAccess = useMinTier("foundation");
+  const { familyIds } = useFamilyUserIds();
+  const [programs, setPrograms] = useState<PurchasedProgram[]>([]);
+  const [activePrograms, setActivePrograms] = useState<ActiveProgramEntry[]>([]);
+  const [personalWorkouts, setPersonalWorkouts] = useState<CommunityWorkout[]>([]);
+  const [masterTemplates, setMasterTemplates] = useState<CommunityWorkout[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Week/Day picker state
   const [pickingProgram, setPickingProgram] = useState<ActiveProgramEntry | null>(null);
