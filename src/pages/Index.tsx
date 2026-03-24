@@ -7,6 +7,7 @@ import SEOHead from "@/components/layout/SEOHead";
 const ChallengeTeaser = lazy(() => import("@/components/landing/ChallengeTeaser"));
 const DoNotPressButton = lazy(() => import("@/components/landing/DoNotPressButton"));
 const FirstMonthPromo = lazy(() => import("@/components/landing/FirstMonthPromo"));
+const AiGeneratorShowcase = lazy(() => import("@/components/landing/AiGeneratorShowcase"));
 
 const FAQ_SCHEMA = {
   "@context": "https://schema.org",
