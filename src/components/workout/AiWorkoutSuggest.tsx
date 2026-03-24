@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import GymPhotoUpload from "@/components/generator/GymPhotoUpload";
 import { motion, AnimatePresence } from "framer-motion";
+import { printCommunityWorkout } from "./printCommunityWorkout";
 
 interface GeneratedExercise {
   title: string;
