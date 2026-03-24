@@ -190,6 +190,24 @@ const InterceptGateway = ({ onSelect, onExit }: InterceptGatewayProps) => {
   };
 
   const handleFreestyle = () => {
+    setShowAiGenerator(true);
+  };
+
+  const handleAiWorkoutStart = (workout: { title: string; description: string; exercises: Array<{ title: string; sets: string; reps: string; notes?: string; exerciseId?: string }> }) => {
+    onSelect({
+      title: workout.title,
+      source: "custom",
+      exercises: workout.exercises.map((ex) => ({
+        exerciseId: ex.exerciseId || "",
+        exerciseTitle: ex.title,
+        prescribedSets: parseInt(ex.sets) || 3,
+        prescribedReps: parseInt(ex.reps) || 10,
+        notes: ex.notes || "",
+      })),
+    });
+  };
+
+  const handleAiSkip = () => {
     onSelect({ title: "Open Workout", source: "manual" });
   };
 
