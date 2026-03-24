@@ -21,6 +21,48 @@ import { Badge } from "@/components/ui/badge";
 import EmptyStateCard from "@/components/shared/EmptyStateCard";
 
 const TrainingHistory = lazy(() => import("@/components/profile/TrainingHistory"));
+const WelcomeGiftModal = lazy(() => import("@/components/dashboard/WelcomeGiftModal"));
+
+/** Posture Analysis card — moved from dashboard home to profile */
+const PostureAnalysisCard = () => {
+  const { user } = useAuth();
+  const [hasPosture, setHasPosture] = useState<boolean | null>(null);
+  const [showCapture, setShowCapture] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("posture_requests" as any)
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .then(({ count }) => setHasPosture((count ?? 0) > 0));
+  }, [user]);
+
+  if (hasPosture !== false) return null;
+
+  return (
+    <div className="bg-card border border-border p-5 mb-6">
+      <div className="flex items-center gap-2 mb-2">
+        <Camera size={14} className="text-primary" />
+        <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Free Posture Analysis</span>
+      </div>
+      <p className="text-xs text-muted-foreground mb-3">
+        Take a quick front & side photo — Coach Matt will analyze your posture and send you a personalized breakdown.
+      </p>
+      <button
+        onClick={() => setShowCapture(true)}
+        className="w-full h-10 border-2 border-primary text-primary flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest hover:bg-primary hover:text-primary-foreground transition-all"
+      >
+        <Camera size={14} /> Get My Free Analysis
+      </button>
+      {showCapture && (
+        <Suspense fallback={null}>
+          <WelcomeGiftModal open={showCapture} onClose={() => setShowCapture(false)} />
+        </Suspense>
+      )}
+    </div>
+  );
+};
 
 interface ProfileData {
   full_name: string | null;
