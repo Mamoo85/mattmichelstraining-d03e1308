@@ -120,7 +120,9 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
   );
   const [workoutLogId, setWorkoutLogId] = useState<string | null>(null);
   const [formTrackerExercise, setFormTrackerExercise] = useState<string | null>(null);
-  const [showIntervalTimer, setShowIntervalTimer] = useState(false);
+  const [showIntervalTimer, setShowIntervalTimer] = useState(
+    !!(initialContext?.isTimedCircuit && initialContext?.timerConfig)
+  );
   const [restSeconds, setRestSeconds] = useState(0);
   const restRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [workoutTitle, setWorkoutTitle] = useState(initialContext?.title || "Workout");
