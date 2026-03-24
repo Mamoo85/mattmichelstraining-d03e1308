@@ -53,7 +53,9 @@ const fade = (delay: number) => ({
   transition: { duration: 0.5, delay },
 });
 
-const MembershipTiers = memo(() => (
+const MembershipTiers = memo(() => {
+  const exerciseCount = useExerciseCount();
+  return (
   <motion.div {...fade(0.15)} className="mb-12">
     <div className="flex items-center gap-2 mb-4">
       <GraduationCap size={18} className="text-primary" />
