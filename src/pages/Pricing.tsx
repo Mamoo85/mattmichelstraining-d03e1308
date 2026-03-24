@@ -397,7 +397,9 @@ const Pricing = () => {
                   <p className="text-xs font-bold text-foreground mt-1 leading-snug">{card.headline}</p>
                 )}
                 {card.pitch && (
-                  <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed">{card.pitch}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed">
+                    {card.key === "foundation" ? card.pitch.replace("Exercise Library", `${exerciseCount}+ Exercise Library`) : card.pitch}
+                  </p>
                 )}
                 <div className="flex items-baseline gap-1 mt-2 mb-1.5">
                   {billingCycle === "annual" ? (
