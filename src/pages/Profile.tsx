@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { useAuth, TIERS, TierKey, TIER_DISCOUNTS } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import AppNavbar from "@/components/layout/AppNavbar";
@@ -10,7 +10,7 @@ import { Link } from "react-router-dom";
 import {
   User, Trophy, Medal, Award, Save, Loader2, Gift, Search,
   Crown, ExternalLink, ShoppingBag, Dumbbell, Calendar, Shield,
-  ArrowRight, ChevronDown, ChevronUp, Zap, Clock, FileText, Send, Activity
+  ArrowRight, ChevronDown, ChevronUp, Zap, Clock, FileText, Send, Activity, Brain
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import GiftSessionModal from "@/components/sessions/GiftSessionModal";
@@ -19,6 +19,8 @@ import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import EmptyStateCard from "@/components/shared/EmptyStateCard";
+
+const TrainingHistory = lazy(() => import("@/components/profile/TrainingHistory"));
 
 interface ProfileData {
   full_name: string | null;
@@ -30,6 +32,7 @@ interface ProfileData {
 const Profile = () => {
   const { user, subscribed, subscriptionTier, subscriptionEnd, checkSubscription } = useAuth();
   const { isAdmin } = useIsAdmin();
+  const [activeTab, setActiveTab] = useState<"profile" | "history">("profile");
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [fullName, setFullName] = useState("");
   const [athleteName, setAthleteName] = useState("");
@@ -287,6 +290,40 @@ const Profile = () => {
           )}
         </div>
 
+        {/* Tab Bar */}
+        <div className="flex border-b border-border mb-6">
+          <button
+            onClick={() => setActiveTab("profile")}
+            className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-widest transition-all border-b-2 flex items-center justify-center gap-1.5 ${
+              activeTab === "profile"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <User size={12} /> Profile
+          </button>
+          <button
+            onClick={() => setActiveTab("history")}
+            className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-widest transition-all border-b-2 flex items-center justify-center gap-1.5 ${
+              activeTab === "history"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Brain size={12} /> Training History
+          </button>
+        </div>
+
+        {activeTab === "history" ? (
+          <Suspense fallback={
+            <div className="flex justify-center py-20">
+              <Loader2 size={24} className="animate-spin text-primary" />
+            </div>
+          }>
+            <TrainingHistory />
+          </Suspense>
+        ) : (
+        <>
         {/* Subscription Details */}
         {(subscribed || isAdmin) && (
           <div className="bg-primary/5 border border-primary/20 p-5 mb-6">
@@ -620,6 +657,8 @@ const Profile = () => {
             </p>
           )}
         </div>
+        </>
+        )}
       </div>
       <SupportTicketForm />
       <TechSupportButton />
