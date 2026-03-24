@@ -13,7 +13,7 @@ import { toast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import m2Logo from "@/assets/m2-logo.jpg";
 
-type TrialPath = "parent" | "basic" | "foundation" | null;
+type TrialPath = "parent" | "foundation" | "pro" | null;
 
 const TRIAL_PROGRAMS = [
   {
