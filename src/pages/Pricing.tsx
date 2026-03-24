@@ -34,10 +34,10 @@ const TIER_CARDS: {
     key: "foundation",
     icon: Zap,
     headline: "20 Years of Iron Game Knowledge in Your Pocket.",
-    pitch: "Stop guessing. Get the exact digital blueprint I use for my athletes. Full access to the M2 App, my private 85+ Exercise Library, the Fix It Rehab Library, and the AI Generator.",
+    pitch: `Stop guessing. Get the exact digital blueprint I use for my athletes. Full access to the M2 App, my private Exercise Library, the Fix It Rehab Library, and the AI Generator.`,
     features: [
       "Full M² App access",
-      "85+ exercise video library",
+      "Exercise video library",
       "Fix It rehab library",
       "AI Workout Generator",
       "Progress logging & tracking",
