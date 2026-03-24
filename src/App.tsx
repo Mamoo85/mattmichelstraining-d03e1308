@@ -172,6 +172,29 @@ const ProveItWrapper = () => {
   );
 };
 
+const DUAL_FAB_ROUTES = ["/dashboard", "/progress", "/coach", "/nutrition", "/profile", "/schedule"];
+
+const DualFabWrapper = () => {
+  const { user } = useAuth();
+  const [pathname, setPathname] = useState("");
+
+  useEffect(() => {
+    setPathname(window.location.pathname);
+    const observer = new MutationObserver(() => setPathname(window.location.pathname));
+    observer.observe(document.querySelector("head")!, { childList: true, subtree: true });
+    const handlePop = () => setPathname(window.location.pathname);
+    window.addEventListener("popstate", handlePop);
+    return () => { observer.disconnect(); window.removeEventListener("popstate", handlePop); };
+  }, []);
+
+  if (!user || !DUAL_FAB_ROUTES.includes(pathname)) return null;
+  return (
+    <Suspense fallback={null}>
+      <DualFab />
+    </Suspense>
+  );
+};
+
 const App = () => (
   <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, maxAge: 24 * 60 * 60_000 }}>
     <SplashScreen />

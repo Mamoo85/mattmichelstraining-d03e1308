@@ -369,6 +369,21 @@ const IntervalTimer = ({ onClose, initialConfig, exercises: circuitExercises, is
               ))}
             </div>
 
+            {/* Circuit exercise list */}
+            {isCircuit && circuitExercises && circuitExercises.length > 0 && (
+              <div className="bg-white/5 rounded-lg p-2">
+                <span className="text-[8px] font-bold uppercase tracking-widest text-white/30 block mb-1">Circuit Exercises</span>
+                <div className="space-y-0.5">
+                  {circuitExercises.map((ex, i) => (
+                    <div key={i} className="flex items-center gap-2 text-[10px] text-white/70">
+                      <span className="text-white/30 font-mono w-4 text-right">{i + 1}.</span>
+                      <span>{ex}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Presets + volume in one row */}
             <div className="flex items-center gap-1.5">
               {PRESETS.map((p) => (
@@ -386,6 +401,22 @@ const IntervalTimer = ({ onClose, initialConfig, exercises: circuitExercises, is
               </div>
             </div>
           </>
+        )}
+
+        {/* +/- round buttons when paused mid-circuit */}
+        {!isSetup && !running && isCircuit && (
+          <div className="flex items-center justify-center gap-3 bg-white/5 rounded-lg py-2">
+            <span className="text-[9px] font-bold uppercase tracking-widest text-white/40">Rounds</span>
+            <button
+              onClick={() => setConfig(c => ({ ...c, rounds: Math.max(currentRound, c.rounds - 1) }))}
+              className="w-8 h-8 flex items-center justify-center text-white/50 hover:text-white bg-white/10 rounded-lg text-lg font-bold"
+            >−</button>
+            <span className="font-mono text-sm font-bold text-white w-8 text-center">{config.rounds}</span>
+            <button
+              onClick={() => setConfig(c => ({ ...c, rounds: c.rounds + 1 }))}
+              className="w-8 h-8 flex items-center justify-center text-white/50 hover:text-white bg-white/10 rounded-lg text-lg font-bold"
+            >+</button>
+          </div>
         )}
 
         {/* Action buttons */}
