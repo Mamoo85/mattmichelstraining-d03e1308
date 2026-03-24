@@ -5,65 +5,51 @@ import { safeLocalStorage } from "@/lib/browserStorage";
 
 // Tier mapping: product_id → tier key
 export const TIERS = {
-  basic: {
-    product_id: "prod_UBI78IQsBpyfNw",
-    price_id: "price_1TCvWxD52tPWee46Mhmf2mEs",
-    name: "M² Basic",
-    price: "$12.99",
-    priceNum: 12.99,
-  },
   foundation: {
-    product_id: "prod_UBI7Wdb3liTxiF",
-    price_id: "price_1TCvXOD52tPWee46dgedK3Ky",
-    name: "M² Foundation",
+    product_id: "prod_UBI78IQsBpyfNw", // TODO: replace with real Stripe product ID
+    price_id: "price_1TCvWxD52tPWee46Mhmf2mEs", // TODO: replace with real Stripe price ID
+    name: "The Foundation",
     price: "$19.99",
     priceNum: 19.99,
   },
-  custom: {
-    product_id: "prod_UBI8SV9Fa6CibX",
-    price_id: "price_1TCvXrD52tPWee46jNJ6sSZ9",
-    name: "M² Custom",
-    price: "$49.99",
-    priceNum: 49.99,
+  pro: {
+    product_id: "prod_UBI7Wdb3liTxiF", // TODO: replace with real Stripe product ID
+    price_id: "price_1TCvXOD52tPWee46dgedK3Ky", // TODO: replace with real Stripe price ID
+    name: "Pro (Semi-Custom)",
+    price: "$149.99",
+    priceNum: 149.99,
   },
-  team_elite: {
-    product_id: "prod_UBI8mP9jA5rV3U",
-    price_id: "price_1TCvYED52tPWee46oJ5hfI5X",
-    name: "M² Team/Elite",
-    price: "$99.99",
-    priceNum: 99.99,
+  elite: {
+    product_id: "prod_UBI8SV9Fa6CibX", // TODO: replace with real Stripe product ID
+    price_id: "price_1TCvXrD52tPWee46jNJ6sSZ9", // TODO: replace with real Stripe price ID
+    name: "Elite (1-on-1)",
+    price: "$349.99",
+    priceNum: 349.99,
   },
 } as const;
 
 // Annual pricing (2 months free = 10 months price)
 export const ANNUAL_TIERS: Record<TierKey, { price_id: string; product_id: string; price: string; priceNum: number; monthlyEquiv: string }> = {
-  basic: {
-    product_id: "prod_UC3NyJRutYTL87",
-    price_id: "price_1TDfH3D52tPWee4668pIobVk",
-    price: "$129.90",
-    priceNum: 129.90,
-    monthlyEquiv: "$10.83",
-  },
   foundation: {
-    product_id: "prod_UC3OvNMcgtPafc",
-    price_id: "price_1TDfHPD52tPWee46Gk18jY4m",
-    price: "$199.90",
-    priceNum: 199.90,
+    product_id: "prod_UC3NyJRutYTL87", // TODO: replace with real Stripe product ID
+    price_id: "price_1TDfH3D52tPWee4668pIobVk", // TODO: replace with real Stripe price ID
+    price: "$199.99",
+    priceNum: 199.99,
     monthlyEquiv: "$16.66",
   },
-  custom: {
-    product_id: "prod_UC3ONcP6ZoWtdM",
-    price_id: "price_1TDfHjD52tPWee46PQkctivf",
-    price: "$499.90",
-    priceNum: 499.90,
-    monthlyEquiv: "$41.66",
+  pro: {
+    product_id: "prod_UC3OvNMcgtPafc", // TODO: replace with real Stripe product ID
+    price_id: "price_1TDfHPD52tPWee46Gk18jY4m", // TODO: replace with real Stripe price ID
+    price: "$1,499.99",
+    priceNum: 1499.99,
+    monthlyEquiv: "$125.00",
   },
-  team_elite: {
-    product_id: "prod_UC3OtnhWc3wNQc",
-    price_id: "price_1TDfI3D52tPWee46F6XteV0s",
-    price: "$999.90",
-    priceNum: 999.90,
-    monthlyEquiv: "$83.33",
+  elite: {
+    product_id: "prod_UC3ONcP6ZoWtdM", // TODO: replace with real Stripe product ID
+    price_id: "price_1TDfHjD52tPWee46PQkctivf", // TODO: replace with real Stripe price ID
+    price: "$3,499.99",
+    priceNum: 3499.99,
+    monthlyEquiv: "$291.66",
   },
 };
 
@@ -71,12 +57,11 @@ export const FIRST_MONTH_COUPON_ID = "JJwqu21q";
 
 export type TierKey = keyof typeof TIERS;
 
-// Tier-based store discounts (more aggressive)
+// Tier-based store discounts
 export const TIER_DISCOUNTS: Record<TierKey, number> = {
-  basic: 10,
-  foundation: 15,
-  custom: 20,
-  team_elite: 25,
+  foundation: 10,
+  pro: 15,
+  elite: 20,
 };
 
 export const getTierByProductId = (productId: string | null): TierKey | null => {
@@ -141,7 +126,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     let initialDone = false;
 
     try {
-      // Set up listener FIRST (per Supabase best practice)
       const result = supabase.auth.onAuthStateChange((_event, newSession) => {
         setSession(newSession);
         if (!initialDone) {
@@ -161,7 +145,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.warn("[Auth] onAuthStateChange blocked or failed:", e);
     }
 
-    // Fallback: if onAuthStateChange hasn't fired within 2s, resolve loading
     const fallbackTimer = setTimeout(() => {
       if (!initialDone) {
         initialDone = true;
@@ -169,7 +152,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     }, 2000);
 
-    // getSession to pick up existing session
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       if (!initialDone) {
         initialDone = true;
@@ -190,7 +172,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [checkSubscription]);
 
-  // Auto-refresh subscription every 5 min while logged in (was 60s)
+  // Auto-refresh subscription every 5 min while logged in
   useEffect(() => {
     if (!session) return;
     const interval = setInterval(checkSubscription, 5 * 60_000);
@@ -198,7 +180,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [session, checkSubscription]);
 
   const signOut = async () => {
-    // Clear React Query cache + persisted cache to prevent data bleed between users
     const { queryClient } = await import("@/App");
     queryClient.clear();
     safeLocalStorage.removeItem("m2-query-cache");

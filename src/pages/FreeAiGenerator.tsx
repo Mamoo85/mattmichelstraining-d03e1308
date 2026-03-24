@@ -371,7 +371,7 @@ const FreeAiGenerator = () => {
                   </Button>
                 </div>
                 <p className="text-[10px] text-muted-foreground mt-3">
-                  14-day free trial • $12.99/mo after • Cancel anytime
+                  14-day free trial • $19.99/mo after • Cancel anytime
                 </p>
               </div>
 

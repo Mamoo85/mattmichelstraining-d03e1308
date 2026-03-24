@@ -86,8 +86,8 @@ const M2Difference = () => (
     <div className="bg-card rounded-lg ring-1 ring-white/5 border-l-4 border-primary p-5 mt-4">
       <p className="text-sm text-muted-foreground leading-relaxed">
         <span className="text-foreground font-bold">Matt personally reviews every athlete's logs.</span> Custom
-        programs start at <span className="text-primary font-bold">$20</span>. Monthly coaching
-        from <span className="text-primary font-bold">$12.99/mo</span>. The same coach whether you're
+        programs start at <span className="text-primary font-bold">$149.99/mo</span>. Foundation access
+        from <span className="text-primary font-bold">$19.99/mo</span>. The same coach whether you're
         in Grosse Pointe or across the country.
       </p>
     </div>

@@ -27,7 +27,7 @@ const ForParents = () => {
     <div className="min-h-screen bg-background">
       <SEOHead
         title="For Parents — Youth Strength Training Safety"
-        description="3.5M youth sports injuries per year — 50% are preventable. Learn how M² Training keeps your athlete safe with science-backed strength programs from $12.99/mo."
+        description="3.5M youth sports injuries per year — 50% are preventable. Learn how M² Training keeps your athlete safe with science-backed strength programs from $19.99/mo."
         path="/for-parents"
       />
       <AppNavbar />

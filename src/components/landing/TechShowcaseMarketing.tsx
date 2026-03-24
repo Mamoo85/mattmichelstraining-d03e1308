@@ -179,7 +179,7 @@ const TechShowcaseMarketing = ({ variant = "full" }: Props) => {
               </Link>
             </Button>
             <p className="text-[10px] text-muted-foreground mt-2">
-              Credit card required • $12.99/mo after trial • Cancel anytime
+              Credit card required • $19.99/mo after trial • Cancel anytime
             </p>
           </div>
         </div>
