@@ -1,16 +1,11 @@
 import { memo, lazy, Suspense, useState, useEffect } from "react";
-import { Camera } from "lucide-react";
 import MonthlyFocusWidget from "@/components/features/MonthlyFocusWidget";
 import UpcomingSessions from "@/components/sessions/UpcomingSessions";
 import EmptyStateCard from "@/components/shared/EmptyStateCard";
-import AnnualUpsellCard from "@/components/pricing/AnnualUpsellCard";
 import TodaysTrainingCard from "@/components/programs/TodaysTrainingCard";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
-import { safeLocalStorage } from "@/lib/browserStorage";
 
 const SharedWorkoutFeed = lazy(() => import("@/components/workout/SharedWorkoutFeed"));
-const WelcomeGiftModal = lazy(() => import("./WelcomeGiftModal"));
 const CustomProgramRequest = lazy(() => import("./CustomProgramRequest"));
 
 interface DashboardHomeProps {
@@ -21,82 +16,33 @@ interface DashboardHomeProps {
 }
 
 const DashboardHome = memo(({ isNewUser, isInPerson, onViewPoints, onViewReferrals }: DashboardHomeProps) => {
-  const { subscribed, user } = useAuth();
-  const [showWelcome, setShowWelcome] = useState(false);
-  const [hasPosture, setHasPosture] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    // Never show welcome modal for in-person clients
-    if (!isInPerson && isNewUser && !safeLocalStorage.getItem("m2-welcome-gift-seen")) {
-      setShowWelcome(true);
-    }
-  }, [isNewUser, isInPerson]);
-
-  useEffect(() => {
-    if (!user) return;
-    supabase
-      .from("posture_requests" as any)
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", user.id)
-      .then(({ count }) => setHasPosture((count ?? 0) > 0));
-  }, [user]);
-
+  const { subscribed } = useAuth();
 
   return (
-  <div className="space-y-6">
-    {/* Welcome modal — never for in-person clients */}
-    {!isInPerson && (
+    <div className="space-y-5">
+      {/* Empty state CTA — never for in-person clients */}
+      {isNewUser && !isInPerson && (
+        <EmptyStateCard
+          title="Welcome to M²"
+          description="Your training log is empty. Select your starting track and begin Day 1."
+          ctaLabel="Select Your Starting Track →"
+          ctaTo="/shop"
+        />
+      )}
+
       <Suspense fallback={null}>
-        {showWelcome && (
-          <WelcomeGiftModal open={showWelcome} onClose={() => setShowWelcome(false)} />
-        )}
+        <CustomProgramRequest />
       </Suspense>
-    )}
 
-    {/* Empty state CTA — never for in-person clients */}
-    {isNewUser && !isInPerson && (
-      <EmptyStateCard
-        title="Welcome to M²"
-        description="Your training log is empty. Select your starting track and begin Day 1 — Matt will review every session and coach you personally."
-        ctaLabel="Select Your Starting Track →"
-        ctaTo="/shop"
-      />
-    )}
+      <TodaysTrainingCard />
 
+      <UpcomingSessions />
+      <MonthlyFocusWidget />
 
-    {/* Posture CTA — never for in-person clients, only if never submitted AND never dismissed the welcome modal */}
-    {!isInPerson && hasPosture === false && !safeLocalStorage.getItem("m2-welcome-gift-seen") && (
-      <div className="bg-card border border-border p-5 space-y-2">
-        <div className="flex items-center gap-2">
-          <Camera size={14} className="text-primary" />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Free Posture Analysis</span>
-        </div>
-        <p className="text-xs text-muted-foreground">
-          Take a quick front & side photo — Coach Matt will analyze your posture and send you a personalized breakdown.
-        </p>
-        <button
-          onClick={() => setShowWelcome(true)}
-          className="w-full h-10 border-2 border-primary text-primary flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest hover:bg-primary hover:text-primary-foreground transition-all"
-        >
-          <Camera size={14} /> Get My Free Analysis
-        </button>
-      </div>
-    )}
-
-    <Suspense fallback={null}>
-      <CustomProgramRequest />
-    </Suspense>
-
-    <TodaysTrainingCard />
-    <AnnualUpsellCard />
-
-    <UpcomingSessions />
-    <MonthlyFocusWidget />
-
-    <Suspense fallback={null}>
-      <SharedWorkoutFeed />
-    </Suspense>
-  </div>
+      <Suspense fallback={null}>
+        <SharedWorkoutFeed />
+      </Suspense>
+    </div>
   );
 });
 

@@ -5,18 +5,16 @@ import TrialPaywallModal from "@/components/billing/TrialPaywallModal";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
-import { Loader2, Crown, User, Dumbbell, Play, Trophy } from "lucide-react";
+import { Loader2, Crown, User, Dumbbell, Trophy, Sparkles, Wrench } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import PwaInstallBanner from "@/components/layout/PwaInstallBanner";
 import StudioCheckIn from "@/components/sessions/StudioCheckIn";
 import { safeLocalStorage } from "@/lib/browserStorage";
 
-// Extracted sub-components
 import DashboardHome from "@/components/dashboard/DashboardHome";
 import WorkoutsTab from "@/components/dashboard/WorkoutsTab";
 
-// Lazy-load heavier tabs
 import { lazy, Suspense } from "react";
 const MyPrograms = lazy(() => import("@/components/features/MyPrograms"));
 const ChallengeHub = lazy(() => import("@/components/dashboard/ChallengeHub"));
@@ -28,7 +26,7 @@ import PortalOnboarding from "@/components/dashboard/PortalOnboarding";
 const BASE_TABS = [
   { key: "home", label: "Home" },
   { key: "progress", label: "Progress" },
-  { key: "programs", label: "My Programs" },
+  { key: "programs", label: "Programs" },
   { key: "workouts", label: "Workouts" },
   { key: "challenge", label: "Challenge" },
 ] as const;
@@ -51,7 +49,6 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (!user) return;
-    // Fetch profile + activity counts in parallel
     Promise.all([
       supabase.from("profiles").select("full_name, athlete_name, is_in_person").eq("user_id", user.id).single(),
       supabase.from("user_active_programs").select("id", { count: "exact", head: true }).eq("user_id", user.id),
@@ -76,38 +73,37 @@ const Dashboard = () => {
   const handleViewPoints = useCallback(() => setActiveTab("challenge"), []);
   const handleViewReferrals = useCallback(() => setActiveTab("challenge"), []);
 
+  const canUseGenerator = subscribed || isAdmin;
+
   return (
     <div className="min-h-screen bg-background">
       <AppNavbar />
       <PwaInstallBanner />
       <div className="container pt-20 pb-40 md:pb-24 px-4 sm:px-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
+        {/* Compact Header */}
+        <div className="flex items-center justify-between gap-3 mb-5">
           <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="text-base sm:text-lg font-bold text-foreground truncate">Welcome back, {athleteDisplay}</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm sm:text-base font-bold text-foreground truncate">{athleteDisplay}</h2>
               {isAdmin ? (
-                <Badge className="flex items-center gap-1 text-[10px] uppercase tracking-widest shrink-0 bg-primary text-primary-foreground">
-                  <Crown size={10} /> M² Coach
+                <Badge className="text-[9px] uppercase tracking-widest shrink-0 bg-primary text-primary-foreground">
+                  <Crown size={9} className="mr-0.5" /> Coach
                 </Badge>
               ) : subscriptionTier ? (
-                <Badge className="flex items-center gap-1 text-[10px] uppercase tracking-widest shrink-0">
-                  <Crown size={10} /> {TIERS[subscriptionTier].name}
+                <Badge className="text-[9px] uppercase tracking-widest shrink-0">
+                  <Crown size={9} className="mr-0.5" /> {TIERS[subscriptionTier].name}
                 </Badge>
               ) : (
-                <Badge variant="outline" className="text-[10px] uppercase tracking-widest shrink-0">Free</Badge>
+                <Badge variant="outline" className="text-[9px] uppercase tracking-widest shrink-0">Free</Badge>
               )}
             </div>
-            <p className="text-xs sm:text-sm text-muted-foreground">Your training portal · Real training, real results</p>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <Link
-              to="/profile"
-              className="flex items-center gap-1.5 bg-muted text-muted-foreground px-3 py-2 text-[10px] font-bold uppercase tracking-widest hover:text-foreground transition-all"
-            >
-              <User size={12} /> Profile
-            </Link>
-          </div>
+          <Link
+            to="/profile"
+            className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground text-[10px] font-bold uppercase tracking-widest transition-colors"
+          >
+            <User size={14} />
+          </Link>
         </div>
 
         <StudioCheckIn onOpenWorkouts={() => setActiveTab("workouts")} />
@@ -118,17 +114,64 @@ const Dashboard = () => {
             onClick={() => window.dispatchEvent(new Event("resume-workout-zone"))}
             className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground py-3 mb-4 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all animate-pulse"
           >
-            <Play size={14} /> Resume Paused Workout
+            Resume Paused Workout
           </button>
         )}
 
+        {/* Action Buttons — Enter Portal + Generators */}
+        <div className="space-y-2 mb-5">
+          {/* Primary: Enter Portal */}
+          <button
+            onClick={() => {
+              if (!subscribed && hasPrograms === false && hasLogs === false && !isAdmin) {
+                navigate("/pricing");
+                return;
+              }
+              window.dispatchEvent(new CustomEvent("open-workout-zone", { detail: null }));
+            }}
+            className="w-full h-12 bg-primary text-primary-foreground flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all"
+          >
+            <Dumbbell size={14} /> Open Workout Portal
+          </button>
+
+          {/* Secondary row: Generator + Fix It */}
+          {canUseGenerator && (
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => navigate("/the-edge")}
+                className="h-11 bg-card border border-primary/40 text-primary flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:bg-primary hover:text-primary-foreground transition-all"
+              >
+                <Sparkles size={13} /> Workout Generator
+              </button>
+              <button
+                onClick={() => {
+                  navigate("/the-edge");
+                  // Set path to fix-it via URL param or state
+                  setTimeout(() => window.dispatchEvent(new CustomEvent("set-generator-path", { detail: "fixit" })), 100);
+                }}
+                className="h-11 bg-card border border-[hsl(270_60%_50%)] text-[hsl(270_60%_60%)] flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:bg-[hsl(270_60%_50%)] hover:text-white transition-all"
+              >
+                <Wrench size={13} /> Fix It Engine
+              </button>
+            </div>
+          )}
+
+          {/* Prove It */}
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent("open-prove-it-zone"))}
+            className="w-full h-11 bg-card border border-border text-muted-foreground flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:border-primary/40 hover:text-foreground transition-all"
+          >
+            <Trophy size={13} /> Submit PR Attempt
+          </button>
+        </div>
+
         {/* Pill tab switcher */}
-        <div className="flex gap-1.5 mb-6 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap scrollbar-hide bg-muted/50 rounded-full p-1 sm:w-fit">
+        <div className="flex gap-1 mb-5 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap scrollbar-hide bg-muted/50 rounded-full p-1 sm:w-fit">
           {tabs.map((t) => (
             <button
               key={t.key}
               onClick={() => setActiveTab(t.key)}
-              className={`px-4 py-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest transition-all whitespace-nowrap shrink-0 rounded-full ${
+              className={`px-3 py-2 text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap shrink-0 rounded-full ${
                 activeTab === t.key
                   ? "bg-primary text-primary-foreground shadow-md"
                   : "text-muted-foreground hover:text-foreground"
@@ -155,40 +198,16 @@ const Dashboard = () => {
           {activeTab === "challenge" && <ChallengeHub />}
           {activeTab === "team" && <TeamManager />}
         </Suspense>
-
-        {/* Persistent bottom buttons — sits above BottomTabBar (h-14) */}
-        <div className="fixed bottom-14 left-0 right-0 z-40 bg-background/80 backdrop-blur-md border-t border-border px-4 py-3 md:bottom-0 md:safe-bottom">
-          <div className="flex gap-2">
-            <button
-              onClick={() => window.dispatchEvent(new CustomEvent("open-prove-it-zone"))}
-              className="flex-1 h-12 bg-primary text-primary-foreground flex items-center justify-center gap-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all"
-            >
-              <Trophy size={14} /> Attempting New Best
-            </button>
-            <button
-              onClick={() => {
-                if (!subscribed && hasPrograms === false && hasLogs === false && !isAdmin) {
-                  navigate("/pricing");
-                  return;
-                }
-                window.dispatchEvent(new CustomEvent("open-workout-zone", { detail: null }));
-              }}
-              className="flex-1 h-12 bg-card border border-primary text-primary flex items-center justify-center gap-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest hover:bg-primary hover:text-primary-foreground transition-all"
-            >
-              <Dumbbell size={14} /> Enter The Portal
-            </button>
-          </div>
-        </div>
       </div>
 
-      {/* Trial banner — hide for in-person clients */}
+      {/* Trial banner */}
       {isOnTrial && !subscribed && !isAdmin && !profile?.is_in_person && (
         <div className="fixed top-16 left-0 right-0 z-40 bg-primary text-primary-foreground text-center py-2 text-xs font-bold uppercase tracking-widest">
           🔥 Trial: {trialDaysLeft} day{trialDaysLeft !== 1 ? "s" : ""} remaining
         </div>
       )}
 
-      {/* Hard paywall — skip for in-person clients */}
+      {/* Hard paywall */}
       {trialExpired && !subscribed && !isAdmin && !profile?.is_in_person && (
         <TrialPaywallModal open={true} hardLock />
       )}

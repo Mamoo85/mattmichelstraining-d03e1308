@@ -792,12 +792,12 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
         )}
 
         {/* Frosted Glass Command Bar */}
-        <footer className="fixed bottom-0 w-full z-50 bg-card/60 backdrop-blur-xl border-t border-white/[0.06] px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+        <footer className="fixed bottom-0 w-full z-50 bg-card/60 backdrop-blur-xl border-t border-white/[0.06] px-4 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
           {/* Circular Rest Timer */}
           {restSeconds > 0 && (
-            <div className="flex items-center justify-center gap-4 mb-3">
-              <div className="relative h-12 w-12">
-                <svg className="h-12 w-12 -rotate-90" viewBox="0 0 48 48">
+            <div className="flex items-center justify-center gap-3 mb-2">
+              <div className="relative h-10 w-10">
+                <svg className="h-10 w-10 -rotate-90" viewBox="0 0 48 48">
                   <circle cx="24" cy="24" r="20" fill="none" stroke="hsl(var(--muted))" strokeWidth="3" />
                   <circle
                     cx="24" cy="24" r="20" fill="none"
@@ -809,53 +809,47 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
                     className="transition-all duration-1000"
                   />
                 </svg>
-                <span className="absolute inset-0 flex items-center justify-center text-xs font-bold font-mono text-primary">
+                <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold font-mono text-primary">
                   {restSeconds}
                 </span>
               </div>
-              <div>
-                <span className="text-xs font-semibold text-foreground block">Rest Timer</span>
-                <button
-                  onClick={clearRestTimer}
-                  className="text-[11px] font-medium text-primary hover:underline"
-                >
-                  Skip →
-                </button>
-              </div>
+              <button
+                onClick={clearRestTimer}
+                className="text-[10px] font-medium text-primary hover:underline"
+              >
+                Skip →
+              </button>
             </div>
           )}
-          <div className="flex items-center justify-between gap-3 max-w-lg mx-auto">
-            {/* Timer pill */}
+          {/* Row 1: Timer + Add */}
+          <div className="flex items-center justify-between gap-2 mb-2">
             <WorkoutTimer
               initialElapsed={initialContext?.resumedElapsed || 0}
               autoStart={timerAutoStart}
               onElapsedChange={handleElapsedChange}
             />
-
-            {/* Add Exercise */}
             <button
               onClick={() => setShowPicker(true)}
               disabled={showPicker}
               className={cn(
-                "flex items-center gap-1.5 px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wide transition-all",
+                "flex items-center gap-1.5 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wide transition-all",
                 "bg-primary text-primary-foreground shadow-[0_0_16px_hsl(var(--primary)/0.3)]",
                 "hover:shadow-[0_0_24px_hsl(var(--primary)/0.5)] active:scale-95",
                 showPicker && "opacity-50"
               )}
             >
-              <Plus size={14} /> Add
-            </button>
-
-            {/* Exit */}
-            <button
-              onClick={handleFinishClick}
-              disabled={saving}
-              className="flex items-center gap-1.5 px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wide border-2 border-destructive/60 text-destructive hover:bg-destructive hover:text-destructive-foreground transition-all active:scale-95"
-            >
-              {saving ? <Loader2 size={14} className="animate-spin" /> : <X size={14} />}
-              Exit Workout
+              <Plus size={12} /> Add
             </button>
           </div>
+          {/* Row 2: Exit — always visible */}
+          <button
+            onClick={handleFinishClick}
+            disabled={saving}
+            className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-wide border-2 border-destructive/60 text-destructive hover:bg-destructive hover:text-destructive-foreground transition-all active:scale-95"
+          >
+            {saving ? <Loader2 size={12} className="animate-spin" /> : <X size={12} />}
+            Exit Workout
+          </button>
         </footer>
       </div>
 
