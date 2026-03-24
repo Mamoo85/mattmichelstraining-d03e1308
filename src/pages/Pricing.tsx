@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useContentMap } from "@/hooks/useSiteContent";
 import TrialCTA from "@/components/billing/TrialCTA";
+import { useExerciseCount } from "@/hooks/useExerciseCount";
 import { getStoredReferralCode, clearStoredReferralCode } from "@/hooks/useReferral";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 const DoNotPressButton = lazy(() => import("@/components/landing/DoNotPressButton"));
