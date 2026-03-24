@@ -366,19 +366,15 @@ const AiWorkoutSuggest = memo(({ onDone, initialPath }: { onDone: () => void; in
               </button>
             </div>
 
-            {/* Share toggle */}
+            {/* Info: saved privately */}
             <div className="flex items-center gap-3 bg-muted p-3">
-              <Share2 size={14} className={shareToBank ? "text-primary" : "text-muted-foreground"} />
+              <Dumbbell size={14} className="text-primary" />
               <div className="flex-1">
-                <span className="text-xs font-bold text-foreground block">Share to Workout Bank</span>
-                <span className="text-[10px] text-muted-foreground">+30 M² Points when shared</span>
+                <span className="text-xs font-bold text-foreground block">
+                  {path === "fixit" ? "Saved to Fix It library" : "Saved to Generated tab"}
+                </span>
+                <span className="text-[10px] text-muted-foreground">Private to your account</span>
               </div>
-              <button
-                onClick={() => setShareToBank(!shareToBank)}
-                className={`w-10 h-5 rounded-full transition-all relative ${shareToBank ? "bg-primary" : "bg-border"}`}
-              >
-                <div className={`w-4 h-4 rounded-full bg-white absolute top-0.5 transition-all ${shareToBank ? "left-5" : "left-0.5"}`} />
-              </button>
             </div>
 
             {/* Actions */}
