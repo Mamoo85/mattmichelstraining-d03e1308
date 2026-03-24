@@ -71,6 +71,7 @@ const DynamicSitemap = lazyRetry(() => import("./pages/DynamicSitemap"));
 const Assessment = lazyRetry(() => import("./pages/Assessment"));
 const WebDesignAgency = lazyRetry(() => import("./pages/WebDesignAgency"));
 const LandscapeMockup = lazyRetry(() => import("./pages/LandscapeMockup"));
+const PlumberMockup = lazyRetry(() => import("./pages/PlumberMockup"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -202,6 +203,7 @@ const App = () => (
                     <Route path="/sitemap.xml" element={<DynamicSitemap />} />
                     <Route path="/detroit-web-design" element={<WebDesignAgency />} />
                     <Route path="/demo-landscaping" element={<LandscapeMockup />} />
+                    <Route path="/demo-plumber" element={<PlumberMockup />} />
                     <Route path="/coach" element={<ProtectedRoute><SubscriptionGuard><Coach /></SubscriptionGuard></ProtectedRoute>} />
                     <Route path="/trial-welcome" element={<ProtectedRoute><TrialWelcome /></ProtectedRoute>} />
                     <Route path="/assessment" element={<ProtectedRoute><Assessment /></ProtectedRoute>} />
