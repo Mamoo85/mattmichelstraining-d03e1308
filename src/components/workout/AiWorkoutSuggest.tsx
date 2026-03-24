@@ -24,9 +24,9 @@ interface GeneratedWorkout {
 
 type Path = null | "workout" | "fixit";
 
-const AiWorkoutSuggest = memo(({ onDone }: { onDone: () => void }) => {
+const AiWorkoutSuggest = memo(({ onDone, initialPath }: { onDone: () => void; initialPath?: "workout" | "fixit" }) => {
   const { user } = useAuth();
-  const [path, setPath] = useState<Path>(null);
+  const [path, setPath] = useState<Path>(initialPath ?? null);
   const [userText, setUserText] = useState("");
   const [gymImageBase64, setGymImageBase64] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
