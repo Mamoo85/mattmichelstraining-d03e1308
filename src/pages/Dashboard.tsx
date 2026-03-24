@@ -141,17 +141,13 @@ const Dashboard = () => {
           {canUseGenerator && (
             <div className="grid grid-cols-2 gap-2">
               <button
-                onClick={() => navigate("/the-edge")}
+                onClick={() => setGeneratorView("workout")}
                 className="h-11 bg-card border border-primary/40 text-primary flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:bg-primary hover:text-primary-foreground transition-all"
               >
                 <Sparkles size={13} /> Workout Generator
               </button>
               <button
-                onClick={() => {
-                  navigate("/the-edge");
-                  // Set path to fix-it via URL param or state
-                  setTimeout(() => window.dispatchEvent(new CustomEvent("set-generator-path", { detail: "fixit" })), 100);
-                }}
+                onClick={() => setGeneratorView("fixit")}
                 className="h-11 bg-card border border-[hsl(270_60%_50%)] text-[hsl(270_60%_60%)] flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:bg-[hsl(270_60%_50%)] hover:text-white transition-all"
               >
                 <Wrench size={13} /> Fix It Engine
