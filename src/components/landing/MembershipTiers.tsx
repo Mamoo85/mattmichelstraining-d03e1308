@@ -23,26 +23,28 @@ const MEMBERSHIP_TIERS = [
     name: "Pro (Semi-Custom)",
     price: "$149.99/mo",
     highlights: [
-      "Full movement assessment",
-      "Custom 4-week training block from Matt",
+      "Everything in Foundation",
+      "Custom 4-week training block built by Matt",
       "2 weekly video form-checks",
       "Direct coach feedback on mechanics",
+      "Movement assessment included",
     ],
-    cta: "Start 14-Day Free Trial",
-    link: "/auth?redirect=/trial-welcome",
+    cta: "Go Pro",
+    link: "/pricing",
     accent: true,
   },
   {
     name: "Elite (1-on-1)",
     price: "$349.99/mo",
     highlights: [
+      "Everything in Pro",
       "Live video movement assessment",
       "Bespoke weekly programming",
       "Daily direct messaging with Matt",
       "Priority scheduling for in-person",
     ],
-    cta: "Start 14-Day Free Trial",
-    link: "/auth?redirect=/trial-welcome",
+    cta: "Go Elite",
+    link: "/pricing",
     accent: false,
   },
 ] as const;
@@ -64,7 +66,7 @@ const MembershipTiers = memo(() => {
       </h2>
     </div>
     <p className="text-sm text-muted-foreground mb-6 max-w-2xl leading-relaxed">
-      Every plan includes a 14-day free trial. Pick the level that fits your athlete — upgrade or cancel anytime.
+      The Foundation includes a 14-day free trial of the M² App. Pro and Elite are custom coaching packages — no trial needed, just results. Upgrade or cancel anytime.
     </p>
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
       {MEMBERSHIP_TIERS.map((t) => (

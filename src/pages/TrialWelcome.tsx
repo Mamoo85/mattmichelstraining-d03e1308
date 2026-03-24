@@ -182,9 +182,9 @@ const TrialWelcome = () => {
         {/* ─── STEP 1: CHOOSE PATH ─── */}
         {!canSelectProgram && (
           <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-            <h2 className="text-sm font-bold text-foreground text-center mb-1">Step 1 — Choose Your Trial Type</h2>
+            <h2 className="text-sm font-bold text-foreground text-center mb-1">Step 1 — Choose Your Path</h2>
             <p className="text-xs text-muted-foreground text-center mb-4">
-              This determines your membership after the 14-day trial.
+              Foundation includes a 14-day free trial of the M² App. Pro and Elite start immediately — custom coaching, no trial needed.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
@@ -203,22 +203,22 @@ const TrialWelcome = () => {
                 onClick={() => setSelectedPath("parent")}
                 icon={Users}
                 title="Parent / Family Pack"
-                charge="$149.99/mo (Pro) after trial"
-                desc="Free assessment + custom program from Matt + FREE child membership."
+                charge="$149.99/mo (Pro) — starts immediately"
+                desc="Custom assessment + program from Matt + FREE child membership. This is the Pro custom coaching package with a family add-on."
                 badge="🎁 Family Pack Included"
                 warning={null}
-                bonus="Free online assessment for parent & child"
+                bonus="Assessment for parent & child included"
               />
               <TrialPathCard
                 selected={selectedPath === "pro"}
                 onClick={() => setSelectedPath("pro")}
                 icon={Star}
-                title="Pro (Semi-Custom) Trial"
-                charge="$149.99/mo (Pro) after trial"
-                desc="Custom 4-week block, 2 weekly video form-checks, and direct coach feedback."
+                title="Pro (Semi-Custom)"
+                charge="$149.99/mo — starts immediately"
+                desc="Custom 4-week block built by Matt, 2 weekly video form-checks, and direct coach feedback. This is the custom coaching package."
                 badge={null}
                 warning={null}
-                bonus="Free movement assessment"
+                bonus="Movement assessment included"
               />
             </div>
 

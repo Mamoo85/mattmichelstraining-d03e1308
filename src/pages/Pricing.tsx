@@ -53,11 +53,11 @@ const TIER_CARDS: {
     icon: Star,
     highlight: true,
     headline: "YouTube Can't Watch You Squat. I Can.",
-    pitch: "An article can't tell you why your back hurts. I will. Complete an assessment, and I build your custom 4-week block. Send me two video form-checks every week. I critique your mechanics, fix weak points, and keep you safe.",
+    pitch: "Straight up, this is the program you get when you want a professional to build you a workout program to do at your own gym, at school, or at home. This is the one you do when you can't budget twice a week personal training, but you can do once a month. Complete an assessment, and I build your custom 4-week block. Send me two video form-checks every week. I critique your mechanics, fix weak points, and keep you safe.",
     features: [
       "Everything in Foundation",
       "Full movement assessment",
-      "Custom 4-week training block",
+      "Custom 4-week training block built by Matt",
       "2 weekly video form-checks",
       "Direct coach feedback on mechanics",
       "Program adjusted every cycle",
@@ -93,7 +93,7 @@ const FAQ_ITEMS = [
   },
   {
     question: "How does the Pro ($149) tier work?",
-    answer: "When you sign up, you'll fill out a detailed damage report (injury history) and upload a quick movement video. I personally review it, build your 4-week program to fix your specific weaknesses, and every week you send me videos of your heavy lifts so I can correct your form.",
+    answer: "This is the custom coaching package — no trial, just real programming. You fill out a detailed damage report (injury history) and upload a quick movement video. I personally review it, build your 4-week program to fix your specific weaknesses, and every week you send me videos of your heavy lifts so I can correct your form. The 14-day trial is for the Foundation app tier only.",
   },
   {
     question: "Is there a contract?",
@@ -189,15 +189,15 @@ const Pricing = () => {
               <span className="text-primary">Online. Expert. Real Coaching.</span>
             </h2>
             <p className="text-sm text-muted-foreground max-w-lg leading-relaxed">
-              20 years of coaching delivered to your phone. Every plan is month-to-month with a
-              <strong className="text-foreground"> 14-day free trial</strong>. Cancel anytime. No contracts.
+              20 years of coaching delivered to your phone. The Foundation tier includes a
+              <strong className="text-foreground"> 14-day free trial</strong> of the full M² App. All plans are month-to-month. Cancel anytime. No contracts.
             </p>
             <div className="flex flex-wrap gap-3 pt-1">
               <Link
                 to="/auth?redirect=/trial-welcome"
                 className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
               >
-                Start 14-Day Free Trial
+                Start Free Trial
               </Link>
               <a
                 href="mailto:matthewmichels4@gmail.com?subject=Training%20Inquiry"
