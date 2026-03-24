@@ -49,12 +49,12 @@ const TRIAL_PROGRAMS = [
   {
     id: "custom",
     title: "Custom Program — Built by Matt",
-    subtitle: "Foundation & Youth Dev Only",
+    subtitle: "Pro & Foundation",
     description: "Matt builds your program from scratch after reviewing your postural assessment. Start with a free assessment.",
     icon: Star,
     tags: ["Personalized", "Assessment Included", "1-on-1"],
     color: "text-primary",
-    forPaths: ["parent", "foundation"] as TrialPath[],
+    forPaths: ["parent", "pro"] as TrialPath[],
   },
 ];
 
