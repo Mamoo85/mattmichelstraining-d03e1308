@@ -32,6 +32,7 @@ interface ProfileData {
 const Profile = () => {
   const { user, subscribed, subscriptionTier, subscriptionEnd, checkSubscription } = useAuth();
   const { isAdmin } = useIsAdmin();
+  const [activeTab, setActiveTab] = useState<"profile" | "history">("profile");
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [fullName, setFullName] = useState("");
   const [athleteName, setAthleteName] = useState("");
