@@ -325,6 +325,17 @@ const TheEdge = () => (
           <TrialCTABlock />
         </div>
 
+        {/* AI Brain Simulator */}
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-3">
+            <Brain size={18} className="text-[hsl(var(--synth-cyan))]" />
+            <h2 className="text-base md:text-lg font-black uppercase tracking-tight text-foreground">See the AI in Action</h2>
+          </div>
+          <Suspense fallback={<div className="h-[420px] bg-card border border-border animate-pulse" />}>
+            <AIBrainSimulator />
+          </Suspense>
+        </div>
+
         {/* Quick nav */}
         <div className="flex flex-wrap gap-2 mb-8">
           {FEATURES.map(f => (
