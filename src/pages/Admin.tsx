@@ -322,6 +322,7 @@ const Admin = () => {
               </div>
             )},
             { key: "schedule", label: "Schedule", content: <AdminSchedule /> },
+            { key: "vip", label: "VIP Access", content: <AdminVipAccess /> },
           ]} />
         )}
 
