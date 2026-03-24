@@ -611,7 +611,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
     <>
       <div className="fixed inset-0 z-[110] bg-background flex flex-col">
         {/* Modern Header */}
-        <header className="shrink-0 flex items-center justify-between px-4 py-3 bg-gradient-to-b from-background to-background/80 backdrop-blur-sm">
+        <header className="shrink-0 flex items-center justify-between px-4 py-3 bg-gradient-to-b from-background to-background/80 backdrop-blur-sm border-b border-white/[0.06]">
           <div className="flex items-center gap-3 min-w-0">
             <img src={m2Logo} alt="M² Training" className="h-8 w-8 rounded-full object-cover" />
             <div className="min-w-0 flex items-center gap-1.5">
@@ -624,7 +624,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
                   onBlur={() => setEditingTitle(false)}
                   onKeyDown={(e) => { if (e.key === "Enter") setEditingTitle(false); }}
                   autoFocus
-                  className="text-sm font-bold text-foreground bg-muted/50 border border-border rounded-lg px-2 py-0.5 outline-none focus:ring-2 focus:ring-primary/40 w-full max-w-[160px]"
+                  className="text-sm font-bold text-foreground bg-muted/50 border border-border rounded-lg px-2 py-0.5 outline-none focus:ring-2 focus:ring-primary/40 w-full max-w-[140px]"
                 />
               ) : (
                 <>
@@ -642,12 +642,12 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
               )}
             </div>
             {readinessResult && readinessResult.weightAdjustmentPct !== 0 && (
-              <span className="text-[10px] font-medium text-primary ml-11">
+              <span className="hidden sm:block text-[10px] font-medium text-primary ml-1">
                 {Math.abs(readinessResult.weightAdjustmentPct)}% adjusted
               </span>
             )}
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 shrink-0">
             {exercises.length > 0 && (
               <button
                 onClick={() => adaptInputRef.current?.click()}
@@ -675,7 +675,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
             </button>
             <Popover>
               <PopoverTrigger asChild>
-                <button className="h-9 flex items-center gap-1.5 px-3 rounded-full text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
+                <button className="hidden sm:flex h-9 items-center gap-1.5 px-3 rounded-full text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
                   <CalendarIcon size={14} />
                   {format(date, "MMM d")}
                 </button>
@@ -691,6 +691,15 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
                 />
               </PopoverContent>
             </Popover>
+            <button
+              onClick={handleFinishClick}
+              disabled={saving}
+              className="ml-1 flex items-center gap-1.5 px-3 py-2 rounded-full border border-destructive/60 text-destructive bg-card hover:bg-destructive hover:text-destructive-foreground transition-all text-[10px] font-bold uppercase tracking-wide"
+              title="Exit workout"
+            >
+              {saving ? <Loader2 size={12} className="animate-spin" /> : <X size={12} />}
+              Exit
+            </button>
           </div>
         </header>
 
@@ -786,7 +795,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
 
         {/* Quick Log NLP Bar */}
         {exercises.length > 0 && (
-          <div className="fixed bottom-[80px] left-0 right-0 z-50 px-4 pb-1">
+          <div className="fixed bottom-[116px] left-0 right-0 z-40 px-4 pb-1">
             <QuickLogBar exercises={exercises} onApplyParsed={handleQuickLogParsed} />
           </div>
         )}
