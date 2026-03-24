@@ -182,9 +182,9 @@ const TrialWelcome = () => {
         {/* ─── STEP 1: CHOOSE PATH ─── */}
         {!canSelectProgram && (
           <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-            <h2 className="text-sm font-bold text-foreground text-center mb-1">Step 1 — Choose Your Trial Type</h2>
+            <h2 className="text-sm font-bold text-foreground text-center mb-1">Step 1 — Choose Your Path</h2>
             <p className="text-xs text-muted-foreground text-center mb-4">
-              This determines your membership after the 14-day trial.
+              Foundation includes a 14-day free trial of the M² App. Pro and Elite start immediately — custom coaching, no trial needed.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
