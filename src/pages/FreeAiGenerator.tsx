@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
-import { Dumbbell, Loader2, Zap, ChevronRight, ArrowRight, Sparkles, Lock, ShieldAlert, Mail, CheckCircle2 } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState, useEffect } from "react";
+import { Dumbbell, Loader2, Zap, ArrowRight, Sparkles, Lock, ShieldAlert, Mail, CheckCircle2, ArrowLeft, Wrench } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import SEOHead from "@/components/layout/SEOHead";
@@ -16,26 +16,7 @@ import GymPhotoUpload from "@/components/generator/GymPhotoUpload";
 const GENERATION_LIMIT = 1;
 const STORAGE_KEY = "m2_ai_generations_count";
 
-const EXPERIENCE = [
-  { value: "beginner", label: "Beginner (0-6 months)" },
-  { value: "intermediate", label: "Intermediate (6mo-3yrs)" },
-  { value: "advanced", label: "Advanced (3+ years)" },
-];
-const GOALS = [
-  { value: "strength", label: "Strength" },
-  { value: "hypertrophy", label: "Hypertrophy (Muscle Growth)" },
-  { value: "endurance", label: "Endurance & Conditioning" },
-  { value: "sport_performance", label: "Sport Performance" },
-];
-const DAYS = ["2", "3", "4", "5", "6"];
-const EQUIPMENT = [
-  { value: "full_gym", label: "Full Gym (Barbell, Rack, Dumbbells)" },
-  { value: "home_gym", label: "Home Gym (Dumbbells, Bench, Rack)" },
-  { value: "dumbbells_only", label: "Dumbbells Only" },
-  { value: "bodyweight", label: "Bodyweight Only" },
-  { value: "school_gym", label: "School / Team Weight Room" },
-  { value: "bands_bodyweight", label: "Resistance Bands + Bodyweight" },
-];
+type Path = null | "workout" | "fixit";
 
 interface GeneratedDay {
   dayLabel: string;
@@ -50,10 +31,8 @@ interface GeneratedProgram {
 const FreeAiGenerator = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [experience, setExperience] = useState("");
-  const [goal, setGoal] = useState("");
-  const [daysPerWeek, setDaysPerWeek] = useState("3");
-  const [equipment, setEquipment] = useState("");
+  const [path, setPath] = useState<Path>(null);
+  const [userText, setUserText] = useState("");
   const [gymImageBase64, setGymImageBase64] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [program, setProgram] = useState<GeneratedProgram | null>(null);
@@ -63,7 +42,6 @@ const FreeAiGenerator = () => {
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
 
-  // Load generation count from localStorage
   useEffect(() => {
     const stored = safeLocalStorage.getItem(STORAGE_KEY);
     if (stored) setGenCount(parseInt(stored, 10) || 0);
@@ -72,7 +50,7 @@ const FreeAiGenerator = () => {
   const isLimitReached = !user && genCount >= GENERATION_LIMIT;
 
   const handleGenerate = async () => {
-    if (!experience || !goal || (!equipment && !gymImageBase64)) return;
+    if (!userText.trim()) return;
     setLoading(true);
     setError(null);
     setProgram(null);
@@ -85,17 +63,14 @@ const FreeAiGenerator = () => {
           apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         },
         body: JSON.stringify({
-          experience,
-          goal,
-          daysPerWeek,
-          equipment: gymImageBase64 ? undefined : equipment,
+          path,
+          userText: userText.trim(),
           gymImageBase64: gymImageBase64 || undefined,
         }),
       });
       if (!resp.ok) {
         const d = await resp.json().catch(() => ({}));
         if (d.limit_reached) {
-          // Server confirmed limit — sync local state
           setGenCount(GENERATION_LIMIT);
           safeLocalStorage.setItem(STORAGE_KEY, String(GENERATION_LIMIT));
         }
@@ -103,7 +78,6 @@ const FreeAiGenerator = () => {
       }
       const data = await resp.json();
       setProgram(data);
-      // Increment generation counter for non-authenticated users
       if (!user) {
         const newCount = genCount + 1;
         setGenCount(newCount);
@@ -124,10 +98,21 @@ const FreeAiGenerator = () => {
     }
   };
 
+  const handleBack = () => {
+    setPath(null);
+    setUserText("");
+    setGymImageBase64(null);
+    setError(null);
+  };
+
   const phaseColors: Record<string, string> = {
     "Rolling/Soft Tissue": "bg-blue-500/20 text-blue-300",
+    "Tissue Release": "bg-blue-500/20 text-blue-300",
     "Dynamic Warmup": "bg-amber-500/20 text-amber-300",
+    Mobility: "bg-amber-500/20 text-amber-300",
     "Main Work": "bg-primary/20 text-primary",
+    "Isometric Loading": "bg-primary/20 text-primary",
+    "Isometric/Corrective Loading": "bg-primary/20 text-primary",
     "Finisher/Conditioning": "bg-red-500/20 text-red-300",
     Cooldown: "bg-green-500/20 text-green-300",
   };
@@ -136,7 +121,7 @@ const FreeAiGenerator = () => {
     <>
       <SEOHead
         title="Free AI Workout Generator | Custom Training Programs"
-        description="Generate a free, custom 7-day workout plan based on your exact equipment, goals, and experience level using advanced sports-science AI."
+        description="Generate a free, custom workout plan or rehab protocol based on your exact situation using advanced sports-science AI."
         path="/free-ai-generator"
         jsonLd={{
           "@context": "https://schema.org",
@@ -145,7 +130,7 @@ const FreeAiGenerator = () => {
           applicationCategory: "HealthApplication",
           operatingSystem: "Web",
           offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-          description: "Generate a free, custom workout plan based on your exact equipment, goals, and experience level.",
+          description: "Generate a free, custom workout plan or rehab protocol based on your situation.",
           provider: { "@type": "Organization", name: "M² Training", url: "https://www.mattmichelstraining.com" },
         }}
       />
@@ -163,128 +148,137 @@ const FreeAiGenerator = () => {
               Free AI Workout <span className="text-primary">Generator</span>
             </h1>
             <p className="text-muted-foreground max-w-xl mx-auto text-sm md:text-base">
-              Get a custom training program built on real sports-science principles — compound movements,
-              progressive overload, and Coach Matt's methodology. No fluff, no machines.
+              Get a custom training program or rehab protocol built on real sports-science principles — powered by Coach Matt's 20+ years of methodology.
             </p>
           </motion.div>
         </section>
 
-        {/* Form */}
+        {/* Form / Fork / Results */}
         <AnimatePresence mode="wait">
           {!program ? (
             <motion.section
-              key="form"
+              key={path ?? "fork"}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               className="max-w-lg mx-auto px-4"
             >
-              <div className="bg-card border border-border rounded-lg p-6 shadow-lg space-y-5">
-                {/* Gym Photo Upload — above dropdowns */}
-                <GymPhotoUpload onImageChange={setGymImageBase64} />
-
-                {/* Divider */}
-                {!gymImageBase64 && (
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1 h-px bg-border" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">or select manually</span>
-                    <div className="flex-1 h-px bg-border" />
-                  </div>
-                )}
-
-                <div>
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1.5">Experience Level *</label>
-                  <Select value={experience} onValueChange={setExperience}>
-                    <SelectTrigger><SelectValue placeholder="Select your experience..." /></SelectTrigger>
-                    <SelectContent>
-                      {EXPERIENCE.map(e => <SelectItem key={e.value} value={e.value}>{e.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1.5">Primary Goal *</label>
-                  <Select value={goal} onValueChange={setGoal}>
-                    <SelectTrigger><SelectValue placeholder="What's your goal?" /></SelectTrigger>
-                    <SelectContent>
-                      {GOALS.map(g => <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1.5">Days Per Week</label>
-                  <Select value={daysPerWeek} onValueChange={setDaysPerWeek}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {DAYS.map(d => <SelectItem key={d} value={d}>{d} days</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Equipment dropdown — hidden when photo is attached */}
-                {!gymImageBase64 && (
-                  <div>
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1.5">Available Equipment *</label>
-                    <Select value={equipment} onValueChange={setEquipment}>
-                      <SelectTrigger><SelectValue placeholder="What do you have access to?" /></SelectTrigger>
-                      <SelectContent>
-                        {EQUIPMENT.map(e => <SelectItem key={e.value} value={e.value}>{e.label}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-
-                {error && <p className="text-destructive text-xs text-center">{error}</p>}
-
-                {/* Rate limit lockout banner */}
-                {isLimitReached && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="bg-destructive/10 border-2 border-destructive/40 rounded-lg p-5 text-center space-y-3"
+              {/* === FORK: choose path === */}
+              {path === null && (
+                <div className="space-y-4">
+                  <button
+                    onClick={() => setPath("workout")}
+                    className="w-full bg-card border-2 border-border hover:border-primary rounded-lg p-8 text-left transition-colors group"
                   >
-                    <ShieldAlert size={28} className="text-destructive mx-auto" />
-                    <p className="text-sm font-bold text-foreground">
-                      You've maxed out your free AI generations.
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      To continue building custom programs and actually track your weights, create your free M² Portal account now.
-                    </p>
-                    <Button
-                      onClick={() => navigate("/auth?mode=signup")}
-                      className="w-full h-12 font-black uppercase tracking-wider text-sm"
-                      size="lg"
-                    >
-                      Create Free Account <ArrowRight size={16} />
-                    </Button>
-                  </motion.div>
-                )}
+                    <div className="flex items-center gap-4">
+                      <span className="text-4xl">🏋️‍♂️</span>
+                      <div>
+                        <p className="text-lg font-black text-foreground group-hover:text-primary transition-colors">
+                          Build a Workout
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Get a full training program tailored to your equipment, goals, and experience.
+                        </p>
+                      </div>
+                    </div>
+                  </button>
 
-                <Button
-                  onClick={handleGenerate}
-                  disabled={loading || !experience || !goal || (!equipment && !gymImageBase64) || isLimitReached}
-                  className="w-full h-14 text-base font-black uppercase tracking-wider relative overflow-hidden group"
-                  size="lg"
-                >
-                  {isLimitReached ? (
-                    <span className="flex items-center gap-2">
-                      <Lock size={18} /> Free Limit Reached ({GENERATION_LIMIT}/{GENERATION_LIMIT})
-                    </span>
-                  ) : loading ? (
-                    <span className="flex items-center gap-2"><Loader2 className="animate-spin" size={18} /> Building Your Program...</span>
-                  ) : (
-                    <span className="flex items-center gap-2">
-                      <Sparkles size={18} /> Generate Free Workout{!user && ` (${genCount}/${GENERATION_LIMIT})`}
-                    </span>
+                  <button
+                    onClick={() => setPath("fixit")}
+                    className="w-full bg-card border-2 border-border hover:border-primary rounded-lg p-8 text-left transition-colors group"
+                  >
+                    <div className="flex items-center gap-4">
+                      <span className="text-4xl">🩹</span>
+                      <div>
+                        <p className="text-lg font-black text-foreground group-hover:text-primary transition-colors">
+                          Fix a Pain Point
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Describe what hurts — get a corrective rehab protocol from the Fix It Engine.
+                        </p>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              )}
+
+              {/* === PATH: workout or fixit === */}
+              {path !== null && (
+                <div className="bg-card border border-border rounded-lg p-6 shadow-lg space-y-5">
+                  <button
+                    onClick={handleBack}
+                    className="text-xs font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-colors flex items-center gap-1"
+                  >
+                    <ArrowLeft size={12} /> Choose different path
+                  </button>
+
+                  {path === "workout" && (
+                    <>
+                      <GymPhotoUpload onImageChange={setGymImageBase64} />
+                      <Textarea
+                        value={userText}
+                        onChange={(e) => setUserText(e.target.value)}
+                        placeholder="Tell me about yourself. (e.g., I'm 35, been lifting for a year, want to get stronger, and I only have 3 days a week with dumbbells and a bench.)"
+                        className="min-h-[112px] bg-background"
+                      />
+                    </>
                   )}
-                  <span className="absolute inset-0 bg-gradient-to-r from-primary via-primary/80 to-primary opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10" />
-                </Button>
 
-                <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
-                  I built this AI engine myself and tested it a million times. It is fueled exclusively by my 20 years of in-the-trenches sports science data. No generic internet fluff. I guarantee its effectiveness. — Coach Matt
-                </p>
-              </div>
+                  {path === "fixit" && (
+                    <Textarea
+                      value={userText}
+                      onChange={(e) => setUserText(e.target.value)}
+                      placeholder="Where does it hurt and when does it happen? (e.g., My lower back tightens up during heavy squats, or my right shoulder hurts when I put on my shirt.)"
+                      className="min-h-[112px] bg-background"
+                    />
+                  )}
+
+                  {error && <p className="text-destructive text-xs text-center">{error}</p>}
+
+                  {isLimitReached && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="bg-destructive/10 border-2 border-destructive/40 rounded-lg p-5 text-center space-y-3"
+                    >
+                      <ShieldAlert size={28} className="text-destructive mx-auto" />
+                      <p className="text-sm font-bold text-foreground">You've maxed out your free AI generations.</p>
+                      <p className="text-xs text-muted-foreground">
+                        Create your free M² Portal account to continue building custom programs.
+                      </p>
+                      <Button onClick={() => navigate("/auth?mode=signup")} className="w-full h-12 font-black uppercase tracking-wider text-sm" size="lg">
+                        Create Free Account <ArrowRight size={16} />
+                      </Button>
+                    </motion.div>
+                  )}
+
+                  <Button
+                    onClick={handleGenerate}
+                    disabled={loading || !userText.trim() || isLimitReached}
+                    className="w-full h-14 text-base font-black uppercase tracking-wider relative overflow-hidden group"
+                    size="lg"
+                  >
+                    {isLimitReached ? (
+                      <span className="flex items-center gap-2">
+                        <Lock size={18} /> Free Limit Reached ({GENERATION_LIMIT}/{GENERATION_LIMIT})
+                      </span>
+                    ) : loading ? (
+                      <span className="flex items-center gap-2"><Loader2 className="animate-spin" size={18} /> {path === "fixit" ? "Building Protocol..." : "Building Your Program..."}</span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        {path === "fixit" ? <Wrench size={18} /> : <Sparkles size={18} />}
+                        {path === "fixit" ? "Generate Rehab Protocol" : "Generate Program"}
+                        {!user && ` (${genCount}/${GENERATION_LIMIT})`}
+                      </span>
+                    )}
+                    <span className="absolute inset-0 bg-gradient-to-r from-primary via-primary/80 to-primary opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10" />
+                  </Button>
+
+                  <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
+                    I built this AI engine myself and tested it a million times. It is fueled exclusively by my 20 years of in-the-trenches sports science data. No generic internet fluff. I guarantee its effectiveness. — Coach Matt
+                  </p>
+                </div>
+              )}
             </motion.section>
           ) : (
             <motion.section
@@ -332,7 +326,7 @@ const FreeAiGenerator = () => {
                 ))}
               </div>
 
-              {/* Email / Save Button */}
+              {/* Email / Save */}
               <div className="flex flex-col sm:flex-row items-center gap-3 max-w-md mx-auto mb-6">
                 <Button
                   variant={emailSent ? "secondary" : "outline"}
@@ -350,39 +344,27 @@ const FreeAiGenerator = () => {
 
               {/* Upsell CTA */}
               <div className="bg-gradient-to-br from-primary/20 via-card to-primary/10 border-2 border-primary/40 rounded-lg p-6 md:p-8 text-center mb-6">
-                <h3 className="text-lg md:text-xl font-black text-foreground mb-2">
-                  This Is Just Week 1.
-                </h3>
+                <h3 className="text-lg md:text-xl font-black text-foreground mb-2">This Is Just Week 1.</h3>
                 <p className="text-sm text-muted-foreground max-w-md mx-auto mb-5">
                   Coach Matt's system built this baseline. To unlock the <span className="text-foreground font-bold">full 8-week progression</span>,
                   live weight tracking, form analysis, and direct coach feedback — load this directly into <span className="text-primary font-bold">The M² Portal</span>.
                 </p>
-
                 <div className="flex flex-col sm:flex-row items-center gap-3 max-w-md mx-auto">
-                  <Input
-                    type="email"
-                    placeholder="your@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="flex-1"
-                  />
+                  <Input type="email" placeholder="your@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className="flex-1" />
                   <Button onClick={handleTrialStart} className="w-full sm:w-auto font-bold gap-2">
                     Start Free Trial <ArrowRight size={16} />
                   </Button>
                 </div>
-                <p className="text-[10px] text-muted-foreground mt-3">
-                  14-day free trial • $19.99/mo after • Cancel anytime
-                </p>
+                <p className="text-[10px] text-muted-foreground mt-3">14-day free trial • $19.99/mo after • Cancel anytime</p>
               </div>
 
               <button
-                onClick={() => { setProgram(null); setEmailSent(false); }}
+                onClick={() => { setProgram(null); setEmailSent(false); setPath(null); setUserText(""); setGymImageBase64(null); }}
                 className="text-xs font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-colors mx-auto block mb-10"
               >
-                ← Generate Another Workout
+                ← Generate Another
               </button>
 
-              {/* Tech Marketing Showcase */}
               <TechShowcaseMarketing variant="full" />
             </motion.section>
           )}
