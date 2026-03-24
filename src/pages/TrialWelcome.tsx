@@ -24,7 +24,7 @@ const TRIAL_PROGRAMS = [
     icon: Shield,
     tags: ["3 Days/Week", "Bodyweight", "Core"],
     color: "text-emerald-500",
-    forPaths: ["basic", "parent", "foundation"] as TrialPath[],
+    forPaths: ["foundation", "parent", "pro"] as TrialPath[],
   },
   {
     id: "a1b2c3d4-0002-4000-8000-000000000002",
