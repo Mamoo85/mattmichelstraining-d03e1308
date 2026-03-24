@@ -188,7 +188,7 @@ const InterceptGateway = ({ onSelect, onExit }: InterceptGatewayProps) => {
   };
 
   const handleFreestyle = () => {
-    onSelect({ title: "Freestyle Session", source: "manual" });
+    onSelect({ title: "Open Workout", source: "manual" });
   };
 
   // Derived data for picker
