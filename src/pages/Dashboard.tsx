@@ -5,7 +5,7 @@ import TrialPaywallModal from "@/components/billing/TrialPaywallModal";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
-import { Loader2, Crown, User, Dumbbell, Trophy, Sparkles, Wrench } from "lucide-react";
+import { Loader2, Crown, User, Dumbbell, Trophy, Sparkles, Wrench, ArrowLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import PwaInstallBanner from "@/components/layout/PwaInstallBanner";
@@ -20,6 +20,8 @@ const MyPrograms = lazy(() => import("@/components/features/MyPrograms"));
 const ChallengeHub = lazy(() => import("@/components/dashboard/ChallengeHub"));
 const TeamManager = lazy(() => import("@/components/features/TeamManager"));
 const ProgressCharts = lazy(() => import("@/components/features/ProgressCharts"));
+const AiWorkoutSuggest = lazy(() => import("@/components/workout/AiWorkoutSuggest"));
+const FixItLibrary = lazy(() => import("@/components/features/FixItLibrary"));
 
 import PortalOnboarding from "@/components/dashboard/PortalOnboarding";
 
@@ -46,6 +48,7 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("home");
   const [hasPrograms, setHasPrograms] = useState<boolean | null>(null);
   const [hasLogs, setHasLogs] = useState<boolean | null>(null);
+  const [generatorView, setGeneratorView] = useState<null | "workout" | "fixit">(null);
 
   useEffect(() => {
     if (!user) return;
@@ -138,17 +141,13 @@ const Dashboard = () => {
           {canUseGenerator && (
             <div className="grid grid-cols-2 gap-2">
               <button
-                onClick={() => navigate("/the-edge")}
+                onClick={() => setGeneratorView("workout")}
                 className="h-11 bg-card border border-primary/40 text-primary flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:bg-primary hover:text-primary-foreground transition-all"
               >
                 <Sparkles size={13} /> Workout Generator
               </button>
               <button
-                onClick={() => {
-                  navigate("/the-edge");
-                  // Set path to fix-it via URL param or state
-                  setTimeout(() => window.dispatchEvent(new CustomEvent("set-generator-path", { detail: "fixit" })), 100);
-                }}
+                onClick={() => setGeneratorView("fixit")}
                 className="h-11 bg-card border border-[hsl(270_60%_50%)] text-[hsl(270_60%_60%)] flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:bg-[hsl(270_60%_50%)] hover:text-white transition-all"
               >
                 <Wrench size={13} /> Fix It Engine
@@ -165,39 +164,61 @@ const Dashboard = () => {
           </button>
         </div>
 
-        {/* Pill tab switcher */}
-        <div className="flex gap-1 mb-5 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap scrollbar-hide bg-muted/50 rounded-full p-1 sm:w-fit">
-          {tabs.map((t) => (
+        {/* Generator overlay — replaces tab area when active */}
+        {generatorView ? (
+          <div className="space-y-4">
             <button
-              key={t.key}
-              onClick={() => setActiveTab(t.key)}
-              className={`px-3 py-2 text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap shrink-0 rounded-full ${
-                activeTab === t.key
-                  ? "bg-primary text-primary-foreground shadow-md"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
+              onClick={() => setGeneratorView(null)}
+              className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground text-[10px] font-bold uppercase tracking-widest transition-colors"
             >
-              {t.label}
+              <ArrowLeft size={12} /> Back to Dashboard
             </button>
-          ))}
-        </div>
+            <Suspense fallback={<TabLoader />}>
+              {generatorView === "workout" && (
+                <AiWorkoutSuggest onDone={() => setGeneratorView(null)} />
+              )}
+              {generatorView === "fixit" && (
+                <FixItLibrary />
+              )}
+            </Suspense>
+          </div>
+        ) : (
+          <>
+            {/* Pill tab switcher */}
+            <div className="flex gap-1 mb-5 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap scrollbar-hide bg-muted/50 rounded-full p-1 sm:w-fit">
+              {tabs.map((t) => (
+                <button
+                  key={t.key}
+                  onClick={() => setActiveTab(t.key)}
+                  className={`px-3 py-2 text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap shrink-0 rounded-full ${
+                    activeTab === t.key
+                      ? "bg-primary text-primary-foreground shadow-md"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
 
-        {/* Tab content */}
-        <Suspense fallback={<TabLoader />}>
-          {activeTab === "home" && (
-            <DashboardHome
-              isNewUser={isNewUser}
-              isInPerson={profile?.is_in_person ?? false}
-              onViewPoints={handleViewPoints}
-              onViewReferrals={handleViewReferrals}
-            />
-          )}
-          {activeTab === "progress" && <ProgressCharts />}
-          {activeTab === "programs" && <MyPrograms />}
-          {activeTab === "workouts" && <WorkoutsTab />}
-          {activeTab === "challenge" && <ChallengeHub />}
-          {activeTab === "team" && <TeamManager />}
-        </Suspense>
+            {/* Tab content */}
+            <Suspense fallback={<TabLoader />}>
+              {activeTab === "home" && (
+                <DashboardHome
+                  isNewUser={isNewUser}
+                  isInPerson={profile?.is_in_person ?? false}
+                  onViewPoints={handleViewPoints}
+                  onViewReferrals={handleViewReferrals}
+                />
+              )}
+              {activeTab === "progress" && <ProgressCharts />}
+              {activeTab === "programs" && <MyPrograms />}
+              {activeTab === "workouts" && <WorkoutsTab />}
+              {activeTab === "challenge" && <ChallengeHub />}
+              {activeTab === "team" && <TeamManager />}
+            </Suspense>
+          </>
+        )}
       </div>
 
       {/* Trial banner */}
