@@ -27,9 +27,19 @@ const testimonials = [
 const ClinicMockup = () => (
   <div style={{ fontFamily: "'Georgia', 'Times New Roman', serif", color: "#3a3a3a", background: "#ffffff" }}>
     <Helmet>
-      <title>{BRAND} Aesthetics & Wellness | Premium MedSpa Grosse Pointe</title>
-      <meta name="description" content="Premium medical aesthetics, IV therapy, and concierge wellness in Grosse Pointe. Board-certified care in a luxurious, private setting." />
-      <meta name="robots" content="noindex, nofollow" />
+      <title>MedSpa & Clinic Website Demo | M² Web Design Detroit</title>
+      <meta name="description" content="See how a premium MedSpa or concierge clinic website looks when built by M² Web Design. Luxury aesthetic, HIPAA-aware design for healthcare providers." />
+      <link rel="canonical" href="https://www.mattmichelstraining.com/demo-clinic" />
+      <meta property="og:title" content="MedSpa & Clinic Website Demo | M² Web Design Detroit" />
+      <meta property="og:description" content="Professional MedSpa website mockup by M² Web Design. Luxury branding, patient portal CTA, board-certified trust signals." />
+      <meta property="og:url" content="https://www.mattmichelstraining.com/demo-clinic" />
+      <meta property="og:type" content="website" />
+      <script type="application/ld+json">{JSON.stringify({
+        "@context": "https://schema.org", "@type": "WebPage", "name": "MedSpa Website Demo",
+        "description": "Demo MedSpa website built by M² Web Design for healthcare providers in Metro Detroit.",
+        "url": "https://www.mattmichelstraining.com/demo-clinic",
+        "provider": { "@type": "ProfessionalService", "name": "M² Web Design", "url": "https://www.mattmichelstraining.com/detroit-web-design" }
+      })}</script>
     </Helmet>
 
     {/* Announcement Bar */}

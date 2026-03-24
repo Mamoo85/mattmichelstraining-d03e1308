@@ -29,9 +29,19 @@ const ElectricianMockup = () => {
   return (
     <div style={{ fontFamily: "'Inter', system-ui, sans-serif", color: "#e2e8f0", background: "#1e1e24" }}>
       <Helmet>
-        <title>{BRAND} Electric | Licensed Electrician Grosse Pointe & East Side Detroit</title>
-        <meta name="description" content="Master electrician serving Grosse Pointe & East Side Detroit. Panel upgrades, generators, smart home wiring. Safe, code-compliant work." />
-        <meta name="robots" content="noindex, nofollow" />
+        <title>Electrician Website Demo | M² Web Design Detroit</title>
+        <meta name="description" content="See how a licensed electrician website looks when built by M² Web Design. Professional lead-generation site for electrical contractors in Metro Detroit." />
+        <link rel="canonical" href="https://www.mattmichelstraining.com/demo-electrician" />
+        <meta property="og:title" content="Electrician Website Demo | M² Web Design Detroit" />
+        <meta property="og:description" content="Professional electrician website mockup by M² Web Design. Safety-first branding, permit badges, quote forms." />
+        <meta property="og:url" content="https://www.mattmichelstraining.com/demo-electrician" />
+        <meta property="og:type" content="website" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org", "@type": "WebPage", "name": "Electrician Website Demo",
+          "description": "Demo electrician website built by M² Web Design for Metro Detroit contractors.",
+          "url": "https://www.mattmichelstraining.com/demo-electrician",
+          "provider": { "@type": "ProfessionalService", "name": "M² Web Design", "url": "https://www.mattmichelstraining.com/detroit-web-design" }
+        })}</script>
       </Helmet>
 
       {/* Sticky Header */}

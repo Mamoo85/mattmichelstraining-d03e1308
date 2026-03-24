@@ -29,9 +29,19 @@ const PlumberMockup = () => {
   return (
     <div style={{ fontFamily: "'Inter', system-ui, sans-serif", color: "#e2e8f0", background: "#0b1929" }}>
       <Helmet>
-        <title>{BRAND} Plumbing | 24/7 Emergency Plumber Grosse Pointe & Metro Detroit</title>
-        <meta name="description" content="Licensed 24/7 emergency plumber serving Grosse Pointe & Metro Detroit. Leak repair, water heaters, sewer & drain cleaning. No hidden fees." />
-        <meta name="robots" content="noindex, nofollow" />
+        <title>Emergency Plumber Website Demo | M² Web Design Detroit</title>
+        <meta name="description" content="See how a 24/7 emergency plumber website looks when built by M² Web Design. Professional lead-generation site for plumbing contractors in Metro Detroit." />
+        <link rel="canonical" href="https://www.mattmichelstraining.com/demo-plumber" />
+        <meta property="og:title" content="Emergency Plumber Website Demo | M² Web Design Detroit" />
+        <meta property="og:description" content="Professional plumber website mockup by M² Web Design. Click-to-call, emergency badges, lead capture forms." />
+        <meta property="og:url" content="https://www.mattmichelstraining.com/demo-plumber" />
+        <meta property="og:type" content="website" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org", "@type": "WebPage", "name": "Plumber Website Demo",
+          "description": "Demo plumber website built by M² Web Design for Metro Detroit contractors.",
+          "url": "https://www.mattmichelstraining.com/demo-plumber",
+          "provider": { "@type": "ProfessionalService", "name": "M² Web Design", "url": "https://www.mattmichelstraining.com/detroit-web-design" }
+        })}</script>
       </Helmet>
 
       {/* Sticky Header */}

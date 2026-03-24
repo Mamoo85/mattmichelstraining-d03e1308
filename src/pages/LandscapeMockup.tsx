@@ -51,9 +51,19 @@ const LandscapeMockup = () => {
   return (
     <div style={{ fontFamily: "'Inter', system-ui, sans-serif", color: "#1e293b", background: "#fff" }}>
       <Helmet>
-        <title>{BRAND} Landscaping | Metro Detroit Lawn Care & Hardscaping</title>
-        <meta name="description" content="Professional, reliable lawn care and hardscaping for Metro Detroit homes. Weekly maintenance, cleanups, patios & more." />
-        <meta name="robots" content="noindex, nofollow" />
+        <title>Landscaping Website Demo | M² Web Design Detroit</title>
+        <meta name="description" content="See how a landscaping company website looks when built by M² Web Design. Professional lead-generation site for lawn care & hardscaping contractors in Metro Detroit." />
+        <link rel="canonical" href="https://www.mattmichelstraining.com/demo-landscaping" />
+        <meta property="og:title" content="Landscaping Website Demo | M² Web Design Detroit" />
+        <meta property="og:description" content="Professional landscaper website mockup by M² Web Design. Seasonal services, quote forms, trust badges." />
+        <meta property="og:url" content="https://www.mattmichelstraining.com/demo-landscaping" />
+        <meta property="og:type" content="website" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org", "@type": "WebPage", "name": "Landscaping Website Demo",
+          "description": "Demo landscaping website built by M² Web Design for Metro Detroit contractors.",
+          "url": "https://www.mattmichelstraining.com/demo-landscaping",
+          "provider": { "@type": "ProfessionalService", "name": "M² Web Design", "url": "https://www.mattmichelstraining.com/detroit-web-design" }
+        })}</script>
       </Helmet>
 
       {/* Sticky Header */}
