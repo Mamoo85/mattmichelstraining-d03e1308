@@ -164,39 +164,61 @@ const Dashboard = () => {
           </button>
         </div>
 
-        {/* Pill tab switcher */}
-        <div className="flex gap-1 mb-5 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap scrollbar-hide bg-muted/50 rounded-full p-1 sm:w-fit">
-          {tabs.map((t) => (
+        {/* Generator overlay — replaces tab area when active */}
+        {generatorView ? (
+          <div className="space-y-4">
             <button
-              key={t.key}
-              onClick={() => setActiveTab(t.key)}
-              className={`px-3 py-2 text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap shrink-0 rounded-full ${
-                activeTab === t.key
-                  ? "bg-primary text-primary-foreground shadow-md"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
+              onClick={() => setGeneratorView(null)}
+              className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground text-[10px] font-bold uppercase tracking-widest transition-colors"
             >
-              {t.label}
+              <ArrowLeft size={12} /> Back to Dashboard
             </button>
-          ))}
-        </div>
+            <Suspense fallback={<TabLoader />}>
+              {generatorView === "workout" && (
+                <AiWorkoutSuggest onDone={() => setGeneratorView(null)} />
+              )}
+              {generatorView === "fixit" && (
+                <FixItLibrary />
+              )}
+            </Suspense>
+          </div>
+        ) : (
+          <>
+            {/* Pill tab switcher */}
+            <div className="flex gap-1 mb-5 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap scrollbar-hide bg-muted/50 rounded-full p-1 sm:w-fit">
+              {tabs.map((t) => (
+                <button
+                  key={t.key}
+                  onClick={() => setActiveTab(t.key)}
+                  className={`px-3 py-2 text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap shrink-0 rounded-full ${
+                    activeTab === t.key
+                      ? "bg-primary text-primary-foreground shadow-md"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
 
-        {/* Tab content */}
-        <Suspense fallback={<TabLoader />}>
-          {activeTab === "home" && (
-            <DashboardHome
-              isNewUser={isNewUser}
-              isInPerson={profile?.is_in_person ?? false}
-              onViewPoints={handleViewPoints}
-              onViewReferrals={handleViewReferrals}
-            />
-          )}
-          {activeTab === "progress" && <ProgressCharts />}
-          {activeTab === "programs" && <MyPrograms />}
-          {activeTab === "workouts" && <WorkoutsTab />}
-          {activeTab === "challenge" && <ChallengeHub />}
-          {activeTab === "team" && <TeamManager />}
-        </Suspense>
+            {/* Tab content */}
+            <Suspense fallback={<TabLoader />}>
+              {activeTab === "home" && (
+                <DashboardHome
+                  isNewUser={isNewUser}
+                  isInPerson={profile?.is_in_person ?? false}
+                  onViewPoints={handleViewPoints}
+                  onViewReferrals={handleViewReferrals}
+                />
+              )}
+              {activeTab === "progress" && <ProgressCharts />}
+              {activeTab === "programs" && <MyPrograms />}
+              {activeTab === "workouts" && <WorkoutsTab />}
+              {activeTab === "challenge" && <ChallengeHub />}
+              {activeTab === "team" && <TeamManager />}
+            </Suspense>
+          </>
+        )}
       </div>
 
       {/* Trial banner */}
