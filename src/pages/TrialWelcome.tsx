@@ -34,7 +34,7 @@ const TRIAL_PROGRAMS = [
     icon: Zap,
     tags: ["3 Days/Week", "Mobility", "Strength"],
     color: "text-amber-500",
-    forPaths: ["basic", "parent", "foundation"] as TrialPath[],
+    forPaths: ["foundation", "parent", "pro"] as TrialPath[],
   },
   {
     id: "a1b2c3d4-0003-4000-8000-000000000003",
