@@ -197,7 +197,7 @@ const Pricing = () => {
                 to="/auth?redirect=/trial-welcome"
                 className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
               >
-                Start 14-Day Free Trial
+                Start Free Trial
               </Link>
               <a
                 href="mailto:matthewmichels4@gmail.com?subject=Training%20Inquiry"
