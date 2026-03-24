@@ -8,9 +8,19 @@ Disallow: /coach
 Disallow: /trial-welcome
 Disallow: /welcome
 Disallow: /auth
+Disallow: /assessment
+Disallow: /nutrition
+Disallow: /matrix
 
 User-agent: Googlebot
 Allow: /
+Allow: /demo-plumber
+Allow: /demo-electrician
+Allow: /demo-landscaping
+Allow: /demo-lawyer
+Allow: /demo-clinic
+Allow: /detroit-web-design
+Allow: /free-ai-generator
 
 User-agent: Bingbot
 Allow: /

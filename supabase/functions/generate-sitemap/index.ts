@@ -13,6 +13,14 @@ const STATIC_ROUTES = [
   { path: "/merch", changefreq: "monthly", priority: "0.6" },
   { path: "/schedule", changefreq: "daily", priority: "0.7" },
   { path: "/free-ai-generator", changefreq: "monthly", priority: "0.9" },
+  { path: "/the-edge", changefreq: "monthly", priority: "0.6" },
+  { path: "/install", changefreq: "monthly", priority: "0.5" },
+  { path: "/detroit-web-design", changefreq: "weekly", priority: "0.9" },
+  { path: "/demo-plumber", changefreq: "monthly", priority: "0.7" },
+  { path: "/demo-electrician", changefreq: "monthly", priority: "0.7" },
+  { path: "/demo-landscaping", changefreq: "monthly", priority: "0.7" },
+  { path: "/demo-lawyer", changefreq: "monthly", priority: "0.7" },
+  { path: "/demo-clinic", changefreq: "monthly", priority: "0.7" },
 ];
 
 serve(async (_req) => {

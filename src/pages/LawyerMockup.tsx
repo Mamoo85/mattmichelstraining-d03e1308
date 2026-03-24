@@ -26,9 +26,19 @@ const LawyerMockup = () => {
   return (
     <div style={{ fontFamily: "'Georgia', 'Times New Roman', serif", color: "#d4d4d8", background: "#1c1c1f" }}>
       <Helmet>
-        <title>{NAME} Law Firm | Attorney in Macomb & Wayne County</title>
-        <meta name="description" content="Dedicated legal representation in Macomb & Wayne County. Estate planning, small business law, and family law. Schedule a confidential consultation." />
-        <meta name="robots" content="noindex, nofollow" />
+        <title>Attorney Website Demo | M² Web Design Detroit</title>
+        <meta name="description" content="See how a private attorney website looks when built by M² Web Design. Premium, trust-building design for law firms in Macomb & Wayne County." />
+        <link rel="canonical" href="https://www.mattmichelstraining.com/demo-lawyer" />
+        <meta property="og:title" content="Attorney Website Demo | M² Web Design Detroit" />
+        <meta property="og:description" content="Professional law firm website mockup by M² Web Design. Gold accents, confidential contact forms, practice area showcases." />
+        <meta property="og:url" content="https://www.mattmichelstraining.com/demo-lawyer" />
+        <meta property="og:type" content="website" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org", "@type": "WebPage", "name": "Attorney Website Demo",
+          "description": "Demo attorney website built by M² Web Design for Metro Detroit law firms.",
+          "url": "https://www.mattmichelstraining.com/demo-lawyer",
+          "provider": { "@type": "ProfessionalService", "name": "M² Web Design", "url": "https://www.mattmichelstraining.com/detroit-web-design" }
+        })}</script>
       </Helmet>
 
       {/* Sticky Header */}
