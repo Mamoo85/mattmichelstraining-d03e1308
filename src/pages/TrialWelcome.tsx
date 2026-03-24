@@ -44,7 +44,7 @@ const TRIAL_PROGRAMS = [
     icon: Dumbbell,
     tags: ["2 Days/Week", "Recovery", "In-Season"],
     color: "text-blue-500",
-    forPaths: ["basic", "parent", "foundation"] as TrialPath[],
+    forPaths: ["foundation", "parent", "pro"] as TrialPath[],
   },
   {
     id: "custom",
