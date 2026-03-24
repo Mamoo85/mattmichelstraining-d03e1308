@@ -25,6 +25,7 @@ const AdminTrialSettings = lazy(() => import("@/components/admin/AdminTrialSetti
 const AdminClientOnboarding = lazy(() => import("@/components/admin/AdminClientOnboarding"));
 const AdminChurnRadar = lazy(() => import("@/components/admin/AdminChurnRadar"));
 const AdminSchedule = lazy(() => import("@/components/admin/AdminSchedule"));
+const AdminVipAccess = lazy(() => import("@/components/admin/AdminVipAccess"));
 
 const AdminPrograms = lazy(() => import("@/components/admin/AdminPrograms"));
 const AdminExerciseLibrary = lazy(() => import("@/components/admin/AdminExerciseLibrary"));
@@ -321,6 +322,7 @@ const Admin = () => {
               </div>
             )},
             { key: "schedule", label: "Schedule", content: <AdminSchedule /> },
+            { key: "vip", label: "VIP Access", content: <AdminVipAccess /> },
           ]} />
         )}
 
