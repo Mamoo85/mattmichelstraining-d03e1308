@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useContentMap } from "@/hooks/useSiteContent";
 import TrialCTA from "@/components/billing/TrialCTA";
+import { useExerciseCount } from "@/hooks/useExerciseCount";
 import { getStoredReferralCode, clearStoredReferralCode } from "@/hooks/useReferral";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 const DoNotPressButton = lazy(() => import("@/components/landing/DoNotPressButton"));
@@ -33,10 +34,10 @@ const TIER_CARDS: {
     key: "foundation",
     icon: Zap,
     headline: "20 Years of Iron Game Knowledge in Your Pocket.",
-    pitch: "Stop guessing. Get the exact digital blueprint I use for my athletes. Full access to the M2 App, my private 85+ Exercise Library, the Fix It Rehab Library, and the AI Generator.",
+    pitch: `Stop guessing. Get the exact digital blueprint I use for my athletes. Full access to the M2 App, my private Exercise Library, the Fix It Rehab Library, and the AI Generator.`,
     features: [
       "Full M² App access",
-      "85+ exercise video library",
+      "Exercise video library",
       "Fix It rehab library",
       "AI Workout Generator",
       "Progress logging & tracking",
@@ -99,6 +100,7 @@ const FAQ_ITEMS = [
 ];
 
 const Pricing = () => {
+  const exerciseCount = useExerciseCount();
   const { user, subscribed, subscriptionTier, subscriptionEnd } = useAuth();
   const { isAdmin } = useIsAdmin();
   const { content: cms } = useContentMap("pricing_page");
@@ -360,7 +362,10 @@ const Pricing = () => {
             const isCurrentPlan = subscriptionTier === card.key;
             const Icon = card.icon;
             const cmsFeatures = cms[`${card.key}_features`];
-            const features = cmsFeatures ? cmsFeatures.split("|").map((f: string) => f.trim()) : card.features;
+            const rawFeatures = cmsFeatures ? cmsFeatures.split("|").map((f: string) => f.trim()) : card.features;
+            const features = card.key === "foundation"
+              ? rawFeatures.map((f: string) => f === "Exercise video library" ? `${exerciseCount}+ exercise video library` : f)
+              : rawFeatures;
 
             return (
               <motion.div
@@ -395,7 +400,9 @@ const Pricing = () => {
                   <p className="text-xs font-bold text-foreground mt-1 leading-snug">{card.headline}</p>
                 )}
                 {card.pitch && (
-                  <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed">{card.pitch}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed">
+                    {card.key === "foundation" ? card.pitch.replace("Exercise Library", `${exerciseCount}+ Exercise Library`) : card.pitch}
+                  </p>
                 )}
                 <div className="flex items-baseline gap-1 mt-2 mb-1.5">
                   {billingCycle === "annual" ? (

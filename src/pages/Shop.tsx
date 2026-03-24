@@ -31,7 +31,7 @@ const Shop = () => {
     <div className="min-h-screen bg-background">
       <SEOHead
         title="Shop — Training Programs & Exercise Library"
-        description="Sport-specific training guides, custom programs, and an 85+ exercise library from Coach Matt Michels. Programs start at $9."
+        description="Sport-specific training guides, custom programs, and a growing exercise library from Coach Matt Michels. Programs start at $9."
         path="/shop"
       />
       <AppNavbar />

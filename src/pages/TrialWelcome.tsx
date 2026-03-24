@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import AppNavbar from "@/components/layout/AppNavbar";
 import { useAuth, TIERS } from "@/hooks/useAuth";
+import { useExerciseCount } from "@/hooks/useExerciseCount";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
@@ -60,6 +61,7 @@ const TRIAL_PROGRAMS = [
 
 const TrialWelcome = () => {
   const { user } = useAuth();
+  const exerciseCount = useExerciseCount();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
@@ -192,7 +194,7 @@ const TrialWelcome = () => {
                 icon={User}
                 title="Foundation Trial"
                 charge="$19.99/mo after trial"
-                desc="Full M² App, 85+ exercise library, Fix It rehab library, AI Generator, and progress logging."
+                desc={`Full M² App, ${exerciseCount}+ exercise library, Fix It rehab library, AI Generator, and progress logging.`}
                 badge={null}
                 warning={null}
               />

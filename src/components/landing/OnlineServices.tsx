@@ -2,8 +2,11 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowRight, Wifi } from "lucide-react";
 import SectionHeader from "@/components/shared/SectionHeader";
+import { useExerciseCount } from "@/hooks/useExerciseCount";
 
-const OnlineServices = () => (
+const OnlineServices = () => {
+  const exerciseCount = useExerciseCount();
+  return (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
@@ -16,7 +19,7 @@ const OnlineServices = () => (
       <div className="bg-card shadow-m2 p-4">
         <span className="text-[11px] font-bold uppercase tracking-widest text-primary block mb-1">Foundation</span>
         <span className="text-lg font-mono font-bold text-foreground block">$19.99<span className="text-xs text-muted-foreground font-normal">/mo</span></span>
-        <p className="text-[11px] text-muted-foreground mt-1">Full M² App, 85+ exercise library, Fix It rehab, AI Generator.</p>
+        <p className="text-[11px] text-muted-foreground mt-1">Full M² App, {exerciseCount}+ exercise library, Fix It rehab, AI Generator.</p>
       </div>
       <div className="bg-card shadow-m2 p-4 border-2 border-primary/30 relative">
         <div className="absolute -top-2 right-2 bg-primary text-primary-foreground text-[8px] font-bold uppercase px-2 py-0.5">Popular</div>
@@ -46,6 +49,7 @@ const OnlineServices = () => (
       <ArrowRight size={14} />
     </Link>
   </motion.div>
-);
+  );
+};
 
 export default OnlineServices;

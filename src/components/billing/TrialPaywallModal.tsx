@@ -4,6 +4,7 @@ import { X, ArrowRight, Loader2, Lock, Star, Trophy, Zap, Percent } from "lucide
 import { useAuth, TIERS } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useExerciseCount } from "@/hooks/useExerciseCount";
 
 interface TrialPaywallModalProps {
   open: boolean;
@@ -18,7 +19,7 @@ const TIER_OPTIONS = [
     name: "The Foundation",
     price: "$19.99/mo",
     icon: Star,
-    perks: ["Full M² App + 85+ exercise library", "Fix It rehab library", "AI Workout Generator", "Progress logging & tracking"],
+    perks: ["Full M² App + {count}+ exercise library", "Fix It rehab library", "AI Workout Generator", "Progress logging & tracking"],
   },
   {
     key: "pro" as const,
@@ -39,6 +40,7 @@ const TIER_OPTIONS = [
 
 const TrialPaywallModal = ({ open, onClose, hardLock }: TrialPaywallModalProps) => {
   const { user } = useAuth();
+  const exerciseCount = useExerciseCount();
   const navigate = useNavigate();
   const [loading, setLoading] = useState<string | null>(null);
 
@@ -133,7 +135,7 @@ const TrialPaywallModal = ({ open, onClose, hardLock }: TrialPaywallModalProps) 
                 <ul className="space-y-1 mb-4 flex-1">
                   {tier.perks.map((p) => (
                     <li key={p} className="text-[10px] text-muted-foreground flex items-start gap-1.5">
-                      <span className="text-primary mt-0.5">✓</span> {p}
+                      <span className="text-primary mt-0.5">✓</span> {p.replace("{count}", String(exerciseCount))}
                     </li>
                   ))}
                 </ul>

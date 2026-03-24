@@ -2,13 +2,15 @@ import { memo } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowRight, ChevronRight, GraduationCap } from "lucide-react";
+import { useExerciseCount } from "@/hooks/useExerciseCount";
 
 const MEMBERSHIP_TIERS = [
   {
     name: "The Foundation",
     price: "$19.99/mo",
+    highlightKey: "exercise" as const,
     highlights: [
-      "Full M² App + 85+ exercise library",
+      "Full M² App + {count}+ exercise library",
       "Fix It rehab library",
       "AI Workout Generator",
       "Progress logging & tracking",
@@ -51,7 +53,9 @@ const fade = (delay: number) => ({
   transition: { duration: 0.5, delay },
 });
 
-const MembershipTiers = memo(() => (
+const MembershipTiers = memo(() => {
+  const exerciseCount = useExerciseCount();
+  return (
   <motion.div {...fade(0.15)} className="mb-12">
     <div className="flex items-center gap-2 mb-4">
       <GraduationCap size={18} className="text-primary" />
@@ -75,9 +79,9 @@ const MembershipTiers = memo(() => (
             <p className="text-lg font-mono font-bold text-primary mb-3">{t.price}</p>
             <ul className="space-y-2 mb-4 flex-1">
               {t.highlights.map((h) => (
-                <li key={h} className="flex items-start gap-2 text-xs text-muted-foreground leading-relaxed">
-                  <ChevronRight size={10} className="text-primary mt-0.5 flex-shrink-0" />
-                  {h}
+                  <li key={h} className="flex items-start gap-2 text-xs text-muted-foreground leading-relaxed">
+                    <ChevronRight size={10} className="text-primary mt-0.5 flex-shrink-0" />
+                    {h.replace("{count}", String(exerciseCount))}
                 </li>
               ))}
             </ul>
@@ -100,7 +104,8 @@ const MembershipTiers = memo(() => (
       <Link to="/pricing" className="text-primary hover:opacity-80 transition-m2">View full plan comparison →</Link>
     </p>
   </motion.div>
-));
+  );
+});
 
 MembershipTiers.displayName = "MembershipTiers";
 
