@@ -6,22 +6,22 @@ import { safeLocalStorage } from "@/lib/browserStorage";
 // Tier mapping: product_id → tier key
 export const TIERS = {
   foundation: {
-    product_id: "prod_UBI78IQsBpyfNw", // TODO: replace with real Stripe product ID
-    price_id: "price_1TCvWxD52tPWee46Mhmf2mEs", // TODO: replace with real Stripe price ID
+    product_id: "prod_UBI78IQsBpyfNw",
+    price_id: "price_1TELWTD52tPWee46lbQwxNZn",
     name: "The Foundation",
     price: "$19.99",
     priceNum: 19.99,
   },
   pro: {
-    product_id: "prod_UBI7Wdb3liTxiF", // TODO: replace with real Stripe product ID
-    price_id: "price_1TCvXOD52tPWee46dgedK3Ky", // TODO: replace with real Stripe price ID
+    product_id: "prod_UBI7Wdb3liTxiF",
+    price_id: "price_1TELXyD52tPWee46XQH8y0qu",
     name: "Pro (Semi-Custom)",
     price: "$149.99",
     priceNum: 149.99,
   },
   elite: {
-    product_id: "prod_UBI8SV9Fa6CibX", // TODO: replace with real Stripe product ID
-    price_id: "price_1TCvXrD52tPWee46jNJ6sSZ9", // TODO: replace with real Stripe price ID
+    product_id: "prod_UBI8SV9Fa6CibX",
+    price_id: "price_1TELYzD52tPWee46oO4mBsmg",
     name: "Elite (1-on-1)",
     price: "$349.99",
     priceNum: 349.99,
@@ -31,22 +31,22 @@ export const TIERS = {
 // Annual pricing (2 months free = 10 months price)
 export const ANNUAL_TIERS: Record<TierKey, { price_id: string; product_id: string; price: string; priceNum: number; monthlyEquiv: string }> = {
   foundation: {
-    product_id: "prod_UC3NyJRutYTL87", // TODO: replace with real Stripe product ID
-    price_id: "price_1TDfH3D52tPWee4668pIobVk", // TODO: replace with real Stripe price ID
+    product_id: "prod_UC3NyJRutYTL87",
+    price_id: "price_1TELXKD52tPWee46KZqfNb6u",
     price: "$199.99",
     priceNum: 199.99,
     monthlyEquiv: "$16.66",
   },
   pro: {
-    product_id: "prod_UC3OvNMcgtPafc", // TODO: replace with real Stripe product ID
-    price_id: "price_1TDfHPD52tPWee46Gk18jY4m", // TODO: replace with real Stripe price ID
+    product_id: "prod_UC3OvNMcgtPafc",
+    price_id: "price_1TELYYD52tPWee46eYgnlcB8",
     price: "$1,499.99",
     priceNum: 1499.99,
     monthlyEquiv: "$125.00",
   },
   elite: {
-    product_id: "prod_UC3ONcP6ZoWtdM", // TODO: replace with real Stripe product ID
-    price_id: "price_1TDfHjD52tPWee46PQkctivf", // TODO: replace with real Stripe price ID
+    product_id: "prod_UC3ONcP6ZoWtdM",
+    price_id: "price_1TELZmD52tPWee46E1mDZPg2",
     price: "$3,499.99",
     priceNum: 3499.99,
     monthlyEquiv: "$291.66",
