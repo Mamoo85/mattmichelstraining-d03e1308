@@ -225,6 +225,7 @@ const App = () => (
               
               <ActiveWorkoutWrapper />
               <ProveItWrapper />
+              <DualFabWrapper />
               
               <Suspense fallback={null}><BottomTabBar /></Suspense>
               <Suspense fallback={null}><OfflineBadge /></Suspense>
