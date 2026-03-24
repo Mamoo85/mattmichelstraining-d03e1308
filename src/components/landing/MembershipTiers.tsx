@@ -79,9 +79,9 @@ const MembershipTiers = memo(() => {
             <p className="text-lg font-mono font-bold text-primary mb-3">{t.price}</p>
             <ul className="space-y-2 mb-4 flex-1">
               {t.highlights.map((h) => (
-                <li key={h} className="flex items-start gap-2 text-xs text-muted-foreground leading-relaxed">
-                  <ChevronRight size={10} className="text-primary mt-0.5 flex-shrink-0" />
-                  {h}
+                  <li key={h} className="flex items-start gap-2 text-xs text-muted-foreground leading-relaxed">
+                    <ChevronRight size={10} className="text-primary mt-0.5 flex-shrink-0" />
+                    {h.replace("{count}", String(exerciseCount))}
                 </li>
               ))}
             </ul>
