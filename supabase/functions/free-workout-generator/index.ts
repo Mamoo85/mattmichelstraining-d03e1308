@@ -216,12 +216,24 @@ serve(async (req) => {
           type: "function",
           function: {
             name: "create_program",
-            description: "Create a multi-day workout program or corrective protocol",
+            description: "Create a multi-day workout program or corrective protocol. If the user requests a timed circuit, set isTimedCircuit=true and provide timerConfig.",
             parameters: {
               type: "object",
               properties: {
                 title: { type: "string" },
                 description: { type: "string" },
+                isTimedCircuit: { type: "boolean", description: "True if this is a timed interval/circuit workout" },
+                timerConfig: {
+                  type: "object",
+                  description: "Timer config for timed circuits only",
+                  properties: {
+                    work: { type: "number" },
+                    rest: { type: "number" },
+                    rounds: { type: "number" },
+                    prep: { type: "number" },
+                  },
+                  required: ["work", "rest", "rounds", "prep"],
+                },
                 days: {
                   type: "array",
                   items: {
