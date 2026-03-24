@@ -213,12 +213,12 @@ const TrialWelcome = () => {
                 selected={selectedPath === "pro"}
                 onClick={() => setSelectedPath("pro")}
                 icon={Star}
-                title="Pro (Semi-Custom) Trial"
-                charge="$149.99/mo (Pro) after trial"
-                desc="Custom 4-week block, 2 weekly video form-checks, and direct coach feedback."
+                title="Pro (Semi-Custom)"
+                charge="$149.99/mo — starts immediately"
+                desc="Custom 4-week block built by Matt, 2 weekly video form-checks, and direct coach feedback. This is the custom coaching package."
                 badge={null}
                 warning={null}
-                bonus="Free movement assessment"
+                bonus="Movement assessment included"
               />
             </div>
 
