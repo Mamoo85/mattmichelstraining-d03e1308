@@ -203,11 +203,11 @@ const TrialWelcome = () => {
                 onClick={() => setSelectedPath("parent")}
                 icon={Users}
                 title="Parent / Family Pack"
-                charge="$149.99/mo (Pro) after trial"
-                desc="Free assessment + custom program from Matt + FREE child membership."
+                charge="$149.99/mo (Pro) — starts immediately"
+                desc="Custom assessment + program from Matt + FREE child membership. This is the Pro custom coaching package with a family add-on."
                 badge="🎁 Family Pack Included"
                 warning={null}
-                bonus="Free online assessment for parent & child"
+                bonus="Assessment for parent & child included"
               />
               <TrialPathCard
                 selected={selectedPath === "pro"}

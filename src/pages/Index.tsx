@@ -35,7 +35,7 @@ const FAQ_SCHEMA = {
       name: "Do you offer online training?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Yes. M² offers monthly online memberships starting at $19.99/mo with a 14-day free trial. Plans include the full exercise library, structured programs, injury recovery guides, and direct coaching from Matt.",
+        text: "Yes. M² offers monthly online memberships starting at $19.99/mo. The Foundation tier includes a 14-day free trial of the full M² App. Pro and Elite are custom coaching packages that start immediately. All plans include the exercise library, structured programs, injury recovery guides, and direct coaching from Matt.",
       },
     },
     {

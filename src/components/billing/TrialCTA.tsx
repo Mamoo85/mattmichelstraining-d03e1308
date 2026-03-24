@@ -33,11 +33,11 @@ const TrialCTA = ({ variant = "banner", className = "" }: TrialCTAProps) => {
         <div className="flex items-start gap-3 mb-4">
           <Shield size={20} className="text-primary flex-shrink-0 mt-0.5" />
           <div>
-            <h3 className="text-sm font-bold text-foreground mb-1">Try Everything Free for 14 Days</h3>
+            <h3 className="text-sm font-bold text-foreground mb-1">Try the M² App Free for 14 Days</h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Full portal access. Programs. Progress tracking. Direct access to Matt. Plus a{" "}
+              Full Foundation portal access. Programs. Progress tracking. Plus a{" "}
               <strong className="text-foreground">free 2-week starter program</strong> loaded into your dashboard 
-              on Day 1 — warmup, workout, rolling, and mobility every session.
+              on Day 1 — warmup, workout, rolling, and mobility every session. Looking for custom coaching? Check out Pro or Elite.
             </p>
           </div>
         </div>

@@ -93,7 +93,7 @@ const FAQ_ITEMS = [
   },
   {
     question: "How does the Pro ($149) tier work?",
-    answer: "When you sign up, you'll fill out a detailed damage report (injury history) and upload a quick movement video. I personally review it, build your 4-week program to fix your specific weaknesses, and every week you send me videos of your heavy lifts so I can correct your form.",
+    answer: "This is the custom coaching package — no trial, just real programming. You fill out a detailed damage report (injury history) and upload a quick movement video. I personally review it, build your 4-week program to fix your specific weaknesses, and every week you send me videos of your heavy lifts so I can correct your form. The 14-day trial is for the Foundation app tier only.",
   },
   {
     question: "Is there a contract?",
