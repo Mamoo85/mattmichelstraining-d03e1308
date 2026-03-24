@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { useAuth, TIERS, TierKey, TIER_DISCOUNTS } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import AppNavbar from "@/components/layout/AppNavbar";
@@ -10,7 +10,7 @@ import { Link } from "react-router-dom";
 import {
   User, Trophy, Medal, Award, Save, Loader2, Gift, Search,
   Crown, ExternalLink, ShoppingBag, Dumbbell, Calendar, Shield,
-  ArrowRight, ChevronDown, ChevronUp, Zap, Clock, FileText, Send, Activity
+  ArrowRight, ChevronDown, ChevronUp, Zap, Clock, FileText, Send, Activity, Brain
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import GiftSessionModal from "@/components/sessions/GiftSessionModal";
@@ -19,6 +19,8 @@ import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import EmptyStateCard from "@/components/shared/EmptyStateCard";
+
+const TrainingHistory = lazy(() => import("@/components/profile/TrainingHistory"));
 
 interface ProfileData {
   full_name: string | null;
