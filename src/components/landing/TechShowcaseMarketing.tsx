@@ -89,7 +89,7 @@ const TechShowcaseMarketing = ({ variant = "full" }: Props) => {
           </p>
           <div className="flex items-center justify-center gap-4 mt-4">
             <span className="text-xs font-bold text-foreground">All this for</span>
-            <span className="text-2xl font-black text-primary">$12.99<span className="text-xs text-muted-foreground font-normal">/mo</span></span>
+            <span className="text-2xl font-black text-primary">$19.99<span className="text-xs text-muted-foreground font-normal">/mo</span></span>
             <span className="text-[9px] bg-primary/20 text-primary font-bold px-2 py-0.5 uppercase tracking-widest">14-Day Free Trial</span>
           </div>
         </div>
