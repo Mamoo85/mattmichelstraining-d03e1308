@@ -300,6 +300,13 @@ const IntervalTimer = ({ onClose, initialConfig, exercises: circuitExercises, is
 
             {phase !== "done" ? (
               <>
+                {/* Circuit exercise name */}
+                {isCircuit && circuitExercises && circuitExercises.length > 0 && currentRound > 0 && (
+                  <span className="text-xs font-black text-white uppercase tracking-wide text-center px-4 mb-1 max-w-[200px] leading-tight">
+                    {circuitExercises[(currentRound - 1) % circuitExercises.length]}
+                  </span>
+                )}
+
                 <span
                   className={cn(
                     "font-mono text-6xl font-black text-white tabular-nums leading-none",
@@ -309,6 +316,14 @@ const IntervalTimer = ({ onClose, initialConfig, exercises: circuitExercises, is
                 >
                   {displayTime}
                 </span>
+
+                {/* Next exercise during rest */}
+                {isCircuit && circuitExercises && phase === "rest" && currentRound < config.rounds && (
+                  <span className="text-[10px] text-white/50 mt-1 uppercase tracking-wide">
+                    Next: {circuitExercises[currentRound % circuitExercises.length]}
+                  </span>
+                )}
+
                 <span className="font-mono text-xs text-white/40 mt-2 tabular-nums">
                   {currentRound > 0 ? `${currentRound} / ${config.rounds}` : `${config.rounds} rounds`}
                 </span>
