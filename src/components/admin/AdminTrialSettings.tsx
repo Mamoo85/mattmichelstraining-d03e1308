@@ -24,7 +24,7 @@ const AdminTrialSettings = () => {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<TrialSettings>({
     trial_days: 14,
-    auto_charge_tier: "basic",
+    auto_charge_tier: "foundation",
     early_cancel_discount_pct: 50,
     auto_renew_default: true,
     tech_support_auto_reply: "",
