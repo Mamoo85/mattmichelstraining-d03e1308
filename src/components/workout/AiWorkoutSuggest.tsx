@@ -1,5 +1,5 @@
 import { useState, memo } from "react";
-import { Sparkles, Loader2, Dumbbell, Play, Save, Share2, ArrowLeft, Wrench, Printer, Timer, Minus, Plus } from "lucide-react";
+import { Sparkles, Loader2, Dumbbell, Play, Save, ArrowLeft, Wrench, Printer, Timer, Minus, Plus } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -42,7 +42,7 @@ const AiWorkoutSuggest = memo(({ onDone, initialPath }: { onDone: () => void; in
   const [generating, setGenerating] = useState(false);
   const [workout, setWorkout] = useState<GeneratedWorkout | null>(null);
   const [saving, setSaving] = useState(false);
-  const [shareToBank, setShareToBank] = useState(false);
+  
   const [editTimerConfig, setEditTimerConfig] = useState<TimerConfigData | null>(null);
 
   const handleGenerate = async () => {
@@ -84,19 +84,21 @@ const AiWorkoutSuggest = memo(({ onDone, initialPath }: { onDone: () => void; in
       order: i,
     }));
 
+    const sourceType = path === "fixit" ? "ai_fixit" : "ai_workout";
     const { error } = await supabase.from("community_workouts").insert({
       user_id: user.id,
       title: workout.title,
       description: workout.description,
       creator_name: "Coach Matt AI",
       exercises: exerciseData as any,
-      is_public: shareToBank,
+      is_public: false,
+      source_type: sourceType,
     });
 
     if (error) {
       toast({ title: "Save failed", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: shareToBank ? "Shared to bank! 🎉 +30 M² Points" : "Saved! 💪" });
+      toast({ title: path === "fixit" ? "Protocol saved to Fix It! 💪" : "Workout saved! 💪" });
       onDone();
     }
     setSaving(false);
@@ -364,19 +366,15 @@ const AiWorkoutSuggest = memo(({ onDone, initialPath }: { onDone: () => void; in
               </button>
             </div>
 
-            {/* Share toggle */}
+            {/* Info: saved privately */}
             <div className="flex items-center gap-3 bg-muted p-3">
-              <Share2 size={14} className={shareToBank ? "text-primary" : "text-muted-foreground"} />
+              <Dumbbell size={14} className="text-primary" />
               <div className="flex-1">
-                <span className="text-xs font-bold text-foreground block">Share to Workout Bank</span>
-                <span className="text-[10px] text-muted-foreground">+30 M² Points when shared</span>
+                <span className="text-xs font-bold text-foreground block">
+                  {path === "fixit" ? "Saved to Fix It library" : "Saved to Generated tab"}
+                </span>
+                <span className="text-[10px] text-muted-foreground">Private to your account</span>
               </div>
-              <button
-                onClick={() => setShareToBank(!shareToBank)}
-                className={`w-10 h-5 rounded-full transition-all relative ${shareToBank ? "bg-primary" : "bg-border"}`}
-              >
-                <div className={`w-4 h-4 rounded-full bg-white absolute top-0.5 transition-all ${shareToBank ? "left-5" : "left-0.5"}`} />
-              </button>
             </div>
 
             {/* Actions */}

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Search, FileText, User, Calendar, Dumbbell, Play, Trash2, Download, Loader2 } from "lucide-react";
+import { Search, FileText, User, Calendar, Dumbbell, Play, Trash2, Download, Loader2, Wrench } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useFamilyUserIds } from "@/hooks/useFamilyUserIds";
@@ -23,13 +23,40 @@ interface CommunityWorkout {
   created_at: string;
   user_id: string;
   is_public: boolean;
+  source_type: string;
 }
 
+export type WorkoutBankMode = "my" | "generated" | "fixit" | "community";
+
 interface CommunityWorkoutBankProps {
+  mode?: WorkoutBankMode;
   onCreateNew?: () => void;
 }
 
-const CommunityWorkoutBank = ({ onCreateNew }: CommunityWorkoutBankProps) => {
+const MODE_CONFIG: Record<WorkoutBankMode, { title: string; subtitle: string; emptyText: string }> = {
+  my: {
+    title: "My Workouts",
+    subtitle: "Your manual workouts + Coach Matt starter workouts",
+    emptyText: "No workouts yet. Create one or grab one from the Community tab!",
+  },
+  generated: {
+    title: "AI Generated Workouts",
+    subtitle: "Workouts built by Coach Matt's AI for you",
+    emptyText: "No generated workouts yet. Use Smart Build to create one!",
+  },
+  fixit: {
+    title: "Fix It Protocols",
+    subtitle: "Your corrective rehab protocols from Coach Matt's AI",
+    emptyText: "No Fix It protocols yet. Use the Fix It button to generate one!",
+  },
+  community: {
+    title: "Community Workout Bank",
+    subtitle: "Workouts shared by other Mattletes",
+    emptyText: "No community workouts yet. Be the first to share!",
+  },
+};
+
+const CommunityWorkoutBank = ({ mode = "my", onCreateNew }: CommunityWorkoutBankProps) => {
   const { user } = useAuth();
   const { familyIds } = useFamilyUserIds();
   const [workouts, setWorkouts] = useState<CommunityWorkout[]>([]);
@@ -42,32 +69,56 @@ const CommunityWorkoutBank = ({ onCreateNew }: CommunityWorkoutBankProps) => {
   const loadWorkouts = useCallback(async () => {
     setLoading(true);
     const userIds = familyIds.length > 0 ? familyIds : user ? [user.id] : [];
-    const [publicRes, privateRes] = await Promise.all([
-      supabase
+
+    let data: any[] = [];
+
+    if (mode === "my") {
+      if (userIds.length > 0) {
+        const { data: res } = await supabase
+          .from("community_workouts")
+          .select("*")
+          .in("user_id", userIds)
+          .in("source_type", ["manual", "coach_seeded"])
+          .order("created_at", { ascending: false })
+          .limit(100);
+        data = res ?? [];
+      }
+    } else if (mode === "generated") {
+      if (userIds.length > 0) {
+        const { data: res } = await supabase
+          .from("community_workouts")
+          .select("*")
+          .in("user_id", userIds)
+          .eq("source_type", "ai_workout")
+          .order("created_at", { ascending: false })
+          .limit(100);
+        data = res ?? [];
+      }
+    } else if (mode === "fixit") {
+      if (userIds.length > 0) {
+        const { data: res } = await supabase
+          .from("community_workouts")
+          .select("*")
+          .in("user_id", userIds)
+          .eq("source_type", "ai_fixit")
+          .order("created_at", { ascending: false })
+          .limit(100);
+        data = res ?? [];
+      }
+    } else if (mode === "community") {
+      const { data: res } = await supabase
         .from("community_workouts")
         .select("*")
         .eq("is_public", true)
+        .eq("source_type", "manual")
         .order("created_at", { ascending: false })
-        .limit(50),
-      userIds.length > 0
-        ? supabase
-            .from("community_workouts")
-            .select("*")
-            .in("user_id", userIds)
-            .eq("is_public", false)
-            .order("created_at", { ascending: false })
-            .limit(50)
-        : Promise.resolve({ data: [] }),
-    ]);
-    const publicWorkouts = (publicRes.data as any[]) ?? [];
-    const privateWorkouts = (privateRes.data as any[]) ?? [];
-    const allMap = new Map<string, any>();
-    for (const w of [...privateWorkouts, ...publicWorkouts]) {
-      if (!allMap.has(w.id)) allMap.set(w.id, w);
+        .limit(50);
+      data = res ?? [];
     }
-    setWorkouts(Array.from(allMap.values()));
+
+    setWorkouts(data as CommunityWorkout[]);
     setLoading(false);
-  }, [user, familyIds]);
+  }, [user, familyIds, mode]);
 
   useEffect(() => { loadWorkouts(); }, [loadWorkouts]);
 
@@ -118,11 +169,12 @@ const CommunityWorkoutBank = ({ onCreateNew }: CommunityWorkoutBankProps) => {
       creator_name: workout.creator_name,
       exercises: workout.exercises as any,
       is_public: false,
+      source_type: "manual",
     });
     if (error) {
       toast({ title: "Save failed", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Saved to your workouts!", description: "You can rename or edit it anytime." });
+      toast({ title: "Saved to your workouts!", description: "Find it in the My Workouts tab." });
       loadWorkouts();
     }
     setSavingId(null);
@@ -133,14 +185,17 @@ const CommunityWorkoutBank = ({ onCreateNew }: CommunityWorkoutBankProps) => {
     return w.user_id === user.id || familyIds.includes(w.user_id);
   };
 
+  const config = MODE_CONFIG[mode];
+  const isFixIt = mode === "fixit";
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-bold uppercase tracking-widest text-foreground">Mattletes Workout Bank</h3>
-          <p className="text-[10px] text-muted-foreground mt-0.5">Community-created workouts · Use any, share yours</p>
+          <h3 className="text-sm font-bold uppercase tracking-widest text-foreground">{config.title}</h3>
+          <p className="text-[10px] text-muted-foreground mt-0.5">{config.subtitle}</p>
         </div>
-        {onCreateNew && (
+        {onCreateNew && mode === "my" && (
           <button
             onClick={onCreateNew}
             className="bg-primary text-primary-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all flex items-center gap-1.5"
@@ -155,7 +210,7 @@ const CommunityWorkoutBank = ({ onCreateNew }: CommunityWorkoutBankProps) => {
         <Search size={14} className="text-muted-foreground mr-2 flex-shrink-0" />
         <input
           type="text"
-          placeholder="Search workouts or creators…"
+          placeholder={mode === "community" ? "Search workouts or creators…" : "Search your workouts…"}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
@@ -164,11 +219,11 @@ const CommunityWorkoutBank = ({ onCreateNew }: CommunityWorkoutBankProps) => {
 
       {/* Workout list */}
       {loading ? (
-        <p className="text-xs text-muted-foreground p-4 text-center">Loading workouts…</p>
+        <p className="text-xs text-muted-foreground p-4 text-center">Loading…</p>
       ) : filtered.length === 0 ? (
         <div className="text-center py-8">
-          <Dumbbell size={24} className="mx-auto text-muted-foreground/30 mb-2" />
-          <p className="text-sm text-muted-foreground">No workouts yet. Be the first to share!</p>
+          {isFixIt ? <Wrench size={24} className="mx-auto text-muted-foreground/30 mb-2" /> : <Dumbbell size={24} className="mx-auto text-muted-foreground/30 mb-2" />}
+          <p className="text-sm text-muted-foreground">{config.emptyText}</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -184,16 +239,23 @@ const CommunityWorkoutBank = ({ onCreateNew }: CommunityWorkoutBankProps) => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <h4 className="text-sm font-bold text-foreground truncate">{w.title}</h4>
-                        {own && (
+                        {mode === "community" && own && (
                           <span className="text-[8px] font-bold uppercase tracking-widest text-primary bg-primary/10 px-1.5 py-0.5 shrink-0">
                             Yours
                           </span>
                         )}
+                        {isFixIt && (
+                          <span className="text-[8px] font-bold uppercase tracking-widest text-accent-foreground bg-accent/20 px-1.5 py-0.5 shrink-0">
+                            Rehab
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center gap-3 mt-1">
-                        <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                          <User size={10} /> {w.creator_name}
-                        </span>
+                        {mode === "community" && (
+                          <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                            <User size={10} /> {w.creator_name}
+                          </span>
+                        )}
                         <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
                           <Dumbbell size={10} /> {w.exercises.length} exercises
                         </span>
@@ -210,7 +272,6 @@ const CommunityWorkoutBank = ({ onCreateNew }: CommunityWorkoutBankProps) => {
 
                 {expanded === w.id && (
                   <div className="border-t border-border p-4 space-y-3">
-                    {/* Exercise list */}
                     <div className="space-y-1.5">
                       {w.exercises.map((ex, i) => (
                         <div key={i} className="flex items-center gap-3 text-xs">
@@ -221,7 +282,6 @@ const CommunityWorkoutBank = ({ onCreateNew }: CommunityWorkoutBankProps) => {
                       ))}
                     </div>
 
-                    {/* Actions */}
                     <div className="flex gap-2 pt-2">
                       <button
                         onClick={() => {
@@ -229,7 +289,7 @@ const CommunityWorkoutBank = ({ onCreateNew }: CommunityWorkoutBankProps) => {
                             new CustomEvent("open-workout-zone", {
                               detail: {
                                 title: w.title,
-                                source: "community",
+                                source: mode === "fixit" ? "fixit" : "community",
                                 exercises: w.exercises.map((ex) => ({
                                   exerciseTitle: ex.title,
                                   prescribedSets: parseInt(ex.sets) || 3,
@@ -242,10 +302,10 @@ const CommunityWorkoutBank = ({ onCreateNew }: CommunityWorkoutBankProps) => {
                         }}
                         className="flex-1 h-10 bg-primary text-primary-foreground flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all"
                       >
-                        <Play size={12} /> Start Workout
+                        <Play size={12} /> {isFixIt ? "Start Protocol" : "Start Workout"}
                       </button>
-                      {/* Save copy — only for other users' workouts */}
-                      {!own && (
+                      {/* Save copy — only in community mode for other users' workouts */}
+                      {mode === "community" && !own && (
                         <button
                           onClick={() => handleSaveCopy(w)}
                           disabled={savingId === w.id}
@@ -260,8 +320,8 @@ const CommunityWorkoutBank = ({ onCreateNew }: CommunityWorkoutBankProps) => {
                       >
                         <FileText size={12} /> PDF
                       </button>
-                      {/* Delete — only own workouts */}
-                      {own && (
+                      {/* Delete — only own workouts, not in community mode */}
+                      {own && mode !== "community" && (
                         <button
                           onClick={() => setDeleteTarget(w)}
                           className="h-10 bg-destructive/10 text-destructive flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:bg-destructive/20 transition-all px-4"
@@ -278,7 +338,6 @@ const CommunityWorkoutBank = ({ onCreateNew }: CommunityWorkoutBankProps) => {
         </div>
       )}
 
-      {/* Delete confirmation */}
       <ConfirmActionModal
         open={!!deleteTarget}
         onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}

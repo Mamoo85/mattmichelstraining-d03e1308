@@ -1,5 +1,5 @@
 import { useState, memo } from "react";
-import { Sparkles, Loader2, Play, RefreshCw, ChevronLeft } from "lucide-react";
+import { Sparkles, Loader2, Play, RefreshCw, ChevronLeft, Save } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import m2Logo from "@/assets/m2-logo.jpg";
