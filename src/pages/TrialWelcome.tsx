@@ -208,15 +208,15 @@ const TrialWelcome = () => {
                 bonus="Free online assessment for parent & child"
               />
               <TrialPathCard
-                selected={selectedPath === "foundation"}
-                onClick={() => setSelectedPath("foundation")}
+                selected={selectedPath === "pro"}
+                onClick={() => setSelectedPath("pro")}
                 icon={Star}
-                title="Adult Foundation Trial"
-                charge="$19.99/mo (Foundation) after trial"
-                desc="8-week training blocks, Fix It recovery library, and coach form feedback."
+                title="Pro (Semi-Custom) Trial"
+                charge="$149.99/mo (Pro) after trial"
+                desc="Custom 4-week block, 2 weekly video form-checks, and direct coach feedback."
                 badge={null}
-                warning="Family Pack available at Custom level"
-                bonus="Free online assessment"
+                warning={null}
+                bonus="Free movement assessment"
               />
             </div>
 
