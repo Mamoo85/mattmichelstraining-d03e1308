@@ -1,8 +1,8 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import SEOHead from "@/components/layout/SEOHead";
 import AppNavbar from "@/components/layout/AppNavbar";
-import StoreGettingStarted from "@/components/store/StoreGettingStarted";
 import StoreTab from "@/components/store/StoreTab";
+import MerchTab from "@/components/store/MerchTab";
 import ExerciseLibrary from "@/components/features/ExerciseLibrary";
 import FixItLibrary from "@/components/features/FixItLibrary";
 import PaywallGate from "@/components/billing/PaywallGate";
@@ -10,14 +10,14 @@ const DoNotPressButton = lazy(() => import("@/components/landing/DoNotPressButto
 const FirstMonthPromo = lazy(() => import("@/components/landing/FirstMonthPromo"));
 
 const TABS = [
-  { key: "start", label: "How It Works" },
-  { key: "store", label: "Store" },
+  { key: "store", label: "Digital Programs" },
+  { key: "merch", label: "Apparel & Gear" },
   { key: "library", label: "Exercise Library" },
   { key: "fixit", label: "Fix It Library" },
 ] as const;
 
 const Shop = () => {
-  const [activeTab, setActiveTab] = useState("start");
+  const [activeTab, setActiveTab] = useState("store");
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -27,6 +27,7 @@ const Shop = () => {
     window.addEventListener("switch-shop-tab", handler);
     return () => window.removeEventListener("switch-shop-tab", handler);
   }, []);
+
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
@@ -53,9 +54,13 @@ const Shop = () => {
           ))}
         </div>
 
-        <Suspense fallback={null}><FirstMonthPromo /></Suspense>
-        {activeTab === "start" && <StoreGettingStarted />}
-        {activeTab === "store" && <StoreTab />}
+        {activeTab === "store" && (
+          <>
+            <Suspense fallback={null}><FirstMonthPromo /></Suspense>
+            <StoreTab />
+          </>
+        )}
+        {activeTab === "merch" && <MerchTab />}
         {activeTab === "library" && (
           <PaywallGate featureKey="exercise_library" featureName="Exercise Library">
             <ExerciseLibrary />
