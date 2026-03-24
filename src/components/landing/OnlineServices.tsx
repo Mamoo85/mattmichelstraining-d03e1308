@@ -4,7 +4,9 @@ import { ArrowRight, Wifi } from "lucide-react";
 import SectionHeader from "@/components/shared/SectionHeader";
 import { useExerciseCount } from "@/hooks/useExerciseCount";
 
-const OnlineServices = () => (
+const OnlineServices = () => {
+  const exerciseCount = useExerciseCount();
+  return (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}

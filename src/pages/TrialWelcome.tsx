@@ -61,6 +61,7 @@ const TRIAL_PROGRAMS = [
 
 const TrialWelcome = () => {
   const { user } = useAuth();
+  const exerciseCount = useExerciseCount();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
