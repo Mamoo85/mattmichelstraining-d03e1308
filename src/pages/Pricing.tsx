@@ -126,8 +126,8 @@ const Pricing = () => {
       if (referralCode && !promoCode.trim()) {
         body.referralCode = referralCode;
       }
-      if (tierKey === "elite") {
-        body.successUrl = "/schedule?checkout=success";
+      if (tierKey === "pro" || tierKey === "elite") {
+        body.successUrl = "/assessment?checkout=success";
       } else {
         body.successUrl = "/dashboard?checkout=success";
       }

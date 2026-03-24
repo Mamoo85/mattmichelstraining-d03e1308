@@ -946,6 +946,57 @@ export type Database = {
         }
         Relationships: []
       }
+      intake_assessments: {
+        Row: {
+          age: number | null
+          created_at: string
+          daily_activity: string | null
+          equipment_access: string | null
+          goals: string | null
+          height: string | null
+          id: string
+          injury_history: string
+          posture_photos: string[] | null
+          squat_video: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          weight: string | null
+        }
+        Insert: {
+          age?: number | null
+          created_at?: string
+          daily_activity?: string | null
+          equipment_access?: string | null
+          goals?: string | null
+          height?: string | null
+          id?: string
+          injury_history: string
+          posture_photos?: string[] | null
+          squat_video?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          weight?: string | null
+        }
+        Update: {
+          age?: number | null
+          created_at?: string
+          daily_activity?: string | null
+          equipment_access?: string | null
+          goals?: string | null
+          height?: string | null
+          id?: string
+          injury_history?: string
+          posture_photos?: string[] | null
+          squat_video?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          weight?: string | null
+        }
+        Relationships: []
+      }
       learn_articles: {
         Row: {
           author: string
