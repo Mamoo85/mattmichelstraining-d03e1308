@@ -16,6 +16,7 @@ import { getStoredReferralCode, clearStoredReferralCode } from "@/hooks/useRefer
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 const DoNotPressButton = lazy(() => import("@/components/landing/DoNotPressButton"));
 const AiGeneratorShowcase = lazy(() => import("@/components/landing/AiGeneratorShowcase"));
+const ProveItShowcase = lazy(() => import("@/components/landing/ProveItShowcase"));
 
 import CheckoutConfirmationModal, { type CheckoutProductType } from "@/components/billing/CheckoutConfirmationModal";
 
@@ -551,6 +552,12 @@ const Pricing = () => {
         <div className="mt-12 max-w-3xl mx-auto">
           <Suspense fallback={null}>
             <AiGeneratorShowcase />
+          </Suspense>
+        </div>
+
+        <div className="mt-8 max-w-3xl mx-auto">
+          <Suspense fallback={null}>
+            <ProveItShowcase />
           </Suspense>
         </div>
 
