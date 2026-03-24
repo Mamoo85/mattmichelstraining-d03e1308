@@ -135,7 +135,7 @@ const TrialPaywallModal = ({ open, onClose, hardLock }: TrialPaywallModalProps) 
                 <ul className="space-y-1 mb-4 flex-1">
                   {tier.perks.map((p) => (
                     <li key={p} className="text-[10px] text-muted-foreground flex items-start gap-1.5">
-                      <span className="text-primary mt-0.5">✓</span> {p}
+                      <span className="text-primary mt-0.5">✓</span> {p.replace("{count}", String(exerciseCount))}
                     </li>
                   ))}
                 </ul>
