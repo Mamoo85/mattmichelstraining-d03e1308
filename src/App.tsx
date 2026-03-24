@@ -70,6 +70,7 @@ const SEOLandingPage = lazyRetry(() => import("./pages/SEOLandingPage"));
 const DynamicSitemap = lazyRetry(() => import("./pages/DynamicSitemap"));
 const Assessment = lazyRetry(() => import("./pages/Assessment"));
 const WebDesignAgency = lazyRetry(() => import("./pages/WebDesignAgency"));
+const LandscapeMockup = lazyRetry(() => import("./pages/LandscapeMockup"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
