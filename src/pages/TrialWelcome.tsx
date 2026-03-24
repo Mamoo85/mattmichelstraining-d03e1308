@@ -187,14 +187,14 @@ const TrialWelcome = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
               <TrialPathCard
-                selected={selectedPath === "basic"}
-                onClick={() => setSelectedPath("basic")}
+                selected={selectedPath === "foundation"}
+                onClick={() => setSelectedPath("foundation")}
                 icon={User}
-                title="Basic Trial"
-                charge="$12.99/mo after trial"
-                desc="200+ exercises, daily workouts, challenges, and progress logging."
+                title="Foundation Trial"
+                charge="$19.99/mo after trial"
+                desc="Full M² App, 85+ exercise library, Fix It rehab library, AI Generator, and progress logging."
                 badge={null}
-                warning="No custom program"
+                warning={null}
               />
               <TrialPathCard
                 selected={selectedPath === "parent"}
