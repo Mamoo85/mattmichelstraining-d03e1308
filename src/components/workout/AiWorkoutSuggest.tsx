@@ -1,5 +1,5 @@
 import { useState, memo } from "react";
-import { Sparkles, Loader2, Dumbbell, Play, Save, Share2, ArrowLeft, Wrench } from "lucide-react";
+import { Sparkles, Loader2, Dumbbell, Play, Save, Share2, ArrowLeft, Wrench, Printer, Timer, Minus, Plus } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
