@@ -74,6 +74,7 @@ const LandscapeMockup = lazyRetry(() => import("./pages/LandscapeMockup"));
 const PlumberMockup = lazyRetry(() => import("./pages/PlumberMockup"));
 const ElectricianMockup = lazyRetry(() => import("./pages/ElectricianMockup"));
 const LawyerMockup = lazyRetry(() => import("./pages/LawyerMockup"));
+const ClinicMockup = lazyRetry(() => import("./pages/ClinicMockup"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
