@@ -48,6 +48,7 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("home");
   const [hasPrograms, setHasPrograms] = useState<boolean | null>(null);
   const [hasLogs, setHasLogs] = useState<boolean | null>(null);
+  const [generatorView, setGeneratorView] = useState<null | "workout" | "fixit">(null);
 
   useEffect(() => {
     if (!user) return;
