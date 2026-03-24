@@ -71,6 +71,7 @@ const DynamicSitemap = lazyRetry(() => import("./pages/DynamicSitemap"));
 const Assessment = lazyRetry(() => import("./pages/Assessment"));
 const WebDesignAgency = lazyRetry(() => import("./pages/WebDesignAgency"));
 const LandscapeMockup = lazyRetry(() => import("./pages/LandscapeMockup"));
+const PlumberMockup = lazyRetry(() => import("./pages/PlumberMockup"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
