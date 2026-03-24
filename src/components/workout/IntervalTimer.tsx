@@ -96,9 +96,11 @@ EditableValue.displayName = "EditableValue";
 interface IntervalTimerProps {
   onClose: () => void;
   initialConfig?: TimerConfig;
+  exercises?: string[];
+  isCircuit?: boolean;
 }
 
-const IntervalTimer = ({ onClose, initialConfig }: IntervalTimerProps) => {
+const IntervalTimer = ({ onClose, initialConfig, exercises: circuitExercises, isCircuit }: IntervalTimerProps) => {
   const [config, setConfig] = useState<TimerConfig>(initialConfig ?? { prep: 5, work: 45, rest: 15, rounds: 5, warning: 10 });
   const [phase, setPhase] = useState<Phase>("idle");
   const [secondsLeft, setSecondsLeft] = useState(0);
