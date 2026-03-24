@@ -84,13 +84,15 @@ const AiWorkoutSuggest = memo(({ onDone, initialPath }: { onDone: () => void; in
       order: i,
     }));
 
+    const sourceType = path === "fixit" ? "ai_fixit" : "ai_workout";
     const { error } = await supabase.from("community_workouts").insert({
       user_id: user.id,
       title: workout.title,
       description: workout.description,
       creator_name: "Coach Matt AI",
       exercises: exerciseData as any,
-      is_public: shareToBank,
+      is_public: false,
+      source_type: sourceType,
     });
 
     if (error) {
