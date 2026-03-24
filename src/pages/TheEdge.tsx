@@ -15,6 +15,7 @@ import techVelocity from "@/assets/tech-velocity-tracker.jpg";
 import techNutrition from "@/assets/tech-nutrition-scanner.jpg";
 import techPosture from "@/assets/tech-posture-analysis.jpg";
 const DoNotPressButton = lazy(() => import("@/components/landing/DoNotPressButton"));
+const AIBrainSimulator = lazy(() => import("@/components/landing/AIBrainSimulator"));
 
 /* ─── Live Mini-Demo Components ─── */
 
