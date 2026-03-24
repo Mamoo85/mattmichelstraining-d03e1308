@@ -168,7 +168,7 @@ const TechShowcaseMarketing = ({ variant = "full" }: Props) => {
         <div className="text-center">
           <div className="bg-gradient-to-br from-primary/20 via-card to-primary/10 border-2 border-primary/40 p-6 inline-block w-full max-w-md">
             <p className="text-lg font-black text-foreground mb-1">
-              All of This. <span className="text-primary">$12.99/mo.</span>
+              All of This. <span className="text-primary">$19.99/mo.</span>
             </p>
             <p className="text-xs text-muted-foreground mb-4">
               All technology is built into the M² member app — included free with every membership.
