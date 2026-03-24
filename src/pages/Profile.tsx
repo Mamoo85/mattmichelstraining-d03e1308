@@ -657,6 +657,8 @@ const Profile = () => {
             </p>
           )}
         </div>
+        </>
+        )}
       </div>
       <SupportTicketForm />
       <TechSupportButton />
