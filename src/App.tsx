@@ -69,6 +69,7 @@ const FreeAiGenerator = lazyRetry(() => import("./pages/FreeAiGenerator"));
 const SEOLandingPage = lazyRetry(() => import("./pages/SEOLandingPage"));
 const DynamicSitemap = lazyRetry(() => import("./pages/DynamicSitemap"));
 const Assessment = lazyRetry(() => import("./pages/Assessment"));
+const WebDesignAgency = lazyRetry(() => import("./pages/WebDesignAgency"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
