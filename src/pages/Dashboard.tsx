@@ -5,7 +5,7 @@ import TrialPaywallModal from "@/components/billing/TrialPaywallModal";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
-import { Loader2, Crown, User, Dumbbell, Trophy, Sparkles, Wrench } from "lucide-react";
+import { Loader2, Crown, User, Dumbbell, Trophy, Sparkles, Wrench, ArrowLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import PwaInstallBanner from "@/components/layout/PwaInstallBanner";
@@ -20,6 +20,8 @@ const MyPrograms = lazy(() => import("@/components/features/MyPrograms"));
 const ChallengeHub = lazy(() => import("@/components/dashboard/ChallengeHub"));
 const TeamManager = lazy(() => import("@/components/features/TeamManager"));
 const ProgressCharts = lazy(() => import("@/components/features/ProgressCharts"));
+const AiWorkoutSuggest = lazy(() => import("@/components/workout/AiWorkoutSuggest"));
+const FixItLibrary = lazy(() => import("@/components/features/FixItLibrary"));
 
 import PortalOnboarding from "@/components/dashboard/PortalOnboarding";
 
