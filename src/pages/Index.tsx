@@ -67,6 +67,8 @@ const Index = () => (
         <AiGeneratorShowcase />
       </Suspense>
       <Suspense fallback={null}>
+        <ProveItShowcase />
+      <Suspense fallback={null}>
         <FirstMonthPromo />
       </Suspense>
       <Suspense fallback={null}>
