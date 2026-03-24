@@ -8,6 +8,7 @@ const ChallengeTeaser = lazy(() => import("@/components/landing/ChallengeTeaser"
 const DoNotPressButton = lazy(() => import("@/components/landing/DoNotPressButton"));
 const FirstMonthPromo = lazy(() => import("@/components/landing/FirstMonthPromo"));
 const AiGeneratorShowcase = lazy(() => import("@/components/landing/AiGeneratorShowcase"));
+const ProveItShowcase = lazy(() => import("@/components/landing/ProveItShowcase"));
 
 const FAQ_SCHEMA = {
   "@context": "https://schema.org",
