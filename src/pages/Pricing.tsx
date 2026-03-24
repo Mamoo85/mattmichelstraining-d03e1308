@@ -205,17 +205,67 @@ const Pricing = () => {
           </div>
         </motion.div>
 
-        {/* Value comparison banner */}
+        {/* In-Person Training Box */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-primary/5 border border-primary/15 p-4 md:p-5 mb-8 max-w-3xl mx-auto"
+          className="border-2 border-primary/30 bg-card mb-8 max-w-3xl mx-auto overflow-hidden"
         >
-          <p className="text-xs text-muted-foreground leading-relaxed text-center">
-            <span className="text-foreground font-bold">Real coaching without the premium price tag.</span>{" "}
-            {cms.value_banner || "Online coaching packages run $200–$500/mo. Matt's Foundation plan starts at $19.99/mo — same 20 years of expertise, same personalized approach, for athletes of every age. No contracts, no middleman, available in any state."}
-          </p>
+          <div className="bg-primary/10 border-b border-primary/20 px-5 py-2.5 flex items-center gap-2">
+            <MapPin className="w-4 h-4 text-primary" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
+              In-Person Training · Grosse Pointe Park, MI
+            </span>
+          </div>
+          <div className="p-5 sm:p-6 space-y-3">
+            <h3 className="text-lg sm:text-xl font-black uppercase tracking-tight text-foreground leading-tight">
+              Train With Matt — In the Gym
+            </h3>
+            <p className="text-sm text-muted-foreground leading-relaxed max-w-lg">
+              One-on-one sessions and <strong className="text-foreground">small group training</strong> available
+              at the studio. Youth athletes, adults, and post-rehab clients welcome. Same coach, same
+              programming quality — face to face.
+            </p>
+            <ul className="space-y-1.5 pt-1">
+              {["1-on-1 personal training sessions", "Small group training (2–4 athletes)", "Youth athlete development", "Post-rehab & return-to-sport"].map((f) => (
+                <li key={f} className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                  <Check className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
+                  {f}
+                </li>
+              ))}
+            </ul>
+            <div className="flex flex-wrap gap-2.5 pt-2">
+              <Link
+                to="/schedule"
+                className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-m2"
+              >
+                <Calendar className="w-3.5 h-3.5" />
+                Schedule a Session
+              </Link>
+              <a
+                href="mailto:matthew.michels4@gmail.com?subject=In-Person%20Training%20Inquiry"
+                className="inline-flex items-center gap-2 border border-primary/40 text-primary px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:bg-primary/10 transition-m2"
+              >
+                <Mail className="w-3.5 h-3.5" />
+                Email
+              </a>
+              <a
+                href="tel:3138064952"
+                className="inline-flex items-center gap-2 border border-primary/40 text-primary px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:bg-primary/10 transition-m2"
+              >
+                <Phone className="w-3.5 h-3.5" />
+                Call
+              </a>
+              <a
+                href="sms:3138064952"
+                className="inline-flex items-center gap-2 border border-primary/40 text-primary px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:bg-primary/10 transition-m2"
+              >
+                <MessageSquare className="w-3.5 h-3.5" />
+                Text
+              </a>
+            </div>
+          </div>
         </motion.div>
 
         {/* Header */}
