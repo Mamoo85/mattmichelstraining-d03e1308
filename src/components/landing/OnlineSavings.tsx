@@ -29,7 +29,7 @@ const OnlineSavings = () => (
 
       <p className="text-sm text-muted-foreground leading-relaxed mb-4">
         Most families spend $200–$600/month on in-person youth training and still get generic programming.
-        M² delivers 20 years of experience direct to your phone starting at <span className="text-foreground font-bold">$12.99/month</span>. 
+        M² delivers 20 years of experience direct to your phone starting at <span className="text-foreground font-bold">$19.99/month</span>. 
         No travel. No scheduling conflicts. Same proven system that's produced 50+ college athletes with zero injuries.
       </p>
 
@@ -49,7 +49,7 @@ const OnlineSavings = () => (
             <span className="text-xs font-bold text-foreground block">M² Online Training</span>
             <span className="text-[10px] text-muted-foreground">Custom programming · any sport · any state · direct coach access</span>
           </div>
-          <span className="text-sm font-mono font-bold text-primary">$12.99–$99.99/mo</span>
+          <span className="text-sm font-mono font-bold text-primary">$19.99–$349.99/mo</span>
         </div>
       </div>
 

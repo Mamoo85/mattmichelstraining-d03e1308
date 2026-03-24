@@ -62,7 +62,7 @@ const Schedule = () => {
   const [guestEmail, setGuestEmail] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
 
-  const isElite = subscriptionTier === "custom" || subscriptionTier === "team_elite";
+  const isElite = subscriptionTier === "pro" || subscriptionTier === "elite";
 
   const today = startOfDay(new Date());
   const days = Array.from({ length: 14 }, (_, i) => addDays(today, i));

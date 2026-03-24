@@ -48,7 +48,7 @@ const Profile = () => {
   const [lookupLoading, setLookupLoading] = useState(false);
   const [showAllLifts, setShowAllLifts] = useState(false);
   const [giftModalOpen, setGiftModalOpen] = useState(false);
-  const canGiftSession = subscriptionTier === "custom" || subscriptionTier === "team_elite";
+  const canGiftSession = subscriptionTier === "pro" || subscriptionTier === "elite";
 
   useEffect(() => {
     if (!user) return;

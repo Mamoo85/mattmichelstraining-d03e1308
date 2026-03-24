@@ -283,7 +283,7 @@ const TrialCTABlock = () => (
         Start Your 14-Day Free Trial <ArrowRight size={16} />
       </Link>
     </Button>
-    <p className="text-[10px] text-muted-foreground mt-2">Credit card required • $12.99/mo after trial • Cancel anytime</p>
+    <p className="text-[10px] text-muted-foreground mt-2">Credit card required • $19.99/mo after trial • Cancel anytime</p>
   </div>
 );
 
@@ -292,7 +292,7 @@ const TheEdge = () => (
   <div className="min-h-screen bg-background">
     <SEOHead
       title="M² Technology — Advanced Training Tech Built Into Your App"
-      description="Posture analysis, velocity tracking, nutrition scanning, smart workout logging — all built into the M² member app. Included free with every membership starting at $12.99/mo."
+      description="Posture analysis, velocity tracking, nutrition scanning, smart workout logging — all built into the M² member app. Included free with every membership starting at $19.99/mo."
       path="/the-edge"
     />
     <AppNavbar />
@@ -315,7 +315,7 @@ const TheEdge = () => (
             fused into one platform no other trainer can match.
           </p>
           <p className="text-xs text-primary font-bold">
-            All technology included free with every membership tier — starting at $12.99/mo.
+            All technology included free with every membership tier — starting at $19.99/mo.
           </p>
         </div>
 

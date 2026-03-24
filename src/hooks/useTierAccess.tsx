@@ -4,14 +4,13 @@ import { useAuth, TierKey } from "./useAuth";
 import { useIsAdmin } from "./useIsAdmin";
 
 // Tier hierarchy: higher tiers inherit all lower-tier access
-const TIER_HIERARCHY: TierKey[] = ["basic", "foundation", "custom", "team_elite"];
+const TIER_HIERARCHY: TierKey[] = ["foundation", "pro", "elite"];
 
 const TIER_COLUMN_MAP: Record<string, string> = {
   free: "tier_free",
-  basic: "tier_basic",
-  foundation: "tier_foundation",
-  custom: "tier_custom",
-  team_elite: "tier_team_elite",
+  foundation: "tier_basic", // maps to the DB column (legacy name)
+  pro: "tier_foundation",   // maps to the DB column (legacy name)
+  elite: "tier_custom",     // maps to the DB column (legacy name)
 };
 
 export const getTierLevel = (tier: TierKey | null): number => {
@@ -27,7 +26,7 @@ export const useTierAccess = (featureKey: string) => {
   const { user, subscriptionTier } = useAuth();
   const { isAdmin } = useIsAdmin();
 
-  // Check if user is an in-person client (gets basic-tier access)
+  // Check if user is an in-person client (gets foundation-tier access)
   const { data: isInPerson = false } = useQuery({
     queryKey: ["is-in-person", user?.id],
     enabled: !!user?.id,
@@ -61,11 +60,11 @@ export const useTierAccess = (featureKey: string) => {
   const feature = features.find((f: any) => f.feature_key === featureKey);
   if (!feature) return { hasAccess: false, loading: false };
 
-  // Determine effective tier: in-person clients get at least basic-tier access
+  // Determine effective tier: in-person clients get at least foundation-tier access
   const effectiveTier: TierKey | null = subscriptionTier
     ? subscriptionTier
     : isInPerson
-      ? "basic"
+      ? "foundation"
       : null;
 
   // No subscription and not in-person → check free tier access

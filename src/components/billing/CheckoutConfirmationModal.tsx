@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ShieldCheck, FileText, Rocket, Video, Users, Loader2 } from "lucide-react";
 
-export type CheckoutProductType = "pdf" | "basic" | "foundation" | "custom" | "custom_program" | "team_elite" | "program" | "session";
+export type CheckoutProductType = "pdf" | "foundation" | "pro" | "elite" | "custom_program" | "program" | "session";
 
 interface CheckoutConfirmationModalProps {
   open: boolean;
@@ -26,21 +26,17 @@ const NEXT_STEPS: Record<CheckoutProductType, { icon: typeof FileText; text: str
     icon: FileText,
     text: "Matt reads your intake and builds a custom program from scratch. You'll receive it in your Profile once it's ready.",
   },
-  basic: {
-    icon: Rocket,
-    text: "You will get instant access to the exercise library and 10 pre-loaded daily workouts. Start training today.",
-  },
   foundation: {
     icon: Rocket,
-    text: "You will get instant access to the portal with your 8-week periodized training block. Your first task is to log your baseline numbers.",
+    text: "You will get instant access to the M² App with the full exercise library, Fix It rehab library, and AI Generator. Start training today.",
   },
-  custom: {
+  pro: {
     icon: Video,
-    text: "After checkout, you will complete your intake form and optionally schedule an in-person or online session with Coach Matt to build your custom protocol.",
+    text: "After checkout, you will complete your movement assessment. Matt will build your custom 4-week block and you can start sending video form-checks.",
   },
-  team_elite: {
-    icon: Users,
-    text: "After checkout, you'll get access to roster management and full-season training plans for your entire team.",
+  elite: {
+    icon: Video,
+    text: "After checkout, you'll schedule your live video assessment with Matt. He'll build your bespoke programming and you'll have daily direct messaging access.",
   },
   session: {
     icon: Rocket,

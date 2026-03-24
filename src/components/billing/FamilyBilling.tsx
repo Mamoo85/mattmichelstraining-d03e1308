@@ -32,10 +32,9 @@ interface FamilyMember {
 }
 
 const TIER_OPTIONS: { key: TierKey; label: string; price: number }[] = [
-  { key: "basic", label: "Basic", price: 14.99 },
-  { key: "foundation", label: "Foundation", price: 39.99 },
-  { key: "custom", label: "Custom", price: 99.99 },
-  { key: "team_elite", label: "Team / Elite", price: 149.99 },
+  { key: "foundation", label: "Foundation", price: 19.99 },
+  { key: "pro", label: "Pro", price: 149.99 },
+  { key: "elite", label: "Elite", price: 349.99 },
 ];
 
 const getTierPrice = (tier: TierKey | "free"): number => {

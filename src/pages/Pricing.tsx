@@ -1,7 +1,7 @@
 import { useState, lazy, Suspense } from "react";
 import { motion } from "framer-motion";
 import SEOHead from "@/components/layout/SEOHead";
-import { Check, X as XIcon, Star, Zap, Shield, Crown, Users, ArrowRight, Loader2, Tag, ChevronDown, ChevronUp, Calendar, CalendarDays } from "lucide-react";
+import { Check, X as XIcon, Star, Zap, Shield, Crown, Users, ArrowRight, Loader2, Tag, ChevronDown, ChevronUp, Calendar, CalendarDays, Mail } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import AppNavbar from "@/components/layout/AppNavbar";
@@ -12,6 +12,7 @@ import { toast } from "@/hooks/use-toast";
 import { useContentMap } from "@/hooks/useSiteContent";
 import TrialCTA from "@/components/billing/TrialCTA";
 import { getStoredReferralCode, clearStoredReferralCode } from "@/hooks/useReferral";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 const DoNotPressButton = lazy(() => import("@/components/landing/DoNotPressButton"));
 
 import CheckoutConfirmationModal, { type CheckoutProductType } from "@/components/billing/CheckoutConfirmationModal";
@@ -24,61 +25,78 @@ const TIER_CARDS: {
   cta: string;
   label?: string;
   subtitle?: string;
+  headline?: string;
+  pitch?: string;
   badge?: string;
 }[] = [
   {
-    key: "basic",
-    icon: Zap,
-    features: [
-      "200+ exercise video library",
-      "10 daily workouts",
-      "Monthly challenges & leaderboard",
-      "Progress logging & tracking",
-    ],
-    cta: "Start Basic",
-    subtitle: "Train on your own terms with a real library.",
-  },
-  {
     key: "foundation",
+    icon: Zap,
+    headline: "20 Years of Iron Game Knowledge in Your Pocket.",
+    pitch: "Stop guessing. Get the exact digital blueprint I use for my athletes. Full access to the M2 App, my private 85+ Exercise Library, the Fix It Rehab Library, and the AI Generator.",
+    features: [
+      "Full M² App access",
+      "85+ exercise video library",
+      "Fix It rehab library",
+      "AI Workout Generator",
+      "Progress logging & tracking",
+      "Monthly challenges & leaderboard",
+    ],
+    cta: "Start Foundation",
+    subtitle: "The digital blueprint behind 20 years of coaching.",
+  },
+  {
+    key: "pro",
     icon: Star,
-    features: [
-      "8-week periodized training blocks",
-      "Fix It injury recovery library",
-      "Flag exercises for coach feedback",
-      "Real programming, not random workouts",
-    ],
-    cta: "Go Foundation",
-    subtitle: "Structured training that updates every cycle.",
-  },
-  {
-    key: "custom",
-    icon: Crown,
     highlight: true,
+    headline: "YouTube Can't Watch You Squat. I Can.",
+    pitch: "An article can't tell you why your back hurts. I will. Complete an assessment, and I build your custom 4-week block. Send me two video form-checks every week. I critique your mechanics, fix weak points, and keep you safe.",
     features: [
-      "Free online assessment",
-      "Custom program built by Matt",
-      "20% off every in-person session — Matt teaches you your workout",
-      "Direct message Coach Matt",
+      "Everything in Foundation",
+      "Full movement assessment",
+      "Custom 4-week training block",
+      "2 weekly video form-checks",
+      "Direct coach feedback on mechanics",
+      "Program adjusted every cycle",
     ],
-    cta: "Go Custom",
-    subtitle: "Your own program from a 20-year coaching vet. Private sessions extra.",
-    badge: "Free Assessment · 20% Off In-Person",
+    cta: "Go Pro",
+    subtitle: "Real coaching. Real feedback. Custom programming.",
+    badge: "Custom Assessment Included",
   },
   {
-    key: "team_elite",
-    icon: Users,
+    key: "elite",
+    icon: Crown,
+    headline: "Undivided Attention. Zero Guesswork.",
+    pitch: "White-glove, concierge strength coaching. Full live video movement assessment. Highly bespoke weekly programming adjusted on the fly. Direct daily messaging with me for instant form analysis and accountability.",
     features: [
-      "Full-season team programming",
-      "Roster management & bulk assignment",
-      "Optional 30-min video chat monthly",
-      "Built for coaches and competitive teams",
+      "Everything in Pro",
+      "Live video movement assessment",
+      "Bespoke weekly programming",
+      "Daily direct messaging with Matt",
+      "Instant form analysis",
+      "Priority scheduling for in-person",
     ],
-    cta: "Go Team/Elite",
-    subtitle: "Train a team or manage multiple athletes under one plan.",
+    cta: "Go Elite",
+    subtitle: "White-glove concierge coaching from Matt.",
   },
 ];
 
 const INITIAL_SHOW = 4;
+
+const FAQ_ITEMS = [
+  {
+    question: "Why should I pay for this when I can use a free AI app?",
+    answer: "Anyone can ask an AI to write a fitness app. But an AI is an empty calculator. I built the M2 AI Generator myself, from scratch, and tested it a million times. I didn't feed it generic internet garbage — I fed it 20 years of my personal, in-the-trenches coaching experience. You aren't paying for code; you are paying for my brain, my safety protocols, and my guarantee of quality.",
+  },
+  {
+    question: "How does the Pro ($149) tier work?",
+    answer: "When you sign up, you'll fill out a detailed damage report (injury history) and upload a quick movement video. I personally review it, build your 4-week program to fix your specific weaknesses, and every week you send me videos of your heavy lifts so I can correct your form.",
+  },
+  {
+    question: "Is there a contract?",
+    answer: "No. Every tier is month-to-month. Cancel anytime.",
+  },
+];
 
 const Pricing = () => {
   const { user, subscribed, subscriptionTier, subscriptionEnd } = useAuth();
@@ -104,13 +122,11 @@ const Pricing = () => {
       if (promoCode.trim()) {
         body.promoCode = promoCode.trim();
       }
-      // Include referral code from URL if present
       const referralCode = getStoredReferralCode();
       if (referralCode && !promoCode.trim()) {
         body.referralCode = referralCode;
       }
-      // Custom/Team_Elite → schedule page for 1-on-1 assessment booking; others → dashboard
-      if (tierKey === "custom" || tierKey === "team_elite") {
+      if (tierKey === "elite") {
         body.successUrl = "/schedule?checkout=success";
       } else {
         body.successUrl = "/dashboard?checkout=success";
@@ -145,8 +161,8 @@ const Pricing = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Pricing — Affordable Youth Strength Training"
-        description="Online strength training from $12.99/mo. Custom 8-week programs from $49.99/mo. 14-day free trial. No contracts."
+        title="Pricing — Expert Strength Coaching Plans"
+        description="Online strength coaching from $19.99/mo. Custom programming from $149.99/mo. Elite 1-on-1 from $349.99/mo. No contracts."
         path="/pricing"
       />
       <AppNavbar />
@@ -166,12 +182,11 @@ const Pricing = () => {
             </div>
             <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-foreground leading-tight">
               Train With Matt.<br />
-              <span className="text-primary">Online. Affordable. Real Coaching.</span>
+              <span className="text-primary">Online. Expert. Real Coaching.</span>
             </h2>
             <p className="text-sm text-muted-foreground max-w-lg leading-relaxed">
               20 years of coaching delivered to your phone. Every plan is month-to-month with a
-              <strong className="text-foreground"> 14-day free trial</strong>. Cancel anytime. Custom members
-              can come train in person at 20% off — or do it all online. Totally up to you.
+              <strong className="text-foreground"> 14-day free trial</strong>. Cancel anytime. No contracts.
             </p>
             <div className="flex flex-wrap gap-3 pt-1">
               <Link
@@ -199,7 +214,7 @@ const Pricing = () => {
         >
           <p className="text-xs text-muted-foreground leading-relaxed text-center">
             <span className="text-foreground font-bold">Real coaching without the premium price tag.</span>{" "}
-            {cms.value_banner || "Online coaching packages run $100–$300/mo. Matt's subscriptions start at $12.99/mo — same 20 years of expertise, same personalized approach, for athletes of every age. No contracts, no middleman, available in any state."}
+            {cms.value_banner || "Online coaching packages run $200–$500/mo. Matt's Foundation plan starts at $19.99/mo — same 20 years of expertise, same personalized approach, for athletes of every age. No contracts, no middleman, available in any state."}
           </p>
         </motion.div>
 
@@ -287,7 +302,7 @@ const Pricing = () => {
           </button>
         </div>
 
-        {/* Tier grid — 4 columns on desktop */}
+        {/* Tier grid — 3 main tiers + Team card */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-7xl mx-auto">
           {TIER_CARDS.map((card, i) => {
             const tier = TIERS[card.key];
@@ -295,7 +310,7 @@ const Pricing = () => {
             const isCurrentPlan = subscriptionTier === card.key;
             const Icon = card.icon;
             const cmsFeatures = cms[`${card.key}_features`];
-            const features = cmsFeatures ? cmsFeatures.split("|").map(f => f.trim()) : card.features;
+            const features = cmsFeatures ? cmsFeatures.split("|").map((f: string) => f.trim()) : card.features;
 
             return (
               <motion.div
@@ -326,10 +341,13 @@ const Pricing = () => {
                 <h3 className="text-base font-black uppercase tracking-tight text-foreground">
                   {card.label || tier.name}
                 </h3>
-                {card.subtitle && (
-                  <p className="text-[10px] text-muted-foreground mb-1 leading-tight">{card.subtitle}</p>
+                {card.headline && (
+                  <p className="text-xs font-bold text-foreground mt-1 leading-snug">{card.headline}</p>
                 )}
-                <div className="flex items-baseline gap-1 mt-1 mb-1.5">
+                {card.pitch && (
+                  <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed">{card.pitch}</p>
+                )}
+                <div className="flex items-baseline gap-1 mt-2 mb-1.5">
                   {billingCycle === "annual" ? (
                     <>
                       <span className="text-2xl font-black text-foreground">{annual.monthlyEquiv}</span>
@@ -353,7 +371,6 @@ const Pricing = () => {
                   {TIER_DISCOUNTS[card.key]}% off store
                 </div>
 
-                {/* Assessment badge for Custom & Team */}
                 {card.badge && (
                   <div className="bg-primary/10 border border-primary/20 px-2.5 py-1.5 mb-3 flex items-center gap-1.5">
                     <Shield className="w-3.5 h-3.5 text-primary shrink-0" />
@@ -368,7 +385,7 @@ const Pricing = () => {
                     const hasMore = features.length > INITIAL_SHOW;
                     return (
                       <>
-                        {visibleFeatures.map((f, j) => (
+                        {visibleFeatures.map((f: string, j: number) => (
                           <li key={j} className="flex items-start gap-1.5 text-xs text-muted-foreground">
                             <Check className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
                             {f}
@@ -420,51 +437,88 @@ const Pricing = () => {
                         </>
                       )}
                     </button>
-                    {card.key === "foundation" && !subscribed && (
-                      <Link
-                        to={user ? "/trial-welcome?path=foundation" : "/auth?redirect=/trial-welcome?path=foundation"}
-                        className="w-full py-1.5 text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-1.5 text-primary hover:underline"
-                      >
-                        Or try 14 days free <ArrowRight className="w-3 h-3" />
-                      </Link>
-                    )}
                   </div>
                 )}
               </motion.div>
             );
           })}
-        </div>
 
-        {/* Family Pack callout — sits below the 4-column grid */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="mt-6 max-w-7xl mx-auto bg-card border-2 border-primary/30 p-6 flex flex-col md:flex-row items-start md:items-center gap-4"
-        >
-          <Shield className="w-8 h-8 text-primary shrink-0" />
-          <div className="flex-1 min-w-0">
-            <h3 className="text-base font-black uppercase tracking-tight text-foreground mb-1">
-              🎁 Family Pack — Free With Custom Membership
-            </h3>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Every Custom membership includes a <strong className="text-foreground">free child membership</strong>. Your athlete gets their own account with age-appropriate programming and full progress monitoring — all under your plan. <strong className="text-foreground">Private sessions extra. 14-day free trial available.</strong>
-            </p>
-          </div>
-          <Link
-            to={user ? "/trial-welcome?path=parent" : "/auth?redirect=/trial-welcome?path=parent"}
-            className="shrink-0 bg-primary text-primary-foreground px-5 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-colors flex items-center gap-2"
+          {/* Team Card — static, no Stripe */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="relative flex flex-col border-2 border-border bg-card p-5"
           >
-            Start Custom Trial <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-        </motion.div>
+            <Users className="w-7 h-7 text-primary mb-2" />
+            <h3 className="text-base font-black uppercase tracking-tight text-foreground">
+              Team & Organization
+            </h3>
+            <p className="text-xs font-bold text-foreground mt-1 leading-snug">
+              Team & Organization Programming
+            </p>
+            <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed">
+              Built for high school programs and travel teams. Injury prevention, off-season strength, and in-season maintenance for your whole roster.
+            </p>
+            <div className="flex items-baseline gap-1 mt-2 mb-1.5">
+              <span className="text-2xl font-black text-foreground">Custom</span>
+              <span className="text-muted-foreground text-xs">Bid</span>
+            </div>
+
+            <ul className="flex-1 space-y-1.5 mb-4">
+              {[
+                "Full-season team programming",
+                "Roster management & bulk assignment",
+                "Injury prevention protocols",
+                "In-season maintenance plans",
+              ].map((f, j) => (
+                <li key={j} className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                  <Check className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
+                  {f}
+                </li>
+              ))}
+            </ul>
+
+            <a
+              href="mailto:matthewmichels4@gmail.com?subject=Team%20Programming%20Inquiry"
+              className="w-full py-2.5 text-[10px] font-bold uppercase tracking-widest border-2 border-foreground text-foreground hover:bg-foreground hover:text-background transition-colors flex items-center justify-center gap-2"
+            >
+              <Mail className="w-3.5 h-3.5" />
+              Contact Coach Matt
+            </a>
+          </motion.div>
+        </div>
 
         {/* Dynamic Feature Comparison Table */}
         <TierComparisonTable />
 
+        {/* FAQ Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="mt-16 max-w-2xl mx-auto"
+        >
+          <h2 className="text-lg font-black uppercase tracking-tight text-foreground text-center mb-1">
+            Frequently Asked Questions
+          </h2>
+          <p className="text-[11px] text-muted-foreground text-center mb-6">
+            Straight answers. No sales pitch.
+          </p>
 
-
-
+          <Accordion type="single" collapsible className="w-full">
+            {FAQ_ITEMS.map((faq, i) => (
+              <AccordionItem key={i} value={`faq-${i}`}>
+                <AccordionTrigger className="text-sm text-left font-bold text-foreground">
+                  {faq.question}
+                </AccordionTrigger>
+                <AccordionContent className="text-sm text-muted-foreground leading-relaxed">
+                  {faq.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </motion.div>
 
         {/* Checkout confirmation modal */}
         <CheckoutConfirmationModal
@@ -487,10 +541,9 @@ const Pricing = () => {
 };
 
 const TIER_COLS = [
-  { key: "tier_basic", label: "Basic", price: "$12.99" },
-  { key: "tier_foundation", label: "Foundation", price: "$19.99" },
-  { key: "tier_custom", label: "Custom", price: "$49.99" },
-  { key: "tier_team_elite", label: "Team", price: "$99.99" },
+  { key: "tier_basic", label: "Foundation", price: "$19.99" },
+  { key: "tier_foundation", label: "Pro", price: "$149.99" },
+  { key: "tier_custom", label: "Elite", price: "$349.99" },
 ] as const;
 
 const TierComparisonTable = () => {
@@ -525,11 +578,11 @@ const TierComparisonTable = () => {
 
       <div className="border border-border bg-card overflow-hidden">
         {/* Header row */}
-        <div className="grid grid-cols-[1fr_repeat(4,48px)] sm:grid-cols-[1fr_repeat(4,64px)] items-end border-b-2 border-primary/30 px-3 py-2.5 bg-background/50">
+        <div className="grid grid-cols-[1fr_repeat(3,56px)] sm:grid-cols-[1fr_repeat(3,72px)] items-end border-b-2 border-primary/30 px-3 py-2.5 bg-background/50">
           <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Feature</span>
           {TIER_COLS.map((col) => (
             <div key={col.key} className="text-center">
-              <span className={`text-[9px] font-bold uppercase tracking-widest block ${col.key === "tier_custom" ? "text-primary" : "text-muted-foreground"}`}>
+              <span className={`text-[9px] font-bold uppercase tracking-widest block ${col.key === "tier_foundation" ? "text-primary" : "text-muted-foreground"}`}>
                 {col.label}
               </span>
             </div>
@@ -540,7 +593,7 @@ const TierComparisonTable = () => {
         {features.map((feature: any, i: number) => (
           <div
             key={feature.feature_label}
-            className={`grid grid-cols-[1fr_repeat(4,48px)] sm:grid-cols-[1fr_repeat(4,64px)] items-center px-3 py-2 ${
+            className={`grid grid-cols-[1fr_repeat(3,56px)] sm:grid-cols-[1fr_repeat(3,72px)] items-center px-3 py-2 ${
               i % 2 === 0 ? "bg-card" : "bg-background/30"
             } ${i < features.length - 1 ? "border-b border-border/40" : ""}`}
           >

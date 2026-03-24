@@ -13,7 +13,7 @@ import { toast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import m2Logo from "@/assets/m2-logo.jpg";
 
-type TrialPath = "parent" | "basic" | "foundation" | null;
+type TrialPath = "parent" | "foundation" | "pro" | null;
 
 const TRIAL_PROGRAMS = [
   {
@@ -24,7 +24,7 @@ const TRIAL_PROGRAMS = [
     icon: Shield,
     tags: ["3 Days/Week", "Bodyweight", "Core"],
     color: "text-emerald-500",
-    forPaths: ["basic", "parent", "foundation"] as TrialPath[],
+    forPaths: ["foundation", "parent", "pro"] as TrialPath[],
   },
   {
     id: "a1b2c3d4-0002-4000-8000-000000000002",
@@ -34,7 +34,7 @@ const TRIAL_PROGRAMS = [
     icon: Zap,
     tags: ["3 Days/Week", "Mobility", "Strength"],
     color: "text-amber-500",
-    forPaths: ["basic", "parent", "foundation"] as TrialPath[],
+    forPaths: ["foundation", "parent", "pro"] as TrialPath[],
   },
   {
     id: "a1b2c3d4-0003-4000-8000-000000000003",
@@ -44,17 +44,17 @@ const TRIAL_PROGRAMS = [
     icon: Dumbbell,
     tags: ["2 Days/Week", "Recovery", "In-Season"],
     color: "text-blue-500",
-    forPaths: ["basic", "parent", "foundation"] as TrialPath[],
+    forPaths: ["foundation", "parent", "pro"] as TrialPath[],
   },
   {
     id: "custom",
     title: "Custom Program — Built by Matt",
-    subtitle: "Foundation & Youth Dev Only",
+    subtitle: "Pro & Foundation",
     description: "Matt builds your program from scratch after reviewing your postural assessment. Start with a free assessment.",
     icon: Star,
     tags: ["Personalized", "Assessment Included", "1-on-1"],
     color: "text-primary",
-    forPaths: ["parent", "foundation"] as TrialPath[],
+    forPaths: ["parent", "pro"] as TrialPath[],
   },
 ];
 
@@ -74,9 +74,9 @@ const TrialWelcome = () => {
   // After checkout, user can pick a program
   const canSelectProgram = checkoutDone;
 
-  const autoChargeLabel = selectedPath === "basic"
-    ? "Basic membership at $12.99/mo"
-    : "Foundation membership at $19.99/mo";
+  const autoChargeLabel = selectedPath === "foundation"
+    ? "Foundation membership at $19.99/mo"
+    : "Pro membership at $149.99/mo";
 
   const handleStartTrial = async () => {
     if (!user) {
@@ -90,7 +90,7 @@ const TrialWelcome = () => {
 
     setCheckingOut(true);
     try {
-      const priceId = selectedPath === "basic" ? TIERS.basic.price_id : TIERS.foundation.price_id;
+      const priceId = selectedPath === "foundation" ? TIERS.foundation.price_id : TIERS.pro.price_id;
 
       const { data, error } = await supabase.functions.invoke("create-checkout", {
         body: {
@@ -187,36 +187,36 @@ const TrialWelcome = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
               <TrialPathCard
-                selected={selectedPath === "basic"}
-                onClick={() => setSelectedPath("basic")}
+                selected={selectedPath === "foundation"}
+                onClick={() => setSelectedPath("foundation")}
                 icon={User}
-                title="Basic Trial"
-                charge="$12.99/mo after trial"
-                desc="200+ exercises, daily workouts, challenges, and progress logging."
+                title="Foundation Trial"
+                charge="$19.99/mo after trial"
+                desc="Full M² App, 85+ exercise library, Fix It rehab library, AI Generator, and progress logging."
                 badge={null}
-                warning="No custom program"
+                warning={null}
               />
               <TrialPathCard
                 selected={selectedPath === "parent"}
                 onClick={() => setSelectedPath("parent")}
                 icon={Users}
                 title="Parent / Family Pack"
-                charge="$49.99/mo (Custom) after trial"
-                desc="Free assessment + custom program from Matt + FREE child membership. Private sessions extra."
+                charge="$149.99/mo (Pro) after trial"
+                desc="Free assessment + custom program from Matt + FREE child membership."
                 badge="🎁 Family Pack Included"
                 warning={null}
                 bonus="Free online assessment for parent & child"
               />
               <TrialPathCard
-                selected={selectedPath === "foundation"}
-                onClick={() => setSelectedPath("foundation")}
+                selected={selectedPath === "pro"}
+                onClick={() => setSelectedPath("pro")}
                 icon={Star}
-                title="Adult Foundation Trial"
-                charge="$19.99/mo (Foundation) after trial"
-                desc="8-week training blocks, Fix It recovery library, and coach form feedback."
+                title="Pro (Semi-Custom) Trial"
+                charge="$149.99/mo (Pro) after trial"
+                desc="Custom 4-week block, 2 weekly video form-checks, and direct coach feedback."
                 badge={null}
-                warning="Family Pack available at Custom level"
-                bonus="Free online assessment"
+                warning={null}
+                bonus="Free movement assessment"
               />
             </div>
 

@@ -174,7 +174,7 @@ const ShopGrid = ({ showCustomOnly = false }: { showCustomOnly?: boolean }) => {
   };
 
   const getProductType = (product: Product): CheckoutProductType => {
-    if (product.category === "custom") return "custom";
+    if (product.category === "custom") return "custom_program";
     return "program";
   };
 

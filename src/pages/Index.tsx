@@ -33,7 +33,7 @@ const FAQ_SCHEMA = {
       name: "Do you offer online training?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Yes. M² offers monthly online memberships starting at $12.99/mo with a 14-day free trial. Plans include the full exercise library, structured programs, injury recovery guides, and direct coaching from Matt.",
+        text: "Yes. M² offers monthly online memberships starting at $19.99/mo with a 14-day free trial. Plans include the full exercise library, structured programs, injury recovery guides, and direct coaching from Matt.",
       },
     },
     {

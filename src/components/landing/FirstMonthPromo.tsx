@@ -24,14 +24,14 @@ const FirstMonthPromo = memo(() => {
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-lg font-black text-primary font-mono">$4.99</span>
-              <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground line-through">$12.99</span>
+              <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground line-through">$19.99</span>
               <span className="text-[9px] font-bold uppercase tracking-widest bg-primary text-primary-foreground px-2 py-0.5">
                 First Month
               </span>
             </div>
             <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
               Start training with Matt for <strong className="text-foreground">$4.99 your first month</strong>. 
-              Full exercise library, workout logging, and monthly coaching. Auto-renews at $12.99/mo — cancel anytime.
+              Full exercise library, workout logging, and monthly coaching. Auto-renews at $19.99/mo — cancel anytime.
             </p>
           </div>
         </div>

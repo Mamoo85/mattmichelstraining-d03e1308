@@ -292,7 +292,7 @@ const MatrixEasterEgg = () => {
               <br />&gt; But since you did… I like you already.
             </p>
             <p className="text-[#33FF33]/90 font-mono text-sm md:text-base leading-relaxed mb-4">
-              Look — for $12.99 a month you get everything I use with my in-person clients. The same exercise library. The same recovery protocols. The same "Fix It" playbook I've spent 20 years building. You can literally point your phone at your plate and get instant macros, or snap a photo of your form mid-set and the app rewrites your next workout around what it sees. Your program adapts to YOUR body. That's not a gimmick — that's the future of training and you'd have it in your pocket.
+              Look — for $19.99 a month you get everything I use with my in-person clients. The same exercise library. The same recovery protocols. The same "Fix It" playbook I've spent 20 years building. You can literally point your phone at your plate and get instant macros, or snap a photo of your form mid-set and the app rewrites your next workout around what it sees. Your program adapts to YOUR body. That's not a gimmick — that's the future of training and you'd have it in your pocket.
             </p>
             <p className="text-[#33FF33]/90 font-mono text-sm md:text-base leading-relaxed mb-4">
               Here's the thing nobody wants to admit: everybody's got something. That shoulder that clicks when you reach overhead. That hip that locks up every deadlift day. That knee you've been "managing" for three years. You're not managing it. You're ignoring it. And it's getting worse.
@@ -334,7 +334,7 @@ const MatrixEasterEgg = () => {
               Start My 14-Day Free Trial
             </Link>
             <p className="font-mono text-[10px] text-[#33FF33]/40 mt-2">
-              Credit card required · Cancel anytime · $12.99/mo after trial
+              Credit card required · Cancel anytime · $19.99/mo after trial
             </p>
           </div>
 

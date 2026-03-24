@@ -89,7 +89,7 @@ const TechShowcaseMarketing = ({ variant = "full" }: Props) => {
           </p>
           <div className="flex items-center justify-center gap-4 mt-4">
             <span className="text-xs font-bold text-foreground">All this for</span>
-            <span className="text-2xl font-black text-primary">$12.99<span className="text-xs text-muted-foreground font-normal">/mo</span></span>
+            <span className="text-2xl font-black text-primary">$19.99<span className="text-xs text-muted-foreground font-normal">/mo</span></span>
             <span className="text-[9px] bg-primary/20 text-primary font-bold px-2 py-0.5 uppercase tracking-widest">14-Day Free Trial</span>
           </div>
         </div>
@@ -168,7 +168,7 @@ const TechShowcaseMarketing = ({ variant = "full" }: Props) => {
         <div className="text-center">
           <div className="bg-gradient-to-br from-primary/20 via-card to-primary/10 border-2 border-primary/40 p-6 inline-block w-full max-w-md">
             <p className="text-lg font-black text-foreground mb-1">
-              All of This. <span className="text-primary">$12.99/mo.</span>
+              All of This. <span className="text-primary">$19.99/mo.</span>
             </p>
             <p className="text-xs text-muted-foreground mb-4">
               All technology is built into the M² member app — included free with every membership.
@@ -179,7 +179,7 @@ const TechShowcaseMarketing = ({ variant = "full" }: Props) => {
               </Link>
             </Button>
             <p className="text-[10px] text-muted-foreground mt-2">
-              Credit card required • $12.99/mo after trial • Cancel anytime
+              Credit card required • $19.99/mo after trial • Cancel anytime
             </p>
           </div>
         </div>

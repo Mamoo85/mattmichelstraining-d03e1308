@@ -114,7 +114,7 @@ function buildEmailHtml(firstName: string, program: WorkoutProgram): string {
               </td>
             </tr>
           </table>
-          <div style="margin-top:16px;font-size:11px;color:#ccc;">20+ years of expertise. All for <strong style="color:#f97316;">$12.99/mo</strong>.</div>
+          <div style="margin-top:16px;font-size:11px;color:#ccc;">20+ years of expertise. All for <strong style="color:#f97316;">$19.99/mo</strong>.</div>
         </td></tr>
       </table>
     </td></tr>
