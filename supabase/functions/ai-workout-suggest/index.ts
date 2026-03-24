@@ -193,12 +193,24 @@ serve(async (req) => {
             type: "function",
             function: {
               name: "create_workout",
-              description: "Create a workout session or corrective protocol with exercises",
+              description: "Create a workout session or corrective protocol with exercises. If the user requests a timed circuit, set isTimedCircuit=true and provide timerConfig.",
               parameters: {
                 type: "object",
                 properties: {
                   title: { type: "string" },
                   description: { type: "string" },
+                  isTimedCircuit: { type: "boolean", description: "True if this is a timed interval/circuit workout" },
+                  timerConfig: {
+                    type: "object",
+                    description: "Timer configuration for timed circuits. Only include when isTimedCircuit is true.",
+                    properties: {
+                      work: { type: "number", description: "Work interval in seconds" },
+                      rest: { type: "number", description: "Rest interval in seconds" },
+                      rounds: { type: "number", description: "Number of rounds" },
+                      prep: { type: "number", description: "Prep countdown in seconds, default 10" },
+                    },
+                    required: ["work", "rest", "rounds", "prep"],
+                  },
                   exercises: {
                     type: "array",
                     items: {
