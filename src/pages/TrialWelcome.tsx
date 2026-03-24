@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import AppNavbar from "@/components/layout/AppNavbar";
 import { useAuth, TIERS } from "@/hooks/useAuth";
+import { useExerciseCount } from "@/hooks/useExerciseCount";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
