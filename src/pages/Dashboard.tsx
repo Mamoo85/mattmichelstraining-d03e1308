@@ -210,7 +210,7 @@ const Dashboard = () => {
               {activeTab === "programs" && <MyPrograms />}
               {activeTab === "workouts" && <WorkoutsTab />}
               {activeTab === "challenge" && <ChallengeHub />}
-              {activeTab === "team" && <TeamManager />}
+              
             </Suspense>
           </>
         )}
