@@ -6,7 +6,6 @@ import AppNavbar from "@/components/layout/AppNavbar";
 import { ArrowLeft, Loader2, User, Dumbbell, TrendingUp, BookOpen } from "lucide-react";
 
 const ProgressCharts = lazy(() => import("@/components/features/ProgressCharts"));
-const MyPrograms = lazy(() => import("@/components/features/MyPrograms"));
 
 const TabLoader = () => (
   <div className="flex justify-center py-12">
