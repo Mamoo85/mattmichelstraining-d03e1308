@@ -49,6 +49,8 @@ export interface LeaderboardEntry {
   level: string;
   athlete_name: string | null;
   full_name: string | null;
+  random_alias: string | null;
+  show_name: boolean;
 }
 
 export const getLevelInfo = (points: number) => {
@@ -123,15 +125,22 @@ export const usePoints = () => {
     const userIds = (pts as any[]).map(p => p.user_id);
     const { data: profiles } = await supabase
       .from("profiles")
-      .select("user_id, athlete_name, full_name")
+      .select("user_id, athlete_name, full_name, random_alias")
+      .in("user_id", userIds);
+    const { data: privacyData } = await supabase
+      .from("user_privacy_settings" as any)
+      .select("user_id, show_name")
       .in("user_id", userIds);
     const profileMap = new Map((profiles || []).map(p => [p.user_id, p]));
+    const privacyMap = new Map(((privacyData || []) as any[]).map(p => [p.user_id, p]));
     setLeaderboard((pts as any[]).map(p => ({
       user_id: p.user_id,
       total_points: p.total_points,
       level: p.level,
       athlete_name: profileMap.get(p.user_id)?.athlete_name || null,
       full_name: profileMap.get(p.user_id)?.full_name || null,
+      random_alias: profileMap.get(p.user_id)?.random_alias || null,
+      show_name: privacyMap.get(p.user_id)?.show_name ?? true,
     })));
   }, []);
 
