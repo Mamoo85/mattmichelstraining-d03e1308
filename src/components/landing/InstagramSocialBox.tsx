@@ -1,4 +1,4 @@
-import { Instagram, ExternalLink, Heart, MessageCircle, Play } from "lucide-react";
+import { Instagram, Facebook, ExternalLink, Heart, MessageCircle, Play } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import athleteFootball from "@/assets/athlete-football.webp";
@@ -8,7 +8,8 @@ import athleteLacrosse from "@/assets/athlete-lacrosse.jpg";
 import mattTraining from "@/assets/matt-training.jpg";
 import mattFamily from "@/assets/matt-family.jpg";
 
-const INSTAGRAM_URL = "https://instagram.com/mattmichelstraining";
+const INSTAGRAM_URL = "https://www.instagram.com/mattmichelstraining/";
+const FACEBOOK_URL = "https://www.facebook.com/mattmichelstraining";
 
 const FALLBACK_POSTS = [
   { img: athleteFootball, likes: "127", comments: "14", caption: "Game-day prep ✊ Nothing beats real strength", url: INSTAGRAM_URL },
@@ -116,15 +117,43 @@ const InstagramSocialBox = () => {
         ))}
       </div>
 
-      {/* Footer CTA */}
+      {/* Footer CTAs */}
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <a
+          href={INSTAGRAM_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 py-3 border border-border text-muted-foreground hover:text-foreground hover:border-primary/40 transition-all text-xs font-bold uppercase tracking-widest"
+        >
+          <Instagram size={14} />
+          Instagram
+        </a>
+        <a
+          href={FACEBOOK_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 py-3 border border-border text-muted-foreground hover:text-foreground hover:border-primary/40 transition-all text-xs font-bold uppercase tracking-widest"
+        >
+          <Facebook size={14} />
+          Facebook
+        </a>
+      </div>
+
+      {/* Facebook highlight */}
       <a
-        href={INSTAGRAM_URL}
+        href={FACEBOOK_URL}
         target="_blank"
         rel="noopener noreferrer"
-        className="mt-3 flex items-center justify-center gap-2 py-3 border border-border text-muted-foreground hover:text-foreground hover:border-primary/40 transition-all text-xs font-bold uppercase tracking-widest"
+        className="mt-3 flex items-center gap-3 p-3 border border-border hover:border-primary/40 transition-all group"
       >
-        <Instagram size={14} />
-        View More on Instagram
+        <div className="w-10 h-10 bg-[hsl(220,46%,48%)] rounded-full flex items-center justify-center shrink-0">
+          <Facebook size={18} className="text-white" />
+        </div>
+        <div>
+          <span className="text-sm font-bold text-foreground block leading-tight">Workout of the Week</span>
+          <span className="text-[10px] text-muted-foreground">Real exercises, real coaching cues — every week on Facebook</span>
+        </div>
+        <ExternalLink size={12} className="text-muted-foreground ml-auto shrink-0 group-hover:text-primary transition-colors" />
       </a>
     </div>
   );
