@@ -203,6 +203,12 @@ const WebDesignAgency = () => {
                 </CardContent>
               </Card>
             </div>
+            <Link
+              to="/whats-included"
+              className="inline-flex items-center gap-1 text-sm text-primary hover:underline mt-6"
+            >
+              See exactly what's included → <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
         </section>
 
