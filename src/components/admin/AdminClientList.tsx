@@ -4,8 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Search, ChevronDown, ChevronUp, Dumbbell, ShoppingBag, Calendar,
   Shield, Clock, Loader2, X, Link2, Unlink, Mail, Trash2, Users, AlertTriangle,
-  Star, Copy, MessageSquare, Gift, BookOpen,
+  Star, Copy, MessageSquare, Gift, BookOpen, Eye,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -23,6 +24,7 @@ import AdminUserLibrary from "./AdminUserLibrary";
 import AdminProfileEditor from "./AdminProfileEditor";
 
 const AdminClientList = () => {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
   const [eraseConfirmStep, setEraseConfirmStep] = useState(0);
