@@ -6,7 +6,7 @@ import TechSupportButton from "@/components/layout/TechSupportButton";
 import SupportTicketForm from "@/components/features/SupportTicketForm";
 import PrivacySettingsCard from "@/components/features/PrivacySettingsCard";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   User, Trophy, Medal, Award, Save, Loader2, Gift, Search,
   Crown, ExternalLink, ShoppingBag, Dumbbell, Calendar, Shield,
