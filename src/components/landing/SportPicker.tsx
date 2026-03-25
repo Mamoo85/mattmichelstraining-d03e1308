@@ -1,11 +1,11 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
-import athleteBaseball from "@/assets/athlete-baseball.jpg";
-import athleteFootball from "@/assets/athlete-football.jpg";
-import athleteSoccer from "@/assets/athlete-soccer.jpg";
-import athleteHockey from "@/assets/athlete-hockey.jpg";
-import athleteSmallGroup from "@/assets/athlete-smallgroup.jpg";
+import athleteBaseball from "@/assets/athlete-baseball.webp";
+import athleteFootball from "@/assets/athlete-football.webp";
+import athleteSoccer from "@/assets/athlete-soccer.webp";
+import athleteHockey from "@/assets/athlete-hockey.webp";
+import athleteSmallGroup from "@/assets/athlete-smallgroup.webp";
 
 const SPORTS = [
   { name: "Baseball", image: athleteBaseball, tag: "Arm care + explosiveness" },
