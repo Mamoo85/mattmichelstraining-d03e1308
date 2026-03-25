@@ -42,7 +42,7 @@ const ChallengeLeaderboard = ({ challengeId, currentUserId }: ChallengeLeaderboa
       // Get profile names for all participants
       const userIds = (participants as any[]).map((p) => p.user_id);
       const { data: profiles } = await (supabase
-        .from("profiles_safe" as any)
+        .from("profiles_public" as any)
         .select("user_id, athlete_name, full_name, random_alias") as any)
         .in("user_id", userIds);
       const { data: privacyData } = await supabase

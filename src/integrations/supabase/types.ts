@@ -3424,6 +3424,30 @@ export type Database = {
       }
     }
     Views: {
+      profiles_public: {
+        Row: {
+          athlete_name: string | null
+          full_name: string | null
+          is_public_profile: boolean | null
+          random_alias: string | null
+          user_id: string | null
+        }
+        Insert: {
+          athlete_name?: string | null
+          full_name?: string | null
+          is_public_profile?: boolean | null
+          random_alias?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          athlete_name?: string | null
+          full_name?: string | null
+          is_public_profile?: boolean | null
+          random_alias?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles_safe: {
         Row: {
           account_role: string | null
