@@ -173,10 +173,13 @@ const MonthlyFocusWidget = () => {
       .eq("challenge_id", challenge.id).eq("is_public", true).order("current_value", { ascending: false });
     if (!parts || parts.length === 0) { setLeaderboard([]); return; }
     const userIds = (parts as any[]).map(p => p.user_id);
-    const { data: profiles } = await supabase.from("profiles").select("user_id, athlete_name, full_name").in("user_id", userIds);
+    const { data: profiles } = await supabase.from("profiles").select("user_id, athlete_name, full_name, random_alias").in("user_id", userIds);
+    const { data: privacyData } = await supabase.from("user_privacy_settings" as any).select("user_id, show_name").in("user_id", userIds);
     const profileMap = new Map((profiles || []).map(p => [p.user_id, p]));
+    const privacyMap = new Map(((privacyData || []) as any[]).map(p => [p.user_id, p]));
     setLeaderboard((parts as any[]).map(p => ({
       ...p, athlete_name: profileMap.get(p.user_id)?.athlete_name || null, full_name: profileMap.get(p.user_id)?.full_name || null,
+      random_alias: profileMap.get(p.user_id)?.random_alias || null, show_name: privacyMap.get(p.user_id)?.show_name ?? true,
     })));
   };
 

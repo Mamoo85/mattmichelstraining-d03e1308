@@ -121,8 +121,8 @@ const PointsLeaderboard = () => {
         ) : (
           <div className="divide-y divide-border">
             {leaderboard.map((entry, idx) => {
-              const name = isYou ? (entry.athlete_name || entry.full_name || "Athlete") : (entry.show_name ? (entry.athlete_name || entry.full_name || "Athlete") : (entry.random_alias || "Athlete"));
               const isYou = entry.user_id === user?.id;
+              const name = isYou ? (entry.athlete_name || entry.full_name || "Athlete") : (entry.show_name ? (entry.athlete_name || entry.full_name || "Athlete") : (entry.random_alias || "Athlete"));
               const levelInfo = getLevelInfo(entry.total_points);
               return (
                 <div

@@ -33,6 +33,8 @@ interface LeaderEntry {
   current_value: number;
   athlete_name: string | null;
   full_name: string | null;
+  random_alias: string | null;
+  show_name: boolean;
   total_points?: number;
 }
 
@@ -170,7 +172,7 @@ ReferralCTA.displayName = "ReferralCTA";
 
 /* ─── Leaderboard Entry Card ─── */
 const LeaderCard = memo(({ entry, rank, isYou, type }: { entry: LeaderEntry; rank: number; isYou: boolean; type: "challenge" | "points" }) => {
-  const name = entry.athlete_name || entry.full_name || "Athlete";
+  const name = isYou ? (entry.athlete_name || entry.full_name || "Athlete") : (entry.show_name ? (entry.athlete_name || entry.full_name || "Athlete") : (entry.random_alias || "Athlete"));
   const value = type === "points" ? (entry.total_points ?? 0) : entry.current_value;
   const medal = rank === 0 ? "🏆" : rank === 1 ? "🥈" : rank === 2 ? "🥉" : null;
 
@@ -236,10 +238,13 @@ const ChallengeHub = () => {
       .eq("monthly_challenge_id", challenge.id).eq("is_public", true).order("current_value", { ascending: false });
     if (!parts || parts.length === 0) { setChallengeLeaderboard([]); return; }
     const userIds = (parts as any[]).map(p => p.user_id);
-    const { data: profiles } = await supabase.from("profiles").select("user_id, athlete_name, full_name").in("user_id", userIds);
+    const { data: profiles } = await supabase.from("profiles").select("user_id, athlete_name, full_name, random_alias").in("user_id", userIds);
+    const { data: privacyData } = await supabase.from("user_privacy_settings" as any).select("user_id, show_name").in("user_id", userIds);
     const pMap = new Map((profiles || []).map(p => [p.user_id, p]));
+    const privMap = new Map(((privacyData || []) as any[]).map(p => [p.user_id, p]));
     setChallengeLeaderboard((parts as any[]).map(p => ({
       ...p, athlete_name: pMap.get(p.user_id)?.athlete_name || null, full_name: pMap.get(p.user_id)?.full_name || null,
+      random_alias: pMap.get(p.user_id)?.random_alias || null, show_name: privMap.get(p.user_id)?.show_name ?? true,
     })));
   }, [challenge]);
 
