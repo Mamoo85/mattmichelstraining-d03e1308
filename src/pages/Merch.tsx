@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import { motion } from "framer-motion";
 import SEOHead from "@/components/layout/SEOHead";
 import { ExternalLink, ShoppingBag, ArrowRight, Ruler, Truck, RotateCcw, Star } from "lucide-react";
 import AppNavbar from "@/components/layout/AppNavbar";
