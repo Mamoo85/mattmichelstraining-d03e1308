@@ -11,6 +11,7 @@ import { useIsAdmin } from "@/hooks/useIsAdmin";
 import PwaInstallBanner from "@/components/layout/PwaInstallBanner";
 import StudioCheckIn from "@/components/sessions/StudioCheckIn";
 import { safeLocalStorage } from "@/lib/browserStorage";
+const WelcomeGiftModal = lazy(() => import("@/components/dashboard/WelcomeGiftModal"));
 
 import DashboardHome from "@/components/dashboard/DashboardHome";
 import WorkoutsTab from "@/components/dashboard/WorkoutsTab";
