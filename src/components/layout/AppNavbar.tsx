@@ -165,6 +165,7 @@ const AppNavbar = () => {
           ) : (
             <Link
               to="/auth"
+              aria-label="Login"
               className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-widest text-primary"
             >
               <LogIn size={14} />
