@@ -51,7 +51,7 @@ const ChallengeLeaderboard = ({ challengeId, currentUserId }: ChallengeLeaderboa
         .in("user_id", userIds);
 
       const profileMap = new Map(
-        (profiles || []).map((p) => [p.user_id, p])
+        ((profiles || []) as any[]).map((p) => [p.user_id, p])
       );
       const privacyMap = new Map(
         ((privacyData || []) as any[]).map((p) => [p.user_id, p])

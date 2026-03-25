@@ -38,9 +38,9 @@ const CommunityActivityFeed = memo(() => {
 
       if (!profiles?.length) return;
 
-      const publicIds = new Set(profiles.map((p) => p.user_id));
+      const publicIds = new Set((profiles as any[]).map((p: any) => p.user_id));
       const profileMap = new Map(
-        profiles.map((p) => [p.user_id, p.athlete_name || p.full_name || p.random_alias || "Athlete"])
+        (profiles as any[]).map((p: any) => [p.user_id, p.athlete_name || p.full_name || p.random_alias || "Athlete"])
       );
 
       // Check privacy for show_name
@@ -52,7 +52,7 @@ const CommunityActivityFeed = memo(() => {
       const privacyMap = new Map((privacy ?? []).map((p) => [p.user_id, p.show_name]));
 
       const randomAliasMap = new Map(
-        profiles.map((p) => [p.user_id, p.random_alias || "Athlete"])
+        (profiles as any[]).map((p: any) => [p.user_id, p.random_alias || "Athlete"])
       );
 
       const filtered = logs

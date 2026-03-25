@@ -51,7 +51,7 @@ const DashboardChallengePreview = memo(({ onViewChallenge }: Props) => {
         .in("user_id", userIds);
 
       const profileMap = new Map(
-        (profiles ?? []).map((p) => [p.user_id, p.athlete_name || p.full_name || p.random_alias || "Athlete"])
+        ((profiles ?? []) as any[]).map((p: any) => [p.user_id, p.athlete_name || p.full_name || p.random_alias || "Athlete"])
       );
 
       setTop3(

@@ -50,7 +50,7 @@ const SharedWorkoutFeed = () => {
         .in("user_id", userIds);
 
       const profileMap = new Map(
-        (profiles || []).map((p) => [p.user_id, p])
+        ((profiles || []) as any[]).map((p: any) => [p.user_id, p])
       );
 
       setResults(
