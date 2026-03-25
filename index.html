@@ -16,11 +16,7 @@
     <meta property="og:url" content="https://www.mattmichelstraining.com/" />
     <meta property="og:site_name" content="Matt Michels Training" />
     
-    <!-- Google Analytics — replace G-XXXXXXXXXX with your real Measurement ID -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-PDLSP336FJ"></script>
-    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-PDLSP336FJ');</script>
-
-    <link rel="dns-prefetch" href="https://eauvubfpanpeuxsrqesu.supabase.co" />
+    <link rel="preconnect" href="https://eauvubfpanpeuxsrqesu.supabase.co" crossorigin />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://cdn.gpteng.co" crossorigin />
     <link rel="dns-prefetch" href="https://cdn.gpteng.co" />
@@ -176,5 +172,8 @@
       <p>Located at 15121 Kercheval Ave, Grosse Pointe Park, MI 48230. Call (313) 806-4952.</p>
     </noscript>
     <script type="module" src="/src/main.tsx"></script>
+    <!-- Google Analytics — deferred to avoid blocking FCP -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-PDLSP336FJ"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-PDLSP336FJ');</script>
   </body>
 </html>
