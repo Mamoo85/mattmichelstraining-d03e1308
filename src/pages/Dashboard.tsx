@@ -26,6 +26,7 @@ import {
 
 import { lazy, Suspense } from "react";
 const WelcomeGiftModal = lazy(() => import("@/components/dashboard/WelcomeGiftModal"));
+const NamePromptModal = lazy(() => import("@/components/dashboard/NamePromptModal"));
 const MyPrograms = lazy(() => import("@/components/features/MyPrograms"));
 const ChallengeHub = lazy(() => import("@/components/dashboard/ChallengeHub"));
 const ProgressCharts = lazy(() => import("@/components/features/ProgressCharts"));
@@ -61,6 +62,7 @@ const Dashboard = () => {
   const [hasLogs, setHasLogs] = useState<boolean | null>(null);
   const [generatorView, setGeneratorView] = useState<null | "workout" | "fixit">(null);
   const [showWelcomeGift, setShowWelcomeGift] = useState(() => safeLocalStorage.getItem("m2-welcome-gift-seen-v2") !== "1");
+  const [showNamePrompt, setShowNamePrompt] = useState(false);
 
   // Feature learning modal state
   const [activeTip, setActiveTip] = useState<FeatureTip | null>(null);
@@ -73,7 +75,14 @@ const Dashboard = () => {
       supabase.from("user_active_programs").select("id", { count: "exact", head: true }).eq("user_id", user.id),
       supabase.from("progress_logs").select("id", { count: "exact", head: true }).eq("user_id", user.id),
     ]).then(([profileRes, progRes, logRes]) => {
-      if (profileRes.data) setProfile(profileRes.data as any);
+      if (profileRes.data) {
+        setProfile(profileRes.data as any);
+        // Show name prompt if full_name is empty/null
+        const name = (profileRes.data as any).full_name;
+        if (!name || name.trim() === '') {
+          setShowNamePrompt(true);
+        }
+      }
       setHasPrograms((progRes.count ?? 0) > 0);
       setHasLogs((logRes.count ?? 0) > 0);
     });
@@ -284,6 +293,23 @@ const Dashboard = () => {
           onContinue={handleTipContinue}
           onDismiss={handleTipDismiss}
         />
+      )}
+
+      {/* Name prompt modal */}
+      {showNamePrompt && (
+        <Suspense fallback={null}>
+          <NamePromptModal
+            open={showNamePrompt}
+            onComplete={() => {
+              setShowNamePrompt(false);
+              // Refresh profile
+              if (user) {
+                supabase.from("profiles").select("full_name, athlete_name, is_in_person").eq("user_id", user.id).single()
+                  .then(({ data }) => { if (data) setProfile(data as any); });
+              }
+            }}
+          />
+        </Suspense>
       )}
     </div>
   );

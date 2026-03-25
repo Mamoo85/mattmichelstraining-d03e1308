@@ -6,6 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 
 interface PrivacySettings {
+  show_name: boolean;
   show_points: boolean;
   show_level: boolean;
   show_lifts: boolean;
@@ -16,6 +17,7 @@ interface PrivacySettings {
 }
 
 const SETTINGS_CONFIG = [
+  { key: "show_name" as const, label: "Name", desc: "Your real name visible to other athletes (Matt always sees it)" },
   { key: "show_points" as const, label: "Points", desc: "Your total points visible on leaderboards" },
   { key: "show_level" as const, label: "Level & Rank", desc: "Your level badge visible to other athletes" },
   { key: "show_lifts" as const, label: "Lift Stats", desc: "Top lifts and PRs visible on your profile" },
@@ -37,7 +39,7 @@ const PrivacySettingsCard = () => {
       // Try to fetch existing settings
       const { data, error } = await supabase
         .from("user_privacy_settings" as any)
-        .select("show_points, show_level, show_lifts, show_challenges, show_nutrition, show_streaks, show_programs")
+        .select("show_name, show_points, show_level, show_lifts, show_challenges, show_nutrition, show_streaks, show_programs")
         .eq("user_id", user.id)
         .single();
 
@@ -46,7 +48,7 @@ const PrivacySettingsCard = () => {
         const { data: newRow } = await supabase
           .from("user_privacy_settings" as any)
           .insert({ user_id: user.id } as any)
-          .select("show_points, show_level, show_lifts, show_challenges, show_nutrition, show_streaks, show_programs")
+          .select("show_name, show_points, show_level, show_lifts, show_challenges, show_nutrition, show_streaks, show_programs")
           .single();
         if (newRow) setSettings(newRow as any);
       } else if (data) {
