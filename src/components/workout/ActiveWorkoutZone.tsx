@@ -749,7 +749,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
         )}
 
         {/* ─── COMMAND PILL (Dynamic Island footer) ─── */}
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 pb-safe">
+        <div className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-[111]">
           <div className="flex items-center gap-3 bg-[#0a0a0a]/90 backdrop-blur-xl border border-white/[0.08] rounded-full px-4 py-2 shadow-[0_4px_24px_rgba(0,0,0,0.8)]">
             {/* Intervals */}
             <button
