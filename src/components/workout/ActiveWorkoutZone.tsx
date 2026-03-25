@@ -743,7 +743,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
 
         {/* ─── QUICK LOG BAR (terminal style) — floats above command pill ─── */}
         {exercises.length > 0 && (
-          <div className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-lg">
+          <div className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-[112] w-[calc(100%-2rem)] max-w-lg">
             <QuickLogBar exercises={exercises} onApplyParsed={handleQuickLogParsed} />
           </div>
         )}
