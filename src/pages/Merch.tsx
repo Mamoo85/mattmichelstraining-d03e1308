@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { motion } from "framer-motion";
 import { motion } from "framer-motion";
 import SEOHead from "@/components/layout/SEOHead";
 import { ExternalLink, ShoppingBag, ArrowRight, Ruler, Truck, RotateCcw, Star } from "lucide-react";
