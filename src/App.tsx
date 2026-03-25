@@ -201,7 +201,8 @@ const App = () => (
                     <Route path="/merch" element={<Merch />} />
                     <Route path="/learn" element={<Learn />} />
                     <Route path="/the-edge" element={<TheEdge />} />
-                    <Route path="/matrix" element={<MatrixEasterEgg />} />
+                    <Route path="/matrix" element={Math.random() < 0.5 ? <MatrixEasterEgg /> : <MatrixMerch />} />
+                    <Route path="/matrix-training" element={<MatrixEasterEgg />} />
                     <Route path="/matrix-merch" element={<MatrixMerch />} />
                     <Route path="/install" element={<Install />} />
                     <Route path="/free-ai-generator" element={<FreeAiGenerator />} />
