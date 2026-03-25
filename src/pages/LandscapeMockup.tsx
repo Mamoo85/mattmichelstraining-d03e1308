@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Leaf, TreePine, Shovel, Sun, Snowflake, Phone, Star, Shield, MapPin, Users, CheckCircle } from "lucide-react";
-import heroImg from "@/assets/demo-landscape-hero.jpg";
 import { RevealSection } from "@/hooks/useInView";
 
+const heroImg = "https://images.unsplash.com/photo-1558904541-efa843a96f01?w=1600&q=80";
 const BRAND = "[BUSINESS NAME]";
-const PHONE = "(555) 123-4567";
+const PHONE = "(313) 806-4952";
 
 const seasons = [
   {

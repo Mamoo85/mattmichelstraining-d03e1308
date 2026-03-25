@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Zap, Battery, Lightbulb, Shield, Star, Award, CheckCircle, FileCheck, Phone } from "lucide-react";
-import heroImg from "@/assets/demo-electrician-hero.jpg";
 import { RevealSection } from "@/hooks/useInView";
 
+const heroImg = "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=1600&q=80";
 const BRAND = "[BUSINESS NAME]";
-const PHONE = "(313) 555-0247";
+const PHONE = "(313) 806-4952";
 
 const services = [
   { title: "Panel Upgrades", desc: "Older Grosse Pointe homes need modern panels. We upgrade safely to handle today's electrical loads.", Icon: Zap },
@@ -18,6 +18,12 @@ const credentials = [
   { value: "20+", label: "Years in Business", Icon: CheckCircle },
   { value: "2,000+", label: "Jobs Completed", Icon: Zap },
   { value: "4.9", label: "Google Rating", Icon: Star },
+];
+
+const testimonials = [
+  { text: "Had our 1920s panel upgraded. Permitted, inspected, passed first time. These guys know their stuff.", attr: "— B.F., Grosse Pointe Farms" },
+  { text: "Installed 3 EV chargers at our business. Clean, fast, code compliant. Will use again.", attr: "— Owner, East Side Auto" },
+  { text: "Other electrician quoted $4,200. These guys did it for $1,800 and pulled the permit.", attr: "— J.S., Warren" },
 ];
 
 const ElectricianMockup = () => {
@@ -125,14 +131,20 @@ const ElectricianMockup = () => {
         </div>
       </RevealSection>
 
-      {/* Social Proof */}
+      {/* Testimonials */}
       <RevealSection className="py-12 px-6" style={{ background: "#1e1e24" }}>
-        <div className="max-w-3xl mx-auto text-center">
-          <div className="flex justify-center gap-1 mb-3">
-            {[...Array(5)].map((_, i) => <Star key={i} size={20} fill="#facc15" color="#facc15" />)}
+        <div className="max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-6">
+            {testimonials.map(t => (
+              <div key={t.attr} className="rounded-xl p-6" style={{ background: "#26262e", border: "1px solid #3a3a44" }}>
+                <div className="flex justify-center gap-1 mb-3">
+                  {[...Array(5)].map((_, i) => <Star key={i} size={14} fill="#facc15" color="#facc15" />)}
+                </div>
+                <p className="italic text-sm text-white/70 mb-2">"{t.text}"</p>
+                <p className="text-xs" style={{ color: "#475569" }}>{t.attr}</p>
+              </div>
+            ))}
           </div>
-          <p className="italic text-base text-white/70 mb-2">"Had our 1920s panel replaced. They were professional, clean, and handled all the permits. Will absolutely use again."</p>
-          <p className="text-sm" style={{ color: "#475569" }}>— Homeowner, Grosse Pointe Farms</p>
         </div>
       </RevealSection>
 

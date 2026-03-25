@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Scale, Building2, Heart, Shield, Lock, Phone, Star } from "lucide-react";
-import heroImg from "@/assets/demo-lawyer-hero.jpg";
 import { RevealSection } from "@/hooks/useInView";
 
+const heroImg = "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?w=1600&q=80";
 const NAME = "[NAME]";
-const PHONE = "(586) 555-0312";
+const PHONE = "(313) 806-4952";
 const GOLD = "#c9a84c";
 
 const practices = [

@@ -1,7 +1,8 @@
 import { Helmet } from "react-helmet-async";
 import { Droplets, Sparkles, Stethoscope, Shield, Lock, Star, Clock, Award, User } from "lucide-react";
-import heroImg from "@/assets/demo-clinic-hero.jpg";
 import { RevealSection } from "@/hooks/useInView";
+
+const heroImg = "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=1600&q=80";
 
 const BRAND = "[NAME]";
 const GOLD = "#b8a064";
