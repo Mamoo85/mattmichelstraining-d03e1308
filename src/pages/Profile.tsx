@@ -10,7 +10,7 @@ import { Link } from "react-router-dom";
 import {
   User, Trophy, Medal, Award, Save, Loader2, Gift, Search,
   Crown, ExternalLink, ShoppingBag, Dumbbell, Calendar, Shield,
-  ArrowRight, ChevronDown, ChevronUp, Zap, Clock, FileText, Send, Activity, Brain, Camera
+  ArrowRight, ChevronDown, ChevronUp, Zap, Clock, FileText, Send, Activity, Brain, Camera, Ticket
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import GiftSessionModal from "@/components/sessions/GiftSessionModal";
