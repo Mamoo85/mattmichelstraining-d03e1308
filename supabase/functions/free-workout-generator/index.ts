@@ -21,6 +21,7 @@ The user has provided a photograph of their workout environment. You MUST:
 
 RULES:
 - NO machines, NO Smith machine, NO leg press, NO isolation curls, NO lat raises, NO flyes
+- Do NOT include sled exercises (sled push, sled pull, sled drag, etc.) UNLESS the user specifically mentions or requests sleds in their input.
 - Focus on compound movements: squat, deadlift, press, bench press, power clean, rows
 - Each day follows 5 phases: 1. Rolling/Soft Tissue, 2. Dynamic Warmup, 3. Main Work, 4. Finisher/Conditioning, 5. Cooldown
 - You must INFER the user's experience level, goals, training days per week, and available equipment strictly from their natural language input below.

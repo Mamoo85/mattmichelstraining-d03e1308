@@ -113,7 +113,8 @@ BANNED EXERCISES — Coach Matt NEVER programs these:
 EXERCISE PHILOSOPHY — Powerlifting & Full-Body Functional:
 - Core lifts: Squat, Deadlift, Press, Bench Press, Power Clean.
 - Accessories = compound: chin-ups, dips, DB rows, lunges, RDLs, front squats, push-ups, farmer carries.
-- Conditioning = full-body: burpees, box jumps, med ball slams, sled work, KB swings, sprints, carries.
+- Conditioning = full-body: burpees, box jumps, med ball slams, KB swings, sprints, carries.
+- Do NOT include sled exercises (sled push, sled pull, sled drag, etc.) UNLESS the program description specifically mentions sleds.
 - Arms = chin-ups and dips, not curls.
 
 RULES:
