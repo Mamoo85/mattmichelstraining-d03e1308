@@ -586,7 +586,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
     <>
       <div className="fixed inset-0 z-[110] bg-[#050505] flex flex-col">
         {/* ─── STEALTH HEADER ─── */}
-        <header className="shrink-0 flex items-center justify-between px-4 py-2.5 bg-[#050505]/90 backdrop-blur-md border-b border-white/[0.04] z-10">
+        <header className="shrink-0 flex items-center justify-between px-4 py-2.5 pt-[calc(0.625rem+env(safe-area-inset-top))] bg-[#050505]/90 backdrop-blur-md border-b border-white/[0.04] z-10">
           <div className="min-w-0 flex-1">
             {editingTitle ? (
               <input
