@@ -339,6 +339,13 @@ const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTrac
       </div>
 
       <EliteUpsellModal open={showUpsell} onClose={() => setShowUpsell(false)} />
+      {showHologram && (
+        <AnatomyHologram
+          exerciseTitle={exercise.exerciseTitle}
+          exerciseId={exercise.exerciseId}
+          onClose={() => setShowHologram(false)}
+        />
+      )}
     </>
   );
 });
