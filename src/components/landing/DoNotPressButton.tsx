@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 const DoNotPressButton = () => {
   const { user } = useAuth();
-  const target = user ? "/merch" : "/matrix";
+  const target = user ? "/matrix-merch" : "/matrix";
 
   return (
     <section className="w-full py-3 px-4 flex justify-center">
