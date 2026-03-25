@@ -39,11 +39,8 @@ function preloadLcpImage(): Plugin {
       // Replace hero shell placeholder with hashed hero logo
       if (heroLogoPath) result = result.replace("/assets/m2-logo-placeholder.jpg", heroLogoPath);
 
-      // Inject splash screen shell into the HTML so the browser can paint it before JS loads
-      if (splashLogoPath) {
-        const splashShell = `<div id="splash-shell" style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#000"><img src="${splashLogoPath}" alt="M² Training" width="256" height="256" fetchpriority="high" decoding="sync" style="width:256px;height:256px;object-fit:contain;filter:drop-shadow(0 0 40px hsl(17 84% 50%/0.4)) contrast(1.05) brightness(1.08)" /></div>`;
-        result = result.replace('<div id="root">', `<div id="root">${splashShell}`);
-      }
+      // Splash screen is handled by React SplashScreen component after JS loads.
+      // The hero-shell text content in index.html paints as FCP immediately.
 
       return result;
     },
