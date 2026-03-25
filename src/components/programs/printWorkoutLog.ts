@@ -97,6 +97,7 @@ export const printWorkoutLog = (program: PrintProgramData) => {
             ${exerciseRows(day.exercises)}
           </tbody>
         </table>
+        ${program.isFixIt ? FIX_IT_DISCLAIMER_HTML : ""}
         <div class="page-footer">M² Training · www.mattmichelstraining.com</div>
       </div>
     `
