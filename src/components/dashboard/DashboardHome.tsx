@@ -19,6 +19,7 @@ interface DashboardHomeProps {
 
 const DashboardHome = memo(({ isNewUser, isInPerson, onViewPoints, onViewReferrals }: DashboardHomeProps) => {
   const { subscribed } = useAuth();
+  const [chatOpen, setChatOpen] = useState(false);
 
   return (
     <div className="space-y-5">
