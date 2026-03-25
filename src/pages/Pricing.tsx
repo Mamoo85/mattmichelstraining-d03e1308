@@ -617,6 +617,7 @@ const Pricing = () => {
             Not ready? Get our free beginner program → <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
+        <StudioBridge />
       </div>
     </div>
   );
@@ -695,4 +696,12 @@ const TierComparisonTable = () => {
     </motion.div>
   );
 };
+const StudioBridge = () => (
+  <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="mt-10 text-center">
+    <Link to="/studio-rental" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors">
+      Are you a trainer? Rent the studio <ArrowRight size={12} />
+    </Link>
+  </motion.div>
+);
+
 export default Pricing;
