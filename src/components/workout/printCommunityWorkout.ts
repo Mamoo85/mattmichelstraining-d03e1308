@@ -124,6 +124,7 @@ export const printCommunityWorkout = (data: PrintCommunityWorkoutData) => {
       ${exerciseRows}
     </tbody>
   </table>
+  ${data.isFixIt ? FIX_IT_DISCLAIMER_HTML : ""}
   <div class="footer">Built by M² Training · www.mattmichelstraining.com</div>
 </body>
 </html>`);
