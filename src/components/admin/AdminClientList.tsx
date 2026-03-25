@@ -454,6 +454,15 @@ const AdminClientList = () => {
                     ))}
                   </div>
 
+                  {/* View as User */}
+                  <button
+                    onClick={() => { setSelectedProfile(null); navigate(`/admin/view-user/${p.user_id}`); }}
+                    className="w-full flex items-center justify-center gap-2 bg-primary/10 border border-primary/20 py-2.5 text-xs font-bold uppercase tracking-widest text-primary hover:bg-primary/20 transition-all"
+                  >
+                    <Eye size={14} />
+                    View as User
+                  </button>
+
                   {/* ===== EDIT PROFILE INFO ===== */}
                   <AdminProfileEditor profile={p} onUpdate={(updated: any) => {
                     setSelectedProfile(updated);
