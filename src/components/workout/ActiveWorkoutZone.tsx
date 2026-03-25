@@ -579,98 +579,72 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
     );
   }
 
-  // Rest timer progress (circular)
-  const restProgress = restSeconds > 0 ? (restSeconds / 90) * 100 : 0;
+  const restMins = Math.floor(restSeconds / 60);
+  const restSecs = restSeconds % 60;
 
   return (
     <>
-      <div className="fixed inset-0 z-[110] bg-background flex flex-col">
-        {/* ─── STICKY HEADER — EXIT IS THE STAR ─── */}
-        <header className="shrink-0 flex items-center justify-between px-3 py-2 bg-background border-b border-border z-10">
-          <div className="flex items-center gap-2 min-w-0 flex-1">
-            <img src={m2Logo} alt="M²" className="h-7 w-7 rounded-full object-cover shrink-0" />
-            <div className="min-w-0 flex items-center gap-1">
-              {editingTitle ? (
-                <input
-                  ref={titleInputRef}
-                  type="text"
-                  value={workoutTitle}
-                  onChange={(e) => setWorkoutTitle(e.target.value)}
-                  onBlur={() => setEditingTitle(false)}
-                  onKeyDown={(e) => { if (e.key === "Enter") setEditingTitle(false); }}
-                  autoFocus
-                  className="text-sm font-bold text-foreground bg-muted/50 border border-border px-1.5 py-0.5 outline-none focus:ring-1 focus:ring-primary/40 w-full max-w-[120px]"
-                />
-              ) : (
-                <button
-                  onClick={() => setEditingTitle(true)}
-                  className="text-sm font-bold text-foreground truncate max-w-[120px] hover:text-primary transition-colors"
-                  title="Tap to edit title"
-                >
-                  {workoutTitle}
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Utility icons */}
-          <div className="flex items-center gap-0.5 shrink-0">
-            {exercises.length > 0 && (
+      <div className="fixed inset-0 z-[110] bg-[#050505] flex flex-col">
+        {/* ─── STEALTH HEADER ─── */}
+        <header className="shrink-0 flex items-center justify-between px-4 py-2.5 bg-[#050505]/90 backdrop-blur-md border-b border-white/[0.04] z-10">
+          <div className="min-w-0 flex-1">
+            {editingTitle ? (
+              <input
+                ref={titleInputRef}
+                type="text"
+                value={workoutTitle}
+                onChange={(e) => setWorkoutTitle(e.target.value)}
+                onBlur={() => setEditingTitle(false)}
+                onKeyDown={(e) => { if (e.key === "Enter") setEditingTitle(false); }}
+                autoFocus
+                className="text-base font-bold text-foreground bg-transparent border-b border-white/20 px-0 py-0.5 outline-none w-full max-w-[180px]"
+              />
+            ) : (
               <button
-                onClick={() => adaptInputRef.current?.click()}
-                disabled={adaptLoading}
-                className="h-8 w-8 flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
-                title="Adapt to Equipment"
+                onClick={() => setEditingTitle(true)}
+                className="text-base font-bold text-foreground truncate max-w-[180px] hover:opacity-70 transition-opacity"
+                title="Tap to edit title"
               >
-                {adaptLoading ? <Loader2 size={14} className="animate-spin" /> : <Camera size={14} />}
+                {workoutTitle}
               </button>
             )}
-            <input
-              ref={adaptInputRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              className="hidden"
-              onChange={handleAdaptCapture}
-            />
-            <button
-              onClick={() => setShowIntervalTimer(true)}
-              className="h-8 w-8 flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
-              title="Interval Timer"
-            >
-              <Clock size={14} />
-            </button>
-            <Popover>
-              <PopoverTrigger asChild>
-                <button className="hidden sm:flex h-8 items-center gap-1 px-2 text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
-                  <CalendarIcon size={12} />
-                  {format(date, "MMM d")}
-                </button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="end">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={(d) => d && setDate(d)}
-                  disabled={(d) => d > new Date()}
-                  initialFocus
-                  className="p-3 pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
+          </div>
 
-            {/* ═══ EXIT BUTTON — large, unmissable, always visible ═══ */}
+          <div className="flex items-center gap-3 shrink-0">
+            {/* Glowing digital watch timer */}
+            <WorkoutTimer
+              initialElapsed={initialContext?.resumedElapsed || 0}
+              autoStart={timerAutoStart}
+              onElapsedChange={handleElapsedChange}
+            />
+            {/* Muted Finish text */}
             <button
               onClick={handleFinishClick}
               disabled={saving}
-              className="ml-1 flex items-center gap-1.5 h-10 px-4 bg-destructive text-destructive-foreground font-bold text-xs uppercase tracking-wide hover:bg-destructive/90 transition-all active:scale-95"
-              title="Exit workout"
+              className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              {saving ? <Loader2 size={14} className="animate-spin" /> : <X size={14} strokeWidth={3} />}
-              Exit
+              {saving ? <Loader2 size={14} className="animate-spin" /> : "Finish"}
             </button>
           </div>
         </header>
+
+        {/* ─── FLOATING NEON REST TIMER ─── */}
+        {restSeconds > 0 && (
+          <div className="absolute top-[52px] left-1/2 -translate-x-1/2 z-20 flex items-center gap-3 px-5 py-2 rounded-full bg-black/80 border border-[hsl(var(--synth-cyan))] shadow-[var(--synth-glow-cyan)]">
+            <span
+              className="font-mono text-lg font-bold tabular-nums"
+              style={{ color: "hsl(var(--synth-cyan))", textShadow: "var(--synth-glow-cyan)" }}
+            >
+              {String(restMins).padStart(2, "0")}:{String(restSecs).padStart(2, "0")}
+            </span>
+            <button
+              onClick={clearRestTimer}
+              className="text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Skip
+            </button>
+          </div>
+        )}
 
         {/* Readiness adjustment banner */}
         {readinessResult && readinessResult.weightAdjustmentPct !== 0 && (
@@ -682,10 +656,10 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
         )}
 
         {/* ─── SCROLLABLE CONTENT ─── */}
-        <main className="flex-1 overflow-y-auto px-3 py-3 space-y-3 pb-[140px]">
+        <main className="flex-1 overflow-y-auto px-3 py-3 space-y-3 pb-[160px]">
           {/* Adapt to Equipment Banner */}
           {adaptBanner && (
-            <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/20 px-3 py-2">
+            <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-2">
               <div className="flex items-center gap-2 min-w-0">
                 <Camera size={12} className="text-emerald-500 shrink-0" />
                 <span className="text-[11px] font-semibold text-emerald-400 truncate">{adaptBanner}</span>
@@ -696,27 +670,24 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
             </div>
           )}
           {adaptLoading && (
-            <div className="flex items-center justify-center gap-2 py-3 bg-muted/30 border border-border">
+            <div className="flex items-center justify-center gap-2 py-3 bg-muted/30 border border-white/[0.06] rounded-lg">
               <Loader2 size={12} className="animate-spin text-primary" />
               <span className="text-[11px] font-medium text-muted-foreground">Analyzing equipment…</span>
             </div>
           )}
 
           {exercises.length === 0 && !showPicker && (
-            <div className="flex flex-col items-center justify-center py-16 text-center space-y-4">
-              <img src={m2Logo} alt="M²" className="h-14 w-14 rounded-full object-cover opacity-60" />
+            <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
+              <div className="h-12 w-12 rounded-full border border-white/[0.08] flex items-center justify-center">
+                <Plus size={20} className="text-muted-foreground" />
+              </div>
               <div>
                 <h3 className="text-base font-bold text-foreground mb-1">Ready to train</h3>
                 <p className="text-sm text-muted-foreground">Add exercises to start logging.</p>
               </div>
               <button
                 onClick={() => setShowPicker(true)}
-                className={cn(
-                  "flex items-center gap-2 px-5 py-2.5 text-sm font-bold",
-                  "bg-primary text-primary-foreground",
-                  "shadow-[0_0_16px_hsl(var(--primary)/0.3)] hover:shadow-[0_0_24px_hsl(var(--primary)/0.5)]",
-                  "transition-all active:scale-95"
-                )}
+                className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-[hsl(var(--synth-cyan))] border border-[hsl(var(--synth-cyan))]/30 rounded-full hover:bg-[hsl(var(--synth-cyan))]/10 transition-all active:scale-95"
               >
                 <Plus size={14} /> Add Exercise
               </button>
@@ -740,8 +711,6 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
             <ExercisePicker onSelect={addExercise} onCancel={() => setShowPicker(false)} />
           )}
 
-          {exercises.length > 0 && <ButtonKeyLegend />}
-
           {exercises.length > 0 && (
             <RecoveryInput value={recovery} onChange={setRecovery} />
           )}
@@ -752,7 +721,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
                 placeholder="Session notes (optional)…"
                 value={sessionNotes}
                 onChange={(e) => setSessionNotes(e.target.value)}
-                className="w-full bg-card border border-border p-3 pr-10 text-sm text-foreground placeholder:text-muted-foreground/50 focus:ring-1 focus:ring-primary/40 outline-none min-h-[60px] resize-none transition-all"
+                className="w-full bg-transparent border border-white/[0.06] rounded-lg p-3 pr-10 text-sm text-foreground placeholder:text-muted-foreground/40 focus:ring-1 focus:ring-[hsl(var(--synth-cyan))]/30 outline-none min-h-[60px] resize-none transition-all"
               />
               <VoiceNoteButton
                 onTranscript={(t) => setSessionNotes((prev) => (prev ? prev + " " + t : t))}
@@ -762,70 +731,66 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
           )}
         </main>
 
-        {/* ─── BOTTOM COMMAND BAR — Quick Log + Timer + Add ─── */}
+        {/* Hidden file input for adapt */}
+        <input
+          ref={adaptInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="hidden"
+          onChange={handleAdaptCapture}
+        />
+
+        {/* ─── QUICK LOG BAR (terminal style) — floats above command pill ─── */}
         {exercises.length > 0 && (
-          <footer className="fixed bottom-0 w-full z-50 bg-card/90 backdrop-blur-xl border-t border-border px-3 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
-            {/* Rest Timer */}
-            {restSeconds > 0 && (
-              <div className="flex items-center justify-center gap-3 mb-1.5">
-                <div className="relative h-9 w-9">
-                  <svg className="h-9 w-9 -rotate-90" viewBox="0 0 48 48">
-                    <circle cx="24" cy="24" r="20" fill="none" stroke="hsl(var(--muted))" strokeWidth="3" />
-                    <circle
-                      cx="24" cy="24" r="20" fill="none"
-                      stroke="hsl(var(--primary))"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                      strokeDasharray={`${2 * Math.PI * 20}`}
-                      strokeDashoffset={`${2 * Math.PI * 20 * (1 - restProgress / 100)}`}
-                      className="transition-all duration-1000"
-                    />
-                  </svg>
-                  <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold font-mono text-primary">
-                    {restSeconds}
-                  </span>
-                </div>
-                <button onClick={clearRestTimer} className="text-[10px] font-medium text-primary hover:underline">
-                  Skip →
-                </button>
-              </div>
+          <div className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-lg">
+            <QuickLogBar exercises={exercises} onApplyParsed={handleQuickLogParsed} />
+          </div>
+        )}
+
+        {/* ─── COMMAND PILL (Dynamic Island footer) ─── */}
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 pb-safe">
+          <div className="flex items-center gap-3 bg-[#0a0a0a]/90 backdrop-blur-xl border border-white/[0.08] rounded-full px-4 py-2 shadow-[0_4px_24px_rgba(0,0,0,0.8)]">
+            {/* Intervals */}
+            <button
+              onClick={() => setShowIntervalTimer(true)}
+              className="h-8 w-8 flex items-center justify-center text-muted-foreground/60 hover:text-foreground transition-colors"
+              title="Interval Timer"
+            >
+              <Timer size={14} />
+            </button>
+
+            {/* + Add Exercise */}
+            <button
+              onClick={() => setShowPicker(true)}
+              disabled={showPicker}
+              className="text-sm font-semibold text-[hsl(var(--synth-cyan))] hover:opacity-80 transition-opacity active:scale-95 px-2"
+              style={{ textShadow: "0 0 8px hsl(185 100% 48% / 0.3)" }}
+            >
+              + Add Exercise
+            </button>
+
+            {/* Camera / Adapt */}
+            {exercises.length > 0 && (
+              <button
+                onClick={() => adaptInputRef.current?.click()}
+                disabled={adaptLoading}
+                className="h-8 w-8 flex items-center justify-center text-muted-foreground/60 hover:text-foreground transition-colors"
+                title="Adapt to Equipment"
+              >
+                {adaptLoading ? <Loader2 size={14} className="animate-spin" /> : <Camera size={14} />}
+              </button>
             )}
 
-            {/* Quick Log Bar */}
-            <div className="mb-1.5">
-              <QuickLogBar exercises={exercises} onApplyParsed={handleQuickLogParsed} />
-            </div>
-
-            {/* Timer + Add row */}
-            <div className="flex items-center justify-between gap-2">
-              <WorkoutTimer
-                initialElapsed={initialContext?.resumedElapsed || 0}
-                autoStart={timerAutoStart}
-                onElapsedChange={handleElapsedChange}
-              />
-              <div className="flex items-center gap-1.5">
-                <button
-                  onClick={handlePause}
-                  className="flex items-center gap-1 px-3 py-2 text-[9px] font-bold uppercase tracking-wide text-muted-foreground border border-border hover:text-foreground transition-all"
-                >
-                  Pause
-                </button>
-                <button
-                  onClick={() => setShowPicker(true)}
-                  disabled={showPicker}
-                  className={cn(
-                    "flex items-center gap-1 px-3 py-2 text-[10px] font-bold uppercase tracking-wide transition-all",
-                    "bg-primary text-primary-foreground",
-                    "hover:opacity-90 active:scale-95",
-                    showPicker && "opacity-50"
-                  )}
-                >
-                  <Plus size={12} /> Add
-                </button>
-              </div>
-            </div>
-          </footer>
-        )}
+            {/* Pause */}
+            <button
+              onClick={handlePause}
+              className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground/50 hover:text-foreground transition-colors"
+            >
+              Pause
+            </button>
+          </div>
+        </div>
       </div>
 
       <ConfirmActionModal
