@@ -50,12 +50,11 @@ const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTrac
       .eq("exercise_id", exercise.exerciseId)
       .order("created_at", { ascending: false })
       .limit(1) as any)
-      .then(({ data }: { data: any[] | null }) => {
-        if (data && data.length > 0) {
-          const raw = data[0].sets_reps_weight;
-          const sets = Array.isArray(raw) ? raw : [];
-          setGhostData(sets.map((s: any) => ({ weight: s.weight || 0, reps: s.reps || 0 })));
-        }
+      .then(({ data, error }: { data: any[] | null; error: any }) => {
+        if (error || !data || data.length === 0) return;
+        const raw = data[0].sets_reps_weight;
+        const sets = Array.isArray(raw) ? raw : [];
+        setGhostData(sets.map((s: any) => ({ weight: s.weight || 0, reps: s.reps || 0 })));
       });
   }, [user, exercise.exerciseId]);
 

@@ -202,7 +202,8 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
       .select("auto_regulate")
       .eq("user_id", user.id)
       .single()
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) { setAutoRegulateEnabled(false); if (hasInitialContent) setPhase("active"); return; }
         const enabled = (data as any)?.auto_regulate === true;
         setAutoRegulateEnabled(enabled);
         if (!enabled && hasInitialContent) setPhase("active");
@@ -433,8 +434,9 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
   useEffect(() => {
     if (!user) return;
     supabase.from("profiles").select("athlete_name, full_name").eq("user_id", user.id).single()
-      .then(({ data }) => {
-        if (data) setAthleteDisplayName((data as any).athlete_name || (data as any).full_name || "Athlete");
+      .then(({ data, error }) => {
+        if (error || !data) return;
+        setAthleteDisplayName((data as any).athlete_name || (data as any).full_name || "Athlete");
       });
   }, [user]);
 
@@ -696,7 +698,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
 
           {exercises.map((ex, i) => (
             <ExerciseCard
-              key={i}
+              key={`${ex.exerciseId || ex.exerciseTitle}-${i}`}
               exercise={ex}
               index={i}
               onUpdate={updateExercise}
