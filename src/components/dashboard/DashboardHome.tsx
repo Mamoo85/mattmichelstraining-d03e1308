@@ -41,6 +41,7 @@ const DashboardHome = memo(({ isNewUser, isInPerson, onViewPoints, onViewReferra
       <TodaysTrainingCard />
 
       <UpcomingSessions />
+      <DashboardReferralCard />
       <MonthlyFocusWidget />
 
       <Suspense fallback={null}>

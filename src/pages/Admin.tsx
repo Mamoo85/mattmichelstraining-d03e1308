@@ -390,6 +390,15 @@ const Admin = () => {
             { key: "seo", label: "SEO Engine", content: <AdminSeoGenerator /> },
           ]} />
         )}
+
+        {/* ── GROWTH ── */}
+        {activeTab === "growth" && (
+          <SubTabs tabs={[
+            { key: "outreach", label: "Outreach", content: <AdminOutreach /> },
+            { key: "seo-pages", label: "SEO Pages", content: <AdminSeoPages /> },
+            { key: "gbp", label: "GBP Posts", content: <AdminGbpPosts /> },
+          ]} />
+        )}
       </div>
     </div>
   );
