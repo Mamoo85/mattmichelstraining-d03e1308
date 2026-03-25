@@ -18,7 +18,7 @@ import WorkoutsTab from "@/components/dashboard/WorkoutsTab";
 import { lazy, Suspense } from "react";
 const MyPrograms = lazy(() => import("@/components/features/MyPrograms"));
 const ChallengeHub = lazy(() => import("@/components/dashboard/ChallengeHub"));
-const TeamManager = lazy(() => import("@/components/features/TeamManager"));
+
 const ProgressCharts = lazy(() => import("@/components/features/ProgressCharts"));
 const AiWorkoutSuggest = lazy(() => import("@/components/workout/AiWorkoutSuggest"));
 const FixItLibrary = lazy(() => import("@/components/features/FixItLibrary"));
