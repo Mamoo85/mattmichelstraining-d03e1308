@@ -285,7 +285,7 @@ serve(async (req) => {
         body: `${userName} generated:\n${exerciseSummary}`,
         link: "/admin",
       }));
-      await supabaseClient.from("notifications").insert(notifications).throwOnError().catch(() => {});
+      try { await supabaseClient.from("notifications").insert(notifications); } catch { /* non-blocking */ }
     }
 
     return new Response(JSON.stringify(workout), {
