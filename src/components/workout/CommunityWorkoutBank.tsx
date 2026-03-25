@@ -6,6 +6,7 @@ import { useFamilyUserIds } from "@/hooks/useFamilyUserIds";
 import { printCommunityWorkout } from "./printCommunityWorkout";
 import { toast } from "@/hooks/use-toast";
 import ConfirmActionModal from "@/components/shared/ConfirmActionModal";
+import FixItDisclaimer from "@/components/shared/FixItDisclaimer";
 
 interface CommunityExercise {
   title: string;
