@@ -630,7 +630,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
 
         {/* ─── FLOATING NEON REST TIMER ─── */}
         {restSeconds > 0 && (
-          <div className="absolute top-[52px] left-1/2 -translate-x-1/2 z-20 flex items-center gap-3 px-5 py-2 rounded-full bg-black/80 border border-[hsl(var(--synth-cyan))] shadow-[var(--synth-glow-cyan)]">
+          <div className="absolute top-[calc(52px+env(safe-area-inset-top))] left-1/2 -translate-x-1/2 z-20 flex items-center gap-3 px-5 py-2 rounded-full bg-black/80 border border-[hsl(var(--synth-cyan))] shadow-[var(--synth-glow-cyan)]">
             <span
               className="font-mono text-lg font-bold tabular-nums"
               style={{ color: "hsl(var(--synth-cyan))", textShadow: "var(--synth-glow-cyan)" }}
