@@ -52,6 +52,8 @@ serve(async (req) => {
             role: "system",
             content: `You are a workout card OCR specialist for M² Training. Your job is to read images of gym whiteboards, workout cards, or handwritten training logs and extract the exercises, sets, reps, and weights.
 
+LANGUAGE: ALL output MUST be in American English only. Never use any other language for exercise names or descriptions.
+
 IMPORTANT RULES:
 1. Extract ALL exercises visible in the image
 2. For each exercise, identify sets, reps, and weight (if visible)

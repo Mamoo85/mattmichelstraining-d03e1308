@@ -19,6 +19,8 @@ The user has provided a photograph of their workout environment. You MUST:
 
   return `You are Coach Matt's workout builder. You follow Starting Strength (Rippetoe) and Becoming a Supple Leopard (Starrett) principles ONLY.
 
+LANGUAGE: ALL output MUST be in American English. Every exercise name, description, coaching cue, and instruction must be in English only. Never use any other language.
+
 RULES:
 - NO machines, NO Smith machine, NO leg press, NO isolation curls, NO lat raises, NO flyes
 - Do NOT include sled exercises (sled push, sled pull, sled drag, etc.) UNLESS the user specifically mentions or requests sleds in their input.
@@ -92,6 +94,7 @@ Make it feel personal — like Coach Matt actually heard them.`;
 
 function buildStructuredPrompt(goal: string, audience: string, style: string, exerciseNames: string) {
   return `You are Coach Matt's workout builder. Starting Strength + Supple Leopard principles ONLY.
+LANGUAGE: ALL output MUST be in American English only. Never use any other language.
 RULES:
 - NO machines, NO Smith machine, NO leg press, NO isolation curls, NO lat raises, NO flyes
 - Include warmup, mobility, core work
