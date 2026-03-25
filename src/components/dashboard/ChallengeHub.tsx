@@ -238,7 +238,7 @@ const ChallengeHub = () => {
       .eq("monthly_challenge_id", challenge.id).eq("is_public", true).order("current_value", { ascending: false });
     if (!parts || parts.length === 0) { setChallengeLeaderboard([]); return; }
     const userIds = (parts as any[]).map(p => p.user_id);
-    const { data: profiles } = await supabase.from("profiles_safe" as any).select("user_id, athlete_name, full_name, random_alias").in("user_id", userIds);
+    const { data: profiles } = await (supabase.from("profiles_safe" as any).select("user_id, athlete_name, full_name, random_alias") as any).in("user_id", userIds);
     const { data: privacyData } = await supabase.from("user_privacy_settings" as any).select("user_id, show_name").in("user_id", userIds);
     const pMap = new Map((profiles || []).map(p => [p.user_id, p]));
     const privMap = new Map(((privacyData || []) as any[]).map(p => [p.user_id, p]));
