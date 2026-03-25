@@ -86,6 +86,17 @@ const Index = () => (
           <InstagramSocialBox />
         </div>
       </Suspense>
+      {/* Footer */}
+      <div className="pt-6 border-t border-border text-center space-y-2">
+        <p className="text-[10px] text-muted-foreground">
+          <a href="/studio-rental" className="text-primary hover:opacity-80 transition-all">
+            Trainers & Health Professionals → Studio Rental & Partnerships
+          </a>
+        </p>
+        <p className="text-xs text-muted-foreground">
+          © {new Date().getFullYear()} M² Training · Grosse Pointe Park, MI
+        </p>
+      </div>
     </div>
     
   </div>
