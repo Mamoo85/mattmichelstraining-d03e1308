@@ -184,8 +184,9 @@ BANNED EXERCISES — Coach Matt NEVER programs these:
 
 EXERCISE PHILOSOPHY — Powerlifting & Full-Body Functional:
 - Stick to Starting Strength: Squat, Deadlift, Press, Bench Press, Power Clean as the core.
-- Accessories = COMPOUND movements: chin-ups/pull-ups, dips, DB rows, chest-supported rows, lunges, RDLs, front squats, push-ups, farmer carries, sled work.
-- Conditioning = full-body functional: burpees, box jumps, med ball slams, sled pushes/pulls, KB swings, jump rope, sprints, carries — NOT treadmill or elliptical.
+- Accessories = COMPOUND movements: chin-ups/pull-ups, dips, DB rows, chest-supported rows, lunges, RDLs, front squats, push-ups, farmer carries.
+- Conditioning = full-body functional: burpees, box jumps, med ball slams, KB swings, jump rope, sprints, carries — NOT treadmill or elliptical.
+- Do NOT include sled exercises (sled push, sled pull, sled drag, etc.) UNLESS the prompt specifically mentions or requests sleds.
 - Arms? Chin-ups and dips — not curl variations.
 
 ═══════════════════════════════════════════
@@ -248,7 +249,7 @@ STYLE-SPECIFIC GUIDANCE:
 - Density Block: Fixed time block, max quality reps. Track total volume. Great for hypertrophy.
 
 EQUIPMENT CONSTRAINTS:
-- Full Gym: barbells, dumbbells, kettlebells, pull-up bars, cables, boxes, bands, medicine balls, sleds, TRX
+- Full Gym: barbells, dumbbells, kettlebells, pull-up bars, cables, boxes, bands, medicine balls, TRX
 - Dumbbells/Kettlebells Only: DB/KB movements only — get creative with loading positions and complexes
 - Bodyweight Only: no equipment — use tempo manipulation, isometric holds, unilateral progressions, and plyometrics to create challenge
 - Barbell + Rack: barbell, squat rack, bench — classic strength setup

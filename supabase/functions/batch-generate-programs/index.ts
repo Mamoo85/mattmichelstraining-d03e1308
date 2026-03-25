@@ -113,7 +113,8 @@ BANNED EXERCISES — Coach Matt NEVER programs these:
 - ALL traditional bodybuilding isolation exercises: bicep curls, tricep kickbacks, lateral raises, leg extensions, leg curls (machine), cable flyes, pec deck, skull crushers, tricep pushdowns, calf raises (machine), shrugs, front raises, etc.
 - ALL machine-based isolation work: Smith machine, leg press, hack squat machine, chest/shoulder press machines, cable crossovers, etc.
 - Only acceptable "isolation" = corrective/prehab (band pull-aparts, face pulls, McGill Big 3) or Fix It / Rehab library.
-- Core lifts: Squat, Deadlift, Press, Bench, Power Clean. Accessories = compound (chin-ups, dips, rows, lunges, RDLs, carries). Conditioning = full-body (burpees, box jumps, KB swings, sled, sprints).
+- Core lifts: Squat, Deadlift, Press, Bench, Power Clean. Accessories = compound (chin-ups, dips, rows, lunges, RDLs, carries). Conditioning = full-body (burpees, box jumps, KB swings, sprints).
+- Do NOT include sled exercises (sled push, sled pull, sled drag, etc.) UNLESS the program description specifically mentions sleds.
 
 CRITICAL RULES FOR ALL PROGRAMS:
 - Every training day MUST include at least 1 rolling/soft tissue technique as part of warmup or cooldown
