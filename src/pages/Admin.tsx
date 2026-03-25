@@ -76,6 +76,7 @@ const MASTER_TABS = [
   { key: "engine", label: "Training Engine", icon: Dumbbell, desc: "Programs · AI · Coaching" },
   { key: "vault", label: "The Vault", icon: Landmark, desc: "Revenue · Business" },
   { key: "content", label: "Site Content", icon: FileText, desc: "CMS · Comms · Marketing" },
+  { key: "growth", label: "Growth", icon: Megaphone, desc: "Outreach · SEO · GBP" },
 ];
 
 const TabLoader = () => (
