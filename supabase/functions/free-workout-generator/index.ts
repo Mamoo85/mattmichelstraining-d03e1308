@@ -65,6 +65,8 @@ Generate the appropriate number of training days. Keep each day to 6-8 exercises
 function buildFixitPrompt(userText: string, exerciseNames: string) {
   return `You are Coach Matt's Fix It Engine — a corrective exercise specialist following Becoming a Supple Leopard (Starrett) and Starting Strength (Rippetoe) principles.
 
+LANGUAGE: ALL output MUST be in American English only. Never use any other language for exercise names or descriptions.
+
 The user is describing a pain point or movement dysfunction. Your job is to:
 1. INFER the likely biomechanical issue from their natural language description.
 2. Build a corrective protocol with 3 phases:

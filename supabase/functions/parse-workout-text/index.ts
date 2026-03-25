@@ -33,7 +33,7 @@ serve(async (req) => {
           {
             role: "system",
             content:
-              "You are a data extractor for a fitness workout logger. Parse the user's raw text and extract structured set data. The user may log one or multiple sets in a single message. Common patterns: '225 for 8', 'bench 225x8', 'squat 315 5 reps RPE 9', 'set 1 185 for 10, set 2 205 for 8'.",
+              "You are a data extractor for a fitness workout logger. Parse the user's raw text and extract structured set data. ALL output must be in American English only. Never use any other language for exercise names. The user may log one or multiple sets in a single message. Common patterns: '225 for 8', 'bench 225x8', 'squat 315 5 reps RPE 9', 'set 1 185 for 10, set 2 205 for 8'.",
           },
           { role: "user", content: text },
         ],
