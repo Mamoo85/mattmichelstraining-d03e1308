@@ -67,6 +67,9 @@ const AdminProgressLogger = lazy(() => import("@/components/admin/AdminProgressL
 const AdminLiftVideoReview = lazy(() => import("@/components/admin/AdminLiftVideoReview"));
 const AdminProveItReview = lazy(() => import("@/components/admin/AdminProveItReview"));
 const AdminSeoGenerator = lazy(() => import("@/components/admin/AdminSeoGenerator"));
+const AdminOutreach = lazy(() => import("@/components/admin/AdminOutreach"));
+const AdminSeoPages = lazy(() => import("@/components/admin/AdminSeoPages"));
+const AdminGbpPosts = lazy(() => import("@/components/admin/AdminGbpPosts"));
 
 const MASTER_TABS = [
   { key: "roster", label: "The Roster", icon: Users, desc: "Users · Support · Families" },
