@@ -60,7 +60,7 @@ const Dashboard = () => {
   const [hasPrograms, setHasPrograms] = useState<boolean | null>(null);
   const [hasLogs, setHasLogs] = useState<boolean | null>(null);
   const [generatorView, setGeneratorView] = useState<null | "workout" | "fixit">(null);
-  const [showWelcomeGift, setShowWelcomeGift] = useState(() => safeLocalStorage.getItem("m2-welcome-gift-seen") !== "1");
+  const [showWelcomeGift, setShowWelcomeGift] = useState(() => safeLocalStorage.getItem("m2-welcome-gift-seen-v2") !== "1");
 
   // Feature learning modal state
   const [activeTip, setActiveTip] = useState<FeatureTip | null>(null);

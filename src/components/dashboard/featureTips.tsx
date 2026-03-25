@@ -9,7 +9,7 @@ import tipFixitImg from "@/assets/tip-fixit-engine.jpg";
 import tipProveItImg from "@/assets/tip-prove-it.jpg";
 
 export const WORKOUT_PORTAL_TIP: FeatureTip = {
-  storageKey: "m2-tip-workout-portal",
+  storageKey: "m2-tip-workout-portal-v2",
   image: tipPortalImg,
   title: "The Workout Portal",
   subtitle: "Your live training session — log every set, track rest times, and crush it.",
@@ -22,7 +22,7 @@ export const WORKOUT_PORTAL_TIP: FeatureTip = {
 };
 
 export const WORKOUT_GENERATOR_TIP: FeatureTip = {
-  storageKey: "m2-tip-workout-generator",
+  storageKey: "m2-tip-workout-generator-v2",
   image: tipGeneratorImg,
   title: "AI Workout Generator",
   subtitle: "Tell the AI your goal, equipment, and time — it builds the workout for you.",
@@ -35,7 +35,7 @@ export const WORKOUT_GENERATOR_TIP: FeatureTip = {
 };
 
 export const FIXIT_ENGINE_TIP: FeatureTip = {
-  storageKey: "m2-tip-fixit-engine",
+  storageKey: "m2-tip-fixit-engine-v2",
   image: tipFixitImg,
   title: "Fix It Engine",
   subtitle: "Something hurting? Tell the AI where, and get corrective exercises instantly.",
@@ -48,7 +48,7 @@ export const FIXIT_ENGINE_TIP: FeatureTip = {
 };
 
 export const PROVE_IT_TIP: FeatureTip = {
-  storageKey: "m2-tip-prove-it",
+  storageKey: "m2-tip-prove-it-v2",
   image: tipProveItImg,
   title: "Prove It — PR Submissions",
   subtitle: "Think you hit a new best? Record it, submit it, and make it official.",
