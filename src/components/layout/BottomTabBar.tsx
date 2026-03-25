@@ -84,7 +84,7 @@ const BottomTabBar = () => {
 
           {/* More tab */}
           <button
-            onClick={() => setMoreOpen(true)}
+            onClick={() => setMoreOpen((v) => !v)}
             className={`flex flex-col items-center justify-center flex-1 gap-0.5 transition-colors relative ${
               isMoreActive ? "text-primary" : "text-muted-foreground"
             }`}

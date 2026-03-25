@@ -56,10 +56,21 @@ const AppNavbar = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm shadow-m2">
       <div className="container flex items-center justify-between h-14">
-        {/* Logo */}
-        <Link to="/" className="flex items-center gap-1.5 group transition-m2 shrink-0">
-          <img src={m2Logo} alt="M² Training" className="w-9 h-9 object-contain" />
-        </Link>
+        {/* Logo / Timer toggle — timer on portal screens */}
+        {user && ["/dashboard", "/progress", "/coach", "/nutrition", "/profile"].includes(location.pathname) ? (
+          <button
+            onClick={toggleTimer}
+            className="flex items-center gap-1.5 group transition-m2 shrink-0 text-primary hover:opacity-80"
+            aria-label="Interval Timer"
+          >
+            <Timer size={22} strokeWidth={2} />
+            <span className="hidden sm:inline text-[10px] font-bold uppercase tracking-widest">Timer</span>
+          </button>
+        ) : (
+          <Link to="/" className="flex items-center gap-1.5 group transition-m2 shrink-0">
+            <img src={m2Logo} alt="M² Training" className="w-9 h-9 object-contain" />
+          </Link>
+        )}
 
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-0.5">

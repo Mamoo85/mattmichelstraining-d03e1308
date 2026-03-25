@@ -45,6 +45,19 @@ const DashboardHome = memo(({ isNewUser, isInPerson, onViewPoints, onViewReferra
       <Suspense fallback={null}>
         <SharedWorkoutFeed />
       </Suspense>
+
+      {/* Chat with Matt — portal only */}
+      <button
+        onClick={() => setChatOpen(true)}
+        className="w-full flex items-center justify-center gap-2 py-3 border border-border bg-card hover:bg-muted/50 transition-colors text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-primary"
+      >
+        <MessageCircle size={14} /> Chat with Matt
+      </button>
+      {chatOpen && (
+        <Suspense fallback={null}>
+          <CoachChatPanel onClose={() => setChatOpen(false)} />
+        </Suspense>
+      )}
     </div>
   );
 });
