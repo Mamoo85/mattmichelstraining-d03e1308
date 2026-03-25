@@ -40,18 +40,25 @@ const AdminVipAccess = () => {
     const newValue = !currentValue;
     setTogglingId(userId);
     try {
+      const updatePayload: Record<string, any> = { is_in_person: newValue };
+      // When revoking VIP, reset to free tier so they lose paid tool access
+      if (!newValue) {
+        updatePayload.subscription_tier = "free";
+        updatePayload.is_pro = false;
+      }
       const { error } = await supabase
         .from("profiles")
-        .update({ is_in_person: newValue } as any)
+        .update(updatePayload as any)
         .eq("user_id", userId);
       if (error) throw error;
       toast({
         title: newValue ? "VIP Access Granted" : "VIP Access Revoked",
         description: newValue
           ? "User now has full in-person access."
-          : "User reverted to standard access.",
+          : "User reverted to free tier. Paid tool access removed.",
       });
       queryClient.invalidateQueries({ queryKey: ["admin-vip-profiles"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-clients"] });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
