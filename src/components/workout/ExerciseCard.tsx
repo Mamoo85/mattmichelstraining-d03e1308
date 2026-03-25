@@ -32,6 +32,7 @@ const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTrac
   const { user } = useAuth();
   const [showCoachNotes, setShowCoachNotes] = useState(false);
   const [showExtras, setShowExtras] = useState(false);
+  const [showHologram, setShowHologram] = useState(false);
   const [showUpsell, setShowUpsell] = useState(false);
   const { isAdmin } = useIsAdmin();
   const { hasAccess: canFlag } = useTierAccess("flag_coach");
