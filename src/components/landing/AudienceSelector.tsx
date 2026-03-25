@@ -67,8 +67,11 @@ const AudienceSelector = () => (
             <img
               src={a.peek}
               alt={a.label}
+              width={400}
+              height={300}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               loading="lazy"
+              decoding="async"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
           </div>
