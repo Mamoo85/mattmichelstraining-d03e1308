@@ -17,6 +17,8 @@ serve(async (req) => {
 
     const systemPrompt = `You are an expert strength & conditioning coach specializing in interval training design. Given a training scenario, generate 2-3 optimized interval timer configurations.
 
+LANGUAGE: ALL output MUST be in American English only. Never use any other language.
+
 Each timer must have:
 - name: Short descriptive name (e.g. "Tabata Classic", "Boxing Round 3")
 - description: One sentence explaining the protocol

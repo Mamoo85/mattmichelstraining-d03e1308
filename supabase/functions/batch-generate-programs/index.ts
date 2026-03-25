@@ -103,7 +103,9 @@ serve(async (req) => {
 
     const isFoundation = (program.category || "").toLowerCase() === "foundation";
 
-    const libraryContext = `The exercise library has THREE sections:
+    const libraryContext = `LANGUAGE: ALL output MUST be in American English. Every exercise name, description, coaching cue, and instruction must be in English only. Never use any other language.
+
+The exercise library has THREE sections:
 1. MAIN EXERCISES — strength, power, conditioning, mobility movements
 2. ROLLING & SOFT TISSUE TECHNIQUES — foam roller, lacrosse ball, barbell smash, voodoo floss techniques from Kelly Starrett's methodology
 3. FIX IT / REHAB EXERCISES — injury prevention protocols (ACL, shoulder impingement, knee pain, ankle stability, etc.)
