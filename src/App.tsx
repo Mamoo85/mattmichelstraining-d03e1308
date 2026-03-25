@@ -65,6 +65,7 @@ const Install = lazyRetry(() => import("./pages/Install"));
 const Nutrition = lazyRetry(() => import("./pages/Nutrition"));
 const TheEdge = lazyRetry(() => import("./pages/TheEdge"));
 const MatrixEasterEgg = lazyRetry(() => import("./pages/MatrixEasterEgg"));
+const MatrixMerch = lazyRetry(() => import("./pages/MatrixMerch"));
 const FreeAiGenerator = lazyRetry(() => import("./pages/FreeAiGenerator"));
 const SEOLandingPage = lazyRetry(() => import("./pages/SEOLandingPage"));
 const DynamicSitemap = lazyRetry(() => import("./pages/DynamicSitemap"));
@@ -201,6 +202,7 @@ const App = () => (
                     <Route path="/learn" element={<Learn />} />
                     <Route path="/the-edge" element={<TheEdge />} />
                     <Route path="/matrix" element={<MatrixEasterEgg />} />
+                    <Route path="/matrix-merch" element={<MatrixMerch />} />
                     <Route path="/install" element={<Install />} />
                     <Route path="/free-ai-generator" element={<FreeAiGenerator />} />
                     <Route path="/training/:slug" element={<SEOLandingPage />} />
