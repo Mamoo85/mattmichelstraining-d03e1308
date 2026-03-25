@@ -205,6 +205,8 @@ const CommunityWorkoutBank = ({ mode = "my", onCreateNew }: CommunityWorkoutBank
         )}
       </div>
 
+      {isFixIt && <FixItDisclaimer compact />}
+
       {/* Search */}
       <div className="flex items-center bg-card border border-border px-3 h-10">
         <Search size={14} className="text-muted-foreground mr-2 flex-shrink-0" />

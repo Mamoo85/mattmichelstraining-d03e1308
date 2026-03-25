@@ -175,6 +175,8 @@ const AiWorkoutSuggest = memo(({ onDone, initialPath }: { onDone: () => void; in
         </button>
       </div>
 
+      {path === "fixit" && <FixItDisclaimer compact />}
+
       <AnimatePresence mode="wait">
         {!workout ? (
           <motion.div

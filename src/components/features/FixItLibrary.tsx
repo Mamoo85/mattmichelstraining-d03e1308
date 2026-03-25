@@ -56,6 +56,8 @@ const FixItLibrary = () => {
         <span className="text-[10px] font-mono text-primary mt-2 block">— Matt Michels, M² Training</span>
       </div>
 
+      <FixItDisclaimer />
+
       <div className="relative mb-4">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
         <input
