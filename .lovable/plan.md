@@ -1,108 +1,64 @@
 
 
-## Plan: Name Prompt, Anonymous Mode with Random Names, and Admin "View as User"
+# Plan: Build Studio Rental Page, Rebuild For Parents Page, Create Results Page
 
-### Summary
-Four interconnected features: (1) prompt users missing a name to enter it, (2) add a `show_name` privacy toggle defaulting to public, (3) generate fun random display names for anonymous users on leaderboards, and (4) add a "View as User" button in the admin client panel.
-
----
-
-### 1. Database Migration
-
-Add a `show_name` column to `user_privacy_settings`:
-
-```sql
-ALTER TABLE public.user_privacy_settings
-ADD COLUMN show_name boolean NOT NULL DEFAULT true;
-```
-
-Add a `random_alias` column to `profiles` for persistent random names:
-
-```sql
-ALTER TABLE public.profiles
-ADD COLUMN random_alias text;
-```
-
-Update `check_user_visibility` function to support `show_name`:
-
-```sql
-CREATE OR REPLACE FUNCTION public.check_user_visibility(...)
--- Add WHEN 'show_name' clause
-```
-
-Add a trigger on `profiles` insert to auto-generate a random alias (e.g., "SteelWolf42", "IronHawk77").
+This plan covers three new/rebuilt pages, routing updates, and navbar additions.
 
 ---
 
-### 2. Name Prompt Modal (`NamePromptModal.tsx`)
+## 1. Studio Rental Page (`/studio-rental`)
 
-- New component shown on Dashboard when `profile.full_name` is empty/null
-- Clean modal with:
-  - Heading: "Let's get you set up"
-  - Explanation: "Matt needs your name to keep things organized and personalize your training. Your name is private if you want it to be."
-  - First Name + Last Name inputs (required)
-  - Toggle: "Keep my name private from other users" (controls `show_name` in `user_privacy_settings`, defaults OFF = name is public)
-  - Save button that updates `profiles.full_name` and `user_privacy_settings.show_name`
-- Cannot be dismissed without entering a name (no X button, no backdrop close)
+**New file: `src/pages/StudioRental.tsx`**
 
----
+- SEOHead with title, description, path as specified
+- 6 sections: Hero (badge, headline, subhead, mailto CTA), What's Included (6-item icon grid), Pricing (3 cards with mailto Inquire buttons), Who This Is For (2-column trainers/health pros), Partnership Interest (CTA mailto), Contact Form (name/email/message → `notify-coach-question` edge function, success toast)
+- Dark M² theme, professional B2B tone, orange accents on section headers only
 
-### 3. Privacy Toggle in Profile Settings
-
-- Add "Name" toggle to `PrivacySettingsCard.tsx` at the top of the list
-- Label: "Name", desc: "Your real name visible to other athletes (Matt always sees it)"
+**Modifications:**
+- `src/App.tsx`: Add `/studio-rental` route (non-protected)
+- `src/components/layout/AppNavbar.tsx`: Add "STUDIO" to nav (either primaryNav or secondaryNav)
+- `src/pages/Pricing.tsx`: Add a small card at bottom linking to `/studio-rental` ("Are you a trainer? Rent the studio →")
 
 ---
 
-### 4. Leaderboard Display Name Logic
+## 2. For Parents Page Rebuild (`/for-parents`)
 
-Update all places that render user names on leaderboards (9 files identified):
-- `PointsLeaderboard.tsx`, `ChallengeLeaderboard.tsx`, `ChallengeHub.tsx`, `MonthlyFocusWidget.tsx`, `AdminPointsManager.tsx`, etc.
-- Current pattern: `entry.athlete_name || entry.full_name || "Athlete"`
-- New pattern: If user has `show_name === false`, display `random_alias` instead
-- The `usePoints` hook leaderboard query will join `user_privacy_settings.show_name` and `profiles.random_alias`
-- Admin views always show real names
+**Rewrite: `src/pages/ForParents.tsx`**
 
----
+Complete rebuild with new structure:
+1. **Hero** — new headline/subhead, two CTAs (Schedule a Consult → /schedule, Text Matt → sms:3138064952), trust line
+2. **Parent Concern Section** — 3 concern/answer accordion-style pairs (injury, sport-specific, monitoring)
+3. **Sports Served** — icon chips for 10 sports
+4. **What a Program Includes** — timeline layout (3 phases: Assessment, Foundation, Sport-Specific)
+5. **Athlete Results** — 3 youth-focused result cards (football squat, wrestling deadlift, baseball velo)
+6. **Pricing** — simple links to schedule/pricing tiers
+7. **Bottom CTA** — Phone, Text, Email, Schedule button strip
 
-### 5. Random Alias Generator
-
-- Database trigger on `profiles` INSERT: generate a random alias like "TitanFox23", "StealthBear91"
-- Two word lists (adjectives + animals/nouns) + random 2-digit number
-- Stored in `profiles.random_alias` so it's persistent and consistent
-
----
-
-### 6. Admin "View as User" Button
-
-- Add a button in `AdminClientList.tsx` user control modal: "View as User"
-- Opens the user's Dashboard/Progress/Profile in a new route like `/admin/view-user/:userId`
-- This page renders the same `ProgressCharts`, `LogHistory`, lift data, AI insights — but fetches data for the target user ID instead of `auth.uid()`
-- Read-only view showing exactly what the athlete sees: their lifts, history, AI recommendations, programs
+- Updated SEOHead with new title/description and LocalBusiness JSON-LD schema
+- Keep existing imports where useful (AppNavbar, SEOHead), remove old components no longer needed
 
 ---
 
-### Technical Details
+## 3. Results Page (`/results`)
 
-**Files to create:**
-- `src/components/dashboard/NamePromptModal.tsx` — the name collection modal
-- `src/pages/AdminViewUser.tsx` — admin impersonation view page
+**New file: `src/pages/Results.tsx`**
 
-**Files to modify:**
-- `src/pages/Dashboard.tsx` — add NamePromptModal check
-- `src/hooks/usePoints.tsx` — leaderboard query joins privacy + alias
-- `src/components/gamification/PointsLeaderboard.tsx` — use alias when hidden
-- `src/components/gamification/ChallengeLeaderboard.tsx` — same
-- `src/components/dashboard/ChallengeHub.tsx` — same
-- `src/components/features/MonthlyFocusWidget.tsx` — same
-- `src/components/features/PrivacySettingsCard.tsx` — add show_name toggle
-- `src/components/admin/AdminClientList.tsx` — add "View as User" button
-- `src/App.tsx` — add admin view-user route
+1. **SEOHead** with SportsActivityLocation JSON-LD schema
+2. **Youth Athletes section** — "What Parents Are Saying" with 3 parent testimonial quote cards (Football OL, Wrestling, Baseball Pitcher)
+3. **Main results grid** — reuse/adapt content from `AthleteResults.tsx` component
+4. **Instagram section** — embed `InstagramSocialBox` component, follow button
+5. **Bottom CTA** — 3 rows: Train In-Person → /schedule, Try the App Free → /auth?redirect=/trial-welcome, Youth Athlete Inquiry → /for-parents
 
-**Migration:**
-- Add `show_name` to `user_privacy_settings`
-- Add `random_alias` to `profiles`
-- Create trigger to auto-generate aliases on profile creation
-- Backfill existing profiles with random aliases
-- Update `check_user_visibility` RPC
+**Modifications:**
+- `src/App.tsx`: Add `/results` route (non-protected)
+
+---
+
+## Technical Details
+
+- All three pages follow existing patterns: `motion` animations, `SEOHead`, `AppNavbar`, Tailwind dark theme classes
+- Contact form on Studio Rental uses `supabase.functions.invoke("notify-coach-question")` — already exists as an edge function
+- No database migrations needed
+- Nav updates: "STUDIO" added to `secondaryNav` in AppNavbar; "RESULTS" can go in secondaryNav or primaryNav depending on space
+- For Parents page removes dependency on `ForParentsHero`, `MembershipTiers`, `BringAFriendCard`, `ParentChildBenefits` components (those components stay in codebase for potential reuse elsewhere)
 
