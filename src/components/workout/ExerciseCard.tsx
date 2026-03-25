@@ -8,6 +8,7 @@ import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useTierAccess } from "@/hooks/useTierAccess";
 import { EliteUpsellModal } from "@/components/billing/PaywallGate";
 import ExerciseVideoEmbed from "@/components/exercise/ExerciseVideoEmbed";
+import AnatomyHologram from "./AnatomyHologram";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import type { LoggedExerciseData } from "./WorkoutLogger";
