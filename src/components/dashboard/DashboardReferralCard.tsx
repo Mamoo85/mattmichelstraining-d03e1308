@@ -27,7 +27,7 @@ const DashboardReferralCard = memo(() => {
           <p className="font-bold text-foreground text-lg">Refer a Friend</p>
         </div>
         <div className="bg-primary/10 border border-primary/20 px-3 py-2 text-center">
-          <span className="text-xs font-black uppercase tracking-widest text-primary">Free for now</span>
+          <span className="text-xs font-black uppercase tracking-widest text-primary">Invite Your Friends!</span>
         </div>
         <p className="text-sm text-muted-foreground">
           Know someone who should be training with M²? Send them your link — it's completely free to join right now.

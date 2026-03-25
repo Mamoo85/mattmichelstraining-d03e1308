@@ -30,7 +30,7 @@ const ReferralDashboard = () => {
       </div>
 
       <div className="bg-primary/10 border border-primary/20 p-4 text-center">
-        <span className="text-sm font-black uppercase tracking-widest text-primary">Free for now</span>
+        <span className="text-sm font-black uppercase tracking-widest text-primary">Invite Your Friends!</span>
       </div>
 
       <div className="bg-card border border-border p-4 space-y-3">
