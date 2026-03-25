@@ -23,6 +23,8 @@ const secondaryNav = [
   { to: "/about", label: "ABOUT", icon: User },
   { to: "/for-parents", label: "PARENTS", icon: Users },
   { to: "/pricing", label: "PRICING", icon: CreditCard },
+  { to: "/results", label: "RESULTS", icon: Dumbbell },
+  { to: "/studio-rental", label: "STUDIO", icon: Home },
 ];
 
 

@@ -54,7 +54,7 @@ const Results = () => (
       title="Results — Real Athletes, Real Gains | M² Training"
       description="See real results from M² Training clients — youth athletes, adults, and sport-specific performance gains in Grosse Pointe and Metro Detroit."
       path="/results"
-      schema={SPORTS_SCHEMA}
+      jsonLd={SPORTS_SCHEMA}
     />
     <AppNavbar />
 

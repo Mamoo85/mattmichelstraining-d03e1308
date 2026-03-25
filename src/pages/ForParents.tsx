@@ -73,7 +73,7 @@ const ForParents = () => (
       title="Youth Athlete Training — Grosse Pointe Park, MI | M² Training"
       description="Sport-specific strength and performance training for high school athletes in Grosse Pointe and Metro Detroit. Coached by Matt Michels — 20 years, 50+ college athletes, zero training injuries."
       path="/for-parents"
-      schema={LOCAL_BUSINESS_SCHEMA}
+      jsonLd={LOCAL_BUSINESS_SCHEMA}
     />
     <AppNavbar />
 
