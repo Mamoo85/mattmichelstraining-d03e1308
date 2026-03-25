@@ -1,48 +1,108 @@
 
 
-# Plan: Switch GBP Posts to Direct Anthropic API Call
+## Plan: Name Prompt, Anonymous Mode with Random Names, and Admin "View as User"
 
-Change `AdminGbpPosts.tsx` to call the Anthropic API directly from the client instead of the edge function. The component structure (tabs, cards, copy button) already exists and stays the same.
-
----
-
-## Security Note
-
-Calling Anthropic directly from the browser exposes the API key in network requests. Since this is an admin-only page behind authentication + role check, the risk is limited to admin users. However, the API key must be stored somewhere accessible to the client.
+### Summary
+Four interconnected features: (1) prompt users missing a name to enter it, (2) add a `show_name` privacy toggle defaulting to public, (3) generate fun random display names for anonymous users on leaderboards, and (4) add a "View as User" button in the admin client panel.
 
 ---
 
-## Changes
+### 1. Database Migration
 
-### `src/components/admin/AdminGbpPosts.tsx`
-- Remove `supabase.functions.invoke("generate-gbp-posts")` call
-- Replace with direct `fetch("https://api.anthropic.com/v1/messages")` using:
-  - Model: `claude-sonnet-4-20250514`
-  - Headers: `x-api-key`, `anthropic-version: 2023-06-01`, `anthropic-dangerous-direct-browser-access: true`, `content-type: application/json`
-  - System prompt per mode (training / webdesign) as specified
-  - User message: "Generate the 4 posts now. Return only the JSON array."
-- Parse `response.content[0].text` as JSON
-- Keep existing error handling pattern (toast on failure)
-- The API key will be read from a constant or environment variable
+Add a `show_name` column to `user_privacy_settings`:
 
-### API Key Storage
-The Anthropic API key needs to be accessible client-side. Two options:
-1. Store as a Vite env var (`VITE_ANTHROPIC_API_KEY`) — requires adding to `.env` or build config
-2. Hardcode in the component (admin-only, not ideal but functional)
+```sql
+ALTER TABLE public.user_privacy_settings
+ADD COLUMN show_name boolean NOT NULL DEFAULT true;
+```
 
-I'll use a Vite env var approach and prompt you to provide the key as a build secret or I can store it as a runtime secret and proxy through an edge function (but you explicitly want direct client calls).
+Add a `random_alias` column to `profiles` for persistent random names:
 
----
+```sql
+ALTER TABLE public.profiles
+ADD COLUMN random_alias text;
+```
 
-## Files
+Update `check_user_visibility` function to support `show_name`:
 
-| File | Action |
-|------|--------|
-| `src/components/admin/AdminGbpPosts.tsx` | **Edit** — replace edge function call with direct Anthropic fetch |
+```sql
+CREATE OR REPLACE FUNCTION public.check_user_visibility(...)
+-- Add WHEN 'show_name' clause
+```
+
+Add a trigger on `profiles` insert to auto-generate a random alias (e.g., "SteelWolf42", "IronHawk77").
 
 ---
 
-## Blocker
+### 2. Name Prompt Modal (`NamePromptModal.tsx`)
 
-I need the Anthropic API key to proceed. How would you like to provide it? I can add it as a secret that you enter, then reference it via a Vite env var for client-side access.
+- New component shown on Dashboard when `profile.full_name` is empty/null
+- Clean modal with:
+  - Heading: "Let's get you set up"
+  - Explanation: "Matt needs your name to keep things organized and personalize your training. Your name is private if you want it to be."
+  - First Name + Last Name inputs (required)
+  - Toggle: "Keep my name private from other users" (controls `show_name` in `user_privacy_settings`, defaults OFF = name is public)
+  - Save button that updates `profiles.full_name` and `user_privacy_settings.show_name`
+- Cannot be dismissed without entering a name (no X button, no backdrop close)
+
+---
+
+### 3. Privacy Toggle in Profile Settings
+
+- Add "Name" toggle to `PrivacySettingsCard.tsx` at the top of the list
+- Label: "Name", desc: "Your real name visible to other athletes (Matt always sees it)"
+
+---
+
+### 4. Leaderboard Display Name Logic
+
+Update all places that render user names on leaderboards (9 files identified):
+- `PointsLeaderboard.tsx`, `ChallengeLeaderboard.tsx`, `ChallengeHub.tsx`, `MonthlyFocusWidget.tsx`, `AdminPointsManager.tsx`, etc.
+- Current pattern: `entry.athlete_name || entry.full_name || "Athlete"`
+- New pattern: If user has `show_name === false`, display `random_alias` instead
+- The `usePoints` hook leaderboard query will join `user_privacy_settings.show_name` and `profiles.random_alias`
+- Admin views always show real names
+
+---
+
+### 5. Random Alias Generator
+
+- Database trigger on `profiles` INSERT: generate a random alias like "TitanFox23", "StealthBear91"
+- Two word lists (adjectives + animals/nouns) + random 2-digit number
+- Stored in `profiles.random_alias` so it's persistent and consistent
+
+---
+
+### 6. Admin "View as User" Button
+
+- Add a button in `AdminClientList.tsx` user control modal: "View as User"
+- Opens the user's Dashboard/Progress/Profile in a new route like `/admin/view-user/:userId`
+- This page renders the same `ProgressCharts`, `LogHistory`, lift data, AI insights — but fetches data for the target user ID instead of `auth.uid()`
+- Read-only view showing exactly what the athlete sees: their lifts, history, AI recommendations, programs
+
+---
+
+### Technical Details
+
+**Files to create:**
+- `src/components/dashboard/NamePromptModal.tsx` — the name collection modal
+- `src/pages/AdminViewUser.tsx` — admin impersonation view page
+
+**Files to modify:**
+- `src/pages/Dashboard.tsx` — add NamePromptModal check
+- `src/hooks/usePoints.tsx` — leaderboard query joins privacy + alias
+- `src/components/gamification/PointsLeaderboard.tsx` — use alias when hidden
+- `src/components/gamification/ChallengeLeaderboard.tsx` — same
+- `src/components/dashboard/ChallengeHub.tsx` — same
+- `src/components/features/MonthlyFocusWidget.tsx` — same
+- `src/components/features/PrivacySettingsCard.tsx` — add show_name toggle
+- `src/components/admin/AdminClientList.tsx` — add "View as User" button
+- `src/App.tsx` — add admin view-user route
+
+**Migration:**
+- Add `show_name` to `user_privacy_settings`
+- Add `random_alias` to `profiles`
+- Create trigger to auto-generate aliases on profile creation
+- Backfill existing profiles with random aliases
+- Update `check_user_visibility` RPC
 
