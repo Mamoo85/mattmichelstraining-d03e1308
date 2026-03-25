@@ -6,6 +6,7 @@ import EmptyStateCard from "@/components/shared/EmptyStateCard";
 import TodaysTrainingCard from "@/components/programs/TodaysTrainingCard";
 import DashboardReferralCard from "@/components/dashboard/DashboardReferralCard";
 import { useAuth } from "@/hooks/useAuth";
+import { useBrowserNotifications } from "@/hooks/useBrowserNotifications";
 
 const SharedWorkoutFeed = lazy(() => import("@/components/workout/SharedWorkoutFeed"));
 const CustomProgramRequest = lazy(() => import("./CustomProgramRequest"));
