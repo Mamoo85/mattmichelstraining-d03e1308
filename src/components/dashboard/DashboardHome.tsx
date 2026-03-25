@@ -5,6 +5,8 @@ import UpcomingSessions from "@/components/sessions/UpcomingSessions";
 import EmptyStateCard from "@/components/shared/EmptyStateCard";
 import TodaysTrainingCard from "@/components/programs/TodaysTrainingCard";
 import DashboardReferralCard from "@/components/dashboard/DashboardReferralCard";
+import DashboardChallengePreview from "@/components/dashboard/DashboardChallengePreview";
+import CommunityActivityFeed from "@/components/dashboard/CommunityActivityFeed";
 import { useAuth } from "@/hooks/useAuth";
 import { useBrowserNotifications } from "@/hooks/useBrowserNotifications";
 
@@ -36,6 +38,12 @@ const DashboardHome = memo(({ isNewUser, isInPerson, onViewPoints, onViewReferra
         />
       )}
 
+      {/* Invite card — near top, above main content */}
+      <DashboardReferralCard />
+
+      {/* Community activity feed */}
+      <CommunityActivityFeed />
+
       <Suspense fallback={null}>
         <CustomProgramRequest />
       </Suspense>
@@ -43,8 +51,10 @@ const DashboardHome = memo(({ isNewUser, isInPerson, onViewPoints, onViewReferra
       <TodaysTrainingCard />
 
       <UpcomingSessions />
-      <DashboardReferralCard />
       <MonthlyFocusWidget />
+
+      {/* Challenge leaderboard preview */}
+      <DashboardChallengePreview onViewChallenge={onViewPoints} />
 
       <Suspense fallback={null}>
         <SharedWorkoutFeed />
