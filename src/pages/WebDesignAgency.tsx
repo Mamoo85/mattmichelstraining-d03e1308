@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import SEOHead from "@/components/layout/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,11 @@ const portfolioCards = [
     features: ["Instant quote forms", "Click-to-call buttons", "Mobile-first design"],
     icon: Zap,
     gradient: "from-orange-600/20 to-amber-600/10",
+    demos: [
+      { label: "Plumber Demo", to: "/demo-plumber" },
+      { label: "Electrician Demo", to: "/demo-electrician" },
+      { label: "Roofing Demo", to: "/demo-roofing" },
+    ],
   },
   {
     title: "The Local Shop",
@@ -23,6 +29,9 @@ const portfolioCards = [
     features: ["Clean menus", "Business hours & Google Maps", "Photo galleries"],
     icon: Globe,
     gradient: "from-blue-600/20 to-cyan-600/10",
+    demos: [
+      { label: "Landscaper Demo", to: "/demo-landscaping" },
+    ],
   },
   {
     title: "The Pro",
@@ -30,6 +39,10 @@ const portfolioCards = [
     features: ["Professional aesthetic", "Booking calendars", "Client trust badges"],
     icon: ShieldCheck,
     gradient: "from-emerald-600/20 to-green-600/10",
+    demos: [
+      { label: "Attorney Demo", to: "/demo-lawyer" },
+      { label: "MedSpa Demo", to: "/demo-clinic" },
+    ],
   },
 ];
 
@@ -145,6 +158,15 @@ const WebDesignAgency = () => {
                         </li>
                       ))}
                     </ul>
+                    {card.demos.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-5 pt-4 border-t border-border/30">
+                        {card.demos.map((d) => (
+                          <Link key={d.to} to={d.to} className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+                            {d.label} <ArrowRight className="h-3 w-3" />
+                          </Link>
+                        ))}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               ))}

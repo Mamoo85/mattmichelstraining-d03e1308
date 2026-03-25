@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Phone, Droplets, Flame, Wrench, Shield, Star, Clock, Award, CheckCircle } from "lucide-react";
-import heroImg from "@/assets/demo-plumber-hero.jpg";
 import { RevealSection } from "@/hooks/useInView";
 
+const heroImg = "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1600&q=80";
 const BRAND = "[BUSINESS NAME]";
-const PHONE = "(313) 555-0199";
+const PHONE = "(313) 806-4952";
 
 const services = [
   { title: "Emergency Leak Repair", desc: "Burst pipe at 2 AM? We answer the phone and show up fast—every single time.", Icon: Droplets, color: "#dc2626" },
@@ -21,6 +21,12 @@ const stats = [
 ];
 
 const badges = ["Licensed", "Fully Insured", "BBB Accredited", "5-Star Google"];
+
+const testimonials = [
+  { text: "Called at 2am with a burst pipe under the kitchen. Tech was at my door in 28 minutes. Unbelievable.", attr: "— R.T., Grosse Pointe Woods" },
+  { text: "Fixed what two other plumbers couldn't figure out. Honest pricing, no upsell.", attr: "— D.H., St. Clair Shores" },
+  { text: "Water heater died on a Friday afternoon. New one installed same day.", attr: "— K.M., Harper Woods" },
+];
 
 const PlumberMockup = () => {
   const [form, setForm] = useState({ name: "", phone: "", address: "", details: "" });
@@ -120,7 +126,7 @@ const PlumberMockup = () => {
         </div>
       </RevealSection>
 
-      {/* Before/After Placeholder */}
+      {/* Before/After */}
       <RevealSection className="py-16 px-6" style={{ background: "#0b1929" }}>
         <div className="max-w-4xl mx-auto">
           <h2 className="text-2xl font-bold text-center text-white mb-8">Recent Work</h2>
@@ -128,8 +134,8 @@ const PlumberMockup = () => {
             {["Emergency pipe repair — Grosse Pointe Woods", "Full water heater replacement — St. Clair Shores"].map((label) => (
               <div key={label} className="rounded-xl overflow-hidden" style={{ background: "#0f2035", border: "1px solid #1e3a5f" }}>
                 <div className="grid grid-cols-2">
-                  <div className="aspect-[4/3] flex items-center justify-center text-sm font-bold" style={{ background: "#162d4a", color: "#475569" }}>BEFORE</div>
-                  <div className="aspect-[4/3] flex items-center justify-center text-sm font-bold" style={{ background: "#1a3854", color: "#475569" }}>AFTER</div>
+                  <img src="https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=600&q=80" alt="Corroded pipe before repair" className="w-full object-cover" style={{ aspectRatio: "4/3" }} />
+                  <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80" alt="Clean copper pipe after repair" className="w-full object-cover" style={{ aspectRatio: "4/3" }} />
                 </div>
                 <p className="text-xs text-center py-3" style={{ color: "#64748b" }}>{label}</p>
               </div>
@@ -149,14 +155,20 @@ const PlumberMockup = () => {
         </div>
       </RevealSection>
 
-      {/* Social Proof */}
+      {/* Testimonials */}
       <RevealSection className="py-12 px-6" style={{ background: "#0b1929" }}>
-        <div className="max-w-3xl mx-auto text-center">
-          <div className="flex justify-center gap-1 mb-3">
-            {[...Array(5)].map((_, i) => <Star key={i} size={20} fill="#facc15" color="#facc15" />)}
+        <div className="max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-6">
+            {testimonials.map(t => (
+              <div key={t.attr} className="rounded-xl p-6" style={{ background: "#0f2035", border: "1px solid #1e3a5f" }}>
+                <div className="flex justify-center gap-1 mb-3">
+                  {[...Array(5)].map((_, i) => <Star key={i} size={14} fill="#dc2626" color="#dc2626" />)}
+                </div>
+                <p className="italic text-sm text-white/70 mb-2">"{t.text}"</p>
+                <p className="text-xs" style={{ color: "#475569" }}>{t.attr}</p>
+              </div>
+            ))}
           </div>
-          <p className="italic text-base text-white/70 mb-2">"Called at midnight with a burst pipe. They were at my house in 30 minutes. Couldn't believe it."</p>
-          <p className="text-sm" style={{ color: "#475569" }}>— Homeowner, Grosse Pointe Park</p>
         </div>
       </RevealSection>
 
