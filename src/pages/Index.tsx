@@ -2,7 +2,7 @@ import { lazy, Suspense } from "react";
 import AppNavbar from "@/components/layout/AppNavbar";
 import HeroSection from "@/components/features/HeroSection";
 import SEOHead from "@/components/layout/SEOHead";
-
+import LocalTopBar from "@/components/landing/LocalTopBar";
 
 const ChallengeTeaser = lazy(() => import("@/components/landing/ChallengeTeaser"));
 const DoNotPressButton = lazy(() => import("@/components/landing/DoNotPressButton"));
@@ -61,6 +61,7 @@ const Index = () => (
       dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_SCHEMA) }}
     />
     <AppNavbar />
+    <LocalTopBar />
     <HeroSection />
     <div className="container py-12 max-w-xl mx-auto space-y-8">
       <Suspense fallback={null}>
