@@ -1,65 +1,105 @@
 
 
-# Plan: Community Features Visibility on Dashboard
+# Plan: Instagram Feed + Content Generator
 
-## Overview
-Three changes to make the dashboard feel more alive and social: a leaderboard preview on the home tab, a "Train with Someone" invite card with native share, and a community activity feed.
+## Part 1 — Instagram Feed (Supabase-backed)
 
-## Database Migration
+### Database Migration
 
-Add two columns:
+Create `instagram_posts` table:
 ```sql
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS invite_card_dismissed BOOLEAN DEFAULT FALSE;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS is_public_profile BOOLEAN DEFAULT FALSE;
+CREATE TABLE public.instagram_posts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  image_url TEXT NOT NULL,
+  caption TEXT,
+  post_url TEXT NOT NULL,
+  likes_count INTEGER DEFAULT 0,
+  posted_at TIMESTAMPTZ DEFAULT now(),
+  active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE public.instagram_posts ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public read active posts" ON public.instagram_posts FOR SELECT USING (active = true);
+CREATE POLICY "Admins full access" ON public.instagram_posts FOR ALL TO authenticated USING (public.has_role(auth.uid(), 'admin')) WITH CHECK (public.has_role(auth.uid(), 'admin'));
 ```
 
-## Change 1 — Challenge Leaderboard Preview on Dashboard Home
+Create `content_queue` table (for Prompt 6):
+```sql
+CREATE TABLE public.content_queue (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  content_type TEXT NOT NULL,
+  caption TEXT NOT NULL,
+  hashtags TEXT,
+  status TEXT DEFAULT 'draft',
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE public.content_queue ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Admins full access" ON public.content_queue FOR ALL TO authenticated USING (public.has_role(auth.uid(), 'admin')) WITH CHECK (public.has_role(auth.uid(), 'admin'));
+```
 
-**New component: `src/components/dashboard/DashboardChallengePreview.tsx`**
+### Upgrade InstagramSocialBox
 
-- Fetches the active monthly challenge + top 3 public participants (reusing the same query pattern from ChallengeHub)
-- Shows a compact card: challenge title, top 3 names/scores with rank medals (🏆🥈🥉), and a "View Full Leaderboard →" button that switches to the Challenge tab
-- If no active challenge, renders nothing
-- Receives `onViewChallenge` prop to switch tabs
+**Modify `src/components/landing/InstagramSocialBox.tsx`**:
+- Fetch from `instagram_posts` (active, ordered by `posted_at desc`, limit 6)
+- Fall back to existing hardcoded posts if no DB data
+- Keep existing grid layout (3-col, hover overlay with caption truncated to 100 chars)
+- Each card links to `post_url` in new tab
 
-**Modify `DashboardHome.tsx`**: Add `<DashboardChallengePreview />` after `<MonthlyFocusWidget />`, pass `onViewPoints` as the tab-switch callback.
+### Admin Instagram Manager
 
-## Change 2 — "Train with Someone" Invite Card
+**New file: `src/components/admin/AdminInstagramPosts.tsx`**:
+- Form to add posts (image_url, caption, post_url, posted_at)
+- List existing posts with active/inactive toggle
+- Delete button
 
-**Replace `DashboardReferralCard.tsx`** with upgraded version:
+### Admin Integration
 
-- Full card with title "Train with Someone You Know", body text about accountability, and "Send an Invite" button
-- Button uses `navigator.share()` with fallback to clipboard copy
-- Dismissible via X button → updates `profiles.invite_card_dismissed = true` in database
-- When dismissed, renders a compact "Invite →" text link instead of the full card
-- Fetches `invite_card_dismissed` from the profile on mount
+**Modify `src/pages/Admin.tsx`**:
+- Add `AdminInstagramPosts` as a sub-tab under "Site Content" (after Media Vault)
 
-**Position in `DashboardHome.tsx`**: Move above `<CustomProgramRequest />` (near top of dashboard, below empty state).
+### Homepage & Results Integration
 
-## Change 3 — Community Activity Feed
+Already done — `InstagramSocialBox` is already used on the Results page. Add it to `Index.tsx` as a "Follow Along" section near the bottom of the content area.
 
-**New component: `src/components/dashboard/CommunityActivityFeed.tsx`**
+---
 
-- Queries last 3 `progress_logs` from other users who have `is_public_profile = true` in profiles, joined with profiles for name/alias
-- Each entry: "[Name] logged [exercise_name] · [X hours ago]"
-- Respects privacy: uses `random_alias` if `show_name` is false
-- If no public logs, shows nothing (no empty state — avoids ghost town feel)
-- Placed in `DashboardHome.tsx` after the invite card, before main content
+## Part 2 — Instagram Content Generator (Admin Tool)
 
-## Files Changed
+### Edge Function
+
+**New file: `supabase/functions/generate-instagram-content/index.ts`**:
+- Accepts `{ content_type, inputs? }` — uses Lovable AI Gateway
+- 5 system prompts mapped to content types: `authority`, `client_win`, `youth_athlete`, `app_feature`, `studio_community`
+- `client_win` accepts inputs: exercise, before, after, weeks, clientType
+- `app_feature` accepts input: featureName
+- Returns `{ caption, hashtags }`
+
+### Admin Content Tab
+
+**New file: `src/components/admin/AdminContentGenerator.tsx`**:
+- 5 content type buttons (Authority Post, Client Win, Youth Athlete, App Feature, Studio/Community)
+- Client Win shows input form before generating (exercise, before/after weight, weeks, type)
+- App Feature shows dropdown (AI Generator, PR Tracking, Form Checks, etc.)
+- Generated output shows in Instagram-style preview card
+- Two actions: "Copy Caption" (clipboard) and "Save to Queue" (inserts into `content_queue`)
+- Below: Queue view listing all drafts with "Mark as Posted" button
+
+### Admin Integration
+
+**Modify `src/pages/Admin.tsx`**:
+- Add to the "Growth" master tab as new sub-tabs: "Content Generator" and "Instagram"
+
+---
+
+## Files Summary
 
 | File | Action |
 |------|--------|
-| Migration SQL | Add `invite_card_dismissed` and `is_public_profile` to profiles |
-| `src/components/dashboard/DashboardChallengePreview.tsx` | Create — compact leaderboard card |
-| `src/components/dashboard/CommunityActivityFeed.tsx` | Create — activity feed |
-| `src/components/dashboard/DashboardReferralCard.tsx` | Rewrite — dismissible invite card with native share |
-| `src/components/dashboard/DashboardHome.tsx` | Add new components, reorder layout |
-
-## Technical Details
-
-- No new RLS policies needed — profiles already has user-scoped RLS; the activity feed query joins `progress_logs` (which has public read for opted-in users) with profiles
-- The `is_public_profile` column defaults to `false` — users opt in via their profile/privacy settings
-- Challenge preview reuses the existing `challenge_participants` + `monthly_challenges` tables
-- Native share API: `navigator.share({ title, text, url })` with `navigator.clipboard.writeText` fallback
+| Migration SQL | Create `instagram_posts` + `content_queue` tables with RLS |
+| `src/components/landing/InstagramSocialBox.tsx` | Modify — fetch from DB with hardcoded fallback |
+| `src/pages/Index.tsx` | Add InstagramSocialBox section |
+| `src/components/admin/AdminInstagramPosts.tsx` | Create — CRUD for instagram posts |
+| `src/components/admin/AdminContentGenerator.tsx` | Create — AI content generator + queue |
+| `supabase/functions/generate-instagram-content/index.ts` | Create — Lovable AI edge function |
+| `src/pages/Admin.tsx` | Add Instagram + Content Generator sub-tabs to Growth |
 
