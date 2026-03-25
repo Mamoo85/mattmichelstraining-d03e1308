@@ -105,10 +105,13 @@ const AdminViewUser = () => {
         {/* Content */}
         <Suspense fallback={<TabLoader />}>
           {activeTab === "progress" && userId && (
-            <ProgressCharts overrideUserId={userId} />
+            <ProgressCharts targetUserId={userId} targetUserName={displayName} />
           )}
-          {activeTab === "programs" && userId && (
-            <MyPrograms overrideUserId={userId} />
+          {activeTab === "programs" && (
+            <div className="text-center py-8">
+              <Dumbbell size={24} className="mx-auto text-muted-foreground/30 mb-2" />
+              <p className="text-xs text-muted-foreground">Programs view — navigate to admin roster for full program management.</p>
+            </div>
           )}
         </Suspense>
       </div>
