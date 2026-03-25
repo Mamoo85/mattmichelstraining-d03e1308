@@ -70,6 +70,8 @@ const AdminSeoGenerator = lazy(() => import("@/components/admin/AdminSeoGenerato
 const AdminOutreach = lazy(() => import("@/components/admin/AdminOutreach"));
 const AdminSeoPages = lazy(() => import("@/components/admin/AdminSeoPages"));
 const AdminGbpPosts = lazy(() => import("@/components/admin/AdminGbpPosts"));
+const AdminInstagramPosts = lazy(() => import("@/components/admin/AdminInstagramPosts"));
+const AdminContentGenerator = lazy(() => import("@/components/admin/AdminContentGenerator"));
 
 const MASTER_TABS = [
   { key: "roster", label: "The Roster", icon: Users, desc: "Users · Support · Families" },
@@ -397,6 +399,8 @@ const Admin = () => {
             { key: "outreach", label: "Outreach", content: <AdminOutreach /> },
             { key: "seo-pages", label: "SEO Pages", content: <AdminSeoPages /> },
             { key: "gbp", label: "GBP Posts", content: <AdminGbpPosts /> },
+            { key: "instagram", label: "Instagram", content: <AdminInstagramPosts /> },
+            { key: "content-gen", label: "Content Generator", content: <AdminContentGenerator /> },
           ]} />
         )}
       </div>
