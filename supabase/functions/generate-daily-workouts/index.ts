@@ -249,7 +249,7 @@ STYLE-SPECIFIC GUIDANCE:
 - Density Block: Fixed time block, max quality reps. Track total volume. Great for hypertrophy.
 
 EQUIPMENT CONSTRAINTS:
-- Full Gym: barbells, dumbbells, kettlebells, pull-up bars, cables, boxes, bands, medicine balls, sleds, TRX
+- Full Gym: barbells, dumbbells, kettlebells, pull-up bars, cables, boxes, bands, medicine balls, TRX
 - Dumbbells/Kettlebells Only: DB/KB movements only — get creative with loading positions and complexes
 - Bodyweight Only: no equipment — use tempo manipulation, isometric holds, unilateral progressions, and plyometrics to create challenge
 - Barbell + Rack: barbell, squat rack, bench — classic strength setup
