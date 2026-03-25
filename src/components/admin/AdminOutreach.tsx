@@ -59,7 +59,7 @@ function getEmailTemplate(lead: Lead): { subject: string; body: string } {
     MedSpa: "https://mattmichelstraining.com/demo-clinic",
   };
   const demo = demoMap[lead.industry ?? ""] ?? "https://mattmichelstraining.com/detroit-web-design";
-  const signature = `Matt Michels\nGrosse Pointe Park, MI\n📱 313.806.4952\nmatthew.michels4@gmail.com`;
+  const signature = `Matt Michels\nGrosse Pointe Park, MI\n📱 313.806.4952\nmatthew.michels4@gmail.com\n\nSee exactly what's included: https://mattmichelstraining.com/whats-included`;
 
   if (lead.website_status === "None") {
     return {
