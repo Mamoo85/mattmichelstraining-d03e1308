@@ -54,7 +54,7 @@ const AppNavbar = () => {
   const isSecondaryActive = secondaryNav.some((n) => location.pathname === n.to);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm shadow-m2">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm shadow-m2 pt-[env(safe-area-inset-top)]">
       <div className="container flex items-center justify-between h-14">
         {/* Logo / Timer toggle — timer on portal screens */}
         {user && ["/dashboard", "/progress", "/coach", "/nutrition", "/profile"].includes(location.pathname) ? (
