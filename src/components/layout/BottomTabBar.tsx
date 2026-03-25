@@ -2,7 +2,8 @@ import { memo, useState, useCallback, lazy, Suspense } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Home, Dumbbell, ShoppingBag, CalendarClock, MoreHorizontal,
-  User, Users, CreditCard, Cpu, Download, LogIn, LogOut, Shield, Timer,
+  User, LogIn, LogOut, Shield, Timer, Instagram,
+  Trophy, CreditCard, Sparkles, ShoppingCart, Users, Building2, Globe,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -17,6 +18,8 @@ import {
 
 const IntervalTimer = lazy(() => import("@/components/workout/IntervalTimer"));
 
+const INSTAGRAM_URL = "https://www.instagram.com/m2training";
+
 const TABS = [
   { to: "/", label: "Home", icon: Home },
   { to: "/dashboard", label: "Portal", icon: Dumbbell },
@@ -24,20 +27,48 @@ const TABS = [
   { to: "/schedule", label: "Schedule", icon: CalendarClock },
 ] as const;
 
-const MORE_LINKS = [
-  { to: "/about", label: "About", icon: User },
-  { to: "/for-parents", label: "Parents", icon: Users },
-  { to: "/pricing", label: "Pricing", icon: CreditCard },
-  { to: "/the-edge", label: "Technology", icon: Cpu },
-  { to: "/install", label: "Install App", icon: Download },
+interface SectionLink {
+  to: string;
+  label: string;
+  icon: typeof Home;
+}
+
+const CLIENT_LINKS: SectionLink[] = [
+  { to: "/dashboard", label: "Dashboard", icon: Dumbbell },
+  { to: "/progress", label: "Progress", icon: Trophy },
+  { to: "/schedule", label: "Schedule", icon: CalendarClock },
 ];
+
+const TRAIN_LINKS: SectionLink[] = [
+  { to: "/schedule", label: "In-Person Training", icon: CalendarClock },
+  { to: "/pricing", label: "Online Coaching", icon: CreditCard },
+  { to: "/for-parents", label: "For Parents", icon: Users },
+  { to: "/results", label: "Results", icon: Trophy },
+];
+
+const APP_LINKS: SectionLink[] = [
+  { to: "/pricing", label: "Pricing & Plans", icon: CreditCard },
+  { to: "/auth?redirect=/trial-welcome", label: "Free Trial", icon: Sparkles },
+  { to: "/merch", label: "Merch", icon: ShoppingCart },
+];
+
+const STUDIO_LINKS: SectionLink[] = [
+  { to: "/studio-rental", label: "Studio Rental", icon: Building2 },
+  { to: "/detroit-web-design", label: "Web Design", icon: Globe },
+];
+
+const SectionHeader = ({ title }: { title: string }) => (
+  <p className="px-5 pt-4 pb-1 text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
+    {title}
+  </p>
+);
 
 const BottomTabBar = () => {
   const location = useLocation();
   const { user, signOut } = useAuth();
   const { isAdmin } = useIsAdmin();
   const { toggleTimer, timerOpen, closeTimer } = useTimer();
-  
+
   const [moreOpen, setMoreOpen] = useState(false);
 
   const handleSignOut = useCallback(() => {
@@ -50,8 +81,30 @@ const BottomTabBar = () => {
     toggleTimer();
   }, [toggleTimer]);
 
-  const isMoreActive = MORE_LINKS.some((l) => location.pathname === l.to) ||
-    location.pathname === "/admin" || location.pathname === "/auth";
+  const allMorePaths = [
+    ...CLIENT_LINKS, ...TRAIN_LINKS, ...APP_LINKS, ...STUDIO_LINKS,
+  ].map((l) => l.to);
+  const isMoreActive =
+    allMorePaths.includes(location.pathname) ||
+    location.pathname === "/admin" ||
+    location.pathname === "/auth";
+
+  const renderLink = ({ to, label, icon: Icon }: SectionLink) => {
+    const active = location.pathname === to;
+    return (
+      <Link
+        key={to + label}
+        to={to}
+        onClick={() => setMoreOpen(false)}
+        className={`flex items-center gap-3 px-5 py-3 transition-colors ${
+          active ? "text-primary bg-primary/5" : "text-foreground hover:bg-muted"
+        }`}
+      >
+        <Icon size={16} strokeWidth={1.5} className={active ? "text-primary" : "text-muted-foreground"} />
+        <span className="text-sm font-semibold">{label}</span>
+      </Link>
+    );
+  };
 
   return (
     <>
@@ -82,7 +135,6 @@ const BottomTabBar = () => {
             );
           })}
 
-          {/* More tab */}
           <button
             onClick={() => setMoreOpen((v) => !v)}
             className={`flex flex-col items-center justify-center flex-1 gap-0.5 transition-colors relative ${
@@ -98,72 +150,80 @@ const BottomTabBar = () => {
         </div>
       </nav>
 
-      {/* More sheet */}
       <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
-        <SheetContent side="bottom" className="bg-background border-t border-border rounded-t-2xl px-0 pb-20">
+        <SheetContent side="bottom" className="bg-background border-t border-border rounded-t-2xl px-0 pb-20 max-h-[80vh] overflow-y-auto">
           <SheetHeader className="px-5 pb-3 border-b border-border">
             <SheetTitle className="text-xs font-bold uppercase tracking-widest text-foreground">More</SheetTitle>
           </SheetHeader>
-          <div className="pt-2">
-            {/* Timer button */}
-            <button
-              onClick={handleTimerClick}
-              className="flex items-center gap-3 px-5 py-3.5 transition-colors text-foreground hover:bg-muted w-full"
+
+          {/* Timer */}
+          <button
+            onClick={handleTimerClick}
+            className="flex items-center gap-3 px-5 py-3 transition-colors text-foreground hover:bg-muted w-full"
+          >
+            <Timer size={16} strokeWidth={1.5} className="text-muted-foreground" />
+            <span className="text-sm font-semibold">Interval Timer</span>
+          </button>
+
+          {user && (
+            <>
+              <SectionHeader title="For Clients" />
+              {CLIENT_LINKS.map(renderLink)}
+            </>
+          )}
+
+          <SectionHeader title="Train with Matt" />
+          {TRAIN_LINKS.map(renderLink)}
+
+          <SectionHeader title="The App" />
+          {APP_LINKS.map(renderLink)}
+
+          <SectionHeader title="Studio & Partners" />
+          {STUDIO_LINKS.map(renderLink)}
+
+          {/* Instagram */}
+          <a
+            href={INSTAGRAM_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 px-5 py-3 text-foreground hover:bg-muted transition-colors"
+          >
+            <Instagram size={16} strokeWidth={1.5} className="text-muted-foreground" />
+            <span className="text-sm font-semibold">Instagram</span>
+          </a>
+
+          {isAdmin && (
+            <Link
+              to="/admin"
+              onClick={() => setMoreOpen(false)}
+              className={`flex items-center gap-3 px-5 py-3 transition-colors ${
+                location.pathname === "/admin" ? "text-primary bg-primary/5" : "text-foreground hover:bg-muted"
+              }`}
             >
-              <Timer size={18} strokeWidth={1.5} className="text-muted-foreground" />
-              <span className="text-sm font-semibold">Interval Timer</span>
-            </button>
+              <Shield size={16} strokeWidth={1.5} className={location.pathname === "/admin" ? "text-primary" : "text-muted-foreground"} />
+              <span className="text-sm font-semibold">Admin</span>
+            </Link>
+          )}
 
-            {MORE_LINKS.map(({ to, label, icon: Icon }) => {
-              const active = location.pathname === to;
-              return (
-                <Link
-                  key={to}
-                  to={to}
-                  onClick={() => setMoreOpen(false)}
-                  className={`flex items-center gap-3 px-5 py-3.5 transition-colors ${
-                    active ? "text-primary bg-primary/5" : "text-foreground hover:bg-muted"
-                  }`}
-                >
-                  <Icon size={18} strokeWidth={1.5} className={active ? "text-primary" : "text-muted-foreground"} />
-                  <span className="text-sm font-semibold">{label}</span>
-                </Link>
-              );
-            })}
-
-            {isAdmin && (
-              <Link
-                to="/admin"
-                onClick={() => setMoreOpen(false)}
-                className={`flex items-center gap-3 px-5 py-3.5 transition-colors ${
-                  location.pathname === "/admin" ? "text-primary bg-primary/5" : "text-foreground hover:bg-muted"
-                }`}
+          <div className="border-t border-border mt-2 pt-2">
+            {user ? (
+              <button
+                onClick={handleSignOut}
+                className="flex items-center gap-3 px-5 py-3 text-foreground hover:bg-muted transition-colors w-full"
               >
-                <Shield size={18} strokeWidth={1.5} className={location.pathname === "/admin" ? "text-primary" : "text-muted-foreground"} />
-                <span className="text-sm font-semibold">Admin</span>
+                <LogOut size={16} strokeWidth={1.5} className="text-muted-foreground" />
+                <span className="text-sm font-semibold">Log Out</span>
+              </button>
+            ) : (
+              <Link
+                to="/auth"
+                onClick={() => setMoreOpen(false)}
+                className="flex items-center gap-3 px-5 py-3 text-primary hover:bg-primary/5 transition-colors"
+              >
+                <LogIn size={16} strokeWidth={1.5} />
+                <span className="text-sm font-semibold">Log In</span>
               </Link>
             )}
-
-            <div className="border-t border-border mt-2 pt-2">
-              {user ? (
-                <button
-                  onClick={handleSignOut}
-                  className="flex items-center gap-3 px-5 py-3.5 text-foreground hover:bg-muted transition-colors w-full"
-                >
-                  <LogOut size={18} strokeWidth={1.5} className="text-muted-foreground" />
-                  <span className="text-sm font-semibold">Log Out</span>
-                </button>
-              ) : (
-                <Link
-                  to="/auth"
-                  onClick={() => setMoreOpen(false)}
-                  className="flex items-center gap-3 px-5 py-3.5 text-primary hover:bg-primary/5 transition-colors"
-                >
-                  <LogIn size={18} strokeWidth={1.5} />
-                  <span className="text-sm font-semibold">Log In</span>
-                </Link>
-              )}
-            </div>
           </div>
         </SheetContent>
       </Sheet>

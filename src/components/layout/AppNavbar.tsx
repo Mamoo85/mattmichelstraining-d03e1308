@@ -2,7 +2,7 @@ import { memo, useState, useCallback, useRef, useEffect, lazy, Suspense } from "
 import { Link, useLocation } from "react-router-dom";
 import {
   Dumbbell, ShoppingBag, Home, LogIn, LogOut, Shield,
-  CreditCard, Users, User, Download, CalendarClock, ChevronDown, Cpu, Timer,
+  CalendarClock, ChevronDown, User, Download, Timer, Instagram,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -11,54 +11,93 @@ import m2Logo from "@/assets/m2-logo.jpg";
 const NotificationBell = lazy(() => import("./NotificationBell"));
 const IntervalTimer = lazy(() => import("@/components/workout/IntervalTimer"));
 
-const primaryNav = [
-  { to: "/", label: "HOME", icon: Home },
-  { to: "/dashboard", label: "PORTAL", icon: Dumbbell },
-  { to: "/shop", label: "SHOP", icon: ShoppingBag },
-  { to: "/schedule", label: "SCHEDULE", icon: CalendarClock },
-  { to: "/the-edge", label: "TECHNOLOGY", icon: Cpu },
+const INSTAGRAM_URL = "https://www.instagram.com/m2training";
+
+interface DropdownItem { to: string; label: string; external?: boolean }
+
+const trainLinks: DropdownItem[] = [
+  { to: "/schedule", label: "In-Person" },
+  { to: "/pricing", label: "Online Coaching" },
+  { to: "/for-parents", label: "For Parents" },
 ];
 
-const secondaryNav = [
-  { to: "/about", label: "ABOUT", icon: User },
-  { to: "/for-parents", label: "PARENTS", icon: Users },
-  { to: "/pricing", label: "PRICING", icon: CreditCard },
-  { to: "/results", label: "RESULTS", icon: Dumbbell },
-  { to: "/studio-rental", label: "STUDIO", icon: Home },
+const appLinks: DropdownItem[] = [
+  { to: "/pricing", label: "Pricing" },
+  { to: "/auth?redirect=/trial-welcome", label: "Free Trial" },
+  { to: "/the-edge", label: "Features" },
 ];
 
+const NavDropdown = ({
+  label,
+  items,
+  active,
+}: {
+  label: string;
+  items: DropdownItem[];
+  active: boolean;
+}) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const location = useLocation();
 
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    if (open) document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  useEffect(() => { setOpen(false); }, [location.pathname]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className={`flex items-center gap-1 px-2.5 py-2 text-[11px] font-bold uppercase tracking-widest transition-m2 ${
+          active || open ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+        }`}
+      >
+        {label}
+        <ChevronDown size={12} className={`transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="absolute top-full right-0 mt-1 w-44 bg-background border border-border shadow-m2 z-50">
+          {items.map(({ to, label: l }) => {
+            const isActive = location.pathname === to;
+            return (
+              <Link
+                key={to + l}
+                to={to}
+                className={`flex items-center gap-2 px-4 py-3 text-[11px] font-bold uppercase tracking-widest transition-m2 ${
+                  isActive ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {l}
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const AppNavbar = () => {
   const location = useLocation();
-  const [moreOpen, setMoreOpen] = useState(false);
-  const moreRef = useRef<HTMLDivElement>(null);
   const { user, signOut } = useAuth();
   const { isAdmin } = useIsAdmin();
   const { portalActive, toggleTimer } = useTimer();
 
-  // Close "More" dropdown on outside click
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
-        setMoreOpen(false);
-      }
-    };
-    if (moreOpen) document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [moreOpen]);
-
-  // Close more dropdown on route change
-  useEffect(() => { setMoreOpen(false); }, [location.pathname]);
-
   if (portalActive) return null;
 
-  const isSecondaryActive = secondaryNav.some((n) => location.pathname === n.to);
+  const trainActive = trainLinks.some((l) => location.pathname === l.to);
+  const appActive = appLinks.some((l) => location.pathname === l.to);
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm shadow-m2 pt-[env(safe-area-inset-top)]">
       <div className="container flex items-center justify-between h-14">
-        {/* Logo / Timer toggle — timer on portal screens */}
+        {/* Logo / Timer toggle */}
         {user && ["/dashboard", "/progress", "/coach", "/nutrition", "/profile"].includes(location.pathname) ? (
           <button
             onClick={toggleTimer}
@@ -76,56 +115,36 @@ const AppNavbar = () => {
 
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-0.5">
-          {/* Primary tabs — always visible */}
-          {primaryNav.map(({ to, label, icon: Icon }) => {
-            const active = location.pathname === to;
-            return (
-              <Link
-                key={to}
-                to={to}
-                className={`flex items-center gap-1 px-2.5 py-2 text-[11px] font-bold uppercase tracking-widest transition-m2 ${
-                  active ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <Icon size={14} />
-                {label}
-              </Link>
-            );
-          })}
+          <NavDropdown label="Train" items={trainLinks} active={trainActive} />
+          <NavDropdown label="The App" items={appLinks} active={appActive} />
 
-          {/* "More" dropdown for secondary tabs */}
-          <div ref={moreRef} className="relative">
-            <button
-              onClick={() => setMoreOpen((v) => !v)}
-              className={`flex items-center gap-1 px-2.5 py-2 text-[11px] font-bold uppercase tracking-widest transition-m2 ${
-                isSecondaryActive || moreOpen
-                  ? "text-primary bg-primary/10"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              MORE
-              <ChevronDown size={12} className={`transition-transform ${moreOpen ? "rotate-180" : ""}`} />
-            </button>
-            {moreOpen && (
-              <div className="absolute top-full right-0 mt-1 w-44 bg-background border border-border shadow-m2 z-50">
-                {secondaryNav.map(({ to, label, icon: Icon }) => {
-                  const active = location.pathname === to;
-                  return (
-                    <Link
-                      key={to}
-                      to={to}
-                      className={`flex items-center gap-2 px-4 py-3 text-[11px] font-bold uppercase tracking-widest transition-m2 ${
-                        active ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      <Icon size={14} />
-                      {label}
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+          <Link
+            to="/results"
+            className={`flex items-center gap-1 px-2.5 py-2 text-[11px] font-bold uppercase tracking-widest transition-m2 ${
+              location.pathname === "/results" ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Results
+          </Link>
+
+          <Link
+            to="/studio-rental"
+            className={`flex items-center gap-1 px-2.5 py-2 text-[11px] font-bold uppercase tracking-widest transition-m2 ${
+              location.pathname === "/studio-rental" ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Studio
+          </Link>
+
+          <a
+            href={INSTAGRAM_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-2 py-2 text-muted-foreground hover:text-primary transition-m2"
+            aria-label="Instagram"
+          >
+            <Instagram size={16} />
+          </a>
 
           {isAdmin && (
             <Link
@@ -135,7 +154,7 @@ const AppNavbar = () => {
               }`}
             >
               <Shield size={14} />
-              ADMIN
+              Admin
             </Link>
           )}
 
@@ -149,13 +168,20 @@ const AppNavbar = () => {
 
           {user && <Suspense fallback={null}><NotificationBell /></Suspense>}
 
+          {/* Schedule CTA */}
+          <Link
+            to="/schedule"
+            className="ml-1 px-4 py-2 text-[11px] font-bold uppercase tracking-widest rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-m2"
+          >
+            Schedule
+          </Link>
+
           {user ? (
             <button
               onClick={signOut}
               className="flex items-center gap-1 px-2.5 py-2 text-[11px] font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-m2"
             >
               <LogOut size={14} />
-              LOGOUT
             </button>
           ) : (
             <Link
@@ -163,12 +189,12 @@ const AppNavbar = () => {
               className="flex items-center gap-1 px-2.5 py-2 text-[11px] font-bold uppercase tracking-widest text-primary hover:opacity-80 transition-m2"
             >
               <LogIn size={14} />
-              LOGIN
+              Login
             </Link>
           )}
         </div>
 
-        {/* Mobile: bell + avatar — hamburger removed, bottom tab bar replaces it */}
+        {/* Mobile: bell + avatar */}
         <div className="md:hidden flex items-center gap-2">
           {user && <Suspense fallback={null}><NotificationBell /></Suspense>}
           {user ? (
