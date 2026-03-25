@@ -39,12 +39,10 @@ const AdminCustomRequests = () => {
   const queryClient = useQueryClient();
   const [generating, setGenerating] = useState<string | null>(null);
   const [approving, setApproving] = useState<string | null>(null);
-  const [confirmApprove, setConfirmApprove] = useState<{ id: string; programId: string; userId: string } | null>(null);
+  const [confirmApprove, setConfirmApprove] = useState<{ id: string; workoutId: string; userId: string } | null>(null);
 
   // Manual AI generation params (for sparse intakes)
-  const [manualParams, setManualParams] = useState<Record<string, {
-    category: string; level: string; sport: string; weeks: string; daysPerWeek: string; description: string;
-  }>>({});
+  const [manualParams, setManualParams] = useState<Record<string, { description: string }>>({});
 
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ["admin-custom-requests"],
@@ -59,18 +57,25 @@ const AdminCustomRequests = () => {
     refetchInterval: 15_000,
   });
 
-  const getManualParams = (id: string) =>
-    manualParams[id] || { category: "General", level: "Beginner", sport: "", weeks: "8", daysPerWeek: "3", description: "" };
-
-  const updateManualParam = (id: string, field: string, value: string) => {
-    setManualParams((prev) => ({
-      ...prev,
-      [id]: { ...getManualParams(id), [field]: value },
-    }));
-  };
+  const getManualDesc = (id: string) => manualParams[id]?.description || "";
 
   const hasFilledIntake = (req: CustomRequest) => {
     return !!(req.goals || req.sport || req.experience || req.equipment);
+  };
+
+  /** Build a natural-language prompt from intake data for ai-workout-suggest */
+  const buildPromptFromIntake = (req: CustomRequest): string => {
+    const parts: string[] = [];
+    if (req.name) parts.push(`Athlete: ${req.name}`);
+    if (req.age) parts.push(`Age: ${req.age}`);
+    if (req.sport) parts.push(`Sport: ${req.sport}`);
+    if (req.experience) parts.push(`Experience: ${req.experience}`);
+    if (req.goals) parts.push(`Goals: ${req.goals}`);
+    if (req.equipment) parts.push(`Equipment: ${req.equipment}`);
+    if (req.injuries) parts.push(`Injuries/limitations: ${req.injuries}`);
+    if (req.days_per_week) parts.push(`Training ${req.days_per_week} days per week`);
+    if (req.additional_notes) parts.push(`Additional notes: ${req.additional_notes}`);
+    return parts.join(". ") + ". Build a complete custom training workout for this athlete.";
   };
 
   const handleGenerateAI = async (req: CustomRequest) => {
@@ -82,88 +87,50 @@ const AdminCustomRequests = () => {
         .update({ status: "generating" } as any)
         .eq("id", req.id);
 
-      // Build params from intake or manual input
+      // Build prompt from intake or manual description
       const filled = hasFilledIntake(req);
-      const params = filled
-        ? {
-            category: req.sport ? "Sport-Specific" : "General",
-            level: req.experience?.toLowerCase().includes("begin") ? "Beginner" : req.experience?.toLowerCase().includes("advanc") ? "Advanced" : "Intermediate",
-            sport: req.sport || "",
-            weeks: 8,
-            daysPerWeek: parseInt(req.days_per_week || "3") || 3,
-            description: [
-              req.goals && `Goals: ${req.goals}`,
-              req.equipment && `Equipment: ${req.equipment}`,
-              req.injuries && `Injuries/limitations: ${req.injuries}`,
-              req.age && `Age: ${req.age}`,
-              req.additional_notes && `Notes: ${req.additional_notes}`,
-            ].filter(Boolean).join(". "),
-            exercisesPerDay: 8,
-            explanationDetail: "detailed",
-            includeFixIt: true,
-            focusAreas: [],
-          }
-        : {
-            category: getManualParams(req.id).category,
-            level: getManualParams(req.id).level,
-            sport: getManualParams(req.id).sport,
-            weeks: parseInt(getManualParams(req.id).weeks) || 8,
-            daysPerWeek: parseInt(getManualParams(req.id).daysPerWeek) || 3,
-            description: getManualParams(req.id).description || `Custom program for ${req.name}`,
-            exercisesPerDay: 8,
-            explanationDetail: "detailed",
-            includeFixIt: true,
-            focusAreas: [],
-          };
+      const userText = filled
+        ? buildPromptFromIntake(req)
+        : getManualDesc(req.id) || `Build a custom workout program for ${req.name}`;
 
-      // Call the existing generate-program function
-      const { data, error } = await supabase.functions.invoke("generate-program", { body: params });
+      // Call ai-workout-suggest (the newest/only generator)
+      const { data, error } = await supabase.functions.invoke("ai-workout-suggest", {
+        body: {
+          mode: "dual-path",
+          path: "workout",
+          userText,
+        },
+      });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      // Save the generated program to training_programs
-      const { data: program, error: progError } = await supabase
-        .from("training_programs")
+      // Save the generated workout into the user's community_workouts library
+      const sourceType = "coach_seeded";
+      const { data: saved, error: saveErr } = await supabase
+        .from("community_workouts")
         .insert({
+          user_id: req.user_id,
           title: data.title || `Custom Program for ${req.name}`,
-          description: data.description || "Custom program",
-          category: params.category,
-          experience_level: params.level,
-          sport: params.sport || null,
-          weeks: params.weeks || 8,
-          days_per_week: params.daysPerWeek || 3,
-          is_purchasable: false,
-          created_by: (await supabase.auth.getUser()).data.user!.id,
-        } as any)
+          description: data.description || "Custom program built by Coach Matt",
+          creator_name: "Coach Matt",
+          is_public: false,
+          exercises: data.exercises || [],
+          source_type: sourceType,
+        })
         .select("id")
         .single();
-      if (progError) throw progError;
+      if (saveErr) throw saveErr;
 
-      // Insert workouts
-      if (data.workouts?.length > 0 && program?.id) {
-        const workouts = data.workouts.map((w: any, i: number) => ({
-          program_id: program.id,
-          week_number: w.week_number,
-          day_number: w.day_number,
-          exercise_id: w.exercise_id,
-          prescribed_sets_reps: w.prescribed_sets_reps,
-          coach_instructions: w.coach_instructions,
-          sort_order: w.sort_order ?? i,
-        }));
-        await supabase.from("program_workouts").insert(workouts);
-      }
-
-      // Update the request with the generated program ID
+      // Update the request with the generated workout ID
       await supabase
         .from("custom_program_requests" as any)
-        .update({ status: "ready_for_review", generated_program_id: program?.id } as any)
+        .update({ status: "ready_for_review", generated_program_id: saved?.id } as any)
         .eq("id", req.id);
 
-      toast.success(`Program generated: ${data.title}`);
+      toast.success(`Workout generated: ${data.title}`);
       queryClient.invalidateQueries({ queryKey: ["admin-custom-requests"] });
     } catch (e: any) {
       toast.error(e.message || "Generation failed");
-      // Revert status
       await supabase
         .from("custom_program_requests" as any)
         .update({ status: "pending" } as any)
@@ -175,32 +142,23 @@ const AdminCustomRequests = () => {
 
   const handleApprove = async (req: CustomRequest) => {
     if (!req.generated_program_id) {
-      toast.error("No program generated yet");
+      toast.error("No workout generated yet");
       return;
     }
-    setConfirmApprove({ id: req.id, programId: req.generated_program_id, userId: req.user_id });
+    setConfirmApprove({ id: req.id, workoutId: req.generated_program_id, userId: req.user_id });
   };
 
   const executeApproval = async () => {
     if (!confirmApprove) return;
     setApproving(confirmApprove.id);
     try {
-      // Assign program to user's library
-      await supabase.from("user_active_programs").insert({
-        user_id: confirmApprove.userId,
-        program_id: confirmApprove.programId,
-        current_week: 1,
-        current_day: 1,
-      } as any);
-
       // Mark request as approved
       await supabase
         .from("custom_program_requests" as any)
         .update({ status: "approved", reviewed_at: new Date().toISOString() } as any)
         .eq("id", confirmApprove.id);
 
-      // Mark free_program_redeemed on their profile (service role needed — use RPC or direct)
-      // Since we're admin, the trigger allows us to update
+      // Mark free_program_redeemed on their profile
       await supabase
         .from("profiles")
         .update({ free_program_redeemed: true } as any)
@@ -211,11 +169,11 @@ const AdminCustomRequests = () => {
         user_id: confirmApprove.userId,
         type: "custom_program_approved",
         title: "Your Custom Program is Ready!",
-        body: "Coach Matt approved your custom program — it's in your My Programs tab now.",
+        body: "Coach Matt built your custom workout — it's in your Workouts tab now.",
         link: "/dashboard",
       });
 
-      toast.success("Program approved and added to athlete's library!");
+      toast.success("Workout approved and delivered to the athlete!");
       queryClient.invalidateQueries({ queryKey: ["admin-custom-requests"] });
     } catch (e: any) {
       toast.error(e.message || "Approval failed");
@@ -249,7 +207,6 @@ const AdminCustomRequests = () => {
 
       {requests.map((req) => {
         const filled = hasFilledIntake(req);
-        const mp = getManualParams(req.id);
 
         return (
           <div key={req.id} className="bg-card border border-border p-4 space-y-3">
@@ -292,43 +249,23 @@ const AdminCustomRequests = () => {
               </div>
             )}
 
-            {/* Manual params for sparse intakes */}
+            {/* Manual description for sparse intakes */}
             {!filled && req.status === "pending" && (
               <div className="border-t border-border pt-3 space-y-2">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                  No intake details — fill in AI parameters:
+                  No intake details — describe the workout for AI:
                 </p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  <div>
-                    <label className="text-[9px] text-muted-foreground uppercase">Category</label>
-                    <Input value={mp.category} onChange={(e) => updateManualParam(req.id, "category", e.target.value)} className="h-8 text-xs" />
-                  </div>
-                  <div>
-                    <label className="text-[9px] text-muted-foreground uppercase">Level</label>
-                    <Input value={mp.level} onChange={(e) => updateManualParam(req.id, "level", e.target.value)} className="h-8 text-xs" />
-                  </div>
-                  <div>
-                    <label className="text-[9px] text-muted-foreground uppercase">Sport</label>
-                    <Input value={mp.sport} onChange={(e) => updateManualParam(req.id, "sport", e.target.value)} className="h-8 text-xs" />
-                  </div>
-                  <div>
-                    <label className="text-[9px] text-muted-foreground uppercase">Weeks</label>
-                    <Input value={mp.weeks} onChange={(e) => updateManualParam(req.id, "weeks", e.target.value)} className="h-8 text-xs" />
-                  </div>
-                  <div>
-                    <label className="text-[9px] text-muted-foreground uppercase">Days/Week</label>
-                    <Input value={mp.daysPerWeek} onChange={(e) => updateManualParam(req.id, "daysPerWeek", e.target.value)} className="h-8 text-xs" />
-                  </div>
-                </div>
-                <div>
-                  <label className="text-[9px] text-muted-foreground uppercase">Description / Notes for AI</label>
-                  <Textarea
-                    value={mp.description}
-                    onChange={(e) => updateManualParam(req.id, "description", e.target.value)}
-                    className="text-xs min-h-[50px]"
-                    placeholder="Any specific instructions for the AI..."
-                  />
-                </div>
+                <Textarea
+                  value={getManualDesc(req.id)}
+                  onChange={(e) =>
+                    setManualParams((prev) => ({
+                      ...prev,
+                      [req.id]: { description: e.target.value },
+                    }))
+                  }
+                  className="text-xs min-h-[60px]"
+                  placeholder="e.g., Build a 3-day full body program for a 16yo football player with access to a full gym. Focus on explosiveness and injury prevention."
+                />
               </div>
             )}
 
@@ -346,7 +283,7 @@ const AdminCustomRequests = () => {
                     ) : (
                       <Sparkles size={12} />
                     )}
-                    {generating === req.id ? "Generating…" : filled ? "Auto-Generate" : "Generate with Params"}
+                    {generating === req.id ? "Generating…" : "Generate Workout"}
                   </button>
                 )}
                 {req.status === "ready_for_review" && (
@@ -368,8 +305,8 @@ const AdminCustomRequests = () => {
       <ConfirmActionModal
         open={!!confirmApprove}
         onOpenChange={(open) => { if (!open) setConfirmApprove(null); }}
-        title="Approve Custom Program"
-        description="This will add the generated program to the athlete's library permanently and mark their free coupon as redeemed."
+        title="Approve Custom Workout"
+        description="This will notify the athlete that their custom workout is ready in their Workouts tab and mark their free coupon as redeemed."
         confirmLabel="Approve & Deliver"
         onConfirm={executeApproval}
       />
