@@ -12,7 +12,15 @@ interface PrintCommunityWorkoutData {
   creatorName: string;
   description?: string;
   exercises: PrintExerciseData[];
+  isFixIt?: boolean;
 }
+
+const FIX_IT_DISCLAIMER_HTML = `
+<div style="margin:12px 0;padding:10px 14px;border:1px solid #ddd;background:#f9f9f9;font-size:9px;line-height:1.6;color:#555;">
+  <strong style="color:#111;font-size:10px;">A note from Coach Matt:</strong>
+  These are the exact protocols I use with my in-person clients — but it's always trial and error. Every body is different. Pain and soreness are two very different things — don't be a wimp, but don't be an idiot either. That's why I built the Flag Matt system — I'm happy to help, change, or adjust anything. There's never one path to any goal. We find what works for <em>you</em>.
+  <span style="display:block;margin-top:4px;font-family:monospace;color:#333;">— Good on ya, legend. Now get after it. 🤙</span>
+</div>`;
 
 const esc = (s: string) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
 
@@ -116,6 +124,7 @@ export const printCommunityWorkout = (data: PrintCommunityWorkoutData) => {
       ${exerciseRows}
     </tbody>
   </table>
+  ${data.isFixIt ? FIX_IT_DISCLAIMER_HTML : ""}
   <div class="footer">Built by M² Training · www.mattmichelstraining.com</div>
 </body>
 </html>`);

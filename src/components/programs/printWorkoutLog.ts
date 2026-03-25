@@ -21,7 +21,15 @@ interface PrintProgramData {
   sport?: string | null;
   category?: string;
   weeks: PrintWeek[];
+  isFixIt?: boolean;
 }
+
+const FIX_IT_DISCLAIMER_HTML = `
+<div style="margin:10px 0;padding:8px 12px;border:1px solid #ddd;background:#f9f9f9;font-size:8px;line-height:1.5;color:#555;">
+  <strong style="color:#111;font-size:9px;">Coach Matt's note:</strong>
+  These are the exact protocols I use with my in-person clients — but it's always trial and error. Pain and soreness are two different things — don't be a wimp, but don't be an idiot either. Use the Flag Matt system if anything needs adjusting. There's never one path to any goal. We find what works for <em>you</em>.
+  <span style="display:block;margin-top:3px;font-family:monospace;color:#333;font-size:7px;">— Good on ya, legend. Now get after it. 🤙</span>
+</div>`;
 
 const esc = (s: string) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
 
@@ -89,6 +97,7 @@ export const printWorkoutLog = (program: PrintProgramData) => {
             ${exerciseRows(day.exercises)}
           </tbody>
         </table>
+        ${program.isFixIt ? FIX_IT_DISCLAIMER_HTML : ""}
         <div class="page-footer">M² Training · www.mattmichelstraining.com</div>
       </div>
     `

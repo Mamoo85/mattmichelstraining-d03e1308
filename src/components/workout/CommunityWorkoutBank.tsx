@@ -6,6 +6,7 @@ import { useFamilyUserIds } from "@/hooks/useFamilyUserIds";
 import { printCommunityWorkout } from "./printCommunityWorkout";
 import { toast } from "@/hooks/use-toast";
 import ConfirmActionModal from "@/components/shared/ConfirmActionModal";
+import FixItDisclaimer from "@/components/shared/FixItDisclaimer";
 
 interface CommunityExercise {
   title: string;
@@ -139,6 +140,7 @@ const CommunityWorkoutBank = ({ mode = "my", onCreateNew }: CommunityWorkoutBank
         reps: e.reps || "10",
         notes: e.notes || "",
       })),
+      isFixIt: workout.source_type === "ai_fixit",
     });
   };
 
@@ -204,6 +206,8 @@ const CommunityWorkoutBank = ({ mode = "my", onCreateNew }: CommunityWorkoutBank
           </button>
         )}
       </div>
+
+      {isFixIt && <FixItDisclaimer compact />}
 
       {/* Search */}
       <div className="flex items-center bg-card border border-border px-3 h-10">

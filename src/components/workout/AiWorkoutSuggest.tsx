@@ -7,6 +7,7 @@ import { toast } from "@/hooks/use-toast";
 import GymPhotoUpload from "@/components/generator/GymPhotoUpload";
 import { motion, AnimatePresence } from "framer-motion";
 import { printCommunityWorkout } from "./printCommunityWorkout";
+import FixItDisclaimer from "@/components/shared/FixItDisclaimer";
 
 interface GeneratedExercise {
   title: string;
@@ -116,6 +117,7 @@ const AiWorkoutSuggest = memo(({ onDone, initialPath }: { onDone: () => void; in
         reps: ex.reps,
         notes: ex.notes || "",
       })),
+      isFixIt: path === "fixit",
     });
   };
 
@@ -173,6 +175,8 @@ const AiWorkoutSuggest = memo(({ onDone, initialPath }: { onDone: () => void; in
           Close
         </button>
       </div>
+
+      {path === "fixit" && <FixItDisclaimer compact />}
 
       <AnimatePresence mode="wait">
         {!workout ? (
