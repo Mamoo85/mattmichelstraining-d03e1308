@@ -9,8 +9,8 @@ const SplashScreen = () => {
   const [show, setShow] = useState(() => !safeSessionStorage.getItem(SESSION_KEY));
 
   useEffect(() => {
-    // Remove the static HTML splash shell injected by Vite plugin
-    const shell = document.getElementById("splash-shell");
+    // Remove the static hero shell when React splash mounts
+    const shell = document.getElementById("hero-shell");
     if (shell) shell.remove();
 
     if (!show) return;
