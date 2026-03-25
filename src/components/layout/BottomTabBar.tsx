@@ -2,7 +2,7 @@ import { memo, useState, useCallback, lazy, Suspense } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Home, Dumbbell, ShoppingBag, CalendarClock, MoreHorizontal,
-  User, LogIn, LogOut, Shield, Timer, Instagram,
+  User, LogIn, LogOut, Shield, Timer, Instagram, Facebook,
   Trophy, CreditCard, Sparkles, ShoppingCart, Users, Building2, Globe,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -18,7 +18,8 @@ import {
 
 const IntervalTimer = lazy(() => import("@/components/workout/IntervalTimer"));
 
-const INSTAGRAM_URL = "https://www.instagram.com/m2training";
+const INSTAGRAM_URL = "https://www.instagram.com/mattmichelstraining/";
+const FACEBOOK_URL = "https://www.facebook.com/mattmichelstraining";
 
 const TABS = [
   { to: "/", label: "Home", icon: Home },
@@ -181,7 +182,7 @@ const BottomTabBar = () => {
           <SectionHeader title="Studio & Partners" />
           {STUDIO_LINKS.map(renderLink)}
 
-          {/* Instagram */}
+          {/* Social */}
           <a
             href={INSTAGRAM_URL}
             target="_blank"
@@ -190,6 +191,15 @@ const BottomTabBar = () => {
           >
             <Instagram size={16} strokeWidth={1.5} className="text-muted-foreground" />
             <span className="text-sm font-semibold">Instagram</span>
+          </a>
+          <a
+            href={FACEBOOK_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 px-5 py-3 text-foreground hover:bg-muted transition-colors"
+          >
+            <Facebook size={16} strokeWidth={1.5} className="text-muted-foreground" />
+            <span className="text-sm font-semibold">Facebook</span>
           </a>
 
           {isAdmin && (

@@ -2,7 +2,7 @@ import { memo, useState, useCallback, useRef, useEffect, lazy, Suspense } from "
 import { Link, useLocation } from "react-router-dom";
 import {
   Dumbbell, ShoppingBag, Home, LogIn, LogOut, Shield,
-  CalendarClock, ChevronDown, User, Download, Timer, Instagram,
+  CalendarClock, ChevronDown, User, Download, Timer, Instagram, Facebook,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -11,7 +11,8 @@ import m2Logo from "@/assets/m2-logo.jpg";
 const NotificationBell = lazy(() => import("./NotificationBell"));
 const IntervalTimer = lazy(() => import("@/components/workout/IntervalTimer"));
 
-const INSTAGRAM_URL = "https://www.instagram.com/m2training";
+const INSTAGRAM_URL = "https://www.instagram.com/mattmichelstraining/";
+const FACEBOOK_URL = "https://www.facebook.com/mattmichelstraining";
 
 interface DropdownItem { to: string; label: string; external?: boolean }
 
@@ -144,6 +145,16 @@ const AppNavbar = () => {
             aria-label="Instagram"
           >
             <Instagram size={16} />
+          </a>
+
+          <a
+            href={FACEBOOK_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-2 py-2 text-muted-foreground hover:text-primary transition-m2"
+            aria-label="Facebook"
+          >
+            <Facebook size={16} />
           </a>
 
           {isAdmin && (
