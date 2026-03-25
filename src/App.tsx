@@ -202,6 +202,7 @@ const App = () => (
                     <Route path="/learn" element={<Learn />} />
                     <Route path="/the-edge" element={<TheEdge />} />
                     <Route path="/matrix" element={<MatrixEasterEgg />} />
+                    <Route path="/matrix-merch" element={<MatrixMerch />} />
                     <Route path="/install" element={<Install />} />
                     <Route path="/free-ai-generator" element={<FreeAiGenerator />} />
                     <Route path="/training/:slug" element={<SEOLandingPage />} />
