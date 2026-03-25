@@ -1855,6 +1855,7 @@ export type Database = {
           is_in_person: boolean
           is_pro: boolean
           is_vip: boolean
+          random_alias: string | null
           referral_count: number | null
           stripe_customer_id: string | null
           subscription_tier: string
@@ -1879,6 +1880,7 @@ export type Database = {
           is_in_person?: boolean
           is_pro?: boolean
           is_vip?: boolean
+          random_alias?: string | null
           referral_count?: number | null
           stripe_customer_id?: string | null
           subscription_tier?: string
@@ -1903,6 +1905,7 @@ export type Database = {
           is_in_person?: boolean
           is_pro?: boolean
           is_vip?: boolean
+          random_alias?: string | null
           referral_count?: number | null
           stripe_customer_id?: string | null
           subscription_tier?: string
@@ -3222,6 +3225,7 @@ export type Database = {
           show_challenges: boolean
           show_level: boolean
           show_lifts: boolean
+          show_name: boolean
           show_nutrition: boolean
           show_points: boolean
           show_programs: boolean
@@ -3235,6 +3239,7 @@ export type Database = {
           show_challenges?: boolean
           show_level?: boolean
           show_lifts?: boolean
+          show_name?: boolean
           show_nutrition?: boolean
           show_points?: boolean
           show_programs?: boolean
@@ -3248,6 +3253,7 @@ export type Database = {
           show_challenges?: boolean
           show_level?: boolean
           show_lifts?: boolean
+          show_name?: boolean
           show_nutrition?: boolean
           show_points?: boolean
           show_programs?: boolean
