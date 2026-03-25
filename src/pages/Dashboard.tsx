@@ -11,20 +11,26 @@ import { useIsAdmin } from "@/hooks/useIsAdmin";
 import PwaInstallBanner from "@/components/layout/PwaInstallBanner";
 import StudioCheckIn from "@/components/sessions/StudioCheckIn";
 import { safeLocalStorage } from "@/lib/browserStorage";
-const WelcomeGiftModal = lazy(() => import("@/components/dashboard/WelcomeGiftModal"));
 
 import DashboardHome from "@/components/dashboard/DashboardHome";
 import WorkoutsTab from "@/components/dashboard/WorkoutsTab";
+import PortalOnboarding from "@/components/dashboard/PortalOnboarding";
+import FeatureLearningModal from "@/components/dashboard/FeatureLearningModal";
+import type { FeatureTip } from "@/components/dashboard/FeatureLearningModal";
+import {
+  WORKOUT_PORTAL_TIP,
+  WORKOUT_GENERATOR_TIP,
+  FIXIT_ENGINE_TIP,
+  PROVE_IT_TIP,
+} from "@/components/dashboard/featureTips";
 
 import { lazy, Suspense } from "react";
+const WelcomeGiftModal = lazy(() => import("@/components/dashboard/WelcomeGiftModal"));
 const MyPrograms = lazy(() => import("@/components/features/MyPrograms"));
 const ChallengeHub = lazy(() => import("@/components/dashboard/ChallengeHub"));
-
 const ProgressCharts = lazy(() => import("@/components/features/ProgressCharts"));
 const AiWorkoutSuggest = lazy(() => import("@/components/workout/AiWorkoutSuggest"));
 const FixItLibrary = lazy(() => import("@/components/features/FixItLibrary"));
-
-import PortalOnboarding from "@/components/dashboard/PortalOnboarding";
 
 const BASE_TABS = [
   { key: "home", label: "Home" },
@@ -40,6 +46,10 @@ const TabLoader = () => (
   </div>
 );
 
+/** Check if user has already seen a feature tip */
+const hasSeen = (key: string) => safeLocalStorage.getItem(key) === "1";
+const markSeen = (key: string) => safeLocalStorage.setItem(key, "1");
+
 const Dashboard = () => {
   const { user, subscribed, subscriptionTier } = useAuth();
   const { trialExpired, isOnTrial, trialDaysLeft } = useTrialStatus();
@@ -51,6 +61,10 @@ const Dashboard = () => {
   const [hasLogs, setHasLogs] = useState<boolean | null>(null);
   const [generatorView, setGeneratorView] = useState<null | "workout" | "fixit">(null);
   const [showWelcomeGift, setShowWelcomeGift] = useState(() => safeLocalStorage.getItem("m2-welcome-gift-seen") !== "1");
+
+  // Feature learning modal state
+  const [activeTip, setActiveTip] = useState<FeatureTip | null>(null);
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -67,13 +81,49 @@ const Dashboard = () => {
 
   const athleteDisplay = profile?.athlete_name || profile?.full_name || "Athlete";
   const isNewUser = hasPrograms === false && hasLogs === false;
-
   const tabs = BASE_TABS;
 
   const handleViewPoints = useCallback(() => setActiveTab("challenge"), []);
   const handleViewReferrals = useCallback(() => setActiveTab("challenge"), []);
-
   const canUseGenerator = subscribed || isAdmin;
+
+  /** Show a feature tip if unseen, then run the action. If already seen, run immediately. */
+  const withTip = useCallback((tip: FeatureTip, action: () => void) => {
+    if (hasSeen(tip.storageKey)) {
+      action();
+    } else {
+      setActiveTip(tip);
+      setPendingAction(() => action);
+    }
+  }, []);
+
+  const handleTipContinue = useCallback(() => {
+    if (activeTip) markSeen(activeTip.storageKey);
+    setActiveTip(null);
+    pendingAction?.();
+    setPendingAction(null);
+  }, [activeTip, pendingAction]);
+
+  const handleTipDismiss = useCallback(() => {
+    if (activeTip) markSeen(activeTip.storageKey);
+    setActiveTip(null);
+    setPendingAction(null);
+  }, [activeTip]);
+
+  // Button actions (extracted so they can be passed to withTip)
+  const openPortalAction = useCallback(() => {
+    if (!subscribed && hasPrograms === false && hasLogs === false && !isAdmin) {
+      navigate("/pricing");
+      return;
+    }
+    window.dispatchEvent(new CustomEvent("open-workout-zone", { detail: null }));
+  }, [subscribed, hasPrograms, hasLogs, isAdmin, navigate]);
+
+  const openGeneratorAction = useCallback(() => setGeneratorView("workout"), []);
+  const openFixItAction = useCallback(() => setGeneratorView("fixit"), []);
+  const openProveItAction = useCallback(() => {
+    window.dispatchEvent(new CustomEvent("open-prove-it-zone"));
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -118,33 +168,25 @@ const Dashboard = () => {
           </button>
         )}
 
-        {/* Action Buttons — Enter Portal + Generators */}
+        {/* Action Buttons */}
         <div className="space-y-2 mb-5">
-          {/* Primary: Enter Portal */}
           <button
-            onClick={() => {
-              if (!subscribed && hasPrograms === false && hasLogs === false && !isAdmin) {
-                navigate("/pricing");
-                return;
-              }
-              window.dispatchEvent(new CustomEvent("open-workout-zone", { detail: null }));
-            }}
+            onClick={() => withTip(WORKOUT_PORTAL_TIP, openPortalAction)}
             className="w-full h-12 bg-primary text-primary-foreground flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all"
           >
             <Dumbbell size={14} /> Open Workout Portal
           </button>
 
-          {/* Secondary row: Generator + Fix It */}
           {canUseGenerator && (
             <div className="grid grid-cols-2 gap-2">
               <button
-                onClick={() => setGeneratorView("workout")}
+                onClick={() => withTip(WORKOUT_GENERATOR_TIP, openGeneratorAction)}
                 className="h-11 bg-card border border-primary/40 text-primary flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:bg-primary hover:text-primary-foreground transition-all"
               >
                 <Sparkles size={13} /> Workout Generator
               </button>
               <button
-                onClick={() => setGeneratorView("fixit")}
+                onClick={() => withTip(FIXIT_ENGINE_TIP, openFixItAction)}
                 className="h-11 bg-card border border-[hsl(270_60%_50%)] text-[hsl(270_60%_60%)] flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:bg-[hsl(270_60%_50%)] hover:text-white transition-all"
               >
                 <Wrench size={13} /> Fix It Engine
@@ -152,16 +194,15 @@ const Dashboard = () => {
             </div>
           )}
 
-          {/* Prove It */}
           <button
-            onClick={() => window.dispatchEvent(new CustomEvent("open-prove-it-zone"))}
+            onClick={() => withTip(PROVE_IT_TIP, openProveItAction)}
             className="w-full h-11 bg-card border border-border text-muted-foreground flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:border-primary/40 hover:text-foreground transition-all"
           >
             <Trophy size={13} /> Submit PR Attempt
           </button>
         </div>
 
-        {/* Generator overlay — replaces tab area when active */}
+        {/* Generator overlay */}
         {generatorView ? (
           <div className="space-y-4">
             <button
@@ -198,7 +239,6 @@ const Dashboard = () => {
               ))}
             </div>
 
-            {/* Tab content */}
             <Suspense fallback={<TabLoader />}>
               {activeTab === "home" && (
                 <DashboardHome
@@ -212,7 +252,6 @@ const Dashboard = () => {
               {activeTab === "programs" && <MyPrograms />}
               {activeTab === "workouts" && <WorkoutsTab />}
               {activeTab === "challenge" && <ChallengeHub />}
-              
             </Suspense>
           </>
         )}
@@ -236,6 +275,15 @@ const Dashboard = () => {
         <Suspense fallback={null}>
           <WelcomeGiftModal open={showWelcomeGift} onClose={() => setShowWelcomeGift(false)} />
         </Suspense>
+      )}
+
+      {/* Feature learning modals */}
+      {activeTip && (
+        <FeatureLearningModal
+          tip={activeTip}
+          onContinue={handleTipContinue}
+          onDismiss={handleTipDismiss}
+        />
       )}
     </div>
   );
