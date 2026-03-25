@@ -61,6 +61,7 @@ const Index = () => (
       dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_SCHEMA) }}
     />
     <AppNavbar />
+    <LocalTopBar />
     <HeroSection />
     <div className="container py-12 max-w-xl mx-auto space-y-8">
       <Suspense fallback={null}>
