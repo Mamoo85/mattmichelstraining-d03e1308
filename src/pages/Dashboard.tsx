@@ -231,6 +231,12 @@ const Dashboard = () => {
       )}
 
       <PortalOnboarding />
+
+      {showWelcomeGift && (
+        <Suspense fallback={null}>
+          <WelcomeGiftModal open={showWelcomeGift} onClose={() => setShowWelcomeGift(false)} />
+        </Suspense>
+      )}
     </div>
   );
 };
