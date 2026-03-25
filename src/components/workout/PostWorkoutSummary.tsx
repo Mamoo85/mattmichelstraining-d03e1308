@@ -108,51 +108,64 @@ const PostWorkoutSummary = ({
 
     // Upload image if provided
     if (imageFile) {
-      const ext = imageFile.name.split(".").pop();
-      const path = `workout-shares/${user.id}/${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage
-        .from("form-check-videos")
-        .upload(path, imageFile, { contentType: imageFile.type });
-      if (!upErr) {
-        const { data: urlData } = supabase.storage
+      try {
+        const ext = imageFile.name.split(".").pop();
+        const path = `workout-shares/${user.id}/${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage
           .from("form-check-videos")
-          .getPublicUrl(path);
-        imageUrl = urlData.publicUrl;
-        imageStatus = "pending"; // needs admin approval
+          .upload(path, imageFile, { contentType: imageFile.type });
+        if (!upErr) {
+          const { data: urlData } = supabase.storage
+            .from("form-check-videos")
+            .getPublicUrl(path);
+          imageUrl = urlData.publicUrl;
+          imageStatus = "pending";
+        }
+      } catch (err: any) {
+        toast.error("Failed to upload image. Check your connection.");
+        setSharing(false);
+        return;
       }
     }
 
-    // Create shared result
-    const { error } = await supabase.from("shared_workout_results" as any).insert({
-      user_id: user.id,
-      workout_log_id: workoutLogId,
-      workout_title: workoutTitle,
-      caption: notes || "",
-      image_url: imageUrl,
-      image_status: imageStatus,
-      stats: {
-        exercises: exercises.length,
-        totalSets,
-        totalReps,
-        totalVolume,
-        duration,
-      },
-      exercises: exercises.map((e) => ({
-        title: e.exerciseTitle,
-        sets: e.sets,
-      })),
-    });
+    try {
+      const { error } = await supabase.from("shared_workout_results" as any).insert({
+        user_id: user.id,
+        workout_log_id: workoutLogId,
+        workout_title: workoutTitle,
+        caption: notes || "",
+        image_url: imageUrl,
+        image_status: imageStatus,
+        stats: {
+          exercises: exercises.length,
+          totalSets,
+          totalReps,
+          totalVolume,
+          duration,
+        },
+        exercises: exercises.map((e) => ({
+          title: e.exerciseTitle,
+          sets: e.sets,
+        })),
+      });
 
-    if (error) {
-      toast.error("Failed to share");
+      if (error) {
+        toast.error("Failed to share. Please try again.");
+        setSharing(false);
+        return;
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Network error — couldn't share workout.");
       setSharing(false);
       return;
     }
 
-    // Award points via edge function (server-side)
-    await supabase.functions.invoke("ai-workout-analysis", {
-      body: { action: "award_share_points", userId: user.id, workoutLogId },
-    });
+    // Award points (non-blocking)
+    try {
+      await supabase.functions.invoke("ai-workout-analysis", {
+        body: { action: "award_share_points", userId: user.id, workoutLogId },
+      });
+    } catch { /* non-blocking */ }
 
     setShared(true);
     setSharing(false);

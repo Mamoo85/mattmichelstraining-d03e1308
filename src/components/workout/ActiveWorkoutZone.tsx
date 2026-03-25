@@ -586,7 +586,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
     <>
       <div className="fixed inset-0 z-[110] bg-[#050505] flex flex-col">
         {/* ─── STEALTH HEADER ─── */}
-        <header className="shrink-0 flex items-center justify-between px-4 py-2.5 bg-[#050505]/90 backdrop-blur-md border-b border-white/[0.04] z-10">
+        <header className="shrink-0 flex items-center justify-between px-4 py-2.5 pt-[calc(0.625rem+env(safe-area-inset-top))] bg-[#050505]/90 backdrop-blur-md border-b border-white/[0.04] z-10">
           <div className="min-w-0 flex-1">
             {editingTitle ? (
               <input
@@ -630,7 +630,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
 
         {/* ─── FLOATING NEON REST TIMER ─── */}
         {restSeconds > 0 && (
-          <div className="absolute top-[52px] left-1/2 -translate-x-1/2 z-20 flex items-center gap-3 px-5 py-2 rounded-full bg-black/80 border border-[hsl(var(--synth-cyan))] shadow-[var(--synth-glow-cyan)]">
+          <div className="absolute top-[calc(52px+env(safe-area-inset-top))] left-1/2 -translate-x-1/2 z-20 flex items-center gap-3 px-5 py-2 rounded-full bg-black/80 border border-[hsl(var(--synth-cyan))] shadow-[var(--synth-glow-cyan)]">
             <span
               className="font-mono text-lg font-bold tabular-nums"
               style={{ color: "hsl(var(--synth-cyan))", textShadow: "var(--synth-glow-cyan)" }}
@@ -702,7 +702,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
               onUpdate={updateExercise}
               onRemove={removeExercise}
               onOpenFormTracker={setFormTrackerExercise}
-              onSetCompleted={() => startRestTimer(90)}
+              onSetCompleted={startRestTimer}
               defaultExpanded={i < 2}
             />
           ))}
@@ -743,13 +743,13 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
 
         {/* ─── QUICK LOG BAR (terminal style) — floats above command pill ─── */}
         {exercises.length > 0 && (
-          <div className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-lg">
+          <div className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-[112] w-[calc(100%-2rem)] max-w-lg">
             <QuickLogBar exercises={exercises} onApplyParsed={handleQuickLogParsed} />
           </div>
         )}
 
         {/* ─── COMMAND PILL (Dynamic Island footer) ─── */}
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 pb-safe">
+        <div className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-[111]">
           <div className="flex items-center gap-3 bg-[#0a0a0a]/90 backdrop-blur-xl border border-white/[0.08] rounded-full px-4 py-2 shadow-[0_4px_24px_rgba(0,0,0,0.8)]">
             {/* Intervals */}
             <button
