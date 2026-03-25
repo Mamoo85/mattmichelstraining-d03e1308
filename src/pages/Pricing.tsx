@@ -607,6 +607,16 @@ const Pricing = () => {
           productType={modalTier?.key as CheckoutProductType || "foundation"}
         />
         <Suspense fallback={null}><DoNotPressButton /></Suspense>
+
+        {/* Free program CTA */}
+        <div className="text-center mt-8 mb-4">
+          <Link
+            to="/free-program"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+          >
+            Not ready? Get our free beginner program → <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
       </div>
     </div>
   );
