@@ -1,115 +1,27 @@
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
+import { useState } from "react";
 import { safeLocalStorage } from "@/lib/browserStorage";
 import {
-  X, ChevronRight, ChevronLeft, Home, TrendingUp, BookOpen, Dumbbell,
-  Trophy, Timer, MessageCircle, Users, Share2, Gift, Target, Camera,
-  BarChart3, Zap, Sparkles
+  X, Dumbbell, Trophy, Sparkles, Timer, BarChart3, Users, Wrench, Zap
 } from "lucide-react";
+import portalImg from "@/assets/portal-overview.jpg";
 
 const STORAGE_KEY = "m2-portal-tour-seen";
 
-interface SlideData {
-  icon: React.ReactNode;
-  title: string;
-  subtitle: string;
-  bullets: { icon: React.ReactNode; text: string }[];
-  accent?: string;
-}
-
-const SLIDES: SlideData[] = [
-  {
-    icon: <Zap size={28} className="text-primary" />,
-    title: "Welcome to the M² Portal",
-    subtitle: "Everything you need to train smarter, prove yourself, and get stronger — all in one place.",
-    bullets: [
-      { icon: <Dumbbell size={14} />, text: "Structured workouts and programs built for you" },
-      { icon: <Trophy size={14} />, text: "Submit PR attempts with video proof" },
-      { icon: <Users size={14} />, text: "Compete with friends on leaderboards" },
-      { icon: <Target size={14} />, text: "Monthly challenges keep you locked in" },
-    ],
-  },
-  {
-    icon: <Home size={28} className="text-primary" />,
-    title: "Home Tab",
-    subtitle: "Your daily command center.",
-    bullets: [
-      { icon: <Target size={14} />, text: "See this month's focus exercise and coaching tips" },
-      { icon: <BarChart3 size={14} />, text: "Quick glance at your points, level, and streaks" },
-      { icon: <Dumbbell size={14} />, text: "Today's Training Card — tap to start a workout" },
-      { icon: <MessageCircle size={14} />, text: "Studio check-in scanner for in-person sessions" },
-    ],
-  },
-  {
-    icon: <TrendingUp size={28} className="text-primary" />,
-    title: "Progress Tab",
-    subtitle: "Track every rep max over time.",
-    bullets: [
-      { icon: <BarChart3 size={14} />, text: "Charts for Squat, Bench, Deadlift & more" },
-      { icon: <Camera size={14} />, text: "Attach video to any lift for coach review" },
-      { icon: <MessageCircle size={14} />, text: "Ask Coach Matt questions on any logged lift" },
-      { icon: <Trophy size={14} />, text: "See your all-time PRs and muscle heatmap" },
-    ],
-  },
-  {
-    icon: <BookOpen size={28} className="text-primary" />,
-    title: "My Programs Tab",
-    subtitle: "Follow structured training programs.",
-    bullets: [
-      { icon: <Dumbbell size={14} />, text: "View your active programs and weekly blocks" },
-      { icon: <Target size={14} />, text: "Log weights and reps directly in your program" },
-      { icon: <Zap size={14} />, text: "Tap any day to launch it in the Workout Portal" },
-      { icon: <Dumbbell size={14} />, text: "Request a custom program built just for you" },
-    ],
-  },
-  {
-    icon: <Dumbbell size={28} className="text-primary" />,
-    title: "Workouts Tab",
-    subtitle: "Build, browse, and share workouts.",
-    bullets: [
-      { icon: <Zap size={14} />, text: "Smart Build — creates a workout from your goals" },
-      { icon: <Dumbbell size={14} />, text: "Manual Build — pick exercises yourself" },
-      { icon: <Users size={14} />, text: "Community Bank — browse & use workouts from others" },
-      { icon: <Share2 size={14} />, text: "Share your workouts to earn points" },
-    ],
-  },
-  {
-    icon: <Trophy size={28} className="text-primary" />,
-    title: "Challenge Tab",
-    subtitle: "Compete on the leaderboard every month.",
-    bullets: [
-      { icon: <Target size={14} />, text: "Join the monthly challenge — new one every month" },
-      { icon: <BarChart3 size={14} />, text: "Log your reps/sets and climb the leaderboard" },
-      { icon: <Trophy size={14} />, text: "Earn points for every entry and streak" },
-      { icon: <Gift size={14} />, text: "Top performers get recognized by Coach Matt" },
-    ],
-  },
-  {
-    icon: <Trophy size={28} className="text-primary" />,
-    title: "\"Prove It\" — PR Submissions",
-    subtitle: "Think you hit a new best? Prove it.",
-    bullets: [
-      { icon: <Camera size={14} />, text: "Tap \"Attempting New Best\" at the bottom of your dashboard" },
-      { icon: <Dumbbell size={14} />, text: "Select the lift, enter your weight and reps" },
-      { icon: <Camera size={14} />, text: "Record or upload your video proof (required)" },
-      { icon: <Target size={14} />, text: "Coach Matt reviews and approves it — then it's official" },
-    ],
-  },
-  {
-    icon: <Zap size={28} className="text-primary" />,
-    title: "The Workout Portal",
-    subtitle: "Where the real work happens.",
-    bullets: [
-      { icon: <Dumbbell size={14} />, text: "Tap \"Enter The Portal\" to launch your active workout" },
-      { icon: <Timer size={14} />, text: "Built-in interval timer — tap the ⚡ button anytime" },
-      { icon: <Zap size={14} />, text: "Smart food scanner — snap a photo, get your macros" },
-      { icon: <BarChart3 size={14} />, text: "Workout adjuster — swap exercises based on your equipment" },
-    ],
-  },
+const FEATURES = [
+  { icon: <Dumbbell size={18} />, text: "Structured programs & daily workouts" },
+  { icon: <Sparkles size={18} />, text: "AI-powered workout & Fix-It generators" },
+  { icon: <BarChart3 size={18} />, text: "Track every PR and see your progress" },
+  { icon: <Trophy size={18} />, text: "Monthly challenges & leaderboards" },
+  { icon: <Timer size={18} />, text: "Built-in interval timers & food scanner" },
+  { icon: <Users size={18} />, text: "Community workout bank & sharing" },
+  { icon: <Wrench size={18} />, text: "Injury prevention & recovery tools" },
 ];
 
 const PortalOnboarding = () => {
-  const [visible, setVisible] = useState(() => safeLocalStorage.getItem(STORAGE_KEY) !== "1");
-  const [page, setPage] = useState(0);
+  const [visible, setVisible] = useState(
+    () => safeLocalStorage.getItem(STORAGE_KEY) !== "1"
+  );
 
   const dismiss = useCallback(() => {
     safeLocalStorage.setItem(STORAGE_KEY, "1");
@@ -118,95 +30,82 @@ const PortalOnboarding = () => {
 
   if (!visible) return null;
 
-  const slide = SLIDES[page];
-  const isLast = page === SLIDES.length - 1;
-
   return (
-    <div className="fixed inset-0 z-[70] bg-black/70 flex items-center justify-center p-4 animate-in fade-in">
-      <div className="bg-card border border-border w-full max-w-sm max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card">
-          <div className="flex items-center gap-2">
-            {slide.icon}
-            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-              {page + 1} / {SLIDES.length}
-            </span>
-          </div>
-          <button onClick={dismiss} className="p-1 text-muted-foreground hover:text-foreground">
-            <X size={16} />
+    <div className="fixed inset-0 z-[70] bg-black/80 flex items-center justify-center p-4 animate-in fade-in">
+      <div className="bg-card border border-border w-full max-w-md max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+        {/* Close button */}
+        <div className="flex justify-end px-4 pt-3">
+          <button
+            onClick={dismiss}
+            className="p-1.5 text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="Close"
+          >
+            <X size={18} />
           </button>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
-          <div className="space-y-1.5">
-            <h3 className="text-base font-bold text-foreground">{slide.title}</h3>
-            <p className="text-xs text-muted-foreground leading-relaxed">{slide.subtitle}</p>
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto px-6 pb-6 space-y-5">
+          {/* Hero image */}
+          <img
+            src={portalImg}
+            alt="M² Training Portal overview"
+            className="w-full rounded border border-border object-cover"
+            width={800}
+            height={512}
+          />
+
+          {/* Welcome heading */}
+          <div className="text-center space-y-2">
+            <h2 className="text-xl font-black uppercase tracking-widest text-foreground">
+              Welcome to M²
+            </h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Your all-in-one training hub — built to help you get stronger, stay consistent, and prove it.
+            </p>
           </div>
 
-          <div className="space-y-2.5">
-            {slide.bullets.map((b, i) => (
-              <div key={i} className="flex items-start gap-2.5">
-                <div className="shrink-0 w-6 h-6 rounded bg-primary/10 flex items-center justify-center text-primary mt-0.5">
-                  {b.icon}
+          {/* Feature bullets */}
+          <div className="space-y-3">
+            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+              What's inside your portal
+            </p>
+            {FEATURES.map((f, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <div className="shrink-0 w-9 h-9 rounded-lg bg-primary/15 flex items-center justify-center text-primary">
+                  {f.icon}
                 </div>
-                <p className="text-xs text-foreground leading-relaxed">{b.text}</p>
+                <p className="text-sm font-semibold text-foreground">{f.text}</p>
               </div>
             ))}
           </div>
-        </div>
 
-        {/* Progress dots */}
-        <div className="flex justify-center gap-1.5 py-2">
-          {SLIDES.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setPage(i)}
-              className={`w-2 h-2 rounded-full transition-all ${
-                i === page ? "bg-primary w-4" : "bg-muted-foreground/30"
-              }`}
-            />
-          ))}
-        </div>
+          {/* Thank you */}
+          <div className="text-center pt-2 space-y-3">
+            <div className="flex items-center justify-center gap-2 text-primary">
+              <Zap size={16} />
+              <p className="text-xs font-bold uppercase tracking-widest">
+                Thank you for being part of the M² team
+              </p>
+              <Zap size={16} />
+            </div>
 
-        {/* Footer */}
-        <div className="px-4 py-3 border-t border-border flex items-center justify-between gap-2">
-          {page > 0 ? (
-            <button
-              onClick={() => setPage(page - 1)}
-              className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground"
-            >
-              <ChevronLeft size={14} /> Back
-            </button>
-          ) : (
-            <div />
-          )}
-
-          {isLast ? (
+            {/* CTA */}
             <button
               onClick={dismiss}
-              className="px-5 py-2.5 bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 shadow-[0_0_15px_rgba(249,115,22,0.3)]"
+              className="w-full h-12 bg-primary text-primary-foreground text-sm font-black uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2"
             >
-              <Zap size={12} /> Let's Go!
+              <Dumbbell size={16} /> Let's Get To Work
             </button>
-          ) : (
-            <button
-              onClick={() => setPage(page + 1)}
-              className="px-5 py-2.5 bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5"
-            >
-              Next <ChevronRight size={14} />
-            </button>
-          )}
-        </div>
 
-        {/* Don't show again */}
-        <div className="px-4 pb-3">
-          <button
-            onClick={dismiss}
-            className="w-full text-center text-[10px] text-muted-foreground hover:text-foreground underline underline-offset-2"
-          >
-            Don't show this again
-          </button>
+            {/* Don't show again */}
+            <button
+              onClick={dismiss}
+              className="w-full text-center text-[11px] text-muted-foreground hover:text-foreground underline underline-offset-2 py-1"
+            >
+              Don't show this again
+            </button>
+          </div>
         </div>
       </div>
     </div>
