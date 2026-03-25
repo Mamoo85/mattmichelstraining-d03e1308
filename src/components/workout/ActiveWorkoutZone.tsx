@@ -614,11 +614,11 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
   return (
     <>
       <div className="fixed inset-0 z-[110] bg-background flex flex-col">
-        {/* Modern Header */}
-        <header className="shrink-0 flex items-center justify-between px-4 py-3 bg-gradient-to-b from-background to-background/80 backdrop-blur-sm border-b border-white/[0.06]">
-          <div className="flex items-center gap-3 min-w-0">
-            <img src={m2Logo} alt="M² Training" className="h-8 w-8 rounded-full object-cover" />
-            <div className="min-w-0 flex items-center gap-1.5">
+        {/* ─── STICKY HEADER — EXIT IS THE STAR ─── */}
+        <header className="shrink-0 flex items-center justify-between px-3 py-2 bg-background border-b border-border z-10">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <img src={m2Logo} alt="M²" className="h-7 w-7 rounded-full object-cover shrink-0" />
+            <div className="min-w-0 flex items-center gap-1">
               {editingTitle ? (
                 <input
                   ref={titleInputRef}
@@ -628,38 +628,30 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
                   onBlur={() => setEditingTitle(false)}
                   onKeyDown={(e) => { if (e.key === "Enter") setEditingTitle(false); }}
                   autoFocus
-                  className="text-sm font-bold text-foreground bg-muted/50 border border-border rounded-lg px-2 py-0.5 outline-none focus:ring-2 focus:ring-primary/40 w-full max-w-[140px]"
+                  className="text-sm font-bold text-foreground bg-muted/50 border border-border px-1.5 py-0.5 outline-none focus:ring-1 focus:ring-primary/40 w-full max-w-[120px]"
                 />
               ) : (
-                <>
-                  <span className="text-sm font-bold text-foreground truncate block leading-tight">
-                    {workoutTitle}
-                  </span>
-                  <button
-                    onClick={() => setEditingTitle(true)}
-                    className="shrink-0 h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
-                    title="Edit title"
-                  >
-                    <Pencil size={12} />
-                  </button>
-                </>
+                <button
+                  onClick={() => setEditingTitle(true)}
+                  className="text-sm font-bold text-foreground truncate max-w-[120px] hover:text-primary transition-colors"
+                  title="Tap to edit title"
+                >
+                  {workoutTitle}
+                </button>
               )}
             </div>
-            {readinessResult && readinessResult.weightAdjustmentPct !== 0 && (
-              <span className="hidden sm:block text-[10px] font-medium text-primary ml-1">
-                {Math.abs(readinessResult.weightAdjustmentPct)}% adjusted
-              </span>
-            )}
           </div>
-          <div className="flex items-center gap-1 shrink-0">
+
+          {/* Utility icons */}
+          <div className="flex items-center gap-0.5 shrink-0">
             {exercises.length > 0 && (
               <button
                 onClick={() => adaptInputRef.current?.click()}
                 disabled={adaptLoading}
-                className="h-9 w-9 flex items-center justify-center rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                className="h-8 w-8 flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
                 title="Adapt to Equipment"
               >
-                {adaptLoading ? <Loader2 size={16} className="animate-spin" /> : <Camera size={16} />}
+                {adaptLoading ? <Loader2 size={14} className="animate-spin" /> : <Camera size={14} />}
               </button>
             )}
             <input
@@ -672,15 +664,15 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
             />
             <button
               onClick={() => setShowIntervalTimer(true)}
-              className="h-9 w-9 flex items-center justify-center rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+              className="h-8 w-8 flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
               title="Interval Timer"
             >
-              <Clock size={16} />
+              <Clock size={14} />
             </button>
             <Popover>
               <PopoverTrigger asChild>
-                <button className="hidden sm:flex h-9 items-center gap-1.5 px-3 rounded-full text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
-                  <CalendarIcon size={14} />
+                <button className="hidden sm:flex h-8 items-center gap-1 px-2 text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
+                  <CalendarIcon size={12} />
                   {format(date, "MMM d")}
                 </button>
               </PopoverTrigger>
@@ -695,56 +687,67 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
                 />
               </PopoverContent>
             </Popover>
+
+            {/* ═══ EXIT BUTTON — large, unmissable, always visible ═══ */}
             <button
               onClick={handleFinishClick}
               disabled={saving}
-              className="ml-1 flex items-center gap-1.5 px-3 py-2 rounded-full border border-destructive/60 text-destructive bg-card hover:bg-destructive hover:text-destructive-foreground transition-all text-[10px] font-bold uppercase tracking-wide"
+              className="ml-1 flex items-center gap-1.5 h-10 px-4 bg-destructive text-destructive-foreground font-bold text-xs uppercase tracking-wide hover:bg-destructive/90 transition-all active:scale-95"
               title="Exit workout"
             >
-              {saving ? <Loader2 size={12} className="animate-spin" /> : <X size={12} />}
+              {saving ? <Loader2 size={14} className="animate-spin" /> : <X size={14} strokeWidth={3} />}
               Exit
             </button>
           </div>
         </header>
 
-        {/* Scrollable content */}
-        <main className="flex-1 overflow-y-auto px-4 py-4 space-y-4 pb-[160px]">
+        {/* Readiness adjustment banner */}
+        {readinessResult && readinessResult.weightAdjustmentPct !== 0 && (
+          <div className="px-3 py-1.5 bg-primary/10 text-center">
+            <span className="text-[10px] font-bold text-primary">
+              Auto-regulated: {readinessResult.weightAdjustmentPct > 0 ? "+" : ""}{readinessResult.weightAdjustmentPct}% weight adjustment applied
+            </span>
+          </div>
+        )}
+
+        {/* ─── SCROLLABLE CONTENT ─── */}
+        <main className="flex-1 overflow-y-auto px-3 py-3 space-y-3 pb-[140px]">
           {/* Adapt to Equipment Banner */}
           {adaptBanner && (
-            <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/20 px-4 py-3 rounded-xl">
+            <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/20 px-3 py-2">
               <div className="flex items-center gap-2 min-w-0">
-                <Camera size={14} className="text-emerald-500 shrink-0" />
-                <span className="text-xs font-semibold text-emerald-400 truncate">{adaptBanner}</span>
+                <Camera size={12} className="text-emerald-500 shrink-0" />
+                <span className="text-[11px] font-semibold text-emerald-400 truncate">{adaptBanner}</span>
               </div>
-              <button onClick={() => setAdaptBanner(null)} className="text-muted-foreground hover:text-foreground rounded-full h-7 w-7 flex items-center justify-center">
-                <X size={12} />
+              <button onClick={() => setAdaptBanner(null)} className="text-muted-foreground hover:text-foreground h-6 w-6 flex items-center justify-center">
+                <X size={10} />
               </button>
             </div>
           )}
           {adaptLoading && (
-            <div className="flex items-center justify-center gap-2 py-4 bg-muted/30 border border-white/[0.06] rounded-xl">
-              <Loader2 size={14} className="animate-spin text-primary" />
-              <span className="text-xs font-medium text-muted-foreground">Analyzing equipment & adapting workout…</span>
+            <div className="flex items-center justify-center gap-2 py-3 bg-muted/30 border border-border">
+              <Loader2 size={12} className="animate-spin text-primary" />
+              <span className="text-[11px] font-medium text-muted-foreground">Analyzing equipment…</span>
             </div>
           )}
 
           {exercises.length === 0 && !showPicker && (
-            <div className="flex flex-col items-center justify-center py-20 text-center space-y-5">
-              <img src={m2Logo} alt="M² Training" className="h-16 w-16 rounded-full object-cover opacity-60" />
+            <div className="flex flex-col items-center justify-center py-16 text-center space-y-4">
+              <img src={m2Logo} alt="M²" className="h-14 w-14 rounded-full object-cover opacity-60" />
               <div>
-                <h3 className="text-lg font-bold text-foreground mb-1">Ready to train</h3>
-                <p className="text-sm text-muted-foreground">Add exercises from the library to start logging.</p>
+                <h3 className="text-base font-bold text-foreground mb-1">Ready to train</h3>
+                <p className="text-sm text-muted-foreground">Add exercises to start logging.</p>
               </div>
               <button
                 onClick={() => setShowPicker(true)}
                 className={cn(
-                  "flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold",
+                  "flex items-center gap-2 px-5 py-2.5 text-sm font-bold",
                   "bg-primary text-primary-foreground",
-                  "shadow-[0_0_20px_hsl(var(--primary)/0.3)] hover:shadow-[0_0_28px_hsl(var(--primary)/0.5)]",
+                  "shadow-[0_0_16px_hsl(var(--primary)/0.3)] hover:shadow-[0_0_24px_hsl(var(--primary)/0.5)]",
                   "transition-all active:scale-95"
                 )}
               >
-                <Plus size={16} /> Add Exercise
+                <Plus size={14} /> Add Exercise
               </button>
             </div>
           )}
@@ -766,16 +769,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
             <ExercisePicker onSelect={addExercise} onCancel={() => setShowPicker(false)} />
           )}
 
-          {exercises.length > 0 && (
-            <ButtonKeyLegend />
-          )}
-
-          {exercises.length > 0 && (
-            <div className="flex flex-col items-center gap-1 py-4 opacity-20">
-              <img src={m2Logo} alt="M²" className="h-6 w-6 rounded-full object-cover" />
-              <span className="text-[9px] font-bold uppercase tracking-[3px] text-muted-foreground">M² Training</span>
-            </div>
-          )}
+          {exercises.length > 0 && <ButtonKeyLegend />}
 
           {exercises.length > 0 && (
             <RecoveryInput value={recovery} onChange={setRecovery} />
@@ -787,83 +781,80 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
                 placeholder="Session notes (optional)…"
                 value={sessionNotes}
                 onChange={(e) => setSessionNotes(e.target.value)}
-                className="w-full bg-card/80 border border-white/[0.06] rounded-2xl p-4 pr-12 text-sm text-foreground placeholder:text-muted-foreground/50 focus:ring-2 focus:ring-primary/40 outline-none min-h-[72px] resize-none shadow-lg transition-all"
+                className="w-full bg-card border border-border p-3 pr-10 text-sm text-foreground placeholder:text-muted-foreground/50 focus:ring-1 focus:ring-primary/40 outline-none min-h-[60px] resize-none transition-all"
               />
               <VoiceNoteButton
                 onTranscript={(t) => setSessionNotes((prev) => (prev ? prev + " " + t : t))}
-                className="absolute top-3 right-3"
+                className="absolute top-2 right-2"
               />
             </div>
           )}
         </main>
 
-        {/* Quick Log NLP Bar */}
+        {/* ─── BOTTOM COMMAND BAR — Quick Log + Timer + Add ─── */}
         {exercises.length > 0 && (
-          <div className="fixed bottom-[116px] left-0 right-0 z-40 px-4 pb-1">
-            <QuickLogBar exercises={exercises} onApplyParsed={handleQuickLogParsed} />
-          </div>
-        )}
-
-        {/* Frosted Glass Command Bar */}
-        <footer className="fixed bottom-0 w-full z-50 bg-card/60 backdrop-blur-xl border-t border-white/[0.06] px-4 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
-          {/* Circular Rest Timer */}
-          {restSeconds > 0 && (
-            <div className="flex items-center justify-center gap-3 mb-2">
-              <div className="relative h-10 w-10">
-                <svg className="h-10 w-10 -rotate-90" viewBox="0 0 48 48">
-                  <circle cx="24" cy="24" r="20" fill="none" stroke="hsl(var(--muted))" strokeWidth="3" />
-                  <circle
-                    cx="24" cy="24" r="20" fill="none"
-                    stroke="hsl(var(--primary))"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeDasharray={`${2 * Math.PI * 20}`}
-                    strokeDashoffset={`${2 * Math.PI * 20 * (1 - restProgress / 100)}`}
-                    className="transition-all duration-1000"
-                  />
-                </svg>
-                <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold font-mono text-primary">
-                  {restSeconds}
-                </span>
+          <footer className="fixed bottom-0 w-full z-50 bg-card/90 backdrop-blur-xl border-t border-border px-3 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
+            {/* Rest Timer */}
+            {restSeconds > 0 && (
+              <div className="flex items-center justify-center gap-3 mb-1.5">
+                <div className="relative h-9 w-9">
+                  <svg className="h-9 w-9 -rotate-90" viewBox="0 0 48 48">
+                    <circle cx="24" cy="24" r="20" fill="none" stroke="hsl(var(--muted))" strokeWidth="3" />
+                    <circle
+                      cx="24" cy="24" r="20" fill="none"
+                      stroke="hsl(var(--primary))"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeDasharray={`${2 * Math.PI * 20}`}
+                      strokeDashoffset={`${2 * Math.PI * 20 * (1 - restProgress / 100)}`}
+                      className="transition-all duration-1000"
+                    />
+                  </svg>
+                  <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold font-mono text-primary">
+                    {restSeconds}
+                  </span>
+                </div>
+                <button onClick={clearRestTimer} className="text-[10px] font-medium text-primary hover:underline">
+                  Skip →
+                </button>
               </div>
-              <button
-                onClick={clearRestTimer}
-                className="text-[10px] font-medium text-primary hover:underline"
-              >
-                Skip →
-              </button>
+            )}
+
+            {/* Quick Log Bar */}
+            <div className="mb-1.5">
+              <QuickLogBar exercises={exercises} onApplyParsed={handleQuickLogParsed} />
             </div>
-          )}
-          {/* Row 1: Timer + Add */}
-          <div className="flex items-center justify-between gap-2 mb-2">
-            <WorkoutTimer
-              initialElapsed={initialContext?.resumedElapsed || 0}
-              autoStart={timerAutoStart}
-              onElapsedChange={handleElapsedChange}
-            />
-            <button
-              onClick={() => setShowPicker(true)}
-              disabled={showPicker}
-              className={cn(
-                "flex items-center gap-1.5 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wide transition-all",
-                "bg-primary text-primary-foreground shadow-[0_0_16px_hsl(var(--primary)/0.3)]",
-                "hover:shadow-[0_0_24px_hsl(var(--primary)/0.5)] active:scale-95",
-                showPicker && "opacity-50"
-              )}
-            >
-              <Plus size={12} /> Add
-            </button>
-          </div>
-          {/* Row 2: Exit — always visible */}
-          <button
-            onClick={handleFinishClick}
-            disabled={saving}
-            className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-wide border-2 border-destructive/60 text-destructive hover:bg-destructive hover:text-destructive-foreground transition-all active:scale-95"
-          >
-            {saving ? <Loader2 size={12} className="animate-spin" /> : <X size={12} />}
-            Exit Workout
-          </button>
-        </footer>
+
+            {/* Timer + Add row */}
+            <div className="flex items-center justify-between gap-2">
+              <WorkoutTimer
+                initialElapsed={initialContext?.resumedElapsed || 0}
+                autoStart={timerAutoStart}
+                onElapsedChange={handleElapsedChange}
+              />
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={handlePause}
+                  className="flex items-center gap-1 px-3 py-2 text-[9px] font-bold uppercase tracking-wide text-muted-foreground border border-border hover:text-foreground transition-all"
+                >
+                  Pause
+                </button>
+                <button
+                  onClick={() => setShowPicker(true)}
+                  disabled={showPicker}
+                  className={cn(
+                    "flex items-center gap-1 px-3 py-2 text-[10px] font-bold uppercase tracking-wide transition-all",
+                    "bg-primary text-primary-foreground",
+                    "hover:opacity-90 active:scale-95",
+                    showPicker && "opacity-50"
+                  )}
+                >
+                  <Plus size={12} /> Add
+                </button>
+              </div>
+            </div>
+          </footer>
+        )}
       </div>
 
       <ConfirmActionModal

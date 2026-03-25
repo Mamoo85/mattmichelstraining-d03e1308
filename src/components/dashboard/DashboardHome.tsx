@@ -1,4 +1,5 @@
-import { memo, lazy, Suspense, useState, useEffect } from "react";
+import { memo, lazy, Suspense, useState } from "react";
+import { MessageCircle } from "lucide-react";
 import MonthlyFocusWidget from "@/components/features/MonthlyFocusWidget";
 import UpcomingSessions from "@/components/sessions/UpcomingSessions";
 import EmptyStateCard from "@/components/shared/EmptyStateCard";
@@ -7,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 const SharedWorkoutFeed = lazy(() => import("@/components/workout/SharedWorkoutFeed"));
 const CustomProgramRequest = lazy(() => import("./CustomProgramRequest"));
+const CoachChatPanel = lazy(() => import("./CoachChatPanel"));
 
 interface DashboardHomeProps {
   isNewUser: boolean;
@@ -17,6 +19,7 @@ interface DashboardHomeProps {
 
 const DashboardHome = memo(({ isNewUser, isInPerson, onViewPoints, onViewReferrals }: DashboardHomeProps) => {
   const { subscribed } = useAuth();
+  const [chatOpen, setChatOpen] = useState(false);
 
   return (
     <div className="space-y-5">
@@ -42,6 +45,19 @@ const DashboardHome = memo(({ isNewUser, isInPerson, onViewPoints, onViewReferra
       <Suspense fallback={null}>
         <SharedWorkoutFeed />
       </Suspense>
+
+      {/* Chat with Matt — portal only */}
+      <button
+        onClick={() => setChatOpen(true)}
+        className="w-full flex items-center justify-center gap-2 py-3 border border-border bg-card hover:bg-muted/50 transition-colors text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-primary"
+      >
+        <MessageCircle size={14} /> Chat with Matt
+      </button>
+      {chatOpen && (
+        <Suspense fallback={null}>
+          <CoachChatPanel onClose={() => setChatOpen(false)} />
+        </Suspense>
+      )}
     </div>
   );
 });

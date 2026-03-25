@@ -40,7 +40,7 @@ const AnnouncementBanner = lazyRetry(() => import("@/components/layout/Announcem
 
 const ActiveWorkoutZone = lazyRetry(() => import("@/components/workout/ActiveWorkoutZone"));
 const ProveItZone = lazyRetry(() => import("@/components/workout/ProveItZone"));
-const DualFab = lazyRetry(() => import("@/components/dashboard/DualFab"));
+
 const BottomTabBar = lazyRetry(() => import("@/components/layout/BottomTabBar"));
 
 // Lazy-load ALL pages including Index for faster initial JS parse
@@ -172,19 +172,6 @@ const ProveItWrapper = () => {
   );
 };
 
-const DUAL_FAB_ROUTES = ["/dashboard", "/progress", "/coach", "/nutrition", "/profile", "/schedule"];
-
-const DualFabWrapper = () => {
-  const { user } = useAuth();
-  const { pathname } = useLocation();
-
-  if (!user || !DUAL_FAB_ROUTES.includes(pathname)) return null;
-  return (
-    <Suspense fallback={null}>
-      <DualFab />
-    </Suspense>
-  );
-};
 
 const App = () => (
   <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, maxAge: 24 * 60 * 60_000 }}>
@@ -239,7 +226,7 @@ const App = () => (
               
               <ActiveWorkoutWrapper />
               <ProveItWrapper />
-              <DualFabWrapper />
+              
               
               <Suspense fallback={null}><BottomTabBar /></Suspense>
               <Suspense fallback={null}><OfflineBadge /></Suspense>
