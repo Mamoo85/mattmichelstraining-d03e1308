@@ -43,11 +43,15 @@ const WorkoutTimer = memo(({ initialElapsed = 0, autoStart = false, onElapsedCha
     <button
       onClick={handleToggle}
       className={cn(
-        "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold tracking-wide transition-all",
+        "flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-bold tracking-wide transition-all",
         running
-          ? "bg-primary text-primary-foreground shadow-[0_0_16px_hsl(var(--primary)/0.4)]"
+          ? "bg-transparent"
           : "bg-muted/60 text-muted-foreground hover:text-foreground hover:bg-muted"
       )}
+      style={running ? {
+        color: "hsl(var(--synth-cyan))",
+        textShadow: "var(--synth-glow-cyan)",
+      } : undefined}
     >
       {running ? <Pause size={14} /> : <Play size={14} />}
       <span className="font-mono tabular-nums">
