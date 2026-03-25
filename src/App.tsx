@@ -78,6 +78,7 @@ const LawyerMockup = lazyRetry(() => import("./pages/LawyerMockup"));
 const ClinicMockup = lazyRetry(() => import("./pages/ClinicMockup"));
 const RoofingMockup = lazyRetry(() => import("./pages/RoofingMockup"));
 const YoungbloodMockup = lazyRetry(() => import("./pages/YoungbloodMockup"));
+const DentalMockup = lazyRetry(() => import("./pages/DentalMockup"));
 const WebDesignIncluded = lazyRetry(() => import("./pages/WebDesignIncluded"));
 const FreeProgram = lazyRetry(() => import("./pages/FreeProgram"));
 const AdminViewUser = lazyRetry(() => import("./pages/AdminViewUser"));
@@ -223,6 +224,7 @@ const App = () => (
                     <Route path="/demo-clinic" element={<ClinicMockup />} />
                     <Route path="/demo-roofing" element={<RoofingMockup />} />
                     <Route path="/demo-youngblood" element={<YoungbloodMockup />} />
+                    <Route path="/demo-dental" element={<DentalMockup />} />
                     <Route path="/whats-included" element={<WebDesignIncluded />} />
                     <Route path="/free-program" element={<FreeProgram />} />
                     <Route path="/studio-rental" element={<StudioRental />} />
