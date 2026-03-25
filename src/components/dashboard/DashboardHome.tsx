@@ -1,4 +1,5 @@
-import { memo, lazy, Suspense, useState, useEffect } from "react";
+import { memo, lazy, Suspense, useState } from "react";
+import { MessageCircle } from "lucide-react";
 import MonthlyFocusWidget from "@/components/features/MonthlyFocusWidget";
 import UpcomingSessions from "@/components/sessions/UpcomingSessions";
 import EmptyStateCard from "@/components/shared/EmptyStateCard";
@@ -7,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 const SharedWorkoutFeed = lazy(() => import("@/components/workout/SharedWorkoutFeed"));
 const CustomProgramRequest = lazy(() => import("./CustomProgramRequest"));
+const CoachChatPanel = lazy(() => import("./CoachChatPanel"));
 
 interface DashboardHomeProps {
   isNewUser: boolean;
