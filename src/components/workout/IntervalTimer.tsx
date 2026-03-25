@@ -345,28 +345,44 @@ const IntervalTimer = ({ onClose, initialConfig, exercises: circuitExercises, is
         {/* Config row — only in setup */}
         {isSetup && (
           <>
-            <div className="flex gap-1.5">
+            {/* Time configs row */}
+            <div className="flex gap-2">
               {([
-                { key: "prep" as const, label: "PREP", isTime: true },
-                { key: "work" as const, label: "WORK", isTime: true },
-                { key: "rest" as const, label: "REST", isTime: true },
-                { key: "rounds" as const, label: "RND", isTime: false },
-              ]).map(({ key, label, isTime }) => (
-                <div key={key} className="flex-1 flex flex-col items-center gap-1 bg-white/5 rounded-lg py-2">
-                  <span className="text-[8px] font-bold uppercase tracking-widest text-white/30">{label}</span>
-                  <div className="flex items-center gap-0.5">
+                { key: "prep" as const, label: "PREP" },
+                { key: "work" as const, label: "WORK" },
+                { key: "rest" as const, label: "REST" },
+              ]).map(({ key, label }) => (
+                <div key={key} className="flex-1 flex flex-col items-center gap-1.5 bg-white/5 rounded-xl py-3">
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-white/40">{label}</span>
+                  <div className="flex items-center gap-1">
                     <button
-                      onClick={() => adjust(key, isTime && config[key] >= 30 ? -5 : -1)}
-                      className="w-7 h-7 flex items-center justify-center text-white/40 hover:text-white text-lg font-bold"
+                      onClick={() => adjust(key, config[key] >= 30 ? -5 : -1)}
+                      className="w-10 h-10 flex items-center justify-center text-white/50 hover:text-white text-xl font-bold rounded-lg active:bg-white/10 transition-colors"
                     >−</button>
-                    <EditableValue value={config[key]} onChange={(v) => setField(key, v)} isTime={isTime} disabled={running} />
+                    <EditableValue value={config[key]} onChange={(v) => setField(key, v)} isTime disabled={running} />
                     <button
-                      onClick={() => adjust(key, isTime && config[key] >= 25 ? 5 : 1)}
-                      className="w-7 h-7 flex items-center justify-center text-white/40 hover:text-white text-lg font-bold"
+                      onClick={() => adjust(key, config[key] >= 25 ? 5 : 1)}
+                      className="w-10 h-10 flex items-center justify-center text-white/50 hover:text-white text-xl font-bold rounded-lg active:bg-white/10 transition-colors"
                     >+</button>
                   </div>
                 </div>
               ))}
+            </div>
+
+            {/* Rounds row — full width, prominent */}
+            <div className="flex items-center justify-between bg-white/5 rounded-xl px-5 py-3">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-white/40">Rounds</span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => adjust("rounds", -1)}
+                  className="w-11 h-11 flex items-center justify-center text-white/50 hover:text-white text-xl font-bold rounded-lg bg-white/5 active:bg-white/15 transition-colors"
+                >−</button>
+                <EditableValue value={config.rounds} onChange={(v) => setField("rounds", v)} disabled={running} />
+                <button
+                  onClick={() => adjust("rounds", 1)}
+                  className="w-11 h-11 flex items-center justify-center text-white/50 hover:text-white text-xl font-bold rounded-lg bg-white/5 active:bg-white/15 transition-colors"
+                >+</button>
+              </div>
             </div>
 
             {/* Circuit exercise list */}
