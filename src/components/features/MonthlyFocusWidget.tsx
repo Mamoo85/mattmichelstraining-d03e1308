@@ -575,8 +575,8 @@ const MonthlyFocusWidget = () => {
             </div>
             <div className="divide-y divide-border">
               {leaderboard.slice(0, 8).map((entry, idx) => {
-                const name = entry.athlete_name || entry.full_name || "Athlete";
                 const isYou = entry.user_id === user?.id;
+                const name = isYou ? (entry.athlete_name || entry.full_name || "Athlete") : ((entry as any).show_name ? (entry.athlete_name || entry.full_name || "Athlete") : ((entry as any).random_alias || "Athlete"));
                 return (
                   <div key={idx} className={`flex items-center gap-3 px-4 py-2 transition-all ${isYou ? "bg-primary/5 border-l-2 border-primary" : ""}`}>
                     <div className="w-5 flex justify-center">{getMedalIcon(idx)}</div>
