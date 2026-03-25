@@ -8,6 +8,7 @@ import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useTierAccess } from "@/hooks/useTierAccess";
 import { EliteUpsellModal } from "@/components/billing/PaywallGate";
 import ExerciseVideoEmbed from "@/components/exercise/ExerciseVideoEmbed";
+import AnatomyHologram from "./AnatomyHologram";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import type { LoggedExerciseData } from "./WorkoutLogger";
@@ -31,6 +32,7 @@ const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTrac
   const { user } = useAuth();
   const [showCoachNotes, setShowCoachNotes] = useState(false);
   const [showExtras, setShowExtras] = useState(false);
+  const [showHologram, setShowHologram] = useState(false);
   const [showUpsell, setShowUpsell] = useState(false);
   const { isAdmin } = useIsAdmin();
   const { hasAccess: canFlag } = useTierAccess("flag_coach");
@@ -117,7 +119,12 @@ const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTrac
             >
               <Target size={14} />
             </button>
-            <span className="text-sm font-bold text-foreground truncate">{exercise.exerciseTitle}</span>
+            <button
+              onClick={() => setShowHologram(true)}
+              className="text-sm font-bold text-foreground truncate hover:text-[hsl(var(--synth-cyan))] transition-colors cursor-pointer"
+            >
+              {exercise.exerciseTitle}
+            </button>
           </div>
 
           {/* ··· More Options Popover */}
@@ -332,6 +339,13 @@ const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTrac
       </div>
 
       <EliteUpsellModal open={showUpsell} onClose={() => setShowUpsell(false)} />
+      {showHologram && (
+        <AnatomyHologram
+          exerciseTitle={exercise.exerciseTitle}
+          exerciseId={exercise.exerciseId}
+          onClose={() => setShowHologram(false)}
+        />
+      )}
     </>
   );
 });
