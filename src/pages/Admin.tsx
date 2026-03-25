@@ -5,7 +5,7 @@ import AppNavbar from "@/components/layout/AppNavbar";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Users, Dumbbell, Landmark, FileText, Trash2, ClipboardList } from "lucide-react";
+import { Loader2, Users, Dumbbell, Landmark, FileText, Trash2, ClipboardList, Megaphone } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 
@@ -67,12 +67,16 @@ const AdminProgressLogger = lazy(() => import("@/components/admin/AdminProgressL
 const AdminLiftVideoReview = lazy(() => import("@/components/admin/AdminLiftVideoReview"));
 const AdminProveItReview = lazy(() => import("@/components/admin/AdminProveItReview"));
 const AdminSeoGenerator = lazy(() => import("@/components/admin/AdminSeoGenerator"));
+const AdminOutreach = lazy(() => import("@/components/admin/AdminOutreach"));
+const AdminSeoPages = lazy(() => import("@/components/admin/AdminSeoPages"));
+const AdminGbpPosts = lazy(() => import("@/components/admin/AdminGbpPosts"));
 
 const MASTER_TABS = [
   { key: "roster", label: "The Roster", icon: Users, desc: "Users · Support · Families" },
   { key: "engine", label: "Training Engine", icon: Dumbbell, desc: "Programs · AI · Coaching" },
   { key: "vault", label: "The Vault", icon: Landmark, desc: "Revenue · Business" },
   { key: "content", label: "Site Content", icon: FileText, desc: "CMS · Comms · Marketing" },
+  { key: "growth", label: "Growth", icon: Megaphone, desc: "Outreach · SEO · GBP" },
 ];
 
 const TabLoader = () => (
@@ -384,6 +388,15 @@ const Admin = () => {
             { key: "cmo", label: "CMO Reports", content: <AdminCmoReports /> },
             { key: "media-vault", label: "Media Vault", content: <AdminMediaVault /> },
             { key: "seo", label: "SEO Engine", content: <AdminSeoGenerator /> },
+          ]} />
+        )}
+
+        {/* ── GROWTH ── */}
+        {activeTab === "growth" && (
+          <SubTabs tabs={[
+            { key: "outreach", label: "Outreach", content: <AdminOutreach /> },
+            { key: "seo-pages", label: "SEO Pages", content: <AdminSeoPages /> },
+            { key: "gbp", label: "GBP Posts", content: <AdminGbpPosts /> },
           ]} />
         )}
       </div>

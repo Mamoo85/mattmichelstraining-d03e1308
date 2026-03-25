@@ -1526,6 +1526,51 @@ export type Database = {
         }
         Relationships: []
       }
+      outreach_leads: {
+        Row: {
+          business_name: string
+          city: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          industry: string | null
+          last_contact_date: string | null
+          notes: string | null
+          owner_name: string | null
+          phone: string | null
+          status: string | null
+          website_status: string | null
+        }
+        Insert: {
+          business_name: string
+          city?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          industry?: string | null
+          last_contact_date?: string | null
+          notes?: string | null
+          owner_name?: string | null
+          phone?: string | null
+          status?: string | null
+          website_status?: string | null
+        }
+        Update: {
+          business_name?: string
+          city?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          industry?: string | null
+          last_contact_date?: string | null
+          notes?: string | null
+          owner_name?: string | null
+          phone?: string | null
+          status?: string | null
+          website_status?: string | null
+        }
+        Relationships: []
+      }
       parent_child_links: {
         Row: {
           child_user_id: string
@@ -1810,6 +1855,7 @@ export type Database = {
           is_in_person: boolean
           is_pro: boolean
           is_vip: boolean
+          referral_count: number | null
           stripe_customer_id: string | null
           subscription_tier: string
           trial_path: string | null
@@ -1833,6 +1879,7 @@ export type Database = {
           is_in_person?: boolean
           is_pro?: boolean
           is_vip?: boolean
+          referral_count?: number | null
           stripe_customer_id?: string | null
           subscription_tier?: string
           trial_path?: string | null
@@ -1856,6 +1903,7 @@ export type Database = {
           is_in_person?: boolean
           is_pro?: boolean
           is_vip?: boolean
+          referral_count?: number | null
           stripe_customer_id?: string | null
           subscription_tier?: string
           trial_path?: string | null

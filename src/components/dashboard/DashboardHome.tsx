@@ -4,6 +4,7 @@ import MonthlyFocusWidget from "@/components/features/MonthlyFocusWidget";
 import UpcomingSessions from "@/components/sessions/UpcomingSessions";
 import EmptyStateCard from "@/components/shared/EmptyStateCard";
 import TodaysTrainingCard from "@/components/programs/TodaysTrainingCard";
+import DashboardReferralCard from "@/components/dashboard/DashboardReferralCard";
 import { useAuth } from "@/hooks/useAuth";
 
 const SharedWorkoutFeed = lazy(() => import("@/components/workout/SharedWorkoutFeed"));
@@ -40,6 +41,7 @@ const DashboardHome = memo(({ isNewUser, isInPerson, onViewPoints, onViewReferra
       <TodaysTrainingCard />
 
       <UpcomingSessions />
+      <DashboardReferralCard />
       <MonthlyFocusWidget />
 
       <Suspense fallback={null}>
