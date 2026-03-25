@@ -1,31 +1,15 @@
 import { useState, memo } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check, Users } from "lucide-react";
 
 const DashboardReferralCard = memo(() => {
   const { user } = useAuth();
   const [copied, setCopied] = useState(false);
 
   const referralLink = `https://mattmichelstraining.com?ref=${user?.id || ""}`;
-
-  const { data: referralCount = 0 } = useQuery({
-    queryKey: ["referral-count", user?.id],
-    queryFn: async () => {
-      if (!user?.id) return 0;
-      const { data } = await supabase
-        .from("profiles")
-        .select("referral_count")
-        .eq("user_id", user.id)
-        .single();
-      return (data as any)?.referral_count ?? 0;
-    },
-    enabled: !!user?.id,
-  });
 
   const handleCopy = () => {
     navigator.clipboard.writeText(referralLink);
@@ -36,15 +20,22 @@ const DashboardReferralCard = memo(() => {
   if (!user) return null;
 
   return (
-    <Card className="border-primary/20">
+    <Card className="border-primary/30 bg-primary/5">
       <CardContent className="p-5 space-y-3">
-        <p className="font-bold text-foreground">🤝 Refer a Friend</p>
-        <p className="text-sm text-muted-foreground">Get 1 free week of coaching when they sign up.</p>
+        <div className="flex items-center gap-2">
+          <Users size={18} className="text-primary" />
+          <p className="font-bold text-foreground text-lg">Refer a Friend</p>
+        </div>
+        <div className="bg-primary/10 border border-primary/20 px-3 py-2 text-center">
+          <span className="text-xs font-black uppercase tracking-widest text-primary">Free for now</span>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Know someone who should be training with M²? Send them your link — it's completely free to join right now.
+        </p>
         <Input readOnly value={referralLink} className="text-xs truncate" />
         <Button className="w-full gap-2" onClick={handleCopy}>
           {copied ? <><Check size={14} className="text-green-400" /> Copied ✓</> : <><Copy size={14} /> Copy Link</>}
         </Button>
-        <p className="text-xs text-muted-foreground text-center">You've referred {referralCount} friends</p>
       </CardContent>
     </Card>
   );
