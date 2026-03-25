@@ -548,6 +548,58 @@ const Pricing = () => {
           </motion.div>
         </div>
 
+        {/* Social Proof Strip */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="mt-12 max-w-5xl mx-auto"
+        >
+          <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-1">
+            What Our Clients Say
+          </span>
+          <h2 className="text-lg font-bold text-foreground mb-4">
+            Real results from real people
+          </h2>
+          <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-2 md:grid md:grid-cols-3 md:overflow-visible scrollbar-hide">
+            {[
+              {
+                quote: "I was following random YouTube programs for 3 years and spinning my wheels. Matt's programming added 40lbs to my deadlift in 10 weeks. The 'why' behind every exercise finally made it click.",
+                name: "Derek R.",
+                tag: "Foundation Member · Warren, MI",
+              },
+              {
+                quote: "My son is a junior linebacker. Matt took him from 155lbs bench to 210 before his senior season. He's being looked at by D3 programs now. Worth every penny.",
+                name: "Parent, Grosse Pointe North HS",
+                tag: "Pro Member · In-Person + App",
+              },
+              {
+                quote: "I'm in Chicago. Found Matt's app online. The form check feature alone fixed a knee problem I'd had for two years. Best $20/month I spend.",
+                name: "Amanda K.",
+                tag: "Foundation Member · Online",
+              },
+            ].map((t, i) => (
+              <div
+                key={i}
+                className="min-w-[280px] snap-start bg-card border border-border p-5 flex flex-col flex-shrink-0 md:flex-shrink"
+              >
+                <div className="flex gap-0.5 mb-3">
+                  {Array.from({ length: 5 }).map((_, s) => (
+                    <Star key={s} size={12} className="text-primary fill-primary" />
+                  ))}
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed italic flex-1">
+                  "{t.quote}"
+                </p>
+                <div className="mt-4 pt-3 border-t border-border">
+                  <span className="text-sm font-bold text-foreground block">{t.name}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary">{t.tag}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
         {/* AI Generator Showcase */}
         <div className="mt-12 max-w-3xl mx-auto">
           <Suspense fallback={null}>
