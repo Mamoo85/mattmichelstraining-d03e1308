@@ -45,13 +45,13 @@ const DashboardChallengePreview = memo(({ onViewChallenge }: Props) => {
 
       // Get names
       const userIds = participants.map((p) => p.user_id);
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, full_name, athlete_name, random_alias")
+      const { data: profiles } = await (supabase
+        .from("profiles_safe" as any)
+        .select("user_id, full_name, athlete_name, random_alias") as any)
         .in("user_id", userIds);
 
       const profileMap = new Map(
-        (profiles ?? []).map((p) => [p.user_id, p.athlete_name || p.full_name || p.random_alias || "Athlete"])
+        ((profiles ?? []) as any[]).map((p: any) => [p.user_id, p.athlete_name || p.full_name || p.random_alias || "Athlete"])
       );
 
       setTop3(
