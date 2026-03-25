@@ -470,6 +470,33 @@ export type Database = {
         }
         Relationships: []
       }
+      content_queue: {
+        Row: {
+          caption: string
+          content_type: string
+          created_at: string | null
+          hashtags: string | null
+          id: string
+          status: string | null
+        }
+        Insert: {
+          caption: string
+          content_type: string
+          created_at?: string | null
+          hashtags?: string | null
+          id?: string
+          status?: string | null
+        }
+        Update: {
+          caption?: string
+          content_type?: string
+          created_at?: string | null
+          hashtags?: string | null
+          id?: string
+          status?: string | null
+        }
+        Relationships: []
+      }
       custom_program_requests: {
         Row: {
           additional_notes: string | null
@@ -946,6 +973,39 @@ export type Database = {
           token?: string
           used_at?: string | null
           used_by?: string | null
+        }
+        Relationships: []
+      }
+      instagram_posts: {
+        Row: {
+          active: boolean | null
+          caption: string | null
+          created_at: string | null
+          id: string
+          image_url: string
+          likes_count: number | null
+          post_url: string
+          posted_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          caption?: string | null
+          created_at?: string | null
+          id?: string
+          image_url: string
+          likes_count?: number | null
+          post_url: string
+          posted_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          caption?: string | null
+          created_at?: string | null
+          id?: string
+          image_url?: string
+          likes_count?: number | null
+          post_url?: string
+          posted_at?: string | null
         }
         Relationships: []
       }

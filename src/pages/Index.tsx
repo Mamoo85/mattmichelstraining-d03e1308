@@ -9,6 +9,7 @@ const DoNotPressButton = lazy(() => import("@/components/landing/DoNotPressButto
 const FirstMonthPromo = lazy(() => import("@/components/landing/FirstMonthPromo"));
 const AiGeneratorShowcase = lazy(() => import("@/components/landing/AiGeneratorShowcase"));
 const ProveItShowcase = lazy(() => import("@/components/landing/ProveItShowcase"));
+const InstagramSocialBox = lazy(() => import("@/components/landing/InstagramSocialBox"));
 
 const FAQ_SCHEMA = {
   "@context": "https://schema.org",
@@ -78,6 +79,12 @@ const Index = () => (
       </Suspense>
       <Suspense fallback={null}>
         <DoNotPressButton />
+      </Suspense>
+      <Suspense fallback={null}>
+        <div>
+          <h2 className="text-sm font-bold uppercase tracking-widest text-foreground mb-4">Follow Along</h2>
+          <InstagramSocialBox />
+        </div>
       </Suspense>
     </div>
     
