@@ -2,7 +2,7 @@ import { memo, useState, useCallback, useRef, useEffect, lazy, Suspense } from "
 import { Link, useLocation } from "react-router-dom";
 import {
   Dumbbell, ShoppingBag, Home, LogIn, LogOut, Shield,
-  CreditCard, Users, User, Download, CalendarClock, ChevronDown, Cpu,
+  CreditCard, Users, User, Download, CalendarClock, ChevronDown, Cpu, Timer,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
