@@ -20,7 +20,6 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import EmptyStateCard from "@/components/shared/EmptyStateCard";
 import { safeLocalStorage } from "@/lib/browserStorage";
-import { safeLocalStorage } from "@/lib/browserStorage";
 const TrainingHistory = lazy(() => import("@/components/profile/TrainingHistory"));
 const WelcomeGiftModal = lazy(() => import("@/components/dashboard/WelcomeGiftModal"));
 
