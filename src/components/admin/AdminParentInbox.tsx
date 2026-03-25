@@ -100,7 +100,8 @@ const AdminParentInbox = () => {
   }, []);
 
   const markRead = async (id: string) => {
-    await supabase.from("parent_inbox").update({ is_read: true }).eq("id", id);
+    const { error } = await supabase.from("parent_inbox").update({ is_read: true }).eq("id", id);
+    if (error) { toast({ title: "Failed to mark as read", variant: "destructive" }); return; }
     setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, is_read: true } : m)));
   };
 
@@ -131,22 +132,27 @@ const AdminParentInbox = () => {
 
   const handleDelete = async () => {
     if (!deleteTarget || !user) return;
+    try {
+      // Move to trash
+      const { error: trashErr } = await supabase.from("admin_trash" as any).insert({
+        original_table: "parent_inbox",
+        original_id: deleteTarget.id,
+        deleted_by: user.id,
+        original_data: deleteTarget as any,
+        label: `Parent message: ${deleteTarget.subject || deleteTarget.parent_email}`,
+      });
+      if (trashErr) throw trashErr;
 
-    // Move to trash
-    await supabase.from("admin_trash" as any).insert({
-      original_table: "parent_inbox",
-      original_id: deleteTarget.id,
-      deleted_by: user.id,
-      original_data: deleteTarget as any,
-      label: `Parent message: ${deleteTarget.subject || deleteTarget.parent_email}`,
-    });
+      // Soft-delete
+      const { error: delErr } = await supabase.from("parent_inbox").update({ is_deleted: true } as any).eq("id", deleteTarget.id);
+      if (delErr) throw delErr;
 
-    // Soft-delete
-    await supabase.from("parent_inbox").update({ is_deleted: true } as any).eq("id", deleteTarget.id);
-
-    setMessages((prev) => prev.filter((m) => m.id !== deleteTarget.id));
-    setDeleteTarget(null);
-    toast({ title: "Moved to trash", description: "Can be restored within 30 days." });
+      setMessages((prev) => prev.filter((m) => m.id !== deleteTarget.id));
+      setDeleteTarget(null);
+      toast({ title: "Moved to trash", description: "Can be restored within 30 days." });
+    } catch (e: any) {
+      toast({ title: "Delete failed", description: e.message || "Something went wrong", variant: "destructive" });
+    }
   };
 
   const filtered = messages.filter((m) => {

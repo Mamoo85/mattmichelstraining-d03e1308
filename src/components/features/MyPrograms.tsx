@@ -119,13 +119,14 @@ const MyPrograms = () => {
       const reps = parseInt(ex.reps) || 1;
       const estimated1rm = Math.round(weight * (1 + reps / 30));
 
-      await supabase.from("progress_logs").insert({
+      const { error: logErr } = await supabase.from("progress_logs").insert({
         user_id: user.id,
         exercise_name: ex.name,
         weight,
         reps,
         estimated_1rm: estimated1rm,
       });
+      if (logErr) toast({ title: "Log failed", description: `Failed to log ${ex.name}: ${logErr.message}`, variant: "destructive" });
     }
 
     toast({ title: "Session logged", description: "Nice work. Matt sees this." });
