@@ -45,7 +45,7 @@ const SharedWorkoutFeed = () => {
       // Fetch profiles for names
       const userIds = [...new Set((data as any[]).map((d: any) => d.user_id))];
       const { data: profiles } = await supabase
-        .from("profiles")
+        .from("profiles_safe" as any)
         .select("user_id, athlete_name, full_name")
         .in("user_id", userIds);
 

@@ -31,7 +31,7 @@ const CommunityActivityFeed = memo(() => {
       // Get profiles that are public
       const userIds = [...new Set(logs.map((l) => l.user_id))];
       const { data: profiles } = await supabase
-        .from("profiles")
+        .from("profiles_safe" as any)
         .select("user_id, full_name, athlete_name, random_alias, is_public_profile")
         .in("user_id", userIds)
         .eq("is_public_profile", true);
