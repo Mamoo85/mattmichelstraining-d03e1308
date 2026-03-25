@@ -30,9 +30,8 @@ function preloadLcpImage(): Plugin {
         }
       }
 
-      // Preload splash image (LCP) and hero logo
+      // Preload hero logo (LCP candidate) — splash is no longer used
       const tags: string[] = [];
-      if (splashLogoPath) tags.push(`<link rel="preload" as="image" href="${splashLogoPath}" fetchpriority="high" />`);
       if (heroLogoPath) tags.push(`<link rel="preload" as="image" href="${heroLogoPath}" fetchpriority="high" />`);
       if (tags.length) result = result.replace("</head>", `${tags.join("\n")}\n</head>`);
 
