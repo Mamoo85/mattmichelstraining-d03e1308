@@ -66,12 +66,7 @@ const Dashboard = () => {
   const athleteDisplay = profile?.athlete_name || profile?.full_name || "Athlete";
   const isNewUser = hasPrograms === false && hasLogs === false;
 
-  const tabs = useMemo(() =>
-    subscriptionTier === "elite" || isAdmin
-      ? [...BASE_TABS, { key: "team", label: "Team" } as const]
-      : BASE_TABS,
-    [subscriptionTier, isAdmin]
-  );
+  const tabs = BASE_TABS;
 
   const handleViewPoints = useCallback(() => setActiveTab("challenge"), []);
   const handleViewReferrals = useCallback(() => setActiveTab("challenge"), []);
