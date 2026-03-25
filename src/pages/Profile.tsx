@@ -6,11 +6,11 @@ import TechSupportButton from "@/components/layout/TechSupportButton";
 import SupportTicketForm from "@/components/features/SupportTicketForm";
 import PrivacySettingsCard from "@/components/features/PrivacySettingsCard";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   User, Trophy, Medal, Award, Save, Loader2, Gift, Search,
   Crown, ExternalLink, ShoppingBag, Dumbbell, Calendar, Shield,
-  ArrowRight, ChevronDown, ChevronUp, Zap, Clock, FileText, Send, Activity, Brain, Camera
+  ArrowRight, ChevronDown, ChevronUp, Zap, Clock, FileText, Send, Activity, Brain, Camera, Ticket
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import GiftSessionModal from "@/components/sessions/GiftSessionModal";
@@ -19,7 +19,7 @@ import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import EmptyStateCard from "@/components/shared/EmptyStateCard";
-
+import { safeLocalStorage } from "@/lib/browserStorage";
 const TrainingHistory = lazy(() => import("@/components/profile/TrainingHistory"));
 const WelcomeGiftModal = lazy(() => import("@/components/dashboard/WelcomeGiftModal"));
 
@@ -60,6 +60,67 @@ const PostureAnalysisCard = () => {
           <WelcomeGiftModal open={showCapture} onClose={() => setShowCapture(false)} />
         </Suspense>
       )}
+    </div>
+  );
+};
+
+/** Deferred free custom program coupon — shows if user clicked "Do Later" */
+const DeferredCouponCard = () => {
+  const { user } = useAuth();
+  const nav = useNavigate();
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    const isDeferred = safeLocalStorage.getItem("m2_coupon_deferred") === "true";
+    if (!isDeferred) return;
+    supabase
+      .from("profiles")
+      .select("is_in_person, free_program_redeemed")
+      .eq("user_id", user.id)
+      .single()
+      .then(({ data }) => {
+        if (data?.is_in_person && !data?.free_program_redeemed) {
+          supabase
+            .from("custom_program_requests" as any)
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", user.id)
+            .then(({ count }) => {
+              if ((count ?? 0) === 0) setVisible(true);
+            });
+        }
+      });
+  }, [user]);
+
+  if (!visible) return null;
+
+  const handleClaim = () => {
+    safeLocalStorage.removeItem("m2_coupon_deferred");
+    nav("/dashboard");
+  };
+
+  return (
+    <div className="bg-primary/5 border-2 border-primary/30 p-5 mb-6">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <Ticket size={14} className="text-primary" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-primary">
+            Free Custom Program
+          </span>
+        </div>
+        <span className="text-[8px] bg-primary text-primary-foreground px-2 py-0.5 font-bold uppercase tracking-widest">
+          1 Free Coupon
+        </span>
+      </div>
+      <p className="text-xs text-muted-foreground mb-3">
+        You have a free custom workout program waiting to be claimed. Fill out the form on your dashboard and Coach Matt will build it for you.
+      </p>
+      <button
+        onClick={handleClaim}
+        className="w-full h-10 bg-primary text-primary-foreground flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all"
+      >
+        <Dumbbell size={14} /> Claim My Free Program
+      </button>
     </div>
   );
 };
@@ -562,6 +623,9 @@ const Profile = () => {
             </div>
           </div>
         </div>
+
+        {/* Deferred Free Custom Program Coupon */}
+        <DeferredCouponCard />
 
         {/* Free Posture Analysis */}
         <PostureAnalysisCard />

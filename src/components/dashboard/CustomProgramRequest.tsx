@@ -2,16 +2,20 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Dumbbell, Loader2, CheckCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { Dumbbell, Loader2, CheckCircle, ChevronDown, ChevronUp, Clock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { safeLocalStorage } from "@/lib/browserStorage";
+
+const DEFERRED_KEY = "m2_coupon_deferred";
 
 const CustomProgramRequest = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [expanded, setExpanded] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [deferred, setDeferred] = useState(() => safeLocalStorage.getItem(DEFERRED_KEY) === "true");
 
   // Check profile for is_in_person + free_program_redeemed
   const { data: profile, isLoading: profileLoading } = useQuery({
@@ -66,17 +70,18 @@ const CustomProgramRequest = () => {
     }
   }, [profile]);
 
-  // Don't show if: not in-person, already redeemed, or loading
+  // Don't show if: not in-person, already redeemed, loading, or deferred
   if (profileLoading) return null;
   if (!profile?.is_in_person) return null;
+  if (deferred) return null;
   if (profile.free_program_redeemed || existingRequest) {
     // Show status if request exists
     if (existingRequest) {
       const statusMap: Record<string, string> = {
         pending: "Coach Matt is reviewing your request",
-        generating: "AI is drafting your custom program",
-        ready_for_review: "Your program is being finalized",
-        approved: "Your custom program is in your library!",
+        generating: "AI is drafting your custom workout",
+        ready_for_review: "Your workout is being finalized",
+        approved: "Your custom workout is in your Workouts tab!",
       };
       return (
         <div className="bg-card border border-border p-5 space-y-2">
@@ -95,6 +100,12 @@ const CustomProgramRequest = () => {
     return null;
   }
 
+  const handleDefer = () => {
+    safeLocalStorage.setItem(DEFERRED_KEY, "true");
+    setDeferred(true);
+    toast.success("Saved! You can claim your free program from your Profile tab anytime.");
+  };
+
   const handleSubmit = async () => {
     if (!form.name.trim()) {
       toast.error("Name is required");
@@ -102,7 +113,6 @@ const CustomProgramRequest = () => {
     }
     setSubmitting(true);
     try {
-      // Insert the request
       const { error: insertError } = await supabase
         .from("custom_program_requests" as any)
         .insert({
@@ -118,10 +128,6 @@ const CustomProgramRequest = () => {
           additional_notes: form.additional_notes.trim() || null,
         } as any);
       if (insertError) throw insertError;
-
-      // Mark coupon as redeemed (server-side via service role would be ideal,
-      // but the protect trigger blocks client updates — so we use an admin notification instead)
-      // The admin will set free_program_redeemed when approving
 
       // Notify admin
       const { data: adminIds } = await supabase
@@ -140,7 +146,7 @@ const CustomProgramRequest = () => {
         await supabase.from("notifications").insert(notifications);
       }
 
-      toast.success("Request submitted! Coach Matt will build your custom program.");
+      toast.success("Request submitted! Coach Matt will build your custom workout.");
       queryClient.invalidateQueries({ queryKey: ["custom-program-request"] });
       queryClient.invalidateQueries({ queryKey: ["profile-program-coupon"] });
     } catch (e: any) {
@@ -169,13 +175,22 @@ const CustomProgramRequest = () => {
         Fill out the form below and submit — Matt will review and build your program.
       </p>
 
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest text-primary hover:text-foreground transition-colors py-2"
-      >
-        {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-        {expanded ? "Collapse Form" : "Claim My Free Program"}
-      </button>
+      <div className="flex gap-2">
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="flex-1 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest text-primary hover:text-foreground transition-colors py-2"
+        >
+          {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          {expanded ? "Collapse Form" : "Claim My Free Program"}
+        </button>
+        <button
+          onClick={handleDefer}
+          className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground border border-border hover:border-primary/30 transition-colors"
+        >
+          <Clock size={12} />
+          Do Later
+        </button>
+      </div>
 
       {expanded && (
         <div className="space-y-3 pt-2 border-t border-border">
