@@ -1,10 +1,10 @@
 import { motion } from "framer-motion";
 import { Shield, Users, Dumbbell, GraduationCap, ArrowRight, HeartPulse } from "lucide-react";
 import { Link } from "react-router-dom";
-import sneakAthlete from "@/assets/sneak-athlete.jpg";
+import sneakAthlete from "@/assets/sneak-athlete.webp";
 import sneakCoach from "@/assets/sneak-coach.jpg";
-import sneakParent from "@/assets/sneak-parent.jpg";
-import portalProgress from "@/assets/portal-progress.jpg";
+import sneakParent from "@/assets/sneak-parent.webp";
+import portalProgress from "@/assets/portal-progress.webp";
 
 const AUDIENCES = [
   {

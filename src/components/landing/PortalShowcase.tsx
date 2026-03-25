@@ -2,8 +2,8 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowRight, Monitor, MessageSquare, TrendingUp, Shield, Zap, User } from "lucide-react";
 import portalPrograms from "@/assets/portal-programs.jpg";
-import portalChat from "@/assets/portal-chat.jpg";
-import portalProgress from "@/assets/portal-progress.jpg";
+import portalChat from "@/assets/portal-chat.webp";
+import portalProgress from "@/assets/portal-progress.webp";
 
 const FEATURES = [
   {

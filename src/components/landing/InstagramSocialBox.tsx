@@ -1,7 +1,7 @@
 import { Instagram, ExternalLink, Heart, MessageCircle, Play } from "lucide-react";
-import athleteFootball from "@/assets/athlete-football.jpg";
-import athleteSoccer from "@/assets/athlete-soccer.jpg";
-import athleteBaseball from "@/assets/athlete-baseball.jpg";
+import athleteFootball from "@/assets/athlete-football.webp";
+import athleteSoccer from "@/assets/athlete-soccer.webp";
+import athleteBaseball from "@/assets/athlete-baseball.webp";
 import athleteLacrosse from "@/assets/athlete-lacrosse.jpg";
 import mattTraining from "@/assets/matt-training.jpg";
 import mattFamily from "@/assets/matt-family.jpg";
