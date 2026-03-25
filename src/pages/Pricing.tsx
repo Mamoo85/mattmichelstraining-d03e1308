@@ -617,6 +617,7 @@ const Pricing = () => {
             Not ready? Get our free beginner program → <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
+        <StudioBridge />
       </div>
     </div>
   );
