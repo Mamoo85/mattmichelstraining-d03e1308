@@ -126,7 +126,7 @@ const MyPrograms = () => {
         reps,
         estimated_1rm: estimated1rm,
       });
-      if (logErr) toast.error(`Failed to log ${ex.name}: ${logErr.message}`);
+      if (logErr) toast({ title: "Log failed", description: `Failed to log ${ex.name}: ${logErr.message}`, variant: "destructive" });
     }
 
     toast({ title: "Session logged", description: "Nice work. Matt sees this." });
