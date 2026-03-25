@@ -563,6 +563,9 @@ const Profile = () => {
           </div>
         </div>
 
+        {/* Deferred Free Custom Program Coupon */}
+        <DeferredCouponCard />
+
         {/* Free Posture Analysis */}
         <PostureAnalysisCard />
 
