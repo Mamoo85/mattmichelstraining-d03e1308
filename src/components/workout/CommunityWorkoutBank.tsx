@@ -140,6 +140,7 @@ const CommunityWorkoutBank = ({ mode = "my", onCreateNew }: CommunityWorkoutBank
         reps: e.reps || "10",
         notes: e.notes || "",
       })),
+      isFixIt: workout.source_type === "ai_fixit",
     });
   };
 

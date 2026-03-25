@@ -117,6 +117,7 @@ const AiWorkoutSuggest = memo(({ onDone, initialPath }: { onDone: () => void; in
         reps: ex.reps,
         notes: ex.notes || "",
       })),
+      isFixIt: path === "fixit",
     });
   };
 
