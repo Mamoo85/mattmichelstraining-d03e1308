@@ -1852,8 +1852,10 @@ export type Database = {
           free_program_redeemed: boolean
           full_name: string | null
           id: string
+          invite_card_dismissed: boolean | null
           is_in_person: boolean
           is_pro: boolean
+          is_public_profile: boolean | null
           is_vip: boolean
           random_alias: string | null
           referral_count: number | null
@@ -1877,8 +1879,10 @@ export type Database = {
           free_program_redeemed?: boolean
           full_name?: string | null
           id?: string
+          invite_card_dismissed?: boolean | null
           is_in_person?: boolean
           is_pro?: boolean
+          is_public_profile?: boolean | null
           is_vip?: boolean
           random_alias?: string | null
           referral_count?: number | null
@@ -1902,8 +1906,10 @@ export type Database = {
           free_program_redeemed?: boolean
           full_name?: string | null
           id?: string
+          invite_card_dismissed?: boolean | null
           is_in_person?: boolean
           is_pro?: boolean
+          is_public_profile?: boolean | null
           is_vip?: boolean
           random_alias?: string | null
           referral_count?: number | null
