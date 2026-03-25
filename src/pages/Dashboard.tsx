@@ -11,6 +11,7 @@ import { useIsAdmin } from "@/hooks/useIsAdmin";
 import PwaInstallBanner from "@/components/layout/PwaInstallBanner";
 import StudioCheckIn from "@/components/sessions/StudioCheckIn";
 import { safeLocalStorage } from "@/lib/browserStorage";
+const WelcomeGiftModal = lazy(() => import("@/components/dashboard/WelcomeGiftModal"));
 
 import DashboardHome from "@/components/dashboard/DashboardHome";
 import WorkoutsTab from "@/components/dashboard/WorkoutsTab";
@@ -49,6 +50,7 @@ const Dashboard = () => {
   const [hasPrograms, setHasPrograms] = useState<boolean | null>(null);
   const [hasLogs, setHasLogs] = useState<boolean | null>(null);
   const [generatorView, setGeneratorView] = useState<null | "workout" | "fixit">(null);
+  const [showWelcomeGift, setShowWelcomeGift] = useState(() => safeLocalStorage.getItem("m2-welcome-gift-seen") !== "1");
 
   useEffect(() => {
     if (!user) return;
@@ -229,6 +231,12 @@ const Dashboard = () => {
       )}
 
       <PortalOnboarding />
+
+      {showWelcomeGift && (
+        <Suspense fallback={null}>
+          <WelcomeGiftModal open={showWelcomeGift} onClose={() => setShowWelcomeGift(false)} />
+        </Suspense>
+      )}
     </div>
   );
 };
