@@ -119,7 +119,12 @@ const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTrac
             >
               <Target size={14} />
             </button>
-            <span className="text-sm font-bold text-foreground truncate">{exercise.exerciseTitle}</span>
+            <button
+              onClick={() => setShowHologram(true)}
+              className="text-sm font-bold text-foreground truncate hover:text-[hsl(var(--synth-cyan))] transition-colors cursor-pointer"
+            >
+              {exercise.exerciseTitle}
+            </button>
           </div>
 
           {/* ··· More Options Popover */}
