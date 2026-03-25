@@ -384,7 +384,6 @@ const IntervalTimer = ({ onClose, initialConfig, exercises: circuitExercises, is
                 >+</button>
               </div>
             </div>
-            </div>
 
             {/* Circuit exercise list */}
             {isCircuit && circuitExercises && circuitExercises.length > 0 && (
