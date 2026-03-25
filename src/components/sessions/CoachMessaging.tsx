@@ -80,7 +80,11 @@ const CoachMessaging = () => {
       sender_role: isAdmin ? "coach" : "athlete",
       message: message.trim(),
     });
-    if (!error) setMessage("");
+    if (error) {
+      toast.error("Failed to send message. Check your connection and try again.");
+    } else {
+      setMessage("");
+    }
     setSending(false);
   };
 
