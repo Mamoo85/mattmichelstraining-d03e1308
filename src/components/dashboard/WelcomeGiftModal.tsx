@@ -20,7 +20,7 @@ const WelcomeGiftModal = ({ open, onClose }: WelcomeGiftModalProps) => {
   const navigate = useNavigate();
 
   const handleDismiss = () => {
-    safeLocalStorage.setItem("m2-welcome-gift-seen", "1");
+    safeLocalStorage.setItem("m2-welcome-gift-seen-v2", "1");
     onClose();
   };
 

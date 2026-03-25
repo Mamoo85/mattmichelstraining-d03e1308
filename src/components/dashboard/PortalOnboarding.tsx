@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import portalImg from "@/assets/portal-overview.jpg";
 
-const STORAGE_KEY = "m2-portal-tour-seen";
+const STORAGE_KEY = "m2-portal-tour-seen-v2";
 
 const FEATURES = [
   { icon: <Dumbbell size={18} />, text: "Structured programs & daily workouts" },
