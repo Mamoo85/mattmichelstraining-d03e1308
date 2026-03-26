@@ -224,6 +224,7 @@ const App = () => (
                     <Route path="/demo-clinic" element={<ClinicMockup />} />
                     <Route path="/demo-roofing" element={<RoofingMockup />} />
                     <Route path="/demo-youngblood" element={<YoungbloodMockup />} />
+                    <Route path="/demo-youngblood/*" element={<YoungbloodMockup />} />
                     <Route path="/demo-dental" element={<DentalMockup />} />
                     <Route path="/demo-dental/*" element={<DentalMockup />} />
                     <Route path="/whats-included" element={<WebDesignIncluded />} />
