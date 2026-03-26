@@ -90,6 +90,7 @@ const AdminLiftVideoReview = () => {
   };
 
   const playVideo = async (path: string) => {
+    if (path.includes('..')) throw new Error('Invalid path');
     const { data } = await supabase.storage.from("lift_videos").createSignedUrl(path, 300);
     if (data?.signedUrl) setPlayingUrl(data.signedUrl);
   };
@@ -117,6 +118,9 @@ const AdminLiftVideoReview = () => {
   const deleteVideo = async (video: LiftVideoRow) => {
     setActionLoading(video.id);
     // Delete from storage
+    if (video.video_path.includes('..')) {
+      throw new Error('Invalid path');
+    }
     await supabase.storage.from("lift_videos").remove([video.video_path]);
     // Delete row
     const { error } = await supabase.from("lift_videos" as any).delete().eq("id", video.id);

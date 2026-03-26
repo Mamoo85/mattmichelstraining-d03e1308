@@ -491,6 +491,7 @@ const PosturalVideoUpload = ({ userId }: { userId: string | null }) => {
     try {
       const ext = file.name.split(".").pop() || "mp4";
       const path = `postural/${userId}/${Date.now()}.${ext}`;
+      if (path.includes('..')) throw new Error('Invalid path');
       const { error } = await supabase.storage.from("form-check-videos").upload(path, file);
       if (error) throw error;
       setUploaded(true);

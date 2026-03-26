@@ -104,6 +104,7 @@ const FoundationPrograms = () => {
     try {
       const ext = file.name.split(".").pop() || "mp4";
       const path = `postural/${user.id}/${Date.now()}.${ext}`;
+      if (path.includes('..')) throw new Error('Invalid file path');
       const { error } = await supabase.storage.from("form-check-videos").upload(path, file);
       if (error) throw error;
       const { data: urlData } = supabase.storage.from("form-check-videos").getPublicUrl(path);

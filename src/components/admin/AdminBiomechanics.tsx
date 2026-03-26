@@ -307,6 +307,7 @@ const AdminBiomechanics = () => {
       for (const file of files) {
         const ext = file.name.split(".").pop();
         const path = `${selectedClient}/${Date.now()}-${file.name}.${ext}`;
+        if (path.includes('..')) throw new Error("Invalid path");
         const { error: uploadError } = await supabase.storage.from("biomechanics_media").upload(path, file);
         if (uploadError) throw uploadError;
         const { data: signedData, error: signedError } = await supabase.storage
