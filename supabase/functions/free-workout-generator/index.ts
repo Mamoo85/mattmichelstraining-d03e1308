@@ -26,6 +26,7 @@ RULES:
 - Do NOT include sled exercises (sled push, sled pull, sled drag, etc.) UNLESS the user specifically mentions or requests sleds in their input.
 - Focus on compound movements: squat, deadlift, press, bench press, power clean, rows
 - Each day follows 5 phases: 1. Rolling/Soft Tissue, 2. Dynamic Warmup, 3. Main Work, 4. Finisher/Conditioning, 5. Cooldown
+- VARIETY IS CRITICAL: Never repeat the same exercise twice in a single workout. Each exercise must target a DIFFERENT movement pattern or muscle group than the previous one. Spread selections across the full exercise library — do not default to the same 10-15 familiar exercises every time. Use creative compound variations (e.g. Zercher squat, Z-press, single-leg RDL, landmine press) alongside staples.
 - You must INFER the user's experience level, goals, training days per week, and available equipment strictly from their natural language input below.
 - If the user doesn't mention how many days, default to 3.
 - If the user doesn't mention equipment, assume full gym (barbell, rack, dumbbells).${visionClause}
