@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Search, ChevronDown, ChevronUp, Dumbbell, ShoppingBag, Calendar,
   Shield, Clock, Loader2, X, Link2, Unlink, Mail, Trash2, Users, AlertTriangle,
-  Star, Copy, MessageSquare, Gift, BookOpen, Eye,
+  Star, Copy, MessageSquare, Gift, BookOpen, Eye, Merge,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -33,6 +33,9 @@ const AdminClientList = () => {
   const [selectedGiftId, setSelectedGiftId] = useState("");
   const [giftNotes, setGiftNotes] = useState("");
   const [gifting, setGifting] = useState(false);
+  const [mergeSearch, setMergeSearch] = useState("");
+  const [mergeTarget, setMergeTarget] = useState<any | null>(null);
+  const [mergeConfirmOpen, setMergeConfirmOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: profiles = [], isLoading } = useQuery({
@@ -332,6 +335,26 @@ const AdminClientList = () => {
     onError: (err: Error) => toast.error(err.message),
   });
 
+  const mergeAccountsMutation = useMutation({
+    mutationFn: async ({ keepUserId, mergeUserId }: { keepUserId: string; mergeUserId: string }) => {
+      const { data, error } = await supabase.functions.invoke("admin-user-manage", {
+        body: { action: "merge_accounts", keepUserId, mergeUserId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-clients"] });
+      toast.success(data.message || "Accounts merged successfully");
+      setSelectedProfile(null);
+      setMergeTarget(null);
+      setMergeSearch("");
+      setMergeConfirmOpen(false);
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
   const filtered = profiles.filter(
     (p) =>
       (p.email ?? "").toLowerCase().includes(search.toLowerCase()) ||
@@ -359,6 +382,15 @@ const AdminClientList = () => {
           p.user_id !== selectedProfile?.user_id &&
           ((p.email ?? "").toLowerCase().includes(linkSearch.toLowerCase()) ||
            (p.full_name ?? "").toLowerCase().includes(linkSearch.toLowerCase()))
+      ).slice(0, 5)
+    : [];
+
+  const mergeSearchResults = mergeSearch.length >= 2
+    ? profiles.filter(
+        (p) =>
+          p.user_id !== selectedProfile?.user_id &&
+          ((p.email ?? "").toLowerCase().includes(mergeSearch.toLowerCase()) ||
+           (p.full_name ?? "").toLowerCase().includes(mergeSearch.toLowerCase()))
       ).slice(0, 5)
     : [];
 
@@ -762,6 +794,66 @@ const AdminClientList = () => {
                     </div>
                   </div>
 
+                  {/* ===== MERGE ACCOUNTS ===== */}
+                  <div className="bg-secondary/30 border border-border p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Merge size={14} className="text-primary" />
+                      <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Merge Accounts</span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mb-2">
+                      Combine a duplicate account into this one. All data from the merged account moves here; the duplicate is deleted.
+                    </p>
+
+                    {mergeTarget ? (
+                      <div className="bg-card border border-border p-2.5 mb-2 space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Merge into {p.full_name?.split(" ")[0] || "this account"}</p>
+                            <p className="text-xs font-bold text-foreground">{mergeTarget.full_name || mergeTarget.email}</p>
+                            <p className="text-[10px] text-muted-foreground">{mergeTarget.email}</p>
+                          </div>
+                          <button onClick={() => { setMergeTarget(null); setMergeSearch(""); }} className="text-muted-foreground hover:text-foreground p-1">
+                            <X size={14} />
+                          </button>
+                        </div>
+                        <button
+                          onClick={() => setMergeConfirmOpen(true)}
+                          className="w-full bg-destructive text-destructive-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2"
+                        >
+                          <Merge size={12} />
+                          Merge {mergeTarget.full_name?.split(" ")[0] || "Account"} → {p.full_name?.split(" ")[0] || "This Account"}
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="relative">
+                          <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                          <Input
+                            value={mergeSearch}
+                            onChange={(e) => setMergeSearch(e.target.value)}
+                            placeholder="Search duplicate account to merge..."
+                            className="pl-8 text-xs h-8"
+                          />
+                        </div>
+                        {mergeSearchResults.length > 0 && (
+                          <div className="mt-1 border border-border bg-card max-h-32 overflow-y-auto">
+                            {mergeSearchResults.map((r) => (
+                              <button
+                                key={r.user_id}
+                                onClick={() => { setMergeTarget(r); setMergeSearch(""); }}
+                                className="w-full text-left px-3 py-2 text-xs hover:bg-accent/20 transition-colors flex items-center gap-2"
+                              >
+                                <Merge size={12} className="text-primary shrink-0" />
+                                <span className="font-bold text-foreground">{r.full_name || r.email}</span>
+                                <span className="text-muted-foreground ml-auto text-[10px]">{r.email}</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+
                   {/* AI Summary */}
                   <div className="flex items-center justify-between bg-secondary/30 border border-border p-3">
                     <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">AI Engagement Summary</span>
@@ -810,6 +902,34 @@ const AdminClientList = () => {
         onConfirm={() => {
           if (selectedProfile?.user_id) {
             eraseUserMutation.mutate(selectedProfile.user_id);
+          }
+        }}
+      />
+
+      {/* ===== MERGE CONFIRMATION ===== */}
+      <ConfirmActionModal
+        open={mergeConfirmOpen}
+        onOpenChange={setMergeConfirmOpen}
+        title="Merge Accounts"
+        description={
+          <>
+            All data from <strong>{mergeTarget?.full_name || mergeTarget?.email}</strong> will be moved to{" "}
+            <strong>{selectedProfile?.full_name || selectedProfile?.email}</strong>.
+            <br /><br />
+            The merged account ({mergeTarget?.email}) will be <strong>permanently deleted</strong> and its email stored as a linked email.
+            This cannot be undone.
+          </>
+        }
+        confirmLabel="Merge Accounts"
+        destructive
+        loading={mergeAccountsMutation.isPending}
+        icon={<Merge size={18} />}
+        onConfirm={() => {
+          if (selectedProfile?.user_id && mergeTarget?.user_id) {
+            mergeAccountsMutation.mutate({
+              keepUserId: selectedProfile.user_id,
+              mergeUserId: mergeTarget.user_id,
+            });
           }
         }}
       />
