@@ -1,140 +1,106 @@
 
 
-# Plan: Account Merge, iCloud Auth Investigation, Pricing Feature Table Cleanup, Bottom Bar Audit
+# Plan: Add Hang Clean, Overhaul Progress Tab, Increase Site-Wide Typography
 
 ## Summary
 
-Four distinct tasks: (1) Build an admin "Merge Accounts" tool, (2) investigate and mitigate the iCloud email sign-in problem, (3) curate and reformat the "What You Get" comparison table on the Pricing page, (4) confirm bottom bar behavior.
+Three changes: (1) add Hang Clean to lift config, (2) completely overhaul the Progress tab with larger fonts, a Matrix/synthwave aesthetic, and a redesigned body avatar, (3) increase title and text sizes site-wide.
 
 ---
 
-## 1. Admin Account Merge Tool
+## 1. Add Hang Clean to Lift Config
 
-**Problem:** Users like Harry create duplicate accounts (e.g., one iCloud, one Gmail). Admin needs to combine them into one.
+**File:** `src/components/progress/liftConfig.ts`
 
-**Approach:**
+- Add "Hang Clean" to the "Advanced · Olympic" category as a 1RM lift
+- Muscles: quads, glutes, hamstrings, upperBack, shoulders, forearms (similar to Power Clean)
 
-- **New edge function action** in `admin-user-manage/index.ts`: `merge_accounts`
-  - Accepts `keepUserId` (the account to keep) and `mergeUserId` (the account to absorb)
-  - Migrates all data from merge → keep across every user-linked table (workout_logs, progress_logs, logged_exercises, coach_notes, notifications, point_transactions, challenge_entries, session_bookings, community_workouts, user_active_programs, purchased_programs, etc.)
-  - Updates all `user_id` foreign keys from mergeUserId → keepUserId
-  - Copies any non-null profile fields from the merged account if the keep account has them null (e.g., athlete_name)
-  - Stores the merged email as a linked identity (see below)
-  - Deletes the merged profile row and auth user
-  - Returns success with a summary of migrated records
+## 2. Progress Tab Overhaul — Matrix Aesthetic
 
-- **New `user_linked_emails` table**: Stores secondary emails for a user
-  - Columns: `id`, `user_id` (FK to auth.users), `email`, `created_at`
-  - RLS: users can read their own, admins can read/write all
-  - This allows a user to have multiple emails on record
+The entire progress page gets a visual overhaul with dramatically larger typography, glowing neon effects, and a rebuilt avatar.
 
-- **Admin UI** in `AdminClientList.tsx`: Add a "Merge Accounts" button inside the user control modal
-  - Shows a search field to pick the second account
-  - Displays a side-by-side comparison (name, email, stats)
-  - Requires confirmation via `ConfirmActionModal`
-  - After merge, refreshes the client list
+### 2a. SectionHeader (`src/components/shared/SectionHeader.tsx`)
+- Title: `text-lg md:text-xl` → `text-2xl md:text-3xl`
+- Subtitle/timestamp text bumped up proportionally
+- NOTE: This is also a site-wide component, so this change covers the site-wide title increase requirement
 
-## 2. iCloud Email Sign-In Investigation & Fix
+### 2b. StatsRow (`src/components/progress/StatsRow.tsx`)
+- Label text: `text-[10px]` → `text-xs`
+- Value text: `text-2xl` → `text-4xl`
+- Unit text: `text-sm` → `text-base`
+- Add stronger glow/shadow effects on the stat cards
+- Add a pulsing neon border animation on the active stat
 
-**Analysis:** The likely issue is that iCloud/Apple Mail's link prefetching consumes the email verification token before the user clicks it. When the user taps the link, the token is already used/expired, so they can't verify → can't log in → make a new Google account.
+### 2c. TronChart (`src/components/progress/TronChart.tsx`)
+- Title text: `text-[10px]` → `text-sm`
+- Session count text: `text-[10px]` → `text-xs`
+- Chart height: 280 → 320
+- Increase axis font sizes from 9 → 11
+- Stronger glow filter on the area line
+- Add a subtle scanline overlay effect for Matrix feel
 
-**Fix:**
-- Add an **interstitial confirmation page** to the email verification flow. Instead of a direct auth callback link, the email links to a page that says "Click to confirm your email" with a button that then hits the real verification endpoint. This prevents prefetch bots from consuming the token.
-- This requires modifying the auth email templates (if configured) or adding a client-side handler on the `/auth` route that detects the verification token in the URL hash and shows a "Confirm" button before calling `supabase.auth.verifyOtp()`.
-- Additionally, the existing `navigateFallbackDenylist` in the service worker already handles token fragments — we'll verify this covers iCloud relay scenarios.
+### 2d. BodyAvatar (`src/components/progress/BodyAvatar.tsx`) — Full Rebuild
+- Increase SVG size from `max-w-[90px]` → `max-w-[140px]`
+- Title text: `text-[9px]` → `text-base font-bold`
+- View labels: `text-[7px]` → `text-xs`
+- Muscle tag labels: `text-[7px]` → `text-[10px]`
+- Add a green "Matrix rain" column effect in the SVG background (animated vertical lines)
+- Brighter thermal glow on active muscles with stronger filter
+- Add a pulsing border effect on the container
+- Use monospace green tint for the cyber grid instead of cyan
 
-**Pragmatic alternative (simpler):** Since magic links already exist, add a prominent "Trouble signing in?" helper on the login screen that offers to send a magic link. This gives iCloud users an immediate workaround. We'll also surface the linked emails from the new table so logging in with either email works.
+### 2e. LiftInsights (`src/components/progress/LiftInsights.tsx`)
+- Section title: `text-[10px]` → `text-sm`
+- Label text: `text-[9px]` → `text-xs`
+- Value text: `text-xl` → `text-3xl`
+- Unit text: `text-xs` → `text-sm`
 
-## 3. Pricing "What You Get" Table — Curate & Add Show More
+### 2f. LogForm (`src/components/progress/LogForm.tsx`)
+- Section label: `text-[10px]` → `text-sm`
+- Input heights: `h-9` → `h-11`
+- Input text sizes bumped up
 
-**Problem:** The tier_features table has 30 rows. Many are filler ("Gift Sessions", "Voice Notes", "Referral Program"). The world-class features (Exercise Library, Fix It Library, AI Generator, Posture Analysis) get lost in the noise.
+### 2g. LogHistory (`src/components/progress/LogHistory.tsx`)
+- Toggle label: `text-[10px]` → `text-sm`
+- Date text: `text-[11px]` → `text-sm`
+- Weight/reps text: `text-sm` → `text-lg`
+- Estimated 1RM text: `text-[10px]` → `text-sm`
 
-**Approach:**
-- Reorder and categorize features via `sort_order` updates in the database:
-  - **Top tier (always visible, first 8):** Exercise Library, Fix It Library, AI Workout Generator (need to add), Posture Analysis, Video Analysis, Workout Scanner, Live Form Tracker, Custom Programming
-  - **Hidden behind "Show More" button:** Workout Logger, Progress Tracking, Monthly Challenges, Recovery Advisor, Coach Messaging, Points & Leaderboard, Community Workouts, Nutrition Scanner, etc.
-  - **Remove entirely:** Gift Sessions (not a real perk), Referral Program, Voice Notes, Velocity Tracker, Flag for Coach (internal feature)
-- Update `TierComparisonTable` component in `Pricing.tsx`:
-  - Show first 8 features by default
-  - Add a "Show More" / "Show Less" toggle button below
-  - Style the premium features (Posture Capture, Custom Programming, Form Check Videos) with a subtle highlight since they differentiate tiers
+### 2h. ProgressCharts (`src/components/features/ProgressCharts.tsx`)
+- Lift category label: `text-[9px]` → `text-xs`
+- Lift button text: `text-[10px]` → `text-xs`
+- Button padding increased
 
-**Database changes:**
-- Delete rows: Gift Sessions, Referral Program, Voice Notes, Velocity Tracker, Flag for Coach
-- Add row: "AI Workout Generator" (all tiers true)
-- Update sort_order to put the best features first
-- Rename "Posture Analysis" → "AI Posture Analysis", "Video Analysis" → "AI Video Form Review"
+### 2i. RecoveryChart — proportional text increases
 
-## 4. Bottom Tab Bar — Confirm Mobile-Only
+## 3. Site-Wide Typography Increase
 
-**Finding:** The bottom bar has `md:hidden` on line 118 of `BottomTabBar.tsx`, so it only shows on mobile (< 768px). On desktop, the `AppNavbar` handles navigation. This is correct and intentional — the screenshot confirms it's working as designed on mobile.
+### 3a. SectionHeader (already covered in 2a)
+- All box/section titles across the site use this component — single change propagates everywhere
 
-**Answer to user:** Yes, the bottom bar is mobile-only by design. Desktop users use the top navbar. No changes needed.
+### 3b. Global CSS (`src/index.css`)
+- Add a base font-size bump: `body { font-size: 16px }` is already standard, but we ensure all `text-sm` (14px) content remains readable
+- No global override needed since the component-level changes handle it
+
+### 3c. Card titles site-wide
+- The pattern `text-[10px] font-bold uppercase tracking-widest` appears across many components as card/box titles
+- These will NOT be changed globally (too risky), but the SectionHeader increase covers the main section titles
+- The Progress tab components are the ones getting the targeted overhaul
 
 ---
 
-## Technical Details
-
-### Files Modified
+## Files Modified
 
 | File | Change |
 |---|---|
-| `supabase/functions/admin-user-manage/index.ts` | Add `merge_accounts` action |
-| `src/components/admin/AdminClientList.tsx` | Add merge UI in user modal |
-| `src/pages/Pricing.tsx` | Add show more/less to TierComparisonTable |
-| `src/pages/Auth.tsx` | Add "Trouble signing in?" magic link helper |
-| New migration | Create `user_linked_emails` table, update tier_features rows |
-
-### Database Migration
-
-```sql
--- 1. user_linked_emails table
-CREATE TABLE public.user_linked_emails (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  email text NOT NULL,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  UNIQUE(email)
-);
-ALTER TABLE public.user_linked_emails ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users read own emails" ON public.user_linked_emails
-  FOR SELECT TO authenticated USING (user_id = auth.uid());
-CREATE POLICY "Admins manage all" ON public.user_linked_emails
-  FOR ALL TO authenticated USING (public.has_role(auth.uid(), 'admin'));
-
--- 2. Curate tier_features
-DELETE FROM tier_features WHERE feature_label IN (
-  'Gift Sessions', 'Referral Program', 'Voice Notes', 
-  'Velocity Tracker', 'Flag for Coach'
-);
-INSERT INTO tier_features (feature_label, sort_order, tier_basic, tier_foundation, tier_custom, tier_team_elite)
-VALUES ('AI Workout Generator', 3, true, true, true, true);
-UPDATE tier_features SET sort_order = 1 WHERE feature_label = 'Exercise Library';
-UPDATE tier_features SET feature_label = 'AI Posture Analysis', sort_order = 5 WHERE feature_label = 'Posture Analysis';
-UPDATE tier_features SET feature_label = 'AI Video Form Review', sort_order = 6 WHERE feature_label = 'Video Analysis';
-UPDATE tier_features SET sort_order = 7 WHERE feature_label = 'Live Form Tracker';
-UPDATE tier_features SET sort_order = 2 WHERE feature_label = 'Fix It Library';
-UPDATE tier_features SET sort_order = 4 WHERE feature_label = 'Workout Scanner';
--- Reorder remaining features 8+
-UPDATE tier_features SET sort_order = 8 WHERE feature_label = 'Custom Programming';
-UPDATE tier_features SET sort_order = 9 WHERE feature_label = 'Form Check Videos';
-UPDATE tier_features SET sort_order = 10 WHERE feature_label = 'Posture Capture';
-UPDATE tier_features SET sort_order = 11 WHERE feature_label = 'Progress Tracking';
-UPDATE tier_features SET sort_order = 12 WHERE feature_label = 'Workout Logger';
-UPDATE tier_features SET sort_order = 13 WHERE feature_label = 'Monthly Challenges';
-UPDATE tier_features SET sort_order = 14 WHERE feature_label = 'Monthly Focus';
-UPDATE tier_features SET sort_order = 15 WHERE feature_label = 'Coach Messaging';
-UPDATE tier_features SET sort_order = 16 WHERE feature_label = 'Recovery Advisor';
-UPDATE tier_features SET sort_order = 17 WHERE feature_label = 'Nutrition Scanner';
-UPDATE tier_features SET sort_order = 18 WHERE feature_label = 'Community Workouts';
-UPDATE tier_features SET sort_order = 19 WHERE feature_label = 'Workout Builder';
-UPDATE tier_features SET sort_order = 20 WHERE feature_label = 'Points & Leaderboard';
-UPDATE tier_features SET sort_order = 21 WHERE feature_label = 'Shared Feed';
-UPDATE tier_features SET sort_order = 22 WHERE feature_label = 'Ask Coach Matt';
-UPDATE tier_features SET sort_order = 23 WHERE feature_label = 'Interval Timer';
-UPDATE tier_features SET sort_order = 24 WHERE feature_label = 'Lift Insights';
-UPDATE tier_features SET sort_order = 25 WHERE feature_label = 'Session Booking';
-UPDATE tier_features SET sort_order = 26 WHERE feature_label = 'Team Management';
-```
+| `src/components/progress/liftConfig.ts` | Add Hang Clean |
+| `src/components/shared/SectionHeader.tsx` | Increase title sizes (site-wide effect) |
+| `src/components/progress/StatsRow.tsx` | Double font sizes, stronger glow |
+| `src/components/progress/TronChart.tsx` | Larger text, taller chart, Matrix scanlines |
+| `src/components/progress/BodyAvatar.tsx` | Rebuild with larger SVG, Matrix rain, bigger labels |
+| `src/components/progress/LiftInsights.tsx` | Larger text throughout |
+| `src/components/progress/LogForm.tsx` | Larger labels and inputs |
+| `src/components/progress/LogHistory.tsx` | Larger text for all log entries |
+| `src/components/features/ProgressCharts.tsx` | Larger category labels and buttons |
+| `src/components/progress/RecoveryChart.tsx` | Proportional text increase |
 
