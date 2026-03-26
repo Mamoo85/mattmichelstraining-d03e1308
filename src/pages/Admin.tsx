@@ -72,6 +72,7 @@ const AdminSeoPages = lazy(() => import("@/components/admin/AdminSeoPages"));
 const AdminGbpPosts = lazy(() => import("@/components/admin/AdminGbpPosts"));
 const AdminInstagramPosts = lazy(() => import("@/components/admin/AdminInstagramPosts"));
 const AdminContentGenerator = lazy(() => import("@/components/admin/AdminContentGenerator"));
+const UserActivityFeed = lazy(() => import("@/components/admin/UserActivityFeed"));
 
 const MASTER_TABS = [
   { key: "roster", label: "The Roster", icon: Users, desc: "Users · Support · Families" },
@@ -300,6 +301,7 @@ const Admin = () => {
         {activeTab === "roster" && (
           <SubTabs tabs={[
             { key: "athletes", label: "All Users", content: <AdminClientList /> },
+            { key: "activity", label: "Activity Feed", content: <UserActivityFeed /> },
             { key: "support", label: <span className="flex items-center gap-1">Support Tickets{pendingSupportCount > 0 && <Badge variant="destructive" className="text-[8px] px-1.5 py-0 min-w-[18px] h-4">{pendingSupportCount}</Badge>}</span>, content: <AdminSupportCopilot /> },
             { key: "coaching", label: <span className="flex items-center gap-1">Coach Review{pendingPostureCount > 0 && <Badge variant="destructive" className="text-[8px] px-1.5 py-0 min-w-[18px] h-4">{pendingPostureCount}</Badge>}</span>, content: (
               <div className="space-y-8">
