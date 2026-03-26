@@ -136,6 +136,7 @@ const PostWorkoutSummary = ({
         caption: notes || "",
         image_url: imageUrl,
         image_status: imageStatus,
+        is_public: true,
         stats: {
           exercises: exercises.length,
           totalSets,

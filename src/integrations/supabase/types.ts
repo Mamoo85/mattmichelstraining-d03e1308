@@ -2605,6 +2605,7 @@ export type Database = {
           id: string
           image_status: string
           image_url: string | null
+          is_public: boolean
           stats: Json
           user_id: string
           workout_log_id: string | null
@@ -2617,6 +2618,7 @@ export type Database = {
           id?: string
           image_status?: string
           image_url?: string | null
+          is_public?: boolean
           stats?: Json
           user_id: string
           workout_log_id?: string | null
@@ -2629,6 +2631,7 @@ export type Database = {
           id?: string
           image_status?: string
           image_url?: string | null
+          is_public?: boolean
           stats?: Json
           user_id?: string
           workout_log_id?: string | null
