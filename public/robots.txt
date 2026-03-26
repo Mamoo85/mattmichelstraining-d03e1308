@@ -21,6 +21,13 @@ Allow: /demo-lawyer
 Allow: /demo-clinic
 Allow: /detroit-web-design
 Allow: /free-ai-generator
+Allow: /demo-roofing
+Allow: /demo-youngblood
+Allow: /demo-dental
+Allow: /results
+Allow: /studio-rental
+Allow: /whats-included
+Allow: /free-program
 
 User-agent: Bingbot
 Allow: /
