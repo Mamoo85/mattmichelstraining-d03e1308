@@ -126,7 +126,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     let initialDone = false;
 
     try {
-      const result = supabase.auth.onAuthStateChange((_event, newSession) => {
+      const result = supabase.auth.onAuthStateChange((event, newSession) => {
+        // If the refresh token is invalid/expired, clear the dead session
+        if (event === "TOKEN_REFRESHED" && !newSession) {
+          console.warn("[Auth] Token refresh failed — clearing stale session");
+          supabase.auth.signOut().catch(() => {});
+          setSession(null);
+          setSubscribed(false);
+          setSubscriptionTier(null);
+          setSubscriptionEnd(null);
+          if (!initialDone) { initialDone = true; setLoading(false); }
+          return;
+        }
         setSession(newSession);
         if (!initialDone) {
           initialDone = true;
@@ -157,7 +168,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         initialDone = true;
         setSession(s);
         setLoading(false);
-        if (s) checkSubscription();
+        if (s) {
+          checkSubscription();
+        }
+      }
+      // If there's a session but it might be stale, verify it
+      if (s) {
+        supabase.auth.getUser().then(({ error: userError }) => {
+          if (userError && (userError.message?.includes("session_not_found") || userError.status === 403)) {
+            console.warn("[Auth] Stale session detected — signing out");
+            supabase.auth.signOut().catch(() => {});
+            setSession(null);
+            setSubscribed(false);
+            setSubscriptionTier(null);
+            setSubscriptionEnd(null);
+          }
+        });
       }
     }).catch(() => {
       if (!initialDone) {
