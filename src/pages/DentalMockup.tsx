@@ -235,8 +235,8 @@ const DentalMockup = () => {
       {/* Doctor Profile */}
       <RevealSection className="py-20 px-6" style={{ background: "#fff" }}>
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-12">
-          <div className="flex-shrink-0 w-40 h-40 rounded-full flex items-center justify-center" style={{ background: "#f0fdfa", border: `3px solid ${TEAL}` }}>
-            <User size={56} strokeWidth={1} style={{ color: TEAL }} />
+          <div className="flex-shrink-0 w-40 h-40 rounded-full overflow-hidden" style={{ border: `3px solid ${TEAL}` }}>
+            <img src="/images/dental-doctor.jpg" alt="Dr. Robert Stewart, DDS, MS" className="w-full h-full object-cover" />
           </div>
           <div className="text-center md:text-left">
             <h2 className="text-2xl md:text-3xl font-bold mb-2" style={{ color: "#0f172a" }}>{DOCTOR}</h2>
