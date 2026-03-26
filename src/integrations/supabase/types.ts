@@ -3427,30 +3427,6 @@ export type Database = {
       }
     }
     Views: {
-      profiles_public: {
-        Row: {
-          athlete_name: string | null
-          full_name: string | null
-          is_public_profile: boolean | null
-          random_alias: string | null
-          user_id: string | null
-        }
-        Insert: {
-          athlete_name?: string | null
-          full_name?: string | null
-          is_public_profile?: boolean | null
-          random_alias?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          athlete_name?: string | null
-          full_name?: string | null
-          is_public_profile?: boolean | null
-          random_alias?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       profiles_safe: {
         Row: {
           account_role: string | null
@@ -3555,6 +3531,16 @@ export type Database = {
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
+      }
+      get_public_profiles: {
+        Args: { user_ids?: string[] }
+        Returns: {
+          athlete_name: string
+          full_name: string
+          is_public_profile: boolean
+          random_alias: string
+          user_id: string
+        }[]
       }
       has_role: {
         Args: {
