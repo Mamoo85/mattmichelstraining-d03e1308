@@ -82,6 +82,14 @@ const routes = [
     h1: "Book an In-Person Training Session",
     body: "Schedule an in-person strength training session at 15121 Kercheval Ave, Grosse Pointe Park, MI 48230. 30-minute sessions $50, 60-minute sessions $90. Call (313) 806-4952.",
   },
+  {
+    path: "/demo-dental",
+    title: "Stewart Dental Group Redesign | M² Web Design Detroit",
+    description:
+      "Premium dental website redesign concept showcasing same-day CEREC crowns, implants, and a trust-first patient experience for Stewart Dental Group.",
+    h1: "Stewart Dental Group Redesign Concept",
+    body: "A premium dental redesign concept for Stewart Dental Group featuring same-day CEREC crowns, restorative dentistry, patient trust signals, and a polished local-practice presentation built by M² Web Design.",
+  },
 ];
 
 function generateHtml(template, route) {
