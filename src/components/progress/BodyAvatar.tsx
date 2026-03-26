@@ -2,7 +2,6 @@ import { getLiftConfig } from "./liftConfig";
 
 /* ───── Detailed anatomical muscle paths (front view) ───── */
 const MUSCLE_PATHS: Record<string, { d: string; label: string; view: "front" | "back" | "both" }> = {
-  // — FRONT —
   shoulders: {
     d: "M16,24 Q20,19 24,22 L24,28 Q20,26 16,28 Z M39,22 Q43,19 47,24 L47,28 Q43,26 39,28 Z",
     label: "Delts",
@@ -33,7 +32,6 @@ const MUSCLE_PATHS: Record<string, { d: string; label: string; view: "front" | "
     label: "Forearms",
     view: "front",
   },
-  // — BACK (rendered offset) —
   upperBack: {
     d: "M24,23 Q28,21 31.5,22 Q35,21 39,23 L38,32 Q35,30 31.5,30 Q28,30 25,32 Z",
     label: "Upper Back",
@@ -56,23 +54,14 @@ const MUSCLE_PATHS: Record<string, { d: string; label: string; view: "front" | "
   },
 };
 
-/* Skeleton wireframe paths */
 const SKELETON_FRONT = [
-  // Head
   "M31.5,5 m-5,5 a5,5.5 0 1,1 10,0 a5,5.5 0 1,1 -10,0",
-  // Neck
   "M30,15.5 L30,21 M33,15.5 L33,21",
-  // Torso outline
   "M24,21 L27,24 L27,32 L28,33 L27,44 L26,50 L30.5,50 L31.5,48 L32.5,50 L37,50 L36,44 L35,33 L36,32 L36,24 L39,21",
-  // Left arm
   "M24,21 L18,24 L16,26 L14,38 L12,50",
-  // Right arm
   "M39,21 L45,24 L47,26 L49,38 L51,50",
-  // Left leg
   "M26,50 L24,66 L23,78",
-  // Right leg
   "M37,50 L39,66 L40,78",
-  // Feet
   "M23,78 L21,79.5 L27,79.5 L27,78",
   "M40,78 L40,79.5 L46,79.5 L44,78",
 ];
@@ -87,11 +76,12 @@ const SKELETON_BACK = [
   "M37,50 L39,66 L40,78",
   "M23,78 L21,79.5 L27,79.5 L27,78",
   "M40,78 L40,79.5 L46,79.5 L44,78",
-  // Spine line
   "M31.5,21 L31.5,44",
-  // Scapula hints
   "M27,26 Q31.5,28 36,26",
 ];
+
+/* Matrix rain column positions */
+const RAIN_COLS = [10, 16, 22, 28, 34, 40, 46, 52];
 
 interface BodyAvatarProps {
   activeLift: string;
@@ -101,46 +91,63 @@ const BodyAvatar = ({ activeLift }: BodyAvatarProps) => {
   const config = getLiftConfig(activeLift);
   const activeMs = config?.muscles ?? [];
 
-  const hasFrontMuscles = activeMs.some(
-    (m) => MUSCLE_PATHS[m] && (MUSCLE_PATHS[m].view === "front" || MUSCLE_PATHS[m].view === "both")
-  );
-  const hasBackMuscles = activeMs.some(
-    (m) => MUSCLE_PATHS[m] && (MUSCLE_PATHS[m].view === "back" || MUSCLE_PATHS[m].view === "both")
-  );
-
   const renderView = (view: "front" | "back", skeleton: string[]) => (
     <div className="flex flex-col items-center">
-      <span className="text-[7px] font-mono uppercase tracking-widest text-muted-foreground mb-1">
+      <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-2 font-bold">
         {view}
       </span>
-      <svg viewBox="6 0 52 84" className="w-full max-w-[90px] h-auto">
+      <svg viewBox="6 0 52 84" className="w-full max-w-[140px] h-auto">
         <defs>
           <radialGradient id={`thermal-${view}`} cx="50%" cy="50%" r="60%">
-            <stop offset="0%" stopColor="hsl(50, 100%, 60%)" />
+            <stop offset="0%" stopColor="hsl(50, 100%, 65%)" />
             <stop offset="45%" stopColor="hsl(30, 100%, 55%)" />
             <stop offset="100%" stopColor="hsl(0, 90%, 50%)" />
           </radialGradient>
           <filter id={`thermalGlow-${view}`}>
-            <feGaussianBlur stdDeviation="1.5" result="blur" />
-            <feFlood floodColor="hsl(30, 100%, 55%)" floodOpacity="0.5" result="color" />
+            <feGaussianBlur stdDeviation="2.5" result="blur" />
+            <feFlood floodColor="hsl(30, 100%, 55%)" floodOpacity="0.6" result="color" />
             <feComposite in="color" in2="blur" operator="in" result="glow" />
             <feMerge>
               <feMergeNode in="glow" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
-          <filter id={`thermalGlowPrint-${view}`}>
-            {/* no-op for print — just passes through */}
-          </filter>
-          {/* Cyber grid background */}
+          {/* Matrix-green cyber grid */}
           <pattern id={`cyberGrid-${view}`} width="6" height="6" patternUnits="userSpaceOnUse">
-            <path d="M6,0 L0,0 L0,6" fill="none" stroke="hsl(185, 100%, 48%)" strokeWidth="0.15" strokeOpacity="0.15" />
+            <path d="M6,0 L0,0 L0,6" fill="none" stroke="hsl(120, 100%, 40%)" strokeWidth="0.15" strokeOpacity="0.2" />
           </pattern>
         </defs>
 
-        {/* Circular cyber-grid background */}
+        {/* Background circle with Matrix-green grid */}
         <circle cx="31.5" cy="42" r="36" fill={`url(#cyberGrid-${view})`} className="avatar-cyber-grid" />
-        <circle cx="31.5" cy="42" r="36" fill="none" stroke="hsl(185, 100%, 48%)" strokeWidth="0.2" strokeOpacity="0.08" className="avatar-cyber-grid" />
+        <circle cx="31.5" cy="42" r="36" fill="none" stroke="hsl(120, 100%, 40%)" strokeWidth="0.3" strokeOpacity="0.1" className="avatar-cyber-grid" />
+
+        {/* Matrix rain columns */}
+        {RAIN_COLS.map((x, i) => (
+          <line
+            key={`rain-${i}`}
+            x1={x}
+            y1={6 + (i * 7) % 20}
+            x2={x}
+            y2={16 + (i * 7) % 20}
+            stroke="hsl(120, 100%, 45%)"
+            strokeWidth="0.5"
+            strokeOpacity="0.12"
+          >
+            <animate
+              attributeName="y1"
+              values={`${6 + (i * 7) % 20};${50 + (i * 5) % 15};${6 + (i * 7) % 20}`}
+              dur={`${2.5 + i * 0.3}s`}
+              repeatCount="indefinite"
+            />
+            <animate
+              attributeName="y2"
+              values={`${16 + (i * 7) % 20};${60 + (i * 5) % 15};${16 + (i * 7) % 20}`}
+              dur={`${2.5 + i * 0.3}s`}
+              repeatCount="indefinite"
+            />
+          </line>
+        ))}
 
         {/* Skeleton wireframe */}
         {skeleton.map((d, i) => (
@@ -148,20 +155,20 @@ const BodyAvatar = ({ activeLift }: BodyAvatarProps) => {
             key={i}
             d={d}
             fill="none"
-            stroke="hsl(215, 20%, 28%)"
-            strokeWidth="0.4"
+            stroke="hsl(120, 40%, 30%)"
+            strokeWidth="0.5"
             className="avatar-skeleton"
           />
         ))}
 
-        {/* Inactive muscles — faint slate */}
+        {/* Inactive muscles */}
         {Object.entries(MUSCLE_PATHS)
           .filter(([key, m]) => {
             if (view === "front") return (m.view === "front" || m.view === "both") && !activeMs.includes(key);
             return (m.view === "back" || m.view === "both") && !activeMs.includes(key);
           })
           .map(([key, muscle]) => (
-          <path
+            <path
               key={key}
               d={muscle.d}
               fill="hsl(215, 20%, 18%)"
@@ -172,20 +179,20 @@ const BodyAvatar = ({ activeLift }: BodyAvatarProps) => {
             />
           ))}
 
-        {/* Active muscles — thermal heatmap */}
+        {/* Active muscles — thermal heatmap with stronger glow */}
         {Object.entries(MUSCLE_PATHS)
           .filter(([key, m]) => {
             if (view === "front") return (m.view === "front" || m.view === "both") && activeMs.includes(key);
             return (m.view === "back" || m.view === "both") && activeMs.includes(key);
           })
           .map(([key, muscle]) => (
-          <path
+            <path
               key={key}
               d={muscle.d}
               fill={`url(#thermal-${view})`}
-              fillOpacity={0.7}
+              fillOpacity={0.8}
               stroke="hsl(0, 90%, 50%)"
-              strokeWidth="0.6"
+              strokeWidth="0.8"
               filter={`url(#thermalGlow-${view})`}
               className="avatar-muscle-active"
             />
@@ -196,34 +203,35 @@ const BodyAvatar = ({ activeLift }: BodyAvatarProps) => {
 
   return (
     <div
-      className="p-3 avatar-container"
+      className="p-4 avatar-container rounded-xl"
       style={{
         background: "hsl(var(--synth-card))",
-        border: "1px solid hsl(var(--synth-cyan) / 0.12)",
+        border: "1.5px solid hsl(120 100% 40% / 0.15)",
+        boxShadow: "0 0 30px -10px hsl(120 100% 40% / 0.1)",
       }}
     >
       <h3
-        className="text-[9px] font-bold uppercase tracking-[0.2em] mb-2 font-mono text-center avatar-title"
-        style={{ color: "hsl(var(--synth-cyan))" }}
+        className="text-base font-bold uppercase tracking-[0.15em] mb-3 font-mono text-center avatar-title"
+        style={{ color: "hsl(120, 100%, 45%)", textShadow: "0 0 12px hsl(120 100% 45% / 0.4)" }}
       >
         Target · {activeLift}
       </h3>
 
-      <div className="flex justify-center gap-2">
+      <div className="flex justify-center gap-4">
         {renderView("front", SKELETON_FRONT)}
         {renderView("back", SKELETON_BACK)}
       </div>
 
       {/* Muscle labels */}
-      <div className="flex flex-wrap gap-1 mt-2 justify-center">
+      <div className="flex flex-wrap gap-1.5 mt-3 justify-center">
         {activeMs.map((key) => (
           <span
             key={key}
-            className="text-[7px] font-mono font-bold uppercase tracking-widest px-1.5 py-px avatar-label"
+            className="text-[10px] font-mono font-bold uppercase tracking-widest px-2 py-0.5 avatar-label"
             style={{
               color: "hsl(var(--synth-orange))",
-              background: "hsl(var(--synth-orange) / 0.08)",
-              border: "1px solid hsl(var(--synth-orange) / 0.2)",
+              background: "hsl(var(--synth-orange) / 0.1)",
+              border: "1px solid hsl(var(--synth-orange) / 0.25)",
             }}
           >
             {MUSCLE_PATHS[key]?.label ?? key}

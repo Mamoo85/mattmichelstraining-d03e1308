@@ -42,7 +42,7 @@ interface LogHistoryProps {
 }
 
 const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryProps) => {
-  const MAX_VIDEO_SIZE = 5 * 1024 * 1024; // 5MB
+  const MAX_VIDEO_SIZE = 5 * 1024 * 1024;
 
   const [showHistory, setShowHistory] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -130,7 +130,6 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
   };
 
   const playVideo = async (video: LiftVideo) => {
-    // For admin: always play. For user: only if approved
     if (!isAdmin && video.status !== "approved") return;
     if (video.video_path.includes('..')) throw new Error('Invalid video path');
     const { data } = await supabase.storage.from("lift_videos").createSignedUrl(video.video_path, 300);
@@ -193,9 +192,9 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
     <div className="mt-6">
       <button
         onClick={() => setShowHistory(!showHistory)}
-        className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-all mb-3"
+        className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-all mb-3"
       >
-        {showHistory ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+        {showHistory ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
         Log History ({logs.length} entries)
         {totalNotes > 0 && (
           <span className="text-primary ml-1">· {totalNotes} coach note{totalNotes !== 1 ? "s" : ""}</span>
@@ -203,7 +202,7 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
       </button>
 
       {showHistory && (
-        <div className="bg-card border border-border divide-y divide-border">
+        <div className="bg-card border border-border divide-y divide-border rounded-lg">
           {[...logs].reverse().map((log, idx) => {
             const isEditing = editingId === log.id;
             const isDeleting = deletingId === log.id;
@@ -213,14 +212,14 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
             const weightDiff = prevLog ? log.weight - prevLog.weight : 0;
 
             return (
-              <div key={log.id} className="p-3 space-y-1">
-                <div className="flex items-center gap-2 flex-wrap">
+              <div key={log.id} className="p-4 space-y-1.5">
+                <div className="flex items-center gap-3 flex-wrap">
                   {isEditing ? (
                     <>
                       <Popover>
                         <PopoverTrigger asChild>
-                          <Button variant="outline" className="h-8 w-[120px] text-xs font-mono px-2">
-                            <CalendarIcon className="mr-1 h-3 w-3 text-primary" />
+                          <Button variant="outline" className="h-10 w-[130px] text-sm font-mono px-3">
+                            <CalendarIcon className="mr-1 h-3.5 w-3.5 text-primary" />
                             {format(editDate, "MMM d, yy")}
                           </Button>
                         </PopoverTrigger>
@@ -236,47 +235,46 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
                         </PopoverContent>
                       </Popover>
                       <input type="number" value={editWeight} onChange={(e) => setEditWeight(e.target.value)}
-                        className="bg-background border border-border text-right pr-2 font-mono text-primary text-xs focus:ring-1 focus:ring-primary outline-none h-8 w-20" />
-                      <span className="text-[10px] text-muted-foreground">lbs ×</span>
+                        className="bg-background border border-border text-right pr-2 font-mono text-primary text-sm focus:ring-1 focus:ring-primary outline-none h-10 w-24 rounded" />
+                      <span className="text-xs text-muted-foreground">lbs ×</span>
                       <input type="number" value={editReps} onChange={(e) => setEditReps(e.target.value)}
-                        className="bg-background border border-border text-right pr-2 font-mono text-primary text-xs focus:ring-1 focus:ring-primary outline-none h-8 w-14" />
+                        className="bg-background border border-border text-right pr-2 font-mono text-primary text-sm focus:ring-1 focus:ring-primary outline-none h-10 w-16 rounded" />
                       <div className="flex gap-1 ml-auto">
                         <button onClick={() => handleUpdate(log.id)} disabled={saving}
-                          className="h-8 w-8 flex items-center justify-center bg-primary text-primary-foreground hover:opacity-90 transition-all disabled:opacity-50">
-                          {saving ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
+                          className="h-9 w-9 flex items-center justify-center bg-primary text-primary-foreground rounded hover:opacity-90 transition-all disabled:opacity-50">
+                          {saving ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
                         </button>
                         <button onClick={cancelEdit}
-                          className="h-8 w-8 flex items-center justify-center bg-muted text-muted-foreground hover:text-foreground transition-all">
-                          <X size={12} />
+                          className="h-9 w-9 flex items-center justify-center bg-muted text-muted-foreground rounded hover:text-foreground transition-all">
+                          <X size={14} />
                         </button>
                       </div>
                     </>
                   ) : (
                     <>
-                      <span className="text-[11px] font-mono text-muted-foreground w-[85px] flex-shrink-0">
+                      <span className="text-sm font-mono text-muted-foreground w-[90px] flex-shrink-0">
                         {format(new Date(log.logged_at), "MMM d, yy")}
                       </span>
-                      <span className="text-sm font-mono font-bold text-foreground">
-                        {log.weight} <span className="text-muted-foreground text-xs">lbs</span>
+                      <span className="text-lg font-mono font-bold text-foreground">
+                        {log.weight} <span className="text-muted-foreground text-sm">lbs</span>
                       </span>
-                      <span className="text-xs text-muted-foreground">×</span>
-                      <span className="text-sm font-mono font-bold text-foreground">{log.reps}</span>
-                      <span className="text-[10px] text-primary font-mono ml-1">
+                      <span className="text-sm text-muted-foreground">×</span>
+                      <span className="text-lg font-mono font-bold text-foreground">{log.reps}</span>
+                      <span className="text-sm text-primary font-mono ml-1">
                         est. {log.estimated_1rm} 1RM
                       </span>
                       {prevLog && weightDiff !== 0 && (
-                        <span className="text-[9px] font-mono font-bold"
+                        <span className="text-xs font-mono font-bold"
                           style={{ color: weightDiff > 0 ? "hsl(var(--primary))" : "hsl(var(--destructive))" }}>
                           {weightDiff > 0 ? "↑" : "↓"}{Math.abs(weightDiff)}
                         </span>
                       )}
 
-                      {/* Video indicator or late upload */}
                       {video ? (
                         <button
                           onClick={() => playVideo(video)}
                           className={cn(
-                            "h-6 px-1.5 flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider border rounded transition-all",
+                            "h-7 px-2 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider border rounded transition-all",
                             video.status === "approved"
                               ? "border-primary/40 text-primary bg-primary/10 hover:bg-primary/20 animate-pulse"
                               : video.status === "pending_review"
@@ -285,30 +283,30 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
                           )}
                           title={video.status === "approved" ? "Watch video" : "Under review"}
                         >
-                          {video.status === "approved" ? <CheckCircle size={10} /> : <Clock size={10} />}
-                          <Video size={10} />
+                          {video.status === "approved" ? <CheckCircle size={12} /> : <Clock size={12} />}
+                          <Video size={12} />
                           {video.status === "pending_review" && "Review"}
                         </button>
                       ) : (
                         <button
                           onClick={() => triggerLateUpload(log.id)}
                           disabled={uploadingVideoLogId === log.id}
-                          className="h-6 px-1.5 flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider border border-dashed border-border text-muted-foreground hover:text-primary hover:border-primary/40 rounded transition-all disabled:opacity-50"
+                          className="h-7 px-2 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider border border-dashed border-border text-muted-foreground hover:text-primary hover:border-primary/40 rounded transition-all disabled:opacity-50"
                           title="Attach video proof"
                         >
-                          {uploadingVideoLogId === log.id ? <Loader2 size={10} className="animate-spin" /> : <Upload size={10} />}
-                          <Video size={10} />
+                          {uploadingVideoLogId === log.id ? <Loader2 size={12} className="animate-spin" /> : <Upload size={12} />}
+                          <Video size={12} />
                         </button>
                       )}
 
                       <div className="flex gap-1 ml-auto">
                         <button onClick={() => startEdit(log)}
-                          className="h-7 w-7 flex items-center justify-center text-muted-foreground hover:text-primary transition-all" title="Edit">
-                          <Pencil size={12} />
+                          className="h-8 w-8 flex items-center justify-center text-muted-foreground hover:text-primary transition-all" title="Edit">
+                          <Pencil size={14} />
                         </button>
                         <button onClick={() => handleDelete(log.id)} disabled={isDeleting}
-                          className="h-7 w-7 flex items-center justify-center text-muted-foreground hover:text-destructive transition-all disabled:opacity-50" title="Delete">
-                          {isDeleting ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+                          className="h-8 w-8 flex items-center justify-center text-muted-foreground hover:text-destructive transition-all disabled:opacity-50" title="Delete">
+                          {isDeleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
                         </button>
                       </div>
                     </>
@@ -327,10 +325,8 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
         </div>
       )}
 
-      {/* Hidden file input for late video uploads */}
       <input ref={lateVideoInputRef} type="file" accept="video/*" capture="environment" className="hidden" onChange={handleLateVideoUpload} />
 
-      {/* Video playback modal */}
       <Dialog open={!!playingVideo} onOpenChange={() => setPlayingVideo(null)}>
         <DialogContent className="max-w-2xl p-2">
           <DialogTitle className="sr-only">Lift Video</DialogTitle>

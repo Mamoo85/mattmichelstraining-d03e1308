@@ -79,16 +79,16 @@ const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) =
 
       {/* Lift category selector */}
       {LIFT_CATEGORIES.map((cat) => (
-        <div key={cat.label} className="mb-3">
-          <span className="text-[9px] font-mono font-bold uppercase tracking-widest mb-1.5 block text-primary">
+        <div key={cat.label} className="mb-4">
+          <span className="text-xs font-mono font-bold uppercase tracking-widest mb-2 block text-primary">
             {cat.label}
           </span>
-          <div className="flex gap-1 flex-wrap">
+          <div className="flex gap-1.5 flex-wrap">
             {cat.lifts.map((lift) => (
               <button
                 key={lift.name}
                 onClick={() => setActiveLift(lift.name)}
-                className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-all duration-300 ${
+                className={`px-4 py-2 text-xs font-bold uppercase tracking-widest transition-all duration-300 rounded ${
                   activeLift === lift.name
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted text-muted-foreground hover:text-foreground"
@@ -116,12 +116,11 @@ const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) =
 
       {loading ? (
         <div className="flex justify-center py-12">
-          <Loader2 size={20} className="text-primary animate-spin" />
+          <Loader2 size={24} className="text-primary animate-spin" />
         </div>
       ) : data.length === 0 ? (
-        /* Empty state for new lifts */
         <EmptyStateCard
-          icon={<TrendingUp size={28} className="text-primary" />}
+          icon={<TrendingUp size={32} className="text-primary" />}
           title={`No ${activeLift} Data Yet`}
           description="Log your first set above and watch your progression chart build over time. Every rep gets tracked — Matt reviews your numbers weekly."
           ctaLabel="Log Your First Set ↑"
@@ -133,7 +132,7 @@ const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) =
           <StatsRow current={current} delta={delta} max={max} repMax={repMax} />
 
           {/* Chart + Avatar */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="md:col-span-2">
               <TronChart data={data} repMax={repMax} />
             </div>
@@ -147,7 +146,7 @@ const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) =
         </>
       )}
 
-      {/* Log History with Coach Notes — always available */}
+      {/* Log History */}
       {effectiveUserId && (
         <LogHistory
           logs={logs}
@@ -157,7 +156,7 @@ const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) =
         />
       )}
 
-      {/* Recovery trends — only renders if data exists */}
+      {/* Recovery trends */}
       {effectiveUserId && <RecoveryChart userId={effectiveUserId} />}
 
       {/* Recovery Advisor */}
