@@ -21,15 +21,15 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
     <div
-      className="px-3 py-2 text-xs font-mono"
+      className="px-4 py-3 text-sm font-mono"
       style={{
         background: "hsl(var(--card))",
         border: "1px solid hsl(var(--border))",
       }}
     >
-      <p className="text-muted-foreground text-[10px] mb-1">{label}</p>
+      <p className="text-muted-foreground text-xs mb-1">{label}</p>
       {payload.map((p: any) => (
-        <p key={p.dataKey} style={{ color: p.color }} className="text-[11px]">
+        <p key={p.dataKey} style={{ color: p.color }} className="text-sm">
           {p.name}: {p.value}
         </p>
       ))}
@@ -73,83 +73,51 @@ const RecoveryChart = ({ userId }: RecoveryChartProps) => {
 
   return (
     <div className="p-6 bg-card border border-border mt-4 rounded-xl">
-      <div className="flex items-center gap-2 mb-3">
-        <Activity size={14} className="text-primary" />
-        <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-primary">
+      <div className="flex items-center gap-2 mb-4">
+        <Activity size={16} className="text-primary" />
+        <span className="text-sm font-mono font-bold uppercase tracking-widest text-primary">
           Recovery Trends
         </span>
-        <span className="text-[10px] font-mono text-muted-foreground ml-auto">
+        <span className="text-xs font-mono text-muted-foreground ml-auto">
           {data.length} session{data.length !== 1 ? "s" : ""}
         </span>
       </div>
 
       {/* Legend */}
-      <div className="flex gap-3 mb-2 flex-wrap">
+      <div className="flex gap-3 mb-3 flex-wrap">
         {[
           { key: "sleep", color: "hsl(220, 70%, 55%)", label: "Sleep (hrs)" },
           { key: "energy", color: "hsl(140, 60%, 45%)", label: "Energy" },
           { key: "soreness", color: "hsl(0, 60%, 50%)", label: "Soreness" },
           { key: "sleepQuality", color: "hsl(270, 50%, 55%)", label: "Sleep Quality" },
         ].map((item) => (
-          <div key={item.key} className="flex items-center gap-1">
-            <div className="w-2 h-2" style={{ background: item.color }} />
-            <span className="text-[9px] font-mono text-muted-foreground">{item.label}</span>
+          <div key={item.key} className="flex items-center gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-sm" style={{ background: item.color }} />
+            <span className="text-xs font-mono text-muted-foreground">{item.label}</span>
           </div>
         ))}
       </div>
 
-      <ResponsiveContainer width="100%" height={200}>
+      <ResponsiveContainer width="100%" height={220}>
         <LineChart data={data}>
           <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="none" />
           <XAxis
             dataKey="date"
-            tick={{ fill: "hsl(36,6%,45%)", fontSize: 9, fontFamily: "monospace" }}
+            tick={{ fill: "hsl(36,6%,45%)", fontSize: 11, fontFamily: "monospace" }}
             axisLine={{ stroke: "hsl(var(--border))" }}
             tickLine={false}
           />
           <YAxis
-            tick={{ fill: "hsl(36,6%,45%)", fontSize: 9, fontFamily: "monospace" }}
+            tick={{ fill: "hsl(36,6%,45%)", fontSize: 11, fontFamily: "monospace" }}
             axisLine={{ stroke: "hsl(var(--border))" }}
             tickLine={false}
             domain={[0, "auto"]}
           />
           <Tooltip content={<CustomTooltip />} />
-          <Line
-            type="monotone"
-            dataKey="sleep"
-            name="Sleep"
-            stroke="hsl(220, 70%, 55%)"
-            strokeWidth={2}
-            dot={{ r: 2 }}
-            connectNulls
-          />
-          <Line
-            type="monotone"
-            dataKey="energy"
-            name="Energy"
-            stroke="hsl(140, 60%, 45%)"
-            strokeWidth={2}
-            dot={{ r: 2 }}
-            connectNulls
-          />
-          <Line
-            type="monotone"
-            dataKey="soreness"
-            name="Soreness"
-            stroke="hsl(0, 60%, 50%)"
-            strokeWidth={2}
-            dot={{ r: 2 }}
-            connectNulls
-          />
-          <Line
-            type="monotone"
-            dataKey="sleepQuality"
-            name="Sleep Quality"
-            stroke="hsl(270, 50%, 55%)"
-            strokeWidth={2}
-            dot={{ r: 2 }}
-            connectNulls
-          />
+          <Line type="monotone" dataKey="sleep" name="Sleep" stroke="hsl(220, 70%, 55%)" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+          <Line type="monotone" dataKey="energy" name="Energy" stroke="hsl(140, 60%, 45%)" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+          <Line type="monotone" dataKey="soreness" name="Soreness" stroke="hsl(0, 60%, 50%)" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+          <Line type="monotone" dataKey="sleepQuality" name="Sleep Quality" stroke="hsl(270, 50%, 55%)" strokeWidth={2} dot={{ r: 3 }} connectNulls />
         </LineChart>
       </ResponsiveContainer>
     </div>

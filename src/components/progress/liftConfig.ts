@@ -1,6 +1,6 @@
 export interface LiftConfig {
   name: string;
-  repMax: number; // 3 or 5
+  repMax: number; // 1, 3, or 5
   muscles: string[]; // muscle group keys for avatar
 }
 
@@ -33,6 +33,7 @@ export const LIFT_CATEGORIES: LiftCategory[] = [
     label: "Advanced · Olympic",
     lifts: [
       { name: "Power Clean", repMax: 1, muscles: ["quads", "glutes", "hamstrings", "upperBack", "shoulders", "forearms"] },
+      { name: "Hang Clean", repMax: 1, muscles: ["quads", "glutes", "hamstrings", "upperBack", "shoulders", "forearms"] },
     ],
   },
 ];

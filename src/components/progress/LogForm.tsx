@@ -16,7 +16,6 @@ interface LogFormProps {
   onLogged: () => Promise<void>;
 }
 
-// Parse spoken text like "225 for 8" or "set one 225 pounds for eight reps"
 function parseSpokenSet(text: string): { weight?: string; reps?: string } {
   const lower = text.toLowerCase().replace(/,/g, "");
   const wordNums: Record<string, string> = {
@@ -40,7 +39,7 @@ function parseSpokenSet(text: string): { weight?: string; reps?: string } {
   return { weight, reps };
 }
 
-const MAX_VIDEO_SIZE = 5 * 1024 * 1024; // 5MB — optimized for low storage
+const MAX_VIDEO_SIZE = 5 * 1024 * 1024;
 
 const LogForm = ({ activeLift, repMax, effectiveUserId, onLogged }: LogFormProps) => {
   const { user, subscriptionTier } = useAuth();
@@ -52,13 +51,11 @@ const LogForm = ({ activeLift, repMax, effectiveUserId, onLogged }: LogFormProps
   const [logSuccess, setLogSuccess] = useState(false);
   const recognitionRef = useRef<any>(null);
 
-  // Video state
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const videoInputRef = useRef<HTMLInputElement>(null);
 
-  // Check if user can attach video (paid or in-person)
-  const canAttachVideo = !!subscriptionTier || false; // Will also check is_in_person via profile query
+  const canAttachVideo = !!subscriptionTier || false;
 
   const handleVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -139,21 +136,17 @@ const LogForm = ({ activeLift, repMax, effectiveUserId, onLogged }: LogFormProps
       return;
     }
 
-    // Upload video if attached
     if (videoFile && logData?.id) {
       setUploadingVideo(true);
       try {
         const ext = videoFile.name.split(".").pop() || "mp4";
         const path = `${effectiveUserId}/${logData.id}.${ext}`;
-        if (path.includes('..')) {
-          throw new Error("Invalid path");
-        }
+        if (path.includes('..')) throw new Error("Invalid path");
         const { error: uploadError } = await supabase.storage
           .from("lift_videos")
           .upload(path, videoFile, { contentType: videoFile.type, upsert: false });
         if (uploadError) throw uploadError;
 
-        // Insert into lift_videos table
         await supabase.from("lift_videos" as any).insert({
           progress_log_id: logData.id,
           user_id: effectiveUserId,
@@ -161,7 +154,6 @@ const LogForm = ({ activeLift, repMax, effectiveUserId, onLogged }: LogFormProps
           status: "pending_review",
         });
 
-        // Trigger AI analysis in background
         supabase.functions.invoke("ai-video-form-review", {
           body: {
             videoUrl: `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/lift_videos/${path}`,
@@ -174,7 +166,7 @@ const LogForm = ({ activeLift, repMax, effectiveUserId, onLogged }: LogFormProps
               .update({ ai_analysis: res.data.review })
               .eq("progress_log_id", logData.id);
           }
-        }).catch(() => {}); // Non-blocking
+        }).catch(() => {});
 
         toast({ title: "Video submitted for review" });
       } catch (err: any) {
@@ -196,7 +188,7 @@ const LogForm = ({ activeLift, repMax, effectiveUserId, onLogged }: LogFormProps
 
   return (
     <div className="mt-4 mb-4 p-6 bg-card border border-border rounded-xl">
-      <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-2">
+      <span className="text-sm font-bold uppercase tracking-widest text-muted-foreground block mb-3">
         Log {activeLift}
       </span>
       <div className="flex items-center gap-2 flex-wrap">
@@ -205,11 +197,11 @@ const LogForm = ({ activeLift, repMax, effectiveUserId, onLogged }: LogFormProps
             <Button
               variant="outline"
               className={cn(
-                "h-9 w-[140px] justify-start text-left font-mono text-xs px-2",
+                "h-11 w-[150px] justify-start text-left font-mono text-sm px-3",
                 !logDate && "text-muted-foreground"
               )}
             >
-              <CalendarIcon className="mr-1.5 h-3.5 w-3.5 text-primary" />
+              <CalendarIcon className="mr-1.5 h-4 w-4 text-primary" />
               {format(logDate, "MMM d, yyyy")}
             </Button>
           </PopoverTrigger>
@@ -229,31 +221,30 @@ const LogForm = ({ activeLift, repMax, effectiveUserId, onLogged }: LogFormProps
           placeholder="Weight (lbs)"
           value={logWeight}
           onChange={(e) => setLogWeight(e.target.value)}
-          className="bg-background border border-border text-right pr-2 font-mono text-primary text-sm focus:ring-1 focus:ring-primary outline-none h-9 w-28"
+          className="bg-background border border-border text-right pr-3 font-mono text-primary text-base focus:ring-1 focus:ring-primary outline-none h-11 w-32 rounded"
         />
         <input
           type="number"
           placeholder={`Reps (${repMax})`}
           value={logReps}
           onChange={(e) => setLogReps(e.target.value)}
-          className="bg-background border border-border text-right pr-2 font-mono text-primary text-sm focus:ring-1 focus:ring-primary outline-none h-9 w-20"
+          className="bg-background border border-border text-right pr-3 font-mono text-primary text-base focus:ring-1 focus:ring-primary outline-none h-11 w-24 rounded"
         />
         <button
           onPointerDown={startListening}
           onPointerUp={stopListening}
           onPointerLeave={stopListening}
           className={cn(
-            "h-9 w-9 flex items-center justify-center border transition-all",
+            "h-11 w-11 flex items-center justify-center border rounded transition-all",
             listening
               ? "bg-primary text-primary-foreground border-primary animate-pulse"
               : "bg-muted text-muted-foreground border-border hover:text-primary hover:border-primary"
           )}
           title="Hold to speak — e.g. '225 for 8'"
         >
-          <Mic size={14} />
+          <Mic size={16} />
         </button>
 
-        {/* Video capture button — paid/in-person only */}
         {canAttachVideo && (
           <>
             <input
@@ -267,14 +258,14 @@ const LogForm = ({ activeLift, repMax, effectiveUserId, onLogged }: LogFormProps
             <button
               onClick={() => videoInputRef.current?.click()}
               className={cn(
-                "h-9 w-9 flex items-center justify-center border transition-all",
+                "h-11 w-11 flex items-center justify-center border rounded transition-all",
                 videoFile
                   ? "bg-primary text-primary-foreground border-primary"
                   : "bg-muted text-muted-foreground border-border hover:text-primary hover:border-primary"
               )}
               title="Attach lift video"
             >
-              <Video size={14} />
+              <Video size={16} />
             </button>
           </>
         )}
@@ -282,26 +273,25 @@ const LogForm = ({ activeLift, repMax, effectiveUserId, onLogged }: LogFormProps
         <button
           onClick={handleLog}
           disabled={logging || uploadingVideo}
-          className={`bg-primary text-primary-foreground px-5 h-9 text-[10px] font-bold uppercase tracking-widest hover:brightness-110 active:scale-95 transition-transform duration-100 disabled:opacity-50 ${logSuccess ? "animate-log-success" : ""}`}
+          className={`bg-primary text-primary-foreground px-6 h-11 text-xs font-bold uppercase tracking-widest hover:brightness-110 active:scale-95 transition-transform duration-100 disabled:opacity-50 rounded ${logSuccess ? "animate-log-success" : ""}`}
         >
-          {logging || uploadingVideo ? <Loader2 size={14} className="animate-spin" /> : "Log"}
+          {logging || uploadingVideo ? <Loader2 size={16} className="animate-spin" /> : "Log"}
         </button>
       </div>
 
-      {/* Video preview chip */}
       {videoFile && (
         <div className="flex items-center gap-2 mt-2">
-          <span className="text-[10px] text-primary flex items-center gap-1">
-            <Video size={10} /> {videoFile.name} ({(videoFile.size / 1024 / 1024).toFixed(1)}MB)
+          <span className="text-xs text-primary flex items-center gap-1">
+            <Video size={12} /> {videoFile.name} ({(videoFile.size / 1024 / 1024).toFixed(1)}MB)
           </span>
           <button onClick={removeVideo} className="text-muted-foreground hover:text-destructive">
-            <X size={12} />
+            <X size={14} />
           </button>
         </div>
       )}
 
       {listening && (
-        <p className="text-[10px] text-primary mt-2 animate-pulse">
+        <p className="text-xs text-primary mt-2 animate-pulse">
           🎙️ Listening… say something like "225 for 8 reps"
         </p>
       )}
