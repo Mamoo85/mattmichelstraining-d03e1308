@@ -3,7 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import AppNavbar from "@/components/layout/AppNavbar";
-import { ArrowLeft, Loader2, User, Dumbbell, TrendingUp, BookOpen, Eye, EyeOff, Shield } from "lucide-react";
+import { ArrowLeft, Loader2, User, Dumbbell, TrendingUp, BookOpen, Eye, EyeOff, Shield, Activity } from "lucide-react";
+import UserActivityFeed from "@/components/admin/UserActivityFeed";
 
 const ProgressCharts = lazy(() => import("@/components/features/ProgressCharts"));
 
@@ -30,7 +31,7 @@ const AdminViewUser = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"progress" | "programs">("progress");
+  const [activeTab, setActiveTab] = useState<"progress" | "programs" | "activity">("progress");
   const [workouts, setWorkouts] = useState<any[]>([]);
   const [activePrograms, setActivePrograms] = useState<any[]>([]);
   const [privacy, setPrivacy] = useState<PrivacySettings | null>(null);
@@ -91,6 +92,7 @@ const AdminViewUser = () => {
   const tabs = [
     { key: "progress" as const, label: "Progress", icon: TrendingUp },
     { key: "programs" as const, label: "Programs", icon: BookOpen },
+    { key: "activity" as const, label: "Activity", icon: Activity },
   ];
 
   const privacyFields: { key: keyof PrivacySettings; label: string }[] = [
