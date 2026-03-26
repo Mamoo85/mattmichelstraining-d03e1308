@@ -33,6 +33,7 @@ const SharedWorkoutFeed = () => {
       const { data } = await supabase
         .from("shared_workout_results" as any)
         .select("*")
+        .eq("is_public", true)
         .order("created_at", { ascending: false })
         .limit(20);
 
