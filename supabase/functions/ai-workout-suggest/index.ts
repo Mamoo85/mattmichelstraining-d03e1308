@@ -26,6 +26,7 @@ RULES:
 - Do NOT include sled exercises (sled push, sled pull, sled drag, etc.) UNLESS the user specifically mentions or requests sleds in their input.
 - Focus on compound movements: squat, deadlift, press, bench press, power clean, rows
 - The workout follows 5 phases: 1. Rolling/Soft Tissue, 2. Dynamic Warmup, 3. Main Work, 4. Finisher/Conditioning, 5. Cooldown
+- VARIETY IS CRITICAL: Never repeat the same exercise twice in a single workout. Each exercise must target a DIFFERENT movement pattern or muscle group than the previous one. Spread selections across the full exercise library — do not default to the same 10-15 "safe" exercises every time. Rotate between lesser-used compound variations (e.g. Zercher squat instead of always goblet squat, Z-press instead of always overhead press, single-leg RDL instead of always bilateral RDL). Surprise the athlete with variety while staying within the approved exercise library.
 - You must INFER the user's experience level, goals, training days per week, and available equipment strictly from their natural language input.
 - If the user doesn't mention how many days, default to 3.
 - If the user doesn't mention equipment, assume full gym (barbell, rack, dumbbells).${visionClause}
@@ -42,6 +43,8 @@ USER INPUT: "${userText}"
 
 AVAILABLE EXERCISES (use these exact names when possible):
 ${exerciseNames}
+
+VARIETY IS CRITICAL: Every exercise in the session must be unique — no duplicates. Rotate through different movement patterns and lesser-used exercises from the library instead of always picking the same familiar ones.
 
 Keep each session to 6-10 exercises across all phases. Make it challenging but appropriate for the inferred experience level.`;
 }
@@ -87,6 +90,7 @@ RULES:
 - NO machines, NO Smith machine, NO leg press, NO isolation curls, NO lat raises, NO flyes
 - Compound movements: squat, deadlift, press, bench press, power clean, rows
 - If they mention pain/tightness, address it with corrective work FIRST
+- VARIETY IS CRITICAL: Never repeat an exercise. Rotate through different movements from the library — avoid defaulting to the same handful of exercises every time. Use creative compound variations.
 
 ATHLETE CHECK-IN: "${userPrompt}"
 
@@ -99,10 +103,10 @@ Make it feel personal — like Coach Matt actually heard them.`;
 function buildStructuredPrompt(goal: string, audience: string, style: string, exerciseNames: string) {
   return `You are Coach Matt's workout builder. Starting Strength + Supple Leopard principles ONLY.
 LANGUAGE: ALL output MUST be in American English only. Never use any other language.
-LANGUAGE: ALL output MUST be in American English only. Never use any other language.
 RULES:
 - NO machines, NO Smith machine, NO leg press, NO isolation curls, NO lat raises, NO flyes
 - Include warmup, mobility, core work
+- VARIETY IS CRITICAL: Every exercise must be unique. Rotate through different movements from the library — do not default to the same exercises every time.
 - Audience: ${audience || "general fitness"} | Style: ${style || "balanced"} | Goal: ${goal || "general fitness"}
 
 AVAILABLE EXERCISES (use ONLY these exact names):
