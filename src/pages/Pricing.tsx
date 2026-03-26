@@ -681,7 +681,10 @@ const TIER_COLS = [
   { key: "tier_custom", label: "Elite", price: "$349.99" },
 ] as const;
 
+const FEATURES_VISIBLE_DEFAULT = 8;
+
 const TierComparisonTable = () => {
+  const [showAll, setShowAll] = useState(false);
   const { data: features = [], isLoading } = useQuery({
     queryKey: ["tier-features"],
     queryFn: async () => {
@@ -696,6 +699,9 @@ const TierComparisonTable = () => {
   });
 
   if (isLoading || features.length === 0) return null;
+
+  const visibleFeatures = showAll ? features : features.slice(0, FEATURES_VISIBLE_DEFAULT);
+  const hasMore = features.length > FEATURES_VISIBLE_DEFAULT;
 
   return (
     <motion.div
@@ -725,12 +731,12 @@ const TierComparisonTable = () => {
         </div>
 
         {/* Feature rows */}
-        {features.map((feature: any, i: number) => (
+        {visibleFeatures.map((feature: any, i: number) => (
           <div
             key={feature.feature_label}
             className={`grid grid-cols-[1fr_repeat(3,56px)] sm:grid-cols-[1fr_repeat(3,72px)] items-center px-3 py-2 ${
               i % 2 === 0 ? "bg-card" : "bg-background/30"
-            } ${i < features.length - 1 ? "border-b border-border/40" : ""}`}
+            } ${i < visibleFeatures.length - 1 ? "border-b border-border/40" : ""}`}
           >
             <span className="text-xs font-semibold text-foreground pr-2 truncate">{feature.feature_label}</span>
             {TIER_COLS.map((col) => (
@@ -745,6 +751,19 @@ const TierComparisonTable = () => {
           </div>
         ))}
       </div>
+
+      {hasMore && (
+        <button
+          onClick={() => setShowAll(!showAll)}
+          className="w-full flex items-center justify-center gap-1.5 py-3 text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-colors mt-1"
+        >
+          {showAll ? (
+            <><ChevronUp className="w-3.5 h-3.5" /> Show Less</>
+          ) : (
+            <><ChevronDown className="w-3.5 h-3.5" /> Show {features.length - FEATURES_VISIBLE_DEFAULT} More Features</>
+          )}
+        </button>
+      )}
     </motion.div>
   );
 };

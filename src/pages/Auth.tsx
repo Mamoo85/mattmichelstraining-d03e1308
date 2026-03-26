@@ -472,6 +472,22 @@ const Auth = () => {
           )}
         </div>
 
+        {/* Trouble signing in helper — addresses iCloud prefetch issue */}
+        {mode === "login" && (
+          <div className="bg-accent/10 border border-accent/30 p-3 mt-4">
+            <p className="text-[11px] font-bold text-foreground mb-1">Trouble signing in?</p>
+            <p className="text-[10px] text-muted-foreground mb-2">
+              iCloud and some email providers can block verification links. Use a <strong>Magic Link</strong> or <strong>Google</strong> to sign in instantly.
+            </p>
+            <button
+              onClick={() => { setMode("magic"); setError(""); setSuccess(""); }}
+              className="text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-colors"
+            >
+              Send me a Magic Link →
+            </button>
+          </div>
+        )}
+
         {/* Nutrition AI Sneak Peek */}
         <NutritionSneakPeek />
       </div>
