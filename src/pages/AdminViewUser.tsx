@@ -247,6 +247,9 @@ const AdminViewUser = () => {
               </div>
             )
           )}
+          {activeTab === "activity" && userId && (
+            <UserActivityFeed targetUserId={userId} />
+          )}
         </Suspense>
       </div>
     </div>
