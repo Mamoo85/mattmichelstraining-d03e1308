@@ -130,6 +130,9 @@ const YoungbloodMockup = () => {
           </nav>
 
           <div className="hidden lg:flex items-center gap-3">
+            <a href="#" className="px-4 py-2 text-xs font-semibold uppercase tracking-widest border rounded text-[#94a3b8] hover:text-white hover:border-white/30 transition-colors" style={{ borderColor: "rgba(255,255,255,.15)" }}>
+              Legacy Partner Portal
+            </a>
             <a href="tel:5867550200" className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold uppercase tracking-widest border rounded text-[#94a3b8] hover:text-white hover:border-white/30 transition-colors" style={{ borderColor: "rgba(255,255,255,.15)" }}>
               <Phone size={14} /> (586) 755-0200
             </a>
@@ -148,6 +151,7 @@ const YoungbloodMockup = () => {
             {["Solutions", "Partners", "Engineering", "Locations", "About", "Contact"].map((l) => (
               <a key={l} href={`#${l.toLowerCase()}`} onClick={() => setMenuOpen(false)} className="block text-sm font-semibold uppercase tracking-widest text-[#94a3b8] hover:text-white">{l}</a>
             ))}
+            <a href="#" onClick={() => setMenuOpen(false)} className="block text-sm font-semibold uppercase tracking-widest text-[#94a3b8] hover:text-white border border-white/15 rounded px-4 py-2 w-fit">Legacy Partner Portal</a>
             <a href="tel:5867550200" className="block text-sm font-semibold text-[#0ea5e9]">(586) 755-0200</a>
           </div>
         )}
@@ -281,6 +285,34 @@ const YoungbloodMockup = () => {
                 <span key={`${m}-${i}`} className="mx-8 text-xs font-semibold uppercase tracking-[0.2em] shrink-0" style={{ color: "rgba(255,255,255,.2)" }}>{m}</span>
               ))}
             </div>
+          </div>
+        </div>
+      </RevealSection>
+
+      {/* ════════════════════════════════════════════════════════════ */}
+      {/*  4b. ENGINEERING SHOWCASE (Real Images)                     */}
+      {/* ════════════════════════════════════════════════════════════ */}
+      <RevealSection className="py-28 px-6" style={{ borderTop: "1px solid rgba(255,255,255,.04)" }}>
+        <div className="max-w-6xl mx-auto">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] mb-3 text-center" style={{ color: "#0ea5e9" }}>From Our Floor</p>
+          <h2 className="yb-heading text-4xl sm:text-5xl text-center mb-16 text-white">Built In-House</h2>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              { src: "/images/engineered-cell.jpg", title: "Custom Engineered Solutions", text: "Turnkey robotic cells and safety enclosures designed, built, and commissioned by our integration team." },
+              { src: "/images/hydraulics-actual.jpg", title: "Hydraulics & Lubrication", text: "Mobile and industrial hydraulic power units engineered by H&P Technologies' core team." },
+              { src: "/images/robotic-arm-actual.jpg", title: "Robotics & Vision", text: "Certified Universal Robots integrator — machine tending, end-of-arm tooling, and SICK vision systems." },
+            ].map((item) => (
+              <div key={item.title} className={`rounded-xl overflow-hidden group ${glassCard}`}>
+                <div className="aspect-[4/3] overflow-hidden">
+                  <img src={item.src} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" />
+                </div>
+                <div className="p-6">
+                  <h3 className="yb-heading text-lg text-white mb-2">{item.title}</h3>
+                  <p className="text-sm leading-relaxed" style={{ color: "#94a3b8" }}>{item.text}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </RevealSection>
