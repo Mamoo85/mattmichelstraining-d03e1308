@@ -132,6 +132,7 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
   const playVideo = async (video: LiftVideo) => {
     // For admin: always play. For user: only if approved
     if (!isAdmin && video.status !== "approved") return;
+    if (video.video_path.includes('..')) throw new Error('Invalid video path');
     const { data } = await supabase.storage.from("lift_videos").createSignedUrl(video.video_path, 300);
     if (data?.signedUrl) {
       setPlayingVideo({ url: data.signedUrl, exercise: "Lift Video" });
@@ -156,6 +157,7 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
     try {
       const ext = file.name.split(".").pop() || "mp4";
       const path = `${effectiveUserId}/${logId}.${ext}`;
+      if (path.includes('..')) throw new Error("Invalid path");
       const { error: upErr } = await supabase.storage.from("lift_videos").upload(path, file, { contentType: file.type });
       if (upErr) throw upErr;
       await supabase.from("lift_videos" as any).insert({

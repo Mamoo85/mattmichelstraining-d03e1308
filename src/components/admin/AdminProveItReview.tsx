@@ -93,8 +93,10 @@ const AdminProveItReview = () => {
       const destPath = `prove_it/${safeAthlName}_${safeExercise}_${date}.mp4`;
 
       try {
+        if (sub.video_path.includes('..')) throw new Error('Invalid video path');
         const { data: videoData } = await supabase.storage.from("lift_videos").download(sub.video_path);
         if (videoData) {
+          if (destPath.includes('..')) throw new Error('Invalid destination path');
           await supabase.storage.from("admin_media").upload(destPath, videoData, {
             contentType: "video/mp4",
             upsert: true,

@@ -145,6 +145,9 @@ const LogForm = ({ activeLift, repMax, effectiveUserId, onLogged }: LogFormProps
       try {
         const ext = videoFile.name.split(".").pop() || "mp4";
         const path = `${effectiveUserId}/${logData.id}.${ext}`;
+        if (path.includes('..')) {
+          throw new Error("Invalid path");
+        }
         const { error: uploadError } = await supabase.storage
           .from("lift_videos")
           .upload(path, videoFile, { contentType: videoFile.type, upsert: false });

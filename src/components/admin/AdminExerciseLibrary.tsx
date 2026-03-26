@@ -138,6 +138,7 @@ const AdminExerciseLibrary = () => {
     setUploading(true);
     try {
       const ext = file.name.split(".").pop() || "mp4";
+      if (ext.includes('..')) throw new Error("Invalid file extension");
       const path = `${crypto.randomUUID()}.${ext}`;
       // Delete old uploaded video if replacing
       if (editing.video_url.includes("exercise_videos/")) {
