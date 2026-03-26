@@ -3546,6 +3546,21 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      get_active_training_programs: {
+        Args: never
+        Returns: {
+          category: string
+          created_at: string
+          description: string
+          id: string
+          is_active: boolean
+          level: string
+          price: number
+          sport: string
+          title: string
+          total_weeks: number
+        }[]
+      }
       get_public_profiles: {
         Args: { user_ids?: string[] }
         Returns: {
