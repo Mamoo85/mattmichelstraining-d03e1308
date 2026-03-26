@@ -45,10 +45,7 @@ const SharedWorkoutFeed = () => {
 
       // Fetch profiles for names
       const userIds = [...new Set((data as any[]).map((d: any) => d.user_id))];
-      const { data: profiles } = await (supabase
-        .from("profiles_public" as any)
-        .select("user_id, athlete_name, full_name") as any)
-        .in("user_id", userIds);
+      const { data: profiles } = await supabase.rpc("get_public_profiles", { user_ids: userIds });
 
       const profileMap = new Map(
         ((profiles || []) as any[]).map((p: any) => [p.user_id, p])

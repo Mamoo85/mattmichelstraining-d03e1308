@@ -30,11 +30,8 @@ const CommunityActivityFeed = memo(() => {
 
       // Get profiles that are public
       const userIds = [...new Set(logs.map((l) => l.user_id))];
-      const { data: profiles } = await (supabase
-        .from("profiles_public" as any)
-        .select("user_id, full_name, athlete_name, random_alias, is_public_profile") as any)
-        .in("user_id", userIds)
-        .eq("is_public_profile", true);
+      const { data: allProfiles } = await supabase.rpc("get_public_profiles", { user_ids: userIds });
+      const profiles = (allProfiles || []).filter((p: any) => p.is_public_profile === true);
 
       if (!profiles?.length) return;
 
