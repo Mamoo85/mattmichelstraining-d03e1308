@@ -52,10 +52,9 @@ const InteractivePrograms = () => {
   useEffect(() => {
     const fetchData = async () => {
       const { data } = await supabase
-        .from("training_programs")
-        .select("id, title, description, category, level, sport, price")
-        .eq("is_active", true);
-      setPrograms((data as TrainingProgram[]) || []);
+        .from("training_programs_public" as any)
+        .select("id, title, description, category, level, sport, price");
+      setPrograms((data as unknown as TrainingProgram[]) || []);
 
       if (user) {
         // Check both user_active_programs AND user_content_access for gifted content
