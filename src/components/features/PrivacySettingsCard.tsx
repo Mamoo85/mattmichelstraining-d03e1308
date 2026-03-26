@@ -21,7 +21,7 @@ const SETTINGS_CONFIG = [
   { key: "show_points" as const, label: "Points", desc: "Your total points visible on leaderboards" },
   { key: "show_level" as const, label: "Level & Rank", desc: "Your level badge visible to other athletes" },
   { key: "show_lifts" as const, label: "Lift Stats", desc: "Top lifts and PRs visible on your profile" },
-  { key: "show_challenges" as const, label: "Challenge Scores", desc: "Monthly challenge entries and rankings" },
+  { key: "show_challenges" as const, label: "Challenge Scores", desc: "Monthly challenge & focus entries — on by default" },
   { key: "show_nutrition" as const, label: "Nutrition Data", desc: "Meal logs and macro summaries" },
   { key: "show_streaks" as const, label: "Streaks", desc: "Weekly workout streak count" },
   { key: "show_programs" as const, label: "Programs", desc: "Active programs and training history" },
