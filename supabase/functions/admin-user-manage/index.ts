@@ -24,14 +24,12 @@ serve(async (req) => {
       const { token } = body;
       if (!token) throw new Error("Token required");
 
-      // Verify the caller's identity via JWT
       const authHeader = req.headers.get("Authorization");
       if (!authHeader?.startsWith("Bearer ")) throw new Error("Not authenticated");
       const { data: callerData, error: callerError } = await supabaseClient.auth.getUser(authHeader.replace("Bearer ", ""));
       if (callerError || !callerData.user) throw new Error("Auth failed");
       const callerUserId = callerData.user.id;
 
-      // Look up the token using service role (bypasses RLS)
       const { data: invite, error: inviteErr } = await supabaseClient
         .from("in_person_invite_tokens")
         .select("*")
@@ -41,13 +39,11 @@ serve(async (req) => {
       if (inviteErr || !invite) throw new Error("Invalid invite link");
       if (invite.is_used) throw new Error("This invite link has already been used");
 
-      // Flag the caller's own profile as in-person (NOT a body-supplied userId)
       await supabaseClient
         .from("profiles")
         .update({ is_in_person: true })
         .eq("user_id", callerUserId);
 
-      // Mark token as used
       await supabaseClient
         .from("in_person_invite_tokens")
         .update({ is_used: true, used_at: new Date().toISOString(), used_by: callerUserId })
@@ -73,12 +69,11 @@ serve(async (req) => {
 
     const { targetUserId, targetEmail, targetName, linkParentId, unlinkChildId, label, updates } = body;
 
-    // ── Update Profile (admin edits user name, email, role, etc.) ──
+    // ── Update Profile ──
     if (action === "update_profile") {
       if (!targetUserId) throw new Error("User ID required");
       if (!updates || typeof updates !== "object") throw new Error("Updates object required");
 
-      // Allowed fields admin can edit on profiles
       const allowedFields = ["full_name", "athlete_name", "email", "account_role"];
       const profilePatch: Record<string, any> = { updated_at: new Date().toISOString() };
       for (const key of allowedFields) {
@@ -91,7 +86,6 @@ serve(async (req) => {
         .eq("user_id", targetUserId);
       if (profileErr) throw new Error(`Profile update failed: ${profileErr.message}`);
 
-      // If email changed, also update the auth user email
       if (updates.email) {
         const { error: authErr } = await supabaseClient.auth.admin.updateUserById(targetUserId, {
           email: updates.email,
@@ -99,7 +93,6 @@ serve(async (req) => {
         if (authErr) console.error("Auth email update failed:", authErr.message);
       }
 
-      // If full_name changed, update auth user metadata too
       if (updates.full_name !== undefined) {
         const { error: metaErr } = await supabaseClient.auth.admin.updateUserById(targetUserId, {
           user_metadata: { full_name: updates.full_name },
@@ -131,7 +124,7 @@ serve(async (req) => {
       });
     }
 
-    // ── Invite In-Person (email-based, kept for backwards compat) ──
+    // ── Invite In-Person (email-based) ──
     if (action === "invite_in_person") {
       if (!targetEmail) throw new Error("Email required");
 
@@ -211,6 +204,113 @@ serve(async (req) => {
       if (error) throw new Error(`Magic link failed: ${error.message}`);
 
       return new Response(JSON.stringify({ success: true, message: `Magic link sent to ${targetEmail}` }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── Merge Accounts ──
+    if (action === "merge_accounts") {
+      const { keepUserId, mergeUserId } = body;
+      if (!keepUserId || !mergeUserId) throw new Error("Both keepUserId and mergeUserId are required");
+      if (keepUserId === mergeUserId) throw new Error("Cannot merge an account with itself");
+
+      // Get both profiles
+      const { data: keepProfile } = await supabaseClient.from("profiles").select("*").eq("user_id", keepUserId).single();
+      const { data: mergeProfile } = await supabaseClient.from("profiles").select("*").eq("user_id", mergeUserId).single();
+      if (!keepProfile || !mergeProfile) throw new Error("One or both user profiles not found");
+
+      // Tables with user_id column to migrate
+      const userIdTables = [
+        "logged_exercises", "workout_logs", "progress_logs", "coach_notes",
+        "lift_messages", "coach_direct_messages", "program_messages",
+        "notifications", "point_transactions", "challenge_entries",
+        "challenge_participants", "session_bookings", "session_credits",
+        "studio_checkins", "community_workouts", "gifted_products",
+        "gifted_sessions", "purchased_programs", "user_active_programs",
+        "custom_program_requests", "intake_assessments", "lift_videos",
+        "coach_ai_drafts", "focus_logs", "shared_workout_results",
+      ];
+
+      const migrated: Record<string, number> = {};
+
+      for (const table of userIdTables) {
+        try {
+          const { data: rows } = await supabaseClient
+            .from(table)
+            .select("id")
+            .eq("user_id", mergeUserId);
+          
+          if (rows && rows.length > 0) {
+            await supabaseClient
+              .from(table)
+              .update({ user_id: keepUserId })
+              .eq("user_id", mergeUserId);
+            migrated[table] = rows.length;
+          }
+        } catch (e) {
+          // Table may not exist or have different schema — skip
+          console.warn(`Merge skip table ${table}:`, e);
+        }
+      }
+
+      // Migrate parent_child_links (both sides)
+      try {
+        await supabaseClient.from("parent_child_links").update({ parent_user_id: keepUserId }).eq("parent_user_id", mergeUserId);
+        await supabaseClient.from("parent_child_links").update({ child_user_id: keepUserId }).eq("child_user_id", mergeUserId);
+      } catch (e) { console.warn("Merge parent_child_links:", e); }
+
+      // Migrate family_subscription_items
+      try {
+        await supabaseClient.from("family_subscription_items").update({ parent_user_id: keepUserId }).eq("parent_user_id", mergeUserId);
+        await supabaseClient.from("family_subscription_items").update({ member_user_id: keepUserId }).eq("member_user_id", mergeUserId);
+      } catch (e) { console.warn("Merge family_subscription_items:", e); }
+
+      // Migrate user_points — sum totals
+      try {
+        const { data: mergePoints } = await supabaseClient.from("user_points").select("total_points").eq("user_id", mergeUserId).single();
+        if (mergePoints && mergePoints.total_points > 0) {
+          await supabaseClient.rpc("award_points", {
+            _user_id: keepUserId,
+            _action: "admin_award",
+            _points: mergePoints.total_points,
+            _description: `Merged from ${mergeProfile.email}`,
+          });
+        }
+        await supabaseClient.from("user_points").delete().eq("user_id", mergeUserId);
+      } catch (e) { console.warn("Merge user_points:", e); }
+
+      // Copy non-null profile fields from merged account if keep has them null
+      const fillFields = ["athlete_name", "full_name", "phone"];
+      const profilePatch: Record<string, any> = {};
+      for (const field of fillFields) {
+        if (!keepProfile[field] && mergeProfile[field]) {
+          profilePatch[field] = mergeProfile[field];
+        }
+      }
+      if (Object.keys(profilePatch).length > 0) {
+        await supabaseClient.from("profiles").update(profilePatch).eq("user_id", keepUserId);
+      }
+
+      // Store the merged email as a linked email
+      if (mergeProfile.email) {
+        await supabaseClient.from("user_linked_emails").insert({
+          user_id: keepUserId,
+          email: mergeProfile.email,
+        }).then(({ error }) => {
+          if (error) console.warn("Linked email insert:", error.message);
+        });
+      }
+
+      // Delete merged profile and auth user
+      await supabaseClient.from("profiles").delete().eq("user_id", mergeUserId);
+      const { error: deleteAuthErr } = await supabaseClient.auth.admin.deleteUser(mergeUserId);
+      if (deleteAuthErr) console.error("Auth delete error:", deleteAuthErr.message);
+
+      return new Response(JSON.stringify({
+        success: true,
+        message: `Merged ${mergeProfile.email} into ${keepProfile.email}`,
+        migrated,
+      }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
