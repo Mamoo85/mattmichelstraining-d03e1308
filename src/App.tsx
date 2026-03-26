@@ -2,7 +2,7 @@ import { lazy, Suspense, useState, useEffect, memo } from "react";
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
-import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 // Defer toast providers — only triggered on user action, not needed for FCP
 const Sonner = lazyRetry(() => import("@/components/ui/sonner").then(m => ({ default: m.Toaster })));
 const Toaster = lazyRetry(() => import("@/components/ui/toaster").then(m => ({ default: m.Toaster })));
@@ -200,6 +200,12 @@ const App = () => (
                   <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/auth" element={<Auth />} />
+                    <Route path="/login" element={<Navigate to="/auth" replace />} />
+                    <Route path="/signin" element={<Navigate to="/auth" replace />} />
+                    <Route path="/~oauth" element={<Auth />} />
+                    <Route path="/~oauth/*" element={<Auth />} />
+                    <Route path="/auth/callback" element={<Auth />} />
+                    <Route path="/auth/callback/*" element={<Auth />} />
                     <Route path="/welcome" element={<Welcome />} />
                     <Route path="/shop" element={<Shop />} />
                     <Route path="/for-parents" element={<ForParents />} />
