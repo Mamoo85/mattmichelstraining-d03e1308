@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Copy, Check, Loader2, UserPlus, LinkIcon } from "lucide-react";
+import { Copy, Check, Loader2, UserPlus, LinkIcon, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 const PUBLISHED_DOMAIN = "https://www.mattmichelstraining.com";
+const APP_INSTALL_LINK = `${PUBLISHED_DOMAIN}/install`;
 
 const AdminClientOnboarding = () => {
   const [label, setLabel] = useState("");
