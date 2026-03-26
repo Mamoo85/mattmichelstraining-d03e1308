@@ -560,6 +560,13 @@ export type Database = {
             referencedRelation: "training_programs"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "custom_program_requests_generated_program_id_fkey"
+            columns: ["generated_program_id"]
+            isOneToOne: false
+            referencedRelation: "training_programs_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       daily_workouts: {
@@ -2030,6 +2037,13 @@ export type Database = {
             referencedRelation: "training_programs"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "program_messages_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "training_programs_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       program_workouts: {
@@ -2079,6 +2093,13 @@ export type Database = {
             columns: ["program_id"]
             isOneToOne: false
             referencedRelation: "training_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "program_workouts_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "training_programs_public"
             referencedColumns: ["id"]
           },
         ]
@@ -3201,6 +3222,13 @@ export type Database = {
             referencedRelation: "training_programs"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "user_active_programs_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "training_programs_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       user_content_access: {
@@ -3240,6 +3268,13 @@ export type Database = {
             columns: ["program_id"]
             isOneToOne: false
             referencedRelation: "training_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_content_access_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "training_programs_public"
             referencedColumns: ["id"]
           },
           {
@@ -3448,7 +3483,45 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      training_programs_public: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          id: string | null
+          is_active: boolean | null
+          level: string | null
+          price: number | null
+          sport: string | null
+          title: string | null
+          total_weeks: number | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          level?: string | null
+          price?: number | null
+          sport?: string | null
+          title?: string | null
+          total_weeks?: number | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          level?: string | null
+          price?: number | null
+          sport?: string | null
+          title?: string | null
+          total_weeks?: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       award_points: {
