@@ -218,11 +218,17 @@ const App = () => (
                     <Route path="/sitemap.xml" element={<DynamicSitemap />} />
                     <Route path="/detroit-web-design" element={<WebDesignAgency />} />
                     <Route path="/demo-landscaping" element={<LandscapeMockup />} />
+                    <Route path="/demo-landscaping/*" element={<LandscapeMockup />} />
                     <Route path="/demo-plumber" element={<PlumberMockup />} />
+                    <Route path="/demo-plumber/*" element={<PlumberMockup />} />
                     <Route path="/demo-electrician" element={<ElectricianMockup />} />
+                    <Route path="/demo-electrician/*" element={<ElectricianMockup />} />
                     <Route path="/demo-lawyer" element={<LawyerMockup />} />
+                    <Route path="/demo-lawyer/*" element={<LawyerMockup />} />
                     <Route path="/demo-clinic" element={<ClinicMockup />} />
+                    <Route path="/demo-clinic/*" element={<ClinicMockup />} />
                     <Route path="/demo-roofing" element={<RoofingMockup />} />
+                    <Route path="/demo-roofing/*" element={<RoofingMockup />} />
                     <Route path="/demo-youngblood" element={<YoungbloodMockup />} />
                     <Route path="/demo-youngblood/*" element={<YoungbloodMockup />} />
                     <Route path="/demo-dental" element={<DentalMockup />} />
