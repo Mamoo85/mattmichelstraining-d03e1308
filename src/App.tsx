@@ -225,6 +225,7 @@ const App = () => (
                     <Route path="/demo-roofing" element={<RoofingMockup />} />
                     <Route path="/demo-youngblood" element={<YoungbloodMockup />} />
                     <Route path="/demo-dental" element={<DentalMockup />} />
+                    <Route path="/demo-dental/*" element={<DentalMockup />} />
                     <Route path="/whats-included" element={<WebDesignIncluded />} />
                     <Route path="/free-program" element={<FreeProgram />} />
                     <Route path="/studio-rental" element={<StudioRental />} />
