@@ -37,9 +37,9 @@ type TabKey = "home" | "generate" | "train" | "lifts";
 
 const TABS: { key: TabKey; label: string; icon: typeof BarChart3 }[] = [
   { key: "home", label: "Home", icon: Home },
+  { key: "lifts", label: "Lifts", icon: BarChart3 },
   { key: "generate", label: "Generate", icon: Sparkles },
   { key: "train", label: "Train", icon: Dumbbell },
-  { key: "lifts", label: "Lifts", icon: BarChart3 },
 ];
 
 const TAB_STORAGE_KEY = "zone-dash-tab";
@@ -541,8 +541,9 @@ const ZoneDashboard = () => {
         style={{ background: "rgba(10,10,10,0.92)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
       >
         <div className="flex items-center gap-3">
-          <div
-            className="h-9 w-9 rounded-lg overflow-hidden flex items-center justify-center"
+          <button
+            onClick={() => navigate("/")}
+            className="h-9 w-9 rounded-lg overflow-hidden flex items-center justify-center transition-all active:scale-90"
             style={{
               background: "#000",
               boxShadow: "0 0 14px rgba(249,115,22,0.6), 0 0 28px rgba(249,115,22,0.25)",
@@ -552,9 +553,8 @@ const ZoneDashboard = () => {
               src={logoImg}
               alt="M²"
               className="h-8 w-8 object-contain"
-              style={{ filter: "none", dropShadow: "none" } as any}
             />
-          </div>
+          </button>
           <div>
             <p className="text-[9px] font-bold uppercase tracking-[0.2em]" style={{ color: "#f97316" }}>THE ZONE</p>
             <p className="text-xs font-semibold" style={{ color: "#fafafa" }}>{displayName}</p>
@@ -724,6 +724,19 @@ const ZoneDashboard = () => {
             <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>Track compound lifts & progress</p>
           </button>
 
+          {/* Challenges & Focus */}
+          <button
+            onClick={() => handleTab("home")}
+            className="rounded-2xl p-3.5 text-left transition-all active:scale-[0.96]"
+            style={{ background: "linear-gradient(135deg, rgba(34,197,94,0.1), rgba(22,163,74,0.06))", border: "1px solid rgba(34,197,94,0.2)" }}
+          >
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: "linear-gradient(135deg, #22c55e, #16a34a)" }}>
+              <Award size={17} color="#fff" />
+            </div>
+            <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>Challenges & Focus</p>
+            <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>Monthly goals & community</p>
+          </button>
+
           {/* Split Generator/Fix It button */}
           <button
             onClick={() => { handleTab("generate"); setGenerateView("menu"); }}
@@ -745,19 +758,6 @@ const ZoneDashboard = () => {
               <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>Generator</p>
               <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>AI builds your workout</p>
             </div>
-          </button>
-
-          {/* Challenges & Focus */}
-          <button
-            onClick={() => handleTab("home")}
-            className="rounded-2xl p-3.5 text-left transition-all active:scale-[0.96]"
-            style={{ background: "linear-gradient(135deg, rgba(34,197,94,0.1), rgba(22,163,74,0.06))", border: "1px solid rgba(34,197,94,0.2)" }}
-          >
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: "linear-gradient(135deg, #22c55e, #16a34a)" }}>
-              <Award size={17} color="#fff" />
-            </div>
-            <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>Challenges & Focus</p>
-            <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>Monthly goals & community</p>
           </button>
 
           {/* Workout Library */}
@@ -795,13 +795,13 @@ const ZoneDashboard = () => {
           onClick={() => navigate("/ai-insights")}
           className="w-full rounded-xl p-3 flex items-center gap-3 transition-all active:scale-[0.97]"
           style={{
-            background: "linear-gradient(135deg, rgba(34,197,94,0.08), rgba(0,240,255,0.06))",
-            border: "1px solid rgba(34,197,94,0.15)",
+            background: "linear-gradient(135deg, rgba(168,85,247,0.1), rgba(124,58,237,0.06))",
+            border: "1px solid rgba(168,85,247,0.18)",
           }}
         >
-          <Heart size={16} style={{ color: "#22c55e" }} />
-          <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#22c55e" }}>Recovery & Mobility Tips</span>
-          <ChevronRight size={14} className="ml-auto" style={{ color: "#22c55e" }} />
+          <Heart size={16} style={{ color: "#a855f7" }} />
+          <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#a855f7" }}>Recovery & Mobility Tips</span>
+          <ChevronRight size={14} className="ml-auto" style={{ color: "#a855f7" }} />
         </button>
 
         {/* ── Tab Strip ──────────────────────────── */}
