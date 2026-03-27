@@ -9,13 +9,13 @@ import {
   BarChart3, Sparkles, Dumbbell, Home, Flame, Zap, Trophy, Play, Wrench,
   Timer, ChevronRight, ChevronDown, MessageCircle, Brain,
   User, Activity, Clock, Target, Star, Award, Camera, Crosshair, Heart, UserPlus,
-  Mic, MapPin
+  Mic, MapPin, Check
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ZoneThemeWrapper from "@/components/zone/ZoneThemeWrapper";
 import FeatureLearningModal from "@/components/dashboard/FeatureLearningModal";
 import { ZONE_LIFTS_TIP, ZONE_GENERATE_TIP, ZONE_TRAIN_TIP, ZONE_HOME_TIP } from "@/components/dashboard/featureTips";
-import logoImg from "@/assets/m2-logo-official.png";
+import logoImg from "@/assets/m2-logo-zone.png";
 
 const ProgressCharts = lazy(() => import("@/components/features/ProgressCharts"));
 const WorkoutsTab = lazy(() => import("@/components/dashboard/WorkoutsTab"));
@@ -32,15 +32,14 @@ const CustomProgramRequest = lazy(() => import("@/components/dashboard/CustomPro
 const AiWorkoutSuggest = lazy(() => import("@/components/workout/AiWorkoutSuggest"));
 const FixItLibrary = lazy(() => import("@/components/features/FixItLibrary"));
 const QuickActivityLog = lazy(() => import("@/components/dashboard/QuickActivityLog"));
-const StudioCheckIn = lazy(() => import("@/components/sessions/StudioCheckIn"));
 
-type TabKey = "lifts" | "generate" | "train" | "home";
+type TabKey = "home" | "generate" | "train" | "lifts";
 
 const TABS: { key: TabKey; label: string; icon: typeof BarChart3 }[] = [
-  { key: "lifts", label: "Lifts", icon: BarChart3 },
+  { key: "home", label: "Home", icon: Home },
   { key: "generate", label: "Generate", icon: Sparkles },
   { key: "train", label: "Train", icon: Dumbbell },
-  { key: "home", label: "Home", icon: Home },
+  { key: "lifts", label: "Lifts", icon: BarChart3 },
 ];
 
 const TAB_STORAGE_KEY = "zone-dash-tab";
@@ -80,7 +79,6 @@ const GenerateTabContent = memo(({ view, setView }: { view: "menu" | "workout" |
 
   return (
     <div className="space-y-3">
-      {/* Two generator cards */}
       <button
         onClick={() => setView("workout")}
         className="w-full rounded-2xl p-5 text-left transition-all active:scale-[0.97]"
@@ -115,7 +113,6 @@ const GenerateTabContent = memo(({ view, setView }: { view: "menu" | "workout" |
         </div>
       </button>
 
-      {/* Auto-timer callout */}
       <div className="rounded-xl px-4 py-3 flex items-center gap-3" style={{ background: "rgba(0,240,255,0.05)", border: "1px solid rgba(0,240,255,0.1)" }}>
         <Timer size={16} style={{ color: "#00f0ff" }} />
         <p className="text-[11px]" style={{ color: "#737373" }}>
@@ -123,7 +120,6 @@ const GenerateTabContent = memo(({ view, setView }: { view: "menu" | "workout" |
         </p>
       </div>
 
-      {/* AI Toolbox */}
       <AiToolbox />
     </div>
   );
@@ -345,7 +341,6 @@ const TrainTabContent = memo(() => (
         </div>
       </div>
 
-      {/* Open Workout button */}
       <button
         onClick={() => window.dispatchEvent(new CustomEvent("open-workout-zone", { detail: null }))}
         className="w-full rounded-2xl py-3 flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest transition-all active:scale-[0.97]"
@@ -419,15 +414,17 @@ const ZoneDashboard = () => {
   const tierLabel = subscriptionTier ? subscriptionTier.charAt(0).toUpperCase() + subscriptionTier.slice(1) : "Member";
 
   const [activeTab, setActiveTab] = useState<TabKey>(() =>
-    (safeLocalStorage.getItem(TAB_STORAGE_KEY) as TabKey) || "lifts"
+    (safeLocalStorage.getItem(TAB_STORAGE_KEY) as TabKey) || "home"
   );
   const [showTabTip, setShowTabTip] = useState(() => {
-    const initialTab = (safeLocalStorage.getItem(TAB_STORAGE_KEY) as TabKey) || "lifts";
+    const initialTab = (safeLocalStorage.getItem(TAB_STORAGE_KEY) as TabKey) || "home";
     return !safeLocalStorage.getItem(`m2-tip-zone-${initialTab}-v1`);
   });
   const [generateView, setGenerateView] = useState<"menu" | "workout" | "fixit">("menu");
   const [showQuickLog, setShowQuickLog] = useState(false);
-  const [showCheckIn, setShowCheckIn] = useState(false);
+  const [showCheckInChoice, setShowCheckInChoice] = useState(false);
+  const [alreadyCheckedInToday, setAlreadyCheckedInToday] = useState(false);
+  const [checkingIn, setCheckingIn] = useState(false);
 
   const [streak, setStreak] = useState(0);
   const [sessionsThisWeek, setSessionsThisWeek] = useState(0);
@@ -442,7 +439,6 @@ const ZoneDashboard = () => {
       const { data: prof } = await supabase.from("profiles").select("athlete_name, full_name").eq("id", user.id).maybeSingle();
       if (prof?.athlete_name || prof?.full_name) setDisplayName(prof.athlete_name || prof.full_name || "Athlete");
 
-      // Fetch top PR
       const { data: prData } = await supabase
         .from("progress_logs")
         .select("exercise_name, weight")
@@ -454,7 +450,6 @@ const ZoneDashboard = () => {
         setTopPR({ name: prData[0].exercise_name, weight: prData[0].weight });
       }
 
-      // Fetch total lift count
       const { count: liftCount } = await supabase
         .from("progress_logs")
         .select("*", { count: "exact", head: true })
@@ -488,9 +483,35 @@ const ZoneDashboard = () => {
         }
         setStreak(s);
       }
+
+      // Check if already checked in today
+      const today = new Date().toISOString().slice(0, 10);
+      const { count: checkinCount } = await supabase
+        .from("studio_checkins")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .gte("checked_in_at", today + "T00:00:00")
+        .lte("checked_in_at", today + "T23:59:59");
+      setAlreadyCheckedInToday((checkinCount || 0) > 0);
     };
     load();
   }, [user]);
+
+  const handleCheckIn = async (location: "matts_gym" | "on_your_own") => {
+    if (!user || alreadyCheckedInToday) return;
+    setCheckingIn(true);
+    const { error } = await supabase
+      .from("studio_checkins")
+      .insert({ user_id: user.id } as any);
+    if (error) {
+      toast({ title: "Check-in failed", description: error.message, variant: "destructive" });
+    } else {
+      setAlreadyCheckedInToday(true);
+      toast({ title: location === "matts_gym" ? "🏋️ Checked in at Matt's Gym!" : "💪 Checked in — On Your Own!", description: "+50 M² Points" });
+    }
+    setCheckingIn(false);
+    setShowCheckInChoice(false);
+  };
 
   const handleTab = useCallback((tab: TabKey) => {
     setActiveTab(tab);
@@ -520,8 +541,19 @@ const ZoneDashboard = () => {
         style={{ background: "rgba(10,10,10,0.92)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
       >
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-lg overflow-hidden flex items-center justify-center" style={{ background: "#000", boxShadow: "0 0 12px rgba(249,115,22,0.5), 0 0 24px rgba(249,115,22,0.2)" }}>
-            <img src={logoImg} alt="M²" className="h-8 w-8 object-contain" />
+          <div
+            className="h-9 w-9 rounded-lg overflow-hidden flex items-center justify-center"
+            style={{
+              background: "#000",
+              boxShadow: "0 0 14px rgba(249,115,22,0.6), 0 0 28px rgba(249,115,22,0.25)",
+            }}
+          >
+            <img
+              src={logoImg}
+              alt="M²"
+              className="h-8 w-8 object-contain"
+              style={{ filter: "none", dropShadow: "none" } as any}
+            />
           </div>
           <div>
             <p className="text-[9px] font-bold uppercase tracking-[0.2em]" style={{ color: "#f97316" }}>THE ZONE</p>
@@ -558,7 +590,6 @@ const ZoneDashboard = () => {
       </header>
 
       <main className="max-w-md mx-auto px-4 pt-4 pb-4 space-y-4">
-
 
         {/* ── Stats Banner ────────── */}
         <div
@@ -612,7 +643,7 @@ const ZoneDashboard = () => {
               )}
             </div>
 
-            {/* Right: Profile Avatar Card with Check-In */}
+            {/* Right: Profile Avatar Card */}
             <button
               onClick={() => navigate("/profile")}
               className="shrink-0 w-[100px] flex flex-col items-center justify-center gap-1.5 relative overflow-hidden transition-all active:scale-95"
@@ -646,43 +677,51 @@ const ZoneDashboard = () => {
               </div>
             </button>
           </div>
-          {/* Check-In strip inside stats banner */}
-          <button
-            onClick={() => setShowCheckIn(true)}
-            className="w-full flex items-center justify-center gap-2 py-2 transition-all active:scale-[0.98]"
-            style={{ borderTop: "1px solid rgba(255,255,255,0.06)", color: "#00f0ff" }}
-          >
-            <MapPin size={12} />
-            <span className="text-[10px] font-bold uppercase tracking-widest">Studio Check-In</span>
-          </button>
+
+          {/* Check-In + Prove It strip */}
+          <div className="flex" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+            <button
+              onClick={() => {
+                if (alreadyCheckedInToday) return;
+                setShowCheckInChoice(true);
+              }}
+              disabled={alreadyCheckedInToday}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 transition-all active:scale-[0.98]"
+              style={{
+                color: alreadyCheckedInToday ? "#525252" : "#00f0ff",
+                opacity: alreadyCheckedInToday ? 0.6 : 1,
+              }}
+            >
+              {alreadyCheckedInToday ? <Check size={13} /> : <MapPin size={13} />}
+              <span className="text-[10px] font-bold uppercase tracking-widest">
+                {alreadyCheckedInToday ? "Checked In ✓" : "Check-In"}
+              </span>
+            </button>
+            <div className="w-px" style={{ background: "rgba(255,255,255,0.06)" }} />
+            <button
+              onClick={() => window.dispatchEvent(new Event("open-prove-it-zone"))}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 transition-all active:scale-[0.98]"
+              style={{ color: "#f97316" }}
+            >
+              <Trophy size={13} />
+              <span className="text-[10px] font-bold uppercase tracking-widest">Prove It</span>
+            </button>
+          </div>
         </div>
 
-        {/* ── Quick Actions ─────────────────────── */}
+        {/* ── Action Grid (2×2) ──────────────────── */}
         <div className="grid grid-cols-2 gap-2">
-          {/* Log Activity (What I Did Today) */}
+          {/* Main Lifts Log */}
           <button
-            onClick={() => setShowQuickLog(true)}
-            className="rounded-2xl p-3.5 text-left transition-all active:scale-[0.96]"
-            style={{ background: "linear-gradient(135deg, rgba(34,197,94,0.1), rgba(22,163,74,0.06))", border: "1px solid rgba(34,197,94,0.2)" }}
-          >
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: "linear-gradient(135deg, #22c55e, #16a34a)" }}>
-              <Mic size={17} color="#fff" />
-            </div>
-            <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>Log Activity</p>
-            <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>Voice or text — tell us what you did</p>
-          </button>
-
-          {/* Prove It */}
-          <button
-            onClick={() => window.dispatchEvent(new Event("open-prove-it-zone"))}
+            onClick={() => navigate("/progress")}
             className="rounded-2xl p-3.5 text-left transition-all active:scale-[0.96]"
             style={{ background: "linear-gradient(135deg, rgba(249,115,22,0.1), rgba(234,88,12,0.06))", border: "1px solid rgba(249,115,22,0.2)" }}
           >
             <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: "linear-gradient(135deg, #f97316, #ea580c)" }}>
-              <Trophy size={17} color="#fff" />
+              <Dumbbell size={17} color="#fff" />
             </div>
-            <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>Prove It</p>
-            <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>Submit a new PR</p>
+            <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>Main Lifts Log</p>
+            <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>Track compound lifts & progress</p>
           </button>
 
           {/* Split Generator/Fix It button */}
@@ -691,7 +730,6 @@ const ZoneDashboard = () => {
             className="rounded-2xl overflow-hidden text-left transition-all active:scale-[0.96] relative"
             style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(168,85,247,0.2)" }}
           >
-            {/* Diagonal split visual */}
             <div className="absolute inset-0 overflow-hidden rounded-2xl">
               <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, rgba(168,85,247,0.12) 50%, rgba(0,240,255,0.10) 50%)" }} />
             </div>
@@ -709,19 +747,62 @@ const ZoneDashboard = () => {
             </div>
           </button>
 
-          {/* AI Technology Hub */}
+          {/* Challenges & Focus */}
           <button
-            onClick={() => navigate("/ai-insights")}
+            onClick={() => handleTab("home")}
             className="rounded-2xl p-3.5 text-left transition-all active:scale-[0.96]"
-            style={{ background: "linear-gradient(135deg, rgba(168,85,247,0.1), rgba(124,58,237,0.06))", border: "1px solid rgba(168,85,247,0.2)" }}
+            style={{ background: "linear-gradient(135deg, rgba(34,197,94,0.1), rgba(22,163,74,0.06))", border: "1px solid rgba(34,197,94,0.2)" }}
           >
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: "linear-gradient(135deg, #a855f7, #7c3aed)" }}>
-              <Brain size={17} color="#fff" />
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: "linear-gradient(135deg, #22c55e, #16a34a)" }}>
+              <Award size={17} color="#fff" />
             </div>
-            <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>Matt's Brain</p>
-            <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>Recovery, mobility & tips</p>
+            <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>Challenges & Focus</p>
+            <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>Monthly goals & community</p>
+          </button>
+
+          {/* Workout Library */}
+          <button
+            onClick={() => handleTab("train")}
+            className="rounded-2xl p-3.5 text-left transition-all active:scale-[0.96]"
+            style={{ background: "linear-gradient(135deg, rgba(0,240,255,0.08), rgba(6,182,212,0.04))", border: "1px solid rgba(0,240,255,0.2)" }}
+          >
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: "linear-gradient(135deg, #00f0ff, #0891b2)" }}>
+              <Play size={17} color="#fff" />
+            </div>
+            <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>Workout Library</p>
+            <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>Programs & saved workouts</p>
           </button>
         </div>
+
+        {/* ── Persistent "What I Did Today" ──────── */}
+        <button
+          onClick={() => setShowQuickLog(true)}
+          className="w-full rounded-2xl p-4 flex items-center gap-4 transition-all active:scale-[0.97]"
+          style={{ background: "linear-gradient(135deg, rgba(34,197,94,0.1), rgba(22,163,74,0.06))", border: "1px solid rgba(34,197,94,0.2)" }}
+        >
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "linear-gradient(135deg, #22c55e, #16a34a)" }}>
+            <Mic size={18} color="#fff" />
+          </div>
+          <div className="text-left flex-1 min-w-0">
+            <p className="text-xs font-black" style={{ color: "#fafafa" }}>What Did You Do Today?</p>
+            <p className="text-[10px] mt-0.5" style={{ color: "#525252" }}>Voice or text — log cardio, circuits, anything</p>
+          </div>
+          <ChevronRight size={16} style={{ color: "#22c55e" }} />
+        </button>
+
+        {/* ── Recovery & Mobility Tips ───────────── */}
+        <button
+          onClick={() => navigate("/ai-insights")}
+          className="w-full rounded-xl p-3 flex items-center gap-3 transition-all active:scale-[0.97]"
+          style={{
+            background: "linear-gradient(135deg, rgba(34,197,94,0.08), rgba(0,240,255,0.06))",
+            border: "1px solid rgba(34,197,94,0.15)",
+          }}
+        >
+          <Heart size={16} style={{ color: "#22c55e" }} />
+          <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#22c55e" }}>Recovery & Mobility Tips</span>
+          <ChevronRight size={14} className="ml-auto" style={{ color: "#22c55e" }} />
+        </button>
 
         {/* ── Tab Strip ──────────────────────────── */}
         <div
@@ -768,38 +849,6 @@ const ZoneDashboard = () => {
             {activeTab === "lifts" && (
               <Suspense fallback={<TabLoader />}>
                 <div className="space-y-4">
-                  {/* What Did You Do Today */}
-                  <button
-                    onClick={() => setShowQuickLog(true)}
-                    className="w-full rounded-2xl p-4 flex items-center gap-4 transition-all active:scale-[0.97]"
-                    style={{ background: "linear-gradient(135deg, rgba(34,197,94,0.1), rgba(22,163,74,0.06))", border: "1px solid rgba(34,197,94,0.2)" }}
-                  >
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "linear-gradient(135deg, #22c55e, #16a34a)" }}>
-                      <Mic size={18} color="#fff" />
-                    </div>
-                    <div className="text-left flex-1 min-w-0">
-                      <p className="text-xs font-black" style={{ color: "#fafafa" }}>What Did You Do Today?</p>
-                      <p className="text-[10px] mt-0.5" style={{ color: "#525252" }}>Voice or text — log cardio, circuits, anything</p>
-                    </div>
-                    <ChevronRight size={16} style={{ color: "#22c55e" }} />
-                  </button>
-
-                  {/* Main Lifts Log */}
-                  <button
-                    onClick={() => navigate("/progress")}
-                    className="w-full rounded-2xl p-4 flex items-center gap-4 transition-all active:scale-[0.97]"
-                    style={{ background: "linear-gradient(135deg, rgba(249,115,22,0.1), rgba(234,88,12,0.06))", border: "1px solid rgba(249,115,22,0.2)" }}
-                  >
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "linear-gradient(135deg, #f97316, #ea580c)" }}>
-                      <Dumbbell size={18} color="#fff" />
-                    </div>
-                    <div className="text-left flex-1 min-w-0">
-                      <p className="text-xs font-black" style={{ color: "#fafafa" }}>Main Lifts Log</p>
-                      <p className="text-[10px] mt-0.5" style={{ color: "#525252" }}>Track your compound lifts & progress</p>
-                    </div>
-                    <ChevronRight size={16} style={{ color: "#f97316" }} />
-                  </button>
-
                   <ProgressCharts />
                   <OverloadCard />
                 </div>
@@ -829,30 +878,56 @@ const ZoneDashboard = () => {
         )}
       </AnimatePresence>
 
-      {/* Studio Check-In Modal */}
+      {/* Check-In Choice Modal */}
       <AnimatePresence>
-        {showCheckIn && (
-          <Suspense fallback={null}>
+        {showCheckInChoice && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+            style={{ background: "rgba(0,0,0,0.85)" }}
+            onClick={() => setShowCheckInChoice(false)}
+          >
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[200] flex items-center justify-center p-4"
-              style={{ background: "rgba(0,0,0,0.8)" }}
-              onClick={() => setShowCheckIn(false)}
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="w-full max-w-sm rounded-2xl p-6 space-y-4"
+              style={{ background: "#141414", border: "1px solid rgba(255,255,255,0.08)" }}
+              onClick={e => e.stopPropagation()}
             >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                className="w-full max-w-md rounded-2xl p-1 overflow-hidden"
-                style={{ background: "#141414", border: "1px solid rgba(255,255,255,0.08)" }}
-                onClick={e => e.stopPropagation()}
+              <div className="text-center">
+                <MapPin size={28} className="mx-auto mb-2" style={{ color: "#00f0ff" }} />
+                <p className="text-sm font-black uppercase tracking-wider" style={{ color: "#fafafa" }}>Where Are You Training?</p>
+              </div>
+              <div className="space-y-2">
+                <button
+                  onClick={() => handleCheckIn("matts_gym")}
+                  disabled={checkingIn}
+                  className="w-full rounded-xl py-4 text-xs font-black uppercase tracking-widest transition-all active:scale-[0.97]"
+                  style={{ background: "linear-gradient(135deg, #f97316, #ea580c)", color: "#fff" }}
+                >
+                  🏋️ Matt's Gym
+                </button>
+                <button
+                  onClick={() => handleCheckIn("on_your_own")}
+                  disabled={checkingIn}
+                  className="w-full rounded-xl py-4 text-xs font-black uppercase tracking-widest transition-all active:scale-[0.97]"
+                  style={{ background: "rgba(0,240,255,0.1)", border: "1px solid rgba(0,240,255,0.3)", color: "#00f0ff" }}
+                >
+                  💪 On Your Own
+                </button>
+              </div>
+              <button
+                onClick={() => setShowCheckInChoice(false)}
+                className="w-full text-center text-[10px] font-bold uppercase tracking-widest py-2"
+                style={{ color: "#525252" }}
               >
-                <StudioCheckIn />
-              </motion.div>
+                Cancel
+              </button>
             </motion.div>
-          </Suspense>
+          </motion.div>
         )}
       </AnimatePresence>
     </ZoneThemeWrapper>
