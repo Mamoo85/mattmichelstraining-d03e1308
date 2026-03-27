@@ -724,6 +724,19 @@ const ZoneDashboard = () => {
             <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>Track compound lifts & progress</p>
           </button>
 
+          {/* Challenges & Focus */}
+          <button
+            onClick={() => handleTab("home")}
+            className="rounded-2xl p-3.5 text-left transition-all active:scale-[0.96]"
+            style={{ background: "linear-gradient(135deg, rgba(34,197,94,0.1), rgba(22,163,74,0.06))", border: "1px solid rgba(34,197,94,0.2)" }}
+          >
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: "linear-gradient(135deg, #22c55e, #16a34a)" }}>
+              <Award size={17} color="#fff" />
+            </div>
+            <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>Challenges & Focus</p>
+            <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>Monthly goals & community</p>
+          </button>
+
           {/* Split Generator/Fix It button */}
           <button
             onClick={() => { handleTab("generate"); setGenerateView("menu"); }}
@@ -745,19 +758,6 @@ const ZoneDashboard = () => {
               <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>Generator</p>
               <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>AI builds your workout</p>
             </div>
-          </button>
-
-          {/* Challenges & Focus */}
-          <button
-            onClick={() => handleTab("home")}
-            className="rounded-2xl p-3.5 text-left transition-all active:scale-[0.96]"
-            style={{ background: "linear-gradient(135deg, rgba(34,197,94,0.1), rgba(22,163,74,0.06))", border: "1px solid rgba(34,197,94,0.2)" }}
-          >
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: "linear-gradient(135deg, #22c55e, #16a34a)" }}>
-              <Award size={17} color="#fff" />
-            </div>
-            <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>Challenges & Focus</p>
-            <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>Monthly goals & community</p>
           </button>
 
           {/* Workout Library */}
