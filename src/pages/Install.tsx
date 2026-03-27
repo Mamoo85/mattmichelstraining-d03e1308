@@ -1,11 +1,11 @@
-import { useState, useEffect, lazy, Suspense } from "react";
-import { Download, Share, PlusSquare, MoreVertical, CheckCircle2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Download, Share, PlusSquare, MoreVertical, CheckCircle2, Dumbbell, BarChart3, Zap, Shield } from "lucide-react";
 import m2Logo from "@/assets/m2-logo.jpg";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Link } from "react-router-dom";
 import AppNavbar from "@/components/layout/AppNavbar";
 import SEOHead from "@/components/layout/SEOHead";
-const DoNotPressButton = lazy(() => import("@/components/landing/DoNotPressButton"));
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -45,25 +45,30 @@ const Install = () => {
   return (
     <>
       <SEOHead
-        title="Install M² Training App"
-        description="Install the M² Training app on your phone for quick access to workouts, progress tracking, and coaching — no app store needed."
+        title="Install Your M² Training Portal"
+        description="Add the M² Training Portal to your home screen for instant access to workouts, progress tracking, and coaching tools."
         path="/install"
       />
       <AppNavbar />
       <main className="min-h-screen bg-background pt-20 pb-16">
         <div className="container max-w-lg mx-auto px-4">
+          {/* Header */}
           <div className="text-center mb-8">
             <div className="w-20 h-20 mx-auto mb-4 rounded-2xl overflow-hidden shadow-m2">
               <img src={m2Logo} alt="M² Training" className="w-full h-full object-cover" />
             </div>
-            <h1 className="text-3xl font-heading font-black text-foreground mb-2">
-              Get the M² App
+            <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-1">
+              Your Training Portal
+            </span>
+            <h1 className="text-2xl font-heading font-black text-foreground mb-2">
+              Install the M² App
             </h1>
-            <p className="text-muted-foreground">
-              Install directly from your browser — no app store required.
+            <p className="text-sm text-muted-foreground">
+              Add your portal to your home screen — open it like a real app, no app store needed.
             </p>
           </div>
 
+          {/* Install state */}
           {isStandalone ? (
             <Card className="border-primary/30 bg-primary/5">
               <CardContent className="flex items-center gap-3 p-6">
@@ -78,14 +83,21 @@ const Install = () => {
             </Card>
           ) : installed ? (
             <Card className="border-primary/30 bg-primary/5">
-              <CardContent className="flex items-center gap-3 p-6">
-                <CheckCircle2 className="text-primary shrink-0" size={28} />
-                <div>
-                  <p className="font-bold text-foreground">App Installed!</p>
-                  <p className="text-sm text-muted-foreground">
-                    Check your home screen for the M² Training icon.
-                  </p>
+              <CardContent className="p-6 space-y-4">
+                <div className="flex items-center gap-3">
+                  <CheckCircle2 className="text-primary shrink-0" size={28} />
+                  <div>
+                    <p className="font-bold text-foreground">App Installed!</p>
+                    <p className="text-sm text-muted-foreground">
+                      Check your home screen for the M² icon.
+                    </p>
+                  </div>
                 </div>
+                <Link to="/dashboard">
+                  <Button className="w-full gap-2 font-bold">
+                    <Dumbbell size={16} /> Open Your Portal
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           ) : deferredPrompt ? (
@@ -96,7 +108,7 @@ const Install = () => {
                 className="w-full text-lg font-bold gap-2"
               >
                 <Download size={20} />
-                Install M² Training
+                Install M² Portal
               </Button>
               <p className="text-center text-xs text-muted-foreground">
                 Works on Android, Chrome, Edge, and Samsung Internet.
@@ -165,18 +177,20 @@ const Install = () => {
             </Card>
           )}
 
+          {/* Portal benefits */}
           <div className="mt-10 space-y-3">
-            <h2 className="text-lg font-heading font-bold text-foreground text-center">
-              Why install?
+            <h2 className="text-sm font-bold uppercase tracking-widest text-foreground text-center">
+              Your portal, one tap away
             </h2>
             <div className="grid grid-cols-1 gap-3">
               {[
-                { icon: "⚡", title: "Instant Access", desc: "Open from your home screen like a real app." },
-                { icon: "📶", title: "Works Offline", desc: "Log workouts even without internet." },
-                { icon: "🔔", title: "Full Screen", desc: "No browser bars — just your training." },
+                { icon: <Dumbbell size={18} className="text-primary" />, title: "Programs & Workouts", desc: "Access your structured training instantly." },
+                { icon: <BarChart3 size={18} className="text-primary" />, title: "Track Progress", desc: "Log lifts, see PRs, and monitor gains." },
+                { icon: <Zap size={18} className="text-primary" />, title: "AI Tools", desc: "Workout generator, Fix-It protocols, and nutrition scanner." },
+                { icon: <Shield size={18} className="text-primary" />, title: "Full-Screen & Offline", desc: "No browser bars. Works without internet." },
               ].map((item) => (
                 <div key={item.title} className="flex items-start gap-3 p-3 rounded-lg bg-card border border-border">
-                  <span className="text-xl">{item.icon}</span>
+                  <div className="shrink-0 mt-0.5">{item.icon}</div>
                   <div>
                     <p className="font-semibold text-foreground text-sm">{item.title}</p>
                     <p className="text-xs text-muted-foreground">{item.desc}</p>
@@ -185,9 +199,17 @@ const Install = () => {
               ))}
             </div>
           </div>
+
+          {/* CTA to portal */}
+          <div className="mt-8 text-center">
+            <Link to="/dashboard">
+              <Button variant="outline" className="gap-2 font-bold text-sm">
+                <Dumbbell size={14} /> Go to Your Portal
+              </Button>
+            </Link>
+          </div>
         </div>
       </main>
-      <Suspense fallback={null}><DoNotPressButton /></Suspense>
     </>
   );
 };
