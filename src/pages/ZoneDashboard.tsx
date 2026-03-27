@@ -2,7 +2,6 @@ import { useState, useEffect, lazy, Suspense, memo } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { usePoints } from "@/hooks/usePoints";
-import { usePoints } from "@/hooks/usePoints";
 import { supabase } from "@/integrations/supabase/client";
 import { safeLocalStorage } from "@/lib/browserStorage";
 import { BarChart3, Sparkles, Dumbbell, Home, Flame, Zap, Trophy, Play, Wrench, Timer, ChevronRight, MessageCircle } from "lucide-react";
@@ -200,8 +199,8 @@ const TabLoader = () => (
 
 /* ── Main Page ───────────────────────────────── */
 const ZoneDashboard = () => {
-  const { user, profile } = useAuth();
-  const { tierLabel } = useTierAccess();
+  const { user, subscriptionTier } = useAuth();
+  const tierLabel = subscriptionTier ? subscriptionTier.charAt(0).toUpperCase() + subscriptionTier.slice(1) : "Member";
   const [activeTab, setActiveTab] = useState<TabKey>(() => {
     return (safeLocalStorage.getItem(TAB_STORAGE_KEY) as TabKey) || "lifts";
   });
@@ -396,12 +395,6 @@ const ZoneDashboard = () => {
           </motion.div>
         </AnimatePresence>
       </div>
-
-      {/* ── Modals ────────────────────────────────── */}
-      <Suspense fallback={null}><WelcomeGiftModal /></Suspense>
-      <Suspense fallback={null}><NamePromptModal /></Suspense>
-      <Suspense fallback={null}><FeatureLearningModal /></Suspense>
-      <Suspense fallback={null}><PortalOnboarding /></Suspense>
     </ZoneThemeWrapper>
   );
 };
