@@ -24,9 +24,10 @@ interface ActivitySummary {
 
 interface QuickActivityLogProps {
   onClose: () => void;
+  targetUserId?: string;
 }
 
-const QuickActivityLog = ({ onClose }: QuickActivityLogProps) => {
+const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
   const { user } = useAuth();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
@@ -158,10 +159,11 @@ const QuickActivityLog = ({ onClose }: QuickActivityLogProps) => {
 
   const handleSave = useCallback(async () => {
     if (!summary || !user) return;
+    const saveUserId = targetUserId || user.id;
     setSaving(true);
     try {
       const { error } = await supabase.from("activity_logs" as any).insert({
-        user_id: user.id,
+        user_id: saveUserId,
         description: summary.description,
         activity_type: summary.activity_type,
         intensity: summary.intensity,

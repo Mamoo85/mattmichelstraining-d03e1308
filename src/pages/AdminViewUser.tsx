@@ -3,10 +3,11 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import AppNavbar from "@/components/layout/AppNavbar";
-import { ArrowLeft, Loader2, User, Dumbbell, TrendingUp, BookOpen, Eye, EyeOff, Shield, Activity } from "lucide-react";
+import { ArrowLeft, Loader2, User, Dumbbell, TrendingUp, BookOpen, Eye, EyeOff, Shield, Activity, MessageSquarePlus } from "lucide-react";
 import UserActivityFeed from "@/components/admin/UserActivityFeed";
 
 const ProgressCharts = lazy(() => import("@/components/features/ProgressCharts"));
+const QuickActivityLog = lazy(() => import("@/components/dashboard/QuickActivityLog"));
 
 const TabLoader = () => (
   <div className="flex justify-center py-12">
@@ -32,6 +33,7 @@ const AdminViewUser = () => {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"progress" | "programs" | "activity">("progress");
+  const [showQuickLog, setShowQuickLog] = useState(false);
   const [workouts, setWorkouts] = useState<any[]>([]);
   const [activePrograms, setActivePrograms] = useState<any[]>([]);
   const [privacy, setPrivacy] = useState<PrivacySettings | null>(null);
@@ -126,7 +128,13 @@ const AdminViewUser = () => {
             <h1 className="text-lg font-bold text-foreground">{displayName}</h1>
             <p className="text-xs text-muted-foreground">{profile?.email} · {profile?.subscription_tier || "free"}</p>
           </div>
-        </div>
+          <button
+            onClick={() => setShowQuickLog(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+          >
+            <MessageSquarePlus size={14} />
+            Log Activity
+          </button>
 
         {/* Tabs */}
         <div className="flex gap-1 mb-6 bg-muted p-1">
@@ -251,6 +259,12 @@ const AdminViewUser = () => {
             <UserActivityFeed targetUserId={userId} />
           )}
         </Suspense>
+
+        {showQuickLog && userId && (
+          <Suspense fallback={null}>
+            <QuickActivityLog onClose={() => setShowQuickLog(false)} targetUserId={userId} />
+          </Suspense>
+        )}
       </div>
     </div>
   );
