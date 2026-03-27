@@ -288,6 +288,15 @@ const ExerciseLibrary = () => {
                 onClick={() => setExpandedId(isExpanded ? null : ex.id)}
               >
                 <div className="p-4 flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    {ex.image_url && (
+                      <img
+                        src={ex.image_url}
+                        alt={ex.title}
+                        className="w-12 h-12 object-cover rounded border border-border flex-shrink-0"
+                        loading="lazy"
+                      />
+                    )}
                   <div className="flex-1 min-w-0">
                     {/* Tags row */}
                     <div className="flex items-center gap-1.5 mb-2 flex-wrap">
