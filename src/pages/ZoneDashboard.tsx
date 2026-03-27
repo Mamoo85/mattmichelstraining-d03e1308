@@ -422,8 +422,9 @@ const ZoneDashboard = () => {
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const { data: prof } = await supabase.from("profiles").select("athlete_name, full_name").eq("id", user.id).maybeSingle();
+      const { data: prof } = await supabase.from("profiles").select("athlete_name, full_name, avatar_url").eq("id", user.id).maybeSingle();
       if (prof?.athlete_name || prof?.full_name) setDisplayName(prof.athlete_name || prof.full_name || "Athlete");
+      if (prof?.avatar_url) setAvatarUrl(prof.avatar_url);
 
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
