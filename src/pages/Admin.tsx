@@ -299,6 +299,13 @@ const Admin = () => {
           })}
         </div>
 
+        {/* ── AI COMMAND CENTER ── */}
+        {activeTab === "ai" && (
+          <Suspense fallback={<TabLoader />}>
+            <AdminAiCommandCenter />
+          </Suspense>
+        )}
+
         {/* ── THE ROSTER ── */}
         {activeTab === "roster" && (
           <SubTabs tabs={[
