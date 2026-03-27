@@ -541,8 +541,9 @@ const ZoneDashboard = () => {
         style={{ background: "rgba(10,10,10,0.92)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
       >
         <div className="flex items-center gap-3">
-          <div
-            className="h-9 w-9 rounded-lg overflow-hidden flex items-center justify-center"
+          <button
+            onClick={() => navigate("/")}
+            className="h-9 w-9 rounded-lg overflow-hidden flex items-center justify-center transition-all active:scale-90"
             style={{
               background: "#000",
               boxShadow: "0 0 14px rgba(249,115,22,0.6), 0 0 28px rgba(249,115,22,0.25)",
@@ -552,9 +553,8 @@ const ZoneDashboard = () => {
               src={logoImg}
               alt="M²"
               className="h-8 w-8 object-contain"
-              style={{ filter: "none", dropShadow: "none" } as any}
             />
-          </div>
+          </button>
           <div>
             <p className="text-[9px] font-bold uppercase tracking-[0.2em]" style={{ color: "#f97316" }}>THE ZONE</p>
             <p className="text-xs font-semibold" style={{ color: "#fafafa" }}>{displayName}</p>
