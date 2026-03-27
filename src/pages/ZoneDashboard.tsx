@@ -418,6 +418,7 @@ const ZoneDashboard = () => {
   const [topPR, setTopPR] = useState<{ name: string; weight: number } | null>(null);
   const [totalLifts, setTotalLifts] = useState(0);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
