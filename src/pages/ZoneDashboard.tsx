@@ -507,8 +507,8 @@ const ZoneDashboard = () => {
         style={{ background: "rgba(10,10,10,0.92)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
       >
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg overflow-hidden flex items-center justify-center" style={{ background: "#000" }}>
-            <img src={logoImg} alt="M²" className="h-6 w-6 object-contain" />
+          <div className="h-8 w-8 rounded-lg overflow-hidden flex items-center justify-center" style={{ background: "#000", boxShadow: "0 0 12px rgba(249,115,22,0.5), 0 0 24px rgba(249,115,22,0.2)" }}>
+            <img src={logoImg} alt="M²" className="h-6 w-6 object-contain" style={{ filter: "brightness(1.2) sepia(1) hue-rotate(-10deg) saturate(3)" }} />
           </div>
           <div>
             <p className="text-[9px] font-bold uppercase tracking-[0.2em]" style={{ color: "#f97316" }}>THE ZONE</p>
@@ -534,13 +534,121 @@ const ZoneDashboard = () => {
           <button onClick={() => navigate("/profile")} className="transition-all active:scale-90">
             <User size={18} style={{ color: "#525252" }} />
           </button>
-          <button onClick={() => navigate("/timer")} className="transition-all active:scale-90">
-            <Timer size={18} style={{ color: "#525252" }} />
+          <button
+            onClick={() => navigate("/timer")}
+            className="h-8 w-8 rounded-full flex items-center justify-center transition-all active:scale-90"
+            style={{ background: "rgba(0,240,255,0.12)", boxShadow: "0 0 8px rgba(0,240,255,0.25)" }}
+          >
+            <Timer size={15} style={{ color: "#00f0ff" }} />
           </button>
         </div>
       </header>
 
       <main className="max-w-md mx-auto px-4 pt-4 pb-4 space-y-4">
+
+        {/* ── Stats Banner (moved to top) ────────── */}
+        <div
+          className="rounded-2xl overflow-hidden"
+          style={{
+            background: "linear-gradient(135deg, rgba(249,115,22,0.08), rgba(168,85,247,0.06), rgba(0,240,255,0.04))",
+            border: "1px solid rgba(249,115,22,0.15)",
+          }}
+        >
+          <div className="flex">
+            {/* Left: Stats */}
+            <div className="flex-1 p-4 space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5">
+                  <Flame size={16} style={{ color: "#f97316" }} />
+                  <span className="text-base font-black" style={{ color: "#fafafa" }}>{streak}</span>
+                  <span className="text-[10px] font-medium" style={{ color: "#737373" }}>day streak</span>
+                </div>
+                <div className="w-px h-4" style={{ background: "rgba(255,255,255,0.1)" }} />
+                <div className="flex items-center gap-1.5">
+                  <Activity size={14} style={{ color: "#a855f7" }} />
+                  <span className="text-base font-black" style={{ color: "#fafafa" }}>{sessionsThisWeek}</span>
+                  <span className="text-[10px] font-medium" style={{ color: "#737373" }}>this week</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 shrink-0">
+                  <Star size={12} style={{ color: "#f97316" }} />
+                  <span className="text-[11px] font-bold" style={{ color: "#fb923c" }}>{levelInfo.label}</span>
+                </div>
+                <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+                  <motion.div
+                    className="h-full rounded-full"
+                    style={{ background: "linear-gradient(90deg, #f97316, #fb923c)" }}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progressPct}%` }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                  />
+                </div>
+                <span className="text-[10px] font-bold shrink-0" style={{ color: "#525252" }}>
+                  {ptsTotal} pts
+                </span>
+              </div>
+
+              {currentProgram !== "—" && (
+                <div className="flex items-center gap-2 pt-1" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                  <Target size={12} style={{ color: "#00f0ff" }} />
+                  <span className="text-[11px] font-medium truncate" style={{ color: "#a3a3a3" }}>{currentProgram}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Right: Profile Avatar Card */}
+            <button
+              onClick={() => navigate("/profile")}
+              className="shrink-0 w-[100px] flex flex-col items-center justify-center gap-1.5 relative overflow-hidden transition-all active:scale-95"
+              style={{ borderLeft: "1px solid rgba(255,255,255,0.06)" }}
+            >
+              <div className="absolute inset-0" style={{
+                background: "radial-gradient(circle at center, rgba(249,115,22,0.15) 0%, transparent 70%)",
+              }} />
+              <div
+                className="relative h-12 w-12 rounded-full flex items-center justify-center text-lg font-black uppercase"
+                style={{
+                  background: "linear-gradient(135deg, #f97316, #ea580c)",
+                  color: "#fff",
+                  boxShadow: "0 0 20px rgba(249,115,22,0.4), 0 0 40px rgba(249,115,22,0.15)",
+                }}
+              >
+                {displayName.charAt(0)}
+              </div>
+              <span className="text-[9px] font-bold uppercase tracking-wider relative" style={{ color: "#f97316" }}>
+                {tierLabel}
+              </span>
+              {topPR && (
+                <div className="relative text-center px-1">
+                  <p className="text-[9px] font-medium" style={{ color: "#737373" }}>Top PR</p>
+                  <p className="text-sm font-black leading-tight" style={{ color: "#fafafa" }}>{topPR.weight}<span className="text-[9px] font-medium" style={{ color: "#737373" }}>lb</span></p>
+                </div>
+              )}
+              <div className="flex items-center gap-0.5 relative">
+                <span className="text-[8px] font-medium" style={{ color: "#525252" }}>View Stats</span>
+                <ChevronRight size={10} style={{ color: "#525252" }} />
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* ── Full-Width Log Lifts Button ────────── */}
+        <button
+          onClick={() => {
+            handleTab("lifts");
+            window.dispatchEvent(new CustomEvent("open-workout-zone", { detail: null }));
+          }}
+          className="w-full rounded-2xl py-3.5 flex items-center justify-center gap-2 text-sm font-black uppercase tracking-widest transition-all active:scale-[0.97]"
+          style={{
+            background: "linear-gradient(135deg, #f97316, #ea580c)",
+            color: "#fff",
+            boxShadow: "0 4px 20px rgba(249,115,22,0.35), 0 0 30px rgba(249,115,22,0.15)",
+          }}
+        >
+          <Dumbbell size={18} /> Log Lifts
+        </button>
 
         {/* ── Action Cards ─────────────────────── */}
         <div className="grid grid-cols-2 gap-2">
@@ -595,106 +703,32 @@ const ZoneDashboard = () => {
             <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>AI Insights</p>
             <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>Recovery, mobility & tips</p>
           </button>
-        </div>
 
-        {/* ── Stats Banner ────────────────────────── */}
-        <div
-          className="rounded-2xl overflow-hidden"
-          style={{
-            background: "linear-gradient(135deg, rgba(249,115,22,0.08), rgba(168,85,247,0.06), rgba(0,240,255,0.04))",
-            border: "1px solid rgba(249,115,22,0.15)",
-          }}
-        >
-          <div className="flex">
-            {/* Left: Stats */}
-            <div className="flex-1 p-4 space-y-3">
-              {/* Streak + Sessions */}
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5">
-                  <Flame size={16} style={{ color: "#f97316" }} />
-                  <span className="text-base font-black" style={{ color: "#fafafa" }}>{streak}</span>
-                  <span className="text-[10px] font-medium" style={{ color: "#737373" }}>day streak</span>
-                </div>
-                <div className="w-px h-4" style={{ background: "rgba(255,255,255,0.1)" }} />
-                <div className="flex items-center gap-1.5">
-                  <Activity size={14} style={{ color: "#a855f7" }} />
-                  <span className="text-base font-black" style={{ color: "#fafafa" }}>{sessionsThisWeek}</span>
-                  <span className="text-[10px] font-medium" style={{ color: "#737373" }}>this week</span>
-                </div>
-              </div>
-
-              {/* XP bar */}
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1 shrink-0">
-                  <Star size={12} style={{ color: "#f97316" }} />
-                  <span className="text-[11px] font-bold" style={{ color: "#fb923c" }}>{levelInfo.label}</span>
-                </div>
-                <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
-                  <motion.div
-                    className="h-full rounded-full"
-                    style={{ background: "linear-gradient(90deg, #f97316, #fb923c)" }}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progressPct}%` }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                  />
-                </div>
-                <span className="text-[10px] font-bold shrink-0" style={{ color: "#525252" }}>
-                  {ptsTotal} pts
-                </span>
-              </div>
-
-              {/* Active program */}
-              {currentProgram !== "—" && (
-                <div className="flex items-center gap-2 pt-1" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                  <Target size={12} style={{ color: "#00f0ff" }} />
-                  <span className="text-[11px] font-medium truncate" style={{ color: "#a3a3a3" }}>{currentProgram}</span>
-                </div>
-              )}
+          {/* Workout Generator */}
+          <button
+            onClick={() => { handleTab("generate"); setGenerateView("workout"); }}
+            className="rounded-2xl p-3.5 text-left transition-all active:scale-[0.96]"
+            style={{ background: "linear-gradient(135deg, rgba(168,85,247,0.08), rgba(249,115,22,0.05))", border: "1px solid rgba(168,85,247,0.18)" }}
+          >
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: "linear-gradient(135deg, #a855f7, #7c3aed)" }}>
+              <Sparkles size={17} color="#fff" />
             </div>
+            <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>Generator</p>
+            <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>AI builds your workout</p>
+          </button>
 
-            {/* Right: Profile Avatar Card */}
-            <button
-              onClick={() => navigate("/profile")}
-              className="shrink-0 w-[100px] flex flex-col items-center justify-center gap-1.5 relative overflow-hidden transition-all active:scale-95"
-              style={{ borderLeft: "1px solid rgba(255,255,255,0.06)" }}
-            >
-              {/* Glow background */}
-              <div className="absolute inset-0" style={{
-                background: "radial-gradient(circle at center, rgba(249,115,22,0.15) 0%, transparent 70%)",
-              }} />
-
-              {/* Avatar circle */}
-              <div
-                className="relative h-12 w-12 rounded-full flex items-center justify-center text-lg font-black uppercase"
-                style={{
-                  background: "linear-gradient(135deg, #f97316, #ea580c)",
-                  color: "#fff",
-                  boxShadow: "0 0 20px rgba(249,115,22,0.4), 0 0 40px rgba(249,115,22,0.15)",
-                }}
-              >
-                {displayName.charAt(0)}
-              </div>
-
-              {/* Tier badge */}
-              <span className="text-[9px] font-bold uppercase tracking-wider relative" style={{ color: "#f97316" }}>
-                {tierLabel}
-              </span>
-
-              {/* Top PR preview */}
-              {topPR && (
-                <div className="relative text-center px-1">
-                  <p className="text-[9px] font-medium" style={{ color: "#737373" }}>Top PR</p>
-                  <p className="text-sm font-black leading-tight" style={{ color: "#fafafa" }}>{topPR.weight}<span className="text-[9px] font-medium" style={{ color: "#737373" }}>lb</span></p>
-                </div>
-              )}
-
-              {/* Tap hint */}
-              <div className="flex items-center gap-0.5 relative">
-                <span className="text-[8px] font-medium" style={{ color: "#525252" }}>View Stats</span>
-                <ChevronRight size={10} style={{ color: "#525252" }} />
-              </div>
-            </button>
-          </div>
+          {/* Fix It Engine */}
+          <button
+            onClick={() => { handleTab("generate"); setGenerateView("fixit"); }}
+            className="rounded-2xl p-3.5 text-left transition-all active:scale-[0.96]"
+            style={{ background: "linear-gradient(135deg, rgba(0,240,255,0.08), rgba(6,182,212,0.04))", border: "1px solid rgba(0,240,255,0.18)" }}
+          >
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: "linear-gradient(135deg, #00f0ff, #0891b2)" }}>
+              <Wrench size={17} color="#fff" />
+            </div>
+            <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>Fix It Engine</p>
+            <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>Corrective protocols</p>
+          </button>
         </div>
 
         {/* ── Tab Strip ──────────────────────────── */}
@@ -742,6 +776,22 @@ const ZoneDashboard = () => {
             {activeTab === "lifts" && (
               <Suspense fallback={<TabLoader />}>
                 <div className="space-y-4">
+                  {/* What I Did Today — default quick log */}
+                  <button
+                    onClick={() => setShowQuickLog(true)}
+                    className="w-full rounded-2xl p-4 flex items-center gap-4 transition-all active:scale-[0.97]"
+                    style={{ background: "linear-gradient(135deg, rgba(34,197,94,0.1), rgba(22,163,74,0.06))", border: "1px solid rgba(34,197,94,0.2)" }}
+                  >
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "linear-gradient(135deg, #22c55e, #16a34a)" }}>
+                      <Mic size={18} color="#fff" />
+                    </div>
+                    <div className="text-left flex-1 min-w-0">
+                      <p className="text-xs font-black" style={{ color: "#fafafa" }}>What Did You Do Today?</p>
+                      <p className="text-[10px] mt-0.5" style={{ color: "#525252" }}>Voice or text — log cardio, circuits, anything</p>
+                    </div>
+                    <ChevronRight size={16} style={{ color: "#22c55e" }} />
+                  </button>
+
                   {/* Quick actions */}
                   <div className="flex gap-2">
                     <button
@@ -753,8 +803,6 @@ const ZoneDashboard = () => {
                     </button>
                   </div>
                   <ProgressCharts />
-
-                  {/* Progressive Overload collapsible */}
                   <OverloadCard />
                 </div>
               </Suspense>
