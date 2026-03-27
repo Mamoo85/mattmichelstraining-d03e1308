@@ -5,7 +5,7 @@ import AppNavbar from "@/components/layout/AppNavbar";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Users, Dumbbell, Landmark, FileText, Trash2, ClipboardList, Megaphone } from "lucide-react";
+import { Loader2, Users, Dumbbell, Landmark, FileText, Trash2, ClipboardList, Megaphone, Bot } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 
@@ -73,8 +73,10 @@ const AdminGbpPosts = lazy(() => import("@/components/admin/AdminGbpPosts"));
 const AdminInstagramPosts = lazy(() => import("@/components/admin/AdminInstagramPosts"));
 const AdminContentGenerator = lazy(() => import("@/components/admin/AdminContentGenerator"));
 const UserActivityFeed = lazy(() => import("@/components/admin/UserActivityFeed"));
+const AdminAiCommandCenter = lazy(() => import("@/components/admin/AdminAiCommandCenter"));
 
 const MASTER_TABS = [
+  { key: "ai", label: "AI Center", icon: Bot, desc: "All AI · One Place" },
   { key: "roster", label: "The Roster", icon: Users, desc: "Users · Support · Families" },
   { key: "engine", label: "Training Engine", icon: Dumbbell, desc: "Programs · AI · Coaching" },
   { key: "vault", label: "The Vault", icon: Landmark, desc: "Revenue · Business" },
