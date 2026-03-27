@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import {
-  Loader2, Plus, Pencil, Trash2, ChevronDown, ChevronRight, Dumbbell, X, Save, Search, Sparkles, Upload, Eye, EyeOff,
+  Loader2, Plus, Pencil, Trash2, ChevronDown, ChevronRight, Dumbbell, X, Save, Search, Sparkles, Upload, Eye, EyeOff, Gift,
 } from "lucide-react";
+import GiftWorkoutModal from "./GiftWorkoutModal";
 import { toast } from "@/hooks/use-toast";
 import ConfirmActionModal from "@/components/shared/ConfirmActionModal";
 
@@ -43,6 +44,7 @@ const AdminWorkoutInventory = () => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [editing, setEditing] = useState<(typeof emptyWorkout & { id?: string }) | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<CommunityWorkout | null>(null);
+  const [giftTarget, setGiftTarget] = useState<CommunityWorkout | null>(null);
 
   // Batch generate state
   const [batchCount, setBatchCount] = useState(3);
@@ -311,6 +313,7 @@ const AdminWorkoutInventory = () => {
               })}
               onDelete={() => setDeleteTarget(w)}
               onTogglePublic={() => togglePublic(w)}
+              onGift={() => setGiftTarget(w)}
             />
           ))}
         </div>
@@ -336,6 +339,7 @@ const AdminWorkoutInventory = () => {
               })}
               onDelete={() => setDeleteTarget(w)}
               onTogglePublic={() => togglePublic(w)}
+              onGift={() => setGiftTarget(w)}
             />
           ))}
         </div>
@@ -464,6 +468,18 @@ const AdminWorkoutInventory = () => {
         description={`Remove "${deleteTarget?.title}"? This cannot be undone.`}
         confirmLabel="Delete"
       />
+
+      {/* Gift modal */}
+      {giftTarget && (
+        <GiftWorkoutModal
+          workoutId={giftTarget.id}
+          workoutTitle={giftTarget.title}
+          workoutExercises={giftTarget.exercises}
+          workoutDescription={giftTarget.description}
+          onClose={() => setGiftTarget(null)}
+          onGifted={() => setGiftTarget(null)}
+        />
+      )}
     </div>
   );
 };
@@ -476,6 +492,7 @@ const WorkoutCard = ({
   onEdit,
   onDelete,
   onTogglePublic,
+  onGift,
 }: {
   workout: CommunityWorkout;
   isExpanded: boolean;
@@ -483,6 +500,7 @@ const WorkoutCard = ({
   onEdit: () => void;
   onDelete: () => void;
   onTogglePublic: () => void;
+  onGift: () => void;
 }) => (
   <div className="bg-card shadow-m2 overflow-hidden">
     <div className="p-3 flex items-center gap-3">
@@ -507,6 +525,13 @@ const WorkoutCard = ({
       </div>
 
       <div className="flex items-center gap-1 flex-shrink-0">
+        <button
+          onClick={onGift}
+          className="p-1.5 text-muted-foreground hover:text-primary transition-m2"
+          title="Gift to user"
+        >
+          <Gift size={14} />
+        </button>
         <button
           onClick={onTogglePublic}
           className="p-1.5 text-muted-foreground hover:text-foreground transition-m2"
