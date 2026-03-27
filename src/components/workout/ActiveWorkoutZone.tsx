@@ -586,10 +586,17 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
 
   return (
     <>
-      <div className="fixed inset-0 z-[110] bg-[#050505] flex flex-col">
-        {/* ─── STEALTH HEADER ─── */}
-        <header className="shrink-0 flex items-center justify-between px-4 py-2.5 pt-[calc(0.625rem+env(safe-area-inset-top))] bg-[#050505]/90 backdrop-blur-md border-b border-white/[0.04] z-10">
-          <div className="min-w-0 flex-1">
+      <div className="fixed inset-0 z-[110] flex flex-col" style={{ background: "#050505" }}>
+        {/* ─── NEON HEADER ─── */}
+        <header className="shrink-0 flex items-center justify-between px-4 py-2.5 pt-[calc(0.625rem+env(safe-area-inset-top))] z-10" style={{ background: "rgba(5,5,5,0.92)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(249,115,22,0.1)" }}>
+          <div className="min-w-0 flex-1 flex items-center gap-3">
+            <button
+              onClick={onFinish}
+              className="h-8 w-8 rounded-full flex items-center justify-center shrink-0 transition-all active:scale-90"
+              style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}
+            >
+              <X size={14} style={{ color: "#f97316" }} />
+            </button>
             {editingTitle ? (
               <input
                 ref={titleInputRef}
@@ -599,12 +606,14 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
                 onBlur={() => setEditingTitle(false)}
                 onKeyDown={(e) => { if (e.key === "Enter") setEditingTitle(false); }}
                 autoFocus
-                className="text-base font-bold text-foreground bg-transparent border-b border-white/20 px-0 py-0.5 outline-none w-full max-w-[180px]"
+                className="text-sm font-bold bg-transparent border-b px-0 py-0.5 outline-none w-full max-w-[160px]"
+                style={{ color: "#fafafa", borderColor: "rgba(249,115,22,0.3)" }}
               />
             ) : (
               <button
                 onClick={() => setEditingTitle(true)}
-                className="text-base font-bold text-foreground truncate max-w-[180px] hover:opacity-70 transition-opacity"
+                className="text-sm font-bold truncate max-w-[160px] hover:opacity-70 transition-opacity"
+                style={{ color: "#fafafa" }}
                 title="Tap to edit title"
               >
                 {workoutTitle}
@@ -613,17 +622,16 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
-            {/* Glowing digital watch timer */}
             <WorkoutTimer
               initialElapsed={initialContext?.resumedElapsed || 0}
               autoStart={timerAutoStart}
               onElapsedChange={handleElapsedChange}
             />
-            {/* Muted Finish text */}
             <button
               onClick={handleFinishClick}
               disabled={saving}
-              className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95"
+              style={{ background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.25)", color: "#22c55e" }}
             >
               {saving ? <Loader2 size={14} className="animate-spin" /> : "Finish"}
             </button>
@@ -680,16 +688,17 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
 
           {exercises.length === 0 && !showPicker && (
             <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
-              <div className="h-12 w-12 rounded-full border border-white/[0.08] flex items-center justify-center">
-                <Plus size={20} className="text-muted-foreground" />
+              <div className="h-14 w-14 rounded-full flex items-center justify-center" style={{ background: "rgba(249,115,22,0.1)", border: "1px solid rgba(249,115,22,0.2)" }}>
+                <Plus size={22} style={{ color: "#f97316" }} />
               </div>
               <div>
-                <h3 className="text-base font-bold text-foreground mb-1">Ready to train</h3>
-                <p className="text-sm text-muted-foreground">Add exercises to start logging.</p>
+                <h3 className="text-base font-black" style={{ color: "#fafafa" }}>Ready to train</h3>
+                <p className="text-sm mt-1" style={{ color: "#525252" }}>Add exercises to start logging</p>
               </div>
               <button
                 onClick={() => setShowPicker(true)}
-                className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-[hsl(var(--synth-cyan))] border border-[hsl(var(--synth-cyan))]/30 rounded-full hover:bg-[hsl(var(--synth-cyan))]/10 transition-all active:scale-95"
+                className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold rounded-full transition-all active:scale-95"
+                style={{ background: "rgba(0,240,255,0.1)", border: "1px solid rgba(0,240,255,0.25)", color: "#00f0ff" }}
               >
                 <Plus size={14} /> Add Exercise
               </button>
@@ -750,26 +759,27 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
           </div>
         )}
 
-        {/* ─── COMMAND PILL (Dynamic Island footer) ─── */}
+        {/* ─── COMMAND PILL (Neon footer) ─── */}
         <div className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-[111]">
-          <div className="flex items-center gap-3 bg-[#0a0a0a]/90 backdrop-blur-xl border border-white/[0.08] rounded-full px-4 py-2 shadow-[0_4px_24px_rgba(0,0,0,0.8)]">
-            {/* Intervals */}
+          <div className="flex items-center gap-2 rounded-full px-3 py-2" style={{ background: "rgba(10,10,10,0.92)", backdropFilter: "blur(24px)", border: "1px solid rgba(249,115,22,0.15)", boxShadow: "0 4px 24px rgba(0,0,0,0.8), 0 0 20px rgba(249,115,22,0.08)" }}>
+            {/* Timer */}
             <button
               onClick={() => setShowIntervalTimer(true)}
-              className="h-8 w-8 flex items-center justify-center text-muted-foreground/60 hover:text-foreground transition-colors"
+              className="h-9 w-9 rounded-full flex items-center justify-center transition-all active:scale-90"
+              style={{ background: "rgba(0,240,255,0.1)", border: "1px solid rgba(0,240,255,0.2)" }}
               title="Interval Timer"
             >
-              <Timer size={14} />
+              <Timer size={14} style={{ color: "#00f0ff" }} />
             </button>
 
             {/* + Add Exercise */}
             <button
               onClick={() => setShowPicker(true)}
               disabled={showPicker}
-              className="text-sm font-semibold text-[hsl(var(--synth-cyan))] hover:opacity-80 transition-opacity active:scale-95 px-2"
-              style={{ textShadow: "0 0 8px hsl(185 100% 48% / 0.3)" }}
+              className="px-3 py-2 rounded-full text-xs font-bold transition-all active:scale-95"
+              style={{ background: "rgba(0,240,255,0.12)", border: "1px solid rgba(0,240,255,0.25)", color: "#00f0ff" }}
             >
-              + Add Exercise
+              + Add
             </button>
 
             {/* Camera / Adapt */}
@@ -777,17 +787,19 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
               <button
                 onClick={() => adaptInputRef.current?.click()}
                 disabled={adaptLoading}
-                className="h-8 w-8 flex items-center justify-center text-muted-foreground/60 hover:text-foreground transition-colors"
+                className="h-9 w-9 rounded-full flex items-center justify-center transition-all active:scale-90"
+                style={{ background: "rgba(168,85,247,0.1)", border: "1px solid rgba(168,85,247,0.2)" }}
                 title="Adapt to Equipment"
               >
-                {adaptLoading ? <Loader2 size={14} className="animate-spin" /> : <Camera size={14} />}
+                {adaptLoading ? <Loader2 size={14} className="animate-spin" style={{ color: "#a855f7" }} /> : <Camera size={14} style={{ color: "#a855f7" }} />}
               </button>
             )}
 
             {/* Pause */}
             <button
               onClick={handlePause}
-              className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground/50 hover:text-foreground transition-colors"
+              className="px-2 py-2 text-[9px] font-bold uppercase tracking-wider transition-all active:scale-95"
+              style={{ color: "#525252" }}
             >
               Pause
             </button>
