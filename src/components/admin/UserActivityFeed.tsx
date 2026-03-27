@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, ChevronDown, ChevronUp, Dumbbell, MessageCircle, Trophy, Target, ClipboardList, UserPlus, ShoppingBag, Camera, Star } from "lucide-react";
+import { Loader2, ChevronDown, ChevronUp, Dumbbell, MessageCircle, Trophy, Target, ClipboardList, UserPlus, ShoppingBag, Camera, Star, Activity } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
@@ -24,6 +24,7 @@ const ICON_MAP: Record<string, any> = {
   posture_request: Camera,
   community_workout: Star,
   custom_request: UserPlus,
+  activity_log: Activity,
 };
 
 const TYPE_COLORS: Record<string, string> = {
@@ -36,6 +37,7 @@ const TYPE_COLORS: Record<string, string> = {
   posture_request: "text-cyan-400",
   community_workout: "text-pink-400",
   custom_request: "text-emerald-400",
+  activity_log: "text-lime-400",
 };
 
 interface Props {
@@ -160,6 +162,19 @@ const UserActivityFeed = ({ targetUserId, limit = 100 }: Props) => {
             id: `cpr-${r.id}`, type: "custom_request", label: "Custom program request",
             detail: `${r.name} · ${r.status}`,
             timestamp: r.created_at, userId: r.user_id,
+          }));
+        });
+      })(),
+
+      // Activity logs (What I Did Today)
+      (() => {
+        let q = supabase.from("activity_logs").select("id, user_id, description, activity_type, intensity, duration_minutes, ai_summary, logged_at").order("logged_at", { ascending: false }).limit(limit);
+        if (targetUserId) q = q.eq("user_id", targetUserId);
+        return q.then(({ data }) => {
+          (data || []).forEach((r: any) => items.push({
+            id: `al-${r.id}`, type: "activity_log", label: r.activity_type ? `Activity: ${r.activity_type}` : "Activity logged",
+            detail: r.ai_summary ? r.ai_summary.slice(0, 80) : r.description?.slice(0, 80) || "",
+            timestamp: r.logged_at || r.created_at, userId: r.user_id,
           }));
         });
       })(),
