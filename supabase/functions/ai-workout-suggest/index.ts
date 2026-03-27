@@ -306,7 +306,7 @@ If the user already mentioned some of these details in their description, skip t
     if (isDualPath) {
       systemPrompt = path === "fixit"
         ? buildDualPathFixitPrompt(userText, exerciseNames, clarifications)
-        : buildDualPathWorkoutPrompt(userText, hasImage, exerciseNames);
+        : buildDualPathWorkoutPrompt(userText, hasImage, exerciseNames, clarifications);
       userMessage = userText;
     } else if (isOpenWorkout) {
       systemPrompt = buildOpenWorkoutPrompt(prompt, exerciseNames);
