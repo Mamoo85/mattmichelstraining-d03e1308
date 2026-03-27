@@ -507,8 +507,8 @@ const ZoneDashboard = () => {
         style={{ background: "rgba(10,10,10,0.92)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
       >
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg overflow-hidden flex items-center justify-center" style={{ background: "#000" }}>
-            <img src={logoImg} alt="M²" className="h-6 w-6 object-contain" />
+          <div className="h-8 w-8 rounded-lg overflow-hidden flex items-center justify-center" style={{ background: "#000", boxShadow: "0 0 12px rgba(249,115,22,0.5), 0 0 24px rgba(249,115,22,0.2)" }}>
+            <img src={logoImg} alt="M²" className="h-6 w-6 object-contain" style={{ filter: "brightness(1.2) sepia(1) hue-rotate(-10deg) saturate(3)" }} />
           </div>
           <div>
             <p className="text-[9px] font-bold uppercase tracking-[0.2em]" style={{ color: "#f97316" }}>THE ZONE</p>
