@@ -121,7 +121,89 @@ const GenerateTabContent = memo(({ view, setView }: { view: "menu" | "workout" |
 });
 GenerateTabContent.displayName = "GenerateTabContent";
 
-/* ── Home Tab ───────────────────────────────── */
+/* ── Progressive Overload Card ──────────────── */
+const OverloadCard = memo(() => {
+  const [open, setOpen] = useState(false);
+  return (
+    <button
+      onClick={() => setOpen(o => !o)}
+      className="w-full rounded-2xl text-left transition-all active:scale-[0.98] overflow-hidden"
+      style={{
+        background: "linear-gradient(135deg, rgba(249,115,22,0.06), rgba(251,146,60,0.03))",
+        border: "1px solid rgba(249,115,22,0.15)",
+      }}
+    >
+      <div className="flex items-center gap-3 px-5 py-4">
+        <div
+          className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+          style={{ background: "linear-gradient(135deg, #f97316, #ea580c)" }}
+        >
+          <Zap size={17} color="#fff" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-black uppercase tracking-wider" style={{ color: "#fb923c" }}>
+            The Power of Progressive Overload
+          </p>
+          <p className="text-[10px] mt-0.5" style={{ color: "#525252" }}>
+            The #1 principle behind every PR
+          </p>
+        </div>
+        <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
+          <ChevronDown size={16} style={{ color: "#f97316" }} />
+        </motion.div>
+      </div>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <div className="px-5 pb-5 space-y-3" style={{ borderTop: "1px solid rgba(249,115,22,0.1)" }}>
+              <p className="text-[12px] leading-relaxed pt-3" style={{ color: "#a3a3a3" }}>
+                Progressive overload is the gradual increase of stress placed on your body during training.
+                It's the single most important principle for building strength, muscle, and athletic performance.
+              </p>
+
+              <div className="space-y-2">
+                {[
+                  { icon: "📈", title: "Add Weight", desc: "Even 2.5 lbs more than last session counts" },
+                  { icon: "🔁", title: "Add Reps", desc: "Same weight, one more rep — that's growth" },
+                  { icon: "📦", title: "Add Sets", desc: "More volume = more stimulus over time" },
+                  { icon: "⏱️", title: "Slow the Tempo", desc: "More time under tension, more adaptation" },
+                ].map((item, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-3 rounded-xl px-3 py-2.5"
+                    style={{ background: "rgba(249,115,22,0.06)" }}
+                  >
+                    <span className="text-base">{item.icon}</span>
+                    <div>
+                      <p className="text-[11px] font-bold" style={{ color: "#fafafa" }}>{item.title}</p>
+                      <p className="text-[10px]" style={{ color: "#737373" }}>{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="rounded-xl px-4 py-3" style={{ background: "rgba(249,115,22,0.08)", borderLeft: "3px solid #f97316" }}>
+                <p className="text-[11px] italic leading-relaxed" style={{ color: "#fb923c" }}>
+                  "Your body only grows when you give it a reason to. Track every lift, beat your numbers, and let the data prove you're getting stronger."
+                </p>
+                <p className="text-[10px] font-bold mt-1" style={{ color: "#737373" }}>— Coach Matt</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </button>
+  );
+});
+OverloadCard.displayName = "OverloadCard";
+
 const HomeTab = memo(() => {
   const [chatOpen, setChatOpen] = useState(false);
   return (
@@ -363,6 +445,9 @@ const ZoneDashboard = () => {
                     </button>
                   </div>
                   <ProgressCharts />
+
+                  {/* Progressive Overload collapsible */}
+                  <OverloadCard />
                 </div>
               </Suspense>
             )}
