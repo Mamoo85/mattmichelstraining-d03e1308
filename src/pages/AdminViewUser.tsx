@@ -135,6 +135,7 @@ const AdminViewUser = () => {
             <MessageSquarePlus size={14} />
             Log Activity
           </button>
+        </div>
 
         {/* Tabs */}
         <div className="flex gap-1 mb-6 bg-muted p-1">
