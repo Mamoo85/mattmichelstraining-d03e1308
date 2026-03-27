@@ -42,6 +42,13 @@ const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTrac
   const [confettiSet, setConfettiSet] = useState<number | null>(null);
   const [refImageUrl, setRefImageUrl] = useState<string | null>(null);
 
+  // Fetch reference image from library
+  useEffect(() => {
+    if (!exercise.exerciseId) return;
+    supabase.from("exercise_library").select("image_url").eq("id", exercise.exerciseId).maybeSingle()
+      .then(({ data }) => { if (data?.image_url) setRefImageUrl(data.image_url); });
+  }, [exercise.exerciseId]);
+
   // Fetch ghost data (previous performance)
   useEffect(() => {
     if (!user || !exercise.exerciseId) return;
