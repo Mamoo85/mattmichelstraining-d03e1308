@@ -544,7 +544,7 @@ const WorkoutCard = ({
           )}
           {userCount > 1 && (
             <span className="text-[9px] bg-primary/15 text-primary px-1.5 py-0.5 font-bold uppercase tracking-widest flex items-center gap-0.5">
-              <Users size={8} /> {userCount === workouts.length ? "Everyone" : `${userCount} users`}
+              <Users size={8} /> {userCount} users
             </span>
           )}
         </div>
