@@ -345,6 +345,19 @@ const TrainTabContent = memo(() => (
         </div>
       </div>
 
+      {/* Open Workout button */}
+      <button
+        onClick={() => window.dispatchEvent(new CustomEvent("open-workout-zone", { detail: null }))}
+        className="w-full rounded-2xl py-3 flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest transition-all active:scale-[0.97]"
+        style={{
+          background: "linear-gradient(135deg, rgba(0,240,255,0.12), rgba(6,182,212,0.08))",
+          border: "1px solid rgba(0,240,255,0.25)",
+          color: "#00f0ff",
+        }}
+      >
+        <Play size={15} /> Open Workout
+      </button>
+
       <TrainSection title="Today's Training" subtitle="Pick up where you left off" icon={Play} color="#f97316">
         <TodaysTrainingCard />
       </TrainSection>
@@ -546,7 +559,20 @@ const ZoneDashboard = () => {
 
       <main className="max-w-md mx-auto px-4 pt-4 pb-4 space-y-4">
 
-        {/* ── Stats Banner (moved to top) ────────── */}
+        {/* ── Full-Width Log Lifts Button (above banner) ── */}
+        <button
+          onClick={() => navigate("/progress")}
+          className="w-full rounded-2xl py-3.5 flex items-center justify-center gap-2 text-sm font-black uppercase tracking-widest transition-all active:scale-[0.97]"
+          style={{
+            background: "linear-gradient(135deg, #f97316, #ea580c)",
+            color: "#fff",
+            boxShadow: "0 4px 20px rgba(249,115,22,0.35), 0 0 30px rgba(249,115,22,0.15)",
+          }}
+        >
+          <Dumbbell size={18} /> Log Lifts
+        </button>
+
+        {/* ── Stats Banner ────────── */}
         <div
           className="rounded-2xl overflow-hidden"
           style={{
@@ -633,19 +659,6 @@ const ZoneDashboard = () => {
             </button>
           </div>
         </div>
-
-        {/* ── Full-Width Log Lifts Button ────────── */}
-        <button
-          onClick={() => navigate("/progress")}
-          className="w-full rounded-2xl py-3.5 flex items-center justify-center gap-2 text-sm font-black uppercase tracking-widest transition-all active:scale-[0.97]"
-          style={{
-            background: "linear-gradient(135deg, #f97316, #ea580c)",
-            color: "#fff",
-            boxShadow: "0 4px 20px rgba(249,115,22,0.35), 0 0 30px rgba(249,115,22,0.15)",
-          }}
-        >
-          <Dumbbell size={18} /> Log Lifts
-        </button>
 
         {/* ── Action Cards ─────────────────────── */}
         <div className="grid grid-cols-2 gap-2">
