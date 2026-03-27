@@ -508,7 +508,7 @@ const ZoneDashboard = () => {
       >
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 rounded-lg overflow-hidden flex items-center justify-center" style={{ background: "#000", boxShadow: "0 0 12px rgba(249,115,22,0.5), 0 0 24px rgba(249,115,22,0.2)" }}>
-            <img src={logoImg} alt="M²" className="h-6 w-6 object-contain" style={{ filter: "brightness(1.2) sepia(1) hue-rotate(-10deg) saturate(3)" }} />
+            <img src={logoImg} alt="M²" className="h-6 w-6 object-contain" style={{ filter: "brightness(0) invert(1) sepia(1) saturate(20) hue-rotate(360deg) brightness(1.1)" }} />
           </div>
           <div>
             <p className="text-[9px] font-bold uppercase tracking-[0.2em]" style={{ color: "#f97316" }}>THE ZONE</p>
@@ -636,10 +636,7 @@ const ZoneDashboard = () => {
 
         {/* ── Full-Width Log Lifts Button ────────── */}
         <button
-          onClick={() => {
-            handleTab("lifts");
-            window.dispatchEvent(new CustomEvent("open-workout-zone", { detail: null }));
-          }}
+          onClick={() => navigate("/progress")}
           className="w-full rounded-2xl py-3.5 flex items-center justify-center gap-2 text-sm font-black uppercase tracking-widest transition-all active:scale-[0.97]"
           style={{
             background: "linear-gradient(135deg, #f97316, #ea580c)",
@@ -700,7 +697,7 @@ const ZoneDashboard = () => {
             <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: "linear-gradient(135deg, #a855f7, #7c3aed)" }}>
               <Brain size={17} color="#fff" />
             </div>
-            <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>AI Insights</p>
+            <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>Matt's Brain</p>
             <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>Recovery, mobility & tips</p>
           </button>
 
