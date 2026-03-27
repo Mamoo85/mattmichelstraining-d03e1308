@@ -773,6 +773,42 @@ const ZoneDashboard = () => {
           <FeatureLearningModal tip={currentTip} onContinue={dismissTip} onDismiss={dismissTip} />
         )}
       </main>
+
+      {/* Quick Activity Log Modal */}
+      <AnimatePresence>
+        {showQuickLog && (
+          <Suspense fallback={null}>
+            <QuickActivityLog onClose={() => setShowQuickLog(false)} />
+          </Suspense>
+        )}
+      </AnimatePresence>
+
+      {/* Studio Check-In Modal */}
+      <AnimatePresence>
+        {showCheckIn && (
+          <Suspense fallback={null}>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+              style={{ background: "rgba(0,0,0,0.8)" }}
+              onClick={() => setShowCheckIn(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="w-full max-w-md rounded-2xl p-1 overflow-hidden"
+                style={{ background: "#141414", border: "1px solid rgba(255,255,255,0.08)" }}
+                onClick={e => e.stopPropagation()}
+              >
+                <StudioCheckIn />
+              </motion.div>
+            </motion.div>
+          </Suspense>
+        )}
+      </AnimatePresence>
     </ZoneThemeWrapper>
   );
 };
