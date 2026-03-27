@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import {
-  Loader2, Plus, Pencil, Trash2, ChevronDown, ChevronRight, Dumbbell, X, Save, Search, Sparkles, Upload, Eye, EyeOff, Gift,
+  Loader2, Plus, Pencil, Trash2, ChevronDown, ChevronRight, Dumbbell, X, Save, Search, Sparkles, Upload, Eye, EyeOff, Gift, Users,
 } from "lucide-react";
 import GiftWorkoutModal from "./GiftWorkoutModal";
 import { toast } from "@/hooks/use-toast";
@@ -26,6 +26,12 @@ interface CommunityWorkout {
   likes_count: number;
   user_id: string;
   created_at: string;
+}
+
+interface GroupedWorkout {
+  canonical: CommunityWorkout;
+  copies: { id: string; user_id: string; created_at: string; creator_name: string }[];
+  userCount: number;
 }
 
 const emptyWorkout = {
@@ -53,11 +59,9 @@ const AdminWorkoutInventory = () => {
   const [batchResults, setBatchResults] = useState<any[]>([]);
 
   const fetchWorkouts = async () => {
-    // Exclude per-user seeded welcome workouts — those are personal copies, not inventory items
     const { data } = await supabase
       .from("community_workouts")
       .select("*")
-      .neq("source_type", "coach_seeded")
       .order("created_at", { ascending: false }) as { data: any[] | null };
     setWorkouts((data as CommunityWorkout[]) || []);
     setLoading(false);
@@ -65,14 +69,34 @@ const AdminWorkoutInventory = () => {
 
   useEffect(() => { fetchWorkouts(); }, []);
 
-  const filtered = workouts.filter(
-    (w) =>
-      w.title.toLowerCase().includes(search.toLowerCase()) ||
-      w.creator_name.toLowerCase().includes(search.toLowerCase())
+  // Group workouts by title to deduplicate seeded copies
+  const grouped: GroupedWorkout[] = (() => {
+    const map = new Map<string, GroupedWorkout>();
+    for (const w of workouts) {
+      const key = w.title.trim().toLowerCase();
+      if (map.has(key)) {
+        const g = map.get(key)!;
+        g.copies.push({ id: w.id, user_id: w.user_id, created_at: w.created_at, creator_name: w.creator_name });
+        g.userCount = g.copies.length;
+      } else {
+        map.set(key, {
+          canonical: w,
+          copies: [{ id: w.id, user_id: w.user_id, created_at: w.created_at, creator_name: w.creator_name }],
+          userCount: 1,
+        });
+      }
+    }
+    return Array.from(map.values());
+  })();
+
+  const filtered = grouped.filter(
+    (g) =>
+      g.canonical.title.toLowerCase().includes(search.toLowerCase()) ||
+      g.canonical.creator_name.toLowerCase().includes(search.toLowerCase())
   );
 
-  const coachWorkouts = filtered.filter((w) => w.creator_name === "Coach Matt");
-  const userWorkouts = filtered.filter((w) => w.creator_name !== "Coach Matt");
+  const coachGroups = filtered.filter((g) => g.canonical.creator_name === "Coach Matt");
+  const userGroups = filtered.filter((g) => g.canonical.creator_name !== "Coach Matt");
 
   const saveWorkout = async () => {
     if (!editing || !user) return;
@@ -294,52 +318,54 @@ const AdminWorkoutInventory = () => {
       </div>
 
       {/* Workout List: Coach Matt section */}
-      {coachWorkouts.length > 0 && (
+      {coachGroups.length > 0 && (
         <div className="space-y-2">
           <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Coach Matt Workouts</p>
-          {coachWorkouts.map((w) => (
+          {coachGroups.map((g) => (
             <WorkoutCard
-              key={w.id}
-              workout={w}
-              isExpanded={expandedId === w.id}
-              onToggle={() => setExpandedId(expandedId === w.id ? null : w.id)}
+              key={g.canonical.id}
+              workout={g.canonical}
+              userCount={g.userCount}
+              isExpanded={expandedId === g.canonical.id}
+              onToggle={() => setExpandedId(expandedId === g.canonical.id ? null : g.canonical.id)}
               onEdit={() => setEditing({
-                id: w.id,
-                title: w.title,
-                description: w.description || "",
-                creator_name: w.creator_name,
-                exercises: w.exercises,
-                is_public: w.is_public,
+                id: g.canonical.id,
+                title: g.canonical.title,
+                description: g.canonical.description || "",
+                creator_name: g.canonical.creator_name,
+                exercises: g.canonical.exercises,
+                is_public: g.canonical.is_public,
               })}
-              onDelete={() => setDeleteTarget(w)}
-              onTogglePublic={() => togglePublic(w)}
-              onGift={() => setGiftTarget(w)}
+              onDelete={() => setDeleteTarget(g.canonical)}
+              onTogglePublic={() => togglePublic(g.canonical)}
+              onGift={() => setGiftTarget(g.canonical)}
             />
           ))}
         </div>
       )}
 
       {/* User-created section */}
-      {userWorkouts.length > 0 && (
+      {userGroups.length > 0 && (
         <div className="space-y-2">
           <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">User-Created Workouts</p>
-          {userWorkouts.map((w) => (
+          {userGroups.map((g) => (
             <WorkoutCard
-              key={w.id}
-              workout={w}
-              isExpanded={expandedId === w.id}
-              onToggle={() => setExpandedId(expandedId === w.id ? null : w.id)}
+              key={g.canonical.id}
+              workout={g.canonical}
+              userCount={g.userCount}
+              isExpanded={expandedId === g.canonical.id}
+              onToggle={() => setExpandedId(expandedId === g.canonical.id ? null : g.canonical.id)}
               onEdit={() => setEditing({
-                id: w.id,
-                title: w.title,
-                description: w.description || "",
-                creator_name: w.creator_name,
-                exercises: w.exercises,
-                is_public: w.is_public,
+                id: g.canonical.id,
+                title: g.canonical.title,
+                description: g.canonical.description || "",
+                creator_name: g.canonical.creator_name,
+                exercises: g.canonical.exercises,
+                is_public: g.canonical.is_public,
               })}
-              onDelete={() => setDeleteTarget(w)}
-              onTogglePublic={() => togglePublic(w)}
-              onGift={() => setGiftTarget(w)}
+              onDelete={() => setDeleteTarget(g.canonical)}
+              onTogglePublic={() => togglePublic(g.canonical)}
+              onGift={() => setGiftTarget(g.canonical)}
             />
           ))}
         </div>
@@ -487,6 +513,7 @@ const AdminWorkoutInventory = () => {
 /** Workout card row */
 const WorkoutCard = ({
   workout,
+  userCount,
   isExpanded,
   onToggle,
   onEdit,
@@ -495,6 +522,7 @@ const WorkoutCard = ({
   onGift,
 }: {
   workout: CommunityWorkout;
+  userCount: number;
   isExpanded: boolean;
   onToggle: () => void;
   onEdit: () => void;
@@ -514,13 +542,16 @@ const WorkoutCard = ({
           {!workout.is_public && (
             <span className="text-[9px] bg-muted text-muted-foreground px-1.5 py-0.5 font-bold uppercase tracking-widest">Private</span>
           )}
+          {userCount > 1 && (
+            <span className="text-[9px] bg-primary/15 text-primary px-1.5 py-0.5 font-bold uppercase tracking-widest flex items-center gap-0.5">
+              <Users size={8} /> {userCount === workouts.length ? "Everyone" : `${userCount} users`}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5">
           <span>{workout.creator_name}</span>
           <span>·</span>
           <span>{workout.exercises.length} exercises</span>
-          <span>·</span>
-          <span>{new Date(workout.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
         </div>
       </div>
 
