@@ -27,6 +27,9 @@ interface QuickActivityLogProps {
   targetUserId?: string;
 }
 
+const INTENSITY_OPTIONS = ["Easy", "Moderate", "Hard"];
+const DURATION_OPTIONS = ["20 min", "30 min", "45 min", "60+ min"];
+
 const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
   const { user } = useAuth();
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -38,12 +41,16 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
   const [showTip, setShowTip] = useState(() => !safeLocalStorage.getItem(QUICK_ACTIVITY_TIP.storageKey));
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  
+  // Track what info has been provided
+  const [needsIntensity, setNeedsIntensity] = useState(false);
+  const [needsDuration, setNeedsDuration] = useState(false);
 
   const supported = typeof window !== "undefined" && ("SpeechRecognition" in window || "webkitSpeechRecognition" in window);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages]);
+  }, [messages, needsIntensity, needsDuration]);
 
   const sendMessage = useCallback(async (text: string) => {
     if (!text.trim() || streaming) return;
@@ -52,6 +59,8 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
     setMessages(allMessages);
     setInput("");
     setStreaming(true);
+    setNeedsIntensity(false);
+    setNeedsDuration(false);
 
     const controller = new AbortController();
     abortRef.current = controller;
@@ -127,6 +136,15 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
           }
         } catch { /* not valid JSON yet */ }
       }
+
+      // Detect if AI is asking about intensity or duration to show bubbles
+      const lower = accumulated.toLowerCase();
+      if (!jsonMatch) {
+        const asksIntensity = /how hard|intensity|difficult|effort/i.test(lower);
+        const asksDuration = /how long|duration|how many minutes|time/i.test(lower);
+        if (asksIntensity) setNeedsIntensity(true);
+        if (asksDuration) setNeedsDuration(true);
+      }
     } catch (e: any) {
       if (e.name !== "AbortError") {
         toast({ title: "Error", description: e.message, variant: "destructive" });
@@ -157,6 +175,12 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
     setListening(true);
   }, [listening, supported, sendMessage]);
 
+  const handleBubbleTap = useCallback((value: string) => {
+    setNeedsIntensity(false);
+    setNeedsDuration(false);
+    sendMessage(value);
+  }, [sendMessage]);
+
   const handleSave = useCallback(async () => {
     if (!summary || !user) return;
     const saveUserId = targetUserId || user.id;
@@ -181,14 +205,13 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
     } finally {
       setSaving(false);
     }
-  }, [summary, user, onClose]);
+  }, [summary, user, targetUserId, onClose]);
 
   const dismissTip = useCallback(() => {
     safeLocalStorage.setItem(QUICK_ACTIVITY_TIP.storageKey, "1");
     setShowTip(false);
   }, []);
 
-  // Clean display: strip JSON blocks from assistant messages
   const cleanContent = (content: string) => content.replace(/```json[\s\S]*?```/g, "").trim();
 
   return (
@@ -256,6 +279,46 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
               <div className="w-2 h-2 rounded-full animate-bounce" style={{ background: "#f97316", animationDelay: "150ms" }} />
               <div className="w-2 h-2 rounded-full animate-bounce" style={{ background: "#f97316", animationDelay: "300ms" }} />
             </div>
+          </div>
+        )}
+
+        {/* Bubble buttons for intensity */}
+        {needsIntensity && !streaming && (
+          <div className="flex flex-wrap gap-2 pt-1">
+            {INTENSITY_OPTIONS.map(opt => (
+              <button
+                key={opt}
+                onClick={() => handleBubbleTap(opt)}
+                className="px-4 py-2 rounded-full text-xs font-bold transition-all active:scale-95"
+                style={{
+                  background: opt === "Easy" ? "rgba(34,197,94,0.15)" : opt === "Moderate" ? "rgba(249,115,22,0.15)" : "rgba(239,68,68,0.15)",
+                  border: `1px solid ${opt === "Easy" ? "rgba(34,197,94,0.4)" : opt === "Moderate" ? "rgba(249,115,22,0.4)" : "rgba(239,68,68,0.4)"}`,
+                  color: opt === "Easy" ? "#22c55e" : opt === "Moderate" ? "#f97316" : "#ef4444",
+                }}
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Bubble buttons for duration */}
+        {needsDuration && !streaming && (
+          <div className="flex flex-wrap gap-2 pt-1">
+            {DURATION_OPTIONS.map(opt => (
+              <button
+                key={opt}
+                onClick={() => handleBubbleTap(opt)}
+                className="px-4 py-2 rounded-full text-xs font-bold transition-all active:scale-95"
+                style={{
+                  background: "rgba(0,240,255,0.1)",
+                  border: "1px solid rgba(0,240,255,0.3)",
+                  color: "#00f0ff",
+                }}
+              >
+                {opt}
+              </button>
+            ))}
           </div>
         )}
       </div>
