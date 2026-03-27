@@ -151,7 +151,7 @@ const FixItLibrary = () => {
                     />
                     <div>
                       <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-1">The WHY</span>
-                      <p className="text-xs text-foreground leading-relaxed">{ex.the_why}</p>
+                      <p className="text-xs text-foreground leading-relaxed whitespace-pre-line break-words">{ex.the_why}</p>
                     </div>
                   </div>
                 )}
