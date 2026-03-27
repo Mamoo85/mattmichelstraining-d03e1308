@@ -41,7 +41,7 @@ interface ClarifyQuestion {
 }
 
 type Path = null | "workout" | "fixit";
-type FixitStep = "describe" | "clarify" | "result";
+type IntakeStep = "describe" | "clarify" | "result";
 
 const AiWorkoutSuggest = memo(({ onDone, initialPath }: { onDone: () => void; initialPath?: "workout" | "fixit" }) => {
   const { user } = useAuth();
@@ -53,24 +53,25 @@ const AiWorkoutSuggest = memo(({ onDone, initialPath }: { onDone: () => void; in
   const [saving, setSaving] = useState(false);
   const [editTimerConfig, setEditTimerConfig] = useState<TimerConfigData | null>(null);
 
-  // Fix It conversational state
-  const [fixitStep, setFixitStep] = useState<FixitStep>("describe");
+  // Conversational intake state (shared by both paths)
+  const [intakeStep, setIntakeStep] = useState<IntakeStep>("describe");
   const [clarifyQuestions, setClarifyQuestions] = useState<ClarifyQuestion[]>([]);
   const [clarifyAnswers, setClarifyAnswers] = useState<Record<string, string[]>>({});
   const [loadingClarify, setLoadingClarify] = useState(false);
 
-  const handleFixitClarify = async () => {
+  const handleClarify = async () => {
     if (!userText.trim()) return;
     setLoadingClarify(true);
     try {
+      const clarifyMode = path === "fixit" ? "fixit-clarify" : "workout-clarify";
       const { data, error } = await supabase.functions.invoke("ai-workout-suggest", {
-        body: { mode: "fixit-clarify", userText: userText.trim() },
+        body: { mode: clarifyMode, userText: userText.trim(), gymImageBase64: gymImageBase64 || undefined },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       if (data?.questions && Array.isArray(data.questions)) {
         setClarifyQuestions(data.questions);
-        setFixitStep("clarify");
+        setIntakeStep("clarify");
       }
     } catch (e: any) {
       toast({ title: "Failed to get questions", description: e.message, variant: "destructive" });
@@ -93,7 +94,7 @@ const AiWorkoutSuggest = memo(({ onDone, initialPath }: { onDone: () => void; in
     setGenerating(true);
     setWorkout(null);
 
-    const clarifications = fixitStep === "clarify" || Object.keys(clarifyAnswers).length > 0
+    const clarifications = intakeStep === "clarify" || Object.keys(clarifyAnswers).length > 0
       ? clarifyAnswers
       : undefined;
 
@@ -110,7 +111,7 @@ const AiWorkoutSuggest = memo(({ onDone, initialPath }: { onDone: () => void; in
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setWorkout(data);
-      if (path === "fixit") setFixitStep("result");
+      setIntakeStep("result");
       if (data?.isTimedCircuit && data?.timerConfig) {
         setEditTimerConfig({ ...data.timerConfig });
       } else {
@@ -197,7 +198,7 @@ const AiWorkoutSuggest = memo(({ onDone, initialPath }: { onDone: () => void; in
     setPath(null);
     setUserText("");
     setGymImageBase64(null);
-    setFixitStep("describe");
+    setIntakeStep("describe");
     setClarifyQuestions([]);
     setClarifyAnswers({});
   };
