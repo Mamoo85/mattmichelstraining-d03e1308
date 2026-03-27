@@ -3,7 +3,6 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
-import { ViteImageOptimizer } from "vite-plugin-image-optimizer";
 
 /**
  * Injects <link rel="preload"> for the LCP hero image so the browser
@@ -14,49 +13,40 @@ function preloadLcpImage(): Plugin {
     name: "preload-lcp-image",
     enforce: "post",
     transformIndexHtml(html, ctx) {
-      // In build mode, find the hashed m2-logo asset in the bundle
       const bundle = ctx.bundle;
-      if (!bundle) return html; // dev mode — skip
+      if (!bundle) return html;
 
       let result = html;
       let heroLogoPath = "";
-      let splashLogoPath = "";
 
       for (const [fileName] of Object.entries(bundle)) {
-        if (/m2-logo-splash-[^/]*\.jpg$/.test(fileName)) {
-          splashLogoPath = `/${fileName}`;
-        } else if (/m2-logo-[^/]*\.jpg$/.test(fileName) && !fileName.includes("official") && !fileName.includes("placeholder") && !fileName.includes("splash")) {
+        if (
+          /m2-logo-[^/]*\.jpg$/.test(fileName) &&
+          !fileName.includes("official") &&
+          !fileName.includes("placeholder") &&
+          !fileName.includes("splash")
+        ) {
           heroLogoPath = `/${fileName}`;
         }
       }
 
-      // Preload hero logo (LCP candidate) — splash is no longer used
       const tags: string[] = [];
-      if (heroLogoPath) tags.push(`<link rel="preload" as="image" href="${heroLogoPath}" fetchpriority="high" />`);
+      if (heroLogoPath) {
+        tags.push(`<link rel="preload" as="image" href="${heroLogoPath}" fetchpriority="high" />`);
+        result = result.replace("/assets/m2-logo-placeholder.jpg", heroLogoPath);
+      }
+
       if (tags.length) result = result.replace("</head>", `${tags.join("\n")}\n</head>`);
-
-      // Replace hero shell placeholder with hashed hero logo
-      if (heroLogoPath) result = result.replace("/assets/m2-logo-placeholder.jpg", heroLogoPath);
-
-      // Splash screen is handled by React SplashScreen component after JS loads.
-      // The hero-shell text content in index.html paints as FCP immediately.
-
       return result;
     },
   };
 }
 
-/**
- * Converts render-blocking CSS <link rel="stylesheet"> tags into
- * non-blocking preload links with an onload swap, so the browser
- * can paint the inlined critical CSS first.
- */
 function asyncCss(): Plugin {
   return {
     name: "async-css",
     enforce: "post",
     transformIndexHtml(html) {
-      // Match Vite-injected stylesheet links (hashed assets only)
       return html.replace(
         /<link rel="stylesheet" crossorigin href="(\/assets\/[^"]+\.css)">/g,
         (_match, href) =>
@@ -66,7 +56,6 @@ function asyncCss(): Plugin {
   };
 }
 
-// https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
@@ -80,11 +69,6 @@ export default defineConfig(({ mode }) => ({
     asyncCss(),
     react(),
     mode === "development" && componentTagger(),
-    ViteImageOptimizer({
-      jpg: { quality: 75 },
-      jpeg: { quality: 75 },
-      png: { quality: 80 },
-    }),
     VitePWA({
       registerType: "autoUpdate",
       injectRegister: false,
@@ -130,15 +114,8 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor: ["react", "react-dom", "react-router-dom"],
-          query: ["@tanstack/react-query"],
-        },
-      },
-    },
     target: ["es2020", "safari14"],
     minify: "esbuild",
+    chunkSizeWarningLimit: 1200,
   },
 }));
