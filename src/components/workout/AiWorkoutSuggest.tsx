@@ -1,5 +1,5 @@
 import { useState, memo } from "react";
-import { Sparkles, Loader2, Dumbbell, Play, Save, ArrowLeft, Wrench, Printer, Timer, Minus, Plus } from "lucide-react";
+import { Sparkles, Loader2, Dumbbell, Play, Save, ArrowLeft, Wrench, Printer, Timer, Minus, Plus, Check } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -33,7 +33,15 @@ interface GeneratedWorkout {
   timerConfig?: TimerConfigData;
 }
 
+interface ClarifyQuestion {
+  id: string;
+  question: string;
+  options: string[];
+  multiSelect?: boolean;
+}
+
 type Path = null | "workout" | "fixit";
+type FixitStep = "describe" | "clarify" | "result";
 
 const AiWorkoutSuggest = memo(({ onDone, initialPath }: { onDone: () => void; initialPath?: "workout" | "fixit" }) => {
   const { user } = useAuth();
@@ -43,13 +51,52 @@ const AiWorkoutSuggest = memo(({ onDone, initialPath }: { onDone: () => void; in
   const [generating, setGenerating] = useState(false);
   const [workout, setWorkout] = useState<GeneratedWorkout | null>(null);
   const [saving, setSaving] = useState(false);
-  
   const [editTimerConfig, setEditTimerConfig] = useState<TimerConfigData | null>(null);
+
+  // Fix It conversational state
+  const [fixitStep, setFixitStep] = useState<FixitStep>("describe");
+  const [clarifyQuestions, setClarifyQuestions] = useState<ClarifyQuestion[]>([]);
+  const [clarifyAnswers, setClarifyAnswers] = useState<Record<string, string[]>>({});
+  const [loadingClarify, setLoadingClarify] = useState(false);
+
+  const handleFixitClarify = async () => {
+    if (!userText.trim()) return;
+    setLoadingClarify(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-workout-suggest", {
+        body: { mode: "fixit-clarify", userText: userText.trim() },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (data?.questions && Array.isArray(data.questions)) {
+        setClarifyQuestions(data.questions);
+        setFixitStep("clarify");
+      }
+    } catch (e: any) {
+      toast({ title: "Failed to get questions", description: e.message, variant: "destructive" });
+    }
+    setLoadingClarify(false);
+  };
+
+  const toggleClarifyAnswer = (questionId: string, option: string, multiSelect: boolean) => {
+    setClarifyAnswers((prev) => {
+      const current = prev[questionId] || [];
+      if (multiSelect) {
+        return { ...prev, [questionId]: current.includes(option) ? current.filter((o) => o !== option) : [...current, option] };
+      }
+      return { ...prev, [questionId]: [option] };
+    });
+  };
 
   const handleGenerate = async () => {
     if (!userText.trim()) return;
     setGenerating(true);
     setWorkout(null);
+
+    const clarifications = fixitStep === "clarify" || Object.keys(clarifyAnswers).length > 0
+      ? clarifyAnswers
+      : undefined;
+
     try {
       const { data, error } = await supabase.functions.invoke("ai-workout-suggest", {
         body: {
@@ -57,11 +104,13 @@ const AiWorkoutSuggest = memo(({ onDone, initialPath }: { onDone: () => void; in
           path,
           userText: userText.trim(),
           gymImageBase64: gymImageBase64 || undefined,
+          clarifications,
         },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setWorkout(data);
+      if (path === "fixit") setFixitStep("result");
       if (data?.isTimedCircuit && data?.timerConfig) {
         setEditTimerConfig({ ...data.timerConfig });
       } else {
@@ -86,21 +135,21 @@ const AiWorkoutSuggest = memo(({ onDone, initialPath }: { onDone: () => void; in
     }));
 
     const sourceType = path === "fixit" ? "ai_fixit" : "ai_workout";
-    const { error } = await supabase.from("community_workouts").insert({
-      user_id: user.id,
-      title: workout.title,
-      description: workout.description,
-      creator_name: "Coach Matt AI",
-      exercises: exerciseData as any,
-      is_public: false,
-      source_type: sourceType,
-    });
-
-    if (error) {
-      toast({ title: "Save failed", description: error.message, variant: "destructive" });
-    } else {
+    try {
+      const { error } = await supabase.from("community_workouts").insert({
+        user_id: user.id,
+        title: workout.title,
+        description: workout.description,
+        creator_name: "Coach Matt AI",
+        exercises: exerciseData as any,
+        is_public: false,
+        source_type: sourceType,
+      });
+      if (error) throw error;
       toast({ title: path === "fixit" ? "Protocol saved to Fix It! 💪" : "Workout saved! 💪" });
       onDone();
+    } catch (err: any) {
+      toast({ title: "Save failed", description: err.message, variant: "destructive" });
     }
     setSaving(false);
   };
@@ -148,6 +197,9 @@ const AiWorkoutSuggest = memo(({ onDone, initialPath }: { onDone: () => void; in
     setPath(null);
     setUserText("");
     setGymImageBase64(null);
+    setFixitStep("describe");
+    setClarifyQuestions([]);
+    setClarifyAnswers({});
   };
 
   const phaseColors: Record<string, string> = {
@@ -181,7 +233,7 @@ const AiWorkoutSuggest = memo(({ onDone, initialPath }: { onDone: () => void; in
       <AnimatePresence mode="wait">
         {!workout ? (
           <motion.div
-            key={path ?? "fork"}
+            key={path === "fixit" ? `fixit-${fixitStep}` : (path ?? "fork")}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
@@ -226,8 +278,8 @@ const AiWorkoutSuggest = memo(({ onDone, initialPath }: { onDone: () => void; in
               </div>
             )}
 
-            {/* === INPUT FORM === */}
-            {path !== null && (
+            {/* === WORKOUT INPUT === */}
+            {path === "workout" && (
               <div className="space-y-4">
                 <button
                   onClick={handleBack}
@@ -235,46 +287,118 @@ const AiWorkoutSuggest = memo(({ onDone, initialPath }: { onDone: () => void; in
                 >
                   <ArrowLeft size={12} /> Choose different path
                 </button>
-
-                {path === "workout" && (
-                  <>
-                    <GymPhotoUpload onImageChange={setGymImageBase64} />
-                    <Textarea
-                      value={userText}
-                      onChange={(e) => setUserText(e.target.value)}
-                      placeholder="Tell me about yourself. (e.g., I'm 35, been lifting for a year, want to get stronger, and I only have 3 days a week with dumbbells and a bench.)"
-                      className="min-h-[100px] bg-background border-border text-sm"
-                    />
-                  </>
-                )}
-
-                {path === "fixit" && (
-                  <Textarea
-                    value={userText}
-                    onChange={(e) => setUserText(e.target.value)}
-                    placeholder="Where does it hurt and when does it happen? (e.g., My lower back tightens up during heavy squats, or my right shoulder hurts when I press overhead.)"
-                    className="min-h-[100px] bg-background border-border text-sm"
-                  />
-                )}
-
+                <GymPhotoUpload onImageChange={setGymImageBase64} />
+                <Textarea
+                  value={userText}
+                  onChange={(e) => setUserText(e.target.value)}
+                  placeholder="Tell me about yourself. (e.g., I'm 35, been lifting for a year, want to get stronger, and I only have 3 days a week with dumbbells and a bench.)"
+                  className="min-h-[100px] bg-background border-border text-sm"
+                />
                 <button
                   onClick={handleGenerate}
                   disabled={generating || !userText.trim()}
                   className="w-full h-12 bg-primary text-primary-foreground flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-50"
                 >
                   {generating ? (
-                    <><Loader2 size={14} className="animate-spin" /> {path === "fixit" ? "Building Protocol…" : "Building Program…"}</>
+                    <><Loader2 size={14} className="animate-spin" /> Building Program…</>
                   ) : (
-                    <>
-                      {path === "fixit" ? <Wrench size={14} /> : <Sparkles size={14} />}
-                      {path === "fixit" ? "Generate Rehab Protocol" : "Generate Program"}
-                    </>
+                    <><Sparkles size={14} /> Generate Program</>
                   )}
                 </button>
-
                 <p className="text-[9px] text-muted-foreground text-center leading-relaxed">
                   Powered by Coach Matt's 20 years of sports-science data. No generic internet fluff.
                 </p>
+              </div>
+            )}
+
+            {/* === FIX IT - DESCRIBE STEP === */}
+            {path === "fixit" && fixitStep === "describe" && (
+              <div className="space-y-4">
+                <button
+                  onClick={handleBack}
+                  className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-colors"
+                >
+                  <ArrowLeft size={12} /> Choose different path
+                </button>
+                <Textarea
+                  value={userText}
+                  onChange={(e) => setUserText(e.target.value)}
+                  placeholder="Where does it hurt and when does it happen? (e.g., My lower back tightens up during heavy squats, or my right shoulder hurts when I press overhead.)"
+                  className="min-h-[100px] bg-background border-border text-sm"
+                />
+                <button
+                  onClick={handleFixitClarify}
+                  disabled={loadingClarify || !userText.trim()}
+                  className="w-full h-12 bg-primary text-primary-foreground flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-50"
+                >
+                  {loadingClarify ? (
+                    <><Loader2 size={14} className="animate-spin" /> Analyzing…</>
+                  ) : (
+                    <><Wrench size={14} /> Next — A Few Quick Questions</>
+                  )}
+                </button>
+                <p className="text-[9px] text-muted-foreground text-center leading-relaxed">
+                  Built from Coach Matt's Fix It protocols and Becoming a Supple Leopard methodology.
+                </p>
+              </div>
+            )}
+
+            {/* === FIX IT - CLARIFY STEP === */}
+            {path === "fixit" && fixitStep === "clarify" && (
+              <div className="space-y-4">
+                <button
+                  onClick={() => setFixitStep("describe")}
+                  className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-colors"
+                >
+                  <ArrowLeft size={12} /> Back to description
+                </button>
+
+                <div className="bg-card border border-border p-4 space-y-1">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-primary">Quick Check-In</p>
+                  <p className="text-xs text-muted-foreground">
+                    A few questions so Coach Matt's system can build the right protocol for your situation.
+                  </p>
+                </div>
+
+                {clarifyQuestions.map((q) => (
+                  <div key={q.id} className="space-y-2">
+                    <p className="text-xs font-bold text-foreground">{q.question}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {q.options.map((opt) => {
+                        const selected = (clarifyAnswers[q.id] || []).includes(opt);
+                        return (
+                          <button
+                            key={opt}
+                            onClick={() => toggleClarifyAnswer(q.id, opt, !!q.multiSelect)}
+                            className={`px-3 py-2 text-xs font-bold rounded-lg border-2 transition-all flex items-center gap-1.5 ${
+                              selected
+                                ? "border-primary bg-primary/10 text-primary"
+                                : "border-border bg-muted/30 text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                            }`}
+                          >
+                            {selected && <Check size={12} />}
+                            {opt}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {q.multiSelect && (
+                      <p className="text-[9px] text-muted-foreground">Select all that apply</p>
+                    )}
+                  </div>
+                ))}
+
+                <button
+                  onClick={handleGenerate}
+                  disabled={generating || Object.keys(clarifyAnswers).length === 0}
+                  className="w-full h-12 bg-primary text-primary-foreground flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-50"
+                >
+                  {generating ? (
+                    <><Loader2 size={14} className="animate-spin" /> Building Protocol…</>
+                  ) : (
+                    <><Wrench size={14} /> Build My Protocol</>
+                  )}
+                </button>
               </div>
             )}
           </motion.div>

@@ -49,7 +49,31 @@ VARIETY IS CRITICAL: Every exercise in the session must be unique — no duplica
 Keep each session to 6-10 exercises across all phases. Make it challenging but appropriate for the inferred experience level.`;
 }
 
-function buildDualPathFixitPrompt(userText: string, exerciseNames: string) {
+function buildDualPathFixitPrompt(userText: string, exerciseNames: string, clarifications?: Record<string, string[]>) {
+  let equipmentContext = "";
+  if (clarifications) {
+    const env = clarifications["environment"]?.[0] || "Gym";
+    const equipment = clarifications["equipment"] || [];
+    const frequency = clarifications["frequency"]?.[0] || "";
+    const painLevel = clarifications["pain_level"]?.[0] || "";
+
+    equipmentContext = `
+
+EQUIPMENT CONTEXT:
+The user will be doing this protocol at: ${env}.
+Available equipment: ${equipment.length > 0 ? equipment.join(", ") : "bodyweight only"}.
+ONLY prescribe exercises that use the listed equipment or bodyweight.
+${equipment.includes("Swiss Ball") ? "Include Swiss ball mobilizations where appropriate (e.g. Swiss ball hip flexor stretch, Swiss ball thoracic extension)." : ""}
+${equipment.includes("Resistance Bands") ? "Include banded distractions and band-assisted stretches where appropriate." : ""}
+${equipment.includes("Foam Roller") ? "Include foam roller techniques for soft tissue work." : ""}
+${equipment.includes("Lacrosse Ball") ? "Include lacrosse ball pin-and-floss techniques." : ""}
+${equipment.includes("Pull-up Bar") ? "Include hanging decompression and dead hangs if relevant." : ""}
+${env === "Home" && equipment.length === 0 ? "Focus on floor-based mobility, isometric holds, and bodyweight corrective exercises only." : ""}
+${env === "Travel" ? "Focus on bodyweight-only exercises that require no equipment and minimal space." : ""}
+${frequency ? `Frequency of issue: ${frequency}.` : ""}
+${painLevel ? `Pain level: ${painLevel}/10.` : ""}`;
+  }
+
   return `You are Coach Matt's Fix It Engine — a corrective exercise specialist following Becoming a Supple Leopard (Starrett) and Starting Strength (Rippetoe) principles.
 
 LANGUAGE: ALL output MUST be in American English only. Never use any other language.
@@ -65,7 +89,7 @@ RULES:
 - Each phase should have 2-3 exercises
 - Focus on the ROOT CAUSE, not just the symptom
 - Use exercises from the library when possible
-- Be specific with coaching cues
+- Be specific with coaching cues${equipmentContext}
 
 USER INPUT: "${userText}"
 
@@ -153,7 +177,80 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { goal, audience, style, prompt, mode, path, userText, gymImageBase64 } = body;
+    const { goal, audience, style, prompt, mode, path, userText, gymImageBase64, clarifications } = body;
+
+    // === FIXIT CLARIFY MODE ===
+    if (mode === "fixit-clarify" && userText) {
+      const clarifyResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages: [
+            {
+              role: "system",
+              content: `You are Coach Matt's Fix It intake system. The user described a pain point. Generate 3-4 follow-up questions to help build a better corrective protocol. Return structured JSON via the tool call.
+
+Questions should cover:
+1. WHERE they'll be doing the protocol (home, gym, travel)
+2. WHAT EQUIPMENT they have available (if home/travel)
+3. HOW OFTEN the issue bothers them
+4. PAIN LEVEL on a 1-10 scale
+
+Make questions conversational and empathetic.`,
+            },
+            { role: "user", content: userText },
+          ],
+          tools: [
+            {
+              type: "function",
+              function: {
+                name: "ask_clarifying_questions",
+                description: "Ask the user follow-up questions before building their protocol.",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    questions: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          id: { type: "string", description: "Unique ID like 'environment', 'equipment', 'frequency', 'pain_level'" },
+                          question: { type: "string" },
+                          options: { type: "array", items: { type: "string" } },
+                          multiSelect: { type: "boolean", description: "True if user can select multiple options" },
+                        },
+                        required: ["id", "question", "options"],
+                      },
+                    },
+                  },
+                  required: ["questions"],
+                },
+              },
+            },
+          ],
+          tool_choice: { type: "function", function: { name: "ask_clarifying_questions" } },
+        }),
+      });
+
+      if (!clarifyResponse.ok) {
+        const text = await clarifyResponse.text();
+        console.error("Clarify AI error:", clarifyResponse.status, text);
+        throw new Error("Failed to generate questions");
+      }
+
+      const clarifyResult = await clarifyResponse.json();
+      const toolCall = clarifyResult.choices?.[0]?.message?.tool_calls?.[0];
+      if (!toolCall) throw new Error("No questions generated");
+
+      const parsed = JSON.parse(toolCall.function.arguments);
+      return new Response(JSON.stringify(parsed), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const isDualPath = mode === "dual-path" && !!path && !!userText;
     const isOpenWorkout = mode === "open-workout" && !!prompt;
@@ -171,7 +268,7 @@ serve(async (req) => {
 
     if (isDualPath) {
       systemPrompt = path === "fixit"
-        ? buildDualPathFixitPrompt(userText, exerciseNames)
+        ? buildDualPathFixitPrompt(userText, exerciseNames, clarifications)
         : buildDualPathWorkoutPrompt(userText, hasImage, exerciseNames);
       userMessage = userText;
     } else if (isOpenWorkout) {
@@ -284,7 +381,6 @@ serve(async (req) => {
 
     const userName = userData.user.email || "Unknown user";
 
-    // Get admin user IDs
     const { data: adminRoles } = await supabaseClient
       .from("user_roles")
       .select("user_id")
