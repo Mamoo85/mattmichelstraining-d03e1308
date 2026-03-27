@@ -19,10 +19,21 @@ interface PRData {
 const AnatomyHologram = memo(({ exerciseTitle, exerciseId, onClose }: AnatomyHologramProps) => {
   const { user } = useAuth();
   const [prData, setPrData] = useState<PRData | null>(null);
+  const [refImageUrl, setRefImageUrl] = useState<string | null>(null);
+
+  // Fetch reference image from exercise_library
+  useEffect(() => {
+    if (!exerciseId && !exerciseTitle) return;
+    const query = exerciseId
+      ? supabase.from("exercise_library").select("image_url").eq("id", exerciseId).maybeSingle()
+      : supabase.from("exercise_library").select("image_url").ilike("title", exerciseTitle).limit(1).maybeSingle();
+    query.then(({ data }) => {
+      if (data?.image_url) setRefImageUrl(data.image_url);
+    });
+  }, [exerciseId, exerciseTitle]);
 
   useEffect(() => {
     if (!user) return;
-    // Fetch PR stats from progress_logs
     supabase
       .from("progress_logs")
       .select("weight, reps")
@@ -90,13 +101,23 @@ const AnatomyHologram = memo(({ exerciseTitle, exerciseId, onClose }: AnatomyHol
           <div className="absolute bottom-8 left-8 w-6 h-6 border-b border-l border-[hsl(var(--synth-cyan))]/20" />
           <div className="absolute bottom-8 right-8 w-6 h-6 border-b border-r border-[hsl(var(--synth-cyan))]/20" />
 
-          {/* Body placeholder */}
-          <Activity
-            size={140}
-            strokeWidth={0.8}
-            className="text-[hsl(var(--synth-cyan))]"
-            style={{ filter: "drop-shadow(0 0 20px hsl(185 100% 48% / 0.3))" }}
-          />
+          {/* Reference image or fallback icon */}
+          {refImageUrl ? (
+            <img
+              src={refImageUrl}
+              alt={exerciseTitle}
+              className="max-h-[240px] max-w-[80%] object-contain relative z-[1]"
+              style={{ filter: "drop-shadow(0 0 20px hsl(185 100% 48% / 0.2))" }}
+              onError={() => setRefImageUrl(null)}
+            />
+          ) : (
+            <Activity
+              size={140}
+              strokeWidth={0.8}
+              className="text-[hsl(var(--synth-cyan))]"
+              style={{ filter: "drop-shadow(0 0 20px hsl(185 100% 48% / 0.3))" }}
+            />
+          )}
         </div>
 
         {/* ─── EXERCISE INFO & PR DISPLAY ─── */}
