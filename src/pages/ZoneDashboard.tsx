@@ -520,8 +520,8 @@ const ZoneDashboard = () => {
         style={{ background: "rgba(10,10,10,0.92)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
       >
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg overflow-hidden flex items-center justify-center" style={{ background: "#000", boxShadow: "0 0 12px rgba(249,115,22,0.5), 0 0 24px rgba(249,115,22,0.2)" }}>
-            <img src={logoImg} alt="M²" className="h-6 w-6 object-contain" style={{ filter: "brightness(0) saturate(100%) invert(52%) sepia(94%) saturate(1200%) hue-rotate(360deg) brightness(100%) contrast(96%)" }} />
+          <div className="h-9 w-9 rounded-lg overflow-hidden flex items-center justify-center" style={{ background: "#000", boxShadow: "0 0 12px rgba(249,115,22,0.5), 0 0 24px rgba(249,115,22,0.2)" }}>
+            <img src={logoImg} alt="M²" className="h-8 w-8 object-contain" />
           </div>
           <div>
             <p className="text-[9px] font-bold uppercase tracking-[0.2em]" style={{ color: "#f97316" }}>THE ZONE</p>
@@ -559,18 +559,6 @@ const ZoneDashboard = () => {
 
       <main className="max-w-md mx-auto px-4 pt-4 pb-4 space-y-4">
 
-        {/* ── Full-Width Log Lifts Button (above banner) ── */}
-        <button
-          onClick={() => navigate("/progress")}
-          className="w-full rounded-2xl py-3.5 flex items-center justify-center gap-2 text-sm font-black uppercase tracking-widest transition-all active:scale-[0.97]"
-          style={{
-            background: "linear-gradient(135deg, #f97316, #ea580c)",
-            color: "#fff",
-            boxShadow: "0 4px 20px rgba(249,115,22,0.35), 0 0 30px rgba(249,115,22,0.15)",
-          }}
-        >
-          <Dumbbell size={18} /> Log Lifts
-        </button>
 
         {/* ── Stats Banner ────────── */}
         <div
@@ -624,7 +612,7 @@ const ZoneDashboard = () => {
               )}
             </div>
 
-            {/* Right: Profile Avatar Card */}
+            {/* Right: Profile Avatar Card with Check-In */}
             <button
               onClick={() => navigate("/profile")}
               className="shrink-0 w-[100px] flex flex-col items-center justify-center gap-1.5 relative overflow-hidden transition-all active:scale-95"
@@ -658,6 +646,15 @@ const ZoneDashboard = () => {
               </div>
             </button>
           </div>
+          {/* Check-In strip inside stats banner */}
+          <button
+            onClick={() => setShowCheckIn(true)}
+            className="w-full flex items-center justify-center gap-2 py-2 transition-all active:scale-[0.98]"
+            style={{ borderTop: "1px solid rgba(255,255,255,0.06)", color: "#00f0ff" }}
+          >
+            <MapPin size={12} />
+            <span className="text-[10px] font-bold uppercase tracking-widest">Studio Check-In</span>
+          </button>
         </div>
 
         {/* ── Quick Actions ─────────────────────── */}
@@ -671,8 +668,8 @@ const ZoneDashboard = () => {
             <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: "linear-gradient(135deg, #22c55e, #16a34a)" }}>
               <Mic size={17} color="#fff" />
             </div>
-            <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>What I Did Today</p>
-            <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>Voice or text quick log</p>
+            <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>Log Activity</p>
+            <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>Voice or text — tell us what you did</p>
           </button>
 
           {/* Prove It */}
@@ -685,10 +682,34 @@ const ZoneDashboard = () => {
               <Trophy size={17} color="#fff" />
             </div>
             <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>Prove It</p>
-            <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>Submit a PR with video</p>
+            <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>Submit a new PR</p>
           </button>
 
-          {/* Matt's Brain */}
+          {/* Split Generator/Fix It button */}
+          <button
+            onClick={() => { handleTab("generate"); setGenerateView("menu"); }}
+            className="rounded-2xl overflow-hidden text-left transition-all active:scale-[0.96] relative"
+            style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(168,85,247,0.2)" }}
+          >
+            {/* Diagonal split visual */}
+            <div className="absolute inset-0 overflow-hidden rounded-2xl">
+              <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, rgba(168,85,247,0.12) 50%, rgba(0,240,255,0.10) 50%)" }} />
+            </div>
+            <div className="relative p-3.5">
+              <div className="flex gap-1.5 mb-2">
+                <div className="w-4 h-4 rounded flex items-center justify-center" style={{ background: "rgba(168,85,247,0.3)" }}>
+                  <Sparkles size={10} color="#a855f7" />
+                </div>
+                <div className="w-4 h-4 rounded flex items-center justify-center" style={{ background: "rgba(0,240,255,0.3)" }}>
+                  <Wrench size={10} color="#00f0ff" />
+                </div>
+              </div>
+              <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>Generator</p>
+              <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>AI builds your workout</p>
+            </div>
+          </button>
+
+          {/* AI Technology Hub */}
           <button
             onClick={() => navigate("/ai-insights")}
             className="rounded-2xl p-3.5 text-left transition-all active:scale-[0.96]"
@@ -698,20 +719,7 @@ const ZoneDashboard = () => {
               <Brain size={17} color="#fff" />
             </div>
             <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>Matt's Brain</p>
-            <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>Recovery & mobility tips</p>
-          </button>
-
-          {/* Studio Check-In */}
-          <button
-            onClick={() => setShowCheckIn(true)}
-            className="rounded-2xl p-3.5 text-left transition-all active:scale-[0.96]"
-            style={{ background: "linear-gradient(135deg, rgba(0,240,255,0.08), rgba(6,182,212,0.04))", border: "1px solid rgba(0,240,255,0.2)" }}
-          >
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: "linear-gradient(135deg, #00f0ff, #0891b2)" }}>
-              <MapPin size={17} color="#fff" />
-            </div>
-            <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>Check In</p>
-            <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>Log a studio visit</p>
+            <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>Recovery, mobility & tips</p>
           </button>
         </div>
 
