@@ -1,6 +1,6 @@
 import {
   Dumbbell, Timer, Zap, BarChart3, Sparkles, Wrench, Trophy, Camera, Target, Users,
-  Brain, Play, MessageCircle, Home, Flame, Activity
+  Brain, Play, MessageCircle, Home, Flame, Activity, Mic
 } from "lucide-react";
 import type { FeatureTip } from "./FeatureLearningModal";
 
@@ -116,5 +116,21 @@ export const ZONE_HOME_TIP: FeatureTip = {
     { icon: <Trophy size={18} />, text: "Monthly challenges & leaderboards" },
     { icon: <Users size={18} />, text: "Community activity & shared workouts" },
     { icon: <Target size={18} />, text: "Monthly focus topics from Coach Matt" },
+  ],
+};
+
+/* ── Quick Activity Log Tip ── */
+
+export const QUICK_ACTIVITY_TIP: FeatureTip = {
+  storageKey: "m2-tip-quick-activity-v1",
+  fallbackIcon: <Mic size={32} style={{ color: "#22c55e" }} />,
+  fallbackGradient: "linear-gradient(135deg, rgba(34,197,94,0.15), rgba(249,115,22,0.08))",
+  title: "Quick Activity Log",
+  subtitle: "Log any workout — not just your main lifts. Voice or text, the AI handles the rest.",
+  bullets: [
+    { icon: <Mic size={18} />, text: "Voice or text — just tell us what you did" },
+    { icon: <Brain size={18} />, text: "AI asks smart follow-up questions" },
+    { icon: <Activity size={18} />, text: "Logs cardio, circuits, mobility — everything" },
+    { icon: <Target size={18} />, text: "Helps Coach Matt understand your full load" },
   ],
 };

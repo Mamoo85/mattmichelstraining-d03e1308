@@ -8,7 +8,8 @@ import { useNavigate } from "react-router-dom";
 import {
   BarChart3, Sparkles, Dumbbell, Home, Flame, Zap, Trophy, Play, Wrench,
   Timer, ChevronRight, ChevronDown, MessageCircle, Brain,
-  User, Activity, Clock, Target, Star, Award, Camera, Crosshair, Heart, UserPlus
+  User, Activity, Clock, Target, Star, Award, Camera, Crosshair, Heart, UserPlus,
+  Mic, MapPin
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ZoneThemeWrapper from "@/components/zone/ZoneThemeWrapper";
@@ -30,6 +31,8 @@ const CoachChatPanel = lazy(() => import("@/components/dashboard/CoachChatPanel"
 const CustomProgramRequest = lazy(() => import("@/components/dashboard/CustomProgramRequest"));
 const AiWorkoutSuggest = lazy(() => import("@/components/workout/AiWorkoutSuggest"));
 const FixItLibrary = lazy(() => import("@/components/features/FixItLibrary"));
+const QuickActivityLog = lazy(() => import("@/components/dashboard/QuickActivityLog"));
+const StudioCheckIn = lazy(() => import("@/components/sessions/StudioCheckIn"));
 
 type TabKey = "lifts" | "generate" | "train" | "home";
 
@@ -410,6 +413,8 @@ const ZoneDashboard = () => {
     return !safeLocalStorage.getItem(`m2-tip-zone-${initialTab}-v1`);
   });
   const [generateView, setGenerateView] = useState<"menu" | "workout" | "fixit">("menu");
+  const [showQuickLog, setShowQuickLog] = useState(false);
+  const [showCheckIn, setShowCheckIn] = useState(false);
 
   const [streak, setStreak] = useState(0);
   const [sessionsThisWeek, setSessionsThisWeek] = useState(0);
@@ -536,6 +541,61 @@ const ZoneDashboard = () => {
       </header>
 
       <main className="max-w-md mx-auto px-4 pt-4 pb-4 space-y-4">
+
+        {/* ── Action Cards ─────────────────────── */}
+        <div className="grid grid-cols-2 gap-2">
+          {/* What I Did Today */}
+          <button
+            onClick={() => setShowQuickLog(true)}
+            className="rounded-2xl p-3.5 text-left transition-all active:scale-[0.96]"
+            style={{ background: "linear-gradient(135deg, rgba(34,197,94,0.1), rgba(22,163,74,0.06))", border: "1px solid rgba(34,197,94,0.2)" }}
+          >
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: "linear-gradient(135deg, #22c55e, #16a34a)" }}>
+              <Mic size={17} color="#fff" />
+            </div>
+            <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>Log Activity</p>
+            <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>Voice or text — tell us what you did</p>
+          </button>
+
+          {/* Studio Check-In */}
+          <button
+            onClick={() => setShowCheckIn(true)}
+            className="rounded-2xl p-3.5 text-left transition-all active:scale-[0.96]"
+            style={{ background: "linear-gradient(135deg, rgba(0,240,255,0.08), rgba(6,182,212,0.04))", border: "1px solid rgba(0,240,255,0.2)" }}
+          >
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: "linear-gradient(135deg, #00f0ff, #0891b2)" }}>
+              <MapPin size={17} color="#fff" />
+            </div>
+            <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>Check In</p>
+            <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>Log a studio visit</p>
+          </button>
+
+          {/* Prove It */}
+          <button
+            onClick={() => window.dispatchEvent(new Event("open-prove-it-zone"))}
+            className="rounded-2xl p-3.5 text-left transition-all active:scale-[0.96]"
+            style={{ background: "linear-gradient(135deg, rgba(249,115,22,0.1), rgba(234,88,12,0.06))", border: "1px solid rgba(249,115,22,0.2)" }}
+          >
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: "linear-gradient(135deg, #f97316, #ea580c)" }}>
+              <Trophy size={17} color="#fff" />
+            </div>
+            <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>Prove It</p>
+            <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>Submit a new PR</p>
+          </button>
+
+          {/* AI Insights */}
+          <button
+            onClick={() => navigate("/ai-insights")}
+            className="rounded-2xl p-3.5 text-left transition-all active:scale-[0.96]"
+            style={{ background: "linear-gradient(135deg, rgba(168,85,247,0.1), rgba(124,58,237,0.06))", border: "1px solid rgba(168,85,247,0.2)" }}
+          >
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: "linear-gradient(135deg, #a855f7, #7c3aed)" }}>
+              <Brain size={17} color="#fff" />
+            </div>
+            <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>AI Insights</p>
+            <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>Recovery, mobility & tips</p>
+          </button>
+        </div>
 
         {/* ── Stats Banner ────────────────────────── */}
         <div
@@ -713,6 +773,42 @@ const ZoneDashboard = () => {
           <FeatureLearningModal tip={currentTip} onContinue={dismissTip} onDismiss={dismissTip} />
         )}
       </main>
+
+      {/* Quick Activity Log Modal */}
+      <AnimatePresence>
+        {showQuickLog && (
+          <Suspense fallback={null}>
+            <QuickActivityLog onClose={() => setShowQuickLog(false)} />
+          </Suspense>
+        )}
+      </AnimatePresence>
+
+      {/* Studio Check-In Modal */}
+      <AnimatePresence>
+        {showCheckIn && (
+          <Suspense fallback={null}>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+              style={{ background: "rgba(0,0,0,0.8)" }}
+              onClick={() => setShowCheckIn(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="w-full max-w-md rounded-2xl p-1 overflow-hidden"
+                style={{ background: "#141414", border: "1px solid rgba(255,255,255,0.08)" }}
+                onClick={e => e.stopPropagation()}
+              >
+                <StudioCheckIn />
+              </motion.div>
+            </motion.div>
+          </Suspense>
+        )}
+      </AnimatePresence>
     </ZoneThemeWrapper>
   );
 };
