@@ -422,7 +422,7 @@ const AdminAiCommandCenter = () => {
     <div className="space-y-4">
       {/* ── Hero Header ── */}
       <div
-        className="overflow-hidden"
+        className="relative"
         style={{
           background: "linear-gradient(135deg, rgba(249,115,22,0.08) 0%, rgba(168,85,247,0.05) 100%)",
           border: "1px solid rgba(249,115,22,0.15)",

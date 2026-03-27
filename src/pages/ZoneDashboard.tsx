@@ -7,10 +7,12 @@ import { useNavigate } from "react-router-dom";
 import {
   BarChart3, Sparkles, Dumbbell, Home, Flame, Zap, Trophy, Play, Wrench,
   Timer, ChevronRight, ChevronDown, MessageCircle, Brain,
-  User, Activity, Clock, Target, Star, Award
+  User, Activity, Clock, Target, Star, Award, Camera, Crosshair, Heart
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ZoneThemeWrapper from "@/components/zone/ZoneThemeWrapper";
+import FeatureLearningModal from "@/components/dashboard/FeatureLearningModal";
+import { ZONE_LIFTS_TIP, ZONE_GENERATE_TIP, ZONE_TRAIN_TIP, ZONE_HOME_TIP } from "@/components/dashboard/featureTips";
 import logoImg from "@/assets/m2-logo-official.jpg";
 
 const ProgressCharts = lazy(() => import("@/components/features/ProgressCharts"));
@@ -116,10 +118,81 @@ const GenerateTabContent = memo(({ view, setView }: { view: "menu" | "workout" |
           <span className="font-bold" style={{ color: "#00f0ff" }}>Auto-Timer</span> — Your interval timer auto-configures to match every generated workout.
         </p>
       </div>
+
+      {/* AI Toolbox */}
+      <AiToolbox />
     </div>
   );
 });
 GenerateTabContent.displayName = "GenerateTabContent";
+
+/* ── AI Toolbox (user-facing tools) ─────────── */
+const AI_TOOLS = [
+  { key: "velocity", label: "Velocity Tracker", icon: Zap, color: "#f97316", badge: "Speed AI", desc: "Track bar speed and power output" },
+  { key: "scanner", label: "Workout Scanner", icon: Camera, color: "#a855f7", badge: "Camera AI", desc: "Scan a whiteboard or printed workout" },
+  { key: "recovery", label: "Recovery Advisor", icon: Heart, color: "#22c55e", badge: "LLM", desc: "AI-powered recovery recommendations" },
+  { key: "timer", label: "Interval Timer", icon: Timer, color: "#00f0ff", badge: "Tool", desc: "Custom work/rest interval timer" },
+  { key: "form", label: "Bar Path Tracker", icon: Crosshair, color: "#f97316", badge: "Vision AI", desc: "Camera-based bar path analysis" },
+];
+
+const AiToolbox = memo(() => {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(168,85,247,0.15)" }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center gap-3 px-4 py-3.5 text-left transition-all active:scale-[0.98]"
+      >
+        <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: "rgba(168,85,247,0.15)" }}>
+          <Sparkles size={16} style={{ color: "#a855f7" }} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-black uppercase tracking-wider" style={{ color: "#a855f7" }}>Your AI Toolbox</p>
+          <p className="text-[10px] mt-0.5" style={{ color: "#737373" }}>Smart tools to level up every session</p>
+        </div>
+        <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
+          <ChevronDown size={16} style={{ color: "#a855f7" }} />
+        </motion.div>
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <div className="px-3 pb-3 space-y-1.5" style={{ borderTop: "1px solid rgba(168,85,247,0.1)" }}>
+              {AI_TOOLS.map((tool) => {
+                const Icon = tool.icon;
+                return (
+                  <button
+                    key={tool.key}
+                    className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all active:scale-[0.97]"
+                    style={{ background: "rgba(255,255,255,0.02)" }}
+                  >
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${tool.color}18` }}>
+                      <Icon size={14} style={{ color: tool.color }} />
+                    </div>
+                    <div className="flex-1 min-w-0 text-left">
+                      <p className="text-[11px] font-bold" style={{ color: "#e5e5e5" }}>{tool.label}</p>
+                      <p className="text-[9px]" style={{ color: "#525252" }}>{tool.desc}</p>
+                    </div>
+                    <span className="text-[8px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full shrink-0" style={{ background: `${tool.color}15`, color: tool.color }}>
+                      {tool.badge}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+});
+AiToolbox.displayName = "AiToolbox";
 
 /* ── Progressive Overload Card ──────────────── */
 const OverloadCard = memo(() => {
@@ -377,7 +450,15 @@ const ZoneDashboard = () => {
     setActiveTab(tab);
     safeLocalStorage.setItem(TAB_STORAGE_KEY, tab);
     if (tab === "generate") setGenerateView("menu");
+    const tipKey = `m2-tip-zone-${tab}-v1`;
+    if (!safeLocalStorage.getItem(tipKey)) setShowTabTip(true);
   }, []);
+
+  const currentTip = activeTab === "lifts" ? ZONE_LIFTS_TIP : activeTab === "generate" ? ZONE_GENERATE_TIP : activeTab === "train" ? ZONE_TRAIN_TIP : ZONE_HOME_TIP;
+  const dismissTip = useCallback(() => {
+    safeLocalStorage.setItem(currentTip.storageKey, "1");
+    setShowTabTip(false);
+  }, [currentTip]);
 
   const levelInfo = getLevelInfo(points?.total_points || 0);
   const nextLevel = getNextLevel(points?.total_points || 0);
@@ -540,6 +621,11 @@ const ZoneDashboard = () => {
             {activeTab === "home" && <HomeTab />}
           </motion.div>
         </AnimatePresence>
+
+        {/* Learning modal */}
+        {showTabTip && (
+          <FeatureLearningModal tip={currentTip} onContinue={dismissTip} onDismiss={dismissTip} />
+        )}
       </main>
     </ZoneThemeWrapper>
   );

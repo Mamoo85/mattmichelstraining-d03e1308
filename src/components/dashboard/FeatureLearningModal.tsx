@@ -2,7 +2,9 @@ import { X } from "lucide-react";
 
 export interface FeatureTip {
   storageKey: string;
-  image: string;
+  image?: string;
+  fallbackIcon?: React.ReactNode;
+  fallbackGradient?: string;
   title: string;
   subtitle: string;
   bullets: { icon: React.ReactNode; text: string }[];
@@ -16,7 +18,7 @@ interface FeatureLearningModalProps {
 
 const FeatureLearningModal = ({ tip, onContinue, onDismiss }: FeatureLearningModalProps) => (
   <div className="fixed inset-0 z-[70] bg-black/80 flex items-center justify-center p-4 animate-in fade-in">
-    <div className="bg-card border border-border w-full max-w-md max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+    <div className="bg-card border border-border w-full max-w-md max-h-[90vh] flex flex-col shadow-2xl overflow-hidden rounded-2xl">
       {/* Close */}
       <div className="flex justify-end px-4 pt-3">
         <button
@@ -30,15 +32,30 @@ const FeatureLearningModal = ({ tip, onContinue, onDismiss }: FeatureLearningMod
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto px-6 pb-6 space-y-5">
-        {/* Image */}
-        <img
-          src={tip.image}
-          alt={tip.title}
-          className="w-full rounded border border-border object-cover"
-          width={800}
-          height={512}
-          loading="lazy"
-        />
+        {/* Image or gradient fallback */}
+        {tip.image ? (
+          <img
+            src={tip.image}
+            alt={tip.title}
+            className="w-full rounded-xl border border-border object-cover"
+            width={800}
+            height={512}
+            loading="lazy"
+            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+          />
+        ) : tip.fallbackIcon ? (
+          <div
+            className="w-full h-40 rounded-xl flex items-center justify-center"
+            style={{
+              background: tip.fallbackGradient || "linear-gradient(135deg, rgba(249,115,22,0.15), rgba(168,85,247,0.1))",
+              border: "1px solid rgba(255,255,255,0.08)",
+            }}
+          >
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.08)" }}>
+              {tip.fallbackIcon}
+            </div>
+          </div>
+        ) : null}
 
         {/* Heading */}
         <div className="text-center space-y-2">
@@ -66,7 +83,7 @@ const FeatureLearningModal = ({ tip, onContinue, onDismiss }: FeatureLearningMod
         <div className="space-y-2 pt-2">
           <button
             onClick={onContinue}
-            className="w-full h-12 bg-primary text-primary-foreground text-sm font-black uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center"
+            className="w-full h-12 bg-primary text-primary-foreground text-sm font-black uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center rounded-xl"
           >
             Got It — Let's Go
           </button>

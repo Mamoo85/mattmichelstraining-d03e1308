@@ -40,6 +40,14 @@ const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTrac
   const [completedSets, setCompletedSets] = useState<Set<number>>(new Set());
   const [justPopped, setJustPopped] = useState<number | null>(null);
   const [confettiSet, setConfettiSet] = useState<number | null>(null);
+  const [refImageUrl, setRefImageUrl] = useState<string | null>(null);
+
+  // Fetch reference image from library
+  useEffect(() => {
+    if (!exercise.exerciseId) return;
+    supabase.from("exercise_library").select("image_url").eq("id", exercise.exerciseId).maybeSingle()
+      .then(({ data }) => { if (data?.image_url) setRefImageUrl(data.image_url); });
+  }, [exercise.exerciseId]);
 
   // Fetch ghost data (previous performance)
   useEffect(() => {
@@ -111,6 +119,14 @@ const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTrac
         {/* ─── MINIMAL HEADER ─── */}
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2 min-w-0">
+            {refImageUrl && (
+              <img
+                src={refImageUrl}
+                alt=""
+                className="w-10 h-10 rounded-lg object-cover border border-white/[0.06] shrink-0"
+                onError={() => setRefImageUrl(null)}
+              />
+            )}
             <button
               onClick={() => setShowCoachNotes(!showCoachNotes)}
               className="text-muted-foreground/40 hover:text-[hsl(var(--synth-cyan))] transition-colors shrink-0"
@@ -133,7 +149,7 @@ const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTrac
                 <MoreHorizontal size={16} />
               </button>
             </PopoverTrigger>
-            <PopoverContent align="end" className="w-48 p-1 bg-[#0a0a0a] border border-white/[0.08]">
+            <PopoverContent align="end" className="w-48 p-1 bg-[#0a0a0a] border border-white/[0.08] z-[120]">
               {(exercise.exerciseTheWhy || exercise.exerciseVideoUrl) && (
                 <button
                   onClick={() => setShowCoachNotes(!showCoachNotes)}
@@ -191,6 +207,14 @@ const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTrac
         {/* Coach notes / video panel */}
         {showCoachNotes && (
           <div className="mb-3 space-y-2">
+            {refImageUrl && (
+              <img
+                src={refImageUrl}
+                alt={exercise.exerciseTitle}
+                className="w-full max-h-48 object-contain rounded-lg border border-white/[0.06] bg-black/30"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+              />
+            )}
             {exercise.exerciseVideoUrl && (
               <div className="rounded-lg overflow-hidden">
                 <ExerciseVideoEmbed videoUrl={exercise.exerciseVideoUrl} exerciseTitle={exercise.exerciseTitle} />
@@ -202,7 +226,12 @@ const ExerciseCard = memo(({ exercise, index, onUpdate, onRemove, onOpenFormTrac
                   <Info size={10} className="text-primary" />
                   <span className="text-[9px] font-bold uppercase tracking-widest text-primary">Coach's Notes</span>
                 </div>
-                <p className="text-[11px] text-muted-foreground leading-relaxed">{exercise.exerciseTheWhy}</p>
+                <p className="text-[11px] text-muted-foreground leading-relaxed whitespace-pre-line break-words">{exercise.exerciseTheWhy}</p>
+              </div>
+            )}
+            {!exercise.exerciseVideoUrl && !exercise.exerciseTheWhy && !refImageUrl && (
+              <div className="bg-white/[0.02] border border-white/[0.04] rounded-lg p-3 text-center">
+                <p className="text-[10px] text-muted-foreground/50 font-mono">No coach notes for this exercise</p>
               </div>
             )}
           </div>

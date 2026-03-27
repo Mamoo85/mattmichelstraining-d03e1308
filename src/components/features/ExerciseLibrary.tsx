@@ -363,7 +363,7 @@ const ExerciseLibrary = () => {
                       <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-1">
                         The WHY
                       </span>
-                      <p className="text-xs text-foreground leading-relaxed mb-2">
+                      <p className="text-xs text-foreground leading-relaxed mb-2 whitespace-pre-line break-words">
                         {ex.the_why}
                       </p>
                     </div>
