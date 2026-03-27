@@ -1,118 +1,70 @@
 
 
-# Plan: Quick Log, Check-In, Prove It, & AI Insights Hub
+# Revised Dashboard: Check-In + Prove It in Stats Banner, 2x2 Grid
 
-## What You Asked For (Summary)
-1. **Check-In button** back on the Zone Dashboard
-2. **"What I Did Today" quick-log** — voice or text AI conversation that logs non-lift workouts (cardio, circuits, etc.) into the user's training history with AI follow-up questions
-3. **Prove It box** visible on the dashboard (currently missing from the default Lifts tab view)
-4. **"My AI Insights" page** — a dedicated page showing all AI-generated tips, recovery recommendations, mobility suggestions, and lift analysis for the user
-5. **Learning pop-up** for the new quick-log feature
-6. All above the profile avatar box, Instagram-style
+## Layout Structure (top to bottom)
 
----
-
-## Technical Plan
-
-### 1. New Edge Function: `log-activity-chat` 
-**File**: `supabase/functions/log-activity-chat/index.ts`
-
-A conversational AI endpoint that:
-- Receives the user's natural language description + conversation history
-- Uses Lovable AI (gemini-3-flash-preview) to classify activity type (endurance, cardio, power, strength, mobility, mixed) and extract details
-- Asks follow-up questions (intensity, weight level, duration) when info is missing
-- When enough info is gathered, returns a structured `{ready: true, summary: {...}}` payload
-- The client then saves the final summary to a new `activity_logs` table
-
-### 2. New Database Table: `activity_logs`
-**Migration**: Create table to store non-lift workout activities
-
-```sql
-CREATE TABLE public.activity_logs (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  description TEXT NOT NULL,
-  activity_type TEXT NOT NULL DEFAULT 'mixed', -- endurance, cardio, power, strength, mobility, mixed
-  intensity TEXT DEFAULT 'moderate', -- easy, moderate, hard, max
-  weight_level TEXT, -- none, light, medium, heavy
-  duration_minutes INTEGER,
-  exercises_mentioned TEXT[],
-  ai_summary TEXT,
-  ai_recovery_tips TEXT,
-  logged_at TIMESTAMPTZ DEFAULT now(),
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-
-ALTER TABLE public.activity_logs ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can read own activity logs" ON public.activity_logs
-  FOR SELECT TO authenticated USING (user_id = auth.uid());
-
-CREATE POLICY "Users can insert own activity logs" ON public.activity_logs
-  FOR INSERT TO authenticated WITH CHECK (user_id = auth.uid());
-
-CREATE POLICY "Admins can read all activity logs" ON public.activity_logs
-  FOR SELECT TO authenticated USING (public.has_role(auth.uid(), 'admin'));
+```text
+┌─ HEADER (logo + name + timer + invite) ─────────┐
+├─ STATS BANNER ──────────────────────────────────┤
+│  [streak] [sessions] [level bar] [pts]  │ Avatar │
+│  [program]                               │        │
+│──────────────────┬───────────────────────│        │
+│ 📍 Check-In      │  🏆 Prove It          │        │
+└──────────────────┴───────────────────────┴────────┘
+┌─ ACTION GRID (2×2) ─────────────────────────────┐
+│ Main Lifts Log    │  Generator (split)           │
+│ Challenges/Focus  │  Workout Library             │
+└─────────────────────────────────────────────────┘
+┌─ "What I Did Today" persistent button ──────────┐
+┌─ Recovery & Mobility Tips banner ───────────────┐
+┌─ TAB STRIP (Home, Generate, Train, Lifts) ──────┐
+┌─ TAB CONTENT ───────────────────────────────────┘
 ```
 
-### 3. New Component: `QuickActivityLog`
-**File**: `src/components/dashboard/QuickActivityLog.tsx`
+## Changes
 
-Instagram-style bottom sheet / modal with:
-- Voice dictation button (Web Speech API, same pattern as existing `VoiceNoteButton`)
-- Text input for typing
-- Chat-style conversation with the AI (streaming responses)
-- Once AI has enough info, shows a summary card with a "Save" button
-- Saves to `activity_logs` table
-- Rounded edges, dark glassmorphic style matching the dashboard
+### 1. Logo Fix
+Import the uploaded `pwa-512x512.png` as `m2-logo-zone.png` (copy the user-uploaded file to `src/assets/`). Remove all CSS `filter` chains. Use only a neon orange `drop-shadow` and `box-shadow` glow — the PNG itself has the correct colors already.
 
-### 4. New Page: AI Insights Hub
-**File**: `src/pages/AiInsights.tsx`
+### 2. Stats Banner — Add Check-In + Prove It Strip
+Replace the current single "Studio Check-In" strip at the bottom of the stats banner with a **two-button strip**:
+- **Check-In** (left, cyan): Opens a popup asking "Matt's Gym" or "On Your Own". Greys out with checkmark after today's check-in.
+- **Prove It** (right, orange): Dispatches `open-prove-it-zone` event.
 
-A dedicated page accessible from the dashboard showing:
-- **Recovery recommendations** based on recent activity_logs + progress_logs
-- **Mobility suggestions** tied to exercises the user has done
-- **Lift tips** from the AI training history analysis
-- **Rolling/stretching protocols** based on their logged activities
-- Uses the existing `ai-athlete-stream` or `ai-training-history` edge functions
-- Instagram-style card layout with sections
+Both sit inside the stats banner, separated by a vertical divider, with bold uppercase text and colored icons.
 
-**Route**: Add `/ai-insights` to `App.tsx`
+### 3. Action Grid → 2×2
+Remove "Log Activity" and "Prove It" from grid (moved elsewhere). Remove "Matt's Brain". New grid:
+- **Main Lifts Log** (orange) → navigates to `/progress`
+- **Generator** (purple/cyan split) → opens Generate tab
+- **Challenges & Focus** (green) → switches to Home tab
+- **Workout Library** (cyan) → switches to Train tab
 
-### 5. Dashboard Updates
-**File**: `src/pages/ZoneDashboard.tsx`
+### 4. Persistent "What I Did Today"
+Place the green quick-log button below the grid and above the tab strip. Always visible regardless of active tab.
 
-Above the Stats Banner (profile avatar box), add three new action cards in order:
+### 5. Recovery & Mobility Tips Banner
+A compact gradient strip (green → cyan) with Heart icon, linking to `/ai-insights`. Placed between "What I Did Today" and the tab strip.
 
-1. **"What I Did Today"** — tappable card with mic icon, opens `QuickActivityLog` modal. Gradient card with conversational prompt text like "Tell us about your workout"
-2. **Studio Check-In** — compact version of the existing `StudioCheckIn` component (just the check-in button, not the full milestones view)
-3. **Prove It — Submit a PR** — card linking to the Prove It zone (already exists as an event dispatch but needs a visible card above the tabs, not just in the Lifts tab)
-4. **"AI Insights"** button — small card that navigates to `/ai-insights`
+### 6. Tab Order Swap
+Change TABS from `[lifts, generate, train, home]` to `[home, generate, train, lifts]`. Default tab → `home`.
 
-### 6. Learning Pop-Up for Quick Activity Log
-**File**: `src/components/dashboard/featureTips.tsx`
+### 7. Lifts Tab Cleanup
+Remove duplicate "What Did You Do Today" and "Main Lifts Log" buttons from inside the Lifts tab. Only show `ProgressCharts` and `OverloadCard`.
 
-Add a `QUICK_ACTIVITY_TIP` with bullets explaining:
-- Voice or text — just tell us what you did
-- AI asks smart follow-up questions
-- Logs cardio, circuits, mobility — anything beyond your main lifts
-- Helps Coach Matt understand your full training load
+### 8. StudioCheckIn — "Matt's Gym or On Your Own" Popup
+Modify `StudioCheckIn.tsx` to accept an optional `location` prop or add a choice modal before saving. Grey out button when `alreadyCheckedInToday` is true.
 
-Triggered on first open of the Quick Activity Log modal.
+### 9. Condense ProgressCharts
+Reduce font sizes and spacing for a more compact lift tracker view.
 
----
-
-## Files Changed/Created
+## Files Modified
 
 | File | Action |
 |------|--------|
-| `supabase/functions/log-activity-chat/index.ts` | Create |
-| `src/components/dashboard/QuickActivityLog.tsx` | Create |
-| `src/pages/AiInsights.tsx` | Create |
-| `src/pages/ZoneDashboard.tsx` | Edit — add check-in, quick-log, prove it card, AI insights button above stats |
-| `src/components/dashboard/featureTips.tsx` | Edit — add QUICK_ACTIVITY_TIP |
-| `src/App.tsx` | Edit — add `/ai-insights` route |
-| Database migration | Create `activity_logs` table |
-
-No changes to existing edge functions or auth flows. All new features require authentication.
+| `src/assets/m2-logo-zone.png` | New — copy from uploaded `pwa-512x512.png` |
+| `src/pages/ZoneDashboard.tsx` | Major edit — all layout changes |
+| `src/components/sessions/StudioCheckIn.tsx` | Add location choice + grey-out logic |
+| `src/components/features/ProgressCharts.tsx` | Condense spacing/fonts |
 
