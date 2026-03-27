@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import { Link } from "react-router-dom";
 import AppNavbar from "@/components/layout/AppNavbar";
 import HeroSection from "@/components/features/HeroSection";
 import SEOHead from "@/components/layout/SEOHead";
