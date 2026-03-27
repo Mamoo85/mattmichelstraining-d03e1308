@@ -660,9 +660,9 @@ const ZoneDashboard = () => {
           </div>
         </div>
 
-        {/* ── Action Cards ─────────────────────── */}
+        {/* ── Quick Actions ─────────────────────── */}
         <div className="grid grid-cols-2 gap-2">
-          {/* What I Did Today */}
+          {/* Log Activity (What I Did Today) */}
           <button
             onClick={() => setShowQuickLog(true)}
             className="rounded-2xl p-3.5 text-left transition-all active:scale-[0.96]"
@@ -671,8 +671,34 @@ const ZoneDashboard = () => {
             <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: "linear-gradient(135deg, #22c55e, #16a34a)" }}>
               <Mic size={17} color="#fff" />
             </div>
-            <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>Log Activity</p>
-            <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>Voice or text — tell us what you did</p>
+            <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>What I Did Today</p>
+            <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>Voice or text quick log</p>
+          </button>
+
+          {/* Prove It */}
+          <button
+            onClick={() => window.dispatchEvent(new Event("open-prove-it-zone"))}
+            className="rounded-2xl p-3.5 text-left transition-all active:scale-[0.96]"
+            style={{ background: "linear-gradient(135deg, rgba(249,115,22,0.1), rgba(234,88,12,0.06))", border: "1px solid rgba(249,115,22,0.2)" }}
+          >
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: "linear-gradient(135deg, #f97316, #ea580c)" }}>
+              <Trophy size={17} color="#fff" />
+            </div>
+            <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>Prove It</p>
+            <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>Submit a PR with video</p>
+          </button>
+
+          {/* Matt's Brain */}
+          <button
+            onClick={() => navigate("/ai-insights")}
+            className="rounded-2xl p-3.5 text-left transition-all active:scale-[0.96]"
+            style={{ background: "linear-gradient(135deg, rgba(168,85,247,0.1), rgba(124,58,237,0.06))", border: "1px solid rgba(168,85,247,0.2)" }}
+          >
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: "linear-gradient(135deg, #a855f7, #7c3aed)" }}>
+              <Brain size={17} color="#fff" />
+            </div>
+            <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>Matt's Brain</p>
+            <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>Recovery & mobility tips</p>
           </button>
 
           {/* Studio Check-In */}
@@ -686,58 +712,6 @@ const ZoneDashboard = () => {
             </div>
             <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>Check In</p>
             <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>Log a studio visit</p>
-          </button>
-
-          {/* Prove It */}
-          <button
-            onClick={() => window.dispatchEvent(new Event("open-prove-it-zone"))}
-            className="rounded-2xl p-3.5 text-left transition-all active:scale-[0.96]"
-            style={{ background: "linear-gradient(135deg, rgba(249,115,22,0.1), rgba(234,88,12,0.06))", border: "1px solid rgba(249,115,22,0.2)" }}
-          >
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: "linear-gradient(135deg, #f97316, #ea580c)" }}>
-              <Trophy size={17} color="#fff" />
-            </div>
-            <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>Prove It</p>
-            <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>Submit a new PR</p>
-          </button>
-
-          {/* AI Insights */}
-          <button
-            onClick={() => navigate("/ai-insights")}
-            className="rounded-2xl p-3.5 text-left transition-all active:scale-[0.96]"
-            style={{ background: "linear-gradient(135deg, rgba(168,85,247,0.1), rgba(124,58,237,0.06))", border: "1px solid rgba(168,85,247,0.2)" }}
-          >
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: "linear-gradient(135deg, #a855f7, #7c3aed)" }}>
-              <Brain size={17} color="#fff" />
-            </div>
-            <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>Matt's Brain</p>
-            <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>Recovery, mobility & tips</p>
-          </button>
-
-          {/* Workout Generator */}
-          <button
-            onClick={() => { handleTab("generate"); setGenerateView("workout"); }}
-            className="rounded-2xl p-3.5 text-left transition-all active:scale-[0.96]"
-            style={{ background: "linear-gradient(135deg, rgba(168,85,247,0.08), rgba(249,115,22,0.05))", border: "1px solid rgba(168,85,247,0.18)" }}
-          >
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: "linear-gradient(135deg, #a855f7, #7c3aed)" }}>
-              <Sparkles size={17} color="#fff" />
-            </div>
-            <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>Generator</p>
-            <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>AI builds your workout</p>
-          </button>
-
-          {/* Fix It Engine */}
-          <button
-            onClick={() => { handleTab("generate"); setGenerateView("fixit"); }}
-            className="rounded-2xl p-3.5 text-left transition-all active:scale-[0.96]"
-            style={{ background: "linear-gradient(135deg, rgba(0,240,255,0.08), rgba(6,182,212,0.04))", border: "1px solid rgba(0,240,255,0.18)" }}
-          >
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: "linear-gradient(135deg, #00f0ff, #0891b2)" }}>
-              <Wrench size={17} color="#fff" />
-            </div>
-            <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>Fix It Engine</p>
-            <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>Corrective protocols</p>
           </button>
         </div>
 
