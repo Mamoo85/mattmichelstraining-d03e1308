@@ -137,6 +137,14 @@ const FixItLibrary = () => {
                 </div>
                 {isExpanded && (
                   <div className="px-4 pb-4 border-t border-border pt-3 space-y-3">
+                    {ex.image_url && (
+                      <img
+                        src={ex.image_url}
+                        alt={ex.title}
+                        className="w-full max-h-64 object-contain rounded border border-border bg-muted/30"
+                        loading="lazy"
+                      />
+                    )}
                     <ExerciseVideoEmbed
                       videoUrl={ex.video_url}
                       exerciseTitle={ex.title}
