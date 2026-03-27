@@ -44,6 +44,7 @@ const AdminWorkoutInventory = () => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [editing, setEditing] = useState<(typeof emptyWorkout & { id?: string }) | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<CommunityWorkout | null>(null);
+  const [giftTarget, setGiftTarget] = useState<CommunityWorkout | null>(null);
 
   // Batch generate state
   const [batchCount, setBatchCount] = useState(3);
@@ -312,6 +313,7 @@ const AdminWorkoutInventory = () => {
               })}
               onDelete={() => setDeleteTarget(w)}
               onTogglePublic={() => togglePublic(w)}
+              onGift={() => setGiftTarget(w)}
             />
           ))}
         </div>
@@ -337,6 +339,7 @@ const AdminWorkoutInventory = () => {
               })}
               onDelete={() => setDeleteTarget(w)}
               onTogglePublic={() => togglePublic(w)}
+              onGift={() => setGiftTarget(w)}
             />
           ))}
         </div>
