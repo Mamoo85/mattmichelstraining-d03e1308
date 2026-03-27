@@ -126,7 +126,7 @@ function buildEmailHtml(firstName: string, program: WorkoutProgram): string {
         <div style="color:#999;font-size:13px;margin-bottom:20px;line-height:1.5;">
           Track your weights, get progressive overload, and direct feedback from Coach Matt — a real trainer in Grosse Pointe, MI.
         </div>
-        <a href="https://mattmichelstraining.lovable.app/auth?mode=signup&trial=true"
+        <a href="https://www.mattmichelstraining.com/auth?mode=signup&trial=true"
            style="display:inline-block;background:#f97316;color:#fff;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:1px;padding:14px 32px;border-radius:8px;text-decoration:none;">
           Start Free Trial →
         </a>
