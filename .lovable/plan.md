@@ -1,93 +1,118 @@
 
 
-# Implementation Plan: Dashboard Overhaul + Exercise Image Integration
+# Plan: Quick Log, Check-In, Prove It, & AI Insights Hub
 
-Two approved plans combined into one implementation pass across ~10 files.
+## What You Asked For (Summary)
+1. **Check-In button** back on the Zone Dashboard
+2. **"What I Did Today" quick-log** — voice or text AI conversation that logs non-lift workouts (cardio, circuits, etc.) into the user's training history with AI follow-up questions
+3. **Prove It box** visible on the dashboard (currently missing from the default Lifts tab view)
+4. **"My AI Insights" page** — a dedicated page showing all AI-generated tips, recovery recommendations, mobility suggestions, and lift analysis for the user
+5. **Learning pop-up** for the new quick-log feature
+6. All above the profile avatar box, Instagram-style
 
 ---
 
-## Plan 1: Dashboard UI, AI Toolbox, Learning Modals, Workout AI Access, Admin Fix
+## Technical Plan
 
-### 1. ZoneDashboard Tab Strip Fix + AI Toolbox + Learning Modals
+### 1. New Edge Function: `log-activity-chat` 
+**File**: `supabase/functions/log-activity-chat/index.ts`
+
+A conversational AI endpoint that:
+- Receives the user's natural language description + conversation history
+- Uses Lovable AI (gemini-3-flash-preview) to classify activity type (endurance, cardio, power, strength, mobility, mixed) and extract details
+- Asks follow-up questions (intensity, weight level, duration) when info is missing
+- When enough info is gathered, returns a structured `{ready: true, summary: {...}}` payload
+- The client then saves the final summary to a new `activity_logs` table
+
+### 2. New Database Table: `activity_logs`
+**Migration**: Create table to store non-lift workout activities
+
+```sql
+CREATE TABLE public.activity_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  description TEXT NOT NULL,
+  activity_type TEXT NOT NULL DEFAULT 'mixed', -- endurance, cardio, power, strength, mobility, mixed
+  intensity TEXT DEFAULT 'moderate', -- easy, moderate, hard, max
+  weight_level TEXT, -- none, light, medium, heavy
+  duration_minutes INTEGER,
+  exercises_mentioned TEXT[],
+  ai_summary TEXT,
+  ai_recovery_tips TEXT,
+  logged_at TIMESTAMPTZ DEFAULT now(),
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE public.activity_logs ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can read own activity logs" ON public.activity_logs
+  FOR SELECT TO authenticated USING (user_id = auth.uid());
+
+CREATE POLICY "Users can insert own activity logs" ON public.activity_logs
+  FOR INSERT TO authenticated WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "Admins can read all activity logs" ON public.activity_logs
+  FOR SELECT TO authenticated USING (public.has_role(auth.uid(), 'admin'));
+```
+
+### 3. New Component: `QuickActivityLog`
+**File**: `src/components/dashboard/QuickActivityLog.tsx`
+
+Instagram-style bottom sheet / modal with:
+- Voice dictation button (Web Speech API, same pattern as existing `VoiceNoteButton`)
+- Text input for typing
+- Chat-style conversation with the AI (streaming responses)
+- Once AI has enough info, shows a summary card with a "Save" button
+- Saves to `activity_logs` table
+- Rounded edges, dark glassmorphic style matching the dashboard
+
+### 4. New Page: AI Insights Hub
+**File**: `src/pages/AiInsights.tsx`
+
+A dedicated page accessible from the dashboard showing:
+- **Recovery recommendations** based on recent activity_logs + progress_logs
+- **Mobility suggestions** tied to exercises the user has done
+- **Lift tips** from the AI training history analysis
+- **Rolling/stretching protocols** based on their logged activities
+- Uses the existing `ai-athlete-stream` or `ai-training-history` edge functions
+- Instagram-style card layout with sections
+
+**Route**: Add `/ai-insights` to `App.tsx`
+
+### 5. Dashboard Updates
 **File**: `src/pages/ZoneDashboard.tsx`
 
-- **Tab strip**: Reduce to `text-[10px]`, add `truncate overflow-hidden` to each tab button
-- **AI Toolbox**: Add collapsible "AI Toolbox" section in GenerateTabContent below the two generator cards. Contains rounded-2xl buttons for: Bar Path Tracker, Velocity Tracker, Workout Scanner, Recovery Advisor, Exercise Substitution, Interval Timer. Each opens in an overlay.
-- **Learning modals**: On each tab's first visit, check `safeLocalStorage` for `m2-tip-zone-{tab}-v1`. If absent, show `FeatureLearningModal`. "Don't show again" saves key. Add lazy imports for the modals.
-- **Submit PR button**: Remove from lifts tab quick actions, fold into the MoreHorizontal popover or stats banner
+Above the Stats Banner (profile avatar box), add three new action cards in order:
 
-### 2. FeatureLearningModal — Support Gradient Fallback
-**File**: `src/components/dashboard/FeatureLearningModal.tsx`
+1. **"What I Did Today"** — tappable card with mic icon, opens `QuickActivityLog` modal. Gradient card with conversational prompt text like "Tell us about your workout"
+2. **Studio Check-In** — compact version of the existing `StudioCheckIn` component (just the check-in button, not the full milestones view)
+3. **Prove It — Submit a PR** — card linking to the Prove It zone (already exists as an event dispatch but needs a visible card above the tabs, not just in the Lifts tab)
+4. **"AI Insights"** button — small card that navigates to `/ai-insights`
 
-- Accept optional `fallbackIcon` prop. When `tip.image` is empty/missing, render a gradient hero div with the icon centered instead of `<img>`.
-
-### 3. Feature Tips — Add Zone Tab Tips
+### 6. Learning Pop-Up for Quick Activity Log
 **File**: `src/components/dashboard/featureTips.tsx`
 
-- Add 4 new exports: `ZONE_LIFTS_TIP`, `ZONE_GENERATE_TIP`, `ZONE_TRAIN_TIP`, `ZONE_HOME_TIP`
-- Use empty `image` with `fallbackIcon` for gradient-based heroes (no new image assets needed)
+Add a `QUICK_ACTIVITY_TIP` with bullets explaining:
+- Voice or text — just tell us what you did
+- AI asks smart follow-up questions
+- Logs cardio, circuits, mobility — anything beyond your main lifts
+- Helps Coach Matt understand your full training load
 
-### 4. Active Workout Camera → AI Tool Popover
-**File**: `src/components/workout/ActiveWorkoutZone.tsx`
-
-- Replace the Camera button's direct "Adapt to Equipment" behavior with a Popover offering 3 options: Adapt to Equipment, Bar Path Tracker, Velocity Tracker
-- Add state for showing LiveFormTracker and VelocityTracker overlays
-
-### 5. ExerciseCard Fixes
-**File**: `src/components/workout/ExerciseCard.tsx`
-
-- **Target button**: Show "No coach notes" message when toggled and no video/theWhy exist
-- **Popover z-index**: Add `z-[120]` to PopoverContent so it renders above the ActiveWorkoutZone command pill
-
-### 6. Admin AI Command Center — Fix Search Clipping
-**File**: `src/components/admin/AdminAiCommandCenter.tsx`
-
-- Change `overflow-hidden` on the hero container (line 425) to `overflow-visible` so the SuggestionPopup isn't clipped
+Triggered on first open of the Quick Activity Log modal.
 
 ---
 
-## Plan 2: Exercise Reference Images + Description Formatting
+## Files Changed/Created
 
-### 7. AnatomyHologram — Show Reference Image
-**File**: `src/components/workout/AnatomyHologram.tsx`
+| File | Action |
+|------|--------|
+| `supabase/functions/log-activity-chat/index.ts` | Create |
+| `src/components/dashboard/QuickActivityLog.tsx` | Create |
+| `src/pages/AiInsights.tsx` | Create |
+| `src/pages/ZoneDashboard.tsx` | Edit — add check-in, quick-log, prove it card, AI insights button above stats |
+| `src/components/dashboard/featureTips.tsx` | Edit — add QUICK_ACTIVITY_TIP |
+| `src/App.tsx` | Edit — add `/ai-insights` route |
+| Database migration | Create `activity_logs` table |
 
-- Fetch `image_url` from `exercise_library` using `exerciseId` or title match
-- If image exists, render it inside the hologram area (with scan-line overlay preserved) instead of the Activity icon
-- Fallback to Activity icon if no image
-
-### 8. ExerciseCard — Show Thumbnail
-**File**: `src/components/workout/ExerciseCard.tsx` (same file as #5)
-
-- Fetch `image_url` from `exercise_library` by `exerciseId`
-- Show 40×40 rounded thumbnail next to exercise title in the header
-- Show full image in coach notes expanded panel
-- Add `onError` handler to hide broken images
-
-### 9. ProtocolTable — Library Image Fallback
-**File**: `src/components/features/ProtocolTable.tsx`
-
-- For exercises without `image_url`, attempt lookup from `exercise_library` by matching exercise name
-- Display library reference images same as coach-uploaded ones
-
-### 10. Description Formatting
-**Files**: `src/components/features/ExerciseLibrary.tsx`, `src/components/features/FixItLibrary.tsx`
-
-- Add `whitespace-pre-line break-words` to `the_why` text blocks
-- Add `onError` handler to all `<img>` tags
-
----
-
-## Files Modified (Summary)
-1. `src/pages/ZoneDashboard.tsx` — Tab fixes, AI Toolbox, learning modals
-2. `src/components/dashboard/FeatureLearningModal.tsx` — Gradient fallback
-3. `src/components/dashboard/featureTips.tsx` — 4 new tab tips
-4. `src/components/workout/ActiveWorkoutZone.tsx` — Camera popover
-5. `src/components/workout/ExerciseCard.tsx` — Target fix, z-index, image thumbnail
-6. `src/components/admin/AdminAiCommandCenter.tsx` — overflow fix
-7. `src/components/workout/AnatomyHologram.tsx` — Reference image display
-8. `src/components/features/ProtocolTable.tsx` — Library image fallback
-9. `src/components/features/ExerciseLibrary.tsx` — Formatting
-10. `src/components/features/FixItLibrary.tsx` — Formatting
-
-No database migrations needed. All image data already exists in `exercise_library`.
+No changes to existing edge functions or auth flows. All new features require authentication.
 
