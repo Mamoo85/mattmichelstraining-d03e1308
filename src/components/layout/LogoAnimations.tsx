@@ -43,8 +43,8 @@ const TetrisLogo = () => {
               rotate: 0,
             }}
             transition={{
-              delay: 0.08 * i + 0.2,
-              duration: 0.5,
+              delay: 0.4 * i + 1.0,
+              duration: 2.5,
               ease: [0.23, 1, 0.32, 1],
             }}
             className="inline-block"
@@ -70,7 +70,7 @@ const SloganTicker = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       setIndex((prev) => (prev + 1) % SLOGANS.length);
-    }, 3500);
+    }, 17500);
     return () => clearInterval(interval);
   }, []);
 
@@ -83,7 +83,7 @@ const SloganTicker = () => {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -12, opacity: 0 }}
           transition={{
-            duration: 0.4,
+            duration: 2.0,
             ease: [0.23, 1, 0.32, 1],
           }}
           className="text-[9px] text-muted-foreground tracking-wider block absolute whitespace-nowrap"
@@ -123,7 +123,7 @@ const SmartSlogan = () => {
     // Wait 6 seconds before starting to cycle
     const startTimer = setTimeout(() => {
       setStarted(true);
-    }, 6000);
+    }, 30000);
     return () => clearTimeout(startTimer);
   }, []);
 
@@ -131,7 +131,7 @@ const SmartSlogan = () => {
     if (!started) return;
     const interval = setInterval(() => {
       setIndex((prev) => (prev + 1) % 2);
-    }, 8000);
+    }, 40000);
     return () => clearInterval(interval);
   }, [started]);
 
@@ -144,7 +144,7 @@ const SmartSlogan = () => {
           animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
           exit={{ opacity: 0, y: -30, filter: "blur(6px)" }}
           transition={{
-            duration: 0.5,
+            duration: 2.5,
             ease: [0.23, 1, 0.32, 1],
           }}
           className="text-xl md:text-4xl lg:text-5xl font-bold tracking-display text-foreground leading-snug text-center whitespace-pre-line"
