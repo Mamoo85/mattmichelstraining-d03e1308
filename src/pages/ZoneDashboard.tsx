@@ -450,7 +450,15 @@ const ZoneDashboard = () => {
     setActiveTab(tab);
     safeLocalStorage.setItem(TAB_STORAGE_KEY, tab);
     if (tab === "generate") setGenerateView("menu");
+    const tipKey = `m2-tip-zone-${tab}-v1`;
+    if (!safeLocalStorage.getItem(tipKey)) setShowTabTip(true);
   }, []);
+
+  const currentTip = activeTab === "lifts" ? ZONE_LIFTS_TIP : activeTab === "generate" ? ZONE_GENERATE_TIP : activeTab === "train" ? ZONE_TRAIN_TIP : ZONE_HOME_TIP;
+  const dismissTip = useCallback(() => {
+    safeLocalStorage.setItem(currentTip.storageKey, "1");
+    setShowTabTip(false);
+  }, [currentTip]);
 
   const levelInfo = getLevelInfo(points?.total_points || 0);
   const nextLevel = getNextLevel(points?.total_points || 0);
@@ -613,6 +621,11 @@ const ZoneDashboard = () => {
             {activeTab === "home" && <HomeTab />}
           </motion.div>
         </AnimatePresence>
+
+        {/* Learning modal */}
+        {showTabTip && (
+          <FeatureLearningModal tip={currentTip} onContinue={dismissTip} onDismiss={dismissTip} />
+        )}
       </main>
     </ZoneThemeWrapper>
   );
