@@ -28,7 +28,7 @@ function beep(freq: number, duration: number, type: OscillatorType = "sine", gai
 
   osc.type = type;
   osc.frequency.value = freq;
-  const effectiveGain = Math.min(gain * masterVolume, 1.0);
+  const effectiveGain = gain * masterVolume;
   gainNode.gain.value = effectiveGain;
   gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
   osc.connect(gainNode).connect(compressor).connect(ctx.destination);
