@@ -1,4 +1,5 @@
 import { useState, useEffect, lazy, Suspense, memo, useCallback } from "react";
+import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { usePoints, getLevelInfo, getNextLevel } from "@/hooks/usePoints";
 import { supabase } from "@/integrations/supabase/client";
