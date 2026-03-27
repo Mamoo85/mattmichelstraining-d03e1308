@@ -1,11 +1,17 @@
-import { useState, useEffect, lazy, Suspense, memo } from "react";
+import { useState, useEffect, lazy, Suspense, memo, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { usePoints, getLevelInfo } from "@/hooks/usePoints";
 import { supabase } from "@/integrations/supabase/client";
 import { safeLocalStorage } from "@/lib/browserStorage";
-import { BarChart3, Sparkles, Dumbbell, Home, Flame, Zap, Trophy, Play, Wrench, Timer, ChevronRight, MessageCircle, Brain } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import {
+  BarChart3, Sparkles, Dumbbell, Home, Flame, Zap, Trophy, Play, Wrench,
+  Timer, ChevronRight, ChevronDown, ChevronUp, MessageCircle, Brain,
+  User, Share2, Activity, Eye, Scan, Send
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ZoneThemeWrapper from "@/components/zone/ZoneThemeWrapper";
-import logoImg from "@/assets/m2-logo-official.png";
+import logoImg from "@/assets/m2-logo-official.jpg";
 
 // Lazy-load heavy tab content
 const ProgressCharts = lazy(() => import("@/components/features/ProgressCharts"));
@@ -39,12 +45,38 @@ const cardStyle = {
   border: "1px solid rgba(255,255,255,0.08)",
 };
 
-/* ── Stat Card ────────────────────────────────── */
-const StatCard = ({ label, value, unit }: { label: string; value: string | number; unit?: string }) => (
-  <div className="rounded-2xl p-4 text-center" style={cardStyle}>
-    <p className="text-2xl font-black" style={{ color: "#fafafa" }}>{value}</p>
-    <p className="text-[10px] font-medium uppercase tracking-wider mt-1" style={{ color: "#737373" }}>{label}</p>
-    {unit && <p className="text-[10px]" style={{ color: "#525252" }}>{unit}</p>}
+/* ── Pill Button ─────────────────────────────── */
+const PillBtn = ({ label, onClick, color }: { label: string; onClick: () => void; color?: string }) => (
+  <button
+    onClick={onClick}
+    className="px-2.5 py-1 rounded-full text-[10px] font-semibold whitespace-nowrap transition-all active:scale-95"
+    style={{
+      background: color ? `${color}15` : "rgba(255,255,255,0.06)",
+      border: `1px solid ${color ? `${color}30` : "rgba(255,255,255,0.1)"}`,
+      color: color || "#a3a3a3",
+    }}
+  >
+    {label}
+  </button>
+);
+
+/* ── Hub Card ────────────────────────────────── */
+const HubCard = ({
+  icon: Icon, color, children
+}: {
+  icon: typeof Flame; color: string; children: React.ReactNode;
+}) => (
+  <div
+    className="rounded-2xl px-4 py-3 flex items-center gap-3"
+    style={{ ...cardStyle, borderLeft: `3px solid ${color}` }}
+  >
+    <div
+      className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+      style={{ background: `${color}18` }}
+    >
+      <Icon size={18} style={{ color }} />
+    </div>
+    <div className="flex-1 min-w-0">{children}</div>
   </div>
 );
 
@@ -55,14 +87,62 @@ const TabLoader = () => (
   </div>
 );
 
-/* ── Generate Tab Content ────────────────────── */
-const GenerateTab = memo(() => {
-  const [view, setView] = useState<"menu" | "workout" | "fixit">("menu");
+/* ── Collapsible Widget ──────────────────────── */
+const CollapsibleWidget = ({
+  title, icon: Icon, color, isOpen, onToggle, children
+}: {
+  title: string; icon: typeof Flame; color: string; isOpen: boolean; onToggle: () => void; children: React.ReactNode;
+}) => (
+  <div className="rounded-2xl overflow-hidden" style={cardStyle}>
+    <button
+      onClick={onToggle}
+      className="w-full flex items-center justify-between px-4 py-3 transition-colors"
+    >
+      <div className="flex items-center gap-2.5">
+        <Icon size={16} style={{ color }} />
+        <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#d4d4d4" }}>{title}</span>
+      </div>
+      {isOpen
+        ? <ChevronUp size={16} style={{ color: "#525252" }} />
+        : <ChevronDown size={16} style={{ color: "#525252" }} />
+      }
+    </button>
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: "auto", opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ duration: 0.25 }}
+          className="overflow-hidden"
+        >
+          <div className="px-4 pb-4">
+            <Suspense fallback={null}>{children}</Suspense>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </div>
+);
 
+/* ── Generate Tab Content (with lifted state) ─ */
+const GenerateTabContent = memo(({ view, setView }: { view: "menu" | "workout" | "fixit"; setView: (v: "menu" | "workout" | "fixit") => void }) => {
   if (view === "workout") {
     return (
       <Suspense fallback={<TabLoader />}>
         <div className="space-y-3">
+          {/* Hero card */}
+          <div className="relative rounded-2xl p-[1px] overflow-hidden" style={{ background: "linear-gradient(135deg, #a855f7, #7c3aed, #f97316)" }}>
+            <div className="rounded-2xl p-5 flex items-center justify-between" style={{ background: "#0a0a0a" }}>
+              <div>
+                <p className="text-lg font-black" style={{ color: "#fafafa" }}>Perfect Workout Generator</p>
+                <p className="text-[10px]" style={{ color: "#737373" }}>AI builds your session + auto-configures your timer</p>
+              </div>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, #a855f7, #7c3aed)" }}>
+                <Brain size={20} style={{ color: "#fff" }} />
+              </div>
+            </div>
+          </div>
           <button onClick={() => setView("menu")} className="text-xs font-medium transition-colors" style={{ color: "#737373" }}>
             ← Back to generators
           </button>
@@ -76,6 +156,18 @@ const GenerateTab = memo(() => {
     return (
       <Suspense fallback={<TabLoader />}>
         <div className="space-y-3">
+          {/* Hero card */}
+          <div className="relative rounded-2xl p-[1px] overflow-hidden" style={{ background: "linear-gradient(135deg, #00f0ff, #0891b2, #06b6d4)" }}>
+            <div className="rounded-2xl p-5 flex items-center justify-between" style={{ background: "#0a0a0a" }}>
+              <div>
+                <p className="text-lg font-black" style={{ color: "#fafafa" }}>Fix It Engine</p>
+                <p className="text-[10px]" style={{ color: "#737373" }}>Corrective protocols tailored to you</p>
+              </div>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, #00f0ff, #0891b2)" }}>
+                <Wrench size={20} style={{ color: "#fff" }} />
+              </div>
+            </div>
+          </div>
           <button onClick={() => setView("menu")} className="text-xs font-medium transition-colors" style={{ color: "#737373" }}>
             ← Back to generators
           </button>
@@ -87,7 +179,6 @@ const GenerateTab = memo(() => {
 
   return (
     <div className="space-y-4">
-      {/* Two launcher cards */}
       <div className="grid grid-cols-2 gap-3">
         <button
           onClick={() => setView("workout")}
@@ -127,7 +218,7 @@ const GenerateTab = memo(() => {
     </div>
   );
 });
-GenerateTab.displayName = "GenerateTab";
+GenerateTabContent.displayName = "GenerateTabContent";
 
 /* ── Home Tab Content ────────────────────────── */
 const HomeTab = memo(() => {
@@ -135,7 +226,6 @@ const HomeTab = memo(() => {
 
   return (
     <div className="space-y-4">
-      {/* Coach Chat */}
       <button
         onClick={() => setChatOpen(true)}
         className="w-full flex items-center gap-4 rounded-2xl p-5 transition-all active:scale-[0.98]"
@@ -162,12 +252,9 @@ const HomeTab = memo(() => {
       )}
 
       <Suspense fallback={null}><TodaysTrainingCard /></Suspense>
-      <Suspense fallback={null}><MonthlyFocusWidget /></Suspense>
-      <Suspense fallback={null}><DashboardChallengePreview onViewChallenge={() => {}} /></Suspense>
       <Suspense fallback={null}><CommunityActivityFeed /></Suspense>
       <Suspense fallback={null}><UpcomingSessions /></Suspense>
       <Suspense fallback={null}><CustomProgramRequest /></Suspense>
-      <Suspense fallback={null}><MyPrograms /></Suspense>
       <Suspense fallback={null}><DashboardReferralCard /></Suspense>
       <Suspense fallback={null}><SharedWorkoutFeed /></Suspense>
     </div>
@@ -175,13 +262,21 @@ const HomeTab = memo(() => {
 });
 HomeTab.displayName = "HomeTab";
 
-/* ── Main Page ───────────────────────────────── */
+/* ═══════════════════════════════════════════════
+   ── Main Page ──────────────────────────────────
+   ═══════════════════════════════════════════════ */
 const ZoneDashboard = () => {
   const { user, subscriptionTier } = useAuth();
+  const { points, leaderboard } = usePoints();
+  const navigate = useNavigate();
   const tierLabel = subscriptionTier ? subscriptionTier.charAt(0).toUpperCase() + subscriptionTier.slice(1) : "Member";
+
   const [activeTab, setActiveTab] = useState<TabKey>(() => {
     return (safeLocalStorage.getItem(TAB_STORAGE_KEY) as TabKey) || "lifts";
   });
+  const [generateView, setGenerateView] = useState<"menu" | "workout" | "fixit">("menu");
+  const [focusOpen, setFocusOpen] = useState(false);
+  const [challengeOpen, setChallengeOpen] = useState(false);
 
   const [streak, setStreak] = useState(0);
   const [sessionsThisWeek, setSessionsThisWeek] = useState(0);
@@ -237,62 +332,159 @@ const ZoneDashboard = () => {
     fetchStats();
   }, [user]);
 
-  const handleTabChange = (tab: TabKey) => {
+  const handleTabChange = useCallback((tab: TabKey) => {
     setActiveTab(tab);
     safeLocalStorage.setItem(TAB_STORAGE_KEY, tab);
-  };
+  }, []);
+
+  const handleActionClick = useCallback((tab: TabKey, genView?: "workout" | "fixit") => {
+    setActiveTab(tab);
+    safeLocalStorage.setItem(TAB_STORAGE_KEY, tab);
+    if (genView) setGenerateView(genView);
+    else if (tab === "generate") setGenerateView("menu");
+    setFocusOpen(false);
+    setChallengeOpen(false);
+  }, []);
+
+  const levelInfo = getLevelInfo(points?.total_points || 0);
 
   const actions = [
-    { label: "Workout Portal", icon: Dumbbell, accent: "#00f0ff", onClick: () => window.dispatchEvent(new CustomEvent("open-workout-zone")) },
-    { label: "AI Generator", icon: Brain, accent: "#a855f7", onClick: () => handleTabChange("generate") },
-    { label: "Fix It Engine", icon: Wrench, accent: "#00f0ff", onClick: () => handleTabChange("generate") },
-    { label: "Submit PR", icon: Trophy, accent: "#f97316", onClick: () => window.dispatchEvent(new Event("open-prove-it-zone")) },
+    {
+      label: "Compound Lifts", icon: BarChart3, accent: "#f97316",
+      onClick: () => handleActionClick("lifts"),
+    },
+    {
+      label: "Perfect Workout Generator", icon: Brain, accent: "#a855f7",
+      onClick: () => handleActionClick("generate", "workout"),
+    },
+    {
+      label: "Fix It Engine", icon: Wrench, accent: "#00f0ff",
+      onClick: () => handleActionClick("generate", "fixit"),
+    },
+    {
+      label: "Workouts & Programs", icon: Dumbbell, accent: "#f97316",
+      onClick: () => handleActionClick("train"),
+    },
   ];
 
   return (
     <ZoneThemeWrapper className="min-h-screen pb-24" style={{ background: "#0a0a0a", color: "#e5e5e5" }}>
       {/* ── Zone Header ─────────────────────────── */}
       <header
-        className="sticky top-0 z-50 flex items-center justify-between px-5 py-4"
-        style={{ background: "rgba(10,10,10,0.85)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+        className="sticky top-0 z-50 flex items-center justify-between px-5 py-3"
+        style={{ background: "rgba(10,10,10,0.88)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
       >
         <div className="flex items-center gap-3">
-          <img src={logoImg} alt="M²" className="h-8 w-8 rounded-lg object-contain" />
+          <img src={logoImg} alt="M²" className="h-9 w-9 rounded-xl object-cover" />
           <div>
-            <p className="text-xs font-medium" style={{ color: "#737373" }}>THE ZONE</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#f97316" }}>THE ZONE</p>
             <p className="text-sm font-semibold" style={{ color: "#fafafa" }}>{displayName}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: "#22c55e", boxShadow: "0 0 8px #22c55e" }} />
-          <span className="text-xs" style={{ color: "#737373" }}>{tierLabel}</span>
+          <span className="text-[10px] font-medium" style={{ color: "#737373" }}>{tierLabel}</span>
         </div>
       </header>
 
-      <main className="max-w-md mx-auto px-4 pb-4 pt-6 space-y-5">
-        {/* ── Quick Stats ──────────────────────────── */}
-        <div className="grid grid-cols-3 gap-3">
-          <StatCard label="Streak" value={`${streak}d`} unit="days" />
-          <StatCard label="This Week" value={sessionsThisWeek} unit="sessions" />
-          <StatCard label="Program" value={currentProgram} />
-        </div>
+      <main className="max-w-md mx-auto px-4 pb-4 pt-5 space-y-4">
 
-        {/* ── Action Grid 2x2 ─────────────────────── */}
+        {/* ═══ 3 RICH INFO HUBS ═══════════════════ */}
+
+        {/* Hub 1: My Stats */}
+        <HubCard icon={Flame} color="#f97316">
+          <div className="flex items-center justify-between">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-black" style={{ color: "#fafafa" }}>🔥 {streak}d</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded font-bold" style={{ background: "#f9731618", color: "#f97316" }}>
+                  {points?.total_points || 0} pts
+                </span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded font-bold uppercase" style={{ background: "#f9731610", color: "#fb923c" }}>
+                  {levelInfo.label}
+                </span>
+              </div>
+              <p className="text-[10px] mt-0.5" style={{ color: "#525252" }}>{sessionsThisWeek} sessions this week</p>
+            </div>
+            <div className="flex gap-1.5 shrink-0">
+              <PillBtn label="Profile" onClick={() => navigate("/profile")} color="#f97316" />
+              <PillBtn label="Refer" onClick={() => navigate("/dashboard")} color="#f97316" />
+            </div>
+          </div>
+        </HubCard>
+
+        {/* Hub 2: AI Insights */}
+        <HubCard icon={Activity} color="#a855f7">
+          <div className="flex items-center justify-between">
+            <div className="min-w-0">
+              <p className="text-xs font-bold truncate" style={{ color: "#e5e5e5" }}>{currentProgram}</p>
+              <p className="text-[10px]" style={{ color: "#525252" }}>Active Program</p>
+            </div>
+            <div className="flex gap-1.5 shrink-0">
+              <PillBtn label="Recovery" onClick={() => handleActionClick("lifts")} color="#a855f7" />
+              <PillBtn label="Insights" onClick={() => handleActionClick("lifts")} color="#a855f7" />
+              <PillBtn label="Avatar" onClick={() => handleActionClick("lifts")} color="#a855f7" />
+            </div>
+          </div>
+        </HubCard>
+
+        {/* Hub 3: Quick Launch */}
+        <HubCard icon={Zap} color="#00f0ff">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: "#22c55e", boxShadow: "0 0 6px #22c55e" }} />
+                <span className="text-xs font-semibold" style={{ color: "#d4d4d4" }}>Coach Matt</span>
+              </div>
+              <span className="text-[10px] px-1.5 py-0.5 rounded font-medium" style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>
+                Available
+              </span>
+            </div>
+            <div className="flex gap-1.5 shrink-0">
+              <PillBtn label="Timer" onClick={() => navigate("/timer")} color="#00f0ff" />
+              <PillBtn label="Chat" onClick={() => handleActionClick("home")} color="#00f0ff" />
+              <PillBtn label="PR" onClick={() => window.dispatchEvent(new Event("open-prove-it-zone"))} color="#f97316" />
+            </div>
+          </div>
+        </HubCard>
+
+        {/* ═══ 2×2 ACTION GRID ═══════════════════ */}
         <div className="grid grid-cols-2 gap-3">
           {actions.map((a) => (
             <button
               key={a.label}
               onClick={a.onClick}
-              className="rounded-2xl p-5 text-left transition-all active:scale-[0.96]"
+              className="rounded-2xl p-4 text-left transition-all active:scale-[0.96]"
               style={{ ...cardStyle, borderColor: `${a.accent}22` }}
             >
-              <a.icon size={24} style={{ color: a.accent }} className="mb-3" />
-              <p className="text-sm font-semibold" style={{ color: "#fafafa" }}>{a.label}</p>
+              <a.icon size={22} style={{ color: a.accent }} className="mb-2" />
+              <p className="text-xs font-bold leading-tight" style={{ color: "#fafafa" }}>{a.label}</p>
             </button>
           ))}
         </div>
 
-        {/* ── Tab Pills ───────────────────────────── */}
+        {/* ═══ COLLAPSIBLE WIDGETS ════════════════ */}
+        <CollapsibleWidget
+          title="Monthly Focus"
+          icon={Flame}
+          color="#f97316"
+          isOpen={focusOpen}
+          onToggle={() => setFocusOpen(v => !v)}
+        >
+          <MonthlyFocusWidget />
+        </CollapsibleWidget>
+
+        <CollapsibleWidget
+          title="Challenge"
+          icon={Trophy}
+          color="#a855f7"
+          isOpen={challengeOpen}
+          onToggle={() => setChallengeOpen(v => !v)}
+        >
+          <DashboardChallengePreview onViewChallenge={() => {}} />
+        </CollapsibleWidget>
+
+        {/* ═══ TAB PILLS ═════════════════════════ */}
         <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
           {TABS.map(({ key, label, icon: Icon }) => (
             <button
@@ -322,7 +514,7 @@ const ZoneDashboard = () => {
           </button>
         )}
 
-        {/* ── Tab Content ─────────────────────────── */}
+        {/* ═══ TAB CONTENT ═══════════════════════ */}
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
@@ -348,15 +540,37 @@ const ZoneDashboard = () => {
                     </div>
                   </div>
                 </div>
+                {/* Inline Submit PR */}
+                <div className="flex justify-end mb-3">
+                  <button
+                    onClick={() => window.dispatchEvent(new Event("open-prove-it-zone"))}
+                    className="text-[11px] font-semibold flex items-center gap-1 transition-colors"
+                    style={{ color: "#f97316" }}
+                  >
+                    🏆 Submit a PR <ChevronRight size={12} />
+                  </button>
+                </div>
                 <ProgressCharts />
               </Suspense>
             )}
 
-            {activeTab === "generate" && <GenerateTab />}
+            {activeTab === "generate" && <GenerateTabContent view={generateView} setView={setGenerateView} />}
 
             {activeTab === "train" && (
               <Suspense fallback={<TabLoader />}>
                 <div className="space-y-4">
+                  {/* Hero card */}
+                  <div className="relative rounded-2xl p-[1px] overflow-hidden" style={{ background: "linear-gradient(135deg, #f97316, #ea580c, #fb923c)" }}>
+                    <div className="rounded-2xl p-5 flex items-center justify-between" style={{ background: "#0a0a0a" }}>
+                      <div>
+                        <p className="text-lg font-black" style={{ color: "#fafafa" }}>Your Library</p>
+                        <p className="text-[10px]" style={{ color: "#737373" }}>Workouts, programs & today's training</p>
+                      </div>
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, #f97316, #ea580c)" }}>
+                        <Dumbbell size={20} style={{ color: "#fff" }} />
+                      </div>
+                    </div>
+                  </div>
                   <TodaysTrainingCard />
                   <WorkoutsTab />
                   <MyPrograms />
