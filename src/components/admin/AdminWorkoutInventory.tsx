@@ -468,6 +468,18 @@ const AdminWorkoutInventory = () => {
         description={`Remove "${deleteTarget?.title}"? This cannot be undone.`}
         confirmLabel="Delete"
       />
+
+      {/* Gift modal */}
+      {giftTarget && (
+        <GiftWorkoutModal
+          workoutId={giftTarget.id}
+          workoutTitle={giftTarget.title}
+          workoutExercises={giftTarget.exercises}
+          workoutDescription={giftTarget.description}
+          onClose={() => setGiftTarget(null)}
+          onGifted={() => setGiftTarget(null)}
+        />
+      )}
     </div>
   );
 };
@@ -480,6 +492,7 @@ const WorkoutCard = ({
   onEdit,
   onDelete,
   onTogglePublic,
+  onGift,
 }: {
   workout: CommunityWorkout;
   isExpanded: boolean;
@@ -487,6 +500,7 @@ const WorkoutCard = ({
   onEdit: () => void;
   onDelete: () => void;
   onTogglePublic: () => void;
+  onGift: () => void;
 }) => (
   <div className="bg-card shadow-m2 overflow-hidden">
     <div className="p-3 flex items-center gap-3">
@@ -511,6 +525,13 @@ const WorkoutCard = ({
       </div>
 
       <div className="flex items-center gap-1 flex-shrink-0">
+        <button
+          onClick={onGift}
+          className="p-1.5 text-muted-foreground hover:text-primary transition-m2"
+          title="Gift to user"
+        >
+          <Gift size={14} />
+        </button>
         <button
           onClick={onTogglePublic}
           className="p-1.5 text-muted-foreground hover:text-foreground transition-m2"
