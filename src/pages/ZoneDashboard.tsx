@@ -363,6 +363,9 @@ const ZoneDashboard = () => {
                     </button>
                   </div>
                   <ProgressCharts />
+
+                  {/* Progressive Overload collapsible */}
+                  <OverloadCard />
                 </div>
               </Suspense>
             )}
