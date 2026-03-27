@@ -85,6 +85,7 @@ const AdminViewUser = lazyRetry(() => import("./pages/AdminViewUser"));
 const StudioRental = lazyRetry(() => import("./pages/StudioRental"));
 const Results = lazyRetry(() => import("./pages/Results"));
 const DemoHomepage = lazyRetry(() => import("./pages/DemoHomepage"));
+const ZonePortal = lazyRetry(() => import("./pages/ZonePortal"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -245,6 +246,7 @@ const App = () => (
                     <Route path="/studio-rental" element={<StudioRental />} />
                     <Route path="/results" element={<Results />} />
                     <Route path="/demo-home" element={<DemoHomepage />} />
+                    <Route path="/zone" element={<ZonePortal />} />
                     <Route path="/coach" element={<ProtectedRoute><SubscriptionGuard><Coach /></SubscriptionGuard></ProtectedRoute>} />
                     <Route path="/trial-welcome" element={<ProtectedRoute><TrialWelcome /></ProtectedRoute>} />
                     <Route path="/assessment" element={<ProtectedRoute><Assessment /></ProtectedRoute>} />
