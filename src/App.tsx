@@ -84,6 +84,7 @@ const FreeProgram = lazyRetry(() => import("./pages/FreeProgram"));
 const AdminViewUser = lazyRetry(() => import("./pages/AdminViewUser"));
 const StudioRental = lazyRetry(() => import("./pages/StudioRental"));
 const Results = lazyRetry(() => import("./pages/Results"));
+const DemoHomepage = lazyRetry(() => import("./pages/DemoHomepage"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
