@@ -1,13 +1,11 @@
 // OpenTelemetry instrumentation for Kubiks
-// Wrapped in try/catch to prevent build failures from blocking the app
+import { trace } from '@opentelemetry/api';
 
 try {
-  const { BasicTracerProvider, SimpleSpanProcessor, ConsoleSpanExporter } = await import('@opentelemetry/sdk-trace-web');
+  const { WebTracerProvider, SimpleSpanProcessor, ConsoleSpanExporter } = await import('@opentelemetry/sdk-trace-web');
   const { OTLPTraceExporter } = await import('@opentelemetry/exporter-trace-otlp-http');
   const { registerInstrumentations } = await import('@opentelemetry/instrumentation');
   const { getWebAutoInstrumentations } = await import('@opentelemetry/auto-instrumentations-web');
-
-  const provider = new BasicTracerProvider();
 
   const otlpExporter = new OTLPTraceExporter({
     url: import.meta.env.VITE_OTEL_EXPORTER_OTLP_ENDPOINT || 'https://ingest.kubiks.app/v1/traces',
@@ -16,13 +14,15 @@ try {
       : undefined,
   });
 
-  provider.addSpanProcessor(new SimpleSpanProcessor(otlpExporter));
-
+  const spanProcessors = [new SimpleSpanProcessor(otlpExporter)];
   if (import.meta.env.DEV) {
-    provider.addSpanProcessor(new SimpleSpanProcessor(new ConsoleSpanExporter()));
+    spanProcessors.push(new SimpleSpanProcessor(new ConsoleSpanExporter()));
   }
 
+  const provider = new WebTracerProvider({ spanProcessors });
   provider.register();
+
+  trace.setGlobalTracerProvider(provider);
 
   registerInstrumentations({
     instrumentations: getWebAutoInstrumentations({
