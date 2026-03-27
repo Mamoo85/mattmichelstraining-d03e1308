@@ -36,7 +36,7 @@ const certs = ["CPT", "FMS", "CES", "IYCA"];
 
 const DemoHomepage = () => (
   <>
-    <SEOHead title="TEST — Demo Homepage" description="Test homepage for conversion optimization." />
+    <SEOHead title="TEST — Demo Homepage" description="Test homepage for conversion optimization." path="/demo-home" />
 
     <div className="min-h-screen bg-background text-foreground">
       {/* Hero */}
