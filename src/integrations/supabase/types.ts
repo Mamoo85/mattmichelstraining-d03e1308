@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          activity_type: string
+          ai_recovery_tips: string | null
+          ai_summary: string | null
+          created_at: string | null
+          description: string
+          duration_minutes: number | null
+          exercises_mentioned: string[] | null
+          id: string
+          intensity: string | null
+          logged_at: string | null
+          user_id: string
+          weight_level: string | null
+        }
+        Insert: {
+          activity_type?: string
+          ai_recovery_tips?: string | null
+          ai_summary?: string | null
+          created_at?: string | null
+          description: string
+          duration_minutes?: number | null
+          exercises_mentioned?: string[] | null
+          id?: string
+          intensity?: string | null
+          logged_at?: string | null
+          user_id: string
+          weight_level?: string | null
+        }
+        Update: {
+          activity_type?: string
+          ai_recovery_tips?: string | null
+          ai_summary?: string | null
+          created_at?: string | null
+          description?: string
+          duration_minutes?: number | null
+          exercises_mentioned?: string[] | null
+          id?: string
+          intensity?: string | null
+          logged_at?: string | null
+          user_id?: string
+          weight_level?: string | null
+        }
+        Relationships: []
+      }
       admin_media_files: {
         Row: {
           created_at: string
