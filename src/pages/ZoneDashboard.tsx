@@ -521,7 +521,7 @@ const ZoneDashboard = () => {
       >
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 rounded-lg overflow-hidden flex items-center justify-center" style={{ background: "#000", boxShadow: "0 0 12px rgba(249,115,22,0.5), 0 0 24px rgba(249,115,22,0.2)" }}>
-            <img src={logoImg} alt="M²" className="h-6 w-6 object-contain" style={{ filter: "brightness(0) invert(1) sepia(1) saturate(20) hue-rotate(360deg) brightness(1.1)" }} />
+            <img src={logoImg} alt="M²" className="h-6 w-6 object-contain" style={{ filter: "brightness(0) saturate(100%) invert(52%) sepia(94%) saturate(1200%) hue-rotate(360deg) brightness(100%) contrast(96%)" }} />
           </div>
           <div>
             <p className="text-[9px] font-bold uppercase tracking-[0.2em]" style={{ color: "#f97316" }}>THE ZONE</p>
