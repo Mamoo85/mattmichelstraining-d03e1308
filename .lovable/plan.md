@@ -1,35 +1,44 @@
 
 
-# Plan: Create Test Demo Homepage
+# Plan: Secret Test Portal — "The Zone" (`/zone`)
 
-**What**: A new standalone test page at `/demo-home` with conversion-optimized fitness coaching homepage copy. Completely isolated from the live site — no changes to existing routes or components.
+A standalone, immersive test portal page at `/zone`. **Not connected to the live site** — no links from any existing page, no shared navigation. Accessible only by typing the URL directly.
 
-## Single File to Create
+## New File: `src/pages/ZonePortal.tsx`
 
-**`src/pages/DemoHomepage.tsx`** — A self-contained page with all sections inline (no new component files). Sections:
+A single self-contained page (~350 lines) with a dark, immersive aesthetic completely different from the rest of the app.
 
-1. **Hero** — Headline: "Get Stronger. Stay Healthy. Train With a Coach Who's Done It 10,000 Times." Subheadline about 20 years, thousands of clients, national champions. Two CTAs: "Start Your Transformation" → `/auth`, "See the Results" → `/results`.
+### Sections
 
-2. **How It Works** — 3-step process: (1) Book a free intro call, (2) Get your custom program, (3) Train with expert guidance and accountability.
+1. **Zone Header** — Minimal sticky bar with M² logo mark, user's name from auth, glowing online indicator. No AppNavbar.
+2. **Quick Stats Row** — 3 glassmorphic cards: Streak, Workouts This Week, Current Program (mock data for now).
+3. **Today's Action Card** — Hero card with gradient border glow, "Start Training" CTA that dispatches `open-workout-zone` event.
+4. **Quick Actions Grid** — 2×2 tiles: Workout Portal, AI Generator, Fix It Engine, Submit PR — each with distinct accent color (cyan, purple, orange).
+5. **Coach Access** — Full-width "Message Coach Matt" bar with pulse dot.
+6. **Bottom Zone Bar** — Fixed custom bottom nav (Home, Train, Progress, Profile) — completely separate from the standard `BottomTabBar`.
 
-3. **Proof of Expertise** — Stats strip: 20+ Years, 5,000+ Clients Trained, National Champions Coached, Zero-Injury Record. Certifications: CPT, FMS, CES, IYCA.
+### Design
 
-4. **App & Coaching Features** — Grid of 6 benefits: Custom Programs, Progress Tracking, Exercise Video Library, Direct Coach Access, Community & Challenges, Nutrition Tools.
+- Background: `#0a0a0a`, no standard site chrome
+- Glassmorphism: `backdrop-blur-xl`, semi-transparent cards with subtle border glow
+- Neon accents: cyan (`#00f0ff`), orange (brand), purple
+- Pulse/glow animations via Tailwind arbitrary values
+- Mobile-first, `max-w-md` centered layout, large tap targets
 
-5. **Testimonials** — 3 text-only testimonials covering adult strength, youth athlete, and remote coaching lanes.
+## Route: `src/App.tsx`
 
-6. **Final CTA** — "Ready to Train With a Real Coach?" with single conversion button.
+Add one lazy route — **not wrapped in ProtectedRoute** since this is a test page:
 
-7. **Footer** — Simple copyright line with "TEST PAGE" label.
+```
+<Route path="/zone" element={<ZonePortal />} />
+```
 
-## Route Addition
+Placed near the other test routes (`/demo-home`). No links added to any navigation or existing page.
 
-**`src/App.tsx`** — Add one lazy route: `/demo-home` → `DemoHomepage`. No navigation links added anywhere — accessible only by direct URL.
+## Isolation
 
-## Design
-
-- Uses existing Tailwind theme tokens (`bg-background`, `text-foreground`, `text-primary`, `bg-card`, `border-border`)
-- Includes `AppNavbar` for consistent navigation
-- Mobile-first, single-column layout matching the existing `max-w-xl` pattern
+- No imports from or connections to the live dashboard
+- Action buttons use `window.dispatchEvent` for existing zone events (workout zone, prove-it) but only function if user is logged in
+- Uses `useAuth` only for displaying name — works fine if not logged in (shows "Athlete")
 - No new dependencies
 
