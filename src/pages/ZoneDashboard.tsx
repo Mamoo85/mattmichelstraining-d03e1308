@@ -8,7 +8,8 @@ import { useNavigate } from "react-router-dom";
 import {
   BarChart3, Sparkles, Dumbbell, Home, Flame, Zap, Trophy, Play, Wrench,
   Timer, ChevronRight, ChevronDown, MessageCircle, Brain,
-  User, Activity, Clock, Target, Star, Award, Camera, Crosshair, Heart, UserPlus
+  User, Activity, Clock, Target, Star, Award, Camera, Crosshair, Heart, UserPlus,
+  Mic, MapPin
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ZoneThemeWrapper from "@/components/zone/ZoneThemeWrapper";
