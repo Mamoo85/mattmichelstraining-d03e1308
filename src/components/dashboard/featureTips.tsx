@@ -134,3 +134,19 @@ export const QUICK_ACTIVITY_TIP: FeatureTip = {
     { icon: <Target size={18} />, text: "Helps Coach Matt understand your full load" },
   ],
 };
+
+/* ── Workout Zone Tip (Open Workout) ── */
+
+export const WORKOUT_ZONE_TIP: FeatureTip = {
+  storageKey: "m2-tip-workout-zone-v1",
+  fallbackIcon: <Dumbbell size={32} style={{ color: "#00f0ff" }} />,
+  fallbackGradient: "linear-gradient(135deg, rgba(0,240,255,0.15), rgba(249,115,22,0.08))",
+  title: "The Workout Zone",
+  subtitle: "This is your live training session. Load a program, pick a workout from your library, dictate a new one, or add exercises one by one.",
+  bullets: [
+    { icon: <Play size={18} />, text: "Resume a paused workout or start fresh" },
+    { icon: <Dumbbell size={18} />, text: "Pick from your programs & workout library" },
+    { icon: <Mic size={18} />, text: "Dictate what you're doing and AI builds it" },
+    { icon: <Target size={18} />, text: "Add individual exercises and track sets/reps" },
+  ],
+};

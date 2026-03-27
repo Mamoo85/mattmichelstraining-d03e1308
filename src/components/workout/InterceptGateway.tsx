@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Play, Dumbbell, BookOpen, Lock, Zap, Loader2, ChevronLeft } from "lucide-react";
+import { Play, Dumbbell, BookOpen, Lock, Zap, Loader2, ChevronLeft, X, Mic, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useMinTier } from "@/hooks/useTierAccess";
@@ -8,6 +8,9 @@ import { useFamilyUserIds } from "@/hooks/useFamilyUserIds";
 import { toast } from "sonner";
 import type { WorkoutZoneContext } from "./ActiveWorkoutZone";
 import OpenWorkoutAI from "./OpenWorkoutAI";
+import FeatureLearningModal from "@/components/dashboard/FeatureLearningModal";
+import { WORKOUT_ZONE_TIP } from "@/components/dashboard/featureTips";
+import { safeLocalStorage } from "@/lib/browserStorage";
 
 interface InterceptGatewayProps {
   onSelect: (context: WorkoutZoneContext) => void;
