@@ -9,7 +9,7 @@ function getCtx(): AudioContext {
 }
 
 export function setMasterVolume(v: number) {
-  masterVolume = Math.max(0, Math.min(2.0, v));
+  masterVolume = Math.max(0, Math.min(4.0, v));
 }
 export function getMasterVolume(): number {
   return masterVolume;
