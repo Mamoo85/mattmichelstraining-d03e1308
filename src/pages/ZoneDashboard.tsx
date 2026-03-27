@@ -760,32 +760,22 @@ const ZoneDashboard = () => {
             {activeTab === "lifts" && (
               <Suspense fallback={<TabLoader />}>
                 <div className="space-y-4">
-                  {/* What I Did Today — default quick log */}
+                  {/* Main Lifts Log */}
                   <button
-                    onClick={() => setShowQuickLog(true)}
+                    onClick={() => navigate("/progress")}
                     className="w-full rounded-2xl p-4 flex items-center gap-4 transition-all active:scale-[0.97]"
-                    style={{ background: "linear-gradient(135deg, rgba(34,197,94,0.1), rgba(22,163,74,0.06))", border: "1px solid rgba(34,197,94,0.2)" }}
+                    style={{ background: "linear-gradient(135deg, rgba(249,115,22,0.1), rgba(234,88,12,0.06))", border: "1px solid rgba(249,115,22,0.2)" }}
                   >
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "linear-gradient(135deg, #22c55e, #16a34a)" }}>
-                      <Mic size={18} color="#fff" />
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "linear-gradient(135deg, #f97316, #ea580c)" }}>
+                      <Dumbbell size={18} color="#fff" />
                     </div>
                     <div className="text-left flex-1 min-w-0">
-                      <p className="text-xs font-black" style={{ color: "#fafafa" }}>What Did You Do Today?</p>
-                      <p className="text-[10px] mt-0.5" style={{ color: "#525252" }}>Voice or text — log cardio, circuits, anything</p>
+                      <p className="text-xs font-black" style={{ color: "#fafafa" }}>Main Lifts Log</p>
+                      <p className="text-[10px] mt-0.5" style={{ color: "#525252" }}>Track your compound lifts & progress</p>
                     </div>
-                    <ChevronRight size={16} style={{ color: "#22c55e" }} />
+                    <ChevronRight size={16} style={{ color: "#f97316" }} />
                   </button>
 
-                  {/* Quick actions */}
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => window.dispatchEvent(new Event("open-prove-it-zone"))}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-semibold transition-all active:scale-95"
-                      style={{ background: "rgba(249,115,22,0.1)", border: "1px solid rgba(249,115,22,0.2)", color: "#f97316" }}
-                    >
-                      <Trophy size={13} /> Submit PR
-                    </button>
-                  </div>
                   <ProgressCharts />
                   <OverloadCard />
                 </div>
