@@ -1,50 +1,37 @@
-import { getWebAutoInstrumentations } from '@opentelemetry/auto-instrumentations-web';
-import { BasicTracerProvider, ConsoleSpanExporter, SimpleSpanProcessor } from '@opentelemetry/sdk-trace-web';
-import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
-import { registerInstrumentations } from '@opentelemetry/instrumentation';
-import { Resource } from '@opentelemetry/resources';
-import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
+// OpenTelemetry instrumentation for Kubiks
+import { trace } from '@opentelemetry/api';
 
-const resource = Resource.default().merge(
-  new Resource({
-    [SemanticResourceAttributes.SERVICE_NAME]:
-      process.env.VITE_OTEL_SERVICE_NAME || 'm2training',
-  }),
-);
+try {
+  const { WebTracerProvider, SimpleSpanProcessor, ConsoleSpanExporter } = await import('@opentelemetry/sdk-trace-web');
+  const { OTLPTraceExporter } = await import('@opentelemetry/exporter-trace-otlp-http');
+  const { registerInstrumentations } = await import('@opentelemetry/instrumentation');
+  const { getWebAutoInstrumentations } = await import('@opentelemetry/auto-instrumentations-web');
 
-const provider = new BasicTracerProvider({
-  resource,
-});
+  const otlpExporter = new OTLPTraceExporter({
+    url: import.meta.env.VITE_OTEL_EXPORTER_OTLP_ENDPOINT || 'https://ingest.kubiks.app/v1/traces',
+    headers: import.meta.env.VITE_OTEL_EXPORTER_OTLP_HEADERS
+      ? { 'x-kubiks-key': (import.meta.env.VITE_OTEL_EXPORTER_OTLP_HEADERS as string).split('=')[1] }
+      : undefined,
+  });
 
-// OTLP exporter for Kubiks
-const otlpExporter = new OTLPTraceExporter({
-  url: process.env.VITE_OTEL_EXPORTER_OTLP_ENDPOINT || 'https://ingest.kubiks.app/v1/traces',
-  headers: process.env.VITE_OTEL_EXPORTER_OTLP_HEADERS
-    ? { 'x-kubiks-key': process.env.VITE_OTEL_EXPORTER_OTLP_HEADERS.split('=')[1] }
-    : undefined,
-});
+  const spanProcessors = [new SimpleSpanProcessor(otlpExporter)];
+  if (import.meta.env.DEV) {
+    spanProcessors.push(new SimpleSpanProcessor(new ConsoleSpanExporter()));
+  }
 
-// Console exporter for development
-const consoleExporter = new ConsoleSpanExporter();
+  const provider = new WebTracerProvider({ spanProcessors });
+  provider.register();
 
-provider.addSpanProcessor(new SimpleSpanProcessor(otlpExporter));
+  trace.setGlobalTracerProvider(provider);
 
-// Add console exporter in development
-if (process.env.NODE_ENV === 'development') {
-  provider.addSpanProcessor(new SimpleSpanProcessor(consoleExporter));
+  registerInstrumentations({
+    instrumentations: getWebAutoInstrumentations({
+      '@opentelemetry/instrumentation-fetch': { enabled: true },
+      '@opentelemetry/instrumentation-xml-http-request': { enabled: true },
+    }),
+  });
+} catch (e) {
+  console.warn('[OTel] Instrumentation init failed:', e);
 }
 
-provider.register();
-
-registerInstrumentations({
-  instrumentations: getWebAutoInstrumentations({
-    '@opentelemetry/instrumentation-fetch': {
-      enabled: true,
-    },
-    '@opentelemetry/instrumentation-xml-http-request': {
-      enabled: true,
-    },
-  }),
-});
-
-export default provider;
+export {};
