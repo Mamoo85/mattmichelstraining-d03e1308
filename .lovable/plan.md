@@ -1,46 +1,62 @@
 
 
-# Youngblood Mockup Production Refactor
+# Exercise Image Matching: Starting Strength + Supple Leopard → Both Libraries
 
-## Summary
-Replace all placeholder content with real Youngblood Automation / H&P Technologies corporate data, add Tier 1 Partners section, regional locations section, hero background image, and glassmorphism card styling.
+## Scope
+252 exercises (167 regular + 85 Fix It) need matched reference images from two books: *Starting Strength* (barbell/compound movements) and *Becoming a Supple Leopard* (mobility/soft tissue work). This is a multi-phase operation.
 
-## Changes (single file: `src/pages/YoungbloodMockup.tsx`)
+## Phase 1: Extract Starting Strength Images
+- Run the same `pypdf` extraction script on the uploaded Starting Strength PDF
+- Save all extracted images to `/mnt/documents/starting-strength-images/`
+- Filter by size (skip icons/logos), keep exercise demonstration drawings and photos
 
-### 1. Data Constants Update
-- **solutions array**: Replace 6 cards with 4 focused cards matching the user's exact descriptions (Pneumatics, Hydraulics, Robotics, Sensing)
-- **stats array**: Update to reflect "Established 1964" instead of "50+ Years"
-- **Hero badge**: Change "50+ Years · Warren, MI" to "Established 1964 · Warren, MI"
-- **Hero tagline**: Add "Engineered Solutions for Motion Control, Fluid Power, and Robotic Integration."
-- **Add `locations` array**: Warren MI (HQ), Grand Rapids MI, Indianapolis IN, Dayton OH with descriptions
-- **Add `tier1Partners` array**: SICK, EATON, EMERSON, UNIVERSAL ROBOTS with subtitles
-- **Footer text**: Update "since 1972" to "Established 1964", keep "A Division of H&P Technologies" prominent
+## Phase 2: Database — Add `image_url` to `exercise_library`
+- Migration: `ALTER TABLE exercise_library ADD COLUMN image_url TEXT;`
+- This lets every exercise in both libraries carry a reference image
 
-### 2. New Section: Tier 1 Partners
-- Replace the manufacturer marquee with a prominent 4-column "Tier 1 Partners" row
-- Each partner gets an icon-style card with name and specialty subtitle
-- Keep the remaining manufacturers in a smaller marquee below
-- Glassmorphism card style: `bg-slate-900/40 backdrop-blur-md border border-white/10`
+## Phase 3: Categorize and Match (the precision work)
+Build a Python script that:
+1. Loads all 252 exercise titles from the database
+2. Groups them by likely source book:
+   - **Starting Strength matches** (~60-80): Back Squat, Front Squat, Deadlift, Bench Press, Overhead Press, Power Clean, Hang Clean, Romanian Deadlift, and all barbell compound variations
+   - **Supple Leopard matches** (~70-90): All foam rolling, lacrosse ball, banded distraction, couch stretch, joint mobilization, and soft tissue exercises
+   - **Either/generic** (~80-100): Kettlebell work, bodyweight movements, accessory exercises — match to whichever book has the best visual
+3. For each match, identify the specific extracted image by page number and content
+4. Crop faces from photos (using PIL face-area detection or manual crop coordinates), keeping only the body mechanics
+5. Preserve all drawings/illustrations in full (Starting Strength has excellent barbell form drawings)
 
-### 3. New Section: Regional Footprint
-- Add after Industries section (or replace the generic stats)
-- 4-column grid with MapPin icons showing each location, role description
-- Glassmorphism styling on each location card
+## Phase 4: Upload to Storage + Update Database
+- Upload each matched/cropped image to the `exercise_reference_images` bucket with structured naming: `{exercise-slug}.jpg`
+- Run UPDATE queries to set `image_url` on each exercise record with the public storage URL
 
-### 4. Visual Polish
-- **Hero**: Add background image (`photo-1581091226825-a6a2a5aee158`) with dark overlay, replacing the grid pattern
-- **Solutions section**: Add subtle background image (`photo-1565515152650-612b3e2441af`) with heavy dark overlay
-- **All cards** (solutions, value props, stats, partners, locations): Apply `bg-slate-900/40 backdrop-blur-md border border-white/10` replacing current `#111827` backgrounds
+## Phase 5: UI Integration
+Update these components to display the new `image_url`:
 
-### 5. Header & Footer
-- Header already shows "A Division of H&P Technologies" — keep as-is
-- Footer col 1: Update founding year to 1964, keep H&P Technologies reference
-- Footer copyright: Update year reference
-- Solutions footer links: Update to match new 4 solution names
+- **`ExerciseLibrary.tsx`** — Show thumbnail in collapsed card, full image in expanded view
+- **`FixItLibrary.tsx`** — Same pattern, thumbnail + expanded image
+- **`ProtocolTable.tsx`** — Already has image display (lightbox) from previous work, will now pull from exercise library images as fallback
+- **`ExerciseCard.tsx`** — Add image display for workout builder context
+
+### Drawing Usage Site-Wide
+Starting Strength's barbell form drawings will also be wired into:
+- `ActiveWorkoutZone.tsx` — show reference drawing during active sets
+- `WorkoutLogger.tsx` — small thumbnail next to logged exercises
+- `AiWorkoutSuggest.tsx` — display reference image in generated protocols
 
 ## Technical Notes
-- Single file edit (~400 lines rewrite)
-- No new dependencies or database changes
-- All existing animations (marquee, spin, pulse) preserved
-- RevealSection scroll animations preserved
+- The Starting Strength PDF contains detailed pen-and-ink drawings of all major lifts — these are the primary assets for barbell exercises
+- Supple Leopard images are photos of mobilization positions — these map to Fix It and mobility exercises
+- Face cropping applies only to photos, not drawings
+- All images uploaded to the existing `exercise_reference_images` public bucket (already has proper RLS)
+- No new edge functions needed — this is a data pipeline + UI update
+- Estimated ~150-200 images will be matched (not all 252 exercises will have a book match; those remain without images until manually added)
+
+## Files Modified
+- `supabase/migrations/` — 1 new migration (add `image_url` column)
+- `src/components/features/ExerciseLibrary.tsx` — add image display
+- `src/components/features/FixItLibrary.tsx` — add image display
+- `src/components/workout/ExerciseCard.tsx` — add thumbnail
+- `src/components/workout/ActiveWorkoutZone.tsx` — reference image during sets
+- `src/components/workout/WorkoutLogger.tsx` — thumbnail next to exercises
+- `src/integrations/supabase/types.ts` — updated automatically
 
