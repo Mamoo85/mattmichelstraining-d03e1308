@@ -215,6 +215,10 @@ const ZoneDashboard = () => {
     if (!user) return;
     // Fetch streak from progress_logs
     const fetchStats = async () => {
+      // Fetch display name
+      const { data: prof } = await supabase.from("profiles").select("first_name").eq("id", user.id).maybeSingle();
+      if (prof?.first_name) setDisplayName(prof.first_name);
+
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
 
