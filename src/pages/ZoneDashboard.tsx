@@ -15,7 +15,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import ZoneThemeWrapper from "@/components/zone/ZoneThemeWrapper";
 import FeatureLearningModal from "@/components/dashboard/FeatureLearningModal";
 import { ZONE_LIFTS_TIP, ZONE_GENERATE_TIP, ZONE_TRAIN_TIP, ZONE_HOME_TIP } from "@/components/dashboard/featureTips";
-import logoImg from "@/assets/m2-logo-official.jpg";
+import logoImg from "@/assets/m2-logo-official.png";
 
 const ProgressCharts = lazy(() => import("@/components/features/ProgressCharts"));
 const WorkoutsTab = lazy(() => import("@/components/dashboard/WorkoutsTab"));
