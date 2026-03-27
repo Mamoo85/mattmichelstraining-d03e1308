@@ -1,7 +1,7 @@
 import { useState, useEffect, lazy, Suspense, memo } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import { useTierAccess } from "@/hooks/useTierAccess";
+import { usePoints } from "@/hooks/usePoints";
 import { usePoints } from "@/hooks/usePoints";
 import { supabase } from "@/integrations/supabase/client";
 import { safeLocalStorage } from "@/lib/browserStorage";
@@ -84,7 +84,7 @@ const GenerateTab = memo(() => {
           <button onClick={() => setView("menu")} className="text-xs text-muted-foreground hover:text-primary transition-colors">
             ← Back to generators
           </button>
-          <AiWorkoutSuggest />
+          <AiWorkoutSuggest onDone={() => setView("menu")} />
         </div>
       </Suspense>
     );
@@ -97,7 +97,7 @@ const GenerateTab = memo(() => {
           <button onClick={() => setView("menu")} className="text-xs text-muted-foreground hover:text-primary transition-colors">
             ← Back to generators
           </button>
-          <AiWorkoutSuggest initialPath="fixit" />
+          <AiWorkoutSuggest onDone={() => setView("menu")} initialPath="fixit" />
         </div>
       </Suspense>
     );
