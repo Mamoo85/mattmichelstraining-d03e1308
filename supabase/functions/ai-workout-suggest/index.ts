@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-function buildDualPathWorkoutPrompt(userText: string, hasImage: boolean, exerciseNames: string) {
+function buildDualPathWorkoutPrompt(userText: string, hasImage: boolean, exerciseNames: string, clarifications?: Record<string, string[]>) {
   const visionClause = hasImage
     ? `\n\nIMPORTANT — VISION MODE:
 The user has provided a photograph of their workout environment. You MUST:
@@ -16,6 +16,29 @@ The user has provided a photograph of their workout environment. You MUST:
 4. If you cannot clearly identify equipment, default to bodyweight alternatives.
 5. List the equipment you detected in the workout description.`
     : "";
+
+  let equipmentContext = "";
+  if (clarifications) {
+    const env = clarifications["environment"]?.[0] || "Gym";
+    const equipment = clarifications["equipment"] || [];
+    const experience = clarifications["experience"]?.[0] || "";
+    const goals = clarifications["goals"] || [];
+    const days = clarifications["days"]?.[0] || "";
+
+    equipmentContext = `
+
+ATHLETE CONTEXT:
+Training environment: ${env}.
+Available equipment: ${equipment.length > 0 ? equipment.join(", ") : "full gym assumed"}.
+${experience ? `Experience level: ${experience}.` : ""}
+${goals.length > 0 ? `Primary goals: ${goals.join(", ")}.` : ""}
+${days ? `Training days per week: ${days}.` : ""}
+ONLY prescribe exercises that match the listed equipment. If home with limited gear, focus on dumbbell, kettlebell, and bodyweight variations.
+${env === "Home" && equipment.length === 0 ? "Focus on bodyweight-only exercises." : ""}
+${env === "Travel" ? "Focus on bodyweight-only exercises that require no equipment and minimal space." : ""}
+${equipment.includes("Dumbbells Only") ? "Use dumbbell variations instead of barbell movements." : ""}
+${equipment.includes("Kettlebells") ? "Include kettlebell swings, Turkish get-ups, and goblet squats where appropriate." : ""}`;
+  }
 
   return `You are Coach Matt's workout builder. You follow Starting Strength (Rippetoe) and Becoming a Supple Leopard (Starrett) principles ONLY.
 
@@ -29,7 +52,7 @@ RULES:
 - VARIETY IS CRITICAL: Never repeat the same exercise twice in a single workout. Each exercise must target a DIFFERENT movement pattern or muscle group than the previous one. Spread selections across the full exercise library — do not default to the same 10-15 "safe" exercises every time. Rotate between lesser-used compound variations (e.g. Zercher squat instead of always goblet squat, Z-press instead of always overhead press, single-leg RDL instead of always bilateral RDL). Surprise the athlete with variety while staying within the approved exercise library.
 - You must INFER the user's experience level, goals, training days per week, and available equipment strictly from their natural language input.
 - If the user doesn't mention how many days, default to 3.
-- If the user doesn't mention equipment, assume full gym (barbell, rack, dumbbells).${visionClause}
+- If the user doesn't mention equipment, assume full gym (barbell, rack, dumbbells).${visionClause}${equipmentContext}
 
 TIMED CIRCUIT DETECTION:
 If the user requests a "timed circuit", "AMRAP", "EMOM", mentions specific work/rest intervals (e.g. "45 on 15 off"), or asks for a time-based workout (e.g. "15 min circuit"), you MUST:
