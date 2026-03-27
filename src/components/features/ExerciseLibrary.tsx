@@ -351,6 +351,14 @@ const ExerciseLibrary = () => {
 
                 {isExpanded && (
                   <div className="px-4 pb-4 border-t border-border pt-3 space-y-3">
+                    {ex.image_url && (
+                      <img
+                        src={ex.image_url}
+                        alt={ex.title}
+                        className="w-full max-h-64 object-contain rounded border border-border bg-muted/30"
+                        loading="lazy"
+                      />
+                    )}
                     <div>
                       <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-1">
                         The WHY
