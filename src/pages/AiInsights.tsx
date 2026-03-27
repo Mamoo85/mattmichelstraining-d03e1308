@@ -66,36 +66,24 @@ const AiInsights = () => {
         lifts: lifts || [],
       };
 
-      // Call AI for insights
+      // Call AI for insights — use session token for auth
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+      if (!accessToken) throw new Error("Please sign in again");
+
       const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-athlete-stream`;
       const resp = await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
-          messages: [
-            {
-              role: "user",
-              content: `Based on my recent training data, give me personalized insights in 4 sections. Use markdown formatting with headers.
-
-## 🔄 Recovery Recommendations
-What I should focus on for recovery based on my recent sessions.
-
-## 🧘 Mobility & Rolling
-Specific mobility exercises, stretches, and foam rolling I should do based on the muscles I've been working.
-
-## 💪 Lift Tips
-Form cues and training tips based on my recent lifts.
-
-## ⚡ Training Load Analysis
-Am I overtraining certain areas? What balance adjustments should I make?
-
-My recent activities: ${JSON.stringify(context.activities)}
-My recent lifts: ${JSON.stringify(context.lifts)}`,
-            },
-          ],
+          type: "recovery_advisor",
+          context: {
+            activities: context.activities,
+            lifts: context.lifts,
+          },
         }),
       });
 
