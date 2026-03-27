@@ -115,7 +115,7 @@ const BottomTabBar = () => {
         </Suspense>
       )}
 
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[100] bg-background/95 backdrop-blur-md border-t border-border pb-[env(safe-area-inset-bottom)]">
+      <nav aria-label="Bottom navigation" className="md:hidden fixed bottom-0 left-0 right-0 z-[100] bg-background/95 backdrop-blur-md border-t border-border pb-[env(safe-area-inset-bottom)]">
         <div className="flex items-stretch justify-around h-14">
           {TABS.map(({ to, label, icon: Icon }) => {
             const active = location.pathname === to;
@@ -138,6 +138,7 @@ const BottomTabBar = () => {
 
           <button
             onClick={() => setMoreOpen((v) => !v)}
+            aria-label="More options"
             className={`flex flex-col items-center justify-center flex-1 gap-0.5 transition-colors relative ${
               isMoreActive ? "text-primary" : "text-muted-foreground"
             }`}
