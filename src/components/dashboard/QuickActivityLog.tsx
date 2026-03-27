@@ -137,13 +137,11 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
         } catch { /* not valid JSON yet */ }
       }
 
-      // Detect if AI is asking about intensity or duration to show bubbles
-      const lower = accumulated.toLowerCase();
+      // Always show quick-tap bubbles after AI responds (unless we already have a summary)
       if (!jsonMatch) {
-        const asksIntensity = /how hard|intensity|difficult|effort/i.test(lower);
-        const asksDuration = /how long|duration|how many minutes|time/i.test(lower);
-        if (asksIntensity) setNeedsIntensity(true);
-        if (asksDuration) setNeedsDuration(true);
+        // Show both sets of bubbles so users can always tap instead of typing
+        setNeedsIntensity(true);
+        setNeedsDuration(true);
       }
     } catch (e: any) {
       if (e.name !== "AbortError") {
