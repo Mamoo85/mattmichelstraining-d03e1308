@@ -413,6 +413,8 @@ const ZoneDashboard = () => {
     return !safeLocalStorage.getItem(`m2-tip-zone-${initialTab}-v1`);
   });
   const [generateView, setGenerateView] = useState<"menu" | "workout" | "fixit">("menu");
+  const [showQuickLog, setShowQuickLog] = useState(false);
+  const [showCheckIn, setShowCheckIn] = useState(false);
 
   const [streak, setStreak] = useState(0);
   const [sessionsThisWeek, setSessionsThisWeek] = useState(0);
