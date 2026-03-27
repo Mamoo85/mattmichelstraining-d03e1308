@@ -202,8 +202,33 @@ serve(async (req) => {
     const body = await req.json();
     const { goal, audience, style, prompt, mode, path, userText, gymImageBase64, clarifications } = body;
 
-    // === FIXIT CLARIFY MODE ===
-    if (mode === "fixit-clarify" && userText) {
+    // === CLARIFY MODE (both paths) ===
+    if ((mode === "fixit-clarify" || mode === "workout-clarify") && userText) {
+      const isFixit = mode === "fixit-clarify";
+      const systemContent = isFixit
+        ? `You are Coach Matt's Fix It intake system. The user described a pain point. Generate 3-4 follow-up questions to help build a better corrective protocol. Return structured JSON via the tool call.
+
+Questions should cover:
+1. WHERE they'll be doing the protocol (home, gym, travel)
+2. WHAT EQUIPMENT they have available (if home/travel)
+3. HOW OFTEN the issue bothers them
+4. PAIN LEVEL on a 1-10 scale
+
+Make questions conversational and empathetic.`
+        : `You are Coach Matt's workout intake system. The user described their training goals. Generate 3-4 follow-up questions to help build a perfectly tailored workout. Return structured JSON via the tool call.
+
+Questions should cover:
+1. WHERE they'll be training (home, gym, travel)
+2. WHAT EQUIPMENT they have access to (e.g. full gym, dumbbells only, kettlebells, bands, bodyweight only)
+3. Their EXPERIENCE LEVEL (beginner, intermediate, advanced)
+4. Their PRIMARY GOALS (e.g. strength, muscle building, fat loss, athletic performance, general fitness)
+
+If the user already mentioned some of these details in their description, skip those questions and ask about what's missing. Keep it conversational and encouraging.`;
+
+      const questionIds = isFixit
+        ? "Unique ID like 'environment', 'equipment', 'frequency', 'pain_level'"
+        : "Unique ID like 'environment', 'equipment', 'experience', 'goals', 'days'";
+
       const clarifyResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -213,18 +238,7 @@ serve(async (req) => {
         body: JSON.stringify({
           model: "google/gemini-2.5-flash",
           messages: [
-            {
-              role: "system",
-              content: `You are Coach Matt's Fix It intake system. The user described a pain point. Generate 3-4 follow-up questions to help build a better corrective protocol. Return structured JSON via the tool call.
-
-Questions should cover:
-1. WHERE they'll be doing the protocol (home, gym, travel)
-2. WHAT EQUIPMENT they have available (if home/travel)
-3. HOW OFTEN the issue bothers them
-4. PAIN LEVEL on a 1-10 scale
-
-Make questions conversational and empathetic.`,
-            },
+            { role: "system", content: systemContent },
             { role: "user", content: userText },
           ],
           tools: [
@@ -232,7 +246,7 @@ Make questions conversational and empathetic.`,
               type: "function",
               function: {
                 name: "ask_clarifying_questions",
-                description: "Ask the user follow-up questions before building their protocol.",
+                description: "Ask the user follow-up questions before building their program.",
                 parameters: {
                   type: "object",
                   properties: {
@@ -241,7 +255,7 @@ Make questions conversational and empathetic.`,
                       items: {
                         type: "object",
                         properties: {
-                          id: { type: "string", description: "Unique ID like 'environment', 'equipment', 'frequency', 'pain_level'" },
+                          id: { type: "string", description: questionIds },
                           question: { type: "string" },
                           options: { type: "array", items: { type: "string" } },
                           multiSelect: { type: "boolean", description: "True if user can select multiple options" },
