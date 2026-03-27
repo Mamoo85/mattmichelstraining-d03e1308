@@ -7,10 +7,12 @@ import { useNavigate } from "react-router-dom";
 import {
   BarChart3, Sparkles, Dumbbell, Home, Flame, Zap, Trophy, Play, Wrench,
   Timer, ChevronRight, ChevronDown, MessageCircle, Brain,
-  User, Activity, Clock, Target, Star, Award
+  User, Activity, Clock, Target, Star, Award, Camera, Crosshair, Heart
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ZoneThemeWrapper from "@/components/zone/ZoneThemeWrapper";
+import FeatureLearningModal from "@/components/dashboard/FeatureLearningModal";
+import { ZONE_LIFTS_TIP, ZONE_GENERATE_TIP, ZONE_TRAIN_TIP, ZONE_HOME_TIP } from "@/components/dashboard/featureTips";
 import logoImg from "@/assets/m2-logo-official.jpg";
 
 const ProgressCharts = lazy(() => import("@/components/features/ProgressCharts"));
