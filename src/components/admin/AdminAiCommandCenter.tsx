@@ -39,7 +39,7 @@ const AdminParentReports = lazy(() => import("./AdminParentReports"));
 const AdminAiQueue = lazy(() => import("./AdminAiQueue"));
 
 const AdminMediaVault = lazy(() => import("./AdminMediaVault"));
-const AiMediaStudio = lazy(() => import("./AiMediaStudio"));
+
 
 const Loader = () => (
   <div className="flex justify-center py-10">
@@ -274,7 +274,7 @@ const PanelRenderer = memo(({ panelKey }: { panelKey: string }) => {
     "parent-reports": <AdminParentReports />,
     "ai-queue": <AdminAiQueue />,
     "media-vault": <AdminMediaVault />,
-    "ai-studio": <AiMediaStudio />,
+    "ai-studio": <AdminMediaVault />,
   };
   return <Suspense fallback={<Loader />}>{map[panelKey] || <p className="text-neutral-500 text-xs p-4">Panel not found</p>}</Suspense>;
 });
