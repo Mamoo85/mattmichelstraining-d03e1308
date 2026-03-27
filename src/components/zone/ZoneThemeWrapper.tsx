@@ -1,10 +1,9 @@
 import { ReactNode } from "react";
 
-const ZoneThemeWrapper = ({ children, className = "" }: { children: ReactNode; className?: string }) => (
+const ZoneThemeWrapper = ({ children, className = "", style }: { children: ReactNode; className?: string; style?: React.CSSProperties }) => (
   <div
     className={`zone-theme ${className}`}
     style={{
-      // Override CSS custom properties for the ultra-dark Zone aesthetic
       "--background": "0 0% 2%",
       "--foreground": "0 0% 90%",
       "--card": "0 0% 5%",
@@ -19,6 +18,7 @@ const ZoneThemeWrapper = ({ children, className = "" }: { children: ReactNode; c
       "--secondary-foreground": "0 0% 90%",
       "--accent": "0 0% 12%",
       "--accent-foreground": "0 0% 90%",
+      ...style,
     } as React.CSSProperties}
   >
     {children}
