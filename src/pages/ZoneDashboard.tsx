@@ -204,6 +204,85 @@ const OverloadCard = memo(() => {
 });
 OverloadCard.displayName = "OverloadCard";
 
+/* ── Train Tab (collapsible sections) ───────── */
+const TrainSection = ({ title, subtitle, icon: Icon, color, children }: {
+  title: string; subtitle: string; icon: typeof Dumbbell; color: string; children: React.ReactNode;
+}) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${color}33` }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center gap-4 p-4 text-left transition-all active:scale-[0.98]"
+      >
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${color}22` }}>
+          <Icon size={18} style={{ color }} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-black uppercase tracking-wider" style={{ color }}>{title}</p>
+          <p className="text-[11px] mt-0.5" style={{ color: "#737373" }}>{subtitle}</p>
+        </div>
+        <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
+          <ChevronDown size={16} style={{ color }} />
+        </motion.div>
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <div className="px-4 pb-4" style={{ borderTop: `1px solid ${color}1a` }}>
+              {children}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+const TrainTabContent = memo(() => (
+  <Suspense fallback={<TabLoader />}>
+    <div className="space-y-3">
+      <div
+        className="rounded-2xl p-5"
+        style={{
+          background: "linear-gradient(135deg, rgba(249,115,22,0.10), rgba(168,85,247,0.06))",
+          border: "1px solid rgba(249,115,22,0.18)",
+        }}
+      >
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: "linear-gradient(135deg, #f97316, #ea580c)" }}>
+            <Dumbbell size={22} color="#fff" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-black" style={{ color: "#fafafa" }}>Your Training Library</p>
+            <p className="text-[11px] mt-0.5" style={{ color: "#a3a3a3" }}>Programs, workouts & today's session — all in one place</p>
+          </div>
+        </div>
+      </div>
+
+      <TrainSection title="Today's Training" subtitle="Pick up where you left off" icon={Play} color="#f97316">
+        <TodaysTrainingCard />
+      </TrainSection>
+
+      <TrainSection title="Workout Library" subtitle="Browse coach-built & community workouts" icon={Flame} color="#a855f7">
+        <WorkoutsTab />
+      </TrainSection>
+
+      <TrainSection title="My Programs" subtitle="Active & available training programs" icon={Target} color="#00f0ff">
+        <MyPrograms />
+      </TrainSection>
+    </div>
+  </Suspense>
+));
+TrainTabContent.displayName = "TrainTabContent";
+
+/* ── Home Tab ───────────────────────────────── */
 const HomeTab = memo(() => {
   const [chatOpen, setChatOpen] = useState(false);
   return (
