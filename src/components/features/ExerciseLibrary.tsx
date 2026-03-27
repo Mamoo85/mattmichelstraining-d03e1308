@@ -295,6 +295,7 @@ const ExerciseLibrary = () => {
                         alt={ex.title}
                         className="w-12 h-12 object-cover rounded border border-border flex-shrink-0"
                         loading="lazy"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                       />
                     )}
                   <div className="flex-1 min-w-0">
@@ -357,6 +358,7 @@ const ExerciseLibrary = () => {
                         alt={ex.title}
                         className="w-full max-h-64 object-contain rounded border border-border bg-muted/30"
                         loading="lazy"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                       />
                     )}
                     <div>
