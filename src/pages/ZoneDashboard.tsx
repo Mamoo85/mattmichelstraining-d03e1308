@@ -37,9 +37,9 @@ type TabKey = "home" | "generate" | "train" | "lifts";
 
 const TABS: { key: TabKey; label: string; icon: typeof BarChart3 }[] = [
   { key: "home", label: "Home", icon: Home },
+  { key: "lifts", label: "Lifts", icon: BarChart3 },
   { key: "generate", label: "Generate", icon: Sparkles },
   { key: "train", label: "Train", icon: Dumbbell },
-  { key: "lifts", label: "Lifts", icon: BarChart3 },
 ];
 
 const TAB_STORAGE_KEY = "zone-dash-tab";
@@ -795,13 +795,13 @@ const ZoneDashboard = () => {
           onClick={() => navigate("/ai-insights")}
           className="w-full rounded-xl p-3 flex items-center gap-3 transition-all active:scale-[0.97]"
           style={{
-            background: "linear-gradient(135deg, rgba(34,197,94,0.08), rgba(0,240,255,0.06))",
-            border: "1px solid rgba(34,197,94,0.15)",
+            background: "linear-gradient(135deg, rgba(168,85,247,0.1), rgba(124,58,237,0.06))",
+            border: "1px solid rgba(168,85,247,0.18)",
           }}
         >
-          <Heart size={16} style={{ color: "#22c55e" }} />
-          <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#22c55e" }}>Recovery & Mobility Tips</span>
-          <ChevronRight size={14} className="ml-auto" style={{ color: "#22c55e" }} />
+          <Heart size={16} style={{ color: "#a855f7" }} />
+          <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#a855f7" }}>Recovery & Mobility Tips</span>
+          <ChevronRight size={14} className="ml-auto" style={{ color: "#a855f7" }} />
         </button>
 
         {/* ── Tab Strip ──────────────────────────── */}
