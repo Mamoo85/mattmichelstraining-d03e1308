@@ -235,83 +235,71 @@ const InterceptGateway = ({ onSelect, onExit }: InterceptGatewayProps) => {
   // ── Week/Day Picker Sub-screen ──
   if (pickingProgram) {
     return (
-      <div className="fixed inset-0 z-[100] bg-background flex flex-col">
-        <header className="shrink-0 px-4 py-4 border-b border-border">
-          <button
-            onClick={() => { setPickingProgram(null); setSelectedWeek(null); }}
-            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-2"
-          >
-            <ChevronLeft size={14} /> Back
+      <div className="fixed inset-0 z-[100] flex flex-col" style={{ background: "#0a0a0a", color: "#e5e5e5" }}>
+        <header className="shrink-0 px-4 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+          <div>
+            <button
+              onClick={() => { setPickingProgram(null); setSelectedWeek(null); }}
+              className="flex items-center gap-1.5 text-xs font-medium mb-1 transition-colors"
+              style={{ color: "#737373" }}
+            >
+              <ChevronLeft size={14} /> Back
+            </button>
+            <h1 className="text-sm font-black uppercase tracking-widest" style={{ color: "#f97316" }}>
+              {pickingProgram.program_title}
+            </h1>
+            <p className="text-[10px] mt-0.5" style={{ color: "#525252" }}>Select a week & day to load</p>
+          </div>
+          <button onClick={onExit} className="h-8 w-8 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.06)" }}>
+            <X size={16} style={{ color: "#737373" }} />
           </button>
-          <h1 className="text-sm font-bold uppercase tracking-widest text-primary truncate">
-            {pickingProgram.program_title}
-          </h1>
-          <p className="text-[10px] text-muted-foreground mt-0.5">Select a week & day to load</p>
         </header>
 
         <main className="flex-1 overflow-y-auto px-4 py-4 space-y-5 pb-24">
           {loadingDays ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 size={20} className="animate-spin text-muted-foreground" />
+              <div className="w-5 h-5 rounded-full animate-spin" style={{ border: "2px solid #f97316", borderTopColor: "transparent" }} />
             </div>
           ) : weeks.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-12">No workouts found in this program.</p>
+            <p className="text-sm text-center py-12" style={{ color: "#525252" }}>No workouts found in this program.</p>
           ) : selectedWeek === null ? (
-            /* Week selector */
             <section className="space-y-2">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                Choose Week
-              </span>
+              <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#525252" }}>Choose Week</span>
               {weeks.map((w) => (
                 <button
                   key={w}
                   onClick={() => setSelectedWeek(w)}
-                  className="w-full text-left bg-card border border-border p-3 hover:border-primary/40 transition-colors flex items-center gap-3"
+                  className="w-full text-left rounded-xl p-4 flex items-center gap-3 transition-all active:scale-[0.97]"
+                  style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(249,115,22,0.15)" }}
                 >
-                  <Play size={14} className="text-primary flex-shrink-0" />
-                  <p className="text-sm font-bold text-foreground">Week {w}</p>
-                  <span className="ml-auto text-[10px] text-muted-foreground">
+                  <Play size={14} style={{ color: "#f97316" }} />
+                  <p className="text-sm font-bold" style={{ color: "#fafafa" }}>Week {w}</p>
+                  <span className="ml-auto text-[10px]" style={{ color: "#525252" }}>
                     {weekDays.filter((wd) => wd.week_number === w).length} days
                   </span>
                 </button>
               ))}
             </section>
           ) : (
-            /* Day selector */
             <section className="space-y-2">
-              <button
-                onClick={() => setSelectedWeek(null)}
-                className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors mb-1"
-              >
+              <button onClick={() => setSelectedWeek(null)} className="flex items-center gap-1 text-[10px] mb-1 transition-colors" style={{ color: "#737373" }}>
                 <ChevronLeft size={12} /> All Weeks
               </button>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                Week {selectedWeek} — Choose Day
-              </span>
+              <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#525252" }}>Week {selectedWeek} — Choose Day</span>
               {daysForWeek.map((d) => (
                 <button
                   key={d}
                   onClick={() => loadDay(selectedWeek, d)}
-                  className="w-full text-left bg-card border border-border p-3 hover:border-primary/40 transition-colors flex items-center gap-3"
+                  className="w-full text-left rounded-xl p-4 flex items-center gap-3 transition-all active:scale-[0.97]"
+                  style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(0,240,255,0.15)" }}
                 >
-                  <Dumbbell size={14} className="text-primary flex-shrink-0" />
-                  <p className="text-sm font-bold text-foreground">Day {d}</p>
+                  <Dumbbell size={14} style={{ color: "#00f0ff" }} />
+                  <p className="text-sm font-bold" style={{ color: "#fafafa" }}>Day {d}</p>
                 </button>
               ))}
             </section>
           )}
         </main>
-
-        <footer className="fixed bottom-0 w-full z-50 bg-background/95 backdrop-blur-md border-t border-border px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
-          <div className="max-w-lg mx-auto">
-            <button
-              onClick={() => { setPickingProgram(null); setSelectedWeek(null); }}
-              className="w-full h-10 border border-border text-muted-foreground text-xs font-bold uppercase tracking-widest hover:text-foreground transition-colors"
-            >
-              ← Back to Selection
-            </button>
-          </div>
-        </footer>
       </div>
     );
   }
