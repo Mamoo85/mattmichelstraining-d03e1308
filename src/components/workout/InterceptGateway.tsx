@@ -54,6 +54,7 @@ const InterceptGateway = ({ onSelect, onExit }: InterceptGatewayProps) => {
   const [masterTemplates, setMasterTemplates] = useState<CommunityWorkout[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAiGenerator, setShowAiGenerator] = useState(false);
+  const [showTip, setShowTip] = useState(() => !safeLocalStorage.getItem(WORKOUT_ZONE_TIP.storageKey));
 
   // Week/Day picker state
   const [pickingProgram, setPickingProgram] = useState<ActiveProgramEntry | null>(null);
