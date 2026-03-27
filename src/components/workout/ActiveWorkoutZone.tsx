@@ -586,10 +586,17 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
 
   return (
     <>
-      <div className="fixed inset-0 z-[110] bg-[#050505] flex flex-col">
-        {/* ─── STEALTH HEADER ─── */}
-        <header className="shrink-0 flex items-center justify-between px-4 py-2.5 pt-[calc(0.625rem+env(safe-area-inset-top))] bg-[#050505]/90 backdrop-blur-md border-b border-white/[0.04] z-10">
-          <div className="min-w-0 flex-1">
+      <div className="fixed inset-0 z-[110] flex flex-col" style={{ background: "#050505" }}>
+        {/* ─── NEON HEADER ─── */}
+        <header className="shrink-0 flex items-center justify-between px-4 py-2.5 pt-[calc(0.625rem+env(safe-area-inset-top))] z-10" style={{ background: "rgba(5,5,5,0.92)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(249,115,22,0.1)" }}>
+          <div className="min-w-0 flex-1 flex items-center gap-3">
+            <button
+              onClick={onFinish}
+              className="h-8 w-8 rounded-full flex items-center justify-center shrink-0 transition-all active:scale-90"
+              style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}
+            >
+              <X size={14} style={{ color: "#f97316" }} />
+            </button>
             {editingTitle ? (
               <input
                 ref={titleInputRef}
@@ -599,12 +606,14 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
                 onBlur={() => setEditingTitle(false)}
                 onKeyDown={(e) => { if (e.key === "Enter") setEditingTitle(false); }}
                 autoFocus
-                className="text-base font-bold text-foreground bg-transparent border-b border-white/20 px-0 py-0.5 outline-none w-full max-w-[180px]"
+                className="text-sm font-bold bg-transparent border-b px-0 py-0.5 outline-none w-full max-w-[160px]"
+                style={{ color: "#fafafa", borderColor: "rgba(249,115,22,0.3)" }}
               />
             ) : (
               <button
                 onClick={() => setEditingTitle(true)}
-                className="text-base font-bold text-foreground truncate max-w-[180px] hover:opacity-70 transition-opacity"
+                className="text-sm font-bold truncate max-w-[160px] hover:opacity-70 transition-opacity"
+                style={{ color: "#fafafa" }}
                 title="Tap to edit title"
               >
                 {workoutTitle}
@@ -613,17 +622,16 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
-            {/* Glowing digital watch timer */}
             <WorkoutTimer
               initialElapsed={initialContext?.resumedElapsed || 0}
               autoStart={timerAutoStart}
               onElapsedChange={handleElapsedChange}
             />
-            {/* Muted Finish text */}
             <button
               onClick={handleFinishClick}
               disabled={saving}
-              className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95"
+              style={{ background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.25)", color: "#22c55e" }}
             >
               {saving ? <Loader2 size={14} className="animate-spin" /> : "Finish"}
             </button>
