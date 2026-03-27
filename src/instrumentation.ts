@@ -1,12 +1,11 @@
 // OpenTelemetry instrumentation for Kubiks
 import { trace } from '@opentelemetry/api';
+import { WebTracerProvider, SimpleSpanProcessor, ConsoleSpanExporter } from '@opentelemetry/sdk-trace-web';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
+import { registerInstrumentations } from '@opentelemetry/instrumentation';
+import { getWebAutoInstrumentations } from '@opentelemetry/auto-instrumentations-web';
 
 try {
-  const { WebTracerProvider, SimpleSpanProcessor, ConsoleSpanExporter } = await import('@opentelemetry/sdk-trace-web');
-  const { OTLPTraceExporter } = await import('@opentelemetry/exporter-trace-otlp-http');
-  const { registerInstrumentations } = await import('@opentelemetry/instrumentation');
-  const { getWebAutoInstrumentations } = await import('@opentelemetry/auto-instrumentations-web');
-
   const otlpExporter = new OTLPTraceExporter({
     url: import.meta.env.VITE_OTEL_EXPORTER_OTLP_ENDPOINT || 'https://ingest.kubiks.app/v1/traces',
     headers: import.meta.env.VITE_OTEL_EXPORTER_OTLP_HEADERS
@@ -21,7 +20,6 @@ try {
 
   const provider = new WebTracerProvider({ spanProcessors });
   provider.register();
-
   trace.setGlobalTracerProvider(provider);
 
   registerInstrumentations({
@@ -34,4 +32,4 @@ try {
   console.warn('[OTel] Instrumentation init failed:', e);
 }
 
-export {};
+export default {};
