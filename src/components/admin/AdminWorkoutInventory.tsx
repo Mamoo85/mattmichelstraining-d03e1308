@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import {
-  Loader2, Plus, Pencil, Trash2, ChevronDown, ChevronRight, Dumbbell, X, Save, Search, Sparkles, Upload, Eye, EyeOff,
+  Loader2, Plus, Pencil, Trash2, ChevronDown, ChevronRight, Dumbbell, X, Save, Search, Sparkles, Upload, Eye, EyeOff, Gift,
 } from "lucide-react";
+import GiftWorkoutModal from "./GiftWorkoutModal";
 import { toast } from "@/hooks/use-toast";
 import ConfirmActionModal from "@/components/shared/ConfirmActionModal";
 
