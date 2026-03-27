@@ -74,6 +74,7 @@ const AdminInstagramPosts = lazy(() => import("@/components/admin/AdminInstagram
 const AdminContentGenerator = lazy(() => import("@/components/admin/AdminContentGenerator"));
 const UserActivityFeed = lazy(() => import("@/components/admin/UserActivityFeed"));
 const AdminAiCommandCenter = lazy(() => import("@/components/admin/AdminAiCommandCenter"));
+const AdminImageMatcher = lazy(() => import("@/components/admin/AdminImageMatcher"));
 
 const MASTER_TABS = [
   { key: "ai", label: "AI Center", icon: Bot, desc: "All AI · One Place" },
@@ -349,6 +350,7 @@ const Admin = () => {
           <SubTabs tabs={[
             { key: "programs", label: "Programs", content: <AdminPrograms /> },
             { key: "exercises", label: "Exercise Library", content: <AdminExerciseLibrary /> },
+            { key: "image-matcher", label: "Image Matcher", content: <AdminImageMatcher /> },
             { key: "workouts", label: "Workouts", content: <AdminWorkoutInventory /> },
             { key: "batch", label: "AI Workouts", content: <AdminBatchGenerator /> },
             { key: "user-generated", label: "User Generated", content: <AdminUserGeneratedWorkouts /> },
