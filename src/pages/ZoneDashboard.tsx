@@ -209,6 +209,7 @@ const ZoneDashboard = () => {
   const [streak, setStreak] = useState(0);
   const [sessionsThisWeek, setSessionsThisWeek] = useState(0);
   const [currentProgram, setCurrentProgram] = useState("—");
+  const [displayName, setDisplayName] = useState("Athlete");
 
   useEffect(() => {
     if (!user) return;
@@ -268,7 +269,7 @@ const ZoneDashboard = () => {
     safeLocalStorage.setItem(TAB_STORAGE_KEY, tab);
   };
 
-  const displayName = profile?.first_name || "Athlete";
+  
 
   return (
     <ZoneThemeWrapper className="min-h-screen pb-24">
