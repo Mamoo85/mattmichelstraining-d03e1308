@@ -204,6 +204,85 @@ const OverloadCard = memo(() => {
 });
 OverloadCard.displayName = "OverloadCard";
 
+/* ── Train Tab (collapsible sections) ───────── */
+const TrainSection = ({ title, subtitle, icon: Icon, color, children }: {
+  title: string; subtitle: string; icon: typeof Dumbbell; color: string; children: React.ReactNode;
+}) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${color}33` }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center gap-4 p-4 text-left transition-all active:scale-[0.98]"
+      >
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${color}22` }}>
+          <Icon size={18} style={{ color }} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-black uppercase tracking-wider" style={{ color }}>{title}</p>
+          <p className="text-[11px] mt-0.5" style={{ color: "#737373" }}>{subtitle}</p>
+        </div>
+        <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
+          <ChevronDown size={16} style={{ color }} />
+        </motion.div>
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <div className="px-4 pb-4" style={{ borderTop: `1px solid ${color}1a` }}>
+              {children}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+const TrainTabContent = memo(() => (
+  <Suspense fallback={<TabLoader />}>
+    <div className="space-y-3">
+      <div
+        className="rounded-2xl p-5"
+        style={{
+          background: "linear-gradient(135deg, rgba(249,115,22,0.10), rgba(168,85,247,0.06))",
+          border: "1px solid rgba(249,115,22,0.18)",
+        }}
+      >
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: "linear-gradient(135deg, #f97316, #ea580c)" }}>
+            <Dumbbell size={22} color="#fff" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-black" style={{ color: "#fafafa" }}>Your Training Library</p>
+            <p className="text-[11px] mt-0.5" style={{ color: "#a3a3a3" }}>Programs, workouts & today's session — all in one place</p>
+          </div>
+        </div>
+      </div>
+
+      <TrainSection title="Today's Training" subtitle="Pick up where you left off" icon={Play} color="#f97316">
+        <TodaysTrainingCard />
+      </TrainSection>
+
+      <TrainSection title="Workout Library" subtitle="Browse coach-built & community workouts" icon={Flame} color="#a855f7">
+        <WorkoutsTab />
+      </TrainSection>
+
+      <TrainSection title="My Programs" subtitle="Active & available training programs" icon={Target} color="#00f0ff">
+        <MyPrograms />
+      </TrainSection>
+    </div>
+  </Suspense>
+));
+TrainTabContent.displayName = "TrainTabContent";
+
+/* ── Home Tab ───────────────────────────────── */
 const HomeTab = memo(() => {
   const [chatOpen, setChatOpen] = useState(false);
   return (
@@ -314,7 +393,9 @@ const ZoneDashboard = () => {
         style={{ background: "rgba(10,10,10,0.92)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
       >
         <div className="flex items-center gap-3">
-          <img src={logoImg} alt="M²" className="h-8 w-8 rounded-lg object-cover" />
+          <div className="h-8 w-8 rounded-lg overflow-hidden flex items-center justify-center" style={{ background: "#000" }}>
+            <img src={logoImg} alt="M²" className="h-6 w-6 object-contain" />
+          </div>
           <div>
             <p className="text-[9px] font-bold uppercase tracking-[0.2em]" style={{ color: "#f97316" }}>THE ZONE</p>
             <p className="text-xs font-semibold" style={{ color: "#fafafa" }}>{displayName}</p>
@@ -345,13 +426,13 @@ const ZoneDashboard = () => {
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1.5">
                 <Flame size={16} style={{ color: "#f97316" }} />
-                <span className="text-sm font-black" style={{ color: "#fafafa" }}>{streak}</span>
+                <span className="text-base font-black" style={{ color: "#fafafa" }}>{streak}</span>
                 <span className="text-[10px] font-medium" style={{ color: "#737373" }}>day streak</span>
               </div>
               <div className="w-px h-4" style={{ background: "rgba(255,255,255,0.1)" }} />
               <div className="flex items-center gap-1.5">
                 <Activity size={14} style={{ color: "#a855f7" }} />
-                <span className="text-sm font-bold" style={{ color: "#fafafa" }}>{sessionsThisWeek}</span>
+                <span className="text-base font-black" style={{ color: "#fafafa" }}>{sessionsThisWeek}</span>
                 <span className="text-[10px] font-medium" style={{ color: "#737373" }}>this week</span>
               </div>
             </div>
@@ -454,90 +535,7 @@ const ZoneDashboard = () => {
 
             {activeTab === "generate" && <GenerateTabContent view={generateView} setView={setGenerateView} />}
 
-            {activeTab === "train" && (
-              <Suspense fallback={<TabLoader />}>
-                <div className="space-y-3">
-                  {/* Hero card */}
-                  <div
-                    className="rounded-2xl p-5"
-                    style={{
-                      background: "linear-gradient(135deg, rgba(249,115,22,0.10), rgba(168,85,247,0.06))",
-                      border: "1px solid rgba(249,115,22,0.18)",
-                    }}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: "linear-gradient(135deg, #f97316, #ea580c)" }}>
-                        <Dumbbell size={22} color="#fff" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-black" style={{ color: "#fafafa" }}>Your Training Library</p>
-                        <p className="text-[11px] mt-0.5" style={{ color: "#a3a3a3" }}>Programs, workouts & today's session — all in one place</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Today's Training */}
-                  <button
-                    onClick={() => {}}
-                    className="w-full rounded-2xl p-5 text-left transition-all active:scale-[0.97]"
-                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(249,115,22,0.2)" }}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(249,115,22,0.15)" }}>
-                        <Play size={18} style={{ color: "#f97316" }} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-black uppercase tracking-wider" style={{ color: "#f97316" }}>Today's Training</p>
-                        <p className="text-[11px] mt-0.5" style={{ color: "#737373" }}>Pick up where you left off</p>
-                      </div>
-                      <ChevronRight size={16} style={{ color: "#525252" }} />
-                    </div>
-                  </button>
-
-                  <TodaysTrainingCard />
-
-                  {/* Workout Library card */}
-                  <button
-                    onClick={() => {}}
-                    className="w-full rounded-2xl p-5 text-left transition-all active:scale-[0.97]"
-                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(168,85,247,0.2)" }}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(168,85,247,0.15)" }}>
-                        <Flame size={18} style={{ color: "#a855f7" }} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-black uppercase tracking-wider" style={{ color: "#a855f7" }}>Workout Library</p>
-                        <p className="text-[11px] mt-0.5" style={{ color: "#737373" }}>Browse coach-built & community workouts</p>
-                      </div>
-                      <ChevronRight size={16} style={{ color: "#525252" }} />
-                    </div>
-                  </button>
-
-                  <WorkoutsTab />
-
-                  {/* Programs card */}
-                  <button
-                    onClick={() => {}}
-                    className="w-full rounded-2xl p-5 text-left transition-all active:scale-[0.97]"
-                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(0,240,255,0.2)" }}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(0,240,255,0.15)" }}>
-                        <Target size={18} style={{ color: "#00f0ff" }} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-black uppercase tracking-wider" style={{ color: "#00f0ff" }}>My Programs</p>
-                        <p className="text-[11px] mt-0.5" style={{ color: "#737373" }}>Active & available training programs</p>
-                      </div>
-                      <ChevronRight size={16} style={{ color: "#525252" }} />
-                    </div>
-                  </button>
-
-                  <MyPrograms />
-                </div>
-              </Suspense>
-            )}
+            {activeTab === "train" && <TrainTabContent />}
 
             {activeTab === "home" && <HomeTab />}
           </motion.div>
