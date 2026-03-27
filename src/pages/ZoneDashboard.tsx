@@ -31,6 +31,8 @@ const CoachChatPanel = lazy(() => import("@/components/dashboard/CoachChatPanel"
 const CustomProgramRequest = lazy(() => import("@/components/dashboard/CustomProgramRequest"));
 const AiWorkoutSuggest = lazy(() => import("@/components/workout/AiWorkoutSuggest"));
 const FixItLibrary = lazy(() => import("@/components/features/FixItLibrary"));
+const QuickActivityLog = lazy(() => import("@/components/dashboard/QuickActivityLog"));
+const StudioCheckIn = lazy(() => import("@/components/sessions/StudioCheckIn"));
 
 type TabKey = "lifts" | "generate" | "train" | "home";
 
