@@ -415,6 +415,9 @@ const ZoneDashboard = () => {
   const [sessionsThisWeek, setSessionsThisWeek] = useState(0);
   const [currentProgram, setCurrentProgram] = useState("—");
   const [displayName, setDisplayName] = useState("Athlete");
+  const [topPR, setTopPR] = useState<{ name: string; weight: number } | null>(null);
+  const [totalLifts, setTotalLifts] = useState(0);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
