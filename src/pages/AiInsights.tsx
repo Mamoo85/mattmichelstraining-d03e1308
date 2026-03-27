@@ -172,7 +172,7 @@ My recent lifts: ${JSON.stringify(context.lifts)}`,
 
   return (
     <ZoneThemeWrapper className="min-h-screen pb-24" style={{ background: "#0a0a0a", color: "#e5e5e5" }}>
-      <SEOHead title="AI Insights | M² Performance" description="Your personalized AI training insights" />
+      <SEOHead title="AI Insights | M² Performance" description="Your personalized AI training insights" path="/ai-insights" />
 
       <header className="sticky top-0 z-50 flex items-center gap-3 px-4 py-3" style={{ background: "rgba(10,10,10,0.92)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
         <button onClick={() => navigate(-1)} className="h-8 w-8 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.06)" }}>

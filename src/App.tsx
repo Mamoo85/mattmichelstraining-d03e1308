@@ -87,6 +87,7 @@ const Results = lazyRetry(() => import("./pages/Results"));
 const DemoHomepage = lazyRetry(() => import("./pages/DemoHomepage"));
 const ZonePortal = lazyRetry(() => import("./pages/ZonePortal"));
 const ZoneDashboard = lazyRetry(() => import("./pages/ZoneDashboard"));
+const AiInsights = lazyRetry(() => import("./pages/AiInsights"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -256,6 +257,7 @@ const App = () => (
                     <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
                     <Route path="/admin/view-user/:userId" element={<ProtectedRoute><AdminViewUser /></ProtectedRoute>} />
                     <Route path="/dashboard" element={<ProtectedRoute><SubscriptionGuard><ZoneDashboard /></SubscriptionGuard></ProtectedRoute>} />
+                    <Route path="/ai-insights" element={<ProtectedRoute><SubscriptionGuard><AiInsights /></SubscriptionGuard></ProtectedRoute>} />
                     <Route path="/profile" element={<ProtectedRoute><SubscriptionGuard><Profile /></SubscriptionGuard></ProtectedRoute>} />
                     <Route path="/progress" element={<ProtectedRoute><SubscriptionGuard><Progress /></SubscriptionGuard></ProtectedRoute>} />
                     <Route path="/nutrition" element={<ProtectedRoute><SubscriptionGuard><Nutrition /></SubscriptionGuard></ProtectedRoute>} />
