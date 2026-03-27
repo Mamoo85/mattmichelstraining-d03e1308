@@ -13,6 +13,7 @@ interface FixItExercise {
   focus_area: string[];
   fix_it_protocol: string[];
   video_url: string | null;
+  image_url: string | null;
 }
 
 const PROTOCOLS = ["ACL Prevention", "Rotator Cuff", "Back Pain / McGill Big 3", "Concussion Return-to-Play", "Ankle Stability", "Hip Mobility"] as const;
@@ -28,7 +29,7 @@ const FixItLibrary = () => {
     const fetch = async () => {
       const { data, error } = await supabase
         .from("exercise_library")
-        .select("id, title, the_why, equipment_needed, focus_area, fix_it_protocol, video_url")
+        .select("id, title, the_why, equipment_needed, focus_area, fix_it_protocol, video_url, image_url")
         .eq("is_fix_it", true)
         .order("title");
       if (!error && data) setExercises(data as FixItExercise[]);
@@ -108,24 +109,42 @@ const FixItLibrary = () => {
             return (
               <div key={ex.id} className="bg-card shadow-m2 hover:bg-m2-surface-hover transition-all cursor-pointer" onClick={() => setExpandedId(isExpanded ? null : ex.id)}>
                 <div className="p-4 flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 mb-2 flex-wrap">
-                      {ex.fix_it_protocol?.map((p) => (
-                        <span key={p} className="text-[9px] font-bold uppercase tracking-widest bg-destructive/15 text-destructive px-2 py-0.5">{p}</span>
-                      ))}
-                      {ex.focus_area?.map((fa) => (
-                        <span key={fa} className="text-[9px] font-bold uppercase tracking-widest bg-primary/15 text-primary px-2 py-0.5">{fa}</span>
-                      ))}
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    {ex.image_url && (
+                      <img
+                        src={ex.image_url}
+                        alt={ex.title}
+                        className="w-12 h-12 object-cover rounded border border-border flex-shrink-0"
+                        loading="lazy"
+                      />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+                        {ex.fix_it_protocol?.map((p) => (
+                          <span key={p} className="text-[9px] font-bold uppercase tracking-widest bg-destructive/15 text-destructive px-2 py-0.5">{p}</span>
+                        ))}
+                        {ex.focus_area?.map((fa) => (
+                          <span key={fa} className="text-[9px] font-bold uppercase tracking-widest bg-primary/15 text-primary px-2 py-0.5">{fa}</span>
+                        ))}
+                      </div>
+                      <h3 className="text-sm font-bold text-foreground leading-tight">{ex.title}</h3>
+                      <p className="text-[11px] text-muted-foreground mt-1">
+                        <Heart size={10} className="inline mr-1" />{ex.equipment_needed}
+                      </p>
                     </div>
-                    <h3 className="text-sm font-bold text-foreground leading-tight">{ex.title}</h3>
-                    <p className="text-[11px] text-muted-foreground mt-1">
-                      <Heart size={10} className="inline mr-1" />{ex.equipment_needed}
-                    </p>
                   </div>
                   {isExpanded ? <ChevronUp size={16} className="text-muted-foreground flex-shrink-0 mt-1" /> : <ChevronDown size={16} className="text-muted-foreground flex-shrink-0 mt-1" />}
                 </div>
                 {isExpanded && (
                   <div className="px-4 pb-4 border-t border-border pt-3 space-y-3">
+                    {ex.image_url && (
+                      <img
+                        src={ex.image_url}
+                        alt={ex.title}
+                        className="w-full max-h-64 object-contain rounded border border-border bg-muted/30"
+                        loading="lazy"
+                      />
+                    )}
                     <ExerciseVideoEmbed
                       videoUrl={ex.video_url}
                       exerciseTitle={ex.title}

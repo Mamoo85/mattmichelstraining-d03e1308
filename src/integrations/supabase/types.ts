@@ -701,6 +701,7 @@ export type Database = {
           fix_it_protocol: string[]
           focus_area: string[]
           id: string
+          image_url: string | null
           is_fix_it: boolean
           level: string
           sport: string[]
@@ -716,6 +717,7 @@ export type Database = {
           fix_it_protocol?: string[]
           focus_area?: string[]
           id?: string
+          image_url?: string | null
           is_fix_it?: boolean
           level?: string
           sport?: string[]
@@ -731,6 +733,7 @@ export type Database = {
           fix_it_protocol?: string[]
           focus_area?: string[]
           id?: string
+          image_url?: string | null
           is_fix_it?: boolean
           level?: string
           sport?: string[]

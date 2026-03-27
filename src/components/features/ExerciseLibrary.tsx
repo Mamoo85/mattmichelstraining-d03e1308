@@ -15,6 +15,7 @@ interface DbExercise {
   sport: string[];
   video_url: string | null;
   level: string;
+  image_url: string | null;
 }
 
 const CLIENT_TYPES = ["Athlete", "Lifestyle Fitness"] as const;
@@ -287,6 +288,15 @@ const ExerciseLibrary = () => {
                 onClick={() => setExpandedId(isExpanded ? null : ex.id)}
               >
                 <div className="p-4 flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    {ex.image_url && (
+                      <img
+                        src={ex.image_url}
+                        alt={ex.title}
+                        className="w-12 h-12 object-cover rounded border border-border flex-shrink-0"
+                        loading="lazy"
+                      />
+                    )}
                   <div className="flex-1 min-w-0">
                     {/* Tags row */}
                     <div className="flex items-center gap-1.5 mb-2 flex-wrap">
@@ -331,6 +341,7 @@ const ExerciseLibrary = () => {
                       ))}
                     </div>
                   </div>
+                  </div>
                   {isExpanded ? (
                     <ChevronUp size={16} className="text-muted-foreground flex-shrink-0 mt-1" />
                   ) : (
@@ -340,6 +351,14 @@ const ExerciseLibrary = () => {
 
                 {isExpanded && (
                   <div className="px-4 pb-4 border-t border-border pt-3 space-y-3">
+                    {ex.image_url && (
+                      <img
+                        src={ex.image_url}
+                        alt={ex.title}
+                        className="w-full max-h-64 object-contain rounded border border-border bg-muted/30"
+                        loading="lazy"
+                      />
+                    )}
                     <div>
                       <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-1">
                         The WHY
