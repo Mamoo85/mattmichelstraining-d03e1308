@@ -124,19 +124,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     let subscription: { unsubscribe: () => void } | null = null;
     let initialDone = false;
+    let signedOutAlready = false;
+
+    const safeClearSession = () => {
+      if (signedOutAlready) return;
+      signedOutAlready = true;
+      supabase.auth.signOut({ scope: "local" }).catch(() => {});
+      setSession(null);
+      setSubscribed(false);
+      setSubscriptionTier(null);
+      setSubscriptionEnd(null);
+    };
 
     try {
       const result = supabase.auth.onAuthStateChange((event, newSession) => {
         // If the refresh token is invalid/expired, clear the dead session
         if (event === "TOKEN_REFRESHED" && !newSession) {
           console.warn("[Auth] Token refresh failed — clearing stale session");
-          supabase.auth.signOut().catch(() => {});
-          setSession(null);
-          setSubscribed(false);
-          setSubscriptionTier(null);
-          setSubscriptionEnd(null);
+          safeClearSession();
           if (!initialDone) { initialDone = true; setLoading(false); }
           return;
+        }
+        if (event === "SIGNED_OUT") {
+          signedOutAlready = true;
         }
         setSession(newSession);
         if (!initialDone) {
@@ -161,7 +171,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         initialDone = true;
         setLoading(false);
       }
-    }, 2000);
+    }, 3000);
 
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       if (!initialDone) {
@@ -172,18 +182,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           checkSubscription();
         }
       }
-      // If there's a session but it might be stale, verify it
+      // Verify the session is still valid — but only sign out on definitive failures
+      // Use a delayed check to allow token refresh to complete first
       if (s) {
-        supabase.auth.getUser().then(({ error: userError }) => {
-          if (userError && (userError.message?.includes("session_not_found") || userError.status === 403)) {
-            console.warn("[Auth] Stale session detected — signing out");
-            supabase.auth.signOut().catch(() => {});
-            setSession(null);
-            setSubscribed(false);
-            setSubscriptionTier(null);
-            setSubscriptionEnd(null);
-          }
-        });
+        setTimeout(() => {
+          if (signedOutAlready) return;
+          supabase.auth.getUser().then(({ error: userError }) => {
+            if (signedOutAlready) return;
+            if (userError) {
+              const msg = userError.message || "";
+              const status = (userError as any).status;
+              // Only clear on definitive auth failures, not transient network errors
+              if (
+                msg.includes("session_not_found") ||
+                msg.includes("invalid claim") ||
+                msg.includes("JWT expired") ||
+                status === 401 ||
+                status === 403
+              ) {
+                console.warn("[Auth] Stale session detected — signing out:", msg);
+                safeClearSession();
+              }
+              // For other errors (network, 500, etc.), keep the session — it may recover
+            }
+          }).catch(() => {
+            // Network error — don't sign out, session may still be valid
+          });
+        }, 1500);
       }
     }).catch(() => {
       if (!initialDone) {
@@ -206,11 +231,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [session, checkSubscription]);
 
   const signOut = async () => {
-    const { queryClient } = await import("@/App");
-    queryClient.clear();
+    try {
+      const { queryClient } = await import("@/App");
+      queryClient.clear();
+    } catch {}
     safeLocalStorage.removeItem("m2-query-cache");
     safeLocalStorage.removeItem("m2_offline_queue");
-    await supabase.auth.signOut();
+    // Use scope: "local" first to clear local state immediately,
+    // then attempt server-side signout (non-blocking)
+    await supabase.auth.signOut({ scope: "local" });
+    supabase.auth.signOut({ scope: "global" }).catch(() => {});
   };
 
   return (
