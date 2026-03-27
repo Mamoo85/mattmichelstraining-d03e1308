@@ -231,11 +231,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [session, checkSubscription]);
 
   const signOut = async () => {
-    const { queryClient } = await import("@/App");
-    queryClient.clear();
+    try {
+      const { queryClient } = await import("@/App");
+      queryClient.clear();
+    } catch {}
     safeLocalStorage.removeItem("m2-query-cache");
     safeLocalStorage.removeItem("m2_offline_queue");
-    await supabase.auth.signOut();
+    // Use scope: "local" first to clear local state immediately,
+    // then attempt server-side signout (non-blocking)
+    await supabase.auth.signOut({ scope: "local" });
+    supabase.auth.signOut({ scope: "global" }).catch(() => {});
   };
 
   return (
