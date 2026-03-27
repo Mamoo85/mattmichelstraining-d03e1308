@@ -305,44 +305,74 @@ const InterceptGateway = ({ onSelect, onExit }: InterceptGatewayProps) => {
   }
 
   return (
-    <div className="fixed inset-0 z-[100] bg-background flex flex-col">
-      <header className="shrink-0 px-4 py-4 border-b border-border">
-        <h1 className="text-sm font-bold uppercase tracking-widest text-primary">
-          What Are We Executing Today?
-        </h1>
+    <div className="fixed inset-0 z-[100] flex flex-col" style={{ background: "#0a0a0a", color: "#e5e5e5" }}>
+      <header className="shrink-0 px-4 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+        <div>
+          <h1 className="text-sm font-black uppercase tracking-widest" style={{ color: "#f97316" }}>
+            What Are We Executing?
+          </h1>
+          <p className="text-[10px] mt-0.5" style={{ color: "#525252" }}>Pick a workout, start fresh, or dictate one</p>
+        </div>
+        <button
+          onClick={onExit}
+          className="h-9 w-9 rounded-full flex items-center justify-center transition-all active:scale-90"
+          style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}
+        >
+          <X size={18} style={{ color: "#f97316" }} />
+        </button>
       </header>
 
-      <main className="flex-1 overflow-y-auto px-4 py-4 space-y-6 pb-24">
-        {/* Open Workout */}
+      <main className="flex-1 overflow-y-auto px-4 py-4 space-y-4 pb-28">
+        {/* Open Workout / Dictate */}
         <button
           onClick={handleFreestyle}
-          className="w-full h-12 border-2 border-primary text-primary flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest hover:bg-primary hover:text-primary-foreground transition-all"
+          className="w-full rounded-2xl py-3.5 flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest transition-all active:scale-[0.97]"
+          style={{
+            background: "linear-gradient(135deg, rgba(0,240,255,0.12), rgba(168,85,247,0.08))",
+            border: "1px solid rgba(0,240,255,0.25)",
+            color: "#00f0ff",
+          }}
         >
-          <Zap size={14} /> Open Workout
+          <Mic size={15} /> Dictate or Build Your Own
+        </button>
+
+        {/* Empty workout */}
+        <button
+          onClick={() => onSelect({ title: "Open Workout", source: "manual" })}
+          className="w-full rounded-2xl py-3 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest transition-all active:scale-[0.97]"
+          style={{
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            color: "#a3a3a3",
+          }}
+        >
+          <Zap size={14} /> Start Empty — Add Exercises
         </button>
 
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <Loader2 size={20} className="animate-spin text-muted-foreground" />
+            <div className="w-5 h-5 rounded-full animate-spin" style={{ border: "2px solid #f97316", borderTopColor: "transparent" }} />
           </div>
         ) : (
           <>
             {programs.length > 0 && (
               <section className="space-y-2">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5" style={{ color: "#f97316" }}>
                   <BookOpen size={12} /> Active Program
                 </span>
                 {programs.map((p) => (
                   <button
                     key={p.id}
                     onClick={() => handleProgram(p)}
-                    className="w-full text-left bg-card border border-border p-3 hover:border-primary/40 transition-colors flex items-center gap-3"
+                    className="w-full text-left rounded-xl p-4 flex items-center gap-3 transition-all active:scale-[0.97]"
+                    style={{ background: "rgba(249,115,22,0.06)", border: "1px solid rgba(249,115,22,0.15)" }}
                   >
-                    <Play size={14} className="text-primary flex-shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-sm font-bold text-foreground truncate">{p.program_title}</p>
-                      {p.sport && <p className="text-[10px] text-muted-foreground">{p.sport}</p>}
+                    <Play size={14} style={{ color: "#f97316" }} />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-bold truncate" style={{ color: "#fafafa" }}>{p.program_title}</p>
+                      {p.sport && <p className="text-[10px]" style={{ color: "#525252" }}>{p.sport}</p>}
                     </div>
+                    <ChevronRight size={14} style={{ color: "#525252" }} />
                   </button>
                 ))}
               </section>
@@ -350,20 +380,22 @@ const InterceptGateway = ({ onSelect, onExit }: InterceptGatewayProps) => {
 
             {activePrograms.length > 0 && (
               <section className="space-y-2">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5" style={{ color: "#a855f7" }}>
                   <Dumbbell size={12} /> My Programs
                 </span>
                 {activePrograms.map((ap) => (
                   <button
                     key={ap.id}
                     onClick={() => handleActiveProgram(ap)}
-                    className="w-full text-left bg-card border border-border p-3 hover:border-primary/40 transition-colors flex items-center gap-3"
+                    className="w-full text-left rounded-xl p-4 flex items-center gap-3 transition-all active:scale-[0.97]"
+                    style={{ background: "rgba(168,85,247,0.06)", border: "1px solid rgba(168,85,247,0.15)" }}
                   >
-                    <Play size={14} className="text-primary flex-shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-sm font-bold text-foreground truncate">{ap.program_title}</p>
-                      {ap.sport && <p className="text-[10px] text-muted-foreground">{ap.sport}</p>}
+                    <Play size={14} style={{ color: "#a855f7" }} />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-bold truncate" style={{ color: "#fafafa" }}>{ap.program_title}</p>
+                      {ap.sport && <p className="text-[10px]" style={{ color: "#525252" }}>{ap.sport}</p>}
                     </div>
+                    <ChevronRight size={14} style={{ color: "#525252" }} />
                   </button>
                 ))}
               </section>
@@ -371,17 +403,19 @@ const InterceptGateway = ({ onSelect, onExit }: InterceptGatewayProps) => {
 
             {personalWorkouts.length > 0 && (
               <section className="space-y-2">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5" style={{ color: "#00f0ff" }}>
                   <Dumbbell size={12} /> Personal Bank
                 </span>
                 {personalWorkouts.map((w) => (
                   <button
                     key={w.id}
                     onClick={() => handleWorkout(w, "custom")}
-                    className="w-full text-left bg-card border border-border p-3 hover:border-primary/40 transition-colors flex items-center gap-3"
+                    className="w-full text-left rounded-xl p-4 flex items-center gap-3 transition-all active:scale-[0.97]"
+                    style={{ background: "rgba(0,240,255,0.04)", border: "1px solid rgba(0,240,255,0.12)" }}
                   >
-                    <Play size={14} className="text-primary flex-shrink-0" />
-                    <p className="text-sm font-bold text-foreground truncate">{w.title}</p>
+                    <Play size={14} style={{ color: "#00f0ff" }} />
+                    <p className="text-sm font-bold truncate" style={{ color: "#fafafa" }}>{w.title}</p>
+                    <ChevronRight size={14} style={{ color: "#525252" }} className="ml-auto shrink-0" />
                   </button>
                 ))}
               </section>
@@ -389,7 +423,7 @@ const InterceptGateway = ({ onSelect, onExit }: InterceptGatewayProps) => {
 
             {masterTemplates.length > 0 && (
               <section className="space-y-2">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5" style={{ color: "#fb923c" }}>
                   <BookOpen size={12} /> M² Master Templates
                 </span>
                 {masterTemplates.map((t) => (
@@ -400,23 +434,21 @@ const InterceptGateway = ({ onSelect, onExit }: InterceptGatewayProps) => {
                         ? handleWorkout(t, "community")
                         : handleTemplateLocked()
                     }
-                    className={`w-full text-left bg-card border border-border p-3 transition-colors flex items-center gap-3 ${
-                      hasTemplateAccess
-                        ? "hover:border-primary/40"
-                        : "opacity-50 cursor-not-allowed"
+                    className={`w-full text-left rounded-xl p-4 flex items-center gap-3 transition-all ${
+                      hasTemplateAccess ? "active:scale-[0.97]" : "opacity-40 cursor-not-allowed"
                     }`}
+                    style={{ background: "rgba(251,146,60,0.05)", border: "1px solid rgba(251,146,60,0.12)" }}
                   >
                     {hasTemplateAccess ? (
-                      <Play size={14} className="text-primary flex-shrink-0" />
+                      <Play size={14} style={{ color: "#fb923c" }} />
                     ) : (
-                      <Lock size={14} className="text-muted-foreground flex-shrink-0" />
+                      <Lock size={14} style={{ color: "#525252" }} />
                     )}
-                    <div className="min-w-0">
-                      <p className="text-sm font-bold text-foreground truncate">{t.title}</p>
-                      {t.creator_name && (
-                        <p className="text-[10px] text-muted-foreground">by {t.creator_name}</p>
-                      )}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-bold truncate" style={{ color: "#fafafa" }}>{t.title}</p>
+                      {t.creator_name && <p className="text-[10px]" style={{ color: "#525252" }}>by {t.creator_name}</p>}
                     </div>
+                    <ChevronRight size={14} style={{ color: "#525252" }} />
                   </button>
                 ))}
               </section>
@@ -425,16 +457,33 @@ const InterceptGateway = ({ onSelect, onExit }: InterceptGatewayProps) => {
         )}
       </main>
 
-      <footer className="fixed bottom-0 w-full z-50 bg-background/95 backdrop-blur-md border-t border-border px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+      {/* Exit footer */}
+      <footer className="fixed bottom-0 w-full z-50 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]" style={{ background: "rgba(10,10,10,0.95)", backdropFilter: "blur(20px)", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
         <div className="max-w-lg mx-auto">
           <button
             onClick={onExit}
-            className="w-full h-10 border border-border text-muted-foreground text-xs font-bold uppercase tracking-widest hover:text-foreground transition-colors"
+            className="w-full py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all active:scale-[0.97]"
+            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#737373" }}
           >
-            ← Back to Dashboard
+            ← Exit to Dashboard
           </button>
         </div>
       </footer>
+
+      {/* Learning popup */}
+      {showTip && (
+        <FeatureLearningModal
+          tip={WORKOUT_ZONE_TIP}
+          onContinue={() => {
+            safeLocalStorage.setItem(WORKOUT_ZONE_TIP.storageKey, "1");
+            setShowTip(false);
+          }}
+          onDismiss={() => {
+            safeLocalStorage.setItem(WORKOUT_ZONE_TIP.storageKey, "1");
+            setShowTip(false);
+          }}
+        />
+      )}
     </div>
   );
 };
