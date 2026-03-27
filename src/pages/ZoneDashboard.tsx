@@ -594,7 +594,7 @@ const ZoneDashboard = () => {
 
             {/* Right: Profile Avatar Card */}
             <button
-              onClick={() => navigate("/progress")}
+              onClick={() => navigate("/profile")}
               className="shrink-0 w-[100px] flex flex-col items-center justify-center gap-1.5 relative overflow-hidden transition-all active:scale-95"
               style={{ borderLeft: "1px solid rgba(255,255,255,0.06)" }}
             >
