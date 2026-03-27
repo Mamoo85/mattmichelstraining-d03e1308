@@ -688,16 +688,17 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
 
           {exercises.length === 0 && !showPicker && (
             <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
-              <div className="h-12 w-12 rounded-full border border-white/[0.08] flex items-center justify-center">
-                <Plus size={20} className="text-muted-foreground" />
+              <div className="h-14 w-14 rounded-full flex items-center justify-center" style={{ background: "rgba(249,115,22,0.1)", border: "1px solid rgba(249,115,22,0.2)" }}>
+                <Plus size={22} style={{ color: "#f97316" }} />
               </div>
               <div>
-                <h3 className="text-base font-bold text-foreground mb-1">Ready to train</h3>
-                <p className="text-sm text-muted-foreground">Add exercises to start logging.</p>
+                <h3 className="text-base font-black" style={{ color: "#fafafa" }}>Ready to train</h3>
+                <p className="text-sm mt-1" style={{ color: "#525252" }}>Add exercises to start logging</p>
               </div>
               <button
                 onClick={() => setShowPicker(true)}
-                className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-[hsl(var(--synth-cyan))] border border-[hsl(var(--synth-cyan))]/30 rounded-full hover:bg-[hsl(var(--synth-cyan))]/10 transition-all active:scale-95"
+                className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold rounded-full transition-all active:scale-95"
+                style={{ background: "rgba(0,240,255,0.1)", border: "1px solid rgba(0,240,255,0.25)", color: "#00f0ff" }}
               >
                 <Plus size={14} /> Add Exercise
               </button>
