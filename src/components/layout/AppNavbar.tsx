@@ -96,7 +96,7 @@ const AppNavbar = () => {
   const appActive = appLinks.some((l) => location.pathname === l.to);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm shadow-m2 pt-[env(safe-area-inset-top)]">
+    <nav aria-label="Main navigation" className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm shadow-m2 pt-[env(safe-area-inset-top)]">
       <div className="container flex items-center justify-between h-14">
         {/* Logo / Timer toggle */}
         {user && ["/dashboard", "/progress", "/coach", "/nutrition", "/profile"].includes(location.pathname) ? (
@@ -110,7 +110,7 @@ const AppNavbar = () => {
           </button>
         ) : (
           <Link to="/" className="flex items-center gap-1.5 group transition-m2 shrink-0">
-            <img src={m2Logo} alt="M² Training" className="w-9 h-9 object-contain" />
+            <img src={m2Logo} alt="M² Training" width={36} height={36} className="w-9 h-9 object-contain" />
           </Link>
         )}
 
@@ -190,6 +190,7 @@ const AppNavbar = () => {
           {user ? (
             <button
               onClick={signOut}
+              aria-label="Sign out"
               className="flex items-center gap-1 px-2.5 py-2 text-[11px] font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-m2"
             >
               <LogOut size={14} />
