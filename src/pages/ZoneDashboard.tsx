@@ -768,6 +768,22 @@ const ZoneDashboard = () => {
             {activeTab === "lifts" && (
               <Suspense fallback={<TabLoader />}>
                 <div className="space-y-4">
+                  {/* What Did You Do Today */}
+                  <button
+                    onClick={() => setShowQuickLog(true)}
+                    className="w-full rounded-2xl p-4 flex items-center gap-4 transition-all active:scale-[0.97]"
+                    style={{ background: "linear-gradient(135deg, rgba(34,197,94,0.1), rgba(22,163,74,0.06))", border: "1px solid rgba(34,197,94,0.2)" }}
+                  >
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "linear-gradient(135deg, #22c55e, #16a34a)" }}>
+                      <Mic size={18} color="#fff" />
+                    </div>
+                    <div className="text-left flex-1 min-w-0">
+                      <p className="text-xs font-black" style={{ color: "#fafafa" }}>What Did You Do Today?</p>
+                      <p className="text-[10px] mt-0.5" style={{ color: "#525252" }}>Voice or text — log cardio, circuits, anything</p>
+                    </div>
+                    <ChevronRight size={16} style={{ color: "#22c55e" }} />
+                  </button>
+
                   {/* Main Lifts Log */}
                   <button
                     onClick={() => navigate("/progress")}
