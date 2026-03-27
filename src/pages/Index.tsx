@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import { Link } from "react-router-dom";
 import AppNavbar from "@/components/layout/AppNavbar";
 import HeroSection from "@/components/features/HeroSection";
 import SEOHead from "@/components/layout/SEOHead";
@@ -62,6 +63,14 @@ const Index = () => (
       dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_SCHEMA) }}
     />
     <AppNavbar />
+    <div className="bg-primary/10 border-b border-primary/20 py-2.5 px-4 text-center">
+      <Link
+        to="/zone"
+        className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+      >
+        🔑 Current Client? Enter The Portal →
+      </Link>
+    </div>
     <LocalTopBar />
     <HeroSection />
     <div className="container py-12 max-w-xl mx-auto space-y-8">
