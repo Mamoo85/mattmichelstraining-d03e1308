@@ -404,7 +404,10 @@ const ZoneDashboard = () => {
   const [activeTab, setActiveTab] = useState<TabKey>(() =>
     (safeLocalStorage.getItem(TAB_STORAGE_KEY) as TabKey) || "lifts"
   );
-  const [showTabTip, setShowTabTip] = useState(false);
+  const [showTabTip, setShowTabTip] = useState(() => {
+    const initialTab = (safeLocalStorage.getItem(TAB_STORAGE_KEY) as TabKey) || "lifts";
+    return !safeLocalStorage.getItem(`m2-tip-zone-${initialTab}-v1`);
+  });
   const [generateView, setGenerateView] = useState<"menu" | "workout" | "fixit">("menu");
 
   const [streak, setStreak] = useState(0);
