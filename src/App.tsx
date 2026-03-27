@@ -86,6 +86,7 @@ const StudioRental = lazyRetry(() => import("./pages/StudioRental"));
 const Results = lazyRetry(() => import("./pages/Results"));
 const DemoHomepage = lazyRetry(() => import("./pages/DemoHomepage"));
 const ZonePortal = lazyRetry(() => import("./pages/ZonePortal"));
+const ZoneDashboard = lazyRetry(() => import("./pages/ZoneDashboard"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
