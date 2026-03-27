@@ -2179,11 +2179,55 @@ export type Database = {
         }
         Relationships: []
       }
+      protocol_exercise_flags: {
+        Row: {
+          admin_response: string | null
+          created_at: string
+          id: string
+          protocol_exercise_id: string
+          question: string
+          resolved_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          admin_response?: string | null
+          created_at?: string
+          id?: string
+          protocol_exercise_id: string
+          question: string
+          resolved_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          admin_response?: string | null
+          created_at?: string
+          id?: string
+          protocol_exercise_id?: string
+          question?: string
+          resolved_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "protocol_exercise_flags_protocol_exercise_id_fkey"
+            columns: ["protocol_exercise_id"]
+            isOneToOne: false
+            referencedRelation: "protocol_exercises"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       protocol_exercises: {
         Row: {
+          coach_notes: string | null
           created_at: string
+          exercise_library_id: string | null
           exercise_name: string
           id: string
+          image_url: string | null
           notes: string | null
           protocol_id: string
           reps: string | null
@@ -2193,9 +2237,12 @@ export type Database = {
           weight: number | null
         }
         Insert: {
+          coach_notes?: string | null
           created_at?: string
+          exercise_library_id?: string | null
           exercise_name: string
           id?: string
+          image_url?: string | null
           notes?: string | null
           protocol_id: string
           reps?: string | null
@@ -2205,9 +2252,12 @@ export type Database = {
           weight?: number | null
         }
         Update: {
+          coach_notes?: string | null
           created_at?: string
+          exercise_library_id?: string | null
           exercise_name?: string
           id?: string
+          image_url?: string | null
           notes?: string | null
           protocol_id?: string
           reps?: string | null
@@ -2217,6 +2267,13 @@ export type Database = {
           weight?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "protocol_exercises_exercise_library_id_fkey"
+            columns: ["exercise_library_id"]
+            isOneToOne: false
+            referencedRelation: "exercise_library"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "protocol_exercises_protocol_id_fkey"
             columns: ["protocol_id"]
@@ -2230,9 +2287,12 @@ export type Database = {
         Row: {
           created_at: string
           description: string | null
+          gift_message: string | null
+          gifted_to: string | null
           id: string
           is_default: boolean
           is_template: boolean
+          source_template_id: string | null
           title: string
           updated_at: string
           user_id: string | null
@@ -2240,9 +2300,12 @@ export type Database = {
         Insert: {
           created_at?: string
           description?: string | null
+          gift_message?: string | null
+          gifted_to?: string | null
           id?: string
           is_default?: boolean
           is_template?: boolean
+          source_template_id?: string | null
           title: string
           updated_at?: string
           user_id?: string | null
@@ -2250,14 +2313,25 @@ export type Database = {
         Update: {
           created_at?: string
           description?: string | null
+          gift_message?: string | null
+          gifted_to?: string | null
           id?: string
           is_default?: boolean
           is_template?: boolean
+          source_template_id?: string | null
           title?: string
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "protocols_source_template_id_fkey"
+            columns: ["source_template_id"]
+            isOneToOne: false
+            referencedRelation: "protocols"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       purchased_programs: {
         Row: {
@@ -3239,6 +3313,7 @@ export type Database = {
           id: string
           notes: string | null
           program_id: string | null
+          protocol_id: string | null
           user_id: string
           workout_id: string | null
         }
@@ -3249,6 +3324,7 @@ export type Database = {
           id?: string
           notes?: string | null
           program_id?: string | null
+          protocol_id?: string | null
           user_id: string
           workout_id?: string | null
         }
@@ -3259,6 +3335,7 @@ export type Database = {
           id?: string
           notes?: string | null
           program_id?: string | null
+          protocol_id?: string | null
           user_id?: string
           workout_id?: string | null
         }
@@ -3275,6 +3352,13 @@ export type Database = {
             columns: ["program_id"]
             isOneToOne: false
             referencedRelation: "training_programs_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_content_access_protocol_id_fkey"
+            columns: ["protocol_id"]
+            isOneToOne: false
+            referencedRelation: "protocols"
             referencedColumns: ["id"]
           },
           {

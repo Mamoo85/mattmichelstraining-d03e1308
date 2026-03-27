@@ -35,13 +35,13 @@ export const WORKOUT_GENERATOR_TIP: FeatureTip = {
 };
 
 export const FIXIT_ENGINE_TIP: FeatureTip = {
-  storageKey: "m2-tip-fixit-engine-v2",
+  storageKey: "m2-tip-fixit-engine-v3",
   image: tipFixitImg,
   title: "Fix It Engine",
-  subtitle: "Something hurting? Tell the AI where, and get corrective exercises instantly.",
+  subtitle: "Something hurting? Tell Coach Matt's system where it hurts and get a corrective protocol built for you.",
   bullets: [
     { icon: <Wrench size={18} />, text: "Select your pain point or problem area" },
-    { icon: <Sparkles size={18} />, text: "AI recommends targeted corrective work" },
+    { icon: <Sparkles size={18} />, text: "Get targeted corrective exercises from Matt's protocols" },
     { icon: <Dumbbell size={18} />, text: "Follow along with guided exercises" },
     { icon: <Target size={18} />, text: "Built from Coach Matt's Fix It protocols" },
   ],

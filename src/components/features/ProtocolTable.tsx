@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import SectionHeader from "@/components/shared/SectionHeader";
-import { Loader2 } from "lucide-react";
+import { Loader2, Gift, ZoomIn } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import ExerciseFlagButton from "@/components/workout/ExerciseFlagButton";
 
 interface Exercise {
   id: string;
@@ -14,6 +15,8 @@ interface Exercise {
   weight: number | null;
   rpe: number | null;
   notes: string | null;
+  coach_notes: string | null;
+  image_url: string | null;
   sort_order: number;
 }
 
@@ -21,28 +24,31 @@ const ProtocolTable = () => {
   const { user } = useAuth();
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [protocolTitle, setProtocolTitle] = useState("");
+  const [giftMessage, setGiftMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [weights, setWeights] = useState<Record<string, string>>({});
   const [logSuccess, setLogSuccess] = useState(false);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
     const fetchProtocol = async () => {
       const { data: protocols } = await supabase
         .from("protocols")
-        .select("id, title")
+        .select("id, title, gift_message")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(1);
 
       if (protocols && protocols.length > 0) {
         setProtocolTitle(protocols[0].title);
+        setGiftMessage(protocols[0].gift_message || null);
         const { data: exs } = await supabase
           .from("protocol_exercises")
           .select("*")
           .eq("protocol_id", protocols[0].id)
           .order("sort_order");
-        if (exs) setExercises(exs);
+        if (exs) setExercises(exs as Exercise[]);
       }
       setLoading(false);
     };
@@ -57,25 +63,29 @@ const ProtocolTable = () => {
       return;
     }
 
-    for (const [id, w] of entries) {
-      const ex = exercises.find((e) => e.id === id);
-      if (!ex) continue;
-      const weight = parseFloat(w);
-      const reps = parseInt(ex.reps || "1");
-      const estimated1rm = Math.round(weight * (1 + reps / 30) * 10) / 10;
+    try {
+      for (const [id, w] of entries) {
+        const ex = exercises.find((e) => e.id === id);
+        if (!ex) continue;
+        const weight = parseFloat(w);
+        const reps = parseInt(ex.reps || "1");
+        const estimated1rm = Math.round(weight * (1 + reps / 30) * 10) / 10;
 
-      await supabase.from("progress_logs").insert({
-        user_id: user.id,
-        exercise_name: ex.exercise_name,
-        weight,
-        reps,
-        estimated_1rm: estimated1rm,
-      });
+        await supabase.from("progress_logs").insert({
+          user_id: user.id,
+          exercise_name: ex.exercise_name,
+          weight,
+          reps,
+          estimated_1rm: estimated1rm,
+        });
+      }
+      toast({ title: "Session logged", description: "Nice work. Matt sees this." });
+      setWeights({});
+      setLogSuccess(true);
+      setTimeout(() => setLogSuccess(false), 500);
+    } catch (err: any) {
+      toast({ title: "Log failed", description: err.message, variant: "destructive" });
     }
-    toast({ title: "Session logged", description: "Nice work. Matt sees this." });
-    setWeights({});
-    setLogSuccess(true);
-    setTimeout(() => setLogSuccess(false), 500);
   };
 
   if (loading) {
@@ -97,6 +107,14 @@ const ProtocolTable = () => {
   return (
     <div className="space-y-4">
       <SectionHeader title={protocolTitle || "Today's Program"} timestamp="Log your weights — Matt reviews every session" />
+
+      {/* Gift message banner */}
+      {giftMessage && (
+        <div className="bg-primary/10 border border-primary/20 rounded-xl p-3 flex items-start gap-2">
+          <Gift size={14} className="text-primary shrink-0 mt-0.5" />
+          <p className="text-xs text-foreground leading-relaxed">{giftMessage}</p>
+        </div>
+      )}
 
       {/* Exercise Cards */}
       <div className="space-y-3">
@@ -121,6 +139,17 @@ const ProtocolTable = () => {
                 </div>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
+                {ex.image_url && (
+                  <button
+                    onClick={() => setLightboxUrl(ex.image_url)}
+                    className="h-10 w-10 rounded-lg overflow-hidden border border-white/10 relative group"
+                  >
+                    <img src={ex.image_url} alt="" className="h-full w-full object-cover" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <ZoomIn size={12} className="text-white" />
+                    </div>
+                  </button>
+                )}
                 <input
                   type="number"
                   placeholder="lbs"
@@ -134,11 +163,22 @@ const ProtocolTable = () => {
                 />
               </div>
             </div>
-            {ex.notes && (
-              <div className="px-4 pb-3 -mt-1">
-                <p className="text-[11px] text-muted-foreground leading-relaxed pl-12">{ex.notes}</p>
+            {(ex.notes || ex.coach_notes) && (
+              <div className="px-4 pb-3 -mt-1 pl-16 space-y-1">
+                {ex.notes && (
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">{ex.notes}</p>
+                )}
+                {ex.coach_notes && (
+                  <p className="text-[11px] text-primary leading-relaxed flex items-start gap-1">
+                    <span className="font-bold shrink-0">Coach's Note:</span> {ex.coach_notes}
+                  </p>
+                )}
               </div>
             )}
+            {/* Flag button */}
+            <div className="px-4 pb-3 pl-16">
+              <ExerciseFlagButton protocolExerciseId={ex.id} exerciseName={ex.exercise_name} />
+            </div>
           </div>
         ))}
       </div>
@@ -155,6 +195,16 @@ const ProtocolTable = () => {
       >
         Log Session
       </button>
+
+      {/* Lightbox */}
+      {lightboxUrl && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+          onClick={() => setLightboxUrl(null)}
+        >
+          <img src={lightboxUrl} alt="Reference" className="max-w-full max-h-[80vh] object-contain rounded-lg" />
+        </div>
+      )}
     </div>
   );
 };
