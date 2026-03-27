@@ -150,6 +150,9 @@
   .pb-safe {
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }
+  .pb-bottom-nav {
+    padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+  }
   /* Safe area margin bottom utility */
   .mb-safe {
     margin-bottom: env(safe-area-inset-bottom);
