@@ -13,6 +13,7 @@ interface FixItExercise {
   focus_area: string[];
   fix_it_protocol: string[];
   video_url: string | null;
+  image_url: string | null;
 }
 
 const PROTOCOLS = ["ACL Prevention", "Rotator Cuff", "Back Pain / McGill Big 3", "Concussion Return-to-Play", "Ankle Stability", "Hip Mobility"] as const;
