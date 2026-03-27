@@ -268,11 +268,28 @@ const IntervalTimer = ({ onClose, initialConfig, exercises: circuitExercises, is
         </button>
       </div>
 
+      {/* START / PAUSE / RESET — at top when idle */}
+      {isSetup && (
+        <div className="shrink-0 px-4 pt-2 pb-1 flex gap-2">
+          <button onClick={startTimer}
+            className="flex-1 h-14 rounded-xl text-white text-sm font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-[0.97]"
+            style={{ background: phaseColor, boxShadow: `0 0 20px ${phaseColor}40` }}
+          >
+            <Play size={18} fill="white" />
+            {phase === "done" ? "AGAIN" : "START"}
+          </button>
+          <button onClick={resetTimer}
+            className="h-14 w-14 rounded-xl bg-white/10 text-white/50 flex items-center justify-center hover:text-white hover:bg-white/15 transition-colors">
+            <RotateCcw size={18} />
+          </button>
+        </div>
+      )}
+
       {/* Main timer area */}
       <div className="flex-1 flex flex-col items-center justify-center relative min-h-0">
         {/* Progress ring */}
         <div className="relative">
-          <svg width="260" height="260" viewBox="0 0 260 260" className="drop-shadow-lg">
+          <svg width="240" height="240" viewBox="0 0 260 260" className="drop-shadow-lg">
             {/* Track */}
             <circle cx="130" cy="130" r={RING_R} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="6" />
             {/* Progress */}
@@ -309,7 +326,7 @@ const IntervalTimer = ({ onClose, initialConfig, exercises: circuitExercises, is
 
                 <span
                   className={cn(
-                    "font-mono text-6xl font-black text-white tabular-nums leading-none",
+                    "font-mono text-7xl font-black text-white tabular-nums leading-none",
                     inWarningZone && "animate-pulse"
                   )}
                   style={inWarningZone ? { color: "#fbbf24" } : undefined}
@@ -341,28 +358,28 @@ const IntervalTimer = ({ onClose, initialConfig, exercises: circuitExercises, is
       </div>
 
       {/* Controls — compact, single viewport */}
-      <div className="shrink-0 px-4 pb-4 pt-2 space-y-2">
+      <div className="shrink-0 px-4 pb-4 pt-1 space-y-2">
         {/* Config row — only in setup */}
         {isSetup && (
           <>
             {/* Time configs row */}
-            <div className="flex gap-2">
+            <div className="grid grid-cols-3 gap-2">
               {([
                 { key: "prep" as const, label: "PREP" },
                 { key: "work" as const, label: "WORK" },
                 { key: "rest" as const, label: "REST" },
               ]).map(({ key, label }) => (
-                <div key={key} className="flex-1 flex flex-col items-center gap-1.5 bg-white/5 rounded-xl py-3">
+                <div key={key} className="flex flex-col items-center gap-1 bg-white/5 rounded-xl py-2.5">
                   <span className="text-[9px] font-bold uppercase tracking-widest text-white/40">{label}</span>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-0.5">
                     <button
                       onClick={() => adjust(key, config[key] >= 30 ? -5 : -1)}
-                      className="w-10 h-10 flex items-center justify-center text-white/50 hover:text-white text-xl font-bold rounded-lg active:bg-white/10 transition-colors"
+                      className="w-9 h-9 flex items-center justify-center text-white/50 hover:text-white text-lg font-bold rounded-lg active:bg-white/10 transition-colors"
                     >−</button>
                     <EditableValue value={config[key]} onChange={(v) => setField(key, v)} isTime disabled={running} />
                     <button
                       onClick={() => adjust(key, config[key] >= 25 ? 5 : 1)}
-                      className="w-10 h-10 flex items-center justify-center text-white/50 hover:text-white text-xl font-bold rounded-lg active:bg-white/10 transition-colors"
+                      className="w-9 h-9 flex items-center justify-center text-white/50 hover:text-white text-lg font-bold rounded-lg active:bg-white/10 transition-colors"
                     >+</button>
                   </div>
                 </div>
@@ -410,9 +427,9 @@ const IntervalTimer = ({ onClose, initialConfig, exercises: circuitExercises, is
               ))}
               <div className="flex items-center gap-1.5 bg-white/5 rounded-lg px-2 py-2">
                 <Volume2 size={12} className="text-white/30" />
-                <input type="range" min={0} max={200} step={5} value={volume}
+                <input type="range" min={0} max={400} step={5} value={volume}
                   onChange={(e) => { const v = Number(e.target.value); setVolume(v); setMasterVolume(v / 100); }}
-                  className="w-12 h-1 accent-white/50 cursor-pointer" />
+                  className="w-14 h-1 accent-white/50 cursor-pointer" />
                 <button onClick={testBeep} className="text-[10px] text-white/30 hover:text-white/60">🔊</button>
               </div>
             </div>
@@ -435,28 +452,36 @@ const IntervalTimer = ({ onClose, initialConfig, exercises: circuitExercises, is
           </div>
         )}
 
-        {/* Action buttons */}
-        <div className="flex gap-2">
-          {!running ? (
-            <button onClick={startTimer}
-              className="flex-1 h-14 rounded-xl text-white text-sm font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-[0.97]"
-              style={{ background: phaseColor, boxShadow: `0 0 20px ${phaseColor}40` }}
-            >
-              <Play size={18} fill="white" />
-              {phase === "done" ? "AGAIN" : "START"}
-            </button>
-          ) : (
+        {/* Action buttons — only show pause/reset when running */}
+        {running && (
+          <div className="flex gap-2">
             <button onClick={pauseTimer}
               className="flex-1 h-14 rounded-xl bg-yellow-600 text-white text-sm font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-yellow-500 transition-all active:scale-[0.97]">
               <Pause size={18} fill="white" />
               PAUSE
             </button>
-          )}
-          <button onClick={resetTimer}
-            className="h-14 w-14 rounded-xl bg-white/10 text-white/50 flex items-center justify-center hover:text-white hover:bg-white/15 transition-colors">
-            <RotateCcw size={18} />
-          </button>
-        </div>
+            <button onClick={resetTimer}
+              className="h-14 w-14 rounded-xl bg-white/10 text-white/50 flex items-center justify-center hover:text-white hover:bg-white/15 transition-colors">
+              <RotateCcw size={18} />
+            </button>
+          </div>
+        )}
+        {/* Again button when done */}
+        {phase === "done" && !running && (
+          <div className="flex gap-2">
+            <button onClick={startTimer}
+              className="flex-1 h-14 rounded-xl text-white text-sm font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-[0.97]"
+              style={{ background: phaseColor, boxShadow: `0 0 20px ${phaseColor}40` }}
+            >
+              <Play size={18} fill="white" />
+              AGAIN
+            </button>
+            <button onClick={resetTimer}
+              className="h-14 w-14 rounded-xl bg-white/10 text-white/50 flex items-center justify-center hover:text-white hover:bg-white/15 transition-colors">
+              <RotateCcw size={18} />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
