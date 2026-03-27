@@ -350,6 +350,7 @@ const Admin = () => {
           <SubTabs tabs={[
             { key: "programs", label: "Programs", content: <AdminPrograms /> },
             { key: "exercises", label: "Exercise Library", content: <AdminExerciseLibrary /> },
+            { key: "image-matcher", label: "Image Matcher", content: <AdminImageMatcher /> },
             { key: "workouts", label: "Workouts", content: <AdminWorkoutInventory /> },
             { key: "batch", label: "AI Workouts", content: <AdminBatchGenerator /> },
             { key: "user-generated", label: "User Generated", content: <AdminUserGeneratedWorkouts /> },
