@@ -1,38 +1,70 @@
 
 
-# Plan: Restyle Zone Dashboard to Match Zone Portal (Instagram-style)
+# Plan: Rich Info Hubs + Restructured Grid + Collapsible Widgets + Logo Fix
 
-Rewrite `src/pages/ZoneDashboard.tsx` to adopt the ZonePortal's Instagram-like aesthetic — inline styles, big `rounded-2xl` cards, generous padding, 2-column action grid, and the clean social-app feel that younger users navigate intuitively.
+All changes in **one file**: `src/pages/ZoneDashboard.tsx`
 
-## What Changes
+---
 
-### `src/pages/ZoneDashboard.tsx` — Full restyle
+## 1. Fix Logo
 
-**Header**: Match ZonePortal's inline-styled sticky header — M² logo badge (gradient orange square with "M²" text or real logo), athlete name, "THE ZONE" label, green pulse dot with "Online" text. Cleaner, more Instagram-like.
+Replace `m2-logo-official.png` import with `m2-logo-official.jpg` (same as rest of app uses `m2-logo.jpg`). Remove the forced `rounded-lg` and white-assuming background. Render with `object-cover` and no color manipulation.
 
-**Stats Row**: 3-column grid with `rounded-2xl` cards, inline `rgba(255,255,255,0.04)` backgrounds, big bold values centered — matching ZonePortal's stat card style exactly.
+## 2. Replace 3 Stat Cards → 3 Rich Info Hubs
 
-**Action Grid**: Switch from 3 cramped buttons to a **2x2 grid** like ZonePortal — Workout Portal (cyan), AI Generator (purple), Fix It Engine (cyan), Submit PR (orange). Each card has colored icon, label, generous `p-5`, `rounded-2xl`. Tapping AI Generator / Fix It switches to the Generate tab.
+Three full-width stacked horizontal cards (not square boxes), each with a colored left accent bar:
 
-**Tab Pills**: Keep 4 tabs (Lifts, Generate, Train, Home) but style them as a clean bottom-of-header row or inline pills matching the social-app aesthetic — `rounded-full`, subtle active indicator using orange.
+**Hub 1 — My Stats** (Orange `#f97316`)
+- Shows: 🔥 Streak count, Points total + level badge (from `usePoints()`), Sessions this week
+- Links: Profile pill, Refer a Friend pill
 
-**Tab Content**: All existing lazy-loaded content preserved. Wrap in the same inline-style approach (dark backgrounds, `rgba` borders, `rounded-2xl` containers).
+**Hub 2 — AI Insights** (Purple `#a855f7`)
+- Shows: Current program name, recovery status icon
+- Links: AI Recovery, Lift Insights, Body Avatar pills
 
-**Coach Chat card**: Match ZonePortal's "Message Coach Matt" card — avatar circle, "Available" badge, full-width `rounded-2xl`.
+**Hub 3 — Quick Launch** (Cyan `#00f0ff`)
+- Shows: Coach Matt status (green pulse + "Available"), Submit PR
+- Links: Interval Timer pill, Message Matt pill, Submit PR pill
 
-**Overall aesthetic shift**:
-- Replace `zone-glass` / `zone-glow-*` Tailwind utilities with inline `style={{}}` matching ZonePortal exactly
-- `rounded-2xl` everywhere (not `rounded-lg`)
-- `rgba(255,255,255,0.04)` card backgrounds with `rgba(255,255,255,0.08)` borders
-- Background `#0a0a0a`, text `#e5e5e5` / `#fafafa` / `#737373`
-- Larger touch targets, more whitespace
-- `max-w-md` centered (matching ZonePortal, not `max-w-lg`)
+Each hub is a compact ~65px tall glassmorphic rectangle with left colored border, icon + stats on left, pill buttons on right. Dense but clean.
 
-### No other files change
+## 3. Rename & Rewire 2x2 Action Grid
 
-All lazy-loaded components (ProgressCharts, WorkoutsTab, MyPrograms, etc.) still render inside ZoneThemeWrapper for dark CSS variable overrides. Only the shell/chrome of ZoneDashboard changes.
+| Position | New Label | Icon | Accent | Action |
+|----------|-----------|------|--------|--------|
+| Top-left | **Compound Lifts** | BarChart3 | Orange | Switch to Lifts tab |
+| Top-right | **Perfect Workout Generator** | Brain | Purple | Switch to Generate tab (workout mode) |
+| Bottom-left | **Fix It Engine** | Wrench | Cyan | Switch to Generate tab (fixit mode) |
+| Bottom-right | **Workouts & Programs** | Dumbbell | Orange | Switch to Train tab |
 
-## Key Principle
+"Submit PR" moves to Hub 3 as a small pill button. "Workout Portal" dispatch removed from grid.
 
-Keep every feature, tab, data fetch, and modal — just make the wrapper look and feel like the `/zone` page the user loved.
+## 4. Collapsible Focus & Challenge Widgets
+
+Between the action grid and tab pills, add two full-width `rounded-2xl` collapsible cards:
+
+- **Monthly Focus** — Shows title bar when collapsed, expands `MonthlyFocusWidget` on tap
+- **Challenge** — Shows title bar when collapsed, expands `DashboardChallengePreview` on tap
+
+Both auto-collapse when any action grid button is tapped. Use `AnimatePresence` for smooth height transitions. Stay open until user taps to minimize.
+
+## 5. Tab Hero Info Cards
+
+- **Lifts tab**: Keep existing gradient-border "Log a Lift" hero card
+- **Generate tab**: Show mode-specific hero card — "Perfect Workout Generator" (purple gradient) or "Fix It Engine" (cyan gradient) with subtitle about auto-timer
+- **Train tab**: Add "Your Library" hero card with Dumbbell icon
+
+## 6. Generate Tab State
+
+Lift `generateView` state (`"menu" | "workout" | "fixit"`) to parent so action grid buttons can set it directly when switching to the Generate tab.
+
+## 7. Imports
+
+Add: `usePoints` hook, `useNavigate` from react-router-dom, `ChevronDown`/`ChevronUp` icons. Change logo import to `.jpg`.
+
+---
+
+## No other files modified
+
+All existing components stay untouched — they inherit the Zone look through CSS variable overrides in the wrapper.
 
