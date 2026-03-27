@@ -417,15 +417,31 @@ const ZoneDashboard = () => {
   const [displayName, setDisplayName] = useState("Athlete");
   const [topPR, setTopPR] = useState<{ name: string; weight: number } | null>(null);
   const [totalLifts, setTotalLifts] = useState(0);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const { data: prof } = await supabase.from("profiles").select("athlete_name, full_name, avatar_url").eq("id", user.id).maybeSingle();
+      const { data: prof } = await supabase.from("profiles").select("athlete_name, full_name").eq("id", user.id).maybeSingle();
       if (prof?.athlete_name || prof?.full_name) setDisplayName(prof.athlete_name || prof.full_name || "Athlete");
-      if (prof?.avatar_url) setAvatarUrl(prof.avatar_url);
+
+      // Fetch top PR
+      const { data: prData } = await supabase
+        .from("progress_logs")
+        .select("exercise_name, weight")
+        .eq("user_id", user.id)
+        .not("weight", "is", null)
+        .order("weight", { ascending: false })
+        .limit(1);
+      if (prData && prData.length > 0 && prData[0].weight) {
+        setTopPR({ name: prData[0].exercise_name, weight: prData[0].weight });
+      }
+
+      // Fetch total lift count
+      const { count: liftCount } = await supabase
+        .from("progress_logs")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id);
+      setTotalLifts(liftCount || 0);
 
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
