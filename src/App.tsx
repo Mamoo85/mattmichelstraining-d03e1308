@@ -200,7 +200,8 @@ const App = () => (
               <Suspense fallback={null}><AnnouncementBanner /></Suspense>
               <ErrorBoundary>
                 <Suspense fallback={<PageLoader />}>
-                  <Routes>
+                  <div className="pb-bottom-nav md:pb-0">
+                    <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/login" element={<Navigate to="/auth" replace />} />
@@ -259,7 +260,8 @@ const App = () => (
                     <Route path="/progress" element={<ProtectedRoute><SubscriptionGuard><Progress /></SubscriptionGuard></ProtectedRoute>} />
                     <Route path="/nutrition" element={<ProtectedRoute><SubscriptionGuard><Nutrition /></SubscriptionGuard></ProtectedRoute>} />
                     <Route path="*" element={<NotFound />} />
-                  </Routes>
+                    </Routes>
+                  </div>
                 </Suspense>
               </ErrorBoundary>
               
