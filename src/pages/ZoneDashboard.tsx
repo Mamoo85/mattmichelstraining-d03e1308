@@ -539,59 +539,102 @@ const ZoneDashboard = () => {
 
         {/* ── Stats Banner ────────────────────────── */}
         <div
-          className="rounded-2xl p-4"
+          className="rounded-2xl overflow-hidden"
           style={{
             background: "linear-gradient(135deg, rgba(249,115,22,0.08), rgba(168,85,247,0.06), rgba(0,240,255,0.04))",
             border: "1px solid rgba(249,115,22,0.15)",
           }}
         >
-          {/* Top row: streak + sessions + program */}
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5">
-                <Flame size={16} style={{ color: "#f97316" }} />
-                <span className="text-base font-black" style={{ color: "#fafafa" }}>{streak}</span>
-                <span className="text-[10px] font-medium" style={{ color: "#737373" }}>day streak</span>
+          <div className="flex">
+            {/* Left: Stats */}
+            <div className="flex-1 p-4 space-y-3">
+              {/* Streak + Sessions */}
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5">
+                  <Flame size={16} style={{ color: "#f97316" }} />
+                  <span className="text-base font-black" style={{ color: "#fafafa" }}>{streak}</span>
+                  <span className="text-[10px] font-medium" style={{ color: "#737373" }}>day streak</span>
+                </div>
+                <div className="w-px h-4" style={{ background: "rgba(255,255,255,0.1)" }} />
+                <div className="flex items-center gap-1.5">
+                  <Activity size={14} style={{ color: "#a855f7" }} />
+                  <span className="text-base font-black" style={{ color: "#fafafa" }}>{sessionsThisWeek}</span>
+                  <span className="text-[10px] font-medium" style={{ color: "#737373" }}>this week</span>
+                </div>
               </div>
-              <div className="w-px h-4" style={{ background: "rgba(255,255,255,0.1)" }} />
-              <div className="flex items-center gap-1.5">
-                <Activity size={14} style={{ color: "#a855f7" }} />
-                <span className="text-base font-black" style={{ color: "#fafafa" }}>{sessionsThisWeek}</span>
-                <span className="text-[10px] font-medium" style={{ color: "#737373" }}>this week</span>
+
+              {/* XP bar */}
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 shrink-0">
+                  <Star size={12} style={{ color: "#f97316" }} />
+                  <span className="text-[11px] font-bold" style={{ color: "#fb923c" }}>{levelInfo.label}</span>
+                </div>
+                <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+                  <motion.div
+                    className="h-full rounded-full"
+                    style={{ background: "linear-gradient(90deg, #f97316, #fb923c)" }}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progressPct}%` }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                  />
+                </div>
+                <span className="text-[10px] font-bold shrink-0" style={{ color: "#525252" }}>
+                  {ptsTotal} pts
+                </span>
               </div>
-            </div>
-            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(249,115,22,0.12)", color: "#f97316" }}>
-              {tierLabel}
-            </span>
-          </div>
 
-          {/* XP bar */}
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 shrink-0">
-              <Star size={12} style={{ color: "#f97316" }} />
-              <span className="text-[11px] font-bold" style={{ color: "#fb923c" }}>{levelInfo.label}</span>
+              {/* Active program */}
+              {currentProgram !== "—" && (
+                <div className="flex items-center gap-2 pt-1" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                  <Target size={12} style={{ color: "#00f0ff" }} />
+                  <span className="text-[11px] font-medium truncate" style={{ color: "#a3a3a3" }}>{currentProgram}</span>
+                </div>
+              )}
             </div>
-            <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
-              <motion.div
-                className="h-full rounded-full"
-                style={{ background: "linear-gradient(90deg, #f97316, #fb923c)" }}
-                initial={{ width: 0 }}
-                animate={{ width: `${progressPct}%` }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
-              />
-            </div>
-            <span className="text-[10px] font-bold shrink-0" style={{ color: "#525252" }}>
-              {ptsTotal} pts
-            </span>
-          </div>
 
-          {/* Active program */}
-          {currentProgram !== "—" && (
-            <div className="flex items-center gap-2 mt-2.5 pt-2.5" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-              <Target size={12} style={{ color: "#00f0ff" }} />
-              <span className="text-[11px] font-medium truncate" style={{ color: "#a3a3a3" }}>{currentProgram}</span>
-            </div>
-          )}
+            {/* Right: Profile Avatar Card */}
+            <button
+              onClick={() => navigate("/progress")}
+              className="shrink-0 w-[100px] flex flex-col items-center justify-center gap-1.5 relative overflow-hidden transition-all active:scale-95"
+              style={{ borderLeft: "1px solid rgba(255,255,255,0.06)" }}
+            >
+              {/* Glow background */}
+              <div className="absolute inset-0" style={{
+                background: "radial-gradient(circle at center, rgba(249,115,22,0.15) 0%, transparent 70%)",
+              }} />
+
+              {/* Avatar circle */}
+              <div
+                className="relative h-12 w-12 rounded-full flex items-center justify-center text-lg font-black uppercase"
+                style={{
+                  background: "linear-gradient(135deg, #f97316, #ea580c)",
+                  color: "#fff",
+                  boxShadow: "0 0 20px rgba(249,115,22,0.4), 0 0 40px rgba(249,115,22,0.15)",
+                }}
+              >
+                {displayName.charAt(0)}
+              </div>
+
+              {/* Tier badge */}
+              <span className="text-[9px] font-bold uppercase tracking-wider relative" style={{ color: "#f97316" }}>
+                {tierLabel}
+              </span>
+
+              {/* Top PR preview */}
+              {topPR && (
+                <div className="relative text-center px-1">
+                  <p className="text-[9px] font-medium" style={{ color: "#737373" }}>Top PR</p>
+                  <p className="text-sm font-black leading-tight" style={{ color: "#fafafa" }}>{topPR.weight}<span className="text-[9px] font-medium" style={{ color: "#737373" }}>lb</span></p>
+                </div>
+              )}
+
+              {/* Tap hint */}
+              <div className="flex items-center gap-0.5 relative">
+                <span className="text-[8px] font-medium" style={{ color: "#525252" }}>View Stats</span>
+                <ChevronRight size={10} style={{ color: "#525252" }} />
+              </div>
+            </button>
+          </div>
         </div>
 
         {/* ── Tab Strip ──────────────────────────── */}
