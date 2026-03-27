@@ -341,6 +341,7 @@ const ExerciseLibrary = () => {
                       ))}
                     </div>
                   </div>
+                  </div>
                   {isExpanded ? (
                     <ChevronUp size={16} className="text-muted-foreground flex-shrink-0 mt-1" />
                   ) : (
