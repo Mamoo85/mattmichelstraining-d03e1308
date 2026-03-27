@@ -371,9 +371,84 @@ const ZoneDashboard = () => {
 
             {activeTab === "train" && (
               <Suspense fallback={<TabLoader />}>
-                <div className="space-y-4">
+                <div className="space-y-3">
+                  {/* Hero card */}
+                  <div
+                    className="rounded-2xl p-5"
+                    style={{
+                      background: "linear-gradient(135deg, rgba(249,115,22,0.10), rgba(168,85,247,0.06))",
+                      border: "1px solid rgba(249,115,22,0.18)",
+                    }}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: "linear-gradient(135deg, #f97316, #ea580c)" }}>
+                        <Dumbbell size={22} color="#fff" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-black" style={{ color: "#fafafa" }}>Your Training Library</p>
+                        <p className="text-[11px] mt-0.5" style={{ color: "#a3a3a3" }}>Programs, workouts & today's session — all in one place</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Today's Training */}
+                  <button
+                    onClick={() => {}}
+                    className="w-full rounded-2xl p-5 text-left transition-all active:scale-[0.97]"
+                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(249,115,22,0.2)" }}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(249,115,22,0.15)" }}>
+                        <Play size={18} style={{ color: "#f97316" }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-black uppercase tracking-wider" style={{ color: "#f97316" }}>Today's Training</p>
+                        <p className="text-[11px] mt-0.5" style={{ color: "#737373" }}>Pick up where you left off</p>
+                      </div>
+                      <ChevronRight size={16} style={{ color: "#525252" }} />
+                    </div>
+                  </button>
+
                   <TodaysTrainingCard />
+
+                  {/* Workout Library card */}
+                  <button
+                    onClick={() => {}}
+                    className="w-full rounded-2xl p-5 text-left transition-all active:scale-[0.97]"
+                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(168,85,247,0.2)" }}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(168,85,247,0.15)" }}>
+                        <Flame size={18} style={{ color: "#a855f7" }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-black uppercase tracking-wider" style={{ color: "#a855f7" }}>Workout Library</p>
+                        <p className="text-[11px] mt-0.5" style={{ color: "#737373" }}>Browse coach-built & community workouts</p>
+                      </div>
+                      <ChevronRight size={16} style={{ color: "#525252" }} />
+                    </div>
+                  </button>
+
                   <WorkoutsTab />
+
+                  {/* Programs card */}
+                  <button
+                    onClick={() => {}}
+                    className="w-full rounded-2xl p-5 text-left transition-all active:scale-[0.97]"
+                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(0,240,255,0.2)" }}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(0,240,255,0.15)" }}>
+                        <Target size={18} style={{ color: "#00f0ff" }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-black uppercase tracking-wider" style={{ color: "#00f0ff" }}>My Programs</p>
+                        <p className="text-[11px] mt-0.5" style={{ color: "#737373" }}>Active & available training programs</p>
+                      </div>
+                      <ChevronRight size={16} style={{ color: "#525252" }} />
+                    </div>
+                  </button>
+
                   <MyPrograms />
                 </div>
               </Suspense>
