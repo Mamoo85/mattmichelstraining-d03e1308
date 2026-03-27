@@ -1,4 +1,5 @@
 import { useState, useEffect, lazy, Suspense, memo, useCallback } from "react";
+import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { usePoints, getLevelInfo, getNextLevel } from "@/hooks/usePoints";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import {
   BarChart3, Sparkles, Dumbbell, Home, Flame, Zap, Trophy, Play, Wrench,
   Timer, ChevronRight, ChevronDown, MessageCircle, Brain,
-  User, Activity, Clock, Target, Star, Award, Camera, Crosshair, Heart
+  User, Activity, Clock, Target, Star, Award, Camera, Crosshair, Heart, UserPlus
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ZoneThemeWrapper from "@/components/zone/ZoneThemeWrapper";
@@ -488,7 +489,22 @@ const ZoneDashboard = () => {
             <p className="text-xs font-semibold" style={{ color: "#fafafa" }}>{displayName}</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              const url = `${window.location.origin}?ref=${user?.id || ""}`;
+              if (navigator.share) {
+                navigator.share({ title: "Train with me on M²", url });
+              } else {
+                navigator.clipboard.writeText(url);
+                toast({ title: "Link copied!" });
+              }
+            }}
+            className="h-8 w-8 rounded-full flex items-center justify-center transition-all active:scale-90"
+            style={{ background: "rgba(249,115,22,0.15)" }}
+          >
+            <UserPlus size={14} style={{ color: "#f97316" }} />
+          </button>
           <button onClick={() => navigate("/profile")} className="transition-all active:scale-90">
             <User size={18} style={{ color: "#525252" }} />
           </button>
