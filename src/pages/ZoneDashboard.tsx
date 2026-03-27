@@ -534,8 +534,12 @@ const ZoneDashboard = () => {
           <button onClick={() => navigate("/profile")} className="transition-all active:scale-90">
             <User size={18} style={{ color: "#525252" }} />
           </button>
-          <button onClick={() => navigate("/timer")} className="transition-all active:scale-90">
-            <Timer size={18} style={{ color: "#525252" }} />
+          <button
+            onClick={() => navigate("/timer")}
+            className="h-8 w-8 rounded-full flex items-center justify-center transition-all active:scale-90"
+            style={{ background: "rgba(0,240,255,0.12)", boxShadow: "0 0 8px rgba(0,240,255,0.25)" }}
+          >
+            <Timer size={15} style={{ color: "#00f0ff" }} />
           </button>
         </div>
       </header>
