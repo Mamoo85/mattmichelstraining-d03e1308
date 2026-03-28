@@ -201,7 +201,7 @@ const App = () => (
               <Suspense fallback={null}><AnnouncementBanner /></Suspense>
               <ErrorBoundary>
                 <Suspense fallback={<PageLoader />}>
-                  <div className="pb-bottom-nav md:pb-0">
+                  <div className="pb-16">
                     <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/auth" element={<Auth />} />

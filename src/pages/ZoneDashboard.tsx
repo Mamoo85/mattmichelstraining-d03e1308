@@ -1,4 +1,5 @@
 import { useState, useEffect, lazy, Suspense, memo, useCallback } from "react";
+import { useBrowserNotifications } from "@/hooks/useBrowserNotifications";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { usePoints, getLevelInfo, getNextLevel } from "@/hooks/usePoints";
@@ -411,6 +412,7 @@ const ZoneDashboard = () => {
   const { user, subscriptionTier } = useAuth();
   const { points } = usePoints();
   const navigate = useNavigate();
+  useBrowserNotifications();
   const tierLabel = subscriptionTier ? subscriptionTier.charAt(0).toUpperCase() + subscriptionTier.slice(1) : "Member";
 
   const [activeTab, setActiveTab] = useState<TabKey>("home");

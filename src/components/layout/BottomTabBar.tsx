@@ -64,6 +64,14 @@ const SectionHeader = ({ title }: { title: string }) => (
   </p>
 );
 
+const HIDDEN_PATHS = [
+  "/demo-landscaping", "/demo-plumber", "/demo-electrician",
+  "/demo-lawyer", "/demo-clinic", "/demo-roofing",
+  "/demo-youngblood", "/demo-dental", "/demo-home",
+  "/detroit-web-design", "/whats-included",
+  "/matrix", "/matrix-training", "/matrix-merch",
+];
+
 const BottomTabBar = () => {
   const location = useLocation();
   const { user, signOut } = useAuth();
@@ -107,6 +115,10 @@ const BottomTabBar = () => {
     );
   };
 
+  // Hide on demo/test pages
+  const isHidden = HIDDEN_PATHS.some(p => location.pathname.startsWith(p));
+  if (isHidden) return null;
+
   return (
     <>
       {timerOpen && (
@@ -115,7 +127,7 @@ const BottomTabBar = () => {
         </Suspense>
       )}
 
-      <nav aria-label="Bottom navigation" className="md:hidden fixed bottom-0 left-0 right-0 z-[100] bg-background/95 backdrop-blur-md border-t border-border pb-[env(safe-area-inset-bottom)]">
+      <nav aria-label="Bottom navigation" className="fixed bottom-0 left-0 right-0 z-[100] bg-background/95 backdrop-blur-md border-t border-border pb-[env(safe-area-inset-bottom)]">
         <div className="flex items-stretch justify-around h-14">
           {TABS.map(({ to, label, icon: Icon }) => {
             const active = location.pathname === to;

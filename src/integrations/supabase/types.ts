@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_feed_notes: {
+        Row: {
+          activity_id: string
+          activity_type: string
+          author_id: string
+          author_role: string
+          created_at: string
+          id: string
+          is_flagged: boolean
+          is_question: boolean
+          note: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activity_id: string
+          activity_type: string
+          author_id: string
+          author_role?: string
+          created_at?: string
+          id?: string
+          is_flagged?: boolean
+          is_question?: boolean
+          note: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activity_id?: string
+          activity_type?: string
+          author_id?: string
+          author_role?: string
+          created_at?: string
+          id?: string
+          is_flagged?: boolean
+          is_question?: boolean
+          note?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       activity_logs: {
         Row: {
           activity_type: string
