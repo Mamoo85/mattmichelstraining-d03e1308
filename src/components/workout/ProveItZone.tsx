@@ -7,7 +7,7 @@ import { toast } from "sonner";
 
 type Step = "pick" | "weight" | "video" | "consent" | "submitting" | "done";
 
-const MAX_VIDEO_MB = 5;
+const MAX_VIDEO_MB = 20;
 
 const ProveItZone = ({ onClose }: { onClose: () => void }) => {
   const { user } = useAuth();
