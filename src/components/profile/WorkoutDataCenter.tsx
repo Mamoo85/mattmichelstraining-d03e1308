@@ -114,7 +114,7 @@ const WorkoutDataCenter = () => {
     if (w) { w.document.write(html); w.document.close(); setTimeout(() => w.print(), 400); }
   }, []);
 
-
+  const generatePDF = useCallback(async () => {
     if (!user) return;
     setPrinting(true);
     try {
