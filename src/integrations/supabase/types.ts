@@ -3786,6 +3786,17 @@ export type Database = {
         Args: { _is_public: boolean }
         Returns: undefined
       }
+      validate_promo_code: {
+        Args: { _code: string }
+        Returns: {
+          applies_to: string
+          code: string
+          discount_type: string
+          discount_value: number
+          id: string
+          specific_product_id: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user" | "parent" | "child"
