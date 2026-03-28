@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { X, Mic, MicOff, Send, Check, Loader2, Dumbbell } from "lucide-react";
+import { X, Mic, MicOff, Send, Check, Loader2, Dumbbell, Camera, ImagePlus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -50,6 +50,8 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
   const [showTip, setShowTip] = useState(() => !safeLocalStorage.getItem(QUICK_ACTIVITY_TIP.storageKey));
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const photoRef = useRef<HTMLInputElement>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   
   // Track what info has been provided
   const [needsIntensity, setNeedsIntensity] = useState(false);
