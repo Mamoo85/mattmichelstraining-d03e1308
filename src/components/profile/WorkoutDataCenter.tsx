@@ -64,7 +64,7 @@ const WorkoutDataCenter = () => {
         supabase.from("studio_checkins" as any).select("id, location, created_at").eq("user_id", user.id).order("created_at", { ascending: false }),
         supabase.from("progress_logs" as any).select("id, exercise_name, weight, reps, sets, logged_at").eq("user_id", user.id).order("logged_at", { ascending: false }),
       ]);
-      setWorkouts(wRes.data || []);
+      setWorkouts((wRes.data || []) as any);
       setActivities(aRes.data as any[] || []);
       setCheckins(cRes.data as any[] || []);
       setProgressLogs(pRes.data as any[] || []);
