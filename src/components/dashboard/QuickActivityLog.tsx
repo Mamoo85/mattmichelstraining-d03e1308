@@ -454,6 +454,24 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
 
       {/* Input bar */}
       <div className="px-4 py-3 flex items-center gap-2" style={{ borderTop: "1px solid rgba(255,255,255,0.06)", background: "rgba(10,10,10,0.95)" }}>
+        {/* Hidden file input for photo */}
+        <input
+          ref={photoRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={handlePhotoUpload}
+          className="hidden"
+        />
+        {/* Camera / Photo button */}
+        <button
+          onClick={() => photoRef.current?.click()}
+          disabled={uploadingPhoto || streaming}
+          className="h-10 w-10 rounded-full flex items-center justify-center shrink-0 transition-all active:scale-90 disabled:opacity-30"
+          style={{ background: "rgba(168,85,247,0.15)", border: "1px solid rgba(168,85,247,0.3)" }}
+        >
+          {uploadingPhoto ? <Loader2 size={16} className="animate-spin" style={{ color: "#a855f7" }} /> : <Camera size={16} style={{ color: "#a855f7" }} />}
+        </button>
         {supported && (
           <button
             onClick={toggleVoice}
