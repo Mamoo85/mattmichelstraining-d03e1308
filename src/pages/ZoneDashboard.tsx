@@ -556,8 +556,8 @@ const ZoneDashboard = () => {
             />
           </button>
           <div>
-            <p className="text-[9px] font-bold uppercase tracking-[0.2em]" style={{ color: "#f97316" }}>THE ZONE</p>
-            <p className="text-xs font-semibold" style={{ color: "#fafafa" }}>{displayName}</p>
+            <p className="text-xs font-bold uppercase tracking-[0.2em]" style={{ color: "#f97316" }}>THE ZONE</p>
+            <p className="text-sm font-semibold" style={{ color: "#fafafa" }}>{displayName}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -592,93 +592,60 @@ const ZoneDashboard = () => {
       <main className="max-w-md sm:max-w-lg md:max-w-2xl lg:max-w-3xl mx-auto px-4 pt-4 pb-4 space-y-4">
 
         {/* ── Stats Banner ────────── */}
+        {/* ── Stats Banner (high-contrast) ────── */}
         <div
           className="rounded-2xl overflow-hidden"
           style={{
-            background: "linear-gradient(135deg, rgba(249,115,22,0.08), rgba(168,85,247,0.06), rgba(0,240,255,0.04))",
+            background: "rgba(0,0,0,0.4)",
             border: "1px solid rgba(249,115,22,0.15)",
           }}
         >
-          <div className="flex">
-            {/* Left: Stats */}
-            <div className="flex-1 p-4 space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5">
-                  <Flame size={16} style={{ color: "#f97316" }} />
-                  <span className="text-base font-black" style={{ color: "#fafafa" }}>{streak}</span>
-                  <span className="text-[10px] font-medium" style={{ color: "#737373" }}>day streak</span>
-                </div>
-                <div className="w-px h-4" style={{ background: "rgba(255,255,255,0.1)" }} />
-                <div className="flex items-center gap-1.5">
-                  <Activity size={14} style={{ color: "#a855f7" }} />
-                  <span className="text-base font-black" style={{ color: "#fafafa" }}>{sessionsThisWeek}</span>
-                  <span className="text-[10px] font-medium" style={{ color: "#737373" }}>this week</span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1 shrink-0">
-                  <Star size={12} style={{ color: "#f97316" }} />
-                  <span className="text-[11px] font-bold" style={{ color: "#fb923c" }}>{levelInfo.label}</span>
-                </div>
-                <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
-                  <motion.div
-                    className="h-full rounded-full"
-                    style={{ background: "linear-gradient(90deg, #f97316, #fb923c)" }}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progressPct}%` }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                  />
-                </div>
-                <span className="text-[10px] font-bold shrink-0" style={{ color: "#525252" }}>
-                  {ptsTotal} pts
-                </span>
-              </div>
-
-              {currentProgram !== "—" && (
-                <div className="flex items-center gap-2 pt-1" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                  <Target size={12} style={{ color: "#00f0ff" }} />
-                  <span className="text-[11px] font-medium truncate" style={{ color: "#a3a3a3" }}>{currentProgram}</span>
-                </div>
-              )}
+          {/* Stats Grid — 3 columns, big numbers */}
+          <div className="grid grid-cols-3 divide-x divide-white/[0.06] p-4">
+            <div className="flex flex-col items-center gap-1 px-2">
+              <Flame size={18} style={{ color: "#f97316" }} />
+              <span className="text-2xl font-black" style={{ color: "#f97316" }}>{streak}</span>
+              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "#737373" }}>Streak</span>
             </div>
-
-            {/* Right: Profile Avatar Card */}
-            <button
-              onClick={() => navigate("/profile")}
-              className="shrink-0 w-[100px] flex flex-col items-center justify-center gap-1.5 relative overflow-hidden transition-all active:scale-95"
-              style={{ borderLeft: "1px solid rgba(255,255,255,0.06)" }}
-            >
-              <div className="absolute inset-0" style={{
-                background: "radial-gradient(circle at center, rgba(249,115,22,0.15) 0%, transparent 70%)",
-              }} />
-              <div
-                className="relative h-12 w-12 rounded-full flex items-center justify-center text-lg font-black uppercase"
-                style={{
-                  background: "linear-gradient(135deg, #f97316, #ea580c)",
-                  color: "#fff",
-                  boxShadow: "0 0 20px rgba(249,115,22,0.4), 0 0 40px rgba(249,115,22,0.15)",
-                }}
-              >
-                {displayName.charAt(0)}
-              </div>
-              <span className="text-[9px] font-bold uppercase tracking-wider relative" style={{ color: "#f97316" }}>
-                {tierLabel}
-              </span>
-              {topPR && (
-                <div className="relative text-center px-1">
-                  <p className="text-[9px] font-medium" style={{ color: "#737373" }}>Top PR</p>
-                  <p className="text-sm font-black leading-tight" style={{ color: "#fafafa" }}>{topPR.weight}<span className="text-[9px] font-medium" style={{ color: "#737373" }}>lb</span></p>
-                </div>
-              )}
-              <div className="flex items-center gap-0.5 relative">
-                <span className="text-[8px] font-medium" style={{ color: "#525252" }}>View Stats</span>
-                <ChevronRight size={10} style={{ color: "#525252" }} />
-              </div>
-            </button>
+            <div className="flex flex-col items-center gap-1 px-2">
+              <Activity size={18} style={{ color: "#a855f7" }} />
+              <span className="text-2xl font-black" style={{ color: "#a855f7" }}>{sessionsThisWeek}</span>
+              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "#737373" }}>Sessions</span>
+            </div>
+            <div className="flex flex-col items-center gap-1 px-2">
+              <Star size={18} style={{ color: "#00f0ff" }} />
+              <span className="text-2xl font-black" style={{ color: "#00f0ff" }}>{ptsTotal}</span>
+              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "#737373" }}>Points</span>
+            </div>
           </div>
 
-          {/* Check-In + Prove It strip */}
+          {/* Level progress bar */}
+          <div className="px-4 pb-3 flex items-center gap-2">
+            <span className="text-xs font-bold shrink-0" style={{ color: "#fb923c" }}>{levelInfo.label}</span>
+            <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+              <motion.div
+                className="h-full rounded-full"
+                style={{ background: "linear-gradient(90deg, #f97316, #fb923c)" }}
+                initial={{ width: 0 }}
+                animate={{ width: `${progressPct}%` }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+              />
+            </div>
+            {nextLevel && (
+              <span className="text-xs font-bold shrink-0" style={{ color: "#525252" }}>
+                {nextLevel.min - ptsTotal} to go
+              </span>
+            )}
+          </div>
+
+          {currentProgram !== "—" && (
+            <div className="flex items-center gap-2 px-4 pb-3 pt-1" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+              <Target size={14} style={{ color: "#00f0ff" }} />
+              <span className="text-xs font-medium truncate" style={{ color: "#a3a3a3" }}>{currentProgram}</span>
+            </div>
+          )}
+
+          {/* Condensed Check-In + Prove It strip */}
           <div className="flex" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
             <button
               onClick={() => {
@@ -686,25 +653,25 @@ const ZoneDashboard = () => {
                 setShowCheckInChoice(true);
               }}
               disabled={alreadyCheckedInToday}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 transition-all active:scale-[0.98]"
+              className="flex-1 flex items-center justify-center gap-2 py-3 transition-all active:scale-[0.98]"
               style={{
                 color: alreadyCheckedInToday ? "#525252" : "#00f0ff",
                 opacity: alreadyCheckedInToday ? 0.6 : 1,
               }}
             >
-              {alreadyCheckedInToday ? <Check size={13} /> : <MapPin size={13} />}
-              <span className="text-[10px] font-bold uppercase tracking-widest">
-                {alreadyCheckedInToday ? "Checked In ✓" : "Check-In"}
+              {alreadyCheckedInToday ? <Check size={14} /> : <MapPin size={14} />}
+              <span className="text-xs font-bold uppercase tracking-widest">
+                {alreadyCheckedInToday ? "Checked In ✓" : "Check In"}
               </span>
             </button>
             <div className="w-px" style={{ background: "rgba(255,255,255,0.06)" }} />
             <button
               onClick={() => window.dispatchEvent(new Event("open-prove-it-zone"))}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 transition-all active:scale-[0.98]"
+              className="flex-1 flex items-center justify-center gap-2 py-3 transition-all active:scale-[0.98]"
               style={{ color: "#f97316" }}
             >
-              <Trophy size={13} />
-              <span className="text-[10px] font-bold uppercase tracking-widest">Prove It</span>
+              <Trophy size={14} />
+              <span className="text-xs font-bold uppercase tracking-widest">Prove It</span>
             </button>
           </div>
         </div>
@@ -720,8 +687,8 @@ const ZoneDashboard = () => {
             <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: "linear-gradient(135deg, #f97316, #ea580c)" }}>
               <Dumbbell size={17} color="#fff" />
             </div>
-            <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>Main Lifts Log</p>
-            <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>Track compound lifts & progress</p>
+            <p className="text-sm font-black" style={{ color: "#fafafa" }}>Main Lifts Log</p>
+            <p className="text-xs mt-0.5" style={{ color: "#525252" }}>Track compound lifts & progress</p>
           </button>
 
           {/* Challenges & Focus */}
@@ -733,8 +700,8 @@ const ZoneDashboard = () => {
             <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: "linear-gradient(135deg, #22c55e, #16a34a)" }}>
               <Award size={17} color="#fff" />
             </div>
-            <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>Challenges & Focus</p>
-            <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>Monthly goals & community</p>
+            <p className="text-sm font-black" style={{ color: "#fafafa" }}>Challenges & Focus</p>
+            <p className="text-xs mt-0.5" style={{ color: "#525252" }}>Monthly goals & community</p>
           </button>
 
           {/* Split Generator/Fix It button */}
@@ -755,8 +722,8 @@ const ZoneDashboard = () => {
                   <Wrench size={10} color="#00f0ff" />
                 </div>
               </div>
-              <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>Generator</p>
-              <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>AI builds your workout</p>
+              <p className="text-sm font-black" style={{ color: "#fafafa" }}>Generator</p>
+              <p className="text-xs mt-0.5" style={{ color: "#525252" }}>AI builds your workout</p>
             </div>
           </button>
 
@@ -769,8 +736,8 @@ const ZoneDashboard = () => {
             <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: "linear-gradient(135deg, #00f0ff, #0891b2)" }}>
               <Play size={17} color="#fff" />
             </div>
-            <p className="text-[11px] font-black" style={{ color: "#fafafa" }}>Workout Library</p>
-            <p className="text-[9px] mt-0.5" style={{ color: "#525252" }}>Programs & saved workouts</p>
+            <p className="text-sm font-black" style={{ color: "#fafafa" }}>Workout Library</p>
+            <p className="text-xs mt-0.5" style={{ color: "#525252" }}>Programs & saved workouts</p>
           </button>
         </div>
 
@@ -784,8 +751,8 @@ const ZoneDashboard = () => {
             <Mic size={18} color="#fff" />
           </div>
           <div className="text-left flex-1 min-w-0">
-            <p className="text-xs font-black" style={{ color: "#fafafa" }}>What Did You Do Today?</p>
-            <p className="text-[10px] mt-0.5" style={{ color: "#525252" }}>Voice or text — log cardio, circuits, anything</p>
+            <p className="text-sm font-black" style={{ color: "#fafafa" }}>What Did You Do Today?</p>
+            <p className="text-xs mt-0.5" style={{ color: "#525252" }}>Voice or text — log cardio, circuits, anything</p>
           </div>
           <ChevronRight size={16} style={{ color: "#22c55e" }} />
         </button>
@@ -800,7 +767,7 @@ const ZoneDashboard = () => {
           }}
         >
           <Heart size={16} style={{ color: "#a855f7" }} />
-          <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#a855f7" }}>Recovery & Mobility Tips</span>
+          <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "#a855f7" }}>Recovery & Mobility Tips</span>
           <ChevronRight size={14} className="ml-auto" style={{ color: "#a855f7" }} />
         </button>
 
@@ -813,7 +780,7 @@ const ZoneDashboard = () => {
             <button
               key={key}
               onClick={() => handleTab(key)}
-              className="flex-1 flex items-center justify-center gap-1 py-2.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all min-w-0 overflow-hidden"
+              className="flex-1 flex items-center justify-center gap-1 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all min-w-0 overflow-hidden"
               style={
                 activeTab === key
                   ? { background: "linear-gradient(135deg, #f97316, #ea580c)", color: "#fff", boxShadow: "0 4px 12px rgba(249,115,22,0.3)" }
@@ -919,11 +886,11 @@ const ZoneDashboard = () => {
                   💪 On Your Own
                 </button>
               </div>
-              <button
-                onClick={() => setShowCheckInChoice(false)}
-                className="w-full text-center text-[10px] font-bold uppercase tracking-widest py-2"
-                style={{ color: "#525252" }}
-              >
+                <button
+                  onClick={() => setShowCheckInChoice(false)}
+                  className="w-full text-center text-xs font-bold uppercase tracking-widest py-2"
+                  style={{ color: "#525252" }}
+                >
                 Cancel
               </button>
             </motion.div>
