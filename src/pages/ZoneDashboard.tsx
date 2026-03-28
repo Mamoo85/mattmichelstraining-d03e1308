@@ -1,4 +1,5 @@
 import { useState, useEffect, lazy, Suspense, memo, useCallback } from "react";
+import { useBrowserNotifications } from "@/hooks/useBrowserNotifications";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { usePoints, getLevelInfo, getNextLevel } from "@/hooks/usePoints";
