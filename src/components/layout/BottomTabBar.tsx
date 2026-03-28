@@ -64,6 +64,14 @@ const SectionHeader = ({ title }: { title: string }) => (
   </p>
 );
 
+const HIDDEN_PATHS = [
+  "/demo-landscaping", "/demo-plumber", "/demo-electrician",
+  "/demo-lawyer", "/demo-clinic", "/demo-roofing",
+  "/demo-youngblood", "/demo-dental", "/demo-home",
+  "/detroit-web-design", "/whats-included",
+  "/matrix", "/matrix-training", "/matrix-merch",
+];
+
 const BottomTabBar = () => {
   const location = useLocation();
   const { user, signOut } = useAuth();
