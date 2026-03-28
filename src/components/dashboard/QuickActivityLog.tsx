@@ -217,8 +217,8 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
           creator_name: "AI Quick Log",
           is_public: false,
           source_type: "ai_quick_log",
-          exercises: summary.workout_sheet,
-        });
+          exercises: summary.workout_sheet as any,
+        } as any);
         if (wsError) {
           console.error("Workout sheet save error:", wsError);
         } else {
