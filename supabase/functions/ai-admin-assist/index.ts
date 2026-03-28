@@ -185,6 +185,70 @@ serve(async (req) => {
         break;
       }
 
+      case "general_query": {
+        // Fetch business stats for context
+        const [profilesRes, workoutLogsRes, programsRes, subsRes] = await Promise.all([
+          supabaseClient.from("profiles").select("id", { count: "exact", head: true }),
+          supabaseClient.from("workout_logs").select("id", { count: "exact", head: true }),
+          supabaseClient.from("training_programs").select("id", { count: "exact", head: true }),
+          supabaseClient.from("profiles").select("subscription_tier").not("subscription_tier", "is", null),
+        ]);
+
+        const tierBreakdown = (subsRes.data || []).reduce((acc: Record<string, number>, p: any) => {
+          acc[p.subscription_tier] = (acc[p.subscription_tier] || 0) + 1;
+          return acc;
+        }, {});
+
+        // Fetch recent activity
+        const { data: recentLogs } = await supabaseClient
+          .from("workout_logs")
+          .select("user_id, date")
+          .order("date", { ascending: false })
+          .limit(50);
+
+        const { data: recentSignups } = await supabaseClient
+          .from("profiles")
+          .select("full_name, created_at, subscription_tier")
+          .order("created_at", { ascending: false })
+          .limit(10);
+
+        const { data: pendingDrafts } = await supabaseClient
+          .from("coach_ai_drafts")
+          .select("id, question, created_at")
+          .eq("status", "pending")
+          .order("created_at", { ascending: false })
+          .limit(5);
+
+        const { data: pendingQueue } = await supabaseClient
+          .from("ai_action_queue")
+          .select("id, action_type, created_at")
+          .eq("status", "pending")
+          .order("created_at", { ascending: false })
+          .limit(5);
+
+        const businessContext = `
+LIVE BUSINESS DATA (as of now):
+- Total Users: ${profilesRes.count || 0}
+- Total Workout Logs: ${workoutLogsRes.count || 0}
+- Total Programs: ${programsRes.count || 0}
+- Subscription Tiers: ${JSON.stringify(tierBreakdown)}
+- Recent Signups: ${(recentSignups || []).map((s: any) => `${s.full_name || "Unknown"} (${s.subscription_tier || "free"}, ${new Date(s.created_at).toLocaleDateString()})`).join(", ") || "None"}
+- Recent Active Users (last 50 logs): ${new Set((recentLogs || []).map((l: any) => l.user_id)).size} unique users
+- Pending Coach AI Drafts: ${(pendingDrafts || []).length} — ${(pendingDrafts || []).map((d: any) => `"${d.question?.slice(0, 50)}"`).join(", ") || "none"}
+- Pending AI Queue Items: ${(pendingQueue || []).length} — ${(pendingQueue || []).map((q: any) => q.action_type).join(", ") || "none"}
+`;
+
+        systemPrompt = `You are an expert AI business intelligence assistant for M² Training, Coach Matt Michels' strength & conditioning platform. You have FULL access to live business data and can answer ANY question about the business, users, training data, marketing, operations, or strategy.
+
+You are as capable as the best AI assistants. Answer thoroughly, with data-backed insights. If asked about specific users, reference the data. If asked for strategy, give actionable advice. If asked to draft content, write it professionally. If asked about technical operations, explain clearly.
+
+Be direct, professional, and comprehensive. Use markdown formatting for readability.
+${businessContext}
+${catalogContext}`;
+        userPrompt = context.query || context.message || "What can you help me with?";
+        break;
+      }
+
       default:
         throw new Error(`Unknown assist type: ${type}`);
     }

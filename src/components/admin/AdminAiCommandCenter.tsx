@@ -1,45 +1,40 @@
-import { useState, lazy, Suspense, memo, useEffect } from "react";
+import { useState, lazy, Suspense, memo, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Sparkles, Search, HelpCircle, X, Loader2, Dumbbell, MessageSquare,
-  BarChart3, Wand2, Headphones, Camera, ChevronDown, ChevronRight,
-  Zap, TrendingUp, Send, FileText, Bot, Clock, Brain, Activity,
+  BarChart3, Wand2, Headphones, Camera, ChevronRight,
+  Zap, Send, Bot, Activity, Brain,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { Badge } from "@/components/ui/badge";
+import ReactMarkdown from "react-markdown";
+import { toast } from "sonner";
 
-/* ── Lazy-loaded sub-panels (existing admin components) ── */
+/* ── Lazy-loaded sub-panels ── */
 const AdminBatchGenerator = lazy(() => import("./AdminBatchGenerator"));
 const AdminExerciseGenerator = lazy(() => import("./AdminExerciseGenerator"));
 const AdminProgramCreator = lazy(() => import("./AdminProgramCreator"));
 const AdminAiToolkit = lazy(() => import("./AdminAiToolkit"));
 const AdminAiTimerGenerator = lazy(() => import("./AdminAiTimerGenerator"));
 const AdminMonthlyFocus = lazy(() => import("./AdminMonthlyFocus"));
-
 const AdminNewsletterComposer = lazy(() => import("./AdminNewsletterComposer"));
 const AdminBroadcasts = lazy(() => import("./AdminBroadcasts"));
 const AdminCoachAiQueue = lazy(() => import("./AdminCoachAiQueue"));
 const AdminDirectMessages = lazy(() => import("./AdminDirectMessages"));
-
 const AdminCmoReports = lazy(() => import("./AdminCmoReports"));
 const AdminChurnRadar = lazy(() => import("./AdminChurnRadar"));
 const AdminAiBusinessTools = lazy(() => import("./AdminAiBusinessTools"));
 const AdminRecoveryHeatmap = lazy(() => import("./AdminRecoveryHeatmap"));
 const AdminBiomechanics = lazy(() => import("./AdminBiomechanics"));
-
 const AdminSeoGenerator = lazy(() => import("./AdminSeoGenerator"));
 const AdminContentGenerator = lazy(() => import("./AdminContentGenerator"));
 const AdminGbpPosts = lazy(() => import("./AdminGbpPosts"));
 const AdminInstagramPosts = lazy(() => import("./AdminInstagramPosts"));
 const AdminMarketingDrafts = lazy(() => import("./AdminMarketingDrafts"));
-
 const AdminSupportCopilot = lazy(() => import("./AdminSupportCopilot"));
 const AdminParentReports = lazy(() => import("./AdminParentReports"));
 const AdminAiQueue = lazy(() => import("./AdminAiQueue"));
-
 const AdminMediaVault = lazy(() => import("./AdminMediaVault"));
-
 
 const Loader = () => (
   <div className="flex justify-center py-10">
@@ -47,7 +42,7 @@ const Loader = () => (
   </div>
 );
 
-/* ── Category definitions ── */
+/* ── Category definitions with contextual suggestions ── */
 const CATEGORIES = [
   {
     key: "train",
@@ -55,6 +50,12 @@ const CATEGORIES = [
     icon: Dumbbell,
     color: "#f97316",
     desc: "Workouts · Programs · Exercises · Timers",
+    suggestions: [
+      "Generate a 4-week beginner strength program",
+      "Create a speed & agility workout for baseball",
+      "Build a deload week template",
+      "Generate 10 new exercise library entries",
+    ],
     panels: [
       { key: "ai-workouts", label: "AI Workout Generator" },
       { key: "ai-exercises", label: "AI Exercise Builder" },
@@ -70,6 +71,12 @@ const CATEGORIES = [
     icon: MessageSquare,
     color: "#3b82f6",
     desc: "Emails · Newsletters · Coach AI · DMs",
+    suggestions: [
+      "Draft this week's newsletter about recovery",
+      "Write a re-engagement email for inactive users",
+      "Compose a parent update template",
+      "Draft a welcome message for new members",
+    ],
     panels: [
       { key: "compose", label: "Newsletter Composer" },
       { key: "broadcasts", label: "Broadcasts" },
@@ -83,6 +90,12 @@ const CATEGORIES = [
     icon: BarChart3,
     color: "#10b981",
     desc: "CMO Reports · Churn · BI · Recovery",
+    suggestions: [
+      "Show me the last 20 user actions",
+      "Which users are at risk of churning?",
+      "Run a CMO intelligence report",
+      "What are the top 5 most active users this week?",
+    ],
     panels: [
       { key: "cmo", label: "CMO Intelligence" },
       { key: "churn", label: "Churn Radar" },
@@ -97,6 +110,12 @@ const CATEGORIES = [
     icon: Wand2,
     color: "#a855f7",
     desc: "SEO · Social Posts · Marketing Content",
+    suggestions: [
+      "Create SEO content for youth training",
+      "Generate 4 Google Business posts",
+      "Write an Instagram caption about deadlifts",
+      "Draft a marketing ad for summer programs",
+    ],
     panels: [
       { key: "seo-engine", label: "SEO Engine" },
       { key: "content-gen", label: "Content Generator" },
@@ -111,6 +130,12 @@ const CATEGORIES = [
     icon: Headphones,
     color: "#06b6d4",
     desc: "Triage · Parent Reports · AI Queue",
+    suggestions: [
+      "How many support items are pending?",
+      "Show me unreviewed AI drafts",
+      "Generate a parent progress report",
+      "What coach replies need review?",
+    ],
     panels: [
       { key: "support-copilot", label: "Support Copilot" },
       { key: "parent-reports", label: "Parent Reports" },
@@ -123,59 +148,18 @@ const CATEGORIES = [
     icon: Camera,
     color: "#ec4899",
     desc: "Photos · Videos · Graphics · Studio",
+    suggestions: [
+      "How many media files are uploaded?",
+      "What video content should I create next?",
+      "Suggest social media content ideas",
+      "What types of graphics perform best?",
+    ],
     panels: [
       { key: "media-vault", label: "Media Vault" },
       { key: "ai-studio", label: "AI Media Studio" },
     ],
   },
 ];
-
-/* ── Dynamic suggestions based on real data ── */
-const useDynamicSuggestions = () => {
-  const { data: suggestions = [] } = useQuery({
-    queryKey: ["ai-cmd-suggestions"],
-    queryFn: async () => {
-      const items: string[] = [];
-      const { count: pendingAi } = await supabase
-        .from("ai_action_queue")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "pending");
-      if (pendingAi && pendingAi > 0) items.push(`Review ${pendingAi} pending AI drafts`);
-
-      const { count: pendingCoach } = await supabase
-        .from("coach_ai_drafts")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "pending");
-      if (pendingCoach && pendingCoach > 0) items.push(`${pendingCoach} coach replies need review`);
-
-      const { count: openTickets } = await supabase
-        .from("support_tickets" as any)
-        .select("id", { count: "exact", head: true })
-        .eq("status", "open");
-      if (openTickets && openTickets > 0) items.push(`Triage ${openTickets} open support tickets`);
-
-      const { count: unreadParent } = await supabase
-        .from("parent_inbox")
-        .select("id", { count: "exact", head: true })
-        .eq("is_read", false)
-        .eq("is_deleted", false);
-      if (unreadParent && unreadParent > 0) items.push(`${unreadParent} parent messages waiting`);
-
-      // Always-available suggestions
-      items.push(
-        "Generate a 4-week training program",
-        "Write this week's newsletter",
-        "Run a CMO intelligence report",
-        "Create SEO content for youth training",
-        "Build a custom workout for a client",
-      );
-
-      return items.slice(0, 8);
-    },
-    staleTime: 60000,
-  });
-  return suggestions;
-};
 
 /* ── Badge counts ── */
 const useBadgeCounts = () => {
@@ -192,60 +176,6 @@ const useBadgeCounts = () => {
   });
   return data ?? { aiQueue: 0, coachQueue: 0 };
 };
-
-/* ── Suggestion Popup ── */
-const SuggestionPopup = memo(({ open, onClose, suggestions, onSelect }: {
-  open: boolean; onClose: () => void; suggestions: string[]; onSelect: (s: string) => void;
-}) => (
-  <AnimatePresence>
-    {open && (
-      <motion.div
-        initial={{ opacity: 0, y: -8, scale: 0.96 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: -8, scale: 0.96 }}
-        transition={{ duration: 0.2 }}
-        className="absolute right-0 top-full mt-2 z-50 w-72 overflow-hidden"
-        style={{
-          background: "#1a1a1a",
-          border: "1px solid rgba(249,115,22,0.25)",
-          borderRadius: 16,
-          boxShadow: "0 20px 50px rgba(0,0,0,0.6)",
-        }}
-      >
-        <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-          <div className="flex items-center gap-2">
-            <Brain size={14} style={{ color: "#f97316" }} />
-            <span className="text-xs font-bold text-white tracking-wide">Smart Suggestions</span>
-          </div>
-          <button onClick={onClose} className="p-1 rounded-full hover:bg-white/10 transition">
-            <X size={14} className="text-neutral-400" />
-          </button>
-        </div>
-        <div className="p-2 space-y-0.5 max-h-80 overflow-y-auto">
-          {suggestions.map((s, i) => (
-            <button
-              key={i}
-              onClick={() => { onSelect(s); onClose(); }}
-              className="w-full text-left flex items-start gap-2.5 px-3 py-2.5 rounded-xl transition hover:bg-white/5 active:scale-[0.98]"
-            >
-              <Zap size={12} className="mt-0.5 shrink-0" style={{ color: i < 4 ? "#f97316" : "#737373" }} />
-              <span className="text-[11px] leading-snug" style={{ color: i < 4 ? "#e5e5e5" : "#a3a3a3" }}>
-                {s}
-              </span>
-              {i < 4 && (
-                <span className="ml-auto shrink-0 text-[8px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full"
-                  style={{ background: "rgba(249,115,22,0.15)", color: "#f97316" }}>
-                  Action
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-      </motion.div>
-    )}
-  </AnimatePresence>
-));
-SuggestionPopup.displayName = "SuggestionPopup";
 
 /* ── Panel Renderer ── */
 const PanelRenderer = memo(({ panelKey }: { panelKey: string }) => {
@@ -305,19 +235,14 @@ const CategoryCard = memo(({ cat, isExpanded, onToggle, activePanel, onPanelSele
         onClick={onToggle}
         className="w-full flex items-center gap-3.5 px-4 py-4 transition active:scale-[0.98]"
       >
-        <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-          style={{ background: cat.color + "18" }}
-        >
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: cat.color + "18" }}>
           <Icon size={20} style={{ color: cat.color }} />
         </div>
         <div className="flex-1 text-left">
           <div className="flex items-center gap-2">
             <span className="text-sm font-bold text-white">{cat.label}</span>
             {totalBadge > 0 && (
-              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-400">
-                {totalBadge}
-              </span>
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-400">{totalBadge}</span>
             )}
           </div>
           <p className="text-[10px] mt-0.5" style={{ color: "#737373" }}>{cat.desc}</p>
@@ -348,16 +273,8 @@ const CategoryCard = memo(({ cat, isExpanded, onToggle, activePanel, onPanelSele
                     border: activePanel === p.key ? `1px solid ${cat.color}30` : "1px solid transparent",
                   }}
                 >
-                  <div
-                    className="w-1.5 h-1.5 rounded-full shrink-0"
-                    style={{ background: activePanel === p.key ? cat.color : "#404040" }}
-                  />
-                  <span
-                    className="text-xs font-medium"
-                    style={{ color: activePanel === p.key ? "#e5e5e5" : "#a3a3a3" }}
-                  >
-                    {p.label}
-                  </span>
+                  <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: activePanel === p.key ? cat.color : "#404040" }} />
+                  <span className="text-xs font-medium" style={{ color: activePanel === p.key ? "#e5e5e5" : "#a3a3a3" }}>{p.label}</span>
                   {p.badge && (
                     (cat.key === "communicate" && badges.coachQueue > 0) ||
                     (cat.key === "support" && badges.aiQueue > 0)
@@ -385,38 +302,84 @@ const AdminAiCommandCenter = () => {
   const [activePanel, setActivePanel] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [aiResponse, setAiResponse] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
 
-  const suggestions = useDynamicSuggestions();
   const badges = useBadgeCounts();
 
-  const handlePanelSelect = (panelKey: string) => {
-    setActivePanel(activePanel === panelKey ? null : panelKey);
-  };
+  // Get suggestions based on expanded category
+  const currentSuggestions = expandedCat
+    ? CATEGORIES.find(c => c.key === expandedCat)?.suggestions || []
+    : [
+        "Show me the last 20 user actions",
+        "Which users are at risk of churning?",
+        "How many active subscribers do we have?",
+        "What coach replies need review?",
+      ];
 
-  const handleSuggestionSelect = (s: string) => {
-    setSearchQuery(s);
-    // Route to appropriate category based on keyword matching
-    const lower = s.toLowerCase();
-    if (lower.includes("program") || lower.includes("workout") || lower.includes("exercise")) {
-      setExpandedCat("train");
-      setActivePanel("ai-workouts");
-    } else if (lower.includes("newsletter") || lower.includes("email") || lower.includes("coach") || lower.includes("reply")) {
-      setExpandedCat("communicate");
-      setActivePanel("compose");
-    } else if (lower.includes("cmo") || lower.includes("churn") || lower.includes("report") || lower.includes("intelligence")) {
-      setExpandedCat("analyze");
-      setActivePanel("cmo");
-    } else if (lower.includes("seo") || lower.includes("content") || lower.includes("post")) {
-      setExpandedCat("create");
-      setActivePanel("seo-engine");
-    } else if (lower.includes("support") || lower.includes("ticket") || lower.includes("triage") || lower.includes("draft")) {
-      setExpandedCat("support");
-      setActivePanel("ai-queue");
-    } else if (lower.includes("parent")) {
-      setExpandedCat("support");
-      setActivePanel("parent-reports");
+  const handlePanelSelect = useCallback((panelKey: string) => {
+    setActivePanel(prev => prev === panelKey ? null : panelKey);
+    setAiResponse("");
+    setAiError(null);
+  }, []);
+
+  const handleAiQuery = useCallback(async (query: string) => {
+    if (!query.trim()) return;
+
+    setAiLoading(true);
+    setAiResponse("");
+    setAiError(null);
+    setShowSuggestions(false);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("Not authenticated — please log in.");
+      }
+
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-admin-assist`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            type: "general_query",
+            context: { query },
+          }),
+        }
+      );
+
+      if (!resp.ok) {
+        let errMsg = "AI service error";
+        try {
+          const errData = await resp.json();
+          errMsg = errData.error || errMsg;
+        } catch { /* ignore */ }
+        if (resp.status === 429) errMsg = "Rate limited — please try again in a moment.";
+        if (resp.status === 402) errMsg = "AI credits needed — please add credits in workspace settings.";
+        throw new Error(errMsg);
+      }
+
+      const data = await resp.json();
+      setAiResponse(data.result || "No response generated.");
+    } catch (e: any) {
+      const msg = e.message || "Unknown error";
+      setAiError(msg);
+      toast.error(msg);
+    } finally {
+      setAiLoading(false);
     }
-  };
+  }, []);
+
+  const handleSubmit = useCallback(() => {
+    if (searchQuery.trim()) {
+      handleAiQuery(searchQuery.trim());
+    }
+  }, [searchQuery, handleAiQuery]);
 
   return (
     <div className="space-y-4">
@@ -436,11 +399,11 @@ const AdminAiCommandCenter = () => {
           </div>
           <div>
             <h2 className="text-base font-black text-white tracking-tight">AI Command Center</h2>
-            <p className="text-[10px]" style={{ color: "#737373" }}>All intelligence. One place.</p>
+            <p className="text-[10px]" style={{ color: "#737373" }}>Ask anything. Get real answers with live data.</p>
           </div>
         </div>
 
-        {/* ── Search bar with ? button ── */}
+        {/* ── Search bar ── */}
         <div className="relative">
           <div
             className="flex items-center gap-2"
@@ -456,14 +419,18 @@ const AdminAiCommandCenter = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter" && searchQuery.trim()) handleSuggestionSelect(searchQuery.trim()); }}
-              placeholder="Ask AI anything..."
+              onKeyDown={(e) => { if (e.key === "Enter") handleSubmit(); }}
+              placeholder="Ask AI anything about your business..."
               className="flex-1 bg-transparent text-xs text-white placeholder:text-neutral-500 outline-none"
+              disabled={aiLoading}
             />
-            {searchQuery.trim() && (
+            {aiLoading ? (
+              <Loader2 size={14} className="animate-spin shrink-0" style={{ color: "#f97316" }} />
+            ) : (
               <button
-                onClick={() => handleSuggestionSelect(searchQuery.trim())}
-                className="w-7 h-7 rounded-full flex items-center justify-center transition active:scale-90 shrink-0"
+                onClick={handleSubmit}
+                disabled={!searchQuery.trim()}
+                className="w-7 h-7 rounded-full flex items-center justify-center transition active:scale-90 shrink-0 disabled:opacity-30"
                 style={{ background: "rgba(249,115,22,0.25)", border: "1px solid rgba(249,115,22,0.4)" }}
               >
                 <Send size={12} style={{ color: "#f97316" }} />
@@ -478,20 +445,113 @@ const AdminAiCommandCenter = () => {
               }}
             >
               <HelpCircle size={13} style={{ color: showSuggestions ? "#f97316" : "#737373" }} />
-              {suggestions.filter(s => s.includes("pending") || s.includes("need") || s.includes("waiting") || s.includes("open")).length > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-red-500" />
-              )}
             </button>
           </div>
 
-          <SuggestionPopup
-            open={showSuggestions}
-            onClose={() => setShowSuggestions(false)}
-            suggestions={suggestions}
-            onSelect={handleSuggestionSelect}
-          />
+          {/* ── Suggestions popup ── */}
+          <AnimatePresence>
+            {showSuggestions && (
+              <motion.div
+                initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.96 }}
+                transition={{ duration: 0.2 }}
+                className="absolute right-0 top-full mt-2 z-50 w-72 overflow-hidden"
+                style={{
+                  background: "#1a1a1a",
+                  border: "1px solid rgba(249,115,22,0.25)",
+                  borderRadius: 16,
+                  boxShadow: "0 20px 50px rgba(0,0,0,0.6)",
+                }}
+              >
+                <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                  <div className="flex items-center gap-2">
+                    <Brain size={14} style={{ color: "#f97316" }} />
+                    <span className="text-xs font-bold text-white tracking-wide">
+                      {expandedCat ? `${CATEGORIES.find(c => c.key === expandedCat)?.label} Ideas` : "Quick Queries"}
+                    </span>
+                  </div>
+                  <button onClick={() => setShowSuggestions(false)} className="p-1 rounded-full hover:bg-white/10 transition">
+                    <X size={14} className="text-neutral-400" />
+                  </button>
+                </div>
+                <div className="p-2 space-y-0.5 max-h-80 overflow-y-auto">
+                  {currentSuggestions.map((s, i) => (
+                    <button
+                      key={`${expandedCat}-${i}`}
+                      onClick={() => {
+                        setSearchQuery(s);
+                        setShowSuggestions(false);
+                        handleAiQuery(s);
+                      }}
+                      className="w-full text-left flex items-start gap-2.5 px-3 py-2.5 rounded-xl transition hover:bg-white/5 active:scale-[0.98]"
+                    >
+                      <Zap size={12} className="mt-0.5 shrink-0" style={{ color: "#f97316" }} />
+                      <span className="text-[11px] leading-snug text-neutral-300">{s}</span>
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
+
+      {/* ── AI Response Area ── */}
+      <AnimatePresence>
+        {(aiLoading || aiResponse || aiError) && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            style={{
+              background: "rgba(255,255,255,0.03)",
+              border: aiError ? "1px solid rgba(239,68,68,0.3)" : "1px solid rgba(249,115,22,0.2)",
+              borderRadius: 20,
+              padding: 16,
+            }}
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: "rgba(249,115,22,0.15)" }}>
+                {aiLoading ? (
+                  <Loader2 size={12} className="animate-spin" style={{ color: "#f97316" }} />
+                ) : (
+                  <Sparkles size={12} style={{ color: "#f97316" }} />
+                )}
+              </div>
+              <span className="text-xs font-bold text-white">
+                {aiLoading ? "Thinking..." : aiError ? "Error" : "AI Response"}
+              </span>
+              {aiResponse && (
+                <button
+                  onClick={() => { setAiResponse(""); setAiError(null); }}
+                  className="ml-auto p-1 rounded-full hover:bg-white/10 transition"
+                >
+                  <X size={12} className="text-neutral-400" />
+                </button>
+              )}
+            </div>
+
+            {aiLoading && (
+              <div className="space-y-2">
+                <div className="h-3 rounded-full bg-white/5 animate-pulse w-3/4" />
+                <div className="h-3 rounded-full bg-white/5 animate-pulse w-1/2" />
+                <div className="h-3 rounded-full bg-white/5 animate-pulse w-5/6" />
+              </div>
+            )}
+
+            {aiError && (
+              <p className="text-xs text-red-400">{aiError}</p>
+            )}
+
+            {aiResponse && (
+              <div className="prose prose-sm prose-invert max-w-none text-xs leading-relaxed [&_h1]:text-sm [&_h2]:text-sm [&_h3]:text-xs [&_p]:text-xs [&_li]:text-xs [&_strong]:text-orange-400 [&_a]:text-cyan-400">
+                <ReactMarkdown>{aiResponse}</ReactMarkdown>
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Activity Pulse ── */}
       {(badges.aiQueue > 0 || badges.coachQueue > 0) && (
@@ -525,7 +585,8 @@ const AdminAiCommandCenter = () => {
             cat={cat}
             isExpanded={expandedCat === cat.key}
             onToggle={() => {
-              setExpandedCat(expandedCat === cat.key ? null : cat.key);
+              const newCat = expandedCat === cat.key ? null : cat.key;
+              setExpandedCat(newCat);
               if (expandedCat === cat.key) setActivePanel(null);
             }}
             activePanel={activePanel}
