@@ -193,6 +193,7 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
     const saveUserId = targetUserId || user.id;
     setSaving(true);
     try {
+      // Save activity log
       const { error } = await supabase.from("activity_logs" as any).insert({
         user_id: saveUserId,
         description: summary.description,
@@ -205,6 +206,26 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
         ai_recovery_tips: summary.ai_recovery_tips,
       } as any);
       if (error) throw error;
+
+      // If AI generated a workout sheet, also save it as a private workout
+      if (summary.workout_sheet && summary.workout_sheet.length > 0) {
+        const today = new Date().toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+        const { error: wsError } = await supabase.from("community_workouts").insert({
+          user_id: saveUserId,
+          title: `${summary.activity_type.charAt(0).toUpperCase() + summary.activity_type.slice(1)} — ${today}`,
+          description: summary.ai_summary,
+          creator_name: "AI Quick Log",
+          is_public: false,
+          source_type: "ai_quick_log",
+          exercises: summary.workout_sheet,
+        });
+        if (wsError) {
+          console.error("Workout sheet save error:", wsError);
+        } else {
+          toast({ title: "Workout sheet saved! 📋", description: "Check your workout library." });
+        }
+      }
+
       toast({ title: "Activity logged! 💪", description: summary.ai_summary });
       onClose();
     } catch (e: any) {
