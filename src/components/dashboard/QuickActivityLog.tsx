@@ -373,6 +373,25 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
               {summary.duration_minutes && <span>• {summary.duration_minutes} min</span>}
               {summary.weight_level && <span>• {summary.weight_level} weight</span>}
             </div>
+            {/* Workout Sheet Preview */}
+            {summary.workout_sheet && summary.workout_sheet.length > 0 && (
+              <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.08)" }}>
+                <div className="px-3 py-1.5 flex items-center gap-1.5" style={{ background: "rgba(249,115,22,0.1)" }}>
+                  <Dumbbell size={10} style={{ color: "#f97316" }} />
+                  <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: "#f97316" }}>Workout Sheet</span>
+                </div>
+                <div className="divide-y" style={{ borderColor: "rgba(255,255,255,0.05)" }}>
+                  {summary.workout_sheet.map((ex, i) => (
+                    <div key={i} className="px-3 py-2 flex items-center justify-between" style={{ background: "rgba(255,255,255,0.02)" }}>
+                      <span className="text-[11px] font-semibold" style={{ color: "#e5e5e5" }}>{ex.title}</span>
+                      <span className="text-[10px] font-mono" style={{ color: "#a3a3a3" }}>
+                        {ex.sets}×{ex.reps} {ex.weight ? `@ ${ex.weight}` : ""}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             {summary.ai_recovery_tips && (
               <p className="text-[11px] italic" style={{ color: "#22c55e" }}>💡 {summary.ai_recovery_tips}</p>
             )}
@@ -383,7 +402,7 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
               style={{ background: "linear-gradient(135deg, #22c55e, #16a34a)", color: "#fff" }}
             >
               {saving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
-              {saving ? "Saving..." : "Save Activity"}
+              {saving ? "Saving..." : summary.workout_sheet?.length ? "Save Activity + Workout Sheet" : "Save Activity"}
             </button>
           </motion.div>
         )}
