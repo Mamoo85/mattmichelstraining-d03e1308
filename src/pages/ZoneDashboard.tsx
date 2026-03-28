@@ -91,7 +91,7 @@ const GenerateTabContent = memo(({ view, setView }: { view: "menu" | "workout" |
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-black" style={{ color: "#fafafa" }}>Perfect Workout Generator</p>
-            <p className="text-[11px] mt-0.5" style={{ color: "#a3a3a3" }}>AI builds your session with auto-configured timer</p>
+            <p className="text-xs mt-0.5" style={{ color: "#a3a3a3" }}>AI builds your session with auto-configured timer</p>
           </div>
           <ChevronRight size={16} style={{ color: "#a855f7" }} />
         </div>
@@ -108,7 +108,7 @@ const GenerateTabContent = memo(({ view, setView }: { view: "menu" | "workout" |
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-black" style={{ color: "#fafafa" }}>Fix It Engine</p>
-            <p className="text-[11px] mt-0.5" style={{ color: "#a3a3a3" }}>Corrective protocols tailored to your body</p>
+            <p className="text-xs mt-0.5" style={{ color: "#a3a3a3" }}>Corrective protocols tailored to your body</p>
           </div>
           <ChevronRight size={16} style={{ color: "#00f0ff" }} />
         </div>
@@ -116,7 +116,7 @@ const GenerateTabContent = memo(({ view, setView }: { view: "menu" | "workout" |
 
       <div className="rounded-xl px-4 py-3 flex items-center gap-3" style={{ background: "rgba(0,240,255,0.05)", border: "1px solid rgba(0,240,255,0.1)" }}>
         <Timer size={16} style={{ color: "#00f0ff" }} />
-        <p className="text-[11px]" style={{ color: "#737373" }}>
+        <p className="text-xs" style={{ color: "#737373" }}>
           <span className="font-bold" style={{ color: "#00f0ff" }}>Auto-Timer</span> — Your interval timer auto-configures to match every generated workout.
         </p>
       </div>
@@ -149,7 +149,7 @@ const AiToolbox = memo(() => {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-xs font-black uppercase tracking-wider" style={{ color: "#a855f7" }}>Your AI Toolbox</p>
-          <p className="text-[10px] mt-0.5" style={{ color: "#737373" }}>Smart tools to level up every session</p>
+          <p className="text-xs mt-0.5" style={{ color: "#737373" }}>Smart tools to level up every session</p>
         </div>
         <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
           <ChevronDown size={16} style={{ color: "#a855f7" }} />
@@ -177,10 +177,10 @@ const AiToolbox = memo(() => {
                       <Icon size={14} style={{ color: tool.color }} />
                     </div>
                     <div className="flex-1 min-w-0 text-left">
-                      <p className="text-[11px] font-bold" style={{ color: "#e5e5e5" }}>{tool.label}</p>
-                      <p className="text-[9px]" style={{ color: "#525252" }}>{tool.desc}</p>
+                      <p className="text-xs font-bold" style={{ color: "#e5e5e5" }}>{tool.label}</p>
+                      <p className="text-xs" style={{ color: "#525252" }}>{tool.desc}</p>
                     </div>
-                    <span className="text-[8px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full shrink-0" style={{ background: `${tool.color}15`, color: tool.color }}>
+                    <span className="text-xs font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full shrink-0" style={{ background: `${tool.color}15`, color: tool.color }}>
                       {tool.badge}
                     </span>
                   </button>
@@ -220,7 +220,7 @@ const OverloadCard = memo(() => {
           <p className="text-xs font-black uppercase tracking-wider" style={{ color: "#fb923c" }}>
             The Power of Progressive Overload
           </p>
-          <p className="text-[10px] mt-0.5" style={{ color: "#525252" }}>
+          <p className="text-xs mt-0.5" style={{ color: "#525252" }}>
             The #1 principle behind every PR
           </p>
         </div>
@@ -258,18 +258,18 @@ const OverloadCard = memo(() => {
                   >
                     <span className="text-base">{item.icon}</span>
                     <div>
-                      <p className="text-[11px] font-bold" style={{ color: "#fafafa" }}>{item.title}</p>
-                      <p className="text-[10px]" style={{ color: "#737373" }}>{item.desc}</p>
+                      <p className="text-xs font-bold" style={{ color: "#fafafa" }}>{item.title}</p>
+                      <p className="text-xs" style={{ color: "#737373" }}>{item.desc}</p>
                     </div>
                   </div>
                 ))}
               </div>
 
               <div className="rounded-xl px-4 py-3" style={{ background: "rgba(249,115,22,0.08)", borderLeft: "3px solid #f97316" }}>
-                <p className="text-[11px] italic leading-relaxed" style={{ color: "#fb923c" }}>
+                <p className="text-xs italic leading-relaxed" style={{ color: "#fb923c" }}>
                   "Your body only grows when you give it a reason to. Track every lift, beat your numbers, and let the data prove you're getting stronger."
                 </p>
-                <p className="text-[10px] font-bold mt-1" style={{ color: "#737373" }}>— Coach Matt</p>
+                <p className="text-xs font-bold mt-1" style={{ color: "#737373" }}>— Coach Matt</p>
               </div>
             </div>
           </motion.div>
@@ -296,7 +296,7 @@ const TrainSection = ({ title, subtitle, icon: Icon, color, children }: {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-xs font-black uppercase tracking-wider" style={{ color }}>{title}</p>
-          <p className="text-[11px] mt-0.5" style={{ color: "#737373" }}>{subtitle}</p>
+          <p className="text-xs mt-0.5" style={{ color: "#737373" }}>{subtitle}</p>
         </div>
         <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
           <ChevronDown size={16} style={{ color }} />
@@ -337,7 +337,7 @@ const TrainTabContent = memo(() => (
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-black" style={{ color: "#fafafa" }}>Your Training Library</p>
-            <p className="text-[11px] mt-0.5" style={{ color: "#a3a3a3" }}>Programs, workouts & today's session — all in one place</p>
+            <p className="text-xs mt-0.5" style={{ color: "#a3a3a3" }}>Programs, workouts & today's session — all in one place</p>
           </div>
         </div>
       </div>
@@ -388,9 +388,9 @@ const HomeTab = memo(() => {
         </div>
         <div className="text-left flex-1">
           <p className="text-sm font-semibold" style={{ color: "#fafafa" }}>Message Coach Matt</p>
-          <p className="text-[11px]" style={{ color: "#525252" }}>Usually replies within 2 hours</p>
+          <p className="text-xs" style={{ color: "#525252" }}>Usually replies within 2 hours</p>
         </div>
-        <span className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>Online</span>
+        <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>Online</span>
       </button>
       {chatOpen && <Suspense fallback={null}><CoachChatPanel onClose={() => setChatOpen(false)} /></Suspense>}
       <Suspense fallback={null}><MonthlyFocusWidget /></Suspense>
