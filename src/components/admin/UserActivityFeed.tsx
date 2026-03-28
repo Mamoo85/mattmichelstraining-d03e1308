@@ -3,9 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, ChevronDown, ChevronUp, Dumbbell, MessageCircle, Trophy, Target, ClipboardList, UserPlus, ShoppingBag, Camera, Star, Activity } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import ActivityItemNotes from "./ActivityItemNotes";
 
 interface ActivityItem {
   id: string;
+  rawId: string;
   type: string;
   label: string;
   detail: string;
@@ -41,9 +43,7 @@ const TYPE_COLORS: Record<string, string> = {
 };
 
 interface Props {
-  /** If provided, only shows activity for this user */
   targetUserId?: string;
-  /** Max items to show */
   limit?: number;
 }
 
@@ -60,119 +60,101 @@ const UserActivityFeed = ({ targetUserId, limit = 100 }: Props) => {
     setLoading(true);
     const items: ActivityItem[] = [];
 
-    // Fetch from multiple tables in parallel
     const queries = [
-      // Workout logs
       (() => {
         let q = supabase.from("workout_logs").select("id, user_id, date, session_notes, created_at").order("created_at", { ascending: false }).limit(limit);
         if (targetUserId) q = q.eq("user_id", targetUserId);
         return q.then(({ data }) => {
           (data || []).forEach((r: any) => items.push({
-            id: `wl-${r.id}`, type: "workout_log", label: "Logged workout",
+            id: `wl-${r.id}`, rawId: r.id, type: "workout_log", label: "Logged workout",
             detail: r.session_notes ? r.session_notes.slice(0, 60) : new Date(r.date).toLocaleDateString(),
             timestamp: r.created_at, userId: r.user_id,
           }));
         });
       })(),
-
-      // Coach DMs
       (() => {
         let q = supabase.from("coach_direct_messages").select("id, user_id, sender_role, message, created_at").order("created_at", { ascending: false }).limit(limit);
         if (targetUserId) q = q.eq("user_id", targetUserId);
         return q.then(({ data }) => {
           (data || []).forEach((r: any) => items.push({
-            id: `dm-${r.id}`, type: "message", label: `${r.sender_role === "coach" ? "Coach replied" : "Sent message"}`,
+            id: `dm-${r.id}`, rawId: r.id, type: "message", label: `${r.sender_role === "coach" ? "Coach replied" : "Sent message"}`,
             detail: r.message.slice(0, 60),
             timestamp: r.created_at, userId: r.user_id,
           }));
         });
       })(),
-
-      // PR submissions
       (() => {
         let q = supabase.from("pr_submissions" as any).select("id, user_id, exercise_name, weight, reps, status, submitted_at").order("submitted_at", { ascending: false }).limit(limit);
         if (targetUserId) q = q.eq("user_id", targetUserId);
         return q.then(({ data }) => {
           (data || []).forEach((r: any) => items.push({
-            id: `pr-${r.id}`, type: "pr_submission", label: `PR: ${r.exercise_name}`,
+            id: `pr-${r.id}`, rawId: r.id, type: "pr_submission", label: `PR: ${r.exercise_name}`,
             detail: `${r.weight}lb × ${r.reps} · ${r.status}`,
             timestamp: r.submitted_at, userId: r.user_id,
           }));
         });
       })(),
-
-      // Challenge entries
       (() => {
         let q = supabase.from("challenge_entries").select("id, user_id, value, logged_at").order("logged_at", { ascending: false }).limit(limit);
         if (targetUserId) q = q.eq("user_id", targetUserId);
         return q.then(({ data }) => {
           (data || []).forEach((r: any) => items.push({
-            id: `ce-${r.id}`, type: "challenge_entry", label: "Challenge entry",
+            id: `ce-${r.id}`, rawId: r.id, type: "challenge_entry", label: "Challenge entry",
             detail: `+${r.value}`,
             timestamp: r.logged_at, userId: r.user_id,
           }));
         });
       })(),
-
-      // Progress logs
       (() => {
         let q = supabase.from("progress_logs" as any).select("id, user_id, exercise_name, logged_at").order("logged_at", { ascending: false }).limit(limit);
         if (targetUserId) q = q.eq("user_id", targetUserId);
         return q.then(({ data }) => {
           (data || []).forEach((r: any) => items.push({
-            id: `pl-${r.id}`, type: "progress_log", label: `Logged ${r.exercise_name}`,
+            id: `pl-${r.id}`, rawId: r.id, type: "progress_log", label: `Logged ${r.exercise_name}`,
             detail: "",
             timestamp: r.logged_at, userId: r.user_id,
           }));
         });
       })(),
-
-      // Community workouts
       (() => {
         let q = supabase.from("community_workouts").select("id, user_id, title, is_public, created_at").order("created_at", { ascending: false }).limit(limit);
         if (targetUserId) q = q.eq("user_id", targetUserId);
         return q.then(({ data }) => {
           (data || []).forEach((r: any) => items.push({
-            id: `cw-${r.id}`, type: "community_workout", label: r.is_public ? "Shared workout" : "Saved workout",
+            id: `cw-${r.id}`, rawId: r.id, type: "community_workout", label: r.is_public ? "Shared workout" : "Saved workout",
             detail: r.title,
             timestamp: r.created_at, userId: r.user_id,
           }));
         });
       })(),
-
-      // Posture requests
       (() => {
         let q = supabase.from("posture_requests").select("id, user_id, status, created_at").order("created_at", { ascending: false }).limit(limit);
         if (targetUserId) q = q.eq("user_id", targetUserId);
         return q.then(({ data }) => {
           (data || []).forEach((r: any) => items.push({
-            id: `pos-${r.id}`, type: "posture_request", label: "Posture check",
+            id: `pos-${r.id}`, rawId: r.id, type: "posture_request", label: "Posture check",
             detail: r.status,
             timestamp: r.created_at, userId: r.user_id,
           }));
         });
       })(),
-
-      // Custom program requests
       (() => {
         let q = supabase.from("custom_program_requests").select("id, user_id, name, status, created_at").order("created_at", { ascending: false }).limit(limit);
         if (targetUserId) q = q.eq("user_id", targetUserId);
         return q.then(({ data }) => {
           (data || []).forEach((r: any) => items.push({
-            id: `cpr-${r.id}`, type: "custom_request", label: "Custom program request",
+            id: `cpr-${r.id}`, rawId: r.id, type: "custom_request", label: "Custom program request",
             detail: `${r.name} · ${r.status}`,
             timestamp: r.created_at, userId: r.user_id,
           }));
         });
       })(),
-
-      // Activity logs (What I Did Today)
       (() => {
         let q = supabase.from("activity_logs").select("id, user_id, description, activity_type, intensity, duration_minutes, ai_summary, logged_at").order("logged_at", { ascending: false }).limit(limit);
         if (targetUserId) q = q.eq("user_id", targetUserId);
         return q.then(({ data }) => {
           (data || []).forEach((r: any) => items.push({
-            id: `al-${r.id}`, type: "activity_log", label: r.activity_type ? `Activity: ${r.activity_type}` : "Activity logged",
+            id: `al-${r.id}`, rawId: r.id, type: "activity_log", label: r.activity_type ? `Activity: ${r.activity_type}` : "Activity logged",
             detail: r.ai_summary ? r.ai_summary.slice(0, 80) : r.description?.slice(0, 80) || "",
             timestamp: r.logged_at || r.created_at, userId: r.user_id,
           }));
@@ -182,7 +164,6 @@ const UserActivityFeed = ({ targetUserId, limit = 100 }: Props) => {
 
     await Promise.all(queries);
 
-    // If global feed, resolve user names
     if (!targetUserId && items.length > 0) {
       const uniqueIds = [...new Set(items.map(i => i.userId))];
       const { data: profiles } = await supabase.rpc("get_public_profiles", { user_ids: uniqueIds });
@@ -193,17 +174,17 @@ const UserActivityFeed = ({ targetUserId, limit = 100 }: Props) => {
       items.forEach(item => { item.userName = nameMap.get(item.userId) || "Unknown"; });
     }
 
-    // Sort by timestamp desc
-    items.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-    setActivities(items.slice(0, limit));
+    // Sort oldest first (chronological)
+    items.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+    setActivities(items.slice(-limit));
     setLoading(false);
 
     // Auto-expand today
-    const today = new Date().toLocaleDateString();
+    const today = new Date().toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
     setExpandedDays(new Set([today]));
   };
 
-  // Group by day
+  // Group by day - oldest days first
   const grouped = useMemo(() => {
     const map = new Map<string, ActivityItem[]>();
     activities.forEach(a => {
@@ -271,22 +252,32 @@ const UserActivityFeed = ({ targetUserId, limit = 100 }: Props) => {
                     const Icon = ICON_MAP[item.type] || ClipboardList;
                     const color = TYPE_COLORS[item.type] || "text-muted-foreground";
                     return (
-                      <div key={item.id} className="flex items-start gap-2.5 py-1.5">
-                        <Icon size={12} className={`${color} mt-0.5 shrink-0`} />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-xs font-semibold text-foreground truncate">{item.label}</span>
-                            {item.userName && (
-                              <span className="text-[9px] text-muted-foreground shrink-0">— {item.userName}</span>
+                      <div key={item.id} className="py-1.5">
+                        <div className="flex items-start gap-2.5">
+                          <Icon size={12} className={`${color} mt-0.5 shrink-0`} />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-xs font-semibold text-foreground truncate">{item.label}</span>
+                              {item.userName && (
+                                <span className="text-[9px] text-muted-foreground shrink-0">— {item.userName}</span>
+                              )}
+                            </div>
+                            {item.detail && (
+                              <p className="text-[10px] text-muted-foreground truncate">{item.detail}</p>
                             )}
                           </div>
-                          {item.detail && (
-                            <p className="text-[10px] text-muted-foreground truncate">{item.detail}</p>
-                          )}
+                          <span className="text-[9px] font-mono text-muted-foreground shrink-0">
+                            {new Date(item.timestamp).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+                          </span>
                         </div>
-                        <span className="text-[9px] font-mono text-muted-foreground shrink-0">
-                          {new Date(item.timestamp).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
-                        </span>
+                        {/* Notes / Flags / Questions */}
+                        <div className="ml-[22px]">
+                          <ActivityItemNotes
+                            activityType={item.type}
+                            activityId={item.rawId}
+                            userId={item.userId}
+                          />
+                        </div>
                       </div>
                     );
                   })}
