@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { X, Mic, MicOff, Send, Check, Loader2, Dumbbell } from "lucide-react";
+import { X, Mic, MicOff, Send, Check, Loader2, Dumbbell, Camera, ImagePlus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -50,6 +50,8 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
   const [showTip, setShowTip] = useState(() => !safeLocalStorage.getItem(QUICK_ACTIVITY_TIP.storageKey));
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const photoRef = useRef<HTMLInputElement>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   
   // Track what info has been provided
   const [needsIntensity, setNeedsIntensity] = useState(false);
@@ -240,6 +242,48 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
     setShowTip(false);
   }, []);
 
+  const handlePhotoUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    setUploadingPhoto(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64 = (reader.result as string).split(",")[1];
+        // Send to scan-workout edge function
+        const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/scan-workout`;
+        const resp = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ image: base64, userId: user.id }),
+        });
+        if (!resp.ok) throw new Error("Failed to scan workout photo");
+        const data = await resp.json();
+        if (data.exercises && data.exercises.length > 0) {
+          // Build a text summary from the scanned exercises and send it as a message
+          const lines = data.exercises.map((ex: any) => {
+            const setsInfo = ex.sets?.map((s: any) => `${s.reps} reps @ ${s.weight} lbs`).join(", ") || "";
+            return `${ex.name}: ${setsInfo}`;
+          }).join("\n");
+          sendMessage(`I did this workout:\n${lines}`);
+          toast({ title: "Photo scanned! 📸", description: `Found ${data.exercises.length} exercises` });
+        } else {
+          toast({ title: "No exercises found", description: "Try a clearer photo of your workout log.", variant: "destructive" });
+        }
+        setUploadingPhoto(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (err: any) {
+      toast({ title: "Scan failed", description: err.message, variant: "destructive" });
+      setUploadingPhoto(false);
+    }
+    // Reset file input
+    if (photoRef.current) photoRef.current.value = "";
+  }, [user, sendMessage]);
+
   const cleanContent = (content: string) => content.replace(/```json[\s\S]*?```/g, "").trim();
 
   return (
@@ -410,6 +454,24 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
 
       {/* Input bar */}
       <div className="px-4 py-3 flex items-center gap-2" style={{ borderTop: "1px solid rgba(255,255,255,0.06)", background: "rgba(10,10,10,0.95)" }}>
+        {/* Hidden file input for photo */}
+        <input
+          ref={photoRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={handlePhotoUpload}
+          className="hidden"
+        />
+        {/* Camera / Photo button */}
+        <button
+          onClick={() => photoRef.current?.click()}
+          disabled={uploadingPhoto || streaming}
+          className="h-10 w-10 rounded-full flex items-center justify-center shrink-0 transition-all active:scale-90 disabled:opacity-30"
+          style={{ background: "rgba(168,85,247,0.15)", border: "1px solid rgba(168,85,247,0.3)" }}
+        >
+          {uploadingPhoto ? <Loader2 size={16} className="animate-spin" style={{ color: "#a855f7" }} /> : <Camera size={16} style={{ color: "#a855f7" }} />}
+        </button>
         {supported && (
           <button
             onClick={toggleVoice}
