@@ -81,7 +81,40 @@ const WorkoutDataCenter = () => {
     });
   };
 
-  const generatePDF = useCallback(async () => {
+  const printBlankWorksheet = useCallback(() => {
+    const rows = Array.from({ length: 9 }, (_, i) => i + 1);
+    let html = `
+      <html><head>
+      <style>
+        @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+        body { font-family: system-ui, sans-serif; max-width: 750px; margin: 0 auto; padding: 24px; color: #1a1a1a; }
+        h1 { font-size: 20px; border-bottom: 3px solid #f97316; padding-bottom: 6px; margin-bottom: 4px; }
+        .meta { font-size: 11px; color: #737373; margin-bottom: 16px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #d4d4d4; padding: 10px 8px; text-align: left; }
+        th { background: #f5f5f5; font-weight: 700; text-transform: uppercase; font-size: 9px; letter-spacing: 0.05em; }
+        td { height: 32px; font-size: 12px; }
+        .num { width: 30px; text-align: center; font-weight: 700; color: #a3a3a3; }
+        .exercise { width: 35%; }
+        .sets, .reps, .weight { width: 10%; text-align: center; }
+        .notes { width: 25%; }
+        .footer { margin-top: 20px; text-align: center; font-size: 10px; color: #a3a3a3; }
+      </style>
+      </head><body>
+      <h1>🏋️ Workout Log Sheet</h1>
+      <p class="meta">Name: ________________________ &nbsp;&nbsp; Date: ________________________</p>
+      <table>
+        <tr><th class="num">#</th><th class="exercise">Exercise</th><th class="sets">Sets</th><th class="reps">Reps</th><th class="weight">Weight</th><th class="notes">Notes</th></tr>
+        ${rows.map(n => `<tr><td class="num">${n}</td><td class="exercise"></td><td class="sets"></td><td class="reps"></td><td class="weight"></td><td class="notes"></td></tr>`).join("")}
+      </table>
+      <p class="footer">M² Training — mattmichelstraining.com</p>
+      </body></html>
+    `;
+    const w = window.open("", "_blank");
+    if (w) { w.document.write(html); w.document.close(); setTimeout(() => w.print(), 400); }
+  }, []);
+
+
     if (!user) return;
     setPrinting(true);
     try {
