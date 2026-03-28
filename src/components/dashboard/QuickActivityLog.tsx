@@ -11,6 +11,14 @@ import { QUICK_ACTIVITY_TIP } from "./featureTips";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
+interface WorkoutSheetExercise {
+  title: string;
+  sets: string;
+  reps: string;
+  weight?: string;
+  notes?: string;
+}
+
 interface ActivitySummary {
   description: string;
   activity_type: string;
@@ -20,6 +28,7 @@ interface ActivitySummary {
   exercises_mentioned: string[];
   ai_summary: string;
   ai_recovery_tips: string;
+  workout_sheet?: WorkoutSheetExercise[];
 }
 
 interface QuickActivityLogProps {
