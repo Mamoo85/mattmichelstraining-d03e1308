@@ -587,7 +587,7 @@ const ZoneDashboard = () => {
         </div>
       </header>
 
-      <main className="max-w-md mx-auto px-4 pt-4 pb-4 space-y-4">
+      <main className="max-w-md sm:max-w-lg md:max-w-2xl lg:max-w-3xl mx-auto px-4 pt-4 pb-4 space-y-4">
 
         {/* ── Stats Banner ────────── */}
         <div
