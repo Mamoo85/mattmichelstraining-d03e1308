@@ -1,92 +1,70 @@
 
 
-# ZoneDashboard Gen-Z Refactor: Instagram-Native UI
+# Revised Dashboard: Check-In + Prove It in Stats Banner, 2x2 Grid
 
-## What Changes
-
-The entire `ZoneDashboard.tsx` main content area gets restructured from a dense, small-font layout into a clean, breathing, Instagram-inspired hierarchy with progressive disclosure.
-
-## New Layout (top to bottom)
+## Layout Structure (top to bottom)
 
 ```text
-┌─ HEADER (logo + name + timer + invite) ──────────┐  ← kept, fonts bumped
-├──────────────────────────────────────────────────────┤
-│  STATS ROW (3 big numbers: Streak / Sessions / Pts) │  ← text-2xl/3xl, clean
-├──────────────────────────────────────────────────────┤
-│  HERO CARD (glassmorphism, gradient border)          │
-│  "Start Today's Workout: Upper Body Power"           │
-│  [  BIG CTA BUTTON  ]                               │
-├──────────────────────────────────────────────────────┤
-│  AI TOOLBOX CAROUSEL (horizontal scroll, stories)    │
-│  ◉ Generator  ◉ Fix It  ◉ Velocity  ◉ Scanner ...   │
-│     snap-x, overflow-x-auto, hide-scrollbar          │
-├──────────────────────────────────────────────────────┤
-│  QUICK LOG CARD (big, breathing)                     │
-├──────────────────────────────────────────────────────┤
-│  CHECK-IN + PROVE IT (side-by-side buttons)          │
-├──────────────────────────────────────────────────────┤
-│  SECONDARY ACTIONS (vertical list, p-5/p-6 cards)    │
-│   • Main Lifts Log                                   │
-│   • My Programs                                      │
-│   • Custom Program Request                           │
-│   • Recovery & Mobility                              │
-│   • Message Coach Matt                               │
-├──────────────────────────────────────────────────────┤
-│  TAB STRIP (Home / Lifts / Generate / Train)         │
-│  TAB CONTENT (unchanged logic)                       │
-└──────────────────────────────────────────────────────┘
+┌─ HEADER (logo + name + timer + invite) ─────────┐
+├─ STATS BANNER ──────────────────────────────────┤
+│  [streak] [sessions] [level bar] [pts]  │ Avatar │
+│  [program]                               │        │
+│──────────────────┬───────────────────────│        │
+│ 📍 Check-In      │  🏆 Prove It          │        │
+└──────────────────┴───────────────────────┴────────┘
+┌─ ACTION GRID (2×2) ─────────────────────────────┐
+│ Main Lifts Log    │  Generator (split)           │
+│ Challenges/Focus  │  Workout Library             │
+└─────────────────────────────────────────────────┘
+┌─ "What I Did Today" persistent button ──────────┐
+┌─ Recovery & Mobility Tips banner ───────────────┐
+┌─ TAB STRIP (Home, Generate, Train, Lifts) ──────┐
+┌─ TAB CONTENT ───────────────────────────────────┘
 ```
 
-## Specific Changes in `ZoneDashboard.tsx`
+## Changes
 
-### 1. Typography Purge
-- Remove every `text-[8px]`, `text-[9px]`, `text-[10px]` — minimum is `text-xs`
-- Stat numbers become `text-3xl font-black`
-- Body/description text becomes `text-sm`
-- Labels become `text-xs font-bold uppercase`
+### 1. Logo Fix
+Import the uploaded `pwa-512x512.png` as `m2-logo-zone.png` (copy the user-uploaded file to `src/assets/`). Remove all CSS `filter` chains. Use only a neon orange `drop-shadow` and `box-shadow` glow — the PNG itself has the correct colors already.
 
-### 2. Hero Card (replaces 2x2 grid + stats banner)
-- Full-width glassmorphism card with gradient border (`p-[1px]` wrapper)
-- Inner dark card with program name, workout title, duration
-- Large orange CTA button "Start Training →"
-- Replaces the old stats banner's training info
+### 2. Stats Banner — Add Check-In + Prove It Strip
+Replace the current single "Studio Check-In" strip at the bottom of the stats banner with a **two-button strip**:
+- **Check-In** (left, cyan): Opens a popup asking "Matt's Gym" or "On Your Own". Greys out with checkmark after today's check-in.
+- **Prove It** (right, orange): Dispatches `open-prove-it-zone` event.
 
-### 3. Stats Row (replaces old dense stats banner)
-- Simple 3-column grid above hero card
-- Each stat: big number (`text-3xl`), label below (`text-xs`), minimal decoration
-- Streak (fire icon), Sessions this week, Points/Level
-- Profile avatar moved to header area or removed from stats
+Both sit inside the stats banner, separated by a vertical divider, with bold uppercase text and colored icons.
 
-### 4. AI Toolbox → Horizontal Carousel
-- Remove the collapsible accordion `AiToolbox` component
-- Replace with a horizontal scroll row of circular/rounded icon buttons
-- Each tool: 56x56 rounded-2xl icon container + label below
-- `overflow-x-auto scrollbar-hide snap-x snap-mandatory` with `scroll-padding`
-- Tools: Generator, Fix It, Velocity, Scanner, Recovery, Timer, Bar Path
+### 3. Action Grid → 2×2
+Remove "Log Activity" and "Prove It" from grid (moved elsewhere). Remove "Matt's Brain". New grid:
+- **Main Lifts Log** (orange) → navigates to `/progress`
+- **Generator** (purple/cyan split) → opens Generate tab
+- **Challenges & Focus** (green) → switches to Home tab
+- **Workout Library** (cyan) → switches to Train tab
 
-### 5. Secondary Actions → Vertical Card List
-- Remove 2x2 grid entirely
-- Vertical stack of full-width cards with `p-5`, `rounded-2xl`
-- Each card: icon left, title + subtitle, chevron right
-- Items: Main Lifts Log, My Programs, Custom Request, Recovery & Mobility, Coach Chat
+### 4. Persistent "What I Did Today"
+Place the green quick-log button below the grid and above the tab strip. Always visible regardless of active tab.
 
-### 6. Spacing & Breathing
-- Main container `space-y-6` (up from `space-y-4`)
-- Cards use `p-5` or `p-6` minimum
-- `gap-4` between elements inside cards
+### 5. Recovery & Mobility Tips Banner
+A compact gradient strip (green → cyan) with Heart icon, linking to `/ai-insights`. Placed between "What I Did Today" and the tab strip.
 
-### 7. Internal Components Updated
-- `GenerateTabContent`: bump all `text-[11px]` → `text-sm`, `text-[9px]`/`text-[10px]` → `text-xs`
-- `AiToolbox` accordion: replaced by carousel (inline in main render)
-- `OverloadCard`: bump font sizes similarly
-- `TrainTabContent`, `HomeTab`: same font size fixes
+### 6. Tab Order Swap
+Change TABS from `[lifts, generate, train, home]` to `[home, generate, train, lifts]`. Default tab → `home`.
 
-### 8. Tab strip font fix
-- Tab labels: `text-xs` (up from `text-[10px]`)
+### 7. Lifts Tab Cleanup
+Remove duplicate "What Did You Do Today" and "Main Lifts Log" buttons from inside the Lifts tab. Only show `ProgressCharts` and `OverloadCard`.
+
+### 8. StudioCheckIn — "Matt's Gym or On Your Own" Popup
+Modify `StudioCheckIn.tsx` to accept an optional `location` prop or add a choice modal before saving. Grey out button when `alreadyCheckedInToday` is true.
+
+### 9. Condense ProgressCharts
+Reduce font sizes and spacing for a more compact lift tracker view.
 
 ## Files Modified
 
 | File | Action |
 |------|--------|
-| `src/pages/ZoneDashboard.tsx` | Major rewrite of layout structure and all font sizes |
+| `src/assets/m2-logo-zone.png` | New — copy from uploaded `pwa-512x512.png` |
+| `src/pages/ZoneDashboard.tsx` | Major edit — all layout changes |
+| `src/components/sessions/StudioCheckIn.tsx` | Add location choice + grey-out logic |
+| `src/components/features/ProgressCharts.tsx` | Condense spacing/fonts |
 
