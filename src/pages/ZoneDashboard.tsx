@@ -412,6 +412,7 @@ const ZoneDashboard = () => {
   const { user, subscriptionTier } = useAuth();
   const { points } = usePoints();
   const navigate = useNavigate();
+  useBrowserNotifications();
   const tierLabel = subscriptionTier ? subscriptionTier.charAt(0).toUpperCase() + subscriptionTier.slice(1) : "Member";
 
   const [activeTab, setActiveTab] = useState<TabKey>("home");
