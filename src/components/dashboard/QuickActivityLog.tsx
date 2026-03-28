@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { X, Mic, MicOff, Send, Check, Loader2 } from "lucide-react";
+import { X, Mic, MicOff, Send, Check, Loader2, Dumbbell } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,6 +11,14 @@ import { QUICK_ACTIVITY_TIP } from "./featureTips";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
+interface WorkoutSheetExercise {
+  title: string;
+  sets: string;
+  reps: string;
+  weight?: string;
+  notes?: string;
+}
+
 interface ActivitySummary {
   description: string;
   activity_type: string;
@@ -20,6 +28,7 @@ interface ActivitySummary {
   exercises_mentioned: string[];
   ai_summary: string;
   ai_recovery_tips: string;
+  workout_sheet?: WorkoutSheetExercise[];
 }
 
 interface QuickActivityLogProps {
@@ -184,6 +193,7 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
     const saveUserId = targetUserId || user.id;
     setSaving(true);
     try {
+      // Save activity log
       const { error } = await supabase.from("activity_logs" as any).insert({
         user_id: saveUserId,
         description: summary.description,
@@ -196,6 +206,26 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
         ai_recovery_tips: summary.ai_recovery_tips,
       } as any);
       if (error) throw error;
+
+      // If AI generated a workout sheet, also save it as a private workout
+      if (summary.workout_sheet && summary.workout_sheet.length > 0) {
+        const today = new Date().toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+        const { error: wsError } = await supabase.from("community_workouts").insert({
+          user_id: saveUserId,
+          title: `${summary.activity_type.charAt(0).toUpperCase() + summary.activity_type.slice(1)} — ${today}`,
+          description: summary.ai_summary,
+          creator_name: "AI Quick Log",
+          is_public: false,
+          source_type: "ai_quick_log",
+          exercises: summary.workout_sheet as any,
+        } as any);
+        if (wsError) {
+          console.error("Workout sheet save error:", wsError);
+        } else {
+          toast({ title: "Workout sheet saved! 📋", description: "Check your workout library." });
+        }
+      }
+
       toast({ title: "Activity logged! 💪", description: summary.ai_summary });
       onClose();
     } catch (e: any) {
@@ -343,6 +373,25 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
               {summary.duration_minutes && <span>• {summary.duration_minutes} min</span>}
               {summary.weight_level && <span>• {summary.weight_level} weight</span>}
             </div>
+            {/* Workout Sheet Preview */}
+            {summary.workout_sheet && summary.workout_sheet.length > 0 && (
+              <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.08)" }}>
+                <div className="px-3 py-1.5 flex items-center gap-1.5" style={{ background: "rgba(249,115,22,0.1)" }}>
+                  <Dumbbell size={10} style={{ color: "#f97316" }} />
+                  <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: "#f97316" }}>Workout Sheet</span>
+                </div>
+                <div className="divide-y" style={{ borderColor: "rgba(255,255,255,0.05)" }}>
+                  {summary.workout_sheet.map((ex, i) => (
+                    <div key={i} className="px-3 py-2 flex items-center justify-between" style={{ background: "rgba(255,255,255,0.02)" }}>
+                      <span className="text-[11px] font-semibold" style={{ color: "#e5e5e5" }}>{ex.title}</span>
+                      <span className="text-[10px] font-mono" style={{ color: "#a3a3a3" }}>
+                        {ex.sets}×{ex.reps} {ex.weight ? `@ ${ex.weight}` : ""}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             {summary.ai_recovery_tips && (
               <p className="text-[11px] italic" style={{ color: "#22c55e" }}>💡 {summary.ai_recovery_tips}</p>
             )}
@@ -353,7 +402,7 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
               style={{ background: "linear-gradient(135deg, #22c55e, #16a34a)", color: "#fff" }}
             >
               {saving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
-              {saving ? "Saving..." : "Save Activity"}
+              {saving ? "Saving..." : summary.workout_sheet?.length ? "Save Activity + Workout Sheet" : "Save Activity"}
             </button>
           </motion.div>
         )}

@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import EmptyStateCard from "@/components/shared/EmptyStateCard";
 import { safeLocalStorage } from "@/lib/browserStorage";
 const TrainingHistory = lazy(() => import("@/components/profile/TrainingHistory"));
+const WorkoutDataCenter = lazy(() => import("@/components/profile/WorkoutDataCenter"));
 const WelcomeGiftModal = lazy(() => import("@/components/dashboard/WelcomeGiftModal"));
 
 /** Posture Analysis card — moved from dashboard home to profile */
@@ -135,7 +136,7 @@ interface ProfileData {
 const Profile = () => {
   const { user, subscribed, subscriptionTier, subscriptionEnd, checkSubscription } = useAuth();
   const { isAdmin } = useIsAdmin();
-  const [activeTab, setActiveTab] = useState<"profile" | "history">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "history" | "data">("profile");
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [fullName, setFullName] = useState("");
   const [athleteName, setAthleteName] = useState("");
@@ -415,6 +416,16 @@ const Profile = () => {
           >
             <Brain size={12} /> Training History
           </button>
+          <button
+            onClick={() => setActiveTab("data")}
+            className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-widest transition-all border-b-2 flex items-center justify-center gap-1.5 ${
+              activeTab === "data"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <FileText size={12} /> Data Center
+          </button>
         </div>
 
         {activeTab === "history" ? (
@@ -424,6 +435,14 @@ const Profile = () => {
             </div>
           }>
             <TrainingHistory />
+          </Suspense>
+        ) : activeTab === "data" ? (
+          <Suspense fallback={
+            <div className="flex justify-center py-20">
+              <Loader2 size={24} className="animate-spin text-primary" />
+            </div>
+          }>
+            <WorkoutDataCenter />
           </Suspense>
         ) : (
         <>
