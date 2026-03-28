@@ -676,35 +676,51 @@ const ZoneDashboard = () => {
           </div>
         </div>
 
-        {/* ── Action Grid (2×2) ──────────────────── */}
+        {/* ── Persistent "What I Did Today" — right under stats ── */}
+        <button
+          onClick={() => setShowQuickLog(true)}
+          className="w-full rounded-2xl p-3.5 flex items-center gap-3 transition-all active:scale-[0.97]"
+          style={{ background: "linear-gradient(135deg, rgba(34,197,94,0.1), rgba(22,163,74,0.06))", border: "1px solid rgba(34,197,94,0.2)" }}
+        >
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: "linear-gradient(135deg, #22c55e, #16a34a)" }}>
+            <Mic size={16} color="#fff" />
+          </div>
+          <div className="text-left flex-1 min-w-0">
+            <p className="text-sm font-black" style={{ color: "#fafafa" }}>What Did You Do Today?</p>
+            <p className="text-xs mt-0.5" style={{ color: "#525252" }}>Voice or text — log cardio, circuits, anything</p>
+          </div>
+          <ChevronRight size={16} style={{ color: "#22c55e" }} />
+        </button>
+
+        {/* ── Action Grid (2×2) — shorter cards ──── */}
         <div className="grid grid-cols-2 gap-2">
           {/* Main Lifts Log */}
           <button
             onClick={() => navigate("/progress")}
-            className="rounded-2xl p-3.5 text-left transition-all active:scale-[0.96]"
+            className="rounded-2xl p-3 text-left transition-all active:scale-[0.96]"
             style={{ background: "linear-gradient(135deg, rgba(249,115,22,0.1), rgba(234,88,12,0.06))", border: "1px solid rgba(249,115,22,0.2)" }}
           >
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: "linear-gradient(135deg, #f97316, #ea580c)" }}>
-              <Dumbbell size={17} color="#fff" />
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-1.5" style={{ background: "linear-gradient(135deg, #f97316, #ea580c)" }}>
+              <Dumbbell size={15} color="#fff" />
             </div>
-            <p className="text-sm font-black" style={{ color: "#fafafa" }}>Main Lifts Log</p>
-            <p className="text-xs mt-0.5" style={{ color: "#525252" }}>Track compound lifts & progress</p>
+            <p className="text-xs font-black" style={{ color: "#fafafa" }}>Main Lifts Log</p>
+            <p className="text-[11px] mt-0.5" style={{ color: "#525252" }}>Track lifts & progress</p>
           </button>
 
           {/* Challenges & Focus */}
           <button
             onClick={() => handleTab("home")}
-            className="rounded-2xl p-3.5 text-left transition-all active:scale-[0.96]"
+            className="rounded-2xl p-3 text-left transition-all active:scale-[0.96]"
             style={{ background: "linear-gradient(135deg, rgba(34,197,94,0.1), rgba(22,163,74,0.06))", border: "1px solid rgba(34,197,94,0.2)" }}
           >
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: "linear-gradient(135deg, #22c55e, #16a34a)" }}>
-              <Award size={17} color="#fff" />
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-1.5" style={{ background: "linear-gradient(135deg, #22c55e, #16a34a)" }}>
+              <Award size={15} color="#fff" />
             </div>
-            <p className="text-sm font-black" style={{ color: "#fafafa" }}>Challenges & Focus</p>
-            <p className="text-xs mt-0.5" style={{ color: "#525252" }}>Monthly goals & community</p>
+            <p className="text-xs font-black" style={{ color: "#fafafa" }}>Challenges & Focus</p>
+            <p className="text-[11px] mt-0.5" style={{ color: "#525252" }}>Monthly goals</p>
           </button>
 
-          {/* Split Generator/Fix It button */}
+          {/* Generator */}
           <button
             onClick={() => { handleTab("generate"); setGenerateView("menu"); }}
             className="rounded-2xl overflow-hidden text-left transition-all active:scale-[0.96] relative"
@@ -713,8 +729,8 @@ const ZoneDashboard = () => {
             <div className="absolute inset-0 overflow-hidden rounded-2xl">
               <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, rgba(168,85,247,0.12) 50%, rgba(0,240,255,0.10) 50%)" }} />
             </div>
-            <div className="relative p-3.5">
-              <div className="flex gap-1.5 mb-2">
+            <div className="relative p-3">
+              <div className="flex gap-1.5 mb-1.5">
                 <div className="w-4 h-4 rounded flex items-center justify-center" style={{ background: "rgba(168,85,247,0.3)" }}>
                   <Sparkles size={10} color="#a855f7" />
                 </div>
@@ -722,40 +738,24 @@ const ZoneDashboard = () => {
                   <Wrench size={10} color="#00f0ff" />
                 </div>
               </div>
-              <p className="text-sm font-black" style={{ color: "#fafafa" }}>Generator</p>
-              <p className="text-xs mt-0.5" style={{ color: "#525252" }}>AI builds your workout</p>
+              <p className="text-xs font-black" style={{ color: "#fafafa" }}>Generator</p>
+              <p className="text-[11px] mt-0.5" style={{ color: "#525252" }}>AI builds your workout</p>
             </div>
           </button>
 
           {/* Workout Library */}
           <button
             onClick={() => handleTab("train")}
-            className="rounded-2xl p-3.5 text-left transition-all active:scale-[0.96]"
+            className="rounded-2xl p-3 text-left transition-all active:scale-[0.96]"
             style={{ background: "linear-gradient(135deg, rgba(0,240,255,0.08), rgba(6,182,212,0.04))", border: "1px solid rgba(0,240,255,0.2)" }}
           >
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: "linear-gradient(135deg, #00f0ff, #0891b2)" }}>
-              <Play size={17} color="#fff" />
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-1.5" style={{ background: "linear-gradient(135deg, #00f0ff, #0891b2)" }}>
+              <Play size={15} color="#fff" />
             </div>
-            <p className="text-sm font-black" style={{ color: "#fafafa" }}>Workout Library</p>
-            <p className="text-xs mt-0.5" style={{ color: "#525252" }}>Programs & saved workouts</p>
+            <p className="text-xs font-black" style={{ color: "#fafafa" }}>Workout Library</p>
+            <p className="text-[11px] mt-0.5" style={{ color: "#525252" }}>Programs & saved</p>
           </button>
         </div>
-
-        {/* ── Persistent "What I Did Today" ──────── */}
-        <button
-          onClick={() => setShowQuickLog(true)}
-          className="w-full rounded-2xl p-4 flex items-center gap-4 transition-all active:scale-[0.97]"
-          style={{ background: "linear-gradient(135deg, rgba(34,197,94,0.1), rgba(22,163,74,0.06))", border: "1px solid rgba(34,197,94,0.2)" }}
-        >
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "linear-gradient(135deg, #22c55e, #16a34a)" }}>
-            <Mic size={18} color="#fff" />
-          </div>
-          <div className="text-left flex-1 min-w-0">
-            <p className="text-sm font-black" style={{ color: "#fafafa" }}>What Did You Do Today?</p>
-            <p className="text-xs mt-0.5" style={{ color: "#525252" }}>Voice or text — log cardio, circuits, anything</p>
-          </div>
-          <ChevronRight size={16} style={{ color: "#22c55e" }} />
-        </button>
 
         {/* ── Recovery & Mobility Tips ───────────── */}
         <button
