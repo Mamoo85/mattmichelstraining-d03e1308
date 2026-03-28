@@ -224,14 +224,24 @@ const WorkoutDataCenter = () => {
             {workouts.length} workout sheets · {progressLogs.length} lift logs · {activities.length} activities · {checkins.length} check-ins
           </p>
         </div>
-        <button
-          onClick={generatePDF}
-          disabled={printing}
-          className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-50"
-        >
-          {printing ? <Loader2 size={12} className="animate-spin" /> : <Printer size={12} />}
-          Print All History
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={printBlankWorksheet}
+            className="flex items-center gap-2 px-3 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all"
+            style={{ background: "rgba(168,85,247,0.15)", color: "#a855f7", border: "1px solid rgba(168,85,247,0.3)" }}
+          >
+            <FileText size={12} />
+            Blank Sheet
+          </button>
+          <button
+            onClick={generatePDF}
+            disabled={printing}
+            className="flex items-center gap-2 px-3 py-2.5 bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-50"
+          >
+            {printing ? <Loader2 size={12} className="animate-spin" /> : <Printer size={12} />}
+            Print History
+          </button>
+        </div>
       </div>
 
       {/* Workout Sheets Section */}
