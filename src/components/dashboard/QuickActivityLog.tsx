@@ -242,6 +242,48 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
     setShowTip(false);
   }, []);
 
+  const handlePhotoUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    setUploadingPhoto(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64 = (reader.result as string).split(",")[1];
+        // Send to scan-workout edge function
+        const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/scan-workout`;
+        const resp = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ image: base64, userId: user.id }),
+        });
+        if (!resp.ok) throw new Error("Failed to scan workout photo");
+        const data = await resp.json();
+        if (data.exercises && data.exercises.length > 0) {
+          // Build a text summary from the scanned exercises and send it as a message
+          const lines = data.exercises.map((ex: any) => {
+            const setsInfo = ex.sets?.map((s: any) => `${s.reps} reps @ ${s.weight} lbs`).join(", ") || "";
+            return `${ex.name}: ${setsInfo}`;
+          }).join("\n");
+          sendMessage(`I did this workout:\n${lines}`);
+          toast({ title: "Photo scanned! 📸", description: `Found ${data.exercises.length} exercises` });
+        } else {
+          toast({ title: "No exercises found", description: "Try a clearer photo of your workout log.", variant: "destructive" });
+        }
+        setUploadingPhoto(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (err: any) {
+      toast({ title: "Scan failed", description: err.message, variant: "destructive" });
+      setUploadingPhoto(false);
+    }
+    // Reset file input
+    if (photoRef.current) photoRef.current.value = "";
+  }, [user, sendMessage]);
+
   const cleanContent = (content: string) => content.replace(/```json[\s\S]*?```/g, "").trim();
 
   return (
