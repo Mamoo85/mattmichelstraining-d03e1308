@@ -247,7 +247,7 @@ const StudioCheckIn = ({ onOpenWorkouts }: { onOpenWorkouts?: () => void }) => {
           <button
             onClick={handleCheckIn}
             disabled={checking || alreadyCheckedInToday}
-            className={`flex items-center gap-2 px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest transition-all disabled:opacity-60 ${
+            className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold uppercase tracking-widest transition-all disabled:opacity-60 ${
               alreadyCheckedInToday
                 ? "bg-primary/10 text-primary border border-primary/20"
                 : "bg-primary text-primary-foreground hover:opacity-90"
@@ -281,7 +281,7 @@ const StudioCheckIn = ({ onOpenWorkouts }: { onOpenWorkouts?: () => void }) => {
           {totalDays > 0 && (
             <button
               onClick={handleShare}
-              className="flex items-center gap-1.5 bg-muted text-muted-foreground px-3 py-2 text-[10px] font-bold uppercase tracking-widest hover:text-foreground transition-all"
+              className="flex items-center gap-1.5 bg-muted text-muted-foreground px-3 py-2 text-xs font-bold uppercase tracking-widest hover:text-foreground transition-all"
             >
               <Share2 size={12} />
               Share
@@ -299,11 +299,11 @@ const StudioCheckIn = ({ onOpenWorkouts }: { onOpenWorkouts?: () => void }) => {
           >
             <div className="flex items-center gap-2">
               <Trophy size={12} className="text-primary" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
                 Milestones & Streaks
               </span>
             </div>
-            <span className="text-[10px] text-muted-foreground">tap to close</span>
+            <span className="text-xs text-muted-foreground">tap to close</span>
           </button>
 
           <div className="p-4 space-y-2">
@@ -316,7 +316,7 @@ const StudioCheckIn = ({ onOpenWorkouts }: { onOpenWorkouts?: () => void }) => {
                 <span className="text-lg">{m.emoji}</span>
                 <div className="flex-1">
                   <span className="text-sm font-bold text-foreground block">{m.label}</span>
-                  <span className="text-[11px] text-muted-foreground">{m.detail}</span>
+                  <span className="text-xs text-muted-foreground">{m.detail}</span>
                 </div>
                 <button
                   onClick={async () => {
@@ -338,7 +338,7 @@ const StudioCheckIn = ({ onOpenWorkouts }: { onOpenWorkouts?: () => void }) => {
             {/* Next goals */}
             {nextMilestones.length > 0 && (
               <>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block pt-2">
+                <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground block pt-2">
                   Next Goals
                 </span>
                 {nextMilestones.map((m, i) => (
@@ -346,7 +346,7 @@ const StudioCheckIn = ({ onOpenWorkouts }: { onOpenWorkouts?: () => void }) => {
                     <span className="text-lg">{m.emoji}</span>
                     <div className="flex-1">
                       <span className="text-sm font-bold text-foreground block">{m.label}</span>
-                      <span className="text-[11px] text-muted-foreground">{m.detail}</span>
+                      <span className="text-xs text-muted-foreground">{m.detail}</span>
                     </div>
                   </div>
                 ))}
@@ -360,7 +360,7 @@ const StudioCheckIn = ({ onOpenWorkouts }: { onOpenWorkouts?: () => void }) => {
       {!showMilestones && milestones.length > 0 && totalDays > 0 && (
         <button
           onClick={() => setShowMilestones(true)}
-          className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-all"
+          className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-all"
         >
           <Trophy size={12} className="text-primary" />
           View Milestones & Streaks
