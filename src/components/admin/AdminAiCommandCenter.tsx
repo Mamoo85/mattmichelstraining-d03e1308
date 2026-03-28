@@ -456,9 +456,19 @@ const AdminAiCommandCenter = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && searchQuery.trim()) handleSuggestionSelect(searchQuery.trim()); }}
               placeholder="Ask AI anything..."
               className="flex-1 bg-transparent text-xs text-white placeholder:text-neutral-500 outline-none"
             />
+            {searchQuery.trim() && (
+              <button
+                onClick={() => handleSuggestionSelect(searchQuery.trim())}
+                className="w-7 h-7 rounded-full flex items-center justify-center transition active:scale-90 shrink-0"
+                style={{ background: "rgba(249,115,22,0.25)", border: "1px solid rgba(249,115,22,0.4)" }}
+              >
+                <Send size={12} style={{ color: "#f97316" }} />
+              </button>
+            )}
             <button
               onClick={() => setShowSuggestions(!showSuggestions)}
               className="relative w-7 h-7 rounded-full flex items-center justify-center transition active:scale-90"
