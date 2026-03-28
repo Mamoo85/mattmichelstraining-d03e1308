@@ -3,185 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Youngblood Automation | Engineered Solutions</title>
+    <title>Youngblood | Modern Light</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'DM Sans', sans-serif; background-color: #070c18; color: #f1f5f9; }
-        h1, h2, h3, h4, .font-raj { font-family: 'Rajdhani', sans-serif; }
-        
-        .glass-nav { background: rgba(7, 12, 24, 0.85); backdrop-filter: blur(16px); border-bottom: 1px solid rgba(255,255,255,0.05); }
-        
-        /* Hero Background - Uses your actual cell photo with a fallback */
-        .hero-bg { 
-            background-image: linear-gradient(to bottom, rgba(7,12,24,0.3), rgba(7,12,24,0.95)), url('/images/engineered-cell.jpg'); 
-            background-color: #1a2540; /* Fallback color */
-            background-size: cover; 
-            background-position: center; 
-        }
-
-        /* Image hover zoom effects */
-        .card-zoom { overflow: hidden; position: relative; }
-        .card-zoom-img { transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1); width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; z-index: 0; }
-        .card-zoom:hover .card-zoom-img { transform: scale(1.08); }
-        .card-overlay { background: linear-gradient(to top, rgba(7,12,24,0.9) 0%, rgba(7,12,24,0.2) 100%); position: absolute; inset: 0; z-index: 1; }
-        .card-content { position: relative; z-index: 2; }
-
-        /* Claude's Scrolling Marquee */
-        .marquee-container { overflow: hidden; white-space: nowrap; width: 100%; border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05); background: #0a1020; padding: 1rem 0; }
-        .marquee { display: inline-flex; animation: marquee 30s linear infinite; }
-        .marquee span { margin: 0 2rem; font-weight: 700; letter-spacing: 0.1em; color: rgba(255,255,255,0.4); text-transform: uppercase; }
-        .marquee span.tier1 { color: #0ea5e9; }
-        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-
-        /* Neon Accents */
-        .text-neon { color: #0ea5e9; text-shadow: 0 0 20px rgba(14,165,233,0.4); }
-        .border-neon { border-color: rgba(14,165,233,0.3); box-shadow: inset 0 0 20px rgba(14,165,233,0.05); }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Inter', sans-serif; }</style>
 </head>
-<body class="antialiased selection:bg-sky-500/30">
+<body class="bg-slate-50 text-slate-900 antialiased">
 
-    <nav class="fixed w-full z-50 glass-nav transition-all duration-300">
+    <nav class="fixed w-full z-50 bg-white/90 backdrop-blur-md border-b border-slate-200">
         <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
             <div>
-                <h1 class="text-3xl font-bold tracking-tight text-white font-raj uppercase">Youngblood<span class="text-sky-500">|</span>Automation</h1>
-                <p class="text-[10px] uppercase tracking-widest text-slate-400 font-bold mt-0.5">A Division of H&P Technologies</p>
+                <h1 class="text-2xl font-black tracking-tight text-slate-900 uppercase">Youngblood<span class="text-blue-600">.</span></h1>
+                <p class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">A Division of H&P Technologies</p>
             </div>
-            <div class="hidden md:block">
-                <a href="#" class="border border-white/20 hover:border-sky-500 hover:text-sky-400 px-6 py-2 rounded text-xs font-bold uppercase tracking-widest transition-all">
-                    Legacy Partner Portal
-                </a>
-            </div>
+            <a href="#" class="border border-slate-300 hover:border-blue-600 text-slate-700 hover:text-blue-600 px-6 py-2 rounded text-xs font-bold uppercase tracking-widest transition-all">
+                Partner Portal
+            </a>
         </div>
     </nav>
 
-    <header class="h-screen w-full flex flex-col justify-end hero-bg px-6 pb-24 md:pb-32">
-        <div class="max-w-7xl mx-auto w-full">
-            <div class="flex items-center gap-3 mb-6">
-                <div class="h-[1px] w-12 bg-sky-500"></div>
-                <span class="text-sky-400 font-bold tracking-[0.2em] uppercase text-xs">Established 1964</span>
-            </div>
-            <h2 class="text-5xl md:text-7xl lg:text-8xl font-bold text-white leading-[1.1] mb-6 font-raj max-w-4xl tracking-tight">
-                Engineered Solutions for <br /><span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-blue-600">Motion & Fluid Power.</span>
+    <header class="pt-32 pb-16 px-6 max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12 min-h-[90vh]">
+        <div class="w-full lg:w-1/2">
+            <span class="text-blue-600 font-bold tracking-[0.2em] uppercase text-xs mb-4 block">Established 1964</span>
+            <h2 class="text-5xl lg:text-7xl font-black leading-tight mb-6 text-slate-900 tracking-tight">
+                Engineered for <br/>Motion & Control.
             </h2>
-            <p class="text-lg md:text-xl text-slate-300 max-w-2xl leading-relaxed">
-                We don't just supply parts. We design, build, and integrate massive industrial systems to keep the Midwest moving.
+            <p class="text-lg text-slate-600 mb-8 max-w-lg">
+                We design, build, and integrate massive industrial systems to keep the Midwest moving. No guesswork, just engineering.
             </p>
+            <div class="flex gap-4">
+                <a href="#" class="bg-blue-600 text-white px-8 py-4 rounded font-bold hover:bg-blue-700 transition-colors">Explore Solutions</a>
+            </div>
+        </div>
+        <div class="w-full lg:w-1/2 h-[500px] rounded-2xl overflow-hidden shadow-2xl">
+            <img src="/images/engineered-cell.jpg" onerror="this.src='https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80'" class="w-full h-full object-cover" alt="Engineered Cell">
         </div>
     </header>
 
-    <section class="bg-[#0a1020] border-b border-white/5 relative z-10 -mt-8 mx-4 md:mx-auto max-w-7xl rounded-lg border-neon bg-[#0a1020]/90 backdrop-blur-md">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/5">
-            <div class="bg-[#0a1020] p-6 text-center">
-                <div class="text-3xl font-raj font-bold text-white mb-1">H&P Tech</div>
-                <div class="text-[10px] uppercase tracking-widest text-slate-400">Parent Company</div>
-            </div>
-            <div class="bg-[#0a1020] p-6 text-center">
-                <div class="text-3xl font-raj font-bold text-white mb-1">60+</div>
-                <div class="text-[10px] uppercase tracking-widest text-slate-400">Tier 1 Mfr Lines</div>
-            </div>
-            <div class="bg-[#0a1020] p-6 text-center">
-                <div class="text-3xl font-raj font-bold text-orange-500 mb-1">99.2%</div>
-                <div class="text-[10px] uppercase tracking-widest text-orange-500/70">Uptime Average</div>
-            </div>
-            <div class="bg-[#0a1020] p-6 text-center">
-                <div class="text-3xl font-raj font-bold text-white mb-1">4</div>
-                <div class="text-[10px] uppercase tracking-widest text-slate-400">Regional Offices</div>
-            </div>
+    <section class="border-y border-slate-200 bg-white">
+        <div class="max-w-7xl mx-auto px-6 py-12 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            <div><div class="text-4xl font-black text-slate-900">H&P</div><div class="text-xs text-slate-500 uppercase font-bold mt-1">Parent Company</div></div>
+            <div><div class="text-4xl font-black text-slate-900">60+</div><div class="text-xs text-slate-500 uppercase font-bold mt-1">Mfr Lines</div></div>
+            <div><div class="text-4xl font-black text-orange-500">99.2%</div><div class="text-xs text-slate-500 uppercase font-bold mt-1">Uptime Avg</div></div>
+            <div><div class="text-4xl font-black text-slate-900">4</div><div class="text-xs text-slate-500 uppercase font-bold mt-1">Regional Hubs</div></div>
         </div>
     </section>
 
-    <div class="marquee-container mt-20">
-        <div class="marquee">
-            <div>
-                <span class="tier1">SICK SENSOR INTELLIGENCE</span> <span>·</span>
-                <span class="tier1">EATON FLUID POWER</span> <span>·</span>
-                <span class="tier1">EMERSON</span> <span>·</span>
-                <span class="tier1">UNIVERSAL ROBOTS</span> <span>·</span>
-                <span>BOSCH REXROTH</span> <span>·</span>
-                <span>SCHUNK</span> <span>·</span>
-                <span>YASKAWA</span> <span>·</span>
-            </div>
-            <div>
-                <span class="tier1">SICK SENSOR INTELLIGENCE</span> <span>·</span>
-                <span class="tier1">EATON FLUID POWER</span> <span>·</span>
-                <span class="tier1">EMERSON</span> <span>·</span>
-                <span class="tier1">UNIVERSAL ROBOTS</span> <span>·</span>
-                <span>BOSCH REXROTH</span> <span>·</span>
-                <span>SCHUNK</span> <span>·</span>
-                <span>YASKAWA</span> <span>·</span>
-            </div>
-        </div>
-    </div>
-
-    <section class="py-24 px-6 max-w-7xl mx-auto">
-        <div class="flex items-center gap-4 mb-12">
-            <h3 class="text-4xl font-bold uppercase tracking-tight font-raj text-white">Core Competencies</h3>
-            <div class="h-px bg-white/10 flex-grow"></div>
-        </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="card-zoom h-[450px] rounded-xl border border-white/10 cursor-pointer group">
-                <img src="/images/hydraulics-actual.jpg" onerror="this.src='https://images.unsplash.com/photo-1537462715879-360eeb61a0ad?auto=format&fit=crop&q=80'" class="card-zoom-img" alt="Hydraulics">
-                <div class="card-overlay"></div>
-                <div class="card-content h-full p-8 flex flex-col justify-end">
-                    <div class="w-10 h-10 border border-sky-500/30 rounded-full flex items-center justify-center mb-4 group-hover:bg-sky-500 transition-colors">
-                        <svg class="w-4 h-4 text-sky-400 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                    </div>
-                    <h4 class="text-3xl font-raj font-bold mb-2 text-white">Industrial Hydraulics</h4>
-                    <p class="text-sm text-slate-400 leading-relaxed">Custom power units, lubrication systems, and fluid conveyance engineered in-house.</p>
+    <section class="py-24 px-6 max-w-7xl mx-auto bg-slate-50">
+        <h3 class="text-3xl font-black mb-12 uppercase tracking-tight text-slate-900">Core Competencies</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="bg-white rounded-xl overflow-hidden shadow-lg border border-slate-100 group cursor-pointer">
+                <div class="h-64 overflow-hidden"><img src="/images/hydraulics-actual.jpg" onerror="this.src='https://images.unsplash.com/photo-1537462715879-360eeb61a0ad?auto=format&fit=crop&q=80'" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"></div>
+                <div class="p-8">
+                    <h4 class="text-2xl font-black mb-2 text-slate-900">Industrial Hydraulics</h4>
+                    <p class="text-slate-600">Custom power units and lubrication systems engineered in-house.</p>
                 </div>
             </div>
-            
-            <div class="card-zoom h-[450px] rounded-xl border border-white/10 cursor-pointer group">
-                <img src="/images/robotic-arm-actual.jpg" onerror="this.src='https://images.unsplash.com/photo-1565515152650-612b3e2441af?auto=format&fit=crop&q=80'" class="card-zoom-img" alt="Robotics">
-                <div class="card-overlay"></div>
-                <div class="card-content h-full p-8 flex flex-col justify-end">
-                    <div class="w-10 h-10 border border-sky-500/30 rounded-full flex items-center justify-center mb-4 group-hover:bg-sky-500 transition-colors">
-                        <svg class="w-4 h-4 text-sky-400 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                    </div>
-                    <h4 class="text-3xl font-raj font-bold mb-2 text-white">Robotics & Vision</h4>
-                    <p class="text-sm text-slate-400 leading-relaxed">Turnkey cobot integration, machine tending, and advanced optical inspection.</p>
-                </div>
-            </div>
-            
-            <div class="card-zoom h-[450px] rounded-xl border border-white/10 cursor-pointer group">
-                <img src="/images/engineered-cell.jpg" onerror="this.src='https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80'" class="card-zoom-img" alt="Custom Automation">
-                <div class="card-overlay"></div>
-                <div class="card-content h-full p-8 flex flex-col justify-end">
-                    <div class="w-10 h-10 border border-sky-500/30 rounded-full flex items-center justify-center mb-4 group-hover:bg-sky-500 transition-colors">
-                        <svg class="w-4 h-4 text-sky-400 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                    </div>
-                    <h4 class="text-3xl font-raj font-bold mb-2 text-white">Custom Engineering</h4>
-                    <p class="text-sm text-slate-400 leading-relaxed">Complete cell design, safety fencing, and complex pneumatic assemblies.</p>
+            <div class="bg-white rounded-xl overflow-hidden shadow-lg border border-slate-100 group cursor-pointer">
+                <div class="h-64 overflow-hidden"><img src="/images/robotic-arm-actual.jpg" onerror="this.src='https://images.unsplash.com/photo-1565515152650-612b3e2441af?auto=format&fit=crop&q=80'" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"></div>
+                <div class="p-8">
+                    <h4 class="text-2xl font-black mb-2 text-slate-900">Robotics & Vision</h4>
+                    <p class="text-slate-600">Turnkey cobot integration and advanced optical inspection.</p>
                 </div>
             </div>
         </div>
     </section>
-
-    <section class="bg-[#0a1020] py-20 border-t border-white/5">
-        <div class="max-w-7xl mx-auto px-6 text-center">
-            <h3 class="text-[11px] font-bold uppercase tracking-[0.2em] text-sky-500 mb-10">Regional Powerhouse</h3>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
-                <div class="border-l border-white/10 pl-4 text-left">
-                    <div class="text-xl font-raj font-bold text-white">Warren, MI</div>
-                    <div class="text-xs text-slate-500 mt-1">Corporate HQ / Engineering</div>
-                </div>
-                <div class="border-l border-white/10 pl-4 text-left">
-                    <div class="text-xl font-raj font-bold text-white">Grand Rapids, MI</div>
-                    <div class="text-xs text-slate-500 mt-1">Western Hub</div>
-                </div>
-                <div class="border-l border-white/10 pl-4 text-left">
-                    <div class="text-xl font-raj font-bold text-white">Indianapolis, IN</div>
-                    <div class="text-xs text-slate-500 mt-1">Central Hub</div>
-                </div>
-                <div class="border-l border-white/10 pl-4 text-left">
-                    <div class="text-xl font-raj font-bold text-white">Dayton, OH</div>
-                    <div class="text-xs text-slate-500 mt-1">Ohio Valley Lab</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
 </body>
 </html>
