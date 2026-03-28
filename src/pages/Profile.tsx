@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import EmptyStateCard from "@/components/shared/EmptyStateCard";
 import { safeLocalStorage } from "@/lib/browserStorage";
 const TrainingHistory = lazy(() => import("@/components/profile/TrainingHistory"));
+const WorkoutDataCenter = lazy(() => import("@/components/profile/WorkoutDataCenter"));
 const WelcomeGiftModal = lazy(() => import("@/components/dashboard/WelcomeGiftModal"));
 
 /** Posture Analysis card — moved from dashboard home to profile */
