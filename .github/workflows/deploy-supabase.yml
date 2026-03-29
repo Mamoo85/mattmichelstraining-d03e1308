@@ -18,7 +18,7 @@ jobs:
           version: latest
 
       - name: Run DB migrations
-        run: supabase db push --project-ref eauvubfpanpeuxsrqesu --password ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: supabase db push --db-url "postgresql://postgres:${{ secrets.SUPABASE_DB_PASSWORD }}@db.eauvubfpanpeuxsrqesu.supabase.co:5432/postgres"
 
       - name: Deploy all edge functions
         run: supabase functions deploy --project-ref eauvubfpanpeuxsrqesu
