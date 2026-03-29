@@ -32,6 +32,7 @@ const DEMOS = [
       { label: "Roofing", to: "/demo-roofing" },
       { label: "Electrical", to: "/demo-electrician" },
       { label: "HVAC", to: "/demo-hvac" },
+      { label: "Auto Repair", to: "/demo-auto-repair" },
     ],
   },
   {
@@ -51,6 +52,16 @@ const DEMOS = [
     demos: [
       { label: "Restaurant & Bar", to: "/demo-restaurant" },
       { label: "Landscaping", to: "/demo-landscaping" },
+      { label: "Cleaning Service", to: "/demo-cleaning" },
+      { label: "Barbershop & Salon", to: "/demo-salon" },
+    ],
+  },
+  {
+    category: "Real Estate & Professional",
+    color: "#1e3a5f",
+    desc: "Credibility-first design for agents and professionals. Listings, bio, testimonials, and contact.",
+    demos: [
+      { label: "Real Estate Agent", to: "/demo-real-estate" },
     ],
   },
 ];
@@ -384,6 +395,65 @@ const WebDesignAgency = () => {
             <p className="text-center text-sm text-muted-foreground">
               Optional add-on: Google Ads management for <span className="font-semibold text-foreground">$99/month</span>
             </p>
+          </div>
+        </section>
+
+        {/* ── ADD-ON SERVICES ───────────────────── */}
+        <section className="px-4 pb-24">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-10">
+              <h2 className="text-2xl sm:text-3xl font-bold mb-3">More Ways to Grow</h2>
+              <p className="text-muted-foreground text-sm max-w-xl mx-auto">A website is the foundation. These add-ons drive more leads after it's live.</p>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+              {[
+                { icon: "📈", name: "Google Ads Management", price: "$99/mo", desc: "I run your campaigns. You take the calls." },
+                { icon: "📝", name: "Monthly Content Package", price: "$79/mo", desc: "4 social posts + 1 blog + email newsletter." },
+                { icon: "📍", name: "Google Business Profile", price: "$149 + $49/mo", desc: "Rank higher on Google Maps." },
+                { icon: "🔍", name: "Local SEO Pages", price: "$299 flat", desc: "10 keyword-targeted pages for your area." },
+                { icon: "⭐", name: "Reputation Management", price: "$79/mo", desc: "Respond to every Google review, fast." },
+                { icon: "🔄", name: "Website Refresh", price: "$199 flat", desc: "Update copy & CTAs on your existing site." },
+              ].map((addon) => (
+                <div key={addon.name} className="flex gap-3 p-4 bg-card/50 border border-border/40 rounded-xl hover:border-primary/30 transition-colors">
+                  <span className="text-xl shrink-0">{addon.icon}</span>
+                  <div>
+                    <div className="flex items-baseline gap-2 flex-wrap">
+                      <h3 className="font-semibold text-sm">{addon.name}</h3>
+                      <span className="text-xs font-bold text-primary">{addon.price}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">{addon.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="text-center">
+              <Link
+                to="/web-design-services"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
+              >
+                See all services & pricing <ArrowRight size={14} />
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* ── REFERRAL PROGRAM ──────────────────── */}
+        <section className="px-4 pb-20 bg-muted/20">
+          <div className="max-w-3xl mx-auto py-12">
+            <div className="flex flex-col sm:flex-row gap-5 items-center p-6 sm:p-8 bg-card border border-primary/20 rounded-2xl">
+              <div className="shrink-0 w-14 h-14 rounded-2xl bg-primary/15 flex items-center justify-center text-2xl">
+                🤝
+              </div>
+              <div className="text-center sm:text-left">
+                <h3 className="font-bold text-lg mb-1">Refer a Business. Get $100.</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Know a contractor, shop owner, or professional who needs a website? Send them my way — if they sign up, you get <span className="font-semibold text-foreground">$100 cash or a free month of hosting</span>. No forms, no tracking links. Just text me and say you sent them.
+                </p>
+                <a href={`tel:${PHONE.replace(/\D/g,"")}`} className="inline-flex items-center gap-1.5 mt-3 text-sm font-semibold text-primary hover:underline">
+                  <Phone size={13} /> Text Matt: {PHONE}
+                </a>
+              </div>
+            </div>
           </div>
         </section>
 

@@ -82,6 +82,11 @@ const RoofingMockup = lazyRetry(() => import("./pages/RoofingMockup"));
 const YoungbloodMockup = lazyRetry(() => import("./pages/YoungbloodMockup"));
 const DentalMockup = lazyRetry(() => import("./pages/DentalMockup"));
 const WebDesignIncluded = lazyRetry(() => import("./pages/WebDesignIncluded"));
+const AutoRepairMockup = lazyRetry(() => import("./pages/AutoRepairMockup"));
+const RealEstateMockup = lazyRetry(() => import("./pages/RealEstateMockup"));
+const CleaningServiceMockup = lazyRetry(() => import("./pages/CleaningServiceMockup"));
+const SalonMockup = lazyRetry(() => import("./pages/SalonMockup"));
+const WebDesignServices = lazyRetry(() => import("./pages/WebDesignServices"));
 const FreeProgram = lazyRetry(() => import("./pages/FreeProgram"));
 const AdminViewUser = lazyRetry(() => import("./pages/AdminViewUser"));
 const StudioRental = lazyRetry(() => import("./pages/StudioRental"));
@@ -251,6 +256,15 @@ const App = () => (
                     <Route path="/demo-restaurant" element={<RestaurantMockup />} />
                     <Route path="/demo-restaurant/*" element={<RestaurantMockup />} />
                     <Route path="/whats-included" element={<WebDesignIncluded />} />
+                    <Route path="/web-design-services" element={<WebDesignServices />} />
+                    <Route path="/demo-auto-repair" element={<AutoRepairMockup />} />
+                    <Route path="/demo-auto-repair/*" element={<AutoRepairMockup />} />
+                    <Route path="/demo-real-estate" element={<RealEstateMockup />} />
+                    <Route path="/demo-real-estate/*" element={<RealEstateMockup />} />
+                    <Route path="/demo-cleaning" element={<CleaningServiceMockup />} />
+                    <Route path="/demo-cleaning/*" element={<CleaningServiceMockup />} />
+                    <Route path="/demo-salon" element={<SalonMockup />} />
+                    <Route path="/demo-salon/*" element={<SalonMockup />} />
                     <Route path="/free-program" element={<FreeProgram />} />
                     <Route path="/studio-rental" element={<StudioRental />} />
                     <Route path="/results" element={<Results />} />
