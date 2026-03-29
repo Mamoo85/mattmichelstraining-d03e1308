@@ -8,17 +8,26 @@ const corsHeaders = {
 };
 
 const PRODUCT_TIER_MAP: Record<string, string> = {
-  // Current (prod_UBI* — latest Stripe products)
-  "prod_UBI78IQsBpyfNw": "basic",
-  "prod_UBI7Wdb3liTxiF": "foundation",
-  "prod_UBI8SV9Fa6CibX": "custom",
-  "prod_UBI8mP9jA5rV3U": "team_elite",
-  // Previous generation (prod_UAl*)
+  // ── Current monthly (prod_UBI*) ──────────────────────────────────────────
+  "prod_UBI78IQsBpyfNw": "basic",        // Foundation $19.99/mo
+  "prod_UEfNKQVnbRcu1F": "guided",       // M² Guided $59.99/mo  ← was missing
+  "prod_UBI7Wdb3liTxiF": "foundation",   // Pro $149.99/mo
+  "prod_UBI8SV9Fa6CibX": "custom",       // Elite $349.99/mo
+  "prod_UBI8mP9jA5rV3U": "team_elite",   // Team Elite
+
+  // ── Current annual (prod_UC3* / prod_UEf*) ───────────────────────────────
+  "prod_UC3NyJRutYTL87": "basic",        // Foundation annual ← was missing
+  "prod_UEfQGAQMjysPqV": "guided",       // Guided annual     ← was missing
+  "prod_UC3OvNMcgtPafc": "foundation",   // Pro annual        ← was missing
+  "prod_UC3ONcP6ZoWtdM": "custom",       // Elite annual      ← was missing
+
+  // ── Previous generation (prod_UAl*) ─────────────────────────────────────
   "prod_UAlStH84vrByST": "basic",
   "prod_UAlTgNGJWmREZL": "foundation",
   "prod_UAlTkDlrDfDije": "custom",
   "prod_UAlUIuvjHBjtNL": "team_elite",
-  // Legacy (prod_U9p*)
+
+  // ── Legacy (prod_U9p*) ───────────────────────────────────────────────────
   "prod_U9ppSReG0j0RIr": "basic",
   "prod_U9pqrtuc44EE4A": "foundation",
   "prod_U9pqNqVuxYD6kl": "custom",
