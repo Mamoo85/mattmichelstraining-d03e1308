@@ -78,6 +78,7 @@ const AdminImageMatcher = lazy(() => import("@/components/admin/AdminImageMatche
 const AdminWebDesignCRM = lazy(() => import("@/components/admin/AdminWebDesignCRM"));
 const AdminProspector = lazy(() => import("@/components/admin/AdminProspector"));
 const AdminAutomationHub = lazy(() => import("@/components/admin/AdminAutomationHub"));
+const AdminWebDesignAutomations = lazy(() => import("@/components/admin/AdminWebDesignAutomations"));
 const AdminGiftCards = lazy(() => import("@/components/admin/AdminGiftCards"));
 const AdminGuideStore = lazy(() => import("@/components/admin/AdminGuideStore"));
 const AdminAffiliateManager = lazy(() => import("@/components/admin/AdminAffiliateManager"));
@@ -414,6 +415,7 @@ const Admin = () => {
             { key: "crm", label: "CRM", content: <AdminWebDesignCRM /> },
             { key: "prospector", label: "Prospector", content: <AdminProspector /> },
             { key: "automation", label: "Automation Hub", content: <AdminAutomationHub /> },
+            { key: "wd-automations", label: "Email Automations", content: <AdminWebDesignAutomations /> },
           ]} />
         )}
       </div>
