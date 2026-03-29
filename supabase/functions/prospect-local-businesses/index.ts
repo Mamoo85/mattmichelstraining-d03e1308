@@ -44,8 +44,9 @@ const INDUSTRY_ROTATION = [
   "chimney sweep",
 ];
 
-// Cities in the Metro Detroit / Southeast Michigan area
+// Cities across Michigan + Midwest — regional expansion
 const CITY_ROTATION = [
+  // Metro Detroit / Southeast MI
   "Detroit MI",
   "Grosse Pointe MI",
   "Warren MI",
@@ -56,6 +57,63 @@ const CITY_ROTATION = [
   "Southfield MI",
   "Pontiac MI",
   "Royal Oak MI",
+  "Ann Arbor MI",
+  "Ypsilanti MI",
+  "Novi MI",
+  "Canton MI",
+  "Macomb MI",
+  // Mid-Michigan
+  "Flint MI",
+  "Lansing MI",
+  "East Lansing MI",
+  "Jackson MI",
+  "Saginaw MI",
+  "Bay City MI",
+  "Midland MI",
+  // West Michigan
+  "Grand Rapids MI",
+  "Kalamazoo MI",
+  "Battle Creek MI",
+  "Muskegon MI",
+  "Holland MI",
+  "Traverse City MI",
+  // Northern MI / UP
+  "Alpena MI",
+  "Marquette MI",
+  // Ohio
+  "Columbus OH",
+  "Cleveland OH",
+  "Cincinnati OH",
+  "Toledo OH",
+  "Akron OH",
+  "Dayton OH",
+  "Canton OH",
+  "Youngstown OH",
+  // Indiana
+  "Indianapolis IN",
+  "Fort Wayne IN",
+  "South Bend IN",
+  "Evansville IN",
+  "Mishawaka IN",
+  // Illinois (suburbs — not Chicago proper which is oversaturated)
+  "Naperville IL",
+  "Aurora IL",
+  "Joliet IL",
+  "Rockford IL",
+  "Peoria IL",
+  "Springfield IL",
+  // Wisconsin
+  "Milwaukee WI",
+  "Madison WI",
+  "Green Bay WI",
+  "Racine WI",
+  "Kenosha WI",
+  // Kentucky
+  "Louisville KY",
+  "Lexington KY",
+  // Missouri
+  "St. Louis MO",
+  "Kansas City MO",
 ];
 
 function scoreDigitalGap(result: any): number {
