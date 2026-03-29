@@ -5,7 +5,7 @@ import AppNavbar from "@/components/layout/AppNavbar";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Users, Dumbbell, Landmark, FileText, Trash2, ClipboardList, Megaphone, Bot } from "lucide-react";
+import { Loader2, Users, Dumbbell, Landmark, FileText, Trash2, ClipboardList, Megaphone, Bot, Globe } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 
@@ -75,6 +75,7 @@ const AdminContentGenerator = lazy(() => import("@/components/admin/AdminContent
 const UserActivityFeed = lazy(() => import("@/components/admin/UserActivityFeed"));
 const AdminAiCommandCenter = lazy(() => import("@/components/admin/AdminAiCommandCenter"));
 const AdminImageMatcher = lazy(() => import("@/components/admin/AdminImageMatcher"));
+const AdminWebDesignCRM = lazy(() => import("@/components/admin/AdminWebDesignCRM"));
 
 const MASTER_TABS = [
   { key: "ai", label: "AI Center", icon: Bot, desc: "All AI · One Place" },
@@ -83,6 +84,7 @@ const MASTER_TABS = [
   { key: "vault", label: "The Vault", icon: Landmark, desc: "Revenue · Business" },
   { key: "content", label: "Site Content", icon: FileText, desc: "CMS · Comms · Marketing" },
   { key: "growth", label: "Growth", icon: Megaphone, desc: "Outreach · SEO · GBP" },
+  { key: "webdesign", label: "Web Design", icon: Globe, desc: "Leads · Projects · CRM" },
 ];
 
 const TabLoader = () => (
@@ -244,27 +246,7 @@ const Admin = () => {
           <p className="text-xs text-muted-foreground">Manage everything from one place</p>
         </div>
 
-        {/* Big Log Lifts button */}
-        <button
-          onClick={() => setActiveTab("log-lifts")}
-          className={cn(
-            "w-full mb-4 py-4 flex items-center justify-center gap-3 text-sm font-bold uppercase tracking-widest transition-all border",
-            activeTab === "log-lifts"
-              ? "bg-primary text-primary-foreground border-primary shadow-lg"
-              : "bg-card text-foreground border-primary/40 hover:bg-primary/10 hover:border-primary"
-          )}
-        >
-          <ClipboardList size={20} />
-          Log Athlete Lifts
-        </button>
-
-        {activeTab === "log-lifts" && (
-          <Suspense fallback={<TabLoader />}>
-            <AdminProgressLogger />
-          </Suspense>
-        )}
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 mb-6">
           {MASTER_TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.key;
@@ -348,6 +330,7 @@ const Admin = () => {
         {/* ── TRAINING ENGINE ── */}
         {activeTab === "engine" && (
           <SubTabs tabs={[
+            { key: "log-lifts", label: <span className="flex items-center gap-1"><ClipboardList size={11} /> Log Lifts</span>, content: <AdminProgressLogger /> },
             { key: "programs", label: "Programs", content: <AdminPrograms /> },
             { key: "exercises", label: "Exercise Library", content: <AdminExerciseLibrary /> },
             { key: "image-matcher", label: "Image Matcher", content: <AdminImageMatcher /> },
@@ -415,6 +398,13 @@ const Admin = () => {
             { key: "instagram", label: "Instagram", content: <AdminInstagramPosts /> },
             { key: "content-gen", label: "Content Generator", content: <AdminContentGenerator /> },
           ]} />
+        )}
+
+        {/* ── WEB DESIGN ── */}
+        {activeTab === "webdesign" && (
+          <Suspense fallback={<TabLoader />}>
+            <AdminWebDesignCRM />
+          </Suspense>
         )}
       </div>
     </div>

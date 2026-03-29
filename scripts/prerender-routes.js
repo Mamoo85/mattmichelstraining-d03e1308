@@ -154,6 +154,20 @@ const routes = [
     h1: "Medical Clinic Website Design — Detroit Metro",
     body: "Patient-first website design for medical clinics and healthcare providers in Detroit and Grosse Pointe. Online appointment booking, service descriptions, provider bios, and insurance information. Built by M² Web Design.",
   },
+  {
+    path: "/demo-hvac",
+    title: "HVAC Website Design Detroit | M² Web Design",
+    description: "High-converting HVAC website design for Metro Detroit heating and cooling companies. 24/7 emergency CTAs, financing options, local SEO.",
+    h1: "HVAC Website Design — Metro Detroit",
+    body: "Professional website design for HVAC companies in Detroit, Grosse Pointe, and surrounding areas. 24/7 emergency service CTAs, financing options, equipment brands, and local SEO to rank above your competition. Built by M² Web Design.",
+  },
+  {
+    path: "/demo-restaurant",
+    title: "Restaurant Website Design Detroit | M² Web Design",
+    description: "Professional restaurant and bar website design for Detroit metro dining. Menu showcase, reservations, events, and local SEO.",
+    h1: "Restaurant & Bar Website Design — Detroit Metro",
+    body: "Professional website design for restaurants, bars, and hospitality businesses in Detroit and Grosse Pointe. Menu showcases, online reservations, private event booking, and local SEO to fill your tables. Built by M² Web Design.",
+  },
 ];
 
 function generateHtml(template, route) {
@@ -185,6 +199,8 @@ function generateHtml(template, route) {
         <a href="/free-ai-generator">Free AI Generator</a> |
         <a href="/learn">Articles</a> |
         <a href="/detroit-web-design">Web Design</a> |
+        <a href="/demo-hvac">HVAC Demo</a> |
+        <a href="/demo-restaurant">Restaurant Demo</a> |
         <a href="/merch">Merch</a>
       </nav>
       <p>M² Training — Grosse Pointe Park, MI. (313) 806-4952. mattmichelstraining.com</p>

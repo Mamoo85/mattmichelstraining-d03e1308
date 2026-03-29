@@ -5,7 +5,7 @@ import { Phone, Droplets, Flame, Wrench, Shield, Star, Clock, Award, CheckCircle
 import { RevealSection } from "@/hooks/useInView";
 
 const heroImg = "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1600&q=80";
-const BRAND = "[BUSINESS NAME]";
+const BRAND = "Metro Pro Plumbing";
 const PHONE = "(313) 806-4952";
 const RED = "#dc2626";
 
@@ -96,6 +96,9 @@ const PlumberMockup = () => {
 
   return (
     <div style={{ fontFamily: "'Inter', system-ui, sans-serif", color: "#e2e8f0", background: "#0b1929" }}>
+      <div style={{background:"#1e40af",color:"white",textAlign:"center",padding:"8px",fontSize:"11px",fontWeight:"700",letterSpacing:"0.1em"}}>
+        SAMPLE WEBSITE — Built by Matt Michels Web Design · (313) 806-4952
+      </div>
       <style>{`
         @keyframes plumber-drip { 0%,100%{transform:scaleY(0);opacity:0} 50%{transform:scaleY(1);opacity:.6} }
         @keyframes plumber-pulse { 0%{box-shadow:0 0 0 0 rgba(220,38,38,.5)} 70%{box-shadow:0 0 0 12px rgba(220,38,38,0)} 100%{box-shadow:0 0 0 0 rgba(220,38,38,0)} }

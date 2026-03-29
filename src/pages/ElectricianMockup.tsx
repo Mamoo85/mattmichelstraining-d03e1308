@@ -5,7 +5,7 @@ import { Zap, Battery, Lightbulb, Shield, Star, Award, CheckCircle, FileCheck, P
 import { RevealSection } from "@/hooks/useInView";
 
 const heroImg = "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=1600&q=80";
-const BRAND = "[BUSINESS NAME]";
+const BRAND = "Great Lakes Electric";
 const PHONE = "(313) 806-4952";
 const YELLOW = "#facc15";
 
@@ -57,6 +57,9 @@ const ElectricianMockup = () => {
 
   return (
     <div style={{ fontFamily: "'Inter', system-ui, sans-serif", color: "#e2e8f0", background: "#1e1e24" }}>
+      <div style={{background:"#1e40af",color:"white",textAlign:"center",padding:"8px",fontSize:"11px",fontWeight:"700",letterSpacing:"0.1em"}}>
+        SAMPLE WEBSITE — Built by Matt Michels Web Design · (313) 806-4952
+      </div>
       <style>{`
         @keyframes elec-crawl { 0%{background-position:0 0} 100%{background-position:28px 0} }
         @keyframes elec-arc { 0%{opacity:0;transform:scaleX(0)} 50%{opacity:1;transform:scaleX(1)} 100%{opacity:0;transform:scaleX(0)} }

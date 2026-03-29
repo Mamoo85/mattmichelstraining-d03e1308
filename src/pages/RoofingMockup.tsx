@@ -5,7 +5,7 @@ import { Phone, Shield, Star, Award, CheckCircle, CloudRain, Home, Wrench, MapPi
 import { RevealSection } from "@/hooks/useInView";
 
 const heroImg = "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1600&q=80";
-const BRAND = "[BUSINESS NAME]";
+const BRAND = "East Side Roofing Co.";
 const PHONE = "(313) 806-4952";
 const ACCENT = "#2563eb";
 
@@ -63,6 +63,9 @@ const RoofingMockup = () => {
 
   return (
     <div style={{ fontFamily: "'Inter', system-ui, sans-serif", color: "#e2e8f0", background: "#0b1929" }}>
+      <div style={{background:"#1e40af",color:"white",textAlign:"center",padding:"8px",fontSize:"11px",fontWeight:"700",letterSpacing:"0.1em"}}>
+        SAMPLE WEBSITE — Built by Matt Michels Web Design · (313) 806-4952
+      </div>
       <style>{`
         @keyframes roof-shingle { 0%{background-position:0 0} 100%{background-position:40px 40px} }
         .roof-pattern { background-image: repeating-linear-gradient(45deg, rgba(37,99,235,.04) 0px, rgba(37,99,235,.04) 2px, transparent 2px, transparent 20px); animation: roof-shingle 4s linear infinite; }

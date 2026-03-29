@@ -71,6 +71,8 @@ const SEOLandingPage = lazyRetry(() => import("./pages/SEOLandingPage"));
 const DynamicSitemap = lazyRetry(() => import("./pages/DynamicSitemap"));
 const Assessment = lazyRetry(() => import("./pages/Assessment"));
 const WebDesignAgency = lazyRetry(() => import("./pages/WebDesignAgency"));
+const HvacMockup = lazyRetry(() => import("./pages/HvacMockup"));
+const RestaurantMockup = lazyRetry(() => import("./pages/RestaurantMockup"));
 const LandscapeMockup = lazyRetry(() => import("./pages/LandscapeMockup"));
 const PlumberMockup = lazyRetry(() => import("./pages/PlumberMockup"));
 const ElectricianMockup = lazyRetry(() => import("./pages/ElectricianMockup"));
@@ -244,6 +246,10 @@ const App = () => (
                     <Route path="/demo-youngblood/*" element={<YoungbloodMockup />} />
                     <Route path="/demo-dental" element={<DentalMockup />} />
                     <Route path="/demo-dental/*" element={<DentalMockup />} />
+                    <Route path="/demo-hvac" element={<HvacMockup />} />
+                    <Route path="/demo-hvac/*" element={<HvacMockup />} />
+                    <Route path="/demo-restaurant" element={<RestaurantMockup />} />
+                    <Route path="/demo-restaurant/*" element={<RestaurantMockup />} />
                     <Route path="/whats-included" element={<WebDesignIncluded />} />
                     <Route path="/free-program" element={<FreeProgram />} />
                     <Route path="/studio-rental" element={<StudioRental />} />
