@@ -17,7 +17,7 @@ DO $$ BEGIN
     USING (
       bucket_id = 'form-check-videos' AND (
         (storage.foldername(name))[1] = auth.uid()::text
-        OR public.has_role(auth.uid(), 'admin'::public.app_role)
+        OR public.has_role(auth.uid(), 'admin')
       )
     );
 EXCEPTION WHEN duplicate_object THEN NULL;
@@ -33,7 +33,7 @@ ALTER TABLE public.program_messages REPLICA IDENTITY FULL;
 DO $$ BEGIN
   CREATE POLICY "Admins can read send log"
     ON public.email_send_log FOR SELECT TO authenticated
-    USING (public.has_role(auth.uid(), 'admin'::public.app_role));
+    USING (public.has_role(auth.uid(), 'admin'));
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
@@ -44,8 +44,8 @@ ALTER TABLE IF EXISTS public.seo_package_orders ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN
   CREATE POLICY "Admins can manage seo_package_orders"
     ON public.seo_package_orders FOR ALL TO authenticated
-    USING (public.has_role(auth.uid(), 'admin'::public.app_role))
-    WITH CHECK (public.has_role(auth.uid(), 'admin'::public.app_role));
+    USING (public.has_role(auth.uid(), 'admin'))
+    WITH CHECK (public.has_role(auth.uid(), 'admin'));
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 DO $$ BEGIN
@@ -60,8 +60,8 @@ ALTER TABLE IF EXISTS public.audit_report_orders ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN
   CREATE POLICY "Admins can manage audit_report_orders"
     ON public.audit_report_orders FOR ALL TO authenticated
-    USING (public.has_role(auth.uid(), 'admin'::public.app_role))
-    WITH CHECK (public.has_role(auth.uid(), 'admin'::public.app_role));
+    USING (public.has_role(auth.uid(), 'admin'))
+    WITH CHECK (public.has_role(auth.uid(), 'admin'));
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 DO $$ BEGIN
@@ -76,8 +76,8 @@ ALTER TABLE IF EXISTS public.gbp_management_clients ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN
   CREATE POLICY "Admins can manage gbp_management_clients"
     ON public.gbp_management_clients FOR ALL TO authenticated
-    USING (public.has_role(auth.uid(), 'admin'::public.app_role))
-    WITH CHECK (public.has_role(auth.uid(), 'admin'::public.app_role));
+    USING (public.has_role(auth.uid(), 'admin'))
+    WITH CHECK (public.has_role(auth.uid(), 'admin'));
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 DO $$ BEGIN
@@ -92,8 +92,8 @@ ALTER TABLE IF EXISTS public.camp_directory_listings ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN
   CREATE POLICY "Admins can manage camp_directory_listings"
     ON public.camp_directory_listings FOR ALL TO authenticated
-    USING (public.has_role(auth.uid(), 'admin'::public.app_role))
-    WITH CHECK (public.has_role(auth.uid(), 'admin'::public.app_role));
+    USING (public.has_role(auth.uid(), 'admin'))
+    WITH CHECK (public.has_role(auth.uid(), 'admin'));
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 DO $$ BEGIN
@@ -108,8 +108,8 @@ ALTER TABLE IF EXISTS public.contractor_clients ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN
   CREATE POLICY "Admins can manage contractor_clients"
     ON public.contractor_clients FOR ALL TO authenticated
-    USING (public.has_role(auth.uid(), 'admin'::public.app_role))
-    WITH CHECK (public.has_role(auth.uid(), 'admin'::public.app_role));
+    USING (public.has_role(auth.uid(), 'admin'))
+    WITH CHECK (public.has_role(auth.uid(), 'admin'));
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 DO $$ BEGIN
@@ -124,8 +124,8 @@ ALTER TABLE IF EXISTS public.b2b_subscribers ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN
   CREATE POLICY "Admins can manage b2b_subscribers"
     ON public.b2b_subscribers FOR ALL TO authenticated
-    USING (public.has_role(auth.uid(), 'admin'::public.app_role))
-    WITH CHECK (public.has_role(auth.uid(), 'admin'::public.app_role));
+    USING (public.has_role(auth.uid(), 'admin'))
+    WITH CHECK (public.has_role(auth.uid(), 'admin'));
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 DO $$ BEGIN
@@ -140,8 +140,8 @@ ALTER TABLE IF EXISTS public.gbp_saas_clients ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN
   CREATE POLICY "Admins can manage gbp_saas_clients"
     ON public.gbp_saas_clients FOR ALL TO authenticated
-    USING (public.has_role(auth.uid(), 'admin'::public.app_role))
-    WITH CHECK (public.has_role(auth.uid(), 'admin'::public.app_role));
+    USING (public.has_role(auth.uid(), 'admin'))
+    WITH CHECK (public.has_role(auth.uid(), 'admin'));
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 DO $$ BEGIN
@@ -156,8 +156,8 @@ ALTER TABLE IF EXISTS public.web_design_leads ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN
   CREATE POLICY "Admins can manage web_design_leads"
     ON public.web_design_leads FOR ALL TO authenticated
-    USING (public.has_role(auth.uid(), 'admin'::public.app_role))
-    WITH CHECK (public.has_role(auth.uid(), 'admin'::public.app_role));
+    USING (public.has_role(auth.uid(), 'admin'))
+    WITH CHECK (public.has_role(auth.uid(), 'admin'));
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 DO $$ BEGIN

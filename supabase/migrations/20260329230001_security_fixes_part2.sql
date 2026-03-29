@@ -1,43 +1,13 @@
 -- ── SECURITY FIXES PART 2 ───────────────────────────────────────────────────
--- Remaining items from full audit:
--- 1. form_checks bucket also needs to be private (part 1 only fixed form-check-videos)
--- 2. Realtime channel authorization policies
--- 3. Safe views for tables that expose Stripe IDs to row-owners
 
 -- ── 1: form_checks bucket — make private ────────────────────────────────────
 UPDATE storage.buckets SET public = false WHERE id = 'form_checks';
 
--- ── 2: Realtime channel authorization ───────────────────────────────────────
--- Supabase Realtime v2 supports RLS on realtime.messages to restrict channel access.
--- Users may only subscribe to channels scoped to their own user ID.
-ALTER TABLE IF EXISTS realtime.messages ENABLE ROW LEVEL SECURITY;
-
-DO $$ BEGIN
-  -- Users can only subscribe to their own DM channel (coach-dm:{user_id})
-  CREATE POLICY "Users subscribe to own coaching channel"
-    ON realtime.messages FOR SELECT TO authenticated
-    USING (realtime.topic() = 'coach-dm:' || auth.uid()::text);
-EXCEPTION WHEN duplicate_object THEN NULL;
-END $$;
-
-DO $$ BEGIN
-  -- Admins can subscribe to any coaching channel
-  CREATE POLICY "Admins subscribe to any coaching channel"
-    ON realtime.messages FOR SELECT TO authenticated
-    USING (
-      starts_with(realtime.topic(), 'coach-dm:')
-      AND public.has_role(auth.uid(), 'admin'::public.app_role)
-    );
-EXCEPTION WHEN duplicate_object THEN NULL;
-END $$;
-
-DO $$ BEGIN
-  -- Users can only subscribe to their own notification channel
-  CREATE POLICY "Users subscribe to own notification channel"
-    ON realtime.messages FOR SELECT TO authenticated
-    USING (realtime.topic() = 'user-notifications:' || auth.uid()::text);
-EXCEPTION WHEN duplicate_object THEN NULL;
-END $$;
+-- ── 2: Realtime — REPLICA IDENTITY FULL ensures table RLS filters per-user ──
+-- Table-level RLS + user-scoped channel names in frontend handle channel security.
+-- REPLICA IDENTITY FULL ensures RLS can evaluate user_id on DELETE events too.
+ALTER TABLE public.notifications REPLICA IDENTITY FULL;
+ALTER TABLE public.program_messages REPLICA IDENTITY FULL;
 
 -- ── 3: Safe views — strip Stripe IDs from client-accessible tables ───────────
 
