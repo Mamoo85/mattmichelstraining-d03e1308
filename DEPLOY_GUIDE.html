@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>M² Deployment Guide</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0f0f1a; color: #e5e5e5; padding: 32px 16px; }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { font-size: 28px; font-weight: 900; color: #f97316; margin-bottom: 6px; }
+    .subtitle { color: #888; font-size: 14px; margin-bottom: 40px; }
+    .step { background: #1a1a2e; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 24px; margin-bottom: 20px; }
+    .step-header { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+    .step-num { width: 36px; height: 36px; border-radius: 50%; background: #f97316; color: white; font-weight: 900; font-size: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .step-num.done { background: #22c55e; }
+    .step-num.skip { background: #3b82f6; }
+    h2 { font-size: 18px; font-weight: 800; }
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-left: 8px; }
+    .badge-done { background: #22c55e22; color: #22c55e; border: 1px solid #22c55e44; }
+    .badge-action { background: #f9731622; color: #f97316; border: 1px solid #f9731644; }
+    p { color: #aaa; font-size: 14px; line-height: 1.7; margin-bottom: 12px; }
+    .code-block { background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 16px; margin: 12px 0; font-family: monospace; font-size: 13px; color: #e5e5e5; overflow-x: auto; white-space: pre; }
+    .copy-btn { display: inline-block; margin-top: 8px; padding: 6px 14px; background: rgba(249,115,22,0.15); border: 1px solid rgba(249,115,22,0.3); color: #f97316; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.15s; }
+    .copy-btn:hover { background: rgba(249,115,22,0.25); }
+    .link-btn { display: inline-block; margin-top: 10px; padding: 10px 22px; background: #f97316; color: white; border-radius: 10px; font-weight: 800; font-size: 14px; text-decoration: none; transition: opacity 0.15s; }
+    .link-btn:hover { opacity: 0.85; }
+    .link-btn.outline { background: transparent; border: 2px solid rgba(255,255,255,0.2); color: #e5e5e5; }
+    label { display: block; font-size: 12px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; margin-top: 14px; }
+    input { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; padding: 10px 14px; color: white; font-size: 14px; font-family: monospace; outline: none; transition: border-color 0.15s; }
+    input:focus { border-color: #f97316; }
+    input::placeholder { color: #555; }
+    .sql-box { position: relative; }
+    .divider { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+    .tip { background: rgba(249,115,22,0.08); border: 1px solid rgba(249,115,22,0.2); border-radius: 10px; padding: 12px 16px; font-size: 13px; color: #f97316; margin: 12px 0; }
+    .functions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
+    .fn-item { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 12px; font-family: monospace; font-size: 12px; color: #aaa; }
+    .progress { display: flex; gap: 8px; margin-bottom: 32px; flex-wrap: wrap; }
+    .prog-item { display: flex; align-items: center; gap-6px; gap: 6px; font-size: 12px; font-weight: 700; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; }
+    .dot-done { background: #22c55e; }
+    .dot-pending { background: #f97316; }
+    .dot-manual { background: #3b82f6; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>M² Deployment Checklist</h1>
+  <p class="subtitle">Follow these steps in order to go fully live. Steps marked DONE are already complete.</p>
+
+  <div class="progress">
+    <div class="prog-item"><div class="dot dot-done"></div> Done / Auto</div>
+    <div class="prog-item"><div class="dot dot-pending"></div> Needs action</div>
+    <div class="prog-item"><div class="dot dot-manual"></div> Manual / Dashboard</div>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num done">✓</div>
+      <div>
+        <h2>Step 1 — Merge to Main <span class="badge badge-done">Done</span></h2>
+      </div>
+    </div>
+    <p>PR #18 was created and merged to <code>main</code> automatically. All code is on your production branch.</p>
+    <a href="https://github.com/Mamoo85/m2training/pull/18" target="_blank" class="link-btn outline">View PR #18 on GitHub →</a>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num skip">2</div>
+      <div>
+        <h2>Step 2 — Publish on Lovable <span class="badge badge-action">Action Required</span></h2>
+      </div>
+    </div>
+    <p>Open your Lovable project, click <strong>Share → Publish</strong>. This deploys all the new pages and dashboard changes to your live site. Takes about 60 seconds.</p>
+    <div class="tip">Lovable auto-picks up from <code>main</code>. Since the branch is already merged, just hit Publish.</div>
+    <a href="https://lovable.dev" target="_blank" class="link-btn">Open Lovable Dashboard →</a>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num skip">3</div>
+      <div>
+        <h2>Step 3 — Run DB Migration <span class="badge badge-action">Action Required</span></h2>
+      </div>
+    </div>
+    <p>Go to your Supabase project → <strong>SQL Editor</strong> → paste and run this SQL. This creates the 5 missing tables needed for the new products.</p>
+    <div class="sql-box">
+      <div class="code-block" id="sql-content">-- SEO Package Orders
+CREATE TABLE IF NOT EXISTS seo_package_orders (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  stripe_session_id TEXT UNIQUE,
+  customer_email TEXT,
+  business_name TEXT,
+  city TEXT,
+  industry TEXT,
+  delivered_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Audit Report Orders
+CREATE TABLE IF NOT EXISTS audit_report_orders (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  stripe_session_id TEXT UNIQUE,
+  customer_email TEXT,
+  business_name TEXT,
+  city TEXT,
+  website_url TEXT,
+  delivered_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- GBP Management Clients
+CREATE TABLE IF NOT EXISTS gbp_management_clients (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  customer_email TEXT,
+  business_name TEXT,
+  contact_name TEXT,
+  phone TEXT,
+  current_gbp_url TEXT,
+  stripe_subscription_id TEXT UNIQUE,
+  status TEXT DEFAULT 'active',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Camp Directory Listings
+CREATE TABLE IF NOT EXISTS camp_directory_listings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  camp_name TEXT NOT NULL,
+  sport TEXT,
+  age_range TEXT,
+  start_date DATE,
+  end_date DATE,
+  location TEXT,
+  price_description TEXT,
+  website_url TEXT,
+  contact_email TEXT,
+  stripe_subscription_id TEXT UNIQUE,
+  is_active BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Newsletter Sponsor Inquiries
+CREATE TABLE IF NOT EXISTS newsletter_sponsor_inquiries (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT,
+  business_name TEXT,
+  email TEXT,
+  phone TEXT,
+  preferred_tier TEXT,
+  message TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);</div>
+      <button class="copy-btn" onclick="copySQL()">Copy SQL</button>
+    </div>
+    <a href="https://supabase.com/dashboard" target="_blank" class="link-btn">Open Supabase SQL Editor →</a>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num skip">4</div>
+      <div>
+        <h2>Step 4 — Deploy Edge Functions <span class="badge badge-action">Action Required</span></h2>
+      </div>
+    </div>
+    <p>In your terminal, make sure you're in the project folder and linked to Supabase (<code>supabase link</code>), then run:</p>
+    <div class="code-block" id="deploy-cmd">supabase functions deploy create-seo-package-checkout
+supabase functions deploy deliver-seo-package
+supabase functions deploy create-audit-checkout
+supabase functions deploy deliver-audit-report
+supabase functions deploy create-gbp-subscription
+supabase functions deploy auto-gbp-posts
+supabase functions deploy submit-sponsor-inquiry
+supabase functions deploy create-camp-listing-checkout
+supabase functions deploy partner-onboarding
+supabase functions deploy auto-proposal-agreement
+supabase functions deploy monthly-client-report
+supabase functions deploy auto-invoice
+supabase functions deploy web-design-winback
+supabase functions deploy stripe-webhook</div>
+    <button class="copy-btn" onclick="copyDeploy()">Copy All Deploy Commands</button>
+    <div class="tip">Or deploy all at once: <code>supabase functions deploy</code> — deploys every function in the project.</div>
+  </div>
+
+  <!-- STEP 5 -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num skip">5</div>
+      <div>
+        <h2>Step 5 — Create Stripe Products <span class="badge badge-action">Action Required</span></h2>
+      </div>
+    </div>
+    <p>Create these 4 products in your Stripe dashboard. After creating each, copy the <strong>Price ID</strong> (starts with <code>price_</code>) and paste it below — you'll need them for Step 6.</p>
+
+    <div style="margin-top: 16px;">
+      <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px; margin-bottom: 12px;">
+        <strong style="color: #f97316; font-size: 15px;">1. Local SEO Package</strong>
+        <p style="margin: 6px 0 0;">Type: <strong>One-time payment</strong> · Amount: <strong>$299.00</strong> · Name: "Local SEO Package (10 Pages)"</p>
+        <label>Paste Price ID after creating:</label>
+        <input type="text" id="price_seo" placeholder="price_xxxxxxxxxxxxxxxxxxxxxxxx" />
+      </div>
+
+      <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px; margin-bottom: 12px;">
+        <strong style="color: #f97316; font-size: 15px;">2. Website Audit Report</strong>
+        <p style="margin: 6px 0 0;">Type: <strong>One-time payment</strong> · Amount: <strong>$29.00</strong> · Name: "Website Audit Report"</p>
+        <label>Paste Price ID after creating:</label>
+        <input type="text" id="price_audit" placeholder="price_xxxxxxxxxxxxxxxxxxxxxxxx" />
+      </div>
+
+      <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px; margin-bottom: 12px;">
+        <strong style="color: #f97316; font-size: 15px;">3. GBP Management</strong>
+        <p style="margin: 6px 0 0;">Type: <strong>Recurring subscription</strong> · Amount: <strong>$49.00/month</strong> · Name: "GBP Management — Monthly"</p>
+        <label>Paste Price ID after creating:</label>
+        <input type="text" id="price_gbp" placeholder="price_xxxxxxxxxxxxxxxxxxxxxxxx" />
+      </div>
+
+      <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px;">
+        <strong style="color: #f97316; font-size: 15px;">4. Camp Directory Listing</strong>
+        <p style="margin: 6px 0 0;">Type: <strong>Recurring subscription</strong> · Amount: <strong>$49.00/month</strong> · Name: "Camp Directory Listing — Monthly"</p>
+        <label>Paste Price ID after creating:</label>
+        <input type="text" id="price_camp" placeholder="price_xxxxxxxxxxxxxxxxxxxxxxxx" />
+      </div>
+    </div>
+
+    <a href="https://dashboard.stripe.com/products/create" target="_blank" class="link-btn" style="margin-top: 16px;">Open Stripe → Create Product →</a>
+  </div>
+
+  <!-- STEP 6 -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num skip">6</div>
+      <div>
+        <h2>Step 6 — Update Price IDs in Edge Functions <span class="badge badge-action">Action Required</span></h2>
+      </div>
+    </div>
+    <p>Once you have the Price IDs from Step 5, update each edge function in <code>supabase/functions/</code>. Here's exactly what to find and replace in each file:</p>
+
+    <div style="margin-top: 12px;">
+      <p><strong style="color: #e5e5e5;">create-seo-package-checkout/index.ts</strong> — find <code>unit_amount: 29900</code> and add the price ID, or use <code>price: "price_YOUR_ID"</code> in the session line items.</p>
+      <p><strong style="color: #e5e5e5;">create-audit-checkout/index.ts</strong> — same pattern, <code>unit_amount: 2900</code></p>
+      <p><strong style="color: #e5e5e5;">create-gbp-subscription/index.ts</strong> — find the <code>price_data</code> block and replace with <code>price: "price_YOUR_ID"</code></p>
+      <p><strong style="color: #e5e5e5;">create-camp-listing-checkout/index.ts</strong> — same as GBP</p>
+    </div>
+
+    <div class="tip">The functions already work with hardcoded amounts (<code>unit_amount</code>). Price IDs are only needed if you want the product to appear in your Stripe dashboard reports by name. If you skip this, checkout still works — it just shows as a custom amount.</div>
+  </div>
+
+  <!-- STEP 7 — Cron jobs -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num skip">7</div>
+      <div>
+        <h2>Step 7 — Schedule Cron Jobs in Supabase <span class="badge badge-action">Action Required</span></h2>
+      </div>
+    </div>
+    <p>These automation functions need to be scheduled. Go to Supabase → <strong>Edge Functions → Cron</strong> (or use pg_cron in SQL Editor) and add:</p>
+    <div class="code-block">-- Run daily at 9am (review requests + drip emails)
+SELECT cron.schedule('send-review-request-daily', '0 9 * * *',
+  $$SELECT net.http_post(url:='https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/send-review-request', headers:='{"Authorization":"Bearer YOUR_ANON_KEY"}'::jsonb)$$
+);
+
+-- Run weekly Monday 8am (GBP posts for clients)
+SELECT cron.schedule('auto-gbp-posts-weekly', '0 8 * * 1',
+  $$SELECT net.http_post(url:='https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/auto-gbp-posts', headers:='{"Authorization":"Bearer YOUR_ANON_KEY"}'::jsonb)$$
+);</div>
+    <button class="copy-btn" onclick="copyCron()">Copy Cron SQL</button>
+    <div class="tip">Replace <code>YOUR_ANON_KEY</code> with your Supabase project's anon key (found in Project Settings → API).</div>
+  </div>
+
+  <hr class="divider" />
+
+  <div style="text-align: center; padding: 20px 0 40px;">
+    <p style="color: #555; font-size: 13px;">Built by Claude Code · M² Training Platform</p>
+  </div>
+</div>
+
+<script>
+function copySQL() {
+  const text = document.getElementById('sql-content').innerText;
+  navigator.clipboard.writeText(text).then(() => alert('SQL copied!'));
+}
+function copyDeploy() {
+  const text = document.getElementById('deploy-cmd').innerText;
+  navigator.clipboard.writeText(text).then(() => alert('Deploy commands copied!'));
+}
+function copyCron() {
+  const text = document.querySelectorAll('.code-block')[2]?.innerText || '';
+  navigator.clipboard.writeText(text).then(() => alert('Cron SQL copied!'));
+}
+</script>
+</body>
+</html>
