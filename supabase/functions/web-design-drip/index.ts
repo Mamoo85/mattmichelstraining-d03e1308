@@ -25,7 +25,7 @@ I've done it for plumbers, roofers, electricians, auto shops — all over the Ea
 
 Want to see what I'd build for you? I put together a quick demo at mattmichelstraining.com/detroit-web-design.
 
-Text me if you want to talk: (313) 806-4952
+Email me at matt@m2training.com or text (313) 806-4952 — whichever works best for you.
 
 — Matt Michels, Grosse Pointe`,
   },
@@ -46,7 +46,7 @@ Real quick — what the site gets you:
 
 If the timing's not right, no hard feelings. But if you're tired of watching competitors get jobs you should be getting — let's talk.
 
-(313) 806-4952
+Email matt@m2training.com or text (313) 806-4952.
 
 — Matt`,
   },
@@ -72,7 +72,7 @@ $499 to build. $49/month to run. That's it.
 
 See what I've built: mattmichelstraining.com/detroit-web-design
 
-(313) 806-4952
+Email matt@m2training.com or text (313) 806-4952 — whichever is easier.
 
 — Matt`,
   },
@@ -87,11 +87,11 @@ Last email, I promise.
 
 I've reached out a few times about building a website for ${biz}. If the timing's off or you're not interested — completely understood, no hard feelings.
 
-But if you ever want a site that gets you found on Google and makes your phone ring — $499 flat, 7 days live — just text me.
+But if you ever want a site that gets you found on Google and makes your phone ring — $499 flat, 7 days live — reach out.
 
-(313) 806-4952
+Email matt@m2training.com or text (313) 806-4952 — whatever's easier.
 
-I work with contractors all over the East Side. Happy to show you what I've built.
+I work with all kinds of local businesses across Metro Detroit. Happy to show you what I've built.
 
 — Matt Michels, Grosse Pointe
 
