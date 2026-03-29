@@ -266,7 +266,7 @@ const Pricing = () => {
                 Schedule a Session
               </Link>
               <a
-                href="mailto:matthew.michels4@gmail.com?subject=In-Person%20Training%20Inquiry"
+                href="mailto:matthewmichels4@gmail.com?subject=In-Person%20Training%20Inquiry"
                 className="inline-flex items-center gap-2 border border-primary/40 text-primary px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:bg-primary/10 transition-m2"
               >
                 <Mail className="w-3.5 h-3.5" />
@@ -695,8 +695,9 @@ const Pricing = () => {
 
 const TIER_COLS = [
   { key: "tier_basic", label: "Foundation", price: "$19.99" },
-  { key: "tier_foundation", label: "Pro", price: "$149.99" },
-  { key: "tier_custom", label: "Elite", price: "$349.99" },
+  { key: "tier_foundation", label: "Guided", price: "$59.99" },
+  { key: "tier_custom", label: "Pro", price: "$149.99" },
+  { key: "tier_team_elite", label: "Elite", price: "$349.99" },
 ] as const;
 
 const FEATURES_VISIBLE_DEFAULT = 8;
@@ -737,11 +738,11 @@ const TierComparisonTable = () => {
 
       <div className="border border-border bg-card overflow-hidden">
         {/* Header row */}
-        <div className="grid grid-cols-[1fr_repeat(3,56px)] sm:grid-cols-[1fr_repeat(3,72px)] items-end border-b-2 border-primary/30 px-3 py-2.5 bg-background/50">
+        <div className="grid grid-cols-[1fr_repeat(4,56px)] sm:grid-cols-[1fr_repeat(4,72px)] items-end border-b-2 border-primary/30 px-3 py-2.5 bg-background/50">
           <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Feature</span>
           {TIER_COLS.map((col) => (
             <div key={col.key} className="text-center">
-              <span className={`text-[9px] font-bold uppercase tracking-widest block ${col.key === "tier_foundation" ? "text-primary" : "text-muted-foreground"}`}>
+              <span className={`text-[9px] font-bold uppercase tracking-widest block ${col.key === "tier_custom" ? "text-primary" : "text-muted-foreground"}`}>
                 {col.label}
               </span>
             </div>
@@ -752,7 +753,7 @@ const TierComparisonTable = () => {
         {visibleFeatures.map((feature: any, i: number) => (
           <div
             key={feature.feature_label}
-            className={`grid grid-cols-[1fr_repeat(3,56px)] sm:grid-cols-[1fr_repeat(3,72px)] items-center px-3 py-2 ${
+            className={`grid grid-cols-[1fr_repeat(4,56px)] sm:grid-cols-[1fr_repeat(4,72px)] items-center px-3 py-2 ${
               i % 2 === 0 ? "bg-card" : "bg-background/30"
             } ${i < visibleFeatures.length - 1 ? "border-b border-border/40" : ""}`}
           >

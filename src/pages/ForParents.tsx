@@ -216,7 +216,7 @@ const ForParents = () => (
           <a href="sms:3138064952" className="inline-flex items-center gap-1.5 border border-border px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-foreground hover:border-primary/40 transition-all">
             <MessageSquare size={12} /> Text
           </a>
-          <a href="mailto:matthew.michels4@gmail.com?subject=Youth%20Athlete%20Inquiry" className="inline-flex items-center gap-1.5 border border-border px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-foreground hover:border-primary/40 transition-all">
+          <a href="mailto:matthewmichels4@gmail.com?subject=Youth%20Athlete%20Inquiry" className="inline-flex items-center gap-1.5 border border-border px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-foreground hover:border-primary/40 transition-all">
             <Mail size={12} /> Email
           </a>
           <Button asChild size="sm">

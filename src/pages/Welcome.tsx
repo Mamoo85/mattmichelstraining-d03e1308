@@ -109,7 +109,7 @@ const LocalLane = () => (
       {[
         { icon: Phone, label: "Call", href: "tel:3138064952" },
         { icon: MessageSquare, label: "Text", href: "sms:3138064952" },
-        { icon: Mail, label: "Email", href: "mailto:matthew.michels4@gmail.com" },
+        { icon: Mail, label: "Email", href: "mailto:matthewmichels4@gmail.com" },
         { icon: Calendar, label: "Schedule", href: "/schedule", isLink: true },
       ].map((b) =>
         b.isLink ? (
