@@ -340,6 +340,7 @@ serve(async (req) => {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
       const meta = session.metadata || {};
+      const priceId = (session.line_items?.data?.[0] as any)?.price?.id as string | null;
 
       // ── TRAINING SESSION BOOKING FALLBACK ──
       // If user closes browser before verify-session-booking runs, the webhook ensures the booking is created
@@ -588,6 +589,175 @@ serve(async (req) => {
             });
           }
         }
+      }
+
+      // ── SPORT GUIDE (AI-generated, DB-driven) ──────────────────────────────
+      if (meta.type === "sport_guide" && meta.guide_id && customerEmail) {
+        try {
+          const guideUrl = `${SUPABASE_URL}/functions/v1/generate-sport-guide`;
+          fetch(guideUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+            },
+            body: JSON.stringify({
+              guide_id: meta.guide_id,
+              customer_email: customerEmail,
+              stripe_session_id: session.id,
+              user_id: userId,
+            }),
+          }).catch((e) => console.error("[WEBHOOK] generate-sport-guide fire failed:", e));
+        } catch (e) {
+          console.error("[WEBHOOK] generate-sport-guide error:", e);
+        }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── NUTRITION PLAN ──────────────────────────────────────────────────────
+      if (meta.type === "nutrition_plan" && customerEmail) {
+        try {
+          const nutritionUrl = `${SUPABASE_URL}/functions/v1/generate-nutrition-plan`;
+          fetch(nutritionUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+            },
+            body: JSON.stringify({
+              stripe_session_id: session.id,
+              customer_email: customerEmail,
+              plan: meta.plan || "basic",
+              sport: meta.sport || "",
+              weight_lbs: meta.weight_lbs || "",
+              goal: meta.goal || "maintain",
+              dietary_restrictions: meta.dietary_restrictions || "",
+              position: meta.position || "",
+            }),
+          }).catch((e) => console.error("[WEBHOOK] generate-nutrition-plan fire failed:", e));
+        } catch (e) {
+          console.error("[WEBHOOK] generate-nutrition-plan error:", e);
+        }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── SEO PACKAGE ────────────────────────────────────────────────────────
+      if (meta.type === "seo_package" && customerEmail) {
+        try {
+          fetch(`${SUPABASE_URL}/functions/v1/deliver-seo-package`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
+            body: JSON.stringify({
+              stripe_session_id: session.id,
+              customer_email: customerEmail,
+              business_name: meta.business_name || "",
+              city: meta.city || "",
+              industry: meta.industry || "",
+            }),
+          }).catch((e) => console.error("[WEBHOOK] deliver-seo-package fire failed:", e));
+        } catch (e) { console.error("[WEBHOOK] deliver-seo-package error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── AUDIT REPORT ───────────────────────────────────────────────────────
+      if (meta.type === "audit_report" && customerEmail) {
+        try {
+          fetch(`${SUPABASE_URL}/functions/v1/deliver-audit-report`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
+            body: JSON.stringify({
+              stripe_session_id: session.id,
+              customer_email: customerEmail,
+              business_name: meta.business_name || "",
+              city: meta.city || "",
+              website_url: meta.website_url || "",
+            }),
+          }).catch((e) => console.error("[WEBHOOK] deliver-audit-report fire failed:", e));
+        } catch (e) { console.error("[WEBHOOK] deliver-audit-report error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── GBP SUBSCRIPTION ───────────────────────────────────────────────────
+      if (meta.type === "gbp_subscription" && customerEmail) {
+        try {
+          // Insert client row + send onboarding email
+          const gbpSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+          await gbpSb.from("gbp_management_clients" as any).insert({
+            customer_email: customerEmail,
+            business_name: meta.business_name || "",
+            contact_name: meta.contact_name || "",
+            phone: meta.phone || "",
+            current_gbp_url: meta.current_gbp_url || "",
+            stripe_subscription_id: session.subscription as string || null,
+            status: "active",
+          });
+          if (RESEND_API_KEY) {
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "Matt Michels <matt@notify.m2training.com>",
+                to: [customerEmail],
+                subject: `Welcome to GBP Management — ${meta.business_name || "your business"}`,
+                html: `<p>You're all set! I'll review your Google Business Profile within 24 hours and reach out to get started. Questions? Reply here or text me at (313) 806-4952.</p><p>— Matt Michels</p>`,
+              }),
+            });
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "M² Site <matt@notify.m2training.com>",
+                to: ["matt@m2training.com"],
+                subject: `New GBP Client: ${meta.business_name || customerEmail}`,
+                html: `<p>New GBP management client: <strong>${meta.business_name}</strong> — ${customerEmail} — ${meta.phone || "no phone"}<br>GBP URL: ${meta.current_gbp_url || "not provided"}</p>`,
+              }),
+            });
+          }
+        } catch (e) { console.error("[WEBHOOK] gbp_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── CAMP LISTING ───────────────────────────────────────────────────────
+      if (meta.type === "camp_listing" && customerEmail) {
+        try {
+          const campSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+          await campSb.from("camp_directory_listings" as any).insert({
+            camp_name: meta.camp_name || "",
+            sport: meta.sport || "",
+            age_range: meta.age_range || "",
+            start_date: meta.start_date || null,
+            end_date: meta.end_date || null,
+            location: meta.location || "",
+            price_description: meta.price_description || "",
+            website_url: meta.website_url || "",
+            contact_email: customerEmail,
+            stripe_subscription_id: session.subscription as string || null,
+            is_active: false, // pending review
+          });
+          if (RESEND_API_KEY) {
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "Matt Michels <matt@notify.m2training.com>",
+                to: [customerEmail],
+                subject: `Camp Listing Received — ${meta.camp_name || "your camp"}`,
+                html: `<p>Your listing for <strong>${meta.camp_name}</strong> has been received and is under review. It will go live within 24 hours.</p><p>— Matt Michels</p>`,
+              }),
+            });
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "M² Site <matt@notify.m2training.com>",
+                to: ["matt@m2training.com"],
+                subject: `New Camp Listing: ${meta.camp_name}`,
+                html: `<p>New camp listing: <strong>${meta.camp_name}</strong> — ${meta.sport} — ${customerEmail}<br>Location: ${meta.location}<br>Ages: ${meta.age_range}<br>Dates: ${meta.start_date} to ${meta.end_date}</p>`,
+              }),
+            });
+          }
+        } catch (e) { console.error("[WEBHOOK] camp_listing error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       if (!priceId || !GUIDE_MAP[priceId]) {

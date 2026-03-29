@@ -76,6 +76,12 @@ const UserActivityFeed = lazy(() => import("@/components/admin/UserActivityFeed"
 const AdminAiCommandCenter = lazy(() => import("@/components/admin/AdminAiCommandCenter"));
 const AdminImageMatcher = lazy(() => import("@/components/admin/AdminImageMatcher"));
 const AdminWebDesignCRM = lazy(() => import("@/components/admin/AdminWebDesignCRM"));
+const AdminProspector = lazy(() => import("@/components/admin/AdminProspector"));
+const AdminAutomationHub = lazy(() => import("@/components/admin/AdminAutomationHub"));
+const AdminWebDesignAutomations = lazy(() => import("@/components/admin/AdminWebDesignAutomations"));
+const AdminGiftCards = lazy(() => import("@/components/admin/AdminGiftCards"));
+const AdminGuideStore = lazy(() => import("@/components/admin/AdminGuideStore"));
+const AdminAffiliateManager = lazy(() => import("@/components/admin/AdminAffiliateManager"));
 
 const MASTER_TABS = [
   { key: "ai", label: "AI Center", icon: Bot, desc: "All AI · One Place" },
@@ -362,6 +368,9 @@ const Admin = () => {
             { key: "stripe-products", label: "Stripe Products", content: <AdminStripeProducts /> },
             { key: "churn", label: "Churn Radar", content: <AdminChurnRadar /> },
             { key: "catalog", label: "Service Catalog", content: <AdminServiceCatalog /> },
+            { key: "gift-cards", label: "Gift Cards", content: <AdminGiftCards /> },
+            { key: "guides", label: "Playbooks Store", content: <AdminGuideStore /> },
+            { key: "affiliates", label: "Affiliates", content: <AdminAffiliateManager /> },
             { key: "trash", label: <span className="flex items-center gap-1"><Trash2 size={11} /> Trash{trashCount > 0 && <Badge variant="secondary" className="text-[8px] px-1.5 py-0 min-w-[18px] h-4">{trashCount}</Badge>}</span>, content: <AdminTrash /> },
           ]} />
         )}
@@ -402,9 +411,12 @@ const Admin = () => {
 
         {/* ── WEB DESIGN ── */}
         {activeTab === "webdesign" && (
-          <Suspense fallback={<TabLoader />}>
-            <AdminWebDesignCRM />
-          </Suspense>
+          <SubTabs tabs={[
+            { key: "crm", label: "CRM", content: <AdminWebDesignCRM /> },
+            { key: "prospector", label: "Prospector", content: <AdminProspector /> },
+            { key: "automation", label: "Automation Hub", content: <AdminAutomationHub /> },
+            { key: "wd-automations", label: "Email Automations", content: <AdminWebDesignAutomations /> },
+          ]} />
         )}
       </div>
     </div>

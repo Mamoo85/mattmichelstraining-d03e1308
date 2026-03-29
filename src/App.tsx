@@ -95,6 +95,17 @@ const DemoHomepage = lazyRetry(() => import("./pages/DemoHomepage"));
 const ZonePortal = lazyRetry(() => import("./pages/ZonePortal"));
 const ZoneDashboard = lazyRetry(() => import("./pages/ZoneDashboard"));
 const AiInsights = lazyRetry(() => import("./pages/AiInsights"));
+const LocalBusinessScore = lazyRetry(() => import("./pages/LocalBusinessScore"));
+const NewsletterSubscribe = lazyRetry(() => import("./pages/NewsletterSubscribe"));
+const GiftCard = lazyRetry(() => import("./pages/GiftCard"));
+const GuideStore = lazyRetry(() => import("./pages/GuideStore"));
+const NutritionPlanGenerator = lazyRetry(() => import("./pages/NutritionPlanGenerator"));
+const AffiliateDashboard = lazyRetry(() => import("./pages/AffiliateDashboard"));
+const SeoPackage = lazyRetry(() => import("./pages/SeoPackage"));
+const AuditReport = lazyRetry(() => import("./pages/AuditReport"));
+const GbpManagement = lazyRetry(() => import("./pages/GbpManagement"));
+const NewsletterSponsor = lazyRetry(() => import("./pages/NewsletterSponsor"));
+const CampDirectory = lazyRetry(() => import("./pages/CampDirectory"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -265,6 +276,17 @@ const App = () => (
                     <Route path="/demo-cleaning/*" element={<CleaningServiceMockup />} />
                     <Route path="/demo-salon" element={<SalonMockup />} />
                     <Route path="/demo-salon/*" element={<SalonMockup />} />
+                    <Route path="/local-business-score" element={<LocalBusinessScore />} />
+                    <Route path="/newsletter" element={<NewsletterSubscribe />} />
+                    <Route path="/gift" element={<GiftCard />} />
+                    <Route path="/guides" element={<GuideStore />} />
+                    <Route path="/nutrition-plan" element={<NutritionPlanGenerator />} />
+                    <Route path="/affiliate" element={<AffiliateDashboard />} />
+                    <Route path="/seo-package" element={<SeoPackage />} />
+                    <Route path="/audit-report" element={<AuditReport />} />
+                    <Route path="/gbp-management" element={<GbpManagement />} />
+                    <Route path="/sponsor" element={<NewsletterSponsor />} />
+                    <Route path="/sports-camps" element={<CampDirectory />} />
                     <Route path="/free-program" element={<FreeProgram />} />
                     <Route path="/studio-rental" element={<StudioRental />} />
                     <Route path="/results" element={<Results />} />

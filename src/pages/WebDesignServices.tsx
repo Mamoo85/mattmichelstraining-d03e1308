@@ -177,6 +177,25 @@ const WebDesignServices = () => {
   const [form, setForm] = useState({ name: "", business: "", phone: "", email: "", service: "", details: "" });
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [partnerForm, setPartnerForm] = useState({ name: "", business: "", email: "", phone: "", how_they_heard: "" });
+  const [partnerSending, setPartnerSending] = useState(false);
+  const [partnerSent, setPartnerSent] = useState(false);
+
+  const handlePartnerSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPartnerSending(true);
+    try {
+      const { error } = await supabase.functions.invoke("partner-onboarding", {
+        body: partnerForm,
+      });
+      if (error) throw error;
+      setPartnerSent(true);
+    } catch {
+      toast.error("Something went wrong. Text me directly at (313) 806-4952");
+    } finally {
+      setPartnerSending(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -337,31 +356,71 @@ const WebDesignServices = () => {
           </div>
         </section>
 
-        {/* Referral Callout */}
-        <section className="px-4 pb-16">
+        {/* Partner Program */}
+        <section id="partner-program" className="px-4 pb-16">
           <div className="max-w-3xl mx-auto">
-            <Card className="border-primary/20 bg-primary/5">
+            <Card className="border-primary/30 bg-primary/5">
               <CardContent className="p-6 sm:p-8">
-                <div className="flex flex-col sm:flex-row gap-5 items-start">
+                <div className="flex items-center gap-3 mb-5">
                   <div className="shrink-0 w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center">
                     <Users size={20} className="text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg mb-2">Refer a Client. Get Paid.</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-                      Know a contractor, small business owner, or professional who needs a website? Send them my way. If they sign up for a site, you get <span className="font-semibold text-foreground">$100 cash or a free month of service</span> — your choice.
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      No formal program to sign up for. Just text me and say "I referred [name]" — that's it.
-                    </p>
-                    <a
-                      href={`tel:${PHONE.replace(/\D/g, "")}`}
-                      className="inline-flex items-center gap-2 mt-3 text-sm font-semibold text-primary hover:underline"
-                    >
-                      <Phone size={13} /> Text Matt at {PHONE}
-                    </a>
+                    <h3 className="font-bold text-xl">Referral Partner Program</h3>
+                    <p className="text-sm text-muted-foreground">Earn $100 cash for every client you send my way</p>
                   </div>
                 </div>
+                <div className="grid sm:grid-cols-3 gap-4 mb-6">
+                  {[
+                    { step: "01", text: "Sign up below — get your personal referral link" },
+                    { step: "02", text: "Share it with a business owner who needs a website" },
+                    { step: "03", text: "They sign up → you get $100 cash within 7 days of launch" },
+                  ].map(({ step, text }) => (
+                    <div key={step} className="flex gap-3 items-start">
+                      <span className="shrink-0 w-7 h-7 rounded-full bg-primary text-primary-foreground text-xs font-black flex items-center justify-center">{step}</span>
+                      <p className="text-sm text-muted-foreground">{text}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {partnerSent ? (
+                  <div className="text-center py-6">
+                    <CheckCircle size={32} className="text-primary mx-auto mb-3" />
+                    <p className="font-bold text-base mb-1">You're in the program!</p>
+                    <p className="text-sm text-muted-foreground">Check your email — your referral link is on its way.</p>
+                  </div>
+                ) : (
+                  <form onSubmit={handlePartnerSubmit} className="space-y-3 pt-2 border-t border-border/40">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest pt-1">Sign Up as a Partner</p>
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      <div>
+                        <Label htmlFor="p-name" className="text-xs">Your Name *</Label>
+                        <Input id="p-name" value={partnerForm.name} onChange={e => setPartnerForm(f => ({...f, name: e.target.value}))} placeholder="John Smith" required />
+                      </div>
+                      <div>
+                        <Label htmlFor="p-biz" className="text-xs">Your Business / Occupation</Label>
+                        <Input id="p-biz" value={partnerForm.business} onChange={e => setPartnerForm(f => ({...f, business: e.target.value}))} placeholder="Smith Roofing LLC" />
+                      </div>
+                    </div>
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      <div>
+                        <Label htmlFor="p-email" className="text-xs">Email *</Label>
+                        <Input id="p-email" type="email" value={partnerForm.email} onChange={e => setPartnerForm(f => ({...f, email: e.target.value}))} placeholder="john@email.com" required />
+                      </div>
+                      <div>
+                        <Label htmlFor="p-phone" className="text-xs">Phone</Label>
+                        <Input id="p-phone" type="tel" value={partnerForm.phone} onChange={e => setPartnerForm(f => ({...f, phone: e.target.value}))} placeholder="(313) 555-1234" />
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="p-heard" className="text-xs">How did you hear about this?</Label>
+                      <Input id="p-heard" value={partnerForm.how_they_heard} onChange={e => setPartnerForm(f => ({...f, how_they_heard: e.target.value}))} placeholder="Friend, social media, existing client..." />
+                    </div>
+                    <Button type="submit" className="w-full font-bold" disabled={partnerSending}>
+                      {partnerSending ? "Signing up..." : "Join the Partner Program — Get My Referral Link →"}
+                    </Button>
+                  </form>
+                )}
               </CardContent>
             </Card>
           </div>
