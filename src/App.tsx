@@ -97,6 +97,10 @@ const ZoneDashboard = lazyRetry(() => import("./pages/ZoneDashboard"));
 const AiInsights = lazyRetry(() => import("./pages/AiInsights"));
 const LocalBusinessScore = lazyRetry(() => import("./pages/LocalBusinessScore"));
 const NewsletterSubscribe = lazyRetry(() => import("./pages/NewsletterSubscribe"));
+const GiftCard = lazyRetry(() => import("./pages/GiftCard"));
+const GuideStore = lazyRetry(() => import("./pages/GuideStore"));
+const NutritionPlanGenerator = lazyRetry(() => import("./pages/NutritionPlanGenerator"));
+const AffiliateDashboard = lazyRetry(() => import("./pages/AffiliateDashboard"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -269,6 +273,10 @@ const App = () => (
                     <Route path="/demo-salon/*" element={<SalonMockup />} />
                     <Route path="/local-business-score" element={<LocalBusinessScore />} />
                     <Route path="/newsletter" element={<NewsletterSubscribe />} />
+                    <Route path="/gift" element={<GiftCard />} />
+                    <Route path="/guides" element={<GuideStore />} />
+                    <Route path="/nutrition-plan" element={<NutritionPlanGenerator />} />
+                    <Route path="/affiliate" element={<AffiliateDashboard />} />
                     <Route path="/free-program" element={<FreeProgram />} />
                     <Route path="/studio-rental" element={<StudioRental />} />
                     <Route path="/results" element={<Results />} />

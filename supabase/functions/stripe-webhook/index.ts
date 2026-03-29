@@ -590,6 +590,56 @@ serve(async (req) => {
         }
       }
 
+      // ── SPORT GUIDE (AI-generated, DB-driven) ──────────────────────────────
+      if (meta.type === "sport_guide" && meta.guide_id && customerEmail) {
+        try {
+          const guideUrl = `${SUPABASE_URL}/functions/v1/generate-sport-guide`;
+          fetch(guideUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+            },
+            body: JSON.stringify({
+              guide_id: meta.guide_id,
+              customer_email: customerEmail,
+              stripe_session_id: session.id,
+              user_id: userId,
+            }),
+          }).catch((e) => console.error("[WEBHOOK] generate-sport-guide fire failed:", e));
+        } catch (e) {
+          console.error("[WEBHOOK] generate-sport-guide error:", e);
+        }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── NUTRITION PLAN ──────────────────────────────────────────────────────
+      if (meta.type === "nutrition_plan" && customerEmail) {
+        try {
+          const nutritionUrl = `${SUPABASE_URL}/functions/v1/generate-nutrition-plan`;
+          fetch(nutritionUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+            },
+            body: JSON.stringify({
+              stripe_session_id: session.id,
+              customer_email: customerEmail,
+              plan: meta.plan || "basic",
+              sport: meta.sport || "",
+              weight_lbs: meta.weight_lbs || "",
+              goal: meta.goal || "maintain",
+              dietary_restrictions: meta.dietary_restrictions || "",
+              position: meta.position || "",
+            }),
+          }).catch((e) => console.error("[WEBHOOK] generate-nutrition-plan fire failed:", e));
+        } catch (e) {
+          console.error("[WEBHOOK] generate-nutrition-plan error:", e);
+        }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       if (!priceId || !GUIDE_MAP[priceId]) {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
