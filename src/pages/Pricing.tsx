@@ -1,7 +1,7 @@
 import { useState, lazy, Suspense } from "react";
 import { motion } from "framer-motion";
 import SEOHead from "@/components/layout/SEOHead";
-import { Check, X as XIcon, Star, Zap, Shield, Crown, Users, ArrowRight, Loader2, Tag, ChevronDown, ChevronUp, Calendar, CalendarDays, Mail, MapPin, Phone, MessageSquare, UserPlus } from "lucide-react";
+import { Check, X as XIcon, Star, Zap, Shield, Crown, Users, ArrowRight, Loader2, Tag, ChevronDown, ChevronUp, Calendar, CalendarDays, Mail, MapPin, Phone, MessageSquare, UserPlus, BookOpen } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import AppNavbar from "@/components/layout/AppNavbar";
@@ -47,6 +47,23 @@ const TIER_CARDS: {
     ],
     cta: "Start Foundation",
     subtitle: "The digital blueprint behind 20 years of coaching.",
+  },
+  {
+    key: "guided",
+    icon: BookOpen,
+    headline: "A Real Coach in Your Corner. Once a Month.",
+    pitch: "Can't budget full custom coaching yet? This is the bridge. Get a monthly program check-in from Matt, one video form check per month, and async feedback on your training. More than an app. Less than full coaching.",
+    features: [
+      "Everything in Foundation",
+      "Monthly program check-in from Matt",
+      "1 video form check per month",
+      "Async coach feedback",
+      "Program updated every 4 weeks",
+      "12% store discount",
+    ],
+    cta: "Start Guided",
+    subtitle: "Accountability and coaching at an accessible price.",
+    badge: "Best Value for Self-Starters",
   },
   {
     key: "pro",
@@ -358,7 +375,7 @@ const Pricing = () => {
         </div>
 
         {/* Tier grid — 3 main tiers + Team card */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 max-w-7xl mx-auto">
           {TIER_CARDS.map((card, i) => {
             const tier = TIERS[card.key];
             const annual = ANNUAL_TIERS[card.key];

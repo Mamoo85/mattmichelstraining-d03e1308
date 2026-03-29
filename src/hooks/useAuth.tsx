@@ -12,6 +12,13 @@ export const TIERS = {
     price: "$19.99",
     priceNum: 19.99,
   },
+  guided: {
+    product_id: "prod_UEfNKQVnbRcu1F",
+    price_id: "price_1TGC2SD52tPWee46PsNJp3H7",
+    name: "M² Guided",
+    price: "$59.99",
+    priceNum: 59.99,
+  },
   pro: {
     product_id: "prod_UBI7Wdb3liTxiF",
     price_id: "price_1TELXyD52tPWee46XQH8y0qu",
@@ -37,6 +44,13 @@ export const ANNUAL_TIERS: Record<TierKey, { price_id: string; product_id: strin
     priceNum: 199.99,
     monthlyEquiv: "$16.66",
   },
+  guided: {
+    product_id: "prod_UEfQGAQMjysPqV",
+    price_id: "price_1TGC5TD52tPWee46JoD2c8og",
+    price: "$599.99",
+    priceNum: 599.99,
+    monthlyEquiv: "$50.00",
+  },
   pro: {
     product_id: "prod_UC3OvNMcgtPafc",
     price_id: "price_1TELYYD52tPWee46eYgnlcB8",
@@ -60,6 +74,7 @@ export type TierKey = keyof typeof TIERS;
 // Tier-based store discounts
 export const TIER_DISCOUNTS: Record<TierKey, number> = {
   foundation: 10,
+  guided: 12,
   pro: 15,
   elite: 20,
 };
