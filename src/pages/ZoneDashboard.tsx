@@ -1,16 +1,18 @@
 import { useState, useEffect, lazy, Suspense, useCallback } from "react";
 import { useBrowserNotifications } from "@/hooks/useBrowserNotifications";
 import { toast } from "@/hooks/use-toast";
-import { useAuth, TIERS } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import { usePoints, getLevelInfo, getNextLevel } from "@/hooks/usePoints";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { User, UserPlus, Timer, Mic, ArrowLeft, Dumbbell, Trophy, Sparkles, Wrench, BookOpen, Utensils, BarChart3, Target, Loader2 } from "lucide-react";
+import {
+  User, UserPlus, Timer, Mic, ArrowLeft, Dumbbell, Trophy,
+  Sparkles, Wrench, BookOpen, Utensils, BarChart3, Target,
+  Loader2, MessageCircle, Zap, ChevronRight,
+} from "lucide-react";
 import ZoneThemeWrapper from "@/components/zone/ZoneThemeWrapper";
-import ZoneCommandCenter from "@/components/dashboard/ZoneCommandCenter";
 import AthleteStats from "@/components/dashboard/AthleteStats";
 import TodayCard from "@/components/dashboard/TodayCard";
-import SmartStartButton from "@/components/dashboard/SmartStartButton";
 import CoachActivityBanner from "@/components/dashboard/CoachActivityBanner";
 import logoImg from "@/assets/m2-logo-zone.png";
 import { safeLocalStorage } from "@/lib/browserStorage";
@@ -21,7 +23,6 @@ import {
   PROVE_IT_TIP,
   QUICK_ACTIVITY_TIP,
 } from "@/components/dashboard/featureTips";
-
 import { AnimatePresence } from "framer-motion";
 
 const CoachChatPanel = lazy(() => import("@/components/dashboard/CoachChatPanel"));
@@ -42,6 +43,18 @@ const OverlayLoader = () => (
   </div>
 );
 
+function getGreeting(name: string, streak: number, sessionsThisWeek: number): string {
+  const first = name.split(" ")[0];
+  const hour = new Date().getHours();
+  if (streak >= 14) return `${streak}-day streak, ${first}. You're built different.`;
+  if (streak >= 7) return `${streak} days straight, ${first}. Keep that locked in.`;
+  if (streak >= 3) return `${streak}-day streak, ${first}. Don't break the chain.`;
+  if (sessionsThisWeek >= 4) return `Strong week, ${first}. Finish it out.`;
+  if (hour < 12) return `Morning, ${first}. Let's get to work.`;
+  if (hour < 17) return `Afternoon, ${first}. Time to grind.`;
+  return `Evening session, ${first}. Finish strong.`;
+}
+
 const ZoneDashboard = () => {
   const { user, subscriptionTier } = useAuth();
   const isProOrElite = subscriptionTier === "pro" || subscriptionTier === "elite";
@@ -59,8 +72,6 @@ const ZoneDashboard = () => {
   const [chatOpen, setChatOpen] = useState(false);
   const [showQuickLog, setShowQuickLog] = useState(false);
   const [generatorView, setGeneratorView] = useState<GeneratorView>(null);
-
-  // Feature tip state
   const [activeTip, setActiveTip] = useState<FeatureTip | null>(null);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
 
@@ -68,23 +79,21 @@ const ZoneDashboard = () => {
     if (!user) return;
     const load = async () => {
       try {
-        const { data: prof, error: profError } = await supabase
+        const { data: prof } = await supabase
           .from("profiles")
           .select("athlete_name, full_name")
           .eq("id", user.id)
           .maybeSingle();
-        if (profError) console.warn("[ZoneDashboard] Failed to load profile:", profError.message);
         if (prof?.athlete_name || prof?.full_name)
           setDisplayName(prof.athlete_name || prof.full_name || "Athlete");
 
-        const { data: ap, error: apError } = await supabase
+        const { data: ap } = await supabase
           .from("user_active_programs")
           .select("current_week, current_day, block_number, training_programs!inner(title)")
           .eq("user_id", user.id)
           .eq("status", "active")
           .limit(1)
           .maybeSingle();
-        if (apError) console.warn("[ZoneDashboard] Failed to load active program:", apError.message);
 
         if (ap?.training_programs && typeof ap.training_programs === "object" && "title" in ap.training_programs) {
           setHasActiveWorkout(true);
@@ -93,14 +102,12 @@ const ZoneDashboard = () => {
           setCurrentDay((ap as { current_day?: number }).current_day || 1);
         }
 
-        // Streak calculation
-        const { data: logs, error: logsError } = await supabase
+        const { data: logs } = await supabase
           .from("progress_logs")
           .select("logged_at")
           .eq("user_id", user.id)
           .order("logged_at", { ascending: false })
           .limit(60);
-        if (logsError) console.warn("[ZoneDashboard] Failed to load logs:", logsError.message);
         if (logs && logs.length > 0) {
           const days = [...new Set(logs.map((l: { logged_at: string }) => l.logged_at.slice(0, 10)))].sort().reverse();
           let s = 1;
@@ -113,18 +120,16 @@ const ZoneDashboard = () => {
           setStreak(s);
         }
 
-        // Sessions this week
         const weekAgo = new Date();
         weekAgo.setDate(weekAgo.getDate() - 7);
-        const { count, error: countError } = await supabase
+        const { count } = await supabase
           .from("progress_logs")
           .select("*", { count: "exact", head: true })
           .eq("user_id", user.id)
           .gte("logged_at", weekAgo.toISOString());
-        if (countError) console.warn("[ZoneDashboard] Failed to load session count:", countError.message);
         setSessionsThisWeek(count || 0);
       } catch (e) {
-        console.error("[ZoneDashboard] Unexpected error loading dashboard data:", e);
+        console.error("[ZoneDashboard]", e);
       }
     };
     load();
@@ -137,14 +142,9 @@ const ZoneDashboard = () => {
     ? Math.min(100, ((totalPoints - levelInfo.min) / (nextLevel.min - levelInfo.min)) * 100)
     : 100;
 
-  /** Show feature tip first time, then run action */
   const withTip = useCallback((tip: FeatureTip, action: () => void) => {
-    if (hasSeen(tip.storageKey)) {
-      action();
-    } else {
-      setActiveTip(tip);
-      setPendingAction(() => action);
-    }
+    if (hasSeen(tip.storageKey)) { action(); }
+    else { setActiveTip(tip); setPendingAction(() => action); }
   }, []);
 
   const handleTipContinue = useCallback(() => {
@@ -160,73 +160,109 @@ const ZoneDashboard = () => {
     setPendingAction(null);
   }, [activeTip]);
 
-  // Hub items — all major app features
+  const greeting = getGreeting(displayName, streak, sessionsThisWeek);
+
+  // Quick Actions — 4 unique actions not available elsewhere
+  const QUICK_ACTIONS = [
+    {
+      label: "Log",
+      icon: <Mic size={17} />,
+      color: "#e8621a",
+      desc: "Voice or text",
+      action: () => withTip(QUICK_ACTIVITY_TIP, () => setShowQuickLog(true)),
+    },
+    {
+      label: "Prove It",
+      icon: <Trophy size={17} />,
+      color: "#eab308",
+      desc: "Submit a PR",
+      action: () => withTip(PROVE_IT_TIP, () => window.dispatchEvent(new Event("open-prove-it-zone"))),
+    },
+    {
+      label: "Coach",
+      icon: <MessageCircle size={17} />,
+      color: "#f97316",
+      desc: "Ask anything",
+      action: () => setChatOpen(true),
+    },
+    {
+      label: "Timer",
+      icon: <Timer size={17} />,
+      color: "#00f0ff",
+      desc: "Rest timer",
+      action: () => navigate("/timer"),
+    },
+  ];
+
+  // Feature Hub — 2-col grid with descriptions
   const HUB_ITEMS = [
     {
       label: "Programs",
-      icon: <Target size={18} style={{ color: "#f97316" }} />,
+      desc: "Your training plan",
+      icon: <Target size={20} />,
       color: "#f97316",
       action: () => setGeneratorView("programs"),
     },
     {
-      label: "Workouts",
-      icon: <Dumbbell size={18} style={{ color: "#00f0ff" }} />,
-      color: "#00f0ff",
-      action: () => navigate("/dashboard"),
-    },
-    {
-      label: "Fix It",
-      icon: <Wrench size={18} style={{ color: "#00f0ff" }} />,
-      color: "#00f0ff",
-      action: () => withTip(FIXIT_ENGINE_TIP, () => setGeneratorView("fixit")),
-    },
-    {
       label: "Generator",
-      icon: <Sparkles size={18} style={{ color: "#a855f7" }} />,
+      desc: "Build custom workouts",
+      icon: <Sparkles size={20} />,
       color: "#a855f7",
       action: () => withTip(WORKOUT_GENERATOR_TIP, () => setGeneratorView("workout")),
     },
     {
+      label: "Fix It",
+      desc: "Pain relief & rehab",
+      icon: <Wrench size={20} />,
+      color: "#00f0ff",
+      action: () => withTip(FIXIT_ENGINE_TIP, () => setGeneratorView("fixit")),
+    },
+    {
       label: "Nutrition",
-      icon: <Utensils size={18} style={{ color: "#22c55e" }} />,
+      desc: "Macros & meal plans",
+      icon: <Utensils size={20} />,
       color: "#22c55e",
       action: () => navigate("/nutrition-plan"),
     },
     {
-      label: "Challenge",
-      icon: <Trophy size={18} style={{ color: "#eab308" }} />,
+      label: "Library",
+      desc: "Browse all workouts",
+      icon: <BookOpen size={20} />,
+      color: "#ec4899",
+      action: () => navigate("/dashboard"),
+    },
+    {
+      label: "Challenges",
+      desc: "Compete for points",
+      icon: <Zap size={20} />,
       color: "#eab308",
       action: () => setGeneratorView("challenge"),
     },
     {
       label: "Progress",
-      icon: <BarChart3 size={18} style={{ color: "#3b82f6" }} />,
+      desc: "Track your gains",
+      icon: <BarChart3 size={20} />,
       color: "#3b82f6",
       action: () => navigate("/progress"),
     },
     {
-      label: "Prove It",
-      icon: <Trophy size={18} style={{ color: "#f97316" }} />,
-      color: "#f97316",
-      action: () => withTip(PROVE_IT_TIP, () => window.dispatchEvent(new Event("open-prove-it-zone"))),
-    },
-    {
-      label: "Library",
-      icon: <BookOpen size={18} style={{ color: "#ec4899" }} />,
-      color: "#ec4899",
+      label: "Workouts",
+      desc: "Saved & recent",
+      icon: <Dumbbell size={20} />,
+      color: "#64748b",
       action: () => navigate("/dashboard"),
     },
   ];
 
   return (
     <ZoneThemeWrapper className="min-h-screen pb-24" style={{ background: "#0a0a0a", color: "#e5e5e5" }}>
-      {/* ── Header ── */}
+      {/* Header */}
       <header
         className="sticky top-0 z-50 flex items-center justify-between px-4 py-2.5"
         style={{
-          background: "rgba(10,10,10,0.92)",
+          background: "rgba(10,10,10,0.94)",
           backdropFilter: "blur(20px)",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          borderBottom: "1px solid rgba(255,255,255,0.05)",
         }}
       >
         <div className="flex items-center gap-3">
@@ -238,8 +274,8 @@ const ZoneDashboard = () => {
             <img src={logoImg} alt="M²" className="h-8 w-8 object-contain" />
           </button>
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.2em]" style={{ color: "#f97316" }}>THE ZONE</p>
-            <p className="text-sm font-semibold" style={{ color: "#fafafa" }}>{displayName}</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.25em]" style={{ color: "#f97316" }}>THE ZONE</p>
+            <p className="text-sm font-semibold leading-tight" style={{ color: "#fafafa" }}>{displayName}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -249,28 +285,26 @@ const ZoneDashboard = () => {
               if (navigator.share) navigator.share({ title: "Train with me on M²", url });
               else { navigator.clipboard.writeText(url); toast({ title: "Link copied!" }); }
             }}
-            aria-label="Share referral link"
+            aria-label="Share"
             className="h-8 w-8 rounded-full flex items-center justify-center transition-all active:scale-90"
-            style={{ background: "rgba(249,115,22,0.15)" }}
+            style={{ background: "rgba(249,115,22,0.12)" }}
           >
             <UserPlus size={14} style={{ color: "#f97316" }} />
           </button>
           <button onClick={() => navigate("/profile")} aria-label="Profile" className="transition-all active:scale-90">
-            <User size={18} style={{ color: "#525252" }} />
-          </button>
-          <button
-            onClick={() => navigate("/timer")}
-            aria-label="Timer"
-            className="h-8 w-8 rounded-full flex items-center justify-center transition-all active:scale-90"
-            style={{ background: "rgba(0,240,255,0.12)", boxShadow: "0 0 8px rgba(0,240,255,0.25)" }}
-          >
-            <Timer size={15} style={{ color: "#00f0ff" }} />
+            <User size={18} style={{ color: "#404040" }} />
           </button>
         </div>
       </header>
 
-      <main className="max-w-md sm:max-w-lg md:max-w-2xl lg:max-w-3xl mx-auto px-4 pt-4 pb-4 space-y-5">
-        {/* 1. Athlete Stats — all boxes clickable */}
+      <main className="max-w-md sm:max-w-lg md:max-w-2xl lg:max-w-3xl mx-auto px-4 pt-3 pb-4 space-y-4">
+
+        {/* Greeting */}
+        <div className="px-1 pt-1">
+          <p className="text-sm font-semibold" style={{ color: "#a3a3a3" }}>{greeting}</p>
+        </div>
+
+        {/* Stats */}
         <AthleteStats
           streak={streak}
           sessionsThisWeek={sessionsThisWeek}
@@ -284,10 +318,10 @@ const ZoneDashboard = () => {
           onPointsClick={() => setGeneratorView("challenge")}
         />
 
-        {/* 2. Coach activity — Pro/Elite only */}
+        {/* Coach banner — Pro/Elite only */}
         {isProOrElite && <CoachActivityBanner />}
 
-        {/* 3. Today's Workout Card — clickable to open Workout Zone */}
+        {/* Today's Workout */}
         <TodayCard
           workoutName={workoutName}
           phase={phase}
@@ -296,81 +330,101 @@ const ZoneDashboard = () => {
           onClick={() => window.dispatchEvent(new Event("open-workout-zone"))}
         />
 
-        {/* 4. Command Center */}
-        <ZoneCommandCenter
-          onChat={() => setChatOpen(true)}
-          onProveIt={() => withTip(PROVE_IT_TIP, () => window.dispatchEvent(new Event("open-prove-it-zone")))}
-          onGenerate={() => withTip(WORKOUT_GENERATOR_TIP, () => setGeneratorView("workout"))}
-          onFixIt={() => withTip(FIXIT_ENGINE_TIP, () => setGeneratorView("fixit"))}
-        />
-
-        {/* 5. Feature Hub — all app features in one place */}
+        {/* Quick Actions */}
         <section>
-          <p className="text-xs font-black uppercase tracking-[0.2em] mb-3 px-1" style={{ color: "#737373" }}>
-            Your Hub
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-2.5 px-1" style={{ color: "#404040" }}>
+            Quick Actions
           </p>
-          <div className="grid grid-cols-3 gap-2">
-            {HUB_ITEMS.map((item) => (
+          <div className="grid grid-cols-4 gap-2">
+            {QUICK_ACTIONS.map((item) => (
               <button
                 key={item.label}
                 onClick={item.action}
-                className="flex flex-col items-center gap-2 rounded-2xl p-3.5 transition-all active:scale-[0.94]"
+                className="flex flex-col items-center gap-1.5 rounded-2xl py-3.5 px-2 transition-all active:scale-[0.93]"
                 style={{
-                  background: `${item.color}0d`,
-                  border: `1px solid ${item.color}22`,
+                  background: `${item.color}10`,
+                  border: `1px solid ${item.color}28`,
                 }}
               >
                 <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center"
-                  style={{ background: `${item.color}1a` }}
+                  className="w-9 h-9 rounded-xl flex items-center justify-center"
+                  style={{ background: `${item.color}1e`, color: item.color }}
                 >
                   {item.icon}
                 </div>
-                <span className="text-[11px] font-bold" style={{ color: "#d4d4d4" }}>
-                  {item.label}
-                </span>
+                <div className="text-center">
+                  <div className="text-[11px] font-bold leading-tight" style={{ color: "#d4d4d4" }}>
+                    {item.label}
+                  </div>
+                  <div className="text-[9px] leading-tight mt-0.5" style={{ color: "#525252" }}>
+                    {item.desc}
+                  </div>
+                </div>
               </button>
             ))}
           </div>
         </section>
 
-        {/* 6. Smart Start Button */}
-        <SmartStartButton hasWorkout={hasActiveWorkout} />
+        {/* Feature Hub */}
+        <section>
+          <div className="flex items-center justify-between mb-2.5 px-1">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: "#404040" }}>
+              Your Hub
+            </p>
+            <span className="text-[9px]" style={{ color: "#303030" }}>Tap anything to explore</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {HUB_ITEMS.map((item) => (
+              <button
+                key={item.label}
+                onClick={item.action}
+                className="flex items-center gap-3 rounded-2xl p-3.5 text-left transition-all active:scale-[0.97] group"
+                style={{
+                  background: `${item.color}09`,
+                  border: `1px solid ${item.color}1e`,
+                }}
+              >
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: `${item.color}18`, color: item.color }}
+                >
+                  {item.icon}
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[12px] font-bold truncate" style={{ color: "#e5e5e5" }}>
+                    {item.label}
+                  </div>
+                  <div className="text-[10px] leading-tight mt-0.5 truncate" style={{ color: "#525252" }}>
+                    {item.desc}
+                  </div>
+                </div>
+                <ChevronRight size={12} className="ml-auto flex-shrink-0 opacity-0 group-hover:opacity-40 transition-opacity" style={{ color: item.color }} />
+              </button>
+            ))}
+          </div>
+        </section>
+
       </main>
 
-      {/* ── Quick Log FAB ── */}
-      <button
-        onClick={() => withTip(QUICK_ACTIVITY_TIP, () => setShowQuickLog(true))}
-        className="fixed bottom-20 right-4 z-40 h-14 w-14 rounded-full flex items-center justify-center transition-all active:scale-90"
-        style={{
-          background: "#e8621a",
-          boxShadow: "0 4px 20px rgba(232,98,26,0.5)",
-        }}
-        aria-label="Log workout"
-      >
-        <Mic size={22} className="text-white" />
-      </button>
-
-      {/* ── Full-screen generator / feature overlay ── */}
+      {/* Overlays */}
       {generatorView && (
         <div className="fixed inset-0 z-50 overflow-y-auto" style={{ background: "#0a0a0a" }}>
-          <div className="sticky top-0 z-10 px-4 py-3 flex items-center gap-3" style={{ background: "rgba(10,10,10,0.95)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+          <div
+            className="sticky top-0 z-10 px-4 py-3 flex items-center gap-3"
+            style={{ background: "rgba(10,10,10,0.95)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}
+          >
             <button
               onClick={() => setGeneratorView(null)}
               className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest transition-colors"
-              style={{ color: "#737373" }}
+              style={{ color: "#525252" }}
             >
               <ArrowLeft size={14} /> Back
             </button>
           </div>
           <div className="pb-24">
             <Suspense fallback={<OverlayLoader />}>
-              {generatorView === "workout" && (
-                <AiWorkoutSuggest onDone={() => setGeneratorView(null)} initialPath="workout" />
-              )}
-              {generatorView === "fixit" && (
-                <AiWorkoutSuggest onDone={() => setGeneratorView(null)} initialPath="fixit" />
-              )}
+              {generatorView === "workout" && <AiWorkoutSuggest onDone={() => setGeneratorView(null)} initialPath="workout" />}
+              {generatorView === "fixit" && <AiWorkoutSuggest onDone={() => setGeneratorView(null)} initialPath="fixit" />}
               {generatorView === "programs" && <MyPrograms />}
               {generatorView === "challenge" && <ChallengeHub />}
             </Suspense>
@@ -378,7 +432,6 @@ const ZoneDashboard = () => {
         </div>
       )}
 
-      {/* ── Modals ── */}
       <AnimatePresence>
         {chatOpen && (
           <Suspense fallback={null}>
@@ -396,11 +449,7 @@ const ZoneDashboard = () => {
       <AnimatePresence>
         {activeTip && (
           <Suspense fallback={null}>
-            <FeatureLearningModal
-              tip={activeTip}
-              onContinue={handleTipContinue}
-              onDismiss={handleTipDismiss}
-            />
+            <FeatureLearningModal tip={activeTip} onContinue={handleTipContinue} onDismiss={handleTipDismiss} />
           </Suspense>
         )}
       </AnimatePresence>
