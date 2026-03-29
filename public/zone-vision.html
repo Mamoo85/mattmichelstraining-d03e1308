@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>M² Zone — Screen Mockups</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=DM+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0a0908;
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 24px 64px;
+    gap: 0;
+  }
+
+  /* ── PAGE TITLE ── */
+  .page-title {
+    text-align: center;
+    margin-bottom: 52px;
+  }
+  .pt-eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .18em;
+    color: #e8621a;
+    margin-bottom: 10px;
+  }
+  .pt-h1 {
+    font-family: 'Oswald', sans-serif;
+    font-size: 34px;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #f0ede8;
+    letter-spacing: .04em;
+    line-height: 1.05;
+  }
+  .pt-sub {
+    font-size: 14px;
+    color: #737370;
+    margin-top: 8px;
+    font-weight: 400;
+  }
+
+  /* ── PHONES ROW ── */
+  .phones {
+    display: flex;
+    gap: 36px;
+    align-items: flex-start;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .phone-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .phone-tag {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    color: #525250;
+    text-align: center;
+  }
+  .phone-tag.active { color: #e8621a; }
+  .phone-tag.parent { color: #22c55e; }
+  .phone-tag.workout { color: #00d4ff; }
+
+  /* ── PHONE SHELL ── */
+  .phone {
+    width: 260px;
+    height: 560px;
+    border-radius: 42px;
+    border: 2.5px solid #222220;
+    background: #080808;
+    box-shadow:
+      0 40px 80px rgba(0,0,0,.8),
+      0 0 0 1px rgba(255,255,255,.04),
+      inset 0 1px 0 rgba(255,255,255,.07),
+      0 0 60px rgba(232,98,26,.06);
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  /* Notch */
+  .phone::before {
+    content: '';
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 72px;
+    height: 7px;
+    background: #1a1a18;
+    border-radius: 4px;
+    z-index: 100;
+  }
+
+  .phone-screen {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: 39px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  /* ═══════════════════════════════
+     SCREEN 1: ATHLETE HOME
+  ═══════════════════════════════ */
+  .s1 { background: #0a0a08; }
+
+  .s1-statusbar {
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 18px;
+    flex-shrink: 0;
+    background: rgba(10,10,8,.95);
+  }
+  .s1-time { font-size: 11px; font-weight: 700; color: #e5e5e3; }
+  .s1-batt {
+    width: 22px; height: 10px;
+    border: 1.5px solid rgba(255,255,255,.5);
+    border-radius: 2.5px;
+    padding: 1.5px;
+    display: flex;
+    align-items: center;
+  }
+  .s1-batt-fill { height: 100%; width: 75%; background: #22c55e; border-radius: 1px; }
+
+  .s1-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px 10px;
+    background: rgba(10,10,8,.95);
+    border-bottom: 1px solid rgba(255,255,255,.06);
+    flex-shrink: 0;
+    backdrop-filter: blur(20px);
+  }
+  .s1-nav-left { display: flex; align-items: center; gap: 9px; }
+  .s1-logo {
+    width: 34px; height: 34px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, #e8621a, #c94e12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Oswald', sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    color: #fff;
+    box-shadow: 0 0 16px rgba(232,98,26,.55), 0 0 32px rgba(232,98,26,.2);
+    flex-shrink: 0;
+  }
+  .s1-logo sup { font-size: 9px; vertical-align: super; line-height: 0; }
+  .s1-id {}
+  .s1-zone-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: .2em; color: #e8621a; }
+  .s1-name { font-size: 13px; font-weight: 700; color: #fafaf8; }
+  .s1-nav-right { display: flex; align-items: center; gap: 6px; }
+  .s1-icon-btn {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.06);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+
+  /* Stats chips */
+  .s1-stats {
+    display: flex;
+    gap: 6px;
+    padding: 10px 12px 6px;
+    flex-shrink: 0;
+  }
+  .s1-chip {
+    flex: 1;
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: 12px;
+    padding: 9px 6px;
+    text-align: center;
+  }
+  .s1-chip-num {
+    font-family: 'Oswald', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    color: #fafaf8;
+    line-height: 1;
+  }
+  .s1-chip-num.orange { color: #e8621a; }
+  .s1-chip-num.purple { color: #a855f7; }
+  .s1-chip-label { font-size: 9px; font-weight: 600; color: #525250; text-transform: uppercase; letter-spacing: .07em; margin-top: 3px; }
+
+  /* Level bar */
+  .s1-level {
+    margin: 4px 12px 6px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.06);
+    border-radius: 10px;
+    padding: 7px 11px;
+    flex-shrink: 0;
+  }
+  .s1-level-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+  }
+  .s1-level-name { font-size: 10px; font-weight: 700; color: #e8621a; }
+  .s1-level-pts { font-size: 9px; color: #525250; }
+  .s1-level-track { height: 5px; background: rgba(255,255,255,.08); border-radius: 3px; overflow: hidden; }
+  .s1-level-fill { height: 100%; width: 64%; background: linear-gradient(90deg, #e8621a, #fb923c); border-radius: 3px; }
+
+  /* Today card */
+  .s1-today {
+    margin: 6px 12px 6px;
+    border-radius: 18px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, rgba(232,98,26,.16), rgba(168,85,247,.08), rgba(0,212,255,.04));
+    border: 1px solid rgba(232,98,26,.28);
+    padding: 14px;
+    position: relative;
+  }
+  .s1-today::before {
+    content: '';
+    position: absolute;
+    top: -30px; right: -30px;
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(232,98,26,.15), transparent 70%);
+  }
+  .s1-today-eye {
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .15em;
+    color: #e8621a;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .s1-today-title {
+    font-family: 'Oswald', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #fafaf8;
+    line-height: 1.1;
+    margin-bottom: 4px;
+  }
+  .s1-today-meta { font-size: 10px; color: #a3a3a0; margin-bottom: 11px; }
+  .s1-week-dots { display: flex; gap: 5px; }
+  .s1-dot {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px;
+    font-weight: 800;
+  }
+  .dot-done { background: #22c55e; color: #000; }
+  .dot-today {
+    background: linear-gradient(135deg, #e8621a, #c94e12);
+    color: #fff;
+    box-shadow: 0 0 12px rgba(232,98,26,.6);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+  @keyframes pulse-dot {
+    0%,100% { box-shadow: 0 0 8px rgba(232,98,26,.6); }
+    50% { box-shadow: 0 0 20px rgba(232,98,26,.9); }
+  }
+  .dot-next { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); color: #404040; }
+
+  /* START BUTTON */
+  .s1-start {
+    margin: 6px 12px;
+    height: 54px;
+    border-radius: 15px;
+    background: linear-gradient(135deg, #e8621a 0%, #c94e12 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    font-size: 13px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: #fff;
+    box-shadow: 0 8px 28px rgba(232,98,26,.45), 0 2px 8px rgba(232,98,26,.3), inset 0 1px 0 rgba(255,255,255,.15);
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+  .s1-start-icon { font-size: 18px; }
+
+  /* 4 action buttons */
+  .s1-actions {
+    display: flex;
+    gap: 6px;
+    padding: 6px 12px;
+    flex-shrink: 0;
+  }
+  .s1-action {
+    flex: 1;
+    border-radius: 12px;
+    padding: 10px 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+  }
+  .s1-action-icon { font-size: 18px; line-height: 1; }
+  .s1-action-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; }
+  .a-orange { background: rgba(232,98,26,.1); border: 1px solid rgba(232,98,26,.22); color: #e8621a; }
+  .a-purple { background: rgba(168,85,247,.1); border: 1px solid rgba(168,85,247,.22); color: #a855f7; }
+  .a-cyan { background: rgba(0,212,255,.08); border: 1px solid rgba(0,212,255,.2); color: #00d4ff; }
+  .a-green { background: rgba(34,197,94,.08); border: 1px solid rgba(34,197,94,.2); color: #22c55e; }
+
+  /* Coach row */
+  .s1-coach {
+    margin: 0 12px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: 12px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .s1-coach-avatar {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e8621a, #c94e12);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 800; color: #fff;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .s1-coach-dot {
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: #22c55e;
+    border: 1.5px solid #0a0a08;
+  }
+  .s1-coach-name { font-size: 12px; font-weight: 700; color: #fafaf8; }
+  .s1-coach-sub { font-size: 10px; color: #525250; }
+  .s1-coach-pill {
+    margin-left: auto;
+    font-size: 9px;
+    font-weight: 700;
+    background: rgba(34,197,94,.12);
+    color: #22c55e;
+    border: 1px solid rgba(34,197,94,.25);
+    padding: 3px 8px;
+    border-radius: 100px;
+    flex-shrink: 0;
+  }
+
+  /* Bottom tab bar */
+  .s1-tabs {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 62px;
+    background: rgba(8,8,6,.96);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255,255,255,.07);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding-bottom: 8px;
+  }
+  .s1-tab {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    flex: 1;
+  }
+  .s1-tab-icon { font-size: 20px; line-height: 1; }
+  .s1-tab-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+  .s1-tab.on .s1-tab-icon,
+  .s1-tab.on .s1-tab-label { color: #e8621a; }
+  .s1-tab:not(.on) .s1-tab-icon,
+  .s1-tab:not(.on) .s1-tab-label { color: #2e2e2c; }
+
+  /* ═══════════════════════════════
+     SCREEN 2: PARENT VIEW
+  ═══════════════════════════════ */
+  .s2 { background: #0d0d0a; }
+
+  .s2-status {
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 18px;
+    background: rgba(13,13,10,.95);
+    flex-shrink: 0;
+  }
+  .s2-time { font-size: 11px; font-weight: 700; color: #e5e5e3; }
+
+  .s2-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px 10px;
+    background: rgba(13,13,10,.95);
+    border-bottom: 1px solid rgba(255,255,255,.06);
+    flex-shrink: 0;
+  }
+  .s2-logo {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #e8621a, #c94e12);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Oswald', sans-serif;
+    font-size: 12px; font-weight: 800; color: #fff;
+    flex-shrink: 0;
+  }
+  .s2-title { font-size: 13px; font-weight: 700; color: #fafaf8; }
+  .s2-badge {
+    margin-left: auto;
+    font-size: 8px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: .1em;
+    background: rgba(232,98,26,.15);
+    color: #e8621a;
+    border: 1px solid rgba(232,98,26,.3);
+    padding: 3px 8px; border-radius: 4px;
+    flex-shrink: 0;
+  }
+
+  /* Athlete hero */
+  .s2-hero {
+    margin: 10px 12px 8px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, rgba(232,98,26,.12), rgba(232,98,26,.05));
+    border: 1px solid rgba(232,98,26,.22);
+    padding: 14px;
+    flex-shrink: 0;
+  }
+  .s2-athlete-name {
+    font-family: 'Oswald', sans-serif;
+    font-size: 20px; font-weight: 800;
+    color: #fafaf8; margin-bottom: 2px;
+  }
+  .s2-athlete-sport {
+    font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .12em;
+    color: #e8621a; margin-bottom: 12px;
+  }
+
+  .s2-week-label { font-size: 9px; color: #737370; font-weight: 600; margin-bottom: 6px; }
+  .s2-dots { display: flex; gap: 5px; margin-bottom: 8px; }
+  .s2-dot {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 800;
+  }
+  .s2-done { background: #22c55e; color: #000; }
+  .s2-miss { background: rgba(239,68,68,.18); color: #f87171; }
+  .s2-inprog {
+    background: linear-gradient(135deg, #e8621a, #c94e12);
+    color: #fff;
+    box-shadow: 0 0 10px rgba(232,98,26,.5);
+  }
+  .s2-fut { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); color: #303030; }
+
+  .s2-summary {
+    background: rgba(255,255,255,.04);
+    border-radius: 10px;
+    padding: 9px 11px;
+  }
+  .s2-summary-label { font-size: 8px; color: #737370; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 3px; }
+  .s2-summary-title { font-size: 12px; font-weight: 700; color: #fafaf8; }
+  .s2-summary-sub { font-size: 9px; color: #525250; margin-top: 2px; }
+
+  /* Stats row */
+  .s2-stats {
+    display: flex;
+    gap: 6px;
+    padding: 0 12px 8px;
+    flex-shrink: 0;
+  }
+  .s2-stat {
+    flex: 1;
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.06);
+    border-radius: 12px;
+    padding: 9px 6px;
+    text-align: center;
+  }
+  .s2-stat-num {
+    font-family: 'Oswald', sans-serif;
+    font-size: 22px; font-weight: 800;
+    color: #fafaf8; line-height: 1;
+  }
+  .s2-stat.g .s2-stat-num { color: #22c55e; }
+  .s2-stat.o .s2-stat-num { color: #e8621a; }
+  .s2-stat-label { font-size: 8px; font-weight: 600; color: #525250; text-transform: uppercase; letter-spacing: .07em; margin-top: 3px; }
+
+  /* Coach note */
+  .s2-note {
+    margin: 0 12px 8px;
+    background: rgba(0,212,255,.06);
+    border: 1px solid rgba(0,212,255,.15);
+    border-radius: 12px;
+    padding: 11px 13px;
+    flex-shrink: 0;
+  }
+  .s2-note-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: #00d4ff; margin-bottom: 4px; }
+  .s2-note-text { font-size: 11px; color: #a3a3a0; line-height: 1.55; }
+  .s2-note-attr { font-size: 9px; color: #525250; margin-top: 5px; }
+
+  /* Message btn */
+  .s2-msg {
+    margin: 0 12px 8px;
+    height: 48px;
+    border-radius: 13px;
+    background: linear-gradient(135deg, #e8621a, #c94e12);
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px;
+    font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em;
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(232,98,26,.38);
+    flex-shrink: 0;
+  }
+
+  /* Week summary pill */
+  .s2-week-sum {
+    margin: 0 12px;
+    background: rgba(34,197,94,.08);
+    border: 1px solid rgba(34,197,94,.2);
+    border-radius: 12px;
+    padding: 10px 13px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .s2-week-emoji { font-size: 20px; }
+  .s2-week-text { font-size: 12px; font-weight: 700; color: #fafaf8; }
+  .s2-week-sub { font-size: 9px; color: #22c55e; margin-top: 2px; }
+
+  /* ═══════════════════════════════
+     SCREEN 3: ACTIVE WORKOUT
+  ═══════════════════════════════ */
+  .s3 { background: #080808; }
+
+  .s3-status {
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 18px;
+    flex-shrink: 0;
+  }
+  .s3-time { font-size: 11px; font-weight: 700; color: #e5e5e3; }
+  .s3-rest {
+    font-family: 'Oswald', sans-serif;
+    font-size: 14px; font-weight: 800;
+    color: #00d4ff;
+    letter-spacing: .05em;
+  }
+
+  .s3-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 14px 8px;
+    background: rgba(8,8,6,.95);
+    border-bottom: 1px solid rgba(255,255,255,.06);
+    flex-shrink: 0;
+  }
+  .s3-back { font-size: 10px; font-weight: 700; color: #525250; text-transform: uppercase; letter-spacing: .08em; }
+  .s3-wo-title { font-size: 11px; font-weight: 700; color: #fafaf8; }
+  .s3-timer {
+    font-family: 'Oswald', sans-serif;
+    font-size: 14px; font-weight: 800;
+    color: #00d4ff;
+  }
+
+  /* Progress bar */
+  .s3-prog {
+    height: 4px;
+    background: rgba(255,255,255,.07);
+    margin: 0 14px 14px;
+    border-radius: 2px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .s3-prog-fill {
+    height: 100%; width: 45%;
+    background: linear-gradient(90deg, #e8621a, #a855f7);
+    border-radius: 2px;
+  }
+
+  /* Exercise */
+  .s3-ex-num {
+    font-size: 9px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: .15em;
+    color: #a855f7; text-align: center;
+    margin-bottom: 5px;
+    flex-shrink: 0;
+  }
+  .s3-ex-name {
+    font-family: 'Oswald', sans-serif;
+    font-size: 28px; font-weight: 800;
+    text-transform: uppercase;
+    color: #fafaf8; text-align: center;
+    line-height: 1.05;
+    padding: 0 14px;
+    margin-bottom: 5px;
+    flex-shrink: 0;
+  }
+  .s3-set-info {
+    font-size: 11px; color: #737370;
+    text-align: center; margin-bottom: 14px;
+    flex-shrink: 0;
+  }
+  .s3-set-info span { color: #00d4ff; font-weight: 600; }
+
+  /* Weight adjuster */
+  .s3-weight {
+    margin: 0 14px 12px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 18px;
+    padding: 14px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .s3-adj-btn {
+    width: 50px; height: 50px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.08);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; color: #e5e5e3; font-weight: 300;
+    flex-shrink: 0;
+    cursor: pointer;
+    border: 1px solid rgba(255,255,255,.1);
+  }
+  .s3-weight-center { text-align: center; }
+  .s3-weight-num {
+    font-family: 'Oswald', sans-serif;
+    font-size: 52px; font-weight: 800;
+    color: #fafaf8; line-height: 1;
+  }
+  .s3-weight-unit { font-size: 12px; color: #737370; }
+
+  /* Set circles */
+  .s3-sets {
+    display: flex; gap: 8px;
+    justify-content: center;
+    margin-bottom: 13px;
+    flex-shrink: 0;
+  }
+  .s3-circle {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 800;
+  }
+  .sc-done { background: #22c55e; color: #000; }
+  .sc-active {
+    background: linear-gradient(135deg, #e8621a, #c94e12);
+    color: #fff;
+    box-shadow: 0 0 16px rgba(232,98,26,.6);
+    animation: pulse-set 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse-set {
+    0%,100% { box-shadow: 0 0 10px rgba(232,98,26,.5); }
+    50% { box-shadow: 0 0 24px rgba(232,98,26,.9); }
+  }
+  .sc-next { background: rgba(255,255,255,.06); border: 1.5px solid rgba(255,255,255,.12); color: #525250; }
+
+  /* LOG BUTTON — hero action */
+  .s3-log {
+    margin: 0 14px 6px;
+    height: 58px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #e8621a 0%, #c94e12 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: .1em;
+    color: #fff;
+    box-shadow: 0 10px 32px rgba(232,98,26,.5), inset 0 1px 0 rgba(255,255,255,.18);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .s3-skip {
+    text-align: center;
+    font-size: 11px; color: #525250; font-weight: 600;
+    margin-bottom: 10px;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+
+  /* Next exercise */
+  .s3-next {
+    margin: 0 14px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: 12px;
+    padding: 10px 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .s3-next-label { font-size: 8px; font-weight: 700; color: #525250; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 2px; }
+  .s3-next-name { font-size: 12px; font-weight: 700; color: #a3a3a0; }
+  .s3-next-arr { margin-left: auto; font-size: 18px; color: #525250; }
+
+  /* ═══════════════════════════════
+     SCREEN 4: PR CELEBRATION
+  ═══════════════════════════════ */
+  .s4 {
+    background: #080808;
+    position: relative;
+  }
+  .s4-overlay {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 45%, rgba(232,98,26,.25) 0%, rgba(168,85,247,.12) 50%, transparent 75%);
+    z-index: 1;
+  }
+  .s4-content {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    gap: 12px;
+  }
+  .s4-trophy { font-size: 72px; line-height: 1; filter: drop-shadow(0 0 20px rgba(232,98,26,.8)); }
+  .s4-pr-label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 14px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: .2em;
+    color: #e8621a;
+  }
+  .s4-ex-name {
+    font-family: 'Oswald', sans-serif;
+    font-size: 26px; font-weight: 800;
+    text-transform: uppercase;
+    color: #fafaf8; text-align: center;
+  }
+  .s4-weight-big {
+    font-family: 'Oswald', sans-serif;
+    font-size: 72px; font-weight: 800;
+    color: #fafaf8;
+    line-height: 1;
+    text-shadow: 0 0 40px rgba(232,98,26,.5);
+  }
+  .s4-weight-unit {
+    font-family: 'Oswald', sans-serif;
+    font-size: 22px; font-weight: 600;
+    color: #737370;
+    margin-top: -8px;
+  }
+  .s4-prev { font-size: 12px; color: #525250; }
+  .s4-prev strong { color: #a3a3a0; }
+  .s4-share {
+    margin-top: 8px;
+    background: linear-gradient(135deg, #e8621a, #c94e12);
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    padding: 14px 32px;
+    font-size: 13px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: .1em;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(232,98,26,.45);
+    width: 100%;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .s4-dots {
+    position: absolute;
+    inset: 0; z-index: 0;
+    overflow: hidden;
+  }
+  .s4-particle {
+    position: absolute;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    animation: float-up 3s ease-in-out infinite;
+  }
+  @keyframes float-up {
+    0% { transform: translateY(0) scale(1); opacity: 1; }
+    100% { transform: translateY(-200px) scale(0); opacity: 0; }
+  }
+
+  /* Labels under phones */
+  .phone-desc {
+    max-width: 220px;
+    text-align: center;
+  }
+  .pd-title { font-size: 13px; font-weight: 700; color: #f0ede8; margin-bottom: 4px; }
+  .pd-sub { font-size: 11px; color: #525250; line-height: 1.5; }
+
+  /* Bottom caption */
+  .caption {
+    margin-top: 52px;
+    text-align: center;
+    max-width: 680px;
+  }
+  .cap-title {
+    font-family: 'Oswald', sans-serif;
+    font-size: 18px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .04em;
+    color: #f0ede8; margin-bottom: 8px;
+  }
+  .cap-sub { font-size: 13px; color: #525250; line-height: 1.6; }
+  .cap-pills { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
+  .pill {
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em;
+    padding: 5px 12px; border-radius: 100px;
+  }
+  .pill-orange { background: rgba(232,98,26,.15); color: #e8621a; border: 1px solid rgba(232,98,26,.3); }
+  .pill-green { background: rgba(34,197,94,.1); color: #22c55e; border: 1px solid rgba(34,197,94,.25); }
+  .pill-cyan { background: rgba(0,212,255,.08); color: #00d4ff; border: 1px solid rgba(0,212,255,.2); }
+  .pill-purple { background: rgba(168,85,247,.1); color: #a855f7; border: 1px solid rgba(168,85,247,.22); }
+</style>
+</head>
+<body>
+
+<div class="page-title">
+  <div class="pt-eyebrow">M² Training · Zone Redesign</div>
+  <div class="pt-h1">What The App Should Look Like</div>
+  <div class="pt-sub">4 screens — athlete home · parent view · active workout · PR celebration</div>
+</div>
+
+<div class="phones">
+
+  <!-- ══ PHONE 1: ATHLETE HOME ══ -->
+  <div class="phone-wrap">
+    <div class="phone-tag active">Athlete Home</div>
+    <div class="phone">
+      <div class="phone-screen s1">
+        <!-- Status -->
+        <div class="s1-statusbar">
+          <span class="s1-time">9:41</span>
+          <div class="s1-batt"><div class="s1-batt-fill"></div></div>
+        </div>
+        <!-- Nav -->
+        <div class="s1-nav">
+          <div class="s1-nav-left">
+            <div class="s1-logo">M<sup>2</sup></div>
+            <div class="s1-id">
+              <div class="s1-zone-label">The Zone</div>
+              <div class="s1-name">Marcus 🔥</div>
+            </div>
+          </div>
+          <div class="s1-nav-right">
+            <div class="s1-icon-btn">👤</div>
+          </div>
+        </div>
+        <!-- Stats -->
+        <div class="s1-stats">
+          <div class="s1-chip">
+            <div class="s1-chip-num orange">7🔥</div>
+            <div class="s1-chip-label">Day Streak</div>
+          </div>
+          <div class="s1-chip">
+            <div class="s1-chip-num">✅✅✅</div>
+            <div class="s1-chip-label">This Week</div>
+          </div>
+          <div class="s1-chip">
+            <div class="s1-chip-num purple">1,240</div>
+            <div class="s1-chip-label">Points</div>
+          </div>
+        </div>
+        <!-- Level -->
+        <div class="s1-level">
+          <div class="s1-level-row">
+            <span class="s1-level-name">⚡ Warrior</span>
+            <span class="s1-level-pts">260 pts to Elite</span>
+          </div>
+          <div class="s1-level-track"><div class="s1-level-fill"></div></div>
+        </div>
+        <!-- Today card -->
+        <div class="s1-today">
+          <div class="s1-today-eye">📅 <span>Phase 2 · Day 4 · Friday</span></div>
+          <div class="s1-today-title">Upper Body<br>Power</div>
+          <div class="s1-today-meta">6 exercises · ~45 min · Coach Matt's program</div>
+          <div class="s1-week-dots">
+            <div class="s1-dot dot-done">M</div>
+            <div class="s1-dot dot-done">W</div>
+            <div class="s1-dot dot-today">F</div>
+            <div class="s1-dot dot-next">M</div>
+            <div class="s1-dot dot-next">W</div>
+          </div>
+        </div>
+        <!-- BIG START -->
+        <div class="s1-start">
+          <span class="s1-start-icon">▶</span>
+          START TODAY'S WORKOUT
+        </div>
+        <!-- Actions -->
+        <div class="s1-actions">
+          <div class="s1-action a-orange"><span class="s1-action-icon">📊</span><span class="s1-action-label">Lifts</span></div>
+          <div class="s1-action a-purple"><span class="s1-action-icon">✨</span><span class="s1-action-label">Build</span></div>
+          <div class="s1-action a-cyan"><span class="s1-action-icon">📚</span><span class="s1-action-label">Programs</span></div>
+          <div class="s1-action a-green"><span class="s1-action-icon">💬</span><span class="s1-action-label">Coach</span></div>
+        </div>
+        <!-- Coach -->
+        <div class="s1-coach">
+          <div class="s1-coach-avatar">
+            M
+            <div class="s1-coach-dot"></div>
+          </div>
+          <div>
+            <div class="s1-coach-name">💬 Text Coach Matt</div>
+            <div class="s1-coach-sub">He's watching your lifts</div>
+          </div>
+          <div class="s1-coach-pill">Online</div>
+        </div>
+        <!-- Tab bar -->
+        <div class="s1-tabs">
+          <div class="s1-tab on">
+            <span class="s1-tab-icon">🏠</span>
+            <span class="s1-tab-label">Home</span>
+          </div>
+          <div class="s1-tab">
+            <span class="s1-tab-icon">🏋️</span>
+            <span class="s1-tab-label">Train</span>
+          </div>
+          <div class="s1-tab">
+            <span class="s1-tab-icon">📈</span>
+            <span class="s1-tab-label">Progress</span>
+          </div>
+          <div class="s1-tab">
+            <span class="s1-tab-icon">🏆</span>
+            <span class="s1-tab-label">Prove It</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-desc">
+      <div class="pd-title">Athlete Home Screen</div>
+      <div class="pd-sub">Today's workout front and center. One giant button. Streak visible immediately. Tab bar at bottom where thumbs live.</div>
+    </div>
+  </div>
+
+  <!-- ══ PHONE 2: PARENT VIEW ══ -->
+  <div class="phone-wrap">
+    <div class="phone-tag parent">Parent View</div>
+    <div class="phone">
+      <div class="phone-screen s2" style="display:flex;flex-direction:column">
+        <div class="s2-status">
+          <span class="s2-time">9:41</span>
+        </div>
+        <div class="s2-header">
+          <div class="s2-logo">M²</div>
+          <div class="s2-title">Marcus's Training</div>
+          <div class="s2-badge">Parent View</div>
+        </div>
+        <!-- Athlete hero -->
+        <div class="s2-hero">
+          <div class="s2-athlete-name">Marcus M.</div>
+          <div class="s2-athlete-sport">⚡ Football · Junior · GP South</div>
+          <div class="s2-week-label">This week's workouts</div>
+          <div class="s2-dots">
+            <div class="s2-dot s2-done">✓</div>
+            <div class="s2-dot s2-miss">–</div>
+            <div class="s2-dot s2-inprog">↺</div>
+            <div class="s2-dot s2-fut">·</div>
+          </div>
+          <div class="s2-summary">
+            <div class="s2-summary-label">Last completed workout</div>
+            <div class="s2-summary-title">Upper Body Strength — Mon, Mar 24</div>
+            <div class="s2-summary-sub">6 exercises · 48 min · New squat PR: 275 lbs 🏆</div>
+          </div>
+        </div>
+        <!-- Stats -->
+        <div class="s2-stats">
+          <div class="s2-stat g">
+            <div class="s2-stat-num">7</div>
+            <div class="s2-stat-label">Day Streak</div>
+          </div>
+          <div class="s2-stat o">
+            <div class="s2-stat-num">275</div>
+            <div class="s2-stat-label">Top PR (lbs)</div>
+          </div>
+          <div class="s2-stat">
+            <div class="s2-stat-num">12</div>
+            <div class="s2-stat-label">Sessions</div>
+          </div>
+        </div>
+        <!-- Coach note -->
+        <div class="s2-note">
+          <div class="s2-note-label">📝 Coach Matt's Note — Mon</div>
+          <div class="s2-note-text">"Marcus hit a new squat PR today — great depth and solid form. Bumping the weight next session."</div>
+          <div class="s2-note-attr">— Coach Matt · 2 days ago</div>
+        </div>
+        <!-- Week summary -->
+        <div class="s2-week-sum">
+          <div class="s2-week-emoji">✅</div>
+          <div>
+            <div class="s2-week-text">Marcus trained 3×this week</div>
+            <div class="s2-week-sub">Goal hit — on track 🎯</div>
+          </div>
+        </div>
+        <!-- Message btn -->
+        <div class="s2-msg" style="margin-top:8px">💬 Message Coach Matt</div>
+      </div>
+    </div>
+    <div class="phone-desc">
+      <div class="pd-title">Parent View</div>
+      <div class="pd-sub">Plain English. Warm tone. Every mom's question answered at a glance — did they train, what happened, what did Matt say.</div>
+    </div>
+  </div>
+
+  <!-- ══ PHONE 3: ACTIVE WORKOUT ══ -->
+  <div class="phone-wrap">
+    <div class="phone-tag workout">Active Workout</div>
+    <div class="phone">
+      <div class="phone-screen s3" style="display:flex;flex-direction:column">
+        <div class="s3-status">
+          <span class="s3-time">9:41</span>
+          <span class="s3-rest">REST 0:28</span>
+        </div>
+        <div class="s3-header">
+          <span class="s3-back">← Exit</span>
+          <span class="s3-wo-title">Upper Body Power</span>
+          <span class="s3-timer">14:22</span>
+        </div>
+        <div class="s3-prog"><div class="s3-prog-fill"></div></div>
+        <div class="s3-ex-num">Exercise 3 of 6</div>
+        <div class="s3-ex-name">Bench Press</div>
+        <div class="s3-set-info">Set 2 of 4 · <span>Last time: 185 lbs × 6</span></div>
+        <!-- Weight adj -->
+        <div class="s3-weight">
+          <div class="s3-adj-btn">−</div>
+          <div class="s3-weight-center">
+            <div class="s3-weight-num">185</div>
+            <div class="s3-weight-unit">pounds</div>
+          </div>
+          <div class="s3-adj-btn">+</div>
+        </div>
+        <!-- Set circles -->
+        <div class="s3-sets">
+          <div class="s3-circle sc-done">S1</div>
+          <div class="s3-circle sc-active">S2</div>
+          <div class="s3-circle sc-next">S3</div>
+          <div class="s3-circle sc-next">S4</div>
+        </div>
+        <!-- LOG BTN -->
+        <div class="s3-log">✓ LOG SET — 185 lbs × 6</div>
+        <div class="s3-skip">Skip this set</div>
+        <!-- Next -->
+        <div class="s3-next">
+          <div>
+            <div class="s3-next-label">Up Next</div>
+            <div class="s3-next-name">Incline DB Press · 4×10</div>
+          </div>
+          <div class="s3-next-arr">→</div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-desc">
+      <div class="pd-title">Active Workout Mode</div>
+      <div class="pd-sub">Sweaty hands, 30 sec rest. One exercise. Weight you can change. One massive LOG button. Nothing else.</div>
+    </div>
+  </div>
+
+  <!-- ══ PHONE 4: PR CELEBRATION ══ -->
+  <div class="phone-wrap">
+    <div class="phone-tag" style="color:#a855f7">PR Celebration</div>
+    <div class="phone">
+      <div class="phone-screen s4">
+        <!-- Particles -->
+        <div class="s4-dots">
+          <div class="s4-particle" style="left:15%;top:80%;background:#e8621a;animation-delay:0s;animation-duration:2.8s"></div>
+          <div class="s4-particle" style="left:25%;top:85%;background:#fb923c;animation-delay:.4s;animation-duration:3.2s"></div>
+          <div class="s4-particle" style="left:40%;top:90%;background:#a855f7;animation-delay:.8s;animation-duration:2.5s"></div>
+          <div class="s4-particle" style="left:55%;top:82%;background:#e8621a;animation-delay:.2s;animation-duration:3.5s"></div>
+          <div class="s4-particle" style="left:70%;top:88%;background:#00d4ff;animation-delay:.6s;animation-duration:2.9s"></div>
+          <div class="s4-particle" style="left:80%;top:85%;background:#fbbf24;animation-delay:1s;animation-duration:3.1s"></div>
+          <div class="s4-particle" style="left:10%;top:75%;background:#fbbf24;width:4px;height:4px;animation-delay:1.4s"></div>
+          <div class="s4-particle" style="left:88%;top:78%;background:#a855f7;width:8px;height:8px;animation-delay:.3s"></div>
+          <div class="s4-particle" style="left:33%;top:92%;background:#e8621a;width:10px;height:10px;border-radius:2px;animation-delay:.9s"></div>
+          <div class="s4-particle" style="left:60%;top:88%;background:#fbbf24;width:5px;height:12px;border-radius:2px;animation-delay:1.2s"></div>
+        </div>
+        <div class="s4-overlay"></div>
+        <div class="s4-content">
+          <div class="s4-trophy">🏆</div>
+          <div class="s4-pr-label">New Personal Record</div>
+          <div class="s4-ex-name">Squat</div>
+          <div class="s4-weight-big">275</div>
+          <div class="s4-weight-unit">pounds</div>
+          <div class="s4-prev">Previous best: <strong>265 lbs</strong> · +10 lbs 📈</div>
+          <button class="s4-share">📲 Share This PR</button>
+        </div>
+      </div>
+    </div>
+    <div class="phone-desc">
+      <div class="pd-title">PR Celebration</div>
+      <div class="pd-sub">Full screen moment. Floating particles. Share button. This is what athletes screenshot and parents post.</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- CAPTION -->
+<div class="caption">
+  <div class="cap-title">Every design decision has a reason</div>
+  <div class="cap-sub">Big orange button is in the thumb zone. Numbers use Oswald for instant readability. Parent view speaks plain English. Workout mode strips everything but the one action you need. PR celebrations are made to be shared.</div>
+  <div class="cap-pills">
+    <span class="pill pill-orange">👁 Eye zone: stats + today's workout</span>
+    <span class="pill pill-green">👍 Thumb zone: start + log buttons</span>
+    <span class="pill pill-cyan">📏 48px minimum tap targets</span>
+    <span class="pill pill-purple">🏆 Shareable PR moments</span>
+  </div>
+</div>
+
+</body>
+</html>
