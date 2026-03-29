@@ -64,7 +64,7 @@ const TIER_CARDS: {
     ],
     cta: "Go Pro",
     subtitle: "Real coaching. Real feedback. Custom programming.",
-    badge: "Custom Assessment Included",
+    badge: "Limited Coaching Spots",
   },
   {
     key: "elite",
@@ -81,6 +81,7 @@ const TIER_CARDS: {
     ],
     cta: "Go Elite",
     subtitle: "White-glove concierge coaching from Matt.",
+    badge: "Very Limited — Apply Now",
   },
 ];
 
@@ -112,7 +113,7 @@ const Pricing = () => {
   const [promoApplied, setPromoApplied] = useState(false);
   const [expandedTiers, setExpandedTiers] = useState<Record<string, boolean>>({});
   const [modalTier, setModalTier] = useState<{ key: TierKey; label: string } | null>(null);
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("annual");
 
   const handleCheckout = async (tierKey: TierKey) => {
     if (!user) {

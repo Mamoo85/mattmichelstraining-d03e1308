@@ -1,7 +1,8 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import { useBrowserNotifications } from "@/hooks/useBrowserNotifications";
 import { toast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, TIERS } from "@/hooks/useAuth";
+import { usePoints, getLevelInfo, getNextLevel } from "@/hooks/usePoints";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { User, UserPlus, Timer } from "lucide-react";
@@ -10,6 +11,7 @@ import ZoneCommandCenter from "@/components/dashboard/ZoneCommandCenter";
 import AthleteStats from "@/components/dashboard/AthleteStats";
 import TodayCard from "@/components/dashboard/TodayCard";
 import SmartStartButton from "@/components/dashboard/SmartStartButton";
+import CoachActivityBanner from "@/components/dashboard/CoachActivityBanner";
 import logoImg from "@/assets/m2-logo-zone.png";
 
 const CoachChatPanel = lazy(() => import("@/components/dashboard/CoachChatPanel"));
@@ -18,7 +20,9 @@ const QuickActivityLog = lazy(() => import("@/components/dashboard/QuickActivity
 import { AnimatePresence } from "framer-motion";
 
 const ZoneDashboard = () => {
-  const { user } = useAuth();
+  const { user, subscriptionTier } = useAuth();
+  const isProOrElite = subscriptionTier === "pro" || subscriptionTier === "elite";
+  const { points } = usePoints();
   const navigate = useNavigate();
   useBrowserNotifications();
 
@@ -27,6 +31,8 @@ const ZoneDashboard = () => {
   const [workoutName, setWorkoutName] = useState("Upper Body Power");
   const [phase, setPhase] = useState("Phase 1");
   const [currentDay, setCurrentDay] = useState(1);
+  const [streak, setStreak] = useState(0);
+  const [sessionsThisWeek, setSessionsThisWeek] = useState(0);
   const [chatOpen, setChatOpen] = useState(false);
   const [showQuickLog, setShowQuickLog] = useState(false);
 
@@ -58,12 +64,50 @@ const ZoneDashboard = () => {
           setPhase(`Block ${(ap as { block_number?: number }).block_number || 1}`);
           setCurrentDay((ap as { current_day?: number }).current_day || 1);
         }
+
+        // Streak calculation
+        const { data: logs, error: logsError } = await supabase
+          .from("progress_logs")
+          .select("logged_at")
+          .eq("user_id", user.id)
+          .order("logged_at", { ascending: false })
+          .limit(60);
+        if (logsError) console.warn("[ZoneDashboard] Failed to load logs:", logsError.message);
+        if (logs && logs.length > 0) {
+          const days = [...new Set(logs.map((l: { logged_at: string }) => l.logged_at.slice(0, 10)))].sort().reverse();
+          let s = 1;
+          for (let i = 1; i < days.length; i++) {
+            const prev = new Date(days[i - 1]);
+            prev.setDate(prev.getDate() - 1);
+            if (prev.toISOString().slice(0, 10) === days[i]) s++;
+            else break;
+          }
+          setStreak(s);
+        }
+
+        // Sessions this week
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        const { count, error: countError } = await supabase
+          .from("progress_logs")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .gte("logged_at", weekAgo.toISOString());
+        if (countError) console.warn("[ZoneDashboard] Failed to load session count:", countError.message);
+        setSessionsThisWeek(count || 0);
       } catch (e) {
         console.error("[ZoneDashboard] Unexpected error loading dashboard data:", e);
       }
     };
     load();
   }, [user]);
+
+  const totalPoints = points?.total_points ?? 0;
+  const levelInfo = getLevelInfo(totalPoints);
+  const nextLevel = getNextLevel(totalPoints);
+  const progressPct = nextLevel
+    ? Math.min(100, ((totalPoints - levelInfo.min) / (nextLevel.min - levelInfo.min)) * 100)
+    : 100;
 
   return (
     <ZoneThemeWrapper className="min-h-screen pb-24" style={{ background: "#0a0a0a", color: "#e5e5e5" }}>
@@ -118,9 +162,20 @@ const ZoneDashboard = () => {
 
       <main className="max-w-md sm:max-w-lg md:max-w-2xl lg:max-w-3xl mx-auto px-4 pt-4 pb-4 space-y-5">
         {/* 1. Athlete Stats */}
-        <AthleteStats />
+        <AthleteStats
+          streak={streak}
+          sessionsThisWeek={sessionsThisWeek}
+          totalPoints={totalPoints}
+          levelLabel={levelInfo.label}
+          nextLevelLabel={nextLevel?.label ?? null}
+          ptsToNext={nextLevel ? nextLevel.min - totalPoints : null}
+          progressPct={progressPct}
+        />
 
-        {/* 2. Today's Workout Card */}
+        {/* 2. Coach activity — Pro/Elite only */}
+        {isProOrElite && <CoachActivityBanner />}
+
+        {/* 3. Today's Workout Card */}
         <TodayCard workoutName={workoutName} phase={phase} day={currentDay} />
 
         {/* 3. Command Center */}

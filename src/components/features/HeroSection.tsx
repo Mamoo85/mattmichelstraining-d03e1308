@@ -1,7 +1,7 @@
 import { lazy, Suspense, useState } from "react";
 import WheelSlogan from "@/components/features/WheelSlogan";
 import { Link } from "react-router-dom";
-import { ArrowRight, Shield, Trophy, Clock, MapPin, Star } from "lucide-react";
+import { ArrowRight, Shield, Trophy, Clock, MapPin, Star, Quote } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 import m2Logo from "@/assets/m2-logo.jpg";
@@ -26,6 +26,19 @@ const SPECIALTIES = [
   "💪 Strength Training",
   "🏈 Youth Sports Performance",
   "📱 Online Coaching",
+];
+
+const HERO_TESTIMONIALS = [
+  {
+    quote: "Matt actually watches my videos, replies the same day, and adjusts my program. It's not even close to other online coaches.",
+    name: "Jake R.",
+    role: "College Football Athlete",
+  },
+  {
+    quote: "She used to get hurt every season. Two months with Matt's youth program and she's faster, stronger, and hasn't missed a game.",
+    name: "Lisa K.",
+    role: "Parent · Soccer",
+  },
 ];
 
 const HeroSection = () => {
@@ -104,24 +117,43 @@ const HeroSection = () => {
               </div>
             </div>
 
-            {/* CTA row — mobile: schedule only; desktop: both */}
+            {/* Social proof — inline testimonials above CTA */}
+            <div className="flex flex-col sm:flex-row gap-3 w-full max-w-2xl mx-auto mb-5">
+              {HERO_TESTIMONIALS.map((t) => (
+                <div key={t.name} className="flex-1 bg-card/60 border border-border rounded-xl p-4 text-left">
+                  <Quote size={14} className="text-primary/50 mb-1.5" />
+                  <p className="text-xs text-muted-foreground leading-relaxed italic mb-2">"{t.quote}"</p>
+                  <div className="flex items-center gap-1 mb-1">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star key={i} size={9} className="text-primary fill-primary" />
+                    ))}
+                  </div>
+                  <span className="text-[11px] font-bold text-foreground block">{t.name}</span>
+                  <span className="text-[10px] text-muted-foreground">{t.role}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* $4.99 promo — primary CTA above the fold */}
+            <div className="w-full max-w-sm mx-auto mb-4">
+              <Link
+                to="/auth?redirect=/trial-welcome"
+                className="flex flex-col items-center gap-1 bg-primary text-primary-foreground px-6 py-4 rounded-xl hover:opacity-90 transition-all w-full shadow-[0_0_24px_rgba(249,115,22,0.4)]"
+              >
+                <span className="text-base font-black uppercase tracking-widest">Start for $4.99 →</span>
+                <span className="text-[10px] font-medium opacity-80">then $19.99/mo · Cancel anytime · No contracts</span>
+              </Link>
+            </div>
+
+            {/* CTA row — secondary actions */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-8">
               <Link
                 to="/schedule"
-                className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3.5 text-xs font-bold uppercase tracking-widest rounded-lg hover:opacity-90 transition-m2 w-full sm:w-auto justify-center"
+                className="inline-flex items-center gap-2 border-2 border-primary text-primary px-6 py-3.5 text-xs font-bold uppercase tracking-widest rounded-lg hover:bg-primary/10 transition-all duration-300 w-full sm:w-auto justify-center"
               >
                 {isMobile ? "Schedule In-Person Session" : "Schedule Here"}
                 <ArrowRight size={14} />
               </Link>
-              {!isMobile && (
-                <Link
-                  to="/dashboard"
-                  className="inline-flex items-center gap-2 border-2 border-primary text-primary px-6 py-3.5 text-xs font-bold uppercase tracking-widest rounded-lg hover:bg-primary/10 hover:shadow-[0_0_20px_rgba(249,115,22,0.35)] transition-all duration-300 w-full sm:w-auto justify-center"
-                >
-                  Enter The Portal
-                  <ArrowRight size={14} />
-                </Link>
-              )}
               <Link
                 to="/about"
                 className="inline-flex items-center gap-2 border-2 border-border text-muted-foreground px-6 py-3.5 text-xs font-bold uppercase tracking-widest rounded-lg hover:border-primary hover:text-primary transition-all duration-300 w-full sm:w-auto justify-center"

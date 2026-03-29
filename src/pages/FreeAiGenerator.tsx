@@ -239,16 +239,17 @@ const FreeAiGenerator = () => {
                     <motion.div
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="bg-destructive/10 border-2 border-destructive/40 rounded-lg p-5 text-center space-y-3"
+                      className="bg-primary/10 border-2 border-primary/40 rounded-lg p-5 text-center space-y-3"
                     >
-                      <ShieldAlert size={28} className="text-destructive mx-auto" />
-                      <p className="text-sm font-bold text-foreground">You've maxed out your free AI generations.</p>
+                      <Zap size={28} className="text-primary mx-auto" />
+                      <p className="text-xl font-black text-foreground">Want the full 8-week program?</p>
                       <p className="text-xs text-muted-foreground">
-                        Create your free M² Portal account to continue building custom programs.
+                        You've used your free generation. Start for <span className="text-foreground font-bold">$4.99</span> to unlock unlimited AI programs, the full M² portal, and direct access to Coach Matt.
                       </p>
-                      <Button onClick={() => navigate("/auth?mode=signup")} className="w-full h-12 font-black uppercase tracking-wider text-sm" size="lg">
-                        Create Free Account <ArrowRight size={16} />
+                      <Button onClick={() => navigate("/auth?redirect=/trial-welcome")} className="w-full h-12 font-black uppercase tracking-wider text-sm" size="lg">
+                        Start for $4.99 <ArrowRight size={16} />
                       </Button>
+                      <p className="text-[10px] text-muted-foreground">then $19.99/mo · Cancel anytime</p>
                     </motion.div>
                   )}
 
@@ -344,18 +345,23 @@ const FreeAiGenerator = () => {
 
               {/* Upsell CTA */}
               <div className="bg-gradient-to-br from-primary/20 via-card to-primary/10 border-2 border-primary/40 rounded-lg p-6 md:p-8 text-center mb-6">
-                <h3 className="text-lg md:text-xl font-black text-foreground mb-2">This Is Just Week 1.</h3>
+                <div className="inline-flex items-center gap-1.5 bg-primary/20 text-primary text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full mb-3">
+                  <Zap size={11} /> This is just Week 1 of 8
+                </div>
+                <h3 className="text-2xl md:text-3xl font-black text-foreground mb-2">
+                  Get the full 8-week program<br />
+                  <span className="text-primary">for $4.99.</span>
+                </h3>
                 <p className="text-sm text-muted-foreground max-w-md mx-auto mb-5">
-                  Coach Matt's system built this baseline. To unlock the <span className="text-foreground font-bold">full 8-week progression</span>,
-                  live weight tracking, form analysis, and direct coach feedback — load this directly into <span className="text-primary font-bold">The M² Portal</span>.
+                  Load this into The M² Portal — with progressive overload built in, automatic weight tracking, form analysis, and direct access to Coach Matt. Your first month is <span className="text-foreground font-bold">$4.99</span>, then $19.99/mo. Cancel anytime.
                 </p>
-                <div className="flex flex-col sm:flex-row items-center gap-3 max-w-md mx-auto">
+                <div className="flex flex-col sm:flex-row items-center gap-3 max-w-md mx-auto mb-3">
                   <Input type="email" placeholder="your@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className="flex-1" />
-                  <Button onClick={handleTrialStart} className="w-full sm:w-auto font-bold gap-2">
-                    Start Free Trial <ArrowRight size={16} />
+                  <Button onClick={handleTrialStart} className="w-full sm:w-auto font-black gap-2 text-base px-6 py-3" size="lg">
+                    Start for $4.99 <ArrowRight size={16} />
                   </Button>
                 </div>
-                <p className="text-[10px] text-muted-foreground mt-3">14-day free trial • $19.99/mo after • Cancel anytime</p>
+                <p className="text-[10px] text-muted-foreground">First month $4.99 · then $19.99/mo · Cancel anytime · No contracts</p>
               </div>
 
               <button
