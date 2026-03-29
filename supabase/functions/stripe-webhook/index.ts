@@ -33,17 +33,26 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
 // Product ID → tier key mapping
 const PRODUCT_TIER_MAP: Record<string, string> = {
-  // Current (prod_UBI* — latest Stripe products)
-  "prod_UBI78IQsBpyfNw": "basic",
-  "prod_UBI7Wdb3liTxiF": "foundation",
-  "prod_UBI8SV9Fa6CibX": "custom",
-  "prod_UBI8mP9jA5rV3U": "team_elite",
-  // Previous generation (prod_UAl*)
+  // ── Current monthly (prod_UBI*) ──────────────────────────────────────────
+  "prod_UBI78IQsBpyfNw": "basic",        // Foundation $19.99/mo
+  "prod_UEfNKQVnbRcu1F": "guided",       // M² Guided $59.99/mo  ← was missing
+  "prod_UBI7Wdb3liTxiF": "foundation",   // Pro $149.99/mo
+  "prod_UBI8SV9Fa6CibX": "custom",       // Elite $349.99/mo
+  "prod_UBI8mP9jA5rV3U": "team_elite",   // Team Elite
+
+  // ── Current annual (prod_UC3* / prod_UEf*) ───────────────────────────────
+  "prod_UC3NyJRutYTL87": "basic",        // Foundation annual ← was missing
+  "prod_UEfQGAQMjysPqV": "guided",       // Guided annual     ← was missing
+  "prod_UC3OvNMcgtPafc": "foundation",   // Pro annual        ← was missing
+  "prod_UC3ONcP6ZoWtdM": "custom",       // Elite annual      ← was missing
+
+  // ── Previous generation (prod_UAl*) ─────────────────────────────────────
   "prod_UAlStH84vrByST": "basic",
   "prod_UAlTgNGJWmREZL": "foundation",
   "prod_UAlTkDlrDfDije": "custom",
   "prod_UAlUIuvjHBjtNL": "team_elite",
-  // Legacy (prod_U9p*)
+
+  // ── Legacy (prod_U9p*) ───────────────────────────────────────────────────
   "prod_U9ppSReG0j0RIr": "basic",
   "prod_U9pqrtuc44EE4A": "foundation",
   "prod_U9pqNqVuxYD6kl": "custom",
@@ -760,6 +769,208 @@ serve(async (req) => {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // ── WEB DESIGN BUILD — $499 one-time ─────────────────────────────────
+      if (meta.type === "web_design_build") {
+        try {
+          const wdSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+          if (meta.lead_id) {
+            await wdSb
+              .from("web_design_leads" as any)
+              .update({ build_fee_paid: true, status: "building" })
+              .eq("id", meta.lead_id);
+          }
+          if (RESEND_API_KEY && customerEmail) {
+            // Confirm payment to client
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "Matt Michels <matt@notify.m2training.com>",
+                to: [customerEmail],
+                subject: `Payment received — ${meta.business_name || "your website"} is a go`,
+                html: `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#f8fafc;padding:32px;">
+                  <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:10px;overflow:hidden;border:1px solid #e2e8f0;">
+                    <div style="background:#e8621a;height:4px;"></div>
+                    <div style="padding:28px 32px;color:#1e293b;font-size:15px;line-height:1.9;">
+                      <p>Hey ${meta.business_name ? `— ${meta.business_name}` : "there"} —</p>
+                      <p><strong>Payment received. We're officially locked in.</strong></p>
+                      <p>I'll be in touch within a few hours to kick things off. You'll get a quick intake form from me — takes about 5 minutes — so I can build exactly what you need.</p>
+                      <p>Timeline: site live in 7 days from when I get your info back.</p>
+                      <p>Questions? Email <a href="mailto:matt@m2training.com" style="color:#e8621a;">matt@m2training.com</a> or text <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a> — whichever works best.</p>
+                      <p>— Matt Michels</p>
+                    </div>
+                  </div>
+                </body></html>`,
+              }),
+            });
+            // Notify Matt
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "M² System <matt@notify.m2training.com>",
+                to: ["matt@m2training.com"],
+                subject: `💰 $499 PAID — ${meta.business_name || customerEmail}`,
+                html: `<p><strong>New web design build payment received!</strong><br>
+                  Business: ${meta.business_name || "unknown"}<br>
+                  Client email: ${customerEmail}<br>
+                  Lead ID: ${meta.lead_id || "none"}<br>
+                  Status updated to "building" in CRM.<br>
+                  <a href="https://www.mattmichelstraining.com/admin">Open Admin Panel →</a></p>`,
+              }),
+            });
+          }
+        } catch (e) { console.error("[WEBHOOK] web_design_build error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── WEB DESIGN RETAINER — $49/mo subscription ─────────────────────────
+      if (meta.type === "web_design_retainer") {
+        try {
+          const wdSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+          if (meta.lead_id) {
+            await wdSb
+              .from("web_design_leads" as any)
+              .update({
+                monthly_retainer: true,
+                stripe_subscription_id: session.subscription as string || null,
+              })
+              .eq("id", meta.lead_id);
+          }
+          if (RESEND_API_KEY && customerEmail) {
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "Matt Michels <matt@notify.m2training.com>",
+                to: [customerEmail],
+                subject: `Monthly maintenance set up — ${meta.business_name || "your site"}`,
+                html: `<p>You're all set on the $49/mo maintenance plan. Your site stays live, secure, and backed up — and you've got my direct cell for any changes you need. Text me at (313) 806-4952 or email matt@m2training.com anytime. — Matt</p>`,
+              }),
+            });
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "M² System <matt@notify.m2training.com>",
+                to: ["matt@m2training.com"],
+                subject: `$49/mo retainer started — ${meta.business_name || customerEmail}`,
+                html: `<p>New web maintenance subscriber: <strong>${meta.business_name}</strong> — ${customerEmail}<br>Subscription ID: ${session.subscription || "n/a"}</p>`,
+              }),
+            });
+          }
+        } catch (e) { console.error("[WEBHOOK] web_design_retainer error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── PDF GUIDE (static content, email delivery) ────────────────────────
+      if (meta.type === "pdf_guide" && meta.guide_id && customerEmail) {
+        const PDF_GUIDE_CONTENT: Record<string, { name: string; html: string }> = {
+          "middle-school-foundation": {
+            name: "The Middle School Foundation (Top 10)",
+            html: `
+              <h2 style="color:#e85d04;margin-bottom:8px;">The Middle School Foundation — Top 10 Exercises</h2>
+              <p style="font-size:14px;color:#666;margin-bottom:20px;">By Matt Michels · M² Performance Training</p>
+              <hr style="border:1px solid #e2e8f0;margin:20px 0;">
+              <p style="font-size:14px;line-height:1.8;">Before your athlete lifts heavy, runs fast, or competes hard — they need a foundation. These 10 movements build movement quality, joint integrity, and the base that prevents injuries for years.</p>
+              <h3 style="color:#1e293b;">1. Goblet Squat</h3><p><strong>Sets/Reps:</strong> 3×10 | <strong>Why:</strong> Teaches hip hinge, builds quad and glute strength, forces upright torso. The safest first squat for any athlete.</p>
+              <h3 style="color:#1e293b;">2. Hip Hinge (Dowel Drill)</h3><p><strong>Sets/Reps:</strong> 3×8 | <strong>Why:</strong> Most middle schoolers have never loaded a hip hinge. This pattern protects the lower back in every sport.</p>
+              <h3 style="color:#1e293b;">3. Push-Up (Strict)</h3><p><strong>Sets/Reps:</strong> 3×8–12 | <strong>Why:</strong> Full-body tension, scapular control, wrist stability. No sagging hips, no craned neck.</p>
+              <h3 style="color:#1e293b;">4. Inverted Row</h3><p><strong>Sets/Reps:</strong> 3×10 | <strong>Why:</strong> Balances pushing with pulling. Strengthens the rear delts and upper back that every young thrower needs.</p>
+              <h3 style="color:#1e293b;">5. Dead Bug</h3><p><strong>Sets/Reps:</strong> 3×8 each side | <strong>Why:</strong> Anti-extension core stability. Teaches the spine to stay neutral under load — the foundation of every athletic movement.</p>
+              <h3 style="color:#1e293b;">6. Side-Lying Hip Abduction</h3><p><strong>Sets/Reps:</strong> 3×12 each | <strong>Why:</strong> The glute med is the most undertrained muscle in youth athletes. Weak hip abductors = knee valgus = ACL risk.</p>
+              <h3 style="color:#1e293b;">7. Single-Leg Balance (Eyes Closed)</h3><p><strong>Sets/Reps:</strong> 3×20s each | <strong>Why:</strong> Proprioception training. Ankle and knee stability that reduces sprain risk in any sport.</p>
+              <h3 style="color:#1e293b;">8. Scapular Wall Slide</h3><p><strong>Sets/Reps:</strong> 3×10 | <strong>Why:</strong> Upper back mobility and scapular control. Fixes the rounded posture middle schoolers develop from screens.</p>
+              <h3 style="color:#1e293b;">9. Reverse Lunge</h3><p><strong>Sets/Reps:</strong> 3×8 each leg | <strong>Why:</strong> Safer than forward lunge at this age. Builds single-leg strength and hip flexor flexibility simultaneously.</p>
+              <h3 style="color:#1e293b;">10. Plank (With Breathing)</h3><p><strong>Sets/Reps:</strong> 3×30s | <strong>Why:</strong> Core brace under time tension. The breath cue — exhale fully at the top — teaches intra-abdominal pressure that carries into all lifting.</p>
+              <hr style="border:1px solid #e2e8f0;margin:24px 0;">
+              <p style="font-size:13px;color:#64748b;">Run this 2–3x/week before sport practice or as a standalone session. Master the movement quality before adding load. Questions? Email matt@m2training.com or text (313) 806-4952.</p>
+            `,
+          },
+          "high-school-armor": {
+            name: "High School Armor (Top 10)",
+            html: `
+              <h2 style="color:#e85d04;margin-bottom:8px;">High School Armor — Top 10 Exercises</h2>
+              <p style="font-size:14px;color:#666;margin-bottom:20px;">By Matt Michels · M² Performance Training</p>
+              <hr style="border:1px solid #e2e8f0;margin:20px 0;">
+              <p style="font-size:14px;line-height:1.8;">High school is where injuries spike — because athletes increase intensity without building structural integrity first. These 10 exercises build the durability, explosive power, and connective tissue strength that keeps varsity athletes on the field.</p>
+              <h3 style="color:#1e293b;">1. Romanian Deadlift (RDL)</h3><p><strong>Sets/Reps:</strong> 3×8 | <strong>Why:</strong> Posterior chain development. The hamstrings and glutes are the body's shock absorbers — this is how you build them.</p>
+              <h3 style="color:#1e293b;">2. Bulgarian Split Squat</h3><p><strong>Sets/Reps:</strong> 3×8 each | <strong>Why:</strong> Single-leg strength that transfers directly to cutting, sprinting, and landing. Exposes and fixes asymmetries.</p>
+              <h3 style="color:#1e293b;">3. Trap Bar Deadlift (or Hex Bar)</h3><p><strong>Sets/Reps:</strong> 4×5 | <strong>Why:</strong> Full-body strength in a spine-safe position. The most transferable strength movement in high school training.</p>
+              <h3 style="color:#1e293b;">4. Nordic Hamstring Curl</h3><p><strong>Sets/Reps:</strong> 3×5 | <strong>Why:</strong> The #1 evidence-based exercise for ACL and hamstring injury prevention. Non-negotiable for every high school athlete.</p>
+              <h3 style="color:#1e293b;">5. Push-Up to Row (DB)</h3><p><strong>Sets/Reps:</strong> 3×8 each | <strong>Why:</strong> Pressing + horizontal pulling in one movement. Builds the shoulder armor that contact athletes need.</p>
+              <h3 style="color:#1e293b;">6. Copenhagen Plank</h3><p><strong>Sets/Reps:</strong> 3×20s each | <strong>Why:</strong> Groin and adductor strength. Prevents the groin strains and hip flexor injuries that sideline athletes mid-season.</p>
+              <h3 style="color:#1e293b;">7. Pallof Press</h3><p><strong>Sets/Reps:</strong> 3×10 each | <strong>Why:</strong> Anti-rotation core stability. Teaches the core to resist — not just flex — which is how it actually works in sport.</p>
+              <h3 style="color:#1e293b;">8. Hip Thrust</h3><p><strong>Sets/Reps:</strong> 3×10 | <strong>Why:</strong> Glute activation at hip extension. Directly builds the push-off power used in every sprint and jump.</p>
+              <h3 style="color:#1e293b;">9. Face Pull</h3><p><strong>Sets/Reps:</strong> 3×15 | <strong>Why:</strong> Rear delt and external rotator health. Counters the internal rotation stress of throwing, swimming, and racket sports.</p>
+              <h3 style="color:#1e293b;">10. Box Jump (Stick Landing)</h3><p><strong>Sets/Reps:</strong> 4×4 | <strong>Why:</strong> Rate of force development AND landing mechanics. The stick-landing cue trains the deceleration control that prevents ACL injuries.</p>
+              <hr style="border:1px solid #e2e8f0;margin:24px 0;">
+              <p style="font-size:13px;color:#64748b;">Run 2–3x/week. In-season: reduce volume by 30%, keep intensity. Off-season: push progressive overload on the big lifts (RDL, Split Squat, Trap Bar). Questions? Email matt@m2training.com or text (313) 806-4952.</p>
+            `,
+          },
+          "road-warrior": {
+            name: "The Road Warrior (Top 10 Travel Fixes)",
+            html: `
+              <h2 style="color:#e85d04;margin-bottom:8px;">The Road Warrior — Top 10 Travel Fixes</h2>
+              <p style="font-size:14px;color:#666;margin-bottom:20px;">By Matt Michels · M² Performance Training</p>
+              <hr style="border:1px solid #e2e8f0;margin:20px 0;">
+              <p style="font-size:14px;line-height:1.8;">Hotel room. Tournament weekend. No equipment. No excuses. These 10 movements keep your body functioning when travel takes you away from training. Use them as a warmup, a maintenance session, or a recovery day circuit.</p>
+              <h3 style="color:#1e293b;">1. 90/90 Hip Switch</h3><p><strong>Sets/Reps:</strong> 2×5 each | <strong>Why:</strong> Restores hip internal/external rotation lost from sitting in a car or plane. Do this first — everything else works better after it.</p>
+              <h3 style="color:#1e293b;">2. World's Greatest Stretch</h3><p><strong>Sets/Reps:</strong> 2×5 each | <strong>Why:</strong> One movement that hits hip flexor, T-spine, hamstring, and ankle. Best single mobility drill in existence for travel-stiff athletes.</p>
+              <h3 style="color:#1e293b;">3. Glute Bridge March</h3><p><strong>Sets/Reps:</strong> 3×10 each | <strong>Why:</strong> Activates glutes and hammers anti-pelvic-tilt core stability. Reverses the dead-butt syndrome from hours of sitting.</p>
+              <h3 style="color:#1e293b;">4. Wall Thoracic Rotation</h3><p><strong>Sets/Reps:</strong> 2×8 each | <strong>Why:</strong> Unlocks the T-spine that compresses during long car rides. Directly improves shoulder mobility and reduces neck tension.</p>
+              <h3 style="color:#1e293b;">5. Push-Up (Slow Eccentric)</h3><p><strong>Sets/Reps:</strong> 3×8 (3-second down) | <strong>Why:</strong> Maintains upper body strength with zero equipment. The slow eccentric builds connective tissue resilience that hotel gym machines can't.</p>
+              <h3 style="color:#1e293b;">6. Single-Leg RDL (Bodyweight)</h3><p><strong>Sets/Reps:</strong> 3×8 each | <strong>Why:</strong> Posterior chain + balance + proprioception. One movement that hits everything the lower body needs when you can't load.</p>
+              <h3 style="color:#1e293b;">7. Lateral Band Walk (or Lateral Lunge if no band)</h3><p><strong>Sets/Reps:</strong> 3×12 each | <strong>Why:</strong> Glute med activation that protects the knee. Travel without this and your hips tighten up, your knee tracks wrong, and your ankle gets stressed.</p>
+              <h3 style="color:#1e293b;">8. Dead Bug</h3><p><strong>Sets/Reps:</strong> 3×8 each | <strong>Why:</strong> Core stability that doesn't require a single piece of equipment. Every hotel room has a floor.</p>
+              <h3 style="color:#1e293b;">9. Calf Raise + Ankle Circle</h3><p><strong>Sets/Reps:</strong> 3×15 each direction | <strong>Why:</strong> Achilles and ankle health after travel compression. Athletes who skip this are one landing away from a sprain on tournament day.</p>
+              <h3 style="color:#1e293b;">10. Foam Roll or Tennis Ball — Feet, Calves, T-Spine</h3><p><strong>Sets/Reps:</strong> 60s each area | <strong>Why:</strong> Tissue quality maintenance. Travel compresses fascia. Roll what aches before it becomes what doesn't work.</p>
+              <hr style="border:1px solid #e2e8f0;margin:24px 0;">
+              <p style="font-size:13px;color:#64748b;"><strong>Travel-day warmup protocol:</strong> 90/90 → World's Greatest → Wall Rotation → Glute Bridge March → done. Takes 8 minutes. Do it before competing or after a long drive. Questions? Email matt@m2training.com or text (313) 806-4952.</p>
+            `,
+          },
+        };
+
+        const guideContent = PDF_GUIDE_CONTENT[meta.guide_id];
+        if (guideContent && RESEND_API_KEY) {
+          const emailHtml = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;">
+<tr><td align="center" style="padding:32px 16px;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">
+    <tr><td style="background:#e8621a;padding:4px 0;"></td></tr>
+    <tr><td style="padding:28px 32px;color:#1e293b;font-size:15px;line-height:1.8;">
+      <p>Hey —</p>
+      <p>Your guide is below. This is the exact blueprint I use with my athletes. Print it, save it, or screenshot it — it's yours forever.</p>
+      ${guideContent.html}
+      <p style="margin-top:24px;">Questions on any of these? Email me at <a href="mailto:matt@m2training.com" style="color:#e8621a;">matt@m2training.com</a> or text <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a>.</p>
+      <p>— Matt Michels</p>
+    </td></tr>
+    <tr><td style="background:#f8fafc;padding:16px 32px;border-top:1px solid #e2e8f0;font-size:12px;color:#94a3b8;">
+      M² Performance Training · <a href="mailto:matt@m2training.com" style="color:#e8621a;">matt@m2training.com</a> · <a href="tel:+13138064952" style="color:#94a3b8;">(313) 806-4952</a>
+    </td></tr>
+  </table>
+</td></tr>
+</table>
+</body></html>`;
+
+          await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              from: "Matt Michels <matt@notify.m2training.com>",
+              to: [customerEmail],
+              subject: `Your guide: ${guideContent.name}`,
+              html: emailHtml,
+            }),
+          });
+          console.log(`[WEBHOOK] PDF guide emailed: ${meta.guide_id} → ${customerEmail}`);
+        }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       if (!priceId || !GUIDE_MAP[priceId]) {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
@@ -802,6 +1013,194 @@ serve(async (req) => {
         }),
       });
     }
+
+      // ── CONTRACTOR LEAD SUBSCRIPTION ─────────────────────────────────────
+      if (meta.type === "contractor_lead_subscription") {
+        try {
+          const wdSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+          // Activate contractor client
+          if (meta.contractor_id) {
+            await wdSb.from("contractor_clients" as any)
+              .update({
+                active: true,
+                stripe_customer_id: session.customer as string,
+                stripe_subscription_id: session.subscription as string || null,
+                onboarded_at: new Date().toISOString(),
+              })
+              .eq("id", meta.contractor_id);
+
+            // Assign contractor to the matching lead site
+            const { data: site } = await wdSb
+              .from("contractor_lead_sites" as any)
+              .select("id, active_contractor_id")
+              .eq("trade", meta.trade || "")
+              .ilike("city", `%${(meta.city || "").split(",")[0]}%`)
+              .limit(1)
+              .single();
+
+            if (site && !(site as any).active_contractor_id) {
+              await wdSb.from("contractor_lead_sites" as any)
+                .update({ active_contractor_id: meta.contractor_id })
+                .eq("id", (site as any).id);
+            }
+          }
+
+          if (RESEND_API_KEY && customerEmail) {
+            const tradeLabel = (meta.trade || "service").charAt(0).toUpperCase() + (meta.trade || "service").slice(1);
+            // Welcome email to contractor
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "Matt Michels <matt@notify.m2training.com>",
+                to: [customerEmail],
+                subject: `You're locked in — exclusive ${tradeLabel} leads in ${meta.city || "your area"}`,
+                html: `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#f8fafc;padding:32px;">
+<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;">
+  <div style="background:#e8621a;height:4px;"></div>
+  <div style="padding:28px 32px;color:#1e293b;font-size:15px;line-height:1.9;">
+    <p>Hey ${meta.business_name || "there"} —</p>
+    <p><strong>You're in.</strong> Every exclusive ${tradeLabel.toLowerCase()} lead that comes through ${meta.city || "your area"} goes directly to you. No sharing, no competing bids.</p>
+    <p>When a lead comes in, you'll get an email immediately with their name, phone, and project details. Call them fast — speed wins jobs.</p>
+    <p>Questions? Reply to this email or text me directly at <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a>.</p>
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;align-items:center;gap:12px;">
+      <img src="https://www.mattmichelstraining.com/images/matt-family-cornfield.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Matt Michels">
+      <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>Grosse Pointe, MI · (313) 806-4952</div>
+    </div>
+  </div>
+</div>
+</body></html>`,
+              }),
+            });
+            // Notify Matt
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "M² System <matt@notify.m2training.com>",
+                to: ["matt@m2training.com"],
+                subject: `💰 New contractor client — ${meta.business_name || customerEmail}`,
+                html: `<p>New contractor lead subscription:<br><strong>${meta.business_name}</strong> — ${customerEmail}<br>Trade: ${meta.trade} | City: ${meta.city}, ${meta.state || "MI"}<br>Subscription: ${session.subscription || "n/a"}</p>`,
+              }),
+            });
+          }
+        } catch (e) { console.error("[WEBHOOK] contractor_lead_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── B2B DATABASE SUBSCRIPTION ─────────────────────────────────────────
+      if (meta.type === "b2b_database_subscription") {
+        try {
+          const b2bSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+          // Activate subscriber
+          if (customerEmail) {
+            await b2bSb.from("b2b_subscribers" as any)
+              .upsert({
+                email: customerEmail,
+                name: meta.customer_name || null,
+                stripe_customer_id: session.customer as string,
+                stripe_subscription_id: session.subscription as string || null,
+                niche: meta.niche || "dental",
+                active: true,
+              }, { onConflict: "email" });
+          }
+
+          if (RESEND_API_KEY && customerEmail) {
+            const nicheLabels: Record<string, string> = {
+              dental: "Dental & Orthodontic Practices",
+              hvac: "HVAC & Mechanical Contractors",
+              pt: "Physical Therapy & Chiro Offices",
+              auto: "Independent Auto Repair Shops",
+            };
+            const nicheLabel = nicheLabels[meta.niche || "dental"] || "Business Contacts";
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "Matt Michels <matt@notify.m2training.com>",
+                to: [customerEmail],
+                subject: `Your B2B database is ready — ${nicheLabel}`,
+                html: `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#f8fafc;padding:32px;">
+<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;">
+  <div style="background:#e8621a;height:4px;"></div>
+  <div style="padding:28px 32px;color:#1e293b;font-size:15px;line-height:1.9;">
+    <p>Hey —</p>
+    <p>You now have access to the <strong>${nicheLabel}</strong> database. Browse, filter by state/city, and export to CSV anytime.</p>
+    <p><a href="https://www.mattmichelstraining.com/b2b-leads" style="background:#e8621a;color:#fff;padding:10px 22px;border-radius:6px;text-decoration:none;font-weight:700;font-size:14px;">Access Your Database →</a></p>
+    <p>The database updates daily. You'll always have the freshest contacts. Questions? Email <a href="mailto:matt@m2training.com" style="color:#e8621a;">matt@m2training.com</a> or text <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a>.</p>
+    <p>— Matt Michels</p>
+  </div>
+</div>
+</body></html>`,
+              }),
+            });
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "M² System <matt@notify.m2training.com>",
+                to: ["matt@m2training.com"],
+                subject: `💰 New B2B database subscriber — ${customerEmail}`,
+                html: `<p>New ${nicheLabel} subscriber: <strong>${customerEmail}</strong> at $149/month.</p>`,
+              }),
+            });
+          }
+        } catch (e) { console.error("[WEBHOOK] b2b_database_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── GBP SAAS SUBSCRIPTION ─────────────────────────────────────────────
+      if (meta.type === "gbp_saas_subscription") {
+        try {
+          const gbpSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+          if (meta.client_id) {
+            await gbpSb.from("gbp_saas_clients" as any)
+              .update({
+                active: true,
+                stripe_subscription_id: session.subscription as string || null,
+              })
+              .eq("id", meta.client_id);
+          }
+
+          if (RESEND_API_KEY && customerEmail) {
+            const isPro = meta.plan === "pro";
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "Matt Michels <matt@notify.m2training.com>",
+                to: [customerEmail],
+                subject: `Welcome to M² Local Marketing — ${meta.business_name || "your business"}`,
+                html: `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#f8fafc;padding:32px;">
+<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;">
+  <div style="background:#e8621a;height:4px;"></div>
+  <div style="padding:28px 32px;color:#1e293b;font-size:15px;line-height:1.9;">
+    <p>Hey ${meta.business_name || "there"} —</p>
+    <p>You're all set on the ${isPro ? "Pro" : "Basic"} plan. I'll start posting to your Google Business Profile ${isPro ? "3x a week, plus sending review requests to your customers" : "3x a week"}.</p>
+    <p><strong>Next step:</strong> I need a couple things to get started. I'll reach out within 24 hours to collect your Google Business Profile info. If you want to speed it up, email <a href="mailto:matt@m2training.com" style="color:#e8621a;">matt@m2training.com</a> or text <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a>.</p>
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;align-items:center;gap:12px;">
+      <img src="https://www.mattmichelstraining.com/images/matt-family-cornfield.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Matt Michels">
+      <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>Grosse Pointe, MI · (313) 806-4952</div>
+    </div>
+  </div>
+</div>
+</body></html>`,
+              }),
+            });
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "M² System <matt@notify.m2training.com>",
+                to: ["matt@m2training.com"],
+                subject: `💰 New GBP client — ${meta.business_name || customerEmail} (${meta.plan})`,
+                html: `<p>New GBP SaaS subscriber: <strong>${meta.business_name}</strong> — ${customerEmail}<br>Plan: ${meta.plan} at $${meta.plan === "pro" ? "99" : "49"}/month.<br>Action needed: collect their GBP location ID to start posting.</p>`,
+              }),
+            });
+          }
+        } catch (e) { console.error("[WEBHOOK] gbp_saas_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
 
     return new Response(JSON.stringify({ received: true }), {
       headers: { "Content-Type": "application/json" },

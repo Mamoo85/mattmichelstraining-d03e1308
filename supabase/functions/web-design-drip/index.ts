@@ -111,6 +111,10 @@ function buildDripEmailHtml(subject: string, body: string): string {
     <tr><td style="background:#0f172a;padding:3px 0;"></td></tr>
     <tr><td style="padding:24px;color:#334155;font-size:15px;line-height:1.8;">
       ${htmlBody}
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;align-items:center;gap:12px;">
+        <img src="https://www.mattmichelstraining.com/images/matt-family-cornfield.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Matt Michels">
+        <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>Grosse Pointe, MI · (313) 806-4952</div>
+      </div>
     </td></tr>
     <tr><td style="background:#f8fafc;padding:16px 24px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;">
       Matt Michels Web Design · Grosse Pointe, MI · (313) 806-4952<br>
