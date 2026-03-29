@@ -1014,6 +1014,188 @@ serve(async (req) => {
       });
     }
 
+      // ── CONTRACTOR LEAD SUBSCRIPTION ─────────────────────────────────────
+      if (meta.type === "contractor_lead_subscription") {
+        try {
+          const wdSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+          // Activate contractor client
+          if (meta.contractor_id) {
+            await wdSb.from("contractor_clients" as any)
+              .update({
+                active: true,
+                stripe_customer_id: session.customer as string,
+                stripe_subscription_id: session.subscription as string || null,
+                onboarded_at: new Date().toISOString(),
+              })
+              .eq("id", meta.contractor_id);
+
+            // Assign contractor to the matching lead site
+            const { data: site } = await wdSb
+              .from("contractor_lead_sites" as any)
+              .select("id, active_contractor_id")
+              .eq("trade", meta.trade || "")
+              .ilike("city", `%${(meta.city || "").split(",")[0]}%`)
+              .limit(1)
+              .single();
+
+            if (site && !(site as any).active_contractor_id) {
+              await wdSb.from("contractor_lead_sites" as any)
+                .update({ active_contractor_id: meta.contractor_id })
+                .eq("id", (site as any).id);
+            }
+          }
+
+          if (RESEND_API_KEY && customerEmail) {
+            const tradeLabel = (meta.trade || "service").charAt(0).toUpperCase() + (meta.trade || "service").slice(1);
+            // Welcome email to contractor
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "Matt Michels <matt@notify.m2training.com>",
+                to: [customerEmail],
+                subject: `You're locked in — exclusive ${tradeLabel} leads in ${meta.city || "your area"}`,
+                html: `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#f8fafc;padding:32px;">
+<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;">
+  <div style="background:#e8621a;height:4px;"></div>
+  <div style="padding:28px 32px;color:#1e293b;font-size:15px;line-height:1.9;">
+    <p>Hey ${meta.business_name || "there"} —</p>
+    <p><strong>You're in.</strong> Every exclusive ${tradeLabel.toLowerCase()} lead that comes through ${meta.city || "your area"} goes directly to you. No sharing, no competing bids.</p>
+    <p>When a lead comes in, you'll get an email immediately with their name, phone, and project details. Call them fast — speed wins jobs.</p>
+    <p>Questions? Reply to this email or text me directly at <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a>.</p>
+    <p>— Matt Michels</p>
+  </div>
+</div>
+</body></html>`,
+              }),
+            });
+            // Notify Matt
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "M² System <matt@notify.m2training.com>",
+                to: ["matt@m2training.com"],
+                subject: `💰 New contractor client — ${meta.business_name || customerEmail}`,
+                html: `<p>New contractor lead subscription:<br><strong>${meta.business_name}</strong> — ${customerEmail}<br>Trade: ${meta.trade} | City: ${meta.city}, ${meta.state || "MI"}<br>Subscription: ${session.subscription || "n/a"}</p>`,
+              }),
+            });
+          }
+        } catch (e) { console.error("[WEBHOOK] contractor_lead_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── B2B DATABASE SUBSCRIPTION ─────────────────────────────────────────
+      if (meta.type === "b2b_database_subscription") {
+        try {
+          const b2bSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+          // Activate subscriber
+          if (customerEmail) {
+            await b2bSb.from("b2b_subscribers" as any)
+              .upsert({
+                email: customerEmail,
+                name: meta.customer_name || null,
+                stripe_customer_id: session.customer as string,
+                stripe_subscription_id: session.subscription as string || null,
+                niche: meta.niche || "dental",
+                active: true,
+              }, { onConflict: "email" });
+          }
+
+          if (RESEND_API_KEY && customerEmail) {
+            const nicheLabels: Record<string, string> = {
+              dental: "Dental & Orthodontic Practices",
+              hvac: "HVAC & Mechanical Contractors",
+              pt: "Physical Therapy & Chiro Offices",
+              auto: "Independent Auto Repair Shops",
+            };
+            const nicheLabel = nicheLabels[meta.niche || "dental"] || "Business Contacts";
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "Matt Michels <matt@notify.m2training.com>",
+                to: [customerEmail],
+                subject: `Your B2B database is ready — ${nicheLabel}`,
+                html: `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#f8fafc;padding:32px;">
+<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;">
+  <div style="background:#e8621a;height:4px;"></div>
+  <div style="padding:28px 32px;color:#1e293b;font-size:15px;line-height:1.9;">
+    <p>Hey —</p>
+    <p>You now have access to the <strong>${nicheLabel}</strong> database. Browse, filter by state/city, and export to CSV anytime.</p>
+    <p><a href="https://www.mattmichelstraining.com/b2b-leads" style="background:#e8621a;color:#fff;padding:10px 22px;border-radius:6px;text-decoration:none;font-weight:700;font-size:14px;">Access Your Database →</a></p>
+    <p>The database updates daily. You'll always have the freshest contacts. Questions? Email <a href="mailto:matt@m2training.com" style="color:#e8621a;">matt@m2training.com</a> or text <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a>.</p>
+    <p>— Matt Michels</p>
+  </div>
+</div>
+</body></html>`,
+              }),
+            });
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "M² System <matt@notify.m2training.com>",
+                to: ["matt@m2training.com"],
+                subject: `💰 New B2B database subscriber — ${customerEmail}`,
+                html: `<p>New ${nicheLabel} subscriber: <strong>${customerEmail}</strong> at $149/month.</p>`,
+              }),
+            });
+          }
+        } catch (e) { console.error("[WEBHOOK] b2b_database_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── GBP SAAS SUBSCRIPTION ─────────────────────────────────────────────
+      if (meta.type === "gbp_saas_subscription") {
+        try {
+          const gbpSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+          if (meta.client_id) {
+            await gbpSb.from("gbp_saas_clients" as any)
+              .update({
+                active: true,
+                stripe_subscription_id: session.subscription as string || null,
+              })
+              .eq("id", meta.client_id);
+          }
+
+          if (RESEND_API_KEY && customerEmail) {
+            const isPro = meta.plan === "pro";
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "Matt Michels <matt@notify.m2training.com>",
+                to: [customerEmail],
+                subject: `Welcome to M² Local Marketing — ${meta.business_name || "your business"}`,
+                html: `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#f8fafc;padding:32px;">
+<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;">
+  <div style="background:#e8621a;height:4px;"></div>
+  <div style="padding:28px 32px;color:#1e293b;font-size:15px;line-height:1.9;">
+    <p>Hey ${meta.business_name || "there"} —</p>
+    <p>You're all set on the ${isPro ? "Pro" : "Basic"} plan. I'll start posting to your Google Business Profile ${isPro ? "3x a week, plus sending review requests to your customers" : "3x a week"}.</p>
+    <p><strong>Next step:</strong> I need a couple things to get started. I'll reach out within 24 hours to collect your Google Business Profile info. If you want to speed it up, email <a href="mailto:matt@m2training.com" style="color:#e8621a;">matt@m2training.com</a> or text <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a>.</p>
+    <p>— Matt Michels</p>
+  </div>
+</div>
+</body></html>`,
+              }),
+            });
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "M² System <matt@notify.m2training.com>",
+                to: ["matt@m2training.com"],
+                subject: `💰 New GBP client — ${meta.business_name || customerEmail} (${meta.plan})`,
+                html: `<p>New GBP SaaS subscriber: <strong>${meta.business_name}</strong> — ${customerEmail}<br>Plan: ${meta.plan} at $${meta.plan === "pro" ? "99" : "49"}/month.<br>Action needed: collect their GBP location ID to start posting.</p>`,
+              }),
+            });
+          }
+        } catch (e) { console.error("[WEBHOOK] gbp_saas_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
     return new Response(JSON.stringify({ received: true }), {
       headers: { "Content-Type": "application/json" },
       status: 200,

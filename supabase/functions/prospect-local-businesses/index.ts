@@ -224,7 +224,89 @@ serve(async (req) => {
     let body: any = {};
     try { body = await req.json(); } catch { /* cron may send empty body */ }
 
-    let { industry, city, limit = 5 } = body;
+    let { industry, city, limit = 5, mode } = body;
+
+    // ── CONTRACTOR LEAD PITCH MODE ─────────────────────────────────────────
+    // When mode === "contractor_lead_pitch", pitch the lead gen service instead of web design
+    if (mode === "contractor_lead_pitch") {
+      const CONTRACTOR_INDUSTRIES = ["roofing contractor", "HVAC contractor", "plumbing contractor", "electrician", "gutter company"];
+      const CONTRACTOR_CITIES = ["Detroit MI", "Warren MI", "Sterling Heights MI", "Livonia MI", "Ann Arbor MI", "Dearborn MI", "Troy MI", "Southfield MI", "Pontiac MI", "Royal Oak MI"];
+      const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+      const contractorIndustry = CONTRACTOR_INDUSTRIES[dayOfYear % CONTRACTOR_INDUSTRIES.length];
+      const contractorCity = CONTRACTOR_CITIES[new Date().getDate() % CONTRACTOR_CITIES.length];
+
+      // Search for contractors to pitch
+      const searchRes = await fetch("https://api.firecrawl.dev/v1/search", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ query: `${contractorIndustry} ${contractorCity} site:yelp.com OR site:yellowpages.com`, limit: 5 }),
+      });
+      const searchData = await searchRes.json();
+      const results = searchData.data || [];
+
+      let pitched = 0;
+      for (const result of results.slice(0, 5)) {
+        const businessName = result.metadata?.title || result.title || "your business";
+        const email = result.metadata?.email;
+        if (!email) continue;
+
+        // Check dedup
+        const { data: existing } = await serviceClient.from("email_send_log").select("id").eq("email", email).eq("campaign", "contractor_lead_pitch").limit(1);
+        if (existing && existing.length > 0) continue;
+
+        // Generate AI pitch for lead gen service
+        const pitchPrompt = `Write a short cold email from Matt Michels to "${businessName}", a ${contractorIndustry} in ${contractorCity.split(" ")[0]}.
+
+Matt runs a local lead generation service. He has a website that generates exclusive roofing/HVAC/plumbing/electrical leads in Metro Detroit. He's looking for ONE contractor per trade per city to receive all the leads.
+
+Key points:
+- Leads are exclusive (they don't compete with other contractors)
+- No Angi or HomeAdvisor — no shared leads
+- $299–$399/month flat, cancel anytime
+- Free 3-lead trial to prove it works first
+- End with: "Email matt@m2training.com or text (313) 806-4952 — whichever works best for you."
+
+Subject + email body, under 120 words total. Sound like a real person, not a marketer.
+
+Format:
+SUBJECT: [subject line]
+---
+[email body]`;
+
+        const aiRes = await fetch("https://api.lovable.ai/openai/v1/chat/completions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${LOVABLE_API_KEY}` },
+          body: JSON.stringify({
+            model: "google/gemini-2.5-flash",
+            messages: [{ role: "user", content: pitchPrompt }],
+            max_tokens: 250,
+          }),
+        });
+        const aiData = await aiRes.json();
+        const emailText = aiData.choices?.[0]?.message?.content || "";
+        const subjectMatch = emailText.match(/SUBJECT:\s*(.+)/);
+        const subject = subjectMatch ? subjectMatch[1].trim() : `Exclusive ${contractorIndustry} leads — ${contractorCity.split(" ")[0]}`;
+        const bodyText = emailText.replace(/SUBJECT:.*\n---\n?/, "").trim();
+
+        await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${Deno.env.get("RESEND_API_KEY") || ""}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            from: "Matt Michels <matt@notify.m2training.com>",
+            to: [email],
+            reply_to: "matt@m2training.com",
+            subject,
+            html: `<div style="font-family:sans-serif;font-size:15px;line-height:1.8;color:#1e293b;max-width:500px;">${bodyText.replace(/\n/g, "<br>")}</div>`,
+          }),
+        });
+
+        await serviceClient.from("email_send_log").insert({ email, campaign: "contractor_lead_pitch", business_name: businessName });
+        pitched++;
+      }
+
+      log("Contractor lead pitch run complete", { pitched, industry: contractorIndustry, city: contractorCity });
+      return new Response(JSON.stringify({ pitched, mode: "contractor_lead_pitch" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     // Day-rotation mode: pick industry + city from rotation based on today
     if (!industry) {

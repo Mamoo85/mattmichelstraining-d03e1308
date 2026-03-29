@@ -106,6 +106,11 @@ const AuditReport = lazyRetry(() => import("./pages/AuditReport"));
 const GbpManagement = lazyRetry(() => import("./pages/GbpManagement"));
 const NewsletterSponsor = lazyRetry(() => import("./pages/NewsletterSponsor"));
 const CampDirectory = lazyRetry(() => import("./pages/CampDirectory"));
+const ContractorLeads = lazyRetry(() => import("./pages/ContractorLeads"));
+const LeadCapturePage = lazyRetry(() => import("./pages/LeadCapturePage"));
+const B2BLeads = lazyRetry(() => import("./pages/B2BLeads"));
+const LocalMarketing = lazyRetry(() => import("./pages/LocalMarketing"));
+const NewsletterPage = lazyRetry(() => import("./pages/NewsletterPage"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -286,6 +291,11 @@ const App = () => (
                     <Route path="/audit-report" element={<AuditReport />} />
                     <Route path="/gbp-management" element={<GbpManagement />} />
                     <Route path="/sponsor" element={<NewsletterSponsor />} />
+                    <Route path="/contractor-leads" element={<ContractorLeads />} />
+                    <Route path="/leads/:slug" element={<LeadCapturePage />} />
+                    <Route path="/b2b-leads" element={<B2BLeads />} />
+                    <Route path="/local-marketing" element={<LocalMarketing />} />
+                    <Route path="/field-rep-weekly" element={<NewsletterPage />} />
                     <Route path="/sports-camps" element={<CampDirectory />} />
                     <Route path="/free-program" element={<FreeProgram />} />
                     <Route path="/studio-rental" element={<StudioRental />} />

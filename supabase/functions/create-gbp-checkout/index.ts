@@ -1,0 +1,85 @@
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import Stripe from "https://esm.sh/stripe@18.5.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { apiVersion: "2025-08-27.basil" });
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
+const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  try {
+    const { email, business_name, contact_name, phone, business_type, city, state, plan = "basic" } = await req.json();
+    if (!email || !business_name) {
+      return new Response(JSON.stringify({ error: "email and business_name are required" }), { status: 400, headers: corsHeaders });
+    }
+
+    const isPro = plan === "pro";
+    const priceAmount = isPro ? 9900 : 4900;
+    const planLabel = isPro ? "Pro (GBP Posts + Review Requests)" : "Basic (GBP Posts Only)";
+    const origin = req.headers.get("origin") || "https://www.mattmichelstraining.com";
+
+    const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+
+    // Insert pending client record
+    const { data: client } = await sb
+      .from("gbp_saas_clients")
+      .insert({ business_name, contact_name, email, phone, business_type, city, state, plan, active: false })
+      .select()
+      .single();
+
+    const session = await stripe.checkout.sessions.create({
+      mode: "subscription",
+      payment_method_types: ["card"],
+      customer_email: email,
+      line_items: [{
+        price_data: {
+          currency: "usd",
+          recurring: { interval: "month" },
+          unit_amount: priceAmount,
+          product_data: {
+            name: `M² Local Marketing — ${planLabel}`,
+            description: isPro
+              ? "3 AI-generated Google Business Profile posts per week + weekly review request emails to your customers."
+              : "3 AI-generated Google Business Profile posts per week. Stay active on Google without lifting a finger.",
+          },
+        },
+        quantity: 1,
+      }],
+      metadata: {
+        type: "gbp_saas_subscription",
+        plan,
+        client_id: client?.id || "",
+        business_name,
+      },
+      success_url: `${origin}/local-marketing?success=1`,
+      cancel_url: `${origin}/local-marketing`,
+    });
+
+    // Notify Matt
+    if (RESEND_API_KEY) {
+      await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          from: "M² System <matt@notify.m2training.com>",
+          to: ["matt@m2training.com"],
+          subject: `New GBP SaaS signup — ${business_name} (${plan})`,
+          html: `<p><strong>${business_name}</strong> started checkout for ${planLabel} at $${(priceAmount / 100).toFixed(0)}/month.<br>Contact: ${contact_name || "n/a"} — ${email} — ${phone || "no phone"}<br>${city || ""}${state ? ", " + state : ""}</p>`,
+        }),
+      });
+    }
+
+    return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: corsHeaders });
+  } catch (e: any) {
+    console.error("[CREATE-GBP-CHECKOUT] Error:", e);
+    return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: corsHeaders });
+  }
+});
