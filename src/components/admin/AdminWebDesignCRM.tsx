@@ -24,6 +24,7 @@ import {
   Rocket,
   Eye,
   Zap,
+  CreditCard,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -122,7 +123,8 @@ interface LeadCardProps {
   onKickoff: (lead: WebDesignLead) => void;
   onSendPreview: (lead: WebDesignLead) => void;
   onGoLive: (lead: WebDesignLead) => void;
-  fulfillmentLoading: string | null; // lead id currently being processed
+  onSendPaymentLink: (lead: WebDesignLead) => void;
+  fulfillmentLoading: string | null;
 }
 
 function LeadCard({
@@ -135,12 +137,16 @@ function LeadCard({
   onKickoff,
   onSendPreview,
   onGoLive,
+  onSendPaymentLink,
   fulfillmentLoading,
 }: LeadCardProps) {
   const [editingNotes, setEditingNotes] = useState(false);
   const [notesValue, setNotesValue] = useState(lead.notes ?? "");
   const next = nextStatus(lead.status);
   const isBusy = fulfillmentLoading === lead.id;
+
+  const canSendPayment = lead.email && !lead.build_fee_paid &&
+    ["in_talks", "proposal_out", "new"].includes(lead.status);
 
   const canKickoff =
     lead.email &&
@@ -220,8 +226,19 @@ function LeadCard({
         </div>
 
         {/* ── Fulfillment action buttons ─────────────────────────────────── */}
-        {(canKickoff || canSendPreview || canGoLive) && (
-          <div className="pt-1 border-t border-border/40">
+        {(canSendPayment || canKickoff || canSendPreview || canGoLive) && (
+          <div className="pt-1 border-t border-border/40 space-y-1">
+            {canSendPayment && (
+              <Button
+                size="sm"
+                className="w-full gap-2 bg-blue-600 hover:bg-blue-500 text-white text-xs h-8"
+                onClick={() => onSendPaymentLink(lead)}
+                disabled={isBusy}
+              >
+                {isBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CreditCard className="w-3.5 h-3.5" />}
+                Send Payment Links
+              </Button>
+            )}
             {canKickoff && (
               <Button
                 size="sm"
@@ -325,8 +342,9 @@ export default function AdminWebDesignCRM() {
   const [proposalText, setProposalText] = useState("");
   const [generatingProposal, setGeneratingProposal] = useState(false);
 
-  // Fulfillment
+  // Fulfillment + payment
   const [fulfillmentLoading, setFulfillmentLoading] = useState<string | null>(null);
+  const [paymentLinkLoading, setPaymentLinkLoading] = useState<string | null>(null);
   const [urlModalLead, setUrlModalLead] = useState<WebDesignLead | null>(null);
   const [urlModalStage, setUrlModalStage] = useState<"preview_ready" | "go_live" | null>(null);
   const [urlInput, setUrlInput] = useState("");
@@ -442,6 +460,23 @@ export default function AdminWebDesignCRM() {
     } catch (e: any) {
       toast.error(`Fulfillment failed: ${e.message}`);
     } finally {
+      setFulfillmentLoading(null);
+    }
+  }
+
+  async function handleSendPaymentLink(lead: WebDesignLead) {
+    setPaymentLinkLoading(lead.id);
+    setFulfillmentLoading(lead.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-web-design-checkout", {
+        body: { lead_id: lead.id, type: "both" },
+      });
+      if (error) throw error;
+      toast.success(`Payment links sent to ${lead.email}`);
+    } catch (e: any) {
+      toast.error(`Failed to send payment links: ${e.message}`);
+    } finally {
+      setPaymentLinkLoading(null);
       setFulfillmentLoading(null);
     }
   }
@@ -586,6 +621,7 @@ export default function AdminWebDesignCRM() {
                         onKickoff={handleKickoff}
                         onSendPreview={handleSendPreview}
                         onGoLive={handleGoLive}
+                        onSendPaymentLink={handleSendPaymentLink}
                         fulfillmentLoading={fulfillmentLoading}
                       />
                     ))}

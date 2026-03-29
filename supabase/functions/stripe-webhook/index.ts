@@ -760,6 +760,100 @@ serve(async (req) => {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // ── WEB DESIGN BUILD — $499 one-time ─────────────────────────────────
+      if (meta.type === "web_design_build") {
+        try {
+          const wdSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+          if (meta.lead_id) {
+            await wdSb
+              .from("web_design_leads" as any)
+              .update({ build_fee_paid: true, status: "building" })
+              .eq("id", meta.lead_id);
+          }
+          if (RESEND_API_KEY && customerEmail) {
+            // Confirm payment to client
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "Matt Michels <matt@notify.m2training.com>",
+                to: [customerEmail],
+                subject: `Payment received — ${meta.business_name || "your website"} is a go`,
+                html: `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#f8fafc;padding:32px;">
+                  <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:10px;overflow:hidden;border:1px solid #e2e8f0;">
+                    <div style="background:#e8621a;height:4px;"></div>
+                    <div style="padding:28px 32px;color:#1e293b;font-size:15px;line-height:1.9;">
+                      <p>Hey ${meta.business_name ? `— ${meta.business_name}` : "there"} —</p>
+                      <p><strong>Payment received. We're officially locked in.</strong></p>
+                      <p>I'll be in touch within a few hours to kick things off. You'll get a quick intake form from me — takes about 5 minutes — so I can build exactly what you need.</p>
+                      <p>Timeline: site live in 7 days from when I get your info back.</p>
+                      <p>Questions? Email <a href="mailto:matt@m2training.com" style="color:#e8621a;">matt@m2training.com</a> or text <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a> — whichever works best.</p>
+                      <p>— Matt Michels</p>
+                    </div>
+                  </div>
+                </body></html>`,
+              }),
+            });
+            // Notify Matt
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "M² System <matt@notify.m2training.com>",
+                to: ["matt@m2training.com"],
+                subject: `💰 $499 PAID — ${meta.business_name || customerEmail}`,
+                html: `<p><strong>New web design build payment received!</strong><br>
+                  Business: ${meta.business_name || "unknown"}<br>
+                  Client email: ${customerEmail}<br>
+                  Lead ID: ${meta.lead_id || "none"}<br>
+                  Status updated to "building" in CRM.<br>
+                  <a href="https://www.mattmichelstraining.com/admin">Open Admin Panel →</a></p>`,
+              }),
+            });
+          }
+        } catch (e) { console.error("[WEBHOOK] web_design_build error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── WEB DESIGN RETAINER — $49/mo subscription ─────────────────────────
+      if (meta.type === "web_design_retainer") {
+        try {
+          const wdSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+          if (meta.lead_id) {
+            await wdSb
+              .from("web_design_leads" as any)
+              .update({
+                monthly_retainer: true,
+                stripe_subscription_id: session.subscription as string || null,
+              })
+              .eq("id", meta.lead_id);
+          }
+          if (RESEND_API_KEY && customerEmail) {
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "Matt Michels <matt@notify.m2training.com>",
+                to: [customerEmail],
+                subject: `Monthly maintenance set up — ${meta.business_name || "your site"}`,
+                html: `<p>You're all set on the $49/mo maintenance plan. Your site stays live, secure, and backed up — and you've got my direct cell for any changes you need. Text me at (313) 806-4952 or email matt@m2training.com anytime. — Matt</p>`,
+              }),
+            });
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "M² System <matt@notify.m2training.com>",
+                to: ["matt@m2training.com"],
+                subject: `$49/mo retainer started — ${meta.business_name || customerEmail}`,
+                html: `<p>New web maintenance subscriber: <strong>${meta.business_name}</strong> — ${customerEmail}<br>Subscription ID: ${session.subscription || "n/a"}</p>`,
+              }),
+            });
+          }
+        } catch (e) { console.error("[WEBHOOK] web_design_retainer error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       if (!priceId || !GUIDE_MAP[priceId]) {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
