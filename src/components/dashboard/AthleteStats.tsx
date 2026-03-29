@@ -8,6 +8,9 @@ interface AthleteStatsProps {
   nextLevelLabel: string | null;
   ptsToNext: number | null;
   progressPct: number;
+  onStreakClick?: () => void;
+  onSessionsClick?: () => void;
+  onPointsClick?: () => void;
 }
 
 export default function AthleteStats({
@@ -18,20 +21,31 @@ export default function AthleteStats({
   nextLevelLabel,
   ptsToNext,
   progressPct,
+  onStreakClick,
+  onSessionsClick,
+  onPointsClick,
 }: AthleteStatsProps) {
   const weekDots = Math.min(sessionsThisWeek, 7);
 
   return (
     <div className="w-full px-4 py-4 space-y-4">
       <div className="flex gap-2">
-        <div className="flex-1 bg-white/5 border border-white/10 rounded-2xl p-4 text-center">
+        <button
+          onClick={onStreakClick}
+          className="flex-1 bg-white/5 border border-white/10 rounded-2xl p-4 text-center transition-all active:scale-95 hover:border-[#e8621a]/40"
+          style={{ cursor: onStreakClick ? "pointer" : "default" }}
+        >
           <div className="flex justify-center mb-1 text-[#e8621a]"><Flame size={20} /></div>
           <div className="font-oswald text-3xl font-black text-[#e8621a] leading-none">{streak}</div>
           <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter mt-1">
-            {streak === 1 ? "Day Streak" : "Day Streak"}
+            Day Streak
           </div>
-        </div>
-        <div className="flex-1 bg-white/5 border border-white/10 rounded-2xl p-4 text-center">
+        </button>
+        <button
+          onClick={onSessionsClick}
+          className="flex-1 bg-white/5 border border-white/10 rounded-2xl p-4 text-center transition-all active:scale-95 hover:border-green-500/40"
+          style={{ cursor: onSessionsClick ? "pointer" : "default" }}
+        >
           <div className="flex justify-center mb-1 text-green-500"><CheckCircle2 size={20} /></div>
           <div className="flex justify-center gap-0.5 mt-1 flex-wrap">
             {Array.from({ length: 7 }).map((_, i) => (
@@ -44,14 +58,18 @@ export default function AthleteStats({
           <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter mt-1.5">
             {sessionsThisWeek} This Week
           </div>
-        </div>
-        <div className="flex-1 bg-white/5 border border-white/10 rounded-2xl p-4 text-center">
+        </button>
+        <button
+          onClick={onPointsClick}
+          className="flex-1 bg-white/5 border border-white/10 rounded-2xl p-4 text-center transition-all active:scale-95 hover:border-[#a855f7]/40"
+          style={{ cursor: onPointsClick ? "pointer" : "default" }}
+        >
           <div className="flex justify-center mb-1 text-[#a855f7]"><Award size={20} /></div>
           <div className="font-oswald text-3xl font-black text-[#a855f7] leading-none">
             {totalPoints.toLocaleString()}
           </div>
           <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter mt-1">Points</div>
-        </div>
+        </button>
       </div>
       <div className="px-1">
         <div className="flex justify-between items-end mb-1 text-xs font-bold uppercase tracking-wide">

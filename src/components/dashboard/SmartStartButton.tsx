@@ -8,7 +8,7 @@ export default function SmartStartButton({ hasWorkout = true }) {
     <div className="w-full px-4 mb-24">
       {!isLogOpen ? (
         <button 
-          onClick={() => hasWorkout ? window.location.href='/workout/active' : setIsLogOpen(true)}
+          onClick={() => hasWorkout ? window.dispatchEvent(new Event("open-workout-zone")) : setIsLogOpen(true)}
           className="w-full h-[60px] bg-gradient-to-r from-[#e8621a] to-[#c94e12] rounded-2xl flex items-center justify-center gap-3 shadow-[0_10px_30px_rgba(232,98,26,0.4)] active:scale-95 transition-all"
         >
           {hasWorkout ? (

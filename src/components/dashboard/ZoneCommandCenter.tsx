@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Sparkles, Wrench, MessageCircle, Image, BarChart3, Trophy } from "lucide-react";
 
 const COMMANDS = [
-  { key: "generate", label: "Generate", icon: Sparkles, color: "#a855f7", route: "/free-ai-generator" },
-  { key: "fixit", label: "Fix It", icon: Wrench, color: "#00f0ff", route: "/ai-insights" },
+  { key: "generate", label: "Generate", icon: Sparkles, color: "#a855f7", route: null },
+  { key: "fixit", label: "Fix It", icon: Wrench, color: "#00f0ff", route: null },
   { key: "chat", label: "Chat", icon: MessageCircle, color: "#f97316", route: null },
   { key: "poster", label: "AI Poster", icon: Image, color: "#ec4899", route: null },
   { key: "progress", label: "Progress", icon: BarChart3, color: "#22c55e", route: "/progress" },
@@ -15,15 +15,19 @@ interface ZoneCommandCenterProps {
   onChat?: () => void;
   onProveIt?: () => void;
   onPoster?: () => void;
+  onGenerate?: () => void;
+  onFixIt?: () => void;
 }
 
-const ZoneCommandCenter = memo(({ onChat, onProveIt, onPoster }: ZoneCommandCenterProps) => {
+const ZoneCommandCenter = memo(({ onChat, onProveIt, onPoster, onGenerate, onFixIt }: ZoneCommandCenterProps) => {
   const navigate = useNavigate();
 
   const handleCommand = (cmd: typeof COMMANDS[number]) => {
     if (cmd.key === "chat" && onChat) { onChat(); return; }
     if (cmd.key === "proveit" && onProveIt) { onProveIt(); return; }
     if (cmd.key === "poster" && onPoster) { onPoster(); return; }
+    if (cmd.key === "generate" && onGenerate) { onGenerate(); return; }
+    if (cmd.key === "fixit" && onFixIt) { onFixIt(); return; }
     if (cmd.route) navigate(cmd.route);
   };
 
