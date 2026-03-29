@@ -337,8 +337,7 @@ const ZoneDashboard = () => {
     return !safeLocalStorage.getItem(`m2-tip-zone-${initialTab}-v1`);
   });
   const [generateView, setGenerateView] = useState<"menu" | "workout" | "fixit">("menu");
-  const [showQuickLog, setShowQuickLog] = useState(false);
-  const [showCheckInChoice, setShowCheckInChoice] = useState(false);
+const [showCheckInChoice, setShowCheckInChoice] = useState(false);
   const [alreadyCheckedInToday, setAlreadyCheckedInToday] = useState(false);
   const [checkingIn, setCheckingIn] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
@@ -352,46 +351,55 @@ const ZoneDashboard = () => {
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const { data: prof } = await supabase.from("profiles").select("athlete_name, full_name").eq("id", user.id).maybeSingle();
-      if (prof?.athlete_name || prof?.full_name) setDisplayName(prof.athlete_name || prof.full_name || "Athlete");
+      try {
+        const { data: prof, error: profError } = await supabase.from("profiles").select("athlete_name, full_name").eq("id", user.id).maybeSingle();
+        if (profError) console.warn("[ZoneDashboard] Failed to load profile:", profError.message);
+        if (prof?.athlete_name || prof?.full_name) setDisplayName(prof.athlete_name || prof.full_name || "Athlete");
 
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      const { count } = await supabase.from("progress_logs").select("*", { count: "exact", head: true }).eq("user_id", user.id).gte("logged_at", weekAgo.toISOString());
-      setSessionsThisWeek(count || 0);
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        const { count, error: countError } = await supabase.from("progress_logs").select("*", { count: "exact", head: true }).eq("user_id", user.id).gte("logged_at", weekAgo.toISOString());
+        if (countError) console.warn("[ZoneDashboard] Failed to load session count:", countError.message);
+        setSessionsThisWeek(count || 0);
 
-      const { data: ap } = await supabase
-        .from("user_active_programs")
-        .select("program_id, training_programs!inner(title)")
-        .eq("user_id", user.id).eq("status", "active").limit(1).maybeSingle();
-      if (ap?.training_programs && typeof ap.training_programs === "object" && "title" in ap.training_programs) {
-        const t = (ap.training_programs as any).title as string;
-        setCurrentProgram(t.length > 20 ? t.slice(0, 20) + "…" : t);
-        setHasActiveWorkout(true);
-      }
-
-      const { data: logs } = await supabase.from("progress_logs").select("logged_at").eq("user_id", user.id).order("logged_at", { ascending: false }).limit(60);
-      if (logs && logs.length > 0) {
-        let s = 1;
-        const days = [...new Set(logs.map(l => l.logged_at.slice(0, 10)))].sort().reverse();
-        for (let i = 1; i < days.length; i++) {
-          const prev = new Date(days[i - 1]);
-          const curr = new Date(days[i]);
-          prev.setDate(prev.getDate() - 1);
-          if (prev.toISOString().slice(0, 10) === curr.toISOString().slice(0, 10)) s++;
-          else break;
+        const { data: ap, error: apError } = await supabase
+          .from("user_active_programs")
+          .select("program_id, training_programs!inner(title)")
+          .eq("user_id", user.id).eq("status", "active").limit(1).maybeSingle();
+        if (apError) console.warn("[ZoneDashboard] Failed to load active program:", apError.message);
+        if (ap?.training_programs && typeof ap.training_programs === "object" && "title" in ap.training_programs) {
+          const t = (ap.training_programs as { title: string }).title;
+          setCurrentProgram(t.length > 20 ? t.slice(0, 20) + "…" : t);
+          setHasActiveWorkout(true);
         }
-        setStreak(s);
-      }
 
-      const today = new Date().toISOString().slice(0, 10);
-      const { count: checkinCount } = await supabase
-        .from("studio_checkins")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", user.id)
-        .gte("checked_in_at", today + "T00:00:00")
-        .lte("checked_in_at", today + "T23:59:59");
-      setAlreadyCheckedInToday((checkinCount || 0) > 0);
+        const { data: logs, error: logsError } = await supabase.from("progress_logs").select("logged_at").eq("user_id", user.id).order("logged_at", { ascending: false }).limit(60);
+        if (logsError) console.warn("[ZoneDashboard] Failed to load logs:", logsError.message);
+        if (logs && logs.length > 0) {
+          let s = 1;
+          const days = [...new Set(logs.map(l => l.logged_at.slice(0, 10)))].sort().reverse();
+          for (let i = 1; i < days.length; i++) {
+            const prev = new Date(days[i - 1]);
+            const curr = new Date(days[i]);
+            prev.setDate(prev.getDate() - 1);
+            if (prev.toISOString().slice(0, 10) === curr.toISOString().slice(0, 10)) s++;
+            else break;
+          }
+          setStreak(s);
+        }
+
+        const today = new Date().toISOString().slice(0, 10);
+        const { count: checkinCount, error: checkinError } = await supabase
+          .from("studio_checkins")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .gte("checked_in_at", today + "T00:00:00")
+          .lte("checked_in_at", today + "T23:59:59");
+        if (checkinError) console.warn("[ZoneDashboard] Failed to load check-in:", checkinError.message);
+        setAlreadyCheckedInToday((checkinCount || 0) > 0);
+      } catch (e) {
+        console.error("[ZoneDashboard] Unexpected error loading dashboard data:", e);
+      }
     };
     load();
   }, [user]);

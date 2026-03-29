@@ -39,6 +39,7 @@ const ZoneCommandCenter = memo(({ onChat, onProveIt, onPoster }: ZoneCommandCent
             <button
               key={cmd.key}
               onClick={() => handleCommand(cmd)}
+              aria-label={cmd.label}
               className="flex flex-col items-center gap-1.5 min-w-[72px] snap-start rounded-2xl p-3 transition-all active:scale-[0.94]"
               style={{
                 background: `${cmd.color}0d`,

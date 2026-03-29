@@ -1,4 +1,3 @@
-import React from 'react';
 import { Flame, CheckCircle2, Award, Target } from 'lucide-react';
 
 export default function AthleteStats() {

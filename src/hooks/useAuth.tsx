@@ -117,7 +117,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSubscriptionEnd(subResult.data?.subscription_end ?? null);
       }
     } catch (e) {
-      // subscription check failed silently
+      console.warn("[Auth] Subscription check failed:", e);
     }
   }, []);
 
@@ -234,7 +234,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const { queryClient } = await import("@/App");
       queryClient.clear();
-    } catch {}
+    } catch (e) {
+      console.warn("[Auth] Failed to clear query cache on sign out:", e);
+    }
     safeLocalStorage.removeItem("m2-query-cache");
     safeLocalStorage.removeItem("m2_offline_queue");
     // Use scope: "local" first to clear local state immediately,
