@@ -20,7 +20,7 @@ const fade = (delay: number) => ({
   transition: { duration: 0.5, delay },
 });
 
-const MAILTO = "mailto:matthew.michels4@gmail.com";
+const MAILTO = "mailto:matthewmichels4@gmail.com";
 
 const AMENITIES = [
   { icon: Dumbbell, label: "Full barbell & rack setup" },
