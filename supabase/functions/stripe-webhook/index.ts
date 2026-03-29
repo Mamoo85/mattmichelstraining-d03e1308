@@ -863,6 +863,114 @@ serve(async (req) => {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // ── PDF GUIDE (static content, email delivery) ────────────────────────
+      if (meta.type === "pdf_guide" && meta.guide_id && customerEmail) {
+        const PDF_GUIDE_CONTENT: Record<string, { name: string; html: string }> = {
+          "middle-school-foundation": {
+            name: "The Middle School Foundation (Top 10)",
+            html: `
+              <h2 style="color:#e85d04;margin-bottom:8px;">The Middle School Foundation — Top 10 Exercises</h2>
+              <p style="font-size:14px;color:#666;margin-bottom:20px;">By Matt Michels · M² Performance Training</p>
+              <hr style="border:1px solid #e2e8f0;margin:20px 0;">
+              <p style="font-size:14px;line-height:1.8;">Before your athlete lifts heavy, runs fast, or competes hard — they need a foundation. These 10 movements build movement quality, joint integrity, and the base that prevents injuries for years.</p>
+              <h3 style="color:#1e293b;">1. Goblet Squat</h3><p><strong>Sets/Reps:</strong> 3×10 | <strong>Why:</strong> Teaches hip hinge, builds quad and glute strength, forces upright torso. The safest first squat for any athlete.</p>
+              <h3 style="color:#1e293b;">2. Hip Hinge (Dowel Drill)</h3><p><strong>Sets/Reps:</strong> 3×8 | <strong>Why:</strong> Most middle schoolers have never loaded a hip hinge. This pattern protects the lower back in every sport.</p>
+              <h3 style="color:#1e293b;">3. Push-Up (Strict)</h3><p><strong>Sets/Reps:</strong> 3×8–12 | <strong>Why:</strong> Full-body tension, scapular control, wrist stability. No sagging hips, no craned neck.</p>
+              <h3 style="color:#1e293b;">4. Inverted Row</h3><p><strong>Sets/Reps:</strong> 3×10 | <strong>Why:</strong> Balances pushing with pulling. Strengthens the rear delts and upper back that every young thrower needs.</p>
+              <h3 style="color:#1e293b;">5. Dead Bug</h3><p><strong>Sets/Reps:</strong> 3×8 each side | <strong>Why:</strong> Anti-extension core stability. Teaches the spine to stay neutral under load — the foundation of every athletic movement.</p>
+              <h3 style="color:#1e293b;">6. Side-Lying Hip Abduction</h3><p><strong>Sets/Reps:</strong> 3×12 each | <strong>Why:</strong> The glute med is the most undertrained muscle in youth athletes. Weak hip abductors = knee valgus = ACL risk.</p>
+              <h3 style="color:#1e293b;">7. Single-Leg Balance (Eyes Closed)</h3><p><strong>Sets/Reps:</strong> 3×20s each | <strong>Why:</strong> Proprioception training. Ankle and knee stability that reduces sprain risk in any sport.</p>
+              <h3 style="color:#1e293b;">8. Scapular Wall Slide</h3><p><strong>Sets/Reps:</strong> 3×10 | <strong>Why:</strong> Upper back mobility and scapular control. Fixes the rounded posture middle schoolers develop from screens.</p>
+              <h3 style="color:#1e293b;">9. Reverse Lunge</h3><p><strong>Sets/Reps:</strong> 3×8 each leg | <strong>Why:</strong> Safer than forward lunge at this age. Builds single-leg strength and hip flexor flexibility simultaneously.</p>
+              <h3 style="color:#1e293b;">10. Plank (With Breathing)</h3><p><strong>Sets/Reps:</strong> 3×30s | <strong>Why:</strong> Core brace under time tension. The breath cue — exhale fully at the top — teaches intra-abdominal pressure that carries into all lifting.</p>
+              <hr style="border:1px solid #e2e8f0;margin:24px 0;">
+              <p style="font-size:13px;color:#64748b;">Run this 2–3x/week before sport practice or as a standalone session. Master the movement quality before adding load. Questions? Email matt@m2training.com or text (313) 806-4952.</p>
+            `,
+          },
+          "high-school-armor": {
+            name: "High School Armor (Top 10)",
+            html: `
+              <h2 style="color:#e85d04;margin-bottom:8px;">High School Armor — Top 10 Exercises</h2>
+              <p style="font-size:14px;color:#666;margin-bottom:20px;">By Matt Michels · M² Performance Training</p>
+              <hr style="border:1px solid #e2e8f0;margin:20px 0;">
+              <p style="font-size:14px;line-height:1.8;">High school is where injuries spike — because athletes increase intensity without building structural integrity first. These 10 exercises build the durability, explosive power, and connective tissue strength that keeps varsity athletes on the field.</p>
+              <h3 style="color:#1e293b;">1. Romanian Deadlift (RDL)</h3><p><strong>Sets/Reps:</strong> 3×8 | <strong>Why:</strong> Posterior chain development. The hamstrings and glutes are the body's shock absorbers — this is how you build them.</p>
+              <h3 style="color:#1e293b;">2. Bulgarian Split Squat</h3><p><strong>Sets/Reps:</strong> 3×8 each | <strong>Why:</strong> Single-leg strength that transfers directly to cutting, sprinting, and landing. Exposes and fixes asymmetries.</p>
+              <h3 style="color:#1e293b;">3. Trap Bar Deadlift (or Hex Bar)</h3><p><strong>Sets/Reps:</strong> 4×5 | <strong>Why:</strong> Full-body strength in a spine-safe position. The most transferable strength movement in high school training.</p>
+              <h3 style="color:#1e293b;">4. Nordic Hamstring Curl</h3><p><strong>Sets/Reps:</strong> 3×5 | <strong>Why:</strong> The #1 evidence-based exercise for ACL and hamstring injury prevention. Non-negotiable for every high school athlete.</p>
+              <h3 style="color:#1e293b;">5. Push-Up to Row (DB)</h3><p><strong>Sets/Reps:</strong> 3×8 each | <strong>Why:</strong> Pressing + horizontal pulling in one movement. Builds the shoulder armor that contact athletes need.</p>
+              <h3 style="color:#1e293b;">6. Copenhagen Plank</h3><p><strong>Sets/Reps:</strong> 3×20s each | <strong>Why:</strong> Groin and adductor strength. Prevents the groin strains and hip flexor injuries that sideline athletes mid-season.</p>
+              <h3 style="color:#1e293b;">7. Pallof Press</h3><p><strong>Sets/Reps:</strong> 3×10 each | <strong>Why:</strong> Anti-rotation core stability. Teaches the core to resist — not just flex — which is how it actually works in sport.</p>
+              <h3 style="color:#1e293b;">8. Hip Thrust</h3><p><strong>Sets/Reps:</strong> 3×10 | <strong>Why:</strong> Glute activation at hip extension. Directly builds the push-off power used in every sprint and jump.</p>
+              <h3 style="color:#1e293b;">9. Face Pull</h3><p><strong>Sets/Reps:</strong> 3×15 | <strong>Why:</strong> Rear delt and external rotator health. Counters the internal rotation stress of throwing, swimming, and racket sports.</p>
+              <h3 style="color:#1e293b;">10. Box Jump (Stick Landing)</h3><p><strong>Sets/Reps:</strong> 4×4 | <strong>Why:</strong> Rate of force development AND landing mechanics. The stick-landing cue trains the deceleration control that prevents ACL injuries.</p>
+              <hr style="border:1px solid #e2e8f0;margin:24px 0;">
+              <p style="font-size:13px;color:#64748b;">Run 2–3x/week. In-season: reduce volume by 30%, keep intensity. Off-season: push progressive overload on the big lifts (RDL, Split Squat, Trap Bar). Questions? Email matt@m2training.com or text (313) 806-4952.</p>
+            `,
+          },
+          "road-warrior": {
+            name: "The Road Warrior (Top 10 Travel Fixes)",
+            html: `
+              <h2 style="color:#e85d04;margin-bottom:8px;">The Road Warrior — Top 10 Travel Fixes</h2>
+              <p style="font-size:14px;color:#666;margin-bottom:20px;">By Matt Michels · M² Performance Training</p>
+              <hr style="border:1px solid #e2e8f0;margin:20px 0;">
+              <p style="font-size:14px;line-height:1.8;">Hotel room. Tournament weekend. No equipment. No excuses. These 10 movements keep your body functioning when travel takes you away from training. Use them as a warmup, a maintenance session, or a recovery day circuit.</p>
+              <h3 style="color:#1e293b;">1. 90/90 Hip Switch</h3><p><strong>Sets/Reps:</strong> 2×5 each | <strong>Why:</strong> Restores hip internal/external rotation lost from sitting in a car or plane. Do this first — everything else works better after it.</p>
+              <h3 style="color:#1e293b;">2. World's Greatest Stretch</h3><p><strong>Sets/Reps:</strong> 2×5 each | <strong>Why:</strong> One movement that hits hip flexor, T-spine, hamstring, and ankle. Best single mobility drill in existence for travel-stiff athletes.</p>
+              <h3 style="color:#1e293b;">3. Glute Bridge March</h3><p><strong>Sets/Reps:</strong> 3×10 each | <strong>Why:</strong> Activates glutes and hammers anti-pelvic-tilt core stability. Reverses the dead-butt syndrome from hours of sitting.</p>
+              <h3 style="color:#1e293b;">4. Wall Thoracic Rotation</h3><p><strong>Sets/Reps:</strong> 2×8 each | <strong>Why:</strong> Unlocks the T-spine that compresses during long car rides. Directly improves shoulder mobility and reduces neck tension.</p>
+              <h3 style="color:#1e293b;">5. Push-Up (Slow Eccentric)</h3><p><strong>Sets/Reps:</strong> 3×8 (3-second down) | <strong>Why:</strong> Maintains upper body strength with zero equipment. The slow eccentric builds connective tissue resilience that hotel gym machines can't.</p>
+              <h3 style="color:#1e293b;">6. Single-Leg RDL (Bodyweight)</h3><p><strong>Sets/Reps:</strong> 3×8 each | <strong>Why:</strong> Posterior chain + balance + proprioception. One movement that hits everything the lower body needs when you can't load.</p>
+              <h3 style="color:#1e293b;">7. Lateral Band Walk (or Lateral Lunge if no band)</h3><p><strong>Sets/Reps:</strong> 3×12 each | <strong>Why:</strong> Glute med activation that protects the knee. Travel without this and your hips tighten up, your knee tracks wrong, and your ankle gets stressed.</p>
+              <h3 style="color:#1e293b;">8. Dead Bug</h3><p><strong>Sets/Reps:</strong> 3×8 each | <strong>Why:</strong> Core stability that doesn't require a single piece of equipment. Every hotel room has a floor.</p>
+              <h3 style="color:#1e293b;">9. Calf Raise + Ankle Circle</h3><p><strong>Sets/Reps:</strong> 3×15 each direction | <strong>Why:</strong> Achilles and ankle health after travel compression. Athletes who skip this are one landing away from a sprain on tournament day.</p>
+              <h3 style="color:#1e293b;">10. Foam Roll or Tennis Ball — Feet, Calves, T-Spine</h3><p><strong>Sets/Reps:</strong> 60s each area | <strong>Why:</strong> Tissue quality maintenance. Travel compresses fascia. Roll what aches before it becomes what doesn't work.</p>
+              <hr style="border:1px solid #e2e8f0;margin:24px 0;">
+              <p style="font-size:13px;color:#64748b;"><strong>Travel-day warmup protocol:</strong> 90/90 → World's Greatest → Wall Rotation → Glute Bridge March → done. Takes 8 minutes. Do it before competing or after a long drive. Questions? Email matt@m2training.com or text (313) 806-4952.</p>
+            `,
+          },
+        };
+
+        const guideContent = PDF_GUIDE_CONTENT[meta.guide_id];
+        if (guideContent && RESEND_API_KEY) {
+          const emailHtml = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;">
+<tr><td align="center" style="padding:32px 16px;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">
+    <tr><td style="background:#e8621a;padding:4px 0;"></td></tr>
+    <tr><td style="padding:28px 32px;color:#1e293b;font-size:15px;line-height:1.8;">
+      <p>Hey —</p>
+      <p>Your guide is below. This is the exact blueprint I use with my athletes. Print it, save it, or screenshot it — it's yours forever.</p>
+      ${guideContent.html}
+      <p style="margin-top:24px;">Questions on any of these? Email me at <a href="mailto:matt@m2training.com" style="color:#e8621a;">matt@m2training.com</a> or text <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a>.</p>
+      <p>— Matt Michels</p>
+    </td></tr>
+    <tr><td style="background:#f8fafc;padding:16px 32px;border-top:1px solid #e2e8f0;font-size:12px;color:#94a3b8;">
+      M² Performance Training · <a href="mailto:matt@m2training.com" style="color:#e8621a;">matt@m2training.com</a> · <a href="tel:+13138064952" style="color:#94a3b8;">(313) 806-4952</a>
+    </td></tr>
+  </table>
+</td></tr>
+</table>
+</body></html>`;
+
+          await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              from: "Matt Michels <matt@notify.m2training.com>",
+              to: [customerEmail],
+              subject: `Your guide: ${guideContent.name}`,
+              html: emailHtml,
+            }),
+          });
+          console.log(`[WEBHOOK] PDF guide emailed: ${meta.guide_id} → ${customerEmail}`);
+        }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       if (!priceId || !GUIDE_MAP[priceId]) {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }

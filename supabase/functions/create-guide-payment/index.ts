@@ -8,7 +8,26 @@ const corsHeaders = {
 };
 
 const TIER_DISCOUNTS: Record<string, number> = {
-  basic: 10, foundation: 15, custom: 20, team_elite: 25,
+  basic: 10, foundation: 15, custom: 20, team_elite: 25, guided: 12,
+};
+
+// PDF guide placeholder IDs — not real Stripe prices, amount/name resolved here
+const STATIC_PRICE_MAP: Record<string, { amount: number; name: string; guideId: string }> = {
+  "price_middle_school_foundation": {
+    amount: 1500,
+    name: "The Middle School Foundation (Top 10)",
+    guideId: "middle-school-foundation",
+  },
+  "price_high_school_armor": {
+    amount: 1500,
+    name: "High School Armor (Top 10)",
+    guideId: "high-school-armor",
+  },
+  "price_road_warrior": {
+    amount: 1500,
+    name: "The Road Warrior (Top 10 Travel Fixes)",
+    guideId: "road-warrior",
+  },
 };
 
 serve(async (req) => {
@@ -62,9 +81,19 @@ serve(async (req) => {
       }
     }
 
-    // Get the price amount from Stripe to calculate gift card discount
-    const stripePrice = await stripe.prices.retrieve(priceId);
-    let originalAmountCents = stripePrice.unit_amount || 0;
+    // Get the price amount — use static map for placeholder IDs, Stripe API for real ones
+    const staticEntry = STATIC_PRICE_MAP[priceId];
+    if (staticEntry) {
+      sessionMetadata.type = "pdf_guide";
+      sessionMetadata.guide_id = staticEntry.guideId;
+    }
+    let originalAmountCents: number;
+    if (staticEntry) {
+      originalAmountCents = staticEntry.amount;
+    } else {
+      const stripePrice = await stripe.prices.retrieve(priceId);
+      originalAmountCents = stripePrice.unit_amount || 0;
+    }
 
     // Apply tier discount
     const discountPct = TIER_DISCOUNTS[tier] || 0;
@@ -100,9 +129,11 @@ serve(async (req) => {
     const finalAmountCents = Math.max(0, amountAfterTierCents - giftCardAppliedCents);
 
     // Build line items with calculated final price
-    const lineItemName = extraMetadata?.type === "custom_program"
-      ? `M² Custom Program — ${extraMetadata.weeks || 4} Week`
-      : "M² Training Product";
+    const lineItemName = staticEntry
+      ? staticEntry.name
+      : extraMetadata?.type === "custom_program"
+        ? `M² Custom Program — ${extraMetadata.weeks || 4} Week`
+        : "M² Training Product";
 
     let description = "";
     if (tierDiscountCents > 0) description += `Member discount: -$${(tierDiscountCents / 100).toFixed(2)}`;
