@@ -17,8 +17,5 @@ jobs:
         with:
           version: latest
 
-      - name: Run DB migrations
-        run: supabase db push --project-ref eauvubfpanpeuxsrqesu --password ${{ secrets.SUPABASE_DB_PASSWORD }}
-
       - name: Deploy all edge functions
         run: supabase functions deploy --project-ref eauvubfpanpeuxsrqesu
