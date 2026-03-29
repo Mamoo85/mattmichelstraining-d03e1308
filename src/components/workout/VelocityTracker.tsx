@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import Webcam from "react-webcam";
 import * as tf from "@tensorflow/tfjs";
+import "@tensorflow/tfjs-backend-webgl";
+import "@tensorflow/tfjs-backend-wasm";
 import * as poseDetection from "@tensorflow-models/pose-detection";
 import { Button } from "@/components/ui/button";
 import { X, RotateCcw, SwitchCamera, Shield, Loader2, Zap, TrendingUp } from "lucide-react";
@@ -45,6 +47,7 @@ const VelocityTracker = ({ exerciseTitle, onClose }: VelocityTrackerProps) => {
     let cancelled = false;
     const init = async () => {
       try {
+        await tf.setBackend("webgl");
         await tf.ready();
         const detector = await poseDetection.createDetector(
           poseDetection.SupportedModels.MoveNet,
@@ -56,7 +59,22 @@ const VelocityTracker = ({ exerciseTitle, onClose }: VelocityTrackerProps) => {
         setStatusText("Tracking active");
       } catch (err) {
         console.error("Velocity tracker model failed:", err);
-        setStatusText("Failed to load model. Try refreshing.");
+        // Fall back to WASM if WebGL unavailable
+        try {
+          await tf.setBackend("wasm");
+          await tf.ready();
+          const detector = await poseDetection.createDetector(
+            poseDetection.SupportedModels.MoveNet,
+            { modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING }
+          );
+          if (cancelled) { detector.dispose(); return; }
+          detectorRef.current = detector;
+          setLoading(false);
+          setStatusText("Tracking active");
+        } catch (fallbackErr) {
+          console.error("Velocity tracker fallback failed:", fallbackErr);
+          setStatusText("Failed to load model. Try refreshing.");
+        }
       }
     };
     init();
