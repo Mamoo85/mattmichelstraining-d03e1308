@@ -115,11 +115,12 @@ const AdminDirectMessages = () => {
   // Realtime
   useEffect(() => {
     const channel = supabase
-      .channel("admin-dm")
+      .channel(`coach-dm:${selectedUser}`)
       .on("postgres_changes", {
         event: "INSERT",
         schema: "public",
         table: "coach_direct_messages",
+        filter: `user_id=eq.${selectedUser}`,
       }, (payload) => {
         const msg = payload.new as DirectMessage;
         if (selectedUser === msg.user_id) {

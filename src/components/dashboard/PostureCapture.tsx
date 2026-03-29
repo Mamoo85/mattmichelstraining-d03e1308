@@ -68,8 +68,10 @@ const PostureCapture = ({ onComplete, onSkip }: PostureCaptureProps) => {
         if (frontUp.error) throw frontUp.error;
         if (sideUp.error) throw sideUp.error;
 
-        const frontUrl = supabase.storage.from("form_checks").getPublicUrl(frontUp.data.path).data.publicUrl;
-        const sideUrl = supabase.storage.from("form_checks").getPublicUrl(sideUp.data.path).data.publicUrl;
+        const { data: frontUrlData } = await supabase.storage.from("form_checks").createSignedUrl(frontUp.data.path, 3600);
+        const frontUrl = frontUrlData?.signedUrl ?? '';
+        const { data: sideUrlData } = await supabase.storage.from("form_checks").createSignedUrl(sideUp.data.path, 3600);
+        const sideUrl = sideUrlData?.signedUrl ?? '';
 
         const { error } = await supabase.from("posture_requests" as any).insert({
           user_id: userId,

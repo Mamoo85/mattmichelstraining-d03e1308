@@ -52,7 +52,7 @@ const CoachMessaging = () => {
   useEffect(() => {
     if (!user) return;
     const channel = supabase
-      .channel("coach-dm")
+      .channel(`coach-dm:${user.id}`)
       .on("postgres_changes", {
         event: "INSERT",
         schema: "public",

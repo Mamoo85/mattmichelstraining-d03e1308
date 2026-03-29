@@ -115,10 +115,10 @@ const PostWorkoutSummary = ({
           .from("form-check-videos")
           .upload(path, imageFile, { contentType: imageFile.type });
         if (!upErr) {
-          const { data: urlData } = supabase.storage
+          const { data: urlData } = await supabase.storage
             .from("form-check-videos")
-            .getPublicUrl(path);
-          imageUrl = urlData.publicUrl;
+            .createSignedUrl(path, 3600);
+          imageUrl = urlData?.signedUrl ?? '';
           imageStatus = "pending";
         }
       } catch (err: any) {

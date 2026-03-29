@@ -107,8 +107,8 @@ const FoundationPrograms = () => {
       if (path.includes('..')) throw new Error('Invalid file path');
       const { error } = await supabase.storage.from("form-check-videos").upload(path, file);
       if (error) throw error;
-      const { data: urlData } = supabase.storage.from("form-check-videos").getPublicUrl(path);
-      setVideoUrl(urlData.publicUrl);
+      const { data: urlData } = await supabase.storage.from("form-check-videos").createSignedUrl(path, 3600);
+      setVideoUrl(urlData?.signedUrl ?? '');
       toast({ title: "Video uploaded!", description: "Matt will review it with your program." });
     } catch (err: any) {
       toast({ title: "Upload failed", description: err.message, variant: "destructive" });

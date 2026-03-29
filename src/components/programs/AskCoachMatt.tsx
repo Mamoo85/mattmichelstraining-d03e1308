@@ -60,8 +60,8 @@ const AskCoachMatt = ({ programId, programTitle, weekNumber, dayNumber, exercise
         const path = `${user.id}/${Date.now()}.${ext}`;
         const { error: uploadError } = await supabase.storage.from("form_checks").upload(path, videoFile, { contentType: videoFile.type });
         if (uploadError) throw uploadError;
-        const { data: urlData } = supabase.storage.from("form_checks").getPublicUrl(path);
-        videoUrl = urlData.publicUrl;
+        const { data: urlData } = await supabase.storage.from("form_checks").createSignedUrl(path, 3600);
+        videoUrl = urlData?.signedUrl ?? '';
       }
 
       await supabase.from("program_messages").insert({
