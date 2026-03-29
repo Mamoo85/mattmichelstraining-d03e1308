@@ -69,7 +69,10 @@ const PdfGuides = () => {
     setBuyingId(modalGuide.id);
     try {
       const { data, error } = await supabase.functions.invoke("create-guide-payment", {
-        body: { priceId: modalGuide.priceId },
+        body: {
+          priceId: modalGuide.priceId,
+          metadata: { type: "pdf_guide", guide_id: modalGuide.id },
+        },
       });
       if (error) throw error;
       if (data?.url) window.open(data.url, "_blank");
@@ -139,6 +142,17 @@ const PdfGuides = () => {
                 </div>
               </div>
             )}
+
+            <button
+              onClick={(e) => { e.stopPropagation(); openModal(guide); }}
+              disabled={buyingId === guide.id}
+              className="mt-auto pt-3 w-full bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-widest py-2.5 hover:opacity-90 transition-m2 disabled:opacity-50 flex items-center justify-center gap-1.5"
+            >
+              {buyingId === guide.id ? (
+                <Loader2 size={11} className="animate-spin" />
+              ) : null}
+              Get This Guide — {guide.price}
+            </button>
 
           </div>
         ))}
