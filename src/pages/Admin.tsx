@@ -76,6 +76,8 @@ const UserActivityFeed = lazy(() => import("@/components/admin/UserActivityFeed"
 const AdminAiCommandCenter = lazy(() => import("@/components/admin/AdminAiCommandCenter"));
 const AdminImageMatcher = lazy(() => import("@/components/admin/AdminImageMatcher"));
 const AdminWebDesignCRM = lazy(() => import("@/components/admin/AdminWebDesignCRM"));
+const AdminProspector = lazy(() => import("@/components/admin/AdminProspector"));
+const AdminAutomationHub = lazy(() => import("@/components/admin/AdminAutomationHub"));
 
 const MASTER_TABS = [
   { key: "ai", label: "AI Center", icon: Bot, desc: "All AI · One Place" },
@@ -402,9 +404,11 @@ const Admin = () => {
 
         {/* ── WEB DESIGN ── */}
         {activeTab === "webdesign" && (
-          <Suspense fallback={<TabLoader />}>
-            <AdminWebDesignCRM />
-          </Suspense>
+          <SubTabs tabs={[
+            { key: "crm", label: "CRM", content: <AdminWebDesignCRM /> },
+            { key: "prospector", label: "Prospector", content: <AdminProspector /> },
+            { key: "automation", label: "Automation Hub", content: <AdminAutomationHub /> },
+          ]} />
         )}
       </div>
     </div>

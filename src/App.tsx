@@ -95,6 +95,8 @@ const DemoHomepage = lazyRetry(() => import("./pages/DemoHomepage"));
 const ZonePortal = lazyRetry(() => import("./pages/ZonePortal"));
 const ZoneDashboard = lazyRetry(() => import("./pages/ZoneDashboard"));
 const AiInsights = lazyRetry(() => import("./pages/AiInsights"));
+const LocalBusinessScore = lazyRetry(() => import("./pages/LocalBusinessScore"));
+const NewsletterSubscribe = lazyRetry(() => import("./pages/NewsletterSubscribe"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -265,6 +267,8 @@ const App = () => (
                     <Route path="/demo-cleaning/*" element={<CleaningServiceMockup />} />
                     <Route path="/demo-salon" element={<SalonMockup />} />
                     <Route path="/demo-salon/*" element={<SalonMockup />} />
+                    <Route path="/local-business-score" element={<LocalBusinessScore />} />
+                    <Route path="/newsletter" element={<NewsletterSubscribe />} />
                     <Route path="/free-program" element={<FreeProgram />} />
                     <Route path="/studio-rental" element={<StudioRental />} />
                     <Route path="/results" element={<Results />} />
