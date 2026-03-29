@@ -344,7 +344,7 @@ const ZoneDashboard = () => {
         className="fixed bottom-20 right-4 z-40 h-14 w-14 rounded-full flex items-center justify-center transition-all active:scale-90"
         style={{
           background: "#e8621a",
-          boxShadow: "0 4px_20px rgba(232,98,26,0.5)",
+          boxShadow: "0 4px 20px rgba(232,98,26,0.5)",
         }}
         aria-label="Log workout"
       >
