@@ -20,6 +20,10 @@ const AFFILIATE_LINKS = {
   elevenlabs: "https://try.elevenlabs.io/jh6f4tyyqf4n",
   surferSeo: "https://surferseo.com/?via=matt",
   synthesia: "https://www.synthesia.io/?via=matthew-michels",
+  seamlessAi: "https://seamless.ai/?via=matt",
+  instantly: "https://instantly.ai/?via=matt",
+  pipedrive: "https://www.pipedrive.com/?via=matt",
+  hubspot: "https://www.hubspot.com/?via=matt",
 };
 
 async function generateNewsletterContent(): Promise<{ subject: string; html: string; preview: string }> {
@@ -94,15 +98,19 @@ Be direct and tactical. These are experienced reps who hate fluff. Write like yo
   }
 
   const toolRotation = [
-    { key: "apollo",      link: AFFILIATE_LINKS.apollo,     name: "Apollo.io" },
-    { key: "hunter",      link: AFFILIATE_LINKS.hunter,     name: "Hunter.io" },
-    { key: "linkedin",    link: AFFILIATE_LINKS.linkedin,   name: "LinkedIn Sales Navigator" },
-    { key: "writesonic",  link: AFFILIATE_LINKS.writesonic, name: "Writesonic" },
-    { key: "elevenlabs",  link: AFFILIATE_LINKS.elevenlabs, name: "ElevenLabs" },
-    { key: "surferSeo",   link: AFFILIATE_LINKS.surferSeo,  name: "Surfer SEO" },
-    { key: "synthesia",   link: AFFILIATE_LINKS.synthesia,  name: "Synthesia" },
+    { key: "apollo",      link: AFFILIATE_LINKS.apollo,      name: "Apollo.io",                 tip: "Use the Chrome extension to pull direct dials while browsing LinkedIn — 10 seconds per contact." },
+    { key: "hunter",      link: AFFILIATE_LINKS.hunter,      name: "Hunter.io",                 tip: "Verify emails before blasting. Hunter catches 95% of bad addresses before they tank your sender score." },
+    { key: "linkedin",    link: AFFILIATE_LINKS.linkedin,    name: "LinkedIn Sales Navigator",  tip: "Save leads into custom lists by territory. Set alerts for job changes — that's your warm intro moment." },
+    { key: "writesonic",  link: AFFILIATE_LINKS.writesonic,  name: "Writesonic",                tip: "Generate 10 cold email variations in 60 seconds. A/B test subject lines without writing them yourself." },
+    { key: "elevenlabs",  link: AFFILIATE_LINKS.elevenlabs,  name: "ElevenLabs",                tip: "Clone your voice and create personalized voicemail drops at scale. Your prospects hear YOU, not a robot." },
+    { key: "surferSeo",   link: AFFILIATE_LINKS.surferSeo,   name: "Surfer SEO",                tip: "Optimize your LinkedIn articles and company blog posts to rank on Google. More inbound = less cold calling." },
+    { key: "synthesia",   link: AFFILIATE_LINKS.synthesia,   name: "Synthesia",                 tip: "Create personalized video prospecting messages without being on camera. Send 50 custom videos per day." },
+    { key: "seamlessAi",  link: AFFILIATE_LINKS.seamlessAi,  name: "Seamless.ai",               tip: "Real-time verified B2B contact data. Search by title, company size, and tech stack — get direct dials instantly." },
+    { key: "instantly",   link: AFFILIATE_LINKS.instantly,    name: "Instantly.ai",              tip: "Warm up unlimited email accounts and send 5,000+ cold emails/day without landing in spam. Built for outbound." },
+    { key: "pipedrive",   link: AFFILIATE_LINKS.pipedrive,   name: "Pipedrive",                 tip: "Visual sales pipeline built for field reps. Drag deals between stages. See exactly where your revenue is stuck." },
+    { key: "hubspot",     link: AFFILIATE_LINKS.hubspot,     name: "HubSpot",                   tip: "Free CRM with email tracking — know the second a prospect opens your email. Upgrade only when you need automation." },
   ];
-  const spotlightTool = toolRotation[weekNumber % 7];
+  const spotlightTool = toolRotation[weekNumber % toolRotation.length];
   const toolLink = spotlightTool.link;
   if (!parsed.tool_name) parsed.tool_name = spotlightTool.name;
 
@@ -139,8 +147,8 @@ Be direct and tactical. These are experienced reps who hate fluff. Write like yo
     <!-- Tool Spotlight -->
     <div style="border:1px solid #e2e8f0;padding:16px 20px;margin:0 0 24px;border-radius:6px;">
       <p style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:2px;color:#64748b;text-transform:uppercase;">Tool Spotlight</p>
-      <p style="margin:0 0 6px;font-size:15px;font-weight:700;color:#1e293b;"><a href="${toolLink}" style="color:#e8621a;text-decoration:none;">${parsed.tool_name}</a></p>
-      <p style="margin:0;font-size:14px;color:#334155;line-height:1.7;">${parsed.tool_tip}</p>
+      <p style="margin:0 0 6px;font-size:15px;font-weight:700;color:#1e293b;"><a href="${toolLink}" style="color:#e8621a;text-decoration:none;">${spotlightTool.name}</a></p>
+      <p style="margin:0;font-size:14px;color:#334155;line-height:1.7;">${spotlightTool.tip}</p>
     </div>
 
     <!-- Stat -->

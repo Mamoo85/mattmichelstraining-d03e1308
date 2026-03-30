@@ -5,7 +5,7 @@ import AppNavbar from "@/components/layout/AppNavbar";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Users, Dumbbell, Landmark, FileText, Trash2, ClipboardList, Megaphone, Bot, Globe } from "lucide-react";
+import { Loader2, Users, Dumbbell, Landmark, FileText, Trash2, ClipboardList, Megaphone, Bot, Globe, DollarSign } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 
@@ -82,8 +82,10 @@ const AdminWebDesignAutomations = lazy(() => import("@/components/admin/AdminWeb
 const AdminGiftCards = lazy(() => import("@/components/admin/AdminGiftCards"));
 const AdminGuideStore = lazy(() => import("@/components/admin/AdminGuideStore"));
 const AdminAffiliateManager = lazy(() => import("@/components/admin/AdminAffiliateManager"));
+const AdminBusinessDashboard = lazy(() => import("@/components/admin/AdminBusinessDashboard"));
 
 const MASTER_TABS = [
+  { key: "business", label: "Business", icon: DollarSign, desc: "Revenue · Automation" },
   { key: "ai", label: "AI Center", icon: Bot, desc: "All AI · One Place" },
   { key: "roster", label: "The Roster", icon: Users, desc: "Users · Support · Families" },
   { key: "engine", label: "Training Engine", icon: Dumbbell, desc: "Programs · AI · Coaching" },
@@ -119,7 +121,7 @@ const SubTabs = ({ tabs, defaultTab }: { tabs: { key: string; label: string | Re
 );
 
 const Admin = () => {
-  const [activeTab, setActiveTab] = useState("roster");
+  const [activeTab, setActiveTab] = useState("business");
   const { isAdmin, isLoading } = useIsAdmin();
 
   const { data: pendingDraftsCount = 0 } = useQuery({
@@ -252,7 +254,7 @@ const Admin = () => {
           <p className="text-xs text-muted-foreground">Manage everything from one place</p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2 mb-6">
           {MASTER_TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.key;
@@ -287,6 +289,13 @@ const Admin = () => {
             );
           })}
         </div>
+
+        {/* ── BUSINESS DASHBOARD ── */}
+        {activeTab === "business" && (
+          <Suspense fallback={<TabLoader />}>
+            <AdminBusinessDashboard />
+          </Suspense>
+        )}
 
         {/* ── AI COMMAND CENTER ── */}
         {activeTab === "ai" && (
