@@ -20,8 +20,10 @@ serve(async (req) => {
     const toNumber = params.get("To") || "";   // the Twilio number (client's assigned number)
     const fromNumber = params.get("From") || ""; // the caller's number
 
-    // Only fire on missed/no-answer/busy calls
-    if (!["no-answer", "busy", "failed"].includes(callStatus)) {
+    // Fire on missed/no-answer/busy calls AND on "ringing" which is what
+    // Android conditional call forwarding sends — the phone already rang
+    // unanswered before forwarding to Twilio, so any inbound call here is a missed call.
+    if (!["no-answer", "busy", "failed", "ringing", "in-progress"].includes(callStatus)) {
       return new Response("<Response/>", {
         headers: { "Content-Type": "text/xml" },
       });
