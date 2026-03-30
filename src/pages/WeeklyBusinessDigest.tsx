@@ -22,17 +22,17 @@ const SAMPLE_TIPS = [
   {
     number: "01",
     headline: "Follow up with every unsold estimate within 48 hours",
-    body: `HVAC businesses that follow up on open estimates within 2 days close 31% more jobs. A short text — "Hey, just checking in on that quote we sent over" — is all it takes.`,
+    body: "HVAC businesses that follow up on open estimates within 2 days close 31% more jobs. A short text -- 'Hey, just checking in on that quote we sent over' -- is all it takes.",
   },
   {
     number: "02",
     headline: "Ask for the Google review right after job completion",
-    body: `The best time to request a review is within 30 minutes of finishing the job. Use a text template: "So glad we could help! Mind leaving us a quick Google review? [link]" — response rates are 4× higher in-person vs. email.`,
+    body: "The best time to request a review is within 30 minutes of finishing the job. Use a text template: 'So glad we could help! Mind leaving us a quick Google review? [link]' -- response rates are 4x higher in-person vs. email.",
   },
   {
     number: "03",
     headline: "Offer a maintenance plan to every new customer",
-    body: `Recurring maintenance contracts average $180–$350/year per household. Mention it on every invoice: "Ask us about our annual tune-up plan." Converts 10–15% of one-time customers into recurring revenue.`,
+    body: "Recurring maintenance contracts average $180-$350/year per household. Mention it on every invoice: 'Ask us about our annual tune-up plan.' Converts 10-15% of one-time customers into recurring revenue.",
   },
 ];
 
@@ -95,21 +95,21 @@ export default function WeeklyBusinessDigest() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
+    <div className="min-h-screen bg-slate-900 text-white overflow-x-hidden">
       {/* Hero */}
-      <section className="px-6 py-20 text-center max-w-3xl mx-auto">
-        <div className="inline-flex items-center gap-2 bg-orange-500/10 text-orange-400 text-sm font-semibold px-4 py-1.5 rounded-full mb-6 border border-orange-500/20">
+      <section className="px-4 sm:px-6 py-12 sm:py-20 text-center max-w-3xl mx-auto">
+        <div className="inline-flex items-center gap-2 bg-orange-500/10 text-orange-400 text-xs sm:text-sm font-semibold px-3 sm:px-4 py-1.5 rounded-full mb-6 border border-orange-500/20">
           <Mail size={14} />
           Weekly AI Business Digest
         </div>
-        <h1 className="text-4xl sm:text-5xl font-black leading-tight mb-4">
+        <h1 className="text-2xl sm:text-4xl md:text-5xl font-black leading-tight mb-4">
           Every Monday: <span className="text-orange-500">3 Tips to Grow</span> Your Business
         </h1>
-        <p className="text-slate-300 text-lg sm:text-xl leading-relaxed max-w-2xl mx-auto mb-8">
+        <p className="text-slate-300 text-base sm:text-lg md:text-xl leading-relaxed max-w-2xl mx-auto mb-8">
           AI analyzes trends in your industry and emails you 3 actionable tips every Monday morning.
           Like having a business coach in your inbox.
         </p>
-        <div className="flex flex-wrap justify-center gap-3 text-sm text-slate-400">
+        <div className="flex flex-wrap justify-center gap-2 sm:gap-3 text-xs sm:text-sm text-slate-400">
           <span className="flex items-center gap-1"><CheckCircle size={14} className="text-green-400" /> $29/mo</span>
           <span className="flex items-center gap-1"><CheckCircle size={14} className="text-green-400" /> 7-day free trial</span>
           <span className="flex items-center gap-1"><CheckCircle size={14} className="text-green-400" /> Cancel anytime</span>
@@ -117,10 +117,10 @@ export default function WeeklyBusinessDigest() {
       </section>
 
       {/* Features */}
-      <section className="px-6 pb-16 max-w-4xl mx-auto">
-        <div className="grid sm:grid-cols-3 gap-6">
+      <section className="px-4 sm:px-6 pb-12 sm:pb-16 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
           {FEATURES.map(({ icon: Icon, title, desc }) => (
-            <div key={title} className="bg-slate-800 rounded-xl p-6 border border-slate-700">
+            <div key={title} className="bg-slate-800 rounded-xl p-4 sm:p-6 border border-slate-700">
               <Icon size={28} className="text-orange-500 mb-4" />
               <h3 className="font-bold text-white mb-2">{title}</h3>
               <p className="text-slate-400 text-sm leading-relaxed">{desc}</p>
@@ -130,24 +130,24 @@ export default function WeeklyBusinessDigest() {
       </section>
 
       {/* Sample digest */}
-      <section className="px-6 pb-16 max-w-3xl mx-auto">
-        <h2 className="text-2xl font-black text-center mb-3">Sample Digest — HVAC Edition</h2>
-        <p className="text-slate-400 text-center text-sm mb-8">This is what lands in your inbox every Monday morning.</p>
-        <div className="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
+      <section className="px-4 sm:px-6 pb-12 sm:pb-16 max-w-3xl mx-auto">
+        <h2 className="text-xl sm:text-2xl font-black text-center mb-3">Sample Digest -- HVAC Edition</h2>
+        <p className="text-slate-400 text-center text-xs sm:text-sm mb-6 sm:mb-8">This is what lands in your inbox every Monday morning.</p>
+        <div className="bg-slate-800 rounded-xl sm:rounded-2xl border border-slate-700 overflow-hidden">
           {/* Email header mock */}
-          <div className="bg-slate-750 border-b border-slate-700 px-6 py-4 flex items-center gap-3">
-            <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white font-black text-xs">M²</div>
-            <div>
+          <div className="bg-slate-750 border-b border-slate-700 px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-3">
+            <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white font-black text-xs shrink-0">M2</div>
+            <div className="min-w-0">
               <p className="text-white text-sm font-semibold">M² Performance Training</p>
-              <p className="text-slate-400 text-xs">matt@notify.m2training.com · Monday 8:00 AM</p>
+              <p className="text-slate-400 text-xs truncate">matt@notify.m2training.com · Monday 8:00 AM</p>
             </div>
           </div>
-          <div className="px-6 py-6">
+          <div className="px-4 sm:px-6 py-4 sm:py-6">
             <p className="text-orange-400 text-xs font-semibold uppercase tracking-widest mb-1">Weekly Business Digest</p>
             <h3 className="text-white font-black text-lg mb-5">3 Tips to Grow Your HVAC Business This Week</h3>
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {SAMPLE_TIPS.map(({ number, headline, body }) => (
-                <div key={number} className="flex gap-4">
+                <div key={number} className="flex gap-3 sm:gap-4">
                   <span className="text-orange-500 font-black text-lg leading-none mt-0.5 shrink-0">{number}</span>
                   <div>
                     <h4 className="text-white font-bold mb-1 text-sm">{headline}</h4>
@@ -164,7 +164,7 @@ export default function WeeklyBusinessDigest() {
       </section>
 
       {/* Form */}
-      <section className="px-6 pb-20 max-w-lg mx-auto">
+      <section className="px-4 sm:px-6 pb-16 sm:pb-20 max-w-lg mx-auto">
         <Card className="bg-slate-800 border-slate-700">
           <CardHeader>
             <CardTitle className="text-white text-xl font-black">Start Your Free Trial</CardTitle>
@@ -239,7 +239,7 @@ export default function WeeklyBusinessDigest() {
       </section>
 
       {/* Footer */}
-      <section className="border-t border-slate-800 py-10 px-6 text-center">
+      <section className="border-t border-slate-800 py-8 sm:py-10 px-4 sm:px-6 text-center">
         <div className="flex items-center justify-center gap-3 mb-3">
           <Users size={18} className="text-orange-500" />
           <span className="text-slate-400 text-sm">Built by Matt Michels — Grosse Pointe, MI</span>
