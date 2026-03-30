@@ -162,6 +162,8 @@ const DirectMail = lazyRetry(() => import("./pages/DirectMail"));
 const WarrantyReminders = lazyRetry(() => import("./pages/WarrantyReminders"));
 const HiringAssistant = lazyRetry(() => import("./pages/HiringAssistant"));
 const KPIEmail = lazyRetry(() => import("./pages/KPIEmail"));
+const AllServices = lazyRetry(() => import("./pages/AllServices"));
+const ReferralPage = lazyRetry(() => import("./pages/ReferralPage"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -397,6 +399,8 @@ const App = () => (
                     <Route path="/warranty-reminders" element={<WarrantyReminders />} />
                     <Route path="/hiring-assistant" element={<HiringAssistant />} />
                     <Route path="/kpi-email" element={<KPIEmail />} />
+                    <Route path="/all-services" element={<AllServices />} />
+                    <Route path="/refer" element={<ReferralPage />} />
                     <Route path="/partners" element={<B2BPartnerPortal />} />
                     <Route path="/sports-camps" element={<CampDirectory />} />
                     <Route path="/free-program" element={<FreeProgram />} />
