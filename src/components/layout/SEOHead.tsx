@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 interface SEOHeadProps {
   title: string;
   description: string;
-  path: string;
+  path?: string;
   ogImage?: string;
   type?: "website" | "article" | "product";
   article?: {

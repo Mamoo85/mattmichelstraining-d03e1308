@@ -107,7 +107,7 @@ function CounterStat({
   value: number;
   suffix: string;
   label: string;
-  Icon: React.ComponentType<{ size: number; className?: string; style?: React.CSSProperties }>;
+  Icon: React.ComponentType<{ size: number | string; className?: string; style?: React.CSSProperties }>;
   visible: boolean;
 }) {
   const count = useCounter(value, 1800, visible);

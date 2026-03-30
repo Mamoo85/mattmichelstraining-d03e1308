@@ -40,7 +40,7 @@ const GuideStore = () => {
         .select("*")
         .eq("is_active", true)
         .order("sort_order", { ascending: true });
-      return (data || []) as Guide[];
+      return (data || []) as unknown as Guide[];
     },
   });
 
