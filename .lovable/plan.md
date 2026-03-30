@@ -1,70 +1,41 @@
 
 
-# Revised Dashboard: Check-In + Prove It in Stats Banner, 2x2 Grid
+# New Automated Revenue Streams for M2 Platform
 
-## Layout Structure (top to bottom)
+## What You Already Have (12 revenue streams)
+1. Training memberships (core business)
+2. Contractor Lead Gen — $399/mo
+3. B2B Dental Database — $49/mo
+4. GBP SaaS (AI posting) — $49-99/mo
+5. Field Rep Newsletter (affiliate revenue)
+6. Field Rep AI Tools — $29/mo
+7. Social Media AI — $149-299/mo
+8. Web Design Services — $499-3,499 + retainer
+9. Missed Call Text-Back — $99/mo
+10. AI Review Responder — $99/mo
+11. Monthly SEO Audit Report — $69/mo
+12. Contractor Chatbot — $149/mo (AI lead qualifier)
 
-```text
-┌─ HEADER (logo + name + timer + invite) ─────────┐
-├─ STATS BANNER ──────────────────────────────────┤
-│  [streak] [sessions] [level bar] [pts]  │ Avatar │
-│  [program]                               │        │
-│──────────────────┬───────────────────────│        │
-│ 📍 Check-In      │  🏆 Prove It          │        │
-└──────────────────┴───────────────────────┴────────┘
-┌─ ACTION GRID (2×2) ─────────────────────────────┐
-│ Main Lifts Log    │  Generator (split)           │
-│ Challenges/Focus  │  Workout Library             │
-└─────────────────────────────────────────────────┘
-┌─ "What I Did Today" persistent button ──────────┐
-┌─ Recovery & Mobility Tips banner ───────────────┐
-┌─ TAB STRIP (Home, Generate, Train, Lifts) ──────┐
-┌─ TAB CONTENT ───────────────────────────────────┘
-```
+Plus: SEO Page Packages (one-time), Studio Rental, Industrial Newsletter, Guide Store, Gift Cards
 
-## Changes
+---
 
-### 1. Logo Fix
-Import the uploaded `pwa-512x512.png` as `m2-logo-zone.png` (copy the user-uploaded file to `src/assets/`). Remove all CSS `filter` chains. Use only a neon orange `drop-shadow` and `box-shadow` glow — the PNG itself has the correct colors already.
+## New Automated Businesses to Add
 
-### 2. Stats Banner — Add Check-In + Prove It Strip
-Replace the current single "Studio Check-In" strip at the bottom of the stats banner with a **two-button strip**:
-- **Check-In** (left, cyan): Opens a popup asking "Matt's Gym" or "On Your Own". Greys out with checkmark after today's check-in.
-- **Prove It** (right, orange): Dispatches `open-prove-it-zone` event.
+### 1. AI Reputation Dashboard — $79/mo
+**What**: Weekly AI-generated report showing a business's online reputation across Google, Yelp, Facebook, and BBB. Tracks star ratings, review volume trends, sentiment analysis, and alerts on negative reviews. Delivered via email every Monday.
+**Why it works**: Pairs perfectly with your existing Review Responder. Businesses that see their reputation data buy more services. Fully automated with Firecrawl + AI.
+**Automation**: Cron scrapes review sites weekly via Firecrawl, AI analyzes sentiment, Resend delivers PDF report.
 
-Both sit inside the stats banner, separated by a vertical divider, with bold uppercase text and colored icons.
+### 2. AI Email Newsletter Service for Local Businesses — $99/mo
+**What**: You already run newsletters for field reps and industrial. Offer this as a white-label service: AI writes and sends a monthly email newsletter for any local business (restaurants, salons, dentists, etc.). Business provides their customer email list, AI generates industry-relevant content + promos.
+**Why it works**: You already have the entire pipeline built (newsletter-send, Resend, AI content generation). Just parameterize it per client.
+**Automation**: Cron runs monthly per client, AI generates content, Resend sends. Zero touch.
 
-### 3. Action Grid → 2×2
-Remove "Log Activity" and "Prove It" from grid (moved elsewhere). Remove "Matt's Brain". New grid:
-- **Main Lifts Log** (orange) → navigates to `/progress`
-- **Generator** (purple/cyan split) → opens Generate tab
-- **Challenges & Focus** (green) → switches to Home tab
-- **Workout Library** (cyan) → switches to Train tab
+### 3. AI Job Posting Writer — $19/mo or $9 per post
+**What**: Small businesses struggle to write job posts that attract applicants. Paste in a job title + basic requirements, get a polished Indeed/LinkedIn-ready posting with SEO keywords, benefits framing, and compliance language.
+**Why it works**: Low price point = high volume. Fully automated via AI. No ongoing maintenance.
+**Automation**: Stateless AI call, instant delivery. Stripe checkout + edge function.
 
-### 4. Persistent "What I Did Today"
-Place the green quick-log button below the grid and above the tab strip. Always visible regardless of active tab.
-
-### 5. Recovery & Mobility Tips Banner
-A compact gradient strip (green → cyan) with Heart icon, linking to `/ai-insights`. Placed between "What I Did Today" and the tab strip.
-
-### 6. Tab Order Swap
-Change TABS from `[lifts, generate, train, home]` to `[home, generate, train, lifts]`. Default tab → `home`.
-
-### 7. Lifts Tab Cleanup
-Remove duplicate "What Did You Do Today" and "Main Lifts Log" buttons from inside the Lifts tab. Only show `ProgressCharts` and `OverloadCard`.
-
-### 8. StudioCheckIn — "Matt's Gym or On Your Own" Popup
-Modify `StudioCheckIn.tsx` to accept an optional `location` prop or add a choice modal before saving. Grey out button when `alreadyCheckedInToday` is true.
-
-### 9. Condense ProgressCharts
-Reduce font sizes and spacing for a more compact lift tracker view.
-
-## Files Modified
-
-| File | Action |
-|------|--------|
-| `src/assets/m2-logo-zone.png` | New — copy from uploaded `pwa-512x512.png` |
-| `src/pages/ZoneDashboard.tsx` | Major edit — all layout changes |
-| `src/components/sessions/StudioCheckIn.tsx` | Add location choice + grey-out logic |
-| `src/components/features/ProgressCharts.tsx` | Condense spacing/fonts |
-
+### 4. AI Google Ads Copy Generator — $39/mo
+**What**: Generate Google Ads headlines, descriptions, and extensions for local businesses. Input: business type + city + services. Output: 10 ad
