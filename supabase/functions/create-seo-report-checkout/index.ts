@@ -1,0 +1,80 @@
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import Stripe from "https://esm.sh/stripe@18.5.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { apiVersion: "2025-08-27.basil" });
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
+const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  try {
+    const { email, business_name, contact_name, phone, target_keywords } = await req.json();
+    if (!email || !business_name) {
+      return new Response(JSON.stringify({ error: "email and business_name are required" }), { status: 400, headers: corsHeaders });
+    }
+
+    const origin = req.headers.get("origin") || "https://www.mattmichelstraining.com";
+    const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+
+    const keywordsArray = target_keywords
+      ? target_keywords.split(/[,\n]+/).map((k: string) => k.trim()).filter(Boolean)
+      : [];
+
+    const { data: client } = await sb
+      .from("seo_report_clients")
+      .insert({ business_name, contact_name, email, phone, target_keywords: keywordsArray, active: false })
+      .select()
+      .single();
+
+    const session = await stripe.checkout.sessions.create({
+      mode: "subscription",
+      payment_method_types: ["card"],
+      customer_email: email,
+      line_items: [{
+        price_data: {
+          currency: "usd",
+          recurring: { interval: "month" },
+          unit_amount: 6900,
+          product_data: {
+            name: "M² Monthly SEO Report — Standard",
+            description: "Automated monthly local SEO report: keyword rankings, GBP health score, competitor comparison, citation check, and 5 prioritized action items.",
+          },
+        },
+        quantity: 1,
+      }],
+      metadata: {
+        type: "seo_report_subscription",
+        client_id: client?.id || "",
+        business_name,
+      },
+      success_url: `${origin}/seo-reports?success=1`,
+      cancel_url: `${origin}/seo-reports`,
+    });
+
+    if (RESEND_API_KEY) {
+      await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          from: "M² System <matt@notify.m2training.com>",
+          to: ["matt@m2training.com"],
+          subject: `New SEO Report signup — ${business_name}`,
+          html: `<p><strong>${business_name}</strong> started checkout for Monthly SEO Reports at $69/month.<br>Contact: ${contact_name || "n/a"} — ${email} — ${phone || "no phone"}<br>Keywords: ${keywordsArray.join(", ") || "none provided"}</p>`,
+        }),
+      });
+    }
+
+    return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: corsHeaders });
+  } catch (e: any) {
+    console.error("[CREATE-SEO-REPORT-CHECKOUT] Error:", e);
+    return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: corsHeaders });
+  }
+});
