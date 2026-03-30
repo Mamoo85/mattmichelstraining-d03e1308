@@ -116,6 +116,10 @@ const ManufacturingWebDesign = lazyRetry(() => import("./pages/ManufacturingWebD
 const RealEstateWebDesign = lazyRetry(() => import("./pages/RealEstateWebDesign"));
 const SocialMediaAI = lazyRetry(() => import("./pages/SocialMediaAI"));
 const TrainerSocialAI = lazyRetry(() => import("./pages/TrainerSocialAI"));
+const GetStarted = lazyRetry(() => import("./pages/GetStarted"));
+const SocialConnect = lazyRetry(() => import("./pages/SocialConnect"));
+const ReviewResponder = lazyRetry(() => import("./pages/ReviewResponder"));
+const SeoAuditService = lazyRetry(() => import("./pages/SeoAuditService"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -306,6 +310,10 @@ const App = () => (
                     <Route path="/real-estate-web-design" element={<RealEstateWebDesign />} />
                     <Route path="/social-media-ai" element={<SocialMediaAI />} />
                     <Route path="/trainer-social-ai" element={<TrainerSocialAI />} />
+                    <Route path="/get-started" element={<GetStarted />} />
+                    <Route path="/social-connect" element={<SocialConnect />} />
+                    <Route path="/review-responder" element={<ReviewResponder />} />
+                    <Route path="/seo-reports" element={<SeoAuditService />} />
                     <Route path="/sports-camps" element={<CampDirectory />} />
                     <Route path="/free-program" element={<FreeProgram />} />
                     <Route path="/studio-rental" element={<StudioRental />} />

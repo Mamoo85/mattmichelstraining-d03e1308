@@ -1,0 +1,4 @@
+-- Industrial newsletter reuses b2b_subscribers with niche = 'industrial_newsletter'.
+-- No new table required.
+-- Subscribers sign up via create-industrial-newsletter-checkout edge function
+-- which inserts rows with niche = 'industrial_newsletter' into b2b_subscribers.
