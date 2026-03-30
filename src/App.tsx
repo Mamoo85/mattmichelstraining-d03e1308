@@ -124,6 +124,12 @@ const ContractorChatbot = lazyRetry(() => import("./pages/ContractorChatbot"));
 const IndustrialNewsletter = lazyRetry(() => import("./pages/IndustrialNewsletter"));
 const MissedCallSaaS = lazyRetry(() => import("./pages/MissedCallSaaS"));
 const B2BPartnerPortal = lazyRetry(() => import("./pages/B2BPartnerPortal"));
+const AINewsletterService = lazyRetry(() => import("./pages/AINewsletterService"));
+const AIAdsCopyGenerator = lazyRetry(() => import("./pages/AIAdsCopyGenerator"));
+const AIJobPostingWriter = lazyRetry(() => import("./pages/AIJobPostingWriter"));
+const AIReputationDashboard = lazyRetry(() => import("./pages/AIReputationDashboard"));
+const ContractorInvoicing = lazyRetry(() => import("./pages/ContractorInvoicing"));
+const AIVoicemailTranscription = lazyRetry(() => import("./pages/AIVoicemailTranscription"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -321,6 +327,12 @@ const App = () => (
                     <Route path="/contractor-chatbot" element={<ContractorChatbot />} />
                     <Route path="/industrial-newsletter" element={<IndustrialNewsletter />} />
                     <Route path="/missed-call-text" element={<MissedCallSaaS />} />
+                    <Route path="/ai-newsletter-service" element={<AINewsletterService />} />
+                    <Route path="/ai-ads-copy" element={<AIAdsCopyGenerator />} />
+                    <Route path="/ai-job-postings" element={<AIJobPostingWriter />} />
+                    <Route path="/ai-reputation" element={<AIReputationDashboard />} />
+                    <Route path="/contractor-invoicing" element={<ContractorInvoicing />} />
+                    <Route path="/ai-voicemail" element={<AIVoicemailTranscription />} />
                     <Route path="/partners" element={<B2BPartnerPortal />} />
                     <Route path="/sports-camps" element={<CampDirectory />} />
                     <Route path="/free-program" element={<FreeProgram />} />
