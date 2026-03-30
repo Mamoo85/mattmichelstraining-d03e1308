@@ -19,7 +19,7 @@ const AFFILIATE_LINKS = {
   writesonic: "https://writesonic.com/?via=matt",
   elevenlabs: "https://try.elevenlabs.io/jh6f4tyyqf4n",
   surferSeo: "https://surferseo.com/?via=matt",
-  synthesia: "https://www.synthesia.io/?via=matt",
+  synthesia: "https://www.synthesia.io/?via=matthew-michels",
 };
 
 async function generateNewsletterContent(): Promise<{ subject: string; html: string; preview: string }> {
