@@ -233,6 +233,137 @@ serve(async (req) => {
 
     let { industry, city, limit = 5, mode } = body;
 
+    // ── LINKEDIN BATCH MODE ────────────────────────────────────────────────
+    // When mode === "linkedin_batch", pull top 10 emailed leads and generate
+    // LinkedIn connection request notes, then email Matt a copy-paste batch.
+    if (mode === "linkedin_batch") {
+      const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+      if (!ANTHROPIC_API_KEY) {
+        return new Response(JSON.stringify({ error: "ANTHROPIC_API_KEY not configured" }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { data: leads, error: leadsErr } = await serviceClient
+        .from("outreach_leads")
+        .select("id, business_name, owner_name, city, industry")
+        .eq("status", "Emailed")
+        .order("last_contact_date", { ascending: false })
+        .limit(10);
+
+      if (leadsErr) throw new Error(`Failed to fetch leads: ${leadsErr.message}`);
+      if (!leads || leads.length === 0) {
+        return new Response(JSON.stringify({ sent: 0, message: "No emailed leads found" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const rows: { id: string; business_name: string; owner_name: string; message: string }[] = [];
+
+      for (const lead of leads) {
+        const ownerName = lead.owner_name || "Business Owner";
+        const businessName = lead.business_name || "your business";
+        const leadCity = lead.city || "Michigan";
+        const leadIndustry = lead.industry || "local business";
+
+        const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: {
+            "x-api-key": ANTHROPIC_API_KEY,
+            "anthropic-version": "2023-06-01",
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "claude-haiku-4-5-20251001",
+            max_tokens: 120,
+            messages: [{
+              role: "user",
+              content: `Write a 280-char max LinkedIn connection request note from Matt Michels (web design/local marketing, Grosse Pointe MI) to ${ownerName} at ${businessName} in ${leadCity}. Reference their specific industry: ${leadIndustry}. Casual, local, not salesy. No hashtags. Return only the note text, nothing else.`,
+            }],
+          }),
+        });
+
+        const aiData = await aiRes.json();
+        const message = (aiData.content?.[0]?.text || "").trim().slice(0, 280);
+
+        await serviceClient
+          .from("outreach_leads")
+          .update({ linkedin_message: message })
+          .eq("id", lead.id);
+
+        rows.push({ id: lead.id, business_name: businessName, owner_name: ownerName, message });
+
+        await new Promise(r => setTimeout(r, 300));
+      }
+
+      const dateStr = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+
+      const tableRows = rows.map(r => `
+        <tr>
+          <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;font-weight:600;color:#1e293b;white-space:nowrap;">${r.business_name}</td>
+          <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;color:#334155;white-space:nowrap;">${r.owner_name}</td>
+          <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;color:#334155;font-size:13px;line-height:1.5;">${r.message}</td>
+        </tr>`).join("");
+
+      const emailHtml = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;">
+<tr><td align="center" style="padding:24px 16px;">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:700px;">
+  <tr><td style="background:#1e293b;padding:20px 28px;border-radius:10px 10px 0 0;">
+    <p style="margin:0;color:#e8621a;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">LinkedIn Batch</p>
+    <p style="margin:4px 0 0;color:#94a3b8;font-size:12px;">${dateStr}</p>
+  </td></tr>
+  <tr><td style="background:#fff;padding:28px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
+    <p style="margin:0 0 16px;font-size:15px;color:#1e293b;font-weight:700;">10 LinkedIn messages ready to send</p>
+    <p style="margin:0 0 24px;font-size:14px;color:#475569;line-height:1.7;">
+      Open LinkedIn Sales Navigator, search each name below, and send the connection request with the note provided. These are leads that already received a cold email — use the connection note as your warm follow-up.
+    </p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-radius:6px;overflow:hidden;border-bottom:none;">
+      <thead>
+        <tr style="background:#f1f5f9;">
+          <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0;">Business</th>
+          <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0;">Owner</th>
+          <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0;">LinkedIn Note (copy-paste)</th>
+        </tr>
+      </thead>
+      <tbody>${tableRows}</tbody>
+    </table>
+  </td></tr>
+  <tr><td style="padding:16px 28px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 10px 10px;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Matt Michels">
+      <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>Grosse Pointe, MI · (313) 806-4952</div>
+    </div>
+  </td></tr>
+</table>
+</td></tr>
+</table>
+</body></html>`;
+
+      const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
+      if (RESEND_API_KEY) {
+        await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            from: "M² System <matt@notify.m2training.com>",
+            to: ["matt@m2training.com"],
+            reply_to: "matt@m2training.com",
+            subject: `10 LinkedIn messages ready to send — ${dateStr}`,
+            html: emailHtml,
+          }),
+        });
+      }
+
+      log("LinkedIn batch complete", { count: rows.length });
+      return new Response(JSON.stringify({ sent: rows.length, mode: "linkedin_batch" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // ── CONTRACTOR LEAD PITCH MODE ─────────────────────────────────────────
     // When mode === "contractor_lead_pitch", pitch the lead gen service instead of web design
     if (mode === "contractor_lead_pitch") {
