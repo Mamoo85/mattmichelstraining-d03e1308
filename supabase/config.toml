@@ -30,6 +30,105 @@ verify_jwt = false
 [functions.missed-call-handler]
 verify_jwt = false
 
+[functions.ai-phone-answering]
+verify_jwt = false
+
+[functions.text-marketing-sender]
+verify_jwt = false
+
+[functions.multi-service-drip]
+verify_jwt = false
+
+[functions.referral-ask-sender]
+verify_jwt = false
+
+[functions.ai-competitor-watch]
+verify_jwt = false
+
+[functions.appointment-reminder-sender]
+verify_jwt = false
+
+[functions.ai-video-script-writer]
+verify_jwt = false
+
+[functions.satisfaction-survey-sender]
+verify_jwt = false
+
+[functions.thank-you-sms-sender]
+verify_jwt = false
+
+[functions.ai-local-seo-writer]
+verify_jwt = false
+
+[functions.payment-chaser-sender]
+verify_jwt = false
+
+[functions.ai-google-qa-manager]
+verify_jwt = false
+
+[functions.staff-newsletter-sender]
+verify_jwt = false
+
+[functions.speed-lead-responder]
+verify_jwt = false
+
+[functions.welcome-drip-sender]
+verify_jwt = false
+
+[functions.review-alert-checker]
+verify_jwt = false
+
+[functions.promo-planner-generator]
+verify_jwt = false
+
+[functions.reactivation-email-sender]
+verify_jwt = false
+
+[functions.ai-sales-script-writer]
+verify_jwt = false
+
+[functions.ai-direct-mail-writer]
+verify_jwt = false
+
+[functions.warranty-reminder-sender]
+verify_jwt = false
+
+[functions.ai-hiring-assistant]
+verify_jwt = false
+
+[functions.kpi-email-sender]
+verify_jwt = false
+
+[functions.ai-blog-post-writer]
+verify_jwt = false
+
+[functions.ai-press-release-writer]
+verify_jwt = false
+
+[functions.send-review-request-sms]
+verify_jwt = false
+
+[functions.quote-followup-sender]
+verify_jwt = false
+
+[functions.ai-social-captions-generator]
+verify_jwt = false
+
+[functions.winback-sms-sender]
+verify_jwt = false
+
+[functions.ai-weekly-digest-sender]
+verify_jwt = false
+
+[functions.ai-proposal-generator]
+verify_jwt = false
+
+[functions.holiday-sms-sender]
+verify_jwt = false
+
+[functions.ai-website-copy-refresher]
+verify_jwt = false
+
 [functions.get-partner-stats]
 verify_jwt = false
 

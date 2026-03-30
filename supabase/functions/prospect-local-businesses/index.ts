@@ -156,23 +156,28 @@ async function generateOutreachEmail(
       messages: [
         {
           role: "system",
-          content: `You are Matt Michels, a local web designer in Grosse Pointe, MI. You build sites for Metro Detroit small businesses. $499 flat, live in 7 days. Your tone is straight-talking, local, and personal — not a pitch, more like a neighbor reaching out.`,
+          content: `You are Matt Michels, a local business consultant in Grosse Pointe, MI. You help Metro Detroit small businesses grow with web design, AI automation, and done-for-you marketing tools. Your tone is straight-talking, local, and personal — not a pitch, more like a neighbor reaching out.`,
         },
         {
           role: "user",
           content: `Write a short, punchy cold outreach email to "${business}", a ${industry} in ${city}.
 
-Subject line + email body (under 150 words total).
+Subject line + email body (under 160 words total).
 
 Make it:
 - Specific to their industry (mention a real pain they'd recognize)
 - Reference that you're local (Grosse Pointe / Metro Detroit)
-- Mention one real problem they probably have online (no website, hard to find on Google, losing jobs to competitors who have sites)
-- Mention $499 flat, 7 days live, $49/mo
-- End with: "Get started at mattmichelstraining.com/get-started — takes 30 seconds, and I'll reach out the same day."
+- Lead with the #1 most relevant service for a ${industry} business:
+  * If HVAC/Plumbing/Roofing/Electrical/Contractor: lead with Missed Call Text-Back ($99/mo) — every missed call auto-texts the customer back within 60 seconds
+  * If Restaurant/Retail/Salon/Gym: lead with Text Message Marketing ($79/mo) — AI writes and sends monthly SMS campaigns to their customer list
+  * If Medical/Dental/Healthcare: lead with AI Reputation Dashboard ($79/mo) — weekly report on their Google/Yelp reviews with AI response suggestions
+  * If Real Estate/Insurance: lead with AI Phone Answering ($149/mo) — AI answers every call 24/7, transcripts sent instantly
+  * If Web/Tech or anything else: lead with web design ($499 flat, live in 7 days)
+- Briefly mention you also build websites starting at $499 if they need one
+- End with: "Takes 30 seconds to get started: mattmichelstraining.com/get-started — I'll reach out the same day."
 - Then add a P.S. line: "P.S. — If you'd rather just text, (313) 806-4952 works too."
 
-Do NOT use salesy language. Sound like a real person.
+Do NOT use salesy language. Sound like a real person. One problem, one solution.
 
 Format:
 SUBJECT: [subject line]

@@ -130,6 +130,38 @@ const AIJobPostingWriter = lazyRetry(() => import("./pages/AIJobPostingWriter"))
 const AIReputationDashboard = lazyRetry(() => import("./pages/AIReputationDashboard"));
 const ContractorInvoicing = lazyRetry(() => import("./pages/ContractorInvoicing"));
 const AIVoicemailTranscription = lazyRetry(() => import("./pages/AIVoicemailTranscription"));
+const AIPhoneAnswering = lazyRetry(() => import("./pages/AIPhoneAnswering"));
+const TextMessageMarketing = lazyRetry(() => import("./pages/TextMessageMarketing"));
+const AIBlogPostService = lazyRetry(() => import("./pages/AIBlogPostService"));
+const ReviewRequestSMS = lazyRetry(() => import("./pages/ReviewRequestSMS"));
+const AIPressRelease = lazyRetry(() => import("./pages/AIPressRelease"));
+const QuoteFollowupSMS = lazyRetry(() => import("./pages/QuoteFollowupSMS"));
+const AISocialCaptionPack = lazyRetry(() => import("./pages/AISocialCaptionPack"));
+const WinBackSMS = lazyRetry(() => import("./pages/WinBackSMS"));
+const WeeklyBusinessDigest = lazyRetry(() => import("./pages/WeeklyBusinessDigest"));
+const AIProposalGenerator = lazyRetry(() => import("./pages/AIProposalGenerator"));
+const HolidaySMSBlast = lazyRetry(() => import("./pages/HolidaySMSBlast"));
+const AIWebsiteCopy = lazyRetry(() => import("./pages/AIWebsiteCopy"));
+const CompetitorWatch = lazyRetry(() => import("./pages/CompetitorWatch"));
+const AppointmentReminders = lazyRetry(() => import("./pages/AppointmentReminders"));
+const AIVideoScripts = lazyRetry(() => import("./pages/AIVideoScripts"));
+const SatisfactionSurvey = lazyRetry(() => import("./pages/SatisfactionSurvey"));
+const ThankYouSMS = lazyRetry(() => import("./pages/ThankYouSMS"));
+const AIEstimateGenerator = lazyRetry(() => import("./pages/AIEstimateGenerator"));
+const LocalSEOPages = lazyRetry(() => import("./pages/LocalSEOPages"));
+const PaymentChaser = lazyRetry(() => import("./pages/PaymentChaser"));
+const GoogleQAManager = lazyRetry(() => import("./pages/GoogleQAManager"));
+const StaffNewsletter = lazyRetry(() => import("./pages/StaffNewsletter"));
+const SpeedToLead = lazyRetry(() => import("./pages/SpeedToLead"));
+const WelcomeDrip = lazyRetry(() => import("./pages/WelcomeDrip"));
+const ReviewAlerts = lazyRetry(() => import("./pages/ReviewAlerts"));
+const PromoPlanner = lazyRetry(() => import("./pages/PromoPlanner"));
+const ReactivationEmails = lazyRetry(() => import("./pages/ReactivationEmails"));
+const SalesScripts = lazyRetry(() => import("./pages/SalesScripts"));
+const DirectMail = lazyRetry(() => import("./pages/DirectMail"));
+const WarrantyReminders = lazyRetry(() => import("./pages/WarrantyReminders"));
+const HiringAssistant = lazyRetry(() => import("./pages/HiringAssistant"));
+const KPIEmail = lazyRetry(() => import("./pages/KPIEmail"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -333,6 +365,38 @@ const App = () => (
                     <Route path="/ai-reputation" element={<AIReputationDashboard />} />
                     <Route path="/contractor-invoicing" element={<ContractorInvoicing />} />
                     <Route path="/ai-voicemail" element={<AIVoicemailTranscription />} />
+                    <Route path="/ai-phone-answering" element={<AIPhoneAnswering />} />
+                    <Route path="/text-message-marketing" element={<TextMessageMarketing />} />
+                    <Route path="/ai-blog-posts" element={<AIBlogPostService />} />
+                    <Route path="/review-request-sms" element={<ReviewRequestSMS />} />
+                    <Route path="/ai-press-release" element={<AIPressRelease />} />
+                    <Route path="/quote-followup-sms" element={<QuoteFollowupSMS />} />
+                    <Route path="/ai-social-captions" element={<AISocialCaptionPack />} />
+                    <Route path="/winback-sms" element={<WinBackSMS />} />
+                    <Route path="/weekly-business-digest" element={<WeeklyBusinessDigest />} />
+                    <Route path="/ai-proposal" element={<AIProposalGenerator />} />
+                    <Route path="/holiday-sms" element={<HolidaySMSBlast />} />
+                    <Route path="/ai-website-copy" element={<AIWebsiteCopy />} />
+                    <Route path="/competitor-watch" element={<CompetitorWatch />} />
+                    <Route path="/appointment-reminders" element={<AppointmentReminders />} />
+                    <Route path="/ai-video-scripts" element={<AIVideoScripts />} />
+                    <Route path="/satisfaction-survey" element={<SatisfactionSurvey />} />
+                    <Route path="/thank-you-sms" element={<ThankYouSMS />} />
+                    <Route path="/ai-estimates" element={<AIEstimateGenerator />} />
+                    <Route path="/local-seo-pages" element={<LocalSEOPages />} />
+                    <Route path="/payment-chaser" element={<PaymentChaser />} />
+                    <Route path="/google-qa" element={<GoogleQAManager />} />
+                    <Route path="/staff-newsletter" element={<StaffNewsletter />} />
+                    <Route path="/speed-to-lead" element={<SpeedToLead />} />
+                    <Route path="/welcome-drip" element={<WelcomeDrip />} />
+                    <Route path="/review-alerts" element={<ReviewAlerts />} />
+                    <Route path="/promo-planner" element={<PromoPlanner />} />
+                    <Route path="/reactivation-emails" element={<ReactivationEmails />} />
+                    <Route path="/sales-scripts" element={<SalesScripts />} />
+                    <Route path="/direct-mail" element={<DirectMail />} />
+                    <Route path="/warranty-reminders" element={<WarrantyReminders />} />
+                    <Route path="/hiring-assistant" element={<HiringAssistant />} />
+                    <Route path="/kpi-email" element={<KPIEmail />} />
                     <Route path="/partners" element={<B2BPartnerPortal />} />
                     <Route path="/sports-camps" element={<CampDirectory />} />
                     <Route path="/free-program" element={<FreeProgram />} />

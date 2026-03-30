@@ -1,0 +1,44 @@
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
+const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
+
+serve(async (_req) => {
+  const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+  try {
+    const { data: clients } = await sb.from("sales_script_clients").select("*").eq("active", true);
+    if (!clients?.length) return new Response(JSON.stringify({ ok: true, sent: 0 }), { status: 200 });
+    let sent = 0;
+    for (const client of clients) {
+      try {
+        const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: { "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "claude-haiku-4-5-20251001", max_tokens: 1000,
+            messages: [{ role: "user", content: `Write 3 phone sales scripts for "${client.business_name}" (${client.industry || "local business"}):\n\n1. COLD CALL OPENER (30 seconds, pattern interrupt, get to the point)\n2. FOLLOW-UP CALL (reference previous conversation, create urgency)\n3. OBJECTION HANDLING (top 5 objections for ${client.industry || "this industry"} with rebuttals)\n\nMake them sound natural, not scripted. Include exact words to say.` }],
+          }),
+        });
+        const aiData = await aiRes.json();
+        const content = aiData?.content?.[0]?.text || "Scripts unavailable.";
+        if (RESEND_API_KEY) {
+          await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              from: "M² Sales Scripts <matt@notify.m2training.com>", to: [client.email],
+              subject: `Your updated sales scripts — ${client.business_name}`,
+              html: `<div style="font-family:sans-serif;max-width:600px;padding:20px;"><h2 style="color:#1e293b;">This Month's Sales Scripts</h2><pre style="white-space:pre-wrap;line-height:1.8;font-family:sans-serif;color:#334155;">${content}</pre><p style="color:#64748b;margin-top:20px;">Print these out and keep them by the phone. Practice the objection handling out loud. — Matt</p></div>`,
+            }),
+          });
+        }
+        await sb.from("sales_script_clients").update({ script_count: (client.script_count || 0) + 1, last_sent_at: new Date().toISOString() }).eq("id", client.id);
+        sent++;
+      } catch (e) { console.error(`[SALES-SCRIPTS] Error for ${client.email}:`, e); }
+    }
+    return new Response(JSON.stringify({ ok: true, sent }), { status: 200 });
+  } catch (e: any) { console.error("[SALES-SCRIPTS] Fatal:", e); return new Response(JSON.stringify({ error: e.message }), { status: 500 }); }
+});

@@ -1,0 +1,20 @@
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import Stripe from "https://esm.sh/stripe@18.5.0";
+const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { apiVersion: "2025-08-27.basil" });
+const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  try {
+    const { email, name, businessName, phone, industry } = await req.json();
+    if (!email || !businessName) return new Response(JSON.stringify({ error: "email and businessName required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    const session = await stripe.checkout.sessions.create({
+      mode: "subscription", payment_method_types: ["card"], customer_email: email,
+      subscription_data: { trial_period_days: 7 },
+      line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 2900, product_data: { name: "Warranty Reminder SMS — $29/month", description: "Auto-remind customers when their warranty is expiring." } }, quantity: 1 }],
+      metadata: { type: "warranty_reminder_subscription", email, name: name || "", businessName, phone: phone || "", industry: industry || "" },
+      success_url: "https://www.mattmichelstraining.com/warranty-reminders?status=success",
+      cancel_url: "https://www.mattmichelstraining.com/warranty-reminders",
+    });
+    return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  } catch (e: any) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }); }
+});
