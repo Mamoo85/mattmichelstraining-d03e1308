@@ -57,6 +57,14 @@ export default function ContractorLeads() {
         description="Exclusive roofing, HVAC, plumbing, and electrical leads in Metro Detroit. No shared leads. One contractor per trade per city. Flat monthly fee."
       />
       <div className="min-h-screen bg-background text-foreground">
+        {/* Hero Banner */}
+        <div className="w-full">
+          <img
+            src="/images/hero-contractor-leads.png"
+            alt="Contractor Lead System — Exclusive Metro Detroit leads"
+            className="w-full object-cover"
+          />
+        </div>
         {/* Hero */}
         <div className="bg-[#1e293b] text-white px-6 py-16 text-center">
           <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">M² Lead Network</p>

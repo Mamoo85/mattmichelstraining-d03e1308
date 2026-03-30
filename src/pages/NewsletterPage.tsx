@@ -58,6 +58,14 @@ export default function NewsletterPage() {
         description="Weekly prospecting tips, scripts, and tool spotlights for medical device, dental, and industrial field reps. Free. Every Monday."
       />
       <div className="min-h-screen bg-background text-foreground">
+        {/* Hero Banner */}
+        <div className="w-full">
+          <img
+            src="/images/hero-field-rep-weekly.png"
+            alt="Field Rep Weekly — Free B2B Newsletter"
+            className="w-full object-cover"
+          />
+        </div>
         <div className="bg-[#1e293b] text-white px-6 py-14 text-center">
           <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">Free Weekly Newsletter</p>
           <h1 className="text-3xl font-black mb-4">The Field Rep Weekly</h1>

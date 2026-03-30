@@ -72,6 +72,14 @@ const Index = () => (
       </Link>
     </div>
     <LocalTopBar />
+    {/* M² Banner */}
+    <div className="w-full">
+      <img
+        src="/images/hero-scaling-local.png"
+        alt="M² — Scaling Local Businesses & Elite Athletes"
+        className="w-full object-cover"
+      />
+    </div>
     <HeroSection />
     <div className="container py-12 max-w-xl mx-auto space-y-8">
       <Suspense fallback={null}>
