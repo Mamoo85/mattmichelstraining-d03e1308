@@ -1202,6 +1202,89 @@ serve(async (req) => {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // ── FIELD REP TOOLS — $29/mo AI subscription ─────────────────────────
+      if (meta.type === "field_rep_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await sb.from("b2b_subscribers")
+              .upsert({
+                email,
+                name: meta.name || null,
+                niche: "field_rep_tools",
+                active: true,
+                stripe_customer_id: session.customer as string || null,
+                stripe_subscription_id: session.subscription as string || null,
+              }, { onConflict: "email" });
+          }
+          if (RESEND_API_KEY && email) {
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "Matt Michels <matt@notify.m2training.com>",
+                to: [email],
+                subject: "Your Field Rep AI Tools are ready",
+                html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're in. Head to <a href="https://www.mattmichelstraining.com/field-rep-tools">mattmichelstraining.com/field-rep-tools</a> and log in to start using all 4 tools — cold email writer, voicemail builder, objection handler, and territory planner.</p><p>Reply to this email if you have questions.</p><p>— Matt<br>(313) 806-4952</p>`,
+              }),
+            });
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "M² Notifications <matt@notify.m2training.com>",
+                to: ["matt@m2training.com"],
+                subject: `💰 New Field Rep Tools subscriber — ${email}`,
+                html: `<p>New $29/mo subscriber: <strong>${email}</strong><br>Subscription ID: ${session.subscription || "n/a"}</p>`,
+              }),
+            });
+          }
+        } catch (e) { console.error("[WEBHOOK] field_rep_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── SOCIAL MEDIA AI — $149/$199/$299/mo subscription ─────────────────
+      if (meta.type === "social_media_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await sb.from("social_media_clients")
+              .upsert({
+                email,
+                business_name: meta.business_name || email,
+                contact_name: meta.name || null,
+                plan: meta.plan || "standard",
+                active: true,
+                stripe_subscription_id: session.subscription as string || null,
+              }, { onConflict: "email" });
+          }
+          const planPrice = meta.plan === "pro" ? "$299" : meta.plan === "trainer" ? "$149" : "$199";
+          if (RESEND_API_KEY && email) {
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "Matt Michels <matt@notify.m2training.com>",
+                to: [email],
+                subject: "Your Social Media AI service is active",
+                html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>Your Social Media AI (${meta.plan || "standard"} plan) is now active. We'll reach out within 24 hours to connect your Facebook, Instagram, and LinkedIn accounts — then the AI takes over posting 3x per week.</p><p>Questions? Reply here or text Matt at (313) 806-4952.</p><p>— Matt</p>`,
+              }),
+            });
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "M² Notifications <matt@notify.m2training.com>",
+                to: ["matt@m2training.com"],
+                subject: `💰 New Social Media AI client — ${meta.business_name || email} (${meta.plan}, ${planPrice}/mo)`,
+                html: `<p>New social media subscriber:<br><strong>${meta.business_name || email}</strong> — ${email}<br>Plan: ${meta.plan} at ${planPrice}/month.<br>Action needed: connect their FB/IG/LinkedIn accounts.</p>`,
+              }),
+            });
+          }
+        } catch (e) { console.error("[WEBHOOK] social_media_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
     return new Response(JSON.stringify({ received: true }), {
       headers: { "Content-Type": "application/json" },
       status: 200,

@@ -12,21 +12,24 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const PLAN_CONFIG: Record<string, { amount: number; label: string; description: string }> = {
+const PLAN_CONFIG: Record<string, { amount: number; label: string; description: string; successRoute: string }> = {
   standard: {
     amount: 19900,
-    label: "Standard (Facebook + LinkedIn)",
-    description: "AI-written posts published to Facebook and LinkedIn 3x per week, branded to your business.",
+    label: "Standard (Facebook + LinkedIn, 3 posts/week)",
+    description: "AI-written posts published to Facebook and LinkedIn 3x per week. Branded to your business, no scheduling apps needed.",
+    successRoute: "/social-media-ai",
   },
   pro: {
     amount: 29900,
-    label: "Pro (Facebook + LinkedIn + Instagram + GBP)",
-    description: "Everything in Standard plus Instagram and Google Business Profile, 5 posts per week, and monthly analytics report.",
+    label: "Pro (Facebook + LinkedIn + Instagram + GBP, 5 posts/week)",
+    description: "Everything in Standard plus Instagram and Google Business Profile posting, 5 posts/week, and a monthly analytics report.",
+    successRoute: "/social-media-ai",
   },
   trainer: {
     amount: 14900,
-    label: "Trainer Social AI",
+    label: "Trainer Social AI (3 posts/week)",
     description: "AI-generated fitness and nutrition content in your brand voice, posted to your social channels 3x per week.",
+    successRoute: "/trainer-social-ai",
   },
 };
 
@@ -52,8 +55,8 @@ serve(async (req) => {
       );
     }
 
-    const planConfig = PLAN_CONFIG[plan];
-    if (!planConfig) {
+    const planCfg = PLAN_CONFIG[plan];
+    if (!planCfg) {
       return new Response(
         JSON.stringify({ error: `Unknown plan: ${plan}` }),
         { status: 400, headers: corsHeaders }
@@ -61,6 +64,9 @@ serve(async (req) => {
     }
 
     const origin = req.headers.get("origin") || "https://www.mattmichelstraining.com";
+    const platformsArr = Array.isArray(platforms) ? platforms : [];
+    const platformsStr = platformsArr.join(",");
+
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
     // Insert pending client record
@@ -73,7 +79,7 @@ serve(async (req) => {
         email,
         city: city || null,
         state: state || null,
-        platforms: Array.isArray(platforms) ? platforms : [],
+        platforms: platformsArr,
         plan,
         active: false,
       })
@@ -89,10 +95,10 @@ serve(async (req) => {
           price_data: {
             currency: "usd",
             recurring: { interval: "month" },
-            unit_amount: planConfig.amount,
+            unit_amount: planCfg.amount,
             product_data: {
-              name: `M² Social Media AI — ${planConfig.label}`,
-              description: planConfig.description,
+              name: `M² Social Media AI — ${planCfg.label}`,
+              description: planCfg.description,
             },
           },
           quantity: 1,
@@ -103,11 +109,11 @@ serve(async (req) => {
         email,
         business_name,
         plan,
-        platforms: Array.isArray(platforms) ? platforms.join(",") : "",
+        platforms: platformsStr,
         client_id: client?.id || "",
       },
-      success_url: `${origin}/social-media-ai?success=1`,
-      cancel_url: `${origin}/social-media-ai`,
+      success_url: `${origin}${planCfg.successRoute}?success=1`,
+      cancel_url: `${origin}${planCfg.successRoute}`,
     });
 
     // Notify Matt
@@ -119,10 +125,10 @@ serve(async (req) => {
           from: "M² System <matt@notify.m2training.com>",
           to: ["matt@m2training.com"],
           subject: `New Social Media AI signup — ${business_name} (${plan})`,
-          html: `<p><strong>${business_name}</strong> started checkout for the ${planConfig.label} plan at $${(planConfig.amount / 100).toFixed(0)}/month.<br>
+          html: `<p><strong>${business_name}</strong> started checkout for the ${planCfg.label} plan at $${(planCfg.amount / 100).toFixed(0)}/month.<br>
 Contact: ${name || "n/a"} — ${email}<br>
 ${city || ""}${state ? ", " + state : ""}${business_type ? " — " + business_type : ""}<br>
-Platforms: ${Array.isArray(platforms) && platforms.length ? platforms.join(", ") : "none selected"}</p>`,
+Platforms: ${platformsArr.length ? platformsArr.join(", ") : "none selected"}</p>`,
         }),
       });
     }

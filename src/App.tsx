@@ -110,9 +110,12 @@ const ContractorLeads = lazyRetry(() => import("./pages/ContractorLeads"));
 const LeadCapturePage = lazyRetry(() => import("./pages/LeadCapturePage"));
 const B2BLeads = lazyRetry(() => import("./pages/B2BLeads"));
 const LocalMarketing = lazyRetry(() => import("./pages/LocalMarketing"));
+const FieldRepTools = lazyRetry(() => import("./pages/FieldRepTools"));
 const NewsletterPage = lazyRetry(() => import("./pages/NewsletterPage"));
 const ManufacturingWebDesign = lazyRetry(() => import("./pages/ManufacturingWebDesign"));
 const RealEstateWebDesign = lazyRetry(() => import("./pages/RealEstateWebDesign"));
+const SocialMediaAI = lazyRetry(() => import("./pages/SocialMediaAI"));
+const TrainerSocialAI = lazyRetry(() => import("./pages/TrainerSocialAI"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -297,9 +300,12 @@ const App = () => (
                     <Route path="/leads/:slug" element={<LeadCapturePage />} />
                     <Route path="/b2b-leads" element={<B2BLeads />} />
                     <Route path="/local-marketing" element={<LocalMarketing />} />
+                    <Route path="/field-rep-tools" element={<FieldRepTools />} />
                     <Route path="/field-rep-weekly" element={<NewsletterPage />} />
                     <Route path="/manufacturing-web-design" element={<ManufacturingWebDesign />} />
                     <Route path="/real-estate-web-design" element={<RealEstateWebDesign />} />
+                    <Route path="/social-media-ai" element={<SocialMediaAI />} />
+                    <Route path="/trainer-social-ai" element={<TrainerSocialAI />} />
                     <Route path="/sports-camps" element={<CampDirectory />} />
                     <Route path="/free-program" element={<FreeProgram />} />
                     <Route path="/studio-rental" element={<StudioRental />} />
