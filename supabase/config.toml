@@ -170,12 +170,3 @@ verify_jwt = false
 
 [functions.create-voicemail-checkout]
 verify_jwt = false
-
-[functions.meta-ads-copy-generator]
-verify_jwt = false
-
-[functions.seo-blog-publisher]
-verify_jwt = false
-
-[functions.send-referral]
-verify_jwt = false

@@ -6,6 +6,24 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+type AdaptWorkoutRequest = {
+  imageBase64?: string;
+  workout?: unknown[];
+};
+
+type GatewayToolCallResponse = {
+  choices?: Array<{
+    message?: {
+      content?: string;
+      tool_calls?: Array<{
+        function?: {
+          arguments?: string;
+        };
+      }>;
+    };
+  }>;
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -33,7 +51,7 @@ serve(async (req) => {
       });
     }
 
-    const { imageBase64, workout } = await req.json();
+    const { imageBase64, workout } = await req.json() as AdaptWorkoutRequest;
     if (!imageBase64) throw new Error("No image provided");
     if (!workout || !Array.isArray(workout)) throw new Error("No workout exercises provided");
 
@@ -134,7 +152,7 @@ Return the adapted workout using the provided tool.`;
       throw new Error("AI gateway error");
     }
 
-    const data = await response.json();
+    const data = await response.json() as GatewayToolCallResponse;
     let result: Record<string, unknown> = {};
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
     if (toolCall?.function?.arguments) {
