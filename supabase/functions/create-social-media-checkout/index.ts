@@ -1,0 +1,135 @@
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import Stripe from "https://esm.sh/stripe@18.5.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { apiVersion: "2025-08-27.basil" });
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
+const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+const PLAN_CONFIG: Record<string, { amount: number; label: string; description: string }> = {
+  standard: {
+    amount: 19900,
+    label: "Standard (Facebook + LinkedIn)",
+    description: "AI-written posts published to Facebook and LinkedIn 3x per week, branded to your business.",
+  },
+  pro: {
+    amount: 29900,
+    label: "Pro (Facebook + LinkedIn + Instagram + GBP)",
+    description: "Everything in Standard plus Instagram and Google Business Profile, 5 posts per week, and monthly analytics report.",
+  },
+  trainer: {
+    amount: 14900,
+    label: "Trainer Social AI",
+    description: "AI-generated fitness and nutrition content in your brand voice, posted to your social channels 3x per week.",
+  },
+};
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  try {
+    const {
+      email,
+      name,
+      business_name,
+      business_type,
+      city,
+      state,
+      plan = "standard",
+      platforms = [],
+    } = await req.json();
+
+    if (!email || !business_name) {
+      return new Response(
+        JSON.stringify({ error: "email and business_name are required" }),
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    const planConfig = PLAN_CONFIG[plan];
+    if (!planConfig) {
+      return new Response(
+        JSON.stringify({ error: `Unknown plan: ${plan}` }),
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    const origin = req.headers.get("origin") || "https://www.mattmichelstraining.com";
+    const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+
+    // Insert pending client record
+    const { data: client } = await sb
+      .from("social_media_clients")
+      .insert({
+        business_name,
+        business_type: business_type || null,
+        contact_name: name || null,
+        email,
+        city: city || null,
+        state: state || null,
+        platforms: Array.isArray(platforms) ? platforms : [],
+        plan,
+        active: false,
+      })
+      .select()
+      .single();
+
+    const session = await stripe.checkout.sessions.create({
+      mode: "subscription",
+      payment_method_types: ["card"],
+      customer_email: email,
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            recurring: { interval: "month" },
+            unit_amount: planConfig.amount,
+            product_data: {
+              name: `M² Social Media AI — ${planConfig.label}`,
+              description: planConfig.description,
+            },
+          },
+          quantity: 1,
+        },
+      ],
+      metadata: {
+        type: "social_media_subscription",
+        email,
+        business_name,
+        plan,
+        platforms: Array.isArray(platforms) ? platforms.join(",") : "",
+        client_id: client?.id || "",
+      },
+      success_url: `${origin}/social-media-ai?success=1`,
+      cancel_url: `${origin}/social-media-ai`,
+    });
+
+    // Notify Matt
+    if (RESEND_API_KEY) {
+      await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          from: "M² System <matt@notify.m2training.com>",
+          to: ["matt@m2training.com"],
+          subject: `New Social Media AI signup — ${business_name} (${plan})`,
+          html: `<p><strong>${business_name}</strong> started checkout for the ${planConfig.label} plan at $${(planConfig.amount / 100).toFixed(0)}/month.<br>
+Contact: ${name || "n/a"} — ${email}<br>
+${city || ""}${state ? ", " + state : ""}${business_type ? " — " + business_type : ""}<br>
+Platforms: ${Array.isArray(platforms) && platforms.length ? platforms.join(", ") : "none selected"}</p>`,
+        }),
+      });
+    }
+
+    return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: corsHeaders });
+  } catch (e: any) {
+    console.error("[CREATE-SOCIAL-MEDIA-CHECKOUT] Error:", e);
+    return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: corsHeaders });
+  }
+});

@@ -16,6 +16,10 @@ const AFFILIATE_LINKS = {
   apollo: "https://www.apollo.io/?via=m2",
   hunter: "https://hunter.io/?ref=m2training",
   linkedin: "https://business.linkedin.com/sales-solutions",
+  writesonic: "https://writesonic.com/?via=matt",
+  elevenlabs: "https://elevenlabs.io/?via=matt",
+  surferSeo: "https://surferseo.com/?via=matt",
+  synthesia: "https://www.synthesia.io/?via=matt",
 };
 
 async function generateNewsletterContent(): Promise<{ subject: string; html: string; preview: string }> {
@@ -89,11 +93,18 @@ Be direct and tactical. These are experienced reps who hate fluff. Write like yo
     };
   }
 
-  const toolLink = parsed.tool_name?.toLowerCase().includes("apollo")
-    ? AFFILIATE_LINKS.apollo
-    : parsed.tool_name?.toLowerCase().includes("hunter")
-    ? AFFILIATE_LINKS.hunter
-    : AFFILIATE_LINKS.linkedin;
+  const toolRotation = [
+    { key: "apollo",      link: AFFILIATE_LINKS.apollo,     name: "Apollo.io" },
+    { key: "hunter",      link: AFFILIATE_LINKS.hunter,     name: "Hunter.io" },
+    { key: "linkedin",    link: AFFILIATE_LINKS.linkedin,   name: "LinkedIn Sales Navigator" },
+    { key: "writesonic",  link: AFFILIATE_LINKS.writesonic, name: "Writesonic" },
+    { key: "elevenlabs",  link: AFFILIATE_LINKS.elevenlabs, name: "ElevenLabs" },
+    { key: "surferSeo",   link: AFFILIATE_LINKS.surferSeo,  name: "Surfer SEO" },
+    { key: "synthesia",   link: AFFILIATE_LINKS.synthesia,  name: "Synthesia" },
+  ];
+  const spotlightTool = toolRotation[weekNumber % 7];
+  const toolLink = spotlightTool.link;
+  if (!parsed.tool_name) parsed.tool_name = spotlightTool.name;
 
   const issueNum = (weekNumber % 52) + 1;
   const dateStr = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
@@ -139,6 +150,11 @@ Be direct and tactical. These are experienced reps who hate fluff. Write like yo
 
     <hr style="border:1px solid #e2e8f0;margin:24px 0;">
     <p style="font-size:13px;color:#64748b;line-height:1.7;">Questions or topics you want covered? Reply to this email or text Matt at <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a>.</p>
+
+    <p style="font-size:13px;color:#64748b;margin-top:20px;">
+      🛠 Use AI tools built for field reps — cold email writers, voicemail scripts, objection handlers:
+      <a href="https://www.mattmichelstraining.com/field-rep-tools" style="color:#e8621a;">Try them free →</a>
+    </p>
 
   </td></tr>
 
