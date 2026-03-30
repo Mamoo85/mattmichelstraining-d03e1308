@@ -83,6 +83,7 @@ const AdminGiftCards = lazy(() => import("@/components/admin/AdminGiftCards"));
 const AdminGuideStore = lazy(() => import("@/components/admin/AdminGuideStore"));
 const AdminAffiliateManager = lazy(() => import("@/components/admin/AdminAffiliateManager"));
 const AdminBusinessDashboard = lazy(() => import("@/components/admin/AdminBusinessDashboard"));
+const AdminSocialMediaOnboarding = lazy(() => import("@/components/admin/AdminSocialMediaOnboarding"));
 
 const MASTER_TABS = [
   { key: "business", label: "Business", icon: DollarSign, desc: "Revenue · Automation" },
@@ -292,9 +293,10 @@ const Admin = () => {
 
         {/* ── BUSINESS DASHBOARD ── */}
         {activeTab === "business" && (
-          <Suspense fallback={<TabLoader />}>
-            <AdminBusinessDashboard />
-          </Suspense>
+          <SubTabs tabs={[
+            { key: "overview", label: "Overview", content: <AdminBusinessDashboard /> },
+            { key: "social-setup", label: "Social Media Setup", content: <AdminSocialMediaOnboarding /> },
+          ]} />
         )}
 
         {/* ── AI COMMAND CENTER ── */}
