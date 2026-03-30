@@ -22,17 +22,17 @@ const SAMPLE_TIPS = [
   {
     number: "01",
     headline: "Follow up with every unsold estimate within 48 hours",
-    body: "HVAC businesses that follow up on open estimates within 2 days close 31% more jobs. A short text — "Hey, just checking in on that quote we sent over" — is all it takes.",
+    body: "HVAC businesses that follow up on open estimates within 2 days close 31% more jobs. A short text — \u201cHey, just checking in on that quote we sent over\u201d — is all it takes.",
   },
   {
     number: "02",
     headline: "Ask for the Google review right after job completion",
-    body: "The best time to request a review is within 30 minutes of finishing the job. Use a text template: "So glad we could help! Mind leaving us a quick Google review? [link]" — response rates are 4× higher in-person vs. email.",
+    body: "The best time to request a review is within 30 minutes of finishing the job. Use a text template: \u201cSo glad we could help! Mind leaving us a quick Google review? [link]\u201d — response rates are 4\u00d7 higher in-person vs. email.",
   },
   {
     number: "03",
     headline: "Offer a maintenance plan to every new customer",
-    body: "Recurring maintenance contracts average $180–$350/year per household. Mention it on every invoice: "Ask us about our annual tune-up plan." Converts 10–15% of one-time customers into recurring revenue.",
+    body: "Recurring maintenance contracts average $180\u2013$350/year per household. Mention it on every invoice: \u201cAsk us about our annual tune-up plan.\u201d Converts 10\u201315% of one-time customers into recurring revenue.",
   },
 ];
 
