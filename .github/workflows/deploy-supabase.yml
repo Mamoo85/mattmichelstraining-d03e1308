@@ -17,5 +17,8 @@ jobs:
         with:
           version: latest
 
+      - name: Run database migrations
+        run: supabase db push --project-ref eauvubfpanpeuxsrqesu
+
       - name: Deploy all edge functions
         run: supabase functions deploy --project-ref eauvubfpanpeuxsrqesu
