@@ -24,6 +24,11 @@ const AFFILIATE_LINKS = {
   instantly: "https://instantly.ai/?via=matt",
   pipedrive: "https://www.pipedrive.com/?via=matt",
   hubspot: "https://www.hubspot.com/?via=matt",
+  closeCrm: "https://www.close.com/?via=matt",
+  jobber: "https://www.getjobber.com/?via=matt",
+  housecallPro: "https://www.housecallpro.com/?via=matt",
+  activecampaign: "https://www.activecampaign.com/?via=matt",
+  lemlist: "https://www.lemlist.com/?via=matt",
 };
 
 async function generateNewsletterContent(): Promise<{ subject: string; html: string; preview: string }> {
@@ -109,6 +114,11 @@ Be direct and tactical. These are experienced reps who hate fluff. Write like yo
     { key: "instantly",   link: AFFILIATE_LINKS.instantly,    name: "Instantly.ai",              tip: "Warm up unlimited email accounts and send 5,000+ cold emails/day without landing in spam. Built for outbound." },
     { key: "pipedrive",   link: AFFILIATE_LINKS.pipedrive,   name: "Pipedrive",                 tip: "Visual sales pipeline built for field reps. Drag deals between stages. See exactly where your revenue is stuck." },
     { key: "hubspot",     link: AFFILIATE_LINKS.hubspot,     name: "HubSpot",                   tip: "Free CRM with email tracking — know the second a prospect opens your email. Upgrade only when you need automation." },
+    { key: "closeCrm",    link: AFFILIATE_LINKS.closeCrm,    name: "Close CRM",                 tip: "Built for outbound sales teams. Power dialer + email sequences built in. See your entire pipeline in one visual board." },
+    { key: "jobber",      link: AFFILIATE_LINKS.jobber,      name: "Jobber",                    tip: "If you're in field service (HVAC, plumbing, landscaping) Jobber handles quotes, scheduling, invoicing, and payments. Stops jobs falling through the cracks." },
+    { key: "housecallPro",link: AFFILIATE_LINKS.housecallPro,name: "Housecall Pro",             tip: "Dispatch software for home service contractors. Drag-and-drop scheduling, auto-texts to customers, and instant payment collection on-site." },
+    { key: "activecampaign",link: AFFILIATE_LINKS.activecampaign,name: "ActiveCampaign",        tip: "CRM + email automation that learns which prospects engage and scores them automatically. Set up a 5-email follow-up sequence once — it runs forever." },
+    { key: "lemlist",     link: AFFILIATE_LINKS.lemlist,     name: "Lemlist",                   tip: "Personalized cold email at scale. Add a prospect's LinkedIn profile picture or website screenshot directly in the email. Open rates jump 30-40%." },
   ];
   const spotlightTool = toolRotation[weekNumber % toolRotation.length];
   const toolLink = spotlightTool.link;

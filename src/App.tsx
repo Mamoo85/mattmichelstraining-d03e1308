@@ -120,6 +120,8 @@ const GetStarted = lazyRetry(() => import("./pages/GetStarted"));
 const SocialConnect = lazyRetry(() => import("./pages/SocialConnect"));
 const ReviewResponder = lazyRetry(() => import("./pages/ReviewResponder"));
 const SeoAuditService = lazyRetry(() => import("./pages/SeoAuditService"));
+const ContractorChatbot = lazyRetry(() => import("./pages/ContractorChatbot"));
+const IndustrialNewsletter = lazyRetry(() => import("./pages/IndustrialNewsletter"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -314,6 +316,8 @@ const App = () => (
                     <Route path="/social-connect" element={<SocialConnect />} />
                     <Route path="/review-responder" element={<ReviewResponder />} />
                     <Route path="/seo-reports" element={<SeoAuditService />} />
+                    <Route path="/contractor-chatbot" element={<ContractorChatbot />} />
+                    <Route path="/industrial-newsletter" element={<IndustrialNewsletter />} />
                     <Route path="/sports-camps" element={<CampDirectory />} />
                     <Route path="/free-program" element={<FreeProgram />} />
                     <Route path="/studio-rental" element={<StudioRental />} />
