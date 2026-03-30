@@ -178,7 +178,7 @@ Rules:
 - Suggest actionable counter-strategies
 - Output sections: 🏢 COMPETITOR OVERVIEW, 💰 PRICING COMPARISON, 🎯 THEIR STRENGTHS, ⚡ OUR ADVANTAGES, 📋 ACTION ITEMS`;
         userPrompt = scrapedContent
-          ? `Analyze this competitor's website:\nURL: ${context.competitorUrl}\n\nContent:\n${scrapedContent}`
+          ? `Analyze this competitor's website:\nURL: ${context?.competitorUrl || "Unknown URL"}\n\nContent:\n${scrapedContent}`
           : `Analyze competitor: ${context?.competitorName || context?.competitorUrl || "a local training facility"}.\nNotes: ${context?.notes || "General competitive analysis"}`;
         break;
       }
