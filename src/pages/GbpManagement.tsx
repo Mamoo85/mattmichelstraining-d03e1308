@@ -99,11 +99,16 @@ export default function GbpManagement() {
               <span className="text-[#f97316]">Handled Every Week.</span>
             </h1>
             <p className="text-base sm:text-lg text-[#aaa] max-w-2xl mx-auto mb-4 leading-relaxed">
-              Businesses with active, optimized GBP profiles show up higher on Google Maps — and get more calls. Matt personally manages your profile for $49/month.
+              Businesses with active, optimized GBP profiles show up higher on Google Maps — and get more calls. Our system actively manages your profile for $49/month.
             </p>
-            <p className="text-sm text-[#f97316] font-semibold mb-8">
-              No AI. No outsourced work. Matt reviews your business and writes every post himself.
-            </p>
+            <div className="bg-[#1a1a2e] border border-white/10 p-5 mb-8 rounded-xl flex items-start gap-4 max-w-2xl mx-auto text-left">
+              <div className="w-[52px] h-[52px] rounded-full bg-[#f97316]/15 border border-[#f97316]/30 flex items-center justify-center flex-shrink-0">
+                <TrendingUp size={24} className="text-[#f97316]" />
+              </div>
+              <p className="text-[13px] text-[#aaa] leading-relaxed">
+                <span className="font-bold text-white">The Local Growth Engine.</span> We built this system specifically for local trades businesses who are too busy on the jobsite to manage their Google presence. Our proprietary setup ensures your profile stays active, optimized, and ranking above the competition. We handle the algorithm, you handle the calls.
+              </p>
+            </div>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button
                 size="lg"

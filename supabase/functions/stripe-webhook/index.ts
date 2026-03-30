@@ -1455,6 +1455,46 @@ serve(async (req) => {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // ── MISSED CALL TEXT-BACK — subscription ──────────────────────────────
+      if (meta.type === "missed_call_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await (sb.from as any)("missed_call_clients").upsert({
+              email,
+              contact_name: meta.name || null,
+              business_name: meta.businessName || email,
+              business_phone: meta.phone || null,
+              active: true,
+              stripe_subscription_id: session.subscription as string || null,
+            }, { onConflict: "email" });
+          }
+          if (RESEND_API_KEY && email) {
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "Matt Michels <matt@notify.m2training.com>",
+                to: [email],
+                subject: "Your Missed Call Text-Back is being set up",
+                html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for Missed Call Text-Back. Your 7-day free trial has started.</p><p>Matt will reach out within 24 hours to complete the forwarding setup — it takes about 5 minutes. After that, every missed call to your business gets an instant text-back automatically.</p><p>Questions? Reply here or text (313) 806-4952.</p><p>— Matt</p>`,
+              }),
+            });
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "M² Notifications <matt@notify.m2training.com>",
+                to: ["matthewmichels@mattmichelstraining.com", "matt@m2training.com"],
+                subject: `💰 New Missed Call client — ${meta.businessName || email} ($99/mo)`,
+                html: `<p>New missed-call text-back subscriber:<br><strong>${meta.businessName || email}</strong> — ${email}<br>Phone: ${meta.phone || "n/a"}<br><br><strong>Action needed:</strong> Buy a $1/mo Twilio number → set webhook to missed-call-handler → update DB → have client forward unanswered calls to Twilio number.</p>`,
+              }),
+            });
+          }
+        } catch (e) { console.error("[WEBHOOK] missed_call_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
     return new Response(JSON.stringify({ received: true }), {
       headers: { "Content-Type": "application/json" },
       status: 200,

@@ -122,6 +122,8 @@ const ReviewResponder = lazyRetry(() => import("./pages/ReviewResponder"));
 const SeoAuditService = lazyRetry(() => import("./pages/SeoAuditService"));
 const ContractorChatbot = lazyRetry(() => import("./pages/ContractorChatbot"));
 const IndustrialNewsletter = lazyRetry(() => import("./pages/IndustrialNewsletter"));
+const MissedCallSaaS = lazyRetry(() => import("./pages/MissedCallSaaS"));
+const B2BPartnerPortal = lazyRetry(() => import("./pages/B2BPartnerPortal"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -318,6 +320,8 @@ const App = () => (
                     <Route path="/seo-reports" element={<SeoAuditService />} />
                     <Route path="/contractor-chatbot" element={<ContractorChatbot />} />
                     <Route path="/industrial-newsletter" element={<IndustrialNewsletter />} />
+                    <Route path="/missed-call-text" element={<MissedCallSaaS />} />
+                    <Route path="/partners" element={<B2BPartnerPortal />} />
                     <Route path="/sports-camps" element={<CampDirectory />} />
                     <Route path="/free-program" element={<FreeProgram />} />
                     <Route path="/studio-rental" element={<StudioRental />} />
