@@ -45,7 +45,7 @@ const BottomTabBar = lazyRetry(() => import("@/components/layout/BottomTabBar"))
 
 // Lazy-load ALL pages including Index for faster initial JS parse
 const Index = lazyRetry(() => import("./pages/Index"));
-const Dashboard = lazyRetry(() => import("./pages/Dashboard"));
+
 const Coach = lazyRetry(() => import("./pages/Coach"));
 const Shop = lazyRetry(() => import("./pages/Shop"));
 const ForParents = lazyRetry(() => import("./pages/ForParents"));

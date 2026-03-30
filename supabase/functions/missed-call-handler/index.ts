@@ -36,7 +36,7 @@ serve(async (req) => {
     // Look up the client by their assigned Twilio number
     const { data: client } = await sb
       .from("missed_call_clients")
-      .select("id, business_name, response_message, active")
+      .select("id, business_name, response_message, active, text_count")
       .eq("twilio_number", toNumber)
       .eq("active", true)
       .single();
@@ -71,17 +71,15 @@ serve(async (req) => {
         const errText = await smsRes.text();
         console.error(`[MISSED-CALL] Twilio SMS error: ${errText}`);
       } else {
-        // Increment text_count
-        await sb
+        // Increment text_count using raw SQL via Supabase
+        const { error: updateErr } = await sb
           .from("missed_call_clients")
-          .update({ text_count: sb.rpc("increment", { row_id: client.id }) as any })
+          .update({ text_count: (client as any).text_count ? (client as any).text_count + 1 : 1 })
           .eq("id", client.id);
 
-        // Simple increment via raw update
-        await sb.rpc("increment_missed_call_text_count", { client_id: client.id }).catch(() => {
-          // Fallback: just log, non-critical
-          console.log(`[MISSED-CALL] Text sent for client ${client.id} but count not incremented (RPC not found)`);
-        });
+        if (updateErr) {
+          console.error(`[MISSED-CALL] Failed to increment text_count:`, updateErr);
+        }
 
         console.log(`[MISSED-CALL] Sent text-back to ${fromNumber} for ${client.business_name}`);
       }
