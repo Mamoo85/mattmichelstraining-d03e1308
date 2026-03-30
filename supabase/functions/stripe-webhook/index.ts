@@ -1487,7 +1487,7 @@ serve(async (req) => {
                 from: "M² Notifications <matt@notify.m2training.com>",
                 to: ["matthewmichels@mattmichelstraining.com", "matt@m2training.com"],
                 subject: `💰 New Missed Call client — ${meta.businessName || email} ($99/mo)`,
-                html: `<p>New missed-call text-back subscriber:<br><strong>${meta.businessName || email}</strong> — ${email}<br>Phone: ${meta.phone || "n/a"}<br><br><strong>Action needed:</strong> Buy a $1/mo Twilio number → set webhook to missed-call-handler → update DB → have client forward unanswered calls to Twilio number.</p>`,
+                html: `<p>💰 New missed-call text-back subscriber:</p><p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Phone: ${meta.phone || "n/a"}</p><hr/><p><strong>⚡ Your 4-step setup checklist for this client:</strong></p><ol><li>Go to <a href="https://www.twilio.com/console/phone-numbers/search">Twilio → Buy a Number</a> — pick a local number matching their area code (~$1.15/mo)</li><li>On that number's config page, set both webhook fields to:<br><code>https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/missed-call-handler</code></li><li>Go to <a href="https://supabase.com/dashboard/project/zmyczlfuufhngzovkjdh/editor">Supabase → Table Editor → missed_call_clients</a> → find their row → fill in <strong>twilio_number</strong> (format: +1XXXXXXXXXX) → flip <strong>active</strong> to true</li><li>Text the client: "To activate your missed-call text-back, forward unanswered calls to [their Twilio number]. On iPhone dial: **61*+1XXXXXXXXXX# — takes 30 seconds."</li></ol><p>Once step 4 is done, it's 100% automatic.</p>`,
               }),
             });
           }
