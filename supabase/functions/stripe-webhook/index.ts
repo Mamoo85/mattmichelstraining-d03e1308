@@ -1285,6 +1285,165 @@ serve(async (req) => {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // ── REVIEW RESPONDER — $99/mo subscription ───────────────────────────
+      if (meta.type === "review_responder_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await sb.from("review_responder_clients" as any).upsert({
+              email,
+              business_name: meta.business_name || email,
+              contact_name: meta.name || null,
+              active: true,
+              stripe_subscription_id: session.subscription as string || null,
+            }, { onConflict: "email" });
+          }
+          if (RESEND_API_KEY && email) {
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "Matt Michels <matt@notify.m2training.com>",
+                to: [email],
+                subject: "Your Review Response Automation is active",
+                html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>Your Google review automation is live. We'll start monitoring and responding to new reviews within 24 hours.</p><p>One step needed: connect your Google Business Profile. Reply to this email or text Matt at (313) 806-4952 and he'll send you the connection link.</p><p>— Matt</p>`,
+              }),
+            });
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "M² Notifications <matt@notify.m2training.com>",
+                to: ["matthewmichels@mattmichelstraining.com", "matt@m2training.com"],
+                subject: `💰 New Review Responder client — ${meta.business_name || email} ($99/mo)`,
+                html: `<p>New review responder subscriber: <strong>${meta.business_name || email}</strong> — ${email}<br>Action needed: connect their Google Business Profile token.</p>`,
+              }),
+            });
+          }
+        } catch (e) { console.error("[WEBHOOK] review_responder_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── SEO REPORT — subscription ─────────────────────────────────────────
+      if (meta.type === "seo_report_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await sb.from("seo_report_clients" as any).upsert({
+              email,
+              business_name: meta.business_name || email,
+              contact_name: meta.name || null,
+              active: true,
+              stripe_subscription_id: session.subscription as string || null,
+            }, { onConflict: "email" });
+          }
+          if (RESEND_API_KEY && email) {
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "Matt Michels <matt@notify.m2training.com>",
+                to: [email],
+                subject: "Your SEO Reports are active",
+                html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>Your monthly SEO report subscription is live. Your first report will be delivered within 24 hours — it covers rankings, traffic trends, competitor gaps, and recommended actions.</p><p>Questions? Reply here or text Matt at (313) 806-4952.</p><p>— Matt</p>`,
+              }),
+            });
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "M² Notifications <matt@notify.m2training.com>",
+                to: ["matthewmichels@mattmichelstraining.com", "matt@m2training.com"],
+                subject: `💰 New SEO Report client — ${meta.business_name || email}`,
+                html: `<p>New SEO report subscriber: <strong>${meta.business_name || email}</strong> — ${email}<br>Subscription ID: ${session.subscription || "n/a"}</p>`,
+              }),
+            });
+          }
+        } catch (e) { console.error("[WEBHOOK] seo_report_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── CHATBOT — subscription ────────────────────────────────────────────
+      if (meta.type === "chatbot_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          const clientId = (session.subscription as string || email || "").replace(/[^a-z0-9]/gi, "").toLowerCase().substring(0, 24);
+          if (email) {
+            await sb.from("chatbot_clients" as any).upsert({
+              email,
+              business_name: meta.business_name || email,
+              contact_name: meta.name || null,
+              client_id: clientId,
+              active: true,
+              stripe_subscription_id: session.subscription as string || null,
+            }, { onConflict: "email" });
+          }
+          if (RESEND_API_KEY && email) {
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "Matt Michels <matt@notify.m2training.com>",
+                to: [email],
+                subject: "Your AI Chatbot is ready to install",
+                html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>Your chatbot subscription is active. Add this snippet to your website before the closing <code>&lt;/body&gt;</code> tag:</p><pre style="background:#f1f5f9;padding:12px;border-radius:6px;font-size:13px;">&lt;script src="https://www.mattmichelstraining.com/chatbot.js" data-client-id="${clientId}"&gt;&lt;/script&gt;</pre><p>That's it — the chatbot will appear automatically. Reply to this email or text (313) 806-4952 if you need help installing it.</p><p>— Matt</p>`,
+              }),
+            });
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "M² Notifications <matt@notify.m2training.com>",
+                to: ["matthewmichels@mattmichelstraining.com", "matt@m2training.com"],
+                subject: `💰 New Chatbot client — ${meta.business_name || email}`,
+                html: `<p>New chatbot subscriber: <strong>${meta.business_name || email}</strong> — ${email}<br>Client ID: <code>${clientId}</code><br>Subscription ID: ${session.subscription || "n/a"}</p>`,
+              }),
+            });
+          }
+        } catch (e) { console.error("[WEBHOOK] chatbot_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── INDUSTRIAL NEWSLETTER — subscription ──────────────────────────────
+      if (meta.type === "industrial_newsletter_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await sb.from("b2b_subscribers").upsert({
+              email,
+              name: meta.name || null,
+              niche: "industrial_newsletter",
+              active: true,
+              stripe_customer_id: session.customer as string || null,
+              stripe_subscription_id: session.subscription as string || null,
+            }, { onConflict: "email" });
+          }
+          if (RESEND_API_KEY && email) {
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "Matt Michels <matt@notify.m2training.com>",
+                to: [email],
+                subject: "You're subscribed to the Industrial Sales Newsletter",
+                html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>Welcome aboard. You'll get your first issue next Monday morning — practical B2B sales intel for industrial and manufacturing markets, no fluff.</p><p>Reply any time if you have questions or want to connect.</p><p>— Matt<br>(313) 806-4952</p>`,
+              }),
+            });
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "M² Notifications <matt@notify.m2training.com>",
+                to: ["matthewmichels@mattmichelstraining.com", "matt@m2training.com"],
+                subject: `💰 New Industrial Newsletter subscriber — ${email}`,
+                html: `<p>New industrial newsletter subscriber: <strong>${email}</strong><br>Name: ${meta.name || "n/a"}</p>`,
+              }),
+            });
+          }
+        } catch (e) { console.error("[WEBHOOK] industrial_newsletter_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
     return new Response(JSON.stringify({ received: true }), {
       headers: { "Content-Type": "application/json" },
       status: 200,

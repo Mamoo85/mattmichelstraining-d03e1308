@@ -169,7 +169,8 @@ Make it:
 - Reference that you're local (Grosse Pointe / Metro Detroit)
 - Mention one real problem they probably have online (no website, hard to find on Google, losing jobs to competitors who have sites)
 - Mention $499 flat, 7 days live, $49/mo
-- End with: "Email me at matt@m2training.com or text (313) 806-4952 — whichever works best for you."
+- End with: "Get started at mattmichelstraining.com/get-started — takes 30 seconds, and I'll reach out the same day."
+- Then add a P.S. line: "P.S. — If you'd rather just text, (313) 806-4952 works too."
 
 Do NOT use salesy language. Sound like a real person.
 
@@ -270,7 +271,8 @@ Key points:
 - No Angi or HomeAdvisor — no shared leads
 - $299–$399/month flat, cancel anytime
 - Free 3-lead trial to prove it works first
-- End with: "Email matt@m2training.com or text (313) 806-4952 — whichever works best for you."
+- End with: "Get started at mattmichelstraining.com/get-started — takes 30 seconds, and I'll reach out the same day."
+- Then add a P.S. line: "P.S. — If you'd rather just text, (313) 806-4952 works too."
 
 Subject + email body, under 120 words total. Sound like a real person, not a marketer.
 
