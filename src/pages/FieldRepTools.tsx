@@ -223,7 +223,7 @@ export default function FieldRepTools() {
         setUserEmail(user.email);
 
         const { data } = await supabase
-          .from("b2b_subscribers")
+          .from("b2b_subscribers" as any)
           .select("id")
           .eq("email", user.email)
           .eq("niche", "field_rep_tools")

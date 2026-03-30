@@ -87,12 +87,12 @@ export default function AdminAutomationHub() {
     queryFn: async () => {
       const [subsRes, sendsRes] = await Promise.all([
         supabase.from("newsletter_subscribers").select("id", { count: "exact", head: true }).eq("is_active", true),
-        supabase.from("newsletter_sends").select("id, created_at").like("template_name", "sports_weekly_%").order("created_at", { ascending: false }).limit(1),
+        supabase.from("newsletter_sends").select("id, sent_at").like("template_name", "sports_weekly_%").order("sent_at", { ascending: false }).limit(1),
       ]);
       return {
         subscribers: subsRes.count ?? 0,
-        lastSent: sendsRes.data?.[0]?.created_at
-          ? new Date(sendsRes.data[0].created_at).toLocaleDateString()
+        lastSent: sendsRes.data?.[0]?.sent_at
+          ? new Date(sendsRes.data[0].sent_at).toLocaleDateString()
           : "Never",
         totalIssues: sendsRes.count ?? 0,
       };

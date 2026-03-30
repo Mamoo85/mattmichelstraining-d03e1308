@@ -17,7 +17,7 @@ const COMMISSION_BY_TIER: Record<string, string> = {
 };
 
 const AffiliateDashboard = () => {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
 
