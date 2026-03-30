@@ -1247,6 +1247,7 @@ serve(async (req) => {
       if (meta.type === "social_media_subscription") {
         try {
           const email = meta.email || customerEmail;
+          let clientId: string | null = null;
           if (email) {
             await sb.from("social_media_clients")
               .upsert({
@@ -1257,8 +1258,18 @@ serve(async (req) => {
                 active: true,
                 stripe_subscription_id: session.subscription as string || null,
               }, { onConflict: "email" });
+            // Fetch the id back so we can include it in the onboarding link
+            const { data: clientRow } = await sb
+              .from("social_media_clients")
+              .select("id")
+              .eq("email", email)
+              .single();
+            clientId = clientRow?.id || null;
           }
           const planPrice = meta.plan === "pro" ? "$299" : meta.plan === "trainer" ? "$149" : "$199";
+          const onboardingUrl = clientId
+            ? `https://www.mattmichelstraining.com/social-connect?client_id=${clientId}`
+            : "https://www.mattmichelstraining.com/social-connect";
           if (RESEND_API_KEY && email) {
             await fetch("https://api.resend.com/emails", {
               method: "POST",
@@ -1267,7 +1278,7 @@ serve(async (req) => {
                 from: "Matt Michels <matt@notify.m2training.com>",
                 to: [email],
                 subject: "Your Social Media AI service is active",
-                html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>Your Social Media AI (${meta.plan || "standard"} plan) is now active. We'll reach out within 24 hours to connect your Facebook, Instagram, and LinkedIn accounts — then the AI takes over posting 3x per week.</p><p>Questions? Reply here or text Matt at (313) 806-4952.</p><p>— Matt</p>`,
+                html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>Your Social Media AI (${meta.plan || "standard"} plan) is now active. AI posts will start going out Monday, Wednesday, and Friday once your accounts are connected.</p><p><strong>Step 2 — Connect your accounts (2 min):</strong><br><a href="${onboardingUrl}" style="color:#e8621a;">Set up your social accounts →</a></p><p>Questions? Reply here or text Matt at (313) 806-4952.</p><p>— Matt</p>`,
               }),
             });
             await fetch("https://api.resend.com/emails", {
@@ -1277,7 +1288,7 @@ serve(async (req) => {
                 from: "M² Notifications <matt@notify.m2training.com>",
                 to: ["matt@m2training.com"],
                 subject: `💰 New Social Media AI client — ${meta.business_name || email} (${meta.plan}, ${planPrice}/mo)`,
-                html: `<p>New social media subscriber:<br><strong>${meta.business_name || email}</strong> — ${email}<br>Plan: ${meta.plan} at ${planPrice}/month.<br>Action needed: connect their FB/IG/LinkedIn accounts.</p>`,
+                html: `<p>New social media subscriber:<br><strong>${meta.business_name || email}</strong> — ${email}<br>Plan: ${meta.plan} at ${planPrice}/month.<br>Client ID: ${clientId || "unknown"}<br>Onboarding link sent to client. They still need to complete account setup.</p>`,
               }),
             });
           }

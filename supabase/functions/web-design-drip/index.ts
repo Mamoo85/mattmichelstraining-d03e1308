@@ -25,7 +25,7 @@ I've done it for plumbers, roofers, electricians, auto shops — all over the Ea
 
 Want to see what I'd build for you? I put together a quick demo at mattmichelstraining.com/detroit-web-design.
 
-Email me at matt@m2training.com or text (313) 806-4952 — whichever works best for you.
+Start here: mattmichelstraining.com/get-started — I'll reach out the same day.
 
 — Matt Michels, Grosse Pointe`,
   },
@@ -46,7 +46,7 @@ Real quick — what the site gets you:
 
 If the timing's not right, no hard feelings. But if you're tired of watching competitors get jobs you should be getting — let's talk.
 
-Email matt@m2training.com or text (313) 806-4952.
+Start here: mattmichelstraining.com/get-started — I'll reach out the same day.
 
 — Matt`,
   },
@@ -72,7 +72,7 @@ $499 to build. $49/month to run. That's it.
 
 See what I've built: mattmichelstraining.com/detroit-web-design
 
-Email matt@m2training.com or text (313) 806-4952 — whichever is easier.
+Start here: mattmichelstraining.com/get-started — I'll reach out the same day.
 
 — Matt`,
   },
@@ -89,7 +89,7 @@ I've reached out a few times about building a website for ${biz}. If the timing'
 
 But if you ever want a site that gets you found on Google and makes your phone ring — $499 flat, 7 days live — reach out.
 
-Email matt@m2training.com or text (313) 806-4952 — whatever's easier.
+Start here: mattmichelstraining.com/get-started — I'll reach out the same day.
 
 I work with all kinds of local businesses across Metro Detroit. Happy to show you what I've built.
 
@@ -115,6 +115,7 @@ function buildDripEmailHtml(subject: string, body: string): string {
         <img src="https://www.mattmichelstraining.com/images/matt-family-cornfield.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Matt Michels">
         <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>Grosse Pointe, MI · (313) 806-4952</div>
       </div>
+      <p style="font-size:12px;color:#94a3b8;margin-top:8px;">Prefer to just text? (313) 806-4952</p>
     </td></tr>
     <tr><td style="background:#f8fafc;padding:16px 24px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;">
       Matt Michels Web Design · Grosse Pointe, MI · (313) 806-4952<br>
