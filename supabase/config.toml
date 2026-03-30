@@ -27,6 +27,12 @@ verify_jwt = false
 [functions.ai-parent-report]
 verify_jwt = false
 
+[functions.missed-call-handler]
+verify_jwt = false
+
+[functions.get-partner-stats]
+verify_jwt = false
+
 [functions.ai-meal-prep]
 verify_jwt = false
 
