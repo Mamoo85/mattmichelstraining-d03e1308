@@ -86,7 +86,7 @@ const SEOHead = ({
     <Helmet>
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
-      <link rel="canonical" href={canonical} />
+      {canonical && <link rel="canonical" href={canonical} />}
 
       {noindex && <meta name="robots" content="noindex, nofollow" />}
 
@@ -94,7 +94,7 @@ const SEOHead = ({
       <meta property="og:type" content={type} />
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={description} />
-      <meta property="og:url" content={canonical} />
+      {canonical && <meta property="og:url" content={canonical} />}
       <meta property="og:image" content={image} />
       <meta property="og:site_name" content="Matt Michels Training" />
 
