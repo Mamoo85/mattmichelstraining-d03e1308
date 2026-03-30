@@ -6,6 +6,32 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+type BusinessIntelRequest = {
+  tool: "churn_predict" | "pricing_optimizer" | "revenue_forecast" | "competitor_monitor";
+  context?: {
+    notes?: string;
+    competitorUrl?: string;
+    competitorName?: string;
+  };
+};
+
+type FirecrawlResponse = {
+  data?: {
+    markdown?: string;
+  };
+  markdown?: string;
+};
+
+type GatewayResponse = {
+  choices?: Array<{ message?: { content?: string } }>;
+  usage?: {
+    prompt_tokens?: number;
+    completion_tokens?: number;
+    total_tokens?: number;
+  };
+  model?: string;
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -17,7 +43,7 @@ serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const sb = createClient(supabaseUrl, serviceKey);
 
-    const { tool, context } = await req.json();
+    const { tool, context } = await req.json() as BusinessIntelRequest;
 
     let systemPrompt = "";
     let userPrompt = "";
@@ -132,7 +158,7 @@ Rules:
               body: JSON.stringify({ url: context.competitorUrl, formats: ["markdown"], onlyMainContent: true }),
             });
             if (scrapeRes.ok) {
-              const scrapeData = await scrapeRes.json();
+              const scrapeData = await scrapeRes.json() as FirecrawlResponse;
               scrapedContent = scrapeData.data?.markdown || scrapeData.markdown || "";
               // Limit content length
               if (scrapedContent.length > 8000) scrapedContent = scrapedContent.slice(0, 8000) + "...";
@@ -192,7 +218,7 @@ Rules:
       throw new Error("AI gateway error");
     }
 
-    const data = await response.json();
+    const data = await response.json() as GatewayResponse;
     const result = data.choices?.[0]?.message?.content || "";
     const usage = data.usage || {};
 

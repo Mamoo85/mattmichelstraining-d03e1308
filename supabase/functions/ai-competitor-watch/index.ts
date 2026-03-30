@@ -6,6 +6,10 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+type AnthropicMessageResponse = {
+  content?: Array<{ text?: string }>;
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -59,7 +63,7 @@ Write in professional but accessible language. Use HTML formatting with <h2>, <p
         }),
       });
 
-      const aiData = await aiResponse.json();
+      const aiData = await aiResponse.json() as AnthropicMessageResponse;
       const reportHtml = aiData.content?.[0]?.text || "Report generation failed.";
 
       const emailHtml = `
@@ -120,8 +124,9 @@ Write in professional but accessible language. Use HTML formatting with <h2>, <p
     );
   } catch (error) {
     console.error("ai-competitor-watch error:", error);
+    const message = error instanceof Error ? error.message : String(error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

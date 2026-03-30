@@ -10,6 +10,10 @@ const cors = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+type AnthropicMessageResponse = {
+  content?: Array<{ text?: string }>;
+};
+
 async function supabaseQuery(path: string, body?: unknown, method = "GET") {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
     method,
@@ -50,8 +54,8 @@ async function generateBlogPost(businessName: string, industry: string, website?
     const text = await res.text();
     throw new Error(`Anthropic API error: ${text}`);
   }
-  const data = await res.json();
-  return data.content[0].text as string;
+  const data = await res.json() as AnthropicMessageResponse;
+  return data.content?.[0]?.text ?? "";
 }
 
 async function sendEmail(to: string, subject: string, html: string) {
@@ -121,8 +125,9 @@ serve(async (req) => {
         );
 
         sent++;
-      } catch (clientErr: any) {
-        console.error(`Error processing blog post for ${client.email}:`, clientErr.message);
+      } catch (clientErr) {
+        const message = clientErr instanceof Error ? clientErr.message : String(clientErr);
+        console.error(`Error processing blog post for ${client.email}:`, message);
       }
     }
 
@@ -130,8 +135,9 @@ serve(async (req) => {
       status: 200,
       headers: { ...cors, "Content-Type": "application/json" },
     });
-  } catch (e: any) {
-    return new Response(JSON.stringify({ error: e.message }), {
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    return new Response(JSON.stringify({ error: message }), {
       status: 500,
       headers: { ...cors, "Content-Type": "application/json" },
     });

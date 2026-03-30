@@ -6,6 +6,18 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+type AthleteStreamRequest = {
+  type: "recovery_advisor" | "exercise_substitution" | "ask_coach";
+  context: {
+    exerciseName?: string;
+    reason?: string;
+    availableEquipment?: string;
+    injuryNotes?: string;
+    message?: string;
+    programTitle?: string;
+  };
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -26,7 +38,7 @@ serve(async (req) => {
     if (userError || !userData.user) throw new Error("Auth failed");
 
     const userId = userData.user.id;
-    const { type, context } = await req.json();
+    const { type, context } = await req.json() as AthleteStreamRequest;
 
     // ── Fetch rich athlete context ──
     const [profileRes, recentLogsRes, recentPRsRes, programsRes, pointsRes] = await Promise.all([
