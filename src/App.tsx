@@ -164,6 +164,8 @@ const HiringAssistant = lazyRetry(() => import("./pages/HiringAssistant"));
 const KPIEmail = lazyRetry(() => import("./pages/KPIEmail"));
 const AllServices = lazyRetry(() => import("./pages/AllServices"));
 const ReferralPage = lazyRetry(() => import("./pages/ReferralPage"));
+const PrivacyPolicy = lazyRetry(() => import("./pages/PrivacyPolicy"));
+const TermsOfService = lazyRetry(() => import("./pages/TermsOfService"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -401,6 +403,8 @@ const App = () => (
                     <Route path="/kpi-email" element={<KPIEmail />} />
                     <Route path="/all-services" element={<AllServices />} />
                     <Route path="/refer" element={<ReferralPage />} />
+                    <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                    <Route path="/terms" element={<TermsOfService />} />
                     <Route path="/partners" element={<B2BPartnerPortal />} />
                     <Route path="/sports-camps" element={<CampDirectory />} />
                     <Route path="/free-program" element={<FreeProgram />} />
