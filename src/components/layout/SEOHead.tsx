@@ -37,7 +37,7 @@ const SEOHead = ({
   noindex = false,
 }: SEOHeadProps) => {
   const fullTitle = title.includes("M²") || title.includes("Matt Michels") ? title : `${title} | Matt Michels Training`;
-  const canonical = `${SITE_URL}${path}`;
+  const canonical = path ? `${SITE_URL}${path}` : undefined;
   const image = ogImage || DEFAULT_OG;
 
   // Build JSON-LD schemas
