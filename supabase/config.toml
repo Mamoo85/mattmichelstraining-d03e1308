@@ -47,3 +47,21 @@ verify_jwt = false
 
 [functions.adapt-workout-vision]
 verify_jwt = false
+
+[functions.create-newsletter-service-checkout]
+verify_jwt = false
+
+[functions.create-ads-copy-checkout]
+verify_jwt = false
+
+[functions.create-job-posting-checkout]
+verify_jwt = false
+
+[functions.create-reputation-checkout]
+verify_jwt = false
+
+[functions.create-invoicing-checkout]
+verify_jwt = false
+
+[functions.create-voicemail-checkout]
+verify_jwt = false
