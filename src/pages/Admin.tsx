@@ -158,6 +158,7 @@ const Admin = () => {
         .eq("status", "pending");
       return count ?? 0;
     },
+    staleTime: 30000,
     refetchInterval: 30000,
   });
 
@@ -170,6 +171,7 @@ const Admin = () => {
         .eq("status", "pending");
       return count ?? 0;
     },
+    staleTime: 30000,
     refetchInterval: 30000,
   });
 
@@ -182,6 +184,7 @@ const Admin = () => {
         .eq("status", "open");
       return count ?? 0;
     },
+    staleTime: 30000,
     refetchInterval: 30000,
   });
 
@@ -195,6 +198,7 @@ const Admin = () => {
         .eq("is_deleted", false);
       return count ?? 0;
     },
+    staleTime: 30000,
     refetchInterval: 30000,
   });
 
@@ -207,6 +211,7 @@ const Admin = () => {
         .eq("status", "pending");
       return count ?? 0;
     },
+    staleTime: 30000,
     refetchInterval: 30000,
   });
 
@@ -219,10 +224,11 @@ const Admin = () => {
         .in("status", ["pending", "ready_for_review"]);
       return count ?? 0;
     },
+    staleTime: 30000,
     refetchInterval: 30000,
   });
 
-   const { data: pendingLiftVideosCount = 0 } = useQuery({
+  const { data: pendingLiftVideosCount = 0 } = useQuery({
     queryKey: ["pending-lift-videos-count"],
     queryFn: async () => {
       const { count } = await supabase
@@ -231,6 +237,7 @@ const Admin = () => {
         .eq("status", "pending_review");
       return count ?? 0;
     },
+    staleTime: 30000,
     refetchInterval: 30000,
   });
 
@@ -243,6 +250,7 @@ const Admin = () => {
         .eq("status", "pending");
       return count ?? 0;
     },
+    staleTime: 30000,
     refetchInterval: 30000,
   });
 
@@ -257,6 +265,7 @@ const Admin = () => {
         .select("id", { count: "exact", head: true });
       return count ?? 0;
     },
+    staleTime: 60000,
     refetchInterval: 60000,
   });
 

@@ -95,6 +95,7 @@ export default function AdminClientHealth() {
         return order[a.status] - order[b.status];
       });
     },
+    staleTime: 60000,
     refetchInterval: 60000,
   });
 

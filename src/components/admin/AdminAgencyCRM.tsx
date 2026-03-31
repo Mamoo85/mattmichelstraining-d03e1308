@@ -66,6 +66,7 @@ const AdminAgencyCRM = memo(() => {
       if (error) throw error;
       return data || [];
     },
+    staleTime: 30_000,
     refetchInterval: 30_000,
   });
 

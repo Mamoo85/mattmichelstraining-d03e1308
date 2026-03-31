@@ -49,6 +49,7 @@ const AdminBusinessDashboard = () => {
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["admin-business-dashboard-v2"],
+    staleTime: 60000,
     refetchInterval: 60000,
     queryFn: async () => {
       // Fetch all client tables in parallel

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, createContext, useContext, ReactNode } from "react";
+import { useState, useEffect, useRef, useCallback, createContext, useContext, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -40,6 +40,13 @@ function saveQueue(queue: QueuedAction[]) {
 export const OfflineSyncProvider = ({ children }: { children: ReactNode }) => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [queue, setQueue] = useState<QueuedAction[]>(loadQueue);
+  // Keep a ref in sync so the flush effect always sees the latest queue
+  // without needing queue in its dependency array (which would cause a
+  // re-flush loop every time setQueue(failed) updates state).
+  const queueRef = useRef(queue);
+  useEffect(() => { queueRef.current = queue; }, [queue]);
+
+  const flushingRef = useRef(false);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -67,21 +74,23 @@ export const OfflineSyncProvider = ({ children }: { children: ReactNode }) => {
     });
   }, []);
 
-  // Flush queue when back online
+  // Flush queue when back online.
+  // Reads from queueRef (not queue state) so this effect only needs to
+  // re-run when isOnline or user changes — not on every queue mutation.
   useEffect(() => {
-    if (!isOnline || queue.length === 0 || !user) return;
+    if (!isOnline || !user || flushingRef.current) return;
 
+    const pending = loadQueue(); // read from localStorage for freshest snapshot
+    if (pending.length === 0) return;
+
+    flushingRef.current = true;
     const flush = async () => {
-      const pending = [...queue];
       const failed: QueuedAction[] = [];
 
       for (const action of pending) {
         try {
           const { error } = await (supabase.from(action.table as any) as any).insert(action.payload);
-          if (error) {
-            // offline sync retry
-            failed.push(action);
-          }
+          if (error) failed.push(action);
         } catch {
           failed.push(action);
         }
@@ -89,9 +98,12 @@ export const OfflineSyncProvider = ({ children }: { children: ReactNode }) => {
 
       setQueue(failed);
       saveQueue(failed);
+      flushingRef.current = false;
 
       if (failed.length === 0 && pending.length > 0) {
         toast({ title: "Synced!", description: `${pending.length} offline action(s) pushed successfully.` });
+      } else if (failed.length > 0) {
+        toast({ title: "Partial sync", description: `${failed.length} action(s) failed and will retry next time you're online.`, variant: "destructive" });
       }
     };
 
