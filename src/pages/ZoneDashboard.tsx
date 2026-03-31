@@ -430,7 +430,7 @@ const ZoneDashboard = () => {
             style={{ background: "rgba(10,10,10,0.95)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}
           >
             <button
-              onClick={() => setGeneratorView(null)}
+              onClick={() => { setGeneratorView(null); window.history.back(); }}
               className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest transition-colors"
               style={{ color: "#525252" }}
             >

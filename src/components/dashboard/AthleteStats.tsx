@@ -170,16 +170,16 @@ export default function AthleteStats({
 
       {/* Motivational tagline + progress bar */}
       <div className="px-1 space-y-2">
-        <p className="text-[11px] font-semibold italic" style={{ color: "#525252" }}>
+        <p className="text-xs font-semibold italic" style={{ color: "#525252" }}>
           {motivation}
         </p>
         <div className="space-y-1">
           <div className="flex justify-between items-center">
-            <span className="text-[10px] font-black uppercase tracking-widest flex items-center gap-1" style={{ color: "#f97316" }}>
-              <Target size={10} /> {levelLabel}
+            <span className="text-xs font-black uppercase tracking-widest flex items-center gap-1" style={{ color: "#f97316" }}>
+              <Target size={12} /> {levelLabel}
             </span>
             {nextLevelLabel && (
-              <span className="text-[9px]" style={{ color: "#404040" }}>{nextLevelLabel} →</span>
+              <span className="text-xs" style={{ color: "#404040" }}>{nextLevelLabel} →</span>
             )}
           </div>
           <div className="h-1.5 w-full rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>

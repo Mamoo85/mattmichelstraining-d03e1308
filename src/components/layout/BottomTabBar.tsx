@@ -159,7 +159,7 @@ const BottomTabBar = () => {
               <span className="absolute top-0 left-1/4 right-1/4 h-0.5 bg-primary rounded-b" />
             )}
             <MoreHorizontal size={20} strokeWidth={isMoreActive ? 2.5 : 1.5} />
-            <span className="text-[9px] font-bold uppercase tracking-wider">More</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider whitespace-nowrap">More</span>
           </button>
         </div>
       </nav>
