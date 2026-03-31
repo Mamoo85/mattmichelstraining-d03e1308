@@ -170,3 +170,24 @@ verify_jwt = false
 
 [functions.create-voicemail-checkout]
 verify_jwt = false
+
+[functions.reputation-report-sender]
+verify_jwt = false
+
+[functions.newsletter-service-sender]
+verify_jwt = false
+
+[functions.faq-refresh-sender]
+verify_jwt = false
+
+[functions.blog-post-monthly-sender]
+verify_jwt = false
+
+[functions.ads-copy-monthly-sender]
+verify_jwt = false
+
+[functions.competitor-watch-weekly-sender]
+verify_jwt = false
+
+[functions.local-seo-monthly-sender]
+verify_jwt = false
