@@ -157,11 +157,11 @@ export default function AthleteStats({
               ? `${(animatedPoints / 1000).toFixed(1)}k`
               : animatedPoints}
           </div>
-          <div className="text-[9px] font-bold uppercase tracking-wider mt-0.5" style={{ color: "#a855f7", opacity: 0.7 }}>
+          <div className="text-xs font-bold uppercase tracking-wider mt-0.5" style={{ color: "#a855f7", opacity: 0.7 }}>
             {levelLabel}
           </div>
           {nextLevelLabel && ptsToNext !== null && (
-            <div className="text-[8px] mt-0.5" style={{ color: "#737373" }}>
+            <div className="text-xs mt-0.5" style={{ color: "#737373" }}>
               {ptsToNext.toLocaleString()} to {nextLevelLabel}
             </div>
           )}
