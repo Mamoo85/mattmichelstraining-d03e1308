@@ -129,6 +129,15 @@ const AppNavbar = () => {
           </Link>
 
           <Link
+            to="/m2-development"
+            className={`flex items-center gap-1 px-2.5 py-2 text-[11px] font-bold uppercase tracking-widest transition-m2 ${
+              location.pathname === "/m2-development" ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            M² Dev
+          </Link>
+
+          <Link
             to="/studio-rental"
             className={`flex items-center gap-1 px-2.5 py-2 text-[11px] font-bold uppercase tracking-widest transition-m2 ${
               location.pathname === "/studio-rental" ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
