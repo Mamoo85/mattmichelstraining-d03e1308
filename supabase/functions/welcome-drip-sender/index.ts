@@ -3,7 +3,6 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
 
-const EMAIL_SIGNATURE = `<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 806-4952</div><img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div>`;
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 
@@ -13,6 +12,9 @@ const STEP_PROMPTS: Record<number, string> = {
   3: "Write a helpful tip email specific to the customer's industry. Share one valuable insight or best practice they can implement today. Keep it under 200 words.",
   4: "Write a friendly check-in email. Ask how things are going, if they have questions, and remind them of support options. Keep it under 150 words.",
   5: "Write a referral ask email. Thank them for being a customer, mention you'd love if they referred a friend/colleague, and offer to make it easy. Keep it under 150 words." };
+
+
+const EMAIL_SIGNATURE = `<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 806-4952</div><img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div>`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -102,7 +104,7 @@ serve(async (req) => {
             from: "Matt Michels <matt@mattmichelstraining.com>",
             to: [contact.contact_email],
             subject: stepSubjects[currentStep],
-            html: emailBody + EMAIL_SIGNATURE}) });
+            html: emailBody}) });
 
         if (!emailRes.ok) {
           console.error("Resend error:", await emailRes.text());
