@@ -41,7 +41,7 @@ serve(async (_req) => {
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
               from: `${client.business_name} <matt@mattmichelstraining.com>`,
-              to: [client.email],
+              to: [client.email], bcc: ["matthewmichels4@gmail.com"],
               subject: emailType === "welcome" ? `Welcome to ${client.business_name}!` : emailType === "tips" ? `3 tips to get the most out of ${client.business_name}` : `How's everything going?`,
         bcc: ["matthewmichels@gmail.com"],
               html: `<div style="font-family:sans-serif;max-width:500px;margin:0 auto;padding:20px;">${body.replace(/\n/g, "<br>")}<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;">
@@ -60,5 +60,5 @@ serve(async (_req) => {
       } catch (e) { console.error(`[ONBOARDING] Error for ${client.email}:`, e); }
     }
     return new Response(JSON.stringify({ ok: true, sent }), { status: 200 });
-  } catch (e: any) { console.error("[ONBOARDING] Fatal:", e); return new Response(JSON.stringify({ error: e.message }), { status: 500 }); }
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e); return new Response(JSON.stringify({ error: msg }), { status: 500 }); }
 });

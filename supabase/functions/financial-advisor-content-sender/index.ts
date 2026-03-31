@@ -43,7 +43,7 @@ Professional, trustworthy, compliant-friendly tone. Include: "This content is fo
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
               from: "M² Development <matt@mattmichelstraining.com>",
-              to: [client.email],
+              to: [client.email], bcc: ["matthewmichels4@gmail.com"],
               subject: `${client.business_name} — ${month} Content Pack`,
         bcc: ["matthewmichels@gmail.com"],
               html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#1e293b;color:#e2e8f0;border-radius:12px;"><h2 style="color:#e8621a;">📊 Monthly Financial Advisor Content</h2><p>Your ${month} content is ready. Review for compliance before publishing:</p><pre style="white-space:pre-wrap;font-family:sans-serif;color:#e2e8f0;">${content}</pre><p style="color:#64748b;font-size:12px;"><strong>Note:</strong> Always review AI-generated content for compliance with your firm's policies before publishing. Powered by M² Development — matt@m2training.com</p></div>`,
@@ -55,5 +55,5 @@ Professional, trustworthy, compliant-friendly tone. Include: "This content is fo
       } catch (e) { console.error(`[FIN-ADVISOR-SENDER] Error for ${client.email}:`, e); }
     }
     return new Response(JSON.stringify({ ok: true, sent }), { status: 200 });
-  } catch (e: any) { return new Response(JSON.stringify({ error: e.message }), { status: 500 }); }
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e); return new Response(JSON.stringify({ error: msg }), { status: 500 }); }
 });

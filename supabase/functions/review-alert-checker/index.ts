@@ -49,7 +49,7 @@ serve(async (req) => {
       headers: { Authorization: `Bearer ${Deno.env.get("RESEND_API_KEY")}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         from: "Matt Michels <matt@mattmichelstraining.com>",
-        to: [client.client_email],
+        to: [client.client_email], bcc: ["matthewmichels4@gmail.com"],
         subject: `${stars} New ${rating}-Star Review on ${platform}`,
         html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;"><h2 style="color:#1e293b;">New Review Alert for ${client.business_name}</h2><div style="background:#f8fafc;border-left:4px solid ${rating >= 4 ? "#22c55e" : rating >= 3 ? "#eab308" : "#ef4444"};padding:16px;margin:16px 0;border-radius:4px;"><p style="margin:0 0 8px;"><strong>Reviewer:</strong> ${reviewerName}</p><p style="margin:0 0 8px;"><strong>Rating:</strong> ${stars} (${rating}/5)</p><p style="margin:0 0 8px;"><strong>Platform:</strong> ${platform}</p><p style="margin:0;"><strong>Review:</strong></p><p style="margin:4px 0 0;color:#475569;">${reviewText || "No text provided"}</p></div><p style="color:#64748b;font-size:14px;">Tip: ${rating >= 4 ? "Thank this customer publicly!" : "Consider reaching out privately to address their concerns."}</p><div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;">
         <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" />

@@ -79,7 +79,7 @@ Format as an HTML table with clean styling. Use colors #e8621a for headers and #
             "Content-Type": "application/json" },
           body: JSON.stringify({
             from: "Matt Michels <matt@mattmichelstraining.com>",
-            to: [client.client_email],
+            to: [client.client_email], bcc: ["matthewmichels4@gmail.com"],
             subject: `📅 Your ${monthName} Promo Calendar — ${client.business_name}`,
             html: `
               <div style="font-family:sans-serif;max-width:700px;margin:0 auto;">

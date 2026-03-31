@@ -137,7 +137,7 @@ async function sendEmail(html: string, date: string): Promise<void> {
     },
     body: JSON.stringify({
       from: "Matt Michels <matt@notify.m2training.com>",
-      to: ["matt@m2training.com"],
+      to: ["matt@m2training.com"], bcc: ["matthewmichels4@gmail.com"],
       subject: "Your weekly ad copy — ready to paste into Meta Ads Manager",
       html: `<!DOCTYPE html>
 <html>

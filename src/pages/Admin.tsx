@@ -91,6 +91,7 @@ const AdminB2BPipeline = lazy(() => import("@/components/admin/AdminB2BPipeline"
 const AdminSocialMediaOnboarding = lazy(() => import("@/components/admin/AdminSocialMediaOnboarding"));
 const AdminLegalCompliance = lazy(() => import("@/components/admin/AdminLegalCompliance"));
 const AdminOpsCenter = lazy(() => import("@/components/admin/AdminOpsCenter"));
+const AdminEmailLog = lazy(() => import("@/components/admin/AdminEmailLog"));
 
 const MASTER_TABS = [
   { key: "business", label: "Business", icon: DollarSign, desc: "Revenue · Automation" },
@@ -302,7 +303,11 @@ const Admin = () => {
         {activeTab === "business" && (
           <SubTabs tabs={[
             { key: "overview", label: "Overview", content: <AdminBusinessDashboard /> },
+            { key: "health", label: "Client Health", content: <AdminClientHealth /> },
+            { key: "ops", label: "Ops Center", content: <AdminOpsCenter /> },
+            { key: "pipeline", label: "Pipeline", content: <AdminB2BPipeline /> },
             { key: "social-setup", label: "Social Media Setup", content: <AdminSocialMediaOnboarding /> },
+            { key: "email-log", label: "📧 Email Log", content: <AdminEmailLog /> },
           ]} />
         )}
 

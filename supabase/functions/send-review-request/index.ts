@@ -97,7 +97,7 @@ async function sendReviewEmail(
     },
     body: JSON.stringify({
       from: "Matt Michels <matt@mattmichelstraining.com>",
-      to: [email],
+      to: [email], bcc: ["matthewmichels4@gmail.com"],
       subject: triggerType === "first_pr"
         ? "New PR — quick favor from Coach Matt"
         : "30 days in — quick favor from Coach Matt",

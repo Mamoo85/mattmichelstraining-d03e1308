@@ -93,7 +93,7 @@ serve(async (req) => {
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           from: "M² AI Answering <matt@mattmichelstraining.com>",
-          to: [client.email],
+          to: [client.email], bcc: ["matthewmichels4@gmail.com"],
           subject: `📞 New call message — ${fromNumber}`,
           html: `<p><strong>New call transcript for ${client.business_name}</strong></p><p>From: ${fromNumber}<br>Call ID: ${callSid}</p><hr/><p><strong>Caller said:</strong> "${speechResult}"</p><p><strong>AI replied:</strong> "${aiResponse}"</p><p>A confirmation text was sent to the caller.<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI \u00b7 (313) 806-4952</div><img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div></p>`,
         }),
@@ -107,7 +107,7 @@ serve(async (req) => {
 </Response>`,
       { headers: { "Content-Type": "text/xml" } }
     );
-  } catch (e: any) {
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("[AI-PHONE-ANSWERING] Error:", e);
     return new Response(
       `<?xml version="1.0" encoding="UTF-8"?><Response><Say>We're experiencing technical difficulties. Please call back later. Thank you.</Say></Response>`,

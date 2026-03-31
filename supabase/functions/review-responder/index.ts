@@ -80,7 +80,7 @@ async function sendWeeklySummary(client: any, reviewCount: number, responseCount
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       from: "M² Review Responder <matt@mattmichelstraining.com>",
-      to: [client.email],
+      to: [client.email], bcc: ["matthewmichels4@gmail.com"],
       subject: `Your weekly review summary — ${client.business_name}`,
       html: `
         <div style="font-family:system-ui,-apple-system,sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#1e293b;">
@@ -173,8 +173,8 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ processed: clients.length, responded: totalResponded }), { status: 200 });
-  } catch (e: any) {
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("[REVIEW-RESPONDER] Error:", e);
-    return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: msg }), { status: 500 });
   }
 });

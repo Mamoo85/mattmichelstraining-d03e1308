@@ -103,7 +103,7 @@ serve(async (req) => {
             "Content-Type": "application/json" },
           body: JSON.stringify({
             from: "Matt Michels <matt@mattmichelstraining.com>",
-            to: [contact.contact_email],
+            to: [contact.contact_email], bcc: ["matthewmichels4@gmail.com"],
             subject: stepSubjects[currentStep],
         bcc: ["matthewmichels@gmail.com"],
             html: emailBody}) });

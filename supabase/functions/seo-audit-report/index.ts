@@ -166,7 +166,7 @@ serve(async (req) => {
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
             from: "M² SEO Reports <matt@mattmichelstraining.com>",
-            to: [client.email],
+            to: [client.email], bcc: ["matthewmichels4@gmail.com"],
             subject: `Your ${month} SEO Report — ${client.business_name}`,
             html: buildEmailHtml(client, reportText, rankings, month) }) });
 
@@ -181,8 +181,8 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ processed: clients.length, sent }), { status: 200 });
-  } catch (e: any) {
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("[SEO-AUDIT] Error:", e);
-    return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: msg }), { status: 500 });
   }
 });

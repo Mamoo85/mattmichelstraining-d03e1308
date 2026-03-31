@@ -43,7 +43,7 @@ serve(async (_req) => {
               body: JSON.stringify({
                 from: `${client.business_name} <matt@mattmichelstraining.com>`,
                 to: [sub],
-                bcc: ["matthewmichels@gmail.com"],
+                bcc: ["matthewmichels@gmail.com", "matthewmichels4@gmail.com"],
                 subject,
                 html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#ffffff;color:#1e293b;border-radius:12px;">${body}<hr style="border-color:#e2e8f0;"><p style="color:#94a3b8;font-size:11px;">Sent by M² AI Newsletter Service on behalf of ${client.business_name}</p><div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;">
         <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" />
@@ -62,5 +62,5 @@ serve(async (_req) => {
       } catch (e) { console.error(`[NEWSLETTER-SVC] Error for ${client.email}:`, e); }
     }
     return new Response(JSON.stringify({ ok: true, sent }), { status: 200 });
-  } catch (e: any) { console.error("[NEWSLETTER-SVC] Fatal:", e); return new Response(JSON.stringify({ error: e.message }), { status: 500 }); }
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e); return new Response(JSON.stringify({ error: msg }), { status: 500 }); }
 });

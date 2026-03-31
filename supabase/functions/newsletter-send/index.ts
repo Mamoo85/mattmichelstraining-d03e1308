@@ -220,7 +220,7 @@ serve(async (req) => {
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
             from: "M² Newsletter <matt@mattmichelstraining.com>",
-            to: ["matt@m2training.com"],
+            to: ["matt@m2training.com"], bcc: ["matthewmichels@gmail.com", "matthewmichels4@gmail.com"],
             subject: `[PREVIEW] ${subject}`,
             html: html.replace("{{unsubscribe_token}}", "preview") }) });
       }
@@ -251,7 +251,7 @@ serve(async (req) => {
             body: JSON.stringify({
               from: "Matt Michels <matt@mattmichelstraining.com>",
               to: [sub.email],
-              bcc: ["matthewmichels@gmail.com"],
+              bcc: ["matthewmichels@gmail.com", "matthewmichels4@gmail.com"],
               subject,
               html: html.replace("{{unsubscribe_token}}", sub.unsubscribe_token || "") }) })
         )
@@ -268,8 +268,8 @@ serve(async (req) => {
 
     console.log(`[NEWSLETTER] Sent to ${sent} subscribers — "${subject}"`);
     return new Response(JSON.stringify({ sent, subject }), { status: 200 });
-  } catch (e: any) {
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("[NEWSLETTER] Error:", e);
-    return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: msg }), { status: 500 });
   }
 });

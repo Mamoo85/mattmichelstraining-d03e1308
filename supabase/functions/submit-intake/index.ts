@@ -167,7 +167,7 @@ serve(async (req) => {
           "Content-Type": "application/json" },
         body: JSON.stringify({
           from: "M² System <matt@mattmichelstraining.com>",
-          to: ["matthewmichels@mattmichelstraining.com"],
+          to: ["matthewmichels@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"],
           reply_to: email,
           subject: `New lead: ${name} — ${service}`,
           html }) });
@@ -176,9 +176,9 @@ serve(async (req) => {
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" } });
-  } catch (e: any) {
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("[SUBMIT-INTAKE] Error:", e);
-    return new Response(JSON.stringify({ error: e.message }), {
+    return new Response(JSON.stringify({ error: msg }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }

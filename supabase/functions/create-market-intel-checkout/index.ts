@@ -27,8 +27,8 @@ serve(async (req) => {
         quantity: 1,
       }],
       mode: "subscription",
-      success_url: `${req.headers.get("origin")}/ai-market-intel?success=true`,
-      cancel_url: `${req.headers.get("origin")}/ai-market-intel?canceled=true`,
+      success_url: `${req.headers.get("origin") || "https://www.mattmichelstraining.com"}/ai-market-intel?success=true`,
+      cancel_url: `${req.headers.get("origin") || "https://www.mattmichelstraining.com"}/ai-market-intel?canceled=true`,
       metadata: {
         type: "market_intel_subscription",
         businessName, email, phone: phone || "", industry: industry || "",

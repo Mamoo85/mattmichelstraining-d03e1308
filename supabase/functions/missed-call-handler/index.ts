@@ -74,7 +74,7 @@ serve(async (req) => {
     }
 
     return new Response("<Response/>", { headers: { "Content-Type": "text/xml" } });
-  } catch (e: any) {
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("[MISSED-CALL] Error:", e);
     return new Response("<Response/>", { headers: { "Content-Type": "text/xml" } });
   }

@@ -61,7 +61,7 @@ serve(async (req) => {
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           from: "M² System <matt@mattmichelstraining.com>",
-          to: ["matt@m2training.com"],
+          to: ["matt@m2training.com"], bcc: ["matthewmichels4@gmail.com"],
           subject: `New Review Responder signup — ${business_name}`,
           html: `<p><strong>${business_name}</strong> started checkout for Review Responder at $99/month.<br>Contact: ${contact_name || "n/a"} — ${email} — ${phone || "no phone"}<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI \u00b7 (313) 806-4952</div><img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div></p>`,
         }),
@@ -69,8 +69,8 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: corsHeaders });
-  } catch (e: any) {
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("[CREATE-REVIEW-RESPONDER-CHECKOUT] Error:", e);
-    return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: corsHeaders });
+    return new Response(JSON.stringify({ error: msg }), { status: 500, headers: corsHeaders });
   }
 });

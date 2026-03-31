@@ -40,7 +40,7 @@ serve(async (req) => {
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           from: "M² Lead Alert <matt@mattmichelstraining.com>",
-          to: ["matt@m2training.com"],
+          to: ["matt@m2training.com"], bcc: ["matthewmichels4@gmail.com"],
           subject: `🔥 HOT LEAD: ${senderEmail} replied INTERESTED`,
           html: `<div style="font-family:sans-serif;padding:20px;background:#1e293b;color:#e2e8f0;border-radius:12px;"><h2 style="color:#22c55e;">🔥 Interested Reply Detected</h2><p><strong>From:</strong> ${senderEmail}</p><p><strong>Subject:</strong> ${originalSubject || "N/A"}</p><p><strong>Message:</strong></p><blockquote style="border-left:3px solid #e8621a;padding-left:12px;color:#94a3b8;">${replyBody.slice(0, 1000)}</blockquote><p style="color:#e8621a;font-weight:bold;">Reply to this lead ASAP!</p><div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;">
         <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" />
@@ -54,8 +54,8 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ ok: true, category, sender: senderEmail }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-  } catch (e: any) {
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("[REPLY-DETECTOR] Error:", e);
-    return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

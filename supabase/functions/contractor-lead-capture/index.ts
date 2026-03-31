@@ -57,7 +57,7 @@ serve(async (req) => {
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           from: "M² Leads <matt@mattmichelstraining.com>",
-          to: ["matt@m2training.com"],
+          to: ["matt@m2training.com"], bcc: ["matthewmichels4@gmail.com"],
           subject: `🔥 New ${site.trade} lead — ${site.city} — ${name}`,
           html: `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#f8fafc;padding:24px;">
 <div style="max-width:480px;margin:0 auto;background:#fff;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;">
@@ -99,7 +99,7 @@ serve(async (req) => {
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
               from: "M² Lead Network <matt@mattmichelstraining.com>",
-              to: [contractor.email],
+              to: [contractor.email], bcc: ["matthewmichels4@gmail.com"],
               subject: `🔥 New ${site.trade} lead — ${name} in ${site.city}`,
               html: `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#f8fafc;padding:24px;">
 <div style="max-width:480px;margin:0 auto;background:#fff;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;">
@@ -137,8 +137,8 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ success: true, lead_id: lead?.id }), { status: 200, headers: corsHeaders });
-  } catch (e: any) {
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("[LEAD-CAPTURE] Error:", e);
-    return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: corsHeaders });
+    return new Response(JSON.stringify({ error: msg }), { status: 500, headers: corsHeaders });
   }
 });

@@ -92,7 +92,7 @@ Write in professional but accessible language. Use HTML formatting with <h2>, <p
           Authorization: `Bearer ${Deno.env.get("RESEND_API_KEY")}` },
         body: JSON.stringify({
           from: "M² Competitor Watch <matt@mattmichelstraining.com>",
-          to: [client.email],
+          to: [client.email], bcc: ["matthewmichels4@gmail.com"],
           subject: `Competitor Watch Report — ${client.business_name} — ${new Date().toLocaleDateString("en-US", { month: "short", year: "numeric" })}`,
           html: emailHtml}) });
 

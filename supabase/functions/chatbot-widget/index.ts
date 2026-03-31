@@ -101,7 +101,7 @@ serve(async (req) => {
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
             from: "M² Chatbot <matt@mattmichelstraining.com>",
-            to: ["matthewmichels@mattmichelstraining.com"],
+            to: ["matthewmichels@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"],
             reply_to: "matt@m2training.com",
             subject: `New chatbot lead from ${client.business_name}'s website: ${name}, ${phone}`,
             html: `<div style="font-family:sans-serif;font-size:15px;line-height:1.8;color:#1e293b;max-width:500px;">
@@ -123,10 +123,10 @@ serve(async (req) => {
       JSON.stringify({ response, lead_captured }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-  } catch (e: any) {
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("[CHATBOT-WIDGET] Error:", e);
     return new Response(
-      JSON.stringify({ error: e.message }),
+      JSON.stringify({ error: msg }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

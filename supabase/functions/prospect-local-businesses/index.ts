@@ -318,7 +318,7 @@ serve(async (req) => {
 
     let body: any = {};
     try { body = await req.json(); } catch { /* cron may send empty body */ }
-    let { industry, city, limit = 5, mode } = body;
+    let { industry, city, limit = 10, mode } = body;
 
     // ── LINKEDIN BATCH MODE ──
     if (mode === "linkedin_batch") {
@@ -327,7 +327,7 @@ serve(async (req) => {
         .select("id, business_name, owner_name, city, industry")
         .eq("status", "Emailed")
         .order("last_contact_date", { ascending: false })
-        .limit(10);
+        .limit(20);
 
       if (leadsErr) throw new Error(`Failed to fetch leads: ${leadsErr.message}`);
       if (!leads || leads.length === 0) {
@@ -377,7 +377,7 @@ serve(async (req) => {
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
             from: "M² System <matt@mattmichelstraining.com>",
-            to: ["matt@mattmichelstraining.com"],
+            to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"],
             reply_to: "matt@mattmichelstraining.com",
             subject: `${rows.length} LinkedIn messages ready to send — ${dateStr}`,
             html: emailHtml,
@@ -403,7 +403,7 @@ serve(async (req) => {
       log("Google Maps contractor results", { count: places.length });
 
       let pitched = 0;
-      for (const place of places.slice(0, 5)) {
+      for (const place of places.slice(0, 10)) {
         const businessName = place.displayName?.text || "your business";
         const website = place.websiteUri || "";
         const phone = place.nationalPhoneNumber || "";

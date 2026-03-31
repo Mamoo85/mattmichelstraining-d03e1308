@@ -204,7 +204,7 @@ serve(async (req) => {
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         from: "Matt Michels <matt@mattmichelstraining.com>",
-        to: [clientEmail],
+        to: [clientEmail], bcc: ["matthewmichels4@gmail.com"],
         subject: emailSubject,
         html: emailHtml,
       }),
@@ -216,7 +216,7 @@ serve(async (req) => {
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         from: "M² System <matt@mattmichelstraining.com>",
-        to: ["matt@m2training.com"],
+        to: ["matt@m2training.com"], bcc: ["matthewmichels4@gmail.com"],
         subject: `Payment link sent — ${business}`,
         html: `<p>Payment link(s) sent to <strong>${clientEmail}</strong> for <strong>${business}</strong>.<br>
           ${buildUrl ? `Build ($499): <a href="${buildUrl}">${buildUrl}</a><br>` : ""}

@@ -123,7 +123,7 @@ serve(async (req) => {
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           from: "M² System <matt@mattmichelstraining.com>",
-          to: ["matt@m2training.com"],
+          to: ["matt@m2training.com"], bcc: ["matthewmichels4@gmail.com"],
           subject: `New Social Media AI signup — ${business_name} (${plan})`,
           html: `<p><strong>${business_name}</strong> started checkout for the ${planCfg.label} plan at $${(planCfg.amount / 100).toFixed(0)}/month.<br>
 Contact: ${name || "n/a"} — ${email}<br>
@@ -134,8 +134,8 @@ Platforms: ${platformsArr.length ? platformsArr.join(", ") : "none selected"}<di
     }
 
     return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: corsHeaders });
-  } catch (e: any) {
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("[CREATE-SOCIAL-MEDIA-CHECKOUT] Error:", e);
-    return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: corsHeaders });
+    return new Response(JSON.stringify({ error: msg }), { status: 500, headers: corsHeaders });
   }
 });

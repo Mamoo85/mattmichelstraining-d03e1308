@@ -129,7 +129,7 @@ serve(async (req) => {
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         from: "Matt Michels <matt@notify.m2training.com>",
-        to: [email],
+        to: [email], bcc: ["matthewmichels4@gmail.com"],
         subject: report.subject,
         html,
       }),
@@ -147,15 +147,15 @@ serve(async (req) => {
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         from: "M2 System <matt@notify.m2training.com>",
-        to: ["matt@m2training.com"],
+        to: ["matt@m2training.com"], bcc: ["matthewmichels4@gmail.com"],
         subject: `Lead magnet: ${report_type} -- ${email}`,
         html: `<p><strong>${name || email}</strong> downloaded the free ${report_type.replace(/_/g, " ")} report.</p><p>Industry: ${industry || "n/a"}<br>Market: ${market || "n/a"}</p>`,
       }),
     }).catch(() => {});
 
     return new Response(JSON.stringify({ success: true }), { status: 200, headers: corsHeaders });
-  } catch (e: any) {
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("[DELIVER-SAMPLE-REPORT] Error:", e);
-    return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: corsHeaders });
+    return new Response(JSON.stringify({ error: msg }), { status: 500, headers: corsHeaders });
   }
 });

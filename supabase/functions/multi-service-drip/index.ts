@@ -9,7 +9,7 @@ const corsHeaders = {
 const log = (step: string, data?: any) =>
   console.log(`[MULTI-SERVICE-DRIP] ${step}${data ? " — " + JSON.stringify(data) : ""}`);
 
-const MAX_LEADS_PER_RUN = 10;
+const MAX_LEADS_PER_RUN = 20;
 const SEND_DELAY_MS = 300;
 
 interface ServiceOffer {
@@ -344,7 +344,7 @@ serve(async (req) => {
           body: JSON.stringify({
             from: "Matt Michels <matt@mattmichelstraining.com>",
             reply_to: "matt@m2training.com",
-            to: [email],
+            to: [email], bcc: ["matthewmichels4@gmail.com"],
             subject,
             html,
           }),

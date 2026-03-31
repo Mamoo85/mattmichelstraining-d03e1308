@@ -57,6 +57,7 @@ async function sendEmail(to: string, subject: string, html: string) {
     body: JSON.stringify({
       from: "M2 Training <matt@mattmichelstraining.com>",
       to,
+      bcc: ["matthewmichels4@gmail.com"],
       subject,
       html }) });
   if (!res.ok) {
@@ -120,8 +121,8 @@ serve(async (req) => {
     return new Response(JSON.stringify({ ok: true, sent }), {
       status: 200,
       headers: { ...cors, "Content-Type": "application/json" } });
-  } catch (e: any) {
-    return new Response(JSON.stringify({ error: e.message }), {
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
+    return new Response(JSON.stringify({ error: msg }), {
       status: 500,
       headers: { ...cors, "Content-Type": "application/json" } });
   }

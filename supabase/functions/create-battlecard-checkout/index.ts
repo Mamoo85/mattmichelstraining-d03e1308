@@ -27,8 +27,8 @@ serve(async (req) => {
         quantity: 1,
       }],
       mode: "subscription",
-      success_url: `${req.headers.get("origin")}/ai-battlecard?success=true`,
-      cancel_url: `${req.headers.get("origin")}/ai-battlecard?canceled=true`,
+      success_url: `${req.headers.get("origin") || "https://www.mattmichelstraining.com"}/ai-battlecard?success=true`,
+      cancel_url: `${req.headers.get("origin") || "https://www.mattmichelstraining.com"}/ai-battlecard?canceled=true`,
       metadata: {
         type: "battlecard_subscription",
         businessName, email, phone: phone || "", industry: industry || "",

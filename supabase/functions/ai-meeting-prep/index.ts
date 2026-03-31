@@ -55,7 +55,7 @@ serve(async (req) => {
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           from: "M² Meeting Prep <matt@mattmichelstraining.com>",
-          to: [clientEmail],
+          to: [clientEmail], bcc: ["matthewmichels4@gmail.com"],
           subject: `Meeting Prep: ${companyName}`,
           html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#ffffff;color:#1e293b;border-radius:12px;">${briefing}<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;">
         <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" />
@@ -74,8 +74,8 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ ok: true, briefing }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-  } catch (e: any) {
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("[MEETING-PREP] Error:", e);
-    return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

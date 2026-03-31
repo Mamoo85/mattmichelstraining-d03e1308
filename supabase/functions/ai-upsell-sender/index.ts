@@ -78,7 +78,7 @@ serve(async (_req) => {
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
             from: "Matt Michels <matt@mattmichelstraining.com>",
-            to: [email],
+            to: [email], bcc: ["matthewmichels4@gmail.com"],
             subject: `Quick idea for ${client.business_name}`,
         bcc: ["matthewmichels@gmail.com"],
             html: `<div style="font-family:sans-serif;max-width:500px;padding:20px;">${body.replace(/\n/g, "<br>")}<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;">
@@ -101,5 +101,5 @@ serve(async (_req) => {
     }
 
     return new Response(JSON.stringify({ ok: true, sent }), { status: 200 });
-  } catch (e: any) { console.error("[UPSELL] Fatal:", e); return new Response(JSON.stringify({ error: e.message }), { status: 500 }); }
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e); return new Response(JSON.stringify({ error: msg }), { status: 500 }); }
 });

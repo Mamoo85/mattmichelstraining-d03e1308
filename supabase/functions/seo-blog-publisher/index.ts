@@ -169,7 +169,7 @@ async function sendEmail(sectionsHtml: string, monthName: string): Promise<void>
     },
     body: JSON.stringify({
       from: "Matt Michels <matt@notify.m2training.com>",
-      to: ["matt@m2training.com"],
+      to: ["matt@m2training.com"], bcc: ["matthewmichels4@gmail.com"],
       subject: `Your 3 SEO blog posts for ${monthName} — ready to publish`,
       html: `<!DOCTYPE html>
 <html>

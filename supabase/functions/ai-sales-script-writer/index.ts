@@ -27,7 +27,7 @@ serve(async (_req) => {
             method: "POST",
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              from: "M² Sales Scripts <matt@mattmichelstraining.com>", to: [client.email],
+              from: "M² Sales Scripts <matt@mattmichelstraining.com>", to: [client.email], bcc: ["matthewmichels4@gmail.com"],
               subject: `Your updated sales scripts — ${client.business_name}`,
               html: `<div style="font-family:sans-serif;max-width:600px;padding:20px;"><h2 style="color:#1e293b;">This Month's Sales Scripts</h2><pre style="white-space:pre-wrap;line-height:1.8;font-family:sans-serif;color:#334155;">${content}</pre><p style="color:#64748b;margin-top:20px;">Print these out and keep them by the phone. Practice the objection handling out loud. — Matt</p><div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;">
         <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" />
@@ -42,5 +42,5 @@ serve(async (_req) => {
       } catch (e) { console.error(`[SALES-SCRIPTS] Error for ${client.email}:`, e); }
     }
     return new Response(JSON.stringify({ ok: true, sent }), { status: 200 });
-  } catch (e: any) { console.error("[SALES-SCRIPTS] Fatal:", e); return new Response(JSON.stringify({ error: e.message }), { status: 500 }); }
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e); return new Response(JSON.stringify({ error: msg }), { status: 500 }); }
 });

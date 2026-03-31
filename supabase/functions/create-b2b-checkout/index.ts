@@ -85,7 +85,7 @@ serve(async (req) => {
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           from: "M² System <matt@notify.m2training.com>",
-          to: ["matt@m2training.com"],
+          to: ["matt@m2training.com"], bcc: ["matthewmichels4@gmail.com"],
           subject: `🔔 Checkout started — ${svc.label} — ${business_name || email}`,
           html: `<p><strong>${business_name || name || email}</strong> started checkout for <strong>${svc.label}</strong> ($${(svc.price / 100).toFixed(0)}/mo).</p><p>Email: ${email}<br>Phone: ${phone || "n/a"}<br>City: ${city || "n/a"}</p>`,
         }),
@@ -93,8 +93,8 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: corsHeaders });
-  } catch (e: any) {
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("[CREATE-B2B-CHECKOUT] Error:", e);
-    return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: corsHeaders });
+    return new Response(JSON.stringify({ error: msg }), { status: 500, headers: corsHeaders });
   }
 });

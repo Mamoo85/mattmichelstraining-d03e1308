@@ -154,8 +154,8 @@ Generate the document in clean HTML format with proper headings, sections, and l
           });
           const innerData = await innerRes.json();
           results.push({ type: doc.type, success: innerData.success || false });
-        } catch (e: any) {
-          results.push({ type: doc.type, success: false, error: e.message });
+        } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
+          results.push({ type: doc.type, success: false, error: (e instanceof Error ? e.message : String(e)) });
         }
       }
       return new Response(JSON.stringify({ results }), {
@@ -166,9 +166,9 @@ Generate the document in clean HTML format with proper headings, sections, and l
     return new Response(JSON.stringify({ error: "Unknown action. Use: list, generate, approve, generate_all" }), {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (e: any) {
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("Jess error:", e);
-    return new Response(JSON.stringify({ error: e.message }), {
+    return new Response(JSON.stringify({ error: msg }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }

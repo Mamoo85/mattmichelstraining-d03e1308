@@ -182,7 +182,7 @@ serve(async (req: Request) => {
       },
       body: JSON.stringify({
         from: "Matt Michels <matt@mattmichelstraining.com>",
-        to: [customer_email],
+        to: [customer_email], bcc: ["matthewmichels4@gmail.com"],
         subject: `Your Website Audit — ${business_name}`,
         html: emailHtml,
       }),
