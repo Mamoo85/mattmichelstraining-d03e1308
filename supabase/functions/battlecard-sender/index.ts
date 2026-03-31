@@ -1,0 +1,115 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  try {
+    const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
+    const { data: clients } = await supabase.from("battlecard_clients").select("*").eq("active", true).limit(50);
+
+    if (!clients?.length) {
+      return new Response(JSON.stringify({ message: "No active battlecard clients" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+    const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY");
+    let processed = 0;
+
+    for (const client of clients) {
+      try {
+        let competitorData = "";
+        if (FIRECRAWL_API_KEY && client.competitor_urls?.length) {
+          for (const url of client.competitor_urls.slice(0, 3)) {
+            try {
+              const scrapeRes = await fetch("https://api.firecrawl.dev/v1/scrape", {
+                method: "POST",
+                headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+                body: JSON.stringify({ url, formats: ["markdown"], onlyMainContent: true }),
+              });
+              const scrapeData = await scrapeRes.json();
+              competitorData += `\n\n--- Competitor: ${url} ---\n${(scrapeData?.data?.markdown || scrapeData?.markdown || "").slice(0, 1500)}`;
+            } catch {}
+          }
+        }
+
+        // Also search for competitor reviews
+        if (FIRECRAWL_API_KEY && client.competitor_names?.length) {
+          for (const name of client.competitor_names.slice(0, 3)) {
+            try {
+              const searchRes = await fetch("https://api.firecrawl.dev/v1/search", {
+                method: "POST",
+                headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+                body: JSON.stringify({ query: `"${name}" reviews complaints`, limit: 3, scrapeOptions: { formats: ["markdown"] } }),
+              });
+              const searchData = await searchRes.json();
+              if (searchData?.data) {
+                competitorData += `\n\n--- Reviews for ${name} ---\n${searchData.data.map((r: any) => r.markdown || r.description || "").join("\n").slice(0, 1000)}`;
+              }
+            } catch {}
+          }
+        }
+
+        const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: { "x-api-key": ANTHROPIC_API_KEY!, "content-type": "application/json", "anthropic-version": "2023-06-01" },
+          body: JSON.stringify({
+            model: "claude-haiku-4-5-20251001",
+            max_tokens: 1200,
+            messages: [{
+              role: "user",
+              content: `Generate a competitive battlecard for ${client.business_name} (${client.industry || "local business"}).
+
+Competitors: ${(client.competitor_names || []).join(", ") || "Unknown"}
+Competitor data scraped:
+${competitorData || "No competitor data available. Use industry knowledge."}
+
+Create an HTML battlecard with:
+1. **Competitor Weaknesses** — extracted from their bad reviews and site gaps
+2. **Your Advantages** — talking points vs each competitor
+3. **Objection Handlers** — "When they say X, you say Y"
+4. **Price Positioning** — how to justify your value
+5. **Win Themes** — 3 key reasons customers should choose ${client.business_name}
+
+Format as professional dark-themed HTML. Make it actionable for sales staff.`,
+            }],
+          }),
+        });
+
+        const aiData = await aiRes.json();
+        const battlecard = aiData?.content?.[0]?.text || "Unable to generate battlecard.";
+
+        await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            from: "M² Development <matt@notify.m2training.com>",
+            to: [client.email],
+            subject: `${client.business_name} — Monthly Competitive Battlecard`,
+            html: `<div style="font-family:Arial,sans-serif;max-width:700px;margin:0 auto;background:#1a1a2e;color:#e0e0e0;padding:32px;border-radius:12px;">
+              <h1 style="color:#e8621a;text-align:center;">Competitive Battlecard</h1>
+              <p style="color:#888;text-align:center;font-size:13px;">${new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })}</p>
+              ${battlecard}
+              <hr style="border-color:#333;margin:24px 0;">
+              <p style="font-size:11px;color:#666;text-align:center;">Generated by M² Development AI Battlecard Service</p>
+            </div>`,
+          }),
+        });
+
+        await supabase.from("battlecard_clients").update({ last_sent_at: new Date().toISOString(), send_count: (client.send_count || 0) + 1 }).eq("id", client.id);
+        processed++;
+      } catch (err) {
+        console.error(`Error processing battlecard client ${client.id}:`, err);
+      }
+    }
+
+    return new Response(JSON.stringify({ success: true, processed }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  } catch (error) {
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Failed" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+});
