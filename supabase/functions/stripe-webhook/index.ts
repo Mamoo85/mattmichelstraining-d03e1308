@@ -2312,9 +2312,7 @@ serve(async (req) => {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
-      headers: { "Content-Type": "application/json" },
-      status: 200,
-    });
+    return new Response(JSON.stringify({ received: true }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     console.error("[STRIPE-WEBHOOK] Error:", msg);
