@@ -63,12 +63,12 @@ function buildEmailHtml(
       </div>` : ""}
 
       <p style="color:#64748b;font-size:13px;">Payments are processed securely through Stripe. I'll get an alert the moment you pay and reach out within a few hours to kick things off.</p>
-      <p>Questions before you pay? Email me at <a href="mailto:matt@m2training.com" style="color:#e8621a;">matt@m2training.com</a> or text <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a> — whichever works best for you.</p>
+      <p>Questions before you pay? Email me at <a href="mailto:matt@mattmichelstraining.com" style="color:#e8621a;">matt@mattmichelstraining.com</a> or text <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a> — whichever works best for you.</p>
       <p>— Matt Michels</p>
     </td></tr>
     <tr><td style="background:#f8fafc;padding:16px 32px;border-top:1px solid #e2e8f0;font-size:12px;color:#94a3b8;">
       Matt Michels Web Design · Grosse Pointe, MI ·
-      <a href="mailto:matt@m2training.com" style="color:#e8621a;">matt@m2training.com</a> ·
+      <a href="mailto:matt@mattmichelstraining.com" style="color:#e8621a;">matt@mattmichelstraining.com</a> ·
       <a href="tel:+13138064952" style="color:#94a3b8;">(313) 806-4952</a>
     </td></tr>
   </table>
@@ -216,7 +216,7 @@ serve(async (req) => {
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         from: "M² System <matt@mattmichelstraining.com>",
-        to: ["matt@m2training.com"], bcc: ["matthewmichels4@gmail.com"],
+        to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"],
         subject: `Payment link sent — ${business}`,
         html: `<p>Payment link(s) sent to <strong>${clientEmail}</strong> for <strong>${business}</strong>.<br>
           ${buildUrl ? `Build ($499): <a href="${buildUrl}">${buildUrl}</a><br>` : ""}

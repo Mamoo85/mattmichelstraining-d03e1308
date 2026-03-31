@@ -80,7 +80,7 @@ serve(async (req: Request) => {
       pagesContent = aiData.choices?.[0]?.message?.content || "";
     } else {
       log("AI generation failed, using placeholder", { status: aiRes.status });
-      pagesContent = `10 local SEO page outlines for ${business_name} in ${city} will be provided shortly. Please contact Matt at matt@m2training.com if you don't receive your pages within 24 hours.`;
+      pagesContent = `10 local SEO page outlines for ${business_name} in ${city} will be provided shortly. Please contact Matt at matt@mattmichelstraining.com if you don't receive your pages within 24 hours.`;
     }
 
     // Format pages as HTML sections
@@ -133,7 +133,7 @@ serve(async (req: Request) => {
         Use the keyword as the page's primary focus throughout the content.
       </p>
       <p style="color:#555;font-size:13px;line-height:1.7;margin:0;">
-        Questions? Reply to this email or reach me at <a href="mailto:matt@m2training.com" style="color:#f97316;">matt@m2training.com</a>.
+        Questions? Reply to this email or reach me at <a href="mailto:matt@mattmichelstraining.com" style="color:#f97316;">matt@mattmichelstraining.com</a>.
       </p>
     </td></tr>
     <tr><td style="background:#1a1a2e;padding:20px 32px;text-align:center;">

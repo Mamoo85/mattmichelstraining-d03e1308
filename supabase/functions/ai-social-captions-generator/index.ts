@@ -14,7 +14,7 @@ const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 
 
-const MATT_EMAIL = "matt@m2training.com";
+const MATT_EMAIL = "matt@mattmichelstraining.com";
 const FROM_EMAIL = "Matt Michels <matt@mattmichelstraining.com>";
 
 interface CaptionsClient {
@@ -104,7 +104,7 @@ function buildClientEmail(client: CaptionsClient, captions: string, month: strin
 
   <tr><td style="background:#f1f5f9;padding:16px 28px;border-radius:0 0 10px 10px;border:1px solid #e2e8f0;border-top:none;">
     <p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;">
-      M² Performance Training · matt@m2training.com · (313) 806-4952
+      M² Performance Training · matt@mattmichelstraining.com · (313) 806-4952
     </p>
   </td></tr>
 

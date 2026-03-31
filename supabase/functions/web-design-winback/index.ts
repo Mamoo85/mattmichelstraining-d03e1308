@@ -52,7 +52,7 @@ function buildWinbackEmail(lead: any): string {
       <a href="https://mattmichelstraining.com/detroit-web-design" style="display:inline-block;background:#f97316;color:#fff;padding:12px 24px;text-decoration:none;font-size:13px;font-weight:900;letter-spacing:1px;text-transform:uppercase;margin-bottom:20px;">See Recent Work</a>
 
       <p style="color:#1a1a2e;font-size:14px;font-weight:bold;margin-top:16px;">— Matt</p>
-      <p style="color:#888;font-size:12px;">(313) 806-4952 · matt@m2training.com</p>
+      <p style="color:#888;font-size:12px;">(313) 806-4952 · matt@mattmichelstraining.com</p>
     </td></tr>
     <tr><td style="background:#f8f8f8;padding:12px;text-align:center;border-top:1px solid #eee;">
       <p style="color:#aaa;font-size:11px;margin:0;">Matt Michels Web Design · Grosse Pointe, MI</p>

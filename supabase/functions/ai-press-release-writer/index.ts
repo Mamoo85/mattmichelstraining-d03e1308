@@ -98,7 +98,7 @@ serve(async (req) => {
 
         // Notify Matt
         await sendEmail(
-          "matt@m2training.com",
+          "matt@mattmichelstraining.com",
           `Press Release Sent — ${client.business_name}`,
           `<p>Press release successfully generated and sent to <strong>${client.email}</strong> for ${client.business_name} (${client.industry}, ${client.city}).</p>
           <hr />

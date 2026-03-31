@@ -57,7 +57,7 @@ serve(async (req) => {
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           from: "M² Leads <matt@mattmichelstraining.com>",
-          to: ["matt@m2training.com"], bcc: ["matthewmichels4@gmail.com"],
+          to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"],
           subject: `🔥 New ${site.trade} lead — ${site.city} — ${name}`,
           html: `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#f8fafc;padding:24px;">
 <div style="max-width:480px;margin:0 auto;background:#fff;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;">
@@ -115,7 +115,7 @@ serve(async (req) => {
     ${project_type ? `<p><strong>Project type:</strong> ${project_type}</p>` : ""}
     ${message ? `<p><strong>Notes:</strong> ${message}</p>` : ""}
     <p style="margin-top:20px;font-size:13px;color:#64748b;">Received ${new Date().toLocaleString("en-US", { timeZone: "America/New_York" })} ET</p>
-    <p style="font-size:13px;color:#64748b;">Questions? Email <a href="mailto:matt@m2training.com" style="color:#e8621a;">matt@m2training.com</a> or text <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a>.</p>
+    <p style="font-size:13px;color:#64748b;">Questions? Email <a href="mailto:matt@mattmichelstraining.com" style="color:#e8621a;">matt@mattmichelstraining.com</a> or text <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a>.</p>
   </div>
 <div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;">
         <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" />

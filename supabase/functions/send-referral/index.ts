@@ -109,7 +109,7 @@ function friendEmailHtml(p: ReferralPayload): string {
     </div>
 
     <div style="text-align:center;padding:16px;">
-      <div style="color:#94a3b8;font-size:12px;">mattmichelstraining.com &nbsp;|&nbsp; (313) 806-4952 &nbsp;|&nbsp; matt@m2training.com</div>
+      <div style="color:#94a3b8;font-size:12px;">mattmichelstraining.com &nbsp;|&nbsp; (313) 806-4952 &nbsp;|&nbsp; matt@mattmichelstraining.com</div>
     </div>
   </div>
 </body>
@@ -210,7 +210,7 @@ function referrerEmailHtml(p: ReferralPayload): string {
 
     <div style="text-align:center;padding:16px;">
       <div style="color:#94a3b8;font-size:12px;">
-        mattmichelstraining.com &nbsp;|&nbsp; (313) 806-4952 &nbsp;|&nbsp; matt@m2training.com
+        mattmichelstraining.com &nbsp;|&nbsp; (313) 806-4952 &nbsp;|&nbsp; matt@mattmichelstraining.com
       </div>
     </div>
   </div>
@@ -276,7 +276,7 @@ serve(async (req) => {
 
     // 2. Email Matt
     await sendEmail({
-      to: "matt@m2training.com",
+      to: "matt@mattmichelstraining.com",
       subject: `Referral lead: ${p.friendBusiness} from ${p.yourName}`,
       html: mattEmailHtml(p),
     });

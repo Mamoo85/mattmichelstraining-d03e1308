@@ -63,7 +63,7 @@ Business details:
 - Legal entity: M² Development (DBA M² Performance Training)
 - Owner: Matt Michels
 - Address: Grosse Pointe, MI (use "Grosse Pointe, MI 48230" as mailing address)
-- Email: matt@m2training.com | Phone: (313) 806-4952
+- Email: matt@mattmichelstraining.com | Phone: (313) 806-4952
 - Website: mattmichelstraining.com
 - Services: 40+ automated B2B SaaS tools (email, SMS, AI content, lead gen) + athletic coaching
 - Payment: Stripe subscriptions with 7-day free trials

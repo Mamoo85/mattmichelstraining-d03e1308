@@ -45,7 +45,7 @@ Professional, safety-first tone. Include relevant regulatory references (FMCSA, 
               to: [client.email], bcc: ["matthewmichels4@gmail.com"],
               subject: `${client.business_name} — ${month} Fleet Document Pack`,
         bcc: ["matthewmichels@gmail.com"],
-              html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#1e293b;color:#e2e8f0;border-radius:12px;"><h2 style="color:#e8621a;">🚛 Monthly Fleet Document Pack</h2><p>Your ${month} documents are ready. Print, customize, and use:</p><pre style="white-space:pre-wrap;font-family:sans-serif;color:#e2e8f0;">${content}</pre><p style="color:#64748b;font-size:12px;">Powered by M² Development — matt@m2training.com</p></div>`,
+              html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#1e293b;color:#e2e8f0;border-radius:12px;"><h2 style="color:#e8621a;">🚛 Monthly Fleet Document Pack</h2><p>Your ${month} documents are ready. Print, customize, and use:</p><pre style="white-space:pre-wrap;font-family:sans-serif;color:#e2e8f0;">${content}</pre><p style="color:#64748b;font-size:12px;">Powered by M² Development — matt@mattmichelstraining.com</p></div>`,
             }),
           });
         }

@@ -415,7 +415,7 @@ Goal: $10,000/mo MRR`
 
   <!-- Footer -->
   <tr><td style="background:#1e293b;padding:16px 28px;border-radius:0 0 10px 10px;font-size:12px;color:#94a3b8;line-height:1.6;text-align:center;">
-    Automated by Agent Smith · <a href="mailto:matt@m2training.com" style="color:#e8621a;">matt@m2training.com</a>
+    Automated by Agent Smith · <a href="mailto:matt@mattmichelstraining.com" style="color:#e8621a;">matt@mattmichelstraining.com</a>
   </td></tr>
 
 </table>
@@ -432,7 +432,7 @@ Goal: $10,000/mo MRR`
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           from: "Agent Smith <matt@mattmichelstraining.com>",
-          to: ["matt@mattmichelstraining.com", "matt@m2training.com"], bcc: ["matthewmichels4@gmail.com"],
+          to: ["matt@mattmichelstraining.com", "matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"],
           subject,
           html }) });
     }

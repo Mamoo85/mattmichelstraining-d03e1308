@@ -109,7 +109,7 @@ serve(async (req: Request) => {
       auditContent = aiData.choices?.[0]?.message?.content || "";
     } else {
       log("AI generation failed", { status: aiRes.status });
-      auditContent = `Audit report for ${business_name} in ${city} is being finalized. Please contact matt@m2training.com if you have questions.`;
+      auditContent = `Audit report for ${business_name} in ${city} is being finalized. Please contact matt@mattmichelstraining.com if you have questions.`;
     }
 
     // Format audit as HTML sections
@@ -160,12 +160,12 @@ serve(async (req: Request) => {
       <p style="font-size:13px;color:#555;line-height:1.7;margin:0 0 8px;">
         Have questions about your audit or ready to fix these issues? I can handle everything for you.
       </p>
-      <a href="mailto:matt@m2training.com" style="display:inline-block;background:#f97316;color:#fff;font-weight:700;font-size:13px;padding:10px 20px;border-radius:6px;text-decoration:none;margin-top:4px;">
+      <a href="mailto:matt@mattmichelstraining.com" style="display:inline-block;background:#f97316;color:#fff;font-weight:700;font-size:13px;padding:10px 20px;border-radius:6px;text-decoration:none;margin-top:4px;">
         Reply to Matt →
       </a>
     </td></tr>
     <tr><td style="background:#1a1a2e;padding:20px 32px;text-align:center;">
-      <p style="color:#888;font-size:11px;margin:0;">Matt Michels · Web Design &amp; Local SEO · Grosse Pointe, MI · matt@m2training.com</p>
+      <p style="color:#888;font-size:11px;margin:0;">Matt Michels · Web Design &amp; Local SEO · Grosse Pointe, MI · matt@mattmichelstraining.com</p>
     </td></tr>
   </table>
 </td></tr>
