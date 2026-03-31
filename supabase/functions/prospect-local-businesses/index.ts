@@ -318,7 +318,7 @@ serve(async (req) => {
 
     let body: any = {};
     try { body = await req.json(); } catch { /* cron may send empty body */ }
-    let { industry, city, limit = 5, mode } = body;
+    let { industry, city, limit = 10, mode } = body;
 
     // ── LINKEDIN BATCH MODE ──
     if (mode === "linkedin_batch") {
