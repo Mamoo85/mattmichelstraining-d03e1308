@@ -208,28 +208,28 @@ const ZoneDashboard = () => {
     },
   ];
 
-  // Feature Hub — 2-col grid with descriptions
+  // Feature Hub — 2-col grid (removed Library & Workouts duplicates)
   const HUB_ITEMS = [
     {
       label: "Programs",
       desc: "Your training plan",
       icon: <Target size={20} />,
       color: "#f97316",
-      action: () => setGeneratorView("programs"),
+      action: () => openOverlay("programs"),
     },
     {
       label: "Generator",
       desc: "Build custom workouts",
       icon: <Sparkles size={20} />,
       color: "#a855f7",
-      action: () => withTip(WORKOUT_GENERATOR_TIP, () => setGeneratorView("workout")),
+      action: () => withTip(WORKOUT_GENERATOR_TIP, () => openOverlay("workout")),
     },
     {
       label: "Fix It",
       desc: "Pain relief & rehab",
       icon: <Wrench size={20} />,
       color: "#00f0ff",
-      action: () => withTip(FIXIT_ENGINE_TIP, () => setGeneratorView("fixit")),
+      action: () => withTip(FIXIT_ENGINE_TIP, () => openOverlay("fixit")),
     },
     {
       label: "Nutrition",
@@ -239,18 +239,11 @@ const ZoneDashboard = () => {
       action: () => navigate("/nutrition-plan"),
     },
     {
-      label: "Library",
-      desc: "Browse all workouts",
-      icon: <BookOpen size={20} />,
-      color: "#ec4899",
-      action: () => navigate("/dashboard"),
-    },
-    {
       label: "Challenges",
       desc: "Compete for points",
       icon: <Zap size={20} />,
       color: "#eab308",
-      action: () => setGeneratorView("challenge"),
+      action: () => openOverlay("challenge"),
     },
     {
       label: "Progress",
@@ -258,13 +251,6 @@ const ZoneDashboard = () => {
       icon: <BarChart3 size={20} />,
       color: "#3b82f6",
       action: () => navigate("/progress"),
-    },
-    {
-      label: "Workouts",
-      desc: "Saved & recent",
-      icon: <Dumbbell size={20} />,
-      color: "#64748b",
-      action: () => navigate("/dashboard"),
     },
   ];
 
