@@ -9,7 +9,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 
 const RSS_FEEDS = [
   "https://www.thomasnet.com/articles/feed/",
@@ -28,8 +28,7 @@ async function fetchRssHeadlines(): Promise<RssItem[]> {
     try {
       const res = await fetch(feedUrl, {
         headers: { "User-Agent": "M2Training/1.0 newsletter-bot" },
-        signal: AbortSignal.timeout(8000),
-      });
+        signal: AbortSignal.timeout(8000) });
       if (!res.ok) continue;
       const xml = await res.text();
 
@@ -56,22 +55,19 @@ async function fetchRssHeadlines(): Promise<RssItem[]> {
 }
 
 async function generateBriefing(headlines: RssItem[]): Promise<{ subject: string; body: string; preview: string }> {
-  if (!ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY not configured");
+  if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
   const headlineText = headlines.length > 0
     ? headlines.map((h, i) => `${i + 1}. ${h.title}${h.description ? " — " + h.description : ""}`).join("\n")
     : "No live headlines available this week. Use general industrial/manufacturing market trends.";
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
-      "x-api-key": ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-      "content-type": "application/json",
-    },
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 1200,
+      model: "google/gemini-2.5-flash-lite", 
       messages: [{
         role: "user",
         content: `You are a sales intelligence analyst for industrial/manufacturing B2B sales reps. Here are this week's top industry headlines:
@@ -85,13 +81,10 @@ Format as JSON with:
 - preview: one-line preview under 100 chars
 - briefing: the full 500-word briefing in HTML (use <h3> for each insight headline, <p> for body, no inline styles)
 
-Return only valid JSON.`,
-      }],
-    }),
-  });
+Return only valid JSON.` }] }) });
 
   const data = await res.json();
-  const raw = data.content?.[0]?.text || "";
+  const raw = data?.choices?.[0]?.message?.content || "";
 
   let parsed: { subject: string; preview: string; briefing: string };
   try {
@@ -101,8 +94,7 @@ Return only valid JSON.`,
     parsed = {
       subject: "Industrial Sales Intel — Monday Briefing",
       preview: "5 moves to make this week in manufacturing sales.",
-      briefing: `<p>${raw.slice(0, 1500)}</p>`,
-    };
+      briefing: `<p>${raw.slice(0, 1500)}</p>` };
   }
 
   return { subject: parsed.subject, body: parsed.briefing, preview: parsed.preview };
@@ -183,9 +175,7 @@ ${briefingHtml
             from: "M² Industrial Intel <matt@notify.m2training.com>",
             to: ["matt@m2training.com"],
             subject: `[PREVIEW] ${subject}`,
-            html: html.replace("{{unsubscribe_token}}", "preview"),
-          }),
-        });
+            html: html.replace("{{unsubscribe_token}}", "preview") }) });
       }
       return new Response(JSON.stringify({ preview_sent: true, subject }), { status: 200 });
     }
@@ -214,9 +204,7 @@ ${briefingHtml
               from: "Matt Michels <matt@notify.m2training.com>",
               to: [sub.email],
               subject,
-              html: html.replace("{{unsubscribe_token}}", sub.unsubscribe_token || ""),
-            }),
-          })
+              html: html.replace("{{unsubscribe_token}}", sub.unsubscribe_token || "") }) })
         )
       );
       sent += batch.length;

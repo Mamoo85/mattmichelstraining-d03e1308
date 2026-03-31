@@ -10,7 +10,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 
 const MATT_EMAIL = "matt@m2training.com";
@@ -26,24 +26,18 @@ interface DigestClient {
 }
 
 async function generateDigest(client: DigestClient): Promise<string> {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
-      "x-api-key": ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-      "content-type": "application/json",
-    },
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 1000,
+      model: "google/gemini-2.5-flash-lite", 
       messages: [
         {
           role: "user",
-          content: `Write a short, valuable weekly business digest email for the ${client.industry} industry. Include: 1 quick tip to get more customers, 1 operational efficiency tip, 1 marketing insight. Keep it under 200 words total, punchy and actionable. Format as simple HTML paragraphs.`,
-        },
-      ],
-    }),
-  });
+          content: `Write a short, valuable weekly business digest email for the ${client.industry} industry. Include: 1 quick tip to get more customers, 1 operational efficiency tip, 1 marketing insight. Keep it under 200 words total, punchy and actionable. Format as simple HTML paragraphs.` },
+      ] }) });
 
   if (!res.ok) {
     const err = await res.text();
@@ -51,7 +45,7 @@ async function generateDigest(client: DigestClient): Promise<string> {
   }
 
   const data = await res.json();
-  return data.content?.[0]?.text || "";
+  return data?.choices?.[0]?.message?.content || "";
 }
 
 async function sendEmail(to: string, subject: string, html: string): Promise<void> {
@@ -59,10 +53,8 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
     method: "POST",
     headers: {
       Authorization: `Bearer ${RESEND_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ from: FROM_EMAIL, to, subject, html }),
-  });
+      "Content-Type": "application/json" },
+    body: JSON.stringify({ from: FROM_EMAIL, to, subject, html }) });
   if (!res.ok) {
     const err = await res.text();
     throw new Error(`Resend error: ${err}`);
@@ -136,16 +128,14 @@ serve(async (_req) => {
     if (error) throw error;
     if (!clients || clients.length === 0) {
       return new Response(JSON.stringify({ ok: true, sent: 0, message: "No active clients" }), {
-        headers: { "Content-Type": "application/json" },
-      });
+        headers: { "Content-Type": "application/json" } });
     }
 
     const dateStr = new Date().toLocaleDateString("en-US", {
       weekday: "long",
       month: "long",
       day: "numeric",
-      year: "numeric",
-    });
+      year: "numeric" });
 
     let sent = 0;
     const errors: string[] = [];
@@ -194,13 +184,11 @@ serve(async (_req) => {
     );
 
     return new Response(JSON.stringify({ ok: true, sent }), {
-      headers: { "Content-Type": "application/json" },
-    });
+      headers: { "Content-Type": "application/json" } });
   } catch (err) {
     console.error("Fatal error:", err);
     return new Response(JSON.stringify({ ok: false, error: (err as Error).message }), {
       status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+      headers: { "Content-Type": "application/json" } });
   }
 });

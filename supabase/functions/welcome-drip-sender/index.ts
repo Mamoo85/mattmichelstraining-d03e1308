@@ -3,16 +3,14 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 
 const STEP_PROMPTS: Record<number, string> = {
   1: "Write a warm welcome email for a new customer. Thank them for choosing the business, introduce the team briefly, and set expectations for what they can expect. Keep it under 200 words.",
   2: "Write a 'getting started' email for a new customer. Give them 3 clear steps to make the most of the product/service. Keep it actionable and under 200 words.",
   3: "Write a helpful tip email specific to the customer's industry. Share one valuable insight or best practice they can implement today. Keep it under 200 words.",
   4: "Write a friendly check-in email. Ask how things are going, if they have questions, and remind them of support options. Keep it under 150 words.",
-  5: "Write a referral ask email. Thank them for being a customer, mention you'd love if they referred a friend/colleague, and offer to make it easy. Keep it under 150 words.",
-};
+  5: "Write a referral ask email. Thank them for being a customer, mention you'd love if they referred a friend/colleague, and offer to make it easy. Keep it under 150 words." };
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -38,8 +36,7 @@ serve(async (req) => {
 
     if (!contacts || contacts.length === 0) {
       return new Response(JSON.stringify({ message: "No drip emails to send" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+        headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     let sent = 0;
@@ -65,24 +62,19 @@ serve(async (req) => {
         const stepPrompt = STEP_PROMPTS[currentStep];
 
         // Generate email with Claude
-        const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
+        const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
           headers: {
-            "x-api-key": Deno.env.get("ANTHROPIC_API_KEY")!,
+            "x-api-key": LOVABLE_API_KEY,
             "content-type": "application/json",
-            "anthropic-version": "2023-06-01",
-          },
+            "anthropic-version": "2023-06-01" },
           body: JSON.stringify({
-            model: "claude-haiku-4-5-20251001",
-            max_tokens: 800,
+            model: "google/gemini-2.5-flash-lite", 
             messages: [
               {
                 role: "user",
-                content: `You are writing on behalf of ${client.business_name} (${client.industry || "local business"}). The customer's name is ${contact.contact_name}. ${stepPrompt}\n\nReturn ONLY the email body as HTML (no subject line, no wrapping). Use a friendly, professional tone. Sign off as the ${client.business_name} team.`,
-              },
-            ],
-          }),
-        });
+                content: `You are writing on behalf of ${client.business_name} (${client.industry || "local business"}). The customer's name is ${contact.contact_name}. ${stepPrompt}\n\nReturn ONLY the email body as HTML (no subject line, no wrapping). Use a friendly, professional tone. Sign off as the ${client.business_name} team.` },
+            ] }) });
 
         if (!aiRes.ok) {
           console.error("Claude API error:", await aiRes.text());
@@ -98,23 +90,19 @@ serve(async (req) => {
           2: `Getting Started with ${client.business_name}`,
           3: `A Helpful Tip from ${client.business_name}`,
           4: `Quick Check-In from ${client.business_name}`,
-          5: `Love Working with You — ${client.business_name}`,
-        };
+          5: `Love Working with You — ${client.business_name}` };
 
         // Send email via Resend
         const emailRes = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: {
             Authorization: `Bearer ${Deno.env.get("RESEND_API_KEY")}`,
-            "Content-Type": "application/json",
-          },
+            "Content-Type": "application/json" },
           body: JSON.stringify({
             from: "Matt Michels <matt@notify.m2training.com>",
             to: [contact.contact_email],
             subject: stepSubjects[currentStep],
-            html: emailBody,
-          }),
-        });
+            html: emailBody }) });
 
         if (!emailRes.ok) {
           console.error("Resend error:", await emailRes.text());
@@ -134,8 +122,7 @@ serve(async (req) => {
             current_step: isCompleted ? 5 : nextStep,
             next_send_at: isCompleted ? null : nextSendAt.toISOString(),
             completed: isCompleted,
-            last_sent_at: new Date().toISOString(),
-          })
+            last_sent_at: new Date().toISOString() })
           .eq("id", contact.id);
 
         // Increment client drip_count
@@ -159,7 +146,6 @@ serve(async (req) => {
     console.error("welcome-drip-sender error:", err);
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+      headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

@@ -2,13 +2,12 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 
 type AnthropicMessageResponse = {
   content?: Array<{ text?: string }>;
@@ -21,10 +20,8 @@ async function supabaseQuery(path: string, body?: unknown, method = "GET") {
       apikey: SUPABASE_SERVICE_ROLE_KEY,
       Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
       "Content-Type": "application/json",
-      Prefer: method === "GET" ? "return=representation" : "return=minimal",
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
+      Prefer: method === "GET" ? "return=representation" : "return=minimal" },
+    body: body ? JSON.stringify(body) : undefined });
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`Supabase ${method} ${path} failed: ${text}`);
@@ -37,25 +34,20 @@ async function generateBlogPost(businessName: string, industry: string, website?
   const websitePart = website ? ` (website: ${website})` : "";
   const prompt = `Write a complete, engaging 400-500 word blog post for ${businessName}, a ${industry} business${websitePart}. Include: an attention-grabbing title, intro paragraph, 3 value-packed sections with subheadings, and a clear call-to-action. Format as clean HTML with h1, h2, p tags.`;
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
-      "x-api-key": ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-      "Content-Type": "application/json",
-    },
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 1200,
-      messages: [{ role: "user", content: prompt }],
-    }),
-  });
+      model: "google/gemini-2.5-flash-lite", 
+      messages: [{ role: "user", content: prompt }] }) });
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`Anthropic API error: ${text}`);
   }
   const data = await res.json() as AnthropicMessageResponse;
-  return data.content?.[0]?.text ?? "";
+  return data?.choices?.[0]?.message?.content ?? "";
 }
 
 async function sendEmail(to: string, subject: string, html: string) {
@@ -63,15 +55,12 @@ async function sendEmail(to: string, subject: string, html: string) {
     method: "POST",
     headers: {
       Authorization: `Bearer ${RESEND_API_KEY}`,
-      "Content-Type": "application/json",
-    },
+      "Content-Type": "application/json" },
     body: JSON.stringify({
       from: "M2 Training <matt@notify.m2training.com>",
       to,
       subject,
-      html,
-    }),
-  });
+      html }) });
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`Resend error: ${text}`);
@@ -133,13 +122,11 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({ ok: true, sent }), {
       status: 200,
-      headers: { ...cors, "Content-Type": "application/json" },
-    });
+      headers: { ...cors, "Content-Type": "application/json" } });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     return new Response(JSON.stringify({ error: message }), {
       status: 500,
-      headers: { ...cors, "Content-Type": "application/json" },
-    });
+      headers: { ...cors, "Content-Type": "application/json" } });
   }
 });
