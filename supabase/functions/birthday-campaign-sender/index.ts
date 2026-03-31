@@ -33,7 +33,7 @@ serve(async (_req) => {
             method: "POST",
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              from: "M² Birthday Campaigns <matt@notify.m2training.com>", to: [client.email],
+              from: "M² Birthday Campaigns <matt@mattmichelstraining.com>", to: [client.email],
               subject: `Your Birthday/Anniversary Templates — ${client.business_name}`,
               html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#1e293b;color:#e2e8f0;border-radius:12px;"><h2 style="color:#e8621a;">🎂 Birthday & Anniversary Campaign Templates</h2><p>Here are your ready-to-use templates. Upload your customer birthday/anniversary list to activate automated sending:</p>${content}<hr style="border-color:#334155;"><p style="color:#64748b;font-size:12px;">Powered by M² Performance — matt@m2training.com</p></div>`,
             }),

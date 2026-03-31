@@ -77,7 +77,7 @@ serve(async (_req) => {
           method: "POST",
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            from: "Matt Michels <matt@notify.m2training.com>",
+            from: "Matt Michels <matt@mattmichelstraining.com>",
             to: [email],
             subject: `Quick idea for ${client.business_name}`,
             html: `<div style="font-family:sans-serif;max-width:500px;padding:20px;">${body.replace(/\n/g, "<br>")}</div>`,

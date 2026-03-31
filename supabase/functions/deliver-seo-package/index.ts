@@ -149,7 +149,7 @@ serve(async (req: Request) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Matt Michels <matt@notify.m2training.com>",
+        from: "Matt Michels <matt@mattmichelstraining.com>",
         to: [customer_email],
         subject: `Your 10 Local SEO Pages — ${business_name}`,
         html: emailHtml,

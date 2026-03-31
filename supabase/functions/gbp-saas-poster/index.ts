@@ -96,7 +96,7 @@ serve(async (req) => {
             method: "POST",
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              from: "M² Local Marketing <matt@notify.m2training.com>",
+              from: "M² Local Marketing <matt@mattmichelstraining.com>",
               to: ["matt@m2training.com"],
               subject: `GBP post ready — ${client.business_name} (needs connection)`,
               html: `<p>${client.business_name} (${client.email}) doesn't have GBP connected yet. Post ready to go:<br><br><em>"${content}"</em><br><br>Reply to this to let them know.</p>` }) });

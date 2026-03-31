@@ -33,7 +33,7 @@ serve(async (_req) => {
             method: "POST",
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              from: "M² Ads Copy <matt@notify.m2training.com>",
+              from: "M² Ads Copy <matt@mattmichelstraining.com>",
               to: [client.email],
               subject: `Your 10 New Google Ads — ${client.business_name}`,
               html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#1e293b;color:#e2e8f0;border-radius:12px;"><h2 style="color:#e8621a;">📢 Monthly Google Ads Copy</h2><p>Here are 10 fresh ad variations. Copy them into your Google Ads campaigns:</p><hr style="border-color:#334155;">${content}<hr style="border-color:#334155;"><p style="color:#64748b;font-size:12px;">Powered by M² Performance — matt@m2training.com</p></div>`,

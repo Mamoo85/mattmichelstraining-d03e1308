@@ -27,7 +27,7 @@ serve(async (_req) => {
             method: "POST",
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              from: "M² Google Q&A <matt@notify.m2training.com>", to: [client.email],
+              from: "M² Google Q&A <matt@mattmichelstraining.com>", to: [client.email],
               subject: `Your weekly Google Q&A — ${client.business_name}`,
               html: `<p>Here are 5 fresh Q&A pairs to post on your Google Business Profile this week:</p><pre style="white-space:pre-wrap;font-family:sans-serif;line-height:1.8;">${content}</pre><p>Post these in your GBP dashboard under "Questions & Answers" to boost your local ranking.</p><p>— Matt</p>` }) });
         }

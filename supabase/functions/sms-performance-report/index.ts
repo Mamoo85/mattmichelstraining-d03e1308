@@ -62,7 +62,7 @@ serve(async (_req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "M² Client Health <matt@notify.m2training.com>",
+          from: "M² Client Health <matt@mattmichelstraining.com>",
           to: ["matt@m2training.com"],
           subject: `Client Health Report — ${summary}`,
           html: `<div style="font-family:sans-serif;max-width:700px;margin:0 auto;padding:20px;background:#1e293b;color:#e2e8f0;border-radius:12px;"><h2 style="color:#e8621a;">📊 Client Health Dashboard</h2><p>${summary}</p><table style="width:100%;border-collapse:collapse;margin-top:16px;"><thead><tr style="border-bottom:2px solid #e8621a;"><th style="padding:8px;text-align:left;">Business</th><th style="padding:8px;text-align:left;">Service</th><th style="padding:8px;text-align:left;">Last Delivery</th><th style="padding:8px;text-align:left;">Status</th></tr></thead><tbody>${rows}</tbody></table></div>`,

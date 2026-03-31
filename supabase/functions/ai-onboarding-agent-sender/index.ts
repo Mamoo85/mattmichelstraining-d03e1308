@@ -40,7 +40,7 @@ serve(async (_req) => {
             method: "POST",
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              from: `${client.business_name} <matt@notify.m2training.com>`,
+              from: `${client.business_name} <matt@mattmichelstraining.com>`,
               to: [client.email],
               subject: emailType === "welcome" ? `Welcome to ${client.business_name}!` : emailType === "tips" ? `3 tips to get the most out of ${client.business_name}` : `How's everything going?`,
               html: `<div style="font-family:sans-serif;max-width:500px;margin:0 auto;padding:20px;">${body.replace(/\n/g, "<br>")}</div>`,

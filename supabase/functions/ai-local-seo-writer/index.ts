@@ -29,7 +29,7 @@ serve(async (_req) => {
             method: "POST",
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              from: "M² Local SEO <matt@notify.m2training.com>", to: [client.email],
+              from: "M² Local SEO <matt@mattmichelstraining.com>", to: [client.email],
               subject: `Your new Local SEO page — ${client.city || "your area"} ${client.industry || "services"}`,
               html: `<p>Here's your monthly local SEO page content — paste it into your website:</p><hr>${content}<hr><p>Add this as a new page on your site. It'll help you rank for "${client.industry} in ${client.city}" searches.</p><p>— Matt</p>`,
             }),

@@ -54,7 +54,7 @@ serve(async (req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "M² Meeting Prep <matt@notify.m2training.com>",
+          from: "M² Meeting Prep <matt@mattmichelstraining.com>",
           to: [clientEmail],
           subject: `Meeting Prep: ${companyName}`,
           html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#ffffff;color:#1e293b;border-radius:12px;">${briefing}</div>`,

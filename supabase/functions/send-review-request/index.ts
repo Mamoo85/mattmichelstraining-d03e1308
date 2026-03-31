@@ -92,7 +92,7 @@ async function sendReviewEmail(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: "Matt Michels <matt@notify.m2training.com>",
+      from: "Matt Michels <matt@mattmichelstraining.com>",
       to: [email],
       subject: triggerType === "first_pr"
         ? "New PR — quick favor from Coach Matt"

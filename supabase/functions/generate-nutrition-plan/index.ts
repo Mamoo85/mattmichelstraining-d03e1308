@@ -185,7 +185,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Matt Michels <matt@notify.m2training.com>",
+        from: "Matt Michels <matt@mattmichelstraining.com>",
         to: [customer_email],
         subject: `Your ${sport} Nutrition Blueprint — From Coach Matt`,
         html: buildEmailHtml(customer_email, plan, generatedPlan, sport || "athlete"),

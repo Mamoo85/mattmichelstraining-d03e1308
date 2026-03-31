@@ -101,7 +101,7 @@ serve(async () => {
           method: "POST",
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            from: "M² System <matt@notify.m2training.com>",
+            from: "M² System <matt@mattmichelstraining.com>",
             to: ["matt@m2training.com"],
             subject: "⚠️ LinkedIn token expired — re-auth needed",
             html: `<p>Your LinkedIn auto-posting stopped because the token expired.</p><p><a href="https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${Deno.env.get("LINKEDIN_CLIENT_ID")}&redirect_uri=https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/linkedin-auth-callback&scope=openid%20profile%20w_member_social&state=m2linkedin">Click here to reconnect LinkedIn →</a></p>` }) });

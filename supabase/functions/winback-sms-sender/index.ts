@@ -9,7 +9,7 @@ const TWILIO_API_KEY = Deno.env.get("TWILIO_API_KEY") || "";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/twilio";
 const MATT_EMAIL = "matt@m2training.com";
-const FROM_EMAIL = "Matt Michels <matt@notify.m2training.com>";
+const FROM_EMAIL = "Matt Michels <matt@mattmichelstraining.com>";
 
 async function generateWinbackMessage(client: any): Promise<string> {
   if (!LOVABLE_API_KEY) return `We miss you at ${client.business_name}! Come back and see what's new. Reply STOP to opt out.`;

@@ -423,7 +423,7 @@ Goal: $10,000/mo MRR`
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "Agent Smith <matt@notify.m2training.com>",
+          from: "Agent Smith <matt@mattmichelstraining.com>",
           to: ["matthewmichels@mattmichelstraining.com", "matt@m2training.com"],
           subject,
           html }) });

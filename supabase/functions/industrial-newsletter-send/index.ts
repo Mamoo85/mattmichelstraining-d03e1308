@@ -172,7 +172,7 @@ ${briefingHtml
           method: "POST",
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            from: "M² Industrial Intel <matt@notify.m2training.com>",
+            from: "M² Industrial Intel <matt@mattmichelstraining.com>",
             to: ["matt@m2training.com"],
             subject: `[PREVIEW] ${subject}`,
             html: html.replace("{{unsubscribe_token}}", "preview") }) });
@@ -201,7 +201,7 @@ ${briefingHtml
             method: "POST",
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              from: "Matt Michels <matt@notify.m2training.com>",
+              from: "Matt Michels <matt@mattmichelstraining.com>",
               to: [sub.email],
               subject,
               html: html.replace("{{unsubscribe_token}}", sub.unsubscribe_token || "") }) })
