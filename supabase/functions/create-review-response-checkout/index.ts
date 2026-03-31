@@ -27,8 +27,8 @@ serve(async (req) => {
         quantity: 1,
       }],
       mode: "subscription",
-      success_url: `${req.headers.get("origin")}/ai-review-response?success=true`,
-      cancel_url: `${req.headers.get("origin")}/ai-review-response?canceled=true`,
+      success_url: `${req.headers.get("origin") || "https://www.mattmichelstraining.com"}/ai-review-response?success=true`,
+      cancel_url: `${req.headers.get("origin") || "https://www.mattmichelstraining.com"}/ai-review-response?canceled=true`,
       metadata: {
         type: "review_response_subscription",
         businessName, email, phone: phone || "", industry: industry || "",

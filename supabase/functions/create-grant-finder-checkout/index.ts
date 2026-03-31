@@ -27,8 +27,8 @@ serve(async (req) => {
         quantity: 1,
       }],
       mode: "subscription",
-      success_url: `${req.headers.get("origin")}/ai-grant-finder?success=true`,
-      cancel_url: `${req.headers.get("origin")}/ai-grant-finder?canceled=true`,
+      success_url: `${req.headers.get("origin") || "https://www.mattmichelstraining.com"}/ai-grant-finder?success=true`,
+      cancel_url: `${req.headers.get("origin") || "https://www.mattmichelstraining.com"}/ai-grant-finder?canceled=true`,
       metadata: {
         type: "grant_finder_subscription",
         businessName, email, phone: phone || "", industry: industry || "",
