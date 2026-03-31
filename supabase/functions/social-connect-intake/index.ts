@@ -141,7 +141,7 @@ serve(async (req) => {
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
             from: "M² Notifications <matt@mattmichelstraining.com>",
-            to: ["matthewmichels@mattmichelstraining.com"],
+            to: ["matthewmichels@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"],
             subject: `Social media client connected — ${existing.business_name}`,
             html: `<p>New client <strong>${existing.business_name}</strong> completed onboarding.</p>
 <ul>
@@ -162,7 +162,7 @@ serve(async (req) => {
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
             from: "Matt Michels <matt@mattmichelstraining.com>",
-            to: [existing.email],
+            to: [existing.email], bcc: ["matthewmichels4@gmail.com"],
             subject: "You're connected — first post coming soon",
             html: `<p>Hey${firstName ? " " + firstName : ""},</p>
 <p>You're all set! Your account is connected and your AI posts are ready to start going out.</p>

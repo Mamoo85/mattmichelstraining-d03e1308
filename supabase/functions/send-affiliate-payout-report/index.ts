@@ -125,7 +125,7 @@ serve(async (req) => {
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         from: "M² Training <matt@mattmichelstraining.com>",
-        to: [ADMIN_EMAIL],
+        to: [ADMIN_EMAIL], bcc: ["matthewmichels4@gmail.com"],
         subject: `Affiliate Payout Report — ${monthStr} — $${(totalCents / 100).toFixed(2)} owed`,
         html: adminHtml,
       }),
@@ -161,7 +161,7 @@ serve(async (req) => {
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           from: "Matt Michels <matt@mattmichelstraining.com>",
-          to: [profile.email],
+          to: [profile.email], bcc: ["matthewmichels4@gmail.com"],
           subject: `You earned $${(total / 100).toFixed(2)} in M² referrals — ${monthStr}`,
           html: affiliateHtml,
         }),
