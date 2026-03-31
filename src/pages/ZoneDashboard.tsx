@@ -372,10 +372,10 @@ const ZoneDashboard = () => {
         {/* Feature Hub */}
         <section>
           <div className="flex items-center justify-between mb-2.5 px-1">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: "#404040" }}>
+            <p className="text-xs font-black uppercase tracking-[0.2em]" style={{ color: "#404040" }}>
               Your Hub
             </p>
-            <span className="text-[9px]" style={{ color: "#303030" }}>Tap anything to explore</span>
+            <span className="text-xs" style={{ color: "#303030" }}>Tap to explore</span>
           </div>
           <div className="grid grid-cols-2 gap-2">
             {HUB_ITEMS.map((item) => (
