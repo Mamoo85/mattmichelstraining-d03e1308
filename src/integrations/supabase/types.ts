@@ -4933,6 +4933,33 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_page_configs: {
+        Row: {
+          city: string
+          created_at: string | null
+          id: string
+          page_data: Json
+          slug: string
+          trade: string
+        }
+        Insert: {
+          city: string
+          created_at?: string | null
+          id?: string
+          page_data: Json
+          slug: string
+          trade: string
+        }
+        Update: {
+          city?: string
+          created_at?: string | null
+          id?: string
+          page_data?: Json
+          slug?: string
+          trade?: string
+        }
+        Relationships: []
+      }
       seo_report_clients: {
         Row: {
           active: boolean | null
