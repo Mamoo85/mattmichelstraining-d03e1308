@@ -811,6 +811,16 @@ serve(async (req) => {
         social_media_subscription: "Social Media AI",
         web_design_build: "Web Design",
         web_design_retainer: "Web Design Retainer",
+        linkedin_outreach_subscription: "AI LinkedIn Outreach",
+        abandoned_cart_subscription: "AI Abandoned Cart Recovery",
+        client_report_subscription: "AI Client Report Generator",
+        restaurant_menu_subscription: "AI Restaurant Menu Copy",
+        insurance_drip_subscription: "AI Insurance Follow-Up Drip",
+        podcast_pitch_subscription: "AI Podcast Pitch Service",
+        trade_show_followup_subscription: "AI Trade Show Follow-Up",
+        testimonial_harvester_subscription: "AI Testimonial Harvester",
+        new_mover_marketing_subscription: "AI New Mover Marketing",
+        annual_review_subscription: "AI Annual Business Review",
       };
       if (customerEmail && AGENCY_SERVICE_LABELS[meta.type]) {
         try {
@@ -2989,6 +2999,58 @@ serve(async (req) => {
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@m2training.com"], subject: `💰 New Trucking Docs — ${meta.businessName || email} ($99/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Trucks: ${meta.trucks || "n/a"}</p>` }) });
           }
         } catch (e) { console.error("[WEBHOOK] trucking_docs error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── 10 NEW GLOBAL BUSINESSES ──────────────────────────────────────────
+      const NEW_BUSINESS_TABLES: Record<string, { table: string; label: string; price: string }> = {
+        linkedin_outreach_subscription: { table: "linkedin_outreach_clients", label: "AI LinkedIn Outreach", price: "$79/mo" },
+        abandoned_cart_subscription: { table: "abandoned_cart_clients", label: "AI Abandoned Cart Recovery", price: "$69/mo" },
+        client_report_subscription: { table: "client_report_clients", label: "AI Client Report Generator", price: "$59/mo" },
+        restaurant_menu_subscription: { table: "restaurant_menu_clients", label: "AI Restaurant Menu Copy", price: "$39/mo" },
+        insurance_drip_subscription: { table: "insurance_drip_clients", label: "AI Insurance Follow-Up Drip", price: "$69/mo" },
+        podcast_pitch_subscription: { table: "podcast_pitch_clients", label: "AI Podcast Pitch Service", price: "$49/mo" },
+        trade_show_followup_subscription: { table: "trade_show_followup_clients", label: "AI Trade Show Follow-Up", price: "$49/mo" },
+        testimonial_harvester_subscription: { table: "testimonial_harvester_clients", label: "AI Testimonial Harvester", price: "$39/mo" },
+        new_mover_marketing_subscription: { table: "new_mover_marketing_clients", label: "AI New Mover Marketing", price: "$59/mo" },
+        annual_review_subscription: { table: "annual_review_clients", label: "AI Annual Business Review", price: "$79/mo" },
+      };
+      if (NEW_BUSINESS_TABLES[meta.type]) {
+        const { table, label, price } = NEW_BUSINESS_TABLES[meta.type];
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await sb.from(table).upsert({
+              email,
+              business_name: meta.businessName || meta.business_name || customerName || email,
+              contact_name: meta.contactName || meta.name || customerName || null,
+              active: true,
+              stripe_subscription_id: session.subscription as string || null,
+            }, { onConflict: "email" });
+          }
+          if (RESEND_API_KEY && email) {
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "Matt Michels <matt@notify.m2training.com>",
+                to: [email],
+                subject: `Welcome to ${label}`,
+                html: `<p>Hey${meta.contactName || meta.name ? " " + (meta.contactName || meta.name) : ""},</p><p>You're all set with <strong>${label}</strong> (${price}). We'll be in touch shortly to get everything running.</p><p>— Matt<br>(313) 806-4952</p>`,
+              }),
+            });
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "M\u00b2 Notifications <matt@notify.m2training.com>",
+                to: ["matt@m2training.com"],
+                subject: `\ud83d\udcb0 New ${label} subscriber \u2014 ${email}`,
+                html: `<p>New ${price} subscriber: <strong>${email}</strong><br>Business: ${meta.businessName || meta.business_name || "n/a"}<br>Sub ID: ${session.subscription || "n/a"}</p>`,
+              }),
+            });
+          }
+        } catch (e) { console.error(`[WEBHOOK] ${meta.type} error:`, e); }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 

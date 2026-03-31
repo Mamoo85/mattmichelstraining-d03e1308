@@ -829,3 +829,62 @@ verify_jwt = false
 
 [functions.deliver-sample-report]
 verify_jwt = false
+[functions.create-linkedin-outreach-checkout]
+verify_jwt = false
+
+[functions.linkedin-outreach-sender]
+verify_jwt = false
+
+[functions.create-abandoned-cart-checkout]
+verify_jwt = false
+
+[functions.abandoned-cart-sender]
+verify_jwt = false
+
+[functions.create-client-report-checkout]
+verify_jwt = false
+
+[functions.client-report-sender]
+verify_jwt = false
+
+[functions.create-restaurant-menu-checkout]
+verify_jwt = false
+
+[functions.restaurant-menu-sender]
+verify_jwt = false
+
+[functions.create-insurance-drip-checkout]
+verify_jwt = false
+
+[functions.insurance-drip-sender]
+verify_jwt = false
+
+[functions.create-podcast-pitch-checkout]
+verify_jwt = false
+
+[functions.podcast-pitch-sender]
+verify_jwt = false
+
+[functions.create-trade-show-followup-checkout]
+verify_jwt = false
+
+[functions.trade-show-followup-sender]
+verify_jwt = false
+
+[functions.create-testimonial-harvester-checkout]
+verify_jwt = false
+
+[functions.testimonial-harvester-sender]
+verify_jwt = false
+
+[functions.create-new-mover-checkout]
+verify_jwt = false
+
+[functions.new-mover-sender]
+verify_jwt = false
+
+[functions.create-annual-review-checkout]
+verify_jwt = false
+
+[functions.annual-review-sender]
+verify_jwt = false
