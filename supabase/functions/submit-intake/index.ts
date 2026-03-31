@@ -66,6 +66,30 @@ serve(async (req) => {
       throw new Error(dbError.message);
     }
 
+    // 2b. Track conversion if came from drip
+    if (source && source !== "direct") {
+      await sb.from("drip_conversions" as any).insert({
+        email,
+        business_name,
+        industry: industry || null,
+        service_interested: service,
+        source: source || "direct",
+        drip_step_converted: source,
+      });
+    }
+
+    // 2c. Add to marketing_leads for unified tracking
+    await sb.from("marketing_leads").upsert({
+      email,
+      first_name: name?.split(" ")[0] || null,
+      source: source || "get-started",
+      industry: industry || null,
+      service_interested: service,
+      phone: phone || null,
+      business_name,
+      utm_source: source || "direct",
+    }, { onConflict: "email" });
+
     // 3. Send notification email to Matt
     if (RESEND_API_KEY) {
       const replySubject = encodeURIComponent(`Re: ${name} — ${service}`);
