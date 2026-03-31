@@ -3054,6 +3054,88 @@ serve(async (req) => {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // ── REFERRAL TRACKING (B2B + Session) ──────────────────────────────────
+      try {
+        const refCode = meta.referral_code || meta.ref || "";
+        if (refCode) {
+          // B2B referral partner conversion
+          const { data: partner } = await sb
+            .from("b2b_referral_partners")
+            .select("id, commission_value, email")
+            .eq("referral_code", refCode)
+            .eq("status", "active")
+            .maybeSingle();
+
+          if (partner) {
+            const clientEmail = meta.email || customerEmail || session.customer_email || "";
+            // Fraud check: partner can't refer themselves
+            if (clientEmail && clientEmail.toLowerCase() !== partner.email.toLowerCase()) {
+              // 30-day duplicate check
+              const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
+              const { data: existing } = await sb
+                .from("b2b_referral_conversions")
+                .select("id")
+                .eq("partner_id", partner.id)
+                .eq("client_email", clientEmail)
+                .gte("created_at", thirtyDaysAgo)
+                .limit(1);
+
+              if (!existing || existing.length === 0) {
+                await sb.from("b2b_referral_conversions").insert({
+                  partner_id: partner.id,
+                  client_email: clientEmail,
+                  service_type: meta.type || "unknown",
+                  stripe_session_id: session.id,
+                  commission_amount: partner.commission_value,
+                  status: "pending",
+                });
+                // Update total earned
+                await sb.from("b2b_referral_partners")
+                  .update({ total_earned: (partner as any).total_earned + partner.commission_value })
+                  .eq("id", partner.id);
+                console.log(`[WEBHOOK] B2B referral conversion recorded for partner ${partner.id}`);
+              }
+            }
+          }
+        }
+
+        // Session referral — check if a training session purchase has referredBy
+        if (meta.type === "training_session" && meta.referredBy) {
+          const referrerId = meta.referredBy;
+          const friendEmail = meta.user_email || customerEmail || "";
+          if (referrerId && friendEmail) {
+            await sb.from("session_referral_rewards").insert({
+              referrer_user_id: referrerId,
+              referred_friend_email: friendEmail,
+              session_type: meta.duration_minutes === "60" ? "60_min" : "30_min",
+              status: "credited",
+              stripe_session_id: session.id,
+              credited_at: new Date().toISOString(),
+            });
+            console.log(`[WEBHOOK] Session referral reward credited to ${referrerId}`);
+            // Notify referrer
+            if (RESEND_API_KEY) {
+              const { data: referrerProfile } = await sb.from("profiles").select("email, athlete_name, full_name").eq("user_id", referrerId).maybeSingle();
+              if (referrerProfile?.email) {
+                await fetch("https://api.resend.com/emails", {
+                  method: "POST",
+                  headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    from: "Matt Michels <matt@mattmichelstraining.com>",
+                    to: [referrerProfile.email],
+                    bcc: ["matthewmichels4@gmail.com"],
+                    subject: "🎉 You earned a free training session!",
+                    html: `<p>Hey ${referrerProfile.athlete_name || referrerProfile.full_name || ""},</p><p>Your friend just booked a session at M² Performance Training — and that means you earned a <strong>free session</strong>!</p><p>Head to <a href="https://www.mattmichelstraining.com/schedule">Schedule</a> to book yours.</p><p>— Matt</p>`,
+                  }),
+                }).catch(() => {});
+              }
+            }
+          }
+        }
+      } catch (refErr) {
+        console.error("[WEBHOOK] Referral tracking error:", refErr);
+      }
+
     return new Response(JSON.stringify({ received: true }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
