@@ -173,6 +173,11 @@ const AIGrantFinder = lazyRetry(() => import("./pages/AIGrantFinder"));
 const AIReviewResponse = lazyRetry(() => import("./pages/AIReviewResponse"));
 const AIBattlecard = lazyRetry(() => import("./pages/AIBattlecard"));
 const AIMarketIntel = lazyRetry(() => import("./pages/AIMarketIntel"));
+const AIPermitMonitor = lazyRetry(() => import("./pages/AIPermitMonitor"));
+const AIOshaCompliance = lazyRetry(() => import("./pages/AIOshaCompliance"));
+const AICollections = lazyRetry(() => import("./pages/AICollections"));
+const AIInventoryAlerts = lazyRetry(() => import("./pages/AIInventoryAlerts"));
+const AIBirthdayCampaign = lazyRetry(() => import("./pages/AIBirthdayCampaign"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -419,6 +424,11 @@ const App = () => (
                     <Route path="/ai-review-response" element={<AIReviewResponse />} />
                     <Route path="/ai-battlecard" element={<AIBattlecard />} />
                     <Route path="/ai-market-intel" element={<AIMarketIntel />} />
+                    <Route path="/ai-permit-monitor" element={<AIPermitMonitor />} />
+                    <Route path="/ai-osha-compliance" element={<AIOshaCompliance />} />
+                    <Route path="/ai-collections" element={<AICollections />} />
+                    <Route path="/ai-inventory-alerts" element={<AIInventoryAlerts />} />
+                    <Route path="/ai-birthday-campaign" element={<AIBirthdayCampaign />} />
                     <Route path="/partners" element={<B2BPartnerPortal />} />
                     <Route path="/sports-camps" element={<CampDirectory />} />
                     <Route path="/free-program" element={<FreeProgram />} />

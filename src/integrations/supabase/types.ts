@@ -365,6 +365,45 @@ export type Database = {
         }
         Relationships: []
       }
+      birthday_campaign_clients: {
+        Row: {
+          active: boolean | null
+          business_name: string
+          created_at: string | null
+          email: string
+          id: string
+          industry: string | null
+          last_sent_at: string | null
+          send_count: number | null
+          stripe_customer_id: string | null
+          twilio_number: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          business_name: string
+          created_at?: string | null
+          email: string
+          id?: string
+          industry?: string | null
+          last_sent_at?: string | null
+          send_count?: number | null
+          stripe_customer_id?: string | null
+          twilio_number?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          business_name?: string
+          created_at?: string | null
+          email?: string
+          id?: string
+          industry?: string | null
+          last_sent_at?: string | null
+          send_count?: number | null
+          stripe_customer_id?: string | null
+          twilio_number?: string | null
+        }
+        Relationships: []
+      }
       blog_post_clients: {
         Row: {
           active: boolean | null
@@ -673,6 +712,89 @@ export type Database = {
           title?: string | null
         }
         Relationships: []
+      }
+      collections_clients: {
+        Row: {
+          active: boolean | null
+          business_name: string
+          created_at: string | null
+          email: string
+          id: string
+          industry: string | null
+          last_sent_at: string | null
+          send_count: number | null
+          stripe_customer_id: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          business_name: string
+          created_at?: string | null
+          email: string
+          id?: string
+          industry?: string | null
+          last_sent_at?: string | null
+          send_count?: number | null
+          stripe_customer_id?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          business_name?: string
+          created_at?: string | null
+          email?: string
+          id?: string
+          industry?: string | null
+          last_sent_at?: string | null
+          send_count?: number | null
+          stripe_customer_id?: string | null
+        }
+        Relationships: []
+      }
+      collections_contacts: {
+        Row: {
+          amount_owed: number | null
+          client_id: string
+          created_at: string | null
+          days_overdue: number | null
+          debtor_email: string | null
+          debtor_name: string
+          debtor_phone: string | null
+          escalation_level: number | null
+          id: string
+          last_sent_at: string | null
+        }
+        Insert: {
+          amount_owed?: number | null
+          client_id: string
+          created_at?: string | null
+          days_overdue?: number | null
+          debtor_email?: string | null
+          debtor_name: string
+          debtor_phone?: string | null
+          escalation_level?: number | null
+          id?: string
+          last_sent_at?: string | null
+        }
+        Update: {
+          amount_owed?: number | null
+          client_id?: string
+          created_at?: string | null
+          days_overdue?: number | null
+          debtor_email?: string | null
+          debtor_name?: string
+          debtor_phone?: string | null
+          escalation_level?: number | null
+          id?: string
+          last_sent_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collections_contacts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "collections_clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       community_workouts: {
         Row: {
@@ -1529,6 +1651,83 @@ export type Database = {
         }
         Relationships: []
       }
+      inventory_alert_clients: {
+        Row: {
+          active: boolean | null
+          business_name: string
+          created_at: string | null
+          email: string
+          id: string
+          industry: string | null
+          last_sent_at: string | null
+          send_count: number | null
+          stripe_customer_id: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          business_name: string
+          created_at?: string | null
+          email: string
+          id?: string
+          industry?: string | null
+          last_sent_at?: string | null
+          send_count?: number | null
+          stripe_customer_id?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          business_name?: string
+          created_at?: string | null
+          email?: string
+          id?: string
+          industry?: string | null
+          last_sent_at?: string | null
+          send_count?: number | null
+          stripe_customer_id?: string | null
+        }
+        Relationships: []
+      }
+      inventory_items: {
+        Row: {
+          avg_daily_usage: number | null
+          client_id: string
+          created_at: string | null
+          current_stock: number | null
+          id: string
+          item_name: string
+          last_alerted_at: string | null
+          par_level: number | null
+        }
+        Insert: {
+          avg_daily_usage?: number | null
+          client_id: string
+          created_at?: string | null
+          current_stock?: number | null
+          id?: string
+          item_name: string
+          last_alerted_at?: string | null
+          par_level?: number | null
+        }
+        Update: {
+          avg_daily_usage?: number | null
+          client_id?: string
+          created_at?: string | null
+          current_stock?: number | null
+          id?: string
+          item_name?: string
+          last_alerted_at?: string | null
+          par_level?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_items_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_alert_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       learn_articles: {
         Row: {
           author: string
@@ -2250,6 +2449,45 @@ export type Database = {
         }
         Relationships: []
       }
+      osha_compliance_clients: {
+        Row: {
+          active: boolean | null
+          business_name: string
+          created_at: string | null
+          email: string
+          employee_count: number | null
+          id: string
+          industry: string | null
+          last_sent_at: string | null
+          send_count: number | null
+          stripe_customer_id: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          business_name: string
+          created_at?: string | null
+          email: string
+          employee_count?: number | null
+          id?: string
+          industry?: string | null
+          last_sent_at?: string | null
+          send_count?: number | null
+          stripe_customer_id?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          business_name?: string
+          created_at?: string | null
+          email?: string
+          employee_count?: number | null
+          id?: string
+          industry?: string | null
+          last_sent_at?: string | null
+          send_count?: number | null
+          stripe_customer_id?: string | null
+        }
+        Relationships: []
+      }
       outreach_leads: {
         Row: {
           business_name: string
@@ -2432,6 +2670,48 @@ export type Database = {
           id?: string
           industry?: string | null
           phone?: string | null
+          stripe_customer_id?: string | null
+        }
+        Relationships: []
+      }
+      permit_monitor_clients: {
+        Row: {
+          active: boolean | null
+          business_name: string
+          city: string | null
+          created_at: string | null
+          email: string
+          id: string
+          industry: string | null
+          last_sent_at: string | null
+          permits: Json | null
+          send_count: number | null
+          stripe_customer_id: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          business_name: string
+          city?: string | null
+          created_at?: string | null
+          email: string
+          id?: string
+          industry?: string | null
+          last_sent_at?: string | null
+          permits?: Json | null
+          send_count?: number | null
+          stripe_customer_id?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          business_name?: string
+          city?: string | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          industry?: string | null
+          last_sent_at?: string | null
+          permits?: Json | null
+          send_count?: number | null
           stripe_customer_id?: string | null
         }
         Relationships: []
