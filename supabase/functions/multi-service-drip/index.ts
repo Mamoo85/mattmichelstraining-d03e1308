@@ -198,7 +198,7 @@ serve(async (req) => {
 
         const claudeJson = await claudeRes.json();
         const emailBody: string =
-          claudeJson?.content?.[0]?.text?.trim() ||
+          claudeJson?.choices?.[0]?.message?.content?.trim() ||
           `Hey —\n\nI wanted to reach out about a few tools that might help ${businessName} get more calls and grow.\n\nHere's what I offer:\n${serviceList}\n\nAll automated — no extra work on your end. Happy to chat if any of it sounds useful.\n\nmattmichelstraining.com\n\n— Matt`;
 
         const subject = `A few more ways I can help ${businessName}`;

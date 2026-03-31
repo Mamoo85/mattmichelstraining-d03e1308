@@ -81,7 +81,7 @@ serve(async (req) => {
         }
 
         const aiData = await aiRes.json();
-        const emailBody = aiData.content[0].text;
+        const emailBody = aiData?.choices?.[0]?.message?.content;
 
         const stepSubjects: Record<number, string> = {
           1: `Welcome to ${client.business_name}!`,

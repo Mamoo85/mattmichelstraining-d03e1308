@@ -68,7 +68,7 @@ Format as an HTML table with clean styling. Use colors #e8621a for headers and #
         }
 
         const aiData = await aiRes.json();
-        const calendarHtml = aiData.content[0].text;
+        const calendarHtml = aiData?.choices?.[0]?.message?.content;
 
         // Email the calendar
         const emailRes = await fetch("https://api.resend.com/emails", {

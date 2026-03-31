@@ -42,7 +42,7 @@ async function generatePressRelease(businessName: string, industry: string, city
     throw new Error(`AI API error: ${text}`);
   }
   const data = await res.json();
-  return data.content[0].text as string;
+  return data?.choices?.[0]?.message?.content as string;
 }
 
 async function sendEmail(to: string, subject: string, html: string) {

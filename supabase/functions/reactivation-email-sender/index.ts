@@ -80,7 +80,7 @@ Return ONLY the HTML email body. No subject line. Sign off as the ${client.busin
             }
 
             const aiData = await aiRes.json();
-            const emailBody = aiData.content[0].text;
+            const emailBody = aiData?.choices?.[0]?.message?.content;
 
             // Send via Resend
             const emailRes = await fetch("https://api.resend.com/emails", {
