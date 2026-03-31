@@ -119,6 +119,8 @@ const ProveItShowcase = forwardRef<HTMLElement>((_, ref) => (
       </div>
     </div>
   </motion.section>
-);
+));
+
+ProveItShowcase.displayName = "ProveItShowcase";
 
 export default ProveItShowcase;

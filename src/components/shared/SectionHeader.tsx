@@ -22,6 +22,8 @@ const SectionHeader = forwardRef<HTMLDivElement, SectionHeaderProps>(({ title, s
     </div>
     {children}
   </div>
-);
+));
+
+SectionHeader.displayName = "SectionHeader";
 
 export default SectionHeader;
