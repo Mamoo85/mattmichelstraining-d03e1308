@@ -3110,14 +3110,17 @@ export type Database = {
           business_name: string
           city: string | null
           created_at: string | null
+          custom_flaw: string | null
           email: string | null
           id: string
           industry: string | null
           last_contact_date: string | null
+          lead_score: number | null
           notes: string | null
           owner_name: string | null
           phone: string | null
           status: string | null
+          target_service: string | null
           website: string | null
           website_status: string | null
         }
@@ -3125,14 +3128,17 @@ export type Database = {
           business_name: string
           city?: string | null
           created_at?: string | null
+          custom_flaw?: string | null
           email?: string | null
           id?: string
           industry?: string | null
           last_contact_date?: string | null
+          lead_score?: number | null
           notes?: string | null
           owner_name?: string | null
           phone?: string | null
           status?: string | null
+          target_service?: string | null
           website?: string | null
           website_status?: string | null
         }
@@ -3140,14 +3146,17 @@ export type Database = {
           business_name?: string
           city?: string | null
           created_at?: string | null
+          custom_flaw?: string | null
           email?: string | null
           id?: string
           industry?: string | null
           last_contact_date?: string | null
+          lead_score?: number | null
           notes?: string | null
           owner_name?: string | null
           phone?: string | null
           status?: string | null
+          target_service?: string | null
           website?: string | null
           website_status?: string | null
         }

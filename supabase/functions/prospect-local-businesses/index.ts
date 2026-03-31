@@ -237,46 +237,101 @@ ${bodyHtml}
   }
 }
 
-// ── Generate outreach email via Lovable AI ──
-async function generateOutreachEmail(
-  business: string, industry: string, city: string, lovableKey: string
+// ── Agent 1: THE SCOUT — Recon & Qualification ──
+async function runScoutAgent(
+  business: string, industry: string, city: string,
+  website: string, rating: number, reviewCount: number, lovableKey: string
+): Promise<{ target_service_to_pitch: string; custom_flaw_observation: string; lead_score: number }> {
+  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${lovableKey}` },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash-lite",
+      messages: [
+        { role: "system", content: `You are an autonomous B2B Lead Qualification Agent for a web design and automation agency run by Matt Michels in Grosse Pointe, MI. Analyze scraped data about businesses and find their specific digital pain point.
+
+Instructions:
+- Check against these triggers:
+  Trigger A: Do they have fewer than 20 Google Reviews? (Pitch: GBP Management / Reputation)
+  Trigger B: Does their website lack a clear 'Book Now' or lead capture form, or have no website? (Pitch: New Website / Automation)
+  Trigger C: Are they missing a web chat widget or after-hours capture? (Pitch: Missed-Call Text Back SaaS $99/mo)
+- Output a strictly formatted JSON object with keys: target_service_to_pitch, custom_flaw_observation, lead_score (1-10).
+- custom_flaw_observation must be a single, natural-sounding sentence pointing out the flaw.
+- lead_score: 1-3 = low priority, 4-6 = moderate, 7-10 = high priority (send email).
+- Respond with ONLY the JSON object, no markdown, no explanation.` },
+        { role: "user", content: `Business: "${business}"
+Industry: ${industry}
+City: ${city}
+Website: ${website || "NONE - No website found"}
+Google Rating: ${rating || "Unknown"}
+Google Reviews: ${reviewCount || 0}
+Has Website: ${website ? "Yes" : "No"}` }
+      ],
+      temperature: 0.3,
+    }),
+  });
+
+  if (!response.ok) throw new Error(`Scout AI error: ${response.status}`);
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content ?? "{}";
+  try {
+    const cleaned = content.replace(/```json\s*/g, "").replace(/```/g, "").trim();
+    return JSON.parse(cleaned);
+  } catch {
+    return { target_service_to_pitch: "web_design", custom_flaw_observation: "I noticed your online presence could use some work.", lead_score: 5 };
+  }
+}
+
+// ── Agent 2: THE SNIPER — Outbound Copywriter ──
+async function runSniperAgent(
+  business: string, industry: string, city: string,
+  customFlaw: string, targetService: string, lovableKey: string
 ): Promise<string> {
   const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${lovableKey}` },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
+      model: "google/gemini-2.5-flash-lite",
       messages: [
-        { role: "system", content: `You are Matt Michels, a local business consultant in Grosse Pointe, MI. You help small businesses grow with web design, AI automation, and done-for-you marketing tools. Your tone is straight-talking, local, and personal.` },
-        { role: "user", content: `Write a short cold outreach email to "${business}", a ${industry} in ${city}.
+        { role: "system", content: `You are an elite, autonomous B2B Outbound Sales Agent. Your job is to write cold emails that get busy business owners to reply. You will be provided with a business name, industry, and a Custom Flaw Observation from our Recon Agent.
 
-Subject line + email body (under 160 words total).
-
-Make it:
-- Specific to their industry (mention a real pain they'd recognize)
-- Reference that you're local (Grosse Pointe / Metro Detroit)
-- Lead with the #1 most relevant service:
-  * If HVAC/Plumbing/Roofing/Electrical/Contractor: lead with Missed Call Text-Back ($99/mo)
-  * If Restaurant/Retail/Salon/Gym: lead with Text Message Marketing ($79/mo)
-  * If Medical/Dental/Healthcare: lead with AI Reputation Dashboard ($79/mo)
-  * If Real Estate/Insurance: lead with AI Phone Answering ($149/mo)
-  * Otherwise: lead with web design ($499 flat, live in 7 days)
-- Briefly mention you also build websites starting at $499 if they need one
-- End with: "Takes 30 seconds to get started: mattmichelstraining.com/get-started"
-- P.S. line: "P.S. — If you'd rather just text, (313) 806-4952 works too."
-
-Format:
-SUBJECT: [subject line]
----
-[email body]` },
+Strict Rules:
+- No Corporate Fluff: Never use words like 'synergy,' 'optimize,' or 'innovative solutions.' Speak like a peer.
+- Length Limit: Do not exceed 4 sentences.
+- The Structure:
+  Sentence 1: Direct observation (Use the provided custom_flaw_observation).
+  Sentence 2: The stakes (e.g., 'You are likely losing 3-4 jobs a month because of this.').
+  Sentence 3: The solution (Briefly mention our service: Missed-Call Text-Back $99/mo, Custom Web App $499, or AI Automation).
+  Sentence 4: The low-friction CTA. NEVER ask for a 30-minute call. Ask if you can send a free 3-minute Loom video breaking down the fix.
+- Output ONLY the email subject line and body text in this format:
+  SUBJECT: [subject line]
+  ---
+  [email body]
+- No pleasantries like 'Here is your email:'.
+- Sign off as Matt.` },
+        { role: "user", content: `Business: "${business}" (${industry} in ${city})
+Custom Flaw Observation: "${customFlaw}"
+Target Service: ${targetService}` }
       ],
-      temperature: 0.75,
+      temperature: 0.7,
     }),
   });
 
-  if (!response.ok) throw new Error(`AI API error: ${response.status}`);
+  if (!response.ok) throw new Error(`Sniper AI error: ${response.status}`);
   const data = await response.json();
   return data.choices?.[0]?.message?.content ?? "";
+}
+
+// ── Check daily volume cap ──
+async function checkDailyVolumeCap(serviceClient: any): Promise<boolean> {
+  const today = new Date().toISOString().split("T")[0];
+  const { count } = await serviceClient
+    .from("email_send_log")
+    .select("id", { count: "exact", head: true })
+    .eq("template_name", "cold_outreach")
+    .eq("status", "sent")
+    .gte("created_at", `${today}T00:00:00Z`);
+  return (count || 0) >= 40;
 }
 
 serve(async (req) => {
@@ -468,6 +523,12 @@ serve(async (req) => {
     let emailed = 0;
     const newLeads: string[] = [];
 
+    // Check daily volume cap before sending any emails
+    const capReached = await checkDailyVolumeCap(serviceClient);
+    if (capReached) {
+      log("Daily volume cap reached (40 emails). Discovery only, no sends.");
+    }
+
     for (const place of places) {
       if (queued >= limit) break;
 
@@ -491,11 +552,10 @@ serve(async (req) => {
 
         if (existing && existing.length > 0) { skipped++; continue; }
 
-        // Step 2: Try to scrape email from their website
+        // Try to scrape email from their website
         let contactEmail: string | null = null;
         if (website) {
           contactEmail = await scrapeEmailFromWebsite(website);
-          // Also try /contact page
           if (!contactEmail) {
             const contactUrl = website.replace(/\/$/, "") + "/contact";
             contactEmail = await scrapeEmailFromWebsite(contactUrl);
@@ -518,35 +578,49 @@ serve(async (req) => {
           }
         }
 
-        // Step 3: Generate outreach email
-        const outreachEmail = await generateOutreachEmail(businessName, industry, city, LOVABLE_API_KEY);
-        const emailLines = outreachEmail.split("\n");
-        const subjectLine = emailLines.find(l => l.startsWith("SUBJECT:"))?.replace("SUBJECT:", "").trim()
-          || `Your ${industry} business could be getting more calls`;
-        const emailBody = emailLines.slice(emailLines.findIndex(l => l === "---") + 1).join("\n").trim();
-        const emailBodyHtml = emailBody.replace(/\n/g, "<br>");
+        // ── AGENT 1: THE SCOUT — Qualify the lead ──
+        const scoutResult = await runScoutAgent(
+          businessName, industry, city, website, rating, reviewCount, LOVABLE_API_KEY
+        );
+        log("Scout result", { business: businessName, score: scoutResult.lead_score, service: scoutResult.target_service_to_pitch, flaw: scoutResult.custom_flaw_observation });
 
-        // Step 4: Auto-send if we have an email address
+        // ── AGENT 2: THE SNIPER — Write & send email if score >= 7 ──
         let emailStatus = "no_email";
-        if (contactEmail && RESEND_API_KEY) {
+        let subjectLine = "";
+        let emailBody = "";
+
+        if (scoutResult.lead_score >= 7 && contactEmail && RESEND_API_KEY && !capReached) {
+          const sniperOutput = await runSniperAgent(
+            businessName, industry, city,
+            scoutResult.custom_flaw_observation, scoutResult.target_service_to_pitch, LOVABLE_API_KEY
+          );
+
+          const emailLines = sniperOutput.split("\n");
+          subjectLine = emailLines.find(l => l.startsWith("SUBJECT:"))?.replace("SUBJECT:", "").trim()
+            || `Quick observation about ${businessName}`;
+          emailBody = emailLines.slice(emailLines.findIndex(l => l === "---") + 1).join("\n").trim();
+          const emailBodyHtml = emailBody.replace(/\n/g, "<br>");
+
           const sent = await sendColdEmail(contactEmail, subjectLine, emailBodyHtml, RESEND_API_KEY);
           if (sent) {
             emailStatus = "sent";
             emailed++;
-            // Log the send
             await serviceClient.from("email_send_log").insert({
               recipient_email: contactEmail,
               template_name: "cold_outreach",
               status: "sent",
-              metadata: { business: businessName, industry, city, gap_score: gapScore },
+              metadata: { business: businessName, industry, city, gap_score: gapScore, lead_score: scoutResult.lead_score, agent: "sniper" },
             });
           } else {
             emailStatus = "send_failed";
           }
-          log("Cold email", { business: businessName, email: contactEmail, status: emailStatus });
+          log("Sniper email", { business: businessName, email: contactEmail, status: emailStatus });
+        } else if (scoutResult.lead_score < 7) {
+          emailStatus = "low_score";
+          log("Lead below threshold", { business: businessName, score: scoutResult.lead_score });
         }
 
-        // Step 5: Store lead in CRM
+        // Store lead in CRM with agent data
         const leadStatus = emailStatus === "sent" ? "Emailed" : "new";
         const { data: newLead, error: insertErr } = await serviceClient
           .from("outreach_leads")
@@ -557,7 +631,10 @@ serve(async (req) => {
             city,
             phone,
             website_status: website ? "has_website" : "no_website",
-            notes: `Auto-prospected ${new Date().toLocaleDateString()}. Gap score: ${gapScore}/100. Rating: ${rating} (${reviewCount} reviews). Website: ${website || "NONE"}. Address: ${address}. Email: ${contactEmail || "NOT FOUND"}. Email status: ${emailStatus}\n\nSubject: ${subjectLine}\n\n${emailBody}`,
+            lead_score: scoutResult.lead_score,
+            target_service: scoutResult.target_service_to_pitch,
+            custom_flaw: scoutResult.custom_flaw_observation,
+            notes: `Auto-prospected ${new Date().toLocaleDateString()}. Gap score: ${gapScore}/100. Lead score: ${scoutResult.lead_score}/10. Target: ${scoutResult.target_service_to_pitch}. Flaw: ${scoutResult.custom_flaw_observation}. Rating: ${rating} (${reviewCount} reviews). Website: ${website || "NONE"}. Address: ${address}. Email: ${contactEmail || "NOT FOUND"}. Email status: ${emailStatus}${subjectLine ? `\n\nSubject: ${subjectLine}\n\n${emailBody}` : ""}`,
             status: leadStatus,
           })
           .select("id")
@@ -567,7 +644,7 @@ serve(async (req) => {
 
         queued++;
         newLeads.push(newLead.id);
-        log("Lead processed", { business: businessName, gapScore, email: contactEmail || "none", emailStatus });
+        log("Lead processed", { business: businessName, gapScore, leadScore: scoutResult.lead_score, email: contactEmail || "none", emailStatus });
 
         await new Promise(r => setTimeout(r, 500));
       } catch (err) {
