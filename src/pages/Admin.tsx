@@ -302,6 +302,9 @@ const Admin = () => {
         {activeTab === "business" && (
           <SubTabs tabs={[
             { key: "overview", label: "Overview", content: <AdminBusinessDashboard /> },
+            { key: "health", label: "Client Health", content: <AdminClientHealth /> },
+            { key: "ops", label: "Ops Center", content: <AdminOpsCenter /> },
+            { key: "pipeline", label: "Pipeline", content: <AdminB2BPipeline /> },
             { key: "social-setup", label: "Social Media Setup", content: <AdminSocialMediaOnboarding /> },
           ]} />
         )}
