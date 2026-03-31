@@ -91,6 +91,7 @@ const AdminB2BPipeline = lazy(() => import("@/components/admin/AdminB2BPipeline"
 const AdminSocialMediaOnboarding = lazy(() => import("@/components/admin/AdminSocialMediaOnboarding"));
 const AdminLegalCompliance = lazy(() => import("@/components/admin/AdminLegalCompliance"));
 const AdminOpsCenter = lazy(() => import("@/components/admin/AdminOpsCenter"));
+const AdminEmailLog = lazy(() => import("@/components/admin/AdminEmailLog"));
 
 const MASTER_TABS = [
   { key: "business", label: "Business", icon: DollarSign, desc: "Revenue · Automation" },
