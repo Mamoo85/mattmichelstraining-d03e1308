@@ -59,6 +59,26 @@ export function useWorkoutSave() {
         }
       }
 
+      // Notify admins about the new workout log
+      try {
+        const { data: adminRoles } = await supabase
+          .from("user_roles")
+          .select("user_id")
+          .eq("role", "admin");
+        if (adminRoles && adminRoles.length > 0) {
+          const notifications = adminRoles.map((ar: any) => ({
+            user_id: ar.user_id,
+            type: "workout_logged",
+            title: "Workout Logged",
+            body: `${validExercises.length} exercise${validExercises.length !== 1 ? "s" : ""} logged`,
+            link: `/admin/view-user/${userId}`,
+          }));
+          await supabase.from("notifications").insert(notifications);
+        }
+      } catch (notifErr) {
+        console.error("Notification insert error:", notifErr);
+      }
+
       safeLocalStorage.removeItem("m2-paused-workout");
       return log.id;
     } catch (err: any) {
