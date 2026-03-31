@@ -432,13 +432,14 @@ const Admin = () => {
         {/* ── WEB DESIGN ── */}
         {activeTab === "webdesign" && (
           <SubTabs tabs={[
-            { key: "crm", label: "CRM", content: <AdminWebDesignCRM /> },
+            { key: "pipeline", label: "B2B Pipeline", content: <AdminB2BPipeline /> },
+            { key: "crm", label: "Web Design CRM", content: <AdminWebDesignCRM /> },
             { key: "prospector", label: "Prospector", content: <AdminProspector /> },
             { key: "automation", label: "Automation Hub", content: <AdminAutomationHub /> },
             { key: "client-health", label: "Client Health", content: <AdminClientHealth /> },
             { key: "ops-center", label: "Ops Center", content: <AdminOpsCenter /> },
             { key: "wd-automations", label: "Email Automations", content: <AdminWebDesignAutomations /> },
-          ]} />
+          ]} defaultTab="pipeline" />
         )}
       </div>
     </div>
