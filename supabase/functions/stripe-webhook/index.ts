@@ -1320,6 +1320,96 @@ serve(async (req) => {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // ── UNIFIED B2B CLIENT PIPELINE ──────────────────────────────────────
+      // All B2B checkout types also feed into the unified b2b_clients + service_subscriptions tables
+      const B2B_SERVICE_TYPES: Record<string, { label: string; price: number }> = {
+        contractor_lead_subscription: { label: "Contractor Leads", price: 39900 },
+        b2b_database_subscription: { label: "B2B Database", price: 14900 },
+        gbp_saas_subscription: { label: "GBP Management", price: 4900 },
+        social_media_subscription: { label: "Social Media AI", price: 19900 },
+        web_design_subscription: { label: "Web Design", price: 49900 },
+        blog_post_subscription: { label: "Blog Posts", price: 9900 },
+        review_response_subscription: { label: "Review Response", price: 4900 },
+        newsletter_service_subscription: { label: "Newsletter Service", price: 9900 },
+        handbook_subscription: { label: "Employee Handbook", price: 9900 },
+        grant_finder_subscription: { label: "Grant Finder", price: 14900 },
+        battlecard_subscription: { label: "Competitive Battlecard", price: 3900 },
+        hiring_assistant_subscription: { label: "Hiring Assistant", price: 7900 },
+        ads_copy_subscription: { label: "Ads Copy", price: 9900 },
+        linkedin_ghostwriting_subscription: { label: "LinkedIn Ghostwriting", price: 14900 },
+        local_seo_subscription: { label: "Local SEO", price: 9900 },
+        chatbot_subscription: { label: "AI Chatbot", price: 9900 },
+        faq_refresh_subscription: { label: "FAQ Refresh", price: 4900 },
+        caption_pack_subscription: { label: "Caption Pack", price: 2900 },
+        direct_mail_subscription: { label: "Direct Mail", price: 9900 },
+        kpi_email_subscription: { label: "KPI Reports", price: 4900 },
+        meeting_prep_subscription: { label: "Meeting Prep", price: 7900 },
+        market_intel_subscription: { label: "Market Intel", price: 14900 },
+        competitor_watch_subscription: { label: "Competitor Watch", price: 9900 },
+        google_qa_subscription: { label: "Google Q&A", price: 4900 },
+        birthday_campaign_subscription: { label: "Birthday Campaign", price: 4900 },
+        holiday_sms_subscription: { label: "Holiday SMS", price: 4900 },
+        appointment_reminder_subscription: { label: "Appointment Reminders", price: 4900 },
+        inventory_alert_subscription: { label: "Inventory Alerts", price: 4900 },
+        directory_submitter_subscription: { label: "Directory Submitter", price: 4900 },
+        estimate_generator_subscription: { label: "Estimate Generator", price: 9900 },
+      };
+
+      if (meta.type && B2B_SERVICE_TYPES[meta.type]) {
+        try {
+          const svcInfo = B2B_SERVICE_TYPES[meta.type];
+          const clientEmail = meta.email || customerEmail;
+          if (clientEmail) {
+            // Upsert into unified b2b_clients
+            const { data: existingClient } = await sb
+              .from("b2b_clients" as any)
+              .select("id")
+              .eq("email", clientEmail)
+              .maybeSingle();
+
+            let clientId: string;
+            if (existingClient) {
+              clientId = existingClient.id;
+              await sb.from("b2b_clients" as any).update({
+                stripe_customer_id: (session.customer as string) || null,
+                business_name: meta.businessName || meta.business_name || undefined,
+                owner_name: meta.customer_name || meta.name || undefined,
+                phone: meta.phone || undefined,
+                website: meta.website || undefined,
+                industry: meta.industry || meta.niche || undefined,
+              }).eq("id", clientId);
+            } else {
+              const { data: newClient } = await sb.from("b2b_clients" as any).insert({
+                email: clientEmail,
+                business_name: meta.businessName || meta.business_name || clientEmail,
+                owner_name: meta.customer_name || meta.name || null,
+                phone: meta.phone || null,
+                website: meta.website || null,
+                industry: meta.industry || meta.niche || null,
+                city: meta.city || null,
+                state: meta.state || "MI",
+                stripe_customer_id: (session.customer as string) || null,
+                source: "checkout",
+              }).select("id").single();
+              clientId = newClient?.id;
+            }
+
+            if (clientId) {
+              await sb.from("service_subscriptions" as any).insert({
+                client_id: clientId,
+                service_type: svcInfo.label,
+                stripe_subscription_id: (session.subscription as string) || null,
+                status: "active",
+                fulfillment_stage: "New Lead - Action Required",
+                monthly_price: svcInfo.price,
+              });
+              console.log(`[WEBHOOK] Unified pipeline: ${svcInfo.label} for ${clientEmail} → b2b_clients`);
+            }
+          }
+        } catch (e) { console.error("[WEBHOOK] Unified b2b pipeline error:", e); }
+      }
+
+
       // ── GBP SAAS SUBSCRIPTION ─────────────────────────────────────────────
       if (meta.type === "gbp_saas_subscription") {
         try {

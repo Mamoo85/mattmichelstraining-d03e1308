@@ -1,10 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { apiVersion: "2025-08-27.basil" });
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
-const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 
 const corsHeaders = {
@@ -12,48 +9,73 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Service catalog — each service maps to its pricing and metadata type
+const SERVICE_CATALOG: Record<string, { label: string; price: number; metaType: string; description: string }> = {
+  dental: { label: "Dental & Orthodontic Practices", price: 14900, metaType: "b2b_database_subscription", description: "Searchable database of verified dental offices. Updated daily." },
+  hvac: { label: "HVAC & Mechanical Contractors", price: 14900, metaType: "b2b_database_subscription", description: "Searchable database of verified HVAC contractors. Updated daily." },
+  pt: { label: "Physical Therapy & Chiro Offices", price: 14900, metaType: "b2b_database_subscription", description: "Searchable database of verified PT/chiro offices. Updated daily." },
+  auto: { label: "Independent Auto Repair Shops", price: 14900, metaType: "b2b_database_subscription", description: "Searchable database of verified auto repair shops. Updated daily." },
+  industrial: { label: "Industrial Suppliers & Manufacturers", price: 9900, metaType: "b2b_database_subscription", description: "Searchable database of verified industrial contacts. Updated weekly." },
+  contractor_leads: { label: "Exclusive Contractor Leads", price: 39900, metaType: "contractor_lead_subscription", description: "Exclusive leads for your trade in your city. One contractor per territory." },
+  gbp_basic: { label: "GBP Management — Basic", price: 4900, metaType: "gbp_saas_subscription", description: "AI posts to your Google Business Profile 3x/week." },
+  gbp_pro: { label: "GBP Management — Pro", price: 9900, metaType: "gbp_saas_subscription", description: "AI posts 3x/week + review solicitation + photo optimization." },
+  social_standard: { label: "Social Media AI — Standard", price: 19900, metaType: "social_media_subscription", description: "AI-generated posts 3x/week to Facebook, Instagram, LinkedIn." },
+  social_pro: { label: "Social Media AI — Pro", price: 29900, metaType: "social_media_subscription", description: "AI posts 5x/week + stories + engagement. Full social management." },
+  web_design: { label: "Web Design & Development", price: 49900, metaType: "web_design_subscription", description: "Professional website design with monthly retainer." },
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { email, name, niche = "dental" } = await req.json();
+    const body = await req.json();
+    const { email, name, business_name, phone, service, city, state, trade, website, niche } = body;
+
     if (!email) return new Response(JSON.stringify({ error: "email is required" }), { status: 400, headers: corsHeaders });
 
-    const origin = req.headers.get("origin") || "https://www.mattmichelstraining.com";
-    const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+    // Resolve service key — support legacy `niche` field for backward compat
+    const serviceKey = service || niche || "dental";
+    const svc = SERVICE_CATALOG[serviceKey];
+    if (!svc) return new Response(JSON.stringify({ error: `Unknown service: ${serviceKey}` }), { status: 400, headers: corsHeaders });
 
-    const nicheLabels: Record<string, string> = {
-      dental: "Dental & Orthodontic Practices",
-      hvac: "HVAC & Mechanical Contractors",
-      pt: "Physical Therapy & Chiropractic Offices",
-      auto: "Independent Auto Repair Shops",
-      industrial: "Industrial Suppliers & Manufacturers",
-    };
-    const nicheLabel = nicheLabels[niche] || "Business Contacts";
+    const origin = req.headers.get("origin") || "https://www.mattmichelstraining.com";
+
+    // Check for existing Stripe customer
+    const customers = await stripe.customers.list({ email, limit: 1 });
+    const customerId = customers.data.length > 0 ? customers.data[0].id : undefined;
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       payment_method_types: ["card"],
-      customer_email: email,
+      customer: customerId,
+      customer_email: customerId ? undefined : email,
       line_items: [{
         price_data: {
           currency: "usd",
           recurring: { interval: "month" },
-          unit_amount: niche === "industrial" ? 9900 : 14900,
+          unit_amount: svc.price,
           product_data: {
-            name: `M² B2B Lead Database — ${nicheLabel}`,
-            description: `Searchable, filterable database of verified ${nicheLabel.toLowerCase()} across the Midwest. ${niche === "industrial" ? "Updated weekly" : "Updated daily"}. Export to CSV anytime.`,
+            name: `M² — ${svc.label}`,
+            description: svc.description,
           },
         },
         quantity: 1,
       }],
       metadata: {
-        type: "b2b_database_subscription",
-        niche,
+        type: svc.metaType,
+        niche: niche || serviceKey,
         customer_name: name || "",
+        business_name: business_name || "",
+        email,
+        phone: phone || "",
+        city: city || "",
+        state: state || "MI",
+        trade: trade || "",
+        website: website || "",
+        industry: niche || serviceKey,
       },
-      success_url: `${origin}/b2b-leads?success=1`,
-      cancel_url: `${origin}/b2b-leads`,
+      success_url: `${origin}/get-started?success=1&service=${serviceKey}`,
+      cancel_url: `${origin}/get-started`,
     });
 
     // Notify Matt
@@ -62,12 +84,12 @@ serve(async (req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "M² System <matt@mattmichelstraining.com>",
+          from: "M² System <matt@notify.m2training.com>",
           to: ["matt@m2training.com"],
-          subject: `New B2B database subscriber — ${email}`,
-          html: `<p><strong>${name || email}</strong> started checkout for the ${nicheLabel} database at $149/month.<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI \u00b7 (313) 806-4952</div><img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div></p>`,
+          subject: `🔔 Checkout started — ${svc.label} — ${business_name || email}`,
+          html: `<p><strong>${business_name || name || email}</strong> started checkout for <strong>${svc.label}</strong> ($${(svc.price / 100).toFixed(0)}/mo).</p><p>Email: ${email}<br>Phone: ${phone || "n/a"}<br>City: ${city || "n/a"}</p>`,
         }),
-      });
+      }).catch(() => {});
     }
 
     return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: corsHeaders });
