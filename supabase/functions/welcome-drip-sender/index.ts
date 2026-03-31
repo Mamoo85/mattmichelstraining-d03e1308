@@ -142,7 +142,7 @@ serve(async (req) => {
     );
   } catch (err) {
     console.error("welcome-drip-sender error:", err);
-    return new Response(JSON.stringify({ error: err.message }), {
+    return new Response(JSON.stringify({ error: (err instanceof Error ? err.message : "Unknown error") }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
