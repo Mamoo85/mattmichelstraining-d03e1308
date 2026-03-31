@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      _applied_migrations: {
+        Row: {
+          applied_at: string | null
+          id: number
+          name: string
+        }
+        Insert: {
+          applied_at?: string | null
+          id?: number
+          name: string
+        }
+        Update: {
+          applied_at?: string | null
+          id?: number
+          name?: string
+        }
+        Relationships: []
+      }
       activity_feed_notes: {
         Row: {
           activity_id: string
