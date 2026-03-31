@@ -1,19 +1,95 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import SEOHead from "@/components/layout/SEOHead";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { CheckCircle, Loader2 } from "lucide-react";
 
-const SERVICES = [
-  "Web Design ($499-$3,499)",
-  "Contractor Lead Generation ($399/mo)",
-  "Google Business Profile Automation ($49-99/mo)",
-  "Social Media AI Posting ($149-299/mo)",
-  "Review Response Automation ($99/mo)",
-  "Monthly SEO Reports ($69/mo)",
-  "Field Rep AI Tools ($29/mo)",
-  "B2B Sales Database ($49/mo)",
-  "Other / Not Sure",
+const SERVICE_CATEGORIES = [
+  {
+    label: "📱 SMS & Text Automation",
+    options: [
+      "Missed Call Text-Back ($99/mo)",
+      "Speed-to-Lead SMS ($39/mo)",
+      "Text Message Marketing ($79/mo)",
+      "Review Request SMS ($39/mo)",
+      "Quote Follow-Up SMS ($49/mo)",
+      "Win-Back SMS ($49/mo)",
+      "Birthday Campaign SMS ($39/mo)",
+      "Appointment Reminders ($39/mo)",
+      "Holiday SMS Blasts ($39/mo)",
+      "Thank-You SMS ($29/mo)",
+    ],
+  },
+  {
+    label: "🤖 AI Content & Marketing",
+    options: [
+      "Social Media AI Posting ($199/mo)",
+      "AI Blog Post Service ($79/mo)",
+      "AI Newsletter Service ($99/mo)",
+      "AI Google Ads Copy ($39/mo)",
+      "AI Social Captions ($29/mo)",
+      "AI Video Script Writer ($29/mo)",
+      "AI Press Release Writer ($49/mo)",
+    ],
+  },
+  {
+    label: "📊 Reputation & Reviews",
+    options: [
+      "AI Reputation Dashboard ($79/mo)",
+      "AI Review Responder ($49/mo)",
+      "AI Social Proof Collector ($39/mo)",
+    ],
+  },
+  {
+    label: "📞 Phone & Communication",
+    options: [
+      "AI Phone Answering ($149/mo)",
+      "AI Voicemail Transcription ($49/mo)",
+      "AI Chatbot Widget ($49/mo)",
+    ],
+  },
+  {
+    label: "💼 Sales & Business Tools",
+    options: [
+      "AI Estimate Generator ($49/mo)",
+      "AI Proposal Generator ($79/mo)",
+      "AI Meeting Prep ($29/mo)",
+      "AI Sales Battlecards ($59/mo)",
+      "Contractor Invoicing ($29/mo)",
+      "Collections Manager ($99/mo)",
+      "AI Market Intel Brief ($79/mo)",
+      "AI Competitor Watch ($99/mo)",
+    ],
+  },
+  {
+    label: "📋 Compliance & Operations",
+    options: [
+      "AI Employee Handbook ($79/mo)",
+      "OSHA Compliance Monitor ($99/mo)",
+      "AI Permit & License Monitor ($79/mo)",
+      "AI Inventory Alert System ($49/mo)",
+      "AI Job Posting Writer ($19/mo)",
+    ],
+  },
+  {
+    label: "🌐 Web & SEO",
+    options: [
+      "Web Design ($499–$3,499)",
+      "Monthly SEO Reports ($69/mo)",
+      "AI Local SEO Pages ($79/mo)",
+      "AI FAQ Refresh ($49/mo)",
+      "AI Directory Submitter ($39/mo)",
+    ],
+  },
+  {
+    label: "🔧 Other",
+    options: [
+      "Contractor Lead Generation ($399/mo)",
+      "Field Rep AI Tools ($29/mo)",
+      "B2B Sales Database ($49/mo)",
+      "Not Sure — Tell Me What's Best",
+    ],
+  },
 ];
 
 type FormState = {
@@ -21,8 +97,10 @@ type FormState = {
   business_name: string;
   email: string;
   phone: string;
+  industry: string;
   service: string;
   message: string;
+  source: string;
 };
 
 const INITIAL: FormState = {
@@ -30,15 +108,45 @@ const INITIAL: FormState = {
   business_name: "",
   email: "",
   phone: "",
+  industry: "",
   service: "",
   message: "",
+  source: "",
 };
+
+const INDUSTRIES = [
+  "HVAC / Plumbing / Electrical",
+  "Roofing / Siding / Gutters",
+  "General Contractor / Remodeling",
+  "Landscaping / Lawn Care",
+  "Cleaning / Janitorial",
+  "Auto Repair / Towing",
+  "Restaurant / Food Service",
+  "Retail / Boutique",
+  "Salon / Spa / Barber",
+  "Medical / Dental / Healthcare",
+  "Real Estate / Insurance",
+  "Legal / Attorney",
+  "Manufacturing / Industrial",
+  "Construction / Commercial",
+  "Pet Services / Grooming",
+  "Consulting / Agency",
+  "Gym / Fitness",
+  "Other",
+];
 
 export default function GetStarted() {
   const [form, setForm] = useState<FormState>(INITIAL);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submittedName, setSubmittedName] = useState("");
+
+  // Capture UTM source from URL params
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const source = params.get("utm_source") || params.get("source") || params.get("ref") || "direct";
+    setForm(prev => ({ ...prev, source }));
+  }, []);
 
   const set = (field: keyof FormState) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -104,13 +212,13 @@ export default function GetStarted() {
         {/* Hero */}
         <div className="bg-[#1e293b] text-white px-6 py-14 text-center">
           <p className="text-[11px] font-bold uppercase tracking-widest text-[#e8621a] mb-3">
-            M² Performance Training
+            M² Development
           </p>
           <h1 className="text-3xl font-black mb-4 leading-tight">
-            Let's talk about what you need.
+            40+ tools to grow your business.<br/>Pick one. We'll handle the rest.
           </h1>
           <p className="text-slate-300 text-sm max-w-md mx-auto leading-relaxed">
-            Fill out the form and Matt will get back to you personally — usually within a few hours.
+            Fill out the form and Matt will get back to you personally — usually within a few hours. No contracts, no pressure.
           </p>
         </div>
 
@@ -182,6 +290,21 @@ export default function GetStarted() {
             </div>
 
             <div>
+              <label className={labelCls}>Your Industry *</label>
+              <select
+                className={inputCls}
+                value={form.industry}
+                onChange={set("industry")}
+                required
+              >
+                <option value="" disabled>Select your industry...</option>
+                {INDUSTRIES.map(i => (
+                  <option key={i} value={i}>{i}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
               <label className={labelCls}>Service Interested In *</label>
               <select
                 className={inputCls}
@@ -190,8 +313,12 @@ export default function GetStarted() {
                 required
               >
                 <option value="" disabled>Select a service...</option>
-                {SERVICES.map(s => (
-                  <option key={s} value={s}>{s}</option>
+                {SERVICE_CATEGORIES.map(cat => (
+                  <optgroup key={cat.label} label={cat.label}>
+                    {cat.options.map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
             </div>
