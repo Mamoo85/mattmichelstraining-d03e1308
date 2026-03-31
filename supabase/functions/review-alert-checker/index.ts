@@ -61,6 +61,6 @@ serve(async (req) => {
     return new Response(JSON.stringify({ success: true, message: "Review alert sent" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {
     console.error("review-alert-checker error:", err);
-    return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ error: (err instanceof Error ? err.message : "Unknown error") }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

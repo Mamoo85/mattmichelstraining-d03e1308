@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -122,7 +123,7 @@ Use HTML formatting with <ol>, <li>, <strong>, <em>, <p> tags.`;
   } catch (error) {
     console.error("ai-video-script-writer error:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error instanceof Error ? error.message : "Unknown error") }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

@@ -1,13 +1,14 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 
-type AIMessageResponse = {
-  content?: Array<{ text?: string }>;
-};
+// AI response type
+// uses OpenAI-compatible format
+
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -56,7 +57,7 @@ Write in professional but accessible language. Use HTML formatting with <h2>, <p
           model: "google/gemini-2.5-flash-lite", 
           messages: [{ role: "user", content: prompt }] }) });
 
-      const aiData = await aiResponse.json() as AIMessageResponse;
+      const aiData = await aiResponse.json() as any;
       const reportHtml = aiData?.choices?.[0]?.message?.content || "Report generation failed.";
 
       const emailHtml = `

@@ -9,9 +9,9 @@ const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 
-type AIMessageResponse = {
-  content?: Array<{ text?: string }>;
-};
+// AI response type
+// uses OpenAI-compatible format
+
 
 async function supabaseQuery(path: string, body?: unknown, method = "GET") {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
@@ -46,7 +46,7 @@ async function generateBlogPost(businessName: string, industry: string, website?
     const text = await res.text();
     throw new Error(`AI API error: ${text}`);
   }
-  const data = await res.json() as AIMessageResponse;
+  const data = await res.json() as any;
   return data?.choices?.[0]?.message?.content ?? "";
 }
 
