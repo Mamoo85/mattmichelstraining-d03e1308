@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Phone, ArrowRight, CheckCircle, TrendingUp, MapPin,
   BarChart3, Star, FileSearch, MessageSquare, RefreshCw,
-  Calendar, Users, Mail, Globe, Zap, DollarSign, Wrench
+  Calendar, Users, Mail, Globe, Wrench
 } from "lucide-react";
 
 const PHONE = "(313) 806-4952";
@@ -154,21 +154,9 @@ const NEW_IDEAS = [
     cta: "Ask About This",
   },
   {
-    icon: Zap,
-    name: "Video / Reel Content Creation",
-    idea: "Short-form video is the #1 organic reach driver right now. I coordinate a 1-hour shoot at your location, edit 4–6 reels/shorts, and write captions optimized for each platform. One-time $299.",
-    cta: "Ask About This",
-  },
-  {
     icon: Globe,
     name: "White-Label for Other Coaches & Trainers",
     idea: "Are you a fitness coach or trainer with clients who need websites? I'll build sites under your brand — you mark up the price, I do the work. Partner pricing available for 3+ referrals.",
-    cta: "Ask About This",
-  },
-  {
-    icon: DollarSign,
-    name: "Local Business Photography Coordination",
-    idea: "A site with real photos converts 2–3x better than stock images. I'll coordinate a 2-hour shoot at your business with a local photographer I trust — headshots, interior, product. $299 flat.",
     cta: "Ask About This",
   },
 ];
