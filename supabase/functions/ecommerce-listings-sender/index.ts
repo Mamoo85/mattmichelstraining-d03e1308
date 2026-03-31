@@ -17,7 +17,7 @@ serve(async (_req) => {
       try {
         const month = new Date().toLocaleString("en-US", { month: "long", year: "numeric" });
         const platform = client.platform || "Amazon/Shopify";
-        const aiRes = await fetch("https://ai.lovable.dev/api/chat", {
+        const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
           headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
