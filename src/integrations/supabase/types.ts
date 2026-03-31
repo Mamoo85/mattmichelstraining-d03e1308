@@ -3058,6 +3058,7 @@ export type Database = {
           owner_name: string | null
           phone: string | null
           status: string | null
+          website: string | null
           website_status: string | null
         }
         Insert: {
@@ -3072,6 +3073,7 @@ export type Database = {
           owner_name?: string | null
           phone?: string | null
           status?: string | null
+          website?: string | null
           website_status?: string | null
         }
         Update: {
@@ -3086,6 +3088,7 @@ export type Database = {
           owner_name?: string | null
           phone?: string | null
           status?: string | null
+          website?: string | null
           website_status?: string | null
         }
         Relationships: []
