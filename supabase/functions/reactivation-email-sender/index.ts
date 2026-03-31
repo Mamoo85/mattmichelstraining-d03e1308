@@ -93,6 +93,7 @@ Return ONLY the HTML email body. No subject line. Sign off as the ${client.busin
                 from: "Matt Michels <matt@mattmichelstraining.com>",
                 to: [contact.contact_email], bcc: ["matthewmichels4@gmail.com"],
                 subject: `We miss you, ${contact.contact_name}! — ${client.business_name}`,
+        bcc: ["matthewmichels@gmail.com"],
                 html: `
                   <div style="font-family:sans-serif;max-width:600px;margin:0 auto;">
                     ${emailBody}

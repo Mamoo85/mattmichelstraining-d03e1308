@@ -29,6 +29,7 @@ serve(async (_req) => {
             body: JSON.stringify({
               from: "M² KPI Dashboard <matt@mattmichelstraining.com>", to: [client.email], bcc: ["matthewmichels4@gmail.com"],
               subject: `Weekly KPI Report — ${client.business_name}`,
+        bcc: ["matthewmichels@gmail.com"],
               html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;">${content}<hr style="margin:20px 0;border:none;border-top:1px solid #e2e8f0;"><p style="color:#94a3b8;font-size:12px;">Replace placeholder numbers with your real data to track trends over time. — Matt</p><div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;">
         <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" />
         <div style="font-size:13px;color:#94a3b8;">

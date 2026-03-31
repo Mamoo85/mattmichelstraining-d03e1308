@@ -80,6 +80,7 @@ serve(async (_req) => {
             from: "Matt Michels <matt@mattmichelstraining.com>",
             to: [email], bcc: ["matthewmichels4@gmail.com"],
             subject: `Quick idea for ${client.business_name}`,
+        bcc: ["matthewmichels@gmail.com"],
             html: `<div style="font-family:sans-serif;max-width:500px;padding:20px;">${body.replace(/\n/g, "<br>")}<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;">
         <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" />
         <div style="font-size:13px;color:#94a3b8;">

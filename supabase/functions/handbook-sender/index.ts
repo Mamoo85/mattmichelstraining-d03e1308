@@ -81,6 +81,7 @@ Format as a clean HTML email with sections, bullet points, and action items. Use
             from: "M² Development <matt@mattmichelstraining.com>",
             to: [client.email], bcc: ["matthewmichels4@gmail.com"],
             subject: `${client.business_name} — Monthly Employee Handbook Update`,
+        bcc: ["matthewmichels@gmail.com"],
             html: `<div style="font-family:Arial,sans-serif;max-width:700px;margin:0 auto;background:#1a1a2e;color:#e0e0e0;padding:32px;border-radius:12px;">
               <div style="text-align:center;margin-bottom:24px;">
                 <h1 style="color:#e8621a;margin:0;">Employee Handbook Update</h1>

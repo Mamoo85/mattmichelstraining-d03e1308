@@ -198,6 +198,16 @@ const AIOshaCompliance = lazyRetry(() => import("./pages/AIOshaCompliance"));
 const AICollections = lazyRetry(() => import("./pages/AICollections"));
 const AIInventoryAlerts = lazyRetry(() => import("./pages/AIInventoryAlerts"));
 const AIBirthdayCampaign = lazyRetry(() => import("./pages/AIBirthdayCampaign"));
+const LinkedInOutreach = lazyRetry(() => import("./pages/LinkedInOutreach"));
+const AbandonedCartRecovery = lazyRetry(() => import("./pages/AbandonedCartRecovery"));
+const ClientReportGenerator = lazyRetry(() => import("./pages/ClientReportGenerator"));
+const RestaurantMenuCopy = lazyRetry(() => import("./pages/RestaurantMenuCopy"));
+const InsuranceFollowUpDrip = lazyRetry(() => import("./pages/InsuranceFollowUpDrip"));
+const PodcastPitchService = lazyRetry(() => import("./pages/PodcastPitchService"));
+const TradeShowFollowUp = lazyRetry(() => import("./pages/TradeShowFollowUp"));
+const TestimonialHarvester = lazyRetry(() => import("./pages/TestimonialHarvester"));
+const NewMoverMarketing = lazyRetry(() => import("./pages/NewMoverMarketing"));
+const AnnualBusinessReview = lazyRetry(() => import("./pages/AnnualBusinessReview"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -469,6 +479,16 @@ const App = () => (
                     <Route path="/ai-collections" element={<AICollections />} />
                     <Route path="/ai-inventory-alerts" element={<AIInventoryAlerts />} />
                     <Route path="/ai-birthday-campaign" element={<AIBirthdayCampaign />} />
+                    <Route path="/linkedin-outreach" element={<LinkedInOutreach />} />
+                    <Route path="/abandoned-cart-recovery" element={<AbandonedCartRecovery />} />
+                    <Route path="/client-report-generator" element={<ClientReportGenerator />} />
+                    <Route path="/restaurant-menu-copy" element={<RestaurantMenuCopy />} />
+                    <Route path="/insurance-follow-up-drip" element={<InsuranceFollowUpDrip />} />
+                    <Route path="/podcast-pitch-service" element={<PodcastPitchService />} />
+                    <Route path="/trade-show-follow-up" element={<TradeShowFollowUp />} />
+                    <Route path="/testimonial-harvester" element={<TestimonialHarvester />} />
+                    <Route path="/new-mover-marketing" element={<NewMoverMarketing />} />
+                    <Route path="/annual-business-review" element={<AnnualBusinessReview />} />
                     <Route path="/partners" element={<B2BPartnerPortal />} />
                     <Route path="/sports-camps" element={<CampDirectory />} />
                     <Route path="/free-program" element={<FreeProgram />} />
