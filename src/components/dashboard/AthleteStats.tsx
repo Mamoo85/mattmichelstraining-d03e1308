@@ -138,7 +138,7 @@ export default function AthleteStats({
               </div>
             ))}
           </div>
-          <div className="text-[9px] font-bold uppercase tracking-wider" style={{ color: "#737373" }}>
+          <div className="text-xs font-bold uppercase tracking-wider" style={{ color: "#737373" }}>
             {sessionsThisWeek} / 7 days
           </div>
         </button>
