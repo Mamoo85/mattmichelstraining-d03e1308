@@ -168,6 +168,11 @@ const AIPriceMonitor = lazyRetry(() => import("./pages/AIPriceMonitor"));
 const AIMeetingPrep = lazyRetry(() => import("./pages/AIMeetingPrep"));
 const AIDirectorySubmitter = lazyRetry(() => import("./pages/AIDirectorySubmitter"));
 const M2Development = lazyRetry(() => import("./pages/M2Development"));
+const AIHandbook = lazyRetry(() => import("./pages/AIHandbook"));
+const AIGrantFinder = lazyRetry(() => import("./pages/AIGrantFinder"));
+const AIReviewResponse = lazyRetry(() => import("./pages/AIReviewResponse"));
+const AIBattlecard = lazyRetry(() => import("./pages/AIBattlecard"));
+const AIMarketIntel = lazyRetry(() => import("./pages/AIMarketIntel"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
