@@ -395,7 +395,7 @@ SUBJECT: [subject line]
 ---
 [email body]`;
 
-        const aiRes = await fetch("https://api.lovable.ai/openai/v1/chat/completions", {
+        const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${LOVABLE_API_KEY}` },
           body: JSON.stringify({
