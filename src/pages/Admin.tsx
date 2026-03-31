@@ -385,6 +385,7 @@ const Admin = () => {
             { key: "gift-cards", label: "Gift Cards", content: <AdminGiftCards /> },
             { key: "guides", label: "Playbooks Store", content: <AdminGuideStore /> },
             { key: "affiliates", label: "Affiliates", content: <AdminAffiliateManager /> },
+            { key: "legal", label: "Legal & Compliance", content: <AdminLegalCompliance /> },
             { key: "trash", label: <span className="flex items-center gap-1"><Trash2 size={11} /> Trash{trashCount > 0 && <Badge variant="secondary" className="text-[8px] px-1.5 py-0 min-w-[18px] h-4">{trashCount}</Badge>}</span>, content: <AdminTrash /> },
           ]} />
         )}
