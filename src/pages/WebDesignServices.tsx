@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Phone, ArrowRight, CheckCircle, TrendingUp, MapPin,
   BarChart3, Star, FileSearch, MessageSquare, RefreshCw,
-  Calendar, Users, Mail, Globe, Zap, DollarSign, Wrench
+  Calendar, Users, Mail, Globe, Wrench
 } from "lucide-react";
 
 const PHONE = "(313) 806-4952";
