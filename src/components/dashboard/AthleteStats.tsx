@@ -109,10 +109,10 @@ export default function AthleteStats({
           <div className="font-oswald text-3xl font-black leading-none" style={{ color: streakStyle.color }}>
             {animatedStreak}
           </div>
-          <div className="text-[9px] font-bold uppercase tracking-wider mt-1" style={{ color: streakStyle.color, opacity: 0.7 }}>
-            Day Streak
+          <div className="text-xs font-bold uppercase tracking-wider mt-1" style={{ color: streakStyle.color, opacity: 0.7 }}>
+            Streak
           </div>
-          <div className="text-[8px] font-semibold mt-0.5" style={{ color: streakStyle.color, opacity: 0.55 }}>
+          <div className="text-xs font-semibold mt-0.5" style={{ color: streakStyle.color, opacity: 0.55 }}>
             {streakStyle.label}
           </div>
         </button>
@@ -127,7 +127,7 @@ export default function AthleteStats({
             {DAY_LABELS.map((d, i) => (
               <div key={i} className="flex flex-col items-center gap-0.5">
                 <div
-                  className={`w-4 h-4 rounded-sm flex items-center justify-center text-[7px] font-black transition-all ${
+                  className={`w-4 h-4 rounded-sm flex items-center justify-center text-xs font-black transition-all ${
                     i < weekDots
                       ? 'bg-green-500 text-black shadow-[0_0_6px_rgba(34,197,94,0.5)]'
                       : 'bg-white/8 text-white/25'
@@ -138,7 +138,7 @@ export default function AthleteStats({
               </div>
             ))}
           </div>
-          <div className="text-[9px] font-bold uppercase tracking-wider" style={{ color: "#737373" }}>
+          <div className="text-xs font-bold uppercase tracking-wider" style={{ color: "#737373" }}>
             {sessionsThisWeek} / 7 days
           </div>
         </button>
@@ -157,11 +157,11 @@ export default function AthleteStats({
               ? `${(animatedPoints / 1000).toFixed(1)}k`
               : animatedPoints}
           </div>
-          <div className="text-[9px] font-bold uppercase tracking-wider mt-0.5" style={{ color: "#a855f7", opacity: 0.7 }}>
+          <div className="text-xs font-bold uppercase tracking-wider mt-0.5" style={{ color: "#a855f7", opacity: 0.7 }}>
             {levelLabel}
           </div>
           {nextLevelLabel && ptsToNext !== null && (
-            <div className="text-[8px] mt-0.5" style={{ color: "#737373" }}>
+            <div className="text-xs mt-0.5" style={{ color: "#737373" }}>
               {ptsToNext.toLocaleString()} to {nextLevelLabel}
             </div>
           )}
@@ -170,16 +170,16 @@ export default function AthleteStats({
 
       {/* Motivational tagline + progress bar */}
       <div className="px-1 space-y-2">
-        <p className="text-[11px] font-semibold italic" style={{ color: "#525252" }}>
+        <p className="text-xs font-semibold italic" style={{ color: "#525252" }}>
           {motivation}
         </p>
         <div className="space-y-1">
           <div className="flex justify-between items-center">
-            <span className="text-[10px] font-black uppercase tracking-widest flex items-center gap-1" style={{ color: "#f97316" }}>
-              <Target size={10} /> {levelLabel}
+            <span className="text-xs font-black uppercase tracking-widest flex items-center gap-1" style={{ color: "#f97316" }}>
+              <Target size={12} /> {levelLabel}
             </span>
             {nextLevelLabel && (
-              <span className="text-[9px]" style={{ color: "#404040" }}>{nextLevelLabel} →</span>
+              <span className="text-xs" style={{ color: "#404040" }}>{nextLevelLabel} →</span>
             )}
           </div>
           <div className="h-1.5 w-full rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>

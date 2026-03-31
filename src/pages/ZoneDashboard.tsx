@@ -6,13 +6,13 @@ import { usePoints, getLevelInfo, getNextLevel } from "@/hooks/usePoints";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import {
-  User, UserPlus, Timer, Mic, ArrowLeft, Dumbbell, Trophy,
-  Sparkles, Wrench, BookOpen, Utensils, BarChart3, Target,
-  Loader2, MessageCircle, Zap, ChevronRight,
+  User, UserPlus, Timer, Mic, ArrowLeft,
+  Trophy, Sparkles, Wrench, Utensils, BarChart3, Target,
+  Loader2, MessageCircle, Zap,
 } from "lucide-react";
 import ZoneThemeWrapper from "@/components/zone/ZoneThemeWrapper";
 import AthleteStats from "@/components/dashboard/AthleteStats";
-import TodayCard from "@/components/dashboard/TodayCard";
+import AthleteProfileCard from "@/components/dashboard/AthleteProfileCard";
 import CoachActivityBanner from "@/components/dashboard/CoachActivityBanner";
 import logoImg from "@/assets/m2-logo-zone.png";
 import { safeLocalStorage } from "@/lib/browserStorage";
@@ -74,6 +74,20 @@ const ZoneDashboard = () => {
   const [generatorView, setGeneratorView] = useState<GeneratorView>(null);
   const [activeTip, setActiveTip] = useState<FeatureTip | null>(null);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+
+  // Browser back button support for overlays
+  const openOverlay = useCallback((view: GeneratorView) => {
+    setGeneratorView(view);
+    if (view) window.history.pushState({ overlay: view }, "", `#${view}`);
+  }, []);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setGeneratorView(null);
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -194,28 +208,28 @@ const ZoneDashboard = () => {
     },
   ];
 
-  // Feature Hub — 2-col grid with descriptions
+  // Feature Hub — 2-col grid (removed Library & Workouts duplicates)
   const HUB_ITEMS = [
     {
       label: "Programs",
       desc: "Your training plan",
       icon: <Target size={20} />,
       color: "#f97316",
-      action: () => setGeneratorView("programs"),
+      action: () => openOverlay("programs"),
     },
     {
       label: "Generator",
       desc: "Build custom workouts",
       icon: <Sparkles size={20} />,
       color: "#a855f7",
-      action: () => withTip(WORKOUT_GENERATOR_TIP, () => setGeneratorView("workout")),
+      action: () => withTip(WORKOUT_GENERATOR_TIP, () => openOverlay("workout")),
     },
     {
       label: "Fix It",
       desc: "Pain relief & rehab",
       icon: <Wrench size={20} />,
       color: "#00f0ff",
-      action: () => withTip(FIXIT_ENGINE_TIP, () => setGeneratorView("fixit")),
+      action: () => withTip(FIXIT_ENGINE_TIP, () => openOverlay("fixit")),
     },
     {
       label: "Nutrition",
@@ -225,18 +239,11 @@ const ZoneDashboard = () => {
       action: () => navigate("/nutrition-plan"),
     },
     {
-      label: "Library",
-      desc: "Browse all workouts",
-      icon: <BookOpen size={20} />,
-      color: "#ec4899",
-      action: () => navigate("/dashboard"),
-    },
-    {
       label: "Challenges",
       desc: "Compete for points",
       icon: <Zap size={20} />,
       color: "#eab308",
-      action: () => setGeneratorView("challenge"),
+      action: () => openOverlay("challenge"),
     },
     {
       label: "Progress",
@@ -244,13 +251,6 @@ const ZoneDashboard = () => {
       icon: <BarChart3 size={20} />,
       color: "#3b82f6",
       action: () => navigate("/progress"),
-    },
-    {
-      label: "Workouts",
-      desc: "Saved & recent",
-      icon: <Dumbbell size={20} />,
-      color: "#64748b",
-      action: () => navigate("/dashboard"),
     },
   ];
 
@@ -274,7 +274,7 @@ const ZoneDashboard = () => {
             <img src={logoImg} alt="M²" className="h-8 w-8 object-contain" />
           </button>
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.25em]" style={{ color: "#f97316" }}>THE ZONE</p>
+            <p className="text-xs font-bold uppercase tracking-[0.25em]" style={{ color: "#f97316" }}>THE ZONE</p>
             <p className="text-sm font-semibold leading-tight" style={{ color: "#fafafa" }}>{displayName}</p>
           </div>
         </div>
@@ -321,18 +321,22 @@ const ZoneDashboard = () => {
         {/* Coach banner — Pro/Elite only */}
         {isProOrElite && <CoachActivityBanner />}
 
-        {/* Today's Workout */}
-        <TodayCard
+        {/* Athlete Profile Card */}
+        <AthleteProfileCard
+          displayName={displayName}
+          streak={streak}
+          totalPoints={totalPoints}
+          levelLabel={levelInfo.label}
+          hasActiveWorkout={hasActiveWorkout}
           workoutName={workoutName}
           phase={phase}
-          day={currentDay}
-          hasWorkout={hasActiveWorkout}
-          onClick={() => window.dispatchEvent(new Event("open-workout-zone"))}
+          currentDay={currentDay}
+          onStartWorkout={() => window.dispatchEvent(new Event("open-workout-zone"))}
         />
 
         {/* Quick Actions */}
         <section>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-2.5 px-1" style={{ color: "#404040" }}>
+          <p className="text-xs font-black uppercase tracking-[0.2em] mb-2.5 px-1" style={{ color: "#404040" }}>
             Quick Actions
           </p>
           <div className="grid grid-cols-4 gap-2">
@@ -353,10 +357,10 @@ const ZoneDashboard = () => {
                   {item.icon}
                 </div>
                 <div className="text-center">
-                  <div className="text-[11px] font-bold leading-tight" style={{ color: "#d4d4d4" }}>
+                  <div className="text-xs font-bold leading-tight" style={{ color: "#d4d4d4" }}>
                     {item.label}
                   </div>
-                  <div className="text-[9px] leading-tight mt-0.5" style={{ color: "#525252" }}>
+                  <div className="text-xs leading-tight mt-0.5" style={{ color: "#525252" }}>
                     {item.desc}
                   </div>
                 </div>
@@ -368,40 +372,52 @@ const ZoneDashboard = () => {
         {/* Feature Hub */}
         <section>
           <div className="flex items-center justify-between mb-2.5 px-1">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: "#404040" }}>
+            <p className="text-xs font-black uppercase tracking-[0.2em]" style={{ color: "#404040" }}>
               Your Hub
             </p>
-            <span className="text-[9px]" style={{ color: "#303030" }}>Tap anything to explore</span>
+            <span className="text-xs" style={{ color: "#303030" }}>Tap to explore</span>
           </div>
           <div className="grid grid-cols-2 gap-2">
             {HUB_ITEMS.map((item) => (
               <button
                 key={item.label}
                 onClick={item.action}
-                className="flex items-center gap-3 rounded-2xl p-3.5 text-left transition-all active:scale-[0.97] group"
+                className="flex items-center gap-2.5 rounded-2xl p-3 text-left transition-all active:scale-[0.97] group"
                 style={{
                   background: `${item.color}09`,
                   border: `1px solid ${item.color}1e`,
                 }}
               >
                 <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                  className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
                   style={{ background: `${item.color}18`, color: item.color }}
                 >
                   {item.icon}
                 </div>
-                <div className="min-w-0">
-                  <div className="text-[12px] font-bold truncate" style={{ color: "#e5e5e5" }}>
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs font-bold" style={{ color: "#e5e5e5" }}>
                     {item.label}
                   </div>
-                  <div className="text-[10px] leading-tight mt-0.5 truncate" style={{ color: "#525252" }}>
+                  <div className="text-xs leading-tight mt-0.5" style={{ color: "#525252" }}>
                     {item.desc}
                   </div>
                 </div>
-                <ChevronRight size={12} className="ml-auto flex-shrink-0 opacity-0 group-hover:opacity-40 transition-opacity" style={{ color: item.color }} />
               </button>
             ))}
           </div>
+
+          {/* Install App prompt */}
+          {!window.matchMedia("(display-mode: standalone)").matches && (
+            <button
+              onClick={() => navigate("/install")}
+              className="w-full flex items-center justify-center gap-2 rounded-xl py-3 mt-2 transition-all active:scale-[0.98]"
+              style={{ background: "rgba(249,115,22,0.08)", border: "1px solid rgba(249,115,22,0.15)" }}
+            >
+              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "#f97316" }}>
+                📲 Install the M² App
+              </span>
+            </button>
+          )}
         </section>
 
       </main>
@@ -414,7 +430,7 @@ const ZoneDashboard = () => {
             style={{ background: "rgba(10,10,10,0.95)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}
           >
             <button
-              onClick={() => setGeneratorView(null)}
+              onClick={() => { setGeneratorView(null); window.history.back(); }}
               className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest transition-colors"
               style={{ color: "#525252" }}
             >
