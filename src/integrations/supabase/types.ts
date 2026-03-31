@@ -6343,6 +6343,42 @@ export type Database = {
         }
         Relationships: []
       }
+      web_design_leads: {
+        Row: {
+          business: string | null
+          created_at: string
+          description: string | null
+          email: string | null
+          id: string
+          name: string | null
+          notes: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          business?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          id?: string
+          name?: string | null
+          notes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          business?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          id?: string
+          name?: string | null
+          notes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       website_copy_clients: {
         Row: {
           active: boolean | null
