@@ -1,60 +1,45 @@
 
 
-# Draft-and-Hold AI Customer Acquisition Engine
+# Fix Build Error + SQL Migration
 
-This builds on the existing `outreach_leads` table and `AdminOutreach.tsx` — no new `prospects` table needed since `outreach_leads` already serves this purpose. The user's "CRITICAL ISOLATION RULE" is already satisfied: `outreach_leads` is completely separate from `users`, `profiles`, and `b2b_clients`.
+## Issue 1: `process-email-queue` Build Error
+The `process-email-queue` Edge Function imports `npm:@lovable.dev/email-js` which cannot resolve. This is a **Lovable-managed email infrastructure function** — it needs to be regenerated using the email infrastructure setup tool, not manually edited.
 
----
+**Fix**: Run the `setup_email_infra` tool to regenerate the function with correct dependencies.
 
-## Step 1: Database Migration
+## Issue 2: `seo_page_configs` SQL Migration Syntax Error
+The migration file `20260331000001_seo_page_configs.sql` is failing. The table likely already exists in the database from a prior manual run. 
 
-Add 3 columns to `outreach_leads`:
-- `ai_drafted_subject TEXT` — AI-generated subject line
-- `ai_drafted_pitch TEXT` — AI-generated email body
-- `ai_drafted_at TIMESTAMPTZ` — when draft was generated
+**Fix**: Create a new migration that uses `DO $$ ... IF NOT EXISTS` guards around both the table creation and the policy creation to make it idempotent:
 
-Add `awaiting_approval` as a valid Kanban status in the UI (no enum constraint exists, status is a text column).
+```sql
+CREATE TABLE IF NOT EXISTS public.seo_page_configs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  trade TEXT NOT NULL,
+  city TEXT NOT NULL,
+  slug TEXT NOT NULL,
+  page_data JSONB NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
 
-## Step 2: Fix Build Error
+ALTER TABLE public.seo_page_configs ENABLE ROW LEVEL SECURITY;
 
-Fix `process-email-queue/deno.json` — remove the broken `esm.sh` import map. The `nodeModulesDir: auto` setting already handles `npm:` specifiers natively.
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'seo_page_configs' AND policyname = 'service_role_seo_page_configs'
+  ) THEN
+    CREATE POLICY "service_role_seo_page_configs"
+      ON public.seo_page_configs FOR ALL TO service_role USING (true) WITH CHECK (true);
+  END IF;
+END $$;
+```
 
-## Step 3: Update `generate-audit-pitch` Edge Function
-
-- Migrate from direct Anthropic API to Lovable AI Gateway (`google/gemini-2.5-flash-lite`)
-- Accept an optional `leadId` parameter
-- Generate both a subject line and email body
-- When `leadId` is provided: save `ai_drafted_subject`, `ai_drafted_pitch`, `ai_drafted_at` to the lead row and set `status = 'awaiting_approval'`
-- When no `leadId`: return the email text as before (backward compatible)
-
-## Step 4: Create `send-approved-pitch` Edge Function
-
-New function at `supabase/functions/send-approved-pitch/index.ts`:
-- Accepts `leadId` + optional edited `subject` and `body`
-- Fetches the lead from `outreach_leads`
-- Validates the lead has an email address and a draft
-- Sends via Resend from `matt@mattmichelstraining.com`, BCC `matthewmichels4@gmail.com`
-- Updates status to `contacted` and sets `last_contact_date`
-- Returns success/failure with proper CORS
-
-## Step 5: Update `AdminOutreach.tsx`
-
-- Add `awaiting_approval` column to the Kanban board (between AI Audited and Contacted)
-- Update the `Lead` interface with the 3 new columns
-- Add an **Approval Queue** section above the Kanban: fetches leads with `status = 'awaiting_approval'`
-- Each approval card shows: business name, city, industry, editable subject input, editable body textarea
-- "Send Email" button calls `send-approved-pitch` edge function
-- "Reject" button moves status back to `lead_found`
-- Update the existing "Audit Pitch" modal to also save drafts to DB (calls `generate-audit-pitch` with `leadId`)
-- Loading states and error toasts on all actions
+Delete the broken migration file and apply this corrected version.
 
 ## File Changes
 
 | File | Action |
 |------|--------|
-| Migration | Add 3 columns to `outreach_leads` |
-| `supabase/functions/process-email-queue/deno.json` | Fix broken import map |
-| `supabase/functions/generate-audit-pitch/index.ts` | Rewrite: Lovable AI + save to DB |
-| `supabase/functions/send-approved-pitch/index.ts` | New: 1-click send via Resend |
-| `src/components/admin/AdminOutreach.tsx` | Add approval queue + send button |
+| `supabase/functions/process-email-queue/*` | Regenerate via email infra tool |
+| `supabase/migrations/20260331000001_seo_page_configs.sql` | Replace with idempotent version |
 
