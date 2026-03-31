@@ -362,6 +362,57 @@ export type Database = {
         }
         Relationships: []
       }
+      b2b_clients: {
+        Row: {
+          business_name: string
+          city: string | null
+          created_at: string
+          email: string
+          id: string
+          industry: string | null
+          notes: string | null
+          owner_name: string | null
+          phone: string | null
+          source: string | null
+          state: string | null
+          stripe_customer_id: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          business_name: string
+          city?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          industry?: string | null
+          notes?: string | null
+          owner_name?: string | null
+          phone?: string | null
+          source?: string | null
+          state?: string | null
+          stripe_customer_id?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          business_name?: string
+          city?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          industry?: string | null
+          notes?: string | null
+          owner_name?: string | null
+          phone?: string | null
+          source?: string | null
+          state?: string | null
+          stripe_customer_id?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       battlecard_clients: {
         Row: {
           active: boolean | null
@@ -4807,6 +4858,56 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      service_subscriptions: {
+        Row: {
+          admin_notes: string | null
+          cancelled_at: string | null
+          client_id: string
+          fulfillment_stage: string
+          id: string
+          monthly_price: number | null
+          service_type: string
+          started_at: string
+          status: string
+          stripe_subscription_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          cancelled_at?: string | null
+          client_id: string
+          fulfillment_stage?: string
+          id?: string
+          monthly_price?: number | null
+          service_type: string
+          started_at?: string
+          status?: string
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          cancelled_at?: string | null
+          client_id?: string
+          fulfillment_stage?: string
+          id?: string
+          monthly_price?: number | null
+          service_type?: string
+          started_at?: string
+          status?: string
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_subscriptions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "b2b_clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       session_bookings: {
         Row: {
