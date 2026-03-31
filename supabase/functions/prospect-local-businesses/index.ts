@@ -148,8 +148,13 @@ ${bodyHtml}
 </div>`,
       }),
     });
+    if (!res.ok) {
+      const errBody = await res.text();
+      console.error(`[PROSPECTOR] Resend error ${res.status}: ${errBody}`);
+    }
     return res.ok;
-  } catch {
+  } catch (err) {
+    console.error(`[PROSPECTOR] Send error: ${err}`);
     return false;
   }
 }
