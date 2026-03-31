@@ -114,7 +114,7 @@ Click **Done** → **Next** → **Publish Campaign**
 1. Go to **business.facebook.com**
 2. Click **Create Account**
 3. Enter:
-   - Business name: "M² Training" (or your LLC name)
+   - Business name: "M² Development"
    - Your name: Matt Michels
    - Email: matthewmichels4@gmail.com
 4. Verify email
@@ -127,7 +127,7 @@ Click **Done** → **Next** → **Publish Campaign**
 
 ### Step 3: Create Facebook Page (if you don't have one)
 1. Go to **facebook.com/pages/create**
-2. Page name: "M² B2B Solutions" (or whatever you want)
+2. Page name: "M² Development"
 3. Category: Business Service
 4. Upload a profile picture (your logo or headshot)
 5. Click **Create Page**
@@ -234,9 +234,9 @@ Click **Publish**
 3. Sign in with LinkedIn (or create account)
 4. Select **Create an ad account**
 5. Fill out:
-   - Account name: "M² Content Services"
+   - Account name: "M² Development"
    - Currency: USD
-   - Company: Select or create "M² Training"
+   - Company: Select or create "M² Development"
 
 ### Step 2: Add Payment Method
 1. In Campaign Manager → Click **Account Assets** → **Billing**

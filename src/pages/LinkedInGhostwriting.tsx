@@ -60,7 +60,7 @@ export default function LinkedInGhostwriting() {
         <div className="bg-[#1e293b] text-white px-6 py-14 text-center">
           <div className="flex items-center justify-center gap-2 mb-3">
             <Linkedin size={16} className="text-primary" />
-            <p className="text-[11px] font-bold uppercase tracking-widest text-primary">M² LinkedIn Content</p>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-primary">M² Development</p>
           </div>
           <h1 className="text-3xl font-black mb-4">
             5 LinkedIn posts per week.<br />Written in your voice.<br />Delivered every Monday.

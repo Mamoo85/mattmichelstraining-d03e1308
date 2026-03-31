@@ -230,7 +230,7 @@ export default function IndustrialDatabase() {
       <SEOHead title="Industrial Supplier Database — $99/month | M² B2B Leads" description="Every machine shop, metal fabricator, and industrial supplier in the Midwest. Updated weekly. Browse, filter, and export." />
       <div className="min-h-screen bg-background text-foreground">
         <div className="bg-[#1e293b] text-white px-6 py-14 text-center">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">M² B2B Intelligence</p>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">M² Development</p>
           <h1 className="text-3xl font-black mb-4">Every industrial supplier<br />in the Midwest.</h1>
           <p className="text-slate-300 max-w-xl mx-auto text-sm leading-relaxed">
             {totalCount > 0 ? `${totalCount.toLocaleString()} verified` : "Thousands of"} machine shops, metal fabricators, CNC shops, injection molders, tool & die shops, and industrial equipment suppliers — with name, phone, email, address, and Google rating. Updated weekly. Export to CSV anytime.
