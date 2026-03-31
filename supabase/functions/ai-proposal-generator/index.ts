@@ -10,7 +10,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 
 const FROM_EMAIL = "Matt Michels <matt@notify.m2training.com>";
@@ -18,8 +18,7 @@ const FROM_EMAIL = "Matt Michels <matt@notify.m2training.com>";
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+  "Access-Control-Allow-Methods": "POST, OPTIONS" };
 
 interface ProposalRequest {
   clientEmail: string;
@@ -43,32 +42,26 @@ async function generateProposal(
   client: ProposalClient,
   req: ProposalRequest,
 ): Promise<string> {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
-      "x-api-key": ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-      "content-type": "application/json",
-    },
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 1000,
+      model: "google/gemini-2.5-flash-lite", 
       messages: [
         {
           role: "user",
-          content: `Write a professional business proposal for ${client.business_name} to send to client '${req.clientName}'. Project: ${req.projectName}. Scope: ${req.projectScope}. Budget range: ${req.budget || "TBD"}. Timeline: ${req.timeline || "To be determined"}. Include: executive summary, scope of work, deliverables, timeline, investment (use the budget range), terms, and a professional call to action. Format as HTML with proper headings and sections.`,
-        },
-      ],
-    }),
-  });
+          content: `Write a professional business proposal for ${client.business_name} to send to client '${req.clientName}'. Project: ${req.projectName}. Scope: ${req.projectScope}. Budget range: ${req.budget || "TBD"}. Timeline: ${req.timeline || "To be determined"}. Include: executive summary, scope of work, deliverables, timeline, investment (use the budget range), terms, and a professional call to action. Format as HTML with proper headings and sections.` },
+      ] }) });
 
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`Anthropic API error: ${err}`);
+    throw new Error(`AI API error: ${err}`);
   }
 
   const data = await res.json();
-  return data.content?.[0]?.text || "";
+  return data?.choices?.[0]?.message?.content || "";
 }
 
 function wrapProposalHtml(
@@ -129,10 +122,8 @@ async function sendEmail(
     method: "POST",
     headers: {
       Authorization: `Bearer ${RESEND_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ from: FROM_EMAIL, to, subject, html }),
-  });
+      "Content-Type": "application/json" },
+    body: JSON.stringify({ from: FROM_EMAIL, to, subject, html }) });
   if (!res.ok) {
     const err = await res.text();
     throw new Error(`Resend error: ${err}`);
@@ -147,8 +138,7 @@ serve(async (req) => {
   if (req.method !== "POST") {
     return new Response(JSON.stringify({ ok: false, error: "Method not allowed" }), {
       status: 405,
-      headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
-    });
+      headers: { ...CORS_HEADERS, "Content-Type": "application/json" } });
   }
 
   try {
@@ -158,8 +148,7 @@ serve(async (req) => {
     } catch {
       return new Response(JSON.stringify({ ok: false, error: "Invalid JSON body" }), {
         status: 400,
-        headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
-      });
+        headers: { ...CORS_HEADERS, "Content-Type": "application/json" } });
     }
 
     const { clientEmail, projectName, clientName, projectScope, budget, timeline, prospectEmail } =
@@ -169,8 +158,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({
           ok: false,
-          error: "Missing required fields: clientEmail, projectName, clientName, projectScope",
-        }),
+          error: "Missing required fields: clientEmail, projectName, clientName, projectScope" }),
         { status: 400, headers: { ...CORS_HEADERS, "Content-Type": "application/json" } },
       );
     }
@@ -220,13 +208,11 @@ serve(async (req) => {
       .eq("id", client.id);
 
     return new Response(JSON.stringify({ ok: true }), {
-      headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
-    });
+      headers: { ...CORS_HEADERS, "Content-Type": "application/json" } });
   } catch (err) {
     console.error("Fatal error:", err);
     return new Response(JSON.stringify({ ok: false, error: (err as Error).message }), {
       status: 500,
-      headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
-    });
+      headers: { ...CORS_HEADERS, "Content-Type": "application/json" } });
   }
 });

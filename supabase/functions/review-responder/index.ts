@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 
 interface Review {
@@ -32,7 +32,7 @@ async function draftResponse(businessName: string, review: Review): Promise<stri
   const reviewerName = review.reviewer.displayName || "there";
   const reviewText = review.comment || "";
 
-  if (!ANTHROPIC_API_KEY) {
+  if (!LOVABLE_API_KEY) {
     if (stars >= 4) return `Thank you so much for your kind words, ${reviewerName}! We truly appreciate you taking the time to share your experience with ${businessName}. It means a lot to our team!`;
     return `Thank you for your feedback, ${reviewerName}. We're sorry your experience didn't meet expectations. We'd love the opportunity to make it right — please reach out to us directly so we can address your concerns.`;
   }
@@ -41,22 +41,17 @@ async function draftResponse(businessName: string, review: Review): Promise<stri
     ? `Write a warm, genuine Google review response for ${businessName}. The customer (${reviewerName}) left a ${stars}-star review: "${reviewText}". Keep it under 400 characters. Sound like a real local business owner — grateful, personal, not robotic. Do not use exclamation points excessively.`
     : `Write a professional, de-escalating Google review response for ${businessName}. The customer (${reviewerName}) left a ${stars}-star review: "${reviewText}". Keep it under 400 characters. Acknowledge their concern, apologize sincerely, and invite them to contact you directly to resolve the issue. Sound human, not like a PR department.`;
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
-      "x-api-key": ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-      "content-type": "application/json",
-    },
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 200,
-      messages: [{ role: "user", content: prompt }],
-    }),
-  });
+      model: "google/gemini-2.5-flash-lite", 
+      messages: [{ role: "user", content: prompt }] }) });
 
   const data = await res.json();
-  const text = data.content?.[0]?.text?.trim() || "";
+  const text = data?.choices?.[0]?.message?.content?.trim() || "";
   return text.slice(0, 400);
 }
 
@@ -68,10 +63,8 @@ async function postReply(locationId: string, reviewId: string, accessToken: stri
         method: "PUT",
         headers: {
           Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ comment }),
-      }
+          "Content-Type": "application/json" },
+        body: JSON.stringify({ comment }) }
     );
     return res.ok;
   } catch {
@@ -117,9 +110,7 @@ async function sendWeeklySummary(client: any, reviewCount: number, responseCount
             </div>
           </div>
         </div>
-      `,
-    }),
-  });
+      ` }) });
 }
 
 serve(async (req) => {
@@ -171,8 +162,7 @@ serve(async (req) => {
       await sb.from("review_responder_clients").update({
         last_checked_at: now.toISOString(),
         response_count: updatedResponseCount,
-        review_count: updatedReviewCount,
-      }).eq("id", client.id);
+        review_count: updatedReviewCount }).eq("id", client.id);
 
       if (isMonday) {
         await sendWeeklySummary(client, updatedReviewCount, updatedResponseCount, newUnreplied.length);

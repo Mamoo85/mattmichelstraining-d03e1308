@@ -3,8 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -14,8 +13,7 @@ serve(async (req) => {
   if (req.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
       status: 405,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+      headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
   try {
@@ -62,26 +60,20 @@ Include these sections in HTML format:
 Use HTML tags: <h2>, <table>, <tr>, <th>, <td>, <p>, <ul>, <li>, <strong>. Make the table use border="1" cellpadding="8" style="border-collapse:collapse;width:100%".
 Keep costs realistic for the ${client.industry} industry in Michigan.`;
 
-    const aiResponse = await fetch("https://api.anthropic.com/v1/messages", {
+    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": Deno.env.get("ANTHROPIC_API_KEY")!,
-        "anthropic-version": "2023-06-01",
-      },
+        Authorization: `Bearer ${LOVABLE_API_KEY}` },
       body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 1000,
-        messages: [{ role: "user", content: prompt }],
-      }),
-    });
+        model: "google/gemini-2.5-flash-lite", 
+        messages: [{ role: "user", content: prompt }] }) });
 
     const aiData = await aiResponse.json();
-    const estimateHtml = aiData.content?.[0]?.text || "Estimate generation failed.";
+    const estimateHtml = aiData?.choices?.[0]?.message?.content || "Estimate generation failed.";
 
     const today = new Date().toLocaleDateString("en-US", {
-      month: "long", day: "numeric", year: "numeric",
-    });
+      month: "long", day: "numeric", year: "numeric" });
 
     const fullEmailHtml = `
 <!DOCTYPE html>
@@ -122,44 +114,36 @@ Keep costs realistic for the ${client.industry} industry in Michigan.`;
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${Deno.env.get("RESEND_API_KEY")}`,
-      },
+        Authorization: `Bearer ${Deno.env.get("RESEND_API_KEY")}` },
       body: JSON.stringify({
         from: `${client.business_name} <matt@notify.m2training.com>`,
         to: [prospectEmail],
         reply_to: clientEmail,
         subject,
-        html: fullEmailHtml,
-      }),
-    });
+        html: fullEmailHtml }) });
 
     // Send copy to client
     await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${Deno.env.get("RESEND_API_KEY")}`,
-      },
+        Authorization: `Bearer ${Deno.env.get("RESEND_API_KEY")}` },
       body: JSON.stringify({
         from: "M² Estimates <matt@notify.m2training.com>",
         to: [clientEmail],
         subject: `[Copy] ${subject} — sent to ${prospectName}`,
-        html: `<p style="background:#e8f5e9;padding:12px;border-radius:4px;"><strong>✅ This estimate was sent to ${prospectName} (${prospectEmail}).</strong></p>${fullEmailHtml}`,
-      }),
-    });
+        html: `<p style="background:#e8f5e9;padding:12px;border-radius:4px;"><strong>✅ This estimate was sent to ${prospectName} (${prospectEmail}).</strong></p>${fullEmailHtml}` }) });
 
     await supabase
       .from("estimate_generator_clients")
       .update({
-        estimate_count: (client.estimate_count || 0) + 1,
-      })
+        estimate_count: (client.estimate_count || 0) + 1 })
       .eq("id", client.id);
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Estimate sent to ${prospectName} at ${prospectEmail} and copy to ${clientEmail}`,
-      }),
+        message: `Estimate sent to ${prospectName} at ${prospectEmail} and copy to ${clientEmail}` }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {

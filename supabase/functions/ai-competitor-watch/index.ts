@@ -3,10 +3,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 
-type AnthropicMessageResponse = {
+type AIMessageResponse = {
   content?: Array<{ text?: string }>;
 };
 
@@ -29,8 +28,7 @@ serve(async (req) => {
     if (clientsError) throw clientsError;
     if (!clients || clients.length === 0) {
       return new Response(JSON.stringify({ message: "No active clients" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+        headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     let processed = 0;
@@ -49,22 +47,17 @@ Include these sections:
 
 Write in professional but accessible language. Use HTML formatting with <h2>, <p>, <ul>, <li>, <strong> tags.`;
 
-      const aiResponse = await fetch("https://api.anthropic.com/v1/messages", {
+      const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": Deno.env.get("ANTHROPIC_API_KEY")!,
-          "anthropic-version": "2023-06-01",
-        },
+          Authorization: `Bearer ${LOVABLE_API_KEY}` },
         body: JSON.stringify({
-          model: "claude-haiku-4-5-20251001",
-          max_tokens: 800,
-          messages: [{ role: "user", content: prompt }],
-        }),
-      });
+          model: "google/gemini-2.5-flash-lite", 
+          messages: [{ role: "user", content: prompt }] }) });
 
-      const aiData = await aiResponse.json() as AnthropicMessageResponse;
-      const reportHtml = aiData.content?.[0]?.text || "Report generation failed.";
+      const aiData = await aiResponse.json() as AIMessageResponse;
+      const reportHtml = aiData?.choices?.[0]?.message?.content || "Report generation failed.";
 
       const emailHtml = `
 <!DOCTYPE html>
@@ -92,15 +85,12 @@ Write in professional but accessible language. Use HTML formatting with <h2>, <p
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${Deno.env.get("RESEND_API_KEY")}`,
-        },
+          Authorization: `Bearer ${Deno.env.get("RESEND_API_KEY")}` },
         body: JSON.stringify({
           from: "M² Competitor Watch <matt@notify.m2training.com>",
           to: [client.email],
           subject: `Competitor Watch Report — ${client.business_name} — ${new Date().toLocaleDateString("en-US", { month: "short", year: "numeric" })}`,
-          html: emailHtml,
-        }),
-      });
+          html: emailHtml }) });
 
       if (!emailRes.ok) {
         console.error(`Failed to email ${client.email}:`, await emailRes.text());
@@ -111,8 +101,7 @@ Write in professional but accessible language. Use HTML formatting with <h2>, <p
         .from("competitor_watch_clients")
         .update({
           report_count: (client.report_count || 0) + 1,
-          last_report_at: new Date().toISOString(),
-        })
+          last_report_at: new Date().toISOString() })
         .eq("id", client.id);
 
       processed++;

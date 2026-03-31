@@ -3,8 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -29,8 +28,7 @@ serve(async (req) => {
 
     if (!clients || clients.length === 0) {
       return new Response(JSON.stringify({ message: "No active reactivation clients" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+        headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     let totalSent = 0;
@@ -52,16 +50,12 @@ serve(async (req) => {
         for (const contact of contacts) {
           try {
             // Generate personalized reactivation email with Claude
-            const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
+            const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
               method: "POST",
               headers: {
-                "x-api-key": Deno.env.get("ANTHROPIC_API_KEY")!,
-                "content-type": "application/json",
-                "anthropic-version": "2023-06-01",
-              },
+                Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
               body: JSON.stringify({
-                model: "claude-haiku-4-5-20251001",
-                max_tokens: 800,
+                model: "google/gemini-2.5-flash-lite", 
                 messages: [
                   {
                     role: "user",
@@ -76,11 +70,8 @@ The email should:
 - Be warm and genuine, not pushy
 - Be under 200 words
 
-Return ONLY the HTML email body. No subject line. Sign off as the ${client.business_name} team.`,
-                  },
-                ],
-              }),
-            });
+Return ONLY the HTML email body. No subject line. Sign off as the ${client.business_name} team.` },
+                ] }) });
 
             if (!aiRes.ok) {
               console.error("Claude API error:", await aiRes.text());
@@ -89,15 +80,14 @@ Return ONLY the HTML email body. No subject line. Sign off as the ${client.busin
             }
 
             const aiData = await aiRes.json();
-            const emailBody = aiData.content[0].text;
+            const emailBody = aiData?.choices?.[0]?.message?.content;
 
             // Send via Resend
             const emailRes = await fetch("https://api.resend.com/emails", {
               method: "POST",
               headers: {
                 Authorization: `Bearer ${Deno.env.get("RESEND_API_KEY")}`,
-                "Content-Type": "application/json",
-              },
+                "Content-Type": "application/json" },
               body: JSON.stringify({
                 from: "Matt Michels <matt@notify.m2training.com>",
                 to: [contact.contact_email],
@@ -106,9 +96,7 @@ Return ONLY the HTML email body. No subject line. Sign off as the ${client.busin
                   <div style="font-family:sans-serif;max-width:600px;margin:0 auto;">
                     ${emailBody}
                   </div>
-                `,
-              }),
-            });
+                ` }) });
 
             if (!emailRes.ok) {
               console.error("Resend error:", await emailRes.text());
@@ -142,7 +130,6 @@ Return ONLY the HTML email body. No subject line. Sign off as the ${client.busin
     console.error("reactivation-email-sender error:", err);
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+      headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

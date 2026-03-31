@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 
 const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
@@ -21,17 +21,15 @@ serve(async (req) => {
 
     let report = "Unable to generate screening report.";
     let score = 5;
-    if (ANTHROPIC_API_KEY) {
-      const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
+    if (LOVABLE_API_KEY) {
+      const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
-        headers: { "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "Content-Type": "application/json" },
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "claude-haiku-4-5-20251001", max_tokens: 800,
-          messages: [{ role: "user", content: `Screen this resume for the position "${jobTitle}" at "${client.business_name}" (${client.industry || "general"}).\n\nResume:\n${resumeText.substring(0, 2000)}\n\nProvide:\n1. SCORE: [1-10] (just the number)\n2. STRENGTHS: (3 bullet points)\n3. CONCERNS: (3 bullet points)\n4. RECOMMENDED INTERVIEW QUESTIONS: (5 questions)\n5. HIRING RECOMMENDATION: (1 sentence)` }],
-        }),
-      });
+          model: "google/gemini-2.5-flash-lite", 
+          messages: [{ role: "user", content: `Screen this resume for the position "${jobTitle}" at "${client.business_name}" (${client.industry || "general"}).\n\nResume:\n${resumeText.substring(0, 2000)}\n\nProvide:\n1. SCORE: [1-10] (just the number)\n2. STRENGTHS: (3 bullet points)\n3. CONCERNS: (3 bullet points)\n4. RECOMMENDED INTERVIEW QUESTIONS: (5 questions)\n5. HIRING RECOMMENDATION: (1 sentence)` }] }) });
       const aiData = await aiRes.json();
-      report = aiData?.content?.[0]?.text || report;
+      report = aiData?.choices?.[0]?.message?.content || report;
       const scoreMatch = report.match(/SCORE:\s*(\d+)/);
       if (scoreMatch) score = parseInt(scoreMatch[1]);
     }
@@ -44,9 +42,7 @@ serve(async (req) => {
         body: JSON.stringify({
           from: "M² Hiring Assistant <matt@notify.m2training.com>", to: [client.email],
           subject: `Candidate Screening: ${candidateName || "New Applicant"} — Score ${score}/10`,
-          html: `<div style="font-family:sans-serif;max-width:600px;padding:20px;"><h2 style="color:#1e293b;">Candidate: ${candidateName || "Unknown"}</h2><p>Position: ${jobTitle}</p><pre style="white-space:pre-wrap;line-height:1.8;font-family:sans-serif;color:#334155;">${report}</pre></div>`,
-        }),
-      });
+          html: `<div style="font-family:sans-serif;max-width:600px;padding:20px;"><h2 style="color:#1e293b;">Candidate: ${candidateName || "Unknown"}</h2><p>Position: ${jobTitle}</p><pre style="white-space:pre-wrap;line-height:1.8;font-family:sans-serif;color:#334155;">${report}</pre></div>` }) });
 
       // If score >= 7 and candidate email provided, auto-email them
       if (score >= 7 && candidateEmail) {
@@ -57,9 +53,7 @@ serve(async (req) => {
             from: `${client.business_name} <matt@notify.m2training.com>`,
             to: [candidateEmail],
             subject: `Thanks for applying — ${jobTitle} at ${client.business_name}`,
-            html: `<p>Hi ${candidateName || "there"},</p><p>Thanks for your interest in the <strong>${jobTitle}</strong> position at ${client.business_name}. We've reviewed your resume and would like to schedule an interview.</p><p>Please reply to this email with your availability over the next week and we'll get something on the calendar.</p><p>Looking forward to speaking with you!</p><p>— ${client.contact_name || client.business_name}</p>`,
-          }),
-        });
+            html: `<p>Hi ${candidateName || "there"},</p><p>Thanks for your interest in the <strong>${jobTitle}</strong> position at ${client.business_name}. We've reviewed your resume and would like to schedule an interview.</p><p>Please reply to this email with your availability over the next week and we'll get something on the calendar.</p><p>Looking forward to speaking with you!</p><p>— ${client.contact_name || client.business_name}</p>` }) });
       }
     }
 

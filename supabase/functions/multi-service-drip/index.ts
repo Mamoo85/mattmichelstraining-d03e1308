@@ -3,8 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 
 const log = (step: string, data?: any) =>
   console.log(`[MULTI-SERVICE-DRIP] ${step}${data ? " — " + JSON.stringify(data) : ""}`);
@@ -115,7 +114,7 @@ serve(async (req) => {
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 
     const serviceClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
@@ -132,8 +131,7 @@ serve(async (req) => {
     if (!leads || leads.length === 0) {
       log("No Emailed leads found");
       return new Response(JSON.stringify({ ok: true, sent: 0, message: "No eligible leads" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+        headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     log("Fetched Emailed leads", { count: leads.length });
@@ -177,26 +175,19 @@ serve(async (req) => {
           .join("\n");
 
         // Generate personalized email body via Claude Haiku
-        const claudeRes = await fetch("https://api.anthropic.com/v1/messages", {
+        const claudeRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
           headers: {
-            "x-api-key": ANTHROPIC_API_KEY,
-            "anthropic-version": "2023-06-01",
-            "Content-Type": "application/json",
-          },
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: "claude-haiku-4-5-20251001",
-            max_tokens: 400,
-            system:
-              "You are Matt Michels, local business consultant in Grosse Pointe MI. Casual, direct, personal tone.",
+            model: "google/gemini-2.5-flash-lite", 
             messages: [
+              { role: "system", content: "You are Matt Michels, local business consultant in Grosse Pointe MI. Casual, direct, personal tone." },
               {
                 role: "user",
-                content: `Write a SHORT email (under 120 words) to ${businessName}, a ${industry || "local business"} in ${city}. Introduce these services that could help them grow, and encourage them to reply or visit mattmichelstraining.com to learn more. Keep it friendly and local. Do not add a subject line. Start with "Hey —". End with "— Matt". Here are the services to highlight:\n${serviceList}`,
-              },
-            ],
-          }),
-        });
+                content: `Write a SHORT email (under 120 words) to ${businessName}, a ${industry || "local business"} in ${city}. Introduce these services that could help them grow, and encourage them to reply or visit mattmichelstraining.com to learn more. Keep it friendly and local. Do not add a subject line. Start with "Hey —". End with "— Matt". Here are the services to highlight:\n${serviceList}` },
+            ] }) });
 
         if (!claudeRes.ok) {
           const errText = await claudeRes.text();
@@ -206,7 +197,7 @@ serve(async (req) => {
 
         const claudeJson = await claudeRes.json();
         const emailBody: string =
-          claudeJson?.content?.[0]?.text?.trim() ||
+          claudeJson?.choices?.[0]?.message?.content?.trim() ||
           `Hey —\n\nI wanted to reach out about a few tools that might help ${businessName} get more calls and grow.\n\nHere's what I offer:\n${serviceList}\n\nAll automated — no extra work on your end. Happy to chat if any of it sounds useful.\n\nmattmichelstraining.com\n\n— Matt`;
 
         const subject = `A few more ways I can help ${businessName}`;
@@ -217,16 +208,13 @@ serve(async (req) => {
           method: "POST",
           headers: {
             Authorization: `Bearer ${RESEND_API_KEY}`,
-            "Content-Type": "application/json",
-          },
+            "Content-Type": "application/json" },
           body: JSON.stringify({
             from: "Matt Michels <matt@notify.m2training.com>",
             reply_to: "matt@m2training.com",
             to: [email],
             subject,
-            html,
-          }),
-        });
+            html }) });
 
         if (!resendRes.ok) {
           const errText = await resendRes.text();
@@ -245,8 +233,7 @@ serve(async (req) => {
             template_name: "multi_service_pitch",
             status: "sent",
             sent_at: new Date().toISOString(),
-            message_id: messageId,
-          });
+            message_id: messageId });
 
         if (insertErr) {
           log("Log insert error", { leadId, error: String(insertErr) });
@@ -264,14 +251,12 @@ serve(async (req) => {
 
     log("Run complete", { sent, processed });
     return new Response(JSON.stringify({ ok: true, sent }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+      headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     log("FATAL ERROR", { message: msg });
     return new Response(JSON.stringify({ error: msg }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+      headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

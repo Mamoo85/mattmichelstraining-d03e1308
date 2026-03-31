@@ -4,12 +4,11 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -29,27 +28,21 @@ serve(async (req) => {
     // 1. Generate AI summary via Claude Haiku
     let ai_summary = "";
     try {
-      const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
+      const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: {
-          "x-api-key": ANTHROPIC_API_KEY,
-          "anthropic-version": "2023-06-01",
-          "Content-Type": "application/json",
-        },
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "claude-haiku-4-5-20251001",
-          max_tokens: 200,
+          model: "google/gemini-2.5-flash-lite", 
           messages: [
             {
               role: "user",
-              content: `You are Agent Smith, a business analyst. Summarize this lead in 3 sentences: Name: ${name}, Business: ${business_name}, Service: ${service}, Message: ${message || "none provided"}. Include: (1) who they are, (2) what they need, (3) urgency/fit assessment (high/medium/low value).`,
-            },
-          ],
-        }),
-      });
+              content: `You are Agent Smith, a business analyst. Summarize this lead in 3 sentences: Name: ${name}, Business: ${business_name}, Service: ${service}, Message: ${message || "none provided"}. Include: (1) who they are, (2) what they need, (3) urgency/fit assessment (high/medium/low value).` },
+          ] }) });
       if (aiRes.ok) {
         const aiData = await aiRes.json();
-        ai_summary = aiData?.content?.[0]?.text || "";
+        ai_summary = aiData?.choices?.[0]?.message?.content || "";
       }
     } catch (aiErr) {
       console.error("[SUBMIT-INTAKE] AI summary error:", aiErr);
@@ -66,8 +59,7 @@ serve(async (req) => {
         service,
         message: message || null,
         ai_summary: ai_summary || null,
-        status: "new",
-      });
+        status: "new" });
 
     if (dbError) {
       console.error("[SUBMIT-INTAKE] DB error:", dbError);
@@ -147,27 +139,22 @@ serve(async (req) => {
         method: "POST",
         headers: {
           Authorization: `Bearer ${RESEND_API_KEY}`,
-          "Content-Type": "application/json",
-        },
+          "Content-Type": "application/json" },
         body: JSON.stringify({
           from: "M² System <matt@notify.m2training.com>",
           to: ["matthewmichels@mattmichelstraining.com"],
           reply_to: email,
           subject: `New lead: ${name} — ${service}`,
-          html,
-        }),
-      });
+          html }) });
     }
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+      headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e: any) {
     console.error("[SUBMIT-INTAKE] Error:", e);
     return new Response(JSON.stringify({ error: e.message }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+      headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

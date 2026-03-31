@@ -6,7 +6,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 
 const TOPICS = [
@@ -36,8 +36,7 @@ async function getLinkedInToken(sb: any): Promise<{ token: string; personId: str
 
   // Get LinkedIn person ID
   const profileRes = await fetch("https://api.linkedin.com/v2/userinfo", {
-    headers: { Authorization: `Bearer ${data.access_token}` },
-  });
+    headers: { Authorization: `Bearer ${data.access_token}` } });
 
   if (!profileRes.ok) return null;
   const profile = await profileRes.json();
@@ -49,26 +48,21 @@ async function getLinkedInToken(sb: any): Promise<{ token: string; personId: str
 async function generatePost(): Promise<string> {
   const topic = TOPICS[Math.floor(Date.now() / 86400000) % TOPICS.length];
 
-  if (!ANTHROPIC_API_KEY) {
+  if (!LOVABLE_API_KEY) {
     return "Local businesses — if you're missing calls, you're missing jobs. Automated text-back sends an instant reply to every missed caller. Simple, effective, $99/mo. #Detroit #LocalBusiness";
   }
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
-      "x-api-key": ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-      "content-type": "application/json",
-    },
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 300,
-      messages: [{ role: "user", content: topic }],
-    }),
-  });
+      model: "google/gemini-2.5-flash-lite", 
+      messages: [{ role: "user", content: topic }] }) });
 
   const data = await res.json();
-  return data.content?.[0]?.text?.trim() || "Local businesses — automated systems = more calls, more jobs. mattmichelstraining.com";
+  return data?.choices?.[0]?.message?.content?.trim() || "Local businesses — automated systems = more calls, more jobs. mattmichelstraining.com";
 }
 
 async function postToLinkedIn(personId: string, token: string, text: string): Promise<boolean> {
@@ -77,22 +71,16 @@ async function postToLinkedIn(personId: string, token: string, text: string): Pr
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
-      "X-Restli-Protocol-Version": "2.0.0",
-    },
+      "X-Restli-Protocol-Version": "2.0.0" },
     body: JSON.stringify({
       author: `urn:li:person:${personId}`,
       lifecycleState: "PUBLISHED",
       specificContent: {
         "com.linkedin.ugc.ShareContent": {
           shareCommentary: { text },
-          shareMediaCategory: "NONE",
-        },
-      },
+          shareMediaCategory: "NONE" } },
       visibility: {
-        "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC",
-      },
-    }),
-  });
+        "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC" } }) });
 
   if (!res.ok) {
     const err = await res.text();
@@ -116,9 +104,7 @@ serve(async () => {
             from: "M² System <matt@notify.m2training.com>",
             to: ["matt@m2training.com"],
             subject: "⚠️ LinkedIn token expired — re-auth needed",
-            html: `<p>Your LinkedIn auto-posting stopped because the token expired.</p><p><a href="https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${Deno.env.get("LINKEDIN_CLIENT_ID")}&redirect_uri=https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/linkedin-auth-callback&scope=openid%20profile%20w_member_social&state=m2linkedin">Click here to reconnect LinkedIn →</a></p>`,
-          }),
-        });
+            html: `<p>Your LinkedIn auto-posting stopped because the token expired.</p><p><a href="https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${Deno.env.get("LINKEDIN_CLIENT_ID")}&redirect_uri=https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/linkedin-auth-callback&scope=openid%20profile%20w_member_social&state=m2linkedin">Click here to reconnect LinkedIn →</a></p>` }) });
       }
       return new Response(JSON.stringify({ error: "No valid token" }), { status: 200 });
     }

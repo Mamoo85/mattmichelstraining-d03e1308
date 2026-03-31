@@ -3,8 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 
 const log = (step: string, data?: any) =>
   console.log(`[PROSPECTOR] ${step}${data ? " — " + JSON.stringify(data) : ""}`);
@@ -149,15 +148,13 @@ async function generateOutreachEmail(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${lovableKey}`,
-    },
+      Authorization: `Bearer ${lovableKey}` },
     body: JSON.stringify({
       model: "google/gemini-2.5-flash",
       messages: [
         {
           role: "system",
-          content: `You are Matt Michels, a local business consultant in Grosse Pointe, MI. You help Metro Detroit small businesses grow with web design, AI automation, and done-for-you marketing tools. Your tone is straight-talking, local, and personal — not a pitch, more like a neighbor reaching out.`,
-        },
+          content: `You are Matt Michels, a local business consultant in Grosse Pointe, MI. You help Metro Detroit small businesses grow with web design, AI automation, and done-for-you marketing tools. Your tone is straight-talking, local, and personal — not a pitch, more like a neighbor reaching out.` },
         {
           role: "user",
           content: `Write a short, punchy cold outreach email to "${business}", a ${industry} in ${city}.
@@ -182,13 +179,9 @@ Do NOT use salesy language. Sound like a real person. One problem, one solution.
 Format:
 SUBJECT: [subject line]
 ---
-[email body]`,
-        },
+[email body]` },
       ],
-      temperature: 0.75,
-      max_tokens: 300,
-    }),
-  });
+      temperature: 0.75 }) });
 
   if (!response.ok) throw new Error(`AI API error: ${response.status}`);
   const data = await response.json();
@@ -207,8 +200,7 @@ serve(async (req) => {
 
     if (!LOVABLE_API_KEY || !FIRECRAWL_API_KEY) {
       return new Response(JSON.stringify({ error: "API keys not configured" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const serviceClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
@@ -217,16 +209,14 @@ serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     if (authHeader?.startsWith("Bearer ")) {
       const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-        global: { headers: { Authorization: authHeader } },
-      });
+        global: { headers: { Authorization: authHeader } } });
       const { data: { user } } = await userClient.auth.getUser();
       // If a real user JWT was passed, verify admin role
       if (user) {
         const { data: isAdmin } = await serviceClient.rpc("has_role", { _user_id: user.id, _role: "admin" });
         if (!isAdmin) {
           return new Response(JSON.stringify({ error: "Admin access required" }), {
-            status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
+            status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
       }
       // If no user returned, this is a service-role/cron call — allow it to proceed
@@ -242,11 +232,10 @@ serve(async (req) => {
     // When mode === "linkedin_batch", pull top 10 emailed leads and generate
     // LinkedIn connection request notes, then email Matt a copy-paste batch.
     if (mode === "linkedin_batch") {
-      const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
-      if (!ANTHROPIC_API_KEY) {
-        return new Response(JSON.stringify({ error: "ANTHROPIC_API_KEY not configured" }), {
-          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+      const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
+      if (!LOVABLE_API_KEY) {
+        return new Response(JSON.stringify({ error: "LOVABLE_API_KEY not configured" }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
       const { data: leads, error: leadsErr } = await serviceClient
@@ -259,8 +248,7 @@ serve(async (req) => {
       if (leadsErr) throw new Error(`Failed to fetch leads: ${leadsErr.message}`);
       if (!leads || leads.length === 0) {
         return new Response(JSON.stringify({ sent: 0, message: "No emailed leads found" }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+          headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
       const rows: { id: string; business_name: string; owner_name: string; message: string }[] = [];
@@ -271,25 +259,19 @@ serve(async (req) => {
         const leadCity = lead.city || "Michigan";
         const leadIndustry = lead.industry || "local business";
 
-        const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
+        const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
           headers: {
-            "x-api-key": ANTHROPIC_API_KEY,
-            "anthropic-version": "2023-06-01",
-            "content-type": "application/json",
-          },
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: "claude-haiku-4-5-20251001",
-            max_tokens: 120,
+            model: "google/gemini-2.5-flash-lite", 
             messages: [{
               role: "user",
-              content: `Write a 280-char max LinkedIn connection request note from Matt Michels (web design/local marketing, Grosse Pointe MI) to ${ownerName} at ${businessName} in ${leadCity}. Reference their specific industry: ${leadIndustry}. Casual, local, not salesy. No hashtags. Return only the note text, nothing else.`,
-            }],
-          }),
-        });
+              content: `Write a 280-char max LinkedIn connection request note from Matt Michels (web design/local marketing, Grosse Pointe MI) to ${ownerName} at ${businessName} in ${leadCity}. Reference their specific industry: ${leadIndustry}. Casual, local, not salesy. No hashtags. Return only the note text, nothing else.` }] }) });
 
         const aiData = await aiRes.json();
-        const message = (aiData.content?.[0]?.text || "").trim().slice(0, 280);
+        const message = (aiData?.choices?.[0]?.message?.content || "").trim().slice(0, 280);
 
         await serviceClient
           .from("outreach_leads")
@@ -358,15 +340,12 @@ serve(async (req) => {
             to: ["matt@m2training.com"],
             reply_to: "matt@m2training.com",
             subject: `10 LinkedIn messages ready to send — ${dateStr}`,
-            html: emailHtml,
-          }),
-        });
+            html: emailHtml }) });
       }
 
       log("LinkedIn batch complete", { count: rows.length });
       return new Response(JSON.stringify({ sent: rows.length, mode: "linkedin_batch" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+        headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // ── CONTRACTOR LEAD PITCH MODE ─────────────────────────────────────────
@@ -382,8 +361,7 @@ serve(async (req) => {
       const searchRes = await fetch("https://api.firecrawl.dev/v1/search", {
         method: "POST",
         headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ query: `${contractorIndustry} ${contractorCity} site:yelp.com OR site:yellowpages.com`, limit: 5 }),
-      });
+        body: JSON.stringify({ query: `${contractorIndustry} ${contractorCity} site:yelp.com OR site:yellowpages.com`, limit: 5 }) });
       const searchData = await searchRes.json();
       const results = searchData.data || [];
 
@@ -422,10 +400,7 @@ SUBJECT: [subject line]
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${LOVABLE_API_KEY}` },
           body: JSON.stringify({
             model: "google/gemini-2.5-flash",
-            messages: [{ role: "user", content: pitchPrompt }],
-            max_tokens: 250,
-          }),
-        });
+            messages: [{ role: "user", content: pitchPrompt }] }) });
         const aiData = await aiRes.json();
         const emailText = aiData.choices?.[0]?.message?.content || "";
         const subjectMatch = emailText.match(/SUBJECT:\s*(.+)/);
@@ -440,9 +415,7 @@ SUBJECT: [subject line]
             to: [email],
             reply_to: "matt@m2training.com",
             subject,
-            html: `<div style="font-family:sans-serif;font-size:15px;line-height:1.8;color:#1e293b;max-width:500px;">${bodyText.replace(/\n/g, "<br>")}<div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-family-cornfield.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Matt Michels"><div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>Grosse Pointe, MI · (313) 806-4952</div></div></div>`,
-          }),
-        });
+            html: `<div style="font-family:sans-serif;font-size:15px;line-height:1.8;color:#1e293b;max-width:500px;">${bodyText.replace(/\n/g, "<br>")}<div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-family-cornfield.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Matt Michels"><div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>Grosse Pointe, MI · (313) 806-4952</div></div></div>` }) });
 
         await serviceClient.from("email_send_log").insert({ email, campaign: "contractor_lead_pitch", business_name: businessName });
         pitched++;
@@ -468,8 +441,7 @@ SUBJECT: [subject line]
     const searchRes = await fetch("https://api.firecrawl.dev/v1/search", {
       method: "POST",
       headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ query: searchQuery, limit: Math.min(limit * 2, 20) }),
-    });
+      body: JSON.stringify({ query: searchQuery, limit: Math.min(limit * 2, 20) }) });
 
     if (!searchRes.ok) throw new Error(`Firecrawl search failed: ${searchRes.status}`);
     const searchData = await searchRes.json();
@@ -478,8 +450,7 @@ SUBJECT: [subject line]
 
     if (results.length === 0) {
       return new Response(JSON.stringify({ found: 0, queued: 0, skipped: 0, message: "No results from search" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+        headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     let queued = 0;
@@ -520,8 +491,7 @@ SUBJECT: [subject line]
             email: "",
             description: `SOURCE: auto_prospected | INDUSTRY: ${industry} | CITY: ${city} | GAP_SCORE: ${gapScore} | URL: ${result.url || "none"}\n\nAUTO-GENERATED OUTREACH:\nSubject: ${subjectLine}\n\n${emailBody}`,
             status: "new",
-            notes: `Auto-prospected ${new Date().toLocaleDateString()}. Gap score: ${gapScore}/100. Drip queued.`,
-          })
+            notes: `Auto-prospected ${new Date().toLocaleDateString()}. Gap score: ${gapScore}/100. Drip queued.` })
           .select("id")
           .single();
 
@@ -548,15 +518,13 @@ SUBJECT: [subject line]
         leads: newLeads,
         industry,
         city,
-        message: `Prospecting complete. ${queued} new ${industry} leads in ${city} added to CRM.`,
-      }),
+        message: `Prospecting complete. ${queued} new ${industry} leads in ${city} added to CRM.` }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     log("ERROR", { message: msg });
     return new Response(JSON.stringify({ error: msg }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
