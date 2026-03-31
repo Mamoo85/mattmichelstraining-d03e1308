@@ -370,8 +370,10 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
     let queued = 0;
     let skipped = 0;
+    let emailed = 0;
     const newLeads: string[] = [];
 
     for (const place of places) {
@@ -388,7 +390,7 @@ serve(async (req) => {
         const rating = place.rating || 0;
         const reviewCount = place.userRatingCount || 0;
 
-        // Dedup check
+        // Dedup check against outreach_leads
         const { data: existing } = await serviceClient
           .from("outreach_leads")
           .select("id")
@@ -397,23 +399,74 @@ serve(async (req) => {
 
         if (existing && existing.length > 0) { skipped++; continue; }
 
-        // Generate outreach email
-        const outreachEmail = await generateOutreachEmail(businessName, industry, city, LOVABLE_API_KEY);
-        const lines = outreachEmail.split("\n");
-        const subjectLine = lines.find(l => l.startsWith("SUBJECT:"))?.replace("SUBJECT:", "").trim()
-          || `Your ${industry} business could be getting more calls`;
-        const emailBody = lines.slice(lines.findIndex(l => l === "---") + 1).join("\n").trim();
+        // Step 2: Try to scrape email from their website
+        let contactEmail: string | null = null;
+        if (website) {
+          contactEmail = await scrapeEmailFromWebsite(website);
+          // Also try /contact page
+          if (!contactEmail) {
+            const contactUrl = website.replace(/\/$/, "") + "/contact";
+            contactEmail = await scrapeEmailFromWebsite(contactUrl);
+          }
+          log("Email scrape", { business: businessName, email: contactEmail || "NOT_FOUND" });
+        }
 
+        // Dedup against email_send_log if we have an email
+        if (contactEmail) {
+          const { data: alreadySent } = await serviceClient
+            .from("email_send_log")
+            .select("id")
+            .eq("recipient_email", contactEmail)
+            .eq("template_name", "cold_outreach")
+            .limit(1);
+          if (alreadySent && alreadySent.length > 0) {
+            log("Already emailed", { email: contactEmail });
+            skipped++;
+            continue;
+          }
+        }
+
+        // Step 3: Generate outreach email
+        const outreachEmail = await generateOutreachEmail(businessName, industry, city, LOVABLE_API_KEY);
+        const emailLines = outreachEmail.split("\n");
+        const subjectLine = emailLines.find(l => l.startsWith("SUBJECT:"))?.replace("SUBJECT:", "").trim()
+          || `Your ${industry} business could be getting more calls`;
+        const emailBody = emailLines.slice(emailLines.findIndex(l => l === "---") + 1).join("\n").trim();
+        const emailBodyHtml = emailBody.replace(/\n/g, "<br>");
+
+        // Step 4: Auto-send if we have an email address
+        let emailStatus = "no_email";
+        if (contactEmail && RESEND_API_KEY) {
+          const sent = await sendColdEmail(contactEmail, subjectLine, emailBodyHtml, RESEND_API_KEY);
+          if (sent) {
+            emailStatus = "sent";
+            emailed++;
+            // Log the send
+            await serviceClient.from("email_send_log").insert({
+              recipient_email: contactEmail,
+              template_name: "cold_outreach",
+              status: "sent",
+              metadata: { business: businessName, industry, city, gap_score: gapScore },
+            });
+          } else {
+            emailStatus = "send_failed";
+          }
+          log("Cold email", { business: businessName, email: contactEmail, status: emailStatus });
+        }
+
+        // Step 5: Store lead in CRM
+        const leadStatus = emailStatus === "sent" ? "Emailed" : "new";
         const { data: newLead, error: insertErr } = await serviceClient
           .from("outreach_leads")
           .insert({
             business_name: businessName,
+            email: contactEmail,
             industry,
             city,
             phone,
             website_status: website ? "has_website" : "no_website",
-            notes: `Auto-prospected ${new Date().toLocaleDateString()}. Gap score: ${gapScore}/100. Rating: ${rating} (${reviewCount} reviews). Website: ${website || "NONE"}. Address: ${address}\n\nAUTO-GENERATED OUTREACH:\nSubject: ${subjectLine}\n\n${emailBody}`,
-            status: "new",
+            notes: `Auto-prospected ${new Date().toLocaleDateString()}. Gap score: ${gapScore}/100. Rating: ${rating} (${reviewCount} reviews). Website: ${website || "NONE"}. Address: ${address}. Email: ${contactEmail || "NOT FOUND"}. Email status: ${emailStatus}\n\nSubject: ${subjectLine}\n\n${emailBody}`,
+            status: leadStatus,
           })
           .select("id")
           .single();
@@ -422,9 +475,9 @@ serve(async (req) => {
 
         queued++;
         newLeads.push(newLead.id);
-        log("Lead queued", { business: businessName, gapScore, rating, reviewCount, hasWebsite: !!website });
+        log("Lead processed", { business: businessName, gapScore, email: contactEmail || "none", emailStatus });
 
-        await new Promise(r => setTimeout(r, 300));
+        await new Promise(r => setTimeout(r, 500));
       } catch (err) {
         log("Error processing place", { error: String(err) });
         skipped++;
