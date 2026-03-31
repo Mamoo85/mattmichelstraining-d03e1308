@@ -161,10 +161,26 @@ function buildHtml(body: string): string {
 </table></td></tr></table></body></html>`;
 }
 
+const DAILY_SEND_CAP = 30;
+
 serve(async () => {
   try {
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+    // Check daily volume cap (shared across all contractor outreach)
+    const todayStart = new Date();
+    todayStart.setUTCHours(0, 0, 0, 0);
+    const { count: dailySent } = await sb
+      .from("email_send_log")
+      .select("id", { count: "exact", head: true })
+      .gte("created_at", todayStart.toISOString())
+      .like("template_name", "contractor_%");
+    const remainingCap = DAILY_SEND_CAP - (dailySent || 0);
+    if (remainingCap <= 0) {
+      log("Daily send cap reached", { dailySent, cap: DAILY_SEND_CAP });
+      return new Response(JSON.stringify({ ok: true, sent: 0, reason: "daily_cap_reached" }), { status: 200 });
+    }
 
     // Pull all emailed leads still in active drip
     const { data: leads } = await sb
@@ -251,6 +267,8 @@ serve(async () => {
       sent++;
       log("Drip sent", { email, step: nextStep.templateName });
       await new Promise(r => setTimeout(r, 200));
+
+      if (sent >= remainingCap) { log("Hit daily cap during drip"); break; }
     }
 
     return new Response(JSON.stringify({ ok: true, sent, total: leads.length }), { status: 200 });

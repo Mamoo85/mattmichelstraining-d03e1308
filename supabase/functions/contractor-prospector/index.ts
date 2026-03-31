@@ -4,6 +4,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const log = (step: string, data?: any) =>
   console.log(`[CONTRACTOR-PROSPECTOR] ${step}${data ? " — " + JSON.stringify(data) : ""}`);
 
+// ── Daily send cap to protect domain reputation ──
+const DAILY_SEND_CAP = 30;
+
 // ── Metro Detroit targets only ──
 const TRADES = ["roofer", "HVAC contractor", "plumber", "electrician", "dentist"];
 const CITIES = [
@@ -40,30 +43,18 @@ function scoreGbp(place: any): { score: number; issues: string[] } {
   return { score: Math.min(score, 95), issues };
 }
 
-function pickOffer(trade: string, score: number, issues: string[]): { offer: string; pitch: string; price: string } {
+function pickOffer(trade: string, issues: string[]): { offer: string; pitch: string; price: string } {
   const isTrade = trade !== "dentist";
   const hasLowReviews = issues.some(i => i.includes("review"));
   const hasLowRating = issues.some(i => i.includes("star"));
 
   if (hasLowReviews || issues.some(i => i.includes("no website"))) {
-    return {
-      offer: "gbp",
-      pitch: "Google Business Profile Management",
-      price: "$199/mo",
-    };
+    return { offer: "gbp", pitch: "Google Business Profile Management", price: "$199/mo" };
   }
   if (isTrade && hasLowRating) {
-    return {
-      offer: "missed_call",
-      pitch: "Missed-Call Text Back",
-      price: "$99/mo",
-    };
+    return { offer: "missed_call", pitch: "Missed-Call Text Back", price: "$99/mo" };
   }
-  return {
-    offer: "leads",
-    pitch: "Exclusive Local Leads",
-    price: "$399/mo",
-  };
+  return { offer: "leads", pitch: "Exclusive Local Leads", price: "$399/mo" };
 }
 
 async function searchGoogleMaps(query: string, apiKey: string): Promise<any[]> {
@@ -100,46 +91,118 @@ async function scrapeEmail(websiteUrl: string): Promise<string | null> {
   } catch { return null; }
 }
 
-async function generateEmail(
+// ── AGENT 1: THE SCOUT — AI Lead Qualification ──
+// Scores each lead 1-10. Only leads scoring 7+ get emailed.
+async function scoutScoreLead(
+  businessName: string,
+  trade: string,
+  city: string,
+  rating: number,
+  reviewCount: number,
+  hasWebsite: boolean,
+  hasPhone: boolean,
+  issues: string[],
+  anthropicKey: string,
+): Promise<{ score: number; reasoning: string; bestOffer: string }> {
+  const prompt = `You are the SCOUT — an AI lead qualification agent for Matt Michels, a local business automation consultant in Grosse Pointe, MI. You evaluate whether a local business is worth cold-emailing.
+
+Business: "${businessName}"
+Trade: ${trade}
+City: ${city}, MI
+Google Rating: ${rating || "N/A"} stars
+Review Count: ${reviewCount}
+Has Website: ${hasWebsite ? "Yes" : "No"}
+Has Phone Listed: ${hasPhone ? "Yes" : "No"}
+GBP Issues Found: ${issues.join(", ") || "None"}
+
+Score this lead 1-10 based on:
+- Pain signals (low reviews, no website, bad rating = HIGH score, they need help)
+- Reachability (has email/phone = better)
+- Revenue potential (trades like roofers/HVAC have higher job values than others)
+- Competition vulnerability (few reviews = easier to outrank)
+- Likelihood to respond to cold outreach (small local businesses > chains)
+
+A score of 7+ means "email this lead." Below 7 = skip.
+
+Also pick the single best offer to pitch:
+- "leads" ($399/mo exclusive local leads) — best for established contractors who want more volume
+- "gbp" ($199/mo GBP management) — best for businesses with weak Google presence
+- "missed_call" ($99/mo missed-call text back) — best for busy field workers who miss calls
+
+Respond with ONLY a JSON object:
+{"score": 8, "reasoning": "one sentence why", "bestOffer": "leads"}`;
+
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": anthropicKey,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 200,
+        messages: [{ role: "user", content: prompt }],
+      }),
+    });
+
+    const data = await res.json();
+    const text = (data.content?.[0]?.text || "").trim();
+    const cleaned = text.replace(/```json\s*/g, "").replace(/```/g, "").trim();
+    const parsed = JSON.parse(cleaned);
+    return {
+      score: Math.min(10, Math.max(1, parsed.score || 5)),
+      reasoning: parsed.reasoning || "",
+      bestOffer: parsed.bestOffer || "leads",
+    };
+  } catch (e) {
+    log("Scout scoring failed, using fallback", { businessName, error: String(e) });
+    // Fallback: use GBP score as proxy
+    const fallbackScore = issues.length >= 3 ? 8 : issues.length >= 2 ? 7 : 5;
+    return { score: fallbackScore, reasoning: "Fallback score based on GBP issues", bestOffer: "leads" };
+  }
+}
+
+// ── AGENT 2: THE SNIPER — Hyper-Personalized Cold Email ──
+// Writes a 4-sentence flaw-based cold email with a specific hook.
+async function sniperGenerateEmail(
   businessName: string,
   trade: string,
   city: string,
   issues: string[],
   offer: { offer: string; pitch: string; price: string },
+  scoutReasoning: string,
   anthropicKey: string,
 ): Promise<{ subject: string; body: string }> {
-  const issueText = issues.length > 0 ? issues.join(", ") : "limited online presence";
   const cityShort = city.replace(" MI", "");
+  const issueText = issues.length > 0 ? issues.join(", ") : "limited online presence";
 
-  let offerDesc = "";
-  if (offer.offer === "gbp") {
-    offerDesc = `I run an automated Google Business Profile management service for ${trade}s in Metro Detroit — ${offer.price}. It handles posting, Q&As, and ranking optimization automatically. Most contractors I work with jump into the top 3 in their zip within 60 days.`;
-  } else if (offer.offer === "missed_call") {
-    offerDesc = `I built a missed-call text back system for ${trade}s — ${offer.price}. When you're under a sink or on a roof and miss a call, it automatically texts that person back within 30 seconds. The contractor who responds first usually gets the job.`;
-  } else {
-    offerDesc = `I run an exclusive local lead system for ${trade}s in Metro Detroit — ${offer.price}. One contractor per trade per city. Real homeowner leads, no shared with competitors. I've got one spot open for ${cityShort}.`;
-  }
+  const prompt = `You are the SNIPER — a cold outreach copywriter for Matt Michels, a local business automation consultant in Grosse Pointe, MI.
 
-  const prompt = `Write a short, direct cold email from Matt Michels (local business owner, Grosse Pointe MI) to the owner of "${businessName}" (a ${trade} in ${cityShort}, MI).
+Your job: write a hyper-personalized 4-sentence cold email that gets replies.
 
-Observed issue: ${issueText}
-Offer: ${offerDesc}
+Target: "${businessName}" — a ${trade} in ${cityShort}, MI
+Specific flaws found: ${issueText}
+Scout's assessment: ${scoutReasoning}
+Offer to pitch: ${offer.pitch} at ${offer.price}
 
-Rules:
-- 4-6 sentences max
-- Blue-collar tone, not corporate
-- Start with "Hey —" not "Dear" or "Hi [Name]"
-- Mention the specific issue you noticed (${issueText})
-- One clear CTA: reply to this email or text (313) 806-4952
-- Sign off as "— Matt, Grosse Pointe"
-- No subject line in the body
+SNIPER RULES:
+1. EXACTLY 4 sentences. Not 3, not 5. Four.
+2. Sentence 1: Call out a SPECIFIC flaw you found (not generic — reference their actual data)
+3. Sentence 2: Agitate — what this flaw is costing them in real dollars or lost jobs
+4. Sentence 3: Present the fix in one line — what Matt does and the price
+5. Sentence 4: Soft CTA — reply or text (313) 806-4952
+6. Start with "Hey —" (never "Dear" or "Hi [Name]")
+7. Sign off "— Matt, Grosse Pointe"
+8. Blue-collar tone. Like a text from a buddy who happens to know marketing.
+9. NO buzzwords (leverage, synergy, optimize, revolutionize, etc.)
+10. Subject line: Under 40 chars, feels like a text message, lowercase ok
 
-Also output a subject line (under 50 chars, no ALL CAPS, feels personal not promotional).
-
-Format your response as:
+Format:
 SUBJECT: [subject line]
 BODY:
-[email body]`;
+[4-sentence email]`;
 
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -150,7 +213,7 @@ BODY:
     },
     body: JSON.stringify({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 600,
+      max_tokens: 400,
       messages: [{ role: "user", content: prompt }],
     }),
   });
@@ -161,7 +224,7 @@ BODY:
   const bodyMatch = text.match(/BODY:\s*([\s\S]+)/);
 
   return {
-    subject: subjectMatch?.[1]?.trim() || `Quick thing I noticed about ${businessName}`,
+    subject: subjectMatch?.[1]?.trim() || `quick thing about ${businessName}`,
     body: bodyMatch?.[1]?.trim() || text,
   };
 }
@@ -185,6 +248,18 @@ M² Performance Training · Grosse Pointe, MI
 </table></td></tr></table></body></html>`;
 }
 
+// ── Check how many emails sent today from this domain ──
+async function getDailySendCount(sb: any): Promise<number> {
+  const todayStart = new Date();
+  todayStart.setUTCHours(0, 0, 0, 0);
+  const { count } = await sb
+    .from("email_send_log")
+    .select("id", { count: "exact", head: true })
+    .gte("created_at", todayStart.toISOString())
+    .like("template_name", "contractor_%");
+  return count || 0;
+}
+
 serve(async () => {
   try {
     const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY")!;
@@ -192,20 +267,35 @@ serve(async () => {
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
+    // Check daily volume cap
+    const dailySent = await getDailySendCount(sb);
+    const remainingCap = DAILY_SEND_CAP - dailySent;
+    if (remainingCap <= 0) {
+      log("Daily send cap reached", { dailySent, cap: DAILY_SEND_CAP });
+      return new Response(
+        JSON.stringify({ ok: true, skipped: "daily_cap_reached", dailySent, cap: DAILY_SEND_CAP }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     const combos = getTodaysCombos();
     let totalEmailed = 0;
     let totalFound = 0;
     let totalSkipped = 0;
+    let totalScoutRejected = 0;
+    const maxToSend = Math.min(15, remainingCap);
 
     for (const { trade, city } of combos) {
       log("Searching", { trade, city });
       const places = await searchGoogleMaps(`${trade} in ${city}`, GOOGLE_MAPS_API_KEY);
       totalFound += places.length;
 
-      for (const place of places.slice(0, 8)) {
+      for (const place of places.slice(0, 10)) {
         const name = place.displayName?.text || "Unknown Business";
         const phone = place.nationalPhoneNumber || null;
         const website = place.websiteUri || null;
+        const rating = place.rating || 0;
+        const reviewCount = place.userRatingCount || 0;
 
         // Deduplicate
         const { data: existing } = await sb
@@ -220,14 +310,16 @@ serve(async () => {
           continue;
         }
 
+        // GBP scoring (fast, no AI)
+        const { score: gbpScore, issues } = scoreGbp(place);
+
         // Get email from website
         let email: string | null = null;
         if (website) email = await scrapeEmail(website);
 
         if (!email) {
-          // Still insert as a lead even without email (for SMS follow-up)
-          const { score, issues } = scoreGbp(place);
-          const offer = pickOffer(trade, score, issues);
+          // Insert as SMS-only lead
+          const offer = pickOffer(trade, issues);
           await sb.from("outreach_leads").insert({
             business_name: name,
             city: city.replace(" MI", ""),
@@ -237,18 +329,51 @@ serve(async () => {
             status: "lead_found",
             channel: "sms",
             offer_pitched: offer.offer,
-            notes: `GBP issues: ${issues.join(", ")}. Score: ${score}`,
+            notes: `GBP issues: ${issues.join(", ")}. GBP score: ${gbpScore}. No email found.`,
           });
           totalSkipped++;
           continue;
         }
 
-        // Score and pick offer
-        const { score, issues } = scoreGbp(place);
-        const offer = pickOffer(trade, score, issues);
+        // ── SCOUT: AI lead qualification (score 1-10) ──
+        const scout = await scoutScoreLead(
+          name, trade, city.replace(" MI", ""),
+          rating, reviewCount,
+          !!website, !!phone, issues,
+          ANTHROPIC_API_KEY,
+        );
+        log("Scout scored", { name, score: scout.score, reasoning: scout.reasoning });
 
-        // Generate email
-        const { subject, body } = await generateEmail(name, trade, city.replace(" MI", ""), issues, offer, ANTHROPIC_API_KEY);
+        if (scout.score < 7) {
+          // Below threshold — store as lead but don't email
+          await sb.from("outreach_leads").insert({
+            business_name: name,
+            city: city.replace(" MI", ""),
+            industry: trade.charAt(0).toUpperCase() + trade.slice(1).replace(" contractor", ""),
+            phone, email,
+            website: website || null,
+            status: "lead_found",
+            channel: "email",
+            offer_pitched: scout.bestOffer,
+            notes: `Scout score: ${scout.score}/10 (below threshold). ${scout.reasoning}. GBP issues: ${issues.join(", ")}`,
+          });
+          totalScoutRejected++;
+          continue;
+        }
+
+        // Use Scout's offer recommendation
+        const offer = pickOffer(trade, issues);
+        // Override with Scout's recommendation if it differs
+        const finalOffer = ["leads", "gbp", "missed_call"].includes(scout.bestOffer)
+          ? { ...offer, offer: scout.bestOffer }
+          : offer;
+
+        // ── SNIPER: Hyper-personalized cold email ──
+        const { subject, body } = await sniperGenerateEmail(
+          name, trade, city.replace(" MI", ""),
+          issues, finalOffer, scout.reasoning,
+          ANTHROPIC_API_KEY,
+        );
         const html = buildEmailHtml(body);
 
         // Send
@@ -269,19 +394,18 @@ serve(async () => {
           continue;
         }
 
-        // Store lead
+        // Store lead with Scout + Sniper metadata
         await sb.from("outreach_leads").insert({
           business_name: name,
           city: city.replace(" MI", ""),
           industry: trade.charAt(0).toUpperCase() + trade.slice(1).replace(" contractor", ""),
-          phone,
-          email,
+          phone, email,
           website: website || null,
           status: "emailed",
           channel: "email",
-          offer_pitched: offer.offer,
+          offer_pitched: finalOffer.offer,
           last_contact_date: new Date().toISOString().split("T")[0],
-          notes: `GBP issues: ${issues.join(", ")}. Score: ${score}. Offer: ${offer.pitch}`,
+          notes: `Scout: ${scout.score}/10 — ${scout.reasoning}. GBP issues: ${issues.join(", ")}. Offer: ${finalOffer.pitch}`,
         });
 
         // Log send
@@ -293,18 +417,28 @@ serve(async () => {
         });
 
         totalEmailed++;
-        log("Emailed", { name, email, offer: offer.offer, city });
+        log("Emailed", { name, email, scoutScore: scout.score, offer: finalOffer.offer, city });
 
-        // Throttle
-        await new Promise(r => setTimeout(r, 300));
+        // Throttle between sends
+        await new Promise(r => setTimeout(r, 500));
 
-        if (totalEmailed >= 15) break;
+        if (totalEmailed >= maxToSend) break;
       }
-      if (totalEmailed >= 15) break;
+      if (totalEmailed >= maxToSend) break;
     }
 
     return new Response(
-      JSON.stringify({ ok: true, found: totalFound, emailed: totalEmailed, skipped: totalSkipped, combos }),
+      JSON.stringify({
+        ok: true,
+        found: totalFound,
+        emailed: totalEmailed,
+        skipped: totalSkipped,
+        scoutRejected: totalScoutRejected,
+        dailySentBefore: dailySent,
+        dailySentAfter: dailySent + totalEmailed,
+        cap: DAILY_SEND_CAP,
+        combos,
+      }),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );
   } catch (err) {
