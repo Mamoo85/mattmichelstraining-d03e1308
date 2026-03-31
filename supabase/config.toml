@@ -179,3 +179,12 @@ verify_jwt = false
 
 [functions.send-referral]
 verify_jwt = false
+
+[functions.generate-affiliate-swipe]
+verify_jwt = false
+
+[functions.generate-seo-page-config]
+verify_jwt = false
+
+[functions.generate-audit-pitch]
+verify_jwt = false

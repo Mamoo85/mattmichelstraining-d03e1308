@@ -1,224 +1,158 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { memo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Sparkles, Copy, Check, Loader2, Users } from "lucide-react";
 import { toast } from "sonner";
-import { Copy, Save, Check, Loader2, Sparkles } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
-const CONTENT_TYPES = [
-  { key: "authority", label: "Authority Post", desc: "Training principle that most people get wrong" },
-  { key: "client_win", label: "Client Win Post", desc: "Celebrate a client PR", hasInputs: true },
-  { key: "youth_athlete", label: "Youth Athlete Post", desc: "Parent-targeted content" },
-  { key: "app_feature", label: "App Feature Post", desc: "Showcase an M² app feature", hasInputs: true },
-  { key: "studio_community", label: "Studio/Community Post", desc: "Behind-the-scenes studio content" },
-] as const;
+const TRADES = [
+  "Roofing", "HVAC", "Plumbing", "Electrical", "Landscaping",
+  "Auto Repair", "Pest Control", "Painting", "Flooring", "Cleaning Services",
+  "General Contracting", "Pool Service", "Tree Service", "Appliance Repair",
+];
 
-const APP_FEATURES = ["AI Generator", "PR Tracking", "Form Checks", "Exercise Library", "Progress Charts", "Recovery Logging"];
+interface SwipeFiles {
+  emails: string[];
+  linkedin: string[];
+  sms: string[];
+}
 
-const AdminContentGenerator = () => {
-  const qc = useQueryClient();
-  const [selected, setSelected] = useState<string | null>(null);
-  const [generating, setGenerating] = useState(false);
-  const [result, setResult] = useState<{ caption: string; hashtags: string } | null>(null);
+function CopyBox({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <div className="relative rounded-lg border border-slate-700 bg-slate-900 p-4">
+      <pre className="whitespace-pre-wrap text-sm text-slate-300 font-sans leading-relaxed pr-8">{text}</pre>
+      <button
+        onClick={handleCopy}
+        className="absolute top-3 right-3 p-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
+      >
+        {copied ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
+      </button>
+    </div>
+  );
+}
 
-  // Client win inputs
-  const [exercise, setExercise] = useState("");
-  const [before, setBefore] = useState("");
-  const [after, setAfter] = useState("");
-  const [weeks, setWeeks] = useState("");
-  const [clientType, setClientType] = useState("Youth");
+function SkeletonBox() {
+  return (
+    <div className="rounded-lg border border-slate-700 bg-slate-900 p-4 space-y-2 animate-pulse">
+      <div className="h-3 bg-slate-700 rounded w-full" />
+      <div className="h-3 bg-slate-700 rounded w-5/6" />
+      <div className="h-3 bg-slate-700 rounded w-4/6" />
+    </div>
+  );
+}
 
-  // App feature input
-  const [featureName, setFeatureName] = useState(APP_FEATURES[0]);
+const AdminContentGenerator = memo(() => {
+  const [trade, setTrade] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<SwipeFiles | null>(null);
 
-  const generate = async () => {
-    if (!selected) return;
-    setGenerating(true);
+  const handleGenerate = async () => {
+    if (!trade) { toast.error("Select a trade first"); return; }
+    setLoading(true);
     setResult(null);
     try {
-      const inputs: any = {};
-      if (selected === "client_win") Object.assign(inputs, { exercise, before, after, weeks, clientType });
-      if (selected === "app_feature") inputs.featureName = featureName;
-
-      const { data, error } = await supabase.functions.invoke("generate-instagram-content", {
-        body: { content_type: selected, inputs },
+      const { data, error } = await supabase.functions.invoke("generate-affiliate-swipe", {
+        body: { trade },
       });
       if (error) throw error;
-      setResult({ caption: data.caption, hashtags: data.hashtags || "" });
-    } catch (e: any) {
-      toast.error(e.message || "Generation failed");
+      setResult(data as SwipeFiles);
+      toast.success(`Swipe files generated for ${trade}`);
+    } catch (err) {
+      toast.error("Generation failed. Check Supabase logs.");
+      console.error(err);
     } finally {
-      setGenerating(false);
+      setLoading(false);
     }
   };
 
-  const copyCaption = () => {
-    if (!result) return;
-    navigator.clipboard.writeText(result.caption + "\n\n" + result.hashtags);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-    toast.success("Copied to clipboard");
-  };
-
-  const saveMut = useMutation({
-    mutationFn: async () => {
-      if (!result || !selected) return;
-      const { error } = await supabase.from("content_queue" as any).insert({
-        content_type: selected,
-        caption: result.caption,
-        hashtags: result.hashtags,
-        status: "draft",
-      } as any);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["content-queue"] });
-      toast.success("Saved to queue");
-    },
-    onError: () => toast.error("Failed to save"),
-  });
-
-  // Queue
-  const { data: queue = [] } = useQuery({
-    queryKey: ["content-queue"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("content_queue" as any)
-        .select("*")
-        .order("created_at", { ascending: false });
-      return data as any[] ?? [];
-    },
-  });
-
-  const markPosted = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("content_queue" as any).update({ status: "posted" } as any).eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["content-queue"] }),
-  });
-
   return (
     <div className="space-y-6">
-      <h2 className="text-sm font-bold uppercase tracking-widest text-foreground">Instagram Content Generator</h2>
-
-      {/* Content type buttons */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-        {CONTENT_TYPES.map(ct => (
-          <button
-            key={ct.key}
-            onClick={() => { setSelected(ct.key); setResult(null); }}
-            className={`p-3 border text-left transition-all ${
-              selected === ct.key
-                ? "border-primary bg-primary/10 text-foreground"
-                : "border-border bg-card text-muted-foreground hover:border-primary/40"
-            }`}
-          >
-            <span className="text-xs font-bold block">{ct.label}</span>
-            <span className="text-[10px] text-muted-foreground">{ct.desc}</span>
-          </button>
-        ))}
+      <div className="flex items-center gap-3">
+        <div className="w-9 h-9 rounded-lg bg-[#e8621a]/10 flex items-center justify-center">
+          <Users size={18} className="text-[#e8621a]" />
+        </div>
+        <div>
+          <h2 className="text-lg font-bold text-white">Affiliate Swipe File Generator</h2>
+          <p className="text-sm text-slate-400">Generate ready-made outreach copy for your referral partners</p>
+        </div>
       </div>
 
-      {/* Inputs for client_win */}
-      {selected === "client_win" && (
-        <Card>
-          <CardContent className="pt-4 space-y-2">
-            <Input placeholder="Exercise name" value={exercise} onChange={e => setExercise(e.target.value)} />
-            <div className="flex gap-2">
-              <Input placeholder="Before weight" value={before} onChange={e => setBefore(e.target.value)} className="w-1/2" />
-              <Input placeholder="After weight" value={after} onChange={e => setAfter(e.target.value)} className="w-1/2" />
-            </div>
-            <div className="flex gap-2">
-              <Input placeholder="Weeks" value={weeks} onChange={e => setWeeks(e.target.value)} className="w-1/2" />
-              <Select value={clientType} onValueChange={setClientType}>
-                <SelectTrigger className="w-1/2"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Youth">Youth</SelectItem>
-                  <SelectItem value="Adult">Adult</SelectItem>
-                  <SelectItem value="Online">Online</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Inputs for app_feature */}
-      {selected === "app_feature" && (
-        <Card>
-          <CardContent className="pt-4">
-            <Select value={featureName} onValueChange={setFeatureName}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {APP_FEATURES.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+      <Card className="bg-slate-900 border-slate-700">
+        <CardContent className="pt-6">
+          <div className="flex gap-3">
+            <Select value={trade} onValueChange={setTrade}>
+              <SelectTrigger className="bg-slate-800 border-slate-600 text-white w-64">
+                <SelectValue placeholder="Select a trade..." />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-800 border-slate-700">
+                {TRADES.map((t) => (
+                  <SelectItem key={t} value={t} className="text-white hover:bg-slate-700">{t}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
-          </CardContent>
-        </Card>
-      )}
+            <Button
+              onClick={handleGenerate}
+              disabled={loading || !trade}
+              className="bg-[#e8621a] hover:bg-[#d4551a] text-white font-semibold"
+            >
+              {loading ? <Loader2 size={16} className="animate-spin mr-2" /> : <Sparkles size={16} className="mr-2" />}
+              {loading ? "Generating..." : "Generate Swipe Files"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Generate button */}
-      {selected && (
-        <Button onClick={generate} disabled={generating} className="w-full">
-          {generating ? <><Loader2 size={14} className="mr-2 animate-spin" /> Generating…</> : <><Sparkles size={14} className="mr-2" /> Generate Caption</>}
-        </Button>
-      )}
+      {(loading || result) && (
+        <Tabs defaultValue="emails" className="w-full">
+          <TabsList className="bg-slate-800 border border-slate-700">
+            <TabsTrigger value="emails" className="data-[state=active]:bg-[#e8621a] data-[state=active]:text-white text-slate-400">
+              Cold Emails
+            </TabsTrigger>
+            <TabsTrigger value="linkedin" className="data-[state=active]:bg-[#e8621a] data-[state=active]:text-white text-slate-400">
+              LinkedIn Posts
+            </TabsTrigger>
+            <TabsTrigger value="sms" className="data-[state=active]:bg-[#e8621a] data-[state=active]:text-white text-slate-400">
+              SMS Scripts
+            </TabsTrigger>
+          </TabsList>
 
-      {/* Result preview */}
-      {result && (
-        <Card className="bg-card border-primary/30">
-          <CardContent className="pt-4 space-y-3">
-            <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">{result.caption}</p>
-            {result.hashtags && (
-              <p className="text-xs text-primary font-medium">{result.hashtags}</p>
-            )}
-            <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={copyCaption}>
-                {copied ? <Check size={12} className="mr-1" /> : <Copy size={12} className="mr-1" />}
-                {copied ? "Copied" : "Copy Caption"}
-              </Button>
-              <Button size="sm" onClick={() => saveMut.mutate()} disabled={saveMut.isPending}>
-                <Save size={12} className="mr-1" /> Save to Queue
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Queue */}
-      {queue.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Content Queue</h3>
-          {queue.map((item: any) => (
-            <Card key={item.id} className="p-3">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Badge variant={item.status === "posted" ? "default" : "secondary"} className="text-[9px]">
-                      {item.status}
-                    </Badge>
-                    <span className="text-[10px] text-muted-foreground">{item.content_type}</span>
-                  </div>
-                  <p className="text-xs text-foreground line-clamp-2">{item.caption}</p>
-                </div>
-                {item.status === "draft" && (
-                  <Button size="sm" variant="outline" className="text-[10px] flex-shrink-0" onClick={() => markPosted.mutate(item.id)}>
-                    Mark Posted
-                  </Button>
-                )}
-              </div>
-            </Card>
+          {(["emails", "linkedin", "sms"] as const).map((tab) => (
+            <TabsContent key={tab} value={tab} className="mt-4 space-y-4">
+              <p className="text-xs text-slate-500 uppercase tracking-widest font-semibold">
+                {tab === "emails" ? "3 Cold Email Templates" : tab === "linkedin" ? "3 LinkedIn Posts" : "3 SMS Scripts"}
+                {trade && ` \u2014 ${trade}`}
+              </p>
+              {loading
+                ? [0, 1, 2].map((i) => <SkeletonBox key={i} />)
+                : result?.[tab].map((text, i) => (
+                    <div key={i}>
+                      <p className="text-xs text-slate-500 mb-1.5">Template {i + 1}</p>
+                      <CopyBox text={text} />
+                    </div>
+                  ))}
+            </TabsContent>
           ))}
+        </Tabs>
+      )}
+
+      {!loading && !result && (
+        <div className="rounded-lg border border-dashed border-slate-700 py-16 text-center">
+          <Sparkles size={32} className="mx-auto mb-3 text-slate-600" />
+          <p className="text-slate-500 text-sm">Select a trade and click Generate to create 9 pieces of outreach copy</p>
+          <p className="text-slate-600 text-xs mt-1">3 cold emails &middot; 3 LinkedIn posts &middot; 3 SMS scripts</p>
         </div>
       )}
     </div>
   );
-};
+});
 
+AdminContentGenerator.displayName = "AdminContentGenerator";
 export default AdminContentGenerator;

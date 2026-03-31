@@ -1,182 +1,202 @@
-import { useState, memo } from "react";
+import { memo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Loader2, ExternalLink, Trash2 } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Sparkles, Copy, Check, Loader2, Trash2, MapPin, ExternalLink } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
-const BULK_PAGES = [
-  { slug: "personal-trainer-grosse-pointe-mi", keyword: "personal trainer Grosse Pointe MI", location: "Grosse Pointe MI", service_type: "personal training" },
-  { slug: "personal-trainer-harper-woods-mi", keyword: "personal trainer Harper Woods MI", location: "Harper Woods MI", service_type: "personal training" },
-  { slug: "online-personal-trainer-michigan", keyword: "online personal trainer Michigan", location: "Michigan", service_type: "online coaching" },
-  { slug: "strength-coach-detroit", keyword: "strength coach Detroit", location: "Detroit MI", service_type: "strength coaching" },
-  { slug: "powerlifting-coach-metro-detroit", keyword: "powerlifting coach Metro Detroit", location: "Metro Detroit MI", service_type: "powerlifting" },
-  { slug: "personal-trainer-st-clair-shores", keyword: "personal trainer St Clair Shores MI", location: "St Clair Shores MI", service_type: "personal training" },
-  { slug: "online-fitness-coach-michigan", keyword: "online fitness coach Michigan", location: "Michigan", service_type: "online coaching" },
-  { slug: "personal-training-grosse-pointe-park", keyword: "personal training Grosse Pointe Park", location: "Grosse Pointe Park MI", service_type: "personal training" },
-  { slug: "strength-training-metro-detroit", keyword: "strength training Metro Detroit", location: "Metro Detroit MI", service_type: "strength training" },
-  { slug: "personal-trainer-eastpointe-mi", keyword: "personal trainer Eastpointe MI", location: "Eastpointe MI", service_type: "personal training" },
-];
+interface SeoPageConfig {
+  id: string;
+  trade: string;
+  city: string;
+  slug: string;
+  page_data: Record<string, unknown>;
+  created_at: string;
+}
 
 const AdminSeoPages = memo(() => {
   const qc = useQueryClient();
-  const [form, setForm] = useState({ keyword: "", location: "", service_type: "", slug: "" });
+  const [trade, setTrade] = useState("");
+  const [city, setCity] = useState("");
   const [generating, setGenerating] = useState(false);
-  const [bulkProgress, setBulkProgress] = useState<string | null>(null);
+  const [result, setResult] = useState<SeoPageConfig | null>(null);
+  const [copied, setCopied] = useState(false);
 
-  const { data: pages = [], isLoading } = useQuery({
-    queryKey: ["seo-landing-pages"],
+  const { data: pages = [], isLoading } = useQuery<SeoPageConfig[]>({
+    queryKey: ["seo-page-configs"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("seo_landing_pages")
-        .select("id, slug, page_title, created_at")
+      const { data, error } = await (supabase as any)
+        .from("seo_page_configs")
+        .select("*")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data || [];
     },
   });
 
-  const generatePage = async (params: { slug: string; keyword: string; location: string; service_type: string }) => {
-    const { data, error } = await supabase.functions.invoke("generate-seo-page", { body: params });
-    if (error) throw error;
-    if (data?.error) throw new Error(data.error);
-    return data;
-  };
-
-  const singleMutation = useMutation({
-    mutationFn: generatePage,
-    onSuccess: (data) => {
-      qc.invalidateQueries({ queryKey: ["seo-landing-pages"] });
-      toast({ title: `Page created: /training/${data.slug}` });
-      setForm({ keyword: "", location: "", service_type: "", slug: "" });
-    },
-    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
-  });
-
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("seo_landing_pages").delete().eq("id", id);
+      const { error } = await (supabase as any).from("seo_page_configs").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["seo-landing-pages"] });
-      toast({ title: "Page deleted" });
+      qc.invalidateQueries({ queryKey: ["seo-page-configs"] });
+      toast.success("Deleted");
     },
+    onError: () => toast.error("Delete failed"),
   });
 
-  const handleBulk = async () => {
+  const handleGenerate = async () => {
+    if (!trade.trim() || !city.trim()) { toast.error("Enter both trade and city"); return; }
     setGenerating(true);
-    for (let i = 0; i < BULK_PAGES.length; i++) {
-      setBulkProgress(`Generating ${i + 1} of ${BULK_PAGES.length}...`);
-      try {
-        await generatePage(BULK_PAGES[i]);
-      } catch (e: any) {
-        console.error(`Failed: ${BULK_PAGES[i].slug}`, e);
-      }
-      if (i < BULK_PAGES.length - 1) await new Promise((r) => setTimeout(r, 2000));
+    setResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-seo-page-config", {
+        body: { trade: trade.trim(), city: city.trim() },
+      });
+      if (error) throw error;
+      setResult(data as SeoPageConfig);
+      qc.invalidateQueries({ queryKey: ["seo-page-configs"] });
+      toast.success("Page config generated and saved");
+    } catch (err) {
+      toast.error("Generation failed. Check Supabase logs.");
+      console.error(err);
+    } finally {
+      setGenerating(false);
     }
-    setBulkProgress(null);
-    setGenerating(false);
-    qc.invalidateQueries({ queryKey: ["seo-landing-pages"] });
-    toast({ title: "Bulk generation complete!" });
+  };
+
+  const handleCopy = () => {
+    if (!result?.page_data) return;
+    navigator.clipboard.writeText(JSON.stringify(result.page_data, null, 2));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
     <div className="space-y-6">
-      {/* Generate Form */}
-      <Card className="border-primary/20">
-        <CardHeader className="pb-3"><CardTitle className="text-sm">Generate SEO Page</CardTitle></CardHeader>
-        <CardContent className="space-y-3">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <Input placeholder="Keyword *" value={form.keyword} onChange={(e) => setForm({ ...form, keyword: e.target.value })} />
-            <Input placeholder="Location *" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
-            <Input placeholder="Service Type" value={form.service_type} onChange={(e) => setForm({ ...form, service_type: e.target.value })} />
-            <Input placeholder="Slug *" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
-          </div>
-          <div className="flex gap-2 flex-wrap">
+      <div className="flex items-center gap-3">
+        <div className="w-9 h-9 rounded-lg bg-[#e8621a]/10 flex items-center justify-center">
+          <MapPin size={18} className="text-[#e8621a]" />
+        </div>
+        <div>
+          <h2 className="text-lg font-bold text-white">Programmatic Local SEO</h2>
+          <p className="text-sm text-slate-400">Generate landing page configs for any trade + city combo</p>
+        </div>
+      </div>
+
+      <Card className="bg-slate-900 border-slate-700">
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+            <div className="space-y-1.5">
+              <Label className="text-slate-300 text-sm">Trade / Industry</Label>
+              <Input
+                value={trade}
+                onChange={(e) => setTrade(e.target.value)}
+                placeholder="e.g. Roofing"
+                className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-slate-300 text-sm">City</Label>
+              <Input
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                placeholder="e.g. Warren, MI"
+                className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+              />
+            </div>
             <Button
-              size="sm"
-              disabled={!form.keyword || !form.location || !form.slug || singleMutation.isPending}
-              onClick={() => singleMutation.mutate(form)}
+              onClick={handleGenerate}
+              disabled={generating || !trade || !city}
+              className="bg-[#e8621a] hover:bg-[#d4551a] text-white font-semibold"
             >
-              {singleMutation.isPending ? <><Loader2 size={14} className="animate-spin mr-1" /> Generating...</> : "Generate Page"}
+              {generating ? <Loader2 size={16} className="animate-spin mr-2" /> : <Sparkles size={16} className="mr-2" />}
+              {generating ? "Generating..." : "Generate Page Config"}
             </Button>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button size="sm" variant="outline" disabled={generating}>
-                  {generating ? bulkProgress : "Bulk Generate (10 pages)"}
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Bulk Generate</AlertDialogTitle>
-                  <AlertDialogDescription>This will generate 10 SEO landing pages. Continue?</AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleBulk}>Generate All</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
           </div>
         </CardContent>
       </Card>
 
-      {/* Existing Pages */}
-      {isLoading ? (
-        <p className="text-muted-foreground text-sm py-8 text-center">Loading pages...</p>
-      ) : (
-        <div className="border border-border rounded-lg overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-[10px]">Slug</TableHead>
-                <TableHead className="text-[10px]">Page Title</TableHead>
-                <TableHead className="text-[10px]">Created</TableHead>
-                <TableHead className="text-[10px]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {pages.map((p: any) => (
-                <TableRow key={p.id}>
-                  <TableCell className="text-xs font-mono">{p.slug}</TableCell>
-                  <TableCell className="text-xs">{p.page_title || "—"}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">{new Date(p.created_at).toLocaleDateString()}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      <Button size="icon" variant="ghost" className="h-7 w-7" asChild>
-                        <a href={`/training/${p.slug}`} target="_blank" rel="noopener noreferrer"><ExternalLink size={12} /></a>
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive"><Trash2 size={12} /></Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete page?</AlertDialogTitle>
-                            <AlertDialogDescription>This will permanently remove /{p.slug}.</AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => deleteMutation.mutate(p.id)}>Delete</AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {pages.length === 0 && (
-                <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground text-sm py-8">No pages yet</TableCell></TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+      {result?.page_data && (
+        <Card className="bg-slate-900 border-[#e8621a]/30">
+          <CardHeader className="pb-3 flex flex-row items-center justify-between">
+            <CardTitle className="text-white text-base">
+              <span className="text-[#e8621a]">{result.trade}</span> in {result.city}
+            </CardTitle>
+            <Button size="sm" variant="ghost" onClick={handleCopy} className="text-slate-400 hover:text-white">
+              {copied ? <Check size={14} className="text-green-400 mr-1" /> : <Copy size={14} className="mr-1" />}
+              {copied ? "Copied" : "Copy JSON"}
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <pre className="text-xs text-slate-300 bg-slate-950 rounded-lg p-4 overflow-x-auto whitespace-pre-wrap leading-relaxed max-h-96">
+              {JSON.stringify(result.page_data, null, 2)}
+            </pre>
+          </CardContent>
+        </Card>
       )}
+
+      <div>
+        <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-3">
+          Saved Configs ({pages.length})
+        </h3>
+        {isLoading ? (
+          <div className="space-y-2">
+            {[0, 1, 2].map((i) => <div key={i} className="h-12 bg-slate-800 rounded-lg animate-pulse" />)}
+          </div>
+        ) : pages.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-slate-700 py-10 text-center">
+            <p className="text-slate-500 text-sm">No configs yet. Generate your first one above.</p>
+          </div>
+        ) : (
+          <div className="rounded-lg border border-slate-700 overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-700 bg-slate-800/50">
+                  <th className="text-left py-2.5 px-4 text-slate-400 font-medium">Slug</th>
+                  <th className="text-left py-2.5 px-4 text-slate-400 font-medium">Trade</th>
+                  <th className="text-left py-2.5 px-4 text-slate-400 font-medium">City</th>
+                  <th className="text-left py-2.5 px-4 text-slate-400 font-medium">Created</th>
+                  <th className="py-2.5 px-4" />
+                </tr>
+              </thead>
+              <tbody>
+                {pages.map((page) => (
+                  <tr key={page.id} className="border-b border-slate-800 hover:bg-slate-800/30 transition-colors">
+                    <td className="py-3 px-4 text-[#e8621a] font-mono text-xs">{page.slug}</td>
+                    <td className="py-3 px-4 text-slate-300">{page.trade}</td>
+                    <td className="py-3 px-4 text-slate-300">{page.city}</td>
+                    <td className="py-3 px-4 text-slate-500">{new Date(page.created_at).toLocaleDateString()}</td>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-1 justify-end">
+                        <button
+                          onClick={() => setResult(page)}
+                          className="p-1.5 rounded text-slate-500 hover:text-white hover:bg-slate-700 transition-colors"
+                          title="View JSON"
+                        >
+                          <ExternalLink size={13} />
+                        </button>
+                        <button
+                          onClick={() => deleteMutation.mutate(page.id)}
+                          disabled={deleteMutation.isPending}
+                          className="p-1.5 rounded text-slate-500 hover:text-red-400 hover:bg-slate-700 transition-colors"
+                          title="Delete"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 });
