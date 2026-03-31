@@ -451,6 +451,6 @@ Goal: $10,000/mo MRR`
     console.error("[AGENT-SMITH] Error:", e);
     return new Response(JSON.stringify({ error: e.message }), {
       status: 500,
-      headers: { "Content-Type": "application/json" } });
+      headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
