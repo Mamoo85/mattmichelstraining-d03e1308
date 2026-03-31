@@ -178,6 +178,10 @@ const DirectMail = lazyRetry(() => import("./pages/DirectMail"));
 const WarrantyReminders = lazyRetry(() => import("./pages/WarrantyReminders"));
 const HiringAssistant = lazyRetry(() => import("./pages/HiringAssistant"));
 const KPIEmail = lazyRetry(() => import("./pages/KPIEmail"));
+const AllServices = lazyRetry(() => import("./pages/AllServices"));
+const ReferralPage = lazyRetry(() => import("./pages/ReferralPage"));
+const PrivacyPolicy = lazyRetry(() => import("./pages/PrivacyPolicy"));
+const TermsOfService = lazyRetry(() => import("./pages/TermsOfService"));
 const AIOnboardingAgent = lazyRetry(() => import("./pages/AIOnboardingAgent"));
 const AISocialProof = lazyRetry(() => import("./pages/AISocialProof"));
 const AIPriceMonitor = lazyRetry(() => import("./pages/AIPriceMonitor"));
@@ -445,6 +449,10 @@ const App = () => (
                     <Route path="/warranty-reminders" element={<WarrantyReminders />} />
                     <Route path="/hiring-assistant" element={<HiringAssistant />} />
                     <Route path="/kpi-email" element={<KPIEmail />} />
+                    <Route path="/all-services" element={<AllServices />} />
+                    <Route path="/refer" element={<ReferralPage />} />
+                    <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                    <Route path="/terms" element={<TermsOfService />} />
                     <Route path="/ai-onboarding-agent" element={<AIOnboardingAgent />} />
                     <Route path="/ai-social-proof" element={<AISocialProof />} />
                     <Route path="/ai-price-monitor" element={<AIPriceMonitor />} />

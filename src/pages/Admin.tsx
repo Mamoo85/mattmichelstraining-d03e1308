@@ -76,6 +76,7 @@ const UserActivityFeed = lazy(() => import("@/components/admin/UserActivityFeed"
 const AdminAiCommandCenter = lazy(() => import("@/components/admin/AdminAiCommandCenter"));
 const AdminImageMatcher = lazy(() => import("@/components/admin/AdminImageMatcher"));
 const AdminWebDesignCRM = lazy(() => import("@/components/admin/AdminWebDesignCRM"));
+const AdminAgencyCRM = lazy(() => import("@/components/admin/AdminAgencyCRM"));
 const AdminProspector = lazy(() => import("@/components/admin/AdminProspector"));
 const AdminAutomationHub = lazy(() => import("@/components/admin/AdminAutomationHub"));
 const AdminM2GrowthHub = lazy(() => import("@/components/admin/AdminM2GrowthHub"));
@@ -432,6 +433,7 @@ const Admin = () => {
         {/* ── WEB DESIGN ── */}
         {activeTab === "webdesign" && (
           <SubTabs tabs={[
+            { key: "fulfillment", label: "Agency CRM", content: <AdminAgencyCRM /> },
             { key: "pipeline", label: "B2B Pipeline", content: <AdminB2BPipeline /> },
             { key: "crm", label: "Web Design CRM", content: <AdminWebDesignCRM /> },
             { key: "prospector", label: "Prospector", content: <AdminProspector /> },

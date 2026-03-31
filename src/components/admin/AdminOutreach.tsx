@@ -1,455 +1,409 @@
-import { useState, memo } from "react";
+import { memo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Textarea } from "@/components/ui/textarea";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, Copy, Check, Trash2, Users, Mail, TrendingUp, DollarSign, CircleDot } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Sheet, SheetContent, SheetHeader, SheetTitle,
+} from "@/components/ui/sheet";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import {
+  Plus, Sparkles, Copy, Check, Loader2, Trash2, Building2, MapPin, ChevronRight,
+} from "lucide-react";
+import { toast } from "sonner";
 
-type Industry = "Plumber" | "Electrician" | "Landscaper" | "Roofer" | "Lawyer" | "MedSpa" | "Other";
-type WebsiteStatus = "None" | "Outdated" | "Basic" | "Good";
-type LeadStatus = "New" | "Emailed" | "Responded" | "Closed" | "Lost";
+type KanbanStatus = "lead_found" | "ai_audited" | "contacted" | "negotiating" | "won";
 
 interface Lead {
   id: string;
   business_name: string;
   owner_name: string | null;
   city: string | null;
-  industry: Industry | null;
+  industry: string | null;
   phone: string | null;
   email: string | null;
-  website_status: WebsiteStatus | null;
-  status: LeadStatus;
-  last_contact_date: string | null;
+  website: string | null;
   notes: string | null;
+  status: string;
   created_at: string;
 }
 
-const STATUS_CYCLE: LeadStatus[] = ["New", "Emailed", "Responded", "Closed", "Lost"];
-const STATUS_COLORS: Record<LeadStatus, string> = {
-  New: "bg-muted text-muted-foreground",
-  Emailed: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  Responded: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  Closed: "bg-green-500/20 text-green-400 border-green-500/30",
-  Lost: "bg-red-500/20 text-red-400 border-red-500/30",
+const COLUMNS: { key: KanbanStatus; label: string; color: string }[] = [
+  { key: "lead_found",  label: "Lead Found",   color: "bg-slate-500/20 text-slate-300 border-slate-500/30" },
+  { key: "ai_audited",  label: "AI Audited",   color: "bg-blue-500/20 text-blue-300 border-blue-500/30" },
+  { key: "contacted",   label: "Contacted",    color: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30" },
+  { key: "negotiating", label: "Negotiating",  color: "bg-purple-500/20 text-purple-300 border-purple-500/30" },
+  { key: "won",         label: "Won",          color: "bg-green-500/20 text-green-300 border-green-500/30" },
+];
+
+const ISSUES = [
+  "No Google Business Profile",
+  "Slow website (3s+ load time)",
+  "Not mobile-friendly",
+  "Outdated website design",
+  "Missing or few reviews",
+  "No clear call-to-action",
+  "No social media presence",
+  "No online booking / contact form",
+];
+
+const INDUSTRIES = [
+  "Roofing", "HVAC", "Plumbing", "Electrical", "Landscaping",
+  "Auto Repair", "Restaurant", "Salon / Barbershop", "Medical / Dental",
+  "Real Estate", "Gym / Fitness", "Pest Control", "Retail", "Other",
+];
+
+const BLANK_FORM = {
+  business_name: "", owner_name: "", city: "", industry: "",
+  phone: "", email: "", website: "", notes: "",
 };
-
-const INDUSTRIES: Industry[] = ["Plumber", "Electrician", "Landscaper", "Roofer", "Lawyer", "MedSpa", "Other"];
-const WEBSITE_STATUSES: WebsiteStatus[] = ["None", "Outdated", "Basic", "Good"];
-
-function getEmailTemplate(lead: Lead): { subject: string; body: string } {
-  const name = lead.owner_name || "there";
-  const biz = lead.business_name;
-  const city = lead.city || "your area";
-  const ind = lead.industry?.toLowerCase() || "trades";
-  const demoMap: Record<string, string> = {
-    Plumber: "https://mattmichelstraining.com/demo-plumber",
-    Electrician: "https://mattmichelstraining.com/demo-electrician",
-    Landscaper: "https://mattmichelstraining.com/demo-landscaping",
-    Roofer: "https://mattmichelstraining.com/demo-roofing",
-    Lawyer: "https://mattmichelstraining.com/demo-lawyer",
-    MedSpa: "https://mattmichelstraining.com/demo-clinic",
-  };
-  const demo = demoMap[lead.industry ?? ""] ?? "https://mattmichelstraining.com/detroit-web-design";
-  const signature = `Matt Michels\nGrosse Pointe Park, MI\n📱 313.806.4952\nmatthewmichels4@gmail.com\n\nSee exactly what's included: https://mattmichelstraining.com/whats-included`;
-
-  if (lead.website_status === "None") {
-    return {
-      subject: `Found ${biz} on Google — couldn't find your website`,
-      body: `Hi ${name},\n\nI was searching for ${ind} in ${city} and came across ${biz} — solid reviews. But I couldn't find your website anywhere.\n\nThat's costing you jobs every week. Over 75% of people search online before they call a ${ind}. If you're not showing up, they're calling someone else.\n\nI build websites for local trades businesses in Metro Detroit — fast, mobile-first, and built to make your phone ring.\n\nWhat agencies charge vs. what I charge:\n\n  Local agencies:  $2,500–$8,000 to build + $150–$300/month\n  My price:        $499 flat to build + $49/month (I handle everything)\n\nFor $49/month — less than a tank of gas — I keep it live, updated, and ranking on Google. You never have to touch it.\n\nI already built a demo so you can see exactly what yours would look like:\n👉 ${demo}\n\nNo contracts. No pressure. Just reply here or call/text me.\n\n${signature}`,
-    };
-  }
-
-  if (lead.website_status === "Outdated" || lead.website_status === "Basic") {
-    return {
-      subject: `Quick note about ${biz}'s website`,
-      body: `Hi ${name},\n\nI found ${biz} while searching for ${ind} in ${city}. Really impressive reviews. I checked your current website and wanted to be straight with you — it's not doing your business justice. On mobile it's hard to navigate, and it's likely hurting your Google ranking.\n\nI rebuild exactly this type of site for local trades businesses in Metro Detroit.\n\nWhat a redesign typically costs vs. what I charge:\n\n  Local agencies:         $2,500–$8,000 + $150–$300/month\n  DIY (Wix/Squarespace):  Your time + ~$40/month, looks generic\n  My price:               $499 flat + $49/month, I do everything\n\nHere's a live demo of what a modern ${ind} site looks like when it's done right:\n👉 ${demo}\n\nIf you like what you see, let's talk. If not, no hard feelings.\n\n${signature}`,
-    };
-  }
-
-  return {
-    subject: `Your ${biz} reviews are great — wanted to connect`,
-    body: `Hi ${name},\n\nI came across ${biz} while searching for ${ind} in ${city}. Genuinely impressive reputation.\n\nI'm a local web designer based in Grosse Pointe Park. I work with trades businesses across Metro Detroit — $499 to build, $49/month to maintain, and I handle everything.\n\nIf you ever want a second set of eyes on your site or are thinking about a refresh, I'd love to chat.\n\n${signature}`,
-  };
-}
-
-function getPhoneScript(lead: Lead): string {
-  const name = lead.owner_name || "there";
-  const biz = lead.business_name;
-  return `Hey ${name}, this is Matt — I'm a web designer in Grosse Pointe. I was going to email you about ${biz}'s website but couldn't find an address. Can I shoot you a quick email?\n\nNo pitch, just want to show you a demo I built. 313.806.4952`;
-}
-
-function needsFollowUp(lead: Lead): boolean {
-  if (lead.status !== "Emailed" || !lead.last_contact_date) return false;
-  const lastContact = new Date(lead.last_contact_date);
-  const daysSince = Math.floor((Date.now() - lastContact.getTime()) / (1000 * 60 * 60 * 24));
-  return daysSince >= 5;
-}
 
 const AdminOutreach = memo(() => {
   const qc = useQueryClient();
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [filterIndustry, setFilterIndustry] = useState<string>("all");
-  const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [scriptOpenId, setScriptOpenId] = useState<string | null>(null);
-  const [scriptCopiedId, setScriptCopiedId] = useState<string | null>(null);
+  const [addOpen, setAddOpen] = useState(false);
+  const [form, setForm] = useState({ ...BLANK_FORM });
+  const [pitchLead, setPitchLead] = useState<Lead | null>(null);
+  const [checkedIssues, setCheckedIssues] = useState<string[]>([]);
+  const [pitchEmail, setPitchEmail] = useState("");
+  const [pitchLoading, setPitchLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  const [form, setForm] = useState({
-    business_name: "",
-    owner_name: "",
-    city: "",
-    industry: "" as string,
-    phone: "",
-    email: "",
-    website_status: "None" as string,
-    notes: "",
-  });
-
-  const { data: leads = [], isLoading } = useQuery({
-    queryKey: ["outreach-leads"],
+  const { data: leads = [], isLoading } = useQuery<Lead[]>({
+    queryKey: ["outreach-leads-kanban"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("outreach_leads" as any)
+        .from("outreach_leads")
         .select("*")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data || []) as unknown as Lead[];
+      return (data || []) as Lead[];
     },
   });
 
   const addMutation = useMutation({
-    mutationFn: async (newLead: typeof form) => {
-      const { error } = await supabase.from("outreach_leads" as any).insert({
-        business_name: newLead.business_name,
-        owner_name: newLead.owner_name || null,
-        city: newLead.city || null,
-        industry: newLead.industry || null,
-        phone: newLead.phone || null,
-        email: newLead.email || null,
-        website_status: newLead.website_status || "None",
-        notes: newLead.notes || null,
+    mutationFn: async (vals: typeof BLANK_FORM) => {
+      const { error } = await supabase.from("outreach_leads").insert({
+        ...vals,
+        status: "lead_found",
       });
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["outreach-leads"] });
-      toast({ title: "Lead added" });
-      setSheetOpen(false);
-      setForm({ business_name: "", owner_name: "", city: "", industry: "", phone: "", email: "", website_status: "None", notes: "" });
+      qc.invalidateQueries({ queryKey: ["outreach-leads-kanban"] });
+      setAddOpen(false);
+      setForm({ ...BLANK_FORM });
+      toast.success("Lead added");
     },
-    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+    onError: () => toast.error("Failed to add lead"),
   });
 
-  const statusMutation = useMutation({
-    mutationFn: async ({ id, newStatus }: { id: string; newStatus: LeadStatus }) => {
-      const updates: any = { status: newStatus };
-      if (newStatus === "Emailed") updates.last_contact_date = new Date().toISOString().split("T")[0];
-      const { error } = await supabase.from("outreach_leads" as any).update(updates).eq("id", id);
+  const moveMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: KanbanStatus }) => {
+      const { error } = await supabase.from("outreach_leads").update({ status }).eq("id", id);
       if (error) throw error;
     },
-    onMutate: async ({ id, newStatus }) => {
-      await qc.cancelQueries({ queryKey: ["outreach-leads"] });
-      const prev = qc.getQueryData<Lead[]>(["outreach-leads"]);
-      qc.setQueryData<Lead[]>(["outreach-leads"], (old) =>
-        (old || []).map((l) => (l.id === id ? { ...l, status: newStatus, ...(newStatus === "Emailed" ? { last_contact_date: new Date().toISOString().split("T")[0] } : {}) } : l))
-      );
-      return { prev };
-    },
-    onError: (_e, _v, ctx) => {
-      if (ctx?.prev) qc.setQueryData(["outreach-leads"], ctx.prev);
-    },
-    onSettled: () => qc.invalidateQueries({ queryKey: ["outreach-leads"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["outreach-leads-kanban"] }),
+    onError: () => toast.error("Move failed"),
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("outreach_leads" as any).delete().eq("id", id);
+      const { error } = await supabase.from("outreach_leads").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["outreach-leads"] });
-      toast({ title: "Lead deleted" });
+      qc.invalidateQueries({ queryKey: ["outreach-leads-kanban"] });
+      toast.success("Lead removed");
     },
+    onError: () => toast.error("Delete failed"),
   });
 
-  const cycleStatus = (lead: Lead) => {
-    const idx = STATUS_CYCLE.indexOf(lead.status);
-    const next = STATUS_CYCLE[(idx + 1) % STATUS_CYCLE.length];
-    statusMutation.mutate({ id: lead.id, newStatus: next });
-  };
-
-  const copyEmail = (lead: Lead) => {
-    const { subject, body } = getEmailTemplate(lead);
-    navigator.clipboard.writeText(`Subject: ${subject}\n\n${body}`);
-    setCopiedId(lead.id);
-    setTimeout(() => setCopiedId(null), 2000);
-  };
-
-  const openGmail = (lead: Lead) => {
-    const { subject, body } = getEmailTemplate(lead);
-    const to = lead.email || "";
-    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(to)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.open(gmailUrl, "_blank");
-
-    // Auto-update status to Emailed if currently New
-    if (lead.status === "New") {
-      statusMutation.mutate({ id: lead.id, newStatus: "Emailed" });
-      toast({ title: "Gmail opened — status updated to Emailed" });
+  const handleGeneratePitch = async () => {
+    if (!pitchLead) return;
+    setPitchLoading(true);
+    setPitchEmail("");
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-audit-pitch", {
+        body: {
+          businessName: pitchLead.business_name,
+          ownerName: pitchLead.owner_name,
+          city: pitchLead.city,
+          industry: pitchLead.industry,
+          website: pitchLead.website,
+          issues: checkedIssues,
+        },
+      });
+      if (error) throw error;
+      setPitchEmail((data as { email: string }).email);
+    } catch (err) {
+      toast.error("Generation failed. Check Supabase logs.");
+      console.error(err);
+    } finally {
+      setPitchLoading(false);
     }
   };
 
-  const copyScript = (lead: Lead) => {
-    navigator.clipboard.writeText(getPhoneScript(lead));
-    setScriptCopiedId(lead.id);
-    setTimeout(() => setScriptCopiedId(null), 2000);
+  const handleMarkAudited = () => {
+    if (!pitchLead) return;
+    moveMutation.mutate({ id: pitchLead.id, status: "ai_audited" });
+    setPitchLead(null);
+    setPitchEmail("");
+    setCheckedIssues([]);
+    toast.success("Moved to AI Audited");
   };
 
-  const filtered = leads.filter((l) => {
-    if (filterIndustry !== "all" && l.industry !== filterIndustry) return false;
-    if (filterStatus !== "all" && l.status !== filterStatus) return false;
-    return true;
-  });
+  const leadsForColumn = (col: KanbanStatus) =>
+    leads.filter((l) => {
+      if (col === "lead_found") return !COLUMNS.slice(1).map((c) => c.key).includes(l.status as KanbanStatus);
+      return l.status === col;
+    });
 
-  const emailedCount = leads.filter((l) => l.status !== "New").length;
-  const respondedCount = leads.filter((l) => l.status === "Responded" || l.status === "Closed").length;
-  const closedCount = leads.filter((l) => l.status === "Closed").length;
-  const responseRate = emailedCount > 0 ? Math.round((respondedCount / emailedCount) * 100) : 0;
-  const mrr = closedCount * 49;
-  const totalBuildFees = closedCount * 499;
+  const won = leadsForColumn("won").length;
+  const total = leads.length;
 
   return (
-    <TooltipProvider>
-      <div className="space-y-4">
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Card className="border-primary/20">
-            <CardContent className="p-4 flex items-center gap-3">
-              <Users size={18} className="text-primary shrink-0" />
-              <div>
-                <p className="text-lg font-bold text-foreground">{leads.length}</p>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Total Leads</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-primary/20">
-            <CardContent className="p-4 flex items-center gap-3">
-              <Mail size={18} className="text-primary shrink-0" />
-              <div>
-                <p className="text-lg font-bold text-foreground">{emailedCount}</p>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Emails Sent</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-primary/20">
-            <CardContent className="p-4 flex items-center gap-3">
-              <TrendingUp size={18} className="text-primary shrink-0" />
-              <div>
-                <p className="text-lg font-bold text-foreground">{responseRate}%</p>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Response Rate</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-primary/20">
-            <CardContent className="p-4 flex items-center gap-3">
-              <DollarSign size={18} className="text-primary shrink-0" />
-              <div>
-                <p className={`text-lg font-bold ${mrr > 0 ? "text-primary" : "text-muted-foreground"}`}>${mrr}/mo</p>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Est. Monthly Recurring</p>
-                {totalBuildFees > 0 && (
-                  <p className="text-[9px] text-muted-foreground">+ ${totalBuildFees} collected</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Add Lead + Filters */}
-        <div className="flex flex-wrap items-center gap-2">
-          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-            <SheetTrigger asChild>
-              <Button size="sm" className="gap-1"><Plus size={14} /> Add Lead</Button>
-            </SheetTrigger>
-            <SheetContent className="overflow-y-auto">
-              <SheetHeader><SheetTitle>Add Lead</SheetTitle></SheetHeader>
-              <div className="space-y-3 mt-4">
-                <Input placeholder="Business Name *" value={form.business_name} onChange={(e) => setForm({ ...form, business_name: e.target.value })} />
-                <Input placeholder="Owner Name" value={form.owner_name} onChange={(e) => setForm({ ...form, owner_name: e.target.value })} />
-                <Input placeholder="City" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
-                <Select value={form.industry} onValueChange={(v) => setForm({ ...form, industry: v })}>
-                  <SelectTrigger><SelectValue placeholder="Industry" /></SelectTrigger>
-                  <SelectContent>{INDUSTRIES.map((i) => <SelectItem key={i} value={i}>{i}</SelectItem>)}</SelectContent>
-                </Select>
-                <Input placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-                <Input placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-                <Select value={form.website_status} onValueChange={(v) => setForm({ ...form, website_status: v })}>
-                  <SelectTrigger><SelectValue placeholder="Website Status" /></SelectTrigger>
-                  <SelectContent>{WEBSITE_STATUSES.map((w) => <SelectItem key={w} value={w}>{w}</SelectItem>)}</SelectContent>
-                </Select>
-                <Textarea placeholder="Notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
-                <Button className="w-full" disabled={!form.business_name || addMutation.isPending} onClick={() => addMutation.mutate(form)}>
-                  {addMutation.isPending ? "Saving..." : "Save Lead"}
-                </Button>
-              </div>
-            </SheetContent>
-          </Sheet>
-
-          <Select value={filterIndustry} onValueChange={setFilterIndustry}>
-            <SelectTrigger className="w-[130px] h-9 text-xs"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Industries</SelectItem>
-              {INDUSTRIES.map((i) => <SelectItem key={i} value={i}>{i}</SelectItem>)}
-            </SelectContent>
-          </Select>
-
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-[120px] h-9 text-xs"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              {STATUS_CYCLE.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Table */}
-        {isLoading ? (
-          <p className="text-muted-foreground text-sm py-8 text-center">Loading leads...</p>
-        ) : (
-          <div className="border border-border rounded-lg overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-[10px]">Business</TableHead>
-                  <TableHead className="text-[10px]">Owner</TableHead>
-                  <TableHead className="text-[10px]">Industry</TableHead>
-                  <TableHead className="text-[10px]">City</TableHead>
-                  <TableHead className="text-[10px]">Status</TableHead>
-                  <TableHead className="text-[10px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((lead) => {
-                  const hasNoContact = !lead.email && !lead.phone;
-                  const followUp = needsFollowUp(lead);
-
-                  return (
-                    <>
-                      <TableRow key={lead.id}>
-                        <TableCell className="text-xs font-medium">{lead.business_name}</TableCell>
-                        <TableCell className="text-xs text-muted-foreground">{lead.owner_name || "—"}</TableCell>
-                        <TableCell className="text-xs">{lead.industry || "—"}</TableCell>
-                        <TableCell className="text-xs">{lead.city || "—"}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Badge
-                              className={`cursor-pointer text-[10px] ${STATUS_COLORS[lead.status]}`}
-                              onClick={() => cycleStatus(lead)}
-                            >
-                              {lead.status}
-                            </Badge>
-                            {followUp && (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <CircleDot size={10} className="text-primary" />
-                                </TooltipTrigger>
-                                <TooltipContent><p className="text-xs">No response in 5+ days — consider following up</p></TooltipContent>
-                              </Tooltip>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-1">
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => copyEmail(lead)}>
-                                  {copiedId === lead.id ? <Check size={12} className="text-green-500" /> : <Copy size={12} />}
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent><p className="text-xs">Copy email to clipboard</p></TooltipContent>
-                            </Tooltip>
-
-                            {lead.email ? (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openGmail(lead)}>
-                                    <Mail size={12} />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent><p className="text-xs">Open Gmail compose</p></TooltipContent>
-                              </Tooltip>
-                            ) : (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    size="icon"
-                                    variant="ghost"
-                                    className="h-7 w-7"
-                                    onClick={() => setScriptOpenId(scriptOpenId === lead.id ? null : lead.id)}
-                                  >
-                                    <Mail size={12} className={hasNoContact ? "text-muted-foreground/40" : "text-muted-foreground"} />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p className="text-xs">{hasNoContact ? "No email on file — use Copy to paste manually" : "No email — show phone script"}</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            )}
-
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive"><Trash2 size={12} /></Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete lead?</AlertDialogTitle>
-                                  <AlertDialogDescription>This will permanently remove {lead.business_name}.</AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => deleteMutation.mutate(lead.id)}>Delete</AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-
-                      {/* Phone script panel for leads with no email */}
-                      {scriptOpenId === lead.id && !lead.email && (
-                        <TableRow key={`${lead.id}-script`}>
-                          <TableCell colSpan={6} className="bg-muted/30 border-t-0">
-                            <div className="space-y-2 py-2">
-                              <p className="text-xs text-muted-foreground">No email on file. Use this script to get their email by phone or text:</p>
-                              <div className="bg-card border border-border rounded-md p-3 text-xs text-foreground whitespace-pre-wrap font-mono leading-relaxed">
-                                {getPhoneScript(lead)}
-                              </div>
-                              <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => copyScript(lead)}>
-                                {scriptCopiedId === lead.id ? <><Check size={12} className="text-green-500" /> Copied ✓</> : <><Copy size={12} /> Copy Script</>}
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </>
-                  );
-                })}
-                {filtered.length === 0 && (
-                  <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground text-sm py-8">No leads yet</TableCell></TableRow>
-                )}
-              </TableBody>
-            </Table>
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-[#e8621a]/10 flex items-center justify-center">
+            <Building2 size={18} className="text-[#e8621a]" />
           </div>
-        )}
+          <div>
+            <h2 className="text-lg font-bold text-white">Outreach CRM</h2>
+            <p className="text-sm text-slate-400">{total} leads &middot; {won} won</p>
+          </div>
+        </div>
+        <Button
+          onClick={() => setAddOpen(true)}
+          className="bg-[#e8621a] hover:bg-[#d4551a] text-white font-semibold"
+          size="sm"
+        >
+          <Plus size={15} className="mr-1.5" /> Add Lead
+        </Button>
       </div>
-    </TooltipProvider>
+
+      {/* Kanban Board */}
+      {isLoading ? (
+        <div className="grid grid-cols-5 gap-3">
+          {COLUMNS.map((col) => (
+            <div key={col.key} className="bg-slate-900 rounded-xl border border-slate-700 p-3 space-y-2 animate-pulse">
+              <div className="h-4 bg-slate-700 rounded w-3/4" />
+              {[0, 1].map((i) => <div key={i} className="h-16 bg-slate-800 rounded-lg" />)}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 items-start">
+          {COLUMNS.map((col) => {
+            const colLeads = leadsForColumn(col.key);
+            return (
+              <div key={col.key} className="bg-slate-900 rounded-xl border border-slate-700 flex flex-col">
+                <div className="flex items-center justify-between px-3 py-2.5 border-b border-slate-700">
+                  <span className="text-xs font-semibold text-slate-300">{col.label}</span>
+                  <span className="text-xs font-bold text-slate-500">{colLeads.length}</span>
+                </div>
+                <div className="p-2 space-y-2 min-h-[120px]">
+                  {colLeads.length === 0 && (
+                    <p className="text-xs text-slate-600 text-center py-6">Empty</p>
+                  )}
+                  {colLeads.map((lead) => (
+                    <Card key={lead.id} className="bg-slate-800 border-slate-700 hover:border-[#e8621a]/40 transition-colors">
+                      <CardContent className="p-3 space-y-1.5">
+                        <p className="text-sm font-semibold text-white leading-tight">{lead.business_name}</p>
+                        {lead.industry && (
+                          <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${col.color}`}>
+                            {lead.industry}
+                          </Badge>
+                        )}
+                        {lead.city && (
+                          <p className="text-xs text-slate-500 flex items-center gap-1">
+                            <MapPin size={10} /> {lead.city}
+                          </p>
+                        )}
+                        <div className="flex items-center gap-1 pt-1">
+                          <button
+                            onClick={() => {
+                              setPitchLead(lead);
+                              setCheckedIssues([]);
+                              setPitchEmail("");
+                            }}
+                            className="flex items-center gap-1 text-[10px] text-[#e8621a] hover:text-[#ff8c4a] font-semibold"
+                          >
+                            <Sparkles size={10} /> Audit Pitch
+                          </button>
+                          <span className="text-slate-700 text-xs">|</span>
+                          {/* Move dropdown */}
+                          <Select
+                            value={lead.status}
+                            onValueChange={(val) => moveMutation.mutate({ id: lead.id, status: val as KanbanStatus })}
+                          >
+                            <SelectTrigger className="h-5 text-[10px] bg-transparent border-0 text-slate-500 hover:text-white p-0 w-auto gap-0.5 focus:ring-0">
+                              <ChevronRight size={10} />
+                              <span>Move</span>
+                            </SelectTrigger>
+                            <SelectContent className="bg-slate-800 border-slate-700">
+                              {COLUMNS.map((c) => (
+                                <SelectItem key={c.key} value={c.key} className="text-xs text-slate-300 hover:bg-slate-700">
+                                  {c.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <span className="text-slate-700 text-xs">|</span>
+                          <button
+                            onClick={() => deleteMutation.mutate(lead.id)}
+                            className="text-slate-600 hover:text-red-400 transition-colors"
+                          >
+                            <Trash2 size={10} />
+                          </button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Add Lead Sheet */}
+      <Sheet open={addOpen} onOpenChange={setAddOpen}>
+        <SheetContent className="bg-slate-900 border-slate-700 text-white w-full sm:max-w-md overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="text-white">Add New Lead</SheetTitle>
+          </SheetHeader>
+          <div className="mt-6 space-y-4">
+            {([
+              { key: "business_name", label: "Business Name *", placeholder: "Smith Roofing LLC" },
+              { key: "owner_name",    label: "Owner Name",       placeholder: "John Smith" },
+              { key: "city",          label: "City",             placeholder: "Warren, MI" },
+              { key: "phone",         label: "Phone",            placeholder: "(313) 555-1234" },
+              { key: "email",         label: "Email",            placeholder: "john@smithroofing.com" },
+              { key: "website",       label: "Website",          placeholder: "https://smithroofing.com" },
+              { key: "notes",         label: "Notes",            placeholder: "Met at chamber event..." },
+            ] as { key: keyof typeof BLANK_FORM; label: string; placeholder: string }[]).map(({ key, label, placeholder }) => (
+              <div key={key} className="space-y-1.5">
+                <Label className="text-slate-300 text-sm">{label}</Label>
+                <Input
+                  value={form[key]}
+                  onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
+                  placeholder={placeholder}
+                  className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                />
+              </div>
+            ))}
+            <div className="space-y-1.5">
+              <Label className="text-slate-300 text-sm">Industry</Label>
+              <Select value={form.industry} onValueChange={(v) => setForm((f) => ({ ...f, industry: v }))}>
+                <SelectTrigger className="bg-slate-800 border-slate-600 text-white">
+                  <SelectValue placeholder="Select industry..." />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-800 border-slate-700">
+                  {INDUSTRIES.map((ind) => (
+                    <SelectItem key={ind} value={ind} className="text-white hover:bg-slate-700">{ind}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button
+              onClick={() => addMutation.mutate(form)}
+              disabled={!form.business_name || addMutation.isPending}
+              className="w-full bg-[#e8621a] hover:bg-[#d4551a] text-white font-semibold mt-2"
+            >
+              {addMutation.isPending ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
+              Add Lead
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Audit Pitch Modal */}
+      <Dialog open={!!pitchLead} onOpenChange={(open) => { if (!open) { setPitchLead(null); setPitchEmail(""); setCheckedIssues([]); } }}>
+        <DialogContent className="bg-slate-900 border-slate-700 text-white max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-white flex items-center gap-2">
+              <Sparkles size={16} className="text-[#e8621a]" />
+              Generate Audit Pitch
+            </DialogTitle>
+          </DialogHeader>
+          {pitchLead && (
+            <div className="space-y-4 mt-2">
+              <div className="bg-slate-800 rounded-lg px-4 py-3 text-sm">
+                <p className="font-semibold text-white">{pitchLead.business_name}</p>
+                <p className="text-slate-400 text-xs mt-0.5">
+                  {[pitchLead.industry, pitchLead.city].filter(Boolean).join(" \u00b7 ")}
+                  {pitchLead.website && <> &middot; <span className="text-[#e8621a]">{pitchLead.website}</span></>}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm font-semibold text-slate-300 mb-2">Issues found (check all that apply):</p>
+                <div className="space-y-2">
+                  {ISSUES.map((issue) => (
+                    <label key={issue} className="flex items-center gap-2.5 cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        checked={checkedIssues.includes(issue)}
+                        onChange={(e) => setCheckedIssues((prev) =>
+                          e.target.checked ? [...prev, issue] : prev.filter((i) => i !== issue)
+                        )}
+                        className="accent-[#e8621a] w-4 h-4"
+                      />
+                      <span className="text-sm text-slate-300 group-hover:text-white transition-colors">{issue}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <Button
+                onClick={handleGeneratePitch}
+                disabled={pitchLoading || checkedIssues.length === 0}
+                className="w-full bg-[#e8621a] hover:bg-[#d4551a] text-white font-semibold"
+              >
+                {pitchLoading ? <Loader2 size={16} className="animate-spin mr-2" /> : <Sparkles size={16} className="mr-2" />}
+                {pitchLoading ? "Generating..." : "Generate Cold Email"}
+              </Button>
+
+              {pitchEmail && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-slate-500 uppercase tracking-widest font-semibold">Generated Email</p>
+                    <button
+                      onClick={() => { navigator.clipboard.writeText(pitchEmail); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+                      className="flex items-center gap-1 text-xs text-slate-400 hover:text-white transition-colors"
+                    >
+                      {copied ? <Check size={12} className="text-green-400" /> : <Copy size={12} />}
+                      {copied ? "Copied" : "Copy"}
+                    </button>
+                  </div>
+                  <div className="bg-slate-800 rounded-lg p-4 border border-slate-700">
+                    <pre className="whitespace-pre-wrap text-sm text-slate-300 font-sans leading-relaxed">{pitchEmail}</pre>
+                  </div>
+                  <Button
+                    onClick={handleMarkAudited}
+                    variant="outline"
+                    className="w-full border-slate-600 text-slate-300 hover:bg-slate-800 hover:text-white"
+                    size="sm"
+                  >
+                    Mark as AI Audited &rarr; Move to next column
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 });
 

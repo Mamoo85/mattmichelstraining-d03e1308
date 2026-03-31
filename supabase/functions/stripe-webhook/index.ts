@@ -753,6 +753,98 @@ serve(async (req) => {
         }
       }
 
+      // ── UNIVERSAL B2B FULFILLMENT WRITER ───────────────────────────────────
+      // Every agency subscription is written to b2b_clients + service_subscriptions
+      // so they instantly appear in the Admin fulfillment CRM
+      const AGENCY_SERVICE_LABELS: Record<string, string> = {
+        contractor_lead_subscription: "Contractor Leads",
+        b2b_database_subscription: "B2B Dental Database",
+        gbp_saas_subscription: "GBP Automation",
+        field_rep_subscription: "Field Rep AI Tools",
+        social_media_subscription: "Social Media AI",
+        missed_call_subscription: "Missed Call Text-Back",
+        reputation_dashboard_subscription: "Reputation Management",
+        ads_copy_subscription: "AI Ads Copy",
+        voicemail_transcription_subscription: "Voicemail Transcription",
+        contractor_invoicing_subscription: "Contractor Invoicing",
+        phone_answering_subscription: "AI Phone Answering",
+        text_marketing_subscription: "Text Message Marketing",
+        blog_post_subscription: "AI Blog Posts",
+        review_request_subscription: "Review Request SMS",
+        press_release_subscription: "AI Press Release",
+        quote_followup_subscription: "Quote Follow-Up SMS",
+        social_captions_subscription: "AI Social Captions",
+        caption_pack_subscription: "AI Social Captions",
+        winback_sms_subscription: "Win-Back SMS",
+        weekly_digest_subscription: "Weekly Business Digest",
+        proposal_generator_subscription: "AI Proposal Generator",
+        holiday_sms_subscription: "Holiday SMS Blast",
+        website_copy_subscription: "AI Website Copy",
+        faq_refresh_subscription: "Website Copy Refresh",
+        competitor_watch_subscription: "Competitor Watch",
+        appointment_reminder_subscription: "Appointment Reminders",
+        video_script_subscription: "AI Video Scripts",
+        satisfaction_survey_subscription: "Satisfaction Survey",
+        thank_you_sms_subscription: "Thank-You SMS",
+        estimate_generator_subscription: "AI Estimate Generator",
+        local_seo_subscription: "Local SEO Pages",
+        payment_chaser_subscription: "Payment Chaser",
+        google_qa_subscription: "Google Q&A Manager",
+        staff_newsletter_subscription: "Staff Newsletter",
+        speed_lead_subscription: "Speed-to-Lead",
+        welcome_drip_subscription: "Welcome Drip",
+        review_alert_subscription: "Review Alerts",
+        promo_planner_subscription: "Promo Planner",
+        reactivation_email_subscription: "Reactivation Emails",
+        sales_script_subscription: "AI Sales Scripts",
+        direct_mail_subscription: "AI Direct Mail",
+        warranty_reminder_subscription: "Warranty Reminders",
+        hiring_assistant_subscription: "AI Hiring Assistant",
+        job_posting_subscription: "AI Hiring Assistant",
+        kpi_email_subscription: "KPI Email Dashboard",
+        newsletter_service_subscription: "Field Rep Newsletter",
+        review_responder_subscription: "Review Responder",
+        seo_report_subscription: "SEO Report",
+        chatbot_subscription: "AI Chatbot",
+        industrial_newsletter_subscription: "Industrial Newsletter",
+        gbp_subscription: "GBP Management",
+        social_media_subscription: "Social Media AI",
+        web_design_build: "Web Design",
+        web_design_retainer: "Web Design Retainer",
+      };
+      if (customerEmail && AGENCY_SERVICE_LABELS[meta.type]) {
+        try {
+          const serviceLabel = AGENCY_SERVICE_LABELS[meta.type];
+          const clientRow = {
+            business_name: meta.businessName || meta.business_name || customerName || customerEmail,
+            owner_name: meta.name || meta.ownerName || customerName || null,
+            email: customerEmail,
+            phone: meta.phone || null,
+            service_type: serviceLabel,
+            stripe_customer_id: session.customer as string || null,
+            stripe_subscription_id: session.subscription as string || null,
+            fulfillment_stage: "New Lead - Action Required",
+            active: true,
+            metadata: meta,
+            updated_at: new Date().toISOString(),
+          };
+          const { data: upserted } = await (sb.from as any)("b2b_clients")
+            .upsert(clientRow, { onConflict: "email,service_type" })
+            .select("id")
+            .single();
+          if (upserted?.id) {
+            await (sb.from as any)("service_subscriptions").insert({
+              client_id: upserted.id,
+              email: customerEmail,
+              service_type: serviceLabel,
+              stripe_subscription_id: session.subscription as string || null,
+              stripe_customer_id: session.customer as string || null,
+              status: "active",
+            });
+          }
+        } catch (e) { console.error("[WEBHOOK] b2b_clients fulfillment write error:", e); }
+      }
+
       // ── SPORT GUIDE (AI-generated, DB-driven) ──────────────────────────────
       if (meta.type === "sport_guide" && meta.guide_id && customerEmail) {
         try {
@@ -2544,6 +2636,89 @@ serve(async (req) => {
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@m2training.com"], subject: `💰 New KPI Email — ${meta.businessName || email} ($49/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}<br>Website: ${meta.website || "n/a"}</p>` }) });
           }
         } catch (e) { console.error("[WEBHOOK] kpi_email_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // caption_pack_subscription (create-caption-pack-checkout)
+      if (meta.type === "caption_pack_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await (sb.from as any)("social_captions_clients").upsert({
+              email, business_name: meta.businessName || email,
+              active: true, stripe_subscription_id: session.subscription as string || null,
+            }, { onConflict: "email" });
+          }
+          if (RESEND_API_KEY && email) {
+            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "matt@notify.m2training.com", to: email, subject: "Welcome to AI Social Captions!", html: `<p>You're all set! Your AI social captions service is active.</p>` }) });
+            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "matt@notify.m2training.com", to: "matt@m2training.com", subject: "New Social Captions Client", html: `<p>New caption_pack_subscription: ${email}</p>` }) });
+          }
+        } catch (e) { console.error("[WEBHOOK] caption_pack_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // faq_refresh_subscription (create-faq-refresh-checkout)
+      if (meta.type === "faq_refresh_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await (sb.from as any)("website_copy_clients").upsert({
+              email, business_name: meta.businessName || email,
+              active: true, stripe_subscription_id: session.subscription as string || null,
+            }, { onConflict: "email" });
+          }
+          if (RESEND_API_KEY && email) {
+            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "matt@notify.m2training.com", to: email, subject: "Welcome — Website Copy Refresh!", html: `<p>Your AI website copy refresh service is active.</p>` }) });
+            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "matt@notify.m2training.com", to: "matt@m2training.com", subject: "New FAQ/Copy Refresh Client", html: `<p>New faq_refresh_subscription: ${email}</p>` }) });
+          }
+        } catch (e) { console.error("[WEBHOOK] faq_refresh_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // job_posting_subscription (create-job-posting-checkout)
+      if (meta.type === "job_posting_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await (sb.from as any)("hiring_assistant_clients").upsert({
+              email, business_name: meta.businessName || email,
+              active: true, stripe_subscription_id: session.subscription as string || null,
+            }, { onConflict: "email" });
+          }
+          if (RESEND_API_KEY && email) {
+            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "matt@notify.m2training.com", to: email, subject: "Welcome — AI Hiring Assistant!", html: `<p>Your AI hiring assistant service is active.</p>` }) });
+            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "matt@notify.m2training.com", to: "matt@m2training.com", subject: "New Hiring Assistant Client", html: `<p>New job_posting_subscription: ${email}</p>` }) });
+          }
+        } catch (e) { console.error("[WEBHOOK] job_posting_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // newsletter_service_subscription (create-newsletter-service-checkout)
+      if (meta.type === "newsletter_service_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await (sb.from as any)("newsletter_subscribers").upsert({
+              email, active: true,
+              stripe_subscription_id: session.subscription as string || null,
+            }, { onConflict: "email" });
+          }
+          if (RESEND_API_KEY && email) {
+            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "matt@notify.m2training.com", to: email, subject: "Welcome to the Field Rep Newsletter!", html: `<p>You're subscribed! Your first digest arrives Monday morning.</p>` }) });
+            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "matt@notify.m2training.com", to: "matt@m2training.com", subject: "New Newsletter Subscriber", html: `<p>New newsletter_service_subscription: ${email}</p>` }) });
+          }
+        } catch (e) { console.error("[WEBHOOK] newsletter_service_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // interactive_program (create-program-checkout)
+      if (meta.type === "interactive_program") {
+        try {
+          const email = meta.email || customerEmail;
+          if (RESEND_API_KEY && email) {
+            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "matt@notify.m2training.com", to: "matt@m2training.com", subject: "New Interactive Program Purchase", html: `<p>New interactive_program purchase: ${email}</p>` }) });
+          }
+        } catch (e) { console.error("[WEBHOOK] interactive_program error:", e); }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
