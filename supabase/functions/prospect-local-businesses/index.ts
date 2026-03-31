@@ -327,7 +327,7 @@ serve(async (req) => {
         .select("id, business_name, owner_name, city, industry")
         .eq("status", "Emailed")
         .order("last_contact_date", { ascending: false })
-        .limit(10);
+        .limit(20);
 
       if (leadsErr) throw new Error(`Failed to fetch leads: ${leadsErr.message}`);
       if (!leads || leads.length === 0) {
