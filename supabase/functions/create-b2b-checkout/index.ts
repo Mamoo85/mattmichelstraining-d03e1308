@@ -73,6 +73,7 @@ serve(async (req) => {
         trade: trade || "",
         website: website || "",
         industry: niche || serviceKey,
+        referral_code: referral_code || "",
       },
       success_url: `${origin}/get-started?success=1&service=${serviceKey}`,
       cancel_url: `${origin}/get-started`,
