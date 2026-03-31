@@ -51,6 +51,6 @@ serve(async (req) => {
     return new Response(JSON.stringify({ success: true, message: `Survey sent to ${customerName} at ${customerPhone}` }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (error) {
     console.error("satisfaction-survey-sender error:", error);
-    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ error: (error instanceof Error ? error.message : "Unknown error") }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
