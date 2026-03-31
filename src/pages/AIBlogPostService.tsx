@@ -81,7 +81,7 @@ export default function AIBlogPostService() {
             Matt will reach out within 24 hours to confirm your industry and get your first 4 posts scheduled. Check your inbox.
           </p>
           <p className="text-sm text-slate-500">
-            Questions? <a href="mailto:matt@m2training.com" className="text-orange-500">matt@m2training.com</a>
+            Questions? <a href="mailto:matt@mattmichelstraining.com" className="text-orange-500">matt@mattmichelstraining.com</a>
           </p>
         </div>
       </div>

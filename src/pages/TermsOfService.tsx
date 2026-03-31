@@ -109,7 +109,7 @@ export default function TermsOfService() {
         <p className="leading-relaxed text-slate-700">
           Matt Michels — M² Performance Training<br />
           Grosse Pointe, MI<br />
-          matt@m2training.com<br />
+          matt@mattmichelstraining.com<br />
           (313) 806-4952
         </p>
       </section>

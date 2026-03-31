@@ -89,7 +89,7 @@ export default function AISocialCaptionPack() {
             Matt will reach out within 24 hours to confirm your platforms and business voice. Your first 30 captions will be ready within 48 hours.
           </p>
           <p className="text-sm text-slate-500">
-            Questions? <a href="mailto:matt@m2training.com" className="text-orange-500">matt@m2training.com</a>
+            Questions? <a href="mailto:matt@mattmichelstraining.com" className="text-orange-500">matt@mattmichelstraining.com</a>
           </p>
         </div>
       </div>

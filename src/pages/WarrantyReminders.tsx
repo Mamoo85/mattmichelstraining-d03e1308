@@ -37,7 +37,7 @@ export default function WarrantyReminders() {
           </div>
           <h1 className="text-2xl font-black text-white mb-3">You're all set!</h1>
           <p className="text-slate-400 leading-relaxed">Your 7-day free trial is active. Matt will reach out to set up your warranty tracking.</p>
-          <p className="mt-4 text-sm text-slate-500">Questions? <a href="mailto:matt@m2training.com" className="text-orange-500">matt@m2training.com</a></p>
+          <p className="mt-4 text-sm text-slate-500">Questions? <a href="mailto:matt@mattmichelstraining.com" className="text-orange-500">matt@mattmichelstraining.com</a></p>
         </div>
       </div>
     );
@@ -155,7 +155,7 @@ export default function WarrantyReminders() {
 
         {/* Footer */}
         <p className="text-[12px] text-slate-500 text-center">
-          Questions? Email <a href="mailto:matt@m2training.com" className="text-orange-500">matt@m2training.com</a> or text <a href="tel:+13138064952" className="text-orange-500">(313) 806-4952</a>
+          Questions? Email <a href="mailto:matt@mattmichelstraining.com" className="text-orange-500">matt@mattmichelstraining.com</a> or text <a href="tel:+13138064952" className="text-orange-500">(313) 806-4952</a>
         </p>
       </div>
     </div>

@@ -70,7 +70,7 @@ export default function NewsletterSponsor() {
       if (error) throw error;
       setSent(true);
     } catch (err: any) {
-      toast.error(err.message || "Something went wrong. Try emailing matt@m2training.com directly.");
+      toast.error(err.message || "Something went wrong. Try emailing matt@mattmichelstraining.com directly.");
     } finally {
       setLoading(false);
     }

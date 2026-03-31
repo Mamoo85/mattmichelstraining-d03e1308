@@ -208,7 +208,7 @@ export default function ContractorLeads() {
                 {submitting ? <Loader2 size={14} className="animate-spin" /> : <ArrowRight size={14} />}
                 {submitting ? "Processing..." : "Claim This Territory →"}
               </button>
-              <p className="text-[11px] text-muted-foreground text-center">Questions first? Email <a href="mailto:matt@m2training.com" className="text-primary">matt@m2training.com</a> or text <a href="tel:+13138064952" className="text-primary">(313) 806-4952</a></p>
+              <p className="text-[11px] text-muted-foreground text-center">Questions first? Email <a href="mailto:matt@mattmichelstraining.com" className="text-primary">matt@mattmichelstraining.com</a> or text <a href="tel:+13138064952" className="text-primary">(313) 806-4952</a></p>
             </form>
           </div>
         </div>

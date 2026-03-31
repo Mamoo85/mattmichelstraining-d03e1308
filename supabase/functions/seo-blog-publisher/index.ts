@@ -168,7 +168,7 @@ async function sendEmail(sectionsHtml: string, monthName: string): Promise<void>
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: "Matt Michels <matt@notify.m2training.com>",
+      from: "Matt Michels <matt@mattmichelstraining.com>",
       to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"],
       subject: `Your 3 SEO blog posts for ${monthName} — ready to publish`,
       html: `<!DOCTYPE html>

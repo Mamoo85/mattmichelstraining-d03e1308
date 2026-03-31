@@ -47,7 +47,7 @@ export default function AIMedSpaMarketing() {
           <div className="w-20 h-20 rounded-full bg-[#f97316]/15 flex items-center justify-center mx-auto mb-6"><CheckCircle size={36} className="text-[#f97316]" /></div>
           <h1 className="text-2xl font-black mb-3">Welcome! Trial Started.</h1>
           <p className="text-[#aaa] text-sm leading-relaxed mb-4">We'll reach out within 24 hours to get your brand info and services. Your first content goes out this week.</p>
-          <p className="text-xs text-[#666]">Questions? Email matt@m2training.com</p>
+          <p className="text-xs text-[#666]">Questions? Email matt@mattmichelstraining.com</p>
         </div>
       </div>
     );
@@ -125,7 +125,7 @@ export default function AIMedSpaMarketing() {
                 {loading ? <Loader2 size={14} className="animate-spin" /> : <ArrowRight size={14} />}
                 {loading ? "Processing..." : "Start Free Trial →"}
               </button>
-              <p className="text-[11px] text-[#555] text-center">Questions? Email <a href="mailto:matt@m2training.com" className="text-[#f97316]">matt@m2training.com</a></p>
+              <p className="text-[11px] text-[#555] text-center">Questions? Email <a href="mailto:matt@mattmichelstraining.com" className="text-[#f97316]">matt@mattmichelstraining.com</a></p>
             </form>
           </div>
         </section>

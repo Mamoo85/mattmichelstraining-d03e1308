@@ -7,7 +7,7 @@ export default function PrivacyPolicy() {
       <section className="mb-8">
         <h2 className="text-xl font-bold mb-3">1. Who We Are</h2>
         <p className="leading-relaxed text-slate-700">
-          M² Performance Training ("we," "us," or "our") operates mattmichelstraining.com and related services. Owner: Matt Michels, Grosse Pointe, MI. Contact: matt@m2training.com | (313) 806-4952.
+          M² Performance Training ("we," "us," or "our") operates mattmichelstraining.com and related services. Owner: Matt Michels, Grosse Pointe, MI. Contact: matt@mattmichelstraining.com | (313) 806-4952.
         </p>
       </section>
 
@@ -56,14 +56,14 @@ export default function PrivacyPolicy() {
       <section className="mb-8">
         <h2 className="text-xl font-bold mb-3">6. Data Retention</h2>
         <p className="leading-relaxed text-slate-700">
-          We retain your information for as long as your account is active or as needed to provide services. You may request deletion at any time by emailing matt@m2training.com.
+          We retain your information for as long as your account is active or as needed to provide services. You may request deletion at any time by emailing matt@mattmichelstraining.com.
         </p>
       </section>
 
       <section className="mb-8">
         <h2 className="text-xl font-bold mb-3">7. Your Rights</h2>
         <p className="leading-relaxed text-slate-700">
-          You may request access to, correction of, or deletion of your personal data at any time. Email matt@m2training.com with your request.
+          You may request access to, correction of, or deletion of your personal data at any time. Email matt@mattmichelstraining.com with your request.
         </p>
       </section>
 
@@ -93,7 +93,7 @@ export default function PrivacyPolicy() {
         <p className="leading-relaxed text-slate-700">
           Matt Michels — M² Performance Training<br />
           Grosse Pointe, MI<br />
-          matt@m2training.com<br />
+          matt@mattmichelstraining.com<br />
           (313) 806-4952
         </p>
       </section>

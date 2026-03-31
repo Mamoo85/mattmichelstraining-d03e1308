@@ -1,7 +1,7 @@
 # M² Performance Training — Claude Code Context
 
 ## Owner
-**Matt Michels** — Grosse Pointe, MI | matt@m2training.com | (313) 806-4952
+**Matt Michels** — Grosse Pointe, MI | matt@mattmichelstraining.com | (313) 806-4952
 Family: wife + young son. Local guy. 10+ years B2B field sales background.
 
 ## The Goal
@@ -12,7 +12,7 @@ $10k+/mo fully automated income. Matt's only job: return calls, texts, and email
 - **Backend**: Supabase Edge Functions (Deno/TypeScript) at `supabase/functions/`
 - **Database**: Supabase Postgres (RLS enforced on all tables)
 - **Payments**: Stripe (inline `price_data`, no pre-created prices)
-- **Email**: Resend API (from: `matt@notify.m2training.com`)
+- **Email**: Resend API (from: `matt@mattmichelstraining.com`)
 - **AI**: Claude Haiku (`claude-haiku-4-5-20251001`) via Anthropic API
 - **Domain**: mattmichelstraining.com
 - **Repo**: `mamoo85/m2training` (GitHub)

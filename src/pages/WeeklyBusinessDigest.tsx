@@ -139,7 +139,7 @@ export default function WeeklyBusinessDigest() {
             <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white font-black text-xs shrink-0">M2</div>
             <div className="min-w-0">
               <p className="text-white text-sm font-semibold">M² Performance Training</p>
-              <p className="text-slate-400 text-xs truncate">matt@notify.m2training.com · Monday 8:00 AM</p>
+              <p className="text-slate-400 text-xs truncate">matt@mattmichelstraining.com · Monday 8:00 AM</p>
             </div>
           </div>
           <div className="px-4 sm:px-6 py-4 sm:py-6">
@@ -244,7 +244,7 @@ export default function WeeklyBusinessDigest() {
           <Users size={18} className="text-orange-500" />
           <span className="text-slate-400 text-sm">Built by Matt Michels — Grosse Pointe, MI</span>
         </div>
-        <p className="text-slate-500 text-xs">Questions? <a href="tel:+13138064952" className="text-orange-500 hover:underline">(313) 806-4952</a> · <a href="mailto:matt@m2training.com" className="text-orange-500 hover:underline">matt@m2training.com</a></p>
+        <p className="text-slate-500 text-xs">Questions? <a href="tel:+13138064952" className="text-orange-500 hover:underline">(313) 806-4952</a> · <a href="mailto:matt@mattmichelstraining.com" className="text-orange-500 hover:underline">matt@mattmichelstraining.com</a></p>
       </section>
     </div>
   );

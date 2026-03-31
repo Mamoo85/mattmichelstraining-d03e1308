@@ -222,7 +222,7 @@ export default function WinBackSMS() {
           <Users size={18} className="text-orange-500" />
           <span className="text-slate-400 text-sm">Built by Matt Michels — Grosse Pointe, MI</span>
         </div>
-        <p className="text-slate-500 text-xs">Questions? <a href="tel:+13138064952" className="text-orange-500 hover:underline">(313) 806-4952</a> · <a href="mailto:matt@m2training.com" className="text-orange-500 hover:underline">matt@m2training.com</a></p>
+        <p className="text-slate-500 text-xs">Questions? <a href="tel:+13138064952" className="text-orange-500 hover:underline">(313) 806-4952</a> · <a href="mailto:matt@mattmichelstraining.com" className="text-orange-500 hover:underline">matt@mattmichelstraining.com</a></p>
       </section>
     </div>
   );

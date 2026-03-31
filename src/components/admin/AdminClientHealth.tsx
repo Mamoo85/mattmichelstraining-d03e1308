@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, AlertTriangle, CheckCircle, Clock, Building2 } from "lucide-react";
 
-const INTERNAL_EMAILS = ["matt@mattmichelstraining.com", "matt@m2training.com", "matthewmichels4@gmail.com"];
+const INTERNAL_EMAILS = ["matt@mattmichelstraining.com", "matt@mattmichelstraining.com", "matthewmichels4@gmail.com"];
 const isInternalEmail = (email: string) => INTERNAL_EMAILS.includes(email?.toLowerCase());
 
 interface ClientRow {

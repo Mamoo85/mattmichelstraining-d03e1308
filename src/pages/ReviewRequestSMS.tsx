@@ -75,7 +75,7 @@ export default function ReviewRequestSMS() {
             Matt will reach out within 24 hours to set up your review request portal and confirm your Google review link.
           </p>
           <p className="text-sm text-slate-500">
-            Questions? <a href="mailto:matt@m2training.com" className="text-orange-500">matt@m2training.com</a>
+            Questions? <a href="mailto:matt@mattmichelstraining.com" className="text-orange-500">matt@mattmichelstraining.com</a>
           </p>
         </div>
       </div>

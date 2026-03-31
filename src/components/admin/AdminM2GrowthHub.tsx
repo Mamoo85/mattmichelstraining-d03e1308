@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle, Circle, Loader2, Zap } from "lucide-react";
 import { toast } from "sonner";
 
-const MATT_EMAIL = "matt@m2training.com";
+const MATT_EMAIL = "matt@mattmichelstraining.com";
 
 const M2_SERVICES = [
   {
@@ -292,7 +292,7 @@ const AdminM2GrowthHub = () => {
         <p className="text-[11px] text-muted-foreground">
           <strong className="text-foreground">How this works:</strong> Enrolling M² Development adds your business as a client in each service table.
           The automated cron jobs will then generate and email content directly to{" "}
-          <span className="text-primary">matt@m2training.com</span> on their normal schedule —
+          <span className="text-primary">matt@mattmichelstraining.com</span> on their normal schedule —
           same as any paying customer. Zero extra cost.
         </p>
       </div>
