@@ -83,7 +83,7 @@ serve(async (req) => {
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-  } catch (e: any) {
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("[GET-PARTNER-STATS] Error:", e);
     return new Response(
       JSON.stringify({ error: e.message }),

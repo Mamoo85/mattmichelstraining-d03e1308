@@ -40,5 +40,5 @@ serve(async (_req) => {
       } catch (e) { console.error(`[LOCAL-SEO] Error for ${client.email}:`, e); }
     }
     return new Response(JSON.stringify({ ok: true, sent }), { status: 200 });
-  } catch (e: any) { console.error("[LOCAL-SEO] Fatal:", e); return new Response(JSON.stringify({ error: e.message }), { status: 500 }); }
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e); console.error("[LOCAL-SEO] Fatal:", e); return new Response(JSON.stringify({ error: e.message }), { status: 500 }); }
 });

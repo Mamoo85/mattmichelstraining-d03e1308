@@ -19,7 +19,7 @@ serve(async (req) => {
       cancel_url: `${req.headers.get("origin") || "https://mattmichelstraining.lovable.app"}/ai-collections`,
     });
     return new Response(JSON.stringify({ url: session.url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-  } catch (e: any) {
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

@@ -213,7 +213,7 @@ ${briefingHtml
 
     console.log(`[INDUSTRIAL-NEWSLETTER] Sent to ${sent} subscribers — "${subject}"`);
     return new Response(JSON.stringify({ sent, subject }), { status: 200 });
-  } catch (e: any) {
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("[INDUSTRIAL-NEWSLETTER] Error:", e);
     return new Response(JSON.stringify({ error: e.message }), { status: 500 });
   }

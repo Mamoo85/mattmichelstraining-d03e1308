@@ -181,7 +181,7 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ processed: clients.length, sent }), { status: 200 });
-  } catch (e: any) {
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("[SEO-AUDIT] Error:", e);
     return new Response(JSON.stringify({ error: e.message }), { status: 500 });
   }

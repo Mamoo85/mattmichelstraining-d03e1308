@@ -137,7 +137,7 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ success: true, lead_id: lead?.id }), { status: 200, headers: corsHeaders });
-  } catch (e: any) {
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("[LEAD-CAPTURE] Error:", e);
     return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: corsHeaders });
   }

@@ -154,7 +154,7 @@ serve(async (req) => {
     }).catch(() => {});
 
     return new Response(JSON.stringify({ success: true }), { status: 200, headers: corsHeaders });
-  } catch (e: any) {
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("[DELIVER-SAMPLE-REPORT] Error:", e);
     return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: corsHeaders });
   }

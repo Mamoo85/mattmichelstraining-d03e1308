@@ -87,7 +87,7 @@ Contact: ${name || "n/a"} — ${email}${phone ? " — " + phone : ""}${city ? "<
       JSON.stringify({ url: session.url }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-  } catch (e: any) {
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("[CREATE-CHATBOT-CHECKOUT] Error:", e);
     return new Response(
       JSON.stringify({ error: e.message }),

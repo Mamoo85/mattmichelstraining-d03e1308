@@ -56,7 +56,7 @@ serve(async (req) => {
 
     console.log(`[LEAD-NOTIFY] Sent ${count} delayed notifications`);
     return new Response(JSON.stringify({ notified: count }), { status: 200 });
-  } catch (e: any) {
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("[LEAD-NOTIFY] Error:", e);
     return new Response(JSON.stringify({ error: e.message }), { status: 500 });
   }

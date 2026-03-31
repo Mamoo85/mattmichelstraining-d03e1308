@@ -53,5 +53,5 @@ Professional, safety-first tone. Include relevant regulatory references (FMCSA, 
       } catch (e) { console.error(`[TRUCKING-DOCS-SENDER] Error for ${client.email}:`, e); }
     }
     return new Response(JSON.stringify({ ok: true, sent }), { status: 200 });
-  } catch (e: any) { return new Response(JSON.stringify({ error: e.message }), { status: 500 }); }
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e); return new Response(JSON.stringify({ error: e.message }), { status: 500 }); }
 });
