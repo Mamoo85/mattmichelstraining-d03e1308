@@ -233,3 +233,191 @@ verify_jwt = false
 
 [functions.create-directory-submitter-checkout]
 verify_jwt = false
+
+[functions.create-med-spa-checkout]
+verify_jwt = false
+
+[functions.create-real-estate-drip-checkout]
+verify_jwt = false
+
+[functions.create-podcast-show-notes-checkout]
+verify_jwt = false
+
+[functions.create-church-newsletter-checkout]
+verify_jwt = false
+
+[functions.create-property-mgmt-checkout]
+verify_jwt = false
+
+[functions.create-franchise-ops-checkout]
+verify_jwt = false
+
+[functions.create-ecommerce-listings-checkout]
+verify_jwt = false
+
+[functions.create-financial-advisor-checkout]
+verify_jwt = false
+
+[functions.create-vet-marketing-checkout]
+verify_jwt = false
+
+[functions.create-trucking-docs-checkout]
+verify_jwt = false
+
+# ── CRON SCHEDULES ─────────────────────────────────────────────────────────────
+
+[functions.prospect-local-businesses]
+schedule = "0 11 * * *"
+
+[functions.multi-service-drip]
+schedule = "0 12 * * *"
+
+[functions.quote-followup-sender]
+schedule = "0 14 * * *"
+
+[functions.payment-chaser-sender]
+schedule = "0 10 * * *"
+
+[functions.appointment-reminder-sender]
+schedule = "0 8 * * *"
+
+[functions.birthday-campaign-sender]
+schedule = "0 9 * * *"
+
+[functions.winback-sms-sender]
+schedule = "0 13 * * *"
+
+[functions.thank-you-sms-sender]
+schedule = "0 17 * * *"
+
+[functions.competitor-watch-weekly-sender]
+schedule = "0 12 * * 1"
+
+[functions.market-intel-sender]
+schedule = "0 13 * * 1"
+
+[functions.battlecard-sender]
+schedule = "0 14 * * 1"
+
+[functions.kpi-email-sender]
+schedule = "0 15 * * 1"
+
+[functions.staff-newsletter-sender]
+schedule = "0 16 * * 1"
+
+[functions.weekly-business-digest]
+schedule = "0 9 * * 1"
+
+[functions.field-rep-weekly]
+schedule = "0 9 * * 2"
+
+[functions.reactivation-email-sender]
+schedule = "0 11 * * 2"
+
+[functions.industrial-newsletter]
+schedule = "0 10 * * 3"
+
+[functions.warranty-reminder-sender]
+schedule = "0 10 * * 3"
+
+[functions.gbp-saas-poster]
+schedule = "0 14 * * 4"
+
+[functions.ai-google-qa-manager]
+schedule = "0 15 * * 4"
+
+[functions.grant-finder-sender]
+schedule = "0 13 * * 5"
+
+[functions.reputation-report-sender]
+schedule = "0 14 * * 5"
+
+[functions.review-response-sender]
+schedule = "0 15 * * 5"
+
+[functions.review-alert-checker]
+schedule = "0 10 * * 5"
+
+[functions.podcast-show-notes-generator]
+schedule = "0 8 1 * *"
+
+[functions.blog-post-monthly-sender]
+schedule = "0 12 1 * *"
+
+[functions.newsletter-service-sender]
+schedule = "0 13 1 * *"
+
+[functions.med-spa-content-sender]
+schedule = "0 14 1 * *"
+
+[functions.real-estate-drip-sender]
+schedule = "0 15 1 * *"
+
+[functions.church-newsletter-sender]
+schedule = "0 16 1 * *"
+
+[functions.property-mgmt-doc-sender]
+schedule = "0 17 1 * *"
+
+[functions.franchise-ops-sender]
+schedule = "0 18 1 * *"
+
+[functions.ecommerce-listings-sender]
+schedule = "0 19 1 * *"
+
+[functions.financial-advisor-content-sender]
+schedule = "0 20 1 * *"
+
+[functions.vet-marketing-sender]
+schedule = "0 21 1 * *"
+
+[functions.trucking-docs-sender]
+schedule = "0 22 1 * *"
+
+[functions.ads-copy-monthly-sender]
+schedule = "0 9 2 * *"
+
+[functions.local-seo-monthly-sender]
+schedule = "0 10 2 * *"
+
+[functions.handbook-sender]
+schedule = "0 11 2 * *"
+
+[functions.osha-compliance-sender]
+schedule = "0 12 2 * *"
+
+[functions.seo-audit-report]
+schedule = "0 13 2 * *"
+
+[functions.promo-planner-generator]
+schedule = "0 14 2 * *"
+
+[functions.ai-onboarding-agent-sender]
+schedule = "0 15 2 * *"
+
+[functions.permit-monitor-sender]
+schedule = "0 16 2 * *"
+
+[functions.collections-sender]
+schedule = "0 17 2 * *"
+
+[functions.inventory-alert-sender]
+schedule = "0 18 2 * *"
+
+[functions.satisfaction-survey-sender]
+schedule = "0 9 3 * *"
+
+[functions.ai-upsell-sender]
+schedule = "0 10 3 * *"
+
+[functions.referral-ask-sender]
+schedule = "0 11 3 * *"
+
+[functions.welcome-drip-sender]
+schedule = "0 12 3 * *"
+
+[functions.ai-social-proof-sender]
+schedule = "0 13 3 * *"
+
+[functions.faq-refresh-sender]
+schedule = "0 14 3 * *"
