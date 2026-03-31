@@ -55,6 +55,7 @@ const REFERRAL_WINDOWS: ReferralWindow[] = [
     minDays: 25,
     maxDays: 35,
     subject: "Quick favor — know anyone who could use this?",
+        bcc: ["matthewmichels@gmail.com"],
     bodyBuilder: (firstName, serviceLabel) =>
       `Hey ${firstName}, it's been about a month — how's ${serviceLabel} working out for you? If you know another business owner who could use something like this, I'd really appreciate the intro. Send them my way and I'll give you both a $50 credit on next month. Just text me at (313) 806-4952 or have them mention your name when they sign up. — Matt`,
   },
@@ -63,6 +64,7 @@ const REFERRAL_WINDOWS: ReferralWindow[] = [
     minDays: 55,
     maxDays: 65,
     subject: "Still the best compliment I can get",
+        bcc: ["matthewmichels@gmail.com"],
     bodyBuilder: (firstName, serviceLabel) =>
       `Hey ${firstName}, two months in — hope ${serviceLabel} is still doing its thing for you. If it's been working well, the biggest compliment you can give me is a referral. Send any business owner my way and I'll knock $50 off both of your next bills. Text me at (313) 806-4952. — Matt`,
   },
@@ -71,6 +73,7 @@ const REFERRAL_WINDOWS: ReferralWindow[] = [
     minDays: 85,
     maxDays: 95,
     subject: "Three months — and a little thank-you offer",
+        bcc: ["matthewmichels@gmail.com"],
     bodyBuilder: (firstName, serviceLabel) =>
       `Hey ${firstName}, you've been with me for three months now — that means a lot. If ${serviceLabel} has been worth it, I'd love an intro to another business owner who could use the same. Refer someone and you both get $50 off next month. Just text me at (313) 806-4952 or have them drop your name at sign-up. Thanks for sticking with me. — Matt`,
   },
@@ -220,6 +223,7 @@ serve(async (req) => {
               reply_to: "matt@m2training.com",
               to: [client.email],
               subject: window.subject,
+        bcc: ["matthewmichels@gmail.com"],
               html,
             }),
           });

@@ -68,6 +68,7 @@ Dark-themed professional HTML.` }] }) });
             from: "M² Development <matt@mattmichelstraining.com>",
             to: [client.email],
             subject: `${client.business_name} — Review Response Drafts Ready`,
+        bcc: ["matthewmichels@gmail.com"],
             html: `<div style="font-family:Arial,sans-serif;max-width:700px;margin:0 auto;background:#1a1a2e;color:#e0e0e0;padding:32px;border-radius:12px;">
               <h1 style="color:#e8621a;text-align:center;">Review Response Drafts</h1>
               <p style="color:#888;text-align:center;font-size:13px;">${new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</p>

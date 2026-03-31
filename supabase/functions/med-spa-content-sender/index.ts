@@ -42,6 +42,7 @@ Format clearly with headers. Make the social posts feel luxurious and results-fo
               from: "M² Development <matt@mattmichelstraining.com>",
               to: [client.email],
               subject: `${client.business_name} — ${week} Marketing Content Pack`,
+        bcc: ["matthewmichels@gmail.com"],
               html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#1e293b;color:#e2e8f0;border-radius:12px;"><h2 style="color:#e8621a;">✨ Monthly Med Spa Marketing Pack</h2><p>Here's your ${week} content. Copy, post, and watch the bookings come in:</p><pre style="white-space:pre-wrap;font-family:sans-serif;color:#e2e8f0;">${content}</pre><hr style="border-color:#334155;"><p style="color:#64748b;font-size:12px;">Powered by M² Development — matt@m2training.com</p></div>`,
             }),
           });

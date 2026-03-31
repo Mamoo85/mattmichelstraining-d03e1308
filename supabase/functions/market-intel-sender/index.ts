@@ -89,6 +89,7 @@ Dark-themed professional HTML. Concise, scannable, executive-friendly.` }] }) })
             from: "M² Development <matt@mattmichelstraining.com>",
             to: [client.email],
             subject: `${client.business_name} — Weekly Market Intelligence Brief`,
+        bcc: ["matthewmichels@gmail.com"],
             html: `<div style="font-family:Arial,sans-serif;max-width:700px;margin:0 auto;background:#1a1a2e;color:#e0e0e0;padding:32px;border-radius:12px;">
               <h1 style="color:#e8621a;text-align:center;">Weekly Market Intelligence</h1>
               <p style="color:#888;text-align:center;font-size:13px;">Week of ${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</p>

@@ -52,6 +52,7 @@ serve(async () => {
         from: "matt@notify.m2training.com",
         to: client.email,
         subject: `Your Seasonal Menu Descriptions — ${currentMonth}`,
+        bcc: ["matthewmichels@gmail.com"],
         html: `<pre style="font-family:sans-serif;white-space:pre-wrap">${content}</pre>`,
       }),
     });

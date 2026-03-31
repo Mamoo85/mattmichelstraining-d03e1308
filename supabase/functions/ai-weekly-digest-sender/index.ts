@@ -48,7 +48,8 @@ async function generateDigest(client: DigestClient): Promise<string> {
   return data?.choices?.[0]?.message?.content || "";
 }
 
-async function sendEmail(to: string, subject: string, html: string): Promise<void> {
+async function sendEmail(to: string, subject: string,
+        bcc: ["matthewmichels@gmail.com"], html: string): Promise<void> {
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {

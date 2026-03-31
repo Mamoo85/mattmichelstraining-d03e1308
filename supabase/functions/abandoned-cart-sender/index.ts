@@ -50,6 +50,7 @@ serve(async () => {
         from: "matt@notify.m2training.com",
         to: client.email,
         subject: "Your Abandoned Cart Recovery Emails This Week",
+        bcc: ["matthewmichels@gmail.com"],
         html: `<pre style="font-family:sans-serif;white-space:pre-wrap">${content}</pre>`,
       }),
     });

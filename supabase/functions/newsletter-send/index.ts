@@ -251,6 +251,7 @@ serve(async (req) => {
             body: JSON.stringify({
               from: "Matt Michels <matt@mattmichelstraining.com>",
               to: [sub.email],
+              bcc: ["matthewmichels@gmail.com"],
               subject,
               html: html.replace("{{unsubscribe_token}}", sub.unsubscribe_token || "") }) })
         )
