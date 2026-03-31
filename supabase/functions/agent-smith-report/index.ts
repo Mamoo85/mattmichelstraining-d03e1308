@@ -446,7 +446,7 @@ Goal: $10,000/mo MRR`
       actions_needed: actionItems.length,
       email_sent: true }), {
       status: 200,
-      headers: { "Content-Type": "application/json" } });
+      headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e: any) {
     console.error("[AGENT-SMITH] Error:", e);
     return new Response(JSON.stringify({ error: e.message }), {
