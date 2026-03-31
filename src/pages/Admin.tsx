@@ -85,6 +85,8 @@ const AdminGuideStore = lazy(() => import("@/components/admin/AdminGuideStore"))
 const AdminAffiliateManager = lazy(() => import("@/components/admin/AdminAffiliateManager"));
 const AdminBusinessDashboard = lazy(() => import("@/components/admin/AdminBusinessDashboard"));
 const AdminSocialMediaOnboarding = lazy(() => import("@/components/admin/AdminSocialMediaOnboarding"));
+const AdminLegalCompliance = lazy(() => import("@/components/admin/AdminLegalCompliance"));
+const AdminOpsCenter = lazy(() => import("@/components/admin/AdminOpsCenter"));
 
 const MASTER_TABS = [
   { key: "business", label: "Business", icon: DollarSign, desc: "Revenue · Automation" },
