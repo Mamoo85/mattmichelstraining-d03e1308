@@ -3193,6 +3193,9 @@ export type Database = {
       }
       outreach_leads: {
         Row: {
+          ai_drafted_at: string | null
+          ai_drafted_pitch: string | null
+          ai_drafted_subject: string | null
           business_name: string
           city: string | null
           created_at: string | null
@@ -3216,6 +3219,9 @@ export type Database = {
           website_status: string | null
         }
         Insert: {
+          ai_drafted_at?: string | null
+          ai_drafted_pitch?: string | null
+          ai_drafted_subject?: string | null
           business_name: string
           city?: string | null
           created_at?: string | null
@@ -3239,6 +3245,9 @@ export type Database = {
           website_status?: string | null
         }
         Update: {
+          ai_drafted_at?: string | null
+          ai_drafted_pitch?: string | null
+          ai_drafted_subject?: string | null
           business_name?: string
           city?: string | null
           created_at?: string | null
