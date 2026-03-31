@@ -109,6 +109,9 @@ const CampDirectory = lazyRetry(() => import("./pages/CampDirectory"));
 const ContractorLeads = lazyRetry(() => import("./pages/ContractorLeads"));
 const LeadCapturePage = lazyRetry(() => import("./pages/LeadCapturePage"));
 const B2BLeads = lazyRetry(() => import("./pages/B2BLeads"));
+const IndustrialDatabase = lazyRetry(() => import("./pages/IndustrialDatabase"));
+const LinkedInGhostwriting = lazyRetry(() => import("./pages/LinkedInGhostwriting"));
+const RevenueDashboard = lazyRetry(() => import("./pages/RevenueDashboard"));
 const LocalMarketing = lazyRetry(() => import("./pages/LocalMarketing"));
 const FieldRepTools = lazyRetry(() => import("./pages/FieldRepTools"));
 const NewsletterPage = lazyRetry(() => import("./pages/NewsletterPage"));
@@ -361,6 +364,9 @@ const App = () => (
                     <Route path="/contractor-leads" element={<ContractorLeads />} />
                     <Route path="/leads/:slug" element={<LeadCapturePage />} />
                     <Route path="/b2b-leads" element={<B2BLeads />} />
+                    <Route path="/industrial-database" element={<IndustrialDatabase />} />
+                    <Route path="/linkedin-ghostwriting" element={<LinkedInGhostwriting />} />
+                    <Route path="/revenue-dashboard" element={<RevenueDashboard />} />
                     <Route path="/local-marketing" element={<LocalMarketing />} />
                     <Route path="/field-rep-tools" element={<FieldRepTools />} />
                     <Route path="/field-rep-weekly" element={<NewsletterPage />} />

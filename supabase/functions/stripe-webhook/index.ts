@@ -1317,6 +1317,49 @@ serve(async (req) => {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // ── LINKEDIN GHOSTWRITING — $299/mo subscription ─────────────────────
+      if (meta.type === "linkedin_ghostwriting_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await sb.from("linkedin_ghostwriting_clients")
+              .update({
+                active: true,
+                stripe_customer_id: session.customer as string || null,
+                stripe_subscription_id: session.subscription as string || null,
+              })
+              .eq("email", email);
+          }
+          if (RESEND_API_KEY && email) {
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "Matt Michels <matt@notify.m2training.com>",
+                to: [email],
+                subject: "Welcome to LinkedIn Ghostwriting",
+                html: `<p>Hey${meta.name ? " " + meta.name : ""},</p>
+<p>You're all set. Every Monday morning, you'll get 5 LinkedIn posts written in your voice and customized to your industry.</p>
+<p>Your first batch goes out this Monday. Just copy, paste, and post throughout the week.</p>
+<p>Not quite right? Reply to any weekly email with feedback and we'll adjust.</p>
+<p>— Matt<br>(313) 806-4952</p>`,
+              }),
+            });
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "M² Notifications <matt@notify.m2training.com>",
+                to: ["matt@m2training.com"],
+                subject: `💰 New LinkedIn Ghostwriting client — ${email}`,
+                html: `<p>New $299/mo subscriber: <strong>${email}</strong><br>Industry: ${meta.industry || "not specified"}<br>Subscription ID: ${session.subscription || "n/a"}</p>`,
+              }),
+            });
+          }
+        } catch (e) { console.error("[WEBHOOK] linkedin_ghostwriting_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       // ── SOCIAL MEDIA AI — $149/$199/$299/mo subscription ─────────────────
       if (meta.type === "social_media_subscription") {
         try {
