@@ -431,6 +431,7 @@ const Admin = () => {
             { key: "prospector", label: "Prospector", content: <AdminProspector /> },
             { key: "automation", label: "Automation Hub", content: <AdminAutomationHub /> },
             { key: "client-health", label: "Client Health", content: <AdminClientHealth /> },
+            { key: "ops-center", label: "Ops Center", content: <AdminOpsCenter /> },
             { key: "wd-automations", label: "Email Automations", content: <AdminWebDesignAutomations /> },
           ]} />
         )}
