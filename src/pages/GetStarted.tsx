@@ -283,6 +283,21 @@ export default function GetStarted() {
             </div>
 
             <div>
+              <label className={labelCls}>Your Industry *</label>
+              <select
+                className={inputCls}
+                value={form.industry}
+                onChange={set("industry")}
+                required
+              >
+                <option value="" disabled>Select your industry...</option>
+                {INDUSTRIES.map(i => (
+                  <option key={i} value={i}>{i}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
               <label className={labelCls}>Service Interested In *</label>
               <select
                 className={inputCls}
@@ -291,8 +306,12 @@ export default function GetStarted() {
                 required
               >
                 <option value="" disabled>Select a service...</option>
-                {SERVICES.map(s => (
-                  <option key={s} value={s}>{s}</option>
+                {SERVICE_CATEGORIES.map(cat => (
+                  <optgroup key={cat.label} label={cat.label}>
+                    {cat.options.map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
             </div>
