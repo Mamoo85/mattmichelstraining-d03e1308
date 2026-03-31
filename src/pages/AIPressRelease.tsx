@@ -81,7 +81,7 @@ export default function AIPressRelease() {
             Matt will reach out within 24 hours to confirm your business details and get your first press release written.
           </p>
           <p className="text-sm text-slate-500">
-            Questions? <a href="mailto:matt@m2training.com" className="text-orange-500">matt@m2training.com</a>
+            Questions? <a href="mailto:matt@mattmichelstraining.com" className="text-orange-500">matt@mattmichelstraining.com</a>
           </p>
         </div>
       </div>

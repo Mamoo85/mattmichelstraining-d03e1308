@@ -47,7 +47,7 @@ serve(async () => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "matt@notify.m2training.com",
+        from: "matt@mattmichelstraining.com",
         to: client.email,
         subject: "Your Abandoned Cart Recovery Emails This Week",
         bcc: ["matthewmichels@gmail.com"],

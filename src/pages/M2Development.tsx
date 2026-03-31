@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 
 const PHONE = "(313) 806-4952";
-const EMAIL = "matt@m2training.com";
+const EMAIL = "matt@mattmichelstraining.com";
 
 interface Service {
   icon: typeof Globe;

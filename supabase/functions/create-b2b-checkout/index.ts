@@ -84,7 +84,7 @@ serve(async (req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "M² System <matt@notify.m2training.com>",
+          from: "M² System <matt@mattmichelstraining.com>",
           to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"],
           subject: `🔔 Checkout started — ${svc.label} — ${business_name || email}`,
           html: `<p><strong>${business_name || name || email}</strong> started checkout for <strong>${svc.label}</strong> ($${(svc.price / 100).toFixed(0)}/mo).</p><p>Email: ${email}<br>Phone: ${phone || "n/a"}<br>City: ${city || "n/a"}</p>`,

@@ -33,7 +33,7 @@ const NewsletterSubscribe = () => {
       if (error) throw error;
       setDone(true);
     } catch (err) {
-      toast.error("Something went wrong. Try again or email matt@m2training.com");
+      toast.error("Something went wrong. Try again or email matt@mattmichelstraining.com");
     } finally {
       setSending(false);
     }

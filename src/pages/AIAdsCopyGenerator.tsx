@@ -53,7 +53,7 @@ export default function AIAdsCopyGenerator() {
           <div className="w-20 h-20 rounded-full bg-[#f97316]/15 flex items-center justify-center mx-auto mb-6"><CheckCircle size={36} className="text-[#f97316]" /></div>
           <h1 className="text-2xl font-black mb-3">You're In — Trial Started!</h1>
           <p className="text-[#aaa] text-sm leading-relaxed mb-4">Your first batch of Google Ads copy will be delivered to your email within 24 hours. Fresh copy every month after that.</p>
-          <p className="text-xs text-[#666]">Questions? Email matt@m2training.com</p>
+          <p className="text-xs text-[#666]">Questions? Email matt@mattmichelstraining.com</p>
         </div>
       </div>
     );

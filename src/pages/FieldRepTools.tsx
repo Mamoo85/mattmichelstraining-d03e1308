@@ -275,7 +275,7 @@ export default function FieldRepTools() {
           </p>
           <p className="mt-4 text-sm text-muted-foreground">
             Questions?{" "}
-            <a href="mailto:matt@m2training.com" className="text-primary">matt@m2training.com</a>
+            <a href="mailto:matt@mattmichelstraining.com" className="text-primary">matt@mattmichelstraining.com</a>
           </p>
         </div>
       </div>
@@ -434,7 +434,7 @@ export default function FieldRepTools() {
               {/* ── Footer ── */}
               <p className="text-[12px] text-muted-foreground text-center">
                 Questions? Email{" "}
-                <a href="mailto:matt@m2training.com" className="text-primary">matt@m2training.com</a>{" "}
+                <a href="mailto:matt@mattmichelstraining.com" className="text-primary">matt@mattmichelstraining.com</a>{" "}
                 or text{" "}
                 <a href="tel:+13138064952" className="text-primary">(313) 806-4952</a>
               </p>

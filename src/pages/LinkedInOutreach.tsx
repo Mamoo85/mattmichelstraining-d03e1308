@@ -63,8 +63,8 @@ export default function LinkedInOutreach() {
           </p>
           <p className="mt-4 text-sm text-slate-500">
             Questions?{" "}
-            <a href="mailto:matt@m2training.com" className="text-orange-500">
-              matt@m2training.com
+            <a href="mailto:matt@mattmichelstraining.com" className="text-orange-500">
+              matt@mattmichelstraining.com
             </a>
           </p>
         </div>
@@ -238,8 +238,8 @@ export default function LinkedInOutreach() {
         {/* Footer */}
         <p className="text-[12px] text-slate-500 text-center">
           Questions? (313) 806-4952 &middot;{" "}
-          <a href="mailto:matt@m2training.com" className="text-orange-500">
-            matt@m2training.com
+          <a href="mailto:matt@mattmichelstraining.com" className="text-orange-500">
+            matt@mattmichelstraining.com
           </a>
         </p>
       </div>

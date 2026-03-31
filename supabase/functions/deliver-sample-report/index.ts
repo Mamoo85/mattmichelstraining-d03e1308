@@ -128,7 +128,7 @@ serve(async (req) => {
       method: "POST",
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: "Matt Michels <matt@notify.m2training.com>",
+        from: "Matt Michels <matt@mattmichelstraining.com>",
         to: [email], bcc: ["matthewmichels4@gmail.com"],
         subject: report.subject,
         html,
@@ -146,7 +146,7 @@ serve(async (req) => {
       method: "POST",
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: "M2 System <matt@notify.m2training.com>",
+        from: "M2 System <matt@mattmichelstraining.com>",
         to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"],
         subject: `Lead magnet: ${report_type} -- ${email}`,
         html: `<p><strong>${name || email}</strong> downloaded the free ${report_type.replace(/_/g, " ")} report.</p><p>Industry: ${industry || "n/a"}<br>Market: ${market || "n/a"}</p>`,

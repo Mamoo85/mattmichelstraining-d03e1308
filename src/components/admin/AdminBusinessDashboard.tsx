@@ -11,7 +11,7 @@ import {
   XCircle, Building2, ChevronDown, ChevronUp, Zap, ArrowUpRight
 } from "lucide-react";
 
-const INTERNAL_EMAILS = ["matt@mattmichelstraining.com", "matt@m2training.com", "matthewmichels4@gmail.com"];
+const INTERNAL_EMAILS = ["matt@mattmichelstraining.com", "matt@mattmichelstraining.com", "matthewmichels4@gmail.com"];
 const isInternal = (email: string) => INTERNAL_EMAILS.includes(email?.toLowerCase());
 
 function timeAgo(date: string | null): string {
