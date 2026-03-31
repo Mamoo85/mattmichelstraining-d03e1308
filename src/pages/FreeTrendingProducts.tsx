@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { TrendingUp, Zap, BarChart3, ArrowRight, CheckCircle, Loader2, Star } from "lucide-react";
+import { trackLeadCapture } from "@/lib/gtag";
 
 const SAMPLE_PRODUCTS = [
   { rank: 1, name: "Portable Blender Pro", category: "Kitchen", trend: "+340%", margin: "$18.50", score: 94 },
@@ -42,6 +43,7 @@ export default function FreeTrendingProducts() {
         body: { email, name, report_type: "trending_products" },
       });
 
+      trackLeadCapture("free_trending_products", 29);
       setSubmitted(true);
       toast.success("Check your inbox!");
     } catch (err: any) {

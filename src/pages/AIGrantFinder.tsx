@@ -5,6 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Search, DollarSign, Calendar, Target, CheckCircle } from "lucide-react";
+import SEOHead from "@/components/layout/SEOHead";
+import { trackCheckoutStart } from "@/lib/gtag";
 
 export default function AIGrantFinder() {
   const { toast } = useToast();
@@ -32,6 +34,14 @@ export default function AIGrantFinder() {
   ];
 
   return (
+    <>
+      <SEOHead
+        title="AI Grant Finder — Discover Grants for Your Business | $149/mo"
+        description="AI scans 500+ grant databases weekly and delivers curated federal, state, and private grant matches to your business. Replace $5K consultants with AI."
+        path="/ai-grant-finder"
+        type="product"
+        product={{ name: "AI Grant Finder", price: 149, currency: "USD", availability: "https://schema.org/InStock" }}
+      />
     <div className="min-h-screen bg-background">
       <div className="max-w-5xl mx-auto px-4 py-16">
         <div className="text-center mb-12">
@@ -81,5 +91,6 @@ export default function AIGrantFinder() {
         </Card>
       </div>
     </div>
+    </>
   );
 }
