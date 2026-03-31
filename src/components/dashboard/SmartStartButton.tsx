@@ -5,7 +5,7 @@ export default function SmartStartButton({ hasWorkout = true }) {
   const [isLogOpen, setIsLogOpen] = useState(false);
 
   return (
-    <div className="w-full px-4 mb-24">
+    <div className="w-full px-4 mb-24 max-w-lg mx-auto">
       {!isLogOpen ? (
         <button 
           onClick={() => hasWorkout ? window.dispatchEvent(new Event("open-workout-zone")) : setIsLogOpen(true)}
