@@ -484,18 +484,19 @@ serve(async (req) => {
       }
     }
 
-    log("Run complete", { found: places.length, queued, skipped, industry, city, source: "google_maps" });
+    log("Run complete", { found: places.length, queued, emailed, skipped, industry, city, source: "google_maps" });
 
     return new Response(
       JSON.stringify({
         found: places.length,
         queued,
+        emailed,
         skipped,
         leads: newLeads,
         industry,
         city,
         source: "google_maps",
-        message: `Prospecting complete. ${queued} new ${industry} leads in ${city} added via Google Maps.`,
+        message: `Prospecting complete. ${queued} leads found, ${emailed} cold emails sent to ${industry} businesses in ${city}.`,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
