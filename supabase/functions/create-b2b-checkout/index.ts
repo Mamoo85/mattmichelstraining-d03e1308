@@ -29,7 +29,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { email, name, business_name, phone, service, city, state, trade, website, niche } = body;
+    const { email, name, business_name, phone, service, city, state, trade, website, niche, referral_code } = body;
 
     if (!email) return new Response(JSON.stringify({ error: "email is required" }), { status: 400, headers: corsHeaders });
 
