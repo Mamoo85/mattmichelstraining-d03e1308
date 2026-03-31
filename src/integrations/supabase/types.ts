@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      _applied_migrations: {
+        Row: {
+          applied_at: string | null
+          id: number
+          name: string
+        }
+        Insert: {
+          applied_at?: string | null
+          id?: number
+          name: string
+        }
+        Update: {
+          applied_at?: string | null
+          id?: number
+          name?: string
+        }
+        Relationships: []
+      }
       activity_feed_notes: {
         Row: {
           activity_id: string
@@ -4912,6 +4930,33 @@ export type Database = {
           page_title?: string
           slug?: string
           target_audience?: string
+        }
+        Relationships: []
+      }
+      seo_page_configs: {
+        Row: {
+          city: string
+          created_at: string | null
+          id: string
+          page_data: Json
+          slug: string
+          trade: string
+        }
+        Insert: {
+          city: string
+          created_at?: string | null
+          id?: string
+          page_data: Json
+          slug: string
+          trade: string
+        }
+        Update: {
+          city?: string
+          created_at?: string | null
+          id?: string
+          page_data?: Json
+          slug?: string
+          trade?: string
         }
         Relationships: []
       }
