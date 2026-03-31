@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 
 serve(async (_req) => {
@@ -14,16 +14,16 @@ serve(async (_req) => {
     let sent = 0;
     for (const client of clients) {
       try {
-        const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
+        const aiRes = await fetch("https://ai.lovable.dev/api/chat", {
           method: "POST",
-          headers: { "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "Content-Type": "application/json" },
+          headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: "claude-haiku-4-5-20251001", max_tokens: 1200,
+            model: "google/gemini-2.5-flash",
             messages: [{ role: "user", content: `Write a local SEO landing page for "${client.business_name}" (${client.industry || "local business"}) serving ${client.city || "the local area"}. Include:\n1. H1 headline with city + service\n2. 3 content sections (about services, why choose us, service area)\n3. 5 FAQ items\n4. Meta title + meta description\n\nFormat as clean HTML. Make it feel local and genuine.` }],
           }),
         });
         const aiData = await aiRes.json();
-        const content = aiData?.content?.[0]?.text || "<p>Content unavailable.</p>";
+        const content = aiData?.choices?.[0]?.message?.content || "<p>Content unavailable.</p>";
         if (RESEND_API_KEY) {
           await fetch("https://api.resend.com/emails", {
             method: "POST",
