@@ -117,6 +117,6 @@ serve(async () => {
 
   } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("[LINKEDIN-POSTER] Fatal:", e);
-    return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: msg }), { status: 500 });
   }
 });

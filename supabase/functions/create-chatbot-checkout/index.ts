@@ -90,7 +90,7 @@ Contact: ${name || "n/a"} — ${email}${phone ? " — " + phone : ""}${city ? "<
   } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("[CREATE-CHATBOT-CHECKOUT] Error:", e);
     return new Response(
-      JSON.stringify({ error: e.message }),
+      JSON.stringify({ error: msg }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

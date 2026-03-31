@@ -89,5 +89,5 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ ok: true, sent: totalSent }), { status: 200, headers: { "Content-Type": "application/json" } });
-  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e); console.error("[TEXT-MARKETING] Fatal error:", e); return new Response(JSON.stringify({ error: e.message }), { status: 500 }); }
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e); return new Response(JSON.stringify({ error: msg }), { status: 500 }); }
 });

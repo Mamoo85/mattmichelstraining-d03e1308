@@ -105,7 +105,7 @@ serve(async (req) => {
       headers: { ...cors, "Content-Type": "application/json" },
     });
   } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
-    return new Response(JSON.stringify({ error: e.message }), {
+    return new Response(JSON.stringify({ error: msg }), {
       status: 500,
       headers: { ...cors, "Content-Type": "application/json" },
     });

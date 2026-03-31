@@ -65,5 +65,5 @@ serve(async (req) => {
 
     await sb.from("hiring_assistant_clients").update({ positions_filled: (client.positions_filled || 0) + 1 }).eq("id", client.id);
     return new Response(JSON.stringify({ ok: true, score, autoEmailed: score >= 7 && !!candidateEmail }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e); console.error("[HIRING-ASSISTANT] Error:", e); return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }); }
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e); return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }); }
 });

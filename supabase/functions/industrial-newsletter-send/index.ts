@@ -215,6 +215,6 @@ ${briefingHtml
     return new Response(JSON.stringify({ sent, subject }), { status: 200 });
   } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("[INDUSTRIAL-NEWSLETTER] Error:", e);
-    return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: msg }), { status: 500 });
   }
 });

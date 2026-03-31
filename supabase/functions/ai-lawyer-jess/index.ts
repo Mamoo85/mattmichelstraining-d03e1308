@@ -168,7 +168,7 @@ Generate the document in clean HTML format with proper headings, sections, and l
     });
   } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("Jess error:", e);
-    return new Response(JSON.stringify({ error: e.message }), {
+    return new Response(JSON.stringify({ error: msg }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }

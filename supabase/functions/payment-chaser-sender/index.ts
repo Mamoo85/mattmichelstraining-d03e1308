@@ -65,5 +65,5 @@ serve(async (req) => {
     await sendSmsGateway(customerPhone, client.phone || customerPhone, msg);
     await sb.from("payment_chaser_clients").update({ chase_count: (client.chase_count || 0) + 1 }).eq("id", client.id);
     return new Response(JSON.stringify({ ok: true, tone, daysOverdue }), { status: 200 });
-  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e); console.error("[PAYMENT-CHASER] Error:", e); return new Response(JSON.stringify({ error: e.message }), { status: 500 }); }
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e); return new Response(JSON.stringify({ error: msg }), { status: 500 }); }
 });
