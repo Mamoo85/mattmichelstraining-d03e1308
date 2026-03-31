@@ -12,6 +12,8 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 
+const EMAIL_SIGNATURE = `<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 806-4952</div><img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div>`;
+
 const log = (msg: string, data?: any) => {
   const d = data ? ` — ${JSON.stringify(data)}` : "";
   console.log(`[GENERATE-NUTRITION-PLAN] ${msg}${d}`);
@@ -188,7 +190,7 @@ serve(async (req) => {
         from: "Matt Michels <matt@mattmichelstraining.com>",
         to: [customer_email],
         subject: `Your ${sport} Nutrition Blueprint — From Coach Matt`,
-        html: buildEmailHtml(customer_email, plan, generatedPlan, sport || "athlete"),
+        html: buildEmailHtml(customer_email + EMAIL_SIGNATURE, plan, generatedPlan, sport || "athlete"),
       }),
     });
 

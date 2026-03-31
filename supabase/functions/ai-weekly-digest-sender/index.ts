@@ -85,7 +85,7 @@ function buildDigestEmail(client: DigestClient, digestHtml: string, dateStr: str
 
     <div style="font-size:15px;color:#1e293b;line-height:1.75;">
       ${digestHtml}
-    </div>
+    <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div>
 
     <hr style="border:none;border-top:1px solid #e2e8f0;margin:28px 0;">
 

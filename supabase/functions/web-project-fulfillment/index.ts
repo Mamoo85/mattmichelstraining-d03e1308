@@ -18,6 +18,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
+
+const EMAIL_SIGNATURE = `<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 806-4952</div><img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div>`;
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
@@ -54,7 +56,7 @@ function wrapHtml(body: string, title: string): string {
 </body></html>`;
 }
 
-function emailApprove(business: string, clientName: string, projectId: string): { subject: string; html: string } {
+function emailApprove(business: string, clientName: string, projectId: string): { subject: string; html: string + EMAIL_SIGNATURE} {
   const subject = `Your website project is officially underway — ${business}`;
   const body = `
     <p>Hey ${clientName || "there"} —</p>
@@ -76,10 +78,10 @@ function emailApprove(business: string, clientName: string, projectId: string): 
     <p>Once I have that, I'll be in design mode. You'll get a preview link within 7 days.</p>
     <p>Questions? Email me at <a href="mailto:matt@m2training.com" style="color:#e8621a;">matt@m2training.com</a> or text <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a> — whichever works best for you. I'm fast to respond.</p>
     <p>— Matt Michels</p>`;
-  return { subject, html: wrapHtml(body, subject) };
+  return { subject, html: wrapHtml(body + EMAIL_SIGNATURE, subject) };
 }
 
-function emailPreviewReady(business: string, clientName: string, previewUrl: string): { subject: string; html: string } {
+function emailPreviewReady(business: string, clientName: string, previewUrl: string): { subject: string; html: string + EMAIL_SIGNATURE} {
   const subject = `Your website preview is ready — ${business}`;
   const body = `
     <p>Hey ${clientName || "there"} —</p>
@@ -94,10 +96,10 @@ function emailPreviewReady(business: string, clientName: string, previewUrl: str
     <p>If it looks good and you're ready to go live, just reply and say <strong>"Approved — go live"</strong> and I'll get it live on your domain within 24 hours.</p>
     <p>Email <a href="mailto:matt@m2training.com" style="color:#e8621a;">matt@m2training.com</a> or text <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a> — I'm here.</p>
     <p>— Matt</p>`;
-  return { subject, html: wrapHtml(body, subject) };
+  return { subject, html: wrapHtml(body + EMAIL_SIGNATURE, subject) };
 }
 
-function emailGoLive(business: string, clientName: string, siteUrl: string): { subject: string; html: string } {
+function emailGoLive(business: string, clientName: string, siteUrl: string): { subject: string; html: string + EMAIL_SIGNATURE} {
   const subject = `🚀 ${business} is live on Google`;
   const body = `
     <p>Hey ${clientName || "there"} —</p>
@@ -118,10 +120,10 @@ function emailGoLive(business: string, clientName: string, siteUrl: string): { s
     <p>Thank you for trusting me with this. If you ever need anything — changes, questions, new pages — I'm one text away.</p>
     <p>Email <a href="mailto:matt@m2training.com" style="color:#e8621a;">matt@m2training.com</a> or text <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a>.</p>
     <p>— Matt Michels</p>`;
-  return { subject, html: wrapHtml(body, subject) };
+  return { subject, html: wrapHtml(body + EMAIL_SIGNATURE, subject) };
 }
 
-function emailRevisionAck(business: string, clientName: string): { subject: string; html: string } {
+function emailRevisionAck(business: string, clientName: string): { subject: string; html: string + EMAIL_SIGNATURE} {
   const subject = `Got your revision notes — ${business}`;
   const body = `
     <p>Hey ${clientName || "there"} —</p>
@@ -129,12 +131,12 @@ function emailRevisionAck(business: string, clientName: string): { subject: stri
     <p>I'll have the updated preview back to you within <strong>2 business days</strong>. I'll send a new link as soon as it's ready.</p>
     <p>If you think of anything else before then, just reply to this email or text me at <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a>. It's easier to batch changes together.</p>
     <p>— Matt</p>`;
-  return { subject, html: wrapHtml(body, subject) };
+  return { subject, html: wrapHtml(body + EMAIL_SIGNATURE, subject) };
 }
 
 // ── Notify Matt ─────────────────────────────────────────────────────────────
 
-function emailMattNotify(stage: string, business: string, clientEmail: string, notes: string): { subject: string; html: string } {
+function emailMattNotify(stage: string, business: string, clientEmail: string, notes: string): { subject: string; html: string + EMAIL_SIGNATURE} {
   const subject = `[Project Update] ${business} — ${stage}`;
   const body = `
     <p><strong>Business:</strong> ${business}<br>
@@ -143,7 +145,7 @@ function emailMattNotify(stage: string, business: string, clientEmail: string, n
     <strong>Notes:</strong> ${notes || "None"}</p>
     <p>Log in to your admin panel to take action:</p>
     <p><a href="https://www.mattmichelstraining.com/admin" style="color:#e8621a;">Open Admin Panel →</a></p>`;
-  return { subject, html: wrapHtml(body, subject) };
+  return { subject, html: wrapHtml(body + EMAIL_SIGNATURE, subject) };
 }
 
 // ── Main handler ─────────────────────────────────────────────────────────────
@@ -219,7 +221,7 @@ serve(async (req) => {
     }
 
     // Build the right emails for this stage
-    let clientEmail_payload: { subject: string; html: string } | null = null;
+    let clientEmail_payload: { subject: string; html: string + EMAIL_SIGNATURE} | null = null;
     let newStatus: string | null = null;
     const projectId = lead_id;
 
@@ -265,7 +267,7 @@ serve(async (req) => {
           from: "Matt Michels <matt@mattmichelstraining.com>",
           to: [clientEmail],
           subject: clientEmail_payload.subject,
-          html: clientEmail_payload.html,
+          html: clientEmail_payload.html + EMAIL_SIGNATURE,
         }),
       });
 
@@ -288,7 +290,7 @@ serve(async (req) => {
         from: "M2 System <matt@mattmichelstraining.com>",
         to: ["matt@m2training.com"],
         subject: mattEmail.subject,
-        html: mattEmail.html,
+        html: mattEmail.html + EMAIL_SIGNATURE,
       }),
     });
 
