@@ -85,6 +85,8 @@ const AdminGuideStore = lazy(() => import("@/components/admin/AdminGuideStore"))
 const AdminAffiliateManager = lazy(() => import("@/components/admin/AdminAffiliateManager"));
 const AdminBusinessDashboard = lazy(() => import("@/components/admin/AdminBusinessDashboard"));
 const AdminSocialMediaOnboarding = lazy(() => import("@/components/admin/AdminSocialMediaOnboarding"));
+const AdminLegalCompliance = lazy(() => import("@/components/admin/AdminLegalCompliance"));
+const AdminOpsCenter = lazy(() => import("@/components/admin/AdminOpsCenter"));
 
 const MASTER_TABS = [
   { key: "business", label: "Business", icon: DollarSign, desc: "Revenue · Automation" },
@@ -383,6 +385,7 @@ const Admin = () => {
             { key: "gift-cards", label: "Gift Cards", content: <AdminGiftCards /> },
             { key: "guides", label: "Playbooks Store", content: <AdminGuideStore /> },
             { key: "affiliates", label: "Affiliates", content: <AdminAffiliateManager /> },
+            { key: "legal", label: "Legal & Compliance", content: <AdminLegalCompliance /> },
             { key: "trash", label: <span className="flex items-center gap-1"><Trash2 size={11} /> Trash{trashCount > 0 && <Badge variant="secondary" className="text-[8px] px-1.5 py-0 min-w-[18px] h-4">{trashCount}</Badge>}</span>, content: <AdminTrash /> },
           ]} />
         )}
@@ -428,6 +431,7 @@ const Admin = () => {
             { key: "prospector", label: "Prospector", content: <AdminProspector /> },
             { key: "automation", label: "Automation Hub", content: <AdminAutomationHub /> },
             { key: "client-health", label: "Client Health", content: <AdminClientHealth /> },
+            { key: "ops-center", label: "Ops Center", content: <AdminOpsCenter /> },
             { key: "wd-automations", label: "Email Automations", content: <AdminWebDesignAutomations /> },
           ]} />
         )}
