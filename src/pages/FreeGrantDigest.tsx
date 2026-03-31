@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { FileText, DollarSign, ArrowRight, CheckCircle, Loader2, Shield, Clock, Target } from "lucide-react";
+import { trackLeadCapture } from "@/lib/gtag";
 
 const SAMPLE_GRANTS = [
   { name: "SBA Community Advantage Loan", amount: "$50K–$250K", deadline: "Rolling", match: "92%", type: "Federal" },
@@ -43,6 +44,7 @@ export default function FreeGrantDigest() {
         body: { email, name, report_type: "grant_digest", industry },
       });
 
+      trackLeadCapture("free_grant_digest", 29);
       setSubmitted(true);
       toast.success("Check your inbox!");
     } catch (err: any) {

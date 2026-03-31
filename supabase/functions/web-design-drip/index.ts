@@ -165,7 +165,7 @@ serve(async (req) => {
       .not("email", "is", null)
       .ilike("description", "%auto_prospected%");
 
-    if (leadsErr) throw leadsErr;
+    if (leadsErr) throw new Error(leadsErr.message || JSON.stringify(leadsErr));
     if (!leads || leads.length === 0) {
       log("No drip-eligible leads found");
       return new Response(JSON.stringify({ sent: 0, message: "No drip-eligible leads" }), {

@@ -48,21 +48,11 @@ const CoachMessaging = () => {
     fetchMessages();
   }, [user]);
 
-  // Realtime subscription
+  // Poll for new messages every 5 seconds
   useEffect(() => {
     if (!user) return;
-    const channel = supabase
-      .channel(`coach-dm:${user.id}`)
-      .on("postgres_changes", {
-        event: "INSERT",
-        schema: "public",
-        table: "coach_direct_messages",
-        filter: `user_id=eq.${user.id}`,
-      }, (payload) => {
-        setMessages((prev) => [...prev, payload.new as DirectMessage]);
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    const interval = setInterval(fetchMessages, 5000);
+    return () => clearInterval(interval);
   }, [user]);
 
   // Auto-scroll on new messages

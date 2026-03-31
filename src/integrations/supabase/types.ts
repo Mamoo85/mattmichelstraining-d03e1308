@@ -2638,6 +2638,9 @@ export type Database = {
         Row: {
           business_name: string | null
           created_at: string
+          drip_completed: boolean | null
+          drip_last_sent_at: string | null
+          drip_step: number | null
           email: string
           first_name: string | null
           id: string
@@ -2651,6 +2654,9 @@ export type Database = {
         Insert: {
           business_name?: string | null
           created_at?: string
+          drip_completed?: boolean | null
+          drip_last_sent_at?: string | null
+          drip_step?: number | null
           email: string
           first_name?: string | null
           id?: string
@@ -2664,6 +2670,9 @@ export type Database = {
         Update: {
           business_name?: string | null
           created_at?: string
+          drip_completed?: boolean | null
+          drip_last_sent_at?: string | null
+          drip_step?: number | null
           email?: string
           first_name?: string | null
           id?: string
@@ -6331,6 +6340,48 @@ export type Database = {
           last_sent_at?: string | null
           send_count?: number | null
           stripe_customer_id?: string | null
+        }
+        Relationships: []
+      }
+      web_design_leads: {
+        Row: {
+          business: string | null
+          created_at: string
+          description: string | null
+          email: string | null
+          id: string
+          monthly_retainer: boolean | null
+          name: string | null
+          notes: string | null
+          site_url: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          business?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          id?: string
+          monthly_retainer?: boolean | null
+          name?: string | null
+          notes?: string | null
+          site_url?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          business?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          id?: string
+          monthly_retainer?: boolean | null
+          name?: string | null
+          notes?: string | null
+          site_url?: string | null
+          status?: string
+          updated_at?: string
         }
         Relationships: []
       }

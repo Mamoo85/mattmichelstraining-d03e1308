@@ -112,24 +112,14 @@ const AdminDirectMessages = () => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
-  // Realtime
+  // Poll for new messages every 5 seconds
   useEffect(() => {
-    const channel = supabase
-      .channel(`coach-dm:${selectedUser}`)
-      .on("postgres_changes", {
-        event: "INSERT",
-        schema: "public",
-        table: "coach_direct_messages",
-        filter: `user_id=eq.${selectedUser}`,
-      }, (payload) => {
-        const msg = payload.new as DirectMessage;
-        if (selectedUser === msg.user_id) {
-          setMessages((prev) => [...prev, msg]);
-        }
-        fetchThreads();
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    if (!selectedUser) return;
+    const interval = setInterval(() => {
+      openThread(selectedUser);
+      fetchThreads();
+    }, 5000);
+    return () => clearInterval(interval);
   }, [selectedUser]);
 
   const handleSendReply = async () => {

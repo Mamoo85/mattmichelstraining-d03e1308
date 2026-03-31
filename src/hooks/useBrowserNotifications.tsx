@@ -13,31 +13,24 @@ export function useBrowserNotifications() {
       Notification.requestPermission();
     }
 
-    // Subscribe to realtime notifications
-    const channel = supabase
-      .channel("browser-notifs")
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "notifications",
-          filter: `user_id=eq.${user.id}`,
-        },
-        (payload) => {
-          if (Notification.permission === "granted") {
-            const { title, body } = payload.new as { title: string; body: string | null };
-            new Notification(title, {
-              body: body || undefined,
-              icon: "/pwa-192x192.png",
-            });
-          }
-        }
-      )
-      .subscribe();
+    // Poll for new notifications every 10 seconds
+    let lastChecked = new Date().toISOString();
+    const interval = setInterval(async () => {
+      const { data } = await supabase
+        .from("notifications")
+        .select("title, body")
+        .eq("user_id", user.id)
+        .gt("created_at", lastChecked)
+        .order("created_at", { ascending: false });
+      if (data && data.length > 0 && Notification.permission === "granted") {
+        const n = data[0] as { title: string; body: string | null };
+        new Notification(n.title, { body: n.body || undefined, icon: "/pwa-192x192.png" });
+      }
+      lastChecked = new Date().toISOString();
+    }, 10000);
 
     return () => {
-      supabase.removeChannel(channel);
+      clearInterval(interval);
     };
   }, [user]);
 }
