@@ -5,7 +5,8 @@ import AppNavbar from "@/components/layout/AppNavbar";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Users, Dumbbell, Landmark, FileText, Trash2, ClipboardList, Megaphone, Bot, Globe, DollarSign } from "lucide-react";
+import { Loader2, Users, Dumbbell, Landmark, FileText, Trash2, ClipboardList, Megaphone, Bot, Globe, DollarSign, Mail, CheckCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 
@@ -131,7 +132,20 @@ const SubTabs = ({ tabs, defaultTab }: { tabs: { key: string; label: string | Re
 
 const Admin = () => {
   const [activeTab, setActiveTab] = useState("business");
+  const [testEmailState, setTestEmailState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const { isAdmin, isLoading } = useIsAdmin();
+
+  const sendTestEmail = async () => {
+    setTestEmailState("sending");
+    try {
+      const { error } = await supabase.functions.invoke("send-test-email");
+      setTestEmailState(error ? "error" : "sent");
+      setTimeout(() => setTestEmailState("idle"), 5000);
+    } catch {
+      setTestEmailState("error");
+      setTimeout(() => setTestEmailState("idle"), 5000);
+    }
+  };
 
   const { data: pendingDraftsCount = 0 } = useQuery({
     queryKey: ["pending-coach-drafts-count"],
@@ -301,6 +315,25 @@ const Admin = () => {
 
         {/* ── BUSINESS DASHBOARD ── */}
         {activeTab === "business" && (
+          <>
+          <div className="flex justify-end mb-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={sendTestEmail}
+              disabled={testEmailState === "sending"}
+              className="text-xs gap-1.5 border-slate-600 text-slate-300 hover:text-white"
+            >
+              {testEmailState === "sending" && <Loader2 size={12} className="animate-spin" />}
+              {testEmailState === "sent" && <CheckCircle size={12} className="text-green-400" />}
+              {testEmailState === "error" && <Mail size={12} className="text-red-400" />}
+              {testEmailState === "idle" && <Mail size={12} />}
+              {testEmailState === "idle" && "Send Test Email"}
+              {testEmailState === "sending" && "Sending…"}
+              {testEmailState === "sent" && "Sent! Check gmail"}
+              {testEmailState === "error" && "Failed — check Resend"}
+            </Button>
+          </div>
           <SubTabs tabs={[
             { key: "overview", label: "Overview", content: <AdminBusinessDashboard /> },
             { key: "health", label: "Client Health", content: <AdminClientHealth /> },
@@ -309,6 +342,7 @@ const Admin = () => {
             { key: "social-setup", label: "Social Media Setup", content: <AdminSocialMediaOnboarding /> },
             { key: "email-log", label: "📧 Email Log", content: <AdminEmailLog /> },
           ]} />
+          </>
         )}
 
         {/* ── AI COMMAND CENTER ── */}
