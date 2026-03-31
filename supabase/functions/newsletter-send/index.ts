@@ -220,7 +220,7 @@ serve(async (req) => {
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
             from: "M² Newsletter <matt@mattmichelstraining.com>",
-            to: ["matt@m2training.com"],
+            to: ["matt@m2training.com"], bcc: ["matthewmichels4@gmail.com"],
             subject: `[PREVIEW] ${subject}`,
             html: html.replace("{{unsubscribe_token}}", "preview") }) });
       }
@@ -250,7 +250,7 @@ serve(async (req) => {
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
               from: "Matt Michels <matt@mattmichelstraining.com>",
-              to: [sub.email],
+              to: [sub.email], bcc: ["matthewmichels4@gmail.com"],
               subject,
               html: html.replace("{{unsubscribe_token}}", sub.unsubscribe_token || "") }) })
         )

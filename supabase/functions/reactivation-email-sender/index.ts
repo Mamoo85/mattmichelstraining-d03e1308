@@ -91,7 +91,7 @@ Return ONLY the HTML email body. No subject line. Sign off as the ${client.busin
                 "Content-Type": "application/json" },
               body: JSON.stringify({
                 from: "Matt Michels <matt@mattmichelstraining.com>",
-                to: [contact.contact_email],
+                to: [contact.contact_email], bcc: ["matthewmichels4@gmail.com"],
                 subject: `We miss you, ${contact.contact_name}! — ${client.business_name}`,
                 html: `
                   <div style="font-family:sans-serif;max-width:600px;margin:0 auto;">

@@ -40,7 +40,7 @@ serve(async (req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "M² Hiring Assistant <matt@mattmichelstraining.com>", to: [client.email],
+          from: "M² Hiring Assistant <matt@mattmichelstraining.com>", to: [client.email], bcc: ["matthewmichels4@gmail.com"],
           subject: `Candidate Screening: ${candidateName || "New Applicant"} — Score ${score}/10`,
           html: `<div style="font-family:sans-serif;max-width:600px;padding:20px;"><h2 style="color:#1e293b;">Candidate: ${candidateName || "Unknown"}</h2><p>Position: ${jobTitle}</p><pre style="white-space:pre-wrap;line-height:1.8;font-family:sans-serif;color:#334155;">${report}</pre><div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;">
         <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" />

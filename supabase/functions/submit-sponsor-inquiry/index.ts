@@ -41,7 +41,7 @@ serve(async (req) => {
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           from: "M² Site <matt@mattmichelstraining.com>",
-          to: ["matt@m2training.com"],
+          to: ["matt@m2training.com"], bcc: ["matthewmichels4@gmail.com"],
           subject: `Sponsor Inquiry: ${name}${preferred_tier ? ` — ${preferred_tier}` : ""}`,
           html: `
             <p><strong>Name:</strong> ${name}</p>

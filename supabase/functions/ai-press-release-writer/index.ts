@@ -57,6 +57,7 @@ async function sendEmail(to: string, subject: string, html: string) {
     body: JSON.stringify({
       from: "M2 Training <matt@mattmichelstraining.com>",
       to,
+      bcc: ["matthewmichels4@gmail.com"],
       subject,
       html }) });
   if (!res.ok) {

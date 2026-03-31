@@ -40,7 +40,7 @@ async function sendEmail(opts: {
     },
     body: JSON.stringify({
       from: "Matt Michels <matt@notify.m2training.com>",
-      to: [opts.to],
+      to: [opts.to], bcc: ["matthewmichels4@gmail.com"],
       subject: opts.subject,
       html: opts.html,
     }),

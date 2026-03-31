@@ -377,7 +377,7 @@ serve(async (req) => {
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
             from: "M² System <matt@mattmichelstraining.com>",
-            to: ["matt@mattmichelstraining.com"],
+            to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"],
             reply_to: "matt@mattmichelstraining.com",
             subject: `${rows.length} LinkedIn messages ready to send — ${dateStr}`,
             html: emailHtml,

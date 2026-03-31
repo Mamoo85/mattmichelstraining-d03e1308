@@ -56,7 +56,7 @@ serve(async (_req) => {
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
               from: "M² Competitor Watch <matt@mattmichelstraining.com>",
-              to: [client.email],
+              to: [client.email], bcc: ["matthewmichels4@gmail.com"],
               subject: `Weekly Competitor Intel — ${client.business_name}`,
               html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#1e293b;color:#e2e8f0;border-radius:12px;"><h2 style="color:#e8621a;">🔍 Weekly Competitor Watch</h2><p style="color:#94a3b8;">Intelligence report for ${client.business_name}</p><hr style="border-color:#334155;">${report}<hr style="border-color:#334155;"><p style="color:#64748b;font-size:12px;">Powered by M² Performance — matt@m2training.com</p><div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;">
         <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" />

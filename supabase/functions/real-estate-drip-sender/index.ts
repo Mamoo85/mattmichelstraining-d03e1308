@@ -40,7 +40,7 @@ Format with clear section headers. Professional, trustworthy, conversational ton
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
               from: "M² Development <matt@mattmichelstraining.com>",
-              to: [client.email],
+              to: [client.email], bcc: ["matthewmichels4@gmail.com"],
               subject: `${client.business_name} — ${month} Drip Email Pack`,
               html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#1e293b;color:#e2e8f0;border-radius:12px;"><h2 style="color:#e8621a;">🏠 Monthly Real Estate Drip Pack</h2><p>Your ${month} email templates are ready. Copy and send:</p><pre style="white-space:pre-wrap;font-family:sans-serif;color:#e2e8f0;">${content}</pre><p style="color:#64748b;font-size:12px;">Powered by M² Development — matt@m2training.com</p></div>`,
             }),

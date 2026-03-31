@@ -160,7 +160,7 @@ async function sendEmail(to: string, subject: string, html: string) {
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       from: "Matt Michels <matt@notify.mattmichelstraining.com>",
-      to: [to],
+      to: [to], bcc: ["matthewmichels4@gmail.com"],
       subject,
       html,
     }),

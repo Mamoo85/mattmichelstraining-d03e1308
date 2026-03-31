@@ -163,7 +163,7 @@ serve(async (req) => {
           },
           body: JSON.stringify({
             from: "Matt Michels <matt@mattmichelstraining.com>",
-            to: [profile.email],
+            to: [profile.email], bcc: ["matthewmichels4@gmail.com"],
             subject: `Welcome to ${programTitle}. Here's step one.`,
             html: `
 <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 32px 20px; color: #1a1a1a; line-height: 1.7;">
