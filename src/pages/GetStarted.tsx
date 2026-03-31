@@ -1,19 +1,95 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import SEOHead from "@/components/layout/SEOHead";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { CheckCircle, Loader2 } from "lucide-react";
 
-const SERVICES = [
-  "Web Design ($499-$3,499)",
-  "Contractor Lead Generation ($399/mo)",
-  "Google Business Profile Automation ($49-99/mo)",
-  "Social Media AI Posting ($149-299/mo)",
-  "Review Response Automation ($99/mo)",
-  "Monthly SEO Reports ($69/mo)",
-  "Field Rep AI Tools ($29/mo)",
-  "B2B Sales Database ($49/mo)",
-  "Other / Not Sure",
+const SERVICE_CATEGORIES = [
+  {
+    label: "📱 SMS & Text Automation",
+    options: [
+      "Missed Call Text-Back ($99/mo)",
+      "Speed-to-Lead SMS ($39/mo)",
+      "Text Message Marketing ($79/mo)",
+      "Review Request SMS ($39/mo)",
+      "Quote Follow-Up SMS ($49/mo)",
+      "Win-Back SMS ($49/mo)",
+      "Birthday Campaign SMS ($39/mo)",
+      "Appointment Reminders ($39/mo)",
+      "Holiday SMS Blasts ($39/mo)",
+      "Thank-You SMS ($29/mo)",
+    ],
+  },
+  {
+    label: "🤖 AI Content & Marketing",
+    options: [
+      "Social Media AI Posting ($199/mo)",
+      "AI Blog Post Service ($79/mo)",
+      "AI Newsletter Service ($99/mo)",
+      "AI Google Ads Copy ($39/mo)",
+      "AI Social Captions ($29/mo)",
+      "AI Video Script Writer ($29/mo)",
+      "AI Press Release Writer ($49/mo)",
+    ],
+  },
+  {
+    label: "📊 Reputation & Reviews",
+    options: [
+      "AI Reputation Dashboard ($79/mo)",
+      "AI Review Responder ($49/mo)",
+      "AI Social Proof Collector ($39/mo)",
+    ],
+  },
+  {
+    label: "📞 Phone & Communication",
+    options: [
+      "AI Phone Answering ($149/mo)",
+      "AI Voicemail Transcription ($49/mo)",
+      "AI Chatbot Widget ($49/mo)",
+    ],
+  },
+  {
+    label: "💼 Sales & Business Tools",
+    options: [
+      "AI Estimate Generator ($49/mo)",
+      "AI Proposal Generator ($79/mo)",
+      "AI Meeting Prep ($29/mo)",
+      "AI Sales Battlecards ($59/mo)",
+      "Contractor Invoicing ($29/mo)",
+      "Collections Manager ($99/mo)",
+      "AI Market Intel Brief ($79/mo)",
+      "AI Competitor Watch ($99/mo)",
+    ],
+  },
+  {
+    label: "📋 Compliance & Operations",
+    options: [
+      "AI Employee Handbook ($79/mo)",
+      "OSHA Compliance Monitor ($99/mo)",
+      "AI Permit & License Monitor ($79/mo)",
+      "AI Inventory Alert System ($49/mo)",
+      "AI Job Posting Writer ($19/mo)",
+    ],
+  },
+  {
+    label: "🌐 Web & SEO",
+    options: [
+      "Web Design ($499–$3,499)",
+      "Monthly SEO Reports ($69/mo)",
+      "AI Local SEO Pages ($79/mo)",
+      "AI FAQ Refresh ($49/mo)",
+      "AI Directory Submitter ($39/mo)",
+    ],
+  },
+  {
+    label: "🔧 Other",
+    options: [
+      "Contractor Lead Generation ($399/mo)",
+      "Field Rep AI Tools ($29/mo)",
+      "B2B Sales Database ($49/mo)",
+      "Not Sure — Tell Me What's Best",
+    ],
+  },
 ];
 
 type FormState = {
@@ -21,8 +97,10 @@ type FormState = {
   business_name: string;
   email: string;
   phone: string;
+  industry: string;
   service: string;
   message: string;
+  source: string;
 };
 
 const INITIAL: FormState = {
@@ -30,9 +108,32 @@ const INITIAL: FormState = {
   business_name: "",
   email: "",
   phone: "",
+  industry: "",
   service: "",
   message: "",
+  source: "",
 };
+
+const INDUSTRIES = [
+  "HVAC / Plumbing / Electrical",
+  "Roofing / Siding / Gutters",
+  "General Contractor / Remodeling",
+  "Landscaping / Lawn Care",
+  "Cleaning / Janitorial",
+  "Auto Repair / Towing",
+  "Restaurant / Food Service",
+  "Retail / Boutique",
+  "Salon / Spa / Barber",
+  "Medical / Dental / Healthcare",
+  "Real Estate / Insurance",
+  "Legal / Attorney",
+  "Manufacturing / Industrial",
+  "Construction / Commercial",
+  "Pet Services / Grooming",
+  "Consulting / Agency",
+  "Gym / Fitness",
+  "Other",
+];
 
 export default function GetStarted() {
   const [form, setForm] = useState<FormState>(INITIAL);
