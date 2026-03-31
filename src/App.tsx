@@ -173,6 +173,11 @@ const AIGrantFinder = lazyRetry(() => import("./pages/AIGrantFinder"));
 const AIReviewResponse = lazyRetry(() => import("./pages/AIReviewResponse"));
 const AIBattlecard = lazyRetry(() => import("./pages/AIBattlecard"));
 const AIMarketIntel = lazyRetry(() => import("./pages/AIMarketIntel"));
+const AIPermitMonitor = lazyRetry(() => import("./pages/AIPermitMonitor"));
+const AIOshaCompliance = lazyRetry(() => import("./pages/AIOshaCompliance"));
+const AICollections = lazyRetry(() => import("./pages/AICollections"));
+const AIInventoryAlerts = lazyRetry(() => import("./pages/AIInventoryAlerts"));
+const AIBirthdayCampaign = lazyRetry(() => import("./pages/AIBirthdayCampaign"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
