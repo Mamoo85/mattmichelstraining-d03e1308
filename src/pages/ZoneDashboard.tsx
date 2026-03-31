@@ -321,13 +321,17 @@ const ZoneDashboard = () => {
         {/* Coach banner — Pro/Elite only */}
         {isProOrElite && <CoachActivityBanner />}
 
-        {/* Today's Workout */}
-        <TodayCard
+        {/* Athlete Profile Card */}
+        <AthleteProfileCard
+          displayName={displayName}
+          streak={streak}
+          totalPoints={totalPoints}
+          levelLabel={levelInfo.label}
+          hasActiveWorkout={hasActiveWorkout}
           workoutName={workoutName}
           phase={phase}
-          day={currentDay}
-          hasWorkout={hasActiveWorkout}
-          onClick={() => window.dispatchEvent(new Event("open-workout-zone"))}
+          currentDay={currentDay}
+          onStartWorkout={() => window.dispatchEvent(new Event("open-workout-zone"))}
         />
 
         {/* Quick Actions */}
