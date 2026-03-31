@@ -1,3 +1,5 @@
+import { forwardRef } from "react";
+
 interface SectionHeaderProps {
   title: string;
   subtitle?: string;
@@ -5,7 +7,8 @@ interface SectionHeaderProps {
   children?: React.ReactNode;
 }
 
-const SectionHeader = ({ title, subtitle, timestamp, children }: SectionHeaderProps) => (
+const SectionHeader = forwardRef<HTMLDivElement, SectionHeaderProps>(({ title, subtitle, timestamp, children }, ref) => (
+  <div ref={ref} className="flex items-center gap-4 mb-6">
   <div className="flex items-center gap-4 mb-6">
     <div className="w-1.5 h-10 bg-primary rounded-full" />
     <div className="flex-1">
