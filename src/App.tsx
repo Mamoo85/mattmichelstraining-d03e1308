@@ -167,6 +167,7 @@ const AISocialProof = lazyRetry(() => import("./pages/AISocialProof"));
 const AIPriceMonitor = lazyRetry(() => import("./pages/AIPriceMonitor"));
 const AIMeetingPrep = lazyRetry(() => import("./pages/AIMeetingPrep"));
 const AIDirectorySubmitter = lazyRetry(() => import("./pages/AIDirectorySubmitter"));
+const M2Development = lazyRetry(() => import("./pages/M2Development"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -407,6 +408,7 @@ const App = () => (
                     <Route path="/ai-price-monitor" element={<AIPriceMonitor />} />
                     <Route path="/ai-meeting-prep" element={<AIMeetingPrep />} />
                     <Route path="/ai-directory-submitter" element={<AIDirectorySubmitter />} />
+                    <Route path="/m2-development" element={<M2Development />} />
                     <Route path="/partners" element={<B2BPartnerPortal />} />
                     <Route path="/sports-camps" element={<CampDirectory />} />
                     <Route path="/free-program" element={<FreeProgram />} />
