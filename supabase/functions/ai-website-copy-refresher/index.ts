@@ -101,7 +101,7 @@ function buildClientEmail(client: CopyClient, copyHtml: string, month: string): 
 
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-left:4px solid #e8621a;border-radius:0 8px 8px 0;padding:24px;font-size:14px;color:#1e293b;line-height:1.75;">
       ${copyHtml}
-    </div>
+    <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div>
 
     <p style="margin:24px 0 0;font-size:14px;color:#64748b;line-height:1.6;">
       Questions about implementing this copy? Reply to this email and I'll help.

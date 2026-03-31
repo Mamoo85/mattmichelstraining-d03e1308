@@ -42,7 +42,13 @@ serve(async (req) => {
           from: "M² Lead Alert <matt@mattmichelstraining.com>",
           to: ["matt@m2training.com"],
           subject: `🔥 HOT LEAD: ${senderEmail} replied INTERESTED`,
-          html: `<div style="font-family:sans-serif;padding:20px;background:#1e293b;color:#e2e8f0;border-radius:12px;"><h2 style="color:#22c55e;">🔥 Interested Reply Detected</h2><p><strong>From:</strong> ${senderEmail}</p><p><strong>Subject:</strong> ${originalSubject || "N/A"}</p><p><strong>Message:</strong></p><blockquote style="border-left:3px solid #e8621a;padding-left:12px;color:#94a3b8;">${replyBody.slice(0, 1000)}</blockquote><p style="color:#e8621a;font-weight:bold;">Reply to this lead ASAP!</p></div>`,
+          html: `<div style="font-family:sans-serif;padding:20px;background:#1e293b;color:#e2e8f0;border-radius:12px;"><h2 style="color:#22c55e;">🔥 Interested Reply Detected</h2><p><strong>From:</strong> ${senderEmail}</p><p><strong>Subject:</strong> ${originalSubject || "N/A"}</p><p><strong>Message:</strong></p><blockquote style="border-left:3px solid #e8621a;padding-left:12px;color:#94a3b8;">${replyBody.slice(0, 1000)}</blockquote><p style="color:#e8621a;font-weight:bold;">Reply to this lead ASAP!</p><div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;">
+        <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" />
+        <div style="font-size:13px;color:#94a3b8;">
+          <strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 806-4952
+        </div>
+        <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M² Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" />
+      </div></div>`,
         }),
       });
     }

@@ -11,6 +11,8 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+const EMAIL_SIGNATURE = `<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 806-4952</div><img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div>`;
+
 const PRICING_URL = "https://www.mattmichelstraining.com/pricing";
 
 const EMAIL_HTML = `
@@ -138,7 +140,7 @@ serve(async (req) => {
             from: "Matt Michels <matt@mattmichelstraining.com>",
             to: [user.email],
             subject: "Your trial ends tomorrow. What's the plan?",
-            html: EMAIL_HTML,
+            html: EMAIL_HTML + EMAIL_SIGNATURE,
           }),
         });
 

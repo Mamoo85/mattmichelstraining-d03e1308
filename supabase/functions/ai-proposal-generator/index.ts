@@ -101,6 +101,9 @@ function wrapProposalHtml(
           <span style="font-size:13px;color:#475569;vertical-align:middle;">
             ${businessName} · Prepared by M² Performance Training
           </span>
+          <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" />
+          <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" />
+          </span>
         </td>
       </tr>
     </table>
