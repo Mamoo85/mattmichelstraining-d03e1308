@@ -86,6 +86,7 @@ const AdminGiftCards = lazy(() => import("@/components/admin/AdminGiftCards"));
 const AdminGuideStore = lazy(() => import("@/components/admin/AdminGuideStore"));
 const AdminAffiliateManager = lazy(() => import("@/components/admin/AdminAffiliateManager"));
 const AdminBusinessDashboard = lazy(() => import("@/components/admin/AdminBusinessDashboard"));
+const AdminB2BPipeline = lazy(() => import("@/components/admin/AdminB2BPipeline"));
 const AdminSocialMediaOnboarding = lazy(() => import("@/components/admin/AdminSocialMediaOnboarding"));
 const AdminLegalCompliance = lazy(() => import("@/components/admin/AdminLegalCompliance"));
 const AdminOpsCenter = lazy(() => import("@/components/admin/AdminOpsCenter"));
