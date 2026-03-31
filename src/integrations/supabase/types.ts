@@ -3117,8 +3117,13 @@ export type Database = {
           last_contact_date: string | null
           lead_score: number | null
           notes: string | null
+          offer_pitched: string | null
           owner_name: string | null
           phone: string | null
+          sms_2_sent: boolean
+          sms_2_sent_at: string | null
+          sms_sent: boolean
+          sms_sent_at: string | null
           status: string | null
           target_service: string | null
           website: string | null
@@ -3135,8 +3140,13 @@ export type Database = {
           last_contact_date?: string | null
           lead_score?: number | null
           notes?: string | null
+          offer_pitched?: string | null
           owner_name?: string | null
           phone?: string | null
+          sms_2_sent?: boolean
+          sms_2_sent_at?: string | null
+          sms_sent?: boolean
+          sms_sent_at?: string | null
           status?: string | null
           target_service?: string | null
           website?: string | null
@@ -3153,8 +3163,13 @@ export type Database = {
           last_contact_date?: string | null
           lead_score?: number | null
           notes?: string | null
+          offer_pitched?: string | null
           owner_name?: string | null
           phone?: string | null
+          sms_2_sent?: boolean
+          sms_2_sent_at?: string | null
+          sms_sent?: boolean
+          sms_sent_at?: string | null
           status?: string | null
           target_service?: string | null
           website?: string | null
