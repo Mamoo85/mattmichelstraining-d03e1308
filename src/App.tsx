@@ -493,6 +493,8 @@ const App = () => (
                     <Route path="/testimonial-harvester" element={<TestimonialHarvester />} />
                     <Route path="/new-mover-marketing" element={<NewMoverMarketing />} />
                     <Route path="/annual-business-review" element={<AnnualBusinessReview />} />
+                    <Route path="/legal/:type" element={<LegalPage />} />
+                    <Route path="/partner-program" element={<PartnerProgram />} />
                     <Route path="/partners" element={<B2BPartnerPortal />} />
                     <Route path="/sports-camps" element={<CampDirectory />} />
                     <Route path="/free-program" element={<FreeProgram />} />
