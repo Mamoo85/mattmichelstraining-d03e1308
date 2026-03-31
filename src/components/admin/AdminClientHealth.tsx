@@ -31,6 +31,11 @@ const SERVICE_TABLES = [
   { table: "review_response_clients", service: "Review Response", price: "$49/mo", lastField: "last_sent_at", freq: 1 },
   { table: "battlecard_clients", service: "Competitive Battlecard", price: "$39/mo", lastField: "last_sent_at", freq: 30 },
   { table: "market_intel_clients", service: "Market Intelligence", price: "$49/mo", lastField: "last_sent_at", freq: 7 },
+  { table: "permit_monitor_clients", service: "Permit Monitor", price: "$79/mo", lastField: "last_sent_at", freq: 30 },
+  { table: "osha_compliance_clients", service: "OSHA Compliance", price: "$99/mo", lastField: "last_sent_at", freq: 30 },
+  { table: "collections_clients", service: "Late Payment Collector", price: "$49/mo", lastField: "last_sent_at", freq: 7 },
+  { table: "inventory_alert_clients", service: "Inventory Alerts", price: "$49/mo", lastField: "last_sent_at", freq: 1 },
+  { table: "birthday_campaign_clients", service: "Birthday Campaign", price: "$29/mo", lastField: "last_sent_at", freq: 30 },
 ] as const;
 
 function daysBetween(dateStr: string | null): number | null {

@@ -72,6 +72,7 @@ const SECTIONS = [
   { title: "Content & Marketing", subtitle: "Consistent content without lifting a finger", items: CONTENT_MARKETING },
   { title: "Lead Generation", subtitle: "Fill your pipeline on autopilot", items: LEAD_GEN },
   { title: "Business Intelligence", subtitle: "AI-powered insights that drive decisions", items: BUSINESS_INTEL },
+  { title: "Compliance & Operations", subtitle: "Stay compliant and efficient on autopilot", items: COMPLIANCE_OPS },
 ];
 
 const ServiceCard = ({ s }: { s: Service }) => (
