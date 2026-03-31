@@ -86,6 +86,7 @@ const AdminGiftCards = lazy(() => import("@/components/admin/AdminGiftCards"));
 const AdminGuideStore = lazy(() => import("@/components/admin/AdminGuideStore"));
 const AdminAffiliateManager = lazy(() => import("@/components/admin/AdminAffiliateManager"));
 const AdminBusinessDashboard = lazy(() => import("@/components/admin/AdminBusinessDashboard"));
+const AdminB2BPipeline = lazy(() => import("@/components/admin/AdminB2BPipeline"));
 const AdminSocialMediaOnboarding = lazy(() => import("@/components/admin/AdminSocialMediaOnboarding"));
 const AdminLegalCompliance = lazy(() => import("@/components/admin/AdminLegalCompliance"));
 const AdminOpsCenter = lazy(() => import("@/components/admin/AdminOpsCenter"));
@@ -431,13 +432,14 @@ const Admin = () => {
         {/* ── WEB DESIGN ── */}
         {activeTab === "webdesign" && (
           <SubTabs tabs={[
-            { key: "crm", label: "CRM", content: <AdminWebDesignCRM /> },
+            { key: "pipeline", label: "B2B Pipeline", content: <AdminB2BPipeline /> },
+            { key: "crm", label: "Web Design CRM", content: <AdminWebDesignCRM /> },
             { key: "prospector", label: "Prospector", content: <AdminProspector /> },
             { key: "automation", label: "Automation Hub", content: <AdminAutomationHub /> },
             { key: "client-health", label: "Client Health", content: <AdminClientHealth /> },
             { key: "ops-center", label: "Ops Center", content: <AdminOpsCenter /> },
             { key: "wd-automations", label: "Email Automations", content: <AdminWebDesignAutomations /> },
-          ]} />
+          ]} defaultTab="pipeline" />
         )}
       </div>
     </div>
