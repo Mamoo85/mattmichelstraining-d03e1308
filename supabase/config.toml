@@ -264,6 +264,192 @@ verify_jwt = false
 [functions.create-trucking-docs-checkout]
 verify_jwt = false
 
+[functions.create-appointment-reminder-checkout]
+verify_jwt = false
+
+[functions.create-audit-checkout]
+verify_jwt = false
+
+[functions.create-b2b-checkout]
+verify_jwt = false
+
+[functions.create-battlecard-checkout]
+verify_jwt = false
+
+[functions.create-birthday-campaign-checkout]
+verify_jwt = false
+
+[functions.create-blog-post-checkout]
+verify_jwt = false
+
+[functions.create-camp-listing-checkout]
+verify_jwt = false
+
+[functions.create-caption-pack-checkout]
+verify_jwt = false
+
+[functions.create-chatbot-checkout]
+verify_jwt = false
+
+[functions.create-checkout]
+verify_jwt = false
+
+[functions.create-collections-checkout]
+verify_jwt = false
+
+[functions.create-competitor-watch-checkout]
+verify_jwt = false
+
+[functions.create-contractor-checkout]
+verify_jwt = false
+
+[functions.create-direct-mail-checkout]
+verify_jwt = false
+
+[functions.create-estimate-generator-checkout]
+verify_jwt = false
+
+[functions.create-faq-refresh-checkout]
+verify_jwt = false
+
+[functions.create-field-rep-checkout]
+verify_jwt = false
+
+[functions.create-gbp-checkout]
+verify_jwt = false
+
+[functions.create-google-qa-checkout]
+verify_jwt = false
+
+[functions.create-grant-finder-checkout]
+verify_jwt = false
+
+[functions.create-handbook-checkout]
+verify_jwt = false
+
+[functions.create-hiring-assistant-checkout]
+verify_jwt = false
+
+[functions.create-holiday-sms-checkout]
+verify_jwt = false
+
+[functions.create-industrial-newsletter-checkout]
+verify_jwt = false
+
+[functions.create-inventory-alert-checkout]
+verify_jwt = false
+
+[functions.create-kpi-email-checkout]
+verify_jwt = false
+
+[functions.create-linkedin-ghostwriting-checkout]
+verify_jwt = false
+
+[functions.create-local-seo-checkout]
+verify_jwt = false
+
+[functions.create-market-intel-checkout]
+verify_jwt = false
+
+[functions.create-nutrition-plan-checkout]
+verify_jwt = false
+
+[functions.create-osha-compliance-checkout]
+verify_jwt = false
+
+[functions.create-payment-chaser-checkout]
+verify_jwt = false
+
+[functions.create-permit-monitor-checkout]
+verify_jwt = false
+
+[functions.create-phone-answering-checkout]
+verify_jwt = false
+
+[functions.create-press-release-checkout]
+verify_jwt = false
+
+[functions.create-program-checkout]
+verify_jwt = false
+
+[functions.create-promo-planner-checkout]
+verify_jwt = false
+
+[functions.create-proposal-checkout]
+verify_jwt = false
+
+[functions.create-quote-followup-checkout]
+verify_jwt = false
+
+[functions.create-reactivation-email-checkout]
+verify_jwt = false
+
+[functions.create-review-alert-checkout]
+verify_jwt = false
+
+[functions.create-review-request-checkout]
+verify_jwt = false
+
+[functions.create-review-responder-checkout]
+verify_jwt = false
+
+[functions.create-review-response-checkout]
+verify_jwt = false
+
+[functions.create-sales-script-checkout]
+verify_jwt = false
+
+[functions.create-satisfaction-survey-checkout]
+verify_jwt = false
+
+[functions.create-seo-package-checkout]
+verify_jwt = false
+
+[functions.create-seo-report-checkout]
+verify_jwt = false
+
+[functions.create-session-checkout]
+verify_jwt = false
+
+[functions.create-social-captions-checkout]
+verify_jwt = false
+
+[functions.create-social-media-checkout]
+verify_jwt = false
+
+[functions.create-speed-lead-checkout]
+verify_jwt = false
+
+[functions.create-staff-newsletter-checkout]
+verify_jwt = false
+
+[functions.create-text-marketing-checkout]
+verify_jwt = false
+
+[functions.create-thank-you-sms-checkout]
+verify_jwt = false
+
+[functions.create-video-script-checkout]
+verify_jwt = false
+
+[functions.create-warranty-reminder-checkout]
+verify_jwt = false
+
+[functions.create-web-design-checkout]
+verify_jwt = false
+
+[functions.create-website-copy-checkout]
+verify_jwt = false
+
+[functions.create-weekly-digest-checkout]
+verify_jwt = false
+
+[functions.create-welcome-drip-checkout]
+verify_jwt = false
+
+[functions.create-winback-sms-checkout]
+verify_jwt = false
+
 # ── CRON SCHEDULES ─────────────────────────────────────────────────────────────
 
 [functions.prospect-local-businesses]
