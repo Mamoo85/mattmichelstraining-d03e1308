@@ -1669,6 +1669,7 @@ serve(async (req) => {
                 contact_name: meta.name || null,
                 plan: meta.plan || "standard",
                 active: true,
+                stripe_customer_id: session.customer as string || null,
                 stripe_subscription_id: session.subscription as string || null,
               }, { onConflict: "email" });
             // Fetch the id back so we can include it in the onboarding link

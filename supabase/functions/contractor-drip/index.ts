@@ -251,18 +251,20 @@ serve(async () => {
         }),
       });
 
-      if (!res.ok) { log("Send failed", { email }); continue; }
+      if (!res.ok) { log("Send failed", { email, status: res.status }); continue; }
 
-      await sb.from("email_send_log" as any).insert({
+      const { error: logErr } = await sb.from("email_send_log" as any).insert({
         recipient_email: email,
         template_name: nextStep.templateName,
         status: "sent",
         message_id: `contractor_drip_${lead.id}_${nextStep.templateName}`,
       });
+      if (logErr) log("email_send_log insert failed", { email, error: logErr.message });
 
-      await sb.from("outreach_leads").update({
+      const { error: updateErr } = await sb.from("outreach_leads").update({
         last_contact_date: new Date().toISOString().split("T")[0],
       }).eq("id", lead.id);
+      if (updateErr) log("outreach_leads update failed", { id: lead.id, error: updateErr.message });
 
       sent++;
       log("Drip sent", { email, step: nextStep.templateName });

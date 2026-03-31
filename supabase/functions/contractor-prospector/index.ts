@@ -218,6 +218,8 @@ BODY:
     }),
   });
 
+  if (!res.ok) throw new Error(`Sniper Claude API ${res.status}: ${await res.text()}`);
+
   const data = await res.json();
   const text = data.content?.[0]?.text || "";
   const subjectMatch = text.match(/SUBJECT:\s*(.+)/);
@@ -320,7 +322,7 @@ serve(async () => {
         if (!email) {
           // Insert as SMS-only lead
           const offer = pickOffer(trade, issues);
-          await sb.from("outreach_leads").insert({
+          const { error: smsInsertErr } = await sb.from("outreach_leads").insert({
             business_name: name,
             city: city.replace(" MI", ""),
             industry: trade.charAt(0).toUpperCase() + trade.slice(1).replace(" contractor", ""),
@@ -331,6 +333,7 @@ serve(async () => {
             offer_pitched: offer.offer,
             notes: `GBP issues: ${issues.join(", ")}. GBP score: ${gbpScore}. No email found.`,
           });
+          if (smsInsertErr) log("SMS lead insert failed", { name, error: smsInsertErr.message });
           totalSkipped++;
           continue;
         }
@@ -346,7 +349,7 @@ serve(async () => {
 
         if (scout.score < 7) {
           // Below threshold — store as lead but don't email
-          await sb.from("outreach_leads").insert({
+          const { error: scoutInsertErr } = await sb.from("outreach_leads").insert({
             business_name: name,
             city: city.replace(" MI", ""),
             industry: trade.charAt(0).toUpperCase() + trade.slice(1).replace(" contractor", ""),
@@ -357,6 +360,7 @@ serve(async () => {
             offer_pitched: scout.bestOffer,
             notes: `Scout score: ${scout.score}/10 (below threshold). ${scout.reasoning}. GBP issues: ${issues.join(", ")}`,
           });
+          if (scoutInsertErr) log("Scout-rejected lead insert failed", { name, error: scoutInsertErr.message });
           totalScoutRejected++;
           continue;
         }
@@ -369,11 +373,18 @@ serve(async () => {
           : offer;
 
         // ── SNIPER: Hyper-personalized cold email ──
-        const { subject, body } = await sniperGenerateEmail(
-          name, trade, city.replace(" MI", ""),
-          issues, finalOffer, scout.reasoning,
-          ANTHROPIC_API_KEY,
-        );
+        let subject: string, body: string;
+        try {
+          ({ subject, body } = await sniperGenerateEmail(
+            name, trade, city.replace(" MI", ""),
+            issues, finalOffer, scout.reasoning,
+            ANTHROPIC_API_KEY,
+          ));
+        } catch (sniperErr) {
+          log("Sniper failed — skipping lead", { name, error: String(sniperErr) });
+          totalSkipped++;
+          continue;
+        }
         const html = buildEmailHtml(body);
 
         // Send
@@ -395,7 +406,7 @@ serve(async () => {
         }
 
         // Store lead with Scout + Sniper metadata
-        await sb.from("outreach_leads").insert({
+        const { error: leadInsertErr } = await sb.from("outreach_leads").insert({
           business_name: name,
           city: city.replace(" MI", ""),
           industry: trade.charAt(0).toUpperCase() + trade.slice(1).replace(" contractor", ""),
@@ -407,14 +418,16 @@ serve(async () => {
           last_contact_date: new Date().toISOString().split("T")[0],
           notes: `Scout: ${scout.score}/10 — ${scout.reasoning}. GBP issues: ${issues.join(", ")}. Offer: ${finalOffer.pitch}`,
         });
+        if (leadInsertErr) log("Emailed lead insert failed", { name, email, error: leadInsertErr.message });
 
         // Log send
-        await sb.from("email_send_log" as any).insert({
+        const { error: logInsertErr } = await sb.from("email_send_log" as any).insert({
           recipient_email: email,
           template_name: "contractor_drip_d0",
           status: "sent",
           message_id: `contractor_d0_${Date.now()}_${email}`,
         });
+        if (logInsertErr) log("email_send_log insert failed", { email, error: logInsertErr.message });
 
         totalEmailed++;
         log("Emailed", { name, email, scoutScore: scout.score, offer: finalOffer.offer, city });
