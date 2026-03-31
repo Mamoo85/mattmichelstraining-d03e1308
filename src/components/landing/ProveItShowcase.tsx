@@ -1,3 +1,4 @@
+import { forwardRef } from "react";
 import { motion } from "framer-motion";
 import { ShieldCheck, Video, Eye, Trophy, ArrowRight, Lock } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -26,7 +27,7 @@ const STEPS = [
   },
 ];
 
-const ProveItShowcase = () => (
+const ProveItShowcase = forwardRef<HTMLElement>((_, ref) => (
   <motion.section
     initial={{ opacity: 0, y: 24 }}
     whileInView={{ opacity: 1, y: 0 }}
