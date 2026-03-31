@@ -2386,6 +2386,71 @@ serve(async (req) => {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // ── PERMIT MONITOR — subscription ────────────────────────────────────
+      if (meta.type === "permit_monitor_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) await (sb.from as any)("permit_monitor_clients").upsert({ email, business_name: meta.businessName || email, industry: meta.industry || null, city: meta.city || null, active: true }, { onConflict: "email" });
+          if (RESEND_API_KEY && email) {
+            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@notify.m2training.com>", to: [email], subject: "Your AI Permit Monitor is active", html: `<p>Hey,</p><p>You're signed up for AI Permit & License Monitor ($79/mo). 7-day trial started.</p><p>Your first permit compliance digest arrives within 7 days.</p><p>— Matt</p>` }) });
+            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@notify.m2training.com>", to: ["matt@m2training.com"], subject: `💰 New Permit Monitor — ${meta.businessName || email} ($79/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}</p>` }) });
+          }
+        } catch (e) { console.error("[WEBHOOK] permit_monitor error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── OSHA COMPLIANCE — subscription ────────────────────────────────────
+      if (meta.type === "osha_compliance_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) await (sb.from as any)("osha_compliance_clients").upsert({ email, business_name: meta.businessName || email, industry: meta.industry || null, employee_count: parseInt(meta.employeeCount) || null, active: true }, { onConflict: "email" });
+          if (RESEND_API_KEY && email) {
+            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@notify.m2training.com>", to: [email], subject: "Your AI Safety Compliance Checker is active", html: `<p>Hey,</p><p>You're signed up for AI OSHA/Safety Compliance ($99/mo). 7-day trial started.</p><p>Your first monthly safety checklist arrives within 7 days.</p><p>— Matt</p>` }) });
+            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@notify.m2training.com>", to: ["matt@m2training.com"], subject: `💰 New OSHA Compliance — ${meta.businessName || email} ($99/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}</p>` }) });
+          }
+        } catch (e) { console.error("[WEBHOOK] osha_compliance error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── COLLECTIONS — subscription ────────────────────────────────────────
+      if (meta.type === "collections_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) await (sb.from as any)("collections_clients").upsert({ email, business_name: meta.businessName || email, industry: meta.industry || null, active: true }, { onConflict: "email" });
+          if (RESEND_API_KEY && email) {
+            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@notify.m2training.com>", to: [email], subject: "Your AI Late Payment Collector is active", html: `<p>Hey,</p><p>You're signed up for AI Late Payment Collector ($49/mo). 7-day trial started.</p><p>Upload your overdue accounts and we'll start generating collection letters immediately.</p><p>— Matt</p>` }) });
+            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@notify.m2training.com>", to: ["matt@m2training.com"], subject: `💰 New Collections — ${meta.businessName || email} ($49/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}</p>` }) });
+          }
+        } catch (e) { console.error("[WEBHOOK] collections error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── INVENTORY ALERT — subscription ────────────────────────────────────
+      if (meta.type === "inventory_alert_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) await (sb.from as any)("inventory_alert_clients").upsert({ email, business_name: meta.businessName || email, industry: meta.industry || null, active: true }, { onConflict: "email" });
+          if (RESEND_API_KEY && email) {
+            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@notify.m2training.com>", to: [email], subject: "Your AI Inventory Alerts are active", html: `<p>Hey,</p><p>You're signed up for AI Inventory Reorder Alerts ($49/mo). 7-day trial started.</p><p>Add your inventory items and par levels to start receiving alerts.</p><p>— Matt</p>` }) });
+            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@notify.m2training.com>", to: ["matt@m2training.com"], subject: `💰 New Inventory Alerts — ${meta.businessName || email} ($49/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}</p>` }) });
+          }
+        } catch (e) { console.error("[WEBHOOK] inventory_alert error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── BIRTHDAY CAMPAIGN — subscription ──────────────────────────────────
+      if (meta.type === "birthday_campaign_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) await (sb.from as any)("birthday_campaign_clients").upsert({ email, business_name: meta.businessName || email, industry: meta.industry || null, active: true }, { onConflict: "email" });
+          if (RESEND_API_KEY && email) {
+            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@notify.m2training.com>", to: [email], subject: "Your AI Birthday Campaign is active", html: `<p>Hey,</p><p>You're signed up for AI Birthday/Anniversary Campaign ($29/mo). 7-day trial started.</p><p>Upload your customer list with birthdays and we'll handle the rest.</p><p>— Matt</p>` }) });
+            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@notify.m2training.com>", to: ["matt@m2training.com"], subject: `💰 New Birthday Campaign — ${meta.businessName || email} ($29/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}</p>` }) });
+          }
+        } catch (e) { console.error("[WEBHOOK] birthday_campaign error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
     return new Response(JSON.stringify({ received: true }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
