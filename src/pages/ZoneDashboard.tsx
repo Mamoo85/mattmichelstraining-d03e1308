@@ -75,6 +75,20 @@ const ZoneDashboard = () => {
   const [activeTip, setActiveTip] = useState<FeatureTip | null>(null);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
 
+  // Browser back button support for overlays
+  const openOverlay = useCallback((view: GeneratorView) => {
+    setGeneratorView(view);
+    if (view) window.history.pushState({ overlay: view }, "", `#${view}`);
+  }, []);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setGeneratorView(null);
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
   useEffect(() => {
     if (!user) return;
     const load = async () => {
