@@ -58,6 +58,14 @@ const BUSINESS_INTEL: Service[] = [
   { icon: Brain, title: "AI Market Intelligence", desc: "Weekly 2-min executive brief — industry news, competitor moves, actionable insights.", price: "$49/mo", link: "/ai-market-intel", tag: "New" },
 ];
 
+const COMPLIANCE_OPS: Service[] = [
+  { icon: Shield, title: "AI Permit & License Monitor", desc: "Never miss a renewal. AI tracks permits, scrapes municipal sites, sends 60/30/7-day reminders.", price: "$79/mo", link: "/ai-permit-monitor", tag: "New" },
+  { icon: Shield, title: "AI OSHA/Safety Compliance", desc: "Monthly safety checklists, OSHA updates, and violation prevention — avoid $15K+ fines.", price: "$99/mo", link: "/ai-osha-compliance", tag: "New" },
+  { icon: DollarSign, title: "AI Late Payment Collector", desc: "Escalating collection letters — friendly to firm to final notice. FDCPA compliant.", price: "$49/mo", link: "/ai-collections", tag: "New" },
+  { icon: Layers, title: "AI Inventory Reorder Alerts", desc: "Low stock alerts, stockout predictions, and supplier suggestions. Save 20-30% on emergency orders.", price: "$49/mo", link: "/ai-inventory-alerts", tag: "New" },
+  { icon: Users, title: "AI Birthday/Anniversary Campaign", desc: "Automated personalized birthday and anniversary offers via email + SMS.", price: "$29/mo", link: "/ai-birthday-campaign", tag: "New" },
+];
+
 const SECTIONS = [
   { title: "Web Design & SEO", subtitle: "Your digital storefront, built to convert", items: WEB_DESIGN },
   { title: "AI Automation", subtitle: "Never miss a lead again", items: AI_AUTOMATION },
