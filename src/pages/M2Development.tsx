@@ -5,7 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   Globe, Zap, BarChart3, MessageSquare, Phone, Mail, Bot,
   FileText, Search, TrendingUp, Users, Shield, ArrowRight,
-  Megaphone, Send, Star, Clock, Target, Layers
+  Megaphone, Send, Star, Clock, Target, Layers, BookOpen,
+  DollarSign, Swords, Brain
 } from "lucide-react";
 
 const PHONE = "(313) 806-4952";
