@@ -116,7 +116,7 @@ const AdminDirectMessages = () => {
   useEffect(() => {
     if (!selectedUser) return;
     const interval = setInterval(() => {
-      fetchMessages(selectedUser);
+      openThread(selectedUser);
       fetchThreads();
     }, 5000);
     return () => clearInterval(interval);
