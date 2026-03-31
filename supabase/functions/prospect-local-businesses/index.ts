@@ -135,9 +135,9 @@ async function sendColdEmail(
       method: "POST",
       headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: "Matt Michels <matt@notify.m2training.com>",
+        from: "Matt Michels <matt@mattmichelstraining.com>",
         to: [to],
-        reply_to: "matt@m2training.com",
+        reply_to: "matt@mattmichelstraining.com",
         subject,
         html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;line-height:1.8;color:#1e293b;max-width:520px;margin:0 auto;padding:24px 0;">
 ${bodyHtml}
@@ -298,9 +298,9 @@ serve(async (req) => {
           method: "POST",
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            from: "M² System <matt@notify.m2training.com>",
-            to: ["matt@m2training.com"],
-            reply_to: "matt@m2training.com",
+            from: "M² System <matt@mattmichelstraining.com>",
+            to: ["matt@mattmichelstraining.com"],
+            reply_to: "matt@mattmichelstraining.com",
             subject: `${rows.length} LinkedIn messages ready to send — ${dateStr}`,
             html: emailHtml,
           }),
