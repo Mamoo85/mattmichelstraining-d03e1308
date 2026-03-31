@@ -20,6 +20,11 @@ const DOCUMENT_TYPES = [
   { type: "affiliate_disclosure", title: "Affiliate Disclosure", description: "FTC-required disclosure for newsletter affiliate links" },
   { type: "coaching_waiver", title: "Coaching & Training Liability Waiver", description: "Injury liability waiver for M² Performance Training" },
   { type: "minor_waiver", title: "Minor Athlete Parental Consent", description: "Parental consent for under-18 athletes" },
+  { type: "referral_terms", title: "Referral Program Terms & Conditions", description: "Governs referral reward eligibility, anti-fraud rules, payout terms for both in-person training and B2B partner referral programs" },
+  { type: "cookie_policy", title: "Cookie Consent Policy", description: "GDPR/UK-compliant cookie usage policy covering analytics, session cookies, and third-party integrations" },
+  { type: "refund_policy", title: "Refund & Cancellation Policy", description: "Standalone refund, cancellation, and pro-rata billing policy for all SaaS products and session purchases" },
+  { type: "contractor_agreement", title: "Independent Contractor Agreement", description: "Agreement template for subcontractors, white-label partners, and freelance service providers" },
+  { type: "data_processing_agreement", title: "Data Processing Agreement (DPA)", description: "Required when handling client customer data for GBP, social media, and lead gen services — GDPR Article 28 compliant" },
 ];
 
 serve(async (req) => {
