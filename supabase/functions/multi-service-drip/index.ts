@@ -343,7 +343,7 @@ serve(async (req) => {
           },
           body: JSON.stringify({
             from: "Matt Michels <matt@mattmichelstraining.com>",
-            reply_to: "matt@m2training.com",
+            reply_to: "matt@mattmichelstraining.com",
             to: [email], bcc: ["matthewmichels4@gmail.com"],
             subject,
             html,

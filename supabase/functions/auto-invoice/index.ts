@@ -79,7 +79,7 @@ function buildInvoiceEmail(lead: any, month: string, invoiceNumber: string): str
         <p style="margin:0 0 8px;font-size:13px;font-weight:bold;color:#1a1a2e;">Payment Options</p>
         <p style="margin:0;font-size:13px;color:#555;line-height:1.7;">
           Venmo: <strong>@MattMichels-Training</strong><br>
-          PayPal: matt@m2training.com<br>
+          PayPal: matt@mattmichelstraining.com<br>
           Zelle: (313) 806-4952<br>
           Check payable to: Matt Michels
         </p>
@@ -89,7 +89,7 @@ function buildInvoiceEmail(lead: any, month: string, invoiceNumber: string): str
       <p style="color:#1a1a2e;font-size:14px;font-weight:bold;margin-top:16px;">— Matt Michels</p>
     </td></tr>
     <tr><td style="background:#f8f8f8;padding:14px;text-align:center;border-top:1px solid #eee;">
-      <p style="color:#aaa;font-size:11px;margin:0;">Matt Michels Web Design · Grosse Pointe, MI · (313) 806-4952 · matt@m2training.com</p>
+      <p style="color:#aaa;font-size:11px;margin:0;">Matt Michels Web Design · Grosse Pointe, MI · (313) 806-4952 · matt@mattmichelstraining.com</p>
     </td></tr>
   </table>
 </td></tr>

@@ -9,7 +9,7 @@ const TWILIO_API_KEY = Deno.env.get("TWILIO_API_KEY") || "";
 
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/twilio";
-const MATT_EMAIL = "matt@m2training.com";
+const MATT_EMAIL = "matt@mattmichelstraining.com";
 const FROM_EMAIL = "Matt Michels <matt@mattmichelstraining.com>";
 
 const CORS_HEADERS = {

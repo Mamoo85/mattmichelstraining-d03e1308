@@ -103,7 +103,7 @@ serve(async (req) => {
 
         // Notify Matt
         await sendEmail(
-          "matt@m2training.com",
+          "matt@mattmichelstraining.com",
           `Blog Post Sent — ${client.business_name}`,
           `<p>Blog post successfully generated and sent to <strong>${client.email}</strong> for ${client.business_name} (${client.industry}).</p>
           <hr />

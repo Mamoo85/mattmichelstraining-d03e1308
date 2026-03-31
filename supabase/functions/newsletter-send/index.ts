@@ -180,7 +180,7 @@ Be direct and tactical. These are experienced reps who hate fluff. Write like yo
   </td></tr>
   <!-- Footer -->
   <tr><td style="background:#f8fafc;padding:16px 28px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 10px 10px;font-size:12px;color:#94a3b8;line-height:1.6;">
-    M² Performance Training · <a href="mailto:matt@m2training.com" style="color:#e8621a;">matt@m2training.com</a><br>
+    M² Performance Training · <a href="mailto:matt@mattmichelstraining.com" style="color:#e8621a;">matt@mattmichelstraining.com</a><br>
     <a href="${SUPABASE_URL}/functions/v1/newsletter-unsubscribe?token={{unsubscribe_token}}" style="color:#94a3b8;">Unsubscribe</a>
   </td></tr>
 
@@ -220,7 +220,7 @@ serve(async (req) => {
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
             from: "M² Newsletter <matt@mattmichelstraining.com>",
-            to: ["matt@m2training.com"], bcc: ["matthewmichels@gmail.com", "matthewmichels4@gmail.com"],
+            to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels@gmail.com", "matthewmichels4@gmail.com"],
             subject: `[PREVIEW] ${subject}`,
             html: html.replace("{{unsubscribe_token}}", "preview") }) });
       }

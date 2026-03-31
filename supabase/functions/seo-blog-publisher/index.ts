@@ -169,7 +169,7 @@ async function sendEmail(sectionsHtml: string, monthName: string): Promise<void>
     },
     body: JSON.stringify({
       from: "Matt Michels <matt@notify.m2training.com>",
-      to: ["matt@m2training.com"], bcc: ["matthewmichels4@gmail.com"],
+      to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"],
       subject: `Your 3 SEO blog posts for ${monthName} — ready to publish`,
       html: `<!DOCTYPE html>
 <html>
@@ -196,7 +196,7 @@ async function sendEmail(sectionsHtml: string, monthName: string): Promise<void>
     ${sectionsHtml}
 
     <div style="background:#1e293b;border-radius:8px;padding:20px 24px;text-align:center;">
-      <div style="color:#94a3b8;font-size:13px;">mattmichelstraining.com &nbsp;|&nbsp; (313) 806-4952 &nbsp;|&nbsp; matt@m2training.com</div>
+      <div style="color:#94a3b8;font-size:13px;">mattmichelstraining.com &nbsp;|&nbsp; (313) 806-4952 &nbsp;|&nbsp; matt@mattmichelstraining.com</div>
     </div>
 
   </div>
