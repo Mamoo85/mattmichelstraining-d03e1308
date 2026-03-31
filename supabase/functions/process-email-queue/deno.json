@@ -1,3 +1,6 @@
 {
-  "nodeModulesDir": "auto"
+  "nodeModulesDir": "auto",
+  "imports": {
+    "npm:@lovable.dev/email-js": "https://esm.sh/@lovable.dev/email-js"
+  }
 }
