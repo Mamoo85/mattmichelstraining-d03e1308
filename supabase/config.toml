@@ -888,3 +888,6 @@ verify_jwt = false
 
 [functions.annual-review-sender]
 verify_jwt = false
+
+[functions.send-test-email]
+verify_jwt = false
