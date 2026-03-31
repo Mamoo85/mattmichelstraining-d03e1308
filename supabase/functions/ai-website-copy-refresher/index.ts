@@ -14,7 +14,7 @@ const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 
 const MATT_EMAIL = "matt@m2training.com";
-const FROM_EMAIL = "Matt Michels <matt@notify.m2training.com>";
+const FROM_EMAIL = "Matt Michels <matt@mattmichelstraining.com>";
 
 interface CopyClient {
   id: string;

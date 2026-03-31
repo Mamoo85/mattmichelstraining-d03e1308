@@ -96,7 +96,7 @@ async function notifyMatt(businessName: string): Promise<void> {
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "M² System <matt@notify.m2training.com>",
+      from: "M² System <matt@mattmichelstraining.com>",
       to: ["matt@m2training.com"],
       subject: `New client ${businessName} needs their social accounts connected`,
       html: `<p>New client <strong>${businessName}</strong> needs their social accounts connected before we can start posting.</p><p>Please reach out to them to collect their Facebook Page ID, LinkedIn Org ID, and access tokens.</p>` }) });

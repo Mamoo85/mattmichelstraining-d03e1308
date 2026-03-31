@@ -100,7 +100,7 @@ serve(async (req) => {
           method: "POST",
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            from: "M² Chatbot <matt@notify.m2training.com>",
+            from: "M² Chatbot <matt@mattmichelstraining.com>",
             to: ["matthewmichels@mattmichelstraining.com"],
             reply_to: "matt@m2training.com",
             subject: `New chatbot lead from ${client.business_name}'s website: ${name}, ${phone}`,

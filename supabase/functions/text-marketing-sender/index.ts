@@ -76,7 +76,7 @@ serve(async (req) => {
             method: "POST",
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              from: "M² Text Marketing <matt@notify.m2training.com>",
+              from: "M² Text Marketing <matt@mattmichelstraining.com>",
               to: [client.email],
               subject: `📱 Your monthly SMS campaign was sent — ${sentCount} messages`,
               html: `<p>Your monthly text campaign just went out!</p><p><strong>Campaign #${(client.campaign_count || 0) + 1}</strong><br>Messages sent: ${sentCount}<br>Contact list size: ${contacts.length}</p><hr/><p><strong>Message sent:</strong></p><blockquote>${campaignText}</blockquote><p>Reply here with any questions. — Matt</p>`,

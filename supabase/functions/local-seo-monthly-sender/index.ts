@@ -31,7 +31,7 @@ serve(async (_req) => {
             method: "POST",
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              from: "M² Local SEO <matt@notify.m2training.com>",
+              from: "M² Local SEO <matt@mattmichelstraining.com>",
               to: [client.email],
               subject: `Your New Local SEO Page — ${client.city || "your area"} ${client.industry || "services"}`,
               html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#1e293b;color:#e2e8f0;border-radius:12px;"><h2 style="color:#e8621a;">🗺️ Monthly Local SEO Page</h2><p>Here's your new landing page content — paste it into your website as a new page:</p><hr style="border-color:#334155;">${content}<hr style="border-color:#334155;"><p style="color:#94a3b8;">Adding this page helps you rank for "${client.industry} in ${client.city}" searches.</p><p style="color:#64748b;font-size:12px;">Powered by M² Performance — matt@m2training.com</p></div>`,

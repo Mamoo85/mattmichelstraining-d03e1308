@@ -56,7 +56,7 @@ serve(async (req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "M² Leads <matt@notify.m2training.com>",
+          from: "M² Leads <matt@mattmichelstraining.com>",
           to: ["matt@m2training.com"],
           subject: `🔥 New ${site.trade} lead — ${site.city} — ${name}`,
           html: `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#f8fafc;padding:24px;">
@@ -92,7 +92,7 @@ serve(async (req) => {
             method: "POST",
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              from: "M² Lead Network <matt@notify.m2training.com>",
+              from: "M² Lead Network <matt@mattmichelstraining.com>",
               to: [contractor.email],
               subject: `🔥 New ${site.trade} lead — ${name} in ${site.city}`,
               html: `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#f8fafc;padding:24px;">

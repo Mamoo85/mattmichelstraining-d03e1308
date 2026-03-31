@@ -31,7 +31,7 @@ serve(async (_req) => {
             method: "POST",
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              from: "M² FAQ Refresh <matt@notify.m2training.com>",
+              from: "M² FAQ Refresh <matt@mattmichelstraining.com>",
               to: [client.email],
               subject: `Monthly FAQ & Copy Refresh — ${client.business_name}`,
               html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#1e293b;color:#e2e8f0;border-radius:12px;"><h2 style="color:#e8621a;">📝 Monthly FAQ & Copy Refresh</h2><p>Here's your updated website content — just paste these sections into your site:</p><hr style="border-color:#334155;">${content}<hr style="border-color:#334155;"><p style="color:#64748b;font-size:12px;">Powered by M² Performance — matt@m2training.com</p></div>`,

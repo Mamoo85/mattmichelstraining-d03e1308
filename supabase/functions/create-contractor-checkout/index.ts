@@ -72,7 +72,7 @@ serve(async (req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "M² System <matt@notify.m2training.com>",
+          from: "M² System <matt@mattmichelstraining.com>",
           to: ["matt@m2training.com"],
           subject: `New contractor checkout — ${tradeLabel} in ${city}`,
           html: `<p>Contractor started checkout:<br><strong>${business_name || name}</strong><br>${email} | ${phone || "no phone"}<br>Trade: ${trade} | City: ${city}, ${state}<br>Monthly: $${(monthlyPrice / 100).toFixed(0)}/mo</p>`,

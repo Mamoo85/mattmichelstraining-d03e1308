@@ -39,7 +39,7 @@ serve(async (req) => {
           method: "POST",
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            from: "M² Lead Network <matt@notify.m2training.com>",
+            from: "M² Lead Network <matt@mattmichelstraining.com>",
             to: [contractor.email],
             subject: `New ${site?.trade || "service"} lead — ${lead.name}`,
             html: `<p>Hey — you have a new lead waiting.<br><strong>${lead.name}</strong> — <a href="tel:${lead.phone}">${lead.phone}</a>${lead.email ? ` — ${lead.email}` : ""}</p><p>Reply to this email or call them directly. First one to respond wins the job.</p>`,

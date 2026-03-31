@@ -60,7 +60,7 @@ serve(async (req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "M² System <matt@notify.m2training.com>",
+          from: "M² System <matt@mattmichelstraining.com>",
           to: ["matt@m2training.com"],
           subject: `New Review Responder signup — ${business_name}`,
           html: `<p><strong>${business_name}</strong> started checkout for Review Responder at $99/month.<br>Contact: ${contact_name || "n/a"} — ${email} — ${phone || "no phone"}</p>`,

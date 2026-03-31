@@ -89,7 +89,7 @@ Return ONLY the HTML email body. No subject line. Sign off as the ${client.busin
                 Authorization: `Bearer ${Deno.env.get("RESEND_API_KEY")}`,
                 "Content-Type": "application/json" },
               body: JSON.stringify({
-                from: "Matt Michels <matt@notify.m2training.com>",
+                from: "Matt Michels <matt@mattmichelstraining.com>",
                 to: [contact.contact_email],
                 subject: `We miss you, ${contact.contact_name}! — ${client.business_name}`,
                 html: `

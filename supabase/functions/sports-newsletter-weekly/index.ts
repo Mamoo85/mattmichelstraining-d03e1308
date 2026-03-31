@@ -214,7 +214,7 @@ Keep it under 400 words total. Write like you're talking to a parent driving the
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify(batch.map((email: string) => ({
-          from: "Matt Michels · M² Training <matt@notify.m2training.com>",
+          from: "Matt Michels · M² Training <matt@mattmichelstraining.com>",
           to: [email],
           subject,
           html,

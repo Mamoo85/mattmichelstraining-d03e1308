@@ -45,7 +45,7 @@ serve(async (req) => {
       method: "POST",
       headers: { Authorization: `Bearer ${Deno.env.get("RESEND_API_KEY")}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: "Matt Michels <matt@notify.m2training.com>",
+        from: "Matt Michels <matt@mattmichelstraining.com>",
         to: [client.client_email],
         subject: `🔥 New Lead: ${leadName}`,
         html: `<h2>New Lead Received!</h2><table style="border-collapse:collapse;width:100%;max-width:500px;"><tr><td style="padding:8px;font-weight:bold;">Name:</td><td style="padding:8px;">${leadName}</td></tr><tr><td style="padding:8px;font-weight:bold;">Phone:</td><td style="padding:8px;">${leadPhone}</td></tr><tr><td style="padding:8px;font-weight:bold;">Message:</td><td style="padding:8px;">${leadMessage || "No message"}</td></tr></table><p style="margin-top:16px;color:#666;">An instant SMS has been sent to the lead. Follow up ASAP for best results!</p>`,

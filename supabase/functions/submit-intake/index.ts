@@ -165,7 +165,7 @@ serve(async (req) => {
           Authorization: `Bearer ${RESEND_API_KEY}`,
           "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "M² System <matt@notify.m2training.com>",
+          from: "M² System <matt@mattmichelstraining.com>",
           to: ["matthewmichels@mattmichelstraining.com"],
           reply_to: email,
           subject: `New lead: ${name} — ${service}`,

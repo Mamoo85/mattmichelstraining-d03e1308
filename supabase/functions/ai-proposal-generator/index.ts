@@ -13,7 +13,7 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 
-const FROM_EMAIL = "Matt Michels <matt@notify.m2training.com>";
+const FROM_EMAIL = "Matt Michels <matt@mattmichelstraining.com>";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",

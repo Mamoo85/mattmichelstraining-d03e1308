@@ -27,7 +27,7 @@ serve(async (_req) => {
             method: "POST",
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              from: "M² KPI Dashboard <matt@notify.m2training.com>", to: [client.email],
+              from: "M² KPI Dashboard <matt@mattmichelstraining.com>", to: [client.email],
               subject: `Weekly KPI Report — ${client.business_name}`,
               html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;">${content}<hr style="margin:20px 0;border:none;border-top:1px solid #e2e8f0;"><p style="color:#94a3b8;font-size:12px;">Replace placeholder numbers with your real data to track trends over time. — Matt</p></div>` }) });
         }

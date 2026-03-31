@@ -116,7 +116,7 @@ Keep costs realistic for the ${client.industry} industry in Michigan.`;
         "Content-Type": "application/json",
         Authorization: `Bearer ${Deno.env.get("RESEND_API_KEY")}` },
       body: JSON.stringify({
-        from: `${client.business_name} <matt@notify.m2training.com>`,
+        from: `${client.business_name} <matt@mattmichelstraining.com>`,
         to: [prospectEmail],
         reply_to: clientEmail,
         subject,
@@ -129,7 +129,7 @@ Keep costs realistic for the ${client.industry} industry in Michigan.`;
         "Content-Type": "application/json",
         Authorization: `Bearer ${Deno.env.get("RESEND_API_KEY")}` },
       body: JSON.stringify({
-        from: "M² Estimates <matt@notify.m2training.com>",
+        from: "M² Estimates <matt@mattmichelstraining.com>",
         to: [clientEmail],
         subject: `[Copy] ${subject} — sent to ${prospectName}`,
         html: `<p style="background:#e8f5e9;padding:12px;border-radius:4px;"><strong>✅ This estimate was sent to ${prospectName} (${prospectEmail}).</strong></p>${fullEmailHtml}` }) });

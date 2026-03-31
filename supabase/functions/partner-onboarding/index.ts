@@ -115,7 +115,7 @@ serve(async (req) => {
           method: "POST",
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            from: "Matt Michels <matt@notify.m2training.com>",
+            from: "Matt Michels <matt@mattmichelstraining.com>",
             to: [email],
             subject: "Welcome to the referral program — your link is inside",
             html,
@@ -134,7 +134,7 @@ serve(async (req) => {
       method: "POST",
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: "M² Site <matt@notify.m2training.com>",
+        from: "M² Site <matt@mattmichelstraining.com>",
         to: ["matt@m2training.com"],
         subject: `New Partner Signup: ${name} (${business || "no business"})`,
         html: `<p>New referral partner: <strong>${name}</strong> — ${email} — ${phone || "no phone"} — ${business || "no business"}</p><p>How heard: ${how_they_heard || "not specified"}</p>`,
