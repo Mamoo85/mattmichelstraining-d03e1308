@@ -345,7 +345,6 @@ serve(async (req) => {
     }
 
 
-
     // Handle guide purchases (existing logic)
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
