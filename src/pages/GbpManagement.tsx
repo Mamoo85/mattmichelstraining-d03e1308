@@ -83,7 +83,7 @@ export default function GbpManagement() {
     <>
       <SEOHead
         title="Google Business Profile Management — $49/mo | Matt Michels Web Design"
-        description="Weekly Google Business Profile posts, profile optimization, and review monitoring. $49/month. Handled by Matt Michels in Metro Detroit."
+        description="Weekly Google Business Profile posts, profile optimization, and review monitoring. $49/month. Fully managed for local businesses nationwide."
         path="/gbp-management"
       />
       <div className="min-h-screen bg-[#0f0f1a] text-white">
@@ -92,7 +92,7 @@ export default function GbpManagement() {
         <section className="pt-20 pb-16 px-4">
           <div className="max-w-3xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#f97316]/15 text-[#f97316] text-[11px] font-bold tracking-widest uppercase mb-6">
-              <MapPin size={11} /> GBP Management · Metro Detroit
+              <MapPin size={11} /> GBP Management · Nationwide
             </div>
             <h1 className="text-3xl sm:text-5xl font-black leading-tight mb-5">
               Your Google Business Profile,<br />

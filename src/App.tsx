@@ -128,6 +128,16 @@ const IndustrialNewsletter = lazyRetry(() => import("./pages/IndustrialNewslette
 const MissedCallSaaS = lazyRetry(() => import("./pages/MissedCallSaaS"));
 const B2BPartnerPortal = lazyRetry(() => import("./pages/B2BPartnerPortal"));
 const AINewsletterService = lazyRetry(() => import("./pages/AINewsletterService"));
+const AIMedSpaMarketing = lazyRetry(() => import("./pages/AIMedSpaMarketing"));
+const AIRealEstateDrip = lazyRetry(() => import("./pages/AIRealEstateDrip"));
+const AIPodcastShowNotes = lazyRetry(() => import("./pages/AIPodcastShowNotes"));
+const AIChurchNewsletter = lazyRetry(() => import("./pages/AIChurchNewsletter"));
+const AIPropertyManagement = lazyRetry(() => import("./pages/AIPropertyManagement"));
+const AIFranchiseOps = lazyRetry(() => import("./pages/AIFranchiseOps"));
+const AIEcommerceListings = lazyRetry(() => import("./pages/AIEcommerceListings"));
+const AIFinancialAdvisorContent = lazyRetry(() => import("./pages/AIFinancialAdvisorContent"));
+const AIVetMarketing = lazyRetry(() => import("./pages/AIVetMarketing"));
+const AITruckingDocs = lazyRetry(() => import("./pages/AITruckingDocs"));
 const AIAdsCopyGenerator = lazyRetry(() => import("./pages/AIAdsCopyGenerator"));
 const AIJobPostingWriter = lazyRetry(() => import("./pages/AIJobPostingWriter"));
 const AIReputationDashboard = lazyRetry(() => import("./pages/AIReputationDashboard"));
@@ -382,6 +392,16 @@ const App = () => (
                     <Route path="/industrial-newsletter" element={<IndustrialNewsletter />} />
                     <Route path="/missed-call-text" element={<MissedCallSaaS />} />
                     <Route path="/ai-newsletter-service" element={<AINewsletterService />} />
+                    <Route path="/ai-med-spa-marketing" element={<AIMedSpaMarketing />} />
+                    <Route path="/ai-real-estate-drip" element={<AIRealEstateDrip />} />
+                    <Route path="/ai-podcast-show-notes" element={<AIPodcastShowNotes />} />
+                    <Route path="/ai-church-newsletter" element={<AIChurchNewsletter />} />
+                    <Route path="/ai-property-management" element={<AIPropertyManagement />} />
+                    <Route path="/ai-franchise-ops" element={<AIFranchiseOps />} />
+                    <Route path="/ai-ecommerce-listings" element={<AIEcommerceListings />} />
+                    <Route path="/ai-financial-advisor-content" element={<AIFinancialAdvisorContent />} />
+                    <Route path="/ai-vet-marketing" element={<AIVetMarketing />} />
+                    <Route path="/ai-trucking-docs" element={<AITruckingDocs />} />
                     <Route path="/ai-ads-copy" element={<AIAdsCopyGenerator />} />
                     <Route path="/ai-job-postings" element={<AIJobPostingWriter />} />
                     <Route path="/ai-reputation" element={<AIReputationDashboard />} />

@@ -151,13 +151,13 @@ export default function IndustrialDatabase() {
   if (isSubscriber || successParam === "1") {
     return (
       <>
-        <SEOHead title="Industrial Supplier Database — M² B2B Leads" description="Browse and export industrial supplier contacts across the Midwest." />
+        <SEOHead title="Industrial Supplier Database — M² B2B Leads" description="Browse and export industrial supplier contacts nationwide." />
         <div className="min-h-screen bg-background text-foreground p-6">
           <div className="max-w-5xl mx-auto">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h1 className="text-xl font-black text-foreground">Industrial Supplier Database</h1>
-                <p className="text-sm text-muted-foreground">{totalCount.toLocaleString()} verified suppliers across the Midwest · Updated weekly</p>
+                <p className="text-sm text-muted-foreground">{totalCount.toLocaleString()} verified suppliers nationwide · Updated weekly</p>
               </div>
               <button onClick={exportCSV} className="bg-primary text-white px-4 py-2 text-[11px] font-bold uppercase tracking-widest flex items-center gap-2 hover:opacity-90 transition-all">
                 <Download size={12} /> Export CSV
@@ -174,7 +174,7 @@ export default function IndustrialDatabase() {
               <select value={filter.state} onChange={e => setFilter(f => ({...f, state: e.target.value}))}
                 className="bg-card border border-border px-3 py-2.5 text-sm text-foreground focus:ring-1 focus:ring-primary outline-none">
                 <option value="">All States</option>
-                {["MI", "OH", "IN", "IL", "WI", "MN", "KY", "MO"].map(s => <option key={s} value={s}>{s}</option>)}
+                {["AL","AZ","AR","CA","CO","CT","FL","GA","ID","IL","IN","IA","KS","KY","LA","MD","MA","MI","MN","MS","MO","NE","NV","NJ","NM","NY","NC","OH","OK","OR","PA","SC","TN","TX","UT","VA","WA","WI","WV"].map(s => <option key={s} value={s}>{s}</option>)}
               </select>
               <input
                 value={filter.city} onChange={e => setFilter(f => ({...f, city: e.target.value}))}
@@ -227,13 +227,13 @@ export default function IndustrialDatabase() {
   // Paywall view
   return (
     <>
-      <SEOHead title="Industrial Supplier Database — $99/month | M² B2B Leads" description="Every machine shop, metal fabricator, and industrial supplier in the Midwest. Updated weekly. Browse, filter, and export." />
+      <SEOHead title="Industrial Supplier Database — $99/month | M² B2B Leads" description="Every machine shop, metal fabricator, and industrial supplier in the US. Updated weekly. Browse, filter, and export." />
       <div className="min-h-screen bg-background text-foreground">
         <div className="bg-[#1e293b] text-white px-6 py-14 text-center">
           <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">M² Development</p>
-          <h1 className="text-3xl font-black mb-4">Every industrial supplier<br />in the Midwest.</h1>
+          <h1 className="text-3xl font-black mb-4">Every industrial supplier<br />in the US.</h1>
           <p className="text-slate-300 max-w-xl mx-auto text-sm leading-relaxed">
-            {totalCount > 0 ? `${totalCount.toLocaleString()} verified` : "Thousands of"} machine shops, metal fabricators, CNC shops, injection molders, tool & die shops, and industrial equipment suppliers — with name, phone, email, address, and Google rating. Updated weekly. Export to CSV anytime.
+            {totalCount > 0 ? `${totalCount.toLocaleString()} verified` : "Thousands of"} machine shops, metal fabricators, CNC shops, injection molders, tool & die shops, and industrial equipment suppliers — with name, phone, email, address, and Google rating. Nationwide. Updated weekly. Export to CSV anytime.
           </p>
         </div>
 

@@ -24,21 +24,98 @@ const INDUSTRY_ROTATION = [
   "commercial property management",
 ];
 
-// ── City rotation ──
+// ── City rotation — national coverage ──
 const CITY_ROTATION = [
-  "Detroit MI", "Grosse Pointe MI", "Warren MI", "Sterling Heights MI",
-  "Livonia MI", "Dearborn MI", "Troy MI", "Southfield MI", "Pontiac MI",
-  "Royal Oak MI", "Ann Arbor MI", "Ypsilanti MI", "Novi MI", "Canton MI",
-  "Macomb MI", "Flint MI", "Lansing MI", "East Lansing MI", "Jackson MI",
-  "Saginaw MI", "Bay City MI", "Midland MI", "Grand Rapids MI",
-  "Kalamazoo MI", "Battle Creek MI", "Muskegon MI", "Holland MI",
-  "Traverse City MI", "Alpena MI", "Marquette MI",
+  // Michigan
+  "Detroit MI", "Grand Rapids MI", "Ann Arbor MI", "Warren MI", "Sterling Heights MI",
+  "Lansing MI", "Flint MI", "Dearborn MI", "Troy MI", "Livonia MI",
+  // Ohio
   "Columbus OH", "Cleveland OH", "Cincinnati OH", "Toledo OH", "Akron OH",
-  "Dayton OH", "Canton OH", "Youngstown OH",
-  "Indianapolis IN", "Fort Wayne IN", "South Bend IN", "Evansville IN",
-  "Naperville IL", "Aurora IL", "Joliet IL", "Rockford IL", "Peoria IL",
-  "Milwaukee WI", "Madison WI", "Green Bay WI",
-  "Louisville KY", "Lexington KY", "St. Louis MO", "Kansas City MO",
+  "Dayton OH", "Canton OH", "Youngstown OH", "Parma OH", "Lorain OH",
+  // Indiana
+  "Indianapolis IN", "Fort Wayne IN", "South Bend IN", "Evansville IN", "Carmel IN",
+  // Illinois
+  "Chicago IL", "Aurora IL", "Joliet IL", "Rockford IL", "Naperville IL",
+  "Peoria IL", "Springfield IL", "Elgin IL", "Waukegan IL",
+  // Wisconsin
+  "Milwaukee WI", "Madison WI", "Green Bay WI", "Kenosha WI", "Racine WI",
+  // Minnesota
+  "Minneapolis MN", "Saint Paul MN", "Rochester MN", "Duluth MN", "Bloomington MN",
+  // Missouri
+  "Kansas City MO", "St. Louis MO", "Springfield MO", "Columbia MO",
+  // Kentucky
+  "Louisville KY", "Lexington KY", "Bowling Green KY",
+  // Tennessee
+  "Nashville TN", "Memphis TN", "Knoxville TN", "Chattanooga TN", "Clarksville TN",
+  // Georgia
+  "Atlanta GA", "Augusta GA", "Columbus GA", "Macon GA", "Savannah GA", "Marietta GA",
+  // Florida
+  "Jacksonville FL", "Tampa FL", "Orlando FL", "Miami FL", "St. Petersburg FL",
+  "Hialeah FL", "Fort Lauderdale FL", "Tallahassee FL", "Cape Coral FL", "Pembroke Pines FL",
+  // Texas
+  "Houston TX", "San Antonio TX", "Dallas TX", "Austin TX", "Fort Worth TX",
+  "El Paso TX", "Arlington TX", "Corpus Christi TX", "Plano TX", "Lubbock TX",
+  "Irving TX", "Garland TX", "Frisco TX", "McKinney TX",
+  // North Carolina
+  "Charlotte NC", "Raleigh NC", "Greensboro NC", "Durham NC", "Winston-Salem NC",
+  "Fayetteville NC", "Cary NC", "Wilmington NC",
+  // South Carolina
+  "Columbia SC", "Charleston SC", "North Charleston SC", "Greenville SC",
+  // Virginia
+  "Virginia Beach VA", "Norfolk VA", "Chesapeake VA", "Richmond VA", "Newport News VA",
+  "Hampton VA", "Alexandria VA",
+  // Maryland
+  "Baltimore MD", "Frederick MD", "Rockville MD", "Gaithersburg MD",
+  // Pennsylvania
+  "Philadelphia PA", "Pittsburgh PA", "Allentown PA", "Erie PA", "Reading PA",
+  "Scranton PA", "Bethlehem PA",
+  // New York
+  "New York NY", "Buffalo NY", "Rochester NY", "Yonkers NY", "Syracuse NY",
+  "Albany NY", "New Rochelle NY",
+  // New Jersey
+  "Newark NJ", "Jersey City NJ", "Paterson NJ", "Elizabeth NJ", "Edison NJ",
+  // Connecticut
+  "Bridgeport CT", "New Haven CT", "Hartford CT", "Stamford CT",
+  // Massachusetts
+  "Boston MA", "Worcester MA", "Springfield MA", "Lowell MA", "Cambridge MA",
+  // Arizona
+  "Phoenix AZ", "Tucson AZ", "Mesa AZ", "Chandler AZ", "Scottsdale AZ",
+  "Glendale AZ", "Gilbert AZ", "Tempe AZ",
+  // Colorado
+  "Denver CO", "Colorado Springs CO", "Aurora CO", "Fort Collins CO", "Lakewood CO",
+  "Thornton CO", "Pueblo CO",
+  // Nevada
+  "Las Vegas NV", "Henderson NV", "Reno NV", "North Las Vegas NV",
+  // California
+  "Los Angeles CA", "San Diego CA", "San Jose CA", "San Francisco CA", "Fresno CA",
+  "Sacramento CA", "Long Beach CA", "Oakland CA", "Bakersfield CA", "Anaheim CA",
+  "Santa Ana CA", "Riverside CA", "Stockton CA", "Irvine CA", "Chula Vista CA",
+  "Fremont CA", "San Bernardino CA", "Modesto CA",
+  // Oregon
+  "Portland OR", "Eugene OR", "Salem OR", "Gresham OR", "Beaverton OR",
+  // Washington
+  "Seattle WA", "Spokane WA", "Tacoma WA", "Vancouver WA", "Bellevue WA",
+  "Kent WA", "Everett WA",
+  // Alabama
+  "Birmingham AL", "Montgomery AL", "Huntsville AL", "Mobile AL",
+  // Louisiana
+  "New Orleans LA", "Baton Rouge LA", "Shreveport LA", "Lafayette LA",
+  // Oklahoma
+  "Oklahoma City OK", "Tulsa OK", "Norman OK", "Broken Arrow OK",
+  // Kansas
+  "Wichita KS", "Overland Park KS", "Kansas City KS", "Topeka KS",
+  // Nebraska
+  "Omaha NE", "Lincoln NE",
+  // Iowa
+  "Des Moines IA", "Cedar Rapids IA", "Davenport IA",
+  // Arkansas
+  "Little Rock AR", "Fort Smith AR", "Fayetteville AR",
+  // Utah
+  "Salt Lake City UT", "West Valley City UT", "Provo UT", "Ogden UT",
+  // Idaho
+  "Boise ID", "Meridian ID", "Nampa ID",
+  // New Mexico
+  "Albuquerque NM", "Las Cruces NM", "Rio Rancho NM",
 ];
 
 // ── Score digital gap from Google Maps data ──

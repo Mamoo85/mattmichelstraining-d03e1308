@@ -173,7 +173,7 @@ export default function LocalMarketing() {
                 </div>
                 <div>
                   <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">City</label>
-                  <input value={form.city} onChange={e => setForm(f => ({...f, city: e.target.value}))} placeholder="Detroit, Warren, Troy…"
+                  <input value={form.city} onChange={e => setForm(f => ({...f, city: e.target.value}))} placeholder="e.g. Chicago, Dallas, Atlanta…"
                     className="w-full bg-background border border-border px-3 py-2.5 text-sm focus:ring-1 focus:ring-primary outline-none" />
                 </div>
               </div>

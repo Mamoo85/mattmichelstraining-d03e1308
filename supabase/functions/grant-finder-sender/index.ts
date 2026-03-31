@@ -44,10 +44,10 @@ Deno.serve(async (req) => {
             model: "google/gemini-2.5-flash-lite", 
             messages: [{
               role: "user",
-              content: `You are a grant research assistant. Find and summarize grant opportunities for ${client.business_name}, a ${client.industry || "small"} business in ${client.location || "Michigan"} with ${client.employee_count || "under 50"} employees and ${client.annual_revenue || "under $5M"} annual revenue.
+              content: `You are a grant research assistant. Find and summarize grant opportunities for ${client.business_name}, a ${client.industry || "small"} business in ${client.location || "the United States"} with ${client.employee_count || "under 50"} employees and ${client.annual_revenue || "under $5M"} annual revenue.
 
 Grant research data:
-${grantContext || "Use general knowledge of current SBA, MEDC, and federal grant programs."}
+${grantContext || "Use general knowledge of current SBA, federal, and state-level small business grant programs."}
 
 Format as HTML email with:
 1. Top 5 matching grants with: name, amount, deadline, eligibility summary, application link
