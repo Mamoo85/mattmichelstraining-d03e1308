@@ -403,7 +403,7 @@ serve(async (req) => {
       log("Google Maps contractor results", { count: places.length });
 
       let pitched = 0;
-      for (const place of places.slice(0, 5)) {
+      for (const place of places.slice(0, 10)) {
         const businessName = place.displayName?.text || "your business";
         const website = place.websiteUri || "";
         const phone = place.nationalPhoneNumber || "";
