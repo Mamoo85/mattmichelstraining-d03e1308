@@ -424,6 +424,11 @@ const App = () => (
                     <Route path="/ai-review-response" element={<AIReviewResponse />} />
                     <Route path="/ai-battlecard" element={<AIBattlecard />} />
                     <Route path="/ai-market-intel" element={<AIMarketIntel />} />
+                    <Route path="/ai-permit-monitor" element={<AIPermitMonitor />} />
+                    <Route path="/ai-osha-compliance" element={<AIOshaCompliance />} />
+                    <Route path="/ai-collections" element={<AICollections />} />
+                    <Route path="/ai-inventory-alerts" element={<AIInventoryAlerts />} />
+                    <Route path="/ai-birthday-campaign" element={<AIBirthdayCampaign />} />
                     <Route path="/partners" element={<B2BPartnerPortal />} />
                     <Route path="/sports-camps" element={<CampDirectory />} />
                     <Route path="/free-program" element={<FreeProgram />} />
