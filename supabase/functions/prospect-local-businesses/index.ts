@@ -76,16 +76,25 @@ async function scrapeEmailFromWebsite(websiteUrl: string): Promise<string | null
     const emailRegex = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
     const emails = html.match(emailRegex) || [];
     // Filter out common junk emails
-    const validEmails = emails.filter(e =>
-      !e.includes("example.com") &&
-      !e.includes("sentry.io") &&
-      !e.includes("wixpress.com") &&
-      !e.includes("schema.org") &&
-      !e.endsWith(".png") &&
-      !e.endsWith(".jpg") &&
-      !e.endsWith(".svg") &&
-      e.length < 60
-    );
+    const validEmails = emails.filter(e => {
+      const lower = e.toLowerCase();
+      // Filter out junk: fonts, CDNs, tracking, generic platforms
+      const junkDomains = [
+        "example.com", "sentry.io", "wixpress.com", "schema.org",
+        "googleapis.com", "google.com", "facebook.com", "twitter.com",
+        "instagram.com", "w3.org", "jquery.com", "wordpress.org",
+        "wordpress.com", "gravatar.com", "cloudflare.com", "amazonaws.com",
+        "indiantypefoundry.com", "fontawesome.com", "bootstrapcdn.com",
+        "typekit.net", "fonts.com", "monotype.com", "myfonts.com",
+        "squarespace.com", "shopify.com", "godaddy.com",
+      ];
+      if (junkDomains.some(d => lower.includes(d))) return false;
+      if (/\.(png|jpg|jpeg|svg|gif|css|js|woff|ttf|eot)$/i.test(lower)) return false;
+      if (lower.length > 60 || lower.length < 5) return false;
+      // Must have a real TLD
+      if (!/\.(com|net|org|biz|info|us|co|io)$/.test(lower)) return false;
+      return true;
+    });
     return validEmails[0] || null;
   } catch {
     return null;
