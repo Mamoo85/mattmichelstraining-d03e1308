@@ -3,10 +3,31 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
-const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
-const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
+const TWILIO_API_KEY = Deno.env.get("TWILIO_API_KEY") || "";
+
+const GATEWAY_URL = "https://connector-gateway.lovable.dev/twilio";
+
+async function sendSmsGateway(to: string, from: string, body: string) {
+  if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+  if (!TWILIO_API_KEY) throw new Error("TWILIO_API_KEY is not configured");
+
+  const res = await fetch(`${GATEWAY_URL}/Messages.json`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${LOVABLE_API_KEY}`,
+      "X-Connection-Api-Key": TWILIO_API_KEY,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({ To: to, From: from, Body: body }),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Twilio gateway error [${res.status}]: ${err}`);
+  }
+  return res.json();
+}
 
 serve(async (req) => {
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
@@ -25,26 +46,23 @@ serve(async (req) => {
     else if (daysOverdue > 5) tone = "firmer";
 
     let msg = `Hi${customerName ? " " + customerName : ""}, this is a reminder from ${client.business_name} regarding your invoice of $${invoiceAmount || "outstanding"}. Please contact us to arrange payment. Reply STOP to opt out.`;
-    if (ANTHROPIC_API_KEY) {
-      const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-haiku-4-5-20251001", max_tokens: 150,
-          messages: [{ role: "user", content: `Write a ${tone} SMS payment reminder from "${client.business_name}" to a customer. Amount: $${invoiceAmount || "outstanding"}. Days overdue: ${daysOverdue}. Under 160 chars. End with "Reply STOP to opt out."` }],
-        }),
-      });
-      const aiData = await aiRes.json();
-      msg = aiData?.content?.[0]?.text?.trim() || msg;
+
+    if (LOVABLE_API_KEY) {
+      try {
+        const aiRes = await fetch("https://ai.lovable.dev/api/chat", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "google/gemini-2.5-flash-lite",
+            messages: [{ role: "user", content: `Write a ${tone} SMS payment reminder from "${client.business_name}" to a customer. Amount: $${invoiceAmount || "outstanding"}. Days overdue: ${daysOverdue}. Under 160 chars. End with "Reply STOP to opt out."` }],
+          }),
+        });
+        const aiData = await aiRes.json();
+        msg = aiData?.choices?.[0]?.message?.content?.trim() || msg;
+      } catch { /* fallback to default msg */ }
     }
 
-    if (TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN) {
-      await fetch(`https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded", Authorization: `Basic ${btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`)}` },
-        body: new URLSearchParams({ To: customerPhone, From: client.phone || customerPhone, Body: msg }).toString(),
-      });
-    }
+    await sendSmsGateway(customerPhone, client.phone || customerPhone, msg);
     await sb.from("payment_chaser_clients").update({ chase_count: (client.chase_count || 0) + 1 }).eq("id", client.id);
     return new Response(JSON.stringify({ ok: true, tone, daysOverdue }), { status: 200 });
   } catch (e: any) { console.error("[PAYMENT-CHASER] Error:", e); return new Response(JSON.stringify({ error: e.message }), { status: 500 }); }
