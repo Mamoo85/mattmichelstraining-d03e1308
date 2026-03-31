@@ -190,8 +190,8 @@ serve(async () => {
 
     console.log(`[SOCIAL-POSTER] Posted: ${posted}, Skipped (no tokens): ${skipped}, Errors: ${errors}`);
     return new Response(JSON.stringify({ posted, skipped, errors }), { status: 200 });
-  } catch (e: any) {
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("[SOCIAL-POSTER] Fatal error:", e);
-    return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: msg }), { status: 500 });
   }
 });

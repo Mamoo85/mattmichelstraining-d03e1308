@@ -267,8 +267,8 @@ serve(async (req) => {
 
     console.log(`[NEWSLETTER] Sent to ${sent} subscribers — "${subject}"`);
     return new Response(JSON.stringify({ sent, subject }), { status: 200 });
-  } catch (e: any) {
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("[NEWSLETTER] Error:", e);
-    return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: msg }), { status: 500 });
   }
 });

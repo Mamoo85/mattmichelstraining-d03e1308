@@ -115,8 +115,8 @@ serve(async () => {
     console.log(`[LINKEDIN-POSTER] ${ok ? "Posted" : "Failed"}: ${post.substring(0, 60)}...`);
     return new Response(JSON.stringify({ ok, preview: post.substring(0, 100) }), { status: 200 });
 
-  } catch (e: any) {
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("[LINKEDIN-POSTER] Fatal:", e);
-    return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: msg }), { status: 500 });
   }
 });

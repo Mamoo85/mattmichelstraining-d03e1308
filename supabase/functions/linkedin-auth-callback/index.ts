@@ -72,7 +72,7 @@ serve(async (req) => {
       </body></html>
     `, { headers: { "Content-Type": "text/html" } });
 
-  } catch (e: any) {
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("[LINKEDIN-AUTH] Error:", e);
     return new Response(`<h2>Error: ${e.message}</h2>`, {
       headers: { "Content-Type": "text/html" },

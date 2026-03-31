@@ -24,11 +24,12 @@ const FindUs = () => (
           (313) 806-4952
         </a>
         <a
-          href="mailto:matthewmichels4@gmail.com"
+          href="mailto:matt@mattmichelstraining.com"
           className="text-sm text-primary font-bold hover:opacity-80 transition-m2"
         >
           Email Matt
         </a>
+
         <a
           href="sms:3138064952"
           className="text-sm text-primary font-bold hover:opacity-80 transition-m2"

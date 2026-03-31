@@ -74,10 +74,10 @@ serve(async (req) => {
       JSON.stringify({ url: session.url }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-  } catch (e: any) {
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("[CREATE-MISSED-CALL-SUBSCRIPTION] Error:", e);
     return new Response(
-      JSON.stringify({ error: e.message }),
+      JSON.stringify({ error: msg }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

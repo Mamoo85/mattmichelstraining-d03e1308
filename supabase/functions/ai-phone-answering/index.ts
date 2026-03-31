@@ -107,7 +107,7 @@ serve(async (req) => {
 </Response>`,
       { headers: { "Content-Type": "text/xml" } }
     );
-  } catch (e: any) {
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("[AI-PHONE-ANSWERING] Error:", e);
     return new Response(
       `<?xml version="1.0" encoding="UTF-8"?><Response><Say>We're experiencing technical difficulties. Please call back later. Thank you.</Say></Response>`,

@@ -123,10 +123,10 @@ serve(async (req) => {
       JSON.stringify({ response, lead_captured }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-  } catch (e: any) {
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("[CHATBOT-WIDGET] Error:", e);
     return new Response(
-      JSON.stringify({ error: e.message }),
+      JSON.stringify({ error: msg }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

@@ -106,8 +106,8 @@ serve(async (req) => {
 
     console.log(`[GBP-POSTER] Posted: ${posted}, Failed/pending: ${failed}`);
     return new Response(JSON.stringify({ posted, failed }), { status: 200 });
-  } catch (e: any) {
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("[GBP-POSTER] Error:", e);
-    return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: msg }), { status: 500 });
   }
 });
