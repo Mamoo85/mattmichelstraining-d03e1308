@@ -183,8 +183,22 @@
       <p>Located at 15121 Kercheval Ave, Grosse Pointe Park, MI 48230. Call (313) 806-4952.</p>
     </noscript>
     <script type="module" src="/src/main.tsx"></script>
-    <!-- Google Analytics — deferred to avoid blocking FCP -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-PDLSP336FJ"></script>
-    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-PDLSP336FJ');</script>
+    <!-- Google Analytics — fully deferred until after page load -->
+    <script>
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          var s = document.createElement('script');
+          s.src = 'https://www.googletagmanager.com/gtag/js?id=G-PDLSP336FJ';
+          s.async = true;
+          document.head.appendChild(s);
+          s.onload = function() {
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-PDLSP336FJ', { send_page_view: true });
+          };
+        }, 2000);
+      }, { once: true });
+    </script>
   </body>
 </html>
