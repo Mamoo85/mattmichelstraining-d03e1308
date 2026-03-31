@@ -357,10 +357,10 @@ const ZoneDashboard = () => {
                   {item.icon}
                 </div>
                 <div className="text-center">
-                  <div className="text-[11px] font-bold leading-tight" style={{ color: "#d4d4d4" }}>
+                  <div className="text-xs font-bold leading-tight" style={{ color: "#d4d4d4" }}>
                     {item.label}
                   </div>
-                  <div className="text-[9px] leading-tight mt-0.5" style={{ color: "#525252" }}>
+                  <div className="text-xs leading-tight mt-0.5" style={{ color: "#525252" }}>
                     {item.desc}
                   </div>
                 </div>
