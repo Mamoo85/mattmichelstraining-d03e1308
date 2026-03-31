@@ -53,9 +53,7 @@ serve(async (req) => {
             const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
               method: "POST",
               headers: {
-                "x-api-key": LOVABLE_API_KEY,
-                "content-type": "application/json",
-                "anthropic-version": "2023-06-01" },
+                Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
               body: JSON.stringify({
                 model: "google/gemini-2.5-flash-lite", 
                 messages: [

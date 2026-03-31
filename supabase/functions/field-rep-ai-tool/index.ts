@@ -106,7 +106,7 @@ serve(async (req) => {
     const prompt = buildPrompt(tool, inputs);
 
     // Call Claude Haiku
-    const anthropicRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
             Authorization: `Bearer ${LOVABLE_API_KEY}`,
@@ -115,14 +115,14 @@ serve(async (req) => {
         model: "google/gemini-2.5-flash-lite", 
         messages: [{ role: "user", content: prompt }] }) });
 
-    if (!anthropicRes.ok) {
-      const errText = await anthropicRes.text();
-      console.error("[FIELD-REP-AI-TOOL] Anthropic error:", anthropicRes.status, errText);
+    if (!aiRes.ok) {
+      const errText = await aiRes.text();
+      console.error("[FIELD-REP-AI-TOOL] AI error:", aiRes.status, errText);
       throw new Error("AI generation failed");
     }
 
-    const anthropicData = await anthropicRes.json();
-    const result = anthropicData.content?.[0]?.text || "";
+    const aiData = await aiRes.json();
+    const result = aiData?.choices?.[0]?.message?.content || "";
 
     return new Response(
       JSON.stringify({ result }),

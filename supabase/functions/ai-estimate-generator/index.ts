@@ -64,8 +64,7 @@ Keep costs realistic for the ${client.industry} industry in Michigan.`;
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": LOVABLE_API_KEY,
-        "anthropic-version": "2023-06-01" },
+        Authorization: `Bearer ${LOVABLE_API_KEY}` },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash-lite", 
         messages: [{ role: "user", content: prompt }] }) });

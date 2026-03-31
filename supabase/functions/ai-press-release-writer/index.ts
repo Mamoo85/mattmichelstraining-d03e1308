@@ -39,7 +39,7 @@ async function generatePressRelease(businessName: string, industry: string, city
       messages: [{ role: "user", content: prompt }] }) });
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`Anthropic API error: ${text}`);
+    throw new Error(`AI API error: ${text}`);
   }
   const data = await res.json();
   return data.content[0].text as string;

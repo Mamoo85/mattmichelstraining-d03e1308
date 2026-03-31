@@ -9,7 +9,7 @@ const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 
-type AnthropicMessageResponse = {
+type AIMessageResponse = {
   content?: Array<{ text?: string }>;
 };
 
@@ -44,9 +44,9 @@ async function generateBlogPost(businessName: string, industry: string, website?
       messages: [{ role: "user", content: prompt }] }) });
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`Anthropic API error: ${text}`);
+    throw new Error(`AI API error: ${text}`);
   }
-  const data = await res.json() as AnthropicMessageResponse;
+  const data = await res.json() as AIMessageResponse;
   return data?.choices?.[0]?.message?.content ?? "";
 }
 

@@ -5,7 +5,7 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 
-type AnthropicMessageResponse = {
+type AIMessageResponse = {
   content?: Array<{ text?: string }>;
 };
 
@@ -51,13 +51,12 @@ Write in professional but accessible language. Use HTML formatting with <h2>, <p
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": LOVABLE_API_KEY,
-          "anthropic-version": "2023-06-01" },
+          Authorization: `Bearer ${LOVABLE_API_KEY}` },
         body: JSON.stringify({
           model: "google/gemini-2.5-flash-lite", 
           messages: [{ role: "user", content: prompt }] }) });
 
-      const aiData = await aiResponse.json() as AnthropicMessageResponse;
+      const aiData = await aiResponse.json() as AIMessageResponse;
       const reportHtml = aiData?.choices?.[0]?.message?.content || "Report generation failed.";
 
       const emailHtml = `

@@ -41,7 +41,7 @@ async function generateDigest(client: DigestClient): Promise<string> {
 
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`Anthropic API error: ${err}`);
+    throw new Error(`AI API error: ${err}`);
   }
 
   const data = await res.json();
