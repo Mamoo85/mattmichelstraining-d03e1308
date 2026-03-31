@@ -60,9 +60,49 @@ function scoreDigitalGap(place: any): number {
   return Math.min(score, 95);
 }
 
+// ── Extract email from a website ──
+async function scrapeEmailFromWebsite(websiteUrl: string): Promise<string | null> {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    const res = await fetch(websiteUrl, {
+      signal: controller.signal,
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; M2Bot/1.0)" },
+    });
+    clearTimeout(timeout);
+    if (!res.ok) return null;
+    const html = await res.text();
+    // Find email addresses in HTML
+    const emailRegex = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
+    const emails = html.match(emailRegex) || [];
+    // Filter out common junk emails
+    const validEmails = emails.filter(e => {
+      const lower = e.toLowerCase();
+      // Filter out junk: fonts, CDNs, tracking, generic platforms
+      const junkDomains = [
+        "example.com", "sentry.io", "wixpress.com", "schema.org",
+        "googleapis.com", "google.com", "facebook.com", "twitter.com",
+        "instagram.com", "w3.org", "jquery.com", "wordpress.org",
+        "wordpress.com", "gravatar.com", "cloudflare.com", "amazonaws.com",
+        "indiantypefoundry.com", "fontawesome.com", "bootstrapcdn.com",
+        "typekit.net", "fonts.com", "monotype.com", "myfonts.com",
+        "squarespace.com", "shopify.com", "godaddy.com",
+      ];
+      if (junkDomains.some(d => lower.includes(d))) return false;
+      if (/\.(png|jpg|jpeg|svg|gif|css|js|woff|ttf|eot)$/i.test(lower)) return false;
+      if (lower.length > 60 || lower.length < 5) return false;
+      // Must have a real TLD
+      if (!/\.(com|net|org|biz|info|us|co|io)$/.test(lower)) return false;
+      return true;
+    });
+    return validEmails[0] || null;
+  } catch {
+    return null;
+  }
+}
+
 // ── Google Maps Places API: Text Search ──
 async function searchGoogleMaps(query: string, apiKey: string): Promise<any[]> {
-  // Use Places API (New) Text Search
   const url = `https://places.googleapis.com/v1/places:searchText`;
   const res = await fetch(url, {
     method: "POST",
@@ -81,6 +121,42 @@ async function searchGoogleMaps(query: string, apiKey: string): Promise<any[]> {
 
   const data = await res.json();
   return data.places || [];
+}
+
+// ── Send cold email via Resend ──
+async function sendColdEmail(
+  to: string,
+  subject: string,
+  bodyHtml: string,
+  resendKey: string,
+): Promise<boolean> {
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from: "Matt Michels <matt@notify.m2training.com>",
+        to: [to],
+        reply_to: "matt@m2training.com",
+        subject,
+        html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;line-height:1.8;color:#1e293b;max-width:520px;margin:0 auto;padding:24px 0;">
+${bodyHtml}
+<div style="margin-top:24px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;align-items:center;gap:12px;">
+  <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Matt Michels">
+  <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>M² Development · Grosse Pointe, MI<br>(313) 806-4952</div>
+</div>
+</div>`,
+      }),
+    });
+    if (!res.ok) {
+      const errBody = await res.text();
+      console.error(`[PROSPECTOR] Resend error ${res.status}: ${errBody}`);
+    }
+    return res.ok;
+  } catch (err) {
+    console.error(`[PROSPECTOR] Send error: ${err}`);
+    return false;
+  }
 }
 
 // ── Generate outreach email via Lovable AI ──
@@ -308,8 +384,10 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
     let queued = 0;
     let skipped = 0;
+    let emailed = 0;
     const newLeads: string[] = [];
 
     for (const place of places) {
@@ -326,7 +404,7 @@ serve(async (req) => {
         const rating = place.rating || 0;
         const reviewCount = place.userRatingCount || 0;
 
-        // Dedup check
+        // Dedup check against outreach_leads
         const { data: existing } = await serviceClient
           .from("outreach_leads")
           .select("id")
@@ -335,23 +413,74 @@ serve(async (req) => {
 
         if (existing && existing.length > 0) { skipped++; continue; }
 
-        // Generate outreach email
-        const outreachEmail = await generateOutreachEmail(businessName, industry, city, LOVABLE_API_KEY);
-        const lines = outreachEmail.split("\n");
-        const subjectLine = lines.find(l => l.startsWith("SUBJECT:"))?.replace("SUBJECT:", "").trim()
-          || `Your ${industry} business could be getting more calls`;
-        const emailBody = lines.slice(lines.findIndex(l => l === "---") + 1).join("\n").trim();
+        // Step 2: Try to scrape email from their website
+        let contactEmail: string | null = null;
+        if (website) {
+          contactEmail = await scrapeEmailFromWebsite(website);
+          // Also try /contact page
+          if (!contactEmail) {
+            const contactUrl = website.replace(/\/$/, "") + "/contact";
+            contactEmail = await scrapeEmailFromWebsite(contactUrl);
+          }
+          log("Email scrape", { business: businessName, email: contactEmail || "NOT_FOUND" });
+        }
 
+        // Dedup against email_send_log if we have an email
+        if (contactEmail) {
+          const { data: alreadySent } = await serviceClient
+            .from("email_send_log")
+            .select("id")
+            .eq("recipient_email", contactEmail)
+            .eq("template_name", "cold_outreach")
+            .limit(1);
+          if (alreadySent && alreadySent.length > 0) {
+            log("Already emailed", { email: contactEmail });
+            skipped++;
+            continue;
+          }
+        }
+
+        // Step 3: Generate outreach email
+        const outreachEmail = await generateOutreachEmail(businessName, industry, city, LOVABLE_API_KEY);
+        const emailLines = outreachEmail.split("\n");
+        const subjectLine = emailLines.find(l => l.startsWith("SUBJECT:"))?.replace("SUBJECT:", "").trim()
+          || `Your ${industry} business could be getting more calls`;
+        const emailBody = emailLines.slice(emailLines.findIndex(l => l === "---") + 1).join("\n").trim();
+        const emailBodyHtml = emailBody.replace(/\n/g, "<br>");
+
+        // Step 4: Auto-send if we have an email address
+        let emailStatus = "no_email";
+        if (contactEmail && RESEND_API_KEY) {
+          const sent = await sendColdEmail(contactEmail, subjectLine, emailBodyHtml, RESEND_API_KEY);
+          if (sent) {
+            emailStatus = "sent";
+            emailed++;
+            // Log the send
+            await serviceClient.from("email_send_log").insert({
+              recipient_email: contactEmail,
+              template_name: "cold_outreach",
+              status: "sent",
+              metadata: { business: businessName, industry, city, gap_score: gapScore },
+            });
+          } else {
+            emailStatus = "send_failed";
+          }
+          log("Cold email", { business: businessName, email: contactEmail, status: emailStatus });
+        }
+
+        // Step 5: Store lead in CRM
+        const leadStatus = emailStatus === "sent" ? "Emailed" : "new";
         const { data: newLead, error: insertErr } = await serviceClient
           .from("outreach_leads")
           .insert({
             business_name: businessName,
+            email: contactEmail,
             industry,
             city,
             phone,
             website_status: website ? "has_website" : "no_website",
-            notes: `Auto-prospected ${new Date().toLocaleDateString()}. Gap score: ${gapScore}/100. Rating: ${rating} (${reviewCount} reviews). Website: ${website || "NONE"}. Address: ${address}\n\nAUTO-GENERATED OUTREACH:\nSubject: ${subjectLine}\n\n${emailBody}`,
-            status: "new",
+            notes: `Auto-prospected ${new Date().toLocaleDateString()}. Gap score: ${gapScore}/100. Rating: ${rating} (${reviewCount} reviews). Website: ${website || "NONE"}. Address: ${address}. Email: ${contactEmail || "NOT FOUND"}. Email status: ${emailStatus}\n\nSubject: ${subjectLine}\n\n${emailBody}`,
+            status: leadStatus,
           })
           .select("id")
           .single();
@@ -360,27 +489,28 @@ serve(async (req) => {
 
         queued++;
         newLeads.push(newLead.id);
-        log("Lead queued", { business: businessName, gapScore, rating, reviewCount, hasWebsite: !!website });
+        log("Lead processed", { business: businessName, gapScore, email: contactEmail || "none", emailStatus });
 
-        await new Promise(r => setTimeout(r, 300));
+        await new Promise(r => setTimeout(r, 500));
       } catch (err) {
         log("Error processing place", { error: String(err) });
         skipped++;
       }
     }
 
-    log("Run complete", { found: places.length, queued, skipped, industry, city, source: "google_maps" });
+    log("Run complete", { found: places.length, queued, emailed, skipped, industry, city, source: "google_maps" });
 
     return new Response(
       JSON.stringify({
         found: places.length,
         queued,
+        emailed,
         skipped,
         leads: newLeads,
         industry,
         city,
         source: "google_maps",
-        message: `Prospecting complete. ${queued} new ${industry} leads in ${city} added via Google Maps.`,
+        message: `Prospecting complete. ${queued} leads found, ${emailed} cold emails sent to ${industry} businesses in ${city}.`,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
