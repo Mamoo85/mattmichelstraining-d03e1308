@@ -1096,6 +1096,48 @@ export type Database = {
         }
         Relationships: []
       }
+      drip_conversions: {
+        Row: {
+          business_name: string | null
+          converted_at: string | null
+          drip_step_converted: string | null
+          email: string
+          id: string
+          industry: string | null
+          metadata: Json | null
+          revenue_amount: number | null
+          service_interested: string | null
+          source: string | null
+          stripe_checkout_completed: boolean | null
+        }
+        Insert: {
+          business_name?: string | null
+          converted_at?: string | null
+          drip_step_converted?: string | null
+          email: string
+          id?: string
+          industry?: string | null
+          metadata?: Json | null
+          revenue_amount?: number | null
+          service_interested?: string | null
+          source?: string | null
+          stripe_checkout_completed?: boolean | null
+        }
+        Update: {
+          business_name?: string | null
+          converted_at?: string | null
+          drip_step_converted?: string | null
+          email?: string
+          id?: string
+          industry?: string | null
+          metadata?: Json | null
+          revenue_amount?: number | null
+          service_interested?: string | null
+          source?: string | null
+          stripe_checkout_completed?: boolean | null
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -2124,28 +2166,43 @@ export type Database = {
       }
       marketing_leads: {
         Row: {
+          business_name: string | null
           created_at: string
           email: string
           first_name: string | null
           id: string
+          industry: string | null
+          phone: string | null
+          service_interested: string | null
           source: string
           updated_at: string
+          utm_source: string | null
         }
         Insert: {
+          business_name?: string | null
           created_at?: string
           email: string
           first_name?: string | null
           id?: string
+          industry?: string | null
+          phone?: string | null
+          service_interested?: string | null
           source?: string
           updated_at?: string
+          utm_source?: string | null
         }
         Update: {
+          business_name?: string | null
           created_at?: string
           email?: string
           first_name?: string | null
           id?: string
+          industry?: string | null
+          phone?: string | null
+          service_interested?: string | null
           source?: string
           updated_at?: string
+          utm_source?: string | null
         }
         Relationships: []
       }
