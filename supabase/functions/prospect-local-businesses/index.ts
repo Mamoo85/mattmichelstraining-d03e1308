@@ -60,9 +60,40 @@ function scoreDigitalGap(place: any): number {
   return Math.min(score, 95);
 }
 
+// ── Extract email from a website ──
+async function scrapeEmailFromWebsite(websiteUrl: string): Promise<string | null> {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    const res = await fetch(websiteUrl, {
+      signal: controller.signal,
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; M2Bot/1.0)" },
+    });
+    clearTimeout(timeout);
+    if (!res.ok) return null;
+    const html = await res.text();
+    // Find email addresses in HTML
+    const emailRegex = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
+    const emails = html.match(emailRegex) || [];
+    // Filter out common junk emails
+    const validEmails = emails.filter(e =>
+      !e.includes("example.com") &&
+      !e.includes("sentry.io") &&
+      !e.includes("wixpress.com") &&
+      !e.includes("schema.org") &&
+      !e.endsWith(".png") &&
+      !e.endsWith(".jpg") &&
+      !e.endsWith(".svg") &&
+      e.length < 60
+    );
+    return validEmails[0] || null;
+  } catch {
+    return null;
+  }
+}
+
 // ── Google Maps Places API: Text Search ──
 async function searchGoogleMaps(query: string, apiKey: string): Promise<any[]> {
-  // Use Places API (New) Text Search
   const url = `https://places.googleapis.com/v1/places:searchText`;
   const res = await fetch(url, {
     method: "POST",
@@ -81,6 +112,37 @@ async function searchGoogleMaps(query: string, apiKey: string): Promise<any[]> {
 
   const data = await res.json();
   return data.places || [];
+}
+
+// ── Send cold email via Resend ──
+async function sendColdEmail(
+  to: string,
+  subject: string,
+  bodyHtml: string,
+  resendKey: string,
+): Promise<boolean> {
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from: "Matt Michels <matt@notify.m2training.com>",
+        to: [to],
+        reply_to: "matt@m2training.com",
+        subject,
+        html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;line-height:1.8;color:#1e293b;max-width:520px;margin:0 auto;padding:24px 0;">
+${bodyHtml}
+<div style="margin-top:24px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;align-items:center;gap:12px;">
+  <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Matt Michels">
+  <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>M² Development · Grosse Pointe, MI<br>(313) 806-4952</div>
+</div>
+</div>`,
+      }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
 }
 
 // ── Generate outreach email via Lovable AI ──
