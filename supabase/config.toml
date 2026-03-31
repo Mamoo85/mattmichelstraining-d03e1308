@@ -891,3 +891,12 @@ verify_jwt = false
 
 [functions.send-test-email]
 verify_jwt = false
+
+[functions.contractor-prospector]
+verify_jwt = false
+
+[functions.contractor-drip]
+verify_jwt = false
+
+[functions.contractor-sms-follow]
+verify_jwt = false
