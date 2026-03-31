@@ -176,7 +176,7 @@ serve(async (req) => {
 </ul>
 <p>Questions? Reply here or text me directly at (313) 806-4952.</p>
 <p>— Matt</p>
-<p><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" width="48" height="48" style="border-radius:50%;object-fit:cover;" alt="Matt Michels" /></p>`,
+<p><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" width="48" height="48" style="border-radius:50%;object-fit:cover;" alt="Matt Michels" /> <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;object-fit:contain;" /></p>`,
           }),
         });
       }
