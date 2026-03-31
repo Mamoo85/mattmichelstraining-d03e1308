@@ -168,6 +168,11 @@ const AIPriceMonitor = lazyRetry(() => import("./pages/AIPriceMonitor"));
 const AIMeetingPrep = lazyRetry(() => import("./pages/AIMeetingPrep"));
 const AIDirectorySubmitter = lazyRetry(() => import("./pages/AIDirectorySubmitter"));
 const M2Development = lazyRetry(() => import("./pages/M2Development"));
+const AIHandbook = lazyRetry(() => import("./pages/AIHandbook"));
+const AIGrantFinder = lazyRetry(() => import("./pages/AIGrantFinder"));
+const AIReviewResponse = lazyRetry(() => import("./pages/AIReviewResponse"));
+const AIBattlecard = lazyRetry(() => import("./pages/AIBattlecard"));
+const AIMarketIntel = lazyRetry(() => import("./pages/AIMarketIntel"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -409,6 +414,11 @@ const App = () => (
                     <Route path="/ai-meeting-prep" element={<AIMeetingPrep />} />
                     <Route path="/ai-directory-submitter" element={<AIDirectorySubmitter />} />
                     <Route path="/m2-development" element={<M2Development />} />
+                    <Route path="/ai-handbook" element={<AIHandbook />} />
+                    <Route path="/ai-grant-finder" element={<AIGrantFinder />} />
+                    <Route path="/ai-review-response" element={<AIReviewResponse />} />
+                    <Route path="/ai-battlecard" element={<AIBattlecard />} />
+                    <Route path="/ai-market-intel" element={<AIMarketIntel />} />
                     <Route path="/partners" element={<B2BPartnerPortal />} />
                     <Route path="/sports-camps" element={<CampDirectory />} />
                     <Route path="/free-program" element={<FreeProgram />} />

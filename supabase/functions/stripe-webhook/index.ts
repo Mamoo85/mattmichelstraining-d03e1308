@@ -344,6 +344,80 @@ serve(async (req) => {
       console.log(`[WEBHOOK] Charge refunded: ${charge.id} — $${(refundedAmount / 100).toFixed(2)}`);
     }
 
+      if (meta.type === "handbook_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await (sb.from as any)("handbook_clients").upsert({ email, business_name: meta.businessName || email, phone: meta.phone || null, industry: meta.industry || null, state: meta.state || "MI", employee_count: parseInt(meta.employeeCount) || null, active: true }, { onConflict: "email" });
+          }
+          if (RESEND_API_KEY && email) {
+            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@notify.m2training.com>", to: [email], subject: "Your AI Employee Handbook service is active", html: `<p>Hey${meta.businessName ? " " + meta.businessName : ""},</p><p>You're signed up for AI Employee Handbook Generator ($99/mo). Your first handbook update will arrive within 48 hours.</p><p>Monthly updates with state labor law compliance on the 1st after that.</p><p>— Matt, M² Development</p>` }) });
+            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@notify.m2training.com>", to: ["matt@m2training.com"], subject: `💰 New Handbook Client — ${meta.businessName || email} ($99/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>State: ${meta.state || "MI"}<br>Employees: ${meta.employeeCount || "n/a"}</p>` }) });
+          }
+        } catch (e) { console.error("[WEBHOOK] handbook_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      if (meta.type === "grant_finder_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await (sb.from as any)("grant_finder_clients").upsert({ email, business_name: meta.businessName || email, phone: meta.phone || null, industry: meta.industry || null, employee_count: parseInt(meta.employeeCount) || null, annual_revenue: meta.annualRevenue || null, location: meta.location || "Michigan", active: true }, { onConflict: "email" });
+          }
+          if (RESEND_API_KEY && email) {
+            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@notify.m2training.com>", to: [email], subject: "Your AI Grant Finder is active", html: `<p>Hey${meta.businessName ? " " + meta.businessName : ""},</p><p>You're signed up for AI Grant Finder ($149/mo). Your first curated grant report will arrive within 7 days.</p><p>Weekly updates every Monday after that.</p><p>— Matt, M² Development</p>` }) });
+            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@notify.m2training.com>", to: ["matt@m2training.com"], subject: `💰 New Grant Finder Client — ${meta.businessName || email} ($149/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}<br>Location: ${meta.location || "Michigan"}</p>` }) });
+          }
+        } catch (e) { console.error("[WEBHOOK] grant_finder_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      if (meta.type === "review_response_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await (sb.from as any)("review_response_clients").upsert({ email, business_name: meta.businessName || email, phone: meta.phone || null, industry: meta.industry || null, google_place_id: meta.googlePlaceId || null, brand_voice: meta.brandVoice || null, active: true }, { onConflict: "email" });
+          }
+          if (RESEND_API_KEY && email) {
+            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@notify.m2training.com>", to: [email], subject: "Your AI Review Response service is active", html: `<p>Hey${meta.businessName ? " " + meta.businessName : ""},</p><p>You're signed up for AI Review Response Service ($49/mo). Your first daily review response digest will arrive within 24 hours.</p><p>— Matt, M² Development</p>` }) });
+            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@notify.m2training.com>", to: ["matt@m2training.com"], subject: `💰 New Review Response Client — ${meta.businessName || email} ($49/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}</p>` }) });
+          }
+        } catch (e) { console.error("[WEBHOOK] review_response_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      if (meta.type === "battlecard_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            const competitorNames = meta.competitorNames ? meta.competitorNames.split(",") : null;
+            const competitorUrls = meta.competitorUrls ? meta.competitorUrls.split(",") : null;
+            await (sb.from as any)("battlecard_clients").upsert({ email, business_name: meta.businessName || email, phone: meta.phone || null, industry: meta.industry || null, competitor_names: competitorNames, competitor_urls: competitorUrls, active: true }, { onConflict: "email" });
+          }
+          if (RESEND_API_KEY && email) {
+            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@notify.m2training.com>", to: [email], subject: "Your AI Competitive Battlecard is active", html: `<p>Hey${meta.businessName ? " " + meta.businessName : ""},</p><p>You're signed up for AI Competitive Battlecard ($39/mo). Your first battlecard will arrive within 48 hours.</p><p>Monthly updates on the 1st after that.</p><p>— Matt, M² Development</p>` }) });
+            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@notify.m2training.com>", to: ["matt@m2training.com"], subject: `💰 New Battlecard Client — ${meta.businessName || email} ($39/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Competitors: ${meta.competitorNames || "n/a"}</p>` }) });
+          }
+        } catch (e) { console.error("[WEBHOOK] battlecard_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      if (meta.type === "market_intel_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            const focusTopics = meta.focusTopics ? meta.focusTopics.split(",") : null;
+            const competitors = meta.competitors ? meta.competitors.split(",") : null;
+            await (sb.from as any)("market_intel_clients").upsert({ email, business_name: meta.businessName || email, phone: meta.phone || null, industry: meta.industry || null, focus_topics: focusTopics, competitors, location: meta.location || "Michigan", active: true }, { onConflict: "email" });
+          }
+          if (RESEND_API_KEY && email) {
+            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@notify.m2training.com>", to: [email], subject: "Your AI Market Intelligence Brief is active", html: `<p>Hey${meta.businessName ? " " + meta.businessName : ""},</p><p>You're signed up for AI Weekly Market Intelligence ($49/mo). Your first brief will arrive next Monday morning.</p><p>— Matt, M² Development</p>` }) });
+            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@notify.m2training.com>", to: ["matt@m2training.com"], subject: `💰 New Market Intel Client — ${meta.businessName || email} ($49/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}<br>Location: ${meta.location || "Michigan"}</p>` }) });
+          }
+        } catch (e) { console.error("[WEBHOOK] market_intel_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
 
     // Handle guide purchases (existing logic)
     if (event.type === "checkout.session.completed") {
