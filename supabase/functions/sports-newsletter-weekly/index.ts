@@ -114,21 +114,19 @@ serve(async (req) => {
     const challenge = challengeRes.data;
     const issueNumber = (sendCountRes.count ?? 0) + 1;
 
-    // Generate newsletter content via AI
+    // Generate newsletter content via AI (with endpoint fallback + safe fallback body)
     const weekOf = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric" });
-    const aiRes = await fetch("https://api.lovable.ai/openai/v1/chat/completions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${LOVABLE_API_KEY}` },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          {
-            role: "system",
-            content: `You are Matt Michels, strength coach with 20+ years experience in Grosse Pointe, MI. You write a weekly performance newsletter called "The M² Brief" for athletes, parents, and coaches. Your voice is direct, knowledgeable, no-BS, and genuinely cares about helping youth athletes develop safely. You write in short paragraphs, use real coaching knowledge, and always end with an actionable takeaway.`,
-          },
-          {
-            role: "user",
-            content: `Write this week's M² Brief newsletter for the week of ${weekOf}.
+
+    const aiPayload = {
+      model: "google/gemini-2.5-flash",
+      messages: [
+        {
+          role: "system",
+          content: `You are Matt Michels, strength coach with 20+ years experience in Grosse Pointe, MI. You write a weekly performance newsletter called "The M² Brief" for athletes, parents, and coaches. Your voice is direct, knowledgeable, no-BS, and genuinely cares about helping youth athletes develop safely. You write in short paragraphs, use real coaching knowledge, and always end with an actionable takeaway.`,
+        },
+        {
+          role: "user",
+          content: `Write this week's M² Brief newsletter for the week of ${weekOf}.
 
 ${focus ? `This month's training focus: ${focus.topic} — "${focus.matt_quote}"` : ""}
 ${challenge ? `Active challenge: ${challenge.title} — ${challenge.description}` : ""}
@@ -151,18 +149,69 @@ Structure the newsletter with these exact sections (use ## for headers):
 [Mention the active challenge, encourage participation, give a tip to do better at it]
 
 Keep it under 400 words total. Write like you're talking to a parent driving their kid to practice. No fluff.`,
-          },
-        ],
-        temperature: 0.72,
-        max_tokens: 700,
-      }),
-    });
+        },
+      ],
+      temperature: 0.72,
+      max_tokens: 700,
+    };
 
-    if (!aiRes.ok) throw new Error(`AI generation failed: ${aiRes.status}`);
-    const aiData = await aiRes.json();
-    const newsletterBody = aiData.choices?.[0]?.message?.content || "";
+    const aiEndpoints = [
+      "https://api.lovable.dev/v1/chat/completions",
+      "https://api.lovable.ai/openai/v1/chat/completions",
+    ];
 
-    if (!newsletterBody) throw new Error("AI returned empty newsletter content");
+    let newsletterBody = "";
+    let lastAiError = "";
+
+    for (const endpoint of aiEndpoints) {
+      try {
+        const aiRes = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${LOVABLE_API_KEY}` },
+          body: JSON.stringify(aiPayload),
+        });
+
+        if (!aiRes.ok) {
+          const errorText = await aiRes.text();
+          lastAiError = `${endpoint} returned ${aiRes.status}: ${errorText}`;
+          continue;
+        }
+
+        const aiData = await aiRes.json();
+        newsletterBody = aiData.choices?.[0]?.message?.content?.trim() || "";
+
+        if (newsletterBody) {
+          log("AI generation succeeded", { endpoint });
+          break;
+        }
+
+        lastAiError = `${endpoint} returned empty content`;
+      } catch (error) {
+        lastAiError = `${endpoint} failed: ${error instanceof Error ? error.message : String(error)}`;
+      }
+    }
+
+    if (!newsletterBody) {
+      log("AI generation failed — using fallback newsletter template", { lastAiError });
+      newsletterBody = [
+        "## This Week's Training Truth",
+        "Most youth athletes aren’t limited by talent — they’re limited by recovery. If your athlete is dragging into practice, the first fix is sleep and hydration before adding extra work.",
+        "",
+        "## The Weekly Drill",
+        "Split-Stance Med Ball Rotational Throw — 3 sets of 6 reps/side. This builds game-speed rotational power and teaches force transfer from the ground up. Common mistake: throwing with only the arms instead of driving through the hips.",
+        "",
+        "## Nutrition for Athletes",
+        "A simple pre-practice win: 25–40g carbs + 15–20g protein 60–90 minutes before training (like a banana and Greek yogurt). Better energy in session = better reps and better adaptation.",
+        "",
+        "## Matt's Take",
+        "Year-round sport pressure is real. What separates long-term athletes isn’t constant intensity — it’s consistency, smart deloads, and coaching that respects development timelines.",
+        "",
+        "## This Week's Challenge Spotlight",
+        challenge
+          ? `${challenge.title}: ${challenge.description}. My tip: set one measurable daily target so progress is obvious by Friday.`
+          : "No active challenge this week — set a 5-day consistency streak (sleep, fuel, and 30+ quality training minutes) and hold yourself to it.",
+      ].join("\n");
+    }
 
     const subject = `M² Brief #${issueNumber} — Week of ${weekOf}`;
     const html = buildNewsletterHtml(subject, newsletterBody, issueNumber);
