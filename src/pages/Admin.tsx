@@ -307,6 +307,7 @@ const Admin = () => {
             { key: "ops", label: "Ops Center", content: <AdminOpsCenter /> },
             { key: "pipeline", label: "Pipeline", content: <AdminB2BPipeline /> },
             { key: "social-setup", label: "Social Media Setup", content: <AdminSocialMediaOnboarding /> },
+            { key: "email-log", label: "📧 Email Log", content: <AdminEmailLog /> },
           ]} />
         )}
 
