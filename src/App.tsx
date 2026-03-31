@@ -208,6 +208,10 @@ const TradeShowFollowUp = lazyRetry(() => import("./pages/TradeShowFollowUp"));
 const TestimonialHarvester = lazyRetry(() => import("./pages/TestimonialHarvester"));
 const NewMoverMarketing = lazyRetry(() => import("./pages/NewMoverMarketing"));
 const AnnualBusinessReview = lazyRetry(() => import("./pages/AnnualBusinessReview"));
+const LegalPage = lazyRetry(() => import("./pages/LegalPage"));
+const CookieBanner = lazyRetry(() => import("./components/layout/CookieBanner"));
+const LegalFooterLazy = lazyRetry(() => import("./components/layout/LegalFooter"));
+const PartnerProgram = lazyRetry(() => import("./pages/PartnerProgram"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
