@@ -69,8 +69,7 @@ serve(async (req) => {
             "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash-lite", 
-        system: systemPrompt,
-        messages }) });
+        messages: [{ role: "system", content: systemPrompt }, ...messages] }) });
 
     const aiData = await aiRes.json();
     const response = (aiData?.choices?.[0]?.message?.content || "Thanks for reaching out! How can I help you today?").trim();

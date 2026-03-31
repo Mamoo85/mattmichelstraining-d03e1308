@@ -182,9 +182,8 @@ serve(async (req) => {
             "Content-Type": "application/json" },
           body: JSON.stringify({
             model: "google/gemini-2.5-flash-lite", 
-            system:
-              "You are Matt Michels, local business consultant in Grosse Pointe MI. Casual, direct, personal tone.",
             messages: [
+              { role: "system", content: "You are Matt Michels, local business consultant in Grosse Pointe MI. Casual, direct, personal tone." },
               {
                 role: "user",
                 content: `Write a SHORT email (under 120 words) to ${businessName}, a ${industry || "local business"} in ${city}. Introduce these services that could help them grow, and encourage them to reply or visit mattmichelstraining.com to learn more. Keep it friendly and local. Do not add a subject line. Start with "Hey —". End with "— Matt". Here are the services to highlight:\n${serviceList}` },
