@@ -127,7 +127,7 @@ export default function AthleteStats({
             {DAY_LABELS.map((d, i) => (
               <div key={i} className="flex flex-col items-center gap-0.5">
                 <div
-                  className={`w-4 h-4 rounded-sm flex items-center justify-center text-[7px] font-black transition-all ${
+                  className={`w-4 h-4 rounded-sm flex items-center justify-center text-xs font-black transition-all ${
                     i < weekDots
                       ? 'bg-green-500 text-black shadow-[0_0_6px_rgba(34,197,94,0.5)]'
                       : 'bg-white/8 text-white/25'
