@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Home, MapPin, ArrowRight, CheckCircle, Loader2, TrendingUp, BarChart3, Shield } from "lucide-react";
+import { trackLeadCapture } from "@/lib/gtag";
 
 const SAMPLE_MARKETS = [
   { market: "Austin, TX", median: "$485,000", change: "+4.2%", inventory: "Low", hotness: 95 },

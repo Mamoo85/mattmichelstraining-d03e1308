@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { FileText, DollarSign, ArrowRight, CheckCircle, Loader2, Shield, Clock, Target } from "lucide-react";
+import { trackLeadCapture } from "@/lib/gtag";
 
 const SAMPLE_GRANTS = [
   { name: "SBA Community Advantage Loan", amount: "$50K–$250K", deadline: "Rolling", match: "92%", type: "Federal" },
