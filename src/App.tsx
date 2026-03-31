@@ -523,6 +523,8 @@ const App = () => (
               <ProveItWrapper />
               
               
+              <Suspense fallback={null}><LegalFooterLazy /></Suspense>
+              <Suspense fallback={null}><CookieBanner /></Suspense>
               <Suspense fallback={null}><BottomTabBar /></Suspense>
               <Suspense fallback={null}><OfflineBadge /></Suspense>
             </BrowserRouter>
