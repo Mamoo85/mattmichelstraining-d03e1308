@@ -40,17 +40,9 @@ const LiftChat = ({ logId, userId }: LiftChatProps) => {
   useEffect(() => {
     fetchMessages();
 
-    // Real-time subscription
-    const channel = supabase
-      .channel(`lift-chat-${logId}`)
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "lift_messages", filter: `progress_log_id=eq.${logId}` },
-        () => fetchMessages()
-      )
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
+    // Poll for new messages every 5 seconds
+    const interval = setInterval(fetchMessages, 5000);
+    return () => clearInterval(interval);
   }, [logId, fetchMessages]);
 
   // Auto-show if there are messages
