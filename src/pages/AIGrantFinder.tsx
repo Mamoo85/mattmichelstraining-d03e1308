@@ -5,6 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Search, DollarSign, Calendar, Target, CheckCircle } from "lucide-react";
+import SEOHead from "@/components/layout/SEOHead";
+import { trackCheckoutStart } from "@/lib/gtag";
 
 export default function AIGrantFinder() {
   const { toast } = useToast();
