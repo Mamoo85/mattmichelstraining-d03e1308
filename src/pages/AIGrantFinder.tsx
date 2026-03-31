@@ -91,5 +91,6 @@ export default function AIGrantFinder() {
         </Card>
       </div>
     </div>
+    </>
   );
 }
