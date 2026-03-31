@@ -402,6 +402,11 @@ const App = () => (
                     <Route path="/warranty-reminders" element={<WarrantyReminders />} />
                     <Route path="/hiring-assistant" element={<HiringAssistant />} />
                     <Route path="/kpi-email" element={<KPIEmail />} />
+                    <Route path="/ai-onboarding-agent" element={<AIOnboardingAgent />} />
+                    <Route path="/ai-social-proof" element={<AISocialProof />} />
+                    <Route path="/ai-price-monitor" element={<AIPriceMonitor />} />
+                    <Route path="/ai-meeting-prep" element={<AIMeetingPrep />} />
+                    <Route path="/ai-directory-submitter" element={<AIDirectorySubmitter />} />
                     <Route path="/partners" element={<B2BPartnerPortal />} />
                     <Route path="/sports-camps" element={<CampDirectory />} />
                     <Route path="/free-program" element={<FreeProgram />} />
