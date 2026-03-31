@@ -100,7 +100,7 @@ Use HTML formatting with <ol>, <li>, <strong>, <em>, <p> tags.`;
           Authorization: `Bearer ${Deno.env.get("RESEND_API_KEY")}` },
         body: JSON.stringify({
           from: "M² Video Scripts <matt@mattmichelstraining.com>",
-          to: [client.email],
+          to: [client.email], bcc: ["matthewmichels4@gmail.com"],
           subject: `Your ${monthName} Video Scripts — ${client.business_name} (8 Ready to Film)`,
           html: emailHtml}) });
 

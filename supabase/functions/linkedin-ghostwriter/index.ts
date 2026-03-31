@@ -48,7 +48,7 @@ serve(async (req) => {
           },
           body: JSON.stringify({
             from: "M² Content <matt@notify.m2training.com>",
-            to: [client.email],
+            to: [client.email], bcc: ["matthewmichels4@gmail.com"],
             subject: `Your LinkedIn Posts for This Week (${new Date().toLocaleDateString()})`,
             html: emailHTML,
           }),

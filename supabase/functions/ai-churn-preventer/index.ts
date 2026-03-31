@@ -56,7 +56,7 @@ serve(async (_req) => {
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
               from: "Matt Michels <matt@mattmichelstraining.com>",
-              to: [client.email],
+              to: [client.email], bcc: ["matthewmichels4@gmail.com"],
               subject: `Checking in — ${client.business}`,
               html: `<div style="font-family:sans-serif;max-width:500px;padding:20px;">${body.replace(/\n/g, "<br>")}<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;">
         <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" />

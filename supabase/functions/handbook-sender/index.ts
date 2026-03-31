@@ -79,7 +79,7 @@ Format as a clean HTML email with sections, bullet points, and action items. Use
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
             from: "M² Development <matt@mattmichelstraining.com>",
-            to: [client.email],
+            to: [client.email], bcc: ["matthewmichels4@gmail.com"],
             subject: `${client.business_name} — Monthly Employee Handbook Update`,
             html: `<div style="font-family:Arial,sans-serif;max-width:700px;margin:0 auto;background:#1a1a2e;color:#e0e0e0;padding:32px;border-radius:12px;">
               <div style="text-align:center;margin-bottom:24px;">

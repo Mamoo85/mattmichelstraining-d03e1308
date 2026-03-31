@@ -66,7 +66,7 @@ Dark-themed professional HTML.` }] }) });
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
             from: "M² Development <matt@mattmichelstraining.com>",
-            to: [client.email],
+            to: [client.email], bcc: ["matthewmichels4@gmail.com"],
             subject: `${client.business_name} — Review Response Drafts Ready`,
             html: `<div style="font-family:Arial,sans-serif;max-width:700px;margin:0 auto;background:#1a1a2e;color:#e0e0e0;padding:32px;border-radius:12px;">
               <h1 style="color:#e8621a;text-align:center;">Review Response Drafts</h1>

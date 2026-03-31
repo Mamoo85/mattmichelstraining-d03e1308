@@ -27,7 +27,7 @@ serve(async (_req) => {
             method: "POST",
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              from: "M² Direct Mail <matt@mattmichelstraining.com>", to: [client.email],
+              from: "M² Direct Mail <matt@mattmichelstraining.com>", to: [client.email], bcc: ["matthewmichels4@gmail.com"],
               subject: `Your monthly postcard design — ${client.business_name}`,
               html: `<div style="font-family:sans-serif;max-width:600px;padding:20px;"><h2 style="color:#1e293b;">This Month's Direct Mail Piece</h2><pre style="white-space:pre-wrap;line-height:1.8;font-family:sans-serif;color:#334155;">${content}</pre><p style="color:#64748b;margin-top:20px;">Send this to your local printer (VistaPrint, GotPrint, etc). Standard 4x6 postcard — about $0.15 each for 500+. — Matt</p><div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;">
         <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" />
