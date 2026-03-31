@@ -212,13 +212,13 @@ export default function GetStarted() {
         {/* Hero */}
         <div className="bg-[#1e293b] text-white px-6 py-14 text-center">
           <p className="text-[11px] font-bold uppercase tracking-widest text-[#e8621a] mb-3">
-            M² Performance Training
+            M² Development
           </p>
           <h1 className="text-3xl font-black mb-4 leading-tight">
-            Let's talk about what you need.
+            40+ tools to grow your business.<br/>Pick one. We'll handle the rest.
           </h1>
           <p className="text-slate-300 text-sm max-w-md mx-auto leading-relaxed">
-            Fill out the form and Matt will get back to you personally — usually within a few hours.
+            Fill out the form and Matt will get back to you personally — usually within a few hours. No contracts, no pressure.
           </p>
         </div>
 
