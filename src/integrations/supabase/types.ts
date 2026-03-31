@@ -6350,8 +6350,10 @@ export type Database = {
           description: string | null
           email: string | null
           id: string
+          monthly_retainer: boolean | null
           name: string | null
           notes: string | null
+          site_url: string | null
           status: string
           updated_at: string
         }
@@ -6361,8 +6363,10 @@ export type Database = {
           description?: string | null
           email?: string | null
           id?: string
+          monthly_retainer?: boolean | null
           name?: string | null
           notes?: string | null
+          site_url?: string | null
           status?: string
           updated_at?: string
         }
@@ -6372,8 +6376,10 @@ export type Database = {
           description?: string | null
           email?: string | null
           id?: string
+          monthly_retainer?: boolean | null
           name?: string | null
           notes?: string | null
+          site_url?: string | null
           status?: string
           updated_at?: string
         }
