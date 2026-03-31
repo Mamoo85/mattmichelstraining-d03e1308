@@ -78,6 +78,8 @@ const AdminImageMatcher = lazy(() => import("@/components/admin/AdminImageMatche
 const AdminWebDesignCRM = lazy(() => import("@/components/admin/AdminWebDesignCRM"));
 const AdminProspector = lazy(() => import("@/components/admin/AdminProspector"));
 const AdminAutomationHub = lazy(() => import("@/components/admin/AdminAutomationHub"));
+const AdminM2GrowthHub = lazy(() => import("@/components/admin/AdminM2GrowthHub"));
+const AdminAdCampaigns = lazy(() => import("@/components/admin/AdminAdCampaigns"));
 const AdminWebDesignAutomations = lazy(() => import("@/components/admin/AdminWebDesignAutomations"));
 const AdminClientHealth = lazy(() => import("@/components/admin/AdminClientHealth"));
 const AdminGiftCards = lazy(() => import("@/components/admin/AdminGiftCards"));
@@ -416,12 +418,14 @@ const Admin = () => {
         {/* ── GROWTH ── */}
         {activeTab === "growth" && (
           <SubTabs tabs={[
+            { key: "m2-hub", label: "🚀 M² Self-Service", content: <AdminM2GrowthHub /> },
+            { key: "ad-campaigns", label: "⚡ Ad Campaigns", content: <AdminAdCampaigns /> },
             { key: "outreach", label: "Outreach", content: <AdminOutreach /> },
             { key: "seo-pages", label: "SEO Pages", content: <AdminSeoPages /> },
             { key: "gbp", label: "GBP Posts", content: <AdminGbpPosts /> },
             { key: "instagram", label: "Instagram", content: <AdminInstagramPosts /> },
             { key: "content-gen", label: "Content Generator", content: <AdminContentGenerator /> },
-          ]} />
+          ]} defaultTab="m2-hub" />
         )}
 
         {/* ── WEB DESIGN ── */}

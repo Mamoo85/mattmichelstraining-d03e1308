@@ -264,6 +264,7 @@ verify_jwt = false
 [functions.create-trucking-docs-checkout]
 verify_jwt = false
 
+<<<<<<< HEAD
 [functions.create-appointment-reminder-checkout]
 verify_jwt = false
 
@@ -448,6 +449,9 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.create-winback-sms-checkout]
+verify_jwt = false
+
+[functions.generate-ad-campaign]
 verify_jwt = false
 
 # ── CRON SCHEDULES ─────────────────────────────────────────────────────────────
