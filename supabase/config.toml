@@ -620,3 +620,6 @@ verify_jwt = false
 
 [functions.create-missed-call-subscription]
 verify_jwt = false
+
+[functions.deliver-sample-report]
+verify_jwt = false

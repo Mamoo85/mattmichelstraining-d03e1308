@@ -128,6 +128,9 @@ const IndustrialNewsletter = lazyRetry(() => import("./pages/IndustrialNewslette
 const MissedCallSaaS = lazyRetry(() => import("./pages/MissedCallSaaS"));
 const B2BPartnerPortal = lazyRetry(() => import("./pages/B2BPartnerPortal"));
 const AINewsletterService = lazyRetry(() => import("./pages/AINewsletterService"));
+const FreeTrendingProducts = lazyRetry(() => import("./pages/FreeTrendingProducts"));
+const FreeGrantDigest = lazyRetry(() => import("./pages/FreeGrantDigest"));
+const FreeRealEstateDigest = lazyRetry(() => import("./pages/FreeRealEstateDigest"));
 const AIMedSpaMarketing = lazyRetry(() => import("./pages/AIMedSpaMarketing"));
 const AIRealEstateDrip = lazyRetry(() => import("./pages/AIRealEstateDrip"));
 const AIPodcastShowNotes = lazyRetry(() => import("./pages/AIPodcastShowNotes"));
@@ -392,6 +395,9 @@ const App = () => (
                     <Route path="/industrial-newsletter" element={<IndustrialNewsletter />} />
                     <Route path="/missed-call-text" element={<MissedCallSaaS />} />
                     <Route path="/ai-newsletter-service" element={<AINewsletterService />} />
+                    <Route path="/free-trending-products" element={<FreeTrendingProducts />} />
+                    <Route path="/free-grant-digest" element={<FreeGrantDigest />} />
+                    <Route path="/free-real-estate-digest" element={<FreeRealEstateDigest />} />
                     <Route path="/ai-med-spa-marketing" element={<AIMedSpaMarketing />} />
                     <Route path="/ai-real-estate-drip" element={<AIRealEstateDrip />} />
                     <Route path="/ai-podcast-show-notes" element={<AIPodcastShowNotes />} />
