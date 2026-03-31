@@ -228,6 +228,26 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
         }
       }
 
+      // Notify all admins about the new activity
+      try {
+        const { data: adminRoles } = await supabase
+          .from("user_roles")
+          .select("user_id")
+          .eq("role", "admin");
+        if (adminRoles && adminRoles.length > 0) {
+          const notifications = adminRoles.map((ar: any) => ({
+            user_id: ar.user_id,
+            type: "activity_logged",
+            title: "New Activity Logged",
+            body: `${summary.activity_type} logged${targetUserId ? " (admin)" : ""}`,
+            link: `/admin/view-user/${saveUserId}`,
+          }));
+          await supabase.from("notifications").insert(notifications);
+        }
+      } catch (notifErr) {
+        console.error("Notification insert error:", notifErr);
+      }
+
       toast({ title: "Activity logged! 💪", description: summary.ai_summary });
       onClose();
     } catch (e: any) {
