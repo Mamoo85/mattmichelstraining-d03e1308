@@ -274,7 +274,7 @@ const ZoneDashboard = () => {
             <img src={logoImg} alt="M²" className="h-8 w-8 object-contain" />
           </button>
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.25em]" style={{ color: "#f97316" }}>THE ZONE</p>
+            <p className="text-xs font-bold uppercase tracking-[0.25em]" style={{ color: "#f97316" }}>THE ZONE</p>
             <p className="text-sm font-semibold leading-tight" style={{ color: "#fafafa" }}>{displayName}</p>
           </div>
         </div>
