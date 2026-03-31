@@ -611,3 +611,12 @@ schedule = "0 13 3 * *"
 
 [functions.faq-refresh-sender]
 schedule = "0 14 3 * *"
+
+[functions.create-guide-payment]
+verify_jwt = false
+
+[functions.create-gbp-subscription]
+verify_jwt = false
+
+[functions.create-missed-call-subscription]
+verify_jwt = false
