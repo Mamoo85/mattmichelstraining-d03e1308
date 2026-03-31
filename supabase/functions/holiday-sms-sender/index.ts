@@ -30,7 +30,7 @@ interface HolidayContact {
 
 async function generateHolidayMessage(client: HolidayClient, holiday: string): Promise<string> {
   if (!LOVABLE_API_KEY) return `Happy ${holiday} from ${client.business_name}! Reply STOP to opt out.`;
-  const res = await fetch("https://ai.lovable.dev/api/chat", {
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({

@@ -24,7 +24,7 @@ serve(async (_req) => {
         else if (daysSinceCreated === 7) emailType = "checkin";
         else continue; // No email due today
 
-        const aiRes = await fetch("https://ai.lovable.dev/api/chat", {
+        const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
           headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({

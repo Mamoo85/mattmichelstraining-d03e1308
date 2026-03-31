@@ -37,7 +37,7 @@ serve(async (req) => {
         let campaignText = `Hey! ${client.business_name} here. Hope your month is going great! Reply STOP to unsubscribe.`;
         if (LOVABLE_API_KEY) {
           try {
-            const claudeRes = await fetch("https://ai.lovable.dev/api/chat", {
+            const claudeRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
               method: "POST",
               headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
               body: JSON.stringify({
