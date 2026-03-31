@@ -413,6 +413,92 @@ export type Database = {
         }
         Relationships: []
       }
+      b2b_referral_conversions: {
+        Row: {
+          client_email: string
+          commission_amount: number
+          created_at: string
+          id: string
+          paid_at: string | null
+          partner_id: string
+          service_type: string
+          status: string
+          stripe_session_id: string | null
+        }
+        Insert: {
+          client_email: string
+          commission_amount?: number
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          partner_id: string
+          service_type: string
+          status?: string
+          stripe_session_id?: string | null
+        }
+        Update: {
+          client_email?: string
+          commission_amount?: number
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          partner_id?: string
+          service_type?: string
+          status?: string
+          stripe_session_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "b2b_referral_conversions_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "b2b_referral_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      b2b_referral_partners: {
+        Row: {
+          commission_type: string
+          commission_value: number
+          created_at: string
+          email: string
+          id: string
+          name: string
+          payout_handle: string | null
+          payout_threshold: number
+          referral_code: string
+          status: string
+          total_earned: number
+        }
+        Insert: {
+          commission_type?: string
+          commission_value?: number
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          payout_handle?: string | null
+          payout_threshold?: number
+          referral_code: string
+          status?: string
+          total_earned?: number
+        }
+        Update: {
+          commission_type?: string
+          commission_value?: number
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          payout_handle?: string | null
+          payout_threshold?: number
+          referral_code?: string
+          status?: string
+          total_earned?: number
+        }
+        Relationships: []
+      }
       battlecard_clients: {
         Row: {
           active: boolean | null
@@ -5045,6 +5131,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      session_referral_rewards: {
+        Row: {
+          created_at: string
+          credited_at: string | null
+          id: string
+          note: string | null
+          redeemed_at: string | null
+          referred_friend_email: string
+          referrer_user_id: string
+          session_type: string
+          status: string
+          stripe_session_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          credited_at?: string | null
+          id?: string
+          note?: string | null
+          redeemed_at?: string | null
+          referred_friend_email: string
+          referrer_user_id: string
+          session_type?: string
+          status?: string
+          stripe_session_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          credited_at?: string | null
+          id?: string
+          note?: string | null
+          redeemed_at?: string | null
+          referred_friend_email?: string
+          referrer_user_id?: string
+          session_type?: string
+          status?: string
+          stripe_session_id?: string | null
+        }
+        Relationships: []
       }
       shared_workout_results: {
         Row: {

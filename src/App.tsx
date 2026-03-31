@@ -208,6 +208,10 @@ const TradeShowFollowUp = lazyRetry(() => import("./pages/TradeShowFollowUp"));
 const TestimonialHarvester = lazyRetry(() => import("./pages/TestimonialHarvester"));
 const NewMoverMarketing = lazyRetry(() => import("./pages/NewMoverMarketing"));
 const AnnualBusinessReview = lazyRetry(() => import("./pages/AnnualBusinessReview"));
+const LegalPage = lazyRetry(() => import("./pages/LegalPage"));
+const CookieBanner = lazyRetry(() => import("./components/layout/CookieBanner"));
+const LegalFooterLazy = lazyRetry(() => import("./components/layout/LegalFooter"));
+const PartnerProgram = lazyRetry(() => import("./pages/PartnerProgram"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -489,6 +493,8 @@ const App = () => (
                     <Route path="/testimonial-harvester" element={<TestimonialHarvester />} />
                     <Route path="/new-mover-marketing" element={<NewMoverMarketing />} />
                     <Route path="/annual-business-review" element={<AnnualBusinessReview />} />
+                    <Route path="/legal/:type" element={<LegalPage />} />
+                    <Route path="/partner-program" element={<PartnerProgram />} />
                     <Route path="/partners" element={<B2BPartnerPortal />} />
                     <Route path="/sports-camps" element={<CampDirectory />} />
                     <Route path="/free-program" element={<FreeProgram />} />
@@ -517,6 +523,8 @@ const App = () => (
               <ProveItWrapper />
               
               
+              <Suspense fallback={null}><LegalFooterLazy /></Suspense>
+              <Suspense fallback={null}><CookieBanner /></Suspense>
               <Suspense fallback={null}><BottomTabBar /></Suspense>
               <Suspense fallback={null}><OfflineBadge /></Suspense>
             </BrowserRouter>
