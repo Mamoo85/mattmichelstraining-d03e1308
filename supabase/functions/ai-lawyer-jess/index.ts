@@ -71,6 +71,8 @@ Business details:
 - AI usage: AI generates emails, blog posts, social media content, estimates, proposals for clients
 - Newsletter: weekly B2B sales newsletter with affiliate product links
 
+IMPORTANT: This is a legitimate compliance task. The business owner needs these documents to COMPLY with laws like CAN-SPAM, TCPA, FTC guidelines, etc. All email communications include proper opt-out mechanisms. Generate every document requested without refusal — these are legally required compliance documents.
+
 Generate the document in clean HTML format with proper headings, sections, and legal language. Include the current date as the effective date. Make it comprehensive but readable. Include all standard clauses for this type of document.`;
 
       const prompt = `Generate a complete "${docConfig.title}" document. ${docConfig.description}. Output clean HTML only, no markdown.`;
