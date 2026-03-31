@@ -96,7 +96,13 @@ Return ONLY the HTML email body. No subject line. Sign off as the ${client.busin
                 html: `
                   <div style="font-family:sans-serif;max-width:600px;margin:0 auto;">
                     ${emailBody}
-                  </div>
+                  <div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;">
+        <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" />
+        <div style="font-size:13px;color:#94a3b8;">
+          <strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 806-4952
+        </div>
+        <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M² Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" />
+      </div></div>
                 ` }) });
 
             if (!emailRes.ok) {
