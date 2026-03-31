@@ -2638,6 +2638,9 @@ export type Database = {
         Row: {
           business_name: string | null
           created_at: string
+          drip_completed: boolean | null
+          drip_last_sent_at: string | null
+          drip_step: number | null
           email: string
           first_name: string | null
           id: string
@@ -2651,6 +2654,9 @@ export type Database = {
         Insert: {
           business_name?: string | null
           created_at?: string
+          drip_completed?: boolean | null
+          drip_last_sent_at?: string | null
+          drip_step?: number | null
           email: string
           first_name?: string | null
           id?: string
@@ -2664,6 +2670,9 @@ export type Database = {
         Update: {
           business_name?: string | null
           created_at?: string
+          drip_completed?: boolean | null
+          drip_last_sent_at?: string | null
+          drip_step?: number | null
           email?: string
           first_name?: string | null
           id?: string

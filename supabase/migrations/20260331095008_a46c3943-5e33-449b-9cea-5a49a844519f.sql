@@ -1,0 +1,4 @@
+ALTER TABLE public.marketing_leads 
+  ADD COLUMN IF NOT EXISTS drip_step INTEGER DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS drip_last_sent_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS drip_completed BOOLEAN DEFAULT false;
