@@ -523,6 +523,12 @@ serve(async (req) => {
     let emailed = 0;
     const newLeads: string[] = [];
 
+    // Check daily volume cap before sending any emails
+    const capReached = await checkDailyVolumeCap(serviceClient);
+    if (capReached) {
+      log("Daily volume cap reached (40 emails). Discovery only, no sends.");
+    }
+
     for (const place of places) {
       if (queued >= limit) break;
 
@@ -546,11 +552,10 @@ serve(async (req) => {
 
         if (existing && existing.length > 0) { skipped++; continue; }
 
-        // Step 2: Try to scrape email from their website
+        // Try to scrape email from their website
         let contactEmail: string | null = null;
         if (website) {
           contactEmail = await scrapeEmailFromWebsite(website);
-          // Also try /contact page
           if (!contactEmail) {
             const contactUrl = website.replace(/\/$/, "") + "/contact";
             contactEmail = await scrapeEmailFromWebsite(contactUrl);
@@ -573,35 +578,49 @@ serve(async (req) => {
           }
         }
 
-        // Step 3: Generate outreach email
-        const outreachEmail = await generateOutreachEmail(businessName, industry, city, LOVABLE_API_KEY);
-        const emailLines = outreachEmail.split("\n");
-        const subjectLine = emailLines.find(l => l.startsWith("SUBJECT:"))?.replace("SUBJECT:", "").trim()
-          || `Your ${industry} business could be getting more calls`;
-        const emailBody = emailLines.slice(emailLines.findIndex(l => l === "---") + 1).join("\n").trim();
-        const emailBodyHtml = emailBody.replace(/\n/g, "<br>");
+        // ── AGENT 1: THE SCOUT — Qualify the lead ──
+        const scoutResult = await runScoutAgent(
+          businessName, industry, city, website, rating, reviewCount, LOVABLE_API_KEY
+        );
+        log("Scout result", { business: businessName, score: scoutResult.lead_score, service: scoutResult.target_service_to_pitch, flaw: scoutResult.custom_flaw_observation });
 
-        // Step 4: Auto-send if we have an email address
+        // ── AGENT 2: THE SNIPER — Write & send email if score >= 7 ──
         let emailStatus = "no_email";
-        if (contactEmail && RESEND_API_KEY) {
+        let subjectLine = "";
+        let emailBody = "";
+
+        if (scoutResult.lead_score >= 7 && contactEmail && RESEND_API_KEY && !capReached) {
+          const sniperOutput = await runSniperAgent(
+            businessName, industry, city,
+            scoutResult.custom_flaw_observation, scoutResult.target_service_to_pitch, LOVABLE_API_KEY
+          );
+
+          const emailLines = sniperOutput.split("\n");
+          subjectLine = emailLines.find(l => l.startsWith("SUBJECT:"))?.replace("SUBJECT:", "").trim()
+            || `Quick observation about ${businessName}`;
+          emailBody = emailLines.slice(emailLines.findIndex(l => l === "---") + 1).join("\n").trim();
+          const emailBodyHtml = emailBody.replace(/\n/g, "<br>");
+
           const sent = await sendColdEmail(contactEmail, subjectLine, emailBodyHtml, RESEND_API_KEY);
           if (sent) {
             emailStatus = "sent";
             emailed++;
-            // Log the send
             await serviceClient.from("email_send_log").insert({
               recipient_email: contactEmail,
               template_name: "cold_outreach",
               status: "sent",
-              metadata: { business: businessName, industry, city, gap_score: gapScore },
+              metadata: { business: businessName, industry, city, gap_score: gapScore, lead_score: scoutResult.lead_score, agent: "sniper" },
             });
           } else {
             emailStatus = "send_failed";
           }
-          log("Cold email", { business: businessName, email: contactEmail, status: emailStatus });
+          log("Sniper email", { business: businessName, email: contactEmail, status: emailStatus });
+        } else if (scoutResult.lead_score < 7) {
+          emailStatus = "low_score";
+          log("Lead below threshold", { business: businessName, score: scoutResult.lead_score });
         }
 
-        // Step 5: Store lead in CRM
+        // Store lead in CRM with agent data
         const leadStatus = emailStatus === "sent" ? "Emailed" : "new";
         const { data: newLead, error: insertErr } = await serviceClient
           .from("outreach_leads")
@@ -612,7 +631,10 @@ serve(async (req) => {
             city,
             phone,
             website_status: website ? "has_website" : "no_website",
-            notes: `Auto-prospected ${new Date().toLocaleDateString()}. Gap score: ${gapScore}/100. Rating: ${rating} (${reviewCount} reviews). Website: ${website || "NONE"}. Address: ${address}. Email: ${contactEmail || "NOT FOUND"}. Email status: ${emailStatus}\n\nSubject: ${subjectLine}\n\n${emailBody}`,
+            lead_score: scoutResult.lead_score,
+            target_service: scoutResult.target_service_to_pitch,
+            custom_flaw: scoutResult.custom_flaw_observation,
+            notes: `Auto-prospected ${new Date().toLocaleDateString()}. Gap score: ${gapScore}/100. Lead score: ${scoutResult.lead_score}/10. Target: ${scoutResult.target_service_to_pitch}. Flaw: ${scoutResult.custom_flaw_observation}. Rating: ${rating} (${reviewCount} reviews). Website: ${website || "NONE"}. Address: ${address}. Email: ${contactEmail || "NOT FOUND"}. Email status: ${emailStatus}${subjectLine ? `\n\nSubject: ${subjectLine}\n\n${emailBody}` : ""}`,
             status: leadStatus,
           })
           .select("id")
@@ -622,7 +644,7 @@ serve(async (req) => {
 
         queued++;
         newLeads.push(newLead.id);
-        log("Lead processed", { business: businessName, gapScore, email: contactEmail || "none", emailStatus });
+        log("Lead processed", { business: businessName, gapScore, leadScore: scoutResult.lead_score, email: contactEmail || "none", emailStatus });
 
         await new Promise(r => setTimeout(r, 500));
       } catch (err) {
