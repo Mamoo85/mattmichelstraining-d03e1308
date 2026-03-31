@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>M² LinkedIn Thumbnails Generator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700;800;900&family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            oswald: ['Oswald', 'sans-serif'],
+            sans: ['DM Sans', 'sans-serif'],
+          },
+          colors: {
+            m2: '#e8621a',
+            m2dark: '#c94e12',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* LinkedIn aspect ratio: 1200 x 627 */
+    .thumbnail-container {
+      width: 1200px;
+      height: 627px;
+      position: relative;
+      overflow: hidden;
+      background-color: #0a0a0a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .glow-orange {
+      background: radial-gradient(circle at top right, rgba(232, 98, 26, 0.4), transparent 60%);
+    }
+    .glow-cyan {
+      background: radial-gradient(circle at top right, rgba(0, 212, 255, 0.3), transparent 60%);
+    }
+    .glow-mixed {
+      background: radial-gradient(circle at bottom left, rgba(232, 98, 26, 0.3), transparent 50%),
+                  radial-gradient(circle at top right, rgba(168, 85, 247, 0.3), transparent 50%);
+    }
+  </style>
+</head>
+<body class="bg-gray-900 text-white p-10 flex flex-col items-center gap-12">
+
+  <div>
+    <div id="thumb-1" class="thumbnail-container glow-orange border border-white/10 shadow-2xl">
+      <div class="absolute top-12 left-12 flex gap-4 text-m2 opacity-80">
+        <i data-lucide="wrench" class="w-16 h-16"></i>
+        <i data-lucide="zap" class="w-16 h-16"></i>
+      </div>
+      
+      <div class="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-m2/10 border border-m2/20 text-m2 text-xl font-bold uppercase tracking-[0.2em] mb-8">
+        Exclusive Metro Detroit Leads
+      </div>
+      
+      <h1 class="font-oswald text-[110px] font-black uppercase tracking-tight leading-none mb-6 text-white">
+        Contractor <span class="text-transparent bg-clip-text bg-gradient-to-r from-m2 to-m2dark">Lead System</span>
+      </h1>
+      
+      <p class="text-4xl text-gray-400 font-bold tracking-wide mb-16">
+        Roofing <span class="text-m2 mx-2">·</span> HVAC <span class="text-m2 mx-2">·</span> Plumbing <span class="text-m2 mx-2">·</span> Electrical
+      </p>
+      
+      <div class="absolute bottom-0 left-0 w-full bg-m2 py-6">
+        <p class="font-oswald text-4xl font-black uppercase tracking-widest text-white">
+          1 Contractor Per Trade. $399/mo.
+        </p>
+      </div>
+    </div>
+    <button onclick="downloadImage('thumb-1', 'contractor-leads.png')" class="mt-4 w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-lg font-bold">Download Contractor Leads Image</button>
+  </div>
+
+  <div>
+    <div id="thumb-2" class="thumbnail-container glow-cyan border border-white/10 shadow-2xl">
+      <div class="absolute top-12 left-12 text-[#00d4ff] opacity-80">
+        <i data-lucide="briefcase" class="w-16 h-16"></i>
+      </div>
+
+      <div class="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-[#00d4ff]/10 border border-[#00d4ff]/20 text-[#00d4ff] text-xl font-bold uppercase tracking-[0.2em] mb-8">
+        Free B2B Newsletter
+      </div>
+      
+      <h1 class="font-oswald text-[120px] font-black uppercase tracking-tight leading-none mb-6 text-white drop-shadow-[0_0_30px_rgba(0,212,255,0.3)]">
+        Field Rep Weekly
+      </h1>
+      
+      <p class="text-4xl text-gray-400 font-bold tracking-wide mb-16">
+        Written by someone who actually carried a bag.
+      </p>
+      
+      <div class="bg-white/5 border border-white/10 px-12 py-6 rounded-2xl backdrop-blur-sm">
+        <p class="font-oswald text-4xl font-bold uppercase tracking-widest text-[#00d4ff]">
+          1 Tip. 1 Script. 1 Tool. Every Monday.
+        </p>
+      </div>
+    </div>
+    <button onclick="downloadImage('thumb-2', 'field-rep-weekly.png')" class="mt-4 w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-lg font-bold">Download Field Rep Image</button>
+  </div>
+
+  <div>
+    <div id="thumb-3" class="thumbnail-container glow-mixed border border-white/10 shadow-2xl">
+      <div class="absolute top-12 left-12 flex items-center gap-4">
+        <div class="w-16 h-16 rounded-xl bg-gradient-to-br from-m2 to-m2dark flex items-center justify-center font-oswald text-3xl font-black text-white">M²</div>
+        <div class="text-left leading-tight font-oswald text-2xl font-bold uppercase tracking-wide text-white">
+          Training<br><span class="text-m2">& B2B Agency</span>
+        </div>
+      </div>
+
+      <h1 class="font-oswald text-[140px] font-black uppercase tracking-tight leading-none mb-8 text-white">
+        START HERE
+      </h1>
+      
+      <p class="text-4xl text-gray-300 font-bold tracking-wide mb-16 max-w-[800px] leading-snug">
+        See everything M² offers and pick the system that fits you.
+      </p>
+      
+      <div class="flex gap-6 mb-12">
+        <div class="px-6 py-3 border border-white/20 rounded-lg text-2xl font-bold text-gray-400">Coaching</div>
+        <div class="px-6 py-3 border border-white/20 rounded-lg text-2xl font-bold text-gray-400">Web Design</div>
+        <div class="px-6 py-3 border border-white/20 rounded-lg text-2xl font-bold text-gray-400">Lead Gen</div>
+      </div>
+      
+      <div class="bg-m2 px-12 py-5 rounded-xl flex items-center gap-4 shadow-[0_10px_40px_rgba(232,98,26,0.4)]">
+        <p class="font-oswald text-4xl font-black uppercase tracking-widest text-white">
+          View All Systems
+        </p>
+        <i data-lucide="arrow-right" class="w-10 h-10 text-white"></i>
+      </div>
+    </div>
+    <button onclick="downloadImage('thumb-3', 'get-started.png')" class="mt-4 w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-lg font-bold">Download Get Started Image</button>
+  </div>
+
+  <script>
+    lucide.createIcons();
+    
+    function downloadImage(elementId, filename) {
+      const element = document.getElementById(elementId);
+      // Temporarily scale up for better quality
+      html2canvas(element, { 
+        scale: 2,
+        backgroundColor: "#0a0a0a",
+        logging: false
+      }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+    }
+  </script>
+</body>
+</html>
