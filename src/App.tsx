@@ -128,6 +128,9 @@ const IndustrialNewsletter = lazyRetry(() => import("./pages/IndustrialNewslette
 const MissedCallSaaS = lazyRetry(() => import("./pages/MissedCallSaaS"));
 const B2BPartnerPortal = lazyRetry(() => import("./pages/B2BPartnerPortal"));
 const AINewsletterService = lazyRetry(() => import("./pages/AINewsletterService"));
+const FreeTrendingProducts = lazyRetry(() => import("./pages/FreeTrendingProducts"));
+const FreeGrantDigest = lazyRetry(() => import("./pages/FreeGrantDigest"));
+const FreeRealEstateDigest = lazyRetry(() => import("./pages/FreeRealEstateDigest"));
 const AIMedSpaMarketing = lazyRetry(() => import("./pages/AIMedSpaMarketing"));
 const AIRealEstateDrip = lazyRetry(() => import("./pages/AIRealEstateDrip"));
 const AIPodcastShowNotes = lazyRetry(() => import("./pages/AIPodcastShowNotes"));
