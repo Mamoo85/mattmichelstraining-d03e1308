@@ -162,6 +162,11 @@ const DirectMail = lazyRetry(() => import("./pages/DirectMail"));
 const WarrantyReminders = lazyRetry(() => import("./pages/WarrantyReminders"));
 const HiringAssistant = lazyRetry(() => import("./pages/HiringAssistant"));
 const KPIEmail = lazyRetry(() => import("./pages/KPIEmail"));
+const AIOnboardingAgent = lazyRetry(() => import("./pages/AIOnboardingAgent"));
+const AISocialProof = lazyRetry(() => import("./pages/AISocialProof"));
+const AIPriceMonitor = lazyRetry(() => import("./pages/AIPriceMonitor"));
+const AIMeetingPrep = lazyRetry(() => import("./pages/AIMeetingPrep"));
+const AIDirectorySubmitter = lazyRetry(() => import("./pages/AIDirectorySubmitter"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
