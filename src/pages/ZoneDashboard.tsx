@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import ZoneThemeWrapper from "@/components/zone/ZoneThemeWrapper";
 import AthleteStats from "@/components/dashboard/AthleteStats";
-import TodayCard from "@/components/dashboard/TodayCard";
+import AthleteProfileCard from "@/components/dashboard/AthleteProfileCard";
 import CoachActivityBanner from "@/components/dashboard/CoachActivityBanner";
 import logoImg from "@/assets/m2-logo-zone.png";
 import { safeLocalStorage } from "@/lib/browserStorage";
