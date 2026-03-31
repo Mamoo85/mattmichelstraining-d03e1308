@@ -76,6 +76,7 @@ const UserActivityFeed = lazy(() => import("@/components/admin/UserActivityFeed"
 const AdminAiCommandCenter = lazy(() => import("@/components/admin/AdminAiCommandCenter"));
 const AdminImageMatcher = lazy(() => import("@/components/admin/AdminImageMatcher"));
 const AdminWebDesignCRM = lazy(() => import("@/components/admin/AdminWebDesignCRM"));
+const AdminAgencyCRM = lazy(() => import("@/components/admin/AdminAgencyCRM"));
 const AdminProspector = lazy(() => import("@/components/admin/AdminProspector"));
 const AdminAutomationHub = lazy(() => import("@/components/admin/AdminAutomationHub"));
 const AdminWebDesignAutomations = lazy(() => import("@/components/admin/AdminWebDesignAutomations"));
@@ -423,7 +424,8 @@ const Admin = () => {
         {/* ── WEB DESIGN ── */}
         {activeTab === "webdesign" && (
           <SubTabs tabs={[
-            { key: "crm", label: "CRM", content: <AdminWebDesignCRM /> },
+            { key: "fulfillment", label: "Agency CRM", content: <AdminAgencyCRM /> },
+            { key: "crm", label: "Web Design CRM", content: <AdminWebDesignCRM /> },
             { key: "prospector", label: "Prospector", content: <AdminProspector /> },
             { key: "automation", label: "Automation Hub", content: <AdminAutomationHub /> },
             { key: "wd-automations", label: "Email Automations", content: <AdminWebDesignAutomations /> },
