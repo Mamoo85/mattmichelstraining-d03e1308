@@ -131,7 +131,7 @@ serve(async (req) => {
   } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("[FIELD-REP-AI-TOOL] Error:", e);
     return new Response(
-      JSON.stringify({ error: e.message || "Unknown error" }),
+      JSON.stringify({ error: (e instanceof Error ? e.message : String(e)) || "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

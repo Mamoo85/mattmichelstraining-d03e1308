@@ -155,7 +155,7 @@ Generate the document in clean HTML format with proper headings, sections, and l
           const innerData = await innerRes.json();
           results.push({ type: doc.type, success: innerData.success || false });
         } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
-          results.push({ type: doc.type, success: false, error: e.message });
+          results.push({ type: doc.type, success: false, error: (e instanceof Error ? e.message : String(e)) });
         }
       }
       return new Response(JSON.stringify({ results }), {
