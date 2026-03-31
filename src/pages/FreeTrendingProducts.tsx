@@ -43,6 +43,7 @@ export default function FreeTrendingProducts() {
         body: { email, name, report_type: "trending_products" },
       });
 
+      trackLeadCapture("free_trending_products", 29);
       setSubmitted(true);
       toast.success("Check your inbox!");
     } catch (err: any) {

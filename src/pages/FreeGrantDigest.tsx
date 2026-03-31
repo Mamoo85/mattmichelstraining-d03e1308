@@ -44,6 +44,7 @@ export default function FreeGrantDigest() {
         body: { email, name, report_type: "grant_digest", industry },
       });
 
+      trackLeadCapture("free_grant_digest", 29);
       setSubmitted(true);
       toast.success("Check your inbox!");
     } catch (err: any) {

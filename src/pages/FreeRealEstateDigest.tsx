@@ -45,6 +45,7 @@ export default function FreeRealEstateDigest() {
         body: { email, name, report_type: "real_estate_digest", market },
       });
 
+      trackLeadCapture("free_real_estate_digest", 39);
       setSubmitted(true);
       toast.success("Check your inbox!");
     } catch (err: any) {
