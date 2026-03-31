@@ -6,11 +6,11 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 
 async function generatePost(businessName: string, businessType: string, city: string): Promise<string> {
-  if (!ANTHROPIC_API_KEY) return `${businessName} is here to help with all your ${businessType} needs in ${city}. Call us today!`;
+  if (!LOVABLE_API_KEY) return `${businessName} is here to help with all your ${businessType} needs in ${city}. Call us today!`;
 
   const postTypes = [
     `Write a Google Business Profile post for ${businessName}, a ${businessType} in ${city}. Focus on a seasonal tip or service reminder. 1-3 sentences. No hashtags. Sound like a real local business owner, not a marketer.`,
@@ -21,22 +21,17 @@ async function generatePost(businessName: string, businessType: string, city: st
 
   const prompt = postTypes[Math.floor(Date.now() / 86400000) % postTypes.length];
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
-      "x-api-key": ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-      "content-type": "application/json",
-    },
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 200,
-      messages: [{ role: "user", content: prompt }],
-    }),
-  });
+      model: "google/gemini-2.5-flash-lite", 
+      messages: [{ role: "user", content: prompt }] }) });
 
   const data = await res.json();
-  return data.content?.[0]?.text?.trim() || `${businessName} — serving ${city} with quality ${businessType} services. Call today!`;
+  return data?.choices?.[0]?.message?.content?.trim() || `${businessName} — serving ${city} with quality ${businessType} services. Call today!`;
 }
 
 async function postToGBP(locationId: string, accessToken: string, content: string): Promise<boolean> {
@@ -47,14 +42,11 @@ async function postToGBP(locationId: string, accessToken: string, content: strin
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
+          "Content-Type": "application/json" },
         body: JSON.stringify({
           languageCode: "en-US",
           summary: content,
-          topicType: "STANDARD",
-        }),
-      }
+          topicType: "STANDARD" }) }
     );
     return res.ok;
   } catch {
@@ -94,8 +86,7 @@ serve(async (req) => {
       if (success) {
         await sb.from("gbp_saas_clients").update({
           last_post_at: new Date().toISOString(),
-          post_count: (client.post_count || 0) + 1,
-        }).eq("id", client.id);
+          post_count: (client.post_count || 0) + 1 }).eq("id", client.id);
         posted++;
       } else {
         // GBP not connected yet — save the content and email Matt to follow up
@@ -105,12 +96,10 @@ serve(async (req) => {
             method: "POST",
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              from: "M² Local Marketing <matt@notify.m2training.com>",
+              from: "M² Local Marketing <matt@mattmichelstraining.com>",
               to: ["matt@m2training.com"],
               subject: `GBP post ready — ${client.business_name} (needs connection)`,
-              html: `<p>${client.business_name} (${client.email}) doesn't have GBP connected yet. Post ready to go:<br><br><em>"${content}"</em><br><br>Reply to this to let them know.</p>`,
-            }),
-          });
+              html: `<p>${client.business_name} (${client.email}) doesn't have GBP connected yet. Post ready to go:<br><br><em>"${content}"</em><br><br>Reply to this to let them know.<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI \u00b7 (313) 806-4952</div><img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div></p>` }) });
         }
       }
     }

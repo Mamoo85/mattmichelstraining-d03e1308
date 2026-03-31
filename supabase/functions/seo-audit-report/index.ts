@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const DATAFORSEO_LOGIN = Deno.env.get("DATAFORSEO_LOGIN") || "";
 const DATAFORSEO_PASSWORD = Deno.env.get("DATAFORSEO_PASSWORD") || "";
@@ -26,15 +26,12 @@ async function fetchKeywordRankings(keywords: string[], location: string): Promi
         method: "POST",
         headers: {
           Authorization: `Basic ${credentials}`,
-          "Content-Type": "application/json",
-        },
+          "Content-Type": "application/json" },
         body: JSON.stringify([{
           keyword,
           location_name: location || "Michigan,United States",
           language_name: "English",
-          depth: 30,
-        }]),
-      });
+          depth: 30 }]) });
 
       if (!res.ok) continue;
       const data = await res.json();
@@ -44,8 +41,7 @@ async function fetchKeywordRankings(keywords: string[], location: string): Promi
       results.push({
         keyword,
         position: organic?.rank_absolute ?? null,
-        url: organic?.url ?? null,
-      });
+        url: organic?.url ?? null });
     } catch {
       results.push({ keyword, position: null, url: null });
     }
@@ -55,7 +51,7 @@ async function fetchKeywordRankings(keywords: string[], location: string): Promi
 }
 
 async function generateReport(client: any, rankings: KeywordResult[]): Promise<string> {
-  if (!ANTHROPIC_API_KEY) return "";
+  if (!LOVABLE_API_KEY) return "";
 
   const hasRankings = rankings.length > 0;
   const rankingText = hasRankings
@@ -66,22 +62,17 @@ async function generateReport(client: any, rankings: KeywordResult[]): Promise<s
     ? `You are a local SEO expert writing a monthly report for ${client.business_name}, a local business${client.location ? ` in ${client.location}` : ""}.\n\nCurrent Google keyword rankings:\n${rankingText}\n\nWrite a concise monthly SEO report in plain English. Include:\n1. A brief overall assessment (2-3 sentences)\n2. What's working\n3. Top 5 prioritized action items to improve rankings this month (numbered list, specific and actionable)\n\nKeep it under 600 words. Write like a knowledgeable friend, not a consultant.`
     : `You are a local SEO expert writing a monthly report for ${client.business_name}${client.location ? ` in ${client.location}` : ""}. Target keywords: ${(client.target_keywords || []).join(", ") || "not specified"}.\n\nWrite a helpful monthly local SEO report in plain English. Since we don't have live ranking data this month, focus on:\n1. A brief assessment of what typically matters most for local businesses like this\n2. Top 5 prioritized action items to improve local search visibility this month (numbered list, specific and actionable)\n3. One quick win they can do today\n\nKeep it under 600 words. Write like a knowledgeable friend, not a consultant.`;
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
-      "x-api-key": ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-      "content-type": "application/json",
-    },
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 900,
-      messages: [{ role: "user", content: prompt }],
-    }),
-  });
+      model: "google/gemini-2.5-flash-lite", 
+      messages: [{ role: "user", content: prompt }] }) });
 
   const data = await res.json();
-  return data.content?.[0]?.text?.trim() || "";
+  return data?.choices?.[0]?.message?.content?.trim() || "";
 }
 
 function buildEmailHtml(client: any, reportText: string, rankings: KeywordResult[], month: string): string {
@@ -136,6 +127,7 @@ function buildEmailHtml(client: any, reportText: string, rankings: KeywordResult
           <p style="font-size:13px;font-weight:700;margin:0;">Matt Michels</p>
           <p style="font-size:12px;color:#64748b;margin:0;">M² Performance Training — (313) 806-4952 — matt@m2training.com</p>
         </div>
+        <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" />
       </div>
     </div>
   `;
@@ -173,12 +165,10 @@ serve(async (req) => {
           method: "POST",
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            from: "M² SEO Reports <matt@notify.m2training.com>",
+            from: "M² SEO Reports <matt@mattmichelstraining.com>",
             to: [client.email],
             subject: `Your ${month} SEO Report — ${client.business_name}`,
-            html: buildEmailHtml(client, reportText, rankings, month),
-          }),
-        });
+            html: buildEmailHtml(client, reportText, rankings, month) }) });
 
         if (res.ok) {
           await sb.from("seo_report_clients").update({ last_report_at: now.toISOString() }).eq("id", client.id);

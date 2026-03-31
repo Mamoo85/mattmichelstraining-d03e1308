@@ -1,10 +1,17 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
+
+// AI response type
+// uses OpenAI-compatible format
+
+
+
+const EMAIL_SIGNATURE = `<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 806-4952</div><img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div>`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -25,8 +32,7 @@ serve(async (req) => {
     if (clientsError) throw clientsError;
     if (!clients || clients.length === 0) {
       return new Response(JSON.stringify({ message: "No active clients" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+        headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     let processed = 0;
@@ -45,22 +51,17 @@ Include these sections:
 
 Write in professional but accessible language. Use HTML formatting with <h2>, <p>, <ul>, <li>, <strong> tags.`;
 
-      const aiResponse = await fetch("https://api.anthropic.com/v1/messages", {
+      const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": Deno.env.get("ANTHROPIC_API_KEY")!,
-          "anthropic-version": "2023-06-01",
-        },
+          Authorization: `Bearer ${LOVABLE_API_KEY}` },
         body: JSON.stringify({
-          model: "claude-haiku-4-5-20251001",
-          max_tokens: 800,
-          messages: [{ role: "user", content: prompt }],
-        }),
-      });
+          model: "google/gemini-2.5-flash-lite", 
+          messages: [{ role: "user", content: prompt }] }) });
 
-      const aiData = await aiResponse.json();
-      const reportHtml = aiData.content?.[0]?.text || "Report generation failed.";
+      const aiData = await aiResponse.json() as any;
+      const reportHtml = aiData?.choices?.[0]?.message?.content || "Report generation failed.";
 
       const emailHtml = `
 <!DOCTYPE html>
@@ -88,15 +89,12 @@ Write in professional but accessible language. Use HTML formatting with <h2>, <p
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${Deno.env.get("RESEND_API_KEY")}`,
-        },
+          Authorization: `Bearer ${Deno.env.get("RESEND_API_KEY")}` },
         body: JSON.stringify({
-          from: "M² Competitor Watch <matt@notify.m2training.com>",
+          from: "M² Competitor Watch <matt@mattmichelstraining.com>",
           to: [client.email],
           subject: `Competitor Watch Report — ${client.business_name} — ${new Date().toLocaleDateString("en-US", { month: "short", year: "numeric" })}`,
-          html: emailHtml,
-        }),
-      });
+          html: emailHtml}) });
 
       if (!emailRes.ok) {
         console.error(`Failed to email ${client.email}:`, await emailRes.text());
@@ -107,8 +105,7 @@ Write in professional but accessible language. Use HTML formatting with <h2>, <p
         .from("competitor_watch_clients")
         .update({
           report_count: (client.report_count || 0) + 1,
-          last_report_at: new Date().toISOString(),
-        })
+          last_report_at: new Date().toISOString() })
         .eq("id", client.id);
 
       processed++;
@@ -120,8 +117,9 @@ Write in professional but accessible language. Use HTML formatting with <h2>, <p
     );
   } catch (error) {
     console.error("ai-competitor-watch error:", error);
+    const message = error instanceof Error ? error.message : String(error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

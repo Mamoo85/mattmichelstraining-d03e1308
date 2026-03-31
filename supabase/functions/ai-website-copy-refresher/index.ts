@@ -1,6 +1,6 @@
 // AI Website Copy Refresher — called by cron (e.g. monthly)
 // 1. Reads active clients from website_copy_clients
-// 2. Generates fresh homepage copy + FAQ via Claude (max_tokens: 1200)
+// 2. Generates fresh homepage copy + FAQ via Claude (, )
 // 3. Emails the HTML copy to the client via Resend
 // 4. Notifies Matt
 // 5. Updates refresh_count and last_refreshed_at
@@ -10,11 +10,11 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 
 const MATT_EMAIL = "matt@m2training.com";
-const FROM_EMAIL = "Matt Michels <matt@notify.m2training.com>";
+const FROM_EMAIL = "Matt Michels <matt@mattmichelstraining.com>";
 
 interface CopyClient {
   id: string;
@@ -30,16 +30,13 @@ async function generateWebsiteCopy(client: CopyClient): Promise<string> {
   const city = client.city || "Michigan";
   const website = client.website || "N/A";
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
-      "x-api-key": ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-      "content-type": "application/json",
-    },
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 1200,
+      model: "google/gemini-2.5-flash-lite", 
       messages: [
         {
           role: "user",
@@ -53,19 +50,16 @@ Homepage copy should include:
 
 FAQ section should include 6 common questions and answers specific to the ${client.industry} industry.
 
-Format as clean HTML, ready to paste into their website.`,
-        },
-      ],
-    }),
-  });
+Format as clean HTML, ready to paste into their website.` },
+      ] }) });
 
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`Anthropic API error: ${err}`);
+    throw new Error(`AI API error: ${err}`);
   }
 
   const data = await res.json();
-  return data.content?.[0]?.text || "";
+  return data?.choices?.[0]?.message?.content || "";
 }
 
 async function sendEmail(to: string, subject: string, html: string): Promise<void> {
@@ -73,10 +67,8 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
     method: "POST",
     headers: {
       Authorization: `Bearer ${RESEND_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ from: FROM_EMAIL, to, subject, html }),
-  });
+      "Content-Type": "application/json" },
+    body: JSON.stringify({ from: FROM_EMAIL, to, subject, html }) });
   if (!res.ok) {
     const err = await res.text();
     throw new Error(`Resend error: ${err}`);
@@ -109,7 +101,7 @@ function buildClientEmail(client: CopyClient, copyHtml: string, month: string): 
 
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-left:4px solid #e8621a;border-radius:0 8px 8px 0;padding:24px;font-size:14px;color:#1e293b;line-height:1.75;">
       ${copyHtml}
-    </div>
+    <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div>
 
     <p style="margin:24px 0 0;font-size:14px;color:#64748b;line-height:1.6;">
       Questions about implementing this copy? Reply to this email and I'll help.
@@ -150,8 +142,7 @@ serve(async (_req) => {
     if (error) throw error;
     if (!clients || clients.length === 0) {
       return new Response(JSON.stringify({ ok: true, sent: 0, message: "No active clients" }), {
-        headers: { "Content-Type": "application/json" },
-      });
+        headers: { "Content-Type": "application/json" } });
     }
 
     const month = new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" });
@@ -173,8 +164,7 @@ serve(async (_req) => {
           .from("website_copy_clients")
           .update({
             refresh_count: (client.refresh_count || 0) + 1,
-            last_refreshed_at: new Date().toISOString(),
-          })
+            last_refreshed_at: new Date().toISOString() })
           .eq("id", client.id);
 
         sent++;
@@ -205,13 +195,11 @@ serve(async (_req) => {
     );
 
     return new Response(JSON.stringify({ ok: true, sent }), {
-      headers: { "Content-Type": "application/json" },
-    });
+      headers: { "Content-Type": "application/json" } });
   } catch (err) {
     console.error("Fatal error:", err);
     return new Response(JSON.stringify({ ok: false, error: (err as Error).message }), {
       status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+      headers: { "Content-Type": "application/json" } });
   }
 });

@@ -54,7 +54,7 @@ function wrapHtml(body: string, title: string): string {
 </body></html>`;
 }
 
-function emailApprove(business: string, clientName: string, projectId: string): { subject: string; html: string } {
+function emailApprove(business: string, clientName: string, projectId: string): { subject: string; html: string} {
   const subject = `Your website project is officially underway — ${business}`;
   const body = `
     <p>Hey ${clientName || "there"} —</p>
@@ -79,7 +79,7 @@ function emailApprove(business: string, clientName: string, projectId: string): 
   return { subject, html: wrapHtml(body, subject) };
 }
 
-function emailPreviewReady(business: string, clientName: string, previewUrl: string): { subject: string; html: string } {
+function emailPreviewReady(business: string, clientName: string, previewUrl: string): { subject: string; html: string} {
   const subject = `Your website preview is ready — ${business}`;
   const body = `
     <p>Hey ${clientName || "there"} —</p>
@@ -97,7 +97,7 @@ function emailPreviewReady(business: string, clientName: string, previewUrl: str
   return { subject, html: wrapHtml(body, subject) };
 }
 
-function emailGoLive(business: string, clientName: string, siteUrl: string): { subject: string; html: string } {
+function emailGoLive(business: string, clientName: string, siteUrl: string): { subject: string; html: string} {
   const subject = `🚀 ${business} is live on Google`;
   const body = `
     <p>Hey ${clientName || "there"} —</p>
@@ -121,7 +121,7 @@ function emailGoLive(business: string, clientName: string, siteUrl: string): { s
   return { subject, html: wrapHtml(body, subject) };
 }
 
-function emailRevisionAck(business: string, clientName: string): { subject: string; html: string } {
+function emailRevisionAck(business: string, clientName: string): { subject: string; html: string} {
   const subject = `Got your revision notes — ${business}`;
   const body = `
     <p>Hey ${clientName || "there"} —</p>
@@ -134,7 +134,7 @@ function emailRevisionAck(business: string, clientName: string): { subject: stri
 
 // ── Notify Matt ─────────────────────────────────────────────────────────────
 
-function emailMattNotify(stage: string, business: string, clientEmail: string, notes: string): { subject: string; html: string } {
+function emailMattNotify(stage: string, business: string, clientEmail: string, notes: string): { subject: string; html: string} {
   const subject = `[Project Update] ${business} — ${stage}`;
   const body = `
     <p><strong>Business:</strong> ${business}<br>
@@ -147,6 +147,9 @@ function emailMattNotify(stage: string, business: string, clientEmail: string, n
 }
 
 // ── Main handler ─────────────────────────────────────────────────────────────
+
+
+const EMAIL_SIGNATURE = `<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 806-4952</div><img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div>`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -219,7 +222,7 @@ serve(async (req) => {
     }
 
     // Build the right emails for this stage
-    let clientEmail_payload: { subject: string; html: string } | null = null;
+    let clientEmail_payload: { subject: string; html: string} | null = null;
     let newStatus: string | null = null;
     const projectId = lead_id;
 
@@ -262,7 +265,7 @@ serve(async (req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "Matt Michels <matt@notify.m2training.com>",
+          from: "Matt Michels <matt@mattmichelstraining.com>",
           to: [clientEmail],
           subject: clientEmail_payload.subject,
           html: clientEmail_payload.html,
@@ -285,7 +288,7 @@ serve(async (req) => {
       method: "POST",
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: "M2 System <matt@notify.m2training.com>",
+        from: "M2 System <matt@mattmichelstraining.com>",
         to: ["matt@m2training.com"],
         subject: mattEmail.subject,
         html: mattEmail.html,

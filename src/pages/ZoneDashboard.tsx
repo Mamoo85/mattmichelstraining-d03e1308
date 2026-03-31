@@ -6,13 +6,13 @@ import { usePoints, getLevelInfo, getNextLevel } from "@/hooks/usePoints";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import {
-  User, UserPlus, Timer, Mic, ArrowLeft, Dumbbell, Trophy,
-  Sparkles, Wrench, BookOpen, Utensils, BarChart3, Target,
-  Loader2, MessageCircle, Zap, ChevronRight,
+  User, Timer, Mic, ArrowLeft,
+  Trophy, Sparkles, Wrench, Utensils, BarChart3, Target,
+  Loader2, MessageCircle, Zap,
 } from "lucide-react";
 import ZoneThemeWrapper from "@/components/zone/ZoneThemeWrapper";
 import AthleteStats from "@/components/dashboard/AthleteStats";
-import TodayCard from "@/components/dashboard/TodayCard";
+import AthleteProfileCard from "@/components/dashboard/AthleteProfileCard";
 import CoachActivityBanner from "@/components/dashboard/CoachActivityBanner";
 import logoImg from "@/assets/m2-logo-zone.png";
 import { safeLocalStorage } from "@/lib/browserStorage";
@@ -25,6 +25,7 @@ import {
 } from "@/components/dashboard/featureTips";
 import { AnimatePresence } from "framer-motion";
 
+const NotificationBell = lazy(() => import("@/components/layout/NotificationBell"));
 const CoachChatPanel = lazy(() => import("@/components/dashboard/CoachChatPanel"));
 const QuickActivityLog = lazy(() => import("@/components/dashboard/QuickActivityLog"));
 const FeatureLearningModal = lazy(() => import("@/components/dashboard/FeatureLearningModal"));
@@ -74,6 +75,21 @@ const ZoneDashboard = () => {
   const [generatorView, setGeneratorView] = useState<GeneratorView>(null);
   const [activeTip, setActiveTip] = useState<FeatureTip | null>(null);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+  const [recentActivity, setRecentActivity] = useState<{ type: string; summary: string; date: string } | null>(null);
+
+  // Browser back button support for overlays
+  const openOverlay = useCallback((view: GeneratorView) => {
+    setGeneratorView(view);
+    if (view) window.history.pushState({ overlay: view }, "", `#${view}`);
+  }, []);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setGeneratorView(null);
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -102,14 +118,29 @@ const ZoneDashboard = () => {
           setCurrentDay((ap as { current_day?: number }).current_day || 1);
         }
 
-        const { data: logs } = await supabase
-          .from("progress_logs")
-          .select("logged_at")
-          .eq("user_id", user.id)
-          .order("logged_at", { ascending: false })
-          .limit(60);
-        if (logs && logs.length > 0) {
-          const days = [...new Set(logs.map((l: { logged_at: string }) => l.logged_at.slice(0, 10)))].sort().reverse();
+        // Fetch streak from both progress_logs and activity_logs
+        const [logsRes, actLogsRes] = await Promise.all([
+          supabase
+            .from("progress_logs")
+            .select("logged_at")
+            .eq("user_id", user.id)
+            .order("logged_at", { ascending: false })
+            .limit(60),
+          supabase
+            .from("activity_logs")
+            .select("logged_at")
+            .eq("user_id", user.id)
+            .order("logged_at", { ascending: false })
+            .limit(60),
+        ]);
+
+        const allDates = [
+          ...(logsRes.data || []).map((l: any) => l.logged_at?.slice(0, 10)),
+          ...(actLogsRes.data || []).map((l: any) => l.logged_at?.slice(0, 10)),
+        ].filter(Boolean);
+        const days = [...new Set(allDates)].sort().reverse();
+
+        if (days.length > 0) {
           let s = 1;
           for (let i = 1; i < days.length; i++) {
             const prev = new Date(days[i - 1]);
@@ -122,12 +153,32 @@ const ZoneDashboard = () => {
 
         const weekAgo = new Date();
         weekAgo.setDate(weekAgo.getDate() - 7);
-        const { count } = await supabase
-          .from("progress_logs")
-          .select("*", { count: "exact", head: true })
+        const weekIso = weekAgo.toISOString();
+        const [weekLogsRes, weekActRes] = await Promise.all([
+          supabase.from("progress_logs").select("logged_at").eq("user_id", user.id).gte("logged_at", weekIso),
+          supabase.from("activity_logs").select("logged_at").eq("user_id", user.id).gte("logged_at", weekIso),
+        ]);
+        const weekDays = new Set([
+          ...(weekLogsRes.data || []).map((l: any) => l.logged_at?.slice(0, 10)),
+          ...(weekActRes.data || []).map((l: any) => l.logged_at?.slice(0, 10)),
+        ].filter(Boolean));
+        setSessionsThisWeek(weekDays.size);
+
+        // Recent activity (most recent from activity_logs)
+        const { data: recentAct } = await supabase
+          .from("activity_logs")
+          .select("activity_type, ai_summary, logged_at")
           .eq("user_id", user.id)
-          .gte("logged_at", weekAgo.toISOString());
-        setSessionsThisWeek(count || 0);
+          .order("logged_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (recentAct) {
+          setRecentActivity({
+            type: recentAct.activity_type || "workout",
+            summary: recentAct.ai_summary || "",
+            date: recentAct.logged_at || "",
+          });
+        }
       } catch (e) {
         console.error("[ZoneDashboard]", e);
       }
@@ -162,7 +213,6 @@ const ZoneDashboard = () => {
 
   const greeting = getGreeting(displayName, streak, sessionsThisWeek);
 
-  // Quick Actions — 4 unique actions not available elsewhere
   const QUICK_ACTIONS = [
     {
       label: "Log",
@@ -194,28 +244,27 @@ const ZoneDashboard = () => {
     },
   ];
 
-  // Feature Hub — 2-col grid with descriptions
   const HUB_ITEMS = [
     {
       label: "Programs",
       desc: "Your training plan",
       icon: <Target size={20} />,
       color: "#f97316",
-      action: () => setGeneratorView("programs"),
+      action: () => openOverlay("programs"),
     },
     {
       label: "Generator",
       desc: "Build custom workouts",
       icon: <Sparkles size={20} />,
       color: "#a855f7",
-      action: () => withTip(WORKOUT_GENERATOR_TIP, () => setGeneratorView("workout")),
+      action: () => withTip(WORKOUT_GENERATOR_TIP, () => openOverlay("workout")),
     },
     {
       label: "Fix It",
       desc: "Pain relief & rehab",
       icon: <Wrench size={20} />,
       color: "#00f0ff",
-      action: () => withTip(FIXIT_ENGINE_TIP, () => setGeneratorView("fixit")),
+      action: () => withTip(FIXIT_ENGINE_TIP, () => openOverlay("fixit")),
     },
     {
       label: "Nutrition",
@@ -225,18 +274,11 @@ const ZoneDashboard = () => {
       action: () => navigate("/nutrition-plan"),
     },
     {
-      label: "Library",
-      desc: "Browse all workouts",
-      icon: <BookOpen size={20} />,
-      color: "#ec4899",
-      action: () => navigate("/dashboard"),
-    },
-    {
       label: "Challenges",
       desc: "Compete for points",
       icon: <Zap size={20} />,
       color: "#eab308",
-      action: () => setGeneratorView("challenge"),
+      action: () => openOverlay("challenge"),
     },
     {
       label: "Progress",
@@ -245,14 +287,18 @@ const ZoneDashboard = () => {
       color: "#3b82f6",
       action: () => navigate("/progress"),
     },
-    {
-      label: "Workouts",
-      desc: "Saved & recent",
-      icon: <Dumbbell size={20} />,
-      color: "#64748b",
-      action: () => navigate("/dashboard"),
-    },
   ];
+
+  const formatRecentDate = (iso: string) => {
+    const d = new Date(iso);
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const diffDays = Math.floor(diffMs / 86400000);
+    if (diffDays === 0) return "Today";
+    if (diffDays === 1) return "Yesterday";
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  };
 
   return (
     <ZoneThemeWrapper className="min-h-screen pb-24" style={{ background: "#0a0a0a", color: "#e5e5e5" }}>
@@ -274,30 +320,21 @@ const ZoneDashboard = () => {
             <img src={logoImg} alt="M²" className="h-8 w-8 object-contain" />
           </button>
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.25em]" style={{ color: "#f97316" }}>THE ZONE</p>
+            <p className="text-xs font-bold uppercase tracking-[0.25em]" style={{ color: "#f97316" }}>THE ZONE</p>
             <p className="text-sm font-semibold leading-tight" style={{ color: "#fafafa" }}>{displayName}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => {
-              const url = `${window.location.origin}?ref=${user?.id || ""}`;
-              if (navigator.share) navigator.share({ title: "Train with me on M²", url });
-              else { navigator.clipboard.writeText(url); toast({ title: "Link copied!" }); }
-            }}
-            aria-label="Share"
-            className="h-8 w-8 rounded-full flex items-center justify-center transition-all active:scale-90"
-            style={{ background: "rgba(249,115,22,0.12)" }}
-          >
-            <UserPlus size={14} style={{ color: "#f97316" }} />
-          </button>
+          <Suspense fallback={null}>
+            <NotificationBell />
+          </Suspense>
           <button onClick={() => navigate("/profile")} aria-label="Profile" className="transition-all active:scale-90">
             <User size={18} style={{ color: "#404040" }} />
           </button>
         </div>
       </header>
 
-      <main className="max-w-md sm:max-w-lg md:max-w-2xl lg:max-w-3xl mx-auto px-4 pt-3 pb-4 space-y-4">
+      <main className="max-w-md sm:max-w-lg md:max-w-2xl lg:max-w-3xl mx-auto px-3 pt-3 pb-4 space-y-3">
 
         {/* Greeting */}
         <div className="px-1 pt-1">
@@ -321,42 +358,61 @@ const ZoneDashboard = () => {
         {/* Coach banner — Pro/Elite only */}
         {isProOrElite && <CoachActivityBanner />}
 
-        {/* Today's Workout */}
-        <TodayCard
+        {/* Athlete Profile Card */}
+        <AthleteProfileCard
+          displayName={displayName}
+          streak={streak}
+          totalPoints={totalPoints}
+          levelLabel={levelInfo.label}
+          hasActiveWorkout={hasActiveWorkout}
           workoutName={workoutName}
           phase={phase}
-          day={currentDay}
-          hasWorkout={hasActiveWorkout}
-          onClick={() => window.dispatchEvent(new Event("open-workout-zone"))}
+          currentDay={currentDay}
+          onStartWorkout={() => window.dispatchEvent(new Event("open-workout-zone"))}
         />
 
-        {/* Quick Actions */}
+        {/* Recent Activity */}
+        {recentActivity && (
+          <button
+            onClick={() => navigate("/profile")}
+            className="w-full rounded-xl p-3 text-left transition-all active:scale-[0.98]"
+            style={{ background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.15)" }}
+          >
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#22c55e" }}>Last Activity</span>
+              <span className="text-[10px]" style={{ color: "#525252" }}>{formatRecentDate(recentActivity.date)}</span>
+            </div>
+            <p className="text-xs text-white/80 line-clamp-2">{recentActivity.summary || recentActivity.type}</p>
+          </button>
+        )}
+
+        {/* Quick Actions — 2x2 grid */}
         <section>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-2.5 px-1" style={{ color: "#404040" }}>
+          <p className="text-xs font-black uppercase tracking-[0.2em] mb-2 px-1" style={{ color: "#404040" }}>
             Quick Actions
           </p>
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             {QUICK_ACTIONS.map((item) => (
               <button
                 key={item.label}
                 onClick={item.action}
-                className="flex flex-col items-center gap-1.5 rounded-2xl py-3.5 px-2 transition-all active:scale-[0.93]"
+                className="flex items-center gap-3 rounded-2xl py-3 px-3 transition-all active:scale-[0.93]"
                 style={{
                   background: `${item.color}10`,
                   border: `1px solid ${item.color}28`,
                 }}
               >
                 <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center"
+                  className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
                   style={{ background: `${item.color}1e`, color: item.color }}
                 >
                   {item.icon}
                 </div>
-                <div className="text-center">
-                  <div className="text-[11px] font-bold leading-tight" style={{ color: "#d4d4d4" }}>
+                <div className="text-left min-w-0">
+                  <div className="text-xs font-bold leading-tight" style={{ color: "#d4d4d4" }}>
                     {item.label}
                   </div>
-                  <div className="text-[9px] leading-tight mt-0.5" style={{ color: "#525252" }}>
+                  <div className="text-[10px] leading-tight mt-0.5" style={{ color: "#525252" }}>
                     {item.desc}
                   </div>
                 </div>
@@ -367,41 +423,53 @@ const ZoneDashboard = () => {
 
         {/* Feature Hub */}
         <section>
-          <div className="flex items-center justify-between mb-2.5 px-1">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: "#404040" }}>
+          <div className="flex items-center justify-between mb-2 px-1">
+            <p className="text-xs font-black uppercase tracking-[0.2em]" style={{ color: "#404040" }}>
               Your Hub
             </p>
-            <span className="text-[9px]" style={{ color: "#303030" }}>Tap anything to explore</span>
+            <span className="text-xs" style={{ color: "#303030" }}>Tap to explore</span>
           </div>
           <div className="grid grid-cols-2 gap-2">
             {HUB_ITEMS.map((item) => (
               <button
                 key={item.label}
                 onClick={item.action}
-                className="flex items-center gap-3 rounded-2xl p-3.5 text-left transition-all active:scale-[0.97] group"
+                className="flex items-center gap-2.5 rounded-2xl p-3 text-left transition-all active:scale-[0.97] group"
                 style={{
                   background: `${item.color}09`,
                   border: `1px solid ${item.color}1e`,
                 }}
               >
                 <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                  className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
                   style={{ background: `${item.color}18`, color: item.color }}
                 >
                   {item.icon}
                 </div>
-                <div className="min-w-0">
-                  <div className="text-[12px] font-bold truncate" style={{ color: "#e5e5e5" }}>
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs font-bold" style={{ color: "#e5e5e5" }}>
                     {item.label}
                   </div>
-                  <div className="text-[10px] leading-tight mt-0.5 truncate" style={{ color: "#525252" }}>
+                  <div className="text-[10px] leading-tight mt-0.5" style={{ color: "#525252" }}>
                     {item.desc}
                   </div>
                 </div>
-                <ChevronRight size={12} className="ml-auto flex-shrink-0 opacity-0 group-hover:opacity-40 transition-opacity" style={{ color: item.color }} />
               </button>
             ))}
           </div>
+
+          {/* Install App prompt */}
+          {!window.matchMedia("(display-mode: standalone)").matches && (
+            <button
+              onClick={() => navigate("/install")}
+              className="w-full flex items-center justify-center gap-2 rounded-xl py-3 mt-2 transition-all active:scale-[0.98]"
+              style={{ background: "rgba(249,115,22,0.08)", border: "1px solid rgba(249,115,22,0.15)" }}
+            >
+              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "#f97316" }}>
+                📲 Install the M² App
+              </span>
+            </button>
+          )}
         </section>
 
       </main>
@@ -414,7 +482,7 @@ const ZoneDashboard = () => {
             style={{ background: "rgba(10,10,10,0.95)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}
           >
             <button
-              onClick={() => setGeneratorView(null)}
+              onClick={() => { setGeneratorView(null); window.history.back(); }}
               className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest transition-colors"
               style={{ color: "#525252" }}
             >

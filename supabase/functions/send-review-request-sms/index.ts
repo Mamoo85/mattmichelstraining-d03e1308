@@ -2,10 +2,10 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
-const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
+const TWILIO_API_KEY = Deno.env.get("TWILIO_API_KEY") || "";
 
-// Default Twilio number used as fallback if client has no twilio_number configured
+const GATEWAY_URL = "https://connector-gateway.lovable.dev/twilio";
 const DEFAULT_TWILIO_NUMBER = Deno.env.get("TWILIO_DEFAULT_NUMBER") || "";
 
 const cors = {
@@ -33,21 +33,21 @@ async function supabaseQuery(path: string, body?: unknown, method = "GET") {
 }
 
 async function sendSms(from: string, to: string, body: string) {
-  const credentials = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
-  const res = await fetch(
-    `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Basic ${credentials}`,
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: new URLSearchParams({ From: from, To: to, Body: body }).toString(),
-    }
-  );
+  if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+  if (!TWILIO_API_KEY) throw new Error("TWILIO_API_KEY is not configured");
+
+  const res = await fetch(`${GATEWAY_URL}/Messages.json`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${LOVABLE_API_KEY}`,
+      "X-Connection-Api-Key": TWILIO_API_KEY,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({ From: from, To: to, Body: body }).toString(),
+  });
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`Twilio error: ${text}`);
+    throw new Error(`Twilio gateway error: ${text}`);
   }
   return res.json();
 }
@@ -65,15 +65,9 @@ serve(async (req) => {
       );
     }
 
-    // Look up client in review_request_clients
     const clients: Array<{
-      id: string;
-      email: string;
-      business_name: string;
-      twilio_number?: string;
-      google_review_url: string;
-      requests_sent: number;
-      active: boolean;
+      id: string; email: string; business_name: string; twilio_number?: string;
+      google_review_url: string; requests_sent: number; active: boolean;
     }> = await supabaseQuery(
       `review_request_clients?select=*&email=eq.${encodeURIComponent(clientEmail)}&active=eq.true`
     );
@@ -100,7 +94,6 @@ serve(async (req) => {
 
     await sendSms(fromNumber, customerPhone, message);
 
-    // Increment requests_sent
     await supabaseQuery(
       `review_request_clients?id=eq.${client.id}`,
       { requests_sent: (client.requests_sent || 0) + 1 },

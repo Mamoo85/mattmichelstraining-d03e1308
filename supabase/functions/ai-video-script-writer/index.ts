@@ -1,10 +1,13 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
+
+
+const EMAIL_SIGNATURE = `<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 806-4952</div><img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div>`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -25,8 +28,7 @@ serve(async (req) => {
     if (clientsError) throw clientsError;
     if (!clients || clients.length === 0) {
       return new Response(JSON.stringify({ message: "No active clients" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+        headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     let processed = 0;
@@ -50,22 +52,17 @@ Format each script as:
 
 Use HTML formatting with <ol>, <li>, <strong>, <em>, <p> tags.`;
 
-      const aiResponse = await fetch("https://api.anthropic.com/v1/messages", {
+      const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": Deno.env.get("ANTHROPIC_API_KEY")!,
-          "anthropic-version": "2023-06-01",
-        },
+          Authorization: `Bearer ${LOVABLE_API_KEY}` },
         body: JSON.stringify({
-          model: "claude-haiku-4-5-20251001",
-          max_tokens: 800,
-          messages: [{ role: "user", content: prompt }],
-        }),
-      });
+          model: "google/gemini-2.5-flash-lite", 
+          messages: [{ role: "user", content: prompt }] }) });
 
       const aiData = await aiResponse.json();
-      const scriptsHtml = aiData.content?.[0]?.text || "Script generation failed.";
+      const scriptsHtml = aiData?.choices?.[0]?.message?.content || "Script generation failed.";
 
       const monthName = new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" });
 
@@ -100,15 +97,12 @@ Use HTML formatting with <ol>, <li>, <strong>, <em>, <p> tags.`;
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${Deno.env.get("RESEND_API_KEY")}`,
-        },
+          Authorization: `Bearer ${Deno.env.get("RESEND_API_KEY")}` },
         body: JSON.stringify({
-          from: "M² Video Scripts <matt@notify.m2training.com>",
+          from: "M² Video Scripts <matt@mattmichelstraining.com>",
           to: [client.email],
           subject: `Your ${monthName} Video Scripts — ${client.business_name} (8 Ready to Film)`,
-          html: emailHtml,
-        }),
-      });
+          html: emailHtml}) });
 
       if (!emailRes.ok) {
         console.error(`Failed to email ${client.email}:`, await emailRes.text());
@@ -119,8 +113,7 @@ Use HTML formatting with <ol>, <li>, <strong>, <em>, <p> tags.`;
         .from("video_script_clients")
         .update({
           script_count: (client.script_count || 0) + 8,
-          last_sent_at: new Date().toISOString(),
-        })
+          last_sent_at: new Date().toISOString() })
         .eq("id", client.id);
 
       processed++;
@@ -133,7 +126,7 @@ Use HTML formatting with <ol>, <li>, <strong>, <em>, <p> tags.`;
   } catch (error) {
     console.error("ai-video-script-writer error:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error instanceof Error ? error.message : "Unknown error") }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

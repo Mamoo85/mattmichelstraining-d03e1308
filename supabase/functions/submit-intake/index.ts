@@ -4,18 +4,17 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { name, business_name, email, phone, service, message } = await req.json();
+    const { name, business_name, email, phone, service, message, industry, source } = await req.json();
 
     if (!name || !business_name || !email || !service) {
       return new Response(
@@ -29,27 +28,21 @@ serve(async (req) => {
     // 1. Generate AI summary via Claude Haiku
     let ai_summary = "";
     try {
-      const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
+      const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: {
-          "x-api-key": ANTHROPIC_API_KEY,
-          "anthropic-version": "2023-06-01",
-          "Content-Type": "application/json",
-        },
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "claude-haiku-4-5-20251001",
-          max_tokens: 200,
+          model: "google/gemini-2.5-flash-lite", 
           messages: [
             {
               role: "user",
-              content: `You are Agent Smith, a business analyst. Summarize this lead in 3 sentences: Name: ${name}, Business: ${business_name}, Service: ${service}, Message: ${message || "none provided"}. Include: (1) who they are, (2) what they need, (3) urgency/fit assessment (high/medium/low value).`,
-            },
-          ],
-        }),
-      });
+              content: `You are Agent Smith, a business analyst. Summarize this lead in 3 sentences: Name: ${name}, Business: ${business_name}, Service: ${service}, Message: ${message || "none provided"}. Include: (1) who they are, (2) what they need, (3) urgency/fit assessment (high/medium/low value).` },
+          ] }) });
       if (aiRes.ok) {
         const aiData = await aiRes.json();
-        ai_summary = aiData?.content?.[0]?.text || "";
+        ai_summary = aiData?.choices?.[0]?.message?.content || "";
       }
     } catch (aiErr) {
       console.error("[SUBMIT-INTAKE] AI summary error:", aiErr);
@@ -66,13 +59,36 @@ serve(async (req) => {
         service,
         message: message || null,
         ai_summary: ai_summary || null,
-        status: "new",
-      });
+        status: "new" });
 
     if (dbError) {
       console.error("[SUBMIT-INTAKE] DB error:", dbError);
       throw new Error(dbError.message);
     }
+
+    // 2b. Track conversion if came from drip
+    if (source && source !== "direct") {
+      await sb.from("drip_conversions" as any).insert({
+        email,
+        business_name,
+        industry: industry || null,
+        service_interested: service,
+        source: source || "direct",
+        drip_step_converted: source,
+      });
+    }
+
+    // 2c. Add to marketing_leads for unified tracking
+    await sb.from("marketing_leads").upsert({
+      email,
+      first_name: name?.split(" ")[0] || null,
+      source: source || "get-started",
+      industry: industry || null,
+      service_interested: service,
+      phone: phone || null,
+      business_name,
+      utm_source: source || "direct",
+    }, { onConflict: "email" });
 
     // 3. Send notification email to Matt
     if (RESEND_API_KEY) {
@@ -140,6 +156,7 @@ serve(async (req) => {
       </div>
     </div>
   </div>
+<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 806-4952</div><img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div>
 </body>
 </html>`;
 
@@ -147,27 +164,22 @@ serve(async (req) => {
         method: "POST",
         headers: {
           Authorization: `Bearer ${RESEND_API_KEY}`,
-          "Content-Type": "application/json",
-        },
+          "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "M² System <matt@notify.m2training.com>",
+          from: "M² System <matt@mattmichelstraining.com>",
           to: ["matthewmichels@mattmichelstraining.com"],
           reply_to: email,
           subject: `New lead: ${name} — ${service}`,
-          html,
-        }),
-      });
+          html }) });
     }
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+      headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e: any) {
     console.error("[SUBMIT-INTAKE] Error:", e);
     return new Response(JSON.stringify({ error: e.message }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+      headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

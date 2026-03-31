@@ -10,7 +10,7 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   User, Trophy, Medal, Award, Save, Loader2, Gift, Search,
   Crown, ExternalLink, ShoppingBag, Dumbbell, Calendar, Shield,
-  ArrowRight, ChevronDown, ChevronUp, Zap, Clock, FileText, Send, Activity, Brain, Camera, Ticket
+  ArrowRight, ChevronDown, ChevronUp, Zap, Clock, FileText, Send, Activity, Brain, Camera, Ticket, Share2, UserPlus
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import GiftSessionModal from "@/components/sessions/GiftSessionModal";
@@ -20,11 +20,13 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import EmptyStateCard from "@/components/shared/EmptyStateCard";
 import { safeLocalStorage } from "@/lib/browserStorage";
+
 const TrainingHistory = lazy(() => import("@/components/profile/TrainingHistory"));
 const WorkoutDataCenter = lazy(() => import("@/components/profile/WorkoutDataCenter"));
 const WelcomeGiftModal = lazy(() => import("@/components/dashboard/WelcomeGiftModal"));
+const UserActivityFeed = lazy(() => import("@/components/admin/UserActivityFeed"));
 
-/** Posture Analysis card — moved from dashboard home to profile */
+/** Posture Analysis card */
 const PostureAnalysisCard = () => {
   const { user } = useAuth();
   const [hasPosture, setHasPosture] = useState<boolean | null>(null);
@@ -65,7 +67,7 @@ const PostureAnalysisCard = () => {
   );
 };
 
-/** Deferred free custom program coupon — shows if user clicked "Do Later" */
+/** Deferred free custom program coupon */
 const DeferredCouponCard = () => {
   const { user } = useAuth();
   const nav = useNavigate();
@@ -114,7 +116,7 @@ const DeferredCouponCard = () => {
         </span>
       </div>
       <p className="text-xs text-muted-foreground mb-3">
-        You have a free custom workout program waiting to be claimed. Fill out the form on your dashboard and Coach Matt will build it for you.
+        You have a free custom workout program waiting to be claimed.
       </p>
       <button
         onClick={handleClaim}
@@ -133,10 +135,19 @@ interface ProfileData {
   subscription_tier: string;
 }
 
+type ProfileTab = "profile" | "programs" | "activity" | "data";
+
+const PROFILE_TABS: { key: ProfileTab; label: string; icon: typeof User }[] = [
+  { key: "profile", label: "Profile", icon: User },
+  { key: "programs", label: "Programs", icon: Dumbbell },
+  { key: "activity", label: "Activity", icon: Activity },
+  { key: "data", label: "Data", icon: Brain },
+];
+
 const Profile = () => {
   const { user, subscribed, subscriptionTier, subscriptionEnd, checkSubscription } = useAuth();
   const { isAdmin } = useIsAdmin();
-  const [activeTab, setActiveTab] = useState<"profile" | "history" | "data">("profile");
+  const [activeTab, setActiveTab] = useState<ProfileTab>("profile");
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [fullName, setFullName] = useState("");
   const [athleteName, setAthleteName] = useState("");
@@ -161,8 +172,6 @@ const Profile = () => {
     if (!user) return;
     const load = async () => {
       setLoading(true);
-
-      // Parallel data fetching for performance
       const [profileRes, partsRes, logsRes, cardsRes, purchasedRes, activeRes, bookingsRes] = await Promise.all([
         supabase.from("profiles").select("full_name, athlete_name, email, subscription_tier, auto_regulate").eq("user_id", user.id).single(),
         supabase.from("challenge_participants").select("challenge_id, current_value, is_public, monthly_challenge_id").eq("user_id", user.id),
@@ -180,7 +189,6 @@ const Profile = () => {
         setAutoRegulate((profileRes.data as any).auto_regulate === true);
       }
 
-      // Challenge enrichment
       if (partsRes.data && partsRes.data.length > 0) {
         const enriched = await Promise.all(
           (partsRes.data as any[]).map(async (p: any) => {
@@ -202,7 +210,6 @@ const Profile = () => {
         setChallenges(enriched);
       }
 
-      // Lift stats
       if (logsRes.data && logsRes.data.length > 0) {
         const grouped: Record<string, { max: number; count: number }> = {};
         logsRes.data.forEach((l: any) => {
@@ -277,6 +284,16 @@ const Profile = () => {
     }
   };
 
+  const handleShare = () => {
+    const url = `${window.location.origin}?ref=${user?.id || ""}`;
+    if (navigator.share) {
+      navigator.share({ title: "Train with me on M²", url });
+    } else {
+      navigator.clipboard.writeText(url);
+      toast({ title: "Referral link copied!" });
+    }
+  };
+
   const getMedalIcon = (rank: number) => {
     if (rank === 1) return <Trophy size={16} className="text-primary" />;
     if (rank === 2) return <Medal size={16} className="text-muted-foreground" />;
@@ -308,133 +325,97 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-background">
       <AppNavbar />
-      <div className="container pt-20 pb-12 max-w-3xl">
+      <div className="container pt-20 pb-12 max-w-3xl px-3 sm:px-4">
 
         {/* Profile Header Card */}
-        <div className="bg-card border border-border p-6 mb-6">
-          <div className="flex items-start gap-4">
-            <div className="w-16 h-16 bg-primary/10 border-2 border-primary/30 flex items-center justify-center shrink-0">
-              <User size={28} className="text-primary" />
+        <div className="bg-card border border-border p-4 sm:p-6 mb-4">
+          <div className="flex items-start gap-3">
+            <div className="w-14 h-14 bg-primary/10 border-2 border-primary/30 flex items-center justify-center shrink-0 rounded-full">
+              <User size={24} className="text-primary" />
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-xl font-black uppercase tracking-tight text-foreground truncate">
+              <h1 className="text-lg font-black uppercase tracking-tight text-foreground truncate">
                 {displayName}
               </h1>
-              <p className="text-xs text-muted-foreground">{profile?.email}</p>
-              <div className="flex items-center gap-2 mt-2 flex-wrap">
+              <p className="text-xs text-muted-foreground truncate">{profile?.email}</p>
+              <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                 {isAdmin ? (
                   <Badge className="flex items-center gap-1 text-[10px] uppercase tracking-widest bg-primary text-primary-foreground">
-                    <Crown size={10} />
-                    M² Coach
+                    <Crown size={10} /> M² Coach
                   </Badge>
                 ) : subscriptionTier ? (
                   <Badge className="flex items-center gap-1 text-[10px] uppercase tracking-widest">
-                    <Crown size={10} />
-                    {TIERS[subscriptionTier].name}
+                    <Crown size={10} /> {TIERS[subscriptionTier].name}
                   </Badge>
                 ) : (
-                  <Badge variant="outline" className="text-[10px] uppercase tracking-widest">Free Account</Badge>
-                )}
-                {subscriptionEnd && (
-                  <span className="text-[10px] text-muted-foreground">
-                    Renews {new Date(subscriptionEnd).toLocaleDateString()}
-                  </span>
+                  <Badge variant="outline" className="text-[10px] uppercase tracking-widest">Free</Badge>
                 )}
               </div>
             </div>
-            <div className="flex flex-col gap-2 shrink-0">
-              {subscribed ? (
-                <button
-                  onClick={handleManageSubscription}
-                  disabled={portalLoading}
-                  className="flex items-center gap-1.5 bg-primary text-primary-foreground px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-50"
-                >
-                  {portalLoading ? <Loader2 size={12} className="animate-spin" /> : <ExternalLink size={12} />}
-                  Manage Plan
-                </button>
-              ) : (
-                <Link
-                  to="/pricing"
-                  className="flex items-center gap-1.5 bg-primary text-primary-foreground px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all"
-                >
-                  <Zap size={12} />
-                  Upgrade
-                </Link>
-              )}
-            </div>
+          </div>
+          {/* Quick action buttons */}
+          <div className="flex gap-2 mt-3">
+            {subscribed ? (
+              <button
+                onClick={handleManageSubscription}
+                disabled={portalLoading}
+                className="flex-1 flex items-center justify-center gap-1.5 bg-primary text-primary-foreground py-2.5 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-50 rounded"
+              >
+                {portalLoading ? <Loader2 size={12} className="animate-spin" /> : <ExternalLink size={12} />}
+                Manage Plan
+              </button>
+            ) : (
+              <Link
+                to="/pricing"
+                className="flex-1 flex items-center justify-center gap-1.5 bg-primary text-primary-foreground py-2.5 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all rounded"
+              >
+                <Zap size={12} /> Upgrade
+              </Link>
+            )}
+            <button
+              onClick={handleShare}
+              className="flex items-center justify-center gap-1.5 border border-primary/30 text-primary px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:bg-primary/10 transition-all rounded"
+            >
+              <UserPlus size={12} /> Invite
+            </button>
+            {canGiftSession && (
+              <button
+                onClick={() => setGiftModalOpen(true)}
+                className="flex items-center justify-center gap-1.5 border border-primary/30 text-primary px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:bg-primary/10 transition-all rounded"
+              >
+                <Gift size={12} /> Gift
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className={`grid grid-cols-2 ${canGiftSession ? "sm:grid-cols-5" : "sm:grid-cols-4"} gap-2 mb-6`}>
-          <Link to="/dashboard" className="bg-card border border-border p-3 flex flex-col items-center gap-1.5 hover:border-primary/40 transition-all">
-            <Dumbbell size={18} className="text-primary" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Dashboard</span>
-          </Link>
-          <Link to="/shop" className="bg-card border border-border p-3 flex flex-col items-center gap-1.5 hover:border-primary/40 transition-all">
-            <ShoppingBag size={18} className="text-primary" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Shop</span>
-          </Link>
-          <Link to="/schedule" className="bg-card border border-border p-3 flex flex-col items-center gap-1.5 hover:border-primary/40 transition-all">
-            <Calendar size={18} className="text-primary" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Schedule</span>
-          </Link>
-          <Link to="/pricing" className="bg-card border border-border p-3 flex flex-col items-center gap-1.5 hover:border-primary/40 transition-all">
-            <Shield size={18} className="text-primary" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Plans</span>
-          </Link>
-          {canGiftSession && (
+        {/* 4-Tab Lateral Navigation */}
+        <div className="flex border border-border rounded-lg overflow-hidden mb-4">
+          {PROFILE_TABS.map(({ key, label, icon: Icon }) => (
             <button
-              onClick={() => setGiftModalOpen(true)}
-              className="bg-primary/10 border border-primary/30 p-3 flex flex-col items-center gap-1.5 hover:border-primary/60 transition-all"
+              key={key}
+              onClick={() => setActiveTab(key)}
+              className={`flex-1 py-2.5 text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-1 ${
+                activeTab === key
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-card text-muted-foreground hover:text-foreground hover:bg-muted"
+              }`}
             >
-              <Gift size={18} className="text-primary" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Gift Session</span>
+              <Icon size={12} />
+              <span className="hidden xs:inline sm:inline">{label}</span>
+              <span className="xs:hidden sm:hidden">{label.slice(0, 4)}</span>
             </button>
-          )}
+          ))}
         </div>
 
-        {/* Tab Bar */}
-        <div className="flex border-b border-border mb-6">
-          <button
-            onClick={() => setActiveTab("profile")}
-            className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-widest transition-all border-b-2 flex items-center justify-center gap-1.5 ${
-              activeTab === "profile"
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <User size={12} /> Profile
-          </button>
-          <button
-            onClick={() => setActiveTab("history")}
-            className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-widest transition-all border-b-2 flex items-center justify-center gap-1.5 ${
-              activeTab === "history"
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Brain size={12} /> Training History
-          </button>
-          <button
-            onClick={() => setActiveTab("data")}
-            className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-widest transition-all border-b-2 flex items-center justify-center gap-1.5 ${
-              activeTab === "data"
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <FileText size={12} /> Data Center
-          </button>
-        </div>
-
-        {activeTab === "history" ? (
+        {/* Tab Content */}
+        {activeTab === "activity" ? (
           <Suspense fallback={
             <div className="flex justify-center py-20">
               <Loader2 size={24} className="animate-spin text-primary" />
             </div>
           }>
-            <TrainingHistory />
+            {user && <UserActivityFeed targetUserId={user.id} />}
           </Suspense>
         ) : activeTab === "data" ? (
           <Suspense fallback={
@@ -442,350 +423,269 @@ const Profile = () => {
               <Loader2 size={24} className="animate-spin text-primary" />
             </div>
           }>
-            <WorkoutDataCenter />
+            <TrainingHistory />
+            <div className="mt-6">
+              <WorkoutDataCenter />
+            </div>
           </Suspense>
-        ) : (
-        <>
-        {/* Subscription Details */}
-        {(subscribed || isAdmin) && (
-          <div className="bg-primary/5 border border-primary/20 p-5 mb-6">
-            <div className="flex items-center gap-2 mb-3">
-              <Crown size={14} className="text-primary" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Your Subscription</span>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Plan</p>
-                <p className="text-sm font-bold text-foreground">{isAdmin ? "M² Coach" : subscriptionTier ? TIERS[subscriptionTier].name : "Free"}</p>
-              </div>
-              <div>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Price</p>
-                <p className="text-sm font-bold text-foreground">{isAdmin ? "∞" : subscriptionTier ? `${TIERS[subscriptionTier].price}/mo` : "—"}</p>
-              </div>
-              <div>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Store Discount</p>
-                <p className="text-sm font-bold text-primary">{isAdmin ? "100% off" : subscriptionTier ? `${TIER_DISCOUNTS[subscriptionTier]}% off` : "—"}</p>
-              </div>
-              <div>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Renews</p>
-                <p className="text-sm font-bold text-foreground">
-                  {isAdmin ? "Never expires" : subscriptionEnd ? new Date(subscriptionEnd).toLocaleDateString() : "—"}
-                </p>
-              </div>
-            </div>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <button
-                onClick={handleManageSubscription}
-                disabled={portalLoading}
-                className="flex items-center gap-1.5 border border-primary/30 text-primary px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-primary/10 transition-all disabled:opacity-50"
-              >
-                {portalLoading ? <Loader2 size={12} className="animate-spin" /> : <ExternalLink size={12} />}
-                Change Plan · Update Payment
-              </button>
-              <button
-                onClick={handleManageSubscription}
-                disabled={portalLoading}
-                className="flex items-center gap-1.5 border border-destructive/40 text-destructive px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-destructive/10 transition-all disabled:opacity-50"
-              >
-                Cancel Subscription
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Family Billing */}
-        <FamilyBilling />
-
-        {/* My Programs — show empty state or list */}
-        {activePrograms.length === 0 && purchasedPrograms.length === 0 && liftStats.length === 0 && (
-          <div className="mb-6">
-            <EmptyStateCard
-              title="Your Journey Starts Here"
-              description="You haven't started any programs or logged any lifts yet. Pick your starting track and let Matt build your path."
-              ctaLabel="Select Your Starting Track →"
-              ctaTo="/shop"
-            />
-          </div>
-        )}
-        {(activePrograms.length > 0 || purchasedPrograms.length > 0) && (
-          <div className="bg-card border border-border p-5 mb-6">
-            <h2 className="text-[10px] font-bold uppercase tracking-widest text-primary mb-4 flex items-center gap-1.5">
-              <Dumbbell size={12} /> My Programs
-            </h2>
-            <div className="space-y-2">
-              {activePrograms.map((ap: any) => (
-                <div key={ap.id} className="flex items-center justify-between bg-muted p-3">
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-foreground truncate">
-                      {(ap.training_programs as any)?.title || "Training Program"}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground">
-                      {(ap.training_programs as any)?.category} · {(ap.training_programs as any)?.level}
-                      {(ap.training_programs as any)?.sport && ` · ${(ap.training_programs as any).sport}`}
-                    </p>
-                  </div>
-                  <Badge variant={ap.status === "active" ? "default" : "outline"} className="text-[9px] uppercase tracking-widest shrink-0">
-                    {ap.status}
-                  </Badge>
+        ) : activeTab === "programs" ? (
+          <>
+            {/* Active & Purchased Programs */}
+            {activePrograms.length === 0 && purchasedPrograms.length === 0 ? (
+              <EmptyStateCard
+                title="No Programs Yet"
+                description="Pick your starting track and let Matt build your path."
+                ctaLabel="Browse Programs →"
+                ctaTo="/shop"
+              />
+            ) : (
+              <div className="bg-card border border-border p-4 mb-4">
+                <h2 className="text-[10px] font-bold uppercase tracking-widest text-primary mb-3 flex items-center gap-1.5">
+                  <Dumbbell size={12} /> My Programs
+                </h2>
+                <div className="space-y-2">
+                  {activePrograms.map((ap: any) => (
+                    <div key={ap.id} className="flex items-center justify-between bg-muted p-3 rounded">
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-foreground truncate">
+                          {(ap.training_programs as any)?.title || "Training Program"}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {(ap.training_programs as any)?.category} · {(ap.training_programs as any)?.level}
+                        </p>
+                      </div>
+                      <Badge variant={ap.status === "active" ? "default" : "outline"} className="text-[9px] uppercase tracking-widest shrink-0">
+                        {ap.status}
+                      </Badge>
+                    </div>
+                  ))}
+                  {purchasedPrograms.map((pp: any) => (
+                    <div key={pp.id} className="flex items-center justify-between bg-muted p-3 rounded">
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-foreground truncate">{pp.program_title}</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          Purchased {new Date(pp.purchased_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <FileText size={14} className="text-primary shrink-0" />
+                    </div>
+                  ))}
                 </div>
-              ))}
-              {purchasedPrograms.map((pp: any) => (
-                <div key={pp.id} className="flex items-center justify-between bg-muted p-3">
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-foreground truncate">{pp.program_title}</p>
-                    <p className="text-[10px] text-muted-foreground">
-                      {pp.program_type === "custom" ? "Custom Program" : pp.program_type}
-                      {pp.sport && ` · ${pp.sport}`}
-                      {" · "}Purchased {new Date(pp.purchased_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <FileText size={14} className="text-primary shrink-0" />
-                </div>
-              ))}
-            </div>
-            <Link
-              to="/dashboard"
-              className="mt-3 flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary/80 transition-all"
-            >
-              Go to Dashboard <ArrowRight size={12} />
-            </Link>
-          </div>
-        )}
+              </div>
+            )}
 
-        {/* Recent Bookings */}
-        {bookings.length > 0 && (
-          <div className="bg-card border border-border p-5 mb-6">
-            <h2 className="text-[10px] font-bold uppercase tracking-widest text-primary mb-4 flex items-center gap-1.5">
-              <Calendar size={12} /> Session History
-            </h2>
-            <div className="space-y-2">
-              {bookings.slice(0, 5).map((b: any) => (
-                <div key={b.id} className="flex items-center justify-between bg-muted p-3">
-                  <div>
-                    <p className="text-sm font-bold text-foreground">
-                      {new Date(b.slot_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                      {" at "}{b.start_time?.slice(0, 5)}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground">
-                      {b.duration_minutes} min · ${(b.amount_cents / 100).toFixed(0)}
-                    </p>
-                  </div>
-                  <Badge
-                    variant={b.status === "confirmed" ? "default" : "outline"}
-                    className={`text-[9px] uppercase tracking-widest ${b.status === "cancelled" ? "text-destructive" : ""}`}
+            {/* Bookings */}
+            {bookings.length > 0 && (
+              <div className="bg-card border border-border p-4 mb-4">
+                <h2 className="text-[10px] font-bold uppercase tracking-widest text-primary mb-3 flex items-center gap-1.5">
+                  <Calendar size={12} /> Session History
+                </h2>
+                <div className="space-y-2">
+                  {bookings.slice(0, 5).map((b: any) => (
+                    <div key={b.id} className="flex items-center justify-between bg-muted p-3 rounded">
+                      <div>
+                        <p className="text-sm font-bold text-foreground">
+                          {new Date(b.slot_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                          {" at "}{b.start_time?.slice(0, 5)}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {b.duration_minutes} min · ${(b.amount_cents / 100).toFixed(0)}
+                        </p>
+                      </div>
+                      <Badge
+                        variant={b.status === "confirmed" ? "default" : "outline"}
+                        className={`text-[9px] uppercase tracking-widest ${b.status === "cancelled" ? "text-destructive" : ""}`}
+                      >
+                        {b.status}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Challenge Results */}
+            {challenges.length > 0 && (
+              <div className="bg-card border border-border p-4 mb-4">
+                <h2 className="text-[10px] font-bold uppercase tracking-widest text-primary mb-3 flex items-center gap-1.5">
+                  <Trophy size={12} /> Challenge Results
+                </h2>
+                <div className="space-y-2">
+                  {challenges.map((c: any, i: number) => (
+                    <div key={i} className="flex items-center gap-3 bg-muted p-3 rounded">
+                      <div className="w-8 flex justify-center">
+                        {getMedalIcon(c.rank)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-foreground truncate">{c.title}</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          Score: {c.current_value} · {getMedalLabel(c.rank)} of {c.total}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Top Lifts */}
+            {liftStats.length > 0 && (
+              <div className="bg-card border border-border p-4 mb-4">
+                <h2 className="text-[10px] font-bold uppercase tracking-widest text-primary mb-3 flex items-center gap-1.5">
+                  <Dumbbell size={12} /> Top Lifts
+                </h2>
+                <div className="grid grid-cols-2 gap-2">
+                  {visibleLifts.map((s, i) => (
+                    <div key={i} className="bg-muted p-3 rounded">
+                      <p className="text-xs font-bold text-foreground truncate">{s.exercise_name}</p>
+                      <p className="text-lg font-mono font-bold text-primary">{Math.round(s.max_weight)} lbs</p>
+                      <p className="text-[10px] text-muted-foreground">{s.count} sessions</p>
+                    </div>
+                  ))}
+                </div>
+                {liftStats.length > 6 && (
+                  <button
+                    onClick={() => setShowAllLifts(!showAllLifts)}
+                    className="mt-3 flex items-center gap-1 text-xs font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-all"
                   >
-                    {b.status}
-                  </Badge>
+                    {showAllLifts ? <><ChevronUp size={12} /> Show Less</> : <><ChevronDown size={12} /> Show All {liftStats.length}</>}
+                  </button>
+                )}
+              </div>
+            )}
+          </>
+        ) : (
+          /* Profile tab */
+          <>
+            {/* Subscription Details */}
+            {(subscribed || isAdmin) && (
+              <div className="bg-primary/5 border border-primary/20 p-4 mb-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Crown size={14} className="text-primary" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Your Subscription</span>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Plan</p>
+                    <p className="text-sm font-bold text-foreground">{isAdmin ? "M² Coach" : subscriptionTier ? TIERS[subscriptionTier].name : "Free"}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Price</p>
+                    <p className="text-sm font-bold text-foreground">{isAdmin ? "∞" : subscriptionTier ? `${TIERS[subscriptionTier].price}/mo` : "—"}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Discount</p>
+                    <p className="text-sm font-bold text-primary">{isAdmin ? "100%" : subscriptionTier ? `${TIER_DISCOUNTS[subscriptionTier]}%` : "—"}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Renews</p>
+                    <p className="text-sm font-bold text-foreground">
+                      {isAdmin ? "Never" : subscriptionEnd ? new Date(subscriptionEnd).toLocaleDateString() : "—"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
-        {/* Edit Profile */}
-        <div className="bg-card border border-border p-5 mb-6">
-          <h2 className="text-[10px] font-bold uppercase tracking-widest text-primary mb-4">Profile Details</h2>
-          <div className="space-y-4">
-            <div>
-              <label className="text-xs font-bold text-muted-foreground block mb-1">Full Name</label>
-              <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Your full name" />
-            </div>
-            <div>
-              <label className="text-xs font-bold text-muted-foreground block mb-1">Athlete Display Name</label>
-              <Input value={athleteName} onChange={(e) => setAthleteName(e.target.value)} placeholder="Name shown on leaderboards" />
-            </div>
-            <div>
-              <label className="text-xs font-bold text-muted-foreground block mb-1">Email</label>
-              <Input value={profile?.email || ""} disabled className="opacity-60" />
-              <p className="text-[10px] text-muted-foreground mt-1">Email cannot be changed here</p>
-            </div>
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="bg-primary text-primary-foreground px-5 py-2.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all flex items-center gap-2 disabled:opacity-50"
-            >
-              {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-              Save Changes
-            </button>
-          </div>
-        </div>
+            <FamilyBilling />
 
-        {/* Auto-Regulation Engine */}
-        <div className="bg-card border border-border p-5 mb-6">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1">
+            {/* Edit Profile */}
+            <div className="bg-card border border-border p-4 mb-4">
+              <h2 className="text-[10px] font-bold uppercase tracking-widest text-primary mb-3">Profile Details</h2>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground block mb-1">Full Name</label>
+                  <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Your full name" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground block mb-1">Athlete Display Name</label>
+                  <Input value={athleteName} onChange={(e) => setAthleteName(e.target.value)} placeholder="Name shown on leaderboards" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground block mb-1">Email</label>
+                  <Input value={profile?.email || ""} disabled className="opacity-60" />
+                </div>
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="bg-primary text-primary-foreground px-5 py-2.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all flex items-center gap-2 disabled:opacity-50 rounded"
+                >
+                  {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                  Save Changes
+                </button>
+              </div>
+            </div>
+
+            {/* Auto-Regulation Engine */}
+            <div className="bg-card border border-border p-4 mb-4">
               <h2 className="text-[10px] font-bold uppercase tracking-widest text-primary mb-2 flex items-center gap-1.5">
                 <Activity size={12} /> Auto-Regulation Engine
               </h2>
               <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-                When enabled, you'll be asked how many hours you slept before each workout. 
-                If you're under-recovered, your prescribed working weights (3RM/5RM) automatically drop 
-                and complex barbell movements swap to dumbbell/machine equivalents — protecting your 
-                joints when your nervous system is compromised.
+                When enabled, your working weights auto-adjust based on recovery data.
               </p>
-              <div className="flex items-center gap-3 bg-primary/5 border border-primary/20 p-3">
-                <Switch
-                  id="auto-regulate"
-                  checked={autoRegulate}
-                  onCheckedChange={setAutoRegulate}
-                />
+              <div className="flex items-center gap-3 bg-primary/5 border border-primary/20 p-3 rounded">
+                <Switch id="auto-regulate" checked={autoRegulate} onCheckedChange={setAutoRegulate} />
                 <label htmlFor="auto-regulate" className="text-xs font-bold text-foreground cursor-pointer select-none">
-                  {autoRegulate ? "Active — you'll get a readiness check before each workout" : "Disabled — standard programming only"}
+                  {autoRegulate ? "Active" : "Disabled"}
                 </label>
               </div>
-              {autoRegulate && (
-                <p className="text-[10px] text-primary mt-2 flex items-center gap-1">
-                  <Zap size={10} />
-                  Don't forget to hit "Save Changes" above to save this preference.
+            </div>
+
+            <DeferredCouponCard />
+            <PostureAnalysisCard />
+            <PrivacySettingsCard />
+
+            {/* Gift Cards */}
+            <div className="bg-card border border-border p-4 mb-4">
+              <h2 className="text-[10px] font-bold uppercase tracking-widest text-primary mb-3 flex items-center gap-1.5">
+                <Gift size={12} /> Gift Cards
+              </h2>
+              <div className="flex gap-2 mb-3">
+                <Input
+                  value={lookupCode}
+                  onChange={(e) => { setLookupCode(e.target.value.toUpperCase()); setLookupResult(null); }}
+                  placeholder="Enter gift card code"
+                  className="font-mono uppercase tracking-widest"
+                />
+                <button
+                  onClick={handleLookup}
+                  disabled={lookupLoading || !lookupCode.trim()}
+                  className="bg-primary text-primary-foreground px-4 py-2 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all flex items-center gap-1.5 disabled:opacity-50 shrink-0 rounded"
+                >
+                  {lookupLoading ? <Loader2 size={12} className="animate-spin" /> : <Search size={12} />}
+                  Check
+                </button>
+              </div>
+              {lookupResult && (
+                <div className="bg-primary/10 border border-primary/20 p-4 mb-3 rounded">
+                  <p className="text-xs text-muted-foreground mb-1">Remaining Balance</p>
+                  <p className="text-2xl font-mono font-bold text-primary">${lookupResult.remaining_balance.toFixed(2)}</p>
+                </div>
+              )}
+              {giftCards.length > 0 ? (
+                <div className="space-y-2">
+                  {giftCards.map((gc: any) => (
+                    <div key={gc.id} className="flex items-center justify-between bg-muted p-3 rounded">
+                      <div>
+                        <p className="text-sm font-mono font-bold text-foreground tracking-widest">{gc.code}</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {gc.purchaser_id === user?.id ? "Purchased" : "Redeemed"} · {new Date(gc.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <p className={`text-lg font-mono font-bold ${gc.remaining_balance > 0 ? "text-primary" : "text-muted-foreground"}`}>
+                        ${gc.remaining_balance.toFixed(2)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground text-center py-2">
+                  No gift cards yet. <Link to="/shop" className="text-primary hover:underline">Buy one</Link>.
                 </p>
               )}
             </div>
-          </div>
-        </div>
-
-        {/* Deferred Free Custom Program Coupon */}
-        <DeferredCouponCard />
-
-        {/* Free Posture Analysis */}
-        <PostureAnalysisCard />
-
-        {/* Privacy Settings */}
-        <PrivacySettingsCard />
-
-        {/* Challenge Medals */}
-        {challenges.length > 0 && (
-          <div className="bg-card border border-border p-5 mb-6">
-            <h2 className="text-[10px] font-bold uppercase tracking-widest text-primary mb-4 flex items-center gap-1.5">
-              <Trophy size={12} /> Challenge Results
-            </h2>
-            <div className="space-y-3">
-              {challenges.map((c: any, i: number) => (
-                <div key={i} className="flex items-center gap-3 bg-muted p-3">
-                  <div className="w-8 flex justify-center">
-                    {getMedalIcon(c.rank)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-foreground truncate">{c.title}</p>
-                    <p className="text-[10px] text-muted-foreground">
-                      Score: {c.current_value} · Rank: {getMedalLabel(c.rank)} of {c.total}
-                    </p>
-                  </div>
-                  {c.rank <= 3 && (
-                    <Badge className="text-[9px] uppercase tracking-widest shrink-0">
-                      {getMedalLabel(c.rank)}
-                    </Badge>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Lift Stats */}
-        {liftStats.length > 0 && (
-          <div className="bg-card border border-border p-5 mb-6">
-            <h2 className="text-[10px] font-bold uppercase tracking-widest text-primary mb-4 flex items-center gap-1.5">
-              <Dumbbell size={12} /> Top Lifts
-            </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {visibleLifts.map((s, i) => (
-                <div key={i} className="bg-muted p-3">
-                  <p className="text-xs font-bold text-foreground truncate">{s.exercise_name}</p>
-                  <p className="text-lg font-mono font-bold text-primary">{Math.round(s.max_weight)} lbs</p>
-                  <p className="text-[10px] text-muted-foreground">{s.count} sessions logged</p>
-                </div>
-              ))}
-            </div>
-            {liftStats.length > 6 && (
-              <button
-                onClick={() => setShowAllLifts(!showAllLifts)}
-                className="mt-3 flex items-center gap-1 text-xs font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-all"
-              >
-                {showAllLifts ? <><ChevronUp size={12} /> Show Less</> : <><ChevronDown size={12} /> Show All {liftStats.length} Lifts</>}
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* Refer & Earn */}
-        <Link
-          to="/dashboard"
-          onClick={() => { /* will navigate; tab set handled by Dashboard */ }}
-          className="bg-card border border-border p-5 mb-6 flex items-center justify-between hover:border-primary/40 transition-all group"
-        >
-          <div className="flex items-center gap-2">
-            <Send size={14} className="text-primary" />
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-primary">Refer & Earn</p>
-              <p className="text-xs text-muted-foreground">Share your referral code and earn credits</p>
-            </div>
-          </div>
-          <ArrowRight size={14} className="text-muted-foreground group-hover:text-primary transition-all" />
-        </Link>
-
-        {/* Gift Cards */}
-        <div className="bg-card border border-border p-5 mb-6">
-          <h2 className="text-[10px] font-bold uppercase tracking-widest text-primary mb-4 flex items-center gap-1.5">
-            <Gift size={12} /> Gift Cards
-          </h2>
-
-          {/* Lookup */}
-          <div className="flex gap-2 mb-4">
-            <Input
-              value={lookupCode}
-              onChange={(e) => { setLookupCode(e.target.value.toUpperCase()); setLookupResult(null); }}
-              placeholder="Enter gift card code"
-              className="font-mono uppercase tracking-widest"
-            />
-            <button
-              onClick={handleLookup}
-              disabled={lookupLoading || !lookupCode.trim()}
-              className="bg-primary text-primary-foreground px-4 py-2 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all flex items-center gap-1.5 disabled:opacity-50 shrink-0"
-            >
-              {lookupLoading ? <Loader2 size={12} className="animate-spin" /> : <Search size={12} />}
-              Check
-            </button>
-          </div>
-
-          {lookupResult && (
-            <div className="bg-primary/10 border border-primary/20 p-4 mb-4">
-              <p className="text-xs text-muted-foreground mb-1">Remaining Balance</p>
-              <p className="text-2xl font-mono font-bold text-primary">${lookupResult.remaining_balance.toFixed(2)}</p>
-              <p className="text-[10px] text-muted-foreground mt-1">
-                Original value: ${lookupResult.original_amount.toFixed(2)}
-              </p>
-            </div>
-          )}
-
-          {giftCards.length > 0 ? (
-            <div className="space-y-2">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Your Cards</p>
-              {giftCards.map((gc: any) => (
-                <div key={gc.id} className="flex items-center justify-between bg-muted p-3">
-                  <div>
-                    <p className="text-sm font-mono font-bold text-foreground tracking-widest">{gc.code}</p>
-                    <p className="text-[10px] text-muted-foreground">
-                      {gc.purchaser_id === user?.id ? "Purchased" : "Redeemed"} · {new Date(gc.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className={`text-lg font-mono font-bold ${gc.remaining_balance > 0 ? "text-primary" : "text-muted-foreground"}`}>
-                      ${gc.remaining_balance.toFixed(2)}
-                    </p>
-                    <p className="text-[9px] text-muted-foreground">
-                      of ${gc.original_amount.toFixed(2)}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-xs text-muted-foreground text-center py-2">
-              No gift cards yet. <Link to="/shop" className="text-primary hover:underline">Buy one in the store</Link>.
-            </p>
-          )}
-        </div>
-        </>
+          </>
         )}
       </div>
       <SupportTicketForm />

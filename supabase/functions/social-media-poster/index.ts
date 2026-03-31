@@ -6,7 +6,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 
 async function generatePost(
@@ -15,7 +15,7 @@ async function generatePost(
   city: string,
   platform: "facebook" | "linkedin"
 ): Promise<string> {
-  if (!ANTHROPIC_API_KEY) {
+  if (!LOVABLE_API_KEY) {
     return `${businessName} is here to help with all your ${businessType} needs in ${city}. Reach out today!`;
   }
 
@@ -28,23 +28,18 @@ async function generatePost(
 
   const prompt = postTypes[Math.floor(Date.now() / 86400000) % postTypes.length];
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
-      "x-api-key": ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-      "content-type": "application/json",
-    },
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 200,
-      messages: [{ role: "user", content: prompt }],
-    }),
-  });
+      model: "google/gemini-2.5-flash-lite", 
+      messages: [{ role: "user", content: prompt }] }) });
 
   const data = await res.json();
   return (
-    data.content?.[0]?.text?.trim() ||
+    data?.choices?.[0]?.message?.content?.trim() ||
     `${businessName} — serving ${city} with quality ${businessType} services. Contact us today!`
   );
 }
@@ -60,8 +55,7 @@ async function postToFacebook(
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message, access_token: accessToken }),
-      }
+        body: JSON.stringify({ message, access_token: accessToken }) }
     );
     return res.ok;
   } catch {
@@ -80,22 +74,16 @@ async function postToLinkedIn(
       headers: {
         Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
-        "X-Restli-Protocol-Version": "2.0.0",
-      },
+        "X-Restli-Protocol-Version": "2.0.0" },
       body: JSON.stringify({
         author: `urn:li:organization:${orgId}`,
         lifecycleState: "PUBLISHED",
         specificContent: {
           "com.linkedin.ugc.ShareContent": {
             shareCommentary: { text: message },
-            shareMediaCategory: "NONE",
-          },
-        },
+            shareMediaCategory: "NONE" } },
         visibility: {
-          "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC",
-        },
-      }),
-    });
+          "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC" } }) });
     return res.ok;
   } catch {
     return false;
@@ -108,12 +96,10 @@ async function notifyMatt(businessName: string): Promise<void> {
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "M² System <matt@notify.m2training.com>",
+      from: "M² System <matt@mattmichelstraining.com>",
       to: ["matt@m2training.com"],
       subject: `New client ${businessName} needs their social accounts connected`,
-      html: `<p>New client <strong>${businessName}</strong> needs their social accounts connected before we can start posting.</p><p>Please reach out to them to collect their Facebook Page ID, LinkedIn Org ID, and access tokens.</p>`,
-    }),
-  });
+      html: `<p>New client <strong>${businessName}</strong> needs their social accounts connected before we can start posting.</p><p>Please reach out to them to collect their Facebook Page ID, LinkedIn Org ID, and access tokens.<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI \u00b7 (313) 806-4952</div><img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div></p>` }) });
 }
 
 serve(async () => {
@@ -192,8 +178,7 @@ serve(async () => {
           .from("social_media_clients")
           .update({
             last_post_at: new Date().toISOString(),
-            post_count: (client.post_count || 0) + 1,
-          })
+            post_count: (client.post_count || 0) + 1 })
           .eq("id", client.id);
         posted++;
       }

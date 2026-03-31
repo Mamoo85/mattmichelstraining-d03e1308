@@ -74,11 +74,11 @@ serve(async (req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "M² System <matt@notify.m2training.com>",
+          from: "M² System <matt@mattmichelstraining.com>",
           to: ["matt@m2training.com"],
           subject: `New Chatbot signup — ${business_name}`,
           html: `<p><strong>${business_name}</strong> started checkout for the Contractor AI Chatbot at $149/month.<br>
-Contact: ${name || "n/a"} — ${email}${phone ? " — " + phone : ""}${city ? "<br>City: " + city : ""}${business_type ? "<br>Type: " + business_type : ""}</p>`,
+Contact: ${name || "n/a"} — ${email}${phone ? " — " + phone : ""}${city ? "<br>City: " + city : ""}${business_type ? "<br>Type: " + business_type : ""}<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI \u00b7 (313) 806-4952</div><img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div></p>`,
         }),
       });
     }

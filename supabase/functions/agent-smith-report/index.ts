@@ -7,7 +7,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 
 const SITE_URL = "https://www.mattmichelstraining.com";
 
@@ -172,8 +172,7 @@ serve(async (req) => {
       gbpPro: (gbpPro || 0) * 99,
       socialStandard: (socialStandard || 0) * 199,
       socialPro: (socialPro || 0) * 299,
-      socialTrainer: (socialTrainer || 0) * 149,
-    };
+      socialTrainer: (socialTrainer || 0) * 149 };
     const totalMrr = Object.values(mrr).reduce((a, b) => a + b, 0);
 
     // Check cron health via timestamps
@@ -184,17 +183,14 @@ serve(async (req) => {
 
     // AI analysis
     let aiAnalysis = "";
-    if (ANTHROPIC_API_KEY) {
-      const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
+    if (LOVABLE_API_KEY) {
+      const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: {
-          "x-api-key": ANTHROPIC_API_KEY,
-          "anthropic-version": "2023-06-01",
-          "content-type": "application/json",
-        },
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "claude-haiku-4-5-20251001",
-          max_tokens: 800,
+          model: "google/gemini-2.5-flash-lite", 
           messages: [{
             role: "user",
             content: `You are Agent Smith, an AI business analyst for M² Performance Training. Analyze this daily business snapshot and write 2-3 sentences about business health, trends, and one actionable recommendation. Be direct and specific — no fluff.
@@ -208,10 +204,9 @@ Outreach leads: ${JSON.stringify(outreachByStatus)}
 Social media clients needing token setup: ${socialMissingTokens?.length || 0}
 Goal: $10,000/mo MRR`
           }]
-        }),
-      });
+        }) });
       const aiData = await aiRes.json();
-      aiAnalysis = aiData.content?.[0]?.text || "";
+      aiAnalysis = aiData?.choices?.[0]?.message?.content || "";
     }
 
     // Format date for subject
@@ -219,8 +214,7 @@ Goal: $10,000/mo MRR`
       weekday: "long",
       month: "long",
       day: "numeric",
-      timeZone: "America/New_York",
-    });
+      timeZone: "America/New_York" });
 
     const fmt = (n: number) => `$${n.toLocaleString("en-US")}`;
 
@@ -269,38 +263,31 @@ Goal: $10,000/mo MRR`
       {
         name: "Contractor Lead Notify",
         schedule: "Every 15 min",
-        healthy: (leadsLast24h || 0) >= 0,
-      },
+        healthy: (leadsLast24h || 0) >= 0 },
       {
         name: "Newsletter Send",
         schedule: "Monday 8am ET",
-        healthy: newsletterAge < 8,
-      },
+        healthy: newsletterAge < 8 },
       {
         name: "GBP SaaS Poster",
         schedule: "Mon/Wed/Fri 10am ET",
-        healthy: gbpPostAge < 72,
-      },
+        healthy: gbpPostAge < 72 },
       {
         name: "Social Media Poster",
         schedule: "Mon/Wed/Fri",
-        healthy: true,
-      },
+        healthy: true },
       {
         name: "B2B Dental Scraper",
         schedule: "Daily 6am ET",
-        healthy: true,
-      },
+        healthy: true },
       {
         name: "Prospect Local Businesses",
         schedule: "Daily 11am ET",
-        healthy: true,
-      },
+        healthy: true },
       {
         name: "Agent Smith Report",
         schedule: "Daily 7am ET",
-        healthy: true,
-      },
+        healthy: true },
     ];
 
     const cronRows = cronJobs
@@ -415,6 +402,7 @@ Goal: $10,000/mo MRR`
     <div style="display:flex;align-items:center;gap:12px;">
       <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Matt Michels">
       <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>M² Performance Training · (313) 806-4952</div>
+        <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" />
     </div>
   </td></tr>
 
@@ -436,12 +424,10 @@ Goal: $10,000/mo MRR`
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "Agent Smith <matt@notify.m2training.com>",
+          from: "Agent Smith <matt@mattmichelstraining.com>",
           to: ["matthewmichels@mattmichelstraining.com", "matt@m2training.com"],
           subject,
-          html,
-        }),
-      });
+          html }) });
     }
 
     console.log(`[AGENT-SMITH] Report sent — MRR: $${totalMrr}, Revenue 7d: $${revenue7d.toFixed(2)}`);
@@ -451,16 +437,13 @@ Goal: $10,000/mo MRR`
       revenue_30d: revenue30d,
       leads_24h: leadsLast24h || 0,
       actions_needed: actionItems.length,
-      email_sent: true,
-    }), {
+      email_sent: true }), {
       status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+      headers: { "Content-Type": "application/json" } });
   } catch (e: any) {
     console.error("[AGENT-SMITH] Error:", e);
     return new Response(JSON.stringify({ error: e.message }), {
       status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+      headers: { "Content-Type": "application/json" } });
   }
 });

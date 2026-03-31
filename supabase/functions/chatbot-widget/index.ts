@@ -3,21 +3,19 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 
 function detectLeadCapture(text: string): { name: string | null; phone: string | null } {
   const phoneMatch = text.match(/\(?\d{3}\)?[\s.\-]?\d{3}[\s.\-]?\d{4}/);
   const nameMatch = text.match(/(?:my name is|i'm|i am|call me|name[:\s]+)([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)/i);
   return {
     phone: phoneMatch ? phoneMatch[0] : null,
-    name: nameMatch ? nameMatch[1].trim() : null,
-  };
+    name: nameMatch ? nameMatch[1].trim() : null };
 }
 
 serve(async (req) => {
@@ -62,25 +60,19 @@ serve(async (req) => {
       { role: "user", content: message },
     ];
 
-    if (!ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY not configured");
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
+    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
-      },
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 300,
-        system: systemPrompt,
-        messages,
-      }),
-    });
+        model: "google/gemini-2.5-flash-lite", 
+        messages: [{ role: "system", content: systemPrompt }, ...messages] }) });
 
     const aiData = await aiRes.json();
-    const response = (aiData.content?.[0]?.text || "Thanks for reaching out! How can I help you today?").trim();
+    const response = (aiData?.choices?.[0]?.message?.content || "Thanks for reaching out! How can I help you today?").trim();
 
     // Check entire conversation for lead capture signals
     const allText = [...messages.map((m: any) => m.content), response].join(" ");
@@ -94,8 +86,7 @@ serve(async (req) => {
         phone,
         message: `Chatbot lead from ${client.business_name}. Session: ${session_id}. Conversation summary: ${allText.slice(0, 500)}`,
         project_type: "chatbot_inquiry",
-        source: client_id,
-      });
+        source: client_id });
 
       // Increment lead count
       await sb
@@ -109,7 +100,7 @@ serve(async (req) => {
           method: "POST",
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            from: "M² Chatbot <matt@notify.m2training.com>",
+            from: "M² Chatbot <matt@mattmichelstraining.com>",
             to: ["matthewmichels@mattmichelstraining.com"],
             reply_to: "matt@m2training.com",
             subject: `New chatbot lead from ${client.business_name}'s website: ${name}, ${phone}`,
@@ -122,10 +113,9 @@ serve(async (req) => {
 <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;align-items:center;gap:12px;">
   <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Matt Michels">
   <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>Grosse Pointe, MI · (313) 806-4952</div>
+        <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" />
 </div>
-</div>`,
-          }),
-        });
+</div>` }) });
       }
     }
 

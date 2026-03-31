@@ -98,6 +98,7 @@ function buildReferralEmailHtml(bodyText: string): string {
             </td>
             <td style="vertical-align:middle;">
               <div style="font-size:14px;color:#1e293b;font-weight:600;">Matt Michels</div>
+        <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" />
               <div style="font-size:13px;color:#64748b;">M² Training · Grosse Pointe, MI</div>
               <div style="font-size:13px;color:#64748b;">(313) 806-4952</div>
             </td>
@@ -215,7 +216,7 @@ serve(async (req) => {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              from: "Matt Michels <matt@notify.m2training.com>",
+              from: "Matt Michels <matt@mattmichelstraining.com>",
               reply_to: "matt@m2training.com",
               to: [client.email],
               subject: window.subject,

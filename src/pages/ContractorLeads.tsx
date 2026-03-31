@@ -6,11 +6,14 @@ import { toast } from "sonner";
 import { Phone, CheckCircle, Zap, DollarSign, XCircle, ArrowRight, Loader2 } from "lucide-react";
 
 const TRADES = [
-  { slug: "roofing-detroit", trade: "Roofing", city: "Detroit", state: "MI", monthly: "$399", spots: 1 },
-  { slug: "hvac-detroit", trade: "HVAC", city: "Detroit", state: "MI", monthly: "$399", spots: 1 },
-  { slug: "plumbing-detroit", trade: "Plumbing", city: "Detroit", state: "MI", monthly: "$399", spots: 1 },
-  { slug: "electrical-detroit", trade: "Electrical", city: "Detroit", state: "MI", monthly: "$399", spots: 1 },
-  { slug: "roofing-ann-arbor", trade: "Roofing", city: "Ann Arbor", state: "MI", monthly: "$299", spots: 1 },
+  { slug: "roofing-chicago", trade: "Roofing", city: "Chicago", state: "IL", monthly: "$399", spots: 1 },
+  { slug: "hvac-columbus", trade: "HVAC", city: "Columbus", state: "OH", monthly: "$399", spots: 1 },
+  { slug: "plumbing-phoenix", trade: "Plumbing", city: "Phoenix", state: "AZ", monthly: "$399", spots: 1 },
+  { slug: "electrical-dallas", trade: "Electrical", city: "Dallas", state: "TX", monthly: "$399", spots: 1 },
+  { slug: "roofing-charlotte", trade: "Roofing", city: "Charlotte", state: "NC", monthly: "$299", spots: 1 },
+  { slug: "hvac-denver", trade: "HVAC", city: "Denver", state: "CO", monthly: "$299", spots: 1 },
+  { slug: "plumbing-nashville", trade: "Plumbing", city: "Nashville", state: "TN", monthly: "$299", spots: 1 },
+  { slug: "gutters-atlanta", trade: "Gutters / Siding", city: "Atlanta", state: "GA", monthly: "$299", spots: 1 },
 ];
 
 const WINS = [
@@ -53,15 +56,15 @@ export default function ContractorLeads() {
   return (
     <>
       <SEOHead
-        title="Exclusive Contractor Leads — Metro Detroit | M² Lead Network"
-        description="Exclusive roofing, HVAC, plumbing, and electrical leads in Metro Detroit. No shared leads. One contractor per trade per city. Flat monthly fee."
+        title="Exclusive Contractor Leads — Any City in the US | M² Lead Network"
+        description="Exclusive roofing, HVAC, plumbing, and electrical leads in your market. No shared leads. One contractor per trade per city. Flat monthly fee."
       />
       <div className="min-h-screen bg-background text-foreground">
         {/* Hero Banner */}
         <div className="w-full">
           <img
             src="/images/hero-contractor-leads.png"
-            alt="Contractor Lead System — Exclusive Metro Detroit leads"
+            alt="Contractor Lead System — Exclusive leads in your city"
             className="w-full object-cover"
           />
         </div>
@@ -193,7 +196,7 @@ export default function ContractorLeads() {
                   <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Target City</label>
                   <input
                     value={form.city} onChange={e => setForm(f => ({...f, city: e.target.value}))}
-                    placeholder="Detroit, Warren, Ann Arbor…" required
+                    placeholder="e.g. Chicago, Dallas, Atlanta…" required
                     className="w-full bg-background border border-border px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-primary outline-none"
                   />
                 </div>

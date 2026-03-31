@@ -10,7 +10,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 
 const AFFILIATE_LINKS = {
   apollo: "https://www.apollo.io/?via=m2",
@@ -28,11 +28,10 @@ const AFFILIATE_LINKS = {
   jobber: "https://www.getjobber.com/?via=matt",
   housecallPro: "https://www.housecallpro.com/?via=matt",
   activecampaign: "https://www.activecampaign.com/?via=matt",
-  lemlist: "https://www.lemlist.com/?via=matt",
-};
+  lemlist: "https://www.lemlist.com/?via=matt" };
 
 async function generateNewsletterContent(): Promise<{ subject: string; html: string; preview: string }> {
-  if (!ANTHROPIC_API_KEY) throw new Error("No ANTHROPIC_API_KEY");
+  if (!LOVABLE_API_KEY) throw new Error("No LOVABLE_API_KEY");
 
   const weekNumber = Math.floor(Date.now() / (7 * 24 * 60 * 60 * 1000));
   const topics = [
@@ -51,16 +50,13 @@ async function generateNewsletterContent(): Promise<{ subject: string; html: str
   ];
   const topic = topics[weekNumber % topics.length];
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
-      "x-api-key": ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-      "content-type": "application/json",
-    },
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 1200,
+      model: "google/gemini-2.5-flash-lite", 
       messages: [{
         role: "user",
         content: `Write a weekly newsletter for B2B field sales reps (medical device, dental equipment, industrial) covering: "${topic}".
@@ -78,11 +74,10 @@ Format as JSON with these fields:
 
 Be direct and tactical. These are experienced reps who hate fluff. Write like you've been in the field.`
       }]
-    }),
-  });
+    }) });
 
   const data = await res.json();
-  const raw = data.content?.[0]?.text || "";
+  const raw = data?.choices?.[0]?.message?.content || "";
 
   let parsed;
   try {
@@ -98,8 +93,7 @@ Be direct and tactical. These are experienced reps who hate fluff. Write like yo
       script_body: "You: 'Hey, this is [name] — quick question: who handles purchasing decisions for [product category] at your practice?'",
       tool_name: "Apollo.io",
       tool_tip: "Use the chrome extension to find direct dials while browsing LinkedIn. It takes 10 seconds per contact.",
-      stat: "80% of sales require 5+ follow-up calls. 44% of reps give up after 1.",
-    };
+      stat: "80% of sales require 5+ follow-up calls. 44% of reps give up after 1." };
   }
 
   const toolRotation = [
@@ -181,6 +175,7 @@ Be direct and tactical. These are experienced reps who hate fluff. Write like yo
     <div style="display:flex;align-items:center;gap:12px;">
       <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Matt Michels">
       <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>Grosse Pointe, MI · (313) 806-4952</div>
+        <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" />
     </div>
   </td></tr>
   <!-- Footer -->
@@ -224,12 +219,10 @@ serve(async (req) => {
           method: "POST",
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            from: "M² Newsletter <matt@notify.m2training.com>",
+            from: "M² Newsletter <matt@mattmichelstraining.com>",
             to: ["matt@m2training.com"],
             subject: `[PREVIEW] ${subject}`,
-            html: html.replace("{{unsubscribe_token}}", "preview"),
-          }),
-        });
+            html: html.replace("{{unsubscribe_token}}", "preview") }) });
       }
       return new Response(JSON.stringify({ draft_id: draft?.id, preview_sent: true }), { status: 200 });
     }
@@ -256,12 +249,10 @@ serve(async (req) => {
             method: "POST",
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              from: "Matt Michels <matt@notify.m2training.com>",
+              from: "Matt Michels <matt@mattmichelstraining.com>",
               to: [sub.email],
               subject,
-              html: html.replace("{{unsubscribe_token}}", sub.unsubscribe_token || ""),
-            }),
-          })
+              html: html.replace("{{unsubscribe_token}}", sub.unsubscribe_token || "") }) })
         )
       );
       sent += batch.length;

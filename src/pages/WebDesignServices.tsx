@@ -227,8 +227,8 @@ const WebDesignServices = () => {
   return (
     <>
       <SEOHead
-        title="Web Design Services & Add-Ons | Matt Michels · Metro Detroit"
-        description="Google Ads, monthly content, SEO pages, GBP management, reputation management, and more. Add-on services for local Metro Detroit businesses."
+        title="Web Design Services & Add-Ons | Matt Michels"
+        description="Google Ads, monthly content, SEO pages, GBP management, reputation management, and more. Add-on services for local businesses nationwide."
         path="/web-design-services"
       />
 
@@ -239,7 +239,7 @@ const WebDesignServices = () => {
           <div className="absolute inset-0 bg-gradient-to-b from-primary/6 via-transparent to-transparent pointer-events-none" />
           <div className="max-w-3xl mx-auto text-center relative z-10">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold tracking-widest uppercase mb-6">
-              <Wrench size={11} /> Add-On Services · Metro Detroit
+              <Wrench size={11} /> Add-On Services · Nationwide
             </div>
             <h1 className="text-3xl sm:text-5xl font-black leading-tight mb-5 tracking-tight">
               A Website Is the Start.<br />

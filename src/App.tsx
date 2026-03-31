@@ -109,6 +109,9 @@ const CampDirectory = lazyRetry(() => import("./pages/CampDirectory"));
 const ContractorLeads = lazyRetry(() => import("./pages/ContractorLeads"));
 const LeadCapturePage = lazyRetry(() => import("./pages/LeadCapturePage"));
 const B2BLeads = lazyRetry(() => import("./pages/B2BLeads"));
+const IndustrialDatabase = lazyRetry(() => import("./pages/IndustrialDatabase"));
+const LinkedInGhostwriting = lazyRetry(() => import("./pages/LinkedInGhostwriting"));
+const RevenueDashboard = lazyRetry(() => import("./pages/RevenueDashboard"));
 const LocalMarketing = lazyRetry(() => import("./pages/LocalMarketing"));
 const FieldRepTools = lazyRetry(() => import("./pages/FieldRepTools"));
 const NewsletterPage = lazyRetry(() => import("./pages/NewsletterPage"));
@@ -125,6 +128,19 @@ const IndustrialNewsletter = lazyRetry(() => import("./pages/IndustrialNewslette
 const MissedCallSaaS = lazyRetry(() => import("./pages/MissedCallSaaS"));
 const B2BPartnerPortal = lazyRetry(() => import("./pages/B2BPartnerPortal"));
 const AINewsletterService = lazyRetry(() => import("./pages/AINewsletterService"));
+const FreeTrendingProducts = lazyRetry(() => import("./pages/FreeTrendingProducts"));
+const FreeGrantDigest = lazyRetry(() => import("./pages/FreeGrantDigest"));
+const FreeRealEstateDigest = lazyRetry(() => import("./pages/FreeRealEstateDigest"));
+const AIMedSpaMarketing = lazyRetry(() => import("./pages/AIMedSpaMarketing"));
+const AIRealEstateDrip = lazyRetry(() => import("./pages/AIRealEstateDrip"));
+const AIPodcastShowNotes = lazyRetry(() => import("./pages/AIPodcastShowNotes"));
+const AIChurchNewsletter = lazyRetry(() => import("./pages/AIChurchNewsletter"));
+const AIPropertyManagement = lazyRetry(() => import("./pages/AIPropertyManagement"));
+const AIFranchiseOps = lazyRetry(() => import("./pages/AIFranchiseOps"));
+const AIEcommerceListings = lazyRetry(() => import("./pages/AIEcommerceListings"));
+const AIFinancialAdvisorContent = lazyRetry(() => import("./pages/AIFinancialAdvisorContent"));
+const AIVetMarketing = lazyRetry(() => import("./pages/AIVetMarketing"));
+const AITruckingDocs = lazyRetry(() => import("./pages/AITruckingDocs"));
 const AIAdsCopyGenerator = lazyRetry(() => import("./pages/AIAdsCopyGenerator"));
 const AIJobPostingWriter = lazyRetry(() => import("./pages/AIJobPostingWriter"));
 const AIReputationDashboard = lazyRetry(() => import("./pages/AIReputationDashboard"));
@@ -166,6 +182,22 @@ const AllServices = lazyRetry(() => import("./pages/AllServices"));
 const ReferralPage = lazyRetry(() => import("./pages/ReferralPage"));
 const PrivacyPolicy = lazyRetry(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazyRetry(() => import("./pages/TermsOfService"));
+const AIOnboardingAgent = lazyRetry(() => import("./pages/AIOnboardingAgent"));
+const AISocialProof = lazyRetry(() => import("./pages/AISocialProof"));
+const AIPriceMonitor = lazyRetry(() => import("./pages/AIPriceMonitor"));
+const AIMeetingPrep = lazyRetry(() => import("./pages/AIMeetingPrep"));
+const AIDirectorySubmitter = lazyRetry(() => import("./pages/AIDirectorySubmitter"));
+const M2Development = lazyRetry(() => import("./pages/M2Development"));
+const AIHandbook = lazyRetry(() => import("./pages/AIHandbook"));
+const AIGrantFinder = lazyRetry(() => import("./pages/AIGrantFinder"));
+const AIReviewResponse = lazyRetry(() => import("./pages/AIReviewResponse"));
+const AIBattlecard = lazyRetry(() => import("./pages/AIBattlecard"));
+const AIMarketIntel = lazyRetry(() => import("./pages/AIMarketIntel"));
+const AIPermitMonitor = lazyRetry(() => import("./pages/AIPermitMonitor"));
+const AIOshaCompliance = lazyRetry(() => import("./pages/AIOshaCompliance"));
+const AICollections = lazyRetry(() => import("./pages/AICollections"));
+const AIInventoryAlerts = lazyRetry(() => import("./pages/AIInventoryAlerts"));
+const AIBirthdayCampaign = lazyRetry(() => import("./pages/AIBirthdayCampaign"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -349,6 +381,9 @@ const App = () => (
                     <Route path="/contractor-leads" element={<ContractorLeads />} />
                     <Route path="/leads/:slug" element={<LeadCapturePage />} />
                     <Route path="/b2b-leads" element={<B2BLeads />} />
+                    <Route path="/industrial-database" element={<IndustrialDatabase />} />
+                    <Route path="/linkedin-ghostwriting" element={<LinkedInGhostwriting />} />
+                    <Route path="/revenue-dashboard" element={<RevenueDashboard />} />
                     <Route path="/local-marketing" element={<LocalMarketing />} />
                     <Route path="/field-rep-tools" element={<FieldRepTools />} />
                     <Route path="/field-rep-weekly" element={<NewsletterPage />} />
@@ -364,6 +399,19 @@ const App = () => (
                     <Route path="/industrial-newsletter" element={<IndustrialNewsletter />} />
                     <Route path="/missed-call-text" element={<MissedCallSaaS />} />
                     <Route path="/ai-newsletter-service" element={<AINewsletterService />} />
+                    <Route path="/free-trending-products" element={<FreeTrendingProducts />} />
+                    <Route path="/free-grant-digest" element={<FreeGrantDigest />} />
+                    <Route path="/free-real-estate-digest" element={<FreeRealEstateDigest />} />
+                    <Route path="/ai-med-spa-marketing" element={<AIMedSpaMarketing />} />
+                    <Route path="/ai-real-estate-drip" element={<AIRealEstateDrip />} />
+                    <Route path="/ai-podcast-show-notes" element={<AIPodcastShowNotes />} />
+                    <Route path="/ai-church-newsletter" element={<AIChurchNewsletter />} />
+                    <Route path="/ai-property-management" element={<AIPropertyManagement />} />
+                    <Route path="/ai-franchise-ops" element={<AIFranchiseOps />} />
+                    <Route path="/ai-ecommerce-listings" element={<AIEcommerceListings />} />
+                    <Route path="/ai-financial-advisor-content" element={<AIFinancialAdvisorContent />} />
+                    <Route path="/ai-vet-marketing" element={<AIVetMarketing />} />
+                    <Route path="/ai-trucking-docs" element={<AITruckingDocs />} />
                     <Route path="/ai-ads-copy" element={<AIAdsCopyGenerator />} />
                     <Route path="/ai-job-postings" element={<AIJobPostingWriter />} />
                     <Route path="/ai-reputation" element={<AIReputationDashboard />} />
@@ -405,6 +453,22 @@ const App = () => (
                     <Route path="/refer" element={<ReferralPage />} />
                     <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                     <Route path="/terms" element={<TermsOfService />} />
+                    <Route path="/ai-onboarding-agent" element={<AIOnboardingAgent />} />
+                    <Route path="/ai-social-proof" element={<AISocialProof />} />
+                    <Route path="/ai-price-monitor" element={<AIPriceMonitor />} />
+                    <Route path="/ai-meeting-prep" element={<AIMeetingPrep />} />
+                    <Route path="/ai-directory-submitter" element={<AIDirectorySubmitter />} />
+                    <Route path="/m2-development" element={<M2Development />} />
+                    <Route path="/ai-handbook" element={<AIHandbook />} />
+                    <Route path="/ai-grant-finder" element={<AIGrantFinder />} />
+                    <Route path="/ai-review-response" element={<AIReviewResponse />} />
+                    <Route path="/ai-battlecard" element={<AIBattlecard />} />
+                    <Route path="/ai-market-intel" element={<AIMarketIntel />} />
+                    <Route path="/ai-permit-monitor" element={<AIPermitMonitor />} />
+                    <Route path="/ai-osha-compliance" element={<AIOshaCompliance />} />
+                    <Route path="/ai-collections" element={<AICollections />} />
+                    <Route path="/ai-inventory-alerts" element={<AIInventoryAlerts />} />
+                    <Route path="/ai-birthday-campaign" element={<AIBirthdayCampaign />} />
                     <Route path="/partners" element={<B2BPartnerPortal />} />
                     <Route path="/sports-camps" element={<CampDirectory />} />
                     <Route path="/free-program" element={<FreeProgram />} />

@@ -1,28 +1,32 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
+const TWILIO_API_KEY = Deno.env.get("TWILIO_API_KEY") || "";
+const GATEWAY_URL = "https://connector-gateway.lovable.dev/twilio";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 async function sendSms(to: string, from: string, body: string) {
-  const accountSid = Deno.env.get("TWILIO_ACCOUNT_SID")!;
-  const authToken = Deno.env.get("TWILIO_AUTH_TOKEN")!;
-  const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
+  if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+  if (!TWILIO_API_KEY) throw new Error("TWILIO_API_KEY is not configured");
 
-  const res = await fetch(url, {
+  const res = await fetch(`${GATEWAY_URL}/Messages.json`, {
     method: "POST",
     headers: {
+      Authorization: `Bearer ${LOVABLE_API_KEY}`,
+      "X-Connection-Api-Key": TWILIO_API_KEY,
       "Content-Type": "application/x-www-form-urlencoded",
-      Authorization: "Basic " + btoa(`${accountSid}:${authToken}`),
     },
     body: new URLSearchParams({ To: to, From: from, Body: body }),
   });
 
   if (!res.ok) {
     const errText = await res.text();
-    throw new Error(`Twilio error: ${errText}`);
+    throw new Error(`Twilio gateway error: ${errText}`);
   }
   return res.json();
 }
@@ -44,7 +48,6 @@ serve(async (req) => {
     const in1h = new Date(now.getTime() + 1 * 60 * 60 * 1000);
     const in2h = new Date(now.getTime() + 2 * 60 * 60 * 1000);
 
-    // 24-hour reminders
     const { data: reminders24, error: err24 } = await supabase
       .from("appointment_reminders")
       .select("*, appointment_reminder_clients!inner(business_name, twilio_number, active)")
@@ -66,16 +69,10 @@ serve(async (req) => {
       const message = `Hi ${reminder.contact_name}! This is a reminder from ${client.business_name}: you have an appointment tomorrow at ${apptTime}. Reply CONFIRM to confirm or call us to reschedule.`;
 
       await sendSms(reminder.contact_phone, client.twilio_number, message);
-
-      await supabase
-        .from("appointment_reminders")
-        .update({ reminded_24h: true })
-        .eq("id", reminder.id);
-
+      await supabase.from("appointment_reminders").update({ reminded_24h: true }).eq("id", reminder.id);
       sent24++;
     }
 
-    // 1-hour reminders
     const { data: reminders1h, error: err1h } = await supabase
       .from("appointment_reminders")
       .select("*, appointment_reminder_clients!inner(business_name, twilio_number, active)")
@@ -96,12 +93,7 @@ serve(async (req) => {
       const message = `Hi ${reminder.contact_name}! Just a heads up — your appointment with ${client.business_name} is coming up at ${apptTime} today. See you soon!`;
 
       await sendSms(reminder.contact_phone, client.twilio_number, message);
-
-      await supabase
-        .from("appointment_reminders")
-        .update({ reminded_1h: true })
-        .eq("id", reminder.id);
-
+      await supabase.from("appointment_reminders").update({ reminded_1h: true }).eq("id", reminder.id);
       sent1h++;
     }
 
@@ -112,7 +104,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("appointment-reminder-sender error:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error instanceof Error ? error.message : "Unknown error") }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

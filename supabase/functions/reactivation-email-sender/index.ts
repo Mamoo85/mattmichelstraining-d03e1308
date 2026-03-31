@@ -1,10 +1,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -29,8 +29,7 @@ serve(async (req) => {
 
     if (!clients || clients.length === 0) {
       return new Response(JSON.stringify({ message: "No active reactivation clients" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+        headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     let totalSent = 0;
@@ -52,16 +51,12 @@ serve(async (req) => {
         for (const contact of contacts) {
           try {
             // Generate personalized reactivation email with Claude
-            const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
+            const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
               method: "POST",
               headers: {
-                "x-api-key": Deno.env.get("ANTHROPIC_API_KEY")!,
-                "content-type": "application/json",
-                "anthropic-version": "2023-06-01",
-              },
+                Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
               body: JSON.stringify({
-                model: "claude-haiku-4-5-20251001",
-                max_tokens: 800,
+                model: "google/gemini-2.5-flash-lite", 
                 messages: [
                   {
                     role: "user",
@@ -76,11 +71,8 @@ The email should:
 - Be warm and genuine, not pushy
 - Be under 200 words
 
-Return ONLY the HTML email body. No subject line. Sign off as the ${client.business_name} team.`,
-                  },
-                ],
-              }),
-            });
+Return ONLY the HTML email body. No subject line. Sign off as the ${client.business_name} team.` },
+                ] }) });
 
             if (!aiRes.ok) {
               console.error("Claude API error:", await aiRes.text());
@@ -89,26 +81,29 @@ Return ONLY the HTML email body. No subject line. Sign off as the ${client.busin
             }
 
             const aiData = await aiRes.json();
-            const emailBody = aiData.content[0].text;
+            const emailBody = aiData?.choices?.[0]?.message?.content;
 
             // Send via Resend
             const emailRes = await fetch("https://api.resend.com/emails", {
               method: "POST",
               headers: {
                 Authorization: `Bearer ${Deno.env.get("RESEND_API_KEY")}`,
-                "Content-Type": "application/json",
-              },
+                "Content-Type": "application/json" },
               body: JSON.stringify({
-                from: "Matt Michels <matt@notify.m2training.com>",
+                from: "Matt Michels <matt@mattmichelstraining.com>",
                 to: [contact.contact_email],
                 subject: `We miss you, ${contact.contact_name}! — ${client.business_name}`,
                 html: `
                   <div style="font-family:sans-serif;max-width:600px;margin:0 auto;">
                     ${emailBody}
-                  </div>
-                `,
-              }),
-            });
+                  <div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;">
+        <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" />
+        <div style="font-size:13px;color:#94a3b8;">
+          <strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 806-4952
+        </div>
+        <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M² Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" />
+      </div></div>
+                ` }) });
 
             if (!emailRes.ok) {
               console.error("Resend error:", await emailRes.text());
@@ -140,9 +135,8 @@ Return ONLY the HTML email body. No subject line. Sign off as the ${client.busin
     );
   } catch (err) {
     console.error("reactivation-email-sender error:", err);
-    return new Response(JSON.stringify({ error: err.message }), {
+    return new Response(JSON.stringify({ error: (err instanceof Error ? err.message : "Unknown error") }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+      headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
