@@ -382,30 +382,42 @@ const ZoneDashboard = () => {
               <button
                 key={item.label}
                 onClick={item.action}
-                className="flex items-center gap-3 rounded-2xl p-3.5 text-left transition-all active:scale-[0.97] group"
+                className="flex items-center gap-2.5 rounded-2xl p-3 text-left transition-all active:scale-[0.97] group"
                 style={{
                   background: `${item.color}09`,
                   border: `1px solid ${item.color}1e`,
                 }}
               >
                 <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                  className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
                   style={{ background: `${item.color}18`, color: item.color }}
                 >
                   {item.icon}
                 </div>
-                <div className="min-w-0">
-                  <div className="text-[12px] font-bold truncate" style={{ color: "#e5e5e5" }}>
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs font-bold" style={{ color: "#e5e5e5" }}>
                     {item.label}
                   </div>
-                  <div className="text-[10px] leading-tight mt-0.5 truncate" style={{ color: "#525252" }}>
+                  <div className="text-xs leading-tight mt-0.5" style={{ color: "#525252" }}>
                     {item.desc}
                   </div>
                 </div>
-                <ChevronRight size={12} className="ml-auto flex-shrink-0 opacity-0 group-hover:opacity-40 transition-opacity" style={{ color: item.color }} />
               </button>
             ))}
           </div>
+
+          {/* Install App prompt */}
+          {!window.matchMedia("(display-mode: standalone)").matches && (
+            <button
+              onClick={() => navigate("/install")}
+              className="w-full flex items-center justify-center gap-2 rounded-xl py-3 mt-2 transition-all active:scale-[0.98]"
+              style={{ background: "rgba(249,115,22,0.08)", border: "1px solid rgba(249,115,22,0.15)" }}
+            >
+              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "#f97316" }}>
+                📲 Install the M² App
+              </span>
+            </button>
+          )}
         </section>
 
       </main>
