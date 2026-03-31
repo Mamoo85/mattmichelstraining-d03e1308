@@ -395,6 +395,9 @@ const App = () => (
                     <Route path="/industrial-newsletter" element={<IndustrialNewsletter />} />
                     <Route path="/missed-call-text" element={<MissedCallSaaS />} />
                     <Route path="/ai-newsletter-service" element={<AINewsletterService />} />
+                    <Route path="/free-trending-products" element={<FreeTrendingProducts />} />
+                    <Route path="/free-grant-digest" element={<FreeGrantDigest />} />
+                    <Route path="/free-real-estate-digest" element={<FreeRealEstateDigest />} />
                     <Route path="/ai-med-spa-marketing" element={<AIMedSpaMarketing />} />
                     <Route path="/ai-real-estate-drip" element={<AIRealEstateDrip />} />
                     <Route path="/ai-podcast-show-notes" element={<AIPodcastShowNotes />} />
