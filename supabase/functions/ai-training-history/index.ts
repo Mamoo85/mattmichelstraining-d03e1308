@@ -26,8 +26,8 @@ serve(async (req) => {
     if (userError || !userData.user) throw new Error("Auth failed");
     const userId = userData.user.id;
 
-    // Fetch all data in parallel
-    const [logsRes, workoutLogsRes, loggedExRes, profileRes] = await Promise.all([
+    // Fetch all data in parallel (including activity_logs)
+    const [logsRes, workoutLogsRes, activityLogsRes, profileRes] = await Promise.all([
       supabaseClient
         .from("progress_logs")
         .select("exercise_name, weight, reps, estimated_1rm, logged_at")
@@ -39,9 +39,10 @@ serve(async (req) => {
         .eq("user_id", userId)
         .order("date", { ascending: true }),
       supabaseClient
-        .from("logged_exercises")
-        .select("exercise_id, sets_reps_weight, client_notes, log_id, created_at, exercise_library(title, focus_area, equipment_needed)")
-        .eq("log_id", userId), // This won't work directly; we need workout log IDs
+        .from("activity_logs")
+        .select("logged_at, activity_type, duration_minutes, intensity")
+        .eq("user_id", userId)
+        .order("logged_at", { ascending: true }),
       supabaseClient
         .from("profiles")
         .select("full_name, athlete_name, created_at")
@@ -51,13 +52,13 @@ serve(async (req) => {
 
     const progressLogs = logsRes.data || [];
     const workoutLogs = workoutLogsRes.data || [];
+    const activityLogs = activityLogsRes.data || [];
     const profile = profileRes.data;
 
     // Get logged_exercises via workout_log ids
     const workoutLogIds = workoutLogs.map((w: any) => w.id);
     let loggedExercises: any[] = [];
     if (workoutLogIds.length > 0) {
-      // Batch in chunks of 100 to avoid query limits
       for (let i = 0; i < workoutLogIds.length; i += 100) {
         const chunk = workoutLogIds.slice(i, i + 100);
         const { data } = await supabaseClient
@@ -99,16 +100,17 @@ serve(async (req) => {
         totalReps += reps;
         totalTonnage += reps * weight;
       }
-      // Focus area tracking
       const areas: string[] = (ex.exercise_library as any)?.focus_area || [];
       for (const area of areas) {
         focusAreaCount[area] = (focusAreaCount[area] || 0) + 1;
       }
     }
 
-    // 3. Training frequency & streaks
+    // 3. Training frequency & streaks — combine workout_logs AND activity_logs dates
     const workoutDates = workoutLogs.map((w: any) => w.date?.split("T")[0]).filter(Boolean);
-    const uniqueDates = [...new Set(workoutDates)].sort();
+    const activityDates = activityLogs.map((a: any) => a.logged_at?.split("T")[0]).filter(Boolean);
+    const allDates = [...workoutDates, ...activityDates];
+    const uniqueDates = [...new Set(allDates)].sort();
     const totalWorkouts = uniqueDates.length;
 
     // Weekly frequency
@@ -176,6 +178,7 @@ serve(async (req) => {
       longestStreak,
       currentStreak: currentActiveStreak,
       weeksActive,
+      totalQuickLogs: activityLogs.length,
       prs: Object.entries(prMap)
         .map(([name, data]) => ({ exercise: name, ...data }))
         .sort((a, b) => b.count - a.count),
@@ -204,6 +207,7 @@ serve(async (req) => {
 ATHLETE: ${stats.athleteName}
 MEMBER SINCE: ${stats.memberSince?.split("T")[0] || "unknown"}
 TOTAL WORKOUTS: ${stats.totalWorkouts} over ${stats.weeksActive} weeks (${stats.avgSessionsPerWeek}/week avg)
+QUICK-LOGGED ACTIVITIES: ${stats.totalQuickLogs}
 TOTAL VOLUME: ${stats.totalSets} sets, ${stats.totalReps} reps, ${stats.totalTonnageLbs.toLocaleString()} lbs total tonnage
 CONSISTENCY: Longest streak ${stats.longestStreak} days, current streak ${stats.currentStreak} days
 RECOVERY: Avg sleep ${stats.recovery.avgSleepHours}h, avg soreness ${stats.recovery.avgSoreness}/5, avg energy ${stats.recovery.avgEnergy}/5
