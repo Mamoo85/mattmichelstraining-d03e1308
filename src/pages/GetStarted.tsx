@@ -141,6 +141,13 @@ export default function GetStarted() {
   const [submitted, setSubmitted] = useState(false);
   const [submittedName, setSubmittedName] = useState("");
 
+  // Capture UTM source from URL params
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const source = params.get("utm_source") || params.get("source") || params.get("ref") || "direct";
+    setForm(prev => ({ ...prev, source }));
+  }, []);
+
   const set = (field: keyof FormState) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => setForm(prev => ({ ...prev, [field]: e.target.value }));
