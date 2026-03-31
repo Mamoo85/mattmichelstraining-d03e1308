@@ -6,9 +6,9 @@ import { usePoints, getLevelInfo, getNextLevel } from "@/hooks/usePoints";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import {
-  User, UserPlus, Timer, Mic, ArrowLeft, Dumbbell, Trophy,
-  Sparkles, Wrench, BookOpen, Utensils, BarChart3, Target,
-  Loader2, MessageCircle, Zap, ChevronRight,
+  User, UserPlus, Timer, Mic, ArrowLeft,
+  Trophy, Sparkles, Wrench, Utensils, BarChart3, Target,
+  Loader2, MessageCircle, Zap,
 } from "lucide-react";
 import ZoneThemeWrapper from "@/components/zone/ZoneThemeWrapper";
 import AthleteStats from "@/components/dashboard/AthleteStats";
