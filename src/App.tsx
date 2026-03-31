@@ -167,6 +167,7 @@ const AISocialProof = lazyRetry(() => import("./pages/AISocialProof"));
 const AIPriceMonitor = lazyRetry(() => import("./pages/AIPriceMonitor"));
 const AIMeetingPrep = lazyRetry(() => import("./pages/AIMeetingPrep"));
 const AIDirectorySubmitter = lazyRetry(() => import("./pages/AIDirectorySubmitter"));
+const M2Development = lazyRetry(() => import("./pages/M2Development"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
