@@ -109,10 +109,10 @@ export default function AthleteStats({
           <div className="font-oswald text-3xl font-black leading-none" style={{ color: streakStyle.color }}>
             {animatedStreak}
           </div>
-          <div className="text-[9px] font-bold uppercase tracking-wider mt-1" style={{ color: streakStyle.color, opacity: 0.7 }}>
-            Day Streak
+          <div className="text-xs font-bold uppercase tracking-wider mt-1" style={{ color: streakStyle.color, opacity: 0.7 }}>
+            Streak
           </div>
-          <div className="text-[8px] font-semibold mt-0.5" style={{ color: streakStyle.color, opacity: 0.55 }}>
+          <div className="text-xs font-semibold mt-0.5" style={{ color: streakStyle.color, opacity: 0.55 }}>
             {streakStyle.label}
           </div>
         </button>
