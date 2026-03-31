@@ -900,3 +900,6 @@ verify_jwt = false
 
 [functions.contractor-sms-follow]
 verify_jwt = false
+
+[functions.admin-migrate]
+verify_jwt = false
