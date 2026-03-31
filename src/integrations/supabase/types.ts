@@ -320,6 +320,48 @@ export type Database = {
         }
         Relationships: []
       }
+      appointment_reminders: {
+        Row: {
+          active: boolean | null
+          business_name: string
+          client_id: string
+          created_at: string | null
+          email: string
+          id: string
+          industry: string | null
+          last_sent_at: string | null
+          phone: string | null
+          send_count: number | null
+          stripe_customer_id: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          business_name: string
+          client_id: string
+          created_at?: string | null
+          email: string
+          id?: string
+          industry?: string | null
+          last_sent_at?: string | null
+          phone?: string | null
+          send_count?: number | null
+          stripe_customer_id?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          business_name?: string
+          client_id?: string
+          created_at?: string | null
+          email?: string
+          id?: string
+          industry?: string | null
+          last_sent_at?: string | null
+          phone?: string | null
+          send_count?: number | null
+          stripe_customer_id?: string | null
+        }
+        Relationships: []
+      }
       battlecard_clients: {
         Row: {
           active: boolean | null
@@ -1767,6 +1809,45 @@ export type Database = {
           slug?: string
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      legal_documents: {
+        Row: {
+          content: string
+          created_at: string | null
+          document_type: string
+          id: string
+          last_reviewed_at: string | null
+          next_review_at: string | null
+          status: string | null
+          title: string
+          updated_at: string | null
+          version: number | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          document_type: string
+          id?: string
+          last_reviewed_at?: string | null
+          next_review_at?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+          version?: number | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          document_type?: string
+          id?: string
+          last_reviewed_at?: string | null
+          next_review_at?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+          version?: number | null
         }
         Relationships: []
       }
@@ -3581,6 +3662,48 @@ export type Database = {
         }
         Relationships: []
       }
+      review_request_clients: {
+        Row: {
+          active: boolean | null
+          business_name: string
+          created_at: string | null
+          email: string
+          google_review_url: string | null
+          id: string
+          industry: string | null
+          last_sent_at: string | null
+          phone: string | null
+          send_count: number | null
+          stripe_customer_id: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          business_name: string
+          created_at?: string | null
+          email: string
+          google_review_url?: string | null
+          id?: string
+          industry?: string | null
+          last_sent_at?: string | null
+          phone?: string | null
+          send_count?: number | null
+          stripe_customer_id?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          business_name?: string
+          created_at?: string | null
+          email?: string
+          google_review_url?: string | null
+          id?: string
+          industry?: string | null
+          last_sent_at?: string | null
+          phone?: string | null
+          send_count?: number | null
+          stripe_customer_id?: string | null
+        }
+        Relationships: []
+      }
       review_response_clients: {
         Row: {
           active: boolean | null
@@ -3939,6 +4062,42 @@ export type Database = {
           sort_order?: number
           updated_at?: string
           updated_by?: string | null
+        }
+        Relationships: []
+      }
+      sms_consent_log: {
+        Row: {
+          client_id: string
+          consent_method: string | null
+          consent_text: string | null
+          consented_at: string | null
+          contact_name: string | null
+          contact_phone: string
+          id: string
+          ip_address: string | null
+          revoked_at: string | null
+        }
+        Insert: {
+          client_id: string
+          consent_method?: string | null
+          consent_text?: string | null
+          consented_at?: string | null
+          contact_name?: string | null
+          contact_phone: string
+          id?: string
+          ip_address?: string | null
+          revoked_at?: string | null
+        }
+        Update: {
+          client_id?: string
+          consent_method?: string | null
+          consent_text?: string | null
+          consented_at?: string | null
+          contact_name?: string | null
+          contact_phone?: string
+          id?: string
+          ip_address?: string | null
+          revoked_at?: string | null
         }
         Relationships: []
       }
