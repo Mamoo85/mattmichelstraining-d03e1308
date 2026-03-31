@@ -50,11 +50,20 @@ const LEAD_GEN: Service[] = [
   { icon: Zap, title: "Field Rep AI Tools", desc: "4 Claude-powered tools for B2B field reps — objection handler, email writer, call prep, CRM notes.", price: "$29/mo", link: "/field-rep-tools" },
 ];
 
+const BUSINESS_INTEL: Service[] = [
+  { icon: BookOpen, title: "AI Employee Handbook", desc: "Monthly AI-updated employee handbooks with state labor law compliance. Replaces $2-5K lawyer fees.", price: "$99/mo", link: "/ai-handbook", tag: "New" },
+  { icon: DollarSign, title: "AI Grant Finder", desc: "Weekly AI-curated grant opportunities matched to your business — SBA, MEDC, and federal programs.", price: "$149/mo", link: "/ai-grant-finder", tag: "New" },
+  { icon: Star, title: "AI Review Response", desc: "Daily AI-drafted review responses in your brand voice. Copy, paste, done.", price: "$49/mo", link: "/ai-review-response", tag: "New" },
+  { icon: Swords, title: "AI Competitive Battlecard", desc: "Monthly competitive intelligence — competitor weaknesses, your advantages, objection handlers.", price: "$39/mo", link: "/ai-battlecard", tag: "New" },
+  { icon: Brain, title: "AI Market Intelligence", desc: "Weekly 2-min executive brief — industry news, competitor moves, actionable insights.", price: "$49/mo", link: "/ai-market-intel", tag: "New" },
+];
+
 const SECTIONS = [
   { title: "Web Design & SEO", subtitle: "Your digital storefront, built to convert", items: WEB_DESIGN },
   { title: "AI Automation", subtitle: "Never miss a lead again", items: AI_AUTOMATION },
   { title: "Content & Marketing", subtitle: "Consistent content without lifting a finger", items: CONTENT_MARKETING },
   { title: "Lead Generation", subtitle: "Fill your pipeline on autopilot", items: LEAD_GEN },
+  { title: "Business Intelligence", subtitle: "AI-powered insights that drive decisions", items: BUSINESS_INTEL },
 ];
 
 const ServiceCard = ({ s }: { s: Service }) => (
