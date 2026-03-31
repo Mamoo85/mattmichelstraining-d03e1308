@@ -79,6 +79,7 @@ const AdminWebDesignCRM = lazy(() => import("@/components/admin/AdminWebDesignCR
 const AdminProspector = lazy(() => import("@/components/admin/AdminProspector"));
 const AdminAutomationHub = lazy(() => import("@/components/admin/AdminAutomationHub"));
 const AdminWebDesignAutomations = lazy(() => import("@/components/admin/AdminWebDesignAutomations"));
+const AdminClientHealth = lazy(() => import("@/components/admin/AdminClientHealth"));
 const AdminGiftCards = lazy(() => import("@/components/admin/AdminGiftCards"));
 const AdminGuideStore = lazy(() => import("@/components/admin/AdminGuideStore"));
 const AdminAffiliateManager = lazy(() => import("@/components/admin/AdminAffiliateManager"));
