@@ -118,7 +118,7 @@ serve(async (req) => {
       .eq("monthly_retainer", true)
       .not("email", "is", null);
 
-    if (error) throw error;
+    if (error) throw new Error(error.message || JSON.stringify(error));
     if (!clients || clients.length === 0) {
       log("No retainer clients");
       return new Response(JSON.stringify({ sent: 0 }), {
