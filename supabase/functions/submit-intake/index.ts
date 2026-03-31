@@ -14,7 +14,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { name, business_name, email, phone, service, message } = await req.json();
+    const { name, business_name, email, phone, service, message, industry, source } = await req.json();
 
     if (!name || !business_name || !email || !service) {
       return new Response(
