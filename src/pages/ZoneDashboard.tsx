@@ -336,7 +336,7 @@ const ZoneDashboard = () => {
 
         {/* Quick Actions */}
         <section>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-2.5 px-1" style={{ color: "#404040" }}>
+          <p className="text-xs font-black uppercase tracking-[0.2em] mb-2.5 px-1" style={{ color: "#404040" }}>
             Quick Actions
           </p>
           <div className="grid grid-cols-4 gap-2">
