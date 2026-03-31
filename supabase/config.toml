@@ -191,3 +191,45 @@ verify_jwt = false
 
 [functions.local-seo-monthly-sender]
 verify_jwt = false
+
+[functions.sms-performance-report]
+verify_jwt = false
+
+[functions.ai-reply-detector]
+verify_jwt = false
+
+[functions.ai-upsell-sender]
+verify_jwt = false
+
+[functions.ai-churn-preventer]
+verify_jwt = false
+
+[functions.ai-meeting-prep]
+verify_jwt = false
+
+[functions.ai-onboarding-agent-sender]
+verify_jwt = false
+
+[functions.ai-social-proof-sender]
+verify_jwt = false
+
+[functions.ai-price-monitor-sender]
+verify_jwt = false
+
+[functions.ai-directory-audit-sender]
+verify_jwt = false
+
+[functions.create-onboarding-agent-checkout]
+verify_jwt = false
+
+[functions.create-social-proof-checkout]
+verify_jwt = false
+
+[functions.create-price-monitor-checkout]
+verify_jwt = false
+
+[functions.create-meeting-prep-checkout]
+verify_jwt = false
+
+[functions.create-directory-submitter-checkout]
+verify_jwt = false
