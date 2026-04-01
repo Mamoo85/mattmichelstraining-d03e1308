@@ -152,7 +152,10 @@ const ContractorSeoPage = () => {
           <section className="py-16 px-4 bg-muted/30">
             <div className="max-w-5xl mx-auto">
               <h2 className="text-2xl md:text-3xl font-bold text-foreground text-center mb-10">
-                {page.trade} Services We Build Websites For
+                {category === "contractor" ? `${page.trade} Services We Build Websites For` :
+                 category === "webdesign" ? `Web Design for ${page.trade} Businesses` :
+                 category === "personal_training" ? `${page.trade} Training Services` :
+                 `${page.trade} Services`}
               </h2>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {d.serviceBullets.map((bullet, i) => (
@@ -172,14 +175,13 @@ const ContractorSeoPage = () => {
         <section className="py-16 px-4">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-2xl md:text-3xl font-bold text-foreground text-center mb-6">
-              Why {page.city} {page.trade} Businesses Choose M² Development
+              {category === "contractor" ? `Why ${page.city} ${page.trade} Businesses Choose M²` :
+               category === "webdesign" ? `Why ${page.trade} Businesses in ${page.city} Choose M²` :
+               category === "personal_training" ? `Why ${page.city} Clients Choose M² Training` :
+               `Why ${page.city} Clients Choose M² Coaching`}
             </h2>
             <div className="grid gap-6 sm:grid-cols-3 mt-10">
-              {[
-                { icon: "🚀", title: "AI-Powered Websites", desc: "We build high-converting sites with AI automation — your website works 24/7 generating leads." },
-                { icon: "📍", title: `Local ${page.city} Expertise`, desc: `We understand the ${page.city} market and build sites that rank for local "${page.trade}" searches.` },
-                { icon: "💰", title: "ROI-Focused", desc: "Every site comes with SEO, lead capture forms, and optional add-ons like review management and Google Ads." },
-              ].map((item, i) => (
+              {cards.map((item, i) => (
                 <div key={i} className="text-center p-6 rounded-xl bg-card border border-border">
                   <span className="text-4xl block mb-4">{item.icon}</span>
                   <h3 className="font-bold text-foreground mb-2">{item.title}</h3>
