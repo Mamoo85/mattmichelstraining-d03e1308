@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import SEOHead from "@/components/layout/SEOHead";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Phone, CheckCircle, Loader2, Send } from "lucide-react";
+import { Phone, CheckCircle, Loader2, Send, AlertCircle } from "lucide-react";
 
 const TRADE_COPY: Record<string, { title: string; description: string; cta: string; checks: string[] }> = {
   roofing: {
@@ -58,19 +58,20 @@ export default function LeadCapturePage() {
   const [form, setForm] = useState({ name: "", phone: "", email: "", project_type: "", message: "" });
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.phone) { toast.error("Name and phone are required"); return; }
     setSubmitting(true);
     try {
-      const { data, error } = await supabase.functions.invoke("contractor-lead-capture", {
+      const { error } = await supabase.functions.invoke("contractor-lead-capture", {
         body: { site_slug: slug, ...form },
       });
       if (error) throw error;
       setDone(true);
-    } catch (e: any) {
-      toast.error(e.message || "Something went wrong. Try calling directly.");
+    } catch {
+      setFailed(true);
     } finally {
       setSubmitting(false);
     }
@@ -88,6 +89,26 @@ export default function LeadCapturePage() {
           <a href="tel:+13138064952" className="mt-6 inline-flex items-center gap-2 text-primary font-bold text-sm">
             <Phone size={14} /> Call directly: (313) 806-4952
           </a>
+        </div>
+      </div>
+    );
+  }
+
+  if (failed) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-6">
+        <div className="text-center max-w-sm">
+          <div className="w-16 h-16 bg-yellow-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertCircle size={32} className="text-yellow-500" />
+          </div>
+          <h1 className="text-2xl font-black text-foreground mb-3">Something went wrong.</h1>
+          <p className="text-muted-foreground leading-relaxed mb-6">Our form had a hiccup. The fastest way to reach a local {trade} contractor is to call or text directly — we'll get you taken care of.</p>
+          <a href="tel:+13138064952" className="inline-flex items-center justify-center gap-2 bg-primary text-white px-6 py-3 font-bold text-sm w-full mb-3">
+            <Phone size={14} /> Call (313) 806-4952
+          </a>
+          <button onClick={() => setFailed(false)} className="text-sm text-muted-foreground underline">
+            Try the form again
+          </button>
         </div>
       </div>
     );

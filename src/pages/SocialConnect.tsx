@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { CheckCircle, Loader2 } from "lucide-react";
+import { CheckCircle, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 
 interface ClientInfo {
   business_name: string;
@@ -12,6 +12,8 @@ interface ClientInfo {
 interface FormData {
   fb_page_url: string;
   linkedin_page_url: string;
+  fb_access_token: string;
+  linkedin_access_token: string;
   brand_voice: string;
   target_audience: string;
   post_topics: string;
@@ -45,11 +47,15 @@ export default function SocialConnect() {
   const [form, setForm] = useState<FormData>({
     fb_page_url: "",
     linkedin_page_url: "",
+    fb_access_token: "",
+    linkedin_access_token: "",
     brand_voice: "",
     target_audience: "",
     post_topics: "",
     avoid_topics: "",
   });
+  const [showFbTokenHelp, setShowFbTokenHelp] = useState(false);
+  const [showLinkedInTokenHelp, setShowLinkedInTokenHelp] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -232,6 +238,68 @@ export default function SocialConnect() {
             <p className="text-xs text-gray-400 mt-1">
               Find this: go to your LinkedIn Company Page → click the 3 dots (···) → Copy link
             </p>
+          </div>
+
+          {/* Facebook Access Token */}
+          <div className="border border-gray-100 rounded-xl p-4 bg-gray-50">
+            <label className="block text-sm font-semibold text-slate-700 mb-1">
+              Facebook Page Access Token{" "}
+              <span className="text-gray-400 font-normal">(optional — enables posting)</span>
+            </label>
+            <input
+              type="password"
+              name="fb_access_token"
+              value={form.fb_access_token}
+              onChange={handleChange}
+              placeholder="EAABs..."
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
+            />
+            <button
+              type="button"
+              onClick={() => setShowFbTokenHelp((v) => !v)}
+              className="mt-2 flex items-center gap-1 text-xs text-orange-600 font-medium hover:text-orange-700"
+            >
+              {showFbTokenHelp ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+              How to get this (3 steps)
+            </button>
+            {showFbTokenHelp && (
+              <ol className="mt-2 text-xs text-gray-600 space-y-1 list-decimal list-inside bg-white rounded-lg p-3 border border-gray-100">
+                <li>Go to <strong>Meta Business Suite</strong> (business.facebook.com)</li>
+                <li>Click <strong>Settings</strong> → <strong>Pages</strong> → select your Page → <strong>Advanced</strong></li>
+                <li>Under <strong>Page Access Tokens</strong>, click <strong>Generate token</strong> and copy it here</li>
+              </ol>
+            )}
+          </div>
+
+          {/* LinkedIn Access Token */}
+          <div className="border border-gray-100 rounded-xl p-4 bg-gray-50">
+            <label className="block text-sm font-semibold text-slate-700 mb-1">
+              LinkedIn Access Token{" "}
+              <span className="text-gray-400 font-normal">(optional — enables posting)</span>
+            </label>
+            <input
+              type="password"
+              name="linkedin_access_token"
+              value={form.linkedin_access_token}
+              onChange={handleChange}
+              placeholder="AQV..."
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
+            />
+            <button
+              type="button"
+              onClick={() => setShowLinkedInTokenHelp((v) => !v)}
+              className="mt-2 flex items-center gap-1 text-xs text-orange-600 font-medium hover:text-orange-700"
+            >
+              {showLinkedInTokenHelp ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+              How to get this (3 steps)
+            </button>
+            {showLinkedInTokenHelp && (
+              <ol className="mt-2 text-xs text-gray-600 space-y-1 list-decimal list-inside bg-white rounded-lg p-3 border border-gray-100">
+                <li>Go to <strong>linkedin.com/developers</strong> → select or create your app</li>
+                <li>Click <strong>Auth</strong> tab → <strong>OAuth 2.0 tools</strong> → <strong>Request access token</strong></li>
+                <li>Check the <strong>w_organization_social</strong> scope → authorize → copy the token here</li>
+              </ol>
+            )}
           </div>
 
           {/* Brand Voice */}

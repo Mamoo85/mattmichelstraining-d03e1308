@@ -82,7 +82,7 @@ serve(async (req) => {
 
     // ── CONNECT ───────────────────────────────────────────────────────────────
     if (action === "connect") {
-      const { fb_page_url, linkedin_page_url, brand_voice, target_audience, post_topics, avoid_topics } = body;
+      const { fb_page_url, linkedin_page_url, fb_access_token, linkedin_access_token, brand_voice, target_audience, post_topics, avoid_topics } = body;
 
       if (!brand_voice || !post_topics) {
         return new Response(JSON.stringify({ error: "brand_voice and post_topics are required" }), {
@@ -93,6 +93,45 @@ serve(async (req) => {
 
       const fb_page_id = fb_page_url ? extractPathSegment(fb_page_url) : null;
       const linkedin_org_id = linkedin_page_url ? extractPathSegment(linkedin_page_url) : null;
+
+      // Validate tokens if provided
+      if (fb_access_token) {
+        try {
+          const fbCheck = await fetch(
+            `https://graph.facebook.com/v19.0/me?access_token=${encodeURIComponent(fb_access_token)}`
+          );
+          if (!fbCheck.ok) {
+            return new Response(
+              JSON.stringify({ error: "Facebook token didn't validate — please re-check and paste again." }),
+              { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          }
+        } catch {
+          return new Response(
+            JSON.stringify({ error: "Could not validate Facebook token. Please try again." }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      }
+
+      if (linkedin_access_token) {
+        try {
+          const liCheck = await fetch("https://api.linkedin.com/v2/me", {
+            headers: { Authorization: `Bearer ${linkedin_access_token}` },
+          });
+          if (!liCheck.ok) {
+            return new Response(
+              JSON.stringify({ error: "LinkedIn token didn't validate — please re-check and paste again." }),
+              { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          }
+        } catch {
+          return new Response(
+            JSON.stringify({ error: "Could not validate LinkedIn token. Please try again." }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      }
 
       // Fetch current client for email details
       const { data: existing, error: fetchErr } = await sb
@@ -108,19 +147,29 @@ serve(async (req) => {
         });
       }
 
+      // Build access_tokens patch — only include platforms that provided a token
+      const accessTokensPatch: Record<string, string> = {};
+      if (fb_access_token) accessTokensPatch.facebook = fb_access_token;
+      if (linkedin_access_token) accessTokensPatch.linkedin = linkedin_access_token;
+
+      const updatePayload: Record<string, unknown> = {
+        fb_page_id: fb_page_id || null,
+        linkedin_org_id: linkedin_org_id || null,
+        onboarding_completed: true,
+        brand_voice: brand_voice,
+        post_topics: {
+          topics: post_topics,
+          avoid: avoid_topics || "",
+          audience: target_audience || "",
+        },
+      };
+      if (Object.keys(accessTokensPatch).length > 0) {
+        updatePayload.access_tokens = accessTokensPatch;
+      }
+
       const { error: updateErr } = await sb
         .from("social_media_clients")
-        .update({
-          fb_page_id: fb_page_id || null,
-          linkedin_org_id: linkedin_org_id || null,
-          onboarding_completed: true,
-          brand_voice: brand_voice,
-          post_topics: {
-            topics: post_topics,
-            avoid: avoid_topics || "",
-            audience: target_audience || "",
-          },
-        })
+        .update(updatePayload)
         .eq("id", client_id);
 
       if (updateErr) {
@@ -133,6 +182,11 @@ serve(async (req) => {
 
       const nextDay = getNextPostingDay();
       const firstName = existing.contact_name?.split(" ")[0] || null;
+      const tokensProvided = Object.keys(accessTokensPatch).length > 0;
+      const tokenNote = tokensProvided
+        ? `<p style="color:#16a34a;font-weight:bold;">✓ Tokens validated and saved — posting starts ${nextDay}. No action needed.</p>
+<ul>${fb_access_token ? "<li>Facebook: ✓ validated</li>" : ""}${linkedin_access_token ? "<li>LinkedIn: ✓ validated</li>" : ""}</ul>`
+        : `<p style="color:#dc2626;font-weight:bold;">⚠ No access tokens provided — you still need to add them manually in Supabase (social_media_clients row id: ${client_id}) before posts can go out.</p>`;
 
       // Email Matt
       if (RESEND_API_KEY) {
@@ -152,7 +206,7 @@ serve(async (req) => {
   <li>Topics: ${post_topics}</li>
   <li>Avoid: ${avoid_topics || "none"}</li>
 </ul>
-<p>You still need to add their access tokens in Supabase. Check the <strong>social_media_clients</strong> table (row id: ${client_id}).</p>`,
+${tokenNote}`,
           }),
         });
 
