@@ -9,53 +9,97 @@ const corsHeaders = {
 const log = (step: string, data?: any) =>
   console.log(`[WEB-DESIGN-DRIP] ${step}${data ? " — " + JSON.stringify(data) : ""}`);
 
+// ── Industry → landing page map (mirrors prospect-local-businesses) ──
+const INDUSTRY_PAGE_MAP: Record<string, { path: string; price: string; monthly: string }> = {
+  "dental practice":        { path: "/dental-web-design",     price: "$1,499", monthly: "$99/mo" },
+  "dentist":                { path: "/dental-web-design",     price: "$1,499", monthly: "$99/mo" },
+  "orthodontist":           { path: "/dental-web-design",     price: "$1,499", monthly: "$99/mo" },
+  "law firm":               { path: "/legal-web-design",      price: "$1,499", monthly: "$99/mo" },
+  "attorney":               { path: "/legal-web-design",      price: "$1,499", monthly: "$99/mo" },
+  "personal injury attorney": { path: "/legal-web-design",   price: "$1,499", monthly: "$99/mo" },
+  "physical therapy clinic":{ path: "/healthcare-web-design", price: "$1,499", monthly: "$99/mo" },
+  "chiropractic office":    { path: "/healthcare-web-design", price: "$1,499", monthly: "$99/mo" },
+  "urgent care clinic":     { path: "/healthcare-web-design", price: "$1,499", monthly: "$99/mo" },
+  "accounting firm":        { path: "/healthcare-web-design", price: "$1,499", monthly: "$99/mo" },
+  "insurance agency":       { path: "/healthcare-web-design", price: "$1,499", monthly: "$99/mo" },
+  "veterinary clinic":      { path: "/healthcare-web-design", price: "$1,499", monthly: "$99/mo" },
+  "restaurant":             { path: "/restaurant-web-design", price: "$799",   monthly: "$79/mo" },
+  "bar and grill":          { path: "/restaurant-web-design", price: "$799",   monthly: "$79/mo" },
+  "pizza restaurant":       { path: "/restaurant-web-design", price: "$799",   monthly: "$79/mo" },
+  "manufacturing company":  { path: "/manufacturing-web-design", price: "$1,499", monthly: "$99/mo" },
+  "machine shop":           { path: "/manufacturing-web-design", price: "$1,499", monthly: "$99/mo" },
+  "fabrication shop":       { path: "/manufacturing-web-design", price: "$1,499", monthly: "$99/mo" },
+  "metal fabrication shop": { path: "/manufacturing-web-design", price: "$1,499", monthly: "$99/mo" },
+  "plastic injection molding company": { path: "/manufacturing-web-design", price: "$1,499", monthly: "$99/mo" },
+  "industrial equipment dealer": { path: "/manufacturing-web-design", price: "$1,499", monthly: "$99/mo" },
+  "commercial real estate broker": { path: "/real-estate-web-design", price: "$1,499", monthly: "$99/mo" },
+  "real estate agent":      { path: "/real-estate-web-design", price: "$1,499", monthly: "$99/mo" },
+  "mortgage broker":        { path: "/real-estate-web-design", price: "$1,499", monthly: "$99/mo" },
+};
+const DEFAULT_PAGE = { path: "/detroit-web-design", price: "$499", monthly: "$49/mo" };
+
+function getIndustryPage(industry: string): { path: string; price: string; monthly: string } {
+  const lower = industry.toLowerCase();
+  for (const [key, val] of Object.entries(INDUSTRY_PAGE_MAP)) {
+    if (lower.includes(key.toLowerCase())) return val;
+  }
+  return DEFAULT_PAGE;
+}
+
 const DRIP_SEQUENCE = [
   {
     templateName: "web_drip_d1",
     daysAfterPrev: 0, // Send immediately
     subject: (biz: string, industry: string) => `${biz} — your competitors are getting calls you're not`,
-    body: (biz: string, industry: string) =>
-      `Hey —
+    body: (biz: string, industry: string) => {
+      const page = getIndustryPage(industry);
+      const siteUrl = `mattmichelstraining.com${page.path}`;
+      return `Hey —
 
 I was looking up ${industry.toLowerCase()} businesses in your area and noticed ${biz} doesn't have a website pulling in leads.
 
-I build sites for Metro Detroit contractors — $499 flat, live in 7 days. No agency, no contract, no BS. Just a site that ranks on Google and makes your phone ring.
+I build sites for local businesses — ${page.price} flat, professional design, no agency markup. Just a site that ranks on Google and makes your phone ring.
 
-I've done it for plumbers, roofers, electricians, auto shops — all over the East Side.
-
-Want to see what I'd build for you? I put together a quick demo at mattmichelstraining.com/detroit-web-design.
+Want to see what I'd build for you? Check out what I've done: ${siteUrl}
 
 Start here: mattmichelstraining.com/get-started — I'll reach out the same day.
 
-— Matt Michels, Grosse Pointe`,
+— Matt Michels, Grosse Pointe
+(313) 806-4952`;
+    },
   },
   {
     templateName: "web_drip_d3",
     daysAfterPrev: 3,
     subject: (biz: string, industry: string) => `Quick follow-up for ${biz}`,
-    body: (biz: string, industry: string) =>
-      `Hey —
+    body: (biz: string, industry: string) => {
+      const page = getIndustryPage(industry);
+      const siteUrl = `mattmichelstraining.com${page.path}`;
+      return `Hey —
 
-Circling back from a few days ago. I built a demo of what a ${industry.toLowerCase()} website looks like when it's done right: mattmichelstraining.com/detroit-web-design.
+Circling back from a few days ago. I build websites specifically for ${industry.toLowerCase()} businesses — here's what you get:
 
-Real quick — what the site gets you:
-- Ranked on Google for "[${industry.toLowerCase()}] + your city"
+- Ranked on Google for "${industry.toLowerCase()} + your city"
 - Click-to-call button front and center
-- Quote form that actually gets filled out
-- Live in 7 days. $499 flat. $49/month after.
+- Contact form that actually gets filled out
+- ${page.price} flat. ${page.monthly} after. No contract.
 
-If the timing's not right, no hard feelings. But if you're tired of watching competitors get jobs you should be getting — let's talk.
+See examples: ${siteUrl}
 
-Start here: mattmichelstraining.com/get-started — I'll reach out the same day.
+If the timing's not right, no hard feelings. But if you're tired of watching competitors get the calls you should be getting — let's talk.
 
-— Matt`,
+— Matt
+(313) 806-4952`;
+    },
   },
   {
     templateName: "web_drip_d7",
     daysAfterPrev: 4,
     subject: (biz: string, industry: string) => `I ran a quick check on ${biz}'s online presence`,
-    body: (biz: string, industry: string) =>
-      `Hey —
+    body: (biz: string, industry: string) => {
+      const page = getIndustryPage(industry);
+      const siteUrl = `mattmichelstraining.com${page.path}`;
+      return `Hey —
 
 I did a quick audit of ${biz}'s online presence. Here's what I found:
 
@@ -64,38 +108,36 @@ I did a quick audit of ${biz}'s online presence. Here's what I found:
 → Google Business Profile: Needs optimization
 → Opportunity: HIGH
 
-This is fixable. Completely fixable. In 7 days.
+This is fixable. ${page.price} to build. ${page.monthly} to run. That's it.
 
-I'm a local business owner in Grosse Pointe — I built my own platform from scratch and I use the same skills to build sites for businesses like yours. You get my direct cell. Not a ticket in some agency system.
+I'm a local business owner in Grosse Pointe — you get my direct cell, not a support ticket.
 
-$499 to build. $49/month to run. That's it.
+See what I've built for ${industry.toLowerCase()} businesses: ${siteUrl}
 
-See what I've built: mattmichelstraining.com/detroit-web-design
-
-Start here: mattmichelstraining.com/get-started — I'll reach out the same day.
-
-— Matt`,
+— Matt
+(313) 806-4952`;
+    },
   },
   {
     templateName: "web_drip_d14",
     daysAfterPrev: 7,
     subject: (biz: string, industry: string) => `Last message from me, ${biz}`,
-    body: (biz: string, industry: string) =>
-      `Hey —
+    body: (biz: string, industry: string) => {
+      const page = getIndustryPage(industry);
+      const siteUrl = `mattmichelstraining.com${page.path}`;
+      return `Hey —
 
 Last email, I promise.
 
 I've reached out a few times about building a website for ${biz}. If the timing's off or you're not interested — completely understood, no hard feelings.
 
-But if you ever want a site that gets you found on Google and makes your phone ring — $499 flat, 7 days live — reach out.
+But if you ever want a professional site built specifically for ${industry.toLowerCase()} businesses — ${page.price} flat, ${page.monthly} after — reach out anytime.
 
-Start here: mattmichelstraining.com/get-started — I'll reach out the same day.
-
-I work with all kinds of local businesses across Metro Detroit. Happy to show you what I've built.
+See what I've built: ${siteUrl}
 
 — Matt Michels, Grosse Pointe
-
-P.S. You can see live demos at mattmichelstraining.com/detroit-web-design`,
+(313) 806-4952`;
+    },
   },
 ];
 

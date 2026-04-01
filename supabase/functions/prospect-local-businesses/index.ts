@@ -22,7 +22,54 @@ const INDUSTRY_ROTATION = [
   "commercial real estate broker", "industrial equipment dealer",
   "plastic injection molding company", "commercial contractor",
   "commercial property management",
+  // High-value verticals — higher price tiers
+  "dental practice", "dentist", "orthodontist",
+  "law firm", "attorney", "personal injury attorney",
+  "physical therapy clinic", "chiropractic office", "urgent care clinic",
+  "restaurant", "bar and grill", "pizza restaurant",
+  "manufacturing company", "machine shop", "fabrication shop",
+  "real estate agent", "mortgage broker",
+  "accounting firm", "insurance agency",
+  "gym", "fitness studio", "crossfit gym",
+  "veterinary clinic", "pet grooming",
 ];
+
+// ── Industry → landing page map (for price segmentation) ──
+const INDUSTRY_PAGE_MAP: Record<string, { path: string; price: string; monthly: string }> = {
+  "dental practice":        { path: "/dental-web-design",     price: "$1,499", monthly: "$99/mo" },
+  "dentist":                { path: "/dental-web-design",     price: "$1,499", monthly: "$99/mo" },
+  "orthodontist":           { path: "/dental-web-design",     price: "$1,499", monthly: "$99/mo" },
+  "law firm":               { path: "/legal-web-design",      price: "$1,499", monthly: "$99/mo" },
+  "attorney":               { path: "/legal-web-design",      price: "$1,499", monthly: "$99/mo" },
+  "personal injury attorney": { path: "/legal-web-design",   price: "$1,499", monthly: "$99/mo" },
+  "physical therapy clinic":{ path: "/healthcare-web-design", price: "$1,499", monthly: "$99/mo" },
+  "chiropractic office":    { path: "/healthcare-web-design", price: "$1,499", monthly: "$99/mo" },
+  "urgent care clinic":     { path: "/healthcare-web-design", price: "$1,499", monthly: "$99/mo" },
+  "accounting firm":        { path: "/healthcare-web-design", price: "$1,499", monthly: "$99/mo" },
+  "insurance agency":       { path: "/healthcare-web-design", price: "$1,499", monthly: "$99/mo" },
+  "veterinary clinic":      { path: "/healthcare-web-design", price: "$1,499", monthly: "$99/mo" },
+  "restaurant":             { path: "/restaurant-web-design", price: "$799",   monthly: "$79/mo" },
+  "bar and grill":          { path: "/restaurant-web-design", price: "$799",   monthly: "$79/mo" },
+  "pizza restaurant":       { path: "/restaurant-web-design", price: "$799",   monthly: "$79/mo" },
+  "manufacturing company":  { path: "/manufacturing-web-design", price: "$1,499", monthly: "$99/mo" },
+  "machine shop":           { path: "/manufacturing-web-design", price: "$1,499", monthly: "$99/mo" },
+  "fabrication shop":       { path: "/manufacturing-web-design", price: "$1,499", monthly: "$99/mo" },
+  "metal fabrication shop": { path: "/manufacturing-web-design", price: "$1,499", monthly: "$99/mo" },
+  "plastic injection molding company": { path: "/manufacturing-web-design", price: "$1,499", monthly: "$99/mo" },
+  "industrial equipment dealer": { path: "/manufacturing-web-design", price: "$1,499", monthly: "$99/mo" },
+  "commercial real estate broker": { path: "/real-estate-web-design", price: "$1,499", monthly: "$99/mo" },
+  "real estate agent":      { path: "/real-estate-web-design", price: "$1,499", monthly: "$99/mo" },
+  "mortgage broker":        { path: "/real-estate-web-design", price: "$1,499", monthly: "$99/mo" },
+};
+const DEFAULT_PAGE = { path: "/detroit-web-design", price: "$499", monthly: "$49/mo" };
+
+function getIndustryPage(industry: string): { path: string; price: string; monthly: string } {
+  const lower = industry.toLowerCase();
+  for (const [key, val] of Object.entries(INDUSTRY_PAGE_MAP)) {
+    if (lower.includes(key.toLowerCase())) return val;
+  }
+  return DEFAULT_PAGE;
+}
 
 // ── City rotation — national coverage ──
 const CITY_ROTATION = [
@@ -285,8 +332,10 @@ Has Website: ${website ? "Yes" : "No"}` }
 // ── Agent 2: THE SNIPER — Outbound Copywriter ──
 async function runSniperAgent(
   business: string, industry: string, city: string,
-  customFlaw: string, targetService: string, lovableKey: string
+  customFlaw: string, targetService: string, lovableKey: string,
+  landingPage: { path: string; price: string; monthly: string }
 ): Promise<string> {
+  const siteUrl = `mattmichelstraining.com${landingPage.path}`;
   const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${lovableKey}` },
@@ -300,18 +349,20 @@ Strict Rules:
 - Length Limit: Do not exceed 4 sentences.
 - The Structure:
   Sentence 1: Direct observation (Use the provided custom_flaw_observation).
-  Sentence 2: The stakes (e.g., 'You are likely losing 3-4 jobs a month because of this.').
-  Sentence 3: The solution (Briefly mention our service: Missed-Call Text-Back $99/mo, Custom Web App $499, or AI Automation).
-  Sentence 4: The low-friction CTA. NEVER ask for a 30-minute call. Ask if you can send a free 3-minute Loom video breaking down the fix.
+  Sentence 2: The stakes (e.g., 'You are likely losing 3-4 new patients a month because of this.').
+  Sentence 3: The solution — mention a professional website starting at ${landingPage.price} + ${landingPage.monthly} with no contract.
+  Sentence 4: The low-friction CTA — link them to ${siteUrl} and offer to answer any questions.
 - Output ONLY the email subject line and body text in this format:
   SUBJECT: [subject line]
   ---
   [email body]
 - No pleasantries like 'Here is your email:'.
-- Sign off as Matt.` },
+- Sign off as Matt, (313) 806-4952.` },
         { role: "user", content: `Business: "${business}" (${industry} in ${city})
 Custom Flaw Observation: "${customFlaw}"
-Target Service: ${targetService}` }
+Target Service: ${targetService}
+Landing Page URL: ${siteUrl}
+Price: ${landingPage.price} setup + ${landingPage.monthly}` }
       ],
       temperature: 0.7,
     }),
@@ -506,7 +557,8 @@ serve(async (req) => {
       city = CITY_ROTATION[dayOfMonth % CITY_ROTATION.length];
     }
 
-    log("Starting prospecting run", { industry, city, limit, source: "google_maps" });
+    const landingPage = getIndustryPage(industry);
+    log("Starting prospecting run", { industry, city, limit, source: "google_maps", landingPage: landingPage.path });
 
     // Step 1: Google Maps Text Search
     const places = await searchGoogleMaps(`${industry} in ${city}`, GOOGLE_MAPS_API_KEY);
@@ -592,7 +644,8 @@ serve(async (req) => {
         if (scoutResult.lead_score >= 7 && contactEmail && RESEND_API_KEY && !capReached) {
           const sniperOutput = await runSniperAgent(
             businessName, industry, city,
-            scoutResult.custom_flaw_observation, scoutResult.target_service_to_pitch, LOVABLE_API_KEY
+            scoutResult.custom_flaw_observation, scoutResult.target_service_to_pitch, LOVABLE_API_KEY,
+            landingPage
           );
 
           const emailLines = sniperOutput.split("\n");
@@ -611,6 +664,23 @@ serve(async (req) => {
               status: "sent",
               metadata: { business: businessName, industry, city, gap_score: gapScore, lead_score: scoutResult.lead_score, agent: "sniper" },
             });
+            // ── Bridge into web_design_leads so the 4-step drip picks this lead up ──
+            const { data: existingWdl } = await serviceClient
+              .from("web_design_leads" as any)
+              .select("id")
+              .ilike("email", contactEmail)
+              .limit(1);
+            if (!existingWdl || existingWdl.length === 0) {
+              await serviceClient.from("web_design_leads" as any).insert({
+                name: businessName,
+                business: businessName,
+                email: contactEmail,
+                phone: phone || null,
+                status: "new",
+                description: `SOURCE: auto_prospected | INDUSTRY: ${industry} | CITY: ${city} | LANDING_PAGE: ${landingPage.path}`,
+              });
+              log("Bridged into web_design_leads for drip", { email: contactEmail, industry });
+            }
           } else {
             emailStatus = "send_failed";
           }

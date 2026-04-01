@@ -123,6 +123,10 @@ const FieldRepTools = lazyRetry(() => import("./pages/FieldRepTools"));
 const NewsletterPage = lazyRetry(() => import("./pages/NewsletterPage"));
 const ManufacturingWebDesign = lazyRetry(() => import("./pages/ManufacturingWebDesign"));
 const RealEstateWebDesign = lazyRetry(() => import("./pages/RealEstateWebDesign"));
+const DentalWebDesign = lazyRetry(() => import("./pages/DentalWebDesign"));
+const LegalWebDesign = lazyRetry(() => import("./pages/LegalWebDesign"));
+const HealthcareWebDesign = lazyRetry(() => import("./pages/HealthcareWebDesign"));
+const RestaurantWebDesign = lazyRetry(() => import("./pages/RestaurantWebDesign"));
 const SocialMediaAI = lazyRetry(() => import("./pages/SocialMediaAI"));
 const TrainerSocialAI = lazyRetry(() => import("./pages/TrainerSocialAI"));
 const GetStarted = lazyRetry(() => import("./pages/GetStarted"));
@@ -411,6 +415,10 @@ const App = () => (
                     <Route path="/field-rep-weekly" element={<NewsletterPage />} />
                     <Route path="/manufacturing-web-design" element={<ManufacturingWebDesign />} />
                     <Route path="/real-estate-web-design" element={<RealEstateWebDesign />} />
+                    <Route path="/dental-web-design" element={<DentalWebDesign />} />
+                    <Route path="/legal-web-design" element={<LegalWebDesign />} />
+                    <Route path="/healthcare-web-design" element={<HealthcareWebDesign />} />
+                    <Route path="/restaurant-web-design" element={<RestaurantWebDesign />} />
                     <Route path="/social-media-ai" element={<SocialMediaAI />} />
                     <Route path="/trainer-social-ai" element={<TrainerSocialAI />} />
                     <Route path="/get-started" element={<GetStarted />} />

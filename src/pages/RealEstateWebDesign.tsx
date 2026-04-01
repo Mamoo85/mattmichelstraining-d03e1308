@@ -31,7 +31,7 @@ const PLANS = [
       "Everything in Agent tier",
       "Portfolio/project showcase",
       "Virtual tour embed support",
-      "IDX-ready architecture",
+      "IDX embed compatible (iHomeFinder, etc.)",
       "Multi-agent directory",
       "Priority support",
     ],
@@ -45,13 +45,13 @@ const FEATURES = [
   { icon: MapPin, label: "Google Maps", sub: "Interactive maps to help buyers find listings fast" },
   { icon: Search, label: "SEO optimized", sub: "Rank for local commercial real estate searches" },
   { icon: Smartphone, label: "Mobile-first", sub: "Perfect on every device — buyers browse on their phone" },
-  { icon: Link2, label: "IDX-ready", sub: "Architecture built to integrate MLS/IDX feeds" },
+  { icon: Link2, label: "IDX compatible", sub: "Embeds third-party IDX providers like iHomeFinder" },
 ];
 
 const FAQS = [
-  { q: "What does IDX-ready mean?", a: "IDX (Internet Data Exchange) lets you pull MLS listings directly onto your site. We build the architecture to support IDX integration — so when you're ready to connect a feed, the site can handle it without a redesign." },
+  { q: "Can I show MLS listings on my site?", a: "Yes — we embed a third-party IDX provider like iHomeFinder or Showcase IDX. These services handle the MLS data feed; we integrate their widget into your site. You'll need an IDX subscription (typically $50–100/mo) on your end." },
   { q: "Can I add properties myself after launch?", a: "Yes. We set up a simple content management system so you or your team can add and update listings, agent bios, and project pages without touching code." },
-  { q: "How long does the build take?", a: "Agent / Broker sites are typically live in 2–3 weeks. Developer / Firm sites with portfolio showcases and multi-agent directories take 4–6 weeks depending on content scope." },
+  { q: "How long does the build take?", a: "Agent / Broker sites are live in 10–14 days. Developer / Firm sites with portfolio showcases and multi-agent directories take 2–3 weeks depending on content scope." },
 ];
 
 export default function RealEstateWebDesign() {
