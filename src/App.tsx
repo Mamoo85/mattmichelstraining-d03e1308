@@ -88,6 +88,7 @@ const CleaningServiceMockup = lazyRetry(() => import("./pages/CleaningServiceMoc
 const SalonMockup = lazyRetry(() => import("./pages/SalonMockup"));
 const WebDesignServices = lazyRetry(() => import("./pages/WebDesignServices"));
 const ClientPortal = lazyRetry(() => import("./pages/ClientPortal"));
+const ClientSite = lazyRetry(() => import("./pages/ClientSite"));
 const FreeProgram = lazyRetry(() => import("./pages/FreeProgram"));
 const AdminViewUser = lazyRetry(() => import("./pages/AdminViewUser"));
 const StudioRental = lazyRetry(() => import("./pages/StudioRental"));
@@ -504,6 +505,7 @@ const App = () => (
                     <Route path="/demo-home" element={<DemoHomepage />} />
                     <Route path="/zone" element={<ZonePortal />} />
                     <Route path="/client-portal" element={<ProtectedRoute><ClientPortal /></ProtectedRoute>} />
+                    <Route path="/site/:slug" element={<ClientSite />} />
                     <Route path="/zone-dashboard" element={<ProtectedRoute><ZoneDashboard /></ProtectedRoute>} />
                     <Route path="/coach" element={<ProtectedRoute><SubscriptionGuard><Coach /></SubscriptionGuard></ProtectedRoute>} />
                     <Route path="/trial-welcome" element={<ProtectedRoute><TrialWelcome /></ProtectedRoute>} />

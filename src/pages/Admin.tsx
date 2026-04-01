@@ -80,6 +80,7 @@ const AdminWebDesignCRM = lazy(() => import("@/components/admin/AdminWebDesignCR
 const AdminAgencyCRM = lazy(() => import("@/components/admin/AdminAgencyCRM"));
 const AdminProspector = lazy(() => import("@/components/admin/AdminProspector"));
 const AdminAutomationHub = lazy(() => import("@/components/admin/AdminAutomationHub"));
+const AdminSiteBuilder = lazy(() => import("@/components/admin/AdminSiteBuilder"));
 const AdminM2GrowthHub = lazy(() => import("@/components/admin/AdminM2GrowthHub"));
 const AdminAdCampaigns = lazy(() => import("@/components/admin/AdminAdCampaigns"));
 const AdminWebDesignAutomations = lazy(() => import("@/components/admin/AdminWebDesignAutomations"));
@@ -488,6 +489,7 @@ const Admin = () => {
             { key: "fulfillment", label: "Agency CRM", content: <AdminAgencyCRM /> },
             { key: "pipeline", label: "B2B Pipeline", content: <AdminB2BPipeline /> },
             { key: "crm", label: "Web Design CRM", content: <AdminWebDesignCRM /> },
+            { key: "site-builder", label: "Site Builder", content: <AdminSiteBuilder /> },
             { key: "prospector", label: "Prospector", content: <AdminProspector /> },
             { key: "automation", label: "Automation Hub", content: <AdminAutomationHub /> },
             { key: "client-health", label: "Client Health", content: <AdminClientHealth /> },

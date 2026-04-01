@@ -1806,6 +1806,68 @@ export type Database = {
         }
         Relationships: []
       }
+      generated_sites: {
+        Row: {
+          address: string | null
+          business_name: string
+          color_scheme: Json
+          created_at: string
+          email: string | null
+          id: string
+          is_published: boolean
+          lead_id: string | null
+          logo_url: string | null
+          phone: string | null
+          published_at: string | null
+          sections: Json
+          slug: string
+          template_key: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          business_name: string
+          color_scheme?: Json
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_published?: boolean
+          lead_id?: string | null
+          logo_url?: string | null
+          phone?: string | null
+          published_at?: string | null
+          sections?: Json
+          slug: string
+          template_key?: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          business_name?: string
+          color_scheme?: Json
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_published?: boolean
+          lead_id?: string | null
+          logo_url?: string | null
+          phone?: string | null
+          published_at?: string | null
+          sections?: Json
+          slug?: string
+          template_key?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generated_sites_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "web_design_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gift_cards: {
         Row: {
           code: string
