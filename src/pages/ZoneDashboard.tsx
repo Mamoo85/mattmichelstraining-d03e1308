@@ -462,6 +462,50 @@ const ZoneDashboard = () => {
             ))}
           </div>
 
+          {/* Posture Analysis & Technology buttons */}
+          <div className="grid grid-cols-2 gap-2 mt-2">
+            <button
+              onClick={() => setPostureOpen(true)}
+              className="flex items-center gap-2.5 rounded-2xl p-3 text-left transition-all active:scale-[0.97] group"
+              style={{
+                background: "rgba(236,72,153,0.09)",
+                border: "1px solid rgba(236,72,153,0.25)",
+                boxShadow: "0 0 12px rgba(236,72,153,0.12), inset 0 0 12px rgba(236,72,153,0.04)",
+              }}
+            >
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: "rgba(236,72,153,0.18)", color: "#ec4899" }}
+              >
+                <Camera size={20} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-xs font-bold" style={{ color: "#e5e5e5" }}>Posture Analysis</div>
+                <div className="text-[10px] leading-tight mt-0.5" style={{ color: "#525252" }}>AI body scan</div>
+              </div>
+            </button>
+            <button
+              onClick={() => setTechOpen(true)}
+              className="flex items-center gap-2.5 rounded-2xl p-3 text-left transition-all active:scale-[0.97] group"
+              style={{
+                background: "rgba(99,102,241,0.09)",
+                border: "1px solid rgba(99,102,241,0.25)",
+                boxShadow: "0 0 12px rgba(99,102,241,0.12), inset 0 0 12px rgba(99,102,241,0.04)",
+              }}
+            >
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: "rgba(99,102,241,0.18)", color: "#6366f1" }}
+              >
+                <Brain size={20} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-xs font-bold" style={{ color: "#e5e5e5" }}>Technology</div>
+                <div className="text-[10px] leading-tight mt-0.5" style={{ color: "#525252" }}>AI tools & more</div>
+              </div>
+            </button>
+          </div>
+
           {/* Install App prompt */}
           {!window.matchMedia("(display-mode: standalone)").matches && (
             <button
