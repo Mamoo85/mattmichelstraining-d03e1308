@@ -5044,6 +5044,7 @@ export type Database = {
       }
       seo_page_configs: {
         Row: {
+          category: string | null
           city: string
           created_at: string | null
           id: string
@@ -5052,6 +5053,7 @@ export type Database = {
           trade: string
         }
         Insert: {
+          category?: string | null
           city: string
           created_at?: string | null
           id?: string
@@ -5060,6 +5062,7 @@ export type Database = {
           trade: string
         }
         Update: {
+          category?: string | null
           city?: string
           created_at?: string | null
           id?: string
