@@ -18,7 +18,7 @@ const STEPS = [
 ];
 
 const FAQS = [
-  { q: "Do the responses sound like a robot?", a: "No. Claude reads the review and writes a response that sounds like it came from you — acknowledging the specific thing the customer mentioned, not a copy-paste template." },
+  { q: "Do the responses sound like a robot?", a: "No. Our AI reads the review and writes a response that sounds like it came from you — acknowledging the specific thing the customer mentioned, not a copy-paste template." },
   { q: "What about 1-star reviews?", a: "Especially important. We respond professionally, de-escalate, and invite the customer to reach out directly. A good response to a bad review often wins more trust than five 5-star reviews." },
   { q: "Does this affect my Google ranking?", a: "Yes. Google's algorithm factors in review response rate as a ranking signal. Businesses that respond consistently rank higher in local search." },
   { q: "Can I bundle this with GBP posting?", a: "Yes — GBP Posting ($49/mo) + Review Response ($99/mo) together is $179/mo, saving you $19/month." },
