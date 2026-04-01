@@ -282,18 +282,7 @@ const SelfPostureAnalysis = memo(({ open, onClose }: SelfPostureAnalysisProps) =
               </div>
             </div>
 
-            {/* Upsell */}
-            <div className="border-t border-border pt-4">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-center mb-2">
-                Fix What We Found
-              </p>
-              <button
-                onClick={() => { handleClose(); navigate("/shop"); }}
-                className="w-full py-3 bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-all rounded-lg"
-              >
-                Browse Corrective Programs →
-              </button>
-            </div>
+            {/* No upsell — this is a pure value tool for clients */}
 
             {/* Re-analyze */}
             <button onClick={reset} className="w-full text-center text-[10px] text-muted-foreground hover:text-foreground transition-colors pt-1">

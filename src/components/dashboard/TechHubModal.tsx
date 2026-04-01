@@ -134,11 +134,37 @@ const TechHubModal = memo(({ open, onClose }: TechHubModalProps) => {
             })}
           </div>
 
-          {/* Upsell footer */}
-          <div className="border-t border-border pt-3 mt-2">
-            <p className="text-[10px] text-muted-foreground text-center">
-              All tools included with your M² membership. Show a friend?{" "}
-              <span className="text-primary font-bold">They get one free analysis.</span>
+          {/* Value-add offers — real services, not ads */}
+          <div className="border-t border-border pt-3 mt-2 space-y-2">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-center">
+              Go Deeper
+            </p>
+            <button
+              onClick={() => { onClose(); window.location.href = "/sessions"; }}
+              className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-all text-left"
+            >
+              <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
+                <Camera size={14} className="text-primary" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-primary">Book a 1-on-1 with Matt</span>
+                <p className="text-[9px] text-muted-foreground">Get hands-on coaching on any finding from these tools.</p>
+              </div>
+            </button>
+            <button
+              onClick={() => { onClose(); window.location.href = "/shop"; }}
+              className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg bg-muted hover:bg-muted/80 transition-all text-left"
+            >
+              <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                <Dumbbell size={14} className="text-muted-foreground" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-foreground">Training Programs</span>
+                <p className="text-[9px] text-muted-foreground">Structured programs built around the issues these tools find.</p>
+              </div>
+            </button>
+            <p className="text-[9px] text-muted-foreground/60 text-center pt-1">
+              Show a friend? They can try one analysis free — then join M² to keep using them.
             </p>
           </div>
         </DialogContent>
