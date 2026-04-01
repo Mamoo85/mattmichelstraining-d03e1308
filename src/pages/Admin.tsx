@@ -489,6 +489,7 @@ const Admin = () => {
             { key: "fulfillment", label: "Agency CRM", content: <AdminAgencyCRM /> },
             { key: "pipeline", label: "B2B Pipeline", content: <AdminB2BPipeline /> },
             { key: "crm", label: "Web Design CRM", content: <AdminWebDesignCRM /> },
+            { key: "site-builder", label: "Site Builder", content: <AdminSiteBuilder /> },
             { key: "prospector", label: "Prospector", content: <AdminProspector /> },
             { key: "automation", label: "Automation Hub", content: <AdminAutomationHub /> },
             { key: "client-health", label: "Client Health", content: <AdminClientHealth /> },
