@@ -96,7 +96,7 @@ export default function TextMessageMarketing() {
           <h2 className="text-3xl font-bold text-white text-center mb-10">What You Get</h2>
           <div className="grid md:grid-cols-2 gap-6">
             {[
-              { icon: "✍️", title: "AI-Written Campaigns", desc: "Claude writes custom SMS copy for your business every month — no templates, no fluff." },
+              { icon: "✍️", title: "AI-Written Campaigns", desc: "AI writes custom SMS copy for your business every month — no templates, no fluff." },
               { icon: "📤", title: "Automated Sending", desc: "Campaigns go out on the 1st of every month automatically. Set it and forget it." },
               { icon: "📊", title: "Delivery Reports", desc: "Monthly email report shows exactly how many messages were sent and delivered." },
               { icon: "🚫", title: "Opt-Out Management", desc: "STOP replies are handled automatically. Stay CAN-SPAM compliant without lifting a finger." },

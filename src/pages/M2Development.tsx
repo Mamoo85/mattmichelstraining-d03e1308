@@ -47,7 +47,7 @@ const CONTENT_MARKETING: Service[] = [
 const LEAD_GEN: Service[] = [
   { icon: TrendingUp, title: "Contractor Lead Gen", desc: "Exclusive leads for local contractors — roofing, HVAC, plumbing, electrical. No shared leads.", price: "$399/mo", link: "/contractor-leads", tag: "Premium" },
   { icon: Users, title: "B2B Dental Database", desc: "Michigan dental office contacts updated daily. Direct access to decision-makers.", price: "$49/mo", link: "/b2b-leads" },
-  { icon: Zap, title: "Field Rep AI Tools", desc: "4 Claude-powered tools for B2B field reps — objection handler, email writer, call prep, CRM notes.", price: "$29/mo", link: "/field-rep-tools" },
+  { icon: Zap, title: "Field Rep AI Tools", desc: "4 AI-powered tools for B2B field reps — objection handler, email writer, call prep, CRM notes.", price: "$29/mo", link: "/field-rep-tools" },
 ];
 
 const BUSINESS_INTEL: Service[] = [
