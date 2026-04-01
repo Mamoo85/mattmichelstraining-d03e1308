@@ -5075,6 +5075,42 @@ export type Database = {
         }
         Relationships: []
       }
+      search_console_data: {
+        Row: {
+          clicks: number | null
+          created_at: string | null
+          ctr: number | null
+          date: string
+          id: string
+          impressions: number | null
+          page_url: string
+          position: number | null
+          query: string | null
+        }
+        Insert: {
+          clicks?: number | null
+          created_at?: string | null
+          ctr?: number | null
+          date: string
+          id?: string
+          impressions?: number | null
+          page_url: string
+          position?: number | null
+          query?: string | null
+        }
+        Update: {
+          clicks?: number | null
+          created_at?: string | null
+          ctr?: number | null
+          date?: string
+          id?: string
+          impressions?: number | null
+          page_url?: string
+          position?: number | null
+          query?: string | null
+        }
+        Relationships: []
+      }
       seo_landing_pages: {
         Row: {
           created_at: string
