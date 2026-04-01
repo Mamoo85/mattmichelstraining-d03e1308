@@ -93,12 +93,6 @@ serve(async (req) => {
       line_items: [
         {
           price: "price_1THQqqD52tPWee46w2VUgpXx",
-            unit_amount: planCfg.amount,
-            product_data: {
-              name: `M² Social Media AI — ${planCfg.label}`,
-              description: planCfg.description,
-            },
-          },
           quantity: 1,
         },
       ],
