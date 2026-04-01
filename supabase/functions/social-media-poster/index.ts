@@ -147,8 +147,14 @@ serve(async () => {
       const businessType = client.business_type || "local business";
       const tokens: Record<string, string> = client.access_tokens || {};
 
-      const hasFbConnection = client.fb_page_id && tokens.facebook;
-      const hasLinkedInConnection = client.linkedin_org_id && tokens.linkedin;
+      // Use per-client tokens if available, otherwise fall back to global secrets
+      const fbPageId = client.fb_page_id || GLOBAL_META_PAGE_ID;
+      const fbToken = tokens.facebook || GLOBAL_META_TOKEN;
+      const liToken = tokens.linkedin || GLOBAL_LINKEDIN_TOKEN;
+      const liOrgId = client.linkedin_org_id || null;
+
+      const hasFbConnection = fbPageId && fbToken;
+      const hasLinkedInConnection = liToken; // personal URN auto-detected
       const hasAnyConnection = hasFbConnection || hasLinkedInConnection;
 
       if (!hasAnyConnection) {
@@ -164,7 +170,7 @@ serve(async () => {
       if (hasFbConnection) {
         try {
           const message = await generatePost(client.business_name, businessType, location, "facebook");
-          const ok = await postToFacebook(client.fb_page_id, tokens.facebook, message);
+          const ok = await postToFacebook(fbPageId, fbToken, message);
           if (ok) {
             clientPosted = true;
           } else {
@@ -177,16 +183,27 @@ serve(async () => {
         }
       }
 
-      // Post to LinkedIn
+      // Post to LinkedIn (personal profile via URN or org)
       if (hasLinkedInConnection) {
         try {
-          const message = await generatePost(client.business_name, businessType, location, "linkedin");
-          const ok = await postToLinkedIn(client.linkedin_org_id, tokens.linkedin, message);
-          if (ok) {
-            clientPosted = true;
+          let authorUrn: string | null = null;
+          if (liOrgId) {
+            authorUrn = `urn:li:organization:${liOrgId}`;
+          } else {
+            authorUrn = await getLinkedInPersonUrn(liToken);
+          }
+          if (authorUrn) {
+            const message = await generatePost(client.business_name, businessType, location, "linkedin");
+            const ok = await postToLinkedIn(authorUrn, liToken, message);
+            if (ok) {
+              clientPosted = true;
+            } else {
+              clientErrored = true;
+              console.error(`[SOCIAL-POSTER] LinkedIn post failed for ${client.business_name}`);
+            }
           } else {
             clientErrored = true;
-            console.error(`[SOCIAL-POSTER] LinkedIn post failed for ${client.business_name}`);
+            console.error(`[SOCIAL-POSTER] Could not resolve LinkedIn URN for ${client.business_name}`);
           }
         } catch (e) {
           clientErrored = true;
