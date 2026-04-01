@@ -569,6 +569,10 @@ const ZoneDashboard = () => {
           </Suspense>
         )}
       </AnimatePresence>
+      <Suspense fallback={null}>
+        <SelfPostureAnalysis open={postureOpen} onClose={() => setPostureOpen(false)} />
+        <TechHubModal open={techOpen} onClose={() => setTechOpen(false)} />
+      </Suspense>
     </ZoneThemeWrapper>
   );
 };
