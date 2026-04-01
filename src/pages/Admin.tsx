@@ -98,6 +98,7 @@ const AdminOpsCenter = lazy(() => import("@/components/admin/AdminOpsCenter"));
 const AdminEmailLog = lazy(() => import("@/components/admin/AdminEmailLog"));
 const AdminMigrations = lazy(() => import("@/components/admin/AdminMigrations"));
 const AdminReferrals = lazy(() => import("@/components/admin/AdminReferrals"));
+const AdminOrders = lazy(() => import("@/components/admin/AdminOrders"));
 
 const MASTER_TABS = [
   { key: "business", label: "Business", icon: DollarSign, desc: "Revenue · Automation" },
@@ -354,6 +355,7 @@ const Admin = () => {
             { key: "ops", label: "Ops Center", content: <AdminOpsCenter /> },
             { key: "pipeline", label: "Pipeline", content: <AdminB2BPipeline /> },
             { key: "social-setup", label: "Social Media Setup", content: <AdminSocialMediaOnboarding /> },
+            { key: "orders", label: "📦 Orders", content: <AdminOrders /> },
             { key: "email-log", label: "📧 Email Log", content: <AdminEmailLog /> },
             { key: "migrations", label: "DB Migrations", content: <AdminMigrations /> },
           ]} />

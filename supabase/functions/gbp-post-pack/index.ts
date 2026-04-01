@@ -194,6 +194,28 @@ serve(async (req) => {
     });
   } catch (err: any) {
     console.error("[gbp-post-pack]", err);
+    try {
+      const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+      const body = await req.clone().json().catch(() => ({}));
+      await sb.from("delivery_failures").insert({
+        function_name: "gbp-post-pack",
+        error_message: err.message,
+        customer_email: body.email || null,
+        order_id: body.order_id || null,
+      });
+      if (RESEND_API_KEY) {
+        await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            from: "M² Alerts <matt@mattmichelstraining.com>",
+            to: ["matt@mattmichelstraining.com"],
+            subject: `🚨 DELIVERY FAILED — gbp-post-pack — ${body.email || "unknown"}`,
+            html: `<p><strong>Function:</strong> gbp-post-pack</p><p><strong>Customer:</strong> ${body.email || "unknown"}</p><p><strong>Error:</strong> ${err.message}</p>`,
+          }),
+        });
+      }
+    } catch (alertErr) { console.error("[gbp-post-pack] Alert failed:", alertErr); }
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
