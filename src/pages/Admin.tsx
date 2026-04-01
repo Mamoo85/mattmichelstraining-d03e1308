@@ -79,6 +79,7 @@ const AdminAiCommandCenter = lazy(() => import("@/components/admin/AdminAiComman
 const AdminImageMatcher = lazy(() => import("@/components/admin/AdminImageMatcher"));
 const AdminWebDesignCRM = lazy(() => import("@/components/admin/AdminWebDesignCRM"));
 const AdminAgencyCRM = lazy(() => import("@/components/admin/AdminAgencyCRM"));
+const AdminDemoLinkGenerator = lazy(() => import("@/components/admin/AdminDemoLinkGenerator"));
 const AdminProspector = lazy(() => import("@/components/admin/AdminProspector"));
 const AdminAutomationHub = lazy(() => import("@/components/admin/AdminAutomationHub"));
 const AdminSiteBuilder = lazy(() => import("@/components/admin/AdminSiteBuilder"));
@@ -497,6 +498,7 @@ const Admin = () => {
             { key: "client-health", label: "Client Health", content: <AdminClientHealth /> },
             { key: "ops-center", label: "Ops Center", content: <AdminOpsCenter /> },
             { key: "wd-automations", label: "Email Automations", content: <AdminWebDesignAutomations /> },
+            { key: "demo-links", label: "🔗 Demo Links", content: <AdminDemoLinkGenerator /> },
           ]} defaultTab="pipeline" />
         )}
       </div>
