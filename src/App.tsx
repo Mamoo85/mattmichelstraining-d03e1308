@@ -89,6 +89,7 @@ const SalonMockup = lazyRetry(() => import("./pages/SalonMockup"));
 const WebDesignServices = lazyRetry(() => import("./pages/WebDesignServices"));
 const ClientPortal = lazyRetry(() => import("./pages/ClientPortal"));
 const ClientSite = lazyRetry(() => import("./pages/ClientSite"));
+const ContractorSeoPage = lazyRetry(() => import("./pages/ContractorSeoPage"));
 const FreeProgram = lazyRetry(() => import("./pages/FreeProgram"));
 const AdminViewUser = lazyRetry(() => import("./pages/AdminViewUser"));
 const StudioRental = lazyRetry(() => import("./pages/StudioRental"));
