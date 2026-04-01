@@ -56,11 +56,10 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "https://www.mattmichelstraining.com";
 
-    const sessionParams: Stripe.Checkout.SessionCreateParams = {
-      customer: customerId,
-      customer_email: customerId ? undefined : user.email,
-      line_items: [
-        {
+    // Use registered Stripe Price ID when available, fallback to inline price_data
+    const lineItem: any = price_id
+      ? { price: price_id, quantity: 1 }
+      : {
           price_data: {
             currency: "usd",
             product_data: { name: `Web Design Add-On: ${service_name}` },
@@ -68,8 +67,12 @@ serve(async (req) => {
             ...(recurring !== false ? { recurring: { interval: "month" } } : {}),
           },
           quantity: 1,
-        },
-      ],
+        };
+
+    const sessionParams: Stripe.Checkout.SessionCreateParams = {
+      customer: customerId,
+      customer_email: customerId ? undefined : user.email,
+      line_items: [lineItem],
       mode: recurring !== false ? "subscription" : "payment",
       success_url: `${origin}/client-portal?checkout=success`,
       cancel_url: `${origin}/client-portal?checkout=cancelled`,
