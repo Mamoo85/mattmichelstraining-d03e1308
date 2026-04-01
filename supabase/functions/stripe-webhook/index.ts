@@ -1122,6 +1122,66 @@ serve(async (req) => {
               }),
             });
           }
+
+          // Track web design referral — credit $50 to referrer
+          if (meta.referral_code && customerEmail) {
+            try {
+              const { data: refRow } = await sb
+                .from("web_design_referrals" as any)
+                .select("id, referrer_email, referrer_name, status")
+                .eq("referral_code", meta.referral_code)
+                .eq("status", "pending")
+                .maybeSingle();
+
+              if (refRow) {
+                await sb.from("web_design_referrals" as any)
+                  .update({
+                    status: "credited",
+                    stripe_session_id: session.id,
+                    referred_email: customerEmail,
+                    referred_business_name: meta.business_name || null,
+                    updated_at: new Date().toISOString(),
+                  })
+                  .eq("id", (refRow as any).id);
+
+                // Notify Matt to pay the referrer
+                if (RESEND_API_KEY) {
+                  await fetch("https://api.resend.com/emails", {
+                    method: "POST",
+                    headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      from: "M² System <matt@mattmichelstraining.com>",
+                      to: ["matt@mattmichelstraining.com"],
+                      bcc: ["matthewmichels4@gmail.com"],
+                      subject: `💰 PAY $50 REFERRAL — ${(refRow as any).referrer_name || (refRow as any).referrer_email}`,
+                      html: `<p><strong>Web design referral converted!</strong></p>
+<p><strong>Referrer:</strong> ${(refRow as any).referrer_name || "Unknown"} (${(refRow as any).referrer_email})<br>
+<strong>Client:</strong> ${meta.business_name || customerEmail}<br>
+<strong>Amount owed:</strong> $50<br>
+<strong>Pay via:</strong> Venmo/PayPal/Check to ${(refRow as any).referrer_email}</p>`,
+                    }),
+                  });
+
+                  // Notify referrer
+                  await fetch("https://api.resend.com/emails", {
+                    method: "POST",
+                    headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      from: "Matt Michels <matt@mattmichelstraining.com>",
+                      to: [(refRow as any).referrer_email],
+                      bcc: ["matthewmichels4@gmail.com"],
+                      subject: "🎉 Your $50 referral bonus is on the way!",
+                      html: `<p>Hey ${(refRow as any).referrer_name || "there"} —</p>
+<p>Your referral just signed up for web design! Your <strong>$50 cash bonus</strong> will be sent within 7 days.</p>
+<p>Keep referring — there's no limit. Every web design signup = another $50.</p>
+<p>— Matt<br>(313) 806-4952</p>`,
+                    }),
+                  });
+                }
+                console.log(`[WEBHOOK] Web design referral credited: ${meta.referral_code} → $50 to ${(refRow as any).referrer_email}`);
+              }
+            } catch (refErr) { console.error("[WEBHOOK] web design referral tracking error:", refErr); }
+          }
         } catch (e) { console.error("[WEBHOOK] web_design_build error:", e); }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }

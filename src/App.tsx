@@ -88,6 +88,7 @@ const RealEstateMockup = lazyRetry(() => import("./pages/RealEstateMockup"));
 const CleaningServiceMockup = lazyRetry(() => import("./pages/CleaningServiceMockup"));
 const SalonMockup = lazyRetry(() => import("./pages/SalonMockup"));
 const WebDesignServices = lazyRetry(() => import("./pages/WebDesignServices"));
+const ReferWebDesign = lazyRetry(() => import("./pages/ReferWebDesign"));
 const ClientPortal = lazyRetry(() => import("./pages/ClientPortal"));
 const ClientSite = lazyRetry(() => import("./pages/ClientSite"));
 const ContractorSeoPage = lazyRetry(() => import("./pages/ContractorSeoPage"));
@@ -379,6 +380,7 @@ const App = () => (
                     <Route path="/demo-restaurant/*" element={<RestaurantMockup />} />
                     <Route path="/whats-included" element={<WebDesignIncluded />} />
                     <Route path="/web-design-services" element={<WebDesignServices />} />
+                    <Route path="/refer-web-design" element={<ReferWebDesign />} />
                     <Route path="/demo-auto-repair" element={<AutoRepairMockup />} />
                     <Route path="/demo-auto-repair/*" element={<AutoRepairMockup />} />
                     <Route path="/demo-real-estate" element={<RealEstateMockup />} />
