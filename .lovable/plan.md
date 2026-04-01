@@ -1,60 +1,93 @@
 
 
-# Scale SEO Pages from 100 → 2,000 with Content Diversity
+# Comprehensive Plan: Facebook Lead Webhook + SEO Completion + Service Verification
 
-## Current State
-- **100 pages** in `seo_page_configs`: 5 trades × 20 cities
-- Each page has identical structure (hero, bullets, FAQs, CTA)
-- All served at `/services/:slug` via `ContractorSeoPage.tsx`
+## What's Actually Happening (3 Workstreams)
 
-## Expansion Matrix (2,000 pages)
+### Workstream 1: Facebook Lead Ads Webhook (Real Lead Generation)
 
-```text
-Category                  Niches    Cities    Pages
-──────────────────────────────────────────────────
-Contractor Trades           20    ×   40   =   800
-Web Design (by industry)    15    ×   40   =   600
-Personal Training           10    ×   40   =   400
-Life/Performance Coaching    5    ×   40   =   200
-──────────────────────────────────────────────────
-                                   Total =  2,000
-```
+The other AI's research is solid. Facebook Lead Ads at $20-55 CPL is the most viable paid channel for contractor leads at $399/mo pricing. The key technical win: Facebook's native lead forms auto-fill name/phone/email from the user's profile and POST to a webhook in real-time. Zero manual work after setup.
 
-**Trades** (20): Plumber, Electrician, HVAC, Roofer, Landscaper, Painter, General Contractor, Concrete, Fencing, Flooring, Kitchen Remodeler, Bathroom Remodeler, Deck Builder, Drywall, Pest Control, Tree Service, Garage Door, Window Installer, Siding, Pressure Washing
+**Database Migration:**
+- Add `source TEXT DEFAULT 'direct'` to `contractor_leads` table
+- Add `facebook_page_id TEXT` to `contractor_lead_sites` table
 
-**Web Design niches** (15): Restaurant, Dental, Law Firm, Real Estate, Auto Repair, Salon, Gym, Chiropractor, Accountant, Insurance Agent, Veterinarian, Photography, Cleaning Service, Moving Company, Wedding Venue
+**New Edge Function: `facebook-lead-webhook/index.ts`**
+- **GET handler**: Facebook webhook verification — responds to `hub.verify_token` challenge using a `FACEBOOK_LEAD_VERIFY_TOKEN` secret
+- **POST handler**: Receives Facebook's `{entry: [{changes: [{value: {leadgen_id, page_id}}]}]}` payload → fetches full lead data from Graph API (`GET /{leadgen_id}?access_token={META_ACCESS_TOKEN}&fields=field_data`) → maps `full_name`, `phone_number`, `email` → looks up `contractor_lead_sites` by `facebook_page_id` → inserts into `contractor_leads` with `source = 'facebook'` → triggers the same Matt + contractor notification emails already in `contractor-lead-capture`
+- Reuses `META_ACCESS_TOKEN` (already configured) for Graph API calls
+- Needs one new secret: `FACEBOOK_LEAD_VERIFY_TOKEN` (a random string Matt picks and enters in Facebook Developer dashboard)
 
-**PT niches** (10): Youth Athletes, Over-40 Fitness, Post-Rehab, Weight Loss, Strength Training, Sports Performance, Bodybuilding, Functional Fitness, Senior Fitness, Women's Fitness
+**Update: `contractor-lead-capture/index.ts`**
+- Accept optional `source` param in request body
+- Pass through to INSERT: `source: source || 'direct'`
 
-**Coaching** (5): Career Transition, Entrepreneur Mindset, Work-Life Balance, Leadership, Accountability
+**What Matt Does After Deploy (not automated):**
+1. Create Facebook Pages per territory (e.g., "Detroit Roofing Estimates") — 10 min each
+2. Run Facebook Lead Ads targeting homeowners in those cities
+3. In Facebook Developer dashboard: register webhook URL → `https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/facebook-lead-webhook`
+4. Update `facebook_page_id` on each `contractor_lead_sites` row to link territories to pages
 
-**Cities** (40): Detroit, Chicago, Miami, Houston, Dallas, Phoenix, Denver, Atlanta, Nashville, Charlotte, Tampa, Orlando, Austin, San Antonio, Minneapolis, Indianapolis, Columbus, Cleveland, Pittsburgh, St Louis, Kansas City, Milwaukee, Cincinnati, Raleigh, Jacksonville, Memphis, Louisville, Las Vegas, Oklahoma City, Richmond, Birmingham, Tucson, Omaha, Albuquerque, Boise, Des Moines, Grosse Pointe, Warren, Sterling Heights, St Clair Shores
+---
 
-## Content Diversity Strategy (Avoiding Google Penalties)
+### Workstream 2: Finish SEO Page Generation (240 done → 2,000 target)
 
-Each category gets a **different AI system prompt** with unique angles:
-- **Contractor**: Focus on licensing, insurance, seasonal demand, local building codes
-- **Web Design**: Focus on industry-specific features (online ordering for restaurants, booking for dentists, listings for real estate)
-- **Personal Training**: Focus on biomechanics, injury prevention, age-specific programming
-- **Coaching**: Focus on transformation stories, methodology, accountability frameworks
+**Current state:** 240 contractor pages generated. Missing ~1,760 pages across all 4 categories.
 
-Each prompt includes the city name for localized references (neighborhoods, landmarks, climate).
+**Remaining generation:**
+- Contractor trades: ~560 more (20 niches × 40 cities = 800 total, minus ~240 done)
+- Web Design: 600 pages (15 industry niches × 40 cities)
+- Personal Training: 400 pages (10 niches × 40 cities)
+- Coaching: 200 pages (5 niches × 40 cities)
 
-## Database Change
-- Add `category` column to `seo_page_configs` to filter/organize pages
-- Update existing 100 rows to `category = 'contractor'`
+**Execution:** Run batch generation script using `gemini-2.5-flash-lite` via Lovable AI Gateway with 4 distinct system prompts per category. Process in batches of ~300 to avoid timeouts. Each prompt includes city-specific references (neighborhoods, landmarks, climate) to ensure content diversity.
 
-## Implementation Steps
+**Frontend:** `ContractorSeoPage.tsx` already handles all 4 categories with dynamic "Why Choose Us" cards and category-specific CTAs. No frontend changes needed.
 
-| # | Task |
-|---|------|
-| 1 | Migration: add `category` column, update existing rows |
-| 2 | Add anon SELECT policy to `seo_page_configs` (pages are public) |
-| 3 | Run batch generation script (~2,000 AI calls via Lovable AI Gateway using `gemini-2.5-flash-lite` at ~$0.001/page = ~$2 total) with 4 distinct system prompts per category |
-| 4 | Update `ContractorSeoPage.tsx` to handle all categories (adjust CTA links based on category) |
+---
 
-## Cost
-- ~$2 one-time AI generation cost
-- ~4MB database storage
-- Generation time: ~45 min with 1.2s delay between calls
+### Workstream 3: Verify All A La Carte Services Still Work
+
+**Confirm these remain independently purchasable — no removals:**
+
+All 12 add-ons in `src/lib/addons.ts` stay as-is:
+- Google Ads Management ($99/mo)
+- Monthly Content Package ($79/mo)
+- GBP Management ($49/mo)
+- Local SEO Landing Pages ($299 one-time)
+- Website Audit ($49 one-time)
+- AI Review Response ($49/mo) — has Stripe price_id
+- Website Refresh ($199 one-time)
+- Missed-Call Text-Back ($99/mo) — has Stripe price_id
+- AI Job Posting Writer ($29/mo) — has Stripe price_id
+- Quote Follow-Up ($49/mo) — has Stripe price_id
+- Competitor Intel ($69/mo) — has Stripe price_id
+- AI Chatbot Widget ($149/mo)
+
+**Standalone service pages (unchanged):**
+- `/contractor-leads`, `/social-media-ai`, `/local-marketing`, `/field-rep-tools`, `/b2b-leads`, `/newsletter`, `/web-design-services`
+
+No services are being removed. The client portal simply cross-sells these same services.
+
+---
+
+## Files Changed/Created
+
+| File | Action | What |
+|------|--------|------|
+| Migration SQL | **Create** | Add `source` to `contractor_leads`, `facebook_page_id` to `contractor_lead_sites` |
+| `supabase/functions/facebook-lead-webhook/index.ts` | **Create** | FB webhook verification + lead ingestion + notification emails |
+| `supabase/functions/contractor-lead-capture/index.ts` | **Edit** | Accept optional `source` param, pass to INSERT |
+| SEO batch script | **Run** | Generate remaining ~1,760 pages across 4 categories |
+
+## New Secret Needed
+- `FACEBOOK_LEAD_VERIFY_TOKEN` — a random string Matt chooses and enters in Facebook Developer dashboard for webhook verification
+
+## Execution Order
+1. Database migration (add columns)
+2. Request `FACEBOOK_LEAD_VERIFY_TOKEN` secret from Matt
+3. Deploy `facebook-lead-webhook` edge function
+4. Update `contractor-lead-capture` to accept `source`
+5. Run SEO batch generation (batches of ~300, ~45 min total)
+6. Quick audit of all add-on checkout flows to confirm nothing broke
 
