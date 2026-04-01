@@ -15,8 +15,6 @@ interface Listing {
   industry: string | null;
   city: string | null;
   state: string | null;
-  phone: string | null;
-  email: string | null;
   website: string | null;
   description: string | null;
   logo_url: string | null;
