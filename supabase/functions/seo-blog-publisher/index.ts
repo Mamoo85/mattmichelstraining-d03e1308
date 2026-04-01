@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
 
 // 3 themes per bucket, rotate by month within each bucket
@@ -75,27 +75,25 @@ Requirements:
     * No keyword stuffing, natural language
     * Do NOT include <html>, <head>, or <body> tags — just the article body content`;
 
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
+  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
-      "x-api-key": ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-      "content-type": "application/json",
+      "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 1200,
-      system: "You are an SEO content writer specializing in small business automation and local marketing in Michigan. Write in a practical, conversational tone. Always output valid JSON exactly as requested.",
-      messages: [{ role: "user", content: prompt }],
-    }),
+        model: "google/gemini-2.5-flash-lite",
+        max_tokens: 1200,
+        messages: [{ role: "system", content: "You are an SEO content writer specializing in small business automation and local marketing in Michigan. Write in a practical, conversational tone. Always output valid JSON exactly as requested." }, { role: "user", content: prompt }],
+      }),
   });
 
   if (!response.ok) {
-    throw new Error(`Anthropic API error: ${response.status}`);
+    throw new Error(`AI Gateway error: ${response.status}`);
   }
 
   const data = await response.json();
-  const raw = data.content[0].text.trim();
+  const raw = data.choices?.[0]?.message?.content.trim();
 
   try {
     return JSON.parse(raw) as BlogPost;

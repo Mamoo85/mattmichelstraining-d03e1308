@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 serve(async () => {
-  const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
   const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
   const sb = createClient(
     Deno.env.get("SUPABASE_URL")!,
@@ -25,22 +25,21 @@ serve(async () => {
   for (const client of clients) {
     const prompt = `Write compelling menu item descriptions for a ${client.cuisine_type || "American"} restaurant called ${client.business_name}. Generate 10 menu item descriptions (mix of appetizers, mains, desserts) that are seasonal for ${currentMonth}. Each description: 2-3 sentences, highlight key ingredients, evoke appetite. Use vivid, appetizing language.`;
 
-    const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
+    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
+        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
+        model: "google/gemini-2.5-flash-lite",
         max_tokens: 1000,
         messages: [{ role: "user", content: prompt }],
       }),
     });
 
     const aiData = await aiRes.json();
-    const content = aiData.content?.[0]?.text || "";
+    const content = aiData.choices?.[0]?.message?.content || "";
 
     await fetch("https://api.resend.com/emails", {
       method: "POST",
