@@ -7257,6 +7257,51 @@ export type Database = {
       }
     }
     Views: {
+      business_listings_public: {
+        Row: {
+          business_name: string | null
+          city: string | null
+          description: string | null
+          id: string | null
+          industry: string | null
+          is_active: boolean | null
+          is_featured: boolean | null
+          logo_url: string | null
+          owner_name: string | null
+          state: string | null
+          tier: string | null
+          website: string | null
+        }
+        Insert: {
+          business_name?: string | null
+          city?: string | null
+          description?: string | null
+          id?: string | null
+          industry?: string | null
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          logo_url?: string | null
+          owner_name?: string | null
+          state?: string | null
+          tier?: string | null
+          website?: string | null
+        }
+        Update: {
+          business_name?: string | null
+          city?: string | null
+          description?: string | null
+          id?: string | null
+          industry?: string | null
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          logo_url?: string | null
+          owner_name?: string | null
+          state?: string | null
+          tier?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
       training_programs_public: {
         Row: {
           category: string | null

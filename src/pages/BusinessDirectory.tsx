@@ -5,7 +5,7 @@ import SEOHead from "@/components/layout/SEOHead";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, MapPin, Phone, Globe, Star, Crown, ArrowRight, ExternalLink } from "lucide-react";
+import { Search, MapPin, Globe, Star, Crown, ArrowRight, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface Listing {
@@ -15,8 +15,6 @@ interface Listing {
   industry: string | null;
   city: string | null;
   state: string | null;
-  phone: string | null;
-  email: string | null;
   website: string | null;
   description: string | null;
   logo_url: string | null;
@@ -69,11 +67,6 @@ const DirectoryCard = memo(({ listing }: { listing: Listing }) => {
             <MapPin className="h-3 w-3" /> {listing.city}{listing.state ? `, ${listing.state}` : ""}
           </span>
         )}
-        {listing.phone && (
-          <a href={`tel:${listing.phone.replace(/\D/g, "")}`} className="flex items-center gap-1 hover:text-foreground transition-colors">
-            <Phone className="h-3 w-3" /> {listing.phone}
-          </a>
-        )}
         {listing.website && (
           <a href={listing.website.startsWith("http") ? listing.website : `https://${listing.website}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-[#e8621a] transition-colors">
             <Globe className="h-3 w-3" /> Website <ExternalLink className="h-2.5 w-2.5" />
@@ -94,7 +87,7 @@ const BusinessDirectory = () => {
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("business_listings")
-        .select("id, business_name, owner_name, industry, city, state, phone, email, website, description, logo_url, tier, is_featured")
+        .select("id, business_name, owner_name, industry, city, state, website, description, logo_url, tier, is_featured")
         .eq("is_active", true)
         .order("is_featured", { ascending: false })
         .order("tier", { ascending: false })
