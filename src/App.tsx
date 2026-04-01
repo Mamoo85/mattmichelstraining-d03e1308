@@ -503,6 +503,7 @@ const App = () => (
                     <Route path="/results" element={<Results />} />
                     <Route path="/demo-home" element={<DemoHomepage />} />
                     <Route path="/zone" element={<ZonePortal />} />
+                    <Route path="/client-portal" element={<ProtectedRoute><ClientPortal /></ProtectedRoute>} />
                     <Route path="/zone-dashboard" element={<ProtectedRoute><ZoneDashboard /></ProtectedRoute>} />
                     <Route path="/coach" element={<ProtectedRoute><SubscriptionGuard><Coach /></SubscriptionGuard></ProtectedRoute>} />
                     <Route path="/trial-welcome" element={<ProtectedRoute><TrialWelcome /></ProtectedRoute>} />
