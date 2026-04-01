@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Gift, DollarSign, ArrowRight, Send, CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import SEOHead from "@/components/SEOHead";
+import SEOHead from "@/components/layout/SEOHead";
 
 const ReferWebDesign = () => {
   const [referrerName, setReferrerName] = useState("");
