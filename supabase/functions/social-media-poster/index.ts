@@ -85,7 +85,7 @@ async function postToFacebook(
 }
 
 async function postToLinkedIn(
-  orgId: string,
+  authorUrn: string,
   accessToken: string,
   message: string
 ): Promise<boolean> {
@@ -97,7 +97,7 @@ async function postToLinkedIn(
         "Content-Type": "application/json",
         "X-Restli-Protocol-Version": "2.0.0" },
       body: JSON.stringify({
-        author: `urn:li:organization:${orgId}`,
+        author: authorUrn,
         lifecycleState: "PUBLISHED",
         specificContent: {
           "com.linkedin.ugc.ShareContent": {
