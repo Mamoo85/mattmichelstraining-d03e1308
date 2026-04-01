@@ -21,23 +21,28 @@ serve(async (req) => {
 
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-    // Find the lead site
+    // Find the lead site — a missing or inactive site is NOT a reason to drop the lead
     const { data: site } = await sb
       .from("contractor_lead_sites")
       .select("id, trade, city, state, active_contractor_id, active")
       .eq("slug", site_slug)
-      .single();
+      .maybeSingle();
 
-    if (!site || !site.active) {
-      return new Response(JSON.stringify({ error: "Site not found" }), { status: 404, headers: corsHeaders });
-    }
+    // Parse trade/city from slug as fallback when site row doesn't exist yet
+    const slugParts = site_slug.split("-");
+    const fallbackTrade = slugParts[0] || "service";
+    const fallbackCity = slugParts.slice(1).map((s: string) => s.charAt(0).toUpperCase() + s.slice(1)).join(" ") || "Unknown";
 
-    // Insert the lead
+    const tradeLabel = site?.trade || fallbackTrade;
+    const cityLabel = site?.city || fallbackCity;
+    const stateLabel = site?.state || "";
+
+    // Insert the lead — site_id is nullable so we capture even if no DB row exists
     const { data: lead } = await sb
       .from("contractor_leads")
       .insert({
-        site_id: site.id,
-        client_id: site.active_contractor_id || null,
+        site_id: site?.id || null,
+        client_id: site?.active_contractor_id || null,
         name,
         phone,
         email: email || null,
@@ -48,7 +53,13 @@ serve(async (req) => {
       .select()
       .single();
 
-    console.log(`[LEAD-CAPTURE] New lead: ${name} ${phone} for ${site.trade} in ${site.city}`);
+    const siteNote = !site
+      ? `<p style='font-size:13px;color:#dc2626;font-weight:bold;'>⚠ Slug "${site_slug}" has no site record — run migration to add this territory.</p>`
+      : !site.active_contractor_id
+      ? "<p style='font-size:13px;color:#f59e0b;'>⚠ No contractor assigned yet — this is a free lead until you sign one.</p>"
+      : "<p style='font-size:13px;color:#16a34a;'>✓ Contractor has been notified automatically.</p>";
+
+    console.log(`[LEAD-CAPTURE] New lead: ${name} ${phone} for ${tradeLabel} in ${cityLabel}`);
 
     // Email Matt immediately
     if (RESEND_API_KEY) {
@@ -58,11 +69,11 @@ serve(async (req) => {
         body: JSON.stringify({
           from: "M² Leads <matt@mattmichelstraining.com>",
           to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"],
-          subject: `🔥 New ${site.trade} lead — ${site.city} — ${name}`,
+          subject: `🔥 New ${tradeLabel} lead — ${cityLabel} — ${name}`,
           html: `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#f8fafc;padding:24px;">
 <div style="max-width:480px;margin:0 auto;background:#fff;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;">
   <div style="background:#e8621a;padding:12px 24px;color:#fff;font-weight:700;font-size:16px;">
-    New ${site.trade.toUpperCase()} Lead — ${site.city}, ${site.state}
+    New ${tradeLabel.toUpperCase()} Lead — ${cityLabel}${stateLabel ? `, ${stateLabel}` : ""}
   </div>
   <div style="padding:24px;font-size:15px;color:#1e293b;line-height:1.8;">
     <p><strong>Name:</strong> ${name}</p>
@@ -72,7 +83,7 @@ serve(async (req) => {
     ${message ? `<p><strong>Notes:</strong> ${message}</p>` : ""}
     <hr style="border:1px solid #e2e8f0;margin:16px 0;">
     <p style="font-size:13px;color:#64748b;">Lead captured from <strong>${site_slug}</strong> at ${new Date().toLocaleString("en-US", { timeZone: "America/New_York" })} ET</p>
-    ${site.active_contractor_id ? "<p style='font-size:13px;color:#16a34a;'>✓ Contractor has been notified automatically.</p>" : "<p style='font-size:13px;color:#f59e0b;'>⚠ No contractor assigned yet — this is a free lead until you sign one.</p>"}
+    ${siteNote}
   </div>
 <div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;">
         <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" />
@@ -86,7 +97,7 @@ serve(async (req) => {
       });
 
       // If contractor is assigned, notify them too
-      if (site.active_contractor_id) {
+      if (site?.active_contractor_id) {
         const { data: contractor } = await sb
           .from("contractor_clients")
           .select("name, email, phone, business_name")
@@ -100,15 +111,15 @@ serve(async (req) => {
             body: JSON.stringify({
               from: "M² Lead Network <matt@mattmichelstraining.com>",
               to: [contractor.email], bcc: ["matthewmichels4@gmail.com"],
-              subject: `🔥 New ${site.trade} lead — ${name} in ${site.city}`,
+              subject: `🔥 New ${tradeLabel} lead — ${name} in ${cityLabel}`,
               html: `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#f8fafc;padding:24px;">
 <div style="max-width:480px;margin:0 auto;background:#fff;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;">
   <div style="background:#e8621a;padding:12px 24px;color:#fff;font-weight:700;font-size:16px;">
-    New Exclusive Lead — ${site.trade.toUpperCase()}
+    New Exclusive Lead — ${tradeLabel.toUpperCase()}
   </div>
   <div style="padding:24px;font-size:15px;color:#1e293b;line-height:1.9;">
     <p>Hey ${contractor.name || contractor.business_name || "there"} —</p>
-    <p>A new ${site.trade} lead just came in for your territory. <strong>You're the only one getting this.</strong></p>
+    <p>A new ${tradeLabel} lead just came in for your territory. <strong>You're the only one getting this.</strong></p>
     <p><strong>Name:</strong> ${name}</p>
     <p><strong>Phone:</strong> <a href="tel:${phone}" style="color:#e8621a;font-size:18px;font-weight:700;">${phone}</a></p>
     ${email ? `<p><strong>Email:</strong> ${email}</p>` : ""}
