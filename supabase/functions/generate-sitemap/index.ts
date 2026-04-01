@@ -49,13 +49,24 @@ serve(async (_req) => {
   </url>`
     ).join("\n");
 
-    const dynamicEntries = (pages || [])
+    const dynamicEntries = pages
       .map((p) => {
         const lastmod = p.created_at ? p.created_at.split("T")[0] : "";
         return `  <url>
     <loc>${SITE_URL}/training/${p.slug}</loc>${lastmod ? `\n    <lastmod>${lastmod}</lastmod>` : ""}
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
+  </url>`;
+      })
+      .join("\n");
+
+    const toolEntries = tools
+      .map((t) => {
+        const lastmod = t.created_at ? t.created_at.split("T")[0] : "";
+        return `  <url>
+    <loc>${SITE_URL}/tools/${t.slug}</loc>${lastmod ? `\n    <lastmod>${lastmod}</lastmod>` : ""}
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>`;
       })
       .join("\n");
