@@ -14,7 +14,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { site_slug, name, phone, email, message, project_type } = await req.json();
+    const { site_slug, name, phone, email, message, project_type, source } = await req.json();
     if (!site_slug || !name || !phone) {
       return new Response(JSON.stringify({ error: "name and phone are required" }), { status: 400, headers: corsHeaders });
     }
@@ -48,6 +48,7 @@ serve(async (req) => {
         email: email || null,
         message: message || null,
         project_type: project_type || null,
+        source: source || "direct",
         status: "new",
       })
       .select()
