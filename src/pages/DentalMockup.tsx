@@ -109,6 +109,35 @@ const DentalMockup = () => {
         <a href="tel:3138064952">313.806.4952</a>
       </div>
 
+      {/* Alt Design Switcher */}
+      <div className="fixed bottom-5 left-4 z-[60] hidden lg:block">
+        <div className="rounded-xl overflow-hidden text-xs" style={{ background: "rgba(255,255,255,.97)", backdropFilter: "blur(12px)", border: "1px solid #e2e8f0", boxShadow: "0 4px 20px rgba(0,0,0,.08)", minWidth: 210 }}>
+          <div className="px-4 py-2.5 border-b border-slate-100">
+            <p className="font-bold uppercase tracking-widest text-[10px]" style={{ color: TEAL }}>See Other Designs</p>
+          </div>
+          <div className="p-2 space-y-1">
+            {[
+              { to: "/demo-dental", label: "Teal / Clinical — Current", active: true },
+              { to: "/demo-dental-alt1", label: "Prestige (Navy & Gold)" },
+              { to: "/demo-dental-alt2", label: "Nordic Wellness (Minimal)" },
+            ].map(d => (
+              <Link
+                key={d.to}
+                to={d.to}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg transition-colors w-full text-left"
+                style={{ background: d.active ? `rgba(13,148,136,.08)` : "transparent", color: d.active ? TEAL : "#94a3b8" }}
+              >
+                <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: d.active ? TEAL : "#cbd5e1" }} />
+                {d.label}
+              </Link>
+            ))}
+          </div>
+          <div className="px-4 py-2.5 border-t border-slate-100">
+            <a href="tel:3138064952" className="text-[10px] font-semibold text-slate-400">Matt — (313) 806-4952</a>
+          </div>
+        </div>
+      </div>
+
       {/* Sticky Header */}
       <header
         className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 md:px-8 py-3 transition-transform duration-300"

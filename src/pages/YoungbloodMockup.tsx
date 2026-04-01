@@ -103,6 +103,35 @@ const YoungbloodMockup = () => {
         <a href="tel:3138064952">313.806.4952</a>
       </div>
 
+      {/* ── Alt Design Switcher ── */}
+      <div className="fixed bottom-5 left-4 z-[60] hidden lg:block">
+        <div className="rounded-xl overflow-hidden text-xs" style={{ background: "rgba(10,15,26,.92)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,.1)", minWidth: 210 }}>
+          <div className="px-4 py-2.5 border-b" style={{ borderColor: "rgba(255,255,255,.07)" }}>
+            <p className="font-bold uppercase tracking-widest text-[10px]" style={{ color: "#0ea5e9" }}>See Other Designs</p>
+          </div>
+          <div className="p-2 space-y-1">
+            {[
+              { to: "/demo-youngblood", label: "Dark / Blue — Current", active: true },
+              { to: "/demo-youngblood-alt1", label: "Steel & Fire (White/Red)" },
+              { to: "/demo-youngblood-alt2", label: "Precision Grid (Cyber)" },
+            ].map(d => (
+              <Link
+                key={d.to}
+                to={d.to}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg transition-colors w-full"
+                style={{ background: d.active ? "rgba(249,115,22,.15)" : "transparent", color: d.active ? "#f97316" : "rgba(255,255,255,.5)" }}
+              >
+                <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: d.active ? "#f97316" : "rgba(255,255,255,.2)" }} />
+                {d.label}
+              </Link>
+            ))}
+          </div>
+          <div className="px-4 py-2.5 border-t" style={{ borderColor: "rgba(255,255,255,.07)" }}>
+            <a href="tel:3138064952" className="text-[10px] font-semibold" style={{ color: "rgba(255,255,255,.3)" }}>Matt — (313) 806-4952</a>
+          </div>
+        </div>
+      </div>
+
       {/* ════════════════════════════════════════════════════════════ */}
       {/*  1. STICKY HEADER                                          */}
       {/* ════════════════════════════════════════════════════════════ */}
