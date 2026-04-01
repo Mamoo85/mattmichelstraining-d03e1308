@@ -222,9 +222,15 @@ const ContractorSeoPage = () => {
         {/* Final CTA */}
         <section className="py-16 px-4 bg-gradient-to-br from-[#1e293b] to-[#0f172a] text-white text-center">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">Ready to Dominate {page.city} Online?</h2>
+            <h2 className="text-2xl md:text-3xl font-bold mb-4">
+              {category === "personal_training" ? `Ready to Transform Your Fitness in ${page.city}?` :
+               category === "coaching" ? `Ready to Level Up in ${page.city}?` :
+               `Ready to Dominate ${page.city} Online?`}
+            </h2>
             <p className="text-lg text-white/80 mb-8">
-              Get a professional website that generates leads for your {page.trade.toLowerCase()} business — starting at $499.
+              {category === "personal_training" ? `Start your ${page.trade.toLowerCase()} journey with a certified trainer today.` :
+               category === "coaching" ? `Book your free ${page.trade.toLowerCase()} discovery call today.` :
+               `Get a professional website that generates leads for your ${page.trade.toLowerCase()} business — starting at $499.`}
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <a href={`tel:${phoneNumber.replace(/\D/g, "")}`}>
@@ -232,9 +238,9 @@ const ContractorSeoPage = () => {
                   <Phone className="h-5 w-5 mr-2" /> Call {phoneNumber}
                 </Button>
               </a>
-              <Link to="/web-design-services">
+              <Link to={cta.primary}>
                 <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 text-lg px-8 py-6 w-full sm:w-auto">
-                  View Pricing
+                  {cta.label}
                 </Button>
               </Link>
             </div>
