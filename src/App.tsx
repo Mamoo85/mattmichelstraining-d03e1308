@@ -88,6 +88,7 @@ const RealEstateMockup = lazyRetry(() => import("./pages/RealEstateMockup"));
 const CleaningServiceMockup = lazyRetry(() => import("./pages/CleaningServiceMockup"));
 const SalonMockup = lazyRetry(() => import("./pages/SalonMockup"));
 const WebDesignServices = lazyRetry(() => import("./pages/WebDesignServices"));
+const ReferWebDesign = lazyRetry(() => import("./pages/ReferWebDesign"));
 const ClientPortal = lazyRetry(() => import("./pages/ClientPortal"));
 const ClientSite = lazyRetry(() => import("./pages/ClientSite"));
 const ContractorSeoPage = lazyRetry(() => import("./pages/ContractorSeoPage"));
