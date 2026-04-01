@@ -30,14 +30,16 @@ serve(async (_req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { data: pages, error } = await supabase
-      .from("seo_landing_pages")
-      .select("slug, created_at")
-      .order("created_at", { ascending: false });
+    const [seoRes, toolsRes] = await Promise.all([
+      supabase.from("seo_landing_pages").select("slug, created_at").order("created_at", { ascending: false }),
+      supabase.from("micro_saas_tools").select("slug, created_at").eq("is_active", true).order("created_at", { ascending: false }),
+    ]);
 
-    if (error) {
-      console.error("Sitemap query error:", error);
-    }
+    if (seoRes.error) console.error("Sitemap seo_landing_pages error:", seoRes.error);
+    if (toolsRes.error) console.error("Sitemap micro_saas_tools error:", toolsRes.error);
+
+    const pages = seoRes.data || [];
+    const tools = toolsRes.data || [];
 
     const staticEntries = STATIC_ROUTES.map(
       (r) => `  <url>
@@ -47,7 +49,7 @@ serve(async (_req) => {
   </url>`
     ).join("\n");
 
-    const dynamicEntries = (pages || [])
+    const dynamicEntries = pages
       .map((p) => {
         const lastmod = p.created_at ? p.created_at.split("T")[0] : "";
         return `  <url>
@@ -58,10 +60,22 @@ serve(async (_req) => {
       })
       .join("\n");
 
+    const toolEntries = tools
+      .map((t) => {
+        const lastmod = t.created_at ? t.created_at.split("T")[0] : "";
+        return `  <url>
+    <loc>${SITE_URL}/tools/${t.slug}</loc>${lastmod ? `\n    <lastmod>${lastmod}</lastmod>` : ""}
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>`;
+      })
+      .join("\n");
+
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${staticEntries}
 ${dynamicEntries}
+${toolEntries}
 </urlset>`;
 
     return new Response(xml, {
