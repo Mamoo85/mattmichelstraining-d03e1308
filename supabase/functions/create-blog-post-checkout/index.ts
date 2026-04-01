@@ -10,7 +10,7 @@ serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       mode: "subscription", payment_method_types: ["card"], customer_email: email,
       subscription_data: { trial_period_days: 7 },
-      line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 7900, product_data: { name: "AI Blog Post Service — $79/month", description: "4 AI-written blog posts per month, emailed as ready-to-publish HTML." } }, quantity: 1 }],
+      line_items: [{ price: "price_1THQqxD52tPWee46FXillQoY", quantity: 1 }],
       metadata: { type: "blog_post_subscription", email, name: name || "", businessName, website: website || "", industry: industry || "" },
       success_url: "https://www.mattmichelstraining.com/ai-blog-posts?status=success",
       cancel_url: "https://www.mattmichelstraining.com/ai-blog-posts",

@@ -92,9 +92,7 @@ serve(async (req) => {
       customer_email: email,
       line_items: [
         {
-          price_data: {
-            currency: "usd",
-            recurring: { interval: "month" },
+          price: "price_1THQqqD52tPWee46w2VUgpXx",
             unit_amount: planCfg.amount,
             product_data: {
               name: `M² Social Media AI — ${planCfg.label}`,

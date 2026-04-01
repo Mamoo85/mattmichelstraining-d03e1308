@@ -117,6 +117,7 @@ const B2BLeads = lazyRetry(() => import("./pages/B2BLeads"));
 const IndustrialDatabase = lazyRetry(() => import("./pages/IndustrialDatabase"));
 const LinkedInGhostwriting = lazyRetry(() => import("./pages/LinkedInGhostwriting"));
 const RevenueDashboard = lazyRetry(() => import("./pages/RevenueDashboard"));
+const MicroSaasToolPage = lazyRetry(() => import("./pages/MicroSaasToolPage"));
 const LocalMarketing = lazyRetry(() => import("./pages/LocalMarketing"));
 const FieldRepTools = lazyRetry(() => import("./pages/FieldRepTools"));
 const NewsletterPage = lazyRetry(() => import("./pages/NewsletterPage"));
@@ -501,6 +502,7 @@ const App = () => (
                     <Route path="/testimonial-harvester" element={<TestimonialHarvester />} />
                     <Route path="/new-mover-marketing" element={<NewMoverMarketing />} />
                     <Route path="/annual-business-review" element={<AnnualBusinessReview />} />
+                    <Route path="/tools/:slug" element={<MicroSaasToolPage />} />
                     <Route path="/legal/:type" element={<LegalPage />} />
                     <Route path="/partner-program" element={<PartnerProgram />} />
                     <Route path="/partners" element={<B2BPartnerPortal />} />

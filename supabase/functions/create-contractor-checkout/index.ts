@@ -42,18 +42,7 @@ serve(async (req) => {
       mode: "subscription",
       payment_method_types: ["card"],
       customer_email: email,
-      line_items: [{
-        price_data: {
-          currency: "usd",
-          recurring: { interval: "month" },
-          unit_amount: monthlyPrice,
-          product_data: {
-            name: `Exclusive ${tradeLabel} Leads — ${city}, ${state}`,
-            description: `All exclusive ${tradeLabel.toLowerCase()} leads in ${city} routed directly to you. No shared leads. Cancel anytime.`,
-          },
-        },
-        quantity: 1,
-      }],
+      line_items: [{ price: "price_1THQqsD52tPWee46ri58gzXf", quantity: 1 }],
       metadata: {
         type: "contractor_lead_subscription",
         trade,

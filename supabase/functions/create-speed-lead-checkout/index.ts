@@ -10,7 +10,7 @@ serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       mode: "subscription", payment_method_types: ["card"], customer_email: email,
       subscription_data: { trial_period_days: 7 },
-      line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 3900, product_data: { name: "Speed-to-Lead SMS — $39/month", description: "Instant text response within 60 seconds of a website form fill." } }, quantity: 1 }],
+      line_items: [{ price: "price_1THQqiD52tPWee46QKMESvro", quantity: 1 }],
       metadata: { type: "speed_lead_subscription", email, name: name || "", businessName, phone: phone || "" },
       success_url: "https://www.mattmichelstraining.com/speed-to-lead?status=success",
       cancel_url: "https://www.mattmichelstraining.com/speed-to-lead",

@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
 
 interface Service {
@@ -50,27 +50,25 @@ Rules:
 - Instagram caption ends with 5-8 relevant hashtags
 - Focus on Metro Detroit small businesses`;
 
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
+  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
-      "x-api-key": ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-      "content-type": "application/json",
+      "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 400,
-      system: "You are a direct response copywriter. Write Facebook/Instagram ads for small local businesses in Metro Detroit. Use pain points, specifics, and clear CTAs. No fluff.",
-      messages: [{ role: "user", content: prompt }],
-    }),
+        model: "google/gemini-2.5-flash-lite",
+        max_tokens: 400,
+        messages: [{ role: "system", content: "You are a direct response copywriter. Write Facebook/Instagram ads for small local businesses in Metro Detroit. Use pain points, specifics, and clear CTAs. No fluff." }, { role: "user", content: prompt }],
+      }),
   });
 
   if (!response.ok) {
-    throw new Error(`Anthropic API error: ${response.status}`);
+    throw new Error(`AI Gateway error: ${response.status}`);
   }
 
   const data = await response.json();
-  const raw = data.content[0].text.trim();
+  const raw = data.choices?.[0]?.message?.content.trim();
 
   try {
     return JSON.parse(raw) as AdCopy;

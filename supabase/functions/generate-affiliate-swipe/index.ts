@@ -12,8 +12,8 @@ serve(async (req) => {
     const { trade } = await req.json();
     if (!trade) return new Response(JSON.stringify({ error: "trade is required" }), { status: 400, headers: corsHeaders });
 
-    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
-    if (!ANTHROPIC_API_KEY) throw new Error("Missing ANTHROPIC_API_KEY");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
+    if (!ANTHROPIC_API_KEY) throw new Error("Missing LOVABLE_API_KEY");
 
     const prompt = `You are a B2B sales copywriter helping a digital marketing agency recruit referral partners.
 
@@ -44,15 +44,14 @@ The agency being referred is M2 Performance Training / Matt Michels (Grosse Poin
 
 Make the copy feel natural, like one contractor genuinely recommending a vendor to a peer — not corporate spam.`;
 
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
+        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
+        model: "google/gemini-2.5-flash-lite",
         max_tokens: 1200,
         messages: [{ role: "user", content: prompt }],
       }),

@@ -37,11 +37,7 @@ serve(async (req: Request) => {
       customer_email: resolvedEmail,
       line_items: [
         {
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: "Local SEO Landing Pages — 10 Pages",
-              description: `10 local SEO pages for ${business_name} in ${city}`,
+          price: "price_1THQrCD52tPWee46S22fwipp" in ${city}`,
             },
             unit_amount: 29900,
           },

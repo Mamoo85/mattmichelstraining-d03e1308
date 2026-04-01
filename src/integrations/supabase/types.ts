@@ -3140,6 +3140,57 @@ export type Database = {
         }
         Relationships: []
       }
+      micro_saas_tools: {
+        Row: {
+          category: string
+          core_pain_point: string
+          created_at: string
+          features_json: Json
+          h1_headline: string
+          id: string
+          is_active: boolean
+          monthly_price: number
+          seo_meta_description: string
+          seo_meta_title: string
+          slug: string
+          stripe_checkout_url: string | null
+          stripe_price_id: string | null
+          target_audience: string
+        }
+        Insert: {
+          category?: string
+          core_pain_point?: string
+          created_at?: string
+          features_json?: Json
+          h1_headline: string
+          id?: string
+          is_active?: boolean
+          monthly_price?: number
+          seo_meta_description: string
+          seo_meta_title: string
+          slug: string
+          stripe_checkout_url?: string | null
+          stripe_price_id?: string | null
+          target_audience?: string
+        }
+        Update: {
+          category?: string
+          core_pain_point?: string
+          created_at?: string
+          features_json?: Json
+          h1_headline?: string
+          id?: string
+          is_active?: boolean
+          monthly_price?: number
+          seo_meta_description?: string
+          seo_meta_title?: string
+          slug?: string
+          stripe_checkout_url?: string | null
+          stripe_price_id?: string | null
+          target_audience?: string
+        }
+        Relationships: []
+      }
       monthly_challenges: {
         Row: {
           created_at: string

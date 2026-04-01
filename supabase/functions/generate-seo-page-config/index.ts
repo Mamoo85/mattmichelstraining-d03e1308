@@ -13,10 +13,10 @@ serve(async (req) => {
     const { trade, city } = await req.json();
     if (!trade || !city) return new Response(JSON.stringify({ error: "trade and city are required" }), { status: 400, headers: corsHeaders });
 
-    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    if (!ANTHROPIC_API_KEY) throw new Error("Missing ANTHROPIC_API_KEY");
+    if (!ANTHROPIC_API_KEY) throw new Error("Missing LOVABLE_API_KEY");
 
     const slug = `${trade.toLowerCase().replace(/\s+/g, "-")}-${city.toLowerCase().replace(/[\s,]+/g, "-")}`;
 
@@ -47,15 +47,14 @@ Return ONLY valid JSON:
   "ctaText": "CTA button text (3-6 words, action-oriented)"
 }`;
 
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
+        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
+        model: "google/gemini-2.5-flash-lite",
         max_tokens: 1000,
         messages: [{ role: "user", content: prompt }],
       }),

@@ -10,7 +10,7 @@ serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       mode: "subscription", payment_method_types: ["card"], customer_email: email,
       subscription_data: { trial_period_days: 7 },
-      line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 2900, product_data: { name: "AI Social Caption Pack — $29/month", description: "30 AI-written social media captions per month, delivered to your inbox." } }, quantity: 1 }],
+      line_items: [{ price: "price_1THQr2D52tPWee46eeXsF7CP", quantity: 1 }],
       metadata: { type: "social_captions_subscription", email, name: name || "", businessName, industry: industry || "", platforms: platforms || "Facebook, Instagram, LinkedIn" },
       success_url: "https://www.mattmichelstraining.com/ai-social-captions?status=success",
       cancel_url: "https://www.mattmichelstraining.com/ai-social-captions",
