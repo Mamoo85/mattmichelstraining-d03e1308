@@ -70,6 +70,7 @@ const AdminProveItReview = lazy(() => import("@/components/admin/AdminProveItRev
 const AdminSeoGenerator = lazy(() => import("@/components/admin/AdminSeoGenerator"));
 const AdminOutreach = lazy(() => import("@/components/admin/AdminOutreach"));
 const AdminSeoPages = lazy(() => import("@/components/admin/AdminSeoPages"));
+const AdminSearchConsole = lazy(() => import("@/components/admin/AdminSearchConsole"));
 const AdminGbpPosts = lazy(() => import("@/components/admin/AdminGbpPosts"));
 const AdminInstagramPosts = lazy(() => import("@/components/admin/AdminInstagramPosts"));
 const AdminContentGenerator = lazy(() => import("@/components/admin/AdminContentGenerator"));
@@ -477,6 +478,7 @@ const Admin = () => {
             { key: "ad-campaigns", label: "⚡ Ad Campaigns", content: <AdminAdCampaigns /> },
             { key: "outreach", label: "Outreach", content: <AdminOutreach /> },
             { key: "seo-pages", label: "SEO Pages", content: <AdminSeoPages /> },
+            { key: "search-console", label: "📊 Search Console", content: <AdminSearchConsole /> },
             { key: "gbp", label: "GBP Posts", content: <AdminGbpPosts /> },
             { key: "instagram", label: "Instagram", content: <AdminInstagramPosts /> },
             { key: "content-gen", label: "Content Generator", content: <AdminContentGenerator /> },
