@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useNavigate } from "react-router-dom";
+
 import ReactMarkdown from "react-markdown";
 
 type Step = "intro" | "front" | "side" | "analyzing" | "results";
