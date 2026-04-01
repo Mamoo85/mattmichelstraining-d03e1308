@@ -1,82 +1,65 @@
 
 
-# Strategic Business Analysis: Full Portfolio Audit + Resource Allocation Plan
+# Build Client Portal for Web Design + Add-On Services
 
-## Why the Other AI Has More Services
+## What We're Building
 
-The other AI is correct — your codebase has **95+ checkout functions** and **80+ client tables**. My previous document only covered the 26 services tracked in `AdminOpsCenter.tsx` plus fitness and a few extras. I missed ~60 services that have full checkout + webhook + sender infrastructure but aren't tracked in the admin dashboard. That's a critical gap.
+A **Client Portal** (`/client-portal`) where web design clients log in to see their site status and purchase add-on services. All other standalone services (dental, trucking, OSHA, etc.) remain untouched and continue selling independently.
 
-## Who's More Realistic on Success %?
+## Architecture
 
-The other AI didn't provide success percentages, but your question is valid. My previous numbers were **optimistic** (70-85% for most services). A realistic assessment:
+```text
+/client-portal (authenticated)
+├── Site Status Card ── pulls from web_design_leads table
+├── Active Add-Ons ── pulls from client_addons table  
+├── Add-On Marketplace ── purchase buttons → Stripe checkout
+└── Billing ── link to Stripe Customer Portal
+```
 
-- **Most of your 95+ services have 0 paying clients right now.** That's a 0% success rate today.
-- SaaS industry data: the average new micro-SaaS product has a **5-15% chance** of reaching $1k MRR within 12 months
-- The key differentiator: you have **infrastructure built** — checkout, delivery, automation. Most founders don't even have that. But infrastructure ≠ product-market fit.
+## Steps
 
-**Honest answer**: Your top 10 services have a 40-60% chance of reaching $1k+ MRR each. The bottom 60 services have a <5% chance individually. The strategy should be to **kill the bottom, double down on the top.**
+### 1. Database: Create `client_addons` table
+New migration to track which add-ons a web design client has purchased:
+- `id`, `lead_id` (references web_design_leads), `user_id` (auth user), `service_key` (e.g. `review_response`, `gbp_management`), `service_name`, `price_cents`, `stripe_subscription_id`, `status` (active/cancelled/paused), `activated_at`, `cancelled_at`
+- RLS: service_role full access + authenticated users can SELECT their own rows
 
-## The Plan: Comprehensive Strategic Document (v2)
+### 2. Create `ClientPortal.tsx` page
+- Auth-gated page at `/client-portal`
+- Fetches the logged-in user's `web_design_leads` record (matched by email)
+- Shows site build status (prospect → intake → building → preview → live)
+- Lists active add-ons from `client_addons`
+- Marketplace grid of available add-ons (pulled from the same ADD_ONS config already in WebDesignServices.tsx, extracted to a shared constant)
 
-### What Gets Built
+### 3. Create `create-addon-checkout` edge function
+- Accepts `service_key`, `price_cents`, `service_name`
+- Creates a Stripe checkout session in subscription mode
+- Attaches metadata: `type: "web_design_addon"`, `service_key`, `lead_id`
+- On webhook completion, inserts into `client_addons`
 
-**File: `M2_Strategic_Portfolio_v2.xlsx`** — Complete audit of ALL 95+ services with:
-- Full service name, price, checkout function, sender function, client table
-- **Completion score** (0-100%): does it have checkout + webhook + sender + landing page + Stripe product?
-- **Autonomy %**: fully automated vs needs manual work
-- **Realistic success %**: based on market data, competition, and current traction
-- **Running cost per client/month**
-- **Tier assignment**: CORE (invest), BUNDLE (merge), or CUT (archive)
-- **Recommendation column**: specific action for each service
+### 4. Update Stripe webhook handler
+- Add a case for `metadata.type === "web_design_addon"` that inserts into `client_addons` with the subscription ID and activates the service
 
-**File: `M2_Strategic_Portfolio_v2.docx`** — Executive strategy document with:
-- The real numbers: what you actually have vs what's generating revenue
-- **Top 10 "Double Down" services** with rationale and resource allocation
-- **Bundle recommendations**: which 30+ low-value services merge into 3-4 bundles
-- **Kill list**: services to archive/remove from cron to save compute
-- **Email volume optimization**: which senders to disable, which to increase
-- **Competitor price comparison** for your top 10 vs GoHighLevel, Vendasta, Podium, BrightLocal
-- **90-day action plan**: week by week priorities
+### 5. Add route to App.tsx
+- `/client-portal` → `ClientPortal.tsx`, wrapped in `ProtectedRoute`
 
-### Strategic Decisions (Built Into Document)
+### 6. Add portal link
+- Add "Client Portal" link to web design pages and navigation for logged-in users
 
-**CORE (Invest — allocate 80% of resources):**
-1. Contractor Lead Gen ($399/mo) — highest ticket, real value
-2. AI Social Media Poster ($199-299/mo) — proven market
-3. Web Design ($499 + $49-199/mo retainer) — service arbitrage model
-4. Appointment Reminders ($29-39/mo) — sticky, high retention
-5. GBP Management ($49-99/mo) — proven demand
-6. AI Newsletter Service ($99/mo) — content delivery
-7. AI Reputation/Review Response ($49-79/mo) — urgent need for SMBs
-8. Employee Handbook ($99/mo) — compliance-driven
-9. OSHA Compliance ($99/mo) — fear-based buying
-10. Blog Post Service ($79/mo) — SEO-driven recurring
+## What Stays Untouched
+- All 90+ standalone service pages and their checkout functions remain as-is
+- No services are archived or removed
+- Lead generation is tabled — no changes there
+- M2 Development hub stays intact
 
-**BUNDLE (Merge ~40 services into 3-4 packs):**
-- "Marketing Suite" ($149/mo): Social Captions + FAQ Refresh + Blog Posts + Promo Planner + Reactivation Email
-- "Operations Suite" ($149/mo): Inventory Alerts + Payment Chaser + Collections + KPI Email + Staff Newsletter
-- "Sales Suite" ($149/mo): Battlecard + Competitor Watch + Market Intel + Sales Script + Proposal Generator
-- "Compliance Suite" ($199/mo): OSHA + Handbook + Trucking Docs + Permit Monitor + Warranty Reminder
-
-**CUT (Archive — disable cron, keep checkout alive):**
-- ~25 ultra-niche services with <5% market viability (Podcast Show Notes, Video Script Writer, Voicemail Transcription, Church Newsletter, Med Spa Marketing, etc.)
-
-**EMAIL VOLUME REDUCTION:**
-- Disable senders for CUT-tier services (saves ~30 cron invocations/day)
-- Reduce frequency on low-engagement senders from daily to weekly
-- Focus email sends on CORE services only
-
-### Technical Approach
-
-1. Python script with openpyxl: enumerate ALL `create-*-checkout` directories, cross-reference with sender functions, client tables, and webhook handlers to score completeness
-2. Color-coded Excel: green (CORE), yellow (BUNDLE), red (CUT)
-3. Word doc with docx library: strategic narrative with data tables
-4. QA both files before delivery
-
-### File Changes
+## Files Changed/Created
 
 | File | Action |
 |------|--------|
-| `/mnt/documents/M2_Strategic_Portfolio_v2.xlsx` | New — complete 95+ service audit |
-| `/mnt/documents/M2_Strategic_Portfolio_v2.docx` | New — strategic analysis + 90-day plan |
+| `src/pages/ClientPortal.tsx` | **Create** — full portal page |
+| `src/lib/addons.ts` | **Create** — shared add-on definitions |
+| `supabase/functions/create-addon-checkout/index.ts` | **Create** — Stripe checkout for add-ons |
+| `src/pages/WebDesignServices.tsx` | **Edit** — extract ADD_ONS to shared file, add portal link |
+| `src/App.tsx` | **Edit** — add `/client-portal` route |
+| Migration SQL | **New** — `client_addons` table + RLS |
+| Webhook handler | **Edit** — handle `web_design_addon` type |
 
