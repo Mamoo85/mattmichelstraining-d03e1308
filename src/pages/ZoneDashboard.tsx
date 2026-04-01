@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import {
   User, Timer, Mic, ArrowLeft,
   Trophy, Sparkles, Wrench, Utensils, BarChart3, Target,
-  Loader2, MessageCircle, Zap,
+  Loader2, MessageCircle, Zap, Camera, Brain,
 } from "lucide-react";
 import ZoneThemeWrapper from "@/components/zone/ZoneThemeWrapper";
 import AthleteStats from "@/components/dashboard/AthleteStats";
