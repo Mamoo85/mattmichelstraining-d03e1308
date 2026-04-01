@@ -75,6 +75,7 @@ serve(async (_req) => {
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${staticEntries}
 ${dynamicEntries}
+${toolEntries}
 </urlset>`;
 
     return new Response(xml, {
