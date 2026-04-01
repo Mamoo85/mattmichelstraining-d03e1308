@@ -5,7 +5,7 @@ import SEOHead from "@/components/layout/SEOHead";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, MapPin, Phone, Globe, Star, Crown, ArrowRight, ExternalLink } from "lucide-react";
+import { Search, MapPin, Globe, Star, Crown, ArrowRight, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface Listing {
