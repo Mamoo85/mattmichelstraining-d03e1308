@@ -92,6 +92,7 @@ const ClientPortal = () => {
           price_cents: addon.priceCents,
           recurring: addon.recurring,
           lead_id: lead?.id || null,
+          price_id: addon.price_id || null,
         },
       });
       if (error) throw error;
