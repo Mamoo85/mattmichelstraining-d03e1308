@@ -10,11 +10,13 @@ export interface AddOn {
   name: string;
   price: string;
   priceSub: string;
-  priceCents: number; // monthly price in cents for Stripe
+  priceCents: number;
   color: string;
   desc: string;
   includes: string[];
   recurring: boolean;
+  price_id?: string;   // Stripe Price ID (registered)
+  product_id?: string; // Stripe Product ID
 }
 
 export const ADD_ONS: AddOn[] = [
