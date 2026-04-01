@@ -1292,6 +1292,110 @@ export type Database = {
         }
         Relationships: []
       }
+      contractor_lead_sites: {
+        Row: {
+          active: boolean | null
+          active_contractor_id: string | null
+          city: string
+          created_at: string | null
+          facebook_page_id: string | null
+          id: string
+          slug: string
+          state: string
+          trade: string
+        }
+        Insert: {
+          active?: boolean | null
+          active_contractor_id?: string | null
+          city: string
+          created_at?: string | null
+          facebook_page_id?: string | null
+          id?: string
+          slug: string
+          state?: string
+          trade: string
+        }
+        Update: {
+          active?: boolean | null
+          active_contractor_id?: string | null
+          city?: string
+          created_at?: string | null
+          facebook_page_id?: string | null
+          id?: string
+          slug?: string
+          state?: string
+          trade?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contractor_lead_sites_active_contractor_id_fkey"
+            columns: ["active_contractor_id"]
+            isOneToOne: false
+            referencedRelation: "contractor_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contractor_leads: {
+        Row: {
+          client_id: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          message: string | null
+          name: string
+          notified_at: string | null
+          phone: string
+          project_type: string | null
+          site_id: string | null
+          source: string | null
+          status: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          message?: string | null
+          name: string
+          notified_at?: string | null
+          phone: string
+          project_type?: string | null
+          site_id?: string | null
+          source?: string | null
+          status?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          message?: string | null
+          name?: string
+          notified_at?: string | null
+          phone?: string
+          project_type?: string | null
+          site_id?: string | null
+          source?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contractor_leads_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "contractor_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contractor_leads_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "contractor_lead_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       custom_program_requests: {
         Row: {
           additional_notes: string | null
