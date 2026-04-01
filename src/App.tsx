@@ -353,6 +353,7 @@ const App = () => (
                     <Route path="/install" element={<Install />} />
                     <Route path="/free-ai-generator" element={<FreeAiGenerator />} />
                     <Route path="/training/:slug" element={<SEOLandingPage />} />
+                    <Route path="/services/:slug" element={<ContractorSeoPage />} />
                     <Route path="/sitemap.xml" element={<DynamicSitemap />} />
                     <Route path="/detroit-web-design" element={<WebDesignAgency />} />
                     <Route path="/demo-landscaping" element={<LandscapeMockup />} />
