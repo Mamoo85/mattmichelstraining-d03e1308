@@ -86,9 +86,8 @@ const BusinessDirectory = () => {
     queryKey: ["business-directory"],
     queryFn: async () => {
       const { data, error } = await (supabase as any)
-        .from("business_listings")
+        .from("business_listings_public")
         .select("id, business_name, owner_name, industry, city, state, website, description, logo_url, tier, is_featured")
-        .eq("is_active", true)
         .order("is_featured", { ascending: false })
         .order("tier", { ascending: false })
         .order("business_name", { ascending: true });
