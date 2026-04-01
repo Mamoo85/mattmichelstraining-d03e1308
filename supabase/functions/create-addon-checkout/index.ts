@@ -39,6 +39,7 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
+    const body = await req.json();
     const { service_key, service_name, price_cents, recurring, lead_id, price_id } = body;
 
     if (!service_key || !service_name || !price_cents) {

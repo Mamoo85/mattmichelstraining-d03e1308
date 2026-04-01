@@ -6906,6 +6906,54 @@ export type Database = {
         }
         Relationships: []
       }
+      web_design_referrals: {
+        Row: {
+          created_at: string
+          id: string
+          paid_at: string | null
+          payout_amount_cents: number
+          payout_method: string | null
+          referral_code: string
+          referred_business_name: string | null
+          referred_email: string
+          referrer_email: string
+          referrer_name: string | null
+          status: string
+          stripe_session_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          payout_amount_cents?: number
+          payout_method?: string | null
+          referral_code: string
+          referred_business_name?: string | null
+          referred_email: string
+          referrer_email: string
+          referrer_name?: string | null
+          status?: string
+          stripe_session_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          payout_amount_cents?: number
+          payout_method?: string | null
+          referral_code?: string
+          referred_business_name?: string | null
+          referred_email?: string
+          referrer_email?: string
+          referrer_name?: string | null
+          status?: string
+          stripe_session_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       website_copy_clients: {
         Row: {
           active: boolean | null
