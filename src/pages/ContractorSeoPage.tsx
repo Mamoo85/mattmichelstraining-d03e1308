@@ -71,7 +71,7 @@ const ContractorSeoPage = () => {
       { icon: "📍", title: `Local ${page.city} Expertise`, desc: `We understand the ${page.city} market and build sites that rank for local "${page.trade}" searches.` },
       { icon: "💰", title: "ROI-Focused", desc: "Every site comes with SEO, lead capture forms, and optional add-ons like review management and Google Ads." },
     ],
-    web_design: [
+    webdesign: [
       { icon: "🎨", title: "Industry-Specific Design", desc: `Custom templates built for ${page.trade.toLowerCase()} businesses — not generic cookie-cutter sites.` },
       { icon: "📱", title: "Mobile-First", desc: "Over 70% of local searches happen on mobile. Every site we build is responsive and fast." },
       { icon: "🔍", title: "Built-In SEO", desc: `Rank higher in ${page.city} for "${page.trade}" searches with our SEO-optimized architecture.` },
