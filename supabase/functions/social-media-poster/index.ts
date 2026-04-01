@@ -9,6 +9,27 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 
+// Global fallback tokens (Matt's accounts)
+const GLOBAL_META_TOKEN = Deno.env.get("META_ACCESS_TOKEN") || "";
+const GLOBAL_META_PAGE_ID = Deno.env.get("META_PAGE_ID") || "";
+const GLOBAL_LINKEDIN_TOKEN = Deno.env.get("LINKEDIN_ACCESS_TOKEN") || "";
+
+let _linkedinPersonUrn: string | null = null;
+async function getLinkedInPersonUrn(token: string): Promise<string | null> {
+  if (_linkedinPersonUrn) return _linkedinPersonUrn;
+  try {
+    const res = await fetch("https://api.linkedin.com/v2/userinfo", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    _linkedinPersonUrn = `urn:li:person:${data.sub}`;
+    return _linkedinPersonUrn;
+  } catch {
+    return null;
+  }
+}
+
 async function generatePost(
   businessName: string,
   businessType: string,
