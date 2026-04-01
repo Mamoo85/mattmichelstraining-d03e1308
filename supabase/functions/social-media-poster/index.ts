@@ -9,6 +9,27 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 
+// Global fallback tokens (Matt's accounts)
+const GLOBAL_META_TOKEN = Deno.env.get("META_ACCESS_TOKEN") || "";
+const GLOBAL_META_PAGE_ID = Deno.env.get("META_PAGE_ID") || "";
+const GLOBAL_LINKEDIN_TOKEN = Deno.env.get("LINKEDIN_ACCESS_TOKEN") || "";
+
+let _linkedinPersonUrn: string | null = null;
+async function getLinkedInPersonUrn(token: string): Promise<string | null> {
+  if (_linkedinPersonUrn) return _linkedinPersonUrn;
+  try {
+    const res = await fetch("https://api.linkedin.com/v2/userinfo", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    _linkedinPersonUrn = `urn:li:person:${data.sub}`;
+    return _linkedinPersonUrn;
+  } catch {
+    return null;
+  }
+}
+
 async function generatePost(
   businessName: string,
   businessType: string,
@@ -64,7 +85,7 @@ async function postToFacebook(
 }
 
 async function postToLinkedIn(
-  orgId: string,
+  authorUrn: string,
   accessToken: string,
   message: string
 ): Promise<boolean> {
@@ -76,7 +97,7 @@ async function postToLinkedIn(
         "Content-Type": "application/json",
         "X-Restli-Protocol-Version": "2.0.0" },
       body: JSON.stringify({
-        author: `urn:li:organization:${orgId}`,
+        author: authorUrn,
         lifecycleState: "PUBLISHED",
         specificContent: {
           "com.linkedin.ugc.ShareContent": {
@@ -126,8 +147,14 @@ serve(async () => {
       const businessType = client.business_type || "local business";
       const tokens: Record<string, string> = client.access_tokens || {};
 
-      const hasFbConnection = client.fb_page_id && tokens.facebook;
-      const hasLinkedInConnection = client.linkedin_org_id && tokens.linkedin;
+      // Use per-client tokens if available, otherwise fall back to global secrets
+      const fbPageId = client.fb_page_id || GLOBAL_META_PAGE_ID;
+      const fbToken = tokens.facebook || GLOBAL_META_TOKEN;
+      const liToken = tokens.linkedin || GLOBAL_LINKEDIN_TOKEN;
+      const liOrgId = client.linkedin_org_id || null;
+
+      const hasFbConnection = fbPageId && fbToken;
+      const hasLinkedInConnection = liToken; // personal URN auto-detected
       const hasAnyConnection = hasFbConnection || hasLinkedInConnection;
 
       if (!hasAnyConnection) {
@@ -143,7 +170,7 @@ serve(async () => {
       if (hasFbConnection) {
         try {
           const message = await generatePost(client.business_name, businessType, location, "facebook");
-          const ok = await postToFacebook(client.fb_page_id, tokens.facebook, message);
+          const ok = await postToFacebook(fbPageId, fbToken, message);
           if (ok) {
             clientPosted = true;
           } else {
@@ -156,16 +183,27 @@ serve(async () => {
         }
       }
 
-      // Post to LinkedIn
+      // Post to LinkedIn (personal profile via URN or org)
       if (hasLinkedInConnection) {
         try {
-          const message = await generatePost(client.business_name, businessType, location, "linkedin");
-          const ok = await postToLinkedIn(client.linkedin_org_id, tokens.linkedin, message);
-          if (ok) {
-            clientPosted = true;
+          let authorUrn: string | null = null;
+          if (liOrgId) {
+            authorUrn = `urn:li:organization:${liOrgId}`;
+          } else {
+            authorUrn = await getLinkedInPersonUrn(liToken);
+          }
+          if (authorUrn) {
+            const message = await generatePost(client.business_name, businessType, location, "linkedin");
+            const ok = await postToLinkedIn(authorUrn, liToken, message);
+            if (ok) {
+              clientPosted = true;
+            } else {
+              clientErrored = true;
+              console.error(`[SOCIAL-POSTER] LinkedIn post failed for ${client.business_name}`);
+            }
           } else {
             clientErrored = true;
-            console.error(`[SOCIAL-POSTER] LinkedIn post failed for ${client.business_name}`);
+            console.error(`[SOCIAL-POSTER] Could not resolve LinkedIn URN for ${client.business_name}`);
           }
         } catch (e) {
           clientErrored = true;
