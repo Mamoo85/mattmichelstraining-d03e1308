@@ -551,6 +551,46 @@ serve(async (req) => {
         customerName,
       });
 
+      // ── WEB DESIGN ADD-ON ────────────────────────────────────────────────
+      if (meta.type === "web_design_addon" && meta.service_key) {
+        try {
+          const addonSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+          await addonSb.from("client_addons").insert({
+            lead_id: meta.lead_id || null,
+            user_id: meta.user_id || null,
+            service_key: meta.service_key,
+            service_name: meta.service_name || meta.service_key,
+            price_cents: session.amount_total || 0,
+            stripe_subscription_id: (session.subscription as string) || null,
+            status: "active",
+          });
+          console.log(`[WEBHOOK] Web design addon activated: ${meta.service_key} for ${customerEmail}`);
+          if (RESEND_API_KEY && customerEmail) {
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "Matt Michels <matt@mattmichelstraining.com>",
+                to: [customerEmail], bcc: ["matthewmichels4@gmail.com"],
+                subject: `Add-On Activated: ${meta.service_name || meta.service_key}`,
+                html: `<p>Your add-on service <strong>${meta.service_name}</strong> is now active. I'll be in touch within 24 hours to get everything set up.</p><p>— Matt, M² Development<br>(313) 806-4952</p>`,
+              }),
+            });
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "M² Notifications <matt@mattmichelstraining.com>",
+                to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"],
+                subject: `💰 New Add-On: ${meta.service_name} — ${customerEmail}`,
+                html: `<p><strong>${meta.service_name}</strong> activated by ${customerEmail}.<br>Lead ID: ${meta.lead_id || "none"}</p>`,
+              }),
+            });
+          }
+        } catch (e) { console.error("[WEBHOOK] web_design_addon error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       // ── B2B SUBSCRIPTION FULFILLMENT (handbook, grant finder, etc.) ──────
       if (meta.type === "handbook_subscription") {
         try {

@@ -788,6 +788,53 @@ export type Database = {
         }
         Relationships: []
       }
+      client_addons: {
+        Row: {
+          activated_at: string
+          cancelled_at: string | null
+          id: string
+          lead_id: string | null
+          price_cents: number
+          service_key: string
+          service_name: string
+          status: string
+          stripe_subscription_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          activated_at?: string
+          cancelled_at?: string | null
+          id?: string
+          lead_id?: string | null
+          price_cents?: number
+          service_key: string
+          service_name: string
+          status?: string
+          stripe_subscription_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          activated_at?: string
+          cancelled_at?: string | null
+          id?: string
+          lead_id?: string | null
+          price_cents?: number
+          service_key?: string
+          service_name?: string
+          status?: string
+          stripe_subscription_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_addons_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "web_design_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_assessments: {
         Row: {
           admin_user_id: string
