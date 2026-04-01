@@ -22,7 +22,7 @@ interface SelfPostureAnalysisProps {
 
 const SelfPostureAnalysis = memo(({ open, onClose }: SelfPostureAnalysisProps) => {
   const { user } = useAuth();
-  const navigate = useNavigate();
+  
   const webcamRef = useRef<Webcam>(null);
   const [step, setStep] = useState<Step>("intro");
   const [frontImg, setFrontImg] = useState<string | null>(null);
