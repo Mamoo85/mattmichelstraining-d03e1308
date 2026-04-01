@@ -55,6 +55,39 @@ const ContractorSeoPage = () => {
   const d = page.page_data;
   const phoneNumber = "(313) 806-4952";
   const emailAddress = "matt@mattmichelstraining.com";
+  const category = (page as any).category || "contractor";
+
+  const ctaLinks: Record<string, { primary: string; label: string }> = {
+    contractor: { primary: "/web-design-services", label: "View Pricing" },
+    web_design: { primary: "/web-design-services", label: "View Packages" },
+    personal_training: { primary: "/programs", label: "View Programs" },
+    coaching: { primary: "/performance-coaching", label: "Start Coaching" },
+  };
+  const cta = ctaLinks[category] || ctaLinks.contractor;
+
+  const whyCards: Record<string, { icon: string; title: string; desc: string }[]> = {
+    contractor: [
+      { icon: "🚀", title: "AI-Powered Websites", desc: "We build high-converting sites with AI automation — your website works 24/7 generating leads." },
+      { icon: "📍", title: `Local ${page.city} Expertise`, desc: `We understand the ${page.city} market and build sites that rank for local "${page.trade}" searches.` },
+      { icon: "💰", title: "ROI-Focused", desc: "Every site comes with SEO, lead capture forms, and optional add-ons like review management and Google Ads." },
+    ],
+    web_design: [
+      { icon: "🎨", title: "Industry-Specific Design", desc: `Custom templates built for ${page.trade.toLowerCase()} businesses — not generic cookie-cutter sites.` },
+      { icon: "📱", title: "Mobile-First", desc: "Over 70% of local searches happen on mobile. Every site we build is responsive and fast." },
+      { icon: "🔍", title: "Built-In SEO", desc: `Rank higher in ${page.city} for "${page.trade}" searches with our SEO-optimized architecture.` },
+    ],
+    personal_training: [
+      { icon: "💪", title: "Evidence-Based Methods", desc: "Programs built on sports science and biomechanics — not trends." },
+      { icon: "📊", title: "Progress Tracking", desc: "Track every rep, every set, every PR with our built-in logging system." },
+      { icon: "🏆", title: "Proven Results", desc: `Athletes and clients across ${page.city} are getting stronger, faster, and more resilient.` },
+    ],
+    coaching: [
+      { icon: "🎯", title: "Goal-Driven Framework", desc: "Structured accountability with weekly check-ins and measurable milestones." },
+      { icon: "💻", title: "100% Virtual", desc: "Coaching via video calls and async messaging — fits your schedule, anywhere." },
+      { icon: "🔥", title: "Real Transformation", desc: `Helping ${page.city} professionals break through plateaus and level up.` },
+    ],
+  };
+  const cards = whyCards[category] || whyCards.contractor;
 
   return (
     <>
