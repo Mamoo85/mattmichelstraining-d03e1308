@@ -98,7 +98,7 @@ const YoungbloodMockup = () => {
       <div className="fixed top-4 right-4 z-[60] hidden lg:flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold tracking-wide" style={{ background: "#f97316", color: "#0a0f1a" }}>
         <span>REDESIGN CONCEPT</span>
         <span className="opacity-60">·</span>
-        <Link to="/detroit-web-design" className="underline underline-offset-2">Matt Michels Web Design</Link>
+        <Link to="/manufacturing-web-design" className="underline underline-offset-2">Matt Michels Web Design</Link>
         <span className="opacity-60">·</span>
         <a href="tel:3138064952">313.806.4952</a>
       </div>
@@ -408,20 +408,67 @@ const YoungbloodMockup = () => {
       <RevealSection id="contact" className="py-28 px-6" style={{ borderTop: "1px solid rgba(255,255,255,.04)" }}>
         <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16">
           <div>
-            <h2 className="yb-heading text-3xl sm:text-4xl mb-3 text-white">Contact Engineering</h2>
-            <p className="text-sm mb-8" style={{ color: "#94a3b8" }}>Tell us about your application and our team will follow up within one business day.</p>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] mb-2" style={{ color: "#f97316" }}>Request a Quote</p>
+            <h2 className="yb-heading text-3xl sm:text-4xl mb-3 text-white">Talk to an Application Engineer</h2>
+            <p className="text-sm mb-8" style={{ color: "#94a3b8" }}>Describe your application below and our engineering team will respond within one business day with sizing recommendations and pricing.</p>
             <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
               <div className="grid sm:grid-cols-2 gap-4">
-                <input placeholder="Your Name" className="w-full rounded px-4 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none transition-colors bg-white/[0.04] border border-white/10" />
-                <input placeholder="Company" className="w-full rounded px-4 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none transition-colors bg-white/[0.04] border border-white/10" />
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: "#64748b" }}>Your Name</label>
+                  <input placeholder="John Smith" className="w-full rounded px-4 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none bg-white/[0.04] border border-white/10 focus:border-[#0ea5e9]/40 transition-colors" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: "#64748b" }}>Company</label>
+                  <input placeholder="Acme Manufacturing" className="w-full rounded px-4 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none bg-white/[0.04] border border-white/10 focus:border-[#0ea5e9]/40 transition-colors" />
+                </div>
               </div>
               <div className="grid sm:grid-cols-2 gap-4">
-                <input placeholder="Phone" type="tel" className="w-full rounded px-4 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none transition-colors bg-white/[0.04] border border-white/10" />
-                <input placeholder="Email" type="email" className="w-full rounded px-4 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none transition-colors bg-white/[0.04] border border-white/10" />
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: "#64748b" }}>Phone</label>
+                  <input placeholder="(586) 555-0100" type="tel" className="w-full rounded px-4 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none bg-white/[0.04] border border-white/10 focus:border-[#0ea5e9]/40 transition-colors" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: "#64748b" }}>Email</label>
+                  <input placeholder="you@company.com" type="email" className="w-full rounded px-4 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none bg-white/[0.04] border border-white/10 focus:border-[#0ea5e9]/40 transition-colors" />
+                </div>
               </div>
-              <textarea placeholder="Describe your application or requirements…" rows={5} className="w-full rounded px-4 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none resize-none transition-colors bg-white/[0.04] border border-white/10" />
-              <button type="submit" className="w-full sm:w-auto px-10 py-4 text-sm font-bold uppercase tracking-widest rounded transition-colors" style={{ background: "#f97316", color: "#0a0f1a" }}>
-                Submit Inquiry
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: "#64748b" }}>Product Category</label>
+                <select className="w-full rounded px-4 py-3 text-sm text-white/80 focus:outline-none bg-white/[0.04] border border-white/10 focus:border-[#0ea5e9]/40 transition-colors">
+                  <option value="" style={{ background: "#0a0f1a" }}>Select a product line…</option>
+                  {["Pneumatics — Manifolds & Valves", "Pneumatics — Electro-Pneumatic Panels", "Hydraulics — Industrial Power Units", "Hydraulics — Mobile Systems", "Robotics — Universal Robots Cobot", "Robotics — End-of-Arm Tooling (EOAT)", "Sensing — Safety Systems (SICK)", "Sensing — Vision Systems", "Motion Control — Linear Actuators", "Motion Control — Servo Drives", "Custom Manifold Machining", "Panel Building & Sub-Assembly", "Not Sure — Need Engineering Guidance"].map(opt => (
+                    <option key={opt} value={opt} style={{ background: "#0a0f1a" }}>{opt}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: "#64748b" }}>Estimated Quantity</label>
+                  <select className="w-full rounded px-4 py-3 text-sm text-white/80 focus:outline-none bg-white/[0.04] border border-white/10 focus:border-[#0ea5e9]/40 transition-colors">
+                    <option style={{ background: "#0a0f1a" }}>1–5 units</option>
+                    <option style={{ background: "#0a0f1a" }}>6–25 units</option>
+                    <option style={{ background: "#0a0f1a" }}>26–100 units</option>
+                    <option style={{ background: "#0a0f1a" }}>100+ / Production Volume</option>
+                    <option style={{ background: "#0a0f1a" }}>Ongoing / Stocking Agreement</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: "#64748b" }}>Timeline / Urgency</label>
+                  <select className="w-full rounded px-4 py-3 text-sm text-white/80 focus:outline-none bg-white/[0.04] border border-white/10 focus:border-[#0ea5e9]/40 transition-colors">
+                    <option style={{ background: "#0a0f1a" }}>Immediate — Line Down</option>
+                    <option style={{ background: "#0a0f1a" }}>Within 1 Week</option>
+                    <option style={{ background: "#0a0f1a" }}>2–4 Weeks</option>
+                    <option style={{ background: "#0a0f1a" }}>1–3 Months (New Project)</option>
+                    <option style={{ background: "#0a0f1a" }}>Exploring / Budgeting</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: "#64748b" }}>Application Description</label>
+                <textarea placeholder="Describe your application, existing equipment, operating conditions, pressure/flow requirements, or any specs we should know…" rows={4} className="w-full rounded px-4 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none resize-none bg-white/[0.04] border border-white/10 focus:border-[#0ea5e9]/40 transition-colors" />
+              </div>
+              <button type="submit" className="w-full sm:w-auto px-10 py-4 text-sm font-bold uppercase tracking-widest rounded transition-opacity hover:opacity-90" style={{ background: "#f97316", color: "#0a0f1a" }}>
+                Submit RFQ
               </button>
             </form>
           </div>
@@ -485,7 +532,7 @@ const YoungbloodMockup = () => {
           <p className="text-xs" style={{ color: "rgba(255,255,255,.2)" }}>&copy; 2026 Youngblood Automation, a division of H&P Technologies. Established 1964. All rights reserved.</p>
           <p className="text-xs" style={{ color: "rgba(255,255,255,.15)" }}>
             Redesign concept by{" "}
-            <Link to="/detroit-web-design" className="underline underline-offset-2 hover:text-white transition-colors">Matt Michels Web Design</Link>
+            <Link to="/manufacturing-web-design" className="underline underline-offset-2 hover:text-white transition-colors">Matt Michels Web Design</Link>
           </p>
         </div>
       </footer>

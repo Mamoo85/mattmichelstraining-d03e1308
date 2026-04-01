@@ -104,7 +104,7 @@ const DentalMockup = () => {
       <div className="fixed top-4 right-4 z-[60] hidden lg:flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold tracking-wide" style={{ background: TEAL, color: "#fff" }}>
         <span>REDESIGN CONCEPT</span>
         <span className="opacity-60">·</span>
-        <Link to="/detroit-web-design" className="underline underline-offset-2">Matt Michels Web Design</Link>
+        <Link to="/dental-web-design" className="underline underline-offset-2">Matt Michels Web Design</Link>
         <span className="opacity-60">·</span>
         <a href="tel:3138064952">313.806.4952</a>
       </div>
@@ -317,16 +317,45 @@ const DentalMockup = () => {
             <p className="text-sm mb-6" style={{ color: "#64748b" }}>
               We look forward to meeting you. Patient forms can be completed online or downloaded and brought to your first appointment. All information is transmitted securely per HIPAA standards.
             </p>
-            <div className="flex flex-col gap-3 mb-8">
-              <button className="w-full text-left rounded-lg px-5 py-4 text-sm font-semibold transition-all hover:scale-[1.01]" style={{ background: "rgba(13,148,136,.1)", color: TEAL, border: "1px solid rgba(13,148,136,.2)" }}
-                onClick={() => alert("This would link to a secure online patient intake form.")}>
-                📋 Complete Patient Information Online
+            <form onSubmit={(e) => e.preventDefault()} className="space-y-3 mb-6">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "#64748b" }}>First Name</label>
+                  <input type="text" placeholder="Jane" className="w-full rounded-lg px-4 py-3 text-sm outline-none" style={{ background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.12)", color: "#fff" }} />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "#64748b" }}>Last Name</label>
+                  <input type="text" placeholder="Smith" className="w-full rounded-lg px-4 py-3 text-sm outline-none" style={{ background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.12)", color: "#fff" }} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "#64748b" }}>Phone</label>
+                  <input type="tel" placeholder="(313) 555-0100" className="w-full rounded-lg px-4 py-3 text-sm outline-none" style={{ background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.12)", color: "#fff" }} />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "#64748b" }}>Email</label>
+                  <input type="email" placeholder="jane@email.com" className="w-full rounded-lg px-4 py-3 text-sm outline-none" style={{ background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.12)", color: "#fff" }} />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "#64748b" }}>Preferred Day</label>
+                <select className="w-full rounded-lg px-4 py-3 text-sm outline-none" style={{ background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.12)", color: "#94a3b8" }}>
+                  <option value="">Select a day</option>
+                  {["Monday", "Tuesday", "Thursday"].map(d => <option key={d} value={d}>{d}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "#64748b" }}>Reason for Visit</label>
+                <select className="w-full rounded-lg px-4 py-3 text-sm outline-none" style={{ background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.12)", color: "#94a3b8" }}>
+                  <option value="">Select reason</option>
+                  {["Crown / Same-Day CEREC", "Dental Implant Consultation", "Bridge or Partial", "Complete Dentures", "Full-Mouth Rehabilitation", "Second Opinion", "New Patient Exam"].map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
+              </div>
+              <button type="submit" className="w-full rounded-lg py-3 text-sm font-bold uppercase tracking-widest transition-opacity hover:opacity-90" style={{ background: TEAL, color: "#fff" }}>
+                Request Appointment
               </button>
-              <button className="w-full text-left rounded-lg px-5 py-4 text-sm font-semibold transition-all hover:scale-[1.01]" style={{ background: "rgba(13,148,136,.1)", color: TEAL, border: "1px solid rgba(13,148,136,.2)" }}
-                onClick={() => alert("This would link to a secure online medical history form.")}>
-                🏥 Complete Medical History Online
-              </button>
-            </div>
+            </form>
             <div className="flex items-center gap-2 text-xs" style={{ color: "#475569" }}>
               <Lock size={12} style={{ color: TEAL }} /> All forms are HIPAA-compliant and securely encrypted.
             </div>
@@ -366,7 +395,7 @@ const DentalMockup = () => {
           </p>
           <p className="text-xs" style={{ color: "rgba(255,255,255,.15)" }}>
             Site by{" "}
-            <Link to="/detroit-web-design" className="underline underline-offset-2 hover:text-white transition-colors">Matt Michels Web Design</Link>
+            <Link to="/dental-web-design" className="underline underline-offset-2 hover:text-white transition-colors">Matt Michels Web Design</Link>
           </p>
         </div>
       </footer>
