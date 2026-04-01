@@ -70,6 +70,7 @@ const AdminProveItReview = lazy(() => import("@/components/admin/AdminProveItRev
 const AdminSeoGenerator = lazy(() => import("@/components/admin/AdminSeoGenerator"));
 const AdminOutreach = lazy(() => import("@/components/admin/AdminOutreach"));
 const AdminSeoPages = lazy(() => import("@/components/admin/AdminSeoPages"));
+const AdminSearchConsole = lazy(() => import("@/components/admin/AdminSearchConsole"));
 const AdminGbpPosts = lazy(() => import("@/components/admin/AdminGbpPosts"));
 const AdminInstagramPosts = lazy(() => import("@/components/admin/AdminInstagramPosts"));
 const AdminContentGenerator = lazy(() => import("@/components/admin/AdminContentGenerator"));
