@@ -59,7 +59,7 @@ const ContractorSeoPage = () => {
 
   const ctaLinks: Record<string, { primary: string; label: string }> = {
     contractor: { primary: "/web-design-services", label: "View Pricing" },
-    web_design: { primary: "/web-design-services", label: "View Packages" },
+    webdesign: { primary: "/web-design-services", label: "View Packages" },
     personal_training: { primary: "/programs", label: "View Programs" },
     coaching: { primary: "/performance-coaching", label: "Start Coaching" },
   };
@@ -71,7 +71,7 @@ const ContractorSeoPage = () => {
       { icon: "📍", title: `Local ${page.city} Expertise`, desc: `We understand the ${page.city} market and build sites that rank for local "${page.trade}" searches.` },
       { icon: "💰", title: "ROI-Focused", desc: "Every site comes with SEO, lead capture forms, and optional add-ons like review management and Google Ads." },
     ],
-    web_design: [
+    webdesign: [
       { icon: "🎨", title: "Industry-Specific Design", desc: `Custom templates built for ${page.trade.toLowerCase()} businesses — not generic cookie-cutter sites.` },
       { icon: "📱", title: "Mobile-First", desc: "Over 70% of local searches happen on mobile. Every site we build is responsive and fast." },
       { icon: "🔍", title: "Built-In SEO", desc: `Rank higher in ${page.city} for "${page.trade}" searches with our SEO-optimized architecture.` },
@@ -152,7 +152,10 @@ const ContractorSeoPage = () => {
           <section className="py-16 px-4 bg-muted/30">
             <div className="max-w-5xl mx-auto">
               <h2 className="text-2xl md:text-3xl font-bold text-foreground text-center mb-10">
-                {page.trade} Services We Build Websites For
+                {category === "contractor" ? `${page.trade} Services We Build Websites For` :
+                 category === "webdesign" ? `Web Design for ${page.trade} Businesses` :
+                 category === "personal_training" ? `${page.trade} Training Services` :
+                 `${page.trade} Services`}
               </h2>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {d.serviceBullets.map((bullet, i) => (
@@ -172,14 +175,13 @@ const ContractorSeoPage = () => {
         <section className="py-16 px-4">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-2xl md:text-3xl font-bold text-foreground text-center mb-6">
-              Why {page.city} {page.trade} Businesses Choose M² Development
+              {category === "contractor" ? `Why ${page.city} ${page.trade} Businesses Choose M²` :
+               category === "webdesign" ? `Why ${page.trade} Businesses in ${page.city} Choose M²` :
+               category === "personal_training" ? `Why ${page.city} Clients Choose M² Training` :
+               `Why ${page.city} Clients Choose M² Coaching`}
             </h2>
             <div className="grid gap-6 sm:grid-cols-3 mt-10">
-              {[
-                { icon: "🚀", title: "AI-Powered Websites", desc: "We build high-converting sites with AI automation — your website works 24/7 generating leads." },
-                { icon: "📍", title: `Local ${page.city} Expertise`, desc: `We understand the ${page.city} market and build sites that rank for local "${page.trade}" searches.` },
-                { icon: "💰", title: "ROI-Focused", desc: "Every site comes with SEO, lead capture forms, and optional add-ons like review management and Google Ads." },
-              ].map((item, i) => (
+              {cards.map((item, i) => (
                 <div key={i} className="text-center p-6 rounded-xl bg-card border border-border">
                   <span className="text-4xl block mb-4">{item.icon}</span>
                   <h3 className="font-bold text-foreground mb-2">{item.title}</h3>
@@ -220,9 +222,15 @@ const ContractorSeoPage = () => {
         {/* Final CTA */}
         <section className="py-16 px-4 bg-gradient-to-br from-[#1e293b] to-[#0f172a] text-white text-center">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">Ready to Dominate {page.city} Online?</h2>
+            <h2 className="text-2xl md:text-3xl font-bold mb-4">
+              {category === "personal_training" ? `Ready to Transform Your Fitness in ${page.city}?` :
+               category === "coaching" ? `Ready to Level Up in ${page.city}?` :
+               `Ready to Dominate ${page.city} Online?`}
+            </h2>
             <p className="text-lg text-white/80 mb-8">
-              Get a professional website that generates leads for your {page.trade.toLowerCase()} business — starting at $499.
+              {category === "personal_training" ? `Start your ${page.trade.toLowerCase()} journey with a certified trainer today.` :
+               category === "coaching" ? `Book your free ${page.trade.toLowerCase()} discovery call today.` :
+               `Get a professional website that generates leads for your ${page.trade.toLowerCase()} business — starting at $499.`}
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <a href={`tel:${phoneNumber.replace(/\D/g, "")}`}>
@@ -230,9 +238,9 @@ const ContractorSeoPage = () => {
                   <Phone className="h-5 w-5 mr-2" /> Call {phoneNumber}
                 </Button>
               </a>
-              <Link to="/web-design-services">
+              <Link to={cta.primary}>
                 <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 text-lg px-8 py-6 w-full sm:w-auto">
-                  View Pricing
+                  {cta.label}
                 </Button>
               </Link>
             </div>
