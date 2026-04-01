@@ -1504,6 +1504,36 @@ export type Database = {
         }
         Relationships: []
       }
+      delivery_failures: {
+        Row: {
+          created_at: string | null
+          customer_email: string | null
+          error_message: string | null
+          function_name: string
+          id: string
+          metadata: Json | null
+          order_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          customer_email?: string | null
+          error_message?: string | null
+          function_name: string
+          id?: string
+          metadata?: Json | null
+          order_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          customer_email?: string | null
+          error_message?: string | null
+          function_name?: string
+          id?: string
+          metadata?: Json | null
+          order_id?: string | null
+        }
+        Relationships: []
+      }
       direct_mail_clients: {
         Row: {
           active: boolean | null
