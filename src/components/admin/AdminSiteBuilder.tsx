@@ -44,7 +44,7 @@ const AdminSiteBuilder = () => {
         .select("id, slug, business_name, template_key, is_published, published_at, created_at, lead_id, phone, email")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data || []) as GeneratedSite[];
+      return ((data as any) || []) as GeneratedSite[];
     },
   });
 
