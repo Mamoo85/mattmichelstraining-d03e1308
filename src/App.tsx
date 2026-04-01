@@ -117,6 +117,7 @@ const B2BLeads = lazyRetry(() => import("./pages/B2BLeads"));
 const IndustrialDatabase = lazyRetry(() => import("./pages/IndustrialDatabase"));
 const LinkedInGhostwriting = lazyRetry(() => import("./pages/LinkedInGhostwriting"));
 const RevenueDashboard = lazyRetry(() => import("./pages/RevenueDashboard"));
+const MicroSaasToolPage = lazyRetry(() => import("./pages/MicroSaasToolPage"));
 const LocalMarketing = lazyRetry(() => import("./pages/LocalMarketing"));
 const FieldRepTools = lazyRetry(() => import("./pages/FieldRepTools"));
 const NewsletterPage = lazyRetry(() => import("./pages/NewsletterPage"));
