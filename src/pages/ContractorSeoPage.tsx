@@ -59,7 +59,7 @@ const ContractorSeoPage = () => {
 
   const ctaLinks: Record<string, { primary: string; label: string }> = {
     contractor: { primary: "/web-design-services", label: "View Pricing" },
-    web_design: { primary: "/web-design-services", label: "View Packages" },
+    webdesign: { primary: "/web-design-services", label: "View Packages" },
     personal_training: { primary: "/programs", label: "View Programs" },
     coaching: { primary: "/performance-coaching", label: "Start Coaching" },
   };
