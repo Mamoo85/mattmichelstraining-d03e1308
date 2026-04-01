@@ -36,10 +36,7 @@ serve(async (req: Request) => {
       customer_email: email,
       line_items: [
         {
-          price: "price_1THQr8D52tPWee46lZDu7pDo" in ${city}`,
-            },
-            unit_amount: 2900,
-          },
+          price: "price_1THQr8D52tPWee46lZDu7pDo",
           quantity: 1,
         },
       ],
