@@ -640,6 +640,72 @@ export type Database = {
         }
         Relationships: []
       }
+      business_listings: {
+        Row: {
+          business_name: string
+          city: string | null
+          created_at: string | null
+          description: string | null
+          email: string | null
+          id: string
+          industry: string | null
+          is_active: boolean | null
+          is_featured: boolean | null
+          logo_url: string | null
+          owner_name: string | null
+          phone: string | null
+          source_id: string | null
+          source_table: string | null
+          state: string | null
+          stripe_customer_id: string | null
+          tier: string | null
+          updated_at: string | null
+          website: string | null
+        }
+        Insert: {
+          business_name: string
+          city?: string | null
+          created_at?: string | null
+          description?: string | null
+          email?: string | null
+          id?: string
+          industry?: string | null
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          logo_url?: string | null
+          owner_name?: string | null
+          phone?: string | null
+          source_id?: string | null
+          source_table?: string | null
+          state?: string | null
+          stripe_customer_id?: string | null
+          tier?: string | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Update: {
+          business_name?: string
+          city?: string | null
+          created_at?: string | null
+          description?: string | null
+          email?: string | null
+          id?: string
+          industry?: string | null
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          logo_url?: string | null
+          owner_name?: string | null
+          phone?: string | null
+          source_id?: string | null
+          source_table?: string | null
+          state?: string | null
+          stripe_customer_id?: string | null
+          tier?: string | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
       call_summaries: {
         Row: {
           callback_needed: boolean | null

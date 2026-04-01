@@ -70,6 +70,7 @@ const FreeAiGenerator = lazyRetry(() => import("./pages/FreeAiGenerator"));
 const SEOLandingPage = lazyRetry(() => import("./pages/SEOLandingPage"));
 const DynamicSitemap = lazyRetry(() => import("./pages/DynamicSitemap"));
 const Assessment = lazyRetry(() => import("./pages/Assessment"));
+const BusinessDirectory = lazyRetry(() => import("./pages/BusinessDirectory"));
 const WebDesignAgency = lazyRetry(() => import("./pages/WebDesignAgency"));
 const HvacMockup = lazyRetry(() => import("./pages/HvacMockup"));
 const RestaurantMockup = lazyRetry(() => import("./pages/RestaurantMockup"));
@@ -477,6 +478,7 @@ const App = () => (
                     <Route path="/ai-meeting-prep" element={<AIMeetingPrep />} />
                     <Route path="/ai-directory-submitter" element={<AIDirectorySubmitter />} />
                     <Route path="/m2-development" element={<M2Development />} />
+                    <Route path="/business-directory" element={<BusinessDirectory />} />
                     <Route path="/ai-handbook" element={<AIHandbook />} />
                     <Route path="/ai-grant-finder" element={<AIGrantFinder />} />
                     <Route path="/ai-review-response" element={<AIReviewResponse />} />
