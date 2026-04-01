@@ -20,25 +20,17 @@ const CookieBanner = () => {
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[60] bg-card border-t border-border shadow-lg p-4 sm:flex sm:items-center sm:justify-between sm:gap-4">
-      <p className="text-sm text-muted-foreground mb-3 sm:mb-0">
+    <div className="fixed bottom-0 left-0 right-0 z-[60] bg-card border-t border-border shadow-lg p-3 flex items-center justify-between gap-3">
+      <p className="text-xs text-muted-foreground">
         We use cookies to improve your experience.{" "}
         <Link to="/legal/cookie-policy" className="text-primary underline">Learn more</Link>.
       </p>
-      <div className="flex gap-2 shrink-0">
-        <button
-          onClick={() => handle("declined")}
-          className="px-4 py-2 text-sm rounded-md border border-border text-muted-foreground hover:bg-muted transition-colors"
-        >
-          Decline
-        </button>
-        <button
-          onClick={() => handle("accepted")}
-          className="px-4 py-2 text-sm rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-        >
-          Accept
-        </button>
-      </div>
+      <button
+        onClick={() => handle("accepted")}
+        className="px-4 py-1.5 text-xs font-semibold rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shrink-0"
+      >
+        OK
+      </button>
     </div>
   );
 };
