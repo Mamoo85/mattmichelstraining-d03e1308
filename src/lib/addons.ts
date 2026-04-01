@@ -10,11 +10,13 @@ export interface AddOn {
   name: string;
   price: string;
   priceSub: string;
-  priceCents: number; // monthly price in cents for Stripe
+  priceCents: number;
   color: string;
   desc: string;
   includes: string[];
   recurring: boolean;
+  price_id?: string;   // Stripe Price ID (registered)
+  product_id?: string; // Stripe Product ID
 }
 
 export const ADD_ONS: AddOn[] = [
@@ -111,10 +113,10 @@ export const ADD_ONS: AddOn[] = [
   {
     key: "review_response",
     icon: MessageSquare,
-    name: "Reputation & Review Management",
-    price: "$79/mo",
+    name: "AI Review Response Service",
+    price: "$49/mo",
     priceSub: "ongoing service",
-    priceCents: 7900,
+    priceCents: 4900,
     color: "#0891b2",
     desc: "I monitor your Google and Yelp reviews and write professional responses within 24 hours — good or bad.",
     includes: [
@@ -125,6 +127,8 @@ export const ADD_ONS: AddOn[] = [
       "Negative review escalation handling",
     ],
     recurring: true,
+    price_id: "price_1THIOhD52tPWee46DlPYS7KZ",
+    product_id: "prod_UFo0Bgx4iwu7lP",
   },
   {
     key: "website_refresh",
@@ -147,7 +151,7 @@ export const ADD_ONS: AddOn[] = [
   {
     key: "missed_call",
     icon: Phone,
-    name: "Missed Call Text-Back",
+    name: "Missed-Call Text-Back",
     price: "$99/mo",
     priceSub: "never lose a lead",
     priceCents: 9900,
@@ -161,6 +165,68 @@ export const ADD_ONS: AddOn[] = [
       "Monthly analytics report",
     ],
     recurring: true,
+    price_id: "price_1THIPrD52tPWee46uvbeRKlL",
+    product_id: "prod_UFo1TyWkgI3AcF",
+  },
+  {
+    key: "job_posting",
+    icon: Globe,
+    name: "AI Job Posting Writer",
+    price: "$29/mo",
+    priceSub: "monthly refreshed listings",
+    priceCents: 2900,
+    color: "#10b981",
+    desc: "AI writes and refreshes your job postings monthly for Indeed, LinkedIn, and other boards — so you always attract the right candidates.",
+    includes: [
+      "Monthly job listing refresh",
+      "Optimized for Indeed & LinkedIn",
+      "Industry-specific language",
+      "A/B tested titles & descriptions",
+      "Delivered via email on the 1st",
+    ],
+    recurring: true,
+    price_id: "price_1THIPVD52tPWee460ZVZoaYp",
+    product_id: "prod_UFo1hGS5DM91nR",
+  },
+  {
+    key: "quote_followup",
+    icon: MessageSquare,
+    name: "AI Quote Follow-Up Sequences",
+    price: "$49/mo",
+    priceSub: "close more deals",
+    priceCents: 4900,
+    color: "#f59e0b",
+    desc: "When you send a quote, our system auto-sends 3-5 follow-up emails/texts over 14 days to close the deal before they ghost.",
+    includes: [
+      "Automated 3-5 step follow-up sequence",
+      "SMS + email combo for max response",
+      "Customizable messaging templates",
+      "Timing optimized for conversion",
+      "Monthly close-rate report",
+    ],
+    recurring: true,
+    price_id: "price_1THIPnD52tPWee46hK3ma3Iq",
+    product_id: "prod_UFo1QFkBVvLuGa",
+  },
+  {
+    key: "competitor_intel",
+    icon: FileSearch,
+    name: "Weekly Competitor Intel Report",
+    price: "$69/mo",
+    priceSub: "know what they're doing",
+    priceCents: 6900,
+    color: "#8b5cf6",
+    desc: "AI monitors 3 competitors' websites, reviews, and social media weekly and emails you a plain-English summary of what changed.",
+    includes: [
+      "Monitor 3 competitors weekly",
+      "Website change detection",
+      "Review sentiment tracking",
+      "Social media activity summary",
+      "Delivered every Monday morning",
+    ],
+    recurring: true,
+    price_id: "price_1THIPpD52tPWee469IzqQxa2",
+    product_id: "prod_UFo1v0LmlodE1L",
   },
   {
     key: "chatbot_widget",
