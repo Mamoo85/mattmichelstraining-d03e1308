@@ -47,13 +47,6 @@ serve(async (req) => {
       line_items: [
         {
           price: "price_1THQqyD52tPWee46qx5nBOwl",
-            unit_amount: 29900,
-            product_data: {
-              name: "LinkedIn Ghostwriting — 5 Posts Per Week",
-              description:
-                "AI-written LinkedIn posts delivered every Monday. Customized to your industry, voice, and topics. Cancel anytime.",
-            },
-          },
           quantity: 1,
         },
       ],
