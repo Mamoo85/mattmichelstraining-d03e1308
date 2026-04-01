@@ -30,14 +30,16 @@ serve(async (_req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { data: pages, error } = await supabase
-      .from("seo_landing_pages")
-      .select("slug, created_at")
-      .order("created_at", { ascending: false });
+    const [seoRes, toolsRes] = await Promise.all([
+      supabase.from("seo_landing_pages").select("slug, created_at").order("created_at", { ascending: false }),
+      supabase.from("micro_saas_tools").select("slug, created_at").eq("is_active", true).order("created_at", { ascending: false }),
+    ]);
 
-    if (error) {
-      console.error("Sitemap query error:", error);
-    }
+    if (seoRes.error) console.error("Sitemap seo_landing_pages error:", seoRes.error);
+    if (toolsRes.error) console.error("Sitemap micro_saas_tools error:", toolsRes.error);
+
+    const pages = seoRes.data || [];
+    const tools = toolsRes.data || [];
 
     const staticEntries = STATIC_ROUTES.map(
       (r) => `  <url>
