@@ -12,7 +12,7 @@ serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       mode: "subscription", payment_method_types: ["card"], customer_email: email,
       subscription_data: { trial_period_days: 7 },
-      line_items: [{ price: "price_1THQqoD52tPWee46KFHFVFn8", unit_amount: 3900, product_data: { name: "Appointment Reminder SMS — $39/month", description: "Automated SMS reminders 24hr and 1hr before every appointment" } }, quantity: 1 }],
+      line_items: [{ price: "price_1THQqoD52tPWee46KFHFVFn8", quantity: 1 }],
       metadata: { type: "appointment_reminder_subscription", email, name: name || "", businessName, phone: phone || "" },
       success_url: "https://mattmichelstraining.com/appointment-reminders?status=success",
       cancel_url: "https://mattmichelstraining.com/appointment-reminders",

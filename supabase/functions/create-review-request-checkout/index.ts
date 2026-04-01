@@ -10,7 +10,7 @@ serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       mode: "subscription", payment_method_types: ["card"], customer_email: email,
       subscription_data: { trial_period_days: 7 },
-      line_items: [{ price: "price_1THQqlD52tPWee463B1ntPSO", unit_amount: 3900, product_data: { name: "Review Request SMS — $39/month", description: "Auto-text customers after each job asking for a Google review." } }, quantity: 1 }],
+      line_items: [{ price: "price_1THQqlD52tPWee463B1ntPSO", quantity: 1 }],
       metadata: { type: "review_request_subscription", email, name: name || "", businessName, googleReviewUrl: googleReviewUrl || "" },
       success_url: "https://www.mattmichelstraining.com/review-request-sms?status=success",
       cancel_url: "https://www.mattmichelstraining.com/review-request-sms",

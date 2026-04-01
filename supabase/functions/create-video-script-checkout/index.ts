@@ -12,7 +12,7 @@ serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       mode: "subscription", payment_method_types: ["card"], customer_email: email,
       subscription_data: { trial_period_days: 7 },
-      line_items: [{ price: "price_1THQqzD52tPWee46tFaBcvfH", unit_amount: 3900, product_data: { name: "AI Video Script Writer — $39/month", description: "8 short-form video scripts per month for TikTok and Reels" } }, quantity: 1 }],
+      line_items: [{ price: "price_1THQqzD52tPWee46tFaBcvfH", quantity: 1 }],
       metadata: { type: "video_script_subscription", email, name: name || "", businessName, industry: industry || "" },
       success_url: "https://mattmichelstraining.com/ai-video-scripts?status=success",
       cancel_url: "https://mattmichelstraining.com/ai-video-scripts",

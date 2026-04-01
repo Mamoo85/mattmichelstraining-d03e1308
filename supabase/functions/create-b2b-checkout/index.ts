@@ -49,16 +49,7 @@ serve(async (req) => {
       payment_method_types: ["card"],
       customer: customerId,
       customer_email: customerId ? undefined : email,
-      line_items: [{
-        price: "price_1THQr5D52tPWee46A8MFdnB0",
-          unit_amount: svc.price,
-          product_data: {
-            name: `M² — ${svc.label}`,
-            description: svc.description,
-          },
-        },
-        quantity: 1,
-      }],
+      line_items: [{ price: "price_1THQr5D52tPWee46A8MFdnB0", quantity: 1 }],
       metadata: {
         type: svc.metaType,
         niche: niche || serviceKey,

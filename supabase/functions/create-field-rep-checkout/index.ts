@@ -38,16 +38,7 @@ serve(async (req) => {
       mode: "subscription",
       payment_method_types: ["card"],
       customer_email: email,
-      line_items: [{
-        price: "price_1THQr7D52tPWee46Z8ZjJOdR",
-          unit_amount: 2900,
-          product_data: {
-            name: "M² Field Rep AI Tools — $29/month",
-            description: "Cold email generator, voicemail scripts, objection handlers, and territory planner. Built for B2B field sales reps.",
-          },
-        },
-        quantity: 1,
-      }],
+      line_items: [{ price: "price_1THQr7D52tPWee46Z8ZjJOdR", quantity: 1 }],
       metadata: {
         type: "field_rep_subscription",
         email,

@@ -19,7 +19,7 @@ serve(async (req) => {
       payment_method_types: ["card"],
       customer_email: email,
       subscription_data: { trial_period_days: 7 },
-      line_items: [{ price: "price_1THQqtD52tPWee46pxNgwmHh", unit_amount: 9900, product_data: { name: "AI Email Newsletter Service — $99/month", description: "AI-written monthly newsletter for your business. Up to 2,500 subscribers." } }, quantity: 1 }],
+      line_items: [{ price: "price_1THQqtD52tPWee46pxNgwmHh", quantity: 1 }],
       metadata: { type: "newsletter_service_subscription", email, name: name || "", businessName, industry: industry || "" },
       success_url: "https://www.mattmichelstraining.com/ai-newsletter-service?status=success",
       cancel_url: "https://www.mattmichelstraining.com/ai-newsletter-service",
