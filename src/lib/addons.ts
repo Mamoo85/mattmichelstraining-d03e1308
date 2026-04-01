@@ -113,10 +113,10 @@ export const ADD_ONS: AddOn[] = [
   {
     key: "review_response",
     icon: MessageSquare,
-    name: "Reputation & Review Management",
-    price: "$79/mo",
+    name: "AI Review Response Service",
+    price: "$49/mo",
     priceSub: "ongoing service",
-    priceCents: 7900,
+    priceCents: 4900,
     color: "#0891b2",
     desc: "I monitor your Google and Yelp reviews and write professional responses within 24 hours — good or bad.",
     includes: [
@@ -127,6 +127,8 @@ export const ADD_ONS: AddOn[] = [
       "Negative review escalation handling",
     ],
     recurring: true,
+    price_id: "price_1THIOhD52tPWee46DlPYS7KZ",
+    product_id: "prod_UFo0Bgx4iwu7lP",
   },
   {
     key: "website_refresh",
