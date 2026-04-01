@@ -215,7 +215,9 @@ const PartnerProgram = lazyRetry(() => import("./pages/PartnerProgram"));
 const AiWebsiteAudit = lazyRetry(() => import("./pages/AiWebsiteAudit"));
 const AiGbpPostPack = lazyRetry(() => import("./pages/AiGbpPostPack"));
 const YoungbloodMockupAlt1 = lazyRetry(() => import("./pages/YoungbloodMockupAlt1"));
+const YoungbloodMockupAlt2 = lazyRetry(() => import("./pages/YoungbloodMockupAlt2"));
 const DentalMockupAlt1 = lazyRetry(() => import("./pages/DentalMockupAlt1"));
+const DentalMockupAlt2 = lazyRetry(() => import("./pages/DentalMockupAlt2"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -378,6 +380,10 @@ const App = () => (
                     <Route path="/demo-youngblood-alt1/*" element={<YoungbloodMockupAlt1 />} />
                     <Route path="/demo-dental-alt1" element={<DentalMockupAlt1 />} />
                     <Route path="/demo-dental-alt1/*" element={<DentalMockupAlt1 />} />
+                    <Route path="/demo-dental-alt2" element={<DentalMockupAlt2 />} />
+                    <Route path="/demo-dental-alt2/*" element={<DentalMockupAlt2 />} />
+                    <Route path="/demo-youngblood-alt2" element={<YoungbloodMockupAlt2 />} />
+                    <Route path="/demo-youngblood-alt2/*" element={<YoungbloodMockupAlt2 />} />
                     <Route path="/demo-hvac" element={<HvacMockup />} />
                     <Route path="/demo-hvac/*" element={<HvacMockup />} />
                     <Route path="/demo-restaurant" element={<RestaurantMockup />} />
