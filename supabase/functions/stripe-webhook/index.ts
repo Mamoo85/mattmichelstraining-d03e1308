@@ -3056,6 +3056,53 @@ serve(async (req) => {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // ── AI WEBSITE AUDIT — $29 one-time ─────────────────────────────────────
+      if (meta.type === "website_audit") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email && meta.business_url) {
+            // Fire and forget — call instant-audit function
+            fetch(`${SUPABASE_URL}/functions/v1/instant-audit`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
+              body: JSON.stringify({
+                email,
+                business_name: meta.business_name || "",
+                business_url: meta.business_url,
+                order_id: meta.order_id || null,
+              }),
+            }).catch((e) => console.error("[WEBHOOK] instant-audit call failed:", e));
+            console.log(`[WEBHOOK] website_audit triggered for ${email} — ${meta.business_url}`);
+          }
+        } catch (e) { console.error("[WEBHOOK] website_audit error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── AI GBP POST PACK — $19 one-time ─────────────────────────────────────
+      if (meta.type === "gbp_post_pack") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email && meta.business_name) {
+            let businessInfo: Record<string, string> = {};
+            try { businessInfo = JSON.parse(meta.business_info || "{}"); } catch {}
+            fetch(`${SUPABASE_URL}/functions/v1/gbp-post-pack`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
+              body: JSON.stringify({
+                email,
+                business_name: meta.business_name,
+                business_type: businessInfo.industry || meta.industry || "",
+                city: businessInfo.city || meta.city || "",
+                differentiators: businessInfo.business_info || "",
+                order_id: meta.order_id || null,
+              }),
+            }).catch((e) => console.error("[WEBHOOK] gbp-post-pack call failed:", e));
+            console.log(`[WEBHOOK] gbp_post_pack triggered for ${email} — ${meta.business_name}`);
+          }
+        } catch (e) { console.error("[WEBHOOK] gbp_post_pack error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       // ── REFERRAL TRACKING (B2B + Session) ──────────────────────────────────
       try {
         const refCode = meta.referral_code || meta.ref || "";
