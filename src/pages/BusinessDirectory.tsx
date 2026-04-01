@@ -67,11 +67,6 @@ const DirectoryCard = memo(({ listing }: { listing: Listing }) => {
             <MapPin className="h-3 w-3" /> {listing.city}{listing.state ? `, ${listing.state}` : ""}
           </span>
         )}
-        {listing.phone && (
-          <a href={`tel:${listing.phone.replace(/\D/g, "")}`} className="flex items-center gap-1 hover:text-foreground transition-colors">
-            <Phone className="h-3 w-3" /> {listing.phone}
-          </a>
-        )}
         {listing.website && (
           <a href={listing.website.startsWith("http") ? listing.website : `https://${listing.website}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-[#e8621a] transition-colors">
             <Globe className="h-3 w-3" /> Website <ExternalLink className="h-2.5 w-2.5" />
