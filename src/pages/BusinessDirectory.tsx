@@ -92,7 +92,7 @@ const BusinessDirectory = () => {
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("business_listings")
-        .select("id, business_name, owner_name, industry, city, state, phone, email, website, description, logo_url, tier, is_featured")
+        .select("id, business_name, owner_name, industry, city, state, website, description, logo_url, tier, is_featured")
         .eq("is_active", true)
         .order("is_featured", { ascending: false })
         .order("tier", { ascending: false })
