@@ -478,6 +478,7 @@ const App = () => (
                     <Route path="/ai-meeting-prep" element={<AIMeetingPrep />} />
                     <Route path="/ai-directory-submitter" element={<AIDirectorySubmitter />} />
                     <Route path="/m2-development" element={<M2Development />} />
+                    <Route path="/business-directory" element={<BusinessDirectory />} />
                     <Route path="/ai-handbook" element={<AIHandbook />} />
                     <Route path="/ai-grant-finder" element={<AIGrantFinder />} />
                     <Route path="/ai-review-response" element={<AIReviewResponse />} />
