@@ -5814,42 +5814,66 @@ export type Database = {
       }
       social_media_clients: {
         Row: {
+          access_tokens: Json | null
           active: boolean | null
           business_name: string
+          business_type: string | null
+          city: string | null
+          contact_name: string | null
           created_at: string | null
           email: string
+          fb_page_id: string | null
           id: string
           industry: string | null
+          last_post_at: string | null
           last_posted_at: string | null
+          linkedin_org_id: string | null
           plan: string | null
           platforms: string[] | null
           post_count: number | null
+          state: string | null
           stripe_customer_id: string | null
         }
         Insert: {
+          access_tokens?: Json | null
           active?: boolean | null
           business_name: string
+          business_type?: string | null
+          city?: string | null
+          contact_name?: string | null
           created_at?: string | null
           email: string
+          fb_page_id?: string | null
           id?: string
           industry?: string | null
+          last_post_at?: string | null
           last_posted_at?: string | null
+          linkedin_org_id?: string | null
           plan?: string | null
           platforms?: string[] | null
           post_count?: number | null
+          state?: string | null
           stripe_customer_id?: string | null
         }
         Update: {
+          access_tokens?: Json | null
           active?: boolean | null
           business_name?: string
+          business_type?: string | null
+          city?: string | null
+          contact_name?: string | null
           created_at?: string | null
           email?: string
+          fb_page_id?: string | null
           id?: string
           industry?: string | null
+          last_post_at?: string | null
           last_posted_at?: string | null
+          linkedin_org_id?: string | null
           plan?: string | null
           platforms?: string[] | null
           post_count?: number | null
+          state?: string | null
           stripe_customer_id?: string | null
         }
         Relationships: []
