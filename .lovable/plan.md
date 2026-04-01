@@ -1,65 +1,60 @@
 
 
-# Build Client Portal for Web Design + Add-On Services
+# Scale SEO Pages from 100 → 2,000 with Content Diversity
 
-## What We're Building
+## Current State
+- **100 pages** in `seo_page_configs`: 5 trades × 20 cities
+- Each page has identical structure (hero, bullets, FAQs, CTA)
+- All served at `/services/:slug` via `ContractorSeoPage.tsx`
 
-A **Client Portal** (`/client-portal`) where web design clients log in to see their site status and purchase add-on services. All other standalone services (dental, trucking, OSHA, etc.) remain untouched and continue selling independently.
-
-## Architecture
+## Expansion Matrix (2,000 pages)
 
 ```text
-/client-portal (authenticated)
-├── Site Status Card ── pulls from web_design_leads table
-├── Active Add-Ons ── pulls from client_addons table  
-├── Add-On Marketplace ── purchase buttons → Stripe checkout
-└── Billing ── link to Stripe Customer Portal
+Category                  Niches    Cities    Pages
+──────────────────────────────────────────────────
+Contractor Trades           20    ×   40   =   800
+Web Design (by industry)    15    ×   40   =   600
+Personal Training           10    ×   40   =   400
+Life/Performance Coaching    5    ×   40   =   200
+──────────────────────────────────────────────────
+                                   Total =  2,000
 ```
 
-## Steps
+**Trades** (20): Plumber, Electrician, HVAC, Roofer, Landscaper, Painter, General Contractor, Concrete, Fencing, Flooring, Kitchen Remodeler, Bathroom Remodeler, Deck Builder, Drywall, Pest Control, Tree Service, Garage Door, Window Installer, Siding, Pressure Washing
 
-### 1. Database: Create `client_addons` table
-New migration to track which add-ons a web design client has purchased:
-- `id`, `lead_id` (references web_design_leads), `user_id` (auth user), `service_key` (e.g. `review_response`, `gbp_management`), `service_name`, `price_cents`, `stripe_subscription_id`, `status` (active/cancelled/paused), `activated_at`, `cancelled_at`
-- RLS: service_role full access + authenticated users can SELECT their own rows
+**Web Design niches** (15): Restaurant, Dental, Law Firm, Real Estate, Auto Repair, Salon, Gym, Chiropractor, Accountant, Insurance Agent, Veterinarian, Photography, Cleaning Service, Moving Company, Wedding Venue
 
-### 2. Create `ClientPortal.tsx` page
-- Auth-gated page at `/client-portal`
-- Fetches the logged-in user's `web_design_leads` record (matched by email)
-- Shows site build status (prospect → intake → building → preview → live)
-- Lists active add-ons from `client_addons`
-- Marketplace grid of available add-ons (pulled from the same ADD_ONS config already in WebDesignServices.tsx, extracted to a shared constant)
+**PT niches** (10): Youth Athletes, Over-40 Fitness, Post-Rehab, Weight Loss, Strength Training, Sports Performance, Bodybuilding, Functional Fitness, Senior Fitness, Women's Fitness
 
-### 3. Create `create-addon-checkout` edge function
-- Accepts `service_key`, `price_cents`, `service_name`
-- Creates a Stripe checkout session in subscription mode
-- Attaches metadata: `type: "web_design_addon"`, `service_key`, `lead_id`
-- On webhook completion, inserts into `client_addons`
+**Coaching** (5): Career Transition, Entrepreneur Mindset, Work-Life Balance, Leadership, Accountability
 
-### 4. Update Stripe webhook handler
-- Add a case for `metadata.type === "web_design_addon"` that inserts into `client_addons` with the subscription ID and activates the service
+**Cities** (40): Detroit, Chicago, Miami, Houston, Dallas, Phoenix, Denver, Atlanta, Nashville, Charlotte, Tampa, Orlando, Austin, San Antonio, Minneapolis, Indianapolis, Columbus, Cleveland, Pittsburgh, St Louis, Kansas City, Milwaukee, Cincinnati, Raleigh, Jacksonville, Memphis, Louisville, Las Vegas, Oklahoma City, Richmond, Birmingham, Tucson, Omaha, Albuquerque, Boise, Des Moines, Grosse Pointe, Warren, Sterling Heights, St Clair Shores
 
-### 5. Add route to App.tsx
-- `/client-portal` → `ClientPortal.tsx`, wrapped in `ProtectedRoute`
+## Content Diversity Strategy (Avoiding Google Penalties)
 
-### 6. Add portal link
-- Add "Client Portal" link to web design pages and navigation for logged-in users
+Each category gets a **different AI system prompt** with unique angles:
+- **Contractor**: Focus on licensing, insurance, seasonal demand, local building codes
+- **Web Design**: Focus on industry-specific features (online ordering for restaurants, booking for dentists, listings for real estate)
+- **Personal Training**: Focus on biomechanics, injury prevention, age-specific programming
+- **Coaching**: Focus on transformation stories, methodology, accountability frameworks
 
-## What Stays Untouched
-- All 90+ standalone service pages and their checkout functions remain as-is
-- No services are archived or removed
-- Lead generation is tabled — no changes there
-- M2 Development hub stays intact
+Each prompt includes the city name for localized references (neighborhoods, landmarks, climate).
 
-## Files Changed/Created
+## Database Change
+- Add `category` column to `seo_page_configs` to filter/organize pages
+- Update existing 100 rows to `category = 'contractor'`
 
-| File | Action |
-|------|--------|
-| `src/pages/ClientPortal.tsx` | **Create** — full portal page |
-| `src/lib/addons.ts` | **Create** — shared add-on definitions |
-| `supabase/functions/create-addon-checkout/index.ts` | **Create** — Stripe checkout for add-ons |
-| `src/pages/WebDesignServices.tsx` | **Edit** — extract ADD_ONS to shared file, add portal link |
-| `src/App.tsx` | **Edit** — add `/client-portal` route |
-| Migration SQL | **New** — `client_addons` table + RLS |
-| Webhook handler | **Edit** — handle `web_design_addon` type |
+## Implementation Steps
+
+| # | Task |
+|---|------|
+| 1 | Migration: add `category` column, update existing rows |
+| 2 | Add anon SELECT policy to `seo_page_configs` (pages are public) |
+| 3 | Run batch generation script (~2,000 AI calls via Lovable AI Gateway using `gemini-2.5-flash-lite` at ~$0.001/page = ~$2 total) with 4 distinct system prompts per category |
+| 4 | Update `ContractorSeoPage.tsx` to handle all categories (adjust CTA links based on category) |
+
+## Cost
+- ~$2 one-time AI generation cost
+- ~4MB database storage
+- Generation time: ~45 min with 1.2s delay between calls
 
