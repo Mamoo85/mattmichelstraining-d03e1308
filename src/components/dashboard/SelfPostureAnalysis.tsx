@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, memo } from "react";
 import Webcam from "react-webcam";
-import { Camera, RotateCcw, Check, Loader2, Share2, Download, Mail, X, ArrowRight } from "lucide-react";
+import { Camera, RotateCcw, Check, Loader2, Share2, Download, Mail, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
