@@ -89,6 +89,7 @@ const SalonMockup = lazyRetry(() => import("./pages/SalonMockup"));
 const WebDesignServices = lazyRetry(() => import("./pages/WebDesignServices"));
 const ClientPortal = lazyRetry(() => import("./pages/ClientPortal"));
 const ClientSite = lazyRetry(() => import("./pages/ClientSite"));
+const ContractorSeoPage = lazyRetry(() => import("./pages/ContractorSeoPage"));
 const FreeProgram = lazyRetry(() => import("./pages/FreeProgram"));
 const AdminViewUser = lazyRetry(() => import("./pages/AdminViewUser"));
 const StudioRental = lazyRetry(() => import("./pages/StudioRental"));
@@ -352,6 +353,7 @@ const App = () => (
                     <Route path="/install" element={<Install />} />
                     <Route path="/free-ai-generator" element={<FreeAiGenerator />} />
                     <Route path="/training/:slug" element={<SEOLandingPage />} />
+                    <Route path="/services/:slug" element={<ContractorSeoPage />} />
                     <Route path="/sitemap.xml" element={<DynamicSitemap />} />
                     <Route path="/detroit-web-design" element={<WebDesignAgency />} />
                     <Route path="/demo-landscaping" element={<LandscapeMockup />} />

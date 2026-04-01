@@ -1,0 +1,1 @@
+ALTER TABLE public.seo_page_configs ADD CONSTRAINT seo_page_configs_slug_key UNIQUE (slug);
