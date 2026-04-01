@@ -341,7 +341,7 @@ serve(async () => {
           name, trade, city.replace(" MI", ""),
           rating, reviewCount,
           !!website, !!phone, issues,
-          ANTHROPIC_API_KEY,
+          LOVABLE_API_KEY,
         );
         log("Scout scored", { name, score: scout.score, reasoning: scout.reasoning });
 
@@ -376,7 +376,7 @@ serve(async () => {
           ({ subject, body } = await sniperGenerateEmail(
             name, trade, city.replace(" MI", ""),
             issues, finalOffer, scout.reasoning,
-            ANTHROPIC_API_KEY,
+            LOVABLE_API_KEY,
           ));
         } catch (sniperErr) {
           log("Sniper failed — skipping lead", { name, error: String(sniperErr) });
