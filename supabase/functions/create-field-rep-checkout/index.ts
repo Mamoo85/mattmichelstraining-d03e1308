@@ -39,9 +39,7 @@ serve(async (req) => {
       payment_method_types: ["card"],
       customer_email: email,
       line_items: [{
-        price_data: {
-          currency: "usd",
-          recurring: { interval: "month" },
+        price: "price_1THQr7D52tPWee46Z8ZjJOdR",
           unit_amount: 2900,
           product_data: {
             name: "M² Field Rep AI Tools — $29/month",

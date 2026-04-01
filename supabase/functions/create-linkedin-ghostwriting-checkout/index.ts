@@ -46,9 +46,7 @@ serve(async (req) => {
       customer_email: email,
       line_items: [
         {
-          price_data: {
-            currency: "usd",
-            recurring: { interval: "month" },
+          price: "price_1THQqyD52tPWee46qx5nBOwl",
             unit_amount: 29900,
             product_data: {
               name: "LinkedIn Ghostwriting — 5 Posts Per Week",

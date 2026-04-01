@@ -10,7 +10,7 @@ serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       mode: "subscription", payment_method_types: ["card"], customer_email: email,
       subscription_data: { trial_period_days: 7 },
-      line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 2900, product_data: { name: "AI Sales Script Generator — $29/month", description: "Monthly updated phone scripts tailored to your business." } }, quantity: 1 }],
+      line_items: [{ price: "price_1THQr1D52tPWee46SUdedHfN", unit_amount: 2900, product_data: { name: "AI Sales Script Generator — $29/month", description: "Monthly updated phone scripts tailored to your business." } }, quantity: 1 }],
       metadata: { type: "sales_script_subscription", email, name: name || "", businessName, industry: industry || "" },
       success_url: "https://www.mattmichelstraining.com/sales-scripts?status=success",
       cancel_url: "https://www.mattmichelstraining.com/sales-scripts",

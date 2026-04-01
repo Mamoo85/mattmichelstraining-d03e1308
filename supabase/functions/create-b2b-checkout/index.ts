@@ -50,9 +50,7 @@ serve(async (req) => {
       customer: customerId,
       customer_email: customerId ? undefined : email,
       line_items: [{
-        price_data: {
-          currency: "usd",
-          recurring: { interval: "month" },
+        price: "price_1THQr5D52tPWee46A8MFdnB0",
           unit_amount: svc.price,
           product_data: {
             name: `M² — ${svc.label}`,

@@ -43,9 +43,7 @@ serve(async (req) => {
       payment_method_types: ["card"],
       customer_email: email,
       line_items: [{
-        price_data: {
-          currency: "usd",
-          recurring: { interval: "month" },
+        price: "price_1THQqsD52tPWee46ri58gzXf",
           unit_amount: monthlyPrice,
           product_data: {
             name: `Exclusive ${tradeLabel} Leads — ${city}, ${state}`,

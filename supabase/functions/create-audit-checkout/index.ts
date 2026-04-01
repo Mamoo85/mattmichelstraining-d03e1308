@@ -36,11 +36,7 @@ serve(async (req: Request) => {
       customer_email: email,
       line_items: [
         {
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: "Website Audit Report",
-              description: `Full website audit for ${business_name} in ${city}`,
+          price: "price_1THQr8D52tPWee46lZDu7pDo" in ${city}`,
             },
             unit_amount: 2900,
           },

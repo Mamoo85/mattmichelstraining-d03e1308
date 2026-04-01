@@ -10,7 +10,7 @@ serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       mode: "subscription", payment_method_types: ["card"], customer_email: email,
       subscription_data: { trial_period_days: 7 },
-      line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 7900, product_data: { name: "AI Real Estate Drip Email — $79/month", description: "Monthly market update newsletter and drip email sequences for real estate agents and brokers." } }, quantity: 1 }],
+      line_items: [{ price: "price_1THQr3D52tPWee46NeM1EJjH", unit_amount: 7900, product_data: { name: "AI Real Estate Drip Email — $79/month", description: "Monthly market update newsletter and drip email sequences for real estate agents and brokers." } }, quantity: 1 }],
       metadata: { type: "real_estate_drip", email, name: name || "", businessName, city: city || "" },
       success_url: "https://www.mattmichelstraining.com/ai-real-estate-drip?status=success",
       cancel_url: "https://www.mattmichelstraining.com/ai-real-estate-drip",

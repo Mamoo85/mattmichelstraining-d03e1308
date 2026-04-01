@@ -40,9 +40,7 @@ serve(async (req) => {
       payment_method_types: ["card"],
       customer_email: email,
       line_items: [{
-        price_data: {
-          currency: "usd",
-          recurring: { interval: "month" },
+        price: "price_1THQqkD52tPWee46fvgmrhvG",
           unit_amount: priceAmount,
           product_data: {
             name: `M² Local Marketing — ${planLabel}`,
