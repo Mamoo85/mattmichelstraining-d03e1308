@@ -478,6 +478,7 @@ const Admin = () => {
             { key: "ad-campaigns", label: "⚡ Ad Campaigns", content: <AdminAdCampaigns /> },
             { key: "outreach", label: "Outreach", content: <AdminOutreach /> },
             { key: "seo-pages", label: "SEO Pages", content: <AdminSeoPages /> },
+            { key: "search-console", label: "📊 Search Console", content: <AdminSearchConsole /> },
             { key: "gbp", label: "GBP Posts", content: <AdminGbpPosts /> },
             { key: "instagram", label: "Instagram", content: <AdminInstagramPosts /> },
             { key: "content-gen", label: "Content Generator", content: <AdminContentGenerator /> },
