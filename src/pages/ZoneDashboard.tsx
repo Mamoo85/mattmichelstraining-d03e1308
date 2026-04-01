@@ -78,6 +78,8 @@ const ZoneDashboard = () => {
   const [activeTip, setActiveTip] = useState<FeatureTip | null>(null);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
   const [recentActivity, setRecentActivity] = useState<{ type: string; summary: string; date: string } | null>(null);
+  const [postureOpen, setPostureOpen] = useState(false);
+  const [techOpen, setTechOpen] = useState(false);
 
   // Browser back button support for overlays
   const openOverlay = useCallback((view: GeneratorView) => {
