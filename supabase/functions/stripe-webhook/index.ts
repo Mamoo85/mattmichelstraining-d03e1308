@@ -3103,6 +3103,28 @@ serve(async (req) => {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // ── AI COMPETITOR REPORT — $49 one-time ─────────────────────────────────
+      if (meta.type === "competitor_report") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email && meta.city && meta.industry) {
+            fetch(`${SUPABASE_URL}/functions/v1/competitor-report`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
+              body: JSON.stringify({
+                email,
+                business_name: meta.business_name || "",
+                city: meta.city,
+                industry: meta.industry,
+                order_id: meta.order_id || null,
+              }),
+            }).catch((e) => console.error("[WEBHOOK] competitor-report call failed:", e));
+            console.log(`[WEBHOOK] competitor_report triggered for ${email} — ${meta.industry} in ${meta.city}`);
+          }
+        } catch (e) { console.error("[WEBHOOK] competitor_report error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       // ── REFERRAL TRACKING (B2B + Session) ──────────────────────────────────
       try {
         const refCode = meta.referral_code || meta.ref || "";

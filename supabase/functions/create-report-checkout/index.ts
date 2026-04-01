@@ -80,6 +80,16 @@ serve(async (req) => {
       }).select().single().then(({ data }) => {
         (body as any).__order_id = data?.id;
       }).catch(() => {});
+    } else if (product_type === "competitor_report") {
+      await sb.from("competitor_reports").insert({
+        email,
+        business_name: business_name || null,
+        city: city || null,
+        industry: industry || null,
+        status: "pending",
+      }).select().single().then(({ data }) => {
+        (body as any).__order_id = data?.id;
+      }).catch(() => {});
     }
 
     const session = await stripe.checkout.sessions.create({
