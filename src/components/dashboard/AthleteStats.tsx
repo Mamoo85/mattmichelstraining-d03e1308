@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Flame, CheckCircle2, Award, Target } from 'lucide-react';
+import { MapPin, CalendarCheck, Award, Target } from 'lucide-react';
 
 interface AthleteStatsProps {
   streak: number;
@@ -54,14 +54,6 @@ function ProgressRing({ pct, color, size = 48 }: { pct: number; color: string; s
   );
 }
 
-function getStreakColor(streak: number) {
-  if (streak >= 14) return { color: "#ff3d00", glow: "0 0 18px rgba(255,61,0,0.7)", label: "On Fire 🔥" };
-  if (streak >= 7)  return { color: "#f97316", glow: "0 0 14px rgba(249,115,22,0.6)", label: "Locked In 🔥" };
-  if (streak >= 3)  return { color: "#fb923c", glow: "0 0 8px rgba(251,146,60,0.4)", label: "Building 💪" };
-  if (streak >= 1)  return { color: "#f97316", glow: "none", label: "Started ✓" };
-  return { color: "#525252", glow: "none", label: "Start today" };
-}
-
 export default function AthleteStats({
   streak,
   sessionsThisWeek,
@@ -77,61 +69,79 @@ export default function AthleteStats({
   const animatedStreak = useCountUp(streak);
   const animatedPoints = useCountUp(totalPoints, 900);
   const weekDots = Math.min(sessionsThisWeek, 7);
-  const streakStyle = getStreakColor(streak);
   const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
   return (
     <div className="w-full space-y-3">
-      {/* 3 stat boxes — grid prevents overflow */}
       <div className="grid grid-cols-3 gap-2">
-        {/* Streak */}
+        {/* CHECK IN — Green glow */}
         <button
           onClick={onStreakClick}
           className="rounded-2xl p-3 text-center transition-all active:scale-95 relative overflow-hidden"
           style={{
-            background: streak > 0 ? `${streakStyle.color}12` : "rgba(255,255,255,0.04)",
-            border: `1px solid ${streakStyle.color}30`,
-            boxShadow: streak >= 3 ? streakStyle.glow : "none",
+            background: "rgba(34,197,94,0.08)",
+            border: "1px solid rgba(34,197,94,0.35)",
+            boxShadow: streak >= 3 ? "0 0 16px rgba(34,197,94,0.4)" : "0 0 8px rgba(34,197,94,0.15)",
           }}
         >
-          <Flame size={16} className="mx-auto mb-1" style={{ color: streakStyle.color }} />
-          <div className="font-oswald text-2xl font-black leading-none" style={{ color: streakStyle.color }}>
+          <MapPin size={16} className="mx-auto mb-1" style={{ color: "#22c55e" }} />
+          <div className="font-oswald text-2xl font-black leading-none" style={{ color: "#22c55e" }}>
             {animatedStreak}
           </div>
-          <div className="text-xs font-bold uppercase tracking-wider mt-1" style={{ color: streakStyle.color, opacity: 0.7 }}>
-            Streak
+          <div className="text-[10px] font-bold uppercase tracking-wider mt-1" style={{ color: "#22c55e", opacity: 0.8 }}>
+            Check In
+          </div>
+          <div className="text-[8px] mt-0.5" style={{ color: "#22c55e", opacity: 0.5 }}>
+            +50 pts · Tap to log
           </div>
         </button>
 
-        {/* Sessions This Week */}
+        {/* THIS WEEK — Blue glow */}
         <button
           onClick={onSessionsClick}
-          className="bg-white/4 border border-white/10 rounded-2xl p-3 text-center transition-all active:scale-95 hover:border-green-500/30"
+          className="rounded-2xl p-3 text-center transition-all active:scale-95 relative overflow-hidden"
+          style={{
+            background: "rgba(59,130,246,0.08)",
+            border: "1px solid rgba(59,130,246,0.35)",
+            boxShadow: sessionsThisWeek >= 3 ? "0 0 14px rgba(59,130,246,0.35)" : "0 0 6px rgba(59,130,246,0.15)",
+          }}
         >
-          <CheckCircle2 size={16} className="mx-auto mb-1 text-green-500" />
+          <CalendarCheck size={16} className="mx-auto mb-1" style={{ color: "#3b82f6" }} />
           <div className="flex justify-center gap-[2px] my-1">
             {DAY_LABELS.map((d, i) => (
               <div
                 key={i}
                 className={`w-3.5 h-3.5 rounded-sm flex items-center justify-center text-[8px] font-black transition-all ${
                   i < weekDots
-                    ? 'bg-green-500 text-black shadow-[0_0_6px_rgba(34,197,94,0.5)]'
-                    : 'bg-white/8 text-white/25'
+                    ? 'text-black'
+                    : 'text-white/20'
                 }`}
+                style={i < weekDots ? {
+                  background: "#3b82f6",
+                  boxShadow: "0 0 6px rgba(59,130,246,0.5)",
+                } : { background: "rgba(255,255,255,0.06)" }}
               >
                 {d}
               </div>
             ))}
           </div>
-          <div className="text-xs font-bold uppercase tracking-wider" style={{ color: "#737373" }}>
-            {sessionsThisWeek} / 7
+          <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "#3b82f6", opacity: 0.8 }}>
+            This Week
+          </div>
+          <div className="text-[8px] mt-0.5" style={{ color: "#3b82f6", opacity: 0.5 }}>
+            {sessionsThisWeek} of 7 sessions
           </div>
         </button>
 
-        {/* Points + Level Ring */}
+        {/* LEVEL — Purple glow */}
         <button
           onClick={onPointsClick}
-          className="bg-white/4 border border-white/10 rounded-2xl p-3 text-center transition-all active:scale-95 hover:border-[#a855f7]/30 relative"
+          className="rounded-2xl p-3 text-center transition-all active:scale-95 relative overflow-hidden"
+          style={{
+            background: "rgba(168,85,247,0.08)",
+            border: "1px solid rgba(168,85,247,0.35)",
+            boxShadow: totalPoints >= 500 ? "0 0 14px rgba(168,85,247,0.35)" : "0 0 6px rgba(168,85,247,0.15)",
+          }}
         >
           <div className="relative w-11 h-11 mx-auto mb-1 flex items-center justify-center">
             <ProgressRing pct={progressPct} color="#a855f7" size={48} />
@@ -142,8 +152,11 @@ export default function AthleteStats({
               ? `${(animatedPoints / 1000).toFixed(1)}k`
               : animatedPoints}
           </div>
-          <div className="text-xs font-bold uppercase tracking-wider mt-0.5" style={{ color: "#a855f7", opacity: 0.7 }}>
+          <div className="text-[10px] font-bold uppercase tracking-wider mt-0.5" style={{ color: "#a855f7", opacity: 0.8 }}>
             {levelLabel}
+          </div>
+          <div className="text-[8px] mt-0.5" style={{ color: "#a855f7", opacity: 0.5 }}>
+            M² Points
           </div>
         </button>
       </div>
@@ -151,7 +164,7 @@ export default function AthleteStats({
       {/* Level progress bar */}
       <div className="space-y-1">
         <div className="flex justify-between items-center">
-          <span className="text-xs font-black uppercase tracking-widest flex items-center gap-1" style={{ color: "#f97316" }}>
+          <span className="text-xs font-black uppercase tracking-widest flex items-center gap-1" style={{ color: "#a855f7" }}>
             <Target size={12} /> {levelLabel}
           </span>
           {nextLevelLabel && (
@@ -163,8 +176,8 @@ export default function AthleteStats({
             className="h-full rounded-full transition-all duration-1000"
             style={{
               width: `${progressPct}%`,
-              background: "linear-gradient(90deg, #e8621a, #f97316, #fb923c)",
-              boxShadow: "0 0 8px rgba(249,115,22,0.4)",
+              background: "linear-gradient(90deg, #a855f7, #6366f1, #3b82f6)",
+              boxShadow: "0 0 8px rgba(168,85,247,0.4)",
             }}
           />
         </div>
