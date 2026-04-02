@@ -96,6 +96,7 @@ serve(async (req) => {
           quantity: 1,
         },
       ],
+      discounts: [{ coupon: "Hw4anw4U" }],
       metadata: {
         type: "social_media_subscription",
         email,
