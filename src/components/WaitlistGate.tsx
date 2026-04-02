@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 interface WaitlistGateProps {
   productName: string;
   description?: string;
+  price?: string;
 }
 
 const WaitlistGate = ({ productName, description }: WaitlistGateProps) => {

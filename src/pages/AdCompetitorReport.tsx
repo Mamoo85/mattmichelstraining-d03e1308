@@ -3,15 +3,10 @@ import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { CheckCircle, ArrowRight, Loader2, Search, MapPin, TrendingUp, Eye } from "lucide-react";
-
-const PIXEL_ID = "4303244103266841";
-
-declare global {
-  interface Window { fbq: (...args: any[]) => void; }
-}
+import { trackFbEvent } from "@/lib/fbpixel";
 
 function firePixel(event: string, data?: Record<string, any>) {
-  try { if (window.fbq) window.fbq("track", event, data); } catch (_) {}
+  trackFbEvent(event, data);
 }
 
 const SAMPLE_EXCERPT = `COMPETITOR ANALYSIS: Apex Roofing — Detroit Metro

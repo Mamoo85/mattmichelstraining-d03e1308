@@ -3,13 +3,10 @@ import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { CheckCircle, Loader2, MapPin, Calendar, MessageSquare, Zap } from "lucide-react";
-
-declare global {
-  interface Window { fbq: (...args: any[]) => void; }
-}
+import { trackFbEvent } from "@/lib/fbpixel";
 
 function firePixel(event: string, data?: Record<string, any>) {
-  try { if (window.fbq) window.fbq("track", event, data); } catch (_) {}
+  trackFbEvent(event, data);
 }
 
 const SAMPLE_POSTS = `30 GOOGLE BUSINESS PROFILE POSTS
