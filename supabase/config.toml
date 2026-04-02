@@ -903,3 +903,6 @@ verify_jwt = false
 
 [functions.admin-migrate]
 verify_jwt = false
+
+[functions.auth-email-hook]
+verify_jwt = false
