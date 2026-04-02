@@ -8,8 +8,10 @@ const PLANS = [
   {
     key: "standard",
     name: "Standard",
-    price: "$199",
+    price: "$99",
+    originalPrice: "$199",
     per: "/month",
+    badge: "🔥 Founding Client Rate",
     description: "Facebook + LinkedIn posting, 3x per week — fully automated.",
     includes: [
       "Facebook + LinkedIn",
@@ -21,8 +23,10 @@ const PLANS = [
   {
     key: "pro",
     name: "Pro",
-    price: "$299",
+    price: "$149",
+    originalPrice: "$299",
     per: "/month",
+    badge: "🔥 Founding Client Rate",
     description: "Everything + Instagram + Google Business Profile, 5 posts/week.",
     includes: [
       "Everything in Standard",

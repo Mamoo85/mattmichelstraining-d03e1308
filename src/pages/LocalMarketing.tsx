@@ -8,8 +8,10 @@ const PLANS = [
   {
     key: "basic",
     name: "Basic",
-    price: "$49",
+    price: "$29",
+    originalPrice: "$49",
     per: "/month",
+    badge: "🔥 Founding Client Rate",
     description: "3 posts per week to your Google Business Profile, on autopilot.",
     includes: [
       "3 AI-written GBP posts per week",
@@ -21,8 +23,10 @@ const PLANS = [
   {
     key: "pro",
     name: "Pro",
-    price: "$99",
+    price: "$49",
+    originalPrice: "$99",
     per: "/month",
+    badge: "🔥 Founding Client Rate",
     description: "GBP posts + weekly review request emails to your customers.",
     includes: [
       "Everything in Basic",
