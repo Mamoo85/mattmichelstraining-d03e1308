@@ -32,7 +32,7 @@ const STATIC_PRICE_MAP: Record<string, { amount: number; name: string; guideId: 
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
   try {

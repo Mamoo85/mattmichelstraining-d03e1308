@@ -12,7 +12,7 @@ const log = (msg: string, data?: any) =>
 
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
   try {

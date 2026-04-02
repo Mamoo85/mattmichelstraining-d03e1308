@@ -25,18 +25,18 @@ const SERVICE_CATALOG: Record<string, { label: string; price: number; metaType: 
 };
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response(null, { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
   try {
     const body = await req.json();
     const { email, name, business_name, phone, service, city, state, trade, website, niche, referral_code } = body;
 
-    if (!email) return new Response(JSON.stringify({ error: "email is required" }), { status: 400, headers: corsHeaders });
+    if (!email) return new Response(JSON.stringify({ error: "email is required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     // Resolve service key — support legacy `niche` field for backward compat
     const serviceKey = service || niche || "dental";
     const svc = SERVICE_CATALOG[serviceKey];
-    if (!svc) return new Response(JSON.stringify({ error: `Unknown service: ${serviceKey}` }), { status: 400, headers: corsHeaders });
+    if (!svc) return new Response(JSON.stringify({ error: `Unknown service: ${serviceKey}` }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const origin = req.headers.get("origin") || "https://www.mattmichelstraining.com";
 
@@ -82,9 +82,9 @@ serve(async (req) => {
       }).catch(() => {});
     }
 
-    return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: corsHeaders });
+    return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("[CREATE-B2B-CHECKOUT] Error:", e);
-    return new Response(JSON.stringify({ error: msg }), { status: 500, headers: corsHeaders });
+    return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

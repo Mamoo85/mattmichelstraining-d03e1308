@@ -184,7 +184,7 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
 };
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
+  if (req.method === "OPTIONS") return new Response(null, { headers: { ...CORS, "Content-Type": "application/json" } });
 
   try {
     // Verify the caller's JWT — must be a logged-in Supabase user with a Matt email
