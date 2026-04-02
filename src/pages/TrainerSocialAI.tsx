@@ -109,8 +109,8 @@ export default function TrainerSocialAI() {
 
           {/* Signup form */}
           <div className="bg-card border border-border p-6 mb-10">
-            <h2 className="text-sm font-black uppercase tracking-widest text-foreground mb-1">Get Started — $149/month</h2>
-            <p className="text-[12px] text-muted-foreground mb-5">No contracts. Cancel before your next billing date and you won't be charged.</p>
+            <h2 className="text-sm font-black uppercase tracking-widest text-foreground mb-1">Get Started — <span className="line-through text-muted-foreground">$79</span> <span className="text-green-500">$59.25/mo</span></h2>
+            <p className="text-[12px] text-muted-foreground mb-5">25% off your first 3 months. No contracts. Cancel anytime.</p>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
