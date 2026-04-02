@@ -35,32 +35,69 @@ export default function B2BLeads() {
   const [signingUp, setSigningUp] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
 
+  // Email verification gate
+  const [verifyEmail, setVerifyEmail] = useState("");
+  const [verifying, setVerifying] = useState(false);
+
   const urlParams = new URLSearchParams(window.location.search);
   const successParam = urlParams.get("success");
+  const emailFromUrl = urlParams.get("email");
 
   useEffect(() => {
     checkAccess();
   }, []);
 
+  async function verifySubscriberAccess(email: string): Promise<boolean> {
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-subscriber-access", {
+        body: { email, niche: "dental" },
+      });
+      if (error) throw error;
+      if (data?.verified) {
+        sessionStorage.setItem("b2b_token", data.token);
+        sessionStorage.setItem("b2b_email", email);
+        setIsSubscriber(true);
+        fetchContacts();
+        return true;
+      }
+    } catch { /* failed */ }
+    return false;
+  }
+
   async function checkAccess() {
     setCheckingAccess(true);
     try {
-      // Check if current user's email is a subscriber
+      // Check sessionStorage first
+      const storedToken = sessionStorage.getItem("b2b_token");
+      const storedEmail = sessionStorage.getItem("b2b_email");
+      if (storedToken && storedEmail) {
+        try {
+          const parsed = JSON.parse(atob(storedToken));
+          if (parsed.exp > Date.now()) {
+            setIsSubscriber(true);
+            fetchContacts();
+            setCheckingAccess(false);
+            return;
+          }
+        } catch { /* invalid */ }
+        sessionStorage.removeItem("b2b_token");
+        sessionStorage.removeItem("b2b_email");
+      }
+
+      // URL email param
+      if (emailFromUrl) {
+        const verified = await verifySubscriberAccess(emailFromUrl);
+        if (verified) { setCheckingAccess(false); return; }
+      }
+
+      // Supabase auth fallback
       const { data: { user } } = await supabase.auth.getUser();
       if (user?.email) {
-        const { data } = await supabase
-          .from("b2b_subscribers" as any)
-          .select("active")
-          .eq("email", user.email)
-          .eq("active", true)
-          .limit(1);
-        if (data && data.length > 0) {
-          setIsSubscriber(true);
-          fetchContacts();
-          return;
-        }
+        const verified = await verifySubscriberAccess(user.email);
+        if (verified) { setCheckingAccess(false); return; }
       }
-      // Also check total count for display
+
+      // Count for display
       const { count } = await supabase.from("b2b_contacts" as any).select("id", { count: "exact", head: true }).eq("industry", "dental");
       setTotalCount(count || 0);
     } finally {
@@ -111,6 +148,17 @@ export default function B2BLeads() {
       setSigningUp(false);
     }
   }
+
+  const handleVerifyEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!verifyEmail) { toast.error("Enter the email you paid with"); return; }
+    setVerifying(true);
+    const verified = await verifySubscriberAccess(verifyEmail);
+    if (!verified) {
+      toast.error("No active subscription found for this email.");
+    }
+    setVerifying(false);
+  };
 
   function exportCSV() {
     if (!contacts.length) return;
@@ -166,6 +214,20 @@ export default function B2BLeads() {
               />
             </div>
 
+            {/* Email verify for success page */}
+            {successParam === "1" && !isSubscriber && (
+              <div className="bg-card border border-border p-5 mb-6">
+                <p className="font-black text-sm text-foreground mb-2">Enter the email you paid with to access your database:</p>
+                <form onSubmit={handleVerifyEmail} className="flex gap-2">
+                  <input type="email" value={verifyEmail} onChange={e => setVerifyEmail(e.target.value)} placeholder="you@company.com" className="flex-1 bg-background border border-border px-3 py-2.5 text-sm focus:ring-1 focus:ring-primary outline-none" />
+                  <button type="submit" disabled={verifying} className="bg-primary text-white px-4 py-2.5 font-bold text-sm disabled:opacity-50 flex items-center gap-2">
+                    {verifying ? <Loader2 size={14} className="animate-spin" /> : <ArrowRight size={14} />}
+                    Verify
+                  </button>
+                </form>
+              </div>
+            )}
+
             {/* Table */}
             {loading ? (
               <div className="flex justify-center py-12"><Loader2 size={20} className="animate-spin text-primary" /></div>
@@ -215,6 +277,19 @@ export default function B2BLeads() {
         </div>
 
         <div className="max-w-3xl mx-auto px-6 py-12">
+          {/* Email verify for existing subscribers */}
+          <div className="bg-card border border-border p-5 mb-8">
+            <p className="font-black text-sm text-foreground mb-1">Already a subscriber?</p>
+            <p className="text-[12px] text-muted-foreground mb-3">Enter the email you paid with to access your database.</p>
+            <form onSubmit={handleVerifyEmail} className="flex gap-2">
+              <input type="email" value={verifyEmail} onChange={e => setVerifyEmail(e.target.value)} placeholder="you@company.com" className="flex-1 bg-background border border-border px-3 py-2.5 text-sm focus:ring-1 focus:ring-primary outline-none" />
+              <button type="submit" disabled={verifying} className="bg-primary text-white px-4 py-2.5 font-bold text-sm uppercase tracking-widest hover:opacity-90 disabled:opacity-50 flex items-center gap-2">
+                {verifying ? <Loader2 size={14} className="animate-spin" /> : <ArrowRight size={14} />}
+                {verifying ? "Checking…" : "Verify"}
+              </button>
+            </form>
+          </div>
+
           {/* Blurred sample table */}
           <h2 className="text-sm font-black uppercase tracking-widest text-muted-foreground mb-4">Sample Data (blurred)</h2>
           <div className="border border-border overflow-hidden mb-10 relative">
