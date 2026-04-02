@@ -75,8 +75,8 @@ export default function AuditReport() {
   return (
     <>
       <SEOHead
-        title="Website Audit Report — $29 | Matt Michels Web Design"
-        description="Get a full website audit in 24 hours. Speed, SEO, mobile, conversion issues, and a prioritized fix list. $29 flat — no upsell."
+        title="Website Audit Report — $9 | Matt Michels Web Design"
+        description="Get a full website audit in 24 hours. Speed, SEO, mobile, conversion issues, and a prioritized fix list. $9 flat — no upsell."
         path="/audit-report"
       />
       <div className="min-h-screen bg-[#0f0f1a] text-white">
@@ -92,14 +92,14 @@ export default function AuditReport() {
               <span className="text-[#f97316]">Why Your Site Isn't Working.</span>
             </h1>
             <p className="text-base sm:text-lg text-[#aaa] max-w-2xl mx-auto mb-8 leading-relaxed">
-              For $29, Matt Michels runs a full website audit and emails you a plain-English report with exactly what's wrong and how to fix it. Used by 50+ Metro Detroit businesses.
+              For $9, Matt Michels runs a full website audit and emails you a plain-English report with exactly what's wrong and how to fix it. Used by 50+ Metro Detroit businesses.
             </p>
             <Button
               size="lg"
               className="bg-[#f97316] hover:bg-[#ea6c10] text-white text-base px-8 py-5 font-bold rounded-xl"
               onClick={() => document.getElementById("audit-form")?.scrollIntoView({ behavior: "smooth" })}
             >
-              Get My Audit — $29 <ArrowRight className="ml-2 h-4 w-4" />
+              Get My Audit — $9 <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
             <p className="text-xs text-[#666] mt-4">Report emailed within 24 hours · No upsell · No subscription</p>
           </div>
@@ -135,7 +135,7 @@ export default function AuditReport() {
           <div className="max-w-lg mx-auto">
             <Card className="bg-[#1a1a2e] border-white/10">
               <CardContent className="p-6 sm:p-8">
-                <h2 className="text-xl font-bold mb-1">Order Your Audit — $29</h2>
+                <h2 className="text-xl font-bold mb-1">Order Your Audit — $9</h2>
                 <p className="text-sm text-[#888] mb-6">Fill in your info below. Your report will be emailed within 24 hours.</p>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid sm:grid-cols-2 gap-4">
@@ -186,7 +186,7 @@ export default function AuditReport() {
                     className="w-full bg-[#f97316] hover:bg-[#ea6c10] text-white font-bold py-5 text-base rounded-xl"
                     disabled={loading}
                   >
-                    {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : "Get My Audit Report — $29 →"}
+                    {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : "Get My Audit Report — $9 →"}
                   </Button>
                   <p className="text-[10px] text-center text-[#555]">Secure payment via Stripe. Report emailed within 24 hours.</p>
                 </form>

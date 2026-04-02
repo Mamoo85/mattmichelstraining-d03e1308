@@ -77,8 +77,8 @@ export default function AiWebsiteAudit() {
   return (
     <>
       <SEOHead
-        title="AI Website Audit — $29 | Instant Report | M² Web Design"
-        description="Get a full AI-powered website audit delivered to your inbox in 60 seconds. SEO, mobile, trust signals, local ranking, and actionable fixes. $29 flat, no subscription."
+        title="AI Website Audit — $9 | Instant Report | M² Web Design"
+        description="Get a full AI-powered website audit delivered to your inbox in 60 seconds. SEO, mobile, trust signals, local ranking, and actionable fixes. $9 flat, no subscription."
         path="/ai-website-audit"
       />
 
@@ -94,7 +94,7 @@ export default function AiWebsiteAudit() {
               <span className="text-primary">isn't bringing in customers.</span>
             </h1>
             <p className="text-lg text-muted-foreground mb-6 max-w-xl mx-auto leading-relaxed">
-              Enter your URL. Pay $29. Get a full professional audit report in your inbox within 60 seconds — SEO score, design grade, trust signals, mobile check, and the 3 fixes that will actually move the needle.
+              Enter your URL. Pay $9. Get a full professional audit report in your inbox within 60 seconds — SEO score, design grade, trust signals, mobile check, and the 3 fixes that will actually move the needle.
             </p>
             <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
               <span className="flex items-center gap-1.5"><CheckCircle size={14} className="text-primary" /> No subscription</span>
@@ -107,7 +107,7 @@ export default function AiWebsiteAudit() {
         <div className="max-w-5xl mx-auto px-6 py-14 grid lg:grid-cols-2 gap-12">
           {/* Form */}
           <div>
-            <h2 className="text-xl font-black text-foreground mb-6">Get Your Audit — $29</h2>
+            <h2 className="text-xl font-black text-foreground mb-6">Get Your Audit — $9</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Your Email <span className="text-destructive">*</span></label>
@@ -148,7 +148,7 @@ export default function AiWebsiteAudit() {
                 className="w-full flex items-center justify-center gap-2 py-4 rounded-lg font-black text-sm uppercase tracking-wider transition-opacity hover:opacity-90 disabled:opacity-60"
                 style={{ background: "var(--primary)", color: "white" }}
               >
-                {submitting ? <><Loader2 size={16} className="animate-spin" /> Processing…</> : <><FileText size={16} /> Get My Audit Report — $29</>}
+                {submitting ? <><Loader2 size={16} className="animate-spin" /> Processing…</> : <><FileText size={16} /> Get My Audit Report — $9</>}
               </button>
               <p className="text-xs text-center text-muted-foreground">Secure checkout via Stripe. One-time charge, no subscription.</p>
             </form>
@@ -205,7 +205,7 @@ export default function AiWebsiteAudit() {
         <section className="py-12 px-6 text-center border-t border-border">
           <div className="max-w-xl mx-auto">
             <h2 className="text-2xl font-black text-foreground mb-3">Ready to know the truth about your site?</h2>
-            <p className="text-muted-foreground mb-6">$29. 60 seconds. No fluff, no upsell call.</p>
+            <p className="text-muted-foreground mb-6">$9. 60 seconds. No fluff, no upsell call.</p>
             <a href="#" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="inline-flex items-center gap-2 px-8 py-4 rounded-lg font-black text-sm uppercase tracking-wider" style={{ background: "var(--primary)", color: "white" }}>
               Get My Audit <ArrowRight size={16} />
             </a>

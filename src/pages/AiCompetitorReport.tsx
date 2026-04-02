@@ -88,8 +88,8 @@ export default function AiCompetitorReport() {
   return (
     <>
       <SEOHead
-        title="AI Local Competitor Analysis — $49 | Real Google Maps Data | M² Web Design"
-        description="Get a data-driven competitor analysis for your local market. Real Google Maps data, review gaps, positioning opportunities, and 5 action items. $49, delivered in 2 minutes."
+        title="AI Local Competitor Analysis — $9 | Real Google Maps Data | M² Web Design"
+        description="Get a data-driven competitor analysis for your local market. Real Google Maps data, review gaps, positioning opportunities, and 5 action items. $9, delivered in 2 minutes."
         path="/ai-competitor-report"
       />
 
@@ -105,7 +105,7 @@ export default function AiCompetitorReport() {
               <span className="text-primary">competing against.</span>
             </h1>
             <p className="text-lg text-muted-foreground mb-6 max-w-xl mx-auto leading-relaxed">
-              We pull your actual competitors from Google Maps — their ratings, review counts, and positioning — then AI analyzes the gaps you can exploit. Real data, not guesswork. $49, delivered in 2 minutes.
+              We pull your actual competitors from Google Maps — their ratings, review counts, and positioning — then AI analyzes the gaps you can exploit. Real data, not guesswork. $9, delivered in 2 minutes.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
               <span className="flex items-center gap-1.5"><CheckCircle size={14} className="text-primary" /> Real Google Maps data</span>
@@ -118,7 +118,7 @@ export default function AiCompetitorReport() {
         <div className="max-w-5xl mx-auto px-6 py-14 grid lg:grid-cols-2 gap-12">
           {/* Form */}
           <div>
-            <h2 className="text-xl font-black text-foreground mb-6">Get Your Competitor Report — $49</h2>
+            <h2 className="text-xl font-black text-foreground mb-6">Get Your Competitor Report — $9</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Your Email <span className="text-destructive">*</span></label>
@@ -174,7 +174,7 @@ export default function AiCompetitorReport() {
                 className="w-full flex items-center justify-center gap-2 py-4 rounded-lg font-black text-sm uppercase tracking-wider transition-opacity hover:opacity-90 disabled:opacity-60"
                 style={{ background: "var(--primary)", color: "white" }}
               >
-                {submitting ? <><Loader2 size={16} className="animate-spin" /> Processing...</> : <><Search size={16} /> Get My Competitor Report — $49</>}
+                {submitting ? <><Loader2 size={16} className="animate-spin" /> Processing...</> : <><Search size={16} /> Get My Competitor Report — $9</>}
               </button>
               <p className="text-xs text-center text-muted-foreground">Secure checkout via Stripe. One-time charge, no subscription.</p>
             </form>
@@ -205,7 +205,7 @@ export default function AiCompetitorReport() {
             <div className="p-5 bg-muted/40 rounded-lg border border-border">
               <h3 className="text-sm font-bold text-foreground mb-2">How is this different from Googling it myself?</h3>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                You could spend 3 hours manually looking up every competitor, counting their reviews, and trying to figure out patterns. Or pay $49 and get a structured analysis with specific action items in 2 minutes. We pull real Google Maps data, not guesses.
+                You could spend 3 hours manually looking up every competitor, counting their reviews, and trying to figure out patterns. Or pay $9 and get a structured analysis with specific action items in 2 minutes. We pull real Google Maps data, not guesses.
               </p>
             </div>
           </div>
@@ -231,7 +231,7 @@ export default function AiCompetitorReport() {
         <section className="py-12 px-6 text-center border-t border-border">
           <div className="max-w-xl mx-auto">
             <h2 className="text-2xl font-black text-foreground mb-3">Know your competition. Own your market.</h2>
-            <p className="text-muted-foreground mb-6">$49. Real data. 2 minutes. No fluff.</p>
+            <p className="text-muted-foreground mb-6">$9. Real data. 2 minutes. No fluff.</p>
             <a href="#" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="inline-flex items-center gap-2 px-8 py-4 rounded-lg font-black text-sm uppercase tracking-wider" style={{ background: "var(--primary)", color: "white" }}>
               Get My Report <ArrowRight size={16} />
             </a>

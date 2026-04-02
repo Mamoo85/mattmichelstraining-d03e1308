@@ -90,7 +90,7 @@ export default function AdWebsiteAudit() {
       {/* Above fold */}
       <div className="max-w-lg mx-auto px-5 pt-10 pb-6">
         <div className="text-center mb-6">
-          <span className="inline-block text-xs font-bold uppercase tracking-widest text-orange-400 mb-3">Instant · AI-Powered · $29</span>
+          <span className="inline-block text-xs font-bold uppercase tracking-widest text-orange-400 mb-3">Instant · AI-Powered · $9</span>
           <h1 className="text-3xl font-black text-white leading-tight mb-3">
             Is Your Website<br />Costing You Customers?
           </h1>
@@ -148,7 +148,7 @@ export default function AdWebsiteAudit() {
             style={{ background: "#e8621a" }}
           >
             {submitting ? <Loader2 size={16} className="animate-spin" /> : <Globe size={16} />}
-            {submitting ? "Processing…" : "Get My Website Audit — $29"}
+            {submitting ? "Processing…" : "Get My Website Audit — $9"}
           </button>
           <p className="text-center text-xs text-slate-500">Secure checkout · Report in ~60 sec · No agency fees · One-time</p>
         </form>
