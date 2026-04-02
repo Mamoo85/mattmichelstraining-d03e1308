@@ -86,17 +86,28 @@ serve(async (req) => {
       .select()
       .single();
 
+    // Apply 25% launch coupon for first 3 months (standard plan only)
+    const discounts = plan === "standard" ? [{ coupon: "Hw4anw4U" }] : [];
+
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       payment_method_types: ["card"],
       customer_email: email,
       line_items: [
         {
-          price: "price_1THQqqD52tPWee46w2VUgpXx",
+          price_data: {
+            currency: "usd",
+            recurring: { interval: "month" },
+            unit_amount: planCfg.amount,
+            product_data: {
+              name: planCfg.label,
+              description: planCfg.description,
+            },
+          },
           quantity: 1,
         },
       ],
-      discounts: [{ coupon: "Hw4anw4U" }],
+      ...(discounts.length > 0 ? { discounts } : {}),
       metadata: {
         type: "social_media_subscription",
         email,
