@@ -41,6 +41,10 @@ export default function AIBlogPostService() {
     email: "",
     website: "",
     industry: "",
+    cmsType: "",
+    cmsUrl: "",
+    cmsUsername: "",
+    cmsAppPassword: "",
   });
   const [loading, setLoading] = useState(false);
 
