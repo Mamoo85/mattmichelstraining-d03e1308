@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { CheckCircle, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { CheckCircle, Loader2, Facebook, Linkedin } from "lucide-react";
 
 interface ClientInfo {
   business_name: string;
@@ -12,12 +12,15 @@ interface ClientInfo {
 interface FormData {
   fb_page_url: string;
   linkedin_page_url: string;
-  fb_access_token: string;
-  linkedin_access_token: string;
   brand_voice: string;
   target_audience: string;
   post_topics: string;
   avoid_topics: string;
+}
+
+interface ConnectStatus {
+  facebook: boolean;
+  linkedin: boolean;
 }
 
 function getNextPostingDay(): string {
