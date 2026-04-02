@@ -11,16 +11,16 @@ const corsHeaders = {
 
 // Service catalog — each service maps to its pricing and metadata type
 const SERVICE_CATALOG: Record<string, { label: string; price: number; metaType: string; description: string }> = {
-  dental: { label: "Dental & Orthodontic Practices", price: 14900, metaType: "b2b_database_subscription", description: "Searchable database of verified dental offices. Updated daily." },
-  hvac: { label: "HVAC & Mechanical Contractors", price: 14900, metaType: "b2b_database_subscription", description: "Searchable database of verified HVAC contractors. Updated daily." },
-  pt: { label: "Physical Therapy & Chiro Offices", price: 14900, metaType: "b2b_database_subscription", description: "Searchable database of verified PT/chiro offices. Updated daily." },
-  auto: { label: "Independent Auto Repair Shops", price: 14900, metaType: "b2b_database_subscription", description: "Searchable database of verified auto repair shops. Updated daily." },
-  industrial: { label: "Industrial Suppliers & Manufacturers", price: 9900, metaType: "b2b_database_subscription", description: "Searchable database of verified industrial contacts. Updated weekly." },
-  contractor_leads: { label: "Exclusive Contractor Leads", price: 39900, metaType: "contractor_lead_subscription", description: "Exclusive leads for your trade in your city. One contractor per territory." },
-  gbp_basic: { label: "GBP Management — Basic", price: 4900, metaType: "gbp_saas_subscription", description: "AI posts to your Google Business Profile 3x/week." },
-  gbp_pro: { label: "GBP Management — Pro", price: 9900, metaType: "gbp_saas_subscription", description: "AI posts 3x/week + review solicitation + photo optimization." },
-  social_standard: { label: "Social Media AI — Standard", price: 19900, metaType: "social_media_subscription", description: "AI-generated posts 3x/week to Facebook, Instagram, LinkedIn." },
-  social_pro: { label: "Social Media AI — Pro", price: 29900, metaType: "social_media_subscription", description: "AI posts 5x/week + stories + engagement. Full social management." },
+  dental: { label: "Dental & Orthodontic Practices", price: 9900, metaType: "b2b_database_subscription", description: "Searchable database of verified dental offices. Updated daily." },
+  hvac: { label: "HVAC & Mechanical Contractors", price: 9900, metaType: "b2b_database_subscription", description: "Searchable database of verified HVAC contractors. Updated daily." },
+  pt: { label: "Physical Therapy & Chiro Offices", price: 9900, metaType: "b2b_database_subscription", description: "Searchable database of verified PT/chiro offices. Updated daily." },
+  auto: { label: "Independent Auto Repair Shops", price: 9900, metaType: "b2b_database_subscription", description: "Searchable database of verified auto repair shops. Updated daily." },
+  industrial: { label: "Industrial Suppliers & Manufacturers", price: 4900, metaType: "b2b_database_subscription", description: "Searchable database of verified industrial contacts. Updated weekly." },
+  contractor_leads: { label: "Exclusive Contractor Leads — Founding Rate", price: 24900, metaType: "contractor_lead_subscription", description: "Exclusive leads for your trade in your city. One contractor per territory." },
+  gbp_basic: { label: "GBP Management — Basic (Founding Rate)", price: 2900, metaType: "gbp_saas_subscription", description: "AI posts to your Google Business Profile 3x/week." },
+  gbp_pro: { label: "GBP Management — Pro (Founding Rate)", price: 4900, metaType: "gbp_saas_subscription", description: "AI posts 3x/week + review solicitation + photo optimization." },
+  social_standard: { label: "Social Media AI — Standard (Founding Rate)", price: 9900, metaType: "social_media_subscription", description: "AI-generated posts 3x/week to Facebook, Instagram, LinkedIn." },
+  social_pro: { label: "Social Media AI — Pro (Founding Rate)", price: 14900, metaType: "social_media_subscription", description: "AI posts 5x/week + stories + engagement. Full social management." },
   web_design: { label: "Web Design & Development", price: 49900, metaType: "web_design_subscription", description: "Professional website design with monthly retainer." },
 };
 
