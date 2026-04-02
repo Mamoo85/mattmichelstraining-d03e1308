@@ -604,7 +604,12 @@ export type Database = {
       blog_post_clients: {
         Row: {
           active: boolean | null
+          auto_publish: boolean | null
           business_name: string
+          cms_app_password: string | null
+          cms_type: string | null
+          cms_url: string | null
+          cms_username: string | null
           created_at: string | null
           email: string
           id: string
@@ -616,7 +621,12 @@ export type Database = {
         }
         Insert: {
           active?: boolean | null
+          auto_publish?: boolean | null
           business_name: string
+          cms_app_password?: string | null
+          cms_type?: string | null
+          cms_url?: string | null
+          cms_username?: string | null
           created_at?: string | null
           email: string
           id?: string
@@ -628,7 +638,12 @@ export type Database = {
         }
         Update: {
           active?: boolean | null
+          auto_publish?: boolean | null
           business_name?: string
+          cms_app_password?: string | null
+          cms_type?: string | null
+          cms_url?: string | null
+          cms_username?: string | null
           created_at?: string | null
           email?: string
           id?: string

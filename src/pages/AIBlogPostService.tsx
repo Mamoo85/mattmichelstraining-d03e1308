@@ -41,6 +41,10 @@ export default function AIBlogPostService() {
     email: "",
     website: "",
     industry: "",
+    cmsType: "",
+    cmsUrl: "",
+    cmsUsername: "",
+    cmsAppPassword: "",
   });
   const [loading, setLoading] = useState(false);
 
@@ -196,6 +200,74 @@ export default function AIBlogPostService() {
                   ))}
                 </select>
               </div>
+
+              {/* CMS Auto-Publishing */}
+              <div className="border-t border-slate-700 pt-4 mt-4">
+                <p className="text-slate-300 text-sm font-semibold mb-2">🚀 Auto-Publish to Your Website (Optional)</p>
+                <p className="text-slate-500 text-xs mb-3">If you use WordPress or Wix, we can publish posts directly to your blog — no copy-paste needed.</p>
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-slate-300 text-sm">CMS Platform</Label>
+                    <select
+                      name="cmsType"
+                      value={form.cmsType}
+                      onChange={handleChange}
+                      className="w-full h-10 rounded-md bg-slate-700 border border-slate-600 text-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    >
+                      <option value="">None — email me the posts</option>
+                      <option value="wordpress">WordPress</option>
+                      <option value="wix">Wix</option>
+                    </select>
+                  </div>
+                  {form.cmsType && (
+                    <>
+                      <div className="space-y-1.5">
+                        <Label className="text-slate-300 text-sm">
+                          {form.cmsType === "wordpress" ? "WordPress Site URL" : "Wix Site URL"}
+                        </Label>
+                        <Input
+                          name="cmsUrl"
+                          value={form.cmsUrl}
+                          onChange={handleChange}
+                          placeholder={form.cmsType === "wordpress" ? "https://yoursite.com" : "https://yoursite.wixsite.com/blog"}
+                          className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-500"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-slate-300 text-sm">
+                          {form.cmsType === "wordpress" ? "WordPress Username" : "Wix API Key"}
+                        </Label>
+                        <Input
+                          name="cmsUsername"
+                          value={form.cmsUsername}
+                          onChange={handleChange}
+                          placeholder={form.cmsType === "wordpress" ? "admin" : "Your Wix API key"}
+                          className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-500"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-slate-300 text-sm">
+                          {form.cmsType === "wordpress" ? "Application Password" : "Wix Site ID"}
+                        </Label>
+                        <Input
+                          name="cmsAppPassword"
+                          type="password"
+                          value={form.cmsAppPassword}
+                          onChange={handleChange}
+                          placeholder={form.cmsType === "wordpress" ? "xxxx xxxx xxxx xxxx" : "Your Wix site ID"}
+                          className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-500"
+                        />
+                        {form.cmsType === "wordpress" && (
+                          <p className="text-slate-500 text-[11px]">
+                            WordPress → Users → Your Profile → Application Passwords → Generate one for "M² Blog Service"
+                          </p>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
               <Button
                 type="submit"
                 disabled={loading}

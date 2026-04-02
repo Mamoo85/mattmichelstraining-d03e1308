@@ -255,6 +255,7 @@ const Dashboard = () => {
                   isInPerson={profile?.is_in_person ?? false}
                   onViewPoints={handleViewPoints}
                   onViewReferrals={handleViewReferrals}
+                  onOpenGenerator={openGeneratorAction}
                 />
               )}
               {activeTab === "progress" && <ProgressCharts />}
