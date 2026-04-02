@@ -288,6 +288,22 @@ serve(async (req) => {
           if (uid) {
             await awardPts(sb, uid, "membership", 50, `Subscribed: ${tierNames}`, subscription.id);
           }
+
+          // Fire subscription-activated email (fire-and-forget)
+          try {
+            const subSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+            await subSb.functions.invoke("send-transactional-email", {
+              body: {
+                templateName: "subscription-activated",
+                recipientEmail: email,
+                idempotencyKey: `sub-activated-${subscription.id}`,
+                templateData: {
+                  name: (customer as any).name || undefined,
+                  tierName: tierNames,
+                },
+              },
+            });
+          } catch (e) { console.error("[WEBHOOK] Subscription email error:", e); }
         }
       }
     }
