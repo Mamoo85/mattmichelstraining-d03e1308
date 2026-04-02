@@ -61,6 +61,7 @@ const Merch = lazyRetry(() => import("./pages/Merch"));
 const Learn = lazyRetry(() => import("./pages/Learn"));
 const TrialWelcome = lazyRetry(() => import("./pages/TrialWelcome"));
 const NotFound = lazyRetry(() => import("./pages/NotFound"));
+const Unsubscribe = lazyRetry(() => import("./pages/Unsubscribe"));
 const Install = lazyRetry(() => import("./pages/Install"));
 const Nutrition = lazyRetry(() => import("./pages/Nutrition"));
 const TheEdge = lazyRetry(() => import("./pages/TheEdge"));
