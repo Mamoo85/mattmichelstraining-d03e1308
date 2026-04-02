@@ -189,8 +189,13 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
     setListening(true);
   }, [listening, supported, sendMessage]);
 
-  const handleBubbleTap = useCallback((value: string) => {
+  const handleIntensityTap = useCallback((value: string) => {
     setNeedsIntensity(false);
+    setIntensityAnswered(true);
+    sendMessage(value);
+  }, [sendMessage]);
+
+  const handleDurationTap = useCallback((value: string) => {
     setNeedsDuration(false);
     sendMessage(value);
   }, [sendMessage]);
