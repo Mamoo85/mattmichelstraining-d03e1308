@@ -691,8 +691,23 @@ serve(async (req) => {
             await (sb.from as any)("handbook_clients").upsert({ email, business_name: meta.businessName || email, phone: meta.phone || null, industry: meta.industry || null, state: meta.state || "MI", employee_count: parseInt(meta.employeeCount) || null, active: true }, { onConflict: "email" });
           }
           if (RESEND_API_KEY && email) {
-            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Employee Handbook service is active", html: `<p>Hey${meta.businessName ? " " + meta.businessName : ""},</p><p>You're signed up for AI Employee Handbook Generator ($99/mo). Your first handbook update will arrive within 48 hours.</p><p>Monthly updates with state labor law compliance on the 1st after that.</p><p>— Matt, M² Development</p>` }) });
-            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Handbook Client — ${meta.businessName || email} ($99/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>State: ${meta.state || "MI"}<br>Employees: ${meta.employeeCount || "n/a"}</p>` }) });
+            await sendM2Email(email, "Your AI Employee Handbook is Active — Here's What Happens Next", m2Email({
+              greeting: `Hey${meta.businessName ? " " + meta.businessName : ""} —`,
+              headline: "Your AI Employee Handbook is Active",
+              body: `<p style="margin:0 0 12px"><strong>You just made your HR life 10x easier.</strong> Here's exactly what you're getting:</p>
+<p style="margin:0 0 8px">📋 <strong>First handbook update</strong> — arrives within 48 hours, customized to your state (${meta.state || "MI"}) labor laws</p>
+<p style="margin:0 0 8px">📅 <strong>Monthly compliance updates</strong> — on the 1st of every month, your handbook gets refreshed with any new state regulations</p>
+<p style="margin:0 0 8px">🏢 <strong>Employee count-aware</strong> — policies calibrated for your team size (${meta.employeeCount || "your team"})</p>
+<p style="margin:0 0 16px">⚡ <strong>Industry-specific</strong> — language tailored to ${meta.industry || "your industry"}</p>
+<p style="margin:0 0 8px"><strong>What happens next:</strong></p>
+<ol style="margin:0 0 16px;padding-left:20px;color:#475569">
+<li>Your first AI-generated handbook section arrives within 48 hours</li>
+<li>Review it — if anything needs adjusting, reply to this email</li>
+<li>Monthly updates auto-generate on the 1st</li>
+</ol>
+<p style="margin:0;color:#64748b;font-size:13px">Questions? Hit reply or text me. I read every message.</p>`,
+            }));
+            await notifyMatt(`💰 New Handbook Client — ${meta.businessName || email} ($99/mo)`, `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>State: ${meta.state || "MI"}<br>Employees: ${meta.employeeCount || "n/a"}</p>`);
           }
         } catch (e) { console.error("[WEBHOOK] handbook_subscription error:", e); }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
