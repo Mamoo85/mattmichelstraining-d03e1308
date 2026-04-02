@@ -579,6 +579,23 @@ const ZoneDashboard = () => {
           </Suspense>
         )}
       </AnimatePresence>
+      {/* Check-In Modal */}
+      {showCheckIn && (
+        <div className="fixed inset-0 z-[200] flex items-end justify-center" style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)" }}>
+          <div
+            className="w-full max-w-lg rounded-t-3xl p-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-4 animate-in slide-in-from-bottom-8"
+            style={{ background: "#111", border: "1px solid rgba(255,255,255,0.08)", borderBottom: "none" }}
+          >
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-black uppercase tracking-widest" style={{ color: "#22c55e" }}>Check In</p>
+              <button onClick={() => setShowCheckIn(false)} className="text-xs font-bold uppercase" style={{ color: "#525252" }}>Close</button>
+            </div>
+            <Suspense fallback={null}>
+              <StudioCheckIn />
+            </Suspense>
+          </div>
+        </div>
+      )}
       <Suspense fallback={null}>
         <SelfPostureAnalysis open={postureOpen} onClose={() => setPostureOpen(false)} />
         <TechHubModal open={techOpen} onClose={() => setTechOpen(false)} />
