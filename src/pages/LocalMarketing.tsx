@@ -88,8 +88,8 @@ export default function LocalMarketing() {
   return (
     <>
       <SEOHead
-        title="Automated Google Business Profile Posts — $49/month | M² Local Marketing"
-        description="We post to your Google Business Profile 3x a week, automatically. Stay active, rank higher, get more calls. $49/month, cancel anytime."
+        title="Automated Google Business Profile Posts — From $29/month | Founding Client Rate"
+        description="We post to your Google Business Profile 3x a week, automatically. Founding client pricing: from $29/month (normally $49)."
       />
       <div className="min-h-screen bg-background text-foreground">
         {/* Hero */}
