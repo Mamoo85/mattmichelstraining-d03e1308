@@ -108,8 +108,8 @@ export default function SocialMediaAI() {
   return (
     <>
       <SEOHead
-        title="AI Social Media Management — $199/mo | M² Social Media AI"
-        description="Your business posts itself. AI writes and publishes to Facebook, Instagram, and LinkedIn — 3x a week, every week. No effort required."
+        title="AI Social Media Management — From $99/mo | Founding Client Rate | M²"
+        description="Your business posts itself. AI writes and publishes to Facebook, Instagram, and LinkedIn — 3x a week. Founding client pricing: from $99/mo (normally $199)."
       />
       <div className="min-h-screen bg-background text-foreground">
         {/* Hero */}
