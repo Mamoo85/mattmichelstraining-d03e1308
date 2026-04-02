@@ -63,7 +63,7 @@ function getGreeting(name: string, streak: number, sessionsThisWeek: number): st
 const ZoneDashboard = () => {
   const { user, subscriptionTier } = useAuth();
   const isProOrElite = subscriptionTier === "pro" || subscriptionTier === "elite";
-  const { points } = usePoints();
+  const { points, transactions } = usePoints();
   const navigate = useNavigate();
   useBrowserNotifications();
 
