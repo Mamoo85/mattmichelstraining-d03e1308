@@ -45,7 +45,7 @@ export default function MissedCallSaaS() {
   const [searchParams] = useSearchParams();
   const isSuccess = searchParams.get("status") === "success";
 
-  const [form, setForm] = useState({ businessName: "", phone: "", email: "", name: "" });
+  const [form, setForm] = useState({ businessName: "", phone: "", email: "", name: "", customMessage: "" });
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
