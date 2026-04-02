@@ -720,8 +720,17 @@ serve(async (req) => {
             await (sb.from as any)("grant_finder_clients").upsert({ email, business_name: meta.businessName || email, phone: meta.phone || null, industry: meta.industry || null, employee_count: parseInt(meta.employeeCount) || null, annual_revenue: meta.annualRevenue || null, location: meta.location || "Michigan", active: true }, { onConflict: "email" });
           }
           if (RESEND_API_KEY && email) {
-            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Grant Finder is active", html: `<p>Hey${meta.businessName ? " " + meta.businessName : ""},</p><p>You're signed up for AI Grant Finder ($149/mo). Your first curated grant report will arrive within 7 days.</p><p>Weekly updates every Monday after that.</p><p>— Matt, M² Development</p>` }) });
-            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Grant Finder Client — ${meta.businessName || email} ($149/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}<br>Location: ${meta.location || "Michigan"}</p>` }) });
+            await sendM2Email(email, "Your AI Grant Finder is Active — First Report in 7 Days", m2Email({
+              greeting: `Hey${meta.businessName ? " " + meta.businessName : ""} —`,
+              headline: "Your AI Grant Finder is Active",
+              body: `<p style="margin:0 0 12px"><strong>We're already scanning for money you're leaving on the table.</strong></p>
+<p style="margin:0 0 8px">🔍 <strong>What we're looking for:</strong> Federal, state, and local grants matching ${meta.industry || "your industry"} businesses in ${meta.location || "Michigan"}</p>
+<p style="margin:0 0 8px">📬 <strong>First curated report</strong> — arrives within 7 days with specific grants you qualify for, amounts, deadlines, and application links</p>
+<p style="margin:0 0 8px">📅 <strong>Weekly updates</strong> — every Monday morning, new grants and deadline reminders</p>
+<p style="margin:0 0 16px">💡 <strong>Revenue range</strong> — filtered for businesses like yours (${meta.annualRevenue || "your revenue bracket"})</p>
+<p style="margin:0;color:#64748b;font-size:13px">Most business owners have no idea how much grant money they're eligible for. That changes now.</p>`,
+            }));
+            await notifyMatt(`💰 New Grant Finder Client — ${meta.businessName || email} ($149/mo)`, `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}<br>Location: ${meta.location || "Michigan"}</p>`);
           }
         } catch (e) { console.error("[WEBHOOK] grant_finder_subscription error:", e); }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
