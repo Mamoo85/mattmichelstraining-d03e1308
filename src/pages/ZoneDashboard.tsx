@@ -442,13 +442,14 @@ const ZoneDashboard = () => {
                 onClick={item.action}
                 className="flex items-center gap-2.5 rounded-2xl p-3 text-left transition-all active:scale-[0.97] group"
                 style={{
-                  background: `${item.color}09`,
-                  border: `1px solid ${item.color}1e`,
+                  background: `${item.color}12`,
+                  border: `1.5px solid ${item.color}35`,
+                  boxShadow: `0 0 10px ${item.color}18, inset 0 0 6px ${item.color}06`,
                 }}
               >
                 <div
                   className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: `${item.color}18`, color: item.color }}
+                  style={{ background: `${item.color}22`, color: item.color }}
                 >
                   {item.icon}
                 </div>
