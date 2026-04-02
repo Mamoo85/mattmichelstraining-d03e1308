@@ -61,6 +61,9 @@ export default function SocialMediaAI() {
     business_type: "",
     city: "",
     state: "",
+    brand_voice: "professional",
+    content_focus: "",
+    content_avoid: "",
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -280,6 +283,34 @@ export default function SocialMediaAI() {
                       {p}
                     </button>
                   ))}
+                </div>
+              </div>
+
+              {/* Brand Preferences */}
+              <div className="border-t border-border pt-3">
+                <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-2">Brand Preferences (optional)</label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-[10px] text-muted-foreground block mb-1">Brand Voice</label>
+                    <select value={form.brand_voice} onChange={e => setForm(f => ({...f, brand_voice: e.target.value}))}
+                      className="w-full bg-background border border-border px-3 py-2.5 text-sm focus:ring-1 focus:ring-primary outline-none">
+                      <option value="professional">Professional</option>
+                      <option value="friendly">Friendly</option>
+                      <option value="casual">Casual</option>
+                      <option value="authoritative">Authoritative</option>
+                      <option value="bold">Bold & Edgy</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-muted-foreground block mb-1">Content Focus</label>
+                    <input value={form.content_focus} onChange={e => setForm(f => ({...f, content_focus: e.target.value}))} placeholder="e.g. Before/after, tips, testimonials"
+                      className="w-full bg-background border border-border px-3 py-2.5 text-sm focus:ring-1 focus:ring-primary outline-none" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-muted-foreground block mb-1">Topics to Avoid</label>
+                    <input value={form.content_avoid} onChange={e => setForm(f => ({...f, content_avoid: e.target.value}))} placeholder="e.g. Politics, competitor names"
+                      className="w-full bg-background border border-border px-3 py-2.5 text-sm focus:ring-1 focus:ring-primary outline-none" />
+                  </div>
                 </div>
               </div>
 

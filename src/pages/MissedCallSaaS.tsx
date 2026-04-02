@@ -45,7 +45,7 @@ export default function MissedCallSaaS() {
   const [searchParams] = useSearchParams();
   const isSuccess = searchParams.get("status") === "success";
 
-  const [form, setForm] = useState({ businessName: "", phone: "", email: "", name: "" });
+  const [form, setForm] = useState({ businessName: "", phone: "", email: "", name: "", customMessage: "" });
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -218,6 +218,18 @@ export default function MissedCallSaaS() {
                     className="bg-white/5 border-white/15 text-white placeholder:text-[#555]"
                     required
                   />
+                </div>
+                <div className="col-span-full">
+                  <Label className="text-[#aaa] text-xs">Custom Text-Back Message (optional)</Label>
+                  <textarea
+                    value={form.customMessage}
+                    onChange={e => setForm(f => ({ ...f, customMessage: e.target.value.slice(0, 160) }))}
+                    placeholder="Hey, I just missed your call — I'll call you right back! How can I help?"
+                    maxLength={160}
+                    rows={2}
+                    className="w-full bg-white/5 border border-white/15 text-white placeholder:text-[#555] rounded-md px-3 py-2 text-sm"
+                  />
+                  <p className="text-[10px] text-[#555] mt-1">{form.customMessage.length}/160 characters · This is the text your callers receive</p>
                 </div>
                 <Button
                   type="submit"

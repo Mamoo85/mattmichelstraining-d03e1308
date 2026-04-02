@@ -48,7 +48,7 @@ const FAQS = [
 
 export default function LocalMarketing() {
   const [selectedPlan, setSelectedPlan] = useState("pro");
-  const [form, setForm] = useState({ email: "", business_name: "", contact_name: "", phone: "", business_type: "", city: "", state: "MI" });
+  const [form, setForm] = useState({ email: "", business_name: "", contact_name: "", phone: "", business_type: "", city: "", state: "MI", post_tone: "friendly", content_focus: "", content_avoid: "" });
   const [submitting, setSubmitting] = useState(false);
 
   const success = new URLSearchParams(window.location.search).get("success") === "1";
@@ -191,6 +191,35 @@ export default function LocalMarketing() {
                     className="w-full bg-background border border-border px-3 py-2.5 text-sm focus:ring-1 focus:ring-primary outline-none" />
                 </div>
               </div>
+
+              {/* Content Preferences */}
+              <div className="border-t border-border pt-3 mt-1">
+                <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-2">Content Preferences (optional)</label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-[10px] text-muted-foreground block mb-1">Posting Tone</label>
+                    <select value={form.post_tone} onChange={e => setForm(f => ({...f, post_tone: e.target.value}))}
+                      className="w-full bg-background border border-border px-3 py-2.5 text-sm focus:ring-1 focus:ring-primary outline-none">
+                      <option value="friendly">Friendly</option>
+                      <option value="professional">Professional</option>
+                      <option value="casual">Casual</option>
+                      <option value="authoritative">Authoritative</option>
+                      <option value="funny">Funny</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-muted-foreground block mb-1">Content Focus</label>
+                    <input value={form.content_focus} onChange={e => setForm(f => ({...f, content_focus: e.target.value}))} placeholder="e.g. Emergency services, seasonal promos"
+                      className="w-full bg-background border border-border px-3 py-2.5 text-sm focus:ring-1 focus:ring-primary outline-none" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-muted-foreground block mb-1">Topics to Avoid</label>
+                    <input value={form.content_avoid} onChange={e => setForm(f => ({...f, content_avoid: e.target.value}))} placeholder="e.g. Competitor names, pricing"
+                      className="w-full bg-background border border-border px-3 py-2.5 text-sm focus:ring-1 focus:ring-primary outline-none" />
+                  </div>
+                </div>
+              </div>
+
               <button type="submit" disabled={submitting}
                 className="w-full bg-primary text-white py-3 font-bold text-sm uppercase tracking-widest hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2">
                 {submitting ? <Loader2 size={14} className="animate-spin" /> : <ArrowRight size={14} />}

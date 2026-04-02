@@ -1983,6 +1983,8 @@ export type Database = {
         Row: {
           active: boolean | null
           business_name: string
+          content_avoid: string | null
+          content_focus: string | null
           created_at: string | null
           email: string
           gbp_account_id: string | null
@@ -1991,11 +1993,14 @@ export type Database = {
           last_posted_at: string | null
           plan: string | null
           post_count: number | null
+          post_tone: string | null
           stripe_customer_id: string | null
         }
         Insert: {
           active?: boolean | null
           business_name: string
+          content_avoid?: string | null
+          content_focus?: string | null
           created_at?: string | null
           email: string
           gbp_account_id?: string | null
@@ -2004,11 +2009,14 @@ export type Database = {
           last_posted_at?: string | null
           plan?: string | null
           post_count?: number | null
+          post_tone?: string | null
           stripe_customer_id?: string | null
         }
         Update: {
           active?: boolean | null
           business_name?: string
+          content_avoid?: string | null
+          content_focus?: string | null
           created_at?: string | null
           email?: string
           gbp_account_id?: string | null
@@ -2017,6 +2025,7 @@ export type Database = {
           last_posted_at?: string | null
           plan?: string | null
           post_count?: number | null
+          post_tone?: string | null
           stripe_customer_id?: string | null
         }
         Relationships: []
@@ -3233,6 +3242,42 @@ export type Database = {
           stripe_checkout_url?: string | null
           stripe_price_id?: string | null
           target_audience?: string
+        }
+        Relationships: []
+      }
+      missed_call_clients: {
+        Row: {
+          active: boolean | null
+          business_name: string
+          created_at: string | null
+          custom_message: string | null
+          email: string
+          id: string
+          last_triggered_at: string | null
+          phone: string | null
+          stripe_customer_id: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          business_name: string
+          created_at?: string | null
+          custom_message?: string | null
+          email: string
+          id?: string
+          last_triggered_at?: string | null
+          phone?: string | null
+          stripe_customer_id?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          business_name?: string
+          created_at?: string | null
+          custom_message?: string | null
+          email?: string
+          id?: string
+          last_triggered_at?: string | null
+          phone?: string | null
+          stripe_customer_id?: string | null
         }
         Relationships: []
       }
@@ -5831,10 +5876,13 @@ export type Database = {
         Row: {
           access_tokens: Json | null
           active: boolean | null
+          brand_voice: string | null
           business_name: string
           business_type: string | null
           city: string | null
           contact_name: string | null
+          content_avoid: string | null
+          content_focus: string | null
           created_at: string | null
           email: string
           fb_page_id: string | null
@@ -5852,10 +5900,13 @@ export type Database = {
         Insert: {
           access_tokens?: Json | null
           active?: boolean | null
+          brand_voice?: string | null
           business_name: string
           business_type?: string | null
           city?: string | null
           contact_name?: string | null
+          content_avoid?: string | null
+          content_focus?: string | null
           created_at?: string | null
           email: string
           fb_page_id?: string | null
@@ -5873,10 +5924,13 @@ export type Database = {
         Update: {
           access_tokens?: Json | null
           active?: boolean | null
+          brand_voice?: string | null
           business_name?: string
           business_type?: string | null
           city?: string | null
           contact_name?: string | null
+          content_avoid?: string | null
+          content_focus?: string | null
           created_at?: string | null
           email?: string
           fb_page_id?: string | null
