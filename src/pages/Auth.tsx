@@ -151,6 +151,18 @@ const Auth = () => {
       } else {
         setSuccess("Check your email to confirm your account.");
       }
+
+      // Fire welcome email (fire-and-forget)
+      if (signUpData?.user?.email) {
+        supabase.functions.invoke("send-transactional-email", {
+          body: {
+            templateName: "welcome",
+            recipientEmail: signUpData.user.email,
+            idempotencyKey: `welcome-${signUpData.user.id}`,
+            templateData: { name: firstName.trim() },
+          },
+        }).catch(() => {});
+      }
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) setError(error.message);

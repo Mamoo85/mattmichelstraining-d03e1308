@@ -288,6 +288,22 @@ serve(async (req) => {
           if (uid) {
             await awardPts(sb, uid, "membership", 50, `Subscribed: ${tierNames}`, subscription.id);
           }
+
+          // Fire subscription-activated email (fire-and-forget)
+          try {
+            const subSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+            await subSb.functions.invoke("send-transactional-email", {
+              body: {
+                templateName: "subscription-activated",
+                recipientEmail: email,
+                idempotencyKey: `sub-activated-${subscription.id}`,
+                templateData: {
+                  name: (customer as any).name || undefined,
+                  tierName: tierNames,
+                },
+              },
+            });
+          } catch (e) { console.error("[WEBHOOK] Subscription email error:", e); }
         }
       }
     }
@@ -550,6 +566,25 @@ serve(async (req) => {
         customerEmail,
         customerName,
       });
+
+      // Fire order confirmation email (fire-and-forget)
+      if (customerEmail) {
+        try {
+          const orderSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+          await orderSb.functions.invoke("send-transactional-email", {
+            body: {
+              templateName: "order-confirmation",
+              recipientEmail: customerEmail,
+              idempotencyKey: `order-confirm-${session.id}`,
+              templateData: {
+                name: customerName || undefined,
+                itemName: txItemName,
+                amount: sessionAmount ? (sessionAmount / 100).toFixed(2) : undefined,
+              },
+            },
+          });
+        } catch (e) { console.error("[WEBHOOK] Order confirmation email error:", e); }
+      }
 
       // ── WEB DESIGN ADD-ON ────────────────────────────────────────────────
       if (meta.type === "web_design_addon" && meta.service_key) {

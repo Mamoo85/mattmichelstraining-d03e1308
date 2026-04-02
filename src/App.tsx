@@ -61,6 +61,7 @@ const Merch = lazyRetry(() => import("./pages/Merch"));
 const Learn = lazyRetry(() => import("./pages/Learn"));
 const TrialWelcome = lazyRetry(() => import("./pages/TrialWelcome"));
 const NotFound = lazyRetry(() => import("./pages/NotFound"));
+const Unsubscribe = lazyRetry(() => import("./pages/Unsubscribe"));
 const Install = lazyRetry(() => import("./pages/Install"));
 const Nutrition = lazyRetry(() => import("./pages/Nutrition"));
 const TheEdge = lazyRetry(() => import("./pages/TheEdge"));
@@ -348,6 +349,7 @@ const App = () => (
                   <div className="pb-16">
                     <Routes>
                     <Route path="/" element={<Index />} />
+                    <Route path="/unsubscribe" element={<Unsubscribe />} />
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/login" element={<Navigate to="/auth" replace />} />
                     <Route path="/signin" element={<Navigate to="/auth" replace />} />
