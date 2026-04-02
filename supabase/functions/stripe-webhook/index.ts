@@ -3225,6 +3225,39 @@ serve(async (req) => {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // ── LUKE — Mark cart as recovered when any instant product purchase completes ──
+      const instantProducts = ["website_audit", "gbp_post_pack", "competitor_report"];
+      if (instantProducts.includes(meta.type || "") && meta.email) {
+        try {
+          await sb.from("cart_abandonments")
+            .update({ recovered: true, recovered_at: new Date().toISOString() })
+            .eq("email", meta.email)
+            .eq("product_type", meta.type)
+            .eq("recovered", false);
+        } catch { /* non-critical */ }
+      }
+
+      // ── LEIA — Seed onboarding sequence for new subscriptions ──────────────
+      const subscriptionProducts: Record<string, string> = {
+        gbp_subscription: "gbp_saas",
+        social_media_subscription: "social_media_ai",
+        field_rep_subscription: "field_rep_tools",
+        contractor_lead_subscription: "contractor_leads",
+      };
+      if (subscriptionProducts[meta.type || ""] && (meta.email || customerEmail)) {
+        try {
+          const onboardEmail = meta.email || customerEmail;
+          const product = subscriptionProducts[meta.type!];
+          const { count } = await sb.from("onboarding_sequences")
+            .select("*", { count: "exact", head: true })
+            .eq("email", onboardEmail)
+            .eq("product", product);
+          if (!count) {
+            await sb.from("onboarding_sequences").insert({ email: onboardEmail, product, current_step: 0, status: "active" });
+          }
+        } catch { /* non-critical */ }
+      }
+
       // ── REFERRAL TRACKING (B2B + Session) ──────────────────────────────────
       try {
         const refCode = meta.referral_code || meta.ref || "";
@@ -3306,6 +3339,32 @@ serve(async (req) => {
       } catch (refErr) {
         console.error("[WEBHOOK] Referral tracking error:", refErr);
       }
+
+    // ── LUKE — Capture abandoned checkouts for recovery emails ────────────────
+    if (event.type === "checkout.session.expired") {
+      try {
+        const expiredSession = event.data.object as Record<string, unknown>;
+        const expMeta = (expiredSession.metadata as Record<string, string>) || {};
+        const expEmail = expMeta.email || (expiredSession.customer_details as Record<string, string>)?.email || null;
+        const instantProductTypes = ["website_audit", "gbp_post_pack", "competitor_report"];
+        if (expMeta.type && instantProductTypes.includes(expMeta.type) && expEmail) {
+          const { count: exists } = await sb.from("cart_abandonments")
+            .select("*", { count: "exact", head: true })
+            .eq("stripe_session_id", expiredSession.id as string);
+          if (!exists) {
+            await sb.from("cart_abandonments").insert({
+              email: expEmail,
+              product_type: expMeta.type,
+              stripe_session_id: expiredSession.id as string,
+              cart_value: expMeta.price ? parseFloat(expMeta.price) : 49,
+              metadata: expMeta,
+            });
+            console.log(`[LUKE] Cart abandonment captured: ${expEmail} — ${expMeta.type}`);
+          }
+        }
+      } catch (e) { console.error("[LUKE] cart_abandonment capture error:", e); }
+      return new Response(JSON.stringify({ received: true }), { status: 200 });
+    }
 
     return new Response(JSON.stringify({ received: true }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (error) {

@@ -140,11 +140,17 @@ export default function ContractorLeads() {
             ))}
           </div>
 
-          {/* Signup Form */}
+          {/* Signup Form — PAUSED */}
           <div id="signup" className="bg-card border border-border p-6">
             <h2 className="text-base font-black text-foreground mb-1 uppercase tracking-wide">Claim your territory</h2>
-            <p className="text-[12px] text-muted-foreground mb-5">You'll be taken to a secure checkout page. Free 3-lead trial before your card is charged.</p>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="bg-muted/40 border border-border rounded p-5 text-center space-y-2">
+              <p className="text-sm font-bold text-foreground">Currently accepting waitlist only</p>
+              <p className="text-[12px] text-muted-foreground">We're onboarding a limited number of contractors in select markets. Drop your info and Matt will reach out personally when your area opens up.</p>
+              <a href="mailto:matt@mattmichelstraining.com?subject=Contractor Leads Waitlist" className="inline-block mt-2 bg-primary text-primary-foreground px-5 py-2.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all">
+                Join the Waitlist →
+              </a>
+            </div>
+            <form onSubmit={handleSubmit} className="space-y-4 hidden">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Your Name</label>

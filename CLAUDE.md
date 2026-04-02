@@ -106,3 +106,4 @@ $10k+/mo fully automated income. Matt's only job: return calls, texts, and email
 - All new tables get RLS enabled + service_role policy
 - Stripe: always inline price_data, always set metadata.type for webhook routing
 - AI calls: Claude Haiku only (cost-efficient), max_tokens 800-1200
+- **"Create an agent"** always means: create a `.md` file at `/root/.claude/agents/[name].md` with frontmatter (`name`, `description`) followed by full agent instructions. Never create an agent as code unless explicitly asked.

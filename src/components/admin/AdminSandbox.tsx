@@ -1,0 +1,215 @@
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { ExternalLink, Loader2, CheckCircle, AlertCircle, Zap, RefreshCw } from "lucide-react";
+
+interface Product {
+  id: string;
+  name: string;
+  price: string;
+  description: string;
+  type: "instant" | "subscription";
+  category: string;
+}
+
+const PRODUCTS: Product[] = [
+  // Instant delivery
+  { id: "website_audit", name: "Website Audit", price: "$49", description: "Full audit delivered within minutes. Tests instant-audit edge function.", type: "instant", category: "One-Time" },
+  { id: "gbp_post_pack", name: "GBP Post Pack", price: "$49", description: "30 Google posts delivered to inbox. Tests gbp-post-pack edge function.", type: "instant", category: "One-Time" },
+  { id: "competitor_report", name: "Competitor Report", price: "$49", description: "Full competitor analysis. Tests competitor-report edge function.", type: "instant", category: "One-Time" },
+  // Subscriptions
+  { id: "gbp_saas_subscription", name: "GBP SaaS", price: "$49/mo", description: "Welcome email + client record created. Posts start Mon/Wed/Fri.", type: "subscription", category: "Subscription" },
+  { id: "social_media_subscription", name: "Social Media AI", price: "$199/mo", description: "Welcome email + social_media_clients record. Posts start Mon/Wed/Fri.", type: "subscription", category: "Subscription" },
+  { id: "field_rep_subscription", name: "Field Rep Tools", price: "$29/mo", description: "Welcome email + b2b_subscribers record. Portal access active.", type: "subscription", category: "Subscription" },
+  { id: "contractor_lead_subscription", name: "Contractor Leads", price: "$399/mo", description: "Welcome email + contractor_clients record created.", type: "subscription", category: "Subscription" },
+  { id: "b2b_database_subscription", name: "B2B Database", price: "$49/mo", description: "Welcome email + b2b_subscribers record. Database access active.", type: "subscription", category: "Subscription" },
+  { id: "review_responder_subscription", name: "Review Responder", price: "$79/mo", description: "Welcome email + review_responder_clients record created.", type: "subscription", category: "Subscription" },
+  { id: "seo_report_subscription", name: "SEO Reports", price: "$99/mo", description: "Welcome email + seo_report_clients record created.", type: "subscription", category: "Subscription" },
+  { id: "chatbot_subscription", name: "AI Chatbot", price: "$79/mo", description: "Welcome email + chatbot_clients record created.", type: "subscription", category: "Subscription" },
+  { id: "missed_call_subscription", name: "Missed Call Text", price: "$49/mo", description: "Welcome email + missed_call_clients record created.", type: "subscription", category: "Subscription" },
+];
+
+type TestStatus = "idle" | "loading" | "success" | "error";
+
+export default function AdminSandbox() {
+  const [statuses, setStatuses] = useState<Record<string, TestStatus>>({});
+  const { toast } = useToast();
+
+  const runTest = async (product: Product) => {
+    setStatuses(s => ({ ...s, [product.id]: "loading" }));
+    try {
+      const { data, error } = await supabase.functions.invoke("create-test-checkout", {
+        body: { product: product.id },
+      });
+      if (error || !data?.url) throw new Error(error?.message || "No checkout URL returned");
+
+      // Open Stripe $0 checkout in new tab
+      window.open(data.url, "_blank");
+      setStatuses(s => ({ ...s, [product.id]: "success" }));
+      toast({ title: `${product.name} test launched`, description: "Complete the $0 checkout — then check your email." });
+    } catch (e: unknown) {
+      setStatuses(s => ({ ...s, [product.id]: "error" }));
+      const msg = e instanceof Error ? e.message : String(e);
+      toast({ title: "Test failed", description: msg, variant: "destructive" });
+    }
+  };
+
+  const resetStatus = (id: string) => setStatuses(s => ({ ...s, [id]: "idle" }));
+
+  const instant = PRODUCTS.filter(p => p.type === "instant");
+  const subs = PRODUCTS.filter(p => p.type === "subscription");
+
+  const StatusIcon = ({ status }: { status: TestStatus }) => {
+    if (status === "loading") return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />;
+    if (status === "success") return <CheckCircle className="h-4 w-4 text-green-500" />;
+    if (status === "error") return <AlertCircle className="h-4 w-4 text-red-500" />;
+    return null;
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-slate-900 rounded-lg p-5 border border-orange-500/20">
+        <div className="flex items-start gap-3">
+          <Zap className="h-5 w-5 text-orange-500 mt-0.5 shrink-0" />
+          <div>
+            <h2 className="text-white font-bold text-lg">Product Sandbox</h2>
+            <p className="text-slate-400 text-sm mt-1">
+              Click any product to go through the real purchase flow at <strong className="text-orange-400">$0</strong>.
+              A real Stripe checkout opens, you complete it, the webhook fires, and you receive the exact email your customer would get.
+            </p>
+            <p className="text-slate-500 text-xs mt-2">
+              Only works for Matt's email addresses. Test records are tagged <code className="bg-slate-800 px-1 rounded">is_test: true</code> and excluded from revenue reporting.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Instant Delivery */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <h3 className="text-white font-semibold">Instant Delivery</h3>
+          <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">Fires in seconds</Badge>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {instant.map(p => (
+            <Card key={p.id} className="bg-slate-800 border-slate-700">
+              <CardHeader className="pb-2">
+                <div className="flex items-start justify-between">
+                  <CardTitle className="text-white text-base">{p.name}</CardTitle>
+                  <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30 text-xs shrink-0 ml-2">{p.price}</Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-slate-400 text-xs leading-relaxed">{p.description}</p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={() => runTest(p)}
+                    disabled={statuses[p.id] === "loading"}
+                    className="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-sm h-8"
+                  >
+                    {statuses[p.id] === "loading" ? (
+                      <><Loader2 className="h-3 w-3 animate-spin mr-1" /> Opening...</>
+                    ) : (
+                      <><ExternalLink className="h-3 w-3 mr-1" /> Test $0</>
+                    )}
+                  </Button>
+                  {statuses[p.id] && statuses[p.id] !== "loading" && (
+                    <button onClick={() => resetStatus(p.id)} className="text-slate-500 hover:text-slate-300">
+                      <RefreshCw className="h-3 w-3" />
+                    </button>
+                  )}
+                  <StatusIcon status={statuses[p.id] || "idle"} />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      {/* Subscriptions */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <h3 className="text-white font-semibold">Subscriptions</h3>
+          <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-xs">Welcome email + DB record</Badge>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {subs.map(p => (
+            <Card key={p.id} className="bg-slate-800 border-slate-700">
+              <CardHeader className="pb-2">
+                <div className="flex items-start justify-between">
+                  <CardTitle className="text-white text-base">{p.name}</CardTitle>
+                  <Badge className="bg-slate-600 text-slate-300 border-slate-500 text-xs shrink-0 ml-2">{p.price}</Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-slate-400 text-xs leading-relaxed">{p.description}</p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={() => runTest(p)}
+                    disabled={statuses[p.id] === "loading"}
+                    variant="outline"
+                    className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700 text-sm h-8"
+                  >
+                    {statuses[p.id] === "loading" ? (
+                      <><Loader2 className="h-3 w-3 animate-spin mr-1" /> Opening...</>
+                    ) : (
+                      <><ExternalLink className="h-3 w-3 mr-1" /> Test $0</>
+                    )}
+                  </Button>
+                  {statuses[p.id] && statuses[p.id] !== "loading" && (
+                    <button onClick={() => resetStatus(p.id)} className="text-slate-500 hover:text-slate-300">
+                      <RefreshCw className="h-3 w-3" />
+                    </button>
+                  )}
+                  <StatusIcon status={statuses[p.id] || "idle"} />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      {/* What to check */}
+      <Card className="bg-slate-800 border-slate-700">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-white text-sm">What to verify after each test</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-slate-400">
+            <div>
+              <p className="text-orange-400 font-semibold mb-1">Instant products</p>
+              <ul className="space-y-1">
+                <li>✓ Stripe checkout completes at $0</li>
+                <li>✓ Email arrives within 2 min</li>
+                <li>✓ Content is correct and useful</li>
+                <li>✓ No error in Supabase logs</li>
+              </ul>
+            </div>
+            <div>
+              <p className="text-blue-400 font-semibold mb-1">Subscription products</p>
+              <ul className="space-y-1">
+                <li>✓ Stripe checkout completes at $0</li>
+                <li>✓ Welcome email arrives within 1 min</li>
+                <li>✓ Record appears in client DB table</li>
+                <li>✓ Matt notification email arrives</li>
+              </ul>
+            </div>
+            <div>
+              <p className="text-green-400 font-semibold mb-1">After testing</p>
+              <ul className="space-y-1">
+                <li>✓ Cancel any $0 test subscriptions in Stripe</li>
+                <li>✓ Test records tagged is_test=true</li>
+                <li>✓ Oracle won't count them in MRR</li>
+                <li>✓ Check Supabase Edge Function logs</li>
+              </ul>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

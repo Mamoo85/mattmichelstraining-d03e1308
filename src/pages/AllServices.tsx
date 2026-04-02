@@ -81,7 +81,7 @@ const CATEGORIES: Category[] = [
   {
     label: "Lead Gen & B2B",
     services: [
-      { name: "Contractor Lead Gen", price: "$399/mo", desc: "Exclusive, local contractor leads delivered directly to your inbox every day.", url: "/contractor-leads" },
+      { name: "Contractor Lead Gen", price: "Waitlist", desc: "Exclusive, local contractor leads delivered directly to your inbox. Join the waitlist — limited markets.", url: "/contractor-leads" },
       { name: "B2B Dental Database", price: "$49/mo", desc: "Full Michigan dental office contact list — updated monthly and ready to dial.", url: "/b2b-leads" },
       { name: "Field Rep AI Tools", price: "$29/mo", desc: "4 Claude-powered tools built specifically for B2B field sales reps.", url: "/field-rep-tools" },
       { name: "Contractor Chatbot", price: "$149/mo", desc: "24/7 AI chatbot on your website that captures and qualifies contractor leads.", url: "/contractor-chatbot" },

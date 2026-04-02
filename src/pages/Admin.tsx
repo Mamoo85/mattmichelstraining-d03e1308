@@ -98,7 +98,9 @@ const AdminOpsCenter = lazy(() => import("@/components/admin/AdminOpsCenter"));
 const AdminEmailLog = lazy(() => import("@/components/admin/AdminEmailLog"));
 const AdminMigrations = lazy(() => import("@/components/admin/AdminMigrations"));
 const AdminOrders = lazy(() => import("@/components/admin/AdminOrders"));
+const AdminTrainingNewsletter = lazy(() => import("@/components/admin/AdminTrainingNewsletter"));
 const AdminReferrals = lazy(() => import("@/components/admin/AdminReferrals"));
+const AdminSandbox = lazy(() => import("@/components/admin/AdminSandbox"));
 
 const MASTER_TABS = [
   { key: "business", label: "Business", icon: DollarSign, desc: "Revenue · Automation" },
@@ -354,10 +356,11 @@ const Admin = () => {
           </div>
           <SubTabs tabs={[
             { key: "overview", label: "Overview", content: <AdminBusinessDashboard /> },
+            { key: "sandbox", label: "🧪 Product Sandbox", content: <AdminSandbox /> },
+            { key: "orders", label: "📦 Orders", content: <AdminOrders /> },
             { key: "health", label: "Client Health", content: <AdminClientHealth /> },
             { key: "ops", label: "Ops Center", content: <AdminOpsCenter /> },
             { key: "pipeline", label: "Pipeline", content: <AdminB2BPipeline /> },
-            { key: "orders", label: "📦 Orders", content: <AdminOrders /> },
             { key: "social-setup", label: "Social Media Setup", content: <AdminSocialMediaOnboarding /> },
             { key: "email-log", label: "📧 Email Log", content: <AdminEmailLog /> },
             { key: "migrations", label: "DB Migrations", content: <AdminMigrations /> },
@@ -464,6 +467,7 @@ const Admin = () => {
             { key: "broadcasts", label: "Broadcasts", content: <AdminBroadcasts /> },
             { key: "subscribers", label: "Subscribers", content: <AdminSubscriberList /> },
             { key: "compose", label: "Compose", content: <AdminNewsletterComposer /> },
+            { key: "training-newsletter", label: "🏋️ Training Newsletter", content: <AdminTrainingNewsletter /> },
             { key: "history", label: "Send History", content: <AdminSendHistory /> },
             { key: "marketing-ai", label: "Marketing & AI", content: (
               <div className="space-y-8">
@@ -494,14 +498,12 @@ const Admin = () => {
         {/* ── WEB DESIGN ── */}
         {activeTab === "webdesign" && (
           <SubTabs tabs={[
-            { key: "fulfillment", label: "Agency CRM", content: <AdminAgencyCRM /> },
             { key: "pipeline", label: "B2B Pipeline", content: <AdminB2BPipeline /> },
+            { key: "fulfillment", label: "Agency CRM", content: <AdminAgencyCRM /> },
             { key: "crm", label: "Web Design CRM", content: <AdminWebDesignCRM /> },
             { key: "site-builder", label: "Site Builder", content: <AdminSiteBuilder /> },
             { key: "prospector", label: "Prospector", content: <AdminProspector /> },
             { key: "automation", label: "Automation Hub", content: <AdminAutomationHub /> },
-            { key: "client-health", label: "Client Health", content: <AdminClientHealth /> },
-            { key: "ops-center", label: "Ops Center", content: <AdminOpsCenter /> },
             { key: "wd-automations", label: "Email Automations", content: <AdminWebDesignAutomations /> },
             { key: "demo-links", label: "🔗 Demo Links", content: <AdminDemoLinkGenerator /> },
           ]} defaultTab="pipeline" />
