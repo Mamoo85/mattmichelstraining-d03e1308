@@ -53,9 +53,10 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
   const photoRef = useRef<HTMLInputElement>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   
-  // Track what info has been provided
+  // Track what info has been provided — sequential prompts
   const [needsIntensity, setNeedsIntensity] = useState(false);
   const [needsDuration, setNeedsDuration] = useState(false);
+  const [intensityAnswered, setIntensityAnswered] = useState(false);
 
   const supported = typeof window !== "undefined" && ("SpeechRecognition" in window || "webkitSpeechRecognition" in window);
 
