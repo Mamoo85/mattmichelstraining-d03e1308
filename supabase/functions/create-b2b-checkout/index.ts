@@ -25,7 +25,7 @@ const SERVICE_CATALOG: Record<string, { label: string; price: number; metaType: 
 };
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response(null, { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
   try {
     const body = await req.json();
