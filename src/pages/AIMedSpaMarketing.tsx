@@ -1,9 +1,7 @@
-import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import SEOHead from "@/components/layout/SEOHead";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { Sparkles, Mail, Star, CheckCircle, ArrowRight, Loader2, Heart } from "lucide-react";
+import WaitlistGate from "@/components/WaitlistGate";
+import { Sparkles, Star, CheckCircle, ArrowRight, Heart } from "lucide-react";
 
 const INCLUDED = [
   "AI-written weekly social media posts (Instagram, Facebook)",
@@ -24,21 +22,6 @@ const RESULTS = [
 export default function AIMedSpaMarketing() {
   const [searchParams] = useSearchParams();
   const isSuccess = searchParams.get("status") === "success";
-  const [form, setForm] = useState({ businessName: "", email: "", name: "", city: "", services: "" });
-  const [loading, setLoading] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.businessName || !form.email) { toast.error("Please fill in all required fields"); return; }
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("create-med-spa-checkout", { body: form });
-      if (error) throw error;
-      if (data?.url) window.location.href = data.url;
-      else throw new Error("No checkout URL returned");
-    } catch (err: any) { toast.error(err.message || "Something went wrong."); }
-    finally { setLoading(false); }
-  };
 
   if (isSuccess) {
     return (
@@ -95,38 +78,8 @@ export default function AIMedSpaMarketing() {
         </section>
 
         <section id="signup-form" className="px-4 pb-20">
-          <div className="max-w-xl mx-auto bg-white/5 border border-white/10 rounded-2xl p-8">
-            <h2 className="text-xl font-black mb-2">Start Your Free Trial</h2>
-            <p className="text-[#888] text-sm mb-6">7 days free, then $149/month. Cancel anytime.</p>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-[11px] font-bold uppercase tracking-widest text-[#888] block mb-1">Your Name</label>
-                  <input value={form.name} onChange={e => setForm(f => ({...f, name: e.target.value}))} placeholder="Jane Smith" className="w-full bg-white/5 border border-white/10 px-3 py-2.5 text-sm text-white placeholder:text-[#555] rounded-lg outline-none focus:ring-1 focus:ring-[#f97316]" />
-                </div>
-                <div>
-                  <label className="text-[11px] font-bold uppercase tracking-widest text-[#888] block mb-1">Spa Name *</label>
-                  <input value={form.businessName} onChange={e => setForm(f => ({...f, businessName: e.target.value}))} placeholder="Glow Med Spa" required className="w-full bg-white/5 border border-white/10 px-3 py-2.5 text-sm text-white placeholder:text-[#555] rounded-lg outline-none focus:ring-1 focus:ring-[#f97316]" />
-                </div>
-                <div>
-                  <label className="text-[11px] font-bold uppercase tracking-widest text-[#888] block mb-1">Email *</label>
-                  <input type="email" value={form.email} onChange={e => setForm(f => ({...f, email: e.target.value}))} placeholder="you@yourspa.com" required className="w-full bg-white/5 border border-white/10 px-3 py-2.5 text-sm text-white placeholder:text-[#555] rounded-lg outline-none focus:ring-1 focus:ring-[#f97316]" />
-                </div>
-                <div>
-                  <label className="text-[11px] font-bold uppercase tracking-widest text-[#888] block mb-1">City / State</label>
-                  <input value={form.city} onChange={e => setForm(f => ({...f, city: e.target.value}))} placeholder="e.g. Dallas, TX" className="w-full bg-white/5 border border-white/10 px-3 py-2.5 text-sm text-white placeholder:text-[#555] rounded-lg outline-none focus:ring-1 focus:ring-[#f97316]" />
-                </div>
-              </div>
-              <div>
-                <label className="text-[11px] font-bold uppercase tracking-widest text-[#888] block mb-1">Services You Offer</label>
-                <input value={form.services} onChange={e => setForm(f => ({...f, services: e.target.value}))} placeholder="Botox, fillers, laser, facials…" className="w-full bg-white/5 border border-white/10 px-3 py-2.5 text-sm text-white placeholder:text-[#555] rounded-lg outline-none focus:ring-1 focus:ring-[#f97316]" />
-              </div>
-              <button type="submit" disabled={loading} className="w-full bg-[#f97316] hover:bg-[#ea6c10] text-white py-3 font-bold text-sm uppercase tracking-widest rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2">
-                {loading ? <Loader2 size={14} className="animate-spin" /> : <ArrowRight size={14} />}
-                {loading ? "Processing..." : "Start Free Trial →"}
-              </button>
-              <p className="text-[11px] text-[#555] text-center">Questions? Email <a href="mailto:matt@mattmichelstraining.com" className="text-[#f97316]">matt@mattmichelstraining.com</a></p>
-            </form>
+          <div className="max-w-xl mx-auto">
+            <WaitlistGate productName="AI Med Spa Marketing" description="Weekly social media posts, monthly email campaigns, and automated Google review requests for med spas." price="$149/mo" />
           </div>
         </section>
       </div>

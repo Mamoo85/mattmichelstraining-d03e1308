@@ -97,6 +97,7 @@ const AdminLegalCompliance = lazy(() => import("@/components/admin/AdminLegalCom
 const AdminOpsCenter = lazy(() => import("@/components/admin/AdminOpsCenter"));
 const AdminEmailLog = lazy(() => import("@/components/admin/AdminEmailLog"));
 const AdminMigrations = lazy(() => import("@/components/admin/AdminMigrations"));
+const AdminOrders = lazy(() => import("@/components/admin/AdminOrders"));
 const AdminReferrals = lazy(() => import("@/components/admin/AdminReferrals"));
 
 const MASTER_TABS = [
@@ -353,6 +354,7 @@ const Admin = () => {
             { key: "health", label: "Client Health", content: <AdminClientHealth /> },
             { key: "ops", label: "Ops Center", content: <AdminOpsCenter /> },
             { key: "pipeline", label: "Pipeline", content: <AdminB2BPipeline /> },
+            { key: "orders", label: "Orders", content: <AdminOrders /> },
             { key: "social-setup", label: "Social Media Setup", content: <AdminSocialMediaOnboarding /> },
             { key: "email-log", label: "📧 Email Log", content: <AdminEmailLog /> },
             { key: "migrations", label: "DB Migrations", content: <AdminMigrations /> },

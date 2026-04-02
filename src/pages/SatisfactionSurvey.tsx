@@ -1,7 +1,5 @@
-import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { CheckCircle, Loader2, ArrowRight, ClipboardCheck, BarChart3, AlertTriangle, TrendingUp } from "lucide-react";
+import WaitlistGate from "@/components/WaitlistGate";
+import { CheckCircle, ClipboardCheck, BarChart3, AlertTriangle, TrendingUp } from "lucide-react";
 
 const BENEFITS = [
   { icon: ClipboardCheck, label: "Auto-survey after each job", sub: "Customers receive a quick survey automatically — no manual follow-up needed" },
@@ -17,14 +15,6 @@ const STEPS = [
 ];
 
 export default function SatisfactionSurvey() {
-  const [form, setForm] = useState({
-    name: "",
-    business_name: "",
-    email: "",
-    phone: "",
-  });
-  const [submitting, setSubmitting] = useState(false);
-
   const success = new URLSearchParams(window.location.search).get("status") === "success";
 
   if (success) {
@@ -41,26 +31,6 @@ export default function SatisfactionSurvey() {
       </div>
     );
   }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.email || !form.business_name) {
-      toast.error("Business name and email are required");
-      return;
-    }
-    setSubmitting(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("create-satisfaction-survey-checkout", {
-        body: { ...form },
-      });
-      if (error) throw error;
-      if (data?.url) window.location.href = data.url;
-    } catch (e: any) {
-      toast.error(e.message || "Something went wrong");
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -102,63 +72,8 @@ export default function SatisfactionSurvey() {
         </div>
 
         {/* Sign-up form */}
-        <div className="bg-card border border-border p-6 mb-10">
-          <h2 className="text-sm font-black uppercase tracking-widest text-foreground mb-4">
-            Get Started — $29/month
-          </h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Your Name</label>
-                <input
-                  value={form.name}
-                  onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                  placeholder="John Smith"
-                  className="w-full bg-background border border-border px-3 py-2.5 text-sm focus:ring-1 focus:ring-primary outline-none"
-                />
-              </div>
-              <div>
-                <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Business Name *</label>
-                <input
-                  required
-                  value={form.business_name}
-                  onChange={e => setForm(f => ({ ...f, business_name: e.target.value }))}
-                  placeholder="Smith Plumbing Co."
-                  className="w-full bg-background border border-border px-3 py-2.5 text-sm focus:ring-1 focus:ring-primary outline-none"
-                />
-              </div>
-              <div>
-                <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Email *</label>
-                <input
-                  type="email"
-                  required
-                  value={form.email}
-                  onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                  placeholder="you@business.com"
-                  className="w-full bg-background border border-border px-3 py-2.5 text-sm focus:ring-1 focus:ring-primary outline-none"
-                />
-              </div>
-              <div>
-                <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Phone</label>
-                <input
-                  type="tel"
-                  value={form.phone}
-                  onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-                  placeholder="(313) 555-0100"
-                  className="w-full bg-background border border-border px-3 py-2.5 text-sm focus:ring-1 focus:ring-primary outline-none"
-                />
-              </div>
-            </div>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full bg-primary text-white py-3 font-bold text-sm uppercase tracking-widest hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {submitting ? <Loader2 size={14} className="animate-spin" /> : <ArrowRight size={14} />}
-              {submitting ? "Processing..." : "Start Free Trial — $29/mo"}
-            </button>
-            <p className="text-[11px] text-muted-foreground text-center">Secure checkout via Stripe. 7-day free trial. Cancel anytime.</p>
-          </form>
+        <div className="mb-10">
+          <WaitlistGate productName="AI Satisfaction Surveys" description="Automated post-purchase satisfaction surveys sent by text or email, with AI-analyzed results." price="See pricing" />
         </div>
 
         {/* Founder credibility */}

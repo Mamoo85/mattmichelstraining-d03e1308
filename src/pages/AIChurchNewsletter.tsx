@@ -1,9 +1,7 @@
-import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import SEOHead from "@/components/layout/SEOHead";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { BookOpen, CheckCircle, ArrowRight, Loader2 } from "lucide-react";
+import WaitlistGate from "@/components/WaitlistGate";
+import { BookOpen, CheckCircle, ArrowRight } from "lucide-react";
 
 const INCLUDED = [
   "Monthly AI-written congregation newsletter",
@@ -19,21 +17,6 @@ const INCLUDED = [
 export default function AIChurchNewsletter() {
   const [searchParams] = useSearchParams();
   const isSuccess = searchParams.get("status") === "success";
-  const [form, setForm] = useState({ businessName: "", email: "", name: "", denomination: "" });
-  const [loading, setLoading] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.businessName || !form.email) { toast.error("Fill in all required fields"); return; }
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("create-church-newsletter-checkout", { body: form });
-      if (error) throw error;
-      if (data?.url) window.location.href = data.url;
-      else throw new Error("No checkout URL");
-    } catch (err: any) { toast.error(err.message || "Something went wrong."); }
-    finally { setLoading(false); }
-  };
 
   if (isSuccess) {
     return (
@@ -75,33 +58,8 @@ export default function AIChurchNewsletter() {
         </section>
 
         <section id="signup-form" className="px-4 pb-20">
-          <div className="max-w-xl mx-auto bg-white/5 border border-white/10 rounded-2xl p-8">
-            <h2 className="text-xl font-black mb-2">Start Your Free Trial</h2>
-            <p className="text-[#888] text-sm mb-6">7 days free, then $29/month. Cancel anytime.</p>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-[11px] font-bold uppercase tracking-widest text-[#888] block mb-1">Your Name</label>
-                  <input value={form.name} onChange={e => setForm(f => ({...f, name: e.target.value}))} placeholder="Pastor John" className="w-full bg-white/5 border border-white/10 px-3 py-2.5 text-sm text-white placeholder:text-[#555] rounded-lg outline-none focus:ring-1 focus:ring-[#f97316]" />
-                </div>
-                <div>
-                  <label className="text-[11px] font-bold uppercase tracking-widest text-[#888] block mb-1">Church / Org Name *</label>
-                  <input value={form.businessName} onChange={e => setForm(f => ({...f, businessName: e.target.value}))} placeholder="Grace Community Church" required className="w-full bg-white/5 border border-white/10 px-3 py-2.5 text-sm text-white placeholder:text-[#555] rounded-lg outline-none focus:ring-1 focus:ring-[#f97316]" />
-                </div>
-                <div>
-                  <label className="text-[11px] font-bold uppercase tracking-widest text-[#888] block mb-1">Email *</label>
-                  <input type="email" value={form.email} onChange={e => setForm(f => ({...f, email: e.target.value}))} placeholder="pastor@yourchurch.org" required className="w-full bg-white/5 border border-white/10 px-3 py-2.5 text-sm text-white placeholder:text-[#555] rounded-lg outline-none focus:ring-1 focus:ring-[#f97316]" />
-                </div>
-                <div>
-                  <label className="text-[11px] font-bold uppercase tracking-widest text-[#888] block mb-1">Denomination (optional)</label>
-                  <input value={form.denomination} onChange={e => setForm(f => ({...f, denomination: e.target.value}))} placeholder="Baptist, Catholic, Nondenominational…" className="w-full bg-white/5 border border-white/10 px-3 py-2.5 text-sm text-white placeholder:text-[#555] rounded-lg outline-none focus:ring-1 focus:ring-[#f97316]" />
-                </div>
-              </div>
-              <button type="submit" disabled={loading} className="w-full bg-[#f97316] hover:bg-[#ea6c10] text-white py-3 font-bold text-sm uppercase tracking-widest rounded-xl disabled:opacity-50 flex items-center justify-center gap-2">
-                {loading ? <Loader2 size={14} className="animate-spin" /> : <ArrowRight size={14} />}
-                {loading ? "Processing..." : "Start Free Trial →"}
-              </button>
-            </form>
+          <div className="max-w-xl mx-auto">
+            <WaitlistGate productName="AI Church Newsletter" description="Weekly AI-written newsletters for your congregation — announcements, reflections, and event highlights." price="See pricing" />
           </div>
         </section>
       </div>

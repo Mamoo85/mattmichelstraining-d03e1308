@@ -1,29 +1,8 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import WaitlistGate from "@/components/WaitlistGate";
 import { Card, CardContent } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { BookOpen, Shield, Scale, FileText, CheckCircle } from "lucide-react";
+import { BookOpen, Shield, Scale, FileText } from "lucide-react";
 
 export default function AIHandbook() {
-  const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ businessName: "", email: "", phone: "", industry: "", state: "MI", employeeCount: "" });
-
-  const handleCheckout = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("create-handbook-checkout", { body: { ...form, employeeCount: parseInt(form.employeeCount) || undefined } });
-      if (error) throw error;
-      if (data?.url) window.open(data.url, "_blank");
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const features = [
     { icon: Shield, title: "State Law Compliance", desc: "Auto-updated with your state's latest labor law changes" },
     { icon: Scale, title: "Anti-Harassment Policies", desc: "Legally sound policies that protect your business" },
@@ -59,25 +38,9 @@ export default function AIHandbook() {
           ))}
         </div>
 
-        <Card className="border-primary/30 max-w-lg mx-auto">
-          <CardContent className="p-6 space-y-4">
-            <h2 className="text-lg font-bold text-center">Start Your Handbook Service</h2>
-            <Input placeholder="Business Name *" value={form.businessName} onChange={(e) => setForm({ ...form, businessName: e.target.value })} />
-            <Input placeholder="Email *" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-            <Input placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-            <div className="grid grid-cols-2 gap-3">
-              <Input placeholder="Industry" value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })} />
-              <Input placeholder="State (e.g. MI)" value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} />
-            </div>
-            <Input placeholder="# of Employees" value={form.employeeCount} onChange={(e) => setForm({ ...form, employeeCount: e.target.value })} />
-            <Button className="w-full font-bold" size="lg" onClick={handleCheckout} disabled={loading || !form.businessName || !form.email}>
-              {loading ? "Processing..." : "Subscribe — $99/mo"}
-            </Button>
-            <div className="flex items-center gap-2 justify-center text-xs text-muted-foreground">
-              <CheckCircle size={12} className="text-green-400" /> Cancel anytime • First report within 48 hours
-            </div>
-          </CardContent>
-        </Card>
+        <div className="max-w-lg mx-auto">
+          <WaitlistGate productName="AI Employee Handbook" description="AI-generated employee handbooks, HR policies, and onboarding documents customized to your business." price="See pricing" />
+        </div>
       </div>
     </div>
   );

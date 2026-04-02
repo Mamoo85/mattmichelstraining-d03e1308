@@ -1,55 +1,21 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
-
-const INDUSTRIES = [
-  "HVAC", "Plumbing", "Roofing", "Electrical", "Landscaping",
-  "Auto Repair", "Restaurant", "Salon / Barbershop", "Gym / Fitness",
-  "Dental / Medical", "Real Estate", "Retail", "Other",
-];
+import WaitlistGate from "@/components/WaitlistGate";
 
 export default function TextMessageMarketing() {
-  const [form, setForm] = useState({ email: "", name: "", businessName: "", phone: "", industry: "" });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
   const searchParams = new URLSearchParams(window.location.search);
   const status = searchParams.get("status");
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    try {
-      const { data, error: fnErr } = await supabase.functions.invoke("create-text-marketing-checkout", {
-        body: form,
-      });
-      if (fnErr || !data?.url) throw fnErr || new Error("No checkout URL returned");
-      window.location.href = data.url;
-    } catch (err: any) {
-      setError(err.message || "Something went wrong. Please try again.");
-      setLoading(false);
-    }
-  };
 
   if (status === "success") {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center px-4">
-        <Card className="max-w-md w-full bg-slate-800 border-slate-700 text-center">
-          <CardContent className="pt-8 pb-8">
-            <div className="text-5xl mb-4">📱</div>
-            <h2 className="text-2xl font-bold text-white mb-3">Welcome aboard!</h2>
-            <p className="text-slate-300">
-              Your 7-day free trial has started. Matt will reach out within 24 hours to set up
-              your dedicated SMS number and get your first contact list imported.
-            </p>
-            <p className="text-slate-400 mt-4 text-sm">Questions? Text (313) 806-4952</p>
-          </CardContent>
-        </Card>
+        <div className="max-w-md w-full bg-slate-800 border border-slate-700 rounded-xl text-center p-8">
+          <div className="text-5xl mb-4">📱</div>
+          <h2 className="text-2xl font-bold text-white mb-3">Welcome aboard!</h2>
+          <p className="text-slate-300">
+            Your 7-day free trial has started. Matt will reach out within 24 hours to set up
+            your dedicated SMS number and get your first contact list imported.
+          </p>
+          <p className="text-slate-400 mt-4 text-sm">Questions? Text (313) 806-4952</p>
+        </div>
       </div>
     );
   }
@@ -118,79 +84,7 @@ export default function TextMessageMarketing() {
       {/* Sign up form */}
       <section className="py-16 px-4 bg-slate-800/50">
         <div className="max-w-md mx-auto">
-          <h2 className="text-3xl font-bold text-white text-center mb-8">Start Your Free Trial</h2>
-          <Card className="bg-slate-800 border-slate-700">
-            <CardHeader>
-              <CardTitle className="text-white text-center">7 Days Free — First Campaign Included</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <Label className="text-slate-300">Your Name</Label>
-                  <Input
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    placeholder="John Smith"
-                    className="bg-slate-700 border-slate-600 text-white mt-1"
-                  />
-                </div>
-                <div>
-                  <Label className="text-slate-300">Business Name *</Label>
-                  <Input
-                    required
-                    value={form.businessName}
-                    onChange={(e) => setForm({ ...form, businessName: e.target.value })}
-                    placeholder="Smith Plumbing LLC"
-                    className="bg-slate-700 border-slate-600 text-white mt-1"
-                  />
-                </div>
-                <div>
-                  <Label className="text-slate-300">Email *</Label>
-                  <Input
-                    required
-                    type="email"
-                    value={form.email}
-                    onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    placeholder="john@smithplumbing.com"
-                    className="bg-slate-700 border-slate-600 text-white mt-1"
-                  />
-                </div>
-                <div>
-                  <Label className="text-slate-300">Phone</Label>
-                  <Input
-                    value={form.phone}
-                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    placeholder="(313) 555-0100"
-                    className="bg-slate-700 border-slate-600 text-white mt-1"
-                  />
-                </div>
-                <div>
-                  <Label className="text-slate-300">Industry</Label>
-                  <Select onValueChange={(val) => setForm({ ...form, industry: val })}>
-                    <SelectTrigger className="bg-slate-700 border-slate-600 text-white mt-1">
-                      <SelectValue placeholder="Select your industry" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-slate-700 border-slate-600">
-                      {INDUSTRIES.map((ind) => (
-                        <SelectItem key={ind} value={ind} className="text-white hover:bg-slate-600">{ind}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {error && <p className="text-red-400 text-sm">{error}</p>}
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 text-lg"
-                >
-                  {loading ? "Redirecting..." : "Start Free Trial — $79/mo"}
-                </Button>
-                <p className="text-xs text-slate-500 text-center">
-                  7-day free trial. Cancel anytime. Setup assistance included.
-                </p>
-              </form>
-            </CardContent>
-          </Card>
+          <WaitlistGate productName="Text Message Marketing" description="Done-for-you SMS campaigns to your customer list — promotions, reminders, and re-engagement sequences." price="See pricing" />
         </div>
       </section>
     </div>

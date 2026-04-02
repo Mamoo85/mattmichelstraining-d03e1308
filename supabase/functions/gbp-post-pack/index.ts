@@ -196,6 +196,25 @@ serve(async (req) => {
     });
   } catch (err: any) {
     console.error("[gbp-post-pack]", err);
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/delivery_failures`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "apikey": SUPABASE_SERVICE_KEY, "Authorization": `Bearer ${SUPABASE_SERVICE_KEY}`, "Prefer": "return=minimal" },
+        body: JSON.stringify({ function_name: "gbp-post-pack", error_message: err.message || String(err) }),
+      });
+    } catch (_) {}
+    try {
+      await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          from: "Matt Michels <matt@mattmichelstraining.com>",
+          to: "matt@mattmichelstraining.com",
+          subject: "⚠️ Delivery Failed: gbp-post-pack",
+          html: `<p><strong>Function:</strong> gbp-post-pack</p><p><strong>Error:</strong> ${err.message || String(err)}</p><p><strong>Time:</strong> ${new Date().toISOString()}</p>`,
+        }),
+      });
+    } catch (_) {}
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
