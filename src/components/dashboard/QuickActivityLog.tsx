@@ -37,7 +37,7 @@ interface QuickActivityLogProps {
 }
 
 const INTENSITY_OPTIONS = ["Easy", "Moderate", "Hard"];
-const DURATION_OPTIONS = ["20 min", "30 min", "45 min", "60+ min"];
+const DURATION_OPTIONS = ["30 min", "60 min"];
 
 const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
   const { user } = useAuth();
