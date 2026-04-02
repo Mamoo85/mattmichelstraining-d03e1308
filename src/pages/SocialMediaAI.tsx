@@ -61,6 +61,9 @@ export default function SocialMediaAI() {
     business_type: "",
     city: "",
     state: "",
+    brand_voice: "professional",
+    content_focus: "",
+    content_avoid: "",
   });
   const [submitting, setSubmitting] = useState(false);
 
