@@ -134,7 +134,6 @@ function ToolCard({
 
   return (
     <div className="bg-card border border-border p-5 flex flex-col gap-4">
-      {/* Header */}
       <div className="flex items-start gap-3">
         <div className="w-9 h-9 rounded bg-primary/10 flex items-center justify-center flex-shrink-0">
           <Icon size={16} className="text-primary" />
@@ -145,7 +144,6 @@ function ToolCard({
         </div>
       </div>
 
-      {/* Form */}
       <form onSubmit={handleGenerate} className="space-y-2.5">
         {tool.fields.map((field) => (
           <div key={field.key}>
@@ -170,7 +168,6 @@ function ToolCard({
         </button>
       </form>
 
-      {/* Result */}
       {result && (
         <div className="relative">
           <textarea
@@ -199,49 +196,99 @@ export default function FieldRepTools() {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
 
+  // Email verification gate
+  const [verifyEmail, setVerifyEmail] = useState("");
+  const [verifying, setVerifying] = useState(false);
+
   // Checkout form state
   const [checkoutEmail, setCheckoutEmail] = useState("");
   const [checkoutName, setCheckoutName] = useState("");
   const [subscribing, setSubscribing] = useState(false);
 
-  const success = new URLSearchParams(window.location.search).get("success") === "1";
+  const urlParams = new URLSearchParams(window.location.search);
+  const success = urlParams.get("success") === "1";
+  const emailFromUrl = urlParams.get("email");
 
-  // ── Auth + subscription check ──
+  // ── Check session + URL token on mount ──
   useEffect(() => {
     let mounted = true;
 
     const check = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!mounted) return;
+      // Check sessionStorage first
+      const storedToken = sessionStorage.getItem("field_rep_token");
+      const storedEmail = sessionStorage.getItem("field_rep_email");
+      if (storedToken && storedEmail) {
+        try {
+          const parsed = JSON.parse(atob(storedToken));
+          if (parsed.exp > Date.now()) {
+            if (mounted) {
+              setUserEmail(storedEmail);
+              setIsSubscribed(true);
+              setCheckingAuth(false);
+            }
+            return;
+          }
+        } catch { /* token invalid, continue */ }
+        sessionStorage.removeItem("field_rep_token");
+        sessionStorage.removeItem("field_rep_email");
+      }
 
-        if (!user?.email) {
+      // Check URL email param (from welcome email magic link)
+      if (emailFromUrl) {
+        const verified = await verifySubscriberAccess(emailFromUrl);
+        if (verified && mounted) {
           setCheckingAuth(false);
           return;
         }
-
-        setUserEmail(user.email);
-
-        const { data } = await supabase
-          .from("b2b_subscribers" as any)
-          .select("id")
-          .eq("email", user.email)
-          .eq("niche", "field_rep_tools")
-          .eq("active", true)
-          .maybeSingle();
-
-        if (mounted) {
-          setIsSubscribed(!!data);
-          setCheckingAuth(false);
-        }
-      } catch {
-        if (mounted) setCheckingAuth(false);
       }
+
+      // Try supabase auth as fallback
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!mounted) return;
+        if (user?.email) {
+          const verified = await verifySubscriberAccess(user.email);
+          if (verified && mounted) {
+            setCheckingAuth(false);
+            return;
+          }
+        }
+      } catch { /* no auth */ }
+
+      if (mounted) setCheckingAuth(false);
     };
 
     check();
     return () => { mounted = false; };
   }, []);
+
+  async function verifySubscriberAccess(email: string): Promise<boolean> {
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-subscriber-access", {
+        body: { email, niche: "field_rep_tools" },
+      });
+      if (error) throw error;
+      if (data?.verified) {
+        setUserEmail(email);
+        setIsSubscribed(true);
+        sessionStorage.setItem("field_rep_token", data.token);
+        sessionStorage.setItem("field_rep_email", email);
+        return true;
+      }
+    } catch { /* verification failed */ }
+    return false;
+  }
+
+  const handleVerifyEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!verifyEmail) { toast.error("Enter the email you paid with"); return; }
+    setVerifying(true);
+    const verified = await verifySubscriberAccess(verifyEmail);
+    if (!verified) {
+      toast.error("No active subscription found for this email. Check your email or subscribe below.");
+    }
+    setVerifying(false);
+  };
 
   // ── Checkout handler ──
   const handleSubscribe = async (e: React.FormEvent) => {
@@ -271,11 +318,23 @@ export default function FieldRepTools() {
           </div>
           <h1 className="text-2xl font-black text-foreground mb-3">You're in!</h1>
           <p className="text-muted-foreground leading-relaxed">
-            Check your email for login info. Once you're signed in, come back here and your tools will be ready.
+            Enter the email you just paid with below to access your tools instantly.
           </p>
+          <form onSubmit={handleVerifyEmail} className="mt-4 space-y-3">
+            <input
+              type="email"
+              value={verifyEmail}
+              onChange={(e) => setVerifyEmail(e.target.value)}
+              placeholder="Email you paid with"
+              className="w-full bg-card border border-border px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-primary outline-none"
+            />
+            <button type="submit" disabled={verifying} className="w-full bg-primary text-white py-2.5 font-bold text-sm uppercase tracking-widest disabled:opacity-50 flex items-center justify-center gap-2">
+              {verifying ? <Loader2 size={14} className="animate-spin" /> : <ArrowRight size={14} />}
+              {verifying ? "Verifying…" : "Access My Tools →"}
+            </button>
+          </form>
           <p className="mt-4 text-sm text-muted-foreground">
-            Questions?{" "}
-            <a href="mailto:matt@mattmichelstraining.com" className="text-primary">matt@mattmichelstraining.com</a>
+            Questions? <a href="mailto:matt@mattmichelstraining.com" className="text-primary">matt@mattmichelstraining.com</a>
           </p>
         </div>
       </div>
@@ -336,6 +395,25 @@ export default function FieldRepTools() {
                 </div>
               ) : (
                 <>
+                  {/* ── Email verification gate ── */}
+                  <div className="bg-card border border-border p-5 mb-8">
+                    <p className="font-black text-sm text-foreground mb-1">Already a subscriber?</p>
+                    <p className="text-[12px] text-muted-foreground mb-3">Enter the email you paid with to access your tools.</p>
+                    <form onSubmit={handleVerifyEmail} className="flex gap-2">
+                      <input
+                        type="email"
+                        value={verifyEmail}
+                        onChange={(e) => setVerifyEmail(e.target.value)}
+                        placeholder="you@company.com"
+                        className="flex-1 bg-background border border-border px-3 py-2.5 text-sm focus:ring-1 focus:ring-primary outline-none"
+                      />
+                      <button type="submit" disabled={verifying} className="bg-primary text-white px-4 py-2.5 font-bold text-sm uppercase tracking-widest hover:opacity-90 disabled:opacity-50 flex items-center gap-2">
+                        {verifying ? <Loader2 size={14} className="animate-spin" /> : <ArrowRight size={14} />}
+                        {verifying ? "Checking…" : "Verify"}
+                      </button>
+                    </form>
+                  </div>
+
                   {/* ── Tool preview cards (locked) ── */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
                     {TOOLS.map((tool) => {
