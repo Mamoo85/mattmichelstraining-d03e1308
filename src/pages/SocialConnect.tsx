@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { CheckCircle, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { CheckCircle, Loader2, Facebook, Linkedin } from "lucide-react";
 
 interface ClientInfo {
   business_name: string;
@@ -12,18 +12,20 @@ interface ClientInfo {
 interface FormData {
   fb_page_url: string;
   linkedin_page_url: string;
-  fb_access_token: string;
-  linkedin_access_token: string;
   brand_voice: string;
   target_audience: string;
   post_topics: string;
   avoid_topics: string;
 }
 
+interface ConnectStatus {
+  facebook: boolean;
+  linkedin: boolean;
+}
+
 function getNextPostingDay(): string {
   const today = new Date();
-  const dow = today.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
-  // posting days: Mon=1, Wed=3, Fri=5
+  const dow = today.getDay();
   const posting = [1, 3, 5];
   for (let i = 1; i <= 7; i++) {
     const next = (dow + i) % 7;
@@ -47,18 +49,26 @@ export default function SocialConnect() {
   const [form, setForm] = useState<FormData>({
     fb_page_url: "",
     linkedin_page_url: "",
-    fb_access_token: "",
-    linkedin_access_token: "",
     brand_voice: "",
     target_audience: "",
     post_topics: "",
     avoid_topics: "",
   });
-  const [showFbTokenHelp, setShowFbTokenHelp] = useState(false);
-  const [showLinkedInTokenHelp, setShowLinkedInTokenHelp] = useState(false);
+
+  const [connected, setConnected] = useState<ConnectStatus>({ facebook: false, linkedin: false });
+  const [connecting, setConnecting] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [success, setSuccess] = useState(false);
+
+  // Check for OAuth return
+  useEffect(() => {
+    const oauthSuccess = params.get("oauth");
+    const platform = params.get("platform");
+    if (oauthSuccess === "success" && platform) {
+      setConnected((prev) => ({ ...prev, [platform]: true }));
+    }
+  }, [params]);
 
   useEffect(() => {
     if (!clientId) {
@@ -73,6 +83,8 @@ export default function SocialConnect() {
           setLoadError("Could not load your account. Please use the link from your welcome email or contact Matt.");
         } else {
           setClient({ business_name: data.business_name, plan: data.plan, contact_name: data.contact_name });
+          if (data.access_tokens?.facebook) setConnected((p) => ({ ...p, facebook: true }));
+          if (data.access_tokens?.linkedin) setConnected((p) => ({ ...p, linkedin: true }));
         }
         setLoading(false);
       });
@@ -82,13 +94,27 @@ export default function SocialConnect() {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
+  async function startOAuth(platform: "facebook" | "linkedin") {
+    setConnecting(platform);
+    try {
+      const { data, error } = await supabase.functions.invoke("social-oauth-start", {
+        body: { platform, client_id: clientId },
+      });
+      if (error || !data?.url) {
+        setSubmitError(`Could not start ${platform} connection. Please try again.`);
+        setConnecting(null);
+        return;
+      }
+      window.location.href = data.url;
+    } catch {
+      setSubmitError(`Could not start ${platform} connection.`);
+      setConnecting(null);
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitError("");
-    if (!form.fb_page_url && !form.linkedin_page_url) {
-      setSubmitError("Please enter at least one social page URL.");
-      return;
-    }
     if (!form.brand_voice.trim()) {
       setSubmitError("Please enter 3 adjectives describing your brand voice.");
       return;
@@ -147,11 +173,7 @@ export default function SocialConnect() {
             <a href="tel:+13138064952" className="text-orange-600 font-medium">(313) 806-4952</a>
           </p>
           <div className="mt-6 flex items-center justify-center gap-3">
-            <img
-              src="https://www.mattmichelstraining.com/images/matt-boat.jpg"
-              alt="Matt Michels"
-              className="w-10 h-10 rounded-full object-cover"
-            />
+            <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" className="w-10 h-10 rounded-full object-cover" />
             <span className="text-sm text-gray-500">— Matt Michels, M² Training</span>
           </div>
         </div>
@@ -166,11 +188,7 @@ export default function SocialConnect() {
       <div className="max-w-xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <img
-            src="https://www.mattmichelstraining.com/images/matt-boat.jpg"
-            alt="Matt Michels"
-            className="w-14 h-14 rounded-full object-cover mx-auto mb-3"
-          />
+          <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" className="w-14 h-14 rounded-full object-cover mx-auto mb-3" />
           <p className="text-sm text-gray-500 mb-4">Matt Michels — M² Training</p>
           <h1 className="text-2xl font-bold text-slate-800">
             {firstName ? `Hey ${firstName} — ` : ""}Let's connect your accounts
@@ -199,108 +217,60 @@ export default function SocialConnect() {
 
         {/* Reassurance */}
         <div className="bg-orange-50 border border-orange-100 rounded-xl px-5 py-4 mb-6 text-sm text-slate-700">
-          This takes about 2 minutes. Once you submit, I'll review everything and your AI posts will start going out
-          Mon, Wed, and Fri. You'll get an email preview before each post goes live.
+          This takes about 2 minutes. Click the buttons below to connect your accounts — no copying tokens or passwords needed.
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-5">
-          {/* Facebook */}
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1">
-              Facebook Business Page URL
-            </label>
-            <input
-              type="url"
-              name="fb_page_url"
-              value={form.fb_page_url}
-              onChange={handleChange}
-              placeholder="https://facebook.com/yourpage"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-            />
-            <p className="text-xs text-gray-400 mt-1">
-              Find this: go to your Facebook Page → About → Page transparency → see "Page URL"
-            </p>
-          </div>
+          {/* OAuth Connect Buttons */}
+          <div className="space-y-3">
+            <p className="text-sm font-semibold text-slate-700">Connect Your Accounts</p>
 
-          {/* LinkedIn */}
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1">
-              LinkedIn Company Page URL
-            </label>
-            <input
-              type="url"
-              name="linkedin_page_url"
-              value={form.linkedin_page_url}
-              onChange={handleChange}
-              placeholder="https://linkedin.com/company/yourcompany"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-            />
-            <p className="text-xs text-gray-400 mt-1">
-              Find this: go to your LinkedIn Company Page → click the 3 dots (···) → Copy link
-            </p>
-          </div>
-
-          {/* Facebook Access Token */}
-          <div className="border border-gray-100 rounded-xl p-4 bg-gray-50">
-            <label className="block text-sm font-semibold text-slate-700 mb-1">
-              Facebook Page Access Token{" "}
-              <span className="text-gray-400 font-normal">(optional — enables posting)</span>
-            </label>
-            <input
-              type="password"
-              name="fb_access_token"
-              value={form.fb_access_token}
-              onChange={handleChange}
-              placeholder="EAABs..."
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
-            />
             <button
               type="button"
-              onClick={() => setShowFbTokenHelp((v) => !v)}
-              className="mt-2 flex items-center gap-1 text-xs text-orange-600 font-medium hover:text-orange-700"
+              onClick={() => startOAuth("facebook")}
+              disabled={connected.facebook || connecting === "facebook"}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-medium transition-colors ${
+                connected.facebook
+                  ? "bg-green-50 border-green-200 text-green-700 cursor-default"
+                  : "bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+              }`}
             >
-              {showFbTokenHelp ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-              How to get this (3 steps)
+              {connecting === "facebook" ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : connected.facebook ? (
+                <CheckCircle className="w-5 h-5 text-green-500" />
+              ) : (
+                <Facebook className="w-5 h-5" />
+              )}
+              {connected.facebook ? "Facebook Connected ✓" : "Connect Facebook Page"}
             </button>
-            {showFbTokenHelp && (
-              <ol className="mt-2 text-xs text-gray-600 space-y-1 list-decimal list-inside bg-white rounded-lg p-3 border border-gray-100">
-                <li>Go to <strong>Meta Business Suite</strong> (business.facebook.com)</li>
-                <li>Click <strong>Settings</strong> → <strong>Pages</strong> → select your Page → <strong>Advanced</strong></li>
-                <li>Under <strong>Page Access Tokens</strong>, click <strong>Generate token</strong> and copy it here</li>
-              </ol>
+
+            <button
+              type="button"
+              onClick={() => startOAuth("linkedin")}
+              disabled={connected.linkedin || connecting === "linkedin"}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-medium transition-colors ${
+                connected.linkedin
+                  ? "bg-green-50 border-green-200 text-green-700 cursor-default"
+                  : "bg-sky-50 border-sky-200 text-sky-700 hover:bg-sky-100"
+              }`}
+            >
+              {connecting === "linkedin" ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : connected.linkedin ? (
+                <CheckCircle className="w-5 h-5 text-green-500" />
+              ) : (
+                <Linkedin className="w-5 h-5" />
+              )}
+              {connected.linkedin ? "LinkedIn Connected ✓" : "Connect LinkedIn"}
+            </button>
+
+            {!connected.facebook && !connected.linkedin && (
+              <p className="text-xs text-gray-400">Connect at least one account to enable posting.</p>
             )}
           </div>
 
-          {/* LinkedIn Access Token */}
-          <div className="border border-gray-100 rounded-xl p-4 bg-gray-50">
-            <label className="block text-sm font-semibold text-slate-700 mb-1">
-              LinkedIn Access Token{" "}
-              <span className="text-gray-400 font-normal">(optional — enables posting)</span>
-            </label>
-            <input
-              type="password"
-              name="linkedin_access_token"
-              value={form.linkedin_access_token}
-              onChange={handleChange}
-              placeholder="AQV..."
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
-            />
-            <button
-              type="button"
-              onClick={() => setShowLinkedInTokenHelp((v) => !v)}
-              className="mt-2 flex items-center gap-1 text-xs text-orange-600 font-medium hover:text-orange-700"
-            >
-              {showLinkedInTokenHelp ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-              How to get this (3 steps)
-            </button>
-            {showLinkedInTokenHelp && (
-              <ol className="mt-2 text-xs text-gray-600 space-y-1 list-decimal list-inside bg-white rounded-lg p-3 border border-gray-100">
-                <li>Go to <strong>linkedin.com/developers</strong> → select or create your app</li>
-                <li>Click <strong>Auth</strong> tab → <strong>OAuth 2.0 tools</strong> → <strong>Request access token</strong></li>
-                <li>Check the <strong>w_organization_social</strong> scope → authorize → copy the token here</li>
-              </ol>
-            )}
-          </div>
+          <hr className="border-gray-100" />
 
           {/* Brand Voice */}
           <div>
@@ -316,9 +286,7 @@ export default function SocialConnect() {
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
               required
             />
-            <p className="text-xs text-gray-400 mt-1">
-              How would you describe your brand's personality in 3 words?
-            </p>
+            <p className="text-xs text-gray-400 mt-1">How would you describe your brand's personality in 3 words?</p>
           </div>
 
           {/* Target Audience */}
@@ -330,7 +298,7 @@ export default function SocialConnect() {
               name="target_audience"
               value={form.target_audience}
               onChange={handleChange}
-              placeholder="e.g. Homeowners in Southeast Michigan, ages 35–65, who own their home and need help with repairs and improvements"
+              placeholder="e.g. Homeowners in Southeast Michigan, ages 35–65"
               rows={3}
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none"
               required
@@ -346,21 +314,18 @@ export default function SocialConnect() {
               name="post_topics"
               value={form.post_topics}
               onChange={handleChange}
-              placeholder="e.g. roofing tips, before/after project photos, seasonal offers, storm damage reminders, 5-star reviews"
+              placeholder="e.g. roofing tips, before/after photos, seasonal offers, 5-star reviews"
               rows={3}
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none"
               required
             />
-            <p className="text-xs text-gray-400 mt-1">
-              What kinds of content do you want the AI to create? More detail = better posts.
-            </p>
+            <p className="text-xs text-gray-400 mt-1">What kinds of content do you want the AI to create?</p>
           </div>
 
           {/* Avoid Topics */}
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1">
-              Topics to Avoid{" "}
-              <span className="text-gray-400 font-normal">(optional)</span>
+              Topics to Avoid <span className="text-gray-400 font-normal">(optional)</span>
             </label>
             <textarea
               name="avoid_topics"
