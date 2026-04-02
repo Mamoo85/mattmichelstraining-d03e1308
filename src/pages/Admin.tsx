@@ -97,6 +97,7 @@ const AdminLegalCompliance = lazy(() => import("@/components/admin/AdminLegalCom
 const AdminOpsCenter = lazy(() => import("@/components/admin/AdminOpsCenter"));
 const AdminEmailLog = lazy(() => import("@/components/admin/AdminEmailLog"));
 const AdminMigrations = lazy(() => import("@/components/admin/AdminMigrations"));
+const AdminFulfillment = lazy(() => import("@/components/admin/AdminFulfillment"));
 const AdminOrders = lazy(() => import("@/components/admin/AdminOrders"));
 const AdminTrainingNewsletter = lazy(() => import("@/components/admin/AdminTrainingNewsletter"));
 const AdminReferrals = lazy(() => import("@/components/admin/AdminReferrals"));
@@ -355,6 +356,7 @@ const Admin = () => {
             </Button>
           </div>
           <SubTabs tabs={[
+            { key: "fulfillment", label: "🔔 Fulfillment", content: <AdminFulfillment /> },
             { key: "overview", label: "Overview", content: <AdminBusinessDashboard /> },
             { key: "sandbox", label: "🧪 Product Sandbox", content: <AdminSandbox /> },
             { key: "orders", label: "📦 Orders", content: <AdminOrders /> },

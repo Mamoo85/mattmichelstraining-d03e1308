@@ -1663,8 +1663,8 @@ serve(async (req) => {
               body: JSON.stringify({
                 from: "M² System <matt@mattmichelstraining.com>",
                 to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"],
-                subject: `💰 New GBP client — ${meta.business_name || customerEmail} (${meta.plan})`,
-                html: `<p>New GBP SaaS subscriber: <strong>${meta.business_name}</strong> — ${customerEmail}<br>Plan: ${meta.plan} at $${meta.plan === "pro" ? "99" : "49"}/month.<br>Action needed: collect their GBP location ID to start posting.</p>`,
+                subject: `🔔 NEW — GBP SaaS: ${meta.business_name || customerEmail}`,
+                html: `<p><strong>New GBP SaaS subscriber needs setup:</strong><br><strong>${meta.business_name}</strong> — ${customerEmail}<br>Plan: ${meta.plan} at $${meta.plan === "pro" ? "99" : "49"}/month.</p><p><a href="https://www.mattmichelstraining.com/admin" style="display:inline-block;background:#e8621a;color:white;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:bold;">👉 Open Fulfillment Hub — Start Setup</a></p>`,
               }),
             });
           }
@@ -1801,8 +1801,8 @@ serve(async (req) => {
               body: JSON.stringify({
                 from: "M² Notifications <matt@mattmichelstraining.com>",
                 to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"],
-                subject: `💰 New Social Media AI client — ${meta.business_name || email} (${meta.plan}, ${planPrice}/mo)`,
-                html: `<p>New social media subscriber:<br><strong>${meta.business_name || email}</strong> — ${email}<br>Plan: ${meta.plan} at ${planPrice}/month.<br>Client ID: ${clientId || "unknown"}<br>Onboarding link sent to client. They still need to complete account setup.</p>`,
+                subject: `🔔 NEW — Social Media AI: ${meta.business_name || email} (${planPrice}/mo)`,
+                html: `<p><strong>New Social Media AI subscriber needs setup:</strong><br><strong>${meta.business_name || email}</strong> — ${email}<br>Plan: ${meta.plan} at ${planPrice}/month.<br>Client ID: ${clientId || "unknown"}</p><p><a href="https://www.mattmichelstraining.com/admin" style="display:inline-block;background:#e8621a;color:white;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:bold;">👉 Open Fulfillment Hub — Start Setup</a></p>`,
               }),
             });
           }
@@ -1920,8 +1920,8 @@ serve(async (req) => {
               body: JSON.stringify({
                 from: "M² Notifications <matt@mattmichelstraining.com>",
                 to: ["matthewmichels@mattmichelstraining.com", "matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"],
-                subject: `💰 New Chatbot client — ${meta.business_name || email}`,
-                html: `<p>New chatbot subscriber: <strong>${meta.business_name || email}</strong> — ${email}<br>Client ID: <code>${clientId}</code><br>Subscription ID: ${session.subscription || "n/a"}</p>`,
+                subject: `🔔 NEW — AI Chatbot: ${meta.business_name || email}`,
+                html: `<p><strong>New chatbot subscriber needs setup:</strong><br><strong>${meta.business_name || email}</strong> — ${email}<br>Client ID: <code>${clientId}</code></p><p><a href="https://www.mattmichelstraining.com/admin" style="display:inline-block;background:#e8621a;color:white;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:bold;">👉 Open Fulfillment Hub — Start Setup</a></p>`,
               }),
             });
           }
@@ -2000,8 +2000,8 @@ serve(async (req) => {
               body: JSON.stringify({
                 from: "M² Notifications <matt@mattmichelstraining.com>",
                 to: ["matthewmichels@mattmichelstraining.com", "matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"],
-                subject: `💰 New Missed Call client — ${meta.businessName || email} ($99/mo)`,
-                html: `<p>💰 New missed-call text-back subscriber:</p><p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Phone: ${meta.phone || "n/a"}</p><hr/><p><strong>⚡ Your 4-step setup checklist for this client:</strong></p><ol><li>Go to <a href="https://www.twilio.com/console/phone-numbers/search">Twilio → Buy a Number</a> — pick a local number matching their area code (~$1.15/mo)</li><li>On that number's config page, set both webhook fields to:<br><code>https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/missed-call-handler</code></li><li>Go to <a href="https://supabase.com/dashboard/project/zmyczlfuufhngzovkjdh/editor">Supabase → Table Editor → missed_call_clients</a> → find their row → fill in <strong>twilio_number</strong> (format: +1XXXXXXXXXX) → flip <strong>active</strong> to true</li><li>Text the client: "To activate your missed-call text-back, forward unanswered calls to [their Twilio number]. On iPhone dial: **61*+1XXXXXXXXXX# — takes 30 seconds."</li></ol><p>Once step 4 is done, it's 100% automatic.</p>`,
+                subject: `🔔 NEW — Missed Call SMS: ${meta.businessName || email}`,
+                html: `<p><strong>New Missed Call subscriber needs setup:</strong><br><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Phone: ${meta.phone || "n/a"}</p><p><a href="https://www.mattmichelstraining.com/admin" style="display:inline-block;background:#e8621a;color:white;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:bold;">👉 Open Fulfillment Hub — Start Setup</a></p>`,
               }),
             });
           }
