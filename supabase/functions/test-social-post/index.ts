@@ -1,6 +1,9 @@
 // Test social media posting — generates a preview or posts after approval
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { corsHeaders } from "@supabase/supabase-js/cors";
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const META_ACCESS_TOKEN = Deno.env.get("META_ACCESS_TOKEN") || "";
