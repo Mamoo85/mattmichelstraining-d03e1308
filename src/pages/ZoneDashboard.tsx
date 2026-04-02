@@ -403,13 +403,14 @@ const ZoneDashboard = () => {
                 onClick={item.action}
                 className="flex items-center gap-3 rounded-2xl py-3 px-3 transition-all active:scale-[0.93]"
                 style={{
-                  background: `${item.color}10`,
-                  border: `1px solid ${item.color}28`,
+                  background: `${item.color}14`,
+                  border: `1.5px solid ${item.color}40`,
+                  boxShadow: `0 0 12px ${item.color}20, inset 0 0 8px ${item.color}08`,
                 }}
               >
                 <div
                   className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: `${item.color}1e`, color: item.color }}
+                  style={{ background: `${item.color}24`, color: item.color }}
                 >
                   {item.icon}
                 </div>
