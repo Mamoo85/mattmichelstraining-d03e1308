@@ -58,7 +58,7 @@ Make the copy feel natural, like one contractor genuinely recommending a vendor 
     });
 
     const ai = await response.json();
-    const raw = ai.content?.[0]?.text || "";
+    const raw = ai?.choices?.[0]?.message?.content || "";
 
     let parsed: { emails: string[]; linkedin: string[]; sms: string[] };
     try {
