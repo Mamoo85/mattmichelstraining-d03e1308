@@ -227,15 +227,19 @@ serve(async (req) => {
       quantity: 1,
     };
 
-    const session = await stripe.checkout.sessions.create({
+    const sessionParams: any = {
       mode: config.mode,
       line_items: [lineItem],
       customer_email: email,
       metadata: { ...config.metadata, tester_email: email },
       success_url: config.success_url + "&session_id={CHECKOUT_SESSION_ID}",
       cancel_url: `${SITE}/admin`,
-      payment_method_collection: "if_required", // $0 doesn't need payment method
-    });
+    };
+    // payment_method_collection only allowed for subscriptions
+    if (config.mode === "subscription") {
+      sessionParams.payment_method_collection = "if_required";
+    }
+    const session = await stripe.checkout.sessions.create(sessionParams);
 
     console.log(`[TEST-CHECKOUT] ${product} — $0 session created for ${email}: ${session.id}`);
     return new Response(JSON.stringify({ url: session.url, session_id: session.id, product }), {
