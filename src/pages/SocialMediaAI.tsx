@@ -166,9 +166,11 @@ export default function SocialMediaAI() {
                     {plan.originalPrice && (
                       <p className="text-xs text-muted-foreground line-through">{plan.originalPrice}{plan.per}</p>
                     )}
-                    <p className="text-xl font-black text-primary">
-                      {plan.price}<span className="text-xs text-muted-foreground font-normal">{plan.per}</span>
+                    <p className="text-xs text-muted-foreground line-through">{plan.price}{plan.per}</p>
+                    <p className="text-xl font-black text-green-500">
+                      {(plan as any).launchPrice}<span className="text-xs text-muted-foreground font-normal">{plan.per}</span>
                     </p>
+                    <p className="text-[10px] text-green-400 font-medium">first 3 months</p>
                   </div>
                 </div>
                 <p className="text-[12px] text-muted-foreground mb-3">{plan.description}</p>
