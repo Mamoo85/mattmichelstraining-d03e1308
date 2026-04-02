@@ -51,7 +51,7 @@ serve(async (req) => {
     if (!email || !business_name) {
       return new Response(
         JSON.stringify({ error: "email and business_name are required" }),
-        { status: 400, headers: corsHeaders }
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -59,7 +59,7 @@ serve(async (req) => {
     if (!planCfg) {
       return new Response(
         JSON.stringify({ error: `Unknown plan: ${plan}` }),
-        { status: 400, headers: corsHeaders }
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -126,9 +126,9 @@ Platforms: ${platformsArr.length ? platformsArr.join(", ") : "none selected"}<di
       });
     }
 
-    return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: corsHeaders });
+    return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("[CREATE-SOCIAL-MEDIA-CHECKOUT] Error:", e);
-    return new Response(JSON.stringify({ error: msg }), { status: 500, headers: corsHeaders });
+    return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

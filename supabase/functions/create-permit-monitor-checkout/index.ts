@@ -4,7 +4,7 @@ import Stripe from "https://esm.sh/stripe@18.5.0";
 const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response(null, { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   try {
     const { businessName, email, industry, city } = await req.json();
     if (!email || !businessName) throw new Error("Missing required fields");
