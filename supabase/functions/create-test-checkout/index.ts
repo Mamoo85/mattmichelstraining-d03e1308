@@ -197,11 +197,10 @@ serve(async (req) => {
     const sbAuth = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       global: { headers: { Authorization: authHeader } },
     });
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await sbAuth.auth.getClaims(token);
-    const userEmail = claimsData?.claims?.email as string | undefined;
-    if (claimsError || !userEmail || !MATT_EMAILS.includes(userEmail)) {
-      console.error("[TEST-CHECKOUT] Auth failed:", claimsError?.message, "email:", userEmail);
+    const { data: userData, error: userError } = await sbAuth.auth.getUser();
+    const userEmail = userData?.user?.email;
+    if (userError || !userEmail || !MATT_EMAILS.includes(userEmail)) {
+      console.error("[TEST-CHECKOUT] Auth failed:", userError?.message, "email:", userEmail);
       return new Response(JSON.stringify({ error: "Unauthorized — test checkouts restricted to admin" }), {
         status: 403, headers: { ...CORS, "Content-Type": "application/json" },
       });
