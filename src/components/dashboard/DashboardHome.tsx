@@ -7,6 +7,7 @@ import TodaysTrainingCard from "@/components/programs/TodaysTrainingCard";
 import DashboardReferralCard from "@/components/dashboard/DashboardReferralCard";
 import DashboardChallengePreview from "@/components/dashboard/DashboardChallengePreview";
 import CommunityActivityFeed from "@/components/dashboard/CommunityActivityFeed";
+import DynamicPromoBox from "@/components/dashboard/DynamicPromoBox";
 import { useAuth } from "@/hooks/useAuth";
 import { useBrowserNotifications } from "@/hooks/useBrowserNotifications";
 
@@ -21,9 +22,10 @@ interface DashboardHomeProps {
   isInPerson: boolean;
   onViewPoints: () => void;
   onViewReferrals: () => void;
+  onOpenGenerator?: () => void;
 }
 
-const DashboardHome = memo(({ isNewUser, isInPerson, onViewPoints, onViewReferrals }: DashboardHomeProps) => {
+const DashboardHome = memo(({ isNewUser, isInPerson, onViewPoints, onViewReferrals, onOpenGenerator }: DashboardHomeProps) => {
   const { subscribed } = useAuth();
   const [chatOpen, setChatOpen] = useState(false);
   const [postureOpen, setPostureOpen] = useState(false);
@@ -32,7 +34,6 @@ const DashboardHome = memo(({ isNewUser, isInPerson, onViewPoints, onViewReferra
 
   return (
     <div className="space-y-5">
-      {/* Empty state CTA — never for in-person clients */}
       {isNewUser && !isInPerson && (
         <EmptyStateCard
           title="Welcome to M²"
@@ -42,10 +43,7 @@ const DashboardHome = memo(({ isNewUser, isInPerson, onViewPoints, onViewReferra
         />
       )}
 
-      {/* Invite card — near top, above main content */}
       <DashboardReferralCard />
-
-      {/* Community activity feed */}
       <CommunityActivityFeed />
 
       <Suspense fallback={null}>
@@ -53,26 +51,36 @@ const DashboardHome = memo(({ isNewUser, isInPerson, onViewPoints, onViewReferra
       </Suspense>
 
       <TodaysTrainingCard />
-
       <UpcomingSessions />
       <MonthlyFocusWidget />
 
-      {/* Challenge leaderboard preview */}
       <DashboardChallengePreview onViewChallenge={onViewPoints} />
 
-      {/* Posture Analysis + Technology buttons */}
+      {/* Posture Analysis + Technology — glowing buttons */}
       <div className="flex gap-2">
         <button
           onClick={() => setPostureOpen(true)}
-          className="flex-1 flex items-center justify-center gap-2 py-3 border border-border bg-card hover:bg-muted/50 transition-colors text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-primary rounded-lg"
+          className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all active:scale-[0.97]"
+          style={{
+            background: "rgba(236,72,153,0.08)",
+            border: "1px solid rgba(236,72,153,0.3)",
+            color: "#ec4899",
+            boxShadow: "0 0 12px rgba(236,72,153,0.2)",
+          }}
         >
           <Camera size={14} /> Posture Analysis
         </button>
         <button
           onClick={() => setTechOpen(true)}
-          className="flex-1 flex items-center justify-center gap-2 py-3 border border-border bg-card hover:bg-muted/50 transition-colors text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-primary rounded-lg"
+          className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all active:scale-[0.97]"
+          style={{
+            background: "rgba(99,102,241,0.08)",
+            border: "1px solid rgba(99,102,241,0.3)",
+            color: "#6366f1",
+            boxShadow: "0 0 12px rgba(99,102,241,0.2)",
+          }}
         >
-          <Brain size={14} /> Technology
+          <Brain size={14} /> Technology Hub
         </button>
       </div>
 
@@ -80,10 +88,18 @@ const DashboardHome = memo(({ isNewUser, isInPerson, onViewPoints, onViewReferra
         <SharedWorkoutFeed />
       </Suspense>
 
-      {/* Chat with Matt — portal only */}
+      {/* Dynamic promo box */}
+      <DynamicPromoBox onOpenGenerator={onOpenGenerator} />
+
+      {/* Chat with Matt */}
       <button
         onClick={() => setChatOpen(true)}
-        className="w-full flex items-center justify-center gap-2 py-3 border border-border bg-card hover:bg-muted/50 transition-colors text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-primary"
+        className="w-full flex items-center justify-center gap-2 py-3 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all active:scale-[0.97]"
+        style={{
+          background: "rgba(249,115,22,0.08)",
+          border: "1px solid rgba(249,115,22,0.25)",
+          color: "#f97316",
+        }}
       >
         <MessageCircle size={14} /> Chat with Matt
       </button>
@@ -93,7 +109,6 @@ const DashboardHome = memo(({ isNewUser, isInPerson, onViewPoints, onViewReferra
         </Suspense>
       )}
 
-      {/* Modals */}
       <Suspense fallback={null}>
         <SelfPostureAnalysis open={postureOpen} onClose={() => setPostureOpen(false)} />
         <TechHubModal open={techOpen} onClose={() => setTechOpen(false)} />

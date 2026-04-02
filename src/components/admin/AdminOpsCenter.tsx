@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Activity, Mail, AlertCircle, Phone, ChevronDown, ChevronRight, Users, Copy, Search } from "lucide-react";
+import { Loader2, Activity, Mail, Phone, ChevronDown, ChevronRight, Users, Copy, Search, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -40,6 +40,7 @@ const ALL_SERVICES = [
 interface ClientRecord {
   business_name: string;
   email: string;
+  phone?: string;
   created_at: string;
 }
 
@@ -54,6 +55,7 @@ interface ServiceData {
 
 interface RosterEntry {
   email: string;
+  phone?: string;
   business_name: string;
   services: string[];
   totalSpend: number;
@@ -62,6 +64,7 @@ interface RosterEntry {
 export default function AdminOpsCenter() {
   const [expandedService, setExpandedService] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [globalSearch, setGlobalSearch] = useState("");
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-ops-center-v2"],
@@ -74,13 +77,14 @@ export default function AdminOpsCenter() {
       for (const svc of ALL_SERVICES) {
         try {
           const { data: rows } = await (supabase.from as any)(svc.table)
-            .select("business_name, email, created_at")
+            .select("business_name, email, phone, created_at")
             .eq("active", true)
             .limit(200);
 
           const clients: ClientRecord[] = (rows || []).map((r: any) => ({
             business_name: r.business_name || "Unknown",
             email: r.email || "N/A",
+            phone: r.phone || undefined,
             created_at: r.created_at || "",
           }));
 
@@ -90,16 +94,17 @@ export default function AdminOpsCenter() {
           totalMRR += rev;
           totalClients += c;
 
-          // Build roster
           for (const cl of clients) {
             const key = cl.email.toLowerCase();
             if (rosterMap.has(key)) {
               const existing = rosterMap.get(key)!;
               existing.services.push(svc.name);
               existing.totalSpend += svc.priceNum;
+              if (cl.phone && !existing.phone) existing.phone = cl.phone;
             } else {
               rosterMap.set(key, {
                 email: cl.email,
+                phone: cl.phone,
                 business_name: cl.business_name,
                 services: [svc.name],
                 totalSpend: svc.priceNum,
@@ -142,10 +147,31 @@ export default function AdminOpsCenter() {
     toast.success("Email copied");
   };
 
+  const copyContact = (client: RosterEntry | ClientRecord) => {
+    const parts = [`${client.business_name}`, client.email];
+    if ('phone' in client && client.phone) parts.push(client.phone);
+    navigator.clipboard.writeText(parts.join(" | "));
+    toast.success("Contact info copied");
+  };
+
+  const sendEmail = (email: string, businessName: string) => {
+    window.open(`mailto:${email}?subject=Following up — ${businessName}&body=Hi there,%0D%0A%0D%0AJust following up on your ${businessName} account. Let me know if you need anything!%0D%0A%0D%0ABest,%0D%0AMatt Michels%0D%0AM² Local Marketing%0D%0A(313) 806-4952`, "_blank");
+  };
+
+  const matchesGlobal = (item: { business_name: string; email: string }) =>
+    !globalSearch ||
+    item.business_name.toLowerCase().includes(globalSearch.toLowerCase()) ||
+    item.email.toLowerCase().includes(globalSearch.toLowerCase());
+
   const filteredRoster = data?.roster.filter(r =>
     r.business_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     r.email.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
+
+  const filteredServices = data?.services.map(svc => ({
+    ...svc,
+    clients: globalSearch ? svc.clients.filter(matchesGlobal) : svc.clients,
+  })).filter(svc => !globalSearch || svc.clients.length > 0) || [];
 
   if (isLoading) {
     return <div className="flex justify-center py-12"><Loader2 className="animate-spin text-primary" size={24} /></div>;
@@ -159,6 +185,22 @@ export default function AdminOpsCenter() {
           <h2 className="text-lg font-bold">Operations Command Center</h2>
           <p className="text-xs text-muted-foreground">All services — click any service to see clients</p>
         </div>
+      </div>
+
+      {/* Global Search Bar */}
+      <div className="relative">
+        <Search size={16} className="absolute left-3 top-3 text-muted-foreground" />
+        <Input
+          placeholder="Search any client across all services..."
+          value={globalSearch}
+          onChange={e => setGlobalSearch(e.target.value)}
+          className="pl-9 h-10 text-sm bg-muted/30 border-primary/20 focus:border-primary/50"
+        />
+        {globalSearch && (
+          <button onClick={() => setGlobalSearch("")} className="absolute right-3 top-3 text-xs text-muted-foreground hover:text-foreground">
+            Clear
+          </button>
+        )}
       </div>
 
       {/* Top Stats */}
@@ -188,7 +230,7 @@ export default function AdminOpsCenter() {
           <div className="relative mt-2">
             <Search size={14} className="absolute left-2.5 top-2.5 text-muted-foreground" />
             <Input
-              placeholder="Search by name or email..."
+              placeholder="Search roster by name or email..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               className="pl-8 h-8 text-xs bg-muted/30"
@@ -205,6 +247,7 @@ export default function AdminOpsCenter() {
                 <div className="flex-1 min-w-0">
                   <div className="text-xs font-bold truncate">{client.business_name}</div>
                   <div className="text-[10px] text-muted-foreground truncate">{client.email}</div>
+                  {client.phone && <div className="text-[10px] text-muted-foreground">{client.phone}</div>}
                   <div className="flex flex-wrap gap-1 mt-1">
                     {client.services.map(s => (
                       <Badge key={s} variant="secondary" className="text-[8px] py-0 px-1.5">{s}</Badge>
@@ -215,9 +258,14 @@ export default function AdminOpsCenter() {
                   <div className="text-xs font-bold text-green-400">${client.totalSpend}/mo</div>
                   <div className="text-[9px] text-muted-foreground">{client.services.length} service{client.services.length > 1 ? "s" : ""}</div>
                 </div>
-                <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => copyEmail(client.email)}>
-                  <Copy size={12} />
-                </Button>
+                <div className="flex flex-col gap-1 shrink-0">
+                  <Button variant="ghost" size="icon" className="h-6 w-6" title="Send email" onClick={() => sendEmail(client.email, client.business_name)}>
+                    <Send size={11} />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-6 w-6" title="Copy all contact info" onClick={() => copyContact(client)}>
+                    <Copy size={11} />
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
@@ -266,11 +314,13 @@ export default function AdminOpsCenter() {
       {/* Revenue by Service — Clickable */}
       <Card className="border-border/40">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-bold">Revenue by Service (click to expand)</CardTitle>
+          <CardTitle className="text-sm font-bold">
+            Revenue by Service {globalSearch && <span className="text-primary text-xs font-normal ml-2">Filtered: "{globalSearch}"</span>}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-1 max-h-[600px] overflow-y-auto">
-            {data?.services.map(svc => (
+            {filteredServices.map(svc => (
               <div key={svc.name}>
                 <button
                   onClick={() => setExpandedService(expandedService === svc.name ? null : svc.name)}
@@ -282,7 +332,7 @@ export default function AdminOpsCenter() {
                     <div className="text-[10px] text-muted-foreground">{svc.price}</div>
                   </div>
                   <Badge variant={svc.activeCount > 0 ? "default" : "outline"} className="text-[9px]">
-                    {svc.activeCount} client{svc.activeCount !== 1 ? "s" : ""}
+                    {globalSearch ? svc.clients.length : svc.activeCount} client{(globalSearch ? svc.clients.length : svc.activeCount) !== 1 ? "s" : ""}
                   </Badge>
                   <div className="text-xs font-bold text-green-400 w-20 text-right">
                     ${svc.totalRevenue.toLocaleString()}/mo
@@ -303,7 +353,10 @@ export default function AdminOpsCenter() {
                           <div className="text-[9px] text-muted-foreground shrink-0">
                             {cl.created_at ? new Date(cl.created_at).toLocaleDateString() : "—"}
                           </div>
-                          <Button variant="ghost" size="icon" className="h-5 w-5 shrink-0" onClick={() => copyEmail(cl.email)}>
+                          <Button variant="ghost" size="icon" className="h-5 w-5 shrink-0" title="Email" onClick={() => sendEmail(cl.email, cl.business_name)}>
+                            <Send size={10} />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-5 w-5 shrink-0" title="Copy" onClick={() => copyEmail(cl.email)}>
                             <Copy size={10} />
                           </Button>
                         </div>
