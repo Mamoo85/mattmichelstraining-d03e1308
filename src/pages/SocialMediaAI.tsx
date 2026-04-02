@@ -8,8 +8,10 @@ const PLANS = [
   {
     key: "standard",
     name: "Standard",
-    price: "$199",
+    price: "$99",
+    originalPrice: "$199",
     per: "/month",
+    badge: "🔥 Founding Client Rate",
     description: "Facebook + LinkedIn posting, 3x per week — fully automated.",
     includes: [
       "Facebook + LinkedIn",
@@ -21,8 +23,10 @@ const PLANS = [
   {
     key: "pro",
     name: "Pro",
-    price: "$299",
+    price: "$149",
+    originalPrice: "$299",
     per: "/month",
+    badge: "🔥 Founding Client Rate",
     description: "Everything + Instagram + Google Business Profile, 5 posts/week.",
     includes: [
       "Everything in Standard",
@@ -104,8 +108,8 @@ export default function SocialMediaAI() {
   return (
     <>
       <SEOHead
-        title="AI Social Media Management — $199/mo | M² Social Media AI"
-        description="Your business posts itself. AI writes and publishes to Facebook, Instagram, and LinkedIn — 3x a week, every week. No effort required."
+        title="AI Social Media Management — From $99/mo | Founding Client Rate | M²"
+        description="Your business posts itself. AI writes and publishes to Facebook, Instagram, and LinkedIn — 3x a week. Founding client pricing: from $99/mo (normally $199)."
       />
       <div className="min-h-screen bg-background text-foreground">
         {/* Hero */}
@@ -144,16 +148,26 @@ export default function SocialMediaAI() {
                     : "border-border bg-card hover:border-primary/50"
                 }`}
               >
-                {plan.featured && (
+                {plan.badge && (
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-orange-400 bg-orange-400/10 px-2 py-0.5 rounded mb-2 inline-block">
+                    {plan.badge}
+                  </span>
+                )}
+                {plan.featured && !plan.badge && (
                   <span className="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/10 px-2 py-0.5 rounded mb-2 inline-block">
                     Most Popular
                   </span>
                 )}
                 <div className="flex items-end justify-between mb-2">
                   <p className="font-black text-foreground text-base">{plan.name}</p>
-                  <p className="text-xl font-black text-primary">
-                    {plan.price}<span className="text-xs text-muted-foreground font-normal">{plan.per}</span>
-                  </p>
+                  <div className="text-right">
+                    {plan.originalPrice && (
+                      <p className="text-xs text-muted-foreground line-through">{plan.originalPrice}{plan.per}</p>
+                    )}
+                    <p className="text-xl font-black text-primary">
+                      {plan.price}<span className="text-xs text-muted-foreground font-normal">{plan.per}</span>
+                    </p>
+                  </div>
                 </div>
                 <p className="text-[12px] text-muted-foreground mb-3">{plan.description}</p>
                 <div className="space-y-1.5">

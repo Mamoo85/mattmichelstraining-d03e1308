@@ -8,8 +8,10 @@ const PLANS = [
   {
     key: "basic",
     name: "Basic",
-    price: "$49",
+    price: "$29",
+    originalPrice: "$49",
     per: "/month",
+    badge: "🔥 Founding Client Rate",
     description: "3 posts per week to your Google Business Profile, on autopilot.",
     includes: [
       "3 AI-written GBP posts per week",
@@ -21,8 +23,10 @@ const PLANS = [
   {
     key: "pro",
     name: "Pro",
-    price: "$99",
+    price: "$49",
+    originalPrice: "$99",
     per: "/month",
+    badge: "🔥 Founding Client Rate",
     description: "GBP posts + weekly review request emails to your customers.",
     includes: [
       "Everything in Basic",
@@ -84,8 +88,8 @@ export default function LocalMarketing() {
   return (
     <>
       <SEOHead
-        title="Automated Google Business Profile Posts — $49/month | M² Local Marketing"
-        description="We post to your Google Business Profile 3x a week, automatically. Stay active, rank higher, get more calls. $49/month, cancel anytime."
+        title="Automated Google Business Profile Posts — From $29/month | Founding Client Rate"
+        description="We post to your Google Business Profile 3x a week, automatically. Founding client pricing: from $29/month (normally $49)."
       />
       <div className="min-h-screen bg-background text-foreground">
         {/* Hero */}
@@ -122,12 +126,22 @@ export default function LocalMarketing() {
                 onClick={() => setSelectedPlan(plan.key)}
                 className={`text-left p-5 border-2 transition-all ${selectedPlan === plan.key ? "border-primary bg-primary/5" : "border-border bg-card hover:border-primary/50"}`}
               >
-                {plan.featured && (
+                {plan.badge && (
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-orange-400 bg-orange-400/10 px-2 py-0.5 rounded mb-2 inline-block">
+                    {plan.badge}
+                  </span>
+                )}
+                {plan.featured && !plan.badge && (
                   <span className="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/10 px-2 py-0.5 rounded mb-2 inline-block">Most Popular</span>
                 )}
                 <div className="flex items-end justify-between mb-2">
                   <p className="font-black text-foreground text-base">{plan.name}</p>
-                  <p className="text-xl font-black text-primary">{plan.price}<span className="text-xs text-muted-foreground font-normal">{plan.per}</span></p>
+                  <div className="text-right">
+                    {plan.originalPrice && (
+                      <p className="text-xs text-muted-foreground line-through">{plan.originalPrice}{plan.per}</p>
+                    )}
+                    <p className="text-xl font-black text-primary">{plan.price}<span className="text-xs text-muted-foreground font-normal">{plan.per}</span></p>
+                  </div>
                 </div>
                 <p className="text-[12px] text-muted-foreground mb-3">{plan.description}</p>
                 <div className="space-y-1.5">

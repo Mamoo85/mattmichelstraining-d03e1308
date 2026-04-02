@@ -14,20 +14,20 @@ const corsHeaders = {
 
 const PLAN_CONFIG: Record<string, { amount: number; label: string; description: string; successRoute: string }> = {
   standard: {
-    amount: 19900,
-    label: "Standard (Facebook + LinkedIn, 3 posts/week)",
-    description: "AI-written posts published to Facebook and LinkedIn 3x per week. Branded to your business, no scheduling apps needed.",
+    amount: 9900,
+    label: "Standard — Founding Client Rate (Facebook + LinkedIn, 3 posts/week)",
+    description: "AI-written posts published to Facebook and LinkedIn 3x per week. Branded to your business.",
     successRoute: "/social-media-ai",
   },
   pro: {
-    amount: 29900,
-    label: "Pro (Facebook + LinkedIn + Instagram + GBP, 5 posts/week)",
+    amount: 14900,
+    label: "Pro — Founding Client Rate (Facebook + LinkedIn + Instagram + GBP, 5 posts/week)",
     description: "Everything in Standard plus Instagram and Google Business Profile posting, 5 posts/week, and a monthly analytics report.",
     successRoute: "/social-media-ai",
   },
   trainer: {
-    amount: 14900,
-    label: "Trainer Social AI (3 posts/week)",
+    amount: 7900,
+    label: "Trainer Social AI — Founding Client Rate (3 posts/week)",
     description: "AI-generated fitness and nutrition content in your brand voice, posted to your social channels 3x per week.",
     successRoute: "/trainer-social-ai",
   },

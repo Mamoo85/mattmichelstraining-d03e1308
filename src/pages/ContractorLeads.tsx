@@ -6,14 +6,14 @@ import { toast } from "sonner";
 import { Phone, CheckCircle, Zap, DollarSign, XCircle, ArrowRight, Loader2 } from "lucide-react";
 
 const TRADES = [
-  { slug: "roofing-chicago", trade: "Roofing", city: "Chicago", state: "IL", monthly: "$399", spots: 1 },
-  { slug: "hvac-columbus", trade: "HVAC", city: "Columbus", state: "OH", monthly: "$399", spots: 1 },
-  { slug: "plumbing-phoenix", trade: "Plumbing", city: "Phoenix", state: "AZ", monthly: "$399", spots: 1 },
-  { slug: "electrical-dallas", trade: "Electrical", city: "Dallas", state: "TX", monthly: "$399", spots: 1 },
-  { slug: "roofing-charlotte", trade: "Roofing", city: "Charlotte", state: "NC", monthly: "$299", spots: 1 },
-  { slug: "hvac-denver", trade: "HVAC", city: "Denver", state: "CO", monthly: "$299", spots: 1 },
-  { slug: "plumbing-nashville", trade: "Plumbing", city: "Nashville", state: "TN", monthly: "$299", spots: 1 },
-  { slug: "gutters-atlanta", trade: "Gutters / Siding", city: "Atlanta", state: "GA", monthly: "$299", spots: 1 },
+  { slug: "roofing-chicago", trade: "Roofing", city: "Chicago", state: "IL", monthly: "$249", spots: 1 },
+  { slug: "hvac-columbus", trade: "HVAC", city: "Columbus", state: "OH", monthly: "$249", spots: 1 },
+  { slug: "plumbing-phoenix", trade: "Plumbing", city: "Phoenix", state: "AZ", monthly: "$249", spots: 1 },
+  { slug: "electrical-dallas", trade: "Electrical", city: "Dallas", state: "TX", monthly: "$249", spots: 1 },
+  { slug: "roofing-charlotte", trade: "Roofing", city: "Charlotte", state: "NC", monthly: "$199", spots: 1 },
+  { slug: "hvac-denver", trade: "HVAC", city: "Denver", state: "CO", monthly: "$199", spots: 1 },
+  { slug: "plumbing-nashville", trade: "Plumbing", city: "Nashville", state: "TN", monthly: "$199", spots: 1 },
+  { slug: "gutters-atlanta", trade: "Gutters / Siding", city: "Atlanta", state: "GA", monthly: "$199", spots: 1 },
 ];
 
 const WINS = [
