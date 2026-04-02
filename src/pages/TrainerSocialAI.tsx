@@ -88,9 +88,11 @@ export default function TrainerSocialAI() {
             AI generates fitness and nutrition content in your brand voice and posts to your social channels 3x per week. Built for trainers and coaches who are too busy training clients to manage social media.
           </p>
           <div className="mt-6 inline-block bg-primary/20 border border-primary/40 px-4 py-2 rounded">
-            <span className="text-white font-black text-xl">$149</span>
-            <span className="text-slate-300 text-sm">/month — cancel anytime</span>
+            <span className="text-white/60 text-sm line-through mr-2">$79</span>
+            <span className="text-green-400 font-black text-xl">$59.25</span>
+            <span className="text-slate-300 text-sm">/mo for first 3 months</span>
           </div>
+          <p className="text-green-400/80 text-xs mt-2 font-medium">🚀 Launch Special — 25% off</p>
         </div>
 
         <div className="max-w-2xl mx-auto px-6 py-12">
