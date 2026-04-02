@@ -403,76 +403,63 @@ const ZoneDashboard = () => {
           </button>
         )}
 
-        {/* Quick Actions — 2x2 grid */}
+        {/* Quick Actions — 4-col grid like mockup */}
         <section>
           <p className="text-xs font-black uppercase tracking-[0.2em] mb-2 px-1" style={{ color: "#404040" }}>
             Quick Actions
           </p>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-4 gap-2">
             {QUICK_ACTIONS.map((item) => (
               <button
                 key={item.label}
                 onClick={item.action}
-                className="flex items-center gap-3 rounded-2xl py-3 px-3 transition-all active:scale-[0.93]"
+                className="flex flex-col items-center gap-1.5 rounded-xl py-3 px-1 transition-all active:scale-[0.93]"
                 style={{
-                  background: `${item.color}14`,
+                  background: `${item.color}10`,
                   border: `1.5px solid ${item.color}40`,
-                  boxShadow: `0 0 12px ${item.color}20, inset 0 0 8px ${item.color}08`,
+                  boxShadow: `0 0 14px ${item.color}25, inset 0 0 10px ${item.color}08`,
                 }}
               >
                 <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: `${item.color}24`, color: item.color }}
+                  className="w-10 h-10 rounded-xl flex items-center justify-center"
+                  style={{ background: `${item.color}20`, color: item.color }}
                 >
                   {item.icon}
                 </div>
-                <div className="text-left min-w-0">
-                  <div className="text-xs font-bold leading-tight" style={{ color: "#d4d4d4" }}>
-                    {item.label}
-                  </div>
-                  <div className="text-[10px] leading-tight mt-0.5" style={{ color: "#525252" }}>
-                    {item.desc}
-                  </div>
-                </div>
+                <span className="text-[10px] font-bold leading-tight text-center" style={{ color: "#d4d4d4" }}>
+                  {item.label}
+                </span>
               </button>
             ))}
           </div>
         </section>
 
-        {/* Feature Hub */}
+        {/* Hub — 3-col grid like mockup */}
         <section>
-          <div className="flex items-center justify-between mb-2 px-1">
-            <p className="text-xs font-black uppercase tracking-[0.2em]" style={{ color: "#404040" }}>
-              Your Hub
-            </p>
-            <span className="text-xs" style={{ color: "#303030" }}>Tap to explore</span>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
+          <p className="text-xs font-black uppercase tracking-[0.2em] mb-2 px-1" style={{ color: "#404040" }}>
+            Hub
+          </p>
+          <div className="grid grid-cols-3 gap-2">
             {HUB_ITEMS.map((item) => (
               <button
                 key={item.label}
                 onClick={item.action}
-                className="flex items-center gap-2.5 rounded-2xl p-3 text-left transition-all active:scale-[0.97] group"
+                className="flex flex-col items-center gap-1.5 rounded-xl py-3.5 px-1 transition-all active:scale-[0.95] group"
                 style={{
-                  background: `${item.color}12`,
+                  background: `${item.color}10`,
                   border: `1.5px solid ${item.color}35`,
-                  boxShadow: `0 0 10px ${item.color}18, inset 0 0 6px ${item.color}06`,
+                  boxShadow: `0 0 14px ${item.color}20, inset 0 0 8px ${item.color}06`,
                 }}
               >
                 <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: `${item.color}22`, color: item.color }}
+                  className="w-11 h-11 rounded-xl flex items-center justify-center"
+                  style={{ background: `${item.color}20`, color: item.color }}
                 >
                   {item.icon}
                 </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-xs font-bold" style={{ color: "#e5e5e5" }}>
-                    {item.label}
-                  </div>
-                  <div className="text-[10px] leading-tight mt-0.5" style={{ color: "#525252" }}>
-                    {item.desc}
-                  </div>
-                </div>
+                <span className="text-[11px] font-bold leading-tight text-center" style={{ color: "#e5e5e5" }}>
+                  {item.label}
+                </span>
               </button>
             ))}
           </div>
