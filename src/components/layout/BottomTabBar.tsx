@@ -121,6 +121,8 @@ const BottomTabBar = () => {
 
   return (
     <>
+      {/* Spacer to prevent fixed navbar from covering content */}
+      <div className="h-14 pb-[env(safe-area-inset-bottom)] md:hidden" aria-hidden="true" />
       {timerOpen && (
         <Suspense fallback={null}>
           <IntervalTimer onClose={closeTimer} />

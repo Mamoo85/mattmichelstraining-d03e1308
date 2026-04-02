@@ -1,77 +1,70 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { Bell, CheckCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Bell, CheckCircle, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface WaitlistGateProps {
   productName: string;
-  description: string;
-  price?: string;
+  description?: string;
 }
 
-export default function WaitlistGate({ productName, description, price }: WaitlistGateProps) {
+const WaitlistGate = ({ productName, description }: WaitlistGateProps) => {
   const [email, setEmail] = useState("");
-  const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [state, setState] = useState<"idle" | "submitting" | "done">("idle");
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
-    setLoading(true);
+    setState("submitting");
     try {
-      const { error } = await supabase
-        .from("newsletter_subscribers")
-        .upsert({ email, is_active: true, source: `waitlist_${productName}` }, { onConflict: "email" });
-      if (error) throw error;
-      setSubmitted(true);
-    } catch (err: any) {
-      toast.error(err.message || "Something went wrong. Please try again.");
-    } finally {
-      setLoading(false);
+      await supabase.from("newsletter_subscribers").upsert(
+        { email, source: `waitlist_${productName.toLowerCase().replace(/\s+/g, "_")}` },
+        { onConflict: "email" }
+      );
+      setState("done");
+      toast({ title: "You're on the list!", description: "We'll notify you when this launches." });
+    } catch {
+      setState("idle");
+      toast({ title: "Something went wrong", variant: "destructive" });
     }
   };
 
-  if (submitted) {
+  if (state === "done") {
     return (
-      <div className="rounded-xl border border-green-200 bg-green-50 p-6 text-center space-y-2">
-        <CheckCircle size={28} className="mx-auto text-green-600" />
-        <p className="font-bold text-green-800">You're on the list.</p>
-        <p className="text-sm text-green-700">We'll email you the moment this launches.</p>
+      <div className="flex flex-col items-center gap-3 py-8 text-center">
+        <CheckCircle className="text-green-500" size={32} />
+        <p className="text-lg font-bold text-foreground">You're on the list!</p>
+        <p className="text-sm text-muted-foreground">We'll email you the moment {productName} launches.</p>
       </div>
     );
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50 p-6 space-y-4">
-      <div className="flex items-start gap-3">
-        <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 text-orange-700 text-xs font-bold px-2.5 py-1 shrink-0 mt-0.5">
-          <Bell size={11} />
-          COMING SOON
-        </span>
-        {price && (
-          <span className="inline-block rounded-full bg-slate-200 text-slate-600 text-xs font-semibold px-2.5 py-1">
-            Launching at {price}
-          </span>
-        )}
+    <div className="max-w-md mx-auto bg-card border border-border rounded-lg p-6 text-center space-y-4">
+      <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
+        <Bell size={12} /> Coming Soon
       </div>
-      <p className="text-sm text-slate-600">{description}</p>
+      <h3 className="text-lg font-bold text-foreground">{productName}</h3>
+      {description && <p className="text-sm text-muted-foreground">{description}</p>}
       <form onSubmit={handleSubmit} className="flex gap-2">
-        <input
+        <Input
           type="email"
-          required
+          placeholder="your@email.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="your@email.com"
-          className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+          required
+          className="flex-1"
         />
-        <button
-          type="submit"
-          disabled={loading}
-          className="bg-[#e8621a] text-white px-4 py-2 rounded-lg text-sm font-bold hover:opacity-90 disabled:opacity-50 whitespace-nowrap"
-        >
-          {loading ? "…" : "Notify Me →"}
-        </button>
+        <Button type="submit" disabled={state === "submitting"} size="sm">
+          {state === "submitting" ? <Loader2 size={14} className="animate-spin" /> : "Notify Me"}
+        </Button>
       </form>
+      <p className="text-[10px] text-muted-foreground">No spam. Just a one-time launch notification.</p>
     </div>
   );
-}
+};
+
+export default WaitlistGate;

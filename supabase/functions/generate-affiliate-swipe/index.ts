@@ -13,7 +13,7 @@ serve(async (req) => {
     if (!trade) return new Response(JSON.stringify({ error: "trade is required" }), { status: 400, headers: corsHeaders });
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
-    if (!ANTHROPIC_API_KEY) throw new Error("Missing LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("Missing LOVABLE_API_KEY");
 
     const prompt = `You are a B2B sales copywriter helping a digital marketing agency recruit referral partners.
 

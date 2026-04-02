@@ -14,7 +14,7 @@ const REPORT_ITEMS = [
 
 const FAQS = [
   { q: "What's a citation?", a: "Anywhere your business name, address, and phone number appear online — Yelp, Yellow Pages, Apple Maps, local directories. Google cross-references these. Inconsistencies hurt your ranking." },
-  { q: "Do I need to do anything each month?", a: "No. Your report arrives in your inbox on the first of every month. We pull the data, Claude writes the analysis, you read it over coffee." },
+  { q: "Do I need to do anything each month?", a: "No. Your report arrives in your inbox on the first of every month. We pull the data, AI writes the analysis, you read it over coffee." },
   { q: "Why not just use a local SEO agency?", a: "A decent agency charges $500-1,500/mo and most of that goes to overhead and account management. We automate the research and reporting. You get 80% of the insight at 14% of the cost." },
   { q: "What if I don't rank anywhere yet?", a: "That's exactly who this is for. The report shows you the gaps and tells you precisely what to fix first. Month two you'll see movement." },
   { q: "Can I bundle this with GBP posting?", a: "Yes — GBP Posting ($49/mo) + Monthly SEO Report ($69/mo) together is $109/mo, saving you $9/month. Ask Matt after checkout." },

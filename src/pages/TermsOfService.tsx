@@ -58,7 +58,7 @@ export default function TermsOfService() {
       <section className="mb-8">
         <h2 className="text-xl font-bold mb-3">6. AI-Generated Content</h2>
         <p className="leading-relaxed text-slate-700">
-          Some services use AI (Anthropic Claude) to generate content such as blog posts, ad copy, scripts, and social media posts. AI-generated content is provided as-is. You are responsible for reviewing and approving any content before publishing or distribution. We make no warranties about the accuracy, completeness, or fitness of AI-generated content for any particular purpose.
+          Some services use AI to generate content such as blog posts, ad copy, scripts, and social media posts. AI-generated content is provided as-is. You are responsible for reviewing and approving any content before publishing or distribution. We make no warranties about the accuracy, completeness, or fitness of AI-generated content for any particular purpose.
         </p>
       </section>
 

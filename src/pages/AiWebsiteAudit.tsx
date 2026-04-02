@@ -79,7 +79,7 @@ export default function AiWebsiteAudit() {
       <SEOHead
         title="AI Website Audit — $29 | Instant Report | M² Web Design"
         description="Get a full AI-powered website audit delivered to your inbox in 60 seconds. SEO, mobile, trust signals, local ranking, and actionable fixes. $29 flat, no subscription."
-        canonical="https://www.mattmichelstraining.com/ai-website-audit"
+        path="/ai-website-audit"
       />
 
       <div className="min-h-screen bg-background">

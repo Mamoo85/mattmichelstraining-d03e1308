@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 
 const corsHeaders = {
@@ -91,27 +91,25 @@ A professional redesign addressing all the issues above typically costs $1,499�
 }
 
 async function generateAudit(businessName: string, businessUrl: string): Promise<string> {
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
+  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
+      "Authorization": `Bearer ${LOVABLE_API_KEY}`,
       "Content-Type": "application/json",
-      "x-api-key": ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 1800,
+      model: "google/gemini-2.5-flash-lite",
       messages: [{ role: "user", content: buildAuditPrompt(businessName, businessUrl) }],
     }),
   });
 
   if (!response.ok) {
     const err = await response.text();
-    throw new Error(`Claude API error: ${err}`);
+    throw new Error(`AI Gateway error: ${err}`);
   }
 
   const data = await response.json();
-  return data.content?.[0]?.text || "";
+  return data.choices?.[0]?.message?.content || "";
 }
 
 async function sendAuditEmail(email: string, businessName: string, reportText: string): Promise<void> {
@@ -232,25 +230,29 @@ serve(async (req) => {
     });
   } catch (err: any) {
     console.error("[instant-audit]", err);
+    // Log failure + alert Matt
     try {
-      await fetch(`${SUPABASE_URL}/rest/v1/delivery_failures`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "apikey": SUPABASE_SERVICE_KEY, "Authorization": `Bearer ${SUPABASE_SERVICE_KEY}`, "Prefer": "return=minimal" },
-        body: JSON.stringify({ function_name: "instant-audit", error_message: err.message || String(err) }),
+      const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+      const body = await req.clone().json().catch(() => ({}));
+      await sb.from("delivery_failures").insert({
+        function_name: "instant-audit",
+        error_message: err.message,
+        customer_email: body.email || null,
+        order_id: body.order_id || null,
       });
-    } catch (_) {}
-    try {
-      await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${Deno.env.get("RESEND_API_KEY") || ""}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          from: "Matt Michels <matt@mattmichelstraining.com>",
-          to: "matt@mattmichelstraining.com",
-          subject: "⚠️ Delivery Failed: instant-audit",
-          html: `<p><strong>Function:</strong> instant-audit</p><p><strong>Error:</strong> ${err.message || String(err)}</p><p><strong>Time:</strong> ${new Date().toISOString()}</p>`,
-        }),
-      });
-    } catch (_) {}
+      if (RESEND_API_KEY) {
+        await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            from: "M² Alerts <matt@mattmichelstraining.com>",
+            to: ["matt@mattmichelstraining.com"],
+            subject: `🚨 DELIVERY FAILED — instant-audit — ${body.email || "unknown"}`,
+            html: `<p><strong>Function:</strong> instant-audit</p><p><strong>Customer:</strong> ${body.email || "unknown"}</p><p><strong>Error:</strong> ${err.message}</p><p><strong>Time:</strong> ${new Date().toISOString()}</p>`,
+          }),
+        });
+      }
+    } catch (alertErr) { console.error("[instant-audit] Alert failed:", alertErr); }
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
