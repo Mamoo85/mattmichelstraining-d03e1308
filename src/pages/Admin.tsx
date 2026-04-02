@@ -132,11 +132,11 @@ const SubTabs = ({ tabs, defaultTab }: { tabs: { key: string; label: string | Re
           </TabsTrigger>
         ))}
       </TabsList>
-      <TabsContent value={activeSubTab} className="mt-0" forceMount>
+      <div className="mt-0">
         <Suspense fallback={<TabLoader />}>
           {activeContent}
         </Suspense>
-      </TabsContent>
+      </div>
     </Tabs>
   );
 };
