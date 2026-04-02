@@ -12,7 +12,7 @@ const corsHeaders = {
 };
 
 function buildPostsPrompt(businessName: string, businessType: string, city: string, differentiators: string): string {
-  return `You are a local SEO and Google Business Profile expert. Generate 30 ready-to-publish Google Business Profile posts for the following business.
+  return `You are a local SEO and Google Business Profile expert. Generate 30 ready-to-publish Google Business Profile posts organized by a seasonal content calendar.
 
 Business Name: ${businessName}
 Business Type: ${businessType}
@@ -21,24 +21,58 @@ What makes them stand out: ${differentiators}
 
 RULES:
 - Each post should be 75-120 words
-- Write in a friendly, local, human tone — NOT corporate or robotic
-- Mix these post types across the 30 posts: (1) service highlight, (2) customer tip, (3) seasonal/local relevance, (4) behind the scenes, (5) FAQ answer, (6) testimonial teaser, (7) special offer teaser, (8) community connection
+- Friendly, local, human tone — NOT corporate
+- Mix these post types: (1) service highlight, (2) customer tip, (3) seasonal/local relevance, (4) behind the scenes, (5) FAQ answer, (6) testimonial teaser, (7) special offer teaser, (8) community connection
 - Reference ${city} naturally in at least 8 posts
 - Never use hashtags
-- Each post should end with a soft call to action (call us, stop by, visit our website, book online, etc.) — vary the CTA, don't use the same one every time
-- Posts should sound like a real person who works there, not marketing copy
+- Each post ends with a varied soft call to action
+- Posts should sound like a real person
 
-Format EXACTLY as:
+Format EXACTLY as follows. Group posts by recommended month:
+
 ---
-POST 1 (Service Highlight)
+## MONTH 1 (Weeks 1-4)
+
+### POST 1 (Service Highlight)
+**Best Time to Post:** Tuesday or Thursday, 10am-12pm local time
+**Image Idea:** [Describe a specific photo or AI image prompt they could use — e.g. "Close-up of freshly installed copper pipe fitting with clean workspace in background"]
 [post text here]
 
----
-POST 2 (Customer Tip)
+### POST 2 (Customer Tip)
+**Best Time to Post:** [day and time recommendation]
+**Image Idea:** [specific image suggestion]
 [post text here]
 
-[continue for all 30 posts]
+[Continue with ~10 posts for Month 1]
+
 ---
+## MONTH 2 (Weeks 5-8)
+
+[10 more posts, seasonal to the next month]
+
+---
+## MONTH 3 (Weeks 9-12)
+
+[10 more posts, seasonal to the following month]
+
+---
+
+After all 30 posts, add:
+
+## 📋 How to Post on Google Business Profile (Step-by-Step)
+1. Go to business.google.com and sign in
+2. Select your business
+3. Click "Add Update" (or "Posts" in the menu)
+4. Choose "Add Update" post type
+5. Paste the post text
+6. Add a photo (use the image suggestions above or your own photos)
+7. Click "Publish" — done! Takes about 30 seconds.
+
+**Pro Tips:**
+- Post 2-3 times per week for maximum ranking benefit
+- Use real photos from your business when possible — Google rewards authenticity
+- Reply to any comments on your posts within 24 hours
+- Keep posts under 1,500 characters (ours are already optimized)
 
 Generate all 30 posts now.`;
 }
@@ -51,8 +85,9 @@ async function generatePosts(businessName: string, businessType: string, city: s
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash-lite",
+      model: "google/gemini-2.5-flash",
       messages: [{ role: "user", content: buildPostsPrompt(businessName, businessType, city, differentiators) }],
+      max_tokens: 3000,
     }),
   });
 
@@ -66,45 +101,51 @@ async function generatePosts(businessName: string, businessType: string, city: s
 }
 
 async function sendPostsEmail(email: string, businessName: string, postsText: string): Promise<void> {
-  // Format posts as clean HTML blocks
-  const postsHtml = postsText
-    .split(/\n---\n/)
-    .filter(p => p.trim())
-    .map((post, i) => {
-      const lines = post.trim().split("\n");
-      const header = lines[0] || `Post ${i + 1}`;
-      const body = lines.slice(1).join("\n").trim();
-      return `
-        <div style="margin-bottom:20px;padding:20px;background:#f8fafc;border-radius:6px;border-left:3px solid #e8621a">
-          <p style="margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#e8621a;font-family:sans-serif">${header}</p>
-          <p style="margin:0;color:#1e293b;line-height:1.7;font-family:sans-serif;font-size:14px;white-space:pre-wrap">${body}</p>
-        </div>`;
-    }).join("");
+  // Parse posts into HTML
+  const htmlBody = postsText
+    .replace(/^## (.+)$/gm, "<h2 style='color:#e8621a;font-family:Georgia,serif;margin-top:36px;margin-bottom:12px;font-size:20px;border-bottom:2px solid #e8621a;padding-bottom:8px'>$1</h2>")
+    .replace(/^### (.+)$/gm, "<h3 style='color:#1e293b;font-family:sans-serif;margin-top:20px;margin-bottom:6px;font-size:15px;font-weight:700'>$1</h3>")
+    .replace(/\*\*(.+?)\*\*/g, "<strong style='color:#1e293b'>$1</strong>")
+    .replace(/\*(.+?)\*/g, "<em>$1</em>")
+    .replace(/^---$/gm, "<hr style='border:none;border-top:2px solid #e2e8f0;margin:32px 0'>")
+    .replace(/^- (.+)$/gm, "<div style='padding:2px 0 2px 16px;font-size:14px;color:#475569'>• $1</div>")
+    .replace(/^\d+\. (.+)$/gm, "<div style='padding:3px 0 3px 16px;font-size:14px;color:#475569'>$&</div>")
+    .replace(/\n\n/g, "</p><p style='margin:0 0 12px;color:#475569;line-height:1.7;font-family:sans-serif;font-size:14px'>")
+    .replace(/\n/g, "<br>");
 
-  const html = `
-<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f8fafc">
   <div style="max-width:640px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)">
     <div style="background:#1e293b;padding:28px 32px">
-      <p style="color:#e8621a;font-weight:700;font-size:12px;letter-spacing:.15em;text-transform:uppercase;margin:0 0 4px">M² Web Design</p>
+      <p style="color:#e8621a;font-weight:700;font-size:12px;letter-spacing:.15em;text-transform:uppercase;margin:0 0 4px">M² Development</p>
       <h1 style="color:#fff;margin:0;font-family:Georgia,serif;font-size:22px">Your 30 GBP Posts Are Ready</h1>
       <p style="color:#94a3b8;margin:8px 0 0;font-size:14px">For: ${businessName || email}</p>
     </div>
     <div style="padding:32px">
-      <p style="color:#475569;line-height:1.7;font-family:sans-serif;font-size:15px;margin:0 0 24px">
-        Here are your <strong>30 Google Business Profile posts</strong> — enough to post 2-3x per week for the next 3 months. Each one is ready to copy and paste directly into your Google Business Profile.
+      <p style="color:#475569;line-height:1.7;font-family:sans-serif;font-size:15px;margin:0 0 8px">
+        Here are your <strong>30 Google Business Profile posts</strong> organized into a <strong>3-month content calendar</strong>. Each post includes:
       </p>
-      <div style="background:#fff7ed;border-radius:6px;padding:16px 20px;border:1px solid #fed7aa;margin-bottom:28px">
-        <p style="margin:0;font-size:13px;color:#92400e;font-family:sans-serif">
-          <strong>How to post:</strong> Go to business.google.com → Your Business Profile → Add Update → paste the post → publish. Takes about 30 seconds each.
-          <br><br>Want us to handle this automatically every week? Our <strong>GBP Autopilot service is $49/month</strong> — we post for you every Monday, Wednesday, and Friday.
-          <a href="https://www.mattmichelstraining.com/local-marketing" style="color:#e8621a;font-weight:700">See details here.</a>
-        </p>
+      <ul style="margin:0 0 24px;padding-left:20px;color:#475569;font-size:14px;line-height:2">
+        <li>📅 Best time to post</li>
+        <li>📸 Image/photo suggestion</li>
+        <li>✍️ Ready-to-paste post text</li>
+        <li>📋 Step-by-step posting guide at the bottom</li>
+      </ul>
+
+      <div style="background:#f8fafc;border-radius:6px;padding:24px;border:1px solid #e2e8f0">
+        <p style="margin:0 0 12px;color:#475569;line-height:1.7;font-family:sans-serif;font-size:14px">${htmlBody}</p>
       </div>
-      ${postsHtml}
-      <div style="margin-top:28px;padding:20px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0">
+
+      <!-- UPSELL: GBP Autopilot -->
+      <div style="margin-top:28px;padding:20px;background:#ecfdf5;border-radius:8px;border:1px solid #6ee7b7">
+        <p style="margin:0 0 6px;font-weight:700;color:#065f46;font-size:15px;font-family:sans-serif">🤖 Want Us to Post These Automatically? GBP Autopilot — $49/mo</p>
+        <p style="margin:0 0 12px;color:#065f46;font-size:13px;font-family:sans-serif;line-height:1.6">
+          We'll post to your Google Business Profile 3x/week on autopilot — Mon/Wed/Fri at the optimal time. You never touch it. Active profiles rank higher in Google's local map pack.
+        </p>
+        <a href="https://www.mattmichelstraining.com/local-marketing" style="display:inline-block;background:#e8621a;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:700;font-size:13px;font-family:sans-serif">See GBP Autopilot →</a>
+      </div>
+
+      <div style="margin-top:24px;padding:20px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0">
         <p style="margin:0 0 8px;font-weight:700;color:#1e293b;font-family:sans-serif">Questions?</p>
         <p style="margin:0;color:#475569;font-size:14px;font-family:sans-serif">
           Call or text Matt: <a href="tel:3138064952" style="color:#e8621a;font-weight:700">(313) 806-4952</a>
@@ -113,11 +154,10 @@ async function sendPostsEmail(email: string, businessName: string, postsText: st
       </div>
     </div>
     <div style="padding:16px 32px;background:#f8fafc;border-top:1px solid #e2e8f0;text-align:center">
-      <p style="margin:0;color:#94a3b8;font-size:12px;font-family:sans-serif">M² Web Design · mattmichelstraining.com · Grosse Pointe, MI</p>
+      <p style="margin:0;color:#94a3b8;font-size:12px;font-family:sans-serif">M² Development · mattmichelstraining.com · Grosse Pointe, MI</p>
     </div>
   </div>
-</body>
-</html>`;
+</body></html>`;
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -128,7 +168,8 @@ async function sendPostsEmail(email: string, businessName: string, postsText: st
     body: JSON.stringify({
       from: "Matt Michels <matt@mattmichelstraining.com>",
       to: [email],
-      subject: `Your 30 Google Business Profile Posts — ${businessName || "M² Web Design"}`,
+      bcc: ["matthewmichels4@gmail.com"],
+      subject: `Your 30 Google Business Profile Posts — ${businessName || "M² Development"}`,
       html,
     }),
   });
@@ -153,7 +194,6 @@ serve(async (req) => {
 
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-    // Idempotency check
     if (order_id) {
       const { data: existing } = await sb.from("gbp_post_packs").select("status").eq("id", order_id).maybeSingle();
       if (existing?.status === "delivered") {
@@ -179,11 +219,9 @@ serve(async (req) => {
       await sb.from("gbp_post_packs").update(updatePayload).eq("id", order_id);
     } else {
       await sb.from("gbp_post_packs").insert({
-        email,
-        business_name: business_name || null,
+        email, business_name: business_name || null,
         business_info: JSON.stringify({ business_type, city, differentiators }),
-        status: "delivered",
-        posts_json: JSON.stringify({ raw: postsText }),
+        status: "delivered", posts_json: JSON.stringify({ raw: postsText }),
       });
     }
 
