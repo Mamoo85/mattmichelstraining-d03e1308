@@ -10,8 +10,9 @@ const PLANS = [
     name: "Standard",
     price: "$99",
     originalPrice: "$199",
+    launchPrice: "$74.25",
     per: "/month",
-    badge: "🔥 Founding Client Rate",
+    badge: "🚀 Launch Special — 25% off first 3 months",
     description: "Facebook + LinkedIn posting, 3x per week — fully automated.",
     includes: [
       "Facebook + LinkedIn",
@@ -25,8 +26,9 @@ const PLANS = [
     name: "Pro",
     price: "$149",
     originalPrice: "$299",
+    launchPrice: "$111.75",
     per: "/month",
-    badge: "🔥 Founding Client Rate",
+    badge: "🚀 Launch Special — 25% off first 3 months",
     description: "Everything + Instagram + Google Business Profile, 5 posts/week.",
     includes: [
       "Everything in Standard",
@@ -108,8 +110,8 @@ export default function SocialMediaAI() {
   return (
     <>
       <SEOHead
-        title="AI Social Media Management — From $99/mo | Founding Client Rate | M²"
-        description="Your business posts itself. AI writes and publishes to Facebook, Instagram, and LinkedIn — 3x a week. Founding client pricing: from $99/mo (normally $199)."
+        title="AI Social Media Management — From $74.25/mo Launch Special | M²"
+        description="Your business posts itself. AI writes and publishes to Facebook, Instagram, and LinkedIn — 3x a week. Launch special: 25% off first 3 months, from $74.25/mo."
       />
       <div className="min-h-screen bg-background text-foreground">
         {/* Hero */}
@@ -164,9 +166,11 @@ export default function SocialMediaAI() {
                     {plan.originalPrice && (
                       <p className="text-xs text-muted-foreground line-through">{plan.originalPrice}{plan.per}</p>
                     )}
-                    <p className="text-xl font-black text-primary">
-                      {plan.price}<span className="text-xs text-muted-foreground font-normal">{plan.per}</span>
+                    <p className="text-xs text-muted-foreground line-through">{plan.price}{plan.per}</p>
+                    <p className="text-xl font-black text-green-500">
+                      {(plan as any).launchPrice}<span className="text-xs text-muted-foreground font-normal">{plan.per}</span>
                     </p>
+                    <p className="text-[10px] text-green-400 font-medium">first 3 months</p>
                   </div>
                 </div>
                 <p className="text-[12px] text-muted-foreground mb-3">{plan.description}</p>
