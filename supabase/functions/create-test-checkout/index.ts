@@ -208,7 +208,7 @@ serve(async (req) => {
     }
 
     const { product } = await req.json();
-    const email = user.email!;
+    const email = userEmail;
 
     const config = TEST_PRODUCTS[product];
     if (!config) {
