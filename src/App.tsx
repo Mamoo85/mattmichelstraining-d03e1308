@@ -349,6 +349,7 @@ const App = () => (
                   <div className="pb-16">
                     <Routes>
                     <Route path="/" element={<Index />} />
+                    <Route path="/unsubscribe" element={<Unsubscribe />} />
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/login" element={<Navigate to="/auth" replace />} />
                     <Route path="/signin" element={<Navigate to="/auth" replace />} />
