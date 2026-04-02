@@ -35,6 +35,7 @@ const ChallengeHub = lazy(() => import("@/components/dashboard/ChallengeHub"));
 const SelfPostureAnalysis = lazy(() => import("@/components/dashboard/SelfPostureAnalysis"));
 const TechHubModal = lazy(() => import("@/components/dashboard/TechHubModal"));
 const DashboardPromoBox = lazy(() => import("@/components/dashboard/DashboardPromoBox"));
+const StudioCheckIn = lazy(() => import("@/components/sessions/StudioCheckIn"));
 
 type GeneratorView = "workout" | "fixit" | "programs" | "challenge" | null;
 
