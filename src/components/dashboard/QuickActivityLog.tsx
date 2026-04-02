@@ -409,21 +409,24 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
 
         {/* Bubble buttons for duration */}
         {needsDuration && !streaming && (
-          <div className="flex flex-wrap gap-2 pt-1">
-            {DURATION_OPTIONS.map(opt => (
-              <button
-                key={opt}
-                onClick={() => handleBubbleTap(opt)}
-                className="px-4 py-2 rounded-full text-xs font-bold transition-all active:scale-95"
-                style={{
-                  background: "rgba(0,240,255,0.1)",
-                  border: "1px solid rgba(0,240,255,0.3)",
-                  color: "#00f0ff",
-                }}
-              >
-                {opt}
-              </button>
-            ))}
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: "#737373" }}>How long?</p>
+            <div className="flex flex-wrap gap-2">
+              {DURATION_OPTIONS.map(opt => (
+                <button
+                  key={opt}
+                  onClick={() => handleDurationTap(opt)}
+                  className="px-4 py-2 rounded-full text-xs font-bold transition-all active:scale-95"
+                  style={{
+                    background: "rgba(0,240,255,0.1)",
+                    border: "1px solid rgba(0,240,255,0.3)",
+                    color: "#00f0ff",
+                  }}
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
           </div>
         )}
       </div>
