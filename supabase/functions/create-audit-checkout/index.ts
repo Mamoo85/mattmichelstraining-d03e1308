@@ -36,7 +36,14 @@ serve(async (req: Request) => {
       customer_email: email,
       line_items: [
         {
-          price: "price_1THQr8D52tPWee46lZDu7pDo",
+          price_data: {
+            currency: "usd",
+            unit_amount: 2900,
+            product_data: {
+              name: "Website Audit",
+              description: "One-time comprehensive website audit with AI-powered recommendations for improving SEO, speed, and conversions.",
+            },
+          },
           quantity: 1,
         },
       ],

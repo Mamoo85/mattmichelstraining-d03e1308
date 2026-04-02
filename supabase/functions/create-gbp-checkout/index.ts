@@ -39,7 +39,18 @@ serve(async (req) => {
       mode: "subscription",
       payment_method_types: ["card"],
       customer_email: email,
-      line_items: [{ price: "price_1THQqkD52tPWee46fvgmrhvG", quantity: 1 }],
+      line_items: [{
+        price_data: {
+          currency: "usd",
+          recurring: { interval: "month" },
+          unit_amount: priceAmount,
+          product_data: {
+            name: `Google Business Profile Management — ${planLabel}`,
+            description: `Monthly GBP management for ${business_name}`,
+          },
+        },
+        quantity: 1,
+      }],
       metadata: {
         type: "gbp_saas_subscription",
         plan,
