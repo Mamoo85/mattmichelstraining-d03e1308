@@ -48,7 +48,7 @@ const FAQS = [
 
 export default function LocalMarketing() {
   const [selectedPlan, setSelectedPlan] = useState("pro");
-  const [form, setForm] = useState({ email: "", business_name: "", contact_name: "", phone: "", business_type: "", city: "", state: "MI" });
+  const [form, setForm] = useState({ email: "", business_name: "", contact_name: "", phone: "", business_type: "", city: "", state: "MI", post_tone: "friendly", content_focus: "", content_avoid: "" });
   const [submitting, setSubmitting] = useState(false);
 
   const success = new URLSearchParams(window.location.search).get("success") === "1";
