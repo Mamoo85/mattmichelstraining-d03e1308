@@ -117,24 +117,27 @@ const TabLoader = () => (
   </div>
 );
 
-const SubTabs = ({ tabs, defaultTab }: { tabs: { key: string; label: string | React.ReactNode; content: React.ReactNode }[]; defaultTab?: string }) => (
-  <Tabs defaultValue={defaultTab || tabs[0].key} className="w-full">
-    <TabsList className="bg-muted/50 h-auto flex-wrap gap-0.5 mb-4">
-      {tabs.map((t) => (
-        <TabsTrigger key={t.key} value={t.key} className="text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-          {t.label}
-        </TabsTrigger>
-      ))}
-    </TabsList>
-    {tabs.map((t) => (
-      <TabsContent key={t.key} value={t.key} className="mt-0">
+const SubTabs = ({ tabs, defaultTab }: { tabs: { key: string; label: string | React.ReactNode; content: React.ReactNode }[]; defaultTab?: string }) => {
+  const [activeSubTab, setActiveSubTab] = useState(defaultTab || tabs[0].key);
+  const activeContent = tabs.find(t => t.key === activeSubTab)?.content ?? tabs[0].content;
+
+  return (
+    <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="w-full">
+      <TabsList className="bg-muted/50 h-auto flex-wrap gap-0.5 mb-4">
+        {tabs.map((t) => (
+          <TabsTrigger key={t.key} value={t.key} className="text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            {t.label}
+          </TabsTrigger>
+        ))}
+      </TabsList>
+      <TabsContent value={activeSubTab} className="mt-0" forceMount>
         <Suspense fallback={<TabLoader />}>
-          {t.content}
+          {activeContent}
         </Suspense>
       </TabsContent>
-    ))}
-  </Tabs>
-);
+    </Tabs>
+  );
+};
 
 const Admin = () => {
   const [activeTab, setActiveTab] = useState("business");
