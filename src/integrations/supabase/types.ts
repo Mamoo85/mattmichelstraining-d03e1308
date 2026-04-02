@@ -7407,6 +7407,62 @@ export type Database = {
         }
         Relationships: []
       }
+      generated_sites_public: {
+        Row: {
+          address: string | null
+          business_name: string | null
+          color_scheme: Json | null
+          created_at: string | null
+          id: string | null
+          is_published: boolean | null
+          lead_id: string | null
+          logo_url: string | null
+          published_at: string | null
+          sections: Json | null
+          slug: string | null
+          template_key: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          business_name?: string | null
+          color_scheme?: Json | null
+          created_at?: string | null
+          id?: string | null
+          is_published?: boolean | null
+          lead_id?: string | null
+          logo_url?: string | null
+          published_at?: string | null
+          sections?: Json | null
+          slug?: string | null
+          template_key?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          business_name?: string | null
+          color_scheme?: Json | null
+          created_at?: string | null
+          id?: string | null
+          is_published?: boolean | null
+          lead_id?: string | null
+          logo_url?: string | null
+          published_at?: string | null
+          sections?: Json | null
+          slug?: string | null
+          template_key?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generated_sites_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "web_design_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       training_programs_public: {
         Row: {
           category: string | null

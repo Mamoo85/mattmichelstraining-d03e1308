@@ -27,10 +27,9 @@ const ClientSite = () => {
     if (!slug) return;
     const fetchSite = async () => {
       const { data, error: fetchErr } = await supabase
-        .from("generated_sites" as any)
+        .from("generated_sites_public" as any)
         .select("*")
         .eq("slug", slug)
-        .eq("is_published", true)
         .single();
       if (fetchErr || !data) {
         setError("Site not found");
