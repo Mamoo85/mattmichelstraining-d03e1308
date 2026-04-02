@@ -135,8 +135,10 @@ serve(async (req) => {
 
     if (hasActiveSub) {
       const subscription = subscriptions.data[0];
-      subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
-      if (subscriptionEnd === "Invalid Date") subscriptionEnd = null;
+      try {
+        const endDate = new Date(subscription.current_period_end * 1000);
+        subscriptionEnd = isNaN(endDate.getTime()) ? null : endDate.toISOString();
+      } catch { subscriptionEnd = null; }
 
       // Multi-item support: check if this user has a specific subscription item mapped
       const { data: familyItem } = await supabaseClient
