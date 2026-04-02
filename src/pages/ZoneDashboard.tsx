@@ -362,6 +362,26 @@ const ZoneDashboard = () => {
           onPointsClick={() => setGeneratorView("challenge")}
         />
 
+        {/* Recent Points Activity */}
+        {transactions.length > 0 && (
+          <div
+            className="rounded-2xl p-3 space-y-2"
+            style={{ background: "rgba(168,85,247,0.06)", border: "1px solid rgba(168,85,247,0.15)" }}
+          >
+            <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: "#a855f7" }}>Recent Points</p>
+            {transactions.slice(0, 4).map((tx) => (
+              <div key={tx.id} className="flex items-center justify-between">
+                <span className="text-[11px] truncate flex-1" style={{ color: "#a3a3a3" }}>
+                  {tx.description}
+                </span>
+                <span className="text-[11px] font-bold ml-2 shrink-0" style={{ color: "#22c55e" }}>
+                  +{tx.points}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Coach banner — Pro/Elite only */}
         {isProOrElite && <CoachActivityBanner />}
 
