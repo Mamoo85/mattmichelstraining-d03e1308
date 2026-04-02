@@ -1183,7 +1183,21 @@ serve(async (req) => {
                 from: "Matt Michels <matt@mattmichelstraining.com>",
                 to: [customerEmail], bcc: ["matthewmichels4@gmail.com"],
                 subject: `Welcome to GBP Management — ${meta.business_name || "your business"}`,
-                html: `<p>You're all set! I'll review your Google Business Profile within 24 hours and reach out to get started. Questions? Reply here or text me at (313) 806-4952.</p><p>— Matt Michels</p>`,
+                html: m2Email({
+              greeting: "Hey — welcome to M² GBP Management.",
+              headline: "Your Google Business Profile Management is Active",
+              body: `<p style="margin:0 0 12px"><strong>Your Google presence is about to get a serious upgrade.</strong></p>
+<p style="margin:0 0 8px">🗺️ <strong>Profile optimization</strong> — I'll review and optimize your entire GBP within 24 hours</p>
+<p style="margin:0 0 8px">📸 <strong>Photo + post management</strong> — regular updates to keep your profile active and ranking</p>
+<p style="margin:0 0 8px">⭐ <strong>Review strategy</strong> — help you get more 5-star reviews consistently</p>
+<p style="margin:0 0 16px">📊 <strong>Monthly reporting</strong> — see exactly how your profile is performing</p>
+<p style="margin:0 0 8px"><strong>What I need from you:</strong></p>
+<ol style="margin:0 0 16px;padding-left:20px;color:#475569">
+<li>Your Google Business Profile URL or business name as it appears on Google</li>
+<li>Admin access to your GBP (I'll walk you through it if needed)</li>
+</ol>
+<p style="margin:0;color:#64748b;font-size:13px">Reply to this email or text me to get started. I'll have your profile optimized by tomorrow.</p>`,
+            }),
               }),
             });
             await fetch("https://api.resend.com/emails", {
@@ -1386,7 +1400,17 @@ serve(async (req) => {
                 from: "Matt Michels <matt@mattmichelstraining.com>",
                 to: [customerEmail], bcc: ["matthewmichels4@gmail.com"],
                 subject: `Monthly maintenance set up — ${meta.business_name || "your site"}`,
-                html: `<p>You're all set on the $49/mo maintenance plan. Your site stays live, secure, and backed up — and you've got my direct cell for any changes you need. Text me at (313) 806-4952 or email matt@mattmichelstraining.com anytime. — Matt</p>`,
+                html: m2Email({
+              greeting: `Hey${meta.business_name ? " " + meta.business_name : ""} —`,
+              headline: "Your Website Maintenance Plan is Active",
+              body: `<p style="margin:0 0 12px"><strong>Your site is now fully covered.</strong> Here's what your $49/mo includes:</p>
+<p style="margin:0 0 8px">🔒 <strong>Security monitoring</strong> — SSL, updates, and vulnerability scanning</p>
+<p style="margin:0 0 8px">💾 <strong>Daily backups</strong> — your site is backed up every day, restorable anytime</p>
+<p style="margin:0 0 8px">🔧 <strong>Content updates</strong> — need text changed, photos swapped, or a new section? Just text me</p>
+<p style="margin:0 0 8px">📈 <strong>Uptime monitoring</strong> — if your site goes down, I know before you do</p>
+<p style="margin:0 0 16px">📱 <strong>Direct access</strong> — text (313) 806-4952 or email anytime for changes</p>
+<p style="margin:0;color:#64748b;font-size:13px">Your site stays live, fast, and looking good. That's the deal.</p>`,
+            }),
               }),
             });
             await fetch("https://api.resend.com/emails", {
@@ -1874,7 +1898,22 @@ serve(async (req) => {
                 from: "Matt Michels <matt@mattmichelstraining.com>",
                 to: [email], bcc: ["matthewmichels4@gmail.com"],
                 subject: "Your Field Rep AI Tools are ready",
-                html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're in. Head to <a href="https://www.mattmichelstraining.com/field-rep-tools">mattmichelstraining.com/field-rep-tools</a> and log in to start using all 4 tools — cold email writer, voicemail builder, objection handler, and territory planner.</p><p>Reply to this email if you have questions.</p><p>— Matt<br>(313) 806-4952</p>`,
+                html: m2Email({
+              greeting: `Hey${meta.name ? " " + meta.name : ""} —`,
+              headline: "Your Field Rep AI Tools Are Ready",
+              body: `<p style="margin:0 0 12px"><strong>4 AI tools built specifically for B2B field reps. Here's what you've got:</strong></p>
+<p style="margin:0 0 8px">✉️ <strong>Cold Email Writer</strong> — paste a prospect's LinkedIn or website, get a personalized cold email in 10 seconds</p>
+<p style="margin:0 0 8px">📞 <strong>Voicemail Script Builder</strong> — AI-generated voicemail scripts that actually get callbacks</p>
+<p style="margin:0 0 8px">🛡️ <strong>Objection Handler</strong> — type the objection, get 3 proven responses instantly</p>
+<p style="margin:0 0 16px">🗺️ <strong>Territory Planner</strong> — AI-optimized route and account prioritization</p>
+<p style="margin:0 0 8px"><strong>How to access:</strong></p>
+<ol style="margin:0 0 16px;padding-left:20px;color:#475569">
+<li>Go to <a href="https://www.mattmichelstraining.com/field-rep-tools" style="color:#e8621a">mattmichelstraining.com/field-rep-tools</a></li>
+<li>Enter the email you paid with (${meta.email || "this email"})</li>
+<li>Start closing more deals</li>
+</ol>
+<p style="margin:0 0 12px;background:#fff7ed;padding:12px;border-radius:6px;border:1px solid #fed7aa;font-size:13px">💡 <strong>Pro tip from Matt:</strong> Start with the Cold Email Writer. Paste a prospect's LinkedIn URL and you'll have a personalized email ready to send in under 30 seconds. My field reps used this to book 3x more meetings.</p>`,
+            }),
               }),
             });
             await fetch("https://api.resend.com/emails", {
@@ -1971,7 +2010,18 @@ serve(async (req) => {
                 from: "Matt Michels <matt@mattmichelstraining.com>",
                 to: [email], bcc: ["matthewmichels4@gmail.com"],
                 subject: "Your Social Media AI service is active",
-                html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>Your Social Media AI (${meta.plan || "standard"} plan) is now active. AI posts will start going out Monday, Wednesday, and Friday once your accounts are connected.</p><p><strong>Step 2 — Connect your accounts (2 min):</strong><br><a href="${onboardingUrl}" style="color:#e8621a;">Set up your social accounts →</a></p><p>Questions? Reply here or text Matt at (313) 806-4952.</p><p>— Matt</p>`,
+                html: m2Email({
+              greeting: `Hey${meta.name ? " " + meta.name : ""} —`,
+              headline: "Your Social Media AI Service is Active",
+              body: `<p style="margin:0 0 12px"><strong>Your ${meta.plan || "standard"} plan (${planPrice}/mo) is live.</strong> Here's what happens now:</p>
+<p style="margin:0 0 8px">📱 <strong>3 platforms</strong> — Facebook, Instagram, and LinkedIn posting</p>
+<p style="margin:0 0 8px">📅 <strong>3x per week</strong> — AI-generated posts go live Monday, Wednesday, Friday</p>
+<p style="margin:0 0 8px">🎯 <strong>Industry-tailored</strong> — content written for ${meta.business_name || "your business"}, not generic templates</p>
+<p style="margin:0 0 8px">📊 <strong>Content calendar</strong> — a mix of tips, behind-the-scenes, promotions, and engagement posts</p>
+<p style="margin:0 0 16px">✨ <strong>First post timeline</strong> — within 48 hours of connecting your accounts</p>
+<p style="margin:0 0 8px"><strong>⚡ One step needed — connect your accounts (takes 2 minutes):</strong></p>`,
+              cta: { text: "Connect Your Social Accounts →", url: onboardingUrl },
+            }),
               }),
             });
             await fetch("https://api.resend.com/emails", {
@@ -2130,7 +2180,16 @@ serve(async (req) => {
                 from: "Matt Michels <matt@mattmichelstraining.com>",
                 to: [email], bcc: ["matthewmichels4@gmail.com"],
                 subject: "You're subscribed to the Industrial Sales Newsletter",
-                html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>Welcome aboard. You'll get your first issue next Monday morning — practical B2B sales intel for industrial and manufacturing markets, no fluff.</p><p>Reply any time if you have questions or want to connect.</p><p>— Matt<br>(313) 806-4952</p>`,
+                html: m2Email({
+              greeting: `Hey${meta.name ? " " + meta.name : ""} —`,
+              headline: "Welcome to the Industrial Sales Newsletter",
+              body: `<p style="margin:0 0 12px"><strong>Real B2B sales intel. No fluff. Every Monday.</strong></p>
+<p style="margin:0 0 8px">📰 <strong>Weekly issue</strong> — drops every Monday at 8am ET</p>
+<p style="margin:0 0 8px">🏭 <strong>Industrial focus</strong> — strategies specific to manufacturing, industrial, and B2B markets</p>
+<p style="margin:0 0 8px">🛠️ <strong>Tool spotlights</strong> — the best AI and sales tools to close more deals</p>
+<p style="margin:0 0 16px">💡 <strong>Matt's field notes</strong> — 10 years of B2B door-knocking distilled into actionable tips</p>
+<p style="margin:0;color:#64748b;font-size:13px">First issue arrives this Monday. Reply anytime — I read every response.</p>`,
+            }),
               }),
             });
             await fetch("https://api.resend.com/emails", {
@@ -2170,7 +2229,22 @@ serve(async (req) => {
                 from: "Matt Michels <matt@mattmichelstraining.com>",
                 to: [email], bcc: ["matthewmichels4@gmail.com"],
                 subject: "Your Missed Call Text-Back is being set up",
-                html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for Missed Call Text-Back. Your 7-day free trial has started.</p><p>Matt will reach out within 24 hours to complete the forwarding setup — it takes about 5 minutes. After that, every missed call to your business gets an instant text-back automatically.</p><p>Questions? Reply here or text (313) 806-4952.</p><p>— Matt</p>`,
+                html: m2Email({
+              greeting: `Hey${meta.name ? " " + meta.name : ""} —`,
+              headline: "Your Missed Call Text-Back is Being Set Up",
+              body: `<p style="margin:0 0 12px"><strong>Every missed call is a potential customer walking away. Not anymore.</strong></p>
+<p style="margin:0 0 8px">📱 <strong>How it works:</strong> Someone calls your business and you can't answer → they instantly get a text: <em>"Hey, sorry I missed your call! I'll get right back to you."</em></p>
+<p style="margin:0 0 8px">⚡ <strong>Instant response</strong> — text fires within seconds of the missed call</p>
+<p style="margin:0 0 8px">🔄 <strong>24/7 coverage</strong> — works nights, weekends, holidays</p>
+<p style="margin:0 0 8px">📊 <strong>Lead capture</strong> — every missed call + text is logged for follow-up</p>
+<p style="margin:0 0 16px">✨ <strong>7-day free trial</strong> — your trial has started</p>
+<p style="margin:0 0 8px"><strong>Setup (5 minutes):</strong></p>
+<ol style="margin:0 0 16px;padding-left:20px;color:#475569">
+<li>Matt will text you within 24 hours to set up call forwarding</li>
+<li>You forward missed calls to your new M² number</li>
+<li>That's it — missed calls now get instant texts, automatically</li>
+</ol>`,
+            }),
               }),
             });
             await fetch("https://api.resend.com/emails", {
