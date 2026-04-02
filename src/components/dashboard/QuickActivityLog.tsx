@@ -489,7 +489,7 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
       </AnimatePresence>
 
       {/* Input bar */}
-      <div className="px-4 py-3 flex items-center gap-2" style={{ borderTop: "1px solid rgba(255,255,255,0.06)", background: "rgba(10,10,10,0.95)" }}>
+      <div className="px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] flex items-center gap-2" style={{ borderTop: "1px solid rgba(255,255,255,0.06)", background: "rgba(10,10,10,0.95)" }}>
         {/* Hidden file input for photo */}
         <input
           ref={photoRef}

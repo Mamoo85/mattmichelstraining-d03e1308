@@ -355,7 +355,7 @@ const ZoneDashboard = () => {
           nextLevelLabel={nextLevel?.label ?? null}
           ptsToNext={nextLevel ? nextLevel.min - totalPoints : null}
           progressPct={progressPct}
-          onStreakClick={() => navigate("/progress")}
+          onStreakClick={() => setShowCheckIn(true)}
           onSessionsClick={() => navigate("/progress")}
           onPointsClick={() => setGeneratorView("challenge")}
         />
