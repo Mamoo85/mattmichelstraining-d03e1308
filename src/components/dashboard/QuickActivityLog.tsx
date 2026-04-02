@@ -322,7 +322,7 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[200] flex flex-col"
-      style={{ background: "rgba(10,10,10,0.97)", backdropFilter: "blur(20px)" }}
+      style={{ background: "rgba(10,10,10,0.97)", backdropFilter: "blur(20px)", paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       {showTip && <FeatureLearningModal tip={QUICK_ACTIVITY_TIP} onContinue={dismissTip} onDismiss={dismissTip} />}
 
