@@ -15,22 +15,22 @@ const corsHeaders = {
 const PRODUCTS = {
   website_audit: {
     name: "AI Website Audit Report",
-    description: "Instant AI-generated audit of your website: SEO, mobile, trust signals, local ranking, and actionable recommendations. Delivered to your inbox within 60 seconds.",
-    amount: 2900,
+    description: "Instant AI-generated audit of your website: SEO, mobile, trust signals, local ranking, and actionable recommendations with how-to-fix steps. Delivered to your inbox within 60 seconds.",
+    amount: 900,
     success_path: "/ai-website-audit?success=1",
     cancel_path: "/ai-website-audit",
   },
   gbp_post_pack: {
     name: "AI Google Business Profile Post Pack (30 Posts)",
-    description: "30 ready-to-schedule GBP posts generated specifically for your business. 3 months of content, delivered instantly.",
+    description: "30 ready-to-schedule GBP posts generated specifically for your business. 3 months of content with seasonal calendar, image prompts, and posting tips. Delivered instantly.",
     amount: 1900,
     success_path: "/ai-gbp-post-pack?success=1",
     cancel_path: "/ai-gbp-post-pack",
   },
   competitor_report: {
     name: "AI Local Competitor Analysis Report",
-    description: "AI-generated competitive landscape for your local market: nearby competitors, review gaps, positioning opportunities. Delivered to your inbox.",
-    amount: 4900,
+    description: "AI-generated competitive landscape for your local market: nearby competitors, win rates, SWOT analysis, review gaps, and a 30-day action sprint. Delivered to your inbox.",
+    amount: 900,
     success_path: "/ai-competitor-report?success=1",
     cancel_path: "/ai-competitor-report",
   },
