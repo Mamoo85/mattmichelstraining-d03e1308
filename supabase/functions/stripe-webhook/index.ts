@@ -31,6 +31,63 @@ async function getUserIdByEmail(sb: any, email: string): Promise<string | null> 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
+// ── M² BRANDED EMAIL TEMPLATE HELPER ─────────────────────────────────────
+function m2Email(opts: { greeting: string; headline: string; body: string; cta?: { text: string; url: string }; signature?: string }): string {
+  const ctaBlock = opts.cta ? `<div style="text-align:center;margin:24px 0"><a href="${opts.cta.url}" style="display:inline-block;background:#e8621a;color:#fff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:700;font-size:15px;font-family:sans-serif">${opts.cta.text}</a></div>` : "";
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+<div style="max-width:560px;margin:0 auto;background:#fff;border-radius:10px;overflow:hidden;border:1px solid #e2e8f0">
+  <div style="background:#1e293b;padding:20px 28px;border-bottom:3px solid #e8621a">
+    <p style="color:#e8621a;font-weight:700;font-size:11px;letter-spacing:.15em;text-transform:uppercase;margin:0 0 4px">M² Development</p>
+    <h1 style="color:#fff;margin:0;font-size:20px;font-family:Georgia,serif">${opts.headline}</h1>
+  </div>
+  <div style="padding:24px 28px;color:#1e293b;font-size:15px;line-height:1.8">
+    <p style="margin:0 0 16px">${opts.greeting}</p>
+    ${opts.body}
+    ${ctaBlock}
+    <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;align-items:center;gap:12px">
+      <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt" style="width:44px;height:44px;border-radius:50%;object-fit:cover" />
+      <div style="font-size:13px;color:#64748b">
+        <strong style="color:#1e293b">${opts.signature || "Matt Michels"}</strong><br>Grosse Pointe, MI · <a href="tel:+13138064952" style="color:#e8621a">(313) 806-4952</a>
+      </div>
+    </div>
+  </div>
+  <div style="padding:12px 28px;background:#f8fafc;border-top:1px solid #e2e8f0;text-align:center">
+    <p style="margin:0;color:#94a3b8;font-size:11px">M² Development · mattmichelstraining.com · Grosse Pointe, MI</p>
+  </div>
+</div></body></html>`;
+}
+
+async function sendM2Email(to: string, subject: string, html: string, bcc?: string): Promise<void> {
+  if (!RESEND_API_KEY) return;
+  await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: "Matt Michels <matt@mattmichelstraining.com>",
+      to: Array.isArray(to) ? to : [to],
+      bcc: [bcc || "matthewmichels4@gmail.com"],
+      subject,
+      html,
+    }),
+  });
+}
+
+async function notifyMatt(subject: string, html: string): Promise<void> {
+  if (!RESEND_API_KEY) return;
+  await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: "M² System <matt@mattmichelstraining.com>",
+      to: ["matt@mattmichelstraining.com"],
+      bcc: ["matthewmichels4@gmail.com"],
+      subject,
+      html,
+    }),
+  });
+}
+
 // Product ID → tier key mapping
 const PRODUCT_TIER_MAP: Record<string, string> = {
   // ── Current monthly (prod_UBI*) ──────────────────────────────────────────
@@ -634,8 +691,23 @@ serve(async (req) => {
             await (sb.from as any)("handbook_clients").upsert({ email, business_name: meta.businessName || email, phone: meta.phone || null, industry: meta.industry || null, state: meta.state || "MI", employee_count: parseInt(meta.employeeCount) || null, active: true }, { onConflict: "email" });
           }
           if (RESEND_API_KEY && email) {
-            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Employee Handbook service is active", html: `<p>Hey${meta.businessName ? " " + meta.businessName : ""},</p><p>You're signed up for AI Employee Handbook Generator ($99/mo). Your first handbook update will arrive within 48 hours.</p><p>Monthly updates with state labor law compliance on the 1st after that.</p><p>— Matt, M² Development</p>` }) });
-            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Handbook Client — ${meta.businessName || email} ($99/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>State: ${meta.state || "MI"}<br>Employees: ${meta.employeeCount || "n/a"}</p>` }) });
+            await sendM2Email(email, "Your AI Employee Handbook is Active — Here's What Happens Next", m2Email({
+              greeting: `Hey${meta.businessName ? " " + meta.businessName : ""} —`,
+              headline: "Your AI Employee Handbook is Active",
+              body: `<p style="margin:0 0 12px"><strong>You just made your HR life 10x easier.</strong> Here's exactly what you're getting:</p>
+<p style="margin:0 0 8px">📋 <strong>First handbook update</strong> — arrives within 48 hours, customized to your state (${meta.state || "MI"}) labor laws</p>
+<p style="margin:0 0 8px">📅 <strong>Monthly compliance updates</strong> — on the 1st of every month, your handbook gets refreshed with any new state regulations</p>
+<p style="margin:0 0 8px">🏢 <strong>Employee count-aware</strong> — policies calibrated for your team size (${meta.employeeCount || "your team"})</p>
+<p style="margin:0 0 16px">⚡ <strong>Industry-specific</strong> — language tailored to ${meta.industry || "your industry"}</p>
+<p style="margin:0 0 8px"><strong>What happens next:</strong></p>
+<ol style="margin:0 0 16px;padding-left:20px;color:#475569">
+<li>Your first AI-generated handbook section arrives within 48 hours</li>
+<li>Review it — if anything needs adjusting, reply to this email</li>
+<li>Monthly updates auto-generate on the 1st</li>
+</ol>
+<p style="margin:0;color:#64748b;font-size:13px">Questions? Hit reply or text me. I read every message.</p>`,
+            }));
+            await notifyMatt(`💰 New Handbook Client — ${meta.businessName || email} ($99/mo)`, `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>State: ${meta.state || "MI"}<br>Employees: ${meta.employeeCount || "n/a"}</p>`);
           }
         } catch (e) { console.error("[WEBHOOK] handbook_subscription error:", e); }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
@@ -648,8 +720,17 @@ serve(async (req) => {
             await (sb.from as any)("grant_finder_clients").upsert({ email, business_name: meta.businessName || email, phone: meta.phone || null, industry: meta.industry || null, employee_count: parseInt(meta.employeeCount) || null, annual_revenue: meta.annualRevenue || null, location: meta.location || "Michigan", active: true }, { onConflict: "email" });
           }
           if (RESEND_API_KEY && email) {
-            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Grant Finder is active", html: `<p>Hey${meta.businessName ? " " + meta.businessName : ""},</p><p>You're signed up for AI Grant Finder ($149/mo). Your first curated grant report will arrive within 7 days.</p><p>Weekly updates every Monday after that.</p><p>— Matt, M² Development</p>` }) });
-            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Grant Finder Client — ${meta.businessName || email} ($149/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}<br>Location: ${meta.location || "Michigan"}</p>` }) });
+            await sendM2Email(email, "Your AI Grant Finder is Active — First Report in 7 Days", m2Email({
+              greeting: `Hey${meta.businessName ? " " + meta.businessName : ""} —`,
+              headline: "Your AI Grant Finder is Active",
+              body: `<p style="margin:0 0 12px"><strong>We're already scanning for money you're leaving on the table.</strong></p>
+<p style="margin:0 0 8px">🔍 <strong>What we're looking for:</strong> Federal, state, and local grants matching ${meta.industry || "your industry"} businesses in ${meta.location || "Michigan"}</p>
+<p style="margin:0 0 8px">📬 <strong>First curated report</strong> — arrives within 7 days with specific grants you qualify for, amounts, deadlines, and application links</p>
+<p style="margin:0 0 8px">📅 <strong>Weekly updates</strong> — every Monday morning, new grants and deadline reminders</p>
+<p style="margin:0 0 16px">💡 <strong>Revenue range</strong> — filtered for businesses like yours (${meta.annualRevenue || "your revenue bracket"})</p>
+<p style="margin:0;color:#64748b;font-size:13px">Most business owners have no idea how much grant money they're eligible for. That changes now.</p>`,
+            }));
+            await notifyMatt(`💰 New Grant Finder Client — ${meta.businessName || email} ($149/mo)`, `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}<br>Location: ${meta.location || "Michigan"}</p>`);
           }
         } catch (e) { console.error("[WEBHOOK] grant_finder_subscription error:", e); }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
@@ -662,7 +743,16 @@ serve(async (req) => {
             await (sb.from as any)("review_response_clients").upsert({ email, business_name: meta.businessName || email, phone: meta.phone || null, industry: meta.industry || null, google_place_id: meta.googlePlaceId || null, brand_voice: meta.brandVoice || null, active: true }, { onConflict: "email" });
           }
           if (RESEND_API_KEY && email) {
-            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Review Response service is active", html: `<p>Hey${meta.businessName ? " " + meta.businessName : ""},</p><p>You're signed up for AI Review Response Service ($49/mo). Your first daily review response digest will arrive within 24 hours.</p><p>— Matt, M² Development</p>` }) });
+            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Review Response Service is Active — Monitoring Starts in 24 Hours", html: m2Email({
+              greeting: `Hey${meta.businessName ? " " + meta.businessName : ""} —`,
+              headline: "Your AI Review Responder is Active",
+              body: `<p style="margin:0 0 12px"><strong>New Google reviews? We handle them.</strong> Here's what's coming:</p>
+<p style="margin:0 0 8px">🔍 <strong>24/7 monitoring</strong> — we watch your Google Business Profile for new reviews</p>
+<p style="margin:0 0 8px">✍️ <strong>AI-crafted responses</strong> — professional, on-brand replies generated automatically</p>
+<p style="margin:0 0 8px">📧 <strong>Daily digest</strong> — new reviews + suggested responses delivered to your inbox</p>
+<p style="margin:0 0 16px">🎯 <strong>Brand voice</strong> — responses match your business tone, not generic AI</p>
+<p style="margin:0 0 8px"><strong>Next step:</strong> Reply to this email with your Google Business Profile URL so we can start monitoring. Or text Matt at (313) 806-4952.</p>`,
+            }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Review Response Client — ${meta.businessName || email} ($49/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}</p>` }) });
           }
         } catch (e) { console.error("[WEBHOOK] review_response_subscription error:", e); }
@@ -678,7 +768,16 @@ serve(async (req) => {
             await (sb.from as any)("battlecard_clients").upsert({ email, business_name: meta.businessName || email, phone: meta.phone || null, industry: meta.industry || null, competitor_names: competitorNames, competitor_urls: competitorUrls, active: true }, { onConflict: "email" });
           }
           if (RESEND_API_KEY && email) {
-            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Competitive Battlecard is active", html: `<p>Hey${meta.businessName ? " " + meta.businessName : ""},</p><p>You're signed up for AI Competitive Battlecard ($39/mo). Your first battlecard will arrive within 48 hours.</p><p>Monthly updates on the 1st after that.</p><p>— Matt, M² Development</p>` }) });
+            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Competitive Battlecard is Active — First Battlecard in 48 Hours", html: m2Email({
+              greeting: `Hey${meta.businessName ? " " + meta.businessName : ""} —`,
+              headline: "Your Competitive Battlecard is Active",
+              body: `<p style="margin:0 0 12px"><strong>Know exactly how to beat your competition.</strong></p>
+<p style="margin:0 0 8px">📊 <strong>First battlecard</strong> — arrives within 48 hours, analyzing your top competitors</p>
+<p style="margin:0 0 8px">📅 <strong>Monthly updates</strong> — refreshed on the 1st with new competitor moves, pricing changes, and market shifts</p>
+<p style="margin:0 0 8px">🎯 <strong>Talk tracks</strong> — exact language to use when prospects mention a competitor</p>
+<p style="margin:0 0 16px">⚡ <strong>Win/loss insights</strong> — what competitors are doing right and where they're vulnerable</p>
+<p style="margin:0;color:#64748b;font-size:13px">Your sales team will never be caught off guard again.</p>`,
+            }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Battlecard Client — ${meta.businessName || email} ($39/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Competitors: ${meta.competitorNames || "n/a"}</p>` }) });
           }
         } catch (e) { console.error("[WEBHOOK] battlecard_subscription error:", e); }
@@ -694,7 +793,16 @@ serve(async (req) => {
             await (sb.from as any)("market_intel_clients").upsert({ email, business_name: meta.businessName || email, phone: meta.phone || null, industry: meta.industry || null, focus_topics: focusTopics, competitors, location: meta.location || "Michigan", active: true }, { onConflict: "email" });
           }
           if (RESEND_API_KEY && email) {
-            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Market Intelligence Brief is active", html: `<p>Hey${meta.businessName ? " " + meta.businessName : ""},</p><p>You're signed up for AI Weekly Market Intelligence ($49/mo). Your first brief will arrive next Monday morning.</p><p>— Matt, M² Development</p>` }) });
+            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Market Intelligence Brief is Active — First Brief Next Monday", html: m2Email({
+              greeting: `Hey${meta.businessName ? " " + meta.businessName : ""} —`,
+              headline: "Your Weekly Market Intelligence is Active",
+              body: `<p style="margin:0 0 12px"><strong>Every Monday morning, you'll know what your market is doing before your competitors do.</strong></p>
+<p style="margin:0 0 8px">📰 <strong>Industry trends</strong> — AI-curated news and developments in ${meta.industry || "your industry"}</p>
+<p style="margin:0 0 8px">📍 <strong>Local market shifts</strong> — what's changing in ${meta.location || "your area"}</p>
+<p style="margin:0 0 8px">🏢 <strong>Competitor moves</strong> — new hires, expansions, pricing changes you should know about</p>
+<p style="margin:0 0 16px">💡 <strong>Action items</strong> — 3 specific things to do this week based on the intel</p>
+<p style="margin:0;color:#64748b;font-size:13px">First brief arrives next Monday. Knowledge is revenue.</p>`,
+            }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Market Intel Client — ${meta.businessName || email} ($49/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}<br>Location: ${meta.location || "Michigan"}</p>` }) });
           }
         } catch (e) { console.error("[WEBHOOK] market_intel_subscription error:", e); }
@@ -707,7 +815,16 @@ serve(async (req) => {
           const email = meta.email || customerEmail;
           if (email) await (sb.from as any)("caption_pack_clients").upsert({ email, contact_name: meta.name || null, business_name: meta.businessName || email, industry: meta.industry || null, platforms: meta.platforms || "Facebook, Instagram", active: true, stripe_subscription_id: session.subscription as string || null }, { onConflict: "email" });
           if (RESEND_API_KEY && email) {
-            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Caption Pack is active", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Caption Pack ($29/mo). 7-day trial started.</p><p>Every month you'll get 30 ready-to-post captions for ${meta.platforms || "Facebook, Instagram"}.</p><p>— Matt</p>` }) });
+            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Caption Pack is Active — 30 Posts Coming Your Way", html: m2Email({
+              greeting: `Hey${meta.name ? " " + meta.name : ""} —`,
+              headline: "Your AI Caption Pack is Active",
+              body: `<p style="margin:0 0 12px"><strong>Never stare at a blank screen wondering what to post again.</strong></p>
+<p style="margin:0 0 8px">📱 <strong>30 captions per month</strong> — ready to copy-paste to ${meta.platforms || "Facebook and Instagram"}</p>
+<p style="margin:0 0 8px">🎯 <strong>Industry-tailored</strong> — written for ${meta.industry || "your business"}, not generic fluff</p>
+<p style="margin:0 0 8px">📅 <strong>Posting schedule included</strong> — we tell you which days to post which caption</p>
+<p style="margin:0 0 16px">✨ <strong>7-day free trial</strong> — first batch arrives this week</p>
+<p style="margin:0;color:#64748b;font-size:13px">Just copy, paste, post. That's it. Social media done in 5 minutes a day.</p>`,
+            }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Caption Pack — ${meta.businessName || email} ($29/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Platforms: ${meta.platforms || "n/a"}</p>` }) });
           }
         } catch (e) { console.error("[WEBHOOK] caption_pack_subscription error:", e); }
@@ -720,7 +837,16 @@ serve(async (req) => {
           const email = meta.email || customerEmail;
           if (email) await (sb.from as any)("faq_refresh_clients").upsert({ email, contact_name: meta.name || null, business_name: meta.businessName || email, industry: meta.industry || null, website_url: meta.website || null, active: true, stripe_subscription_id: session.subscription as string || null }, { onConflict: "email" });
           if (RESEND_API_KEY && email) {
-            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI FAQ Refresh is active", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI FAQ Refresh ($29/mo). 7-day trial started.</p><p>Every month you'll get updated FAQs optimized for SEO.</p><p>— Matt</p>` }) });
+            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI FAQ Refresh is Active — SEO-Optimized FAQs Monthly", html: m2Email({
+              greeting: `Hey${meta.name ? " " + meta.name : ""} —`,
+              headline: "Your AI FAQ Refresh is Active",
+              body: `<p style="margin:0 0 12px"><strong>Fresh FAQs = fresh Google rankings.</strong> Here's what you're getting:</p>
+<p style="margin:0 0 8px">🔄 <strong>Monthly updated FAQs</strong> — SEO-optimized questions and answers for your website</p>
+<p style="margin:0 0 8px">🔍 <strong>Keyword-targeted</strong> — written to rank for the searches your customers are actually making</p>
+<p style="margin:0 0 8px">📋 <strong>Copy-paste ready</strong> — formatted for your website, no editing needed</p>
+<p style="margin:0 0 16px">✨ <strong>7-day free trial</strong> — first refresh arrives this week</p>
+<p style="margin:0;color:#64748b;font-size:13px">Google loves fresh content. This is the easiest way to feed it.</p>`,
+            }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New FAQ Refresh — ${meta.businessName || email} ($29/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}</p>` }) });
           }
         } catch (e) { console.error("[WEBHOOK] faq_refresh_subscription error:", e); }
@@ -733,7 +859,16 @@ serve(async (req) => {
           const email = meta.email || customerEmail;
           if (email) await (sb.from as any)("job_posting_clients").upsert({ email, contact_name: meta.name || null, business_name: meta.businessName || email, active: true, stripe_subscription_id: session.subscription as string || null }, { onConflict: "email" });
           if (RESEND_API_KEY && email) {
-            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Job Posting Generator is active", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Job Posting Generator ($39/mo). 7-day trial started.</p><p>Submit your job details and get polished postings within 24 hours.</p><p>— Matt</p>` }) });
+            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Job Posting Generator is Active — Post Smarter, Hire Faster", html: m2Email({
+              greeting: `Hey${meta.name ? " " + meta.name : ""} —`,
+              headline: "Your AI Job Posting Generator is Active",
+              body: `<p style="margin:0 0 12px"><strong>Stop writing boring job posts that nobody applies to.</strong></p>
+<p style="margin:0 0 8px">✍️ <strong>AI-written job posts</strong> — polished, professional, and optimized to attract quality candidates</p>
+<p style="margin:0 0 8px">⚡ <strong>Submit details, get posts</strong> — turnaround within 24 hours</p>
+<p style="margin:0 0 8px">📋 <strong>Multiple formats</strong> — Indeed, LinkedIn, and general-purpose versions</p>
+<p style="margin:0 0 16px">✨ <strong>7-day free trial started</strong></p>
+<p style="margin:0;color:#64748b;font-size:13px">Reply with your first job description and we'll have it polished by tomorrow.</p>`,
+            }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Job Posting — ${meta.businessName || email} ($39/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}</p>` }) });
           }
         } catch (e) { console.error("[WEBHOOK] job_posting_subscription error:", e); }
@@ -746,7 +881,16 @@ serve(async (req) => {
           const email = meta.email || customerEmail;
           if (email) await (sb.from as any)("newsletter_service_clients").upsert({ email, contact_name: meta.name || null, business_name: meta.businessName || email, industry: meta.industry || null, active: true, stripe_subscription_id: session.subscription as string || null }, { onConflict: "email" });
           if (RESEND_API_KEY && email) {
-            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Newsletter Service is active", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Newsletter Service ($49/mo). 7-day trial started.</p><p>Your first custom newsletter goes out on the 1st.</p><p>— Matt</p>` }) });
+            await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Newsletter Service is Active — First Issue Goes Out on the 1st", html: m2Email({
+              greeting: `Hey${meta.name ? " " + meta.name : ""} —`,
+              headline: "Your AI Newsletter Service is Active",
+              body: `<p style="margin:0 0 12px"><strong>A professional newsletter your customers actually want to read.</strong></p>
+<p style="margin:0 0 8px">📧 <strong>Monthly custom newsletter</strong> — written for ${meta.industry || "your industry"}, branded to your business</p>
+<p style="margin:0 0 8px">🎯 <strong>Industry-relevant content</strong> — tips, trends, and insights your audience cares about</p>
+<p style="margin:0 0 8px">📅 <strong>First issue</strong> — goes out on the 1st of next month</p>
+<p style="margin:0 0 16px">✨ <strong>7-day free trial started</strong></p>
+<p style="margin:0;color:#64748b;font-size:13px">You focus on running your business. We'll keep your customers engaged.</p>`,
+            }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Newsletter Service — ${meta.businessName || email} ($49/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}</p>` }) });
           }
         } catch (e) { console.error("[WEBHOOK] newsletter_service_subscription error:", e); }
@@ -1039,7 +1183,21 @@ serve(async (req) => {
                 from: "Matt Michels <matt@mattmichelstraining.com>",
                 to: [customerEmail], bcc: ["matthewmichels4@gmail.com"],
                 subject: `Welcome to GBP Management — ${meta.business_name || "your business"}`,
-                html: `<p>You're all set! I'll review your Google Business Profile within 24 hours and reach out to get started. Questions? Reply here or text me at (313) 806-4952.</p><p>— Matt Michels</p>`,
+                html: m2Email({
+              greeting: "Hey — welcome to M² GBP Management.",
+              headline: "Your Google Business Profile Management is Active",
+              body: `<p style="margin:0 0 12px"><strong>Your Google presence is about to get a serious upgrade.</strong></p>
+<p style="margin:0 0 8px">🗺️ <strong>Profile optimization</strong> — I'll review and optimize your entire GBP within 24 hours</p>
+<p style="margin:0 0 8px">📸 <strong>Photo + post management</strong> — regular updates to keep your profile active and ranking</p>
+<p style="margin:0 0 8px">⭐ <strong>Review strategy</strong> — help you get more 5-star reviews consistently</p>
+<p style="margin:0 0 16px">📊 <strong>Monthly reporting</strong> — see exactly how your profile is performing</p>
+<p style="margin:0 0 8px"><strong>What I need from you:</strong></p>
+<ol style="margin:0 0 16px;padding-left:20px;color:#475569">
+<li>Your Google Business Profile URL or business name as it appears on Google</li>
+<li>Admin access to your GBP (I'll walk you through it if needed)</li>
+</ol>
+<p style="margin:0;color:#64748b;font-size:13px">Reply to this email or text me to get started. I'll have your profile optimized by tomorrow.</p>`,
+            }),
               }),
             });
             await fetch("https://api.resend.com/emails", {
@@ -1242,7 +1400,17 @@ serve(async (req) => {
                 from: "Matt Michels <matt@mattmichelstraining.com>",
                 to: [customerEmail], bcc: ["matthewmichels4@gmail.com"],
                 subject: `Monthly maintenance set up — ${meta.business_name || "your site"}`,
-                html: `<p>You're all set on the $49/mo maintenance plan. Your site stays live, secure, and backed up — and you've got my direct cell for any changes you need. Text me at (313) 806-4952 or email matt@mattmichelstraining.com anytime. — Matt</p>`,
+                html: m2Email({
+              greeting: `Hey${meta.business_name ? " " + meta.business_name : ""} —`,
+              headline: "Your Website Maintenance Plan is Active",
+              body: `<p style="margin:0 0 12px"><strong>Your site is now fully covered.</strong> Here's what your $49/mo includes:</p>
+<p style="margin:0 0 8px">🔒 <strong>Security monitoring</strong> — SSL, updates, and vulnerability scanning</p>
+<p style="margin:0 0 8px">💾 <strong>Daily backups</strong> — your site is backed up every day, restorable anytime</p>
+<p style="margin:0 0 8px">🔧 <strong>Content updates</strong> — need text changed, photos swapped, or a new section? Just text me</p>
+<p style="margin:0 0 8px">📈 <strong>Uptime monitoring</strong> — if your site goes down, I know before you do</p>
+<p style="margin:0 0 16px">📱 <strong>Direct access</strong> — text (313) 806-4952 or email anytime for changes</p>
+<p style="margin:0;color:#64748b;font-size:13px">Your site stays live, fast, and looking good. That's the deal.</p>`,
+            }),
               }),
             });
             await fetch("https://api.resend.com/emails", {
@@ -1730,7 +1898,22 @@ serve(async (req) => {
                 from: "Matt Michels <matt@mattmichelstraining.com>",
                 to: [email], bcc: ["matthewmichels4@gmail.com"],
                 subject: "Your Field Rep AI Tools are ready",
-                html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're in. Head to <a href="https://www.mattmichelstraining.com/field-rep-tools">mattmichelstraining.com/field-rep-tools</a> and log in to start using all 4 tools — cold email writer, voicemail builder, objection handler, and territory planner.</p><p>Reply to this email if you have questions.</p><p>— Matt<br>(313) 806-4952</p>`,
+                html: m2Email({
+              greeting: `Hey${meta.name ? " " + meta.name : ""} —`,
+              headline: "Your Field Rep AI Tools Are Ready",
+              body: `<p style="margin:0 0 12px"><strong>4 AI tools built specifically for B2B field reps. Here's what you've got:</strong></p>
+<p style="margin:0 0 8px">✉️ <strong>Cold Email Writer</strong> — paste a prospect's LinkedIn or website, get a personalized cold email in 10 seconds</p>
+<p style="margin:0 0 8px">📞 <strong>Voicemail Script Builder</strong> — AI-generated voicemail scripts that actually get callbacks</p>
+<p style="margin:0 0 8px">🛡️ <strong>Objection Handler</strong> — type the objection, get 3 proven responses instantly</p>
+<p style="margin:0 0 16px">🗺️ <strong>Territory Planner</strong> — AI-optimized route and account prioritization</p>
+<p style="margin:0 0 8px"><strong>How to access:</strong></p>
+<ol style="margin:0 0 16px;padding-left:20px;color:#475569">
+<li>Go to <a href="https://www.mattmichelstraining.com/field-rep-tools" style="color:#e8621a">mattmichelstraining.com/field-rep-tools</a></li>
+<li>Enter the email you paid with (${meta.email || "this email"})</li>
+<li>Start closing more deals</li>
+</ol>
+<p style="margin:0 0 12px;background:#fff7ed;padding:12px;border-radius:6px;border:1px solid #fed7aa;font-size:13px">💡 <strong>Pro tip from Matt:</strong> Start with the Cold Email Writer. Paste a prospect's LinkedIn URL and you'll have a personalized email ready to send in under 30 seconds. My field reps used this to book 3x more meetings.</p>`,
+            }),
               }),
             });
             await fetch("https://api.resend.com/emails", {
@@ -1827,7 +2010,18 @@ serve(async (req) => {
                 from: "Matt Michels <matt@mattmichelstraining.com>",
                 to: [email], bcc: ["matthewmichels4@gmail.com"],
                 subject: "Your Social Media AI service is active",
-                html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>Your Social Media AI (${meta.plan || "standard"} plan) is now active. AI posts will start going out Monday, Wednesday, and Friday once your accounts are connected.</p><p><strong>Step 2 — Connect your accounts (2 min):</strong><br><a href="${onboardingUrl}" style="color:#e8621a;">Set up your social accounts →</a></p><p>Questions? Reply here or text Matt at (313) 806-4952.</p><p>— Matt</p>`,
+                html: m2Email({
+              greeting: `Hey${meta.name ? " " + meta.name : ""} —`,
+              headline: "Your Social Media AI Service is Active",
+              body: `<p style="margin:0 0 12px"><strong>Your ${meta.plan || "standard"} plan (${planPrice}/mo) is live.</strong> Here's what happens now:</p>
+<p style="margin:0 0 8px">📱 <strong>3 platforms</strong> — Facebook, Instagram, and LinkedIn posting</p>
+<p style="margin:0 0 8px">📅 <strong>3x per week</strong> — AI-generated posts go live Monday, Wednesday, Friday</p>
+<p style="margin:0 0 8px">🎯 <strong>Industry-tailored</strong> — content written for ${meta.business_name || "your business"}, not generic templates</p>
+<p style="margin:0 0 8px">📊 <strong>Content calendar</strong> — a mix of tips, behind-the-scenes, promotions, and engagement posts</p>
+<p style="margin:0 0 16px">✨ <strong>First post timeline</strong> — within 48 hours of connecting your accounts</p>
+<p style="margin:0 0 8px"><strong>⚡ One step needed — connect your accounts (takes 2 minutes):</strong></p>`,
+              cta: { text: "Connect Your Social Accounts →", url: onboardingUrl },
+            }),
               }),
             });
             await fetch("https://api.resend.com/emails", {
@@ -1986,7 +2180,16 @@ serve(async (req) => {
                 from: "Matt Michels <matt@mattmichelstraining.com>",
                 to: [email], bcc: ["matthewmichels4@gmail.com"],
                 subject: "You're subscribed to the Industrial Sales Newsletter",
-                html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>Welcome aboard. You'll get your first issue next Monday morning — practical B2B sales intel for industrial and manufacturing markets, no fluff.</p><p>Reply any time if you have questions or want to connect.</p><p>— Matt<br>(313) 806-4952</p>`,
+                html: m2Email({
+              greeting: `Hey${meta.name ? " " + meta.name : ""} —`,
+              headline: "Welcome to the Industrial Sales Newsletter",
+              body: `<p style="margin:0 0 12px"><strong>Real B2B sales intel. No fluff. Every Monday.</strong></p>
+<p style="margin:0 0 8px">📰 <strong>Weekly issue</strong> — drops every Monday at 8am ET</p>
+<p style="margin:0 0 8px">🏭 <strong>Industrial focus</strong> — strategies specific to manufacturing, industrial, and B2B markets</p>
+<p style="margin:0 0 8px">🛠️ <strong>Tool spotlights</strong> — the best AI and sales tools to close more deals</p>
+<p style="margin:0 0 16px">💡 <strong>Matt's field notes</strong> — 10 years of B2B door-knocking distilled into actionable tips</p>
+<p style="margin:0;color:#64748b;font-size:13px">First issue arrives this Monday. Reply anytime — I read every response.</p>`,
+            }),
               }),
             });
             await fetch("https://api.resend.com/emails", {
@@ -2026,7 +2229,22 @@ serve(async (req) => {
                 from: "Matt Michels <matt@mattmichelstraining.com>",
                 to: [email], bcc: ["matthewmichels4@gmail.com"],
                 subject: "Your Missed Call Text-Back is being set up",
-                html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for Missed Call Text-Back. Your 7-day free trial has started.</p><p>Matt will reach out within 24 hours to complete the forwarding setup — it takes about 5 minutes. After that, every missed call to your business gets an instant text-back automatically.</p><p>Questions? Reply here or text (313) 806-4952.</p><p>— Matt</p>`,
+                html: m2Email({
+              greeting: `Hey${meta.name ? " " + meta.name : ""} —`,
+              headline: "Your Missed Call Text-Back is Being Set Up",
+              body: `<p style="margin:0 0 12px"><strong>Every missed call is a potential customer walking away. Not anymore.</strong></p>
+<p style="margin:0 0 8px">📱 <strong>How it works:</strong> Someone calls your business and you can't answer → they instantly get a text: <em>"Hey, sorry I missed your call! I'll get right back to you."</em></p>
+<p style="margin:0 0 8px">⚡ <strong>Instant response</strong> — text fires within seconds of the missed call</p>
+<p style="margin:0 0 8px">🔄 <strong>24/7 coverage</strong> — works nights, weekends, holidays</p>
+<p style="margin:0 0 8px">📊 <strong>Lead capture</strong> — every missed call + text is logged for follow-up</p>
+<p style="margin:0 0 16px">✨ <strong>7-day free trial</strong> — your trial has started</p>
+<p style="margin:0 0 8px"><strong>Setup (5 minutes):</strong></p>
+<ol style="margin:0 0 16px;padding-left:20px;color:#475569">
+<li>Matt will text you within 24 hours to set up call forwarding</li>
+<li>You forward missed calls to your new M² number</li>
+<li>That's it — missed calls now get instant texts, automatically</li>
+</ol>`,
+            }),
               }),
             });
             await fetch("https://api.resend.com/emails", {
