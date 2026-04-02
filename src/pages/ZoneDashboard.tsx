@@ -35,6 +35,7 @@ const ChallengeHub = lazy(() => import("@/components/dashboard/ChallengeHub"));
 const SelfPostureAnalysis = lazy(() => import("@/components/dashboard/SelfPostureAnalysis"));
 const TechHubModal = lazy(() => import("@/components/dashboard/TechHubModal"));
 const DashboardPromoBox = lazy(() => import("@/components/dashboard/DashboardPromoBox"));
+const StudioCheckIn = lazy(() => import("@/components/sessions/StudioCheckIn"));
 
 type GeneratorView = "workout" | "fixit" | "programs" | "challenge" | null;
 
@@ -62,7 +63,7 @@ function getGreeting(name: string, streak: number, sessionsThisWeek: number): st
 const ZoneDashboard = () => {
   const { user, subscriptionTier } = useAuth();
   const isProOrElite = subscriptionTier === "pro" || subscriptionTier === "elite";
-  const { points } = usePoints();
+  const { points, transactions } = usePoints();
   const navigate = useNavigate();
   useBrowserNotifications();
 
@@ -81,6 +82,7 @@ const ZoneDashboard = () => {
   const [recentActivity, setRecentActivity] = useState<{ type: string; summary: string; date: string } | null>(null);
   const [postureOpen, setPostureOpen] = useState(false);
   const [techOpen, setTechOpen] = useState(false);
+  const [showCheckIn, setShowCheckIn] = useState(false);
 
   // Browser back button support for overlays
   const openOverlay = useCallback((view: GeneratorView) => {
@@ -355,10 +357,30 @@ const ZoneDashboard = () => {
           nextLevelLabel={nextLevel?.label ?? null}
           ptsToNext={nextLevel ? nextLevel.min - totalPoints : null}
           progressPct={progressPct}
-          onStreakClick={() => navigate("/progress")}
+          onStreakClick={() => setShowCheckIn(true)}
           onSessionsClick={() => navigate("/progress")}
           onPointsClick={() => setGeneratorView("challenge")}
         />
+
+        {/* Recent Points Activity */}
+        {transactions.length > 0 && (
+          <div
+            className="rounded-2xl p-3 space-y-2"
+            style={{ background: "rgba(168,85,247,0.06)", border: "1px solid rgba(168,85,247,0.15)" }}
+          >
+            <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: "#a855f7" }}>Recent Points</p>
+            {transactions.slice(0, 4).map((tx) => (
+              <div key={tx.id} className="flex items-center justify-between">
+                <span className="text-[11px] truncate flex-1" style={{ color: "#a3a3a3" }}>
+                  {tx.description}
+                </span>
+                <span className="text-[11px] font-bold ml-2 shrink-0" style={{ color: "#22c55e" }}>
+                  +{tx.points}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Coach banner — Pro/Elite only */}
         {isProOrElite && <CoachActivityBanner />}
@@ -577,6 +599,23 @@ const ZoneDashboard = () => {
           </Suspense>
         )}
       </AnimatePresence>
+      {/* Check-In Modal */}
+      {showCheckIn && (
+        <div className="fixed inset-0 z-[200] flex items-end justify-center" style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)" }}>
+          <div
+            className="w-full max-w-lg rounded-t-3xl p-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-4 animate-in slide-in-from-bottom-8"
+            style={{ background: "#111", border: "1px solid rgba(255,255,255,0.08)", borderBottom: "none" }}
+          >
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-black uppercase tracking-widest" style={{ color: "#22c55e" }}>Check In</p>
+              <button onClick={() => setShowCheckIn(false)} className="text-xs font-bold uppercase" style={{ color: "#525252" }}>Close</button>
+            </div>
+            <Suspense fallback={null}>
+              <StudioCheckIn />
+            </Suspense>
+          </div>
+        </div>
+      )}
       <Suspense fallback={null}>
         <SelfPostureAnalysis open={postureOpen} onClose={() => setPostureOpen(false)} />
         <TechHubModal open={techOpen} onClose={() => setTechOpen(false)} />

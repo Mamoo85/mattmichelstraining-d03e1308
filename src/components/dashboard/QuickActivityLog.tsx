@@ -37,7 +37,7 @@ interface QuickActivityLogProps {
 }
 
 const INTENSITY_OPTIONS = ["Easy", "Moderate", "Hard"];
-const DURATION_OPTIONS = ["20 min", "30 min", "45 min", "60+ min"];
+const DURATION_OPTIONS = ["30 min", "60 min"];
 
 const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
   const { user } = useAuth();
@@ -53,9 +53,10 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
   const photoRef = useRef<HTMLInputElement>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   
-  // Track what info has been provided
+  // Track what info has been provided — sequential prompts
   const [needsIntensity, setNeedsIntensity] = useState(false);
   const [needsDuration, setNeedsDuration] = useState(false);
+  const [intensityAnswered, setIntensityAnswered] = useState(false);
 
   const supported = typeof window !== "undefined" && ("SpeechRecognition" in window || "webkitSpeechRecognition" in window);
 
@@ -148,11 +149,15 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
         } catch { /* not valid JSON yet */ }
       }
 
-      // Always show quick-tap bubbles after AI responds (unless we already have a summary)
+      // Show intensity bubbles first (unless we already have a summary)
       if (!jsonMatch) {
-        // Show both sets of bubbles so users can always tap instead of typing
-        setNeedsIntensity(true);
-        setNeedsDuration(true);
+        if (!intensityAnswered) {
+          setNeedsIntensity(true);
+          setNeedsDuration(false);
+        } else {
+          setNeedsIntensity(false);
+          setNeedsDuration(true);
+        }
       }
     } catch (e: any) {
       if (e.name !== "AbortError") {
@@ -184,8 +189,13 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
     setListening(true);
   }, [listening, supported, sendMessage]);
 
-  const handleBubbleTap = useCallback((value: string) => {
+  const handleIntensityTap = useCallback((value: string) => {
     setNeedsIntensity(false);
+    setIntensityAnswered(true);
+    sendMessage(value);
+  }, [sendMessage]);
+
+  const handleDurationTap = useCallback((value: string) => {
     setNeedsDuration(false);
     sendMessage(value);
   }, [sendMessage]);
@@ -312,7 +322,7 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[200] flex flex-col"
-      style={{ background: "rgba(10,10,10,0.97)", backdropFilter: "blur(20px)" }}
+      style={{ background: "rgba(10,10,10,0.97)", backdropFilter: "blur(20px)", paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       {showTip && <FeatureLearningModal tip={QUICK_ACTIVITY_TIP} onContinue={dismissTip} onDismiss={dismissTip} />}
 
@@ -376,41 +386,47 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
 
         {/* Bubble buttons for intensity */}
         {needsIntensity && !streaming && (
-          <div className="flex flex-wrap gap-2 pt-1">
-            {INTENSITY_OPTIONS.map(opt => (
-              <button
-                key={opt}
-                onClick={() => handleBubbleTap(opt)}
-                className="px-4 py-2 rounded-full text-xs font-bold transition-all active:scale-95"
-                style={{
-                  background: opt === "Easy" ? "rgba(34,197,94,0.15)" : opt === "Moderate" ? "rgba(249,115,22,0.15)" : "rgba(239,68,68,0.15)",
-                  border: `1px solid ${opt === "Easy" ? "rgba(34,197,94,0.4)" : opt === "Moderate" ? "rgba(249,115,22,0.4)" : "rgba(239,68,68,0.4)"}`,
-                  color: opt === "Easy" ? "#22c55e" : opt === "Moderate" ? "#f97316" : "#ef4444",
-                }}
-              >
-                {opt}
-              </button>
-            ))}
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: "#737373" }}>How hard was it?</p>
+            <div className="flex flex-wrap gap-2">
+              {INTENSITY_OPTIONS.map(opt => (
+                <button
+                  key={opt}
+                  onClick={() => handleIntensityTap(opt)}
+                  className="px-4 py-2 rounded-full text-xs font-bold transition-all active:scale-95"
+                  style={{
+                    background: opt === "Easy" ? "rgba(34,197,94,0.15)" : opt === "Moderate" ? "rgba(249,115,22,0.15)" : "rgba(239,68,68,0.15)",
+                    border: `1px solid ${opt === "Easy" ? "rgba(34,197,94,0.4)" : opt === "Moderate" ? "rgba(249,115,22,0.4)" : "rgba(239,68,68,0.4)"}`,
+                    color: opt === "Easy" ? "#22c55e" : opt === "Moderate" ? "#f97316" : "#ef4444",
+                  }}
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
         {/* Bubble buttons for duration */}
         {needsDuration && !streaming && (
-          <div className="flex flex-wrap gap-2 pt-1">
-            {DURATION_OPTIONS.map(opt => (
-              <button
-                key={opt}
-                onClick={() => handleBubbleTap(opt)}
-                className="px-4 py-2 rounded-full text-xs font-bold transition-all active:scale-95"
-                style={{
-                  background: "rgba(0,240,255,0.1)",
-                  border: "1px solid rgba(0,240,255,0.3)",
-                  color: "#00f0ff",
-                }}
-              >
-                {opt}
-              </button>
-            ))}
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: "#737373" }}>How long?</p>
+            <div className="flex flex-wrap gap-2">
+              {DURATION_OPTIONS.map(opt => (
+                <button
+                  key={opt}
+                  onClick={() => handleDurationTap(opt)}
+                  className="px-4 py-2 rounded-full text-xs font-bold transition-all active:scale-95"
+                  style={{
+                    background: "rgba(0,240,255,0.1)",
+                    border: "1px solid rgba(0,240,255,0.3)",
+                    color: "#00f0ff",
+                  }}
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
           </div>
         )}
       </div>
@@ -473,7 +489,7 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
       </AnimatePresence>
 
       {/* Input bar */}
-      <div className="px-4 py-3 flex items-center gap-2" style={{ borderTop: "1px solid rgba(255,255,255,0.06)", background: "rgba(10,10,10,0.95)" }}>
+      <div className="px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] flex items-center gap-2" style={{ borderTop: "1px solid rgba(255,255,255,0.06)", background: "rgba(10,10,10,0.95)" }}>
         {/* Hidden file input for photo */}
         <input
           ref={photoRef}
