@@ -386,21 +386,24 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
 
         {/* Bubble buttons for intensity */}
         {needsIntensity && !streaming && (
-          <div className="flex flex-wrap gap-2 pt-1">
-            {INTENSITY_OPTIONS.map(opt => (
-              <button
-                key={opt}
-                onClick={() => handleBubbleTap(opt)}
-                className="px-4 py-2 rounded-full text-xs font-bold transition-all active:scale-95"
-                style={{
-                  background: opt === "Easy" ? "rgba(34,197,94,0.15)" : opt === "Moderate" ? "rgba(249,115,22,0.15)" : "rgba(239,68,68,0.15)",
-                  border: `1px solid ${opt === "Easy" ? "rgba(34,197,94,0.4)" : opt === "Moderate" ? "rgba(249,115,22,0.4)" : "rgba(239,68,68,0.4)"}`,
-                  color: opt === "Easy" ? "#22c55e" : opt === "Moderate" ? "#f97316" : "#ef4444",
-                }}
-              >
-                {opt}
-              </button>
-            ))}
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: "#737373" }}>How hard was it?</p>
+            <div className="flex flex-wrap gap-2">
+              {INTENSITY_OPTIONS.map(opt => (
+                <button
+                  key={opt}
+                  onClick={() => handleIntensityTap(opt)}
+                  className="px-4 py-2 rounded-full text-xs font-bold transition-all active:scale-95"
+                  style={{
+                    background: opt === "Easy" ? "rgba(34,197,94,0.15)" : opt === "Moderate" ? "rgba(249,115,22,0.15)" : "rgba(239,68,68,0.15)",
+                    border: `1px solid ${opt === "Easy" ? "rgba(34,197,94,0.4)" : opt === "Moderate" ? "rgba(249,115,22,0.4)" : "rgba(239,68,68,0.4)"}`,
+                    color: opt === "Easy" ? "#22c55e" : opt === "Moderate" ? "#f97316" : "#ef4444",
+                  }}
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
