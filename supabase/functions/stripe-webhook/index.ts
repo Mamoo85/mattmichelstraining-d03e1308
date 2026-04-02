@@ -31,6 +31,63 @@ async function getUserIdByEmail(sb: any, email: string): Promise<string | null> 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
+// ── M² BRANDED EMAIL TEMPLATE HELPER ─────────────────────────────────────
+function m2Email(opts: { greeting: string; headline: string; body: string; cta?: { text: string; url: string }; signature?: string }): string {
+  const ctaBlock = opts.cta ? `<div style="text-align:center;margin:24px 0"><a href="${opts.cta.url}" style="display:inline-block;background:#e8621a;color:#fff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:700;font-size:15px;font-family:sans-serif">${opts.cta.text}</a></div>` : "";
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+<div style="max-width:560px;margin:0 auto;background:#fff;border-radius:10px;overflow:hidden;border:1px solid #e2e8f0">
+  <div style="background:#1e293b;padding:20px 28px;border-bottom:3px solid #e8621a">
+    <p style="color:#e8621a;font-weight:700;font-size:11px;letter-spacing:.15em;text-transform:uppercase;margin:0 0 4px">M² Development</p>
+    <h1 style="color:#fff;margin:0;font-size:20px;font-family:Georgia,serif">${opts.headline}</h1>
+  </div>
+  <div style="padding:24px 28px;color:#1e293b;font-size:15px;line-height:1.8">
+    <p style="margin:0 0 16px">${opts.greeting}</p>
+    ${opts.body}
+    ${ctaBlock}
+    <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;align-items:center;gap:12px">
+      <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt" style="width:44px;height:44px;border-radius:50%;object-fit:cover" />
+      <div style="font-size:13px;color:#64748b">
+        <strong style="color:#1e293b">${opts.signature || "Matt Michels"}</strong><br>Grosse Pointe, MI · <a href="tel:+13138064952" style="color:#e8621a">(313) 806-4952</a>
+      </div>
+    </div>
+  </div>
+  <div style="padding:12px 28px;background:#f8fafc;border-top:1px solid #e2e8f0;text-align:center">
+    <p style="margin:0;color:#94a3b8;font-size:11px">M² Development · mattmichelstraining.com · Grosse Pointe, MI</p>
+  </div>
+</div></body></html>`;
+}
+
+async function sendM2Email(to: string, subject: string, html: string, bcc?: string): Promise<void> {
+  if (!RESEND_API_KEY) return;
+  await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: "Matt Michels <matt@mattmichelstraining.com>",
+      to: Array.isArray(to) ? to : [to],
+      bcc: [bcc || "matthewmichels4@gmail.com"],
+      subject,
+      html,
+    }),
+  });
+}
+
+async function notifyMatt(subject: string, html: string): Promise<void> {
+  if (!RESEND_API_KEY) return;
+  await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: "M² System <matt@mattmichelstraining.com>",
+      to: ["matt@mattmichelstraining.com"],
+      bcc: ["matthewmichels4@gmail.com"],
+      subject,
+      html,
+    }),
+  });
+}
+
 // Product ID → tier key mapping
 const PRODUCT_TIER_MAP: Record<string, string> = {
   // ── Current monthly (prod_UBI*) ──────────────────────────────────────────
