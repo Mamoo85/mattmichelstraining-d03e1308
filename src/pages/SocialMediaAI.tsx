@@ -10,8 +10,9 @@ const PLANS = [
     name: "Standard",
     price: "$99",
     originalPrice: "$199",
+    launchPrice: "$74.25",
     per: "/month",
-    badge: "🔥 Founding Client Rate",
+    badge: "🚀 Launch Special — 25% off first 3 months",
     description: "Facebook + LinkedIn posting, 3x per week — fully automated.",
     includes: [
       "Facebook + LinkedIn",
@@ -25,8 +26,9 @@ const PLANS = [
     name: "Pro",
     price: "$149",
     originalPrice: "$299",
+    launchPrice: "$111.75",
     per: "/month",
-    badge: "🔥 Founding Client Rate",
+    badge: "🚀 Launch Special — 25% off first 3 months",
     description: "Everything + Instagram + Google Business Profile, 5 posts/week.",
     includes: [
       "Everything in Standard",
