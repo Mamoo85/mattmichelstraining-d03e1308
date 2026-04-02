@@ -189,18 +189,26 @@ serve(async (req) => {
   try {
     // Verify the caller's JWT — must be a logged-in Supabase user with a Matt email
     const authHeader = req.headers.get("authorization") || "";
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Unauthorized — no auth header" }), {
+        status: 403, headers: { ...CORS, "Content-Type": "application/json" },
+      });
+    }
     const sbAuth = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      global: { headers: { authorization: authHeader } },
+      global: { headers: { Authorization: authHeader } },
     });
-    const { data: { user }, error: authError } = await sbAuth.auth.getUser();
-    if (authError || !user || !MATT_EMAILS.includes(user.email || "")) {
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await sbAuth.auth.getClaims(token);
+    const userEmail = claimsData?.claims?.email as string | undefined;
+    if (claimsError || !userEmail || !MATT_EMAILS.includes(userEmail)) {
+      console.error("[TEST-CHECKOUT] Auth failed:", claimsError?.message, "email:", userEmail);
       return new Response(JSON.stringify({ error: "Unauthorized — test checkouts restricted to admin" }), {
         status: 403, headers: { ...CORS, "Content-Type": "application/json" },
       });
     }
 
     const { product } = await req.json();
-    const email = user.email!;
+    const email = userEmail;
 
     const config = TEST_PRODUCTS[product];
     if (!config) {
