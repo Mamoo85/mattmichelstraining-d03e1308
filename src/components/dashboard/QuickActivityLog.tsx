@@ -149,11 +149,15 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
         } catch { /* not valid JSON yet */ }
       }
 
-      // Always show quick-tap bubbles after AI responds (unless we already have a summary)
+      // Show intensity bubbles first (unless we already have a summary)
       if (!jsonMatch) {
-        // Show both sets of bubbles so users can always tap instead of typing
-        setNeedsIntensity(true);
-        setNeedsDuration(true);
+        if (!intensityAnswered) {
+          setNeedsIntensity(true);
+          setNeedsDuration(false);
+        } else {
+          setNeedsIntensity(false);
+          setNeedsDuration(true);
+        }
       }
     } catch (e: any) {
       if (e.name !== "AbortError") {
