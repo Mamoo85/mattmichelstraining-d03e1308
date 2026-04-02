@@ -151,7 +151,7 @@ export default function AdCompetitorReport() {
             style={{ background: "#e8621a" }}
           >
             {submitting ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
-            {submitting ? "Processing…" : "Get My Competitor Report — $49"}
+            {submitting ? "Processing…" : "Get My Competitor Report — $9"}
           </button>
           <p className="text-center text-xs text-slate-500">Secure checkout · Delivered to your inbox in ~2 min · One-time fee</p>
         </form>
