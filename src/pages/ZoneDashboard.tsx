@@ -509,6 +509,11 @@ const ZoneDashboard = () => {
             </button>
           </div>
 
+          {/* Dynamic Promo Box */}
+          <Suspense fallback={null}>
+            <DashboardPromoBox />
+          </Suspense>
+
           {/* Install App prompt */}
           {!window.matchMedia("(display-mode: standalone)").matches && (
             <button
