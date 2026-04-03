@@ -597,6 +597,21 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
           <Send size={16} color="#fff" />
         </button>
       </div>
+
+      {/* PR Celebration */}
+      {prCelebration && (
+        <PRCelebration
+          exerciseName={prCelebration.exerciseName}
+          newWeight={prCelebration.newWeight}
+          previousBest={prCelebration.previousBest}
+          reps={prCelebration.reps}
+          pointsAwarded={50}
+          onDismiss={() => {
+            setPrCelebration(null);
+            onClose();
+          }}
+        />
+      )}
     </motion.div>
   );
 };
