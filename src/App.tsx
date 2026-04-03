@@ -147,6 +147,8 @@ const NewHomeownerCampaign = lazyRetry(() => import("./pages/NewHomeownerCampaig
 const ObituaryService = lazyRetry(() => import("./pages/ObituaryService"));
 const SermonPrep = lazyRetry(() => import("./pages/SermonPrep"));
 const HOASecretary = lazyRetry(() => import("./pages/HOASecretary"));
+const HOAMinutesTemplate = lazyRetry(() => import("./pages/HOAMinutesTemplate"));
+const HOAMeetingMinutes = lazyRetry(() => import("./pages/blog/HOAMeetingMinutes"));
 const HOAViolation = lazyRetry(() => import("./pages/HOAViolation"));
 const RFPAlerts = lazyRetry(() => import("./pages/RFPAlerts"));
 const FranchiseAnalyzer = lazyRetry(() => import("./pages/FranchiseAnalyzer"));
@@ -496,6 +498,8 @@ const App = () => (
                     <Route path="/obituary-service" element={<ObituaryService />} />
                     <Route path="/sermon-prep" element={<SermonPrep />} />
                     <Route path="/hoa-secretary" element={<HOASecretary />} />
+                    <Route path="/hoa-minutes-template" element={<HOAMinutesTemplate />} />
+                    <Route path="/blog/hoa-meeting-minutes" element={<HOAMeetingMinutes />} />
                     <Route path="/hoa-violation" element={<HOAViolation />} />
                     <Route path="/rfp-alerts" element={<RFPAlerts />} />
                     <Route path="/franchise-analyzer" element={<FranchiseAnalyzer />} />

@@ -1083,3 +1083,9 @@ verify_jwt = false
 
 [functions.create-gov-meeting-tracker-checkout]
 verify_jwt = false
+
+[functions.hoa-lead-magnet-capture]
+verify_jwt = false
+
+[functions.hoa-cold-outreach]
+verify_jwt = false
