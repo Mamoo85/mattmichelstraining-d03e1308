@@ -246,6 +246,55 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
         } else {
           toast({ title: "Workout sheet saved! 📋", description: "Check your workout library." });
         }
+
+        // PR Detection: check each exercise against progress_logs
+        for (const ex of summary.workout_sheet) {
+          const weightStr = ex.weight?.replace(/[^0-9.]/g, "");
+          const weight = weightStr ? parseFloat(weightStr) : 0;
+          if (weight <= 0) continue;
+
+          const liftName = ALL_LIFTS.find(
+            l => l.name.toLowerCase() === ex.title.toLowerCase() ||
+                 ex.title.toLowerCase().includes(l.name.toLowerCase()) ||
+                 l.name.toLowerCase().includes(ex.title.toLowerCase())
+          )?.name;
+          if (!liftName) continue;
+
+          try {
+            const { data: prev } = await supabase
+              .from("progress_logs")
+              .select("weight")
+              .eq("user_id", saveUserId)
+              .eq("exercise_name", liftName)
+              .order("weight", { ascending: false })
+              .limit(1);
+
+            const prevBest = prev?.[0]?.weight || 0;
+            if (weight > prevBest) {
+              // Insert new PR
+              await supabase.from("progress_logs").insert({
+                user_id: saveUserId,
+                exercise_name: liftName,
+                weight: weight,
+                reps: parseInt(ex.reps) || 1,
+              } as any);
+
+              // Award points
+              try { await awardPoints("workout_log", `New PR: ${liftName} ${weight} lbs`); } catch {}
+
+              // Show celebration (first PR found)
+              setPrCelebration({
+                exerciseName: liftName,
+                newWeight: weight,
+                previousBest: prevBest,
+                reps: parseInt(ex.reps) || undefined,
+              });
+              break; // Show one at a time
+            }
+          } catch (err) {
+            console.error("PR check error:", err);
+          }
+        }
       }
 
       // Notify all admins about the new activity
@@ -269,13 +318,13 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
       }
 
       toast({ title: "Activity logged! 💪", description: summary.ai_summary });
-      onClose();
+      if (!prCelebration) onClose();
     } catch (e: any) {
       toast({ title: "Save failed", description: e.message, variant: "destructive" });
     } finally {
       setSaving(false);
     }
-  }, [summary, user, targetUserId, onClose]);
+  }, [summary, user, targetUserId, onClose, awardPoints]);
 
   const dismissTip = useCallback(() => {
     safeLocalStorage.setItem(QUICK_ACTIVITY_TIP.storageKey, "1");
