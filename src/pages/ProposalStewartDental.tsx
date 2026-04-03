@@ -405,7 +405,7 @@ export default function ProposalStewartDental() {
                   value={clientName}
                   onChange={e => setClientName(e.target.value)}
                   className="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2"
-                  style={{ borderColor: BORDER, focusRingColor: ORANGE }}
+                  style={{ borderColor: BORDER }}
                 />
               </div>
 
