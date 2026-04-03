@@ -15,6 +15,7 @@ const AdminClientList = lazy(() => import("@/components/admin/AdminClientList"))
 const AdminSupportCopilot = lazy(() => import("@/components/admin/AdminSupportCopilot"));
 const AdminFamilyManager = lazy(() => import("@/components/admin/AdminFamilyManager"));
 const AdminTeamRosters = lazy(() => import("@/components/admin/AdminTeamRosters"));
+const AdminCoachManager = lazy(() => import("@/components/admin/AdminCoachManager"));
 const AdminParentReports = lazy(() => import("@/components/admin/AdminParentReports"));
 const AdminParentInbox = lazy(() => import("@/components/admin/AdminParentInbox"));
 const AdminCoachInbox = lazy(() => import("@/components/admin/AdminCoachInbox"));
