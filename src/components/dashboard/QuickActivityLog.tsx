@@ -167,7 +167,7 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
       setStreaming(false);
       abortRef.current = null;
     }
-  }, [messages, streaming]);
+  }, [messages, streaming, intensityAnswered]);
 
   const toggleVoice = useCallback(() => {
     if (!supported) return;
