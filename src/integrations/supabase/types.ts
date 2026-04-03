@@ -2935,6 +2935,7 @@ export type Database = {
           active: boolean | null
           business_name: string
           city: string | null
+          contact_name: string | null
           created_at: string | null
           email: string
           id: string
@@ -2948,6 +2949,7 @@ export type Database = {
           active?: boolean | null
           business_name: string
           city?: string | null
+          contact_name?: string | null
           created_at?: string | null
           email: string
           id?: string
@@ -2961,6 +2963,7 @@ export type Database = {
           active?: boolean | null
           business_name?: string
           city?: string | null
+          contact_name?: string | null
           created_at?: string | null
           email?: string
           id?: string
@@ -5937,6 +5940,45 @@ export type Database = {
           active?: boolean | null
           business_name?: string
           caption_count?: number | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          industry?: string | null
+          last_sent_at?: string | null
+          stripe_customer_id?: string | null
+        }
+        Relationships: []
+      }
+      social_captions_clients: {
+        Row: {
+          active: boolean | null
+          business_name: string
+          caption_count: number | null
+          contact_name: string | null
+          created_at: string | null
+          email: string
+          id: string
+          industry: string | null
+          last_sent_at: string | null
+          stripe_customer_id: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          business_name: string
+          caption_count?: number | null
+          contact_name?: string | null
+          created_at?: string | null
+          email: string
+          id?: string
+          industry?: string | null
+          last_sent_at?: string | null
+          stripe_customer_id?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          business_name?: string
+          caption_count?: number | null
+          contact_name?: string | null
           created_at?: string | null
           email?: string
           id?: string
