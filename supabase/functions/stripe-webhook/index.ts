@@ -4630,6 +4630,38 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // ── EMPLOYEE CREDENTIAL AUDIT — $149 one-time ─────────────────────────
+      if (meta.type === "employee_credential_audit") {
+        const auditId = meta.audit_id;
+        fetch(`${SUPABASE_URL}/functions/v1/employee-credential-scan`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
+          body: JSON.stringify({ audit_id: auditId }),
+        }).catch((e: unknown) => console.error("[WEBHOOK] employee-credential-scan fire error:", e));
+        // Update stripe_session_id on the audit record
+        try {
+          const sb2 = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+          await sb2.from("employee_credential_audits").update({ stripe_session_id: session.id as string }).eq("id", auditId);
+        } catch (e) { console.error("[WEBHOOK] employee_credential_audit session_id update error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── NEW HIRE BREACH CHECK — $9.99 one-time HIBP screen ───────────────────
+      if (meta.type === "new_hire_breach_check") {
+        fetch(`${SUPABASE_URL}/functions/v1/new-hire-breach-check`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
+          body: JSON.stringify({
+            candidate_name: meta.candidate_name,
+            candidate_email: meta.candidate_email,
+            requester_email: meta.requester_email,
+            is_test: meta.is_test === "true",
+            stripe_session_id: session.id,
+          }),
+        }).catch(console.error);
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
     // ── LUKE — Capture abandoned checkouts for recovery emails ────────────────
     if (event.type === "checkout.session.expired") {
       try {

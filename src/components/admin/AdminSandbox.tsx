@@ -68,6 +68,8 @@ const PRODUCTS: Product[] = [
   { id: "competitor_pricing_subscription", name: "Competitor Pricing Intel", price: "$149/mo", description: "Welcome email + competitor_pricing_clients record. Weekly price change detection + AI recommendations.", type: "subscription", category: "Autonomous Products" },
   { id: "re_newsletter_subscription", name: "Real Estate Newsletter", price: "$79/mo", description: "Welcome email + re_newsletter_clients record. Weekly branded market report sent to agent's contacts.", type: "subscription", category: "Autonomous Products" },
   { id: "trademark_watch_subscription", name: "Trademark Watch Service", price: "$49/mo", description: "Welcome email + trademark_watch_clients record + first mark. Weekly USPTO similarity scan.", type: "subscription", category: "Autonomous Products" },
+  { id: "employee_credential_audit", name: "Employee Credential Audit", price: "$149 one-time", description: "Checks every employee email against HaveIBeenPwned. Delivers breach report to inbox within minutes.", type: "instant", category: "One-Time" },
+  { id: "new_hire_breach_check", name: "New Hire Breach Screen", price: "$9.99/check", description: "Check a job candidate's email against HaveIBeenPwned before onboarding. Report delivered in minutes.", type: "instant", category: "One-Time" },
 ];
 
 type TestStatus = "idle" | "loading" | "success" | "error";

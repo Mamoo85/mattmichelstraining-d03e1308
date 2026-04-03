@@ -281,6 +281,8 @@ const PetMemorialSuccess = lazyRetry(() => import("./pages/PetMemorial").then(m 
 const MemorialPage = lazyRetry(() => import("./pages/MemorialPage"));
 const RealEstateNewsletter = lazyRetry(() => import("./pages/RealEstateNewsletter"));
 const RealEstateDashboard = lazyRetry(() => import("./pages/RealEstateDashboard"));
+const EmployeeCredentialAudit = lazyRetry(() => import("./pages/EmployeeCredentialAudit"));
+const NewHireCheck = lazyRetry(() => import("./pages/NewHireCheck"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -654,6 +656,8 @@ const App = () => (
                     <Route path="/competitor-pricing/dashboard" element={<ProtectedRoute><CompetitorPricingDashboard /></ProtectedRoute>} />
                     <Route path="/real-estate-newsletter" element={<RealEstateNewsletter />} />
                     <Route path="/real-estate-newsletter/dashboard" element={<ProtectedRoute><RealEstateDashboard /></ProtectedRoute>} />
+                    <Route path="/employee-credential-audit" element={<EmployeeCredentialAudit />} />
+                    <Route path="/new-hire-check" element={<NewHireCheck />} />
                     <Route path="*" element={<NotFound />} />
                     </Routes>
                   </div>

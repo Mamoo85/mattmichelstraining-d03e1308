@@ -72,6 +72,8 @@ const ALL_SERVICES = [
   { table: "re_newsletter_clients", name: "Real Estate Newsletter", price: "$79/mo", priceNum: 79 },
   // ── One-Time Products ─────────────────────────────────────────────────────
   { table: "pet_memorial_submissions", name: "AI Pet Memorial", price: "$79 one-time", priceNum: 79 },
+  { table: "employee_credential_audits", name: "Employee Credential Audit", price: "$149 one-time", priceNum: 149 },
+  { table: "new_hire_breach_checks", name: "New Hire Breach Screen", price: "$9.99/check", priceNum: 9.99 },
 ] as const;
 
 interface ClientRecord {

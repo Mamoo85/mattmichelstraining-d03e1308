@@ -546,6 +546,32 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
     },
     success_url: `${SITE}/trademark-watch?test=true`,
   },
+  employee_credential_audit: {
+    name: "TEST — Employee Credential Audit ($149)",
+    description: "Checks employee emails against HIBP breach database. $0 test.",
+    mode: "payment",
+    metadata: {
+      type: "employee_credential_audit",
+      audit_id: "test-audit-id-placeholder",
+      email: MATT,
+      company_name: "M² Performance Training",
+      is_test: "true",
+    },
+    success_url: `${SITE}/employee-credential-audit?test=true`,
+  },
+  new_hire_breach_check: {
+    name: "TEST — New Hire Breach Screen ($9.99)",
+    description: "Check candidate email against HIBP breach database. $0 test.",
+    mode: "payment",
+    metadata: {
+      type: "new_hire_breach_check",
+      candidate_name: "Test Candidate",
+      candidate_email: "test@example.com",
+      requester_email: MATT,
+      is_test: "true",
+    },
+    success_url: `${SITE}/new-hire-check?test=true`,
+  },
 };
 
 serve(async (req) => {
@@ -579,6 +605,30 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: `Unknown product: ${product}`, available: Object.keys(TEST_PRODUCTS) }), {
         status: 400, headers: { ...CORS, "Content-Type": "application/json" },
       });
+    }
+
+    // For employee_credential_audit, pre-create the audit record and use the real UUID
+    if (product === "employee_credential_audit") {
+      const sb = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "");
+      const { data: auditRow, error: insertError } = await sb
+        .from("employee_credential_audits")
+        .insert({
+          customer_email: MATT,
+          company_name: "M² Performance Training",
+          employee_emails: ["matt@mattmichelstraining.com", "test@example.com"],
+          status: "pending",
+          is_test: true,
+        })
+        .select("id")
+        .single();
+
+      if (insertError || !auditRow) {
+        console.error("[TEST-CHECKOUT] Failed to pre-create audit record:", insertError);
+        return new Response(JSON.stringify({ error: "Failed to create test audit record" }), {
+          status: 500, headers: { ...CORS, "Content-Type": "application/json" },
+        });
+      }
+      config.metadata.audit_id = auditRow.id;
     }
 
     const lineItem = {
