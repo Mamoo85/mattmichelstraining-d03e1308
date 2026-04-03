@@ -7751,57 +7751,57 @@ export type Database = {
         Row: {
           business_name: string | null
           city: string | null
+          created_at: string | null
           description: string | null
           id: string | null
           industry: string | null
           is_active: boolean | null
           is_featured: boolean | null
           logo_url: string | null
-          owner_name: string | null
           state: string | null
           tier: string | null
+          updated_at: string | null
           website: string | null
         }
         Insert: {
           business_name?: string | null
           city?: string | null
+          created_at?: string | null
           description?: string | null
           id?: string | null
           industry?: string | null
           is_active?: boolean | null
           is_featured?: boolean | null
           logo_url?: string | null
-          owner_name?: string | null
           state?: string | null
           tier?: string | null
+          updated_at?: string | null
           website?: string | null
         }
         Update: {
           business_name?: string | null
           city?: string | null
+          created_at?: string | null
           description?: string | null
           id?: string | null
           industry?: string | null
           is_active?: boolean | null
           is_featured?: boolean | null
           logo_url?: string | null
-          owner_name?: string | null
           state?: string | null
           tier?: string | null
+          updated_at?: string | null
           website?: string | null
         }
         Relationships: []
       }
       generated_sites_public: {
         Row: {
-          address: string | null
           business_name: string | null
           color_scheme: Json | null
           created_at: string | null
           id: string | null
           is_published: boolean | null
-          lead_id: string | null
-          logo_url: string | null
           published_at: string | null
           sections: Json | null
           slug: string | null
@@ -7809,14 +7809,11 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          address?: string | null
           business_name?: string | null
           color_scheme?: Json | null
           created_at?: string | null
           id?: string | null
           is_published?: boolean | null
-          lead_id?: string | null
-          logo_url?: string | null
           published_at?: string | null
           sections?: Json | null
           slug?: string | null
@@ -7824,29 +7821,18 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          address?: string | null
           business_name?: string | null
           color_scheme?: Json | null
           created_at?: string | null
           id?: string | null
           is_published?: boolean | null
-          lead_id?: string | null
-          logo_url?: string | null
           published_at?: string | null
           sections?: Json | null
           slug?: string | null
           template_key?: string | null
           updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "generated_sites_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "web_design_leads"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       training_programs_public: {
         Row: {
@@ -7924,6 +7910,16 @@ export type Database = {
           sport: string
           title: string
           total_weeks: number
+        }[]
+      }
+      get_my_pending_actions: {
+        Args: never
+        Returns: {
+          action_type: string
+          ai_result: string
+          created_at: string
+          id: string
+          status: string
         }[]
       }
       get_public_profiles: {
