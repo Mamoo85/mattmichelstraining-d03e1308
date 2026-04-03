@@ -37,6 +37,7 @@ function matchProgressLift(parsedName: string): string | null {
 
 const QuickLogBar = ({ exercises, onApplyParsed }: QuickLogBarProps) => {
   const { user } = useAuth();
+  const { awardPoints } = usePoints();
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [listening, setListening] = useState(false);
@@ -47,6 +48,12 @@ const QuickLogBar = ({ exercises, onApplyParsed }: QuickLogBarProps) => {
     previous_best: number;
   }> | null>(null);
   const [pendingSets, setPendingSets] = useState<ParsedSet[] | null>(null);
+  const [prCelebration, setPrCelebration] = useState<{
+    exerciseName: string;
+    newWeight: number;
+    previousBest: number;
+    reps?: number;
+  } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const speechSupported =
