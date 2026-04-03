@@ -15,6 +15,7 @@ const TeamFeed = ({ rosterId }: Props) => {
   const { user } = useAuth();
   const [items, setItems] = useState<any[]>([]);
   const [reactions, setReactions] = useState<Record<string, any[]>>({});
+  const [profiles, setProfiles] = useState<Record<string, any>>({});
   const [newPost, setNewPost] = useState("");
   const [posting, setPosting] = useState(false);
 
@@ -30,16 +31,23 @@ const TeamFeed = ({ rosterId }: Props) => {
 
     if (data?.length) {
       const ids = data.map((d) => d.id);
-      const { data: rxns } = await supabase
-        .from("team_feed_reactions")
-        .select("*")
-        .in("feed_item_id", ids);
+      const userIds = [...new Set(data.map((d) => d.user_id))];
+
+      const [rxnsRes, profilesRes] = await Promise.all([
+        supabase.from("team_feed_reactions").select("*").in("feed_item_id", ids),
+        supabase.from("profiles").select("user_id, athlete_name, full_name").in("user_id", userIds),
+      ]);
+
       const grouped: Record<string, any[]> = {};
-      (rxns || []).forEach((r) => {
+      (rxnsRes.data || []).forEach((r) => {
         if (!grouped[r.feed_item_id]) grouped[r.feed_item_id] = [];
         grouped[r.feed_item_id].push(r);
       });
       setReactions(grouped);
+
+      const pMap: Record<string, any> = {};
+      (profilesRes.data || []).forEach((p) => { pMap[p.user_id] = p; });
+      setProfiles(pMap);
     }
   };
 
@@ -81,12 +89,24 @@ const TeamFeed = ({ rosterId }: Props) => {
   };
 
   const REACTIONS = ["🔥", "💪", "👏", "💯"];
-
   const typeEmoji: Record<string, string> = {
-    pr: "🏆",
-    workout_log: "💪",
-    shoutout: "🙌",
-    coach_announcement: "📢",
+    pr: "🏆", workout_log: "💪", shoutout: "🙌", coach_announcement: "📢",
+  };
+
+  const getName = (userId: string) => {
+    const p = profiles[userId];
+    return p?.athlete_name || p?.full_name || "Teammate";
+  };
+
+  const timeAgo = (dateStr: string) => {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return "just now";
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    const days = Math.floor(hrs / 24);
+    return `${days}d ago`;
   };
 
   return (
@@ -108,15 +128,24 @@ const TeamFeed = ({ rosterId }: Props) => {
         return (
           <Card key={item.id} className={`p-3 ${item.is_pinned ? "border-primary bg-primary/5" : ""}`}>
             <div className="space-y-2">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span>{typeEmoji[item.type] || "💬"}</span>
-                <span className="font-bold uppercase tracking-wider">{item.type.replace("_", " ")}</span>
-                <span>·</span>
-                <span>{new Date(item.created_at).toLocaleDateString()}</span>
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-black text-primary">
+                  {getName(item.user_id)[0]}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="font-bold text-foreground">{getName(item.user_id)}</span>
+                    <span className="text-muted-foreground">{typeEmoji[item.type] || "💬"} {item.type.replace("_", " ")}</span>
+                    <span className="text-muted-foreground">· {timeAgo(item.created_at)}</span>
+                  </div>
+                </div>
+                {item.is_pinned && (
+                  <span className="text-[9px] bg-primary/10 text-primary font-bold uppercase tracking-wider px-1.5 py-0.5 rounded">Pinned</span>
+                )}
               </div>
-              <p className="text-sm text-foreground">{item.content}</p>
+              <p className="text-sm text-foreground pl-9">{item.content}</p>
               {/* Reactions */}
-              <div className="flex gap-1">
+              <div className="flex gap-1 pl-9">
                 {REACTIONS.map((emoji) => {
                   const count = itemReactions.filter((r) => r.reaction === emoji).length;
                   const mine = itemReactions.some((r) => r.reaction === emoji && r.user_id === user?.id);
