@@ -6,8 +6,9 @@ import TeamFeed from "@/components/teams/TeamFeed";
 import TeamLeaderboard from "@/components/teams/TeamLeaderboard";
 import TeamTodayWorkout from "@/components/teams/TeamTodayWorkout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Users } from "lucide-react";
+import { Loader2, Users, Trophy, Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 
 const MyTeam = () => {
@@ -15,6 +16,7 @@ const MyTeam = () => {
   const navigate = useNavigate();
   const [membership, setMembership] = useState<any>(null);
   const [team, setTeam] = useState<any>(null);
+  const [memberCount, setMemberCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -31,6 +33,14 @@ const MyTeam = () => {
       if (member) {
         setMembership(member);
         setTeam(member.team_rosters);
+
+        // Get member count
+        const { count } = await supabase
+          .from("team_members")
+          .select("*", { count: "exact", head: true })
+          .eq("roster_id", (member.team_rosters as any).id)
+          .eq("status", "active");
+        setMemberCount(count || 0);
       }
       setLoading(false);
     };
@@ -70,16 +80,25 @@ const MyTeam = () => {
     <div className="min-h-screen bg-background">
       <AppNavbar />
       <div className="container pt-20 pb-24 space-y-4">
+        {/* Team header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-black text-foreground uppercase tracking-wider">
               {team.team_name}
             </h1>
-            {team.sport && (
-              <span className="text-xs text-primary font-bold uppercase tracking-wider">
-                {team.sport}
+            <div className="flex items-center gap-3 mt-1">
+              {team.sport && (
+                <Badge variant="default" className="text-[10px] uppercase tracking-wider">
+                  {team.sport}
+                </Badge>
+              )}
+              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Users size={12} /> {memberCount}
               </span>
-            )}
+              {team.school_name && (
+                <span className="text-xs text-muted-foreground">{team.school_name}</span>
+              )}
+            </div>
           </div>
         </div>
 

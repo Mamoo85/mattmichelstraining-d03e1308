@@ -8,6 +8,7 @@ import CoachMyTeams from "@/components/teams/CoachMyTeams";
 import CoachRoster from "@/components/teams/CoachRoster";
 import CoachAssignWorkout from "@/components/teams/CoachAssignWorkout";
 import CoachTeamFeed from "@/components/teams/CoachTeamFeed";
+import CoachTeamProgress from "@/components/teams/CoachTeamProgress";
 import { Loader2, ShieldAlert } from "lucide-react";
 
 const CoachHub = () => {
@@ -26,7 +27,6 @@ const CoachHub = () => {
         .eq("is_active", true)
         .maybeSingle();
 
-      // Also check if admin
       const { data: isAdmin } = await supabase.rpc("has_role", {
         _user_id: user.id,
         _role: "admin",
@@ -73,10 +73,11 @@ const CoachHub = () => {
         </div>
 
         <Tabs defaultValue="teams" className="w-full">
-          <TabsList className="w-full grid grid-cols-4">
+          <TabsList className="w-full grid grid-cols-5">
             <TabsTrigger value="teams" className="text-xs">Teams</TabsTrigger>
             <TabsTrigger value="roster" className="text-xs">Roster</TabsTrigger>
             <TabsTrigger value="assign" className="text-xs">Assign</TabsTrigger>
+            <TabsTrigger value="progress" className="text-xs">Progress</TabsTrigger>
             <TabsTrigger value="feed" className="text-xs">Feed</TabsTrigger>
           </TabsList>
 
@@ -93,6 +94,10 @@ const CoachHub = () => {
 
           <TabsContent value="assign">
             <CoachAssignWorkout rosterId={selectedRosterId} />
+          </TabsContent>
+
+          <TabsContent value="progress">
+            <CoachTeamProgress rosterId={selectedRosterId} />
           </TabsContent>
 
           <TabsContent value="feed">
