@@ -94,13 +94,9 @@ const YoungbloodMockup = () => {
         .yb-heading { font-family: 'Rajdhani', sans-serif; font-weight: 700; letter-spacing: -0.02em; }
       `}</style>
 
-      {/* ── Demo Badge ── */}
-      <div className="fixed top-4 right-4 z-[60] hidden lg:flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold tracking-wide" style={{ background: "#f97316", color: "#0a0f1a" }}>
-        <span>REDESIGN CONCEPT</span>
-        <span className="opacity-60">·</span>
-        <Link to="/manufacturing-web-design" className="underline underline-offset-2">Matt Michels Web Design</Link>
-        <span className="opacity-60">·</span>
-        <a href="tel:3138064952">313.806.4952</a>
+      {/* ── Demo Banner ── */}
+      <div className="fixed top-0 left-0 right-0 z-[150] text-center py-2 px-4 text-xs font-bold tracking-widest" style={{ background: "#0ea5e9", color: "#0a0f1a" }}>
+        REDESIGN CONCEPT · Matt Michels Web Design · 313.806.4952
       </div>
 
       {/* ── Alt Design Switcher ── */}
@@ -136,7 +132,7 @@ const YoungbloodMockup = () => {
       {/*  1. STICKY HEADER                                          */}
       {/* ════════════════════════════════════════════════════════════ */}
       <header
-        className="fixed inset-x-0 top-0 z-50 transition-transform duration-300"
+        className="fixed inset-x-0 top-8 z-50 transition-transform duration-300"
         style={{
           transform: headerVisible ? "translateY(0)" : "translateY(-100%)",
           background: "rgba(10,15,26,.85)",

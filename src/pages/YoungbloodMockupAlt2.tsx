@@ -82,9 +82,14 @@ export default function YoungbloodMockupAlt2() {
         .partner-chip:hover { border-color: ${BLUE} !important; color: ${BLUE} !important; }
       `}</style>
 
+      {/* Demo banner */}
+      <div className="fixed top-0 left-0 right-0 z-[150] text-center py-2 px-4 text-xs font-bold tracking-widest" style={{ background: BLUE, color: WHITE }}>
+        REDESIGN CONCEPT · Matt Michels Web Design · 313.806.4952
+      </div>
+
       {/* Header */}
       <header style={{
-        position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
+        position: "fixed", top: 32, left: 0, right: 0, zIndex: 100,
         background: NAVY, borderBottom: `1px solid ${BORDER}`,
         transform: headerVisible ? "translateY(0)" : "translateY(-100%)",
         transition: "transform 0.3s ease",
