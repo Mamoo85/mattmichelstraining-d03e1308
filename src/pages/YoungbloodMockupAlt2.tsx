@@ -201,7 +201,7 @@ export default function YoungbloodMockupAlt2() {
             </div>
           </RevealSection>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: 1, background: BORDER }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 340px), 1fr))", gap: 1, background: BORDER }}>
             {SOLUTIONS.map(s => (
               <RevealSection key={s.id}>
                 <div className="solution-card" style={{ background: "#0A1628", padding: "36px 32px", cursor: "pointer", transition: "border-color 0.2s", border: "1px solid transparent" }}>
