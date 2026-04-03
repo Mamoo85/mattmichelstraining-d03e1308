@@ -151,10 +151,23 @@ const QuickLogBar = ({ exercises, onApplyParsed }: QuickLogBarProps) => {
     }
 
     toast.success(`${confirmed.length} PR${confirmed.length > 1 ? "s" : ""} logged! 🏆`);
+
+    // Show celebration for the biggest PR
+    const biggest = confirmed.reduce((a, b) => (b.weight_lbs - b.previous_best > a.weight_lbs - a.previous_best ? b : a), confirmed[0]);
+    setPrCelebration({
+      exerciseName: biggest.exercise_name,
+      newWeight: biggest.weight_lbs,
+      previousBest: biggest.previous_best,
+      reps: biggest.reps,
+    });
+
+    // Award points
+    try { await awardPoints("workout_log", `New PR: ${biggest.exercise_name} ${biggest.weight_lbs} lbs`); } catch {}
+
     setPrCandidates(null);
     setPendingSets(null);
     setText("");
-  }, [user, pendingSets, onApplyParsed]);
+  }, [user, pendingSets, onApplyParsed, awardPoints]);
 
   const handlePRDismiss = useCallback(() => {
     // User said "not correct" — don't apply sets, let them re-enter
