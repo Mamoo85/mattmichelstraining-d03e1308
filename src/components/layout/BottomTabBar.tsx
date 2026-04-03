@@ -70,6 +70,7 @@ const HIDDEN_PATHS = [
   "/demo-youngblood", "/demo-dental", "/demo-home",
   "/detroit-web-design", "/whats-included",
   "/matrix", "/matrix-training", "/matrix-merch",
+  "/admin",
 ];
 
 const BottomTabBar = () => {

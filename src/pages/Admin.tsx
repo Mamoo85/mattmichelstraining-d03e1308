@@ -581,7 +581,7 @@ const Admin = () => {
       </div>
 
       {/* ── Mobile bottom nav bar ─────────────────────────────────────────── */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-t border-border md:hidden">
+      <div className="fixed bottom-0 left-0 right-0 z-[110] bg-card/95 backdrop-blur-md border-t border-border md:hidden">
         {/* Two rows of 5 and 4 (or scroll) */}
         <div className="overflow-x-auto">
           <div className="flex min-w-max px-1 py-1 gap-0.5">
