@@ -431,6 +431,12 @@ const Pricing = () => {
                       <span className="text-muted-foreground text-xs">/mo</span>
                       <span className="text-[10px] text-muted-foreground line-through ml-1">{tier.price}</span>
                     </>
+                  ) : card.key === "foundation" ? (
+                    <>
+                      <span className="text-2xl font-black text-primary">$9.99</span>
+                      <span className="text-muted-foreground text-xs">/mo</span>
+                      <span className="text-[10px] text-muted-foreground line-through ml-1">{tier.price}</span>
+                    </>
                   ) : (
                     <>
                       <span className="text-2xl font-black text-foreground">{tier.price}</span>
@@ -438,6 +444,11 @@ const Pricing = () => {
                     </>
                   )}
                 </div>
+                {card.key === "foundation" && billingCycle === "monthly" && (
+                  <p className="text-[10px] text-primary font-bold mb-1">
+                    🔥 Launch Special — 50% off for 6 months
+                  </p>
+                )}
                 {billingCycle === "annual" && (
                   <p className="text-[10px] text-primary font-bold mb-1">
                     {annual.price}/yr · 2 months free

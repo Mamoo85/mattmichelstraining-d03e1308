@@ -8,12 +8,12 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
-const PwaInstallBanner = () => {
+const PwaInstallBanner = ({ autoTrigger = false }: { autoTrigger?: boolean }) => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [dismissed, setDismissed] = useState(false);
+  const [autoTriggered, setAutoTriggered] = useState(false);
 
   useEffect(() => {
-    // Check if already dismissed this session
     if (safeSessionStorage.getItem("pwa-banner-dismissed")) {
       setDismissed(true);
     }
@@ -27,7 +27,23 @@ const PwaInstallBanner = () => {
     return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
 
-  // Don't show if already installed (standalone), dismissed, or no prompt available
+  // Auto-trigger install prompt once per session for logged-in mobile users
+  useEffect(() => {
+    if (autoTrigger && deferredPrompt && !dismissed && !autoTriggered) {
+      const alreadyAutoTriggered = safeSessionStorage.getItem("pwa-auto-triggered");
+      if (!alreadyAutoTriggered) {
+        setAutoTriggered(true);
+        safeSessionStorage.setItem("pwa-auto-triggered", "1");
+        deferredPrompt.prompt().then(() => {
+          deferredPrompt.userChoice.then(({ outcome }) => {
+            if (outcome === "accepted") setDeferredPrompt(null);
+            setDismissed(true);
+          });
+        });
+      }
+    }
+  }, [autoTrigger, deferredPrompt, dismissed, autoTriggered]);
+
   const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
   if (isStandalone || dismissed || !deferredPrompt) return null;
 
