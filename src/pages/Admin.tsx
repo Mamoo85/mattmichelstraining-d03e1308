@@ -149,6 +149,31 @@ const Admin = () => {
   const [testEmailState, setTestEmailState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const { isAdmin, isLoading } = useIsAdmin();
 
+  // Listen for navigation events from child components (e.g., Automation Hub)
+  useEffect(() => {
+    const handleSwitchTab = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail === "prospector") {
+        setActiveTab("webdesign");
+        // Small delay to let the tab render, then SubTabs default will show first tab
+        // We need to dispatch another event for the sub-tab
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent("switch-subtab", { detail: "prospector" }));
+        }, 100);
+      }
+    };
+    const handleNavigateAdmin = (e: Event) => {
+      const tab = (e as CustomEvent).detail;
+      if (tab) setActiveTab(tab);
+    };
+    window.addEventListener("switch-webdesign-tab", handleSwitchTab);
+    window.addEventListener("navigate-admin", handleNavigateAdmin);
+    return () => {
+      window.removeEventListener("switch-webdesign-tab", handleSwitchTab);
+      window.removeEventListener("navigate-admin", handleNavigateAdmin);
+    };
+  }, []);
+
   const sendTestEmail = async () => {
     setTestEmailState("sending");
     try {

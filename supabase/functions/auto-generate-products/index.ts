@@ -36,7 +36,7 @@ async function generateProgramSeoPage(
   slug: string,
   lovableKey: string
 ): Promise<{ pageTitle: string; metaDescription: string; content: string }> {
-  const res = await fetch("https://api.lovable.ai/openai/v1/chat/completions", {
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${lovableKey}` },
     body: JSON.stringify({
