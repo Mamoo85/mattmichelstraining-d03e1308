@@ -53,13 +53,7 @@ const PRCelebration = ({
   const [visible, setVisible] = useState(true);
   const improvement = previousBest > 0 ? newWeight - previousBest : 0;
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setVisible(false);
-      setTimeout(onDismiss, 400);
-    }, 8000);
-    return () => clearTimeout(timer);
-  }, [onDismiss]);
+  // No auto-dismiss — user must tap/click to close
 
   const handleDismiss = useCallback(() => {
     setVisible(false);

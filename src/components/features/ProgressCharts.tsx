@@ -7,6 +7,9 @@ import { Loader2, TrendingUp } from "lucide-react";
 import { LIFT_CATEGORIES, ALL_LIFTS, getLiftConfig } from "@/components/progress/liftConfig";
 import TronChart from "@/components/progress/TronChart";
 import BodyAvatar from "@/components/progress/BodyAvatar";
+import BodyProgressMap from "@/components/progress/BodyProgressMap";
+import VolumeChart from "@/components/progress/VolumeChart";
+import StreakHeatmap from "@/components/progress/StreakHeatmap";
 import LogForm from "@/components/progress/LogForm";
 import StatsRow from "@/components/progress/StatsRow";
 import LogHistory from "@/components/progress/LogHistory";
@@ -23,6 +26,13 @@ interface ProgressLog {
   logged_at: string;
 }
 
+interface AllLog {
+  exercise_name: string;
+  weight: number;
+  reps: number;
+  logged_at: string;
+}
+
 interface ProgressChartsProps {
   targetUserId?: string;
   targetUserName?: string;
@@ -34,6 +44,7 @@ const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) =
   const [activeLift, setActiveLift] = useState(ALL_LIFTS[0].name);
   const [data, setData] = useState<{ date: string; value: number }[]>([]);
   const [logs, setLogs] = useState<ProgressLog[]>([]);
+  const [allLogs, setAllLogs] = useState<AllLog[]>([]);
   const [loading, setLoading] = useState(true);
 
   const effectiveUserId = targetUserId || user?.id;
@@ -43,20 +54,31 @@ const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) =
   const fetchData = useCallback(async () => {
     if (!effectiveUserId) { setLoading(false); return; }
     setLoading(true);
-    const { data: rawLogs } = await supabase
-      .from("progress_logs")
-      .select("id, weight, reps, estimated_1rm, logged_at")
-      .eq("user_id", effectiveUserId)
-      .eq("exercise_name", activeLift)
-      .order("logged_at");
-    if (rawLogs) {
-      setLogs(rawLogs);
+    const [liftRes, allRes] = await Promise.all([
+      supabase
+        .from("progress_logs")
+        .select("id, weight, reps, estimated_1rm, logged_at")
+        .eq("user_id", effectiveUserId)
+        .eq("exercise_name", activeLift)
+        .order("logged_at"),
+      supabase
+        .from("progress_logs")
+        .select("exercise_name, weight, reps, logged_at")
+        .eq("user_id", effectiveUserId)
+        .order("logged_at"),
+    ]);
+
+    if (liftRes.data) {
+      setLogs(liftRes.data);
       setData(
-        rawLogs.map((l) => ({
+        liftRes.data.map((l) => ({
           date: new Date(l.logged_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
           value: Math.round(l.weight),
         }))
       );
+    }
+    if (allRes.data) {
+      setAllLogs(allRes.data as AllLog[]);
     }
     setLoading(false);
   }, [effectiveUserId, activeLift]);
@@ -77,7 +99,7 @@ const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) =
         timestamp={targetUserId ? "Admin view — logging for this client" : "Track your maxes and watch them climb"}
       />
 
-      {/* Lift category selector — condensed */}
+      {/* Lift category selector */}
       {LIFT_CATEGORIES.map((cat) => (
         <div key={cat.label} className="mb-2">
           <span className="text-[9px] font-mono font-bold uppercase tracking-widest mb-1 block text-primary">
@@ -129,6 +151,8 @@ const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) =
       ) : (
         <>
           <StatsRow current={current} delta={delta} max={max} repMax={repMax} />
+
+          {/* Main chart + body avatar */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="md:col-span-2">
               <TronChart data={data} repMax={repMax} />
@@ -137,8 +161,28 @@ const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) =
               <BodyAvatar activeLift={activeLift} />
             </div>
           </div>
+
           <LiftInsights logs={logs} liftName={activeLift} />
+
+          {/* Volume chart */}
+          <div className="mt-4">
+            <VolumeChart logs={logs} liftName={activeLift} />
+          </div>
         </>
+      )}
+
+      {/* Activity heatmap — always visible if any logs exist */}
+      {allLogs.length > 0 && (
+        <div className="mt-4">
+          <StreakHeatmap logs={allLogs} />
+        </div>
+      )}
+
+      {/* Body Progress Heat Map — shows all-lift improvement across muscle groups */}
+      {allLogs.length > 2 && (
+        <div className="mt-4">
+          <BodyProgressMap allLogs={allLogs} />
+        </div>
       )}
 
       {effectiveUserId && (

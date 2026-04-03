@@ -14,6 +14,7 @@ import ZoneThemeWrapper from "@/components/zone/ZoneThemeWrapper";
 import AthleteStats from "@/components/dashboard/AthleteStats";
 import AthleteProfileCard from "@/components/dashboard/AthleteProfileCard";
 import CoachActivityBanner from "@/components/dashboard/CoachActivityBanner";
+import DataHubButton from "@/components/dashboard/DataHubButton";
 import logoImg from "@/assets/m2-logo-zone.png";
 import { safeLocalStorage } from "@/lib/browserStorage";
 import type { FeatureTip } from "@/components/dashboard/FeatureLearningModal";
@@ -372,6 +373,9 @@ const ZoneDashboard = () => {
             ))}
           </div>
         )}
+
+        {/* Data Hub — animated stat flipper */}
+        <DataHubButton />
 
         {/* Coach banner — Pro/Elite only */}
         {isProOrElite && <CoachActivityBanner />}
