@@ -214,7 +214,7 @@ export default function DentalMockup() {
         <section id="doctor" className="py-20 px-5" style={{ background:"white" }}>
           <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-12">
             <div className="flex-shrink-0">
-              <img src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=600&q=80"
+              <img src="/images/dr-stewart.jpg"
                 alt="Dr. Robert Stewart, DDS, MS"
                 className="rounded-2xl object-cover"
                 style={{ width:220, height:280, border:`3px solid ${T}`, display:"block" }} />
