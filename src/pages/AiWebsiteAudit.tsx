@@ -106,7 +106,7 @@ export default function AiWebsiteAudit() {
         <div className="max-w-5xl mx-auto px-6 py-14 grid lg:grid-cols-2 gap-12">
           {/* Form */}
           <div>
-            <h2 className="text-xl font-black text-foreground mb-6">Get Your Audit — $9</h2>
+            <h2 className="text-xl font-black text-foreground mb-6">Get Your Free Audit</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Your Email <span className="text-destructive">*</span></label>
