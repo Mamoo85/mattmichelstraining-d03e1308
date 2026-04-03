@@ -323,7 +323,7 @@ export default function AdminTrainingNewsletter() {
       {/* Side-by-side comparison */}
       <div className="flex gap-4 flex-col lg:flex-row">
         <ContentCard
-          label="Claude (Anthropic)"
+          label="GPT-5 Mini (OpenAI)"
           icon={<Bot size={15} className="text-orange-400" />}
           color="#e8621a"
           result={anthropicResult}
