@@ -597,6 +597,7 @@ const ZoneDashboard = () => {
       <Suspense fallback={null}>
         <SelfPostureAnalysis open={postureOpen} onClose={() => setPostureOpen(false)} />
         <TechHubModal open={techOpen} onClose={() => setTechOpen(false)} />
+        {user && <PwaInstallBanner autoTrigger />}
       </Suspense>
     </ZoneThemeWrapper>
   );
