@@ -87,6 +87,7 @@ const ClinicMockup = lazyRetry(() => import("./pages/ClinicMockup"));
 const RoofingMockup = lazyRetry(() => import("./pages/RoofingMockup"));
 const YoungbloodMockup = lazyRetry(() => import("./pages/YoungbloodMockup"));
 const DentalMockup = lazyRetry(() => import("./pages/DentalMockup"));
+const ProposalStewartDental = lazyRetry(() => import("./pages/ProposalStewartDental"));
 const WebDesignIncluded = lazyRetry(() => import("./pages/WebDesignIncluded"));
 const AutoRepairMockup = lazyRetry(() => import("./pages/AutoRepairMockup"));
 const RealEstateMockup = lazyRetry(() => import("./pages/RealEstateMockup"));
@@ -444,6 +445,7 @@ const App = () => (
                     <Route path="/demo-youngblood/*" element={<YoungbloodMockup />} />
                     <Route path="/demo-dental" element={<DentalMockup />} />
                     <Route path="/demo-dental/*" element={<DentalMockup />} />
+                    <Route path="/proposal/stewart-dental" element={<ProposalStewartDental />} />
                     <Route path="/ai-website-audit" element={<AiWebsiteAudit />} />
                     <Route path="/ai-gbp-post-pack" element={<AiGbpPostPack />} />
                     <Route path="/ai-competitor-report" element={<AiCompetitorReport />} />
