@@ -4669,6 +4669,38 @@ export type Database = {
           },
         ]
       }
+      purchased_guides: {
+        Row: {
+          guide_id: string
+          id: string
+          purchased_at: string | null
+          stripe_session_id: string | null
+          user_id: string
+        }
+        Insert: {
+          guide_id: string
+          id?: string
+          purchased_at?: string | null
+          stripe_session_id?: string | null
+          user_id: string
+        }
+        Update: {
+          guide_id?: string
+          id?: string
+          purchased_at?: string | null
+          stripe_session_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchased_guides_guide_id_fkey"
+            columns: ["guide_id"]
+            isOneToOne: false
+            referencedRelation: "sport_guides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       purchased_programs: {
         Row: {
           exercises: Json
@@ -6019,6 +6051,45 @@ export type Database = {
           last_sent_at?: string | null
           lead_count?: number | null
           stripe_customer_id?: string | null
+        }
+        Relationships: []
+      }
+      sport_guides: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          price_cents: number
+          sort_order: number
+          sport: string
+          stripe_price_id: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          price_cents?: number
+          sort_order?: number
+          sport?: string
+          stripe_price_id?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          price_cents?: number
+          sort_order?: number
+          sport?: string
+          stripe_price_id?: string | null
+          title?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
