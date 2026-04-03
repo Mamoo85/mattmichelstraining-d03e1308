@@ -93,7 +93,7 @@ export default function AiWebsiteAudit() {
               <span className="text-primary">isn't bringing in customers.</span>
             </h1>
             <p className="text-lg text-muted-foreground mb-6 max-w-xl mx-auto leading-relaxed">
-              Enter your URL. Pay $9. Get a full professional audit report in your inbox within 60 seconds — SEO score, design grade, trust signals, mobile check, and the 3 fixes that will actually move the needle.
+              Enter your URL. Get a full professional audit report in your inbox within 60 seconds — SEO score, design grade, trust signals, mobile check, and the 3 fixes that will actually move the needle. <strong className="text-primary">100% Free.</strong>
             </p>
             <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
               <span className="flex items-center gap-1.5"><CheckCircle size={14} className="text-primary" /> No subscription</span>
