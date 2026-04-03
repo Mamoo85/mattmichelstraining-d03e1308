@@ -27,7 +27,7 @@ SELECT cron.schedule(
   '0 13 * * 1',
   $$
   SELECT extensions.http_post(
-    url := 'https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/prospect-local-businesses',
+    url := 'https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/prospect-local-businesses',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'Authorization', 'Bearer ' || (
@@ -45,7 +45,7 @@ SELECT cron.schedule(
   '0 13 * * 2',
   $$
   SELECT extensions.http_post(
-    url := 'https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/prospect-local-businesses',
+    url := 'https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/prospect-local-businesses',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'Authorization', 'Bearer ' || (
@@ -63,7 +63,7 @@ SELECT cron.schedule(
   '0 13 * * 3',
   $$
   SELECT extensions.http_post(
-    url := 'https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/prospect-local-businesses',
+    url := 'https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/prospect-local-businesses',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'Authorization', 'Bearer ' || (
@@ -81,7 +81,7 @@ SELECT cron.schedule(
   '0 13 * * 4',
   $$
   SELECT extensions.http_post(
-    url := 'https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/prospect-local-businesses',
+    url := 'https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/prospect-local-businesses',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'Authorization', 'Bearer ' || (
@@ -99,7 +99,7 @@ SELECT cron.schedule(
   '0 13 * * 5',
   $$
   SELECT extensions.http_post(
-    url := 'https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/prospect-local-businesses',
+    url := 'https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/prospect-local-businesses',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'Authorization', 'Bearer ' || (

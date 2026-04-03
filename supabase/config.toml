@@ -1,4 +1,4 @@
-project_id = "eauvubfpanpeuxsrqesu"
+project_id = "zmyczlfuufhngzovkjdh"
 
 [functions.process-email-queue]
 verify_jwt = true
@@ -917,4 +917,61 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.handle-email-suppression]
+verify_jwt = false
+
+[functions.review-monitor]
+verify_jwt = false
+
+[functions.weekly-sms-sender]
+verify_jwt = false
+
+[functions.noshow-trigger]
+verify_jwt = false
+
+[functions.noshow-followup]
+verify_jwt = false
+
+[functions.estimate-drip-runner]
+verify_jwt = false
+
+[functions.invoice-chaser-runner]
+verify_jwt = false
+
+[functions.afterjob-drip-runner]
+verify_jwt = false
+
+[functions.slow-day-trigger]
+verify_jwt = false
+
+[functions.create-review-monitor-checkout]
+verify_jwt = false
+
+[functions.create-sms-blast-checkout]
+verify_jwt = false
+
+[functions.create-noshow-checkout]
+verify_jwt = false
+
+[functions.create-estimate-drip-checkout]
+verify_jwt = false
+
+[functions.create-invoice-chaser-checkout]
+verify_jwt = false
+
+[functions.create-afterjob-drip-checkout]
+verify_jwt = false
+
+[functions.create-promo-blaster-checkout]
+verify_jwt = false
+
+[functions.create-referral-program-checkout]
+verify_jwt = false
+
+[functions.create-slow-day-checkout]
+verify_jwt = false
+
+[functions.create-homeowner-campaign-checkout]
+verify_jwt = false
+
+[functions.sms-product-monitor]
 verify_jwt = false

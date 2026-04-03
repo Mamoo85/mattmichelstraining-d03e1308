@@ -134,6 +134,16 @@ const TrainerSocialAI = lazyRetry(() => import("./pages/TrainerSocialAI"));
 const GetStarted = lazyRetry(() => import("./pages/GetStarted"));
 const SocialConnect = lazyRetry(() => import("./pages/SocialConnect"));
 const ReviewResponder = lazyRetry(() => import("./pages/ReviewResponder"));
+const ReviewMonitor = lazyRetry(() => import("./pages/ReviewMonitor"));
+const WeeklySMSBlast = lazyRetry(() => import("./pages/WeeklySMSBlast"));
+const NoShowRebooker = lazyRetry(() => import("./pages/NoShowRebooker"));
+const EstimateFollowup = lazyRetry(() => import("./pages/EstimateFollowup"));
+const InvoiceChaser = lazyRetry(() => import("./pages/InvoiceChaser"));
+const AfterJobFollowup = lazyRetry(() => import("./pages/AfterJobFollowup"));
+const SeasonalPromos = lazyRetry(() => import("./pages/SeasonalPromos"));
+const ReferralProgram = lazyRetry(() => import("./pages/ReferralProgram"));
+const SlowDaySMS = lazyRetry(() => import("./pages/SlowDaySMS"));
+const NewHomeownerCampaign = lazyRetry(() => import("./pages/NewHomeownerCampaign"));
 const SeoAuditService = lazyRetry(() => import("./pages/SeoAuditService"));
 const ContractorChatbot = lazyRetry(() => import("./pages/ContractorChatbot"));
 const IndustrialNewsletter = lazyRetry(() => import("./pages/IndustrialNewsletter"));
@@ -455,6 +465,16 @@ const App = () => (
                     <Route path="/contractor-chatbot" element={<ContractorChatbot />} />
                     <Route path="/industrial-newsletter" element={<IndustrialNewsletter />} />
                     <Route path="/missed-call-text" element={<MissedCallSaaS />} />
+                    <Route path="/review-monitor" element={<ReviewMonitor />} />
+                    <Route path="/weekly-sms-blast" element={<WeeklySMSBlast />} />
+                    <Route path="/no-show-rebooker" element={<NoShowRebooker />} />
+                    <Route path="/estimate-followup" element={<EstimateFollowup />} />
+                    <Route path="/invoice-chaser" element={<InvoiceChaser />} />
+                    <Route path="/after-job-followup" element={<AfterJobFollowup />} />
+                    <Route path="/seasonal-promos" element={<SeasonalPromos />} />
+                    <Route path="/referral-program" element={<ReferralProgram />} />
+                    <Route path="/slow-day-sms" element={<SlowDaySMS />} />
+                    <Route path="/new-homeowner-campaign" element={<NewHomeownerCampaign />} />
                     <Route path="/ai-newsletter-service" element={<AINewsletterService />} />
                     <Route path="/free-trending-products" element={<FreeTrendingProducts />} />
                     <Route path="/free-grant-digest" element={<FreeGrantDigest />} />

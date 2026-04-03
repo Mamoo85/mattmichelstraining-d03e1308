@@ -1027,6 +1027,16 @@ serve(async (req) => {
         seo_report_subscription: "SEO Report",
         chatbot_subscription: "AI Chatbot",
         industrial_newsletter_subscription: "Industrial Newsletter",
+        review_monitor_subscription: "Review Monitor",
+        sms_blast_subscription: "Weekly SMS Blast",
+        noshow_subscription: "No-Show Re-Booker",
+        estimate_drip_subscription: "Estimate Follow-Up Drip",
+        invoice_chaser_subscription: "Invoice Chaser",
+        afterjob_drip_subscription: "After-Job Drip",
+        promo_blaster_subscription: "Seasonal Promo Blaster",
+        referral_program_subscription: "Referral Program",
+        slow_day_subscription: "Slow Day SMS",
+        homeowner_campaign_subscription: "New Homeowner Campaign",
         gbp_subscription: "GBP Management",
         social_media_subscription: "Social Media AI",
         web_design_build: "Web Design",
@@ -1831,35 +1841,23 @@ serve(async (req) => {
 
           if (RESEND_API_KEY && customerEmail) {
             const isPro = meta.plan === "pro";
-            await fetch("https://api.resend.com/emails", {
-              method: "POST",
-              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-              body: JSON.stringify({
-                from: "Matt Michels <matt@mattmichelstraining.com>",
-                to: [customerEmail], bcc: ["matthewmichels4@gmail.com"],
-                subject: `Welcome to M² Local Marketing — ${meta.business_name || "your business"}`,
-                html: `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#f8fafc;padding:32px;">
-<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;">
-  <div style="background:#e8621a;height:4px;"></div>
-  <div style="padding:28px 32px;color:#1e293b;font-size:15px;line-height:1.9;">
-    <p>Hey ${meta.business_name || "there"} —</p>
-    <p>You're all set on the ${isPro ? "Pro" : "Basic"} plan. I'll start posting to your Google Business Profile ${isPro ? "3x a week, plus sending review requests to your customers" : "3x a week"}.</p>
-    <p><strong>Next step:</strong> I need a couple things to get started. I'll reach out within 24 hours to collect your Google Business Profile info. If you want to speed it up, email <a href="mailto:matt@mattmichelstraining.com" style="color:#e8621a;">matt@mattmichelstraining.com</a> or text <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a>.</p>
-    <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;align-items:center;gap:12px;">
-      <img src="https://www.mattmichelstraining.com/images/matt-family-cornfield.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Matt Michels">
-      <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>Grosse Pointe, MI · (313) 806-4952</div>
-    </div>
-  </div>
-<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;">
-        <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" />
-        <div style="font-size:13px;color:#94a3b8;">
-          <strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 806-4952
-        </div>
-        <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M² Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" />
-      </div></div>
-</body></html>`,
-              }),
-            });
+            await sendM2Email(customerEmail, `Your Google Business Profile Automation is Live — ${meta.business_name || "your business"}`, m2Email({
+              greeting: `Hey${meta.business_name ? " " + meta.business_name : ""} —`,
+              headline: isPro ? "GBP Autopilot (Pro) is Active" : "GBP Autopilot (Basic) is Active",
+              body: `<p style="margin:0 0 12px"><strong>Here's exactly what you're getting:</strong></p>
+<p style="margin:0 0 8px">📅 <strong>${isPro ? "3 posts per week" : "3 posts per week"}</strong> — AI-written content goes live every Monday, Wednesday, and Friday</p>
+<p style="margin:0 0 8px">🎯 <strong>Local & relevant</strong> — posts are written for ${meta.business_name || "your business"} in ${meta.city || "your city"}, not generic templates</p>
+<p style="margin:0 0 8px">🔄 <strong>Content mix</strong> — seasonal tips, service highlights, community content, customer-focused posts, and soft CTAs</p>
+${isPro ? `<p style="margin:0 0 8px">⭐ <strong>Review requests</strong> (Pro) — weekly review request emails to your customer list to grow your Google rating</p>` : ""}
+<p style="margin:0 0 20px">📈 <strong>Why this works</strong> — Google rewards consistent activity on your Business Profile. Active profiles rank higher in local search. Most businesses post 0–1x/month. You'll post 12+ times a month automatically.</p>
+<p style="margin:0 0 8px"><strong>⚡ One step to get started:</strong></p>
+<p style="margin:0 0 4px">I need to connect your Google Business Profile. Takes 5 minutes. Two options:</p>
+<ul style="margin:8px 0 16px;padding-left:20px;color:#475569">
+<li>Text me at <a href="tel:+13138064952" style="color:#e8621a">(313) 806-4952</a> and I'll send you the connection link</li>
+<li>Or reply to this email — I'll get it set up same day</li>
+</ul>
+<p style="margin:0;background:#f0fdf4;padding:12px;border-radius:6px;border:1px solid #bbf7d0;font-size:13px;color:#166534">✅ Your first post will go live within 24 hours of connecting your profile. You won't have to do anything after that.</p>`,
+            }), "matthewmichels4@gmail.com");
             await fetch("https://api.resend.com/emails", {
               method: "POST",
               headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
@@ -2059,8 +2057,19 @@ serve(async (req) => {
               body: JSON.stringify({
                 from: "Matt Michels <matt@mattmichelstraining.com>",
                 to: [email], bcc: ["matthewmichels4@gmail.com"],
-                subject: "Your Review Response Automation is active",
-                html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>Your Google review automation is live. We'll start monitoring and responding to new reviews within 24 hours.</p><p>One step needed: connect your Google Business Profile. Reply to this email or text Matt at (313) 806-4952 and he'll send you the connection link.</p><p>— Matt</p>`,
+                subject: "Your Review Responder is Active — One Quick Step to Go Live",
+                html: m2Email({
+              greeting: `Hey${meta.name ? " " + meta.name : ""} —`,
+              headline: "Your Review Responder is Active",
+              body: `<p style="margin:0 0 12px"><strong>Here's what this service does for you:</strong></p>
+<p style="margin:0 0 8px">⭐ <strong>Monitors Google reviews</strong> — we check your profile multiple times per day for new reviews</p>
+<p style="margin:0 0 8px">🤖 <strong>AI-written responses</strong> — every new review (positive or negative) gets a professional, personalized response within hours</p>
+<p style="margin:0 0 8px">📊 <strong>Protects your reputation</strong> — fast responses show potential customers you're engaged and care. Google also rewards it with better local rankings.</p>
+<p style="margin:0 0 20px">💬 <strong>Negative reviews handled carefully</strong> — AI de-escalates professionally, invites offline resolution, and never argues</p>
+<p style="margin:0 0 8px"><strong>⚡ One step needed — connect your Google Business Profile:</strong></p>
+<p style="margin:0 0 16px;color:#475569">Text Matt at <a href="tel:+13138064952" style="color:#e8621a">(313) 806-4952</a> or reply to this email — he'll send you the Google connection link within the hour. Setup takes 3 minutes.</p>
+<p style="margin:0;background:#f0fdf4;padding:12px;border-radius:6px;border:1px solid #bbf7d0;font-size:13px;color:#166534">✅ Once connected, every new review gets responded to automatically — you never have to think about it again.</p>`,
+            }),
               }),
             });
             await fetch("https://api.resend.com/emails", {
@@ -2098,8 +2107,19 @@ serve(async (req) => {
               body: JSON.stringify({
                 from: "Matt Michels <matt@mattmichelstraining.com>",
                 to: [email], bcc: ["matthewmichels4@gmail.com"],
-                subject: "Your SEO Reports are active",
-                html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>Your monthly SEO report subscription is live. Your first report will be delivered within 24 hours — it covers rankings, traffic trends, competitor gaps, and recommended actions.</p><p>Questions? Reply here or text Matt at (313) 806-4952.</p><p>— Matt</p>`,
+                subject: "Your Monthly SEO Report is Active — First Report Coming Within 24 Hours",
+                html: m2Email({
+              greeting: `Hey${meta.name ? " " + meta.name : ""} —`,
+              headline: "Your SEO Reports Are Active",
+              body: `<p style="margin:0 0 12px"><strong>Your first report lands in your inbox within 24 hours. Here's what you'll get every month:</strong></p>
+<p style="margin:0 0 8px">🔍 <strong>Keyword Rankings</strong> — see exactly where you rank on Google for your most important local search terms, and whether you're moving up or down</p>
+<p style="margin:0 0 8px">📈 <strong>Traffic Trends</strong> — month-over-month comparison of your site visits, where people are coming from, and what's driving the most leads</p>
+<p style="margin:0 0 8px">🏆 <strong>Competitor Gap Analysis</strong> — what keywords your top 3 competitors rank for that you don't, with specific pages to create</p>
+<p style="margin:0 0 8px">🔗 <strong>Backlink Summary</strong> — new links pointing to your site plus opportunities to build more authority</p>
+<p style="margin:0 0 8px">⚡ <strong>Top 3 Priority Actions</strong> — every report ends with exactly what to do this month to move the needle, ranked by impact</p>
+<p style="margin:0 0 20px">📅 <strong>Delivery schedule</strong> — your report arrives on the 1st of every month. First report within 24 hours.</p>
+<p style="margin:0;background:#f0fdf4;padding:12px;border-radius:6px;border:1px solid #bbf7d0;font-size:13px;color:#166534">✅ No login required — your report comes straight to this email. Reply anytime with questions and I'll walk you through it.</p>`,
+            }),
               }),
             });
             await fetch("https://api.resend.com/emails", {
@@ -2139,8 +2159,24 @@ serve(async (req) => {
               body: JSON.stringify({
                 from: "Matt Michels <matt@mattmichelstraining.com>",
                 to: [email], bcc: ["matthewmichels4@gmail.com"],
-                subject: "Your AI Chatbot is ready to install",
-                html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>Your chatbot subscription is active. Add this snippet to your website before the closing <code>&lt;/body&gt;</code> tag:</p><pre style="background:#f1f5f9;padding:12px;border-radius:6px;font-size:13px;">&lt;script src="https://www.mattmichelstraining.com/chatbot.js" data-client-id="${clientId}"&gt;&lt;/script&gt;</pre><p>That's it — the chatbot will appear automatically. Reply to this email or text (313) 806-4952 if you need help installing it.</p><p>— Matt</p>`,
+                subject: "Your AI Chatbot is Active — We'll Have It Live on Your Site Within 48 Hours",
+                html: m2Email({
+              greeting: `Hey${meta.name ? " " + meta.name : ""} —`,
+              headline: "Your AI Chatbot is Active",
+              body: `<p style="margin:0 0 12px"><strong>Here's what your chatbot will do for your business:</strong></p>
+<p style="margin:0 0 8px">💬 <strong>Answers questions 24/7</strong> — pricing, hours, services, location — instantly, even at 2am when you're asleep</p>
+<p style="margin:0 0 8px">📞 <strong>Captures leads</strong> — collects name, phone, and what they need before they leave your site</p>
+<p style="margin:0 0 8px">⚡ <strong>Responds in seconds</strong> — 78% of customers buy from the first business that responds. Your chatbot wins that race automatically.</p>
+<p style="margin:0 0 20px">🎯 <strong>Trained on your business</strong> — we customize it with your services, hours, service area, and FAQs before going live</p>
+<p style="margin:0 0 8px"><strong>What happens next — we handle everything:</strong></p>
+<ol style="margin:8px 0 16px;padding-left:20px;color:#475569">
+<li>Matt will email or text you within 24 hours to collect your business details (services, hours, FAQs)</li>
+<li>We build and configure your chatbot (takes us 1 business day)</li>
+<li>We install it on your website — you don't touch any code</li>
+<li>We test it, then send you a "you're live" confirmation</li>
+</ol>
+<p style="margin:0;background:#f0fdf4;padding:12px;border-radius:6px;border:1px solid #bbf7d0;font-size:13px;color:#166534">✅ You don't need to install anything. We take care of setup and installation for you — start to finish.</p>`,
+            }),
               }),
             });
             await fetch("https://api.resend.com/emails", {
@@ -2155,6 +2191,405 @@ serve(async (req) => {
             });
           }
         } catch (e) { console.error("[WEBHOOK] chatbot_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── REVIEW MONITOR — $29/mo ───────────────────────────────────────────
+      if (meta.type === "review_monitor_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await sb.from("review_monitor_clients" as any).upsert({
+              email,
+              business_name: meta.business_name || null,
+              name: meta.name || null,
+              phone: meta.phone || null,
+              active: true,
+              stripe_customer_id: session.customer as string || null,
+            }, { onConflict: "email" });
+            await sendM2Email(email, "You're set — Google Review Monitor is live",
+              m2Email({
+                greeting: `Hi ${meta.name || "there"},`,
+                headline: "Your Review Monitor is Active",
+                body: `<p>Great news — <strong>${meta.business_name || "your business"}</strong> is now being monitored for new Google reviews.</p>
+<p><strong>Here's what happens next:</strong></p>
+<ol style="margin:12px 0;padding-left:20px">
+  <li style="margin-bottom:8px">Matt will connect your Google Business Profile within <strong>24 hours</strong></li>
+  <li style="margin-bottom:8px">We check for new reviews <strong>4 times per day</strong> (every 6 hours)</li>
+  <li style="margin-bottom:8px">The moment a new review appears, you get a <strong>text alert with the full review</strong></li>
+  <li style="margin-bottom:8px">Every alert includes an <strong>AI-written response</strong> ready to copy and paste</li>
+  <li style="margin-bottom:8px">Every Monday, a <strong>weekly digest email</strong> lands in your inbox</li>
+</ol>
+<p><strong>What you'll get in each alert:</strong></p>
+<ul style="margin:12px 0;padding-left:20px">
+  <li>Reviewer name + star rating</li>
+  <li>Full review text</li>
+  <li>Ready-to-post AI response (sounds personal, takes 10 seconds)</li>
+</ul>
+<p>Questions? Text or call anytime.</p>`,
+                cta: { text: "Text Matt to Expedite Setup", url: "sms:+13138064952" },
+              })
+            );
+            await notifyMatt(`💰 New Review Monitor client — ${meta.business_name || email} ($29/mo)`,
+              `<p>New review monitor subscriber: <strong>${meta.business_name || email}</strong> — ${email}<br>Phone: ${meta.phone || "n/a"}<br>Action: connect Google Business Profile.</p>`
+            );
+          }
+        } catch (e) { console.error("[WEBHOOK] review_monitor_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── WEEKLY SMS BLAST — $19/mo ─────────────────────────────────────────
+      if (meta.type === "sms_blast_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await sb.from("sms_blast_clients" as any).upsert({
+              email,
+              business_name: meta.business_name || null,
+              name: meta.name || null,
+              phone: meta.phone || null,
+              business_type: meta.business_type || null,
+              city: meta.city || null,
+              state: meta.state || "MI",
+              active: true,
+              stripe_customer_id: session.customer as string || null,
+            }, { onConflict: "email" });
+            await sendM2Email(email, "You're in — Weekly SMS Blast setup",
+              m2Email({
+                greeting: `Hi ${meta.name || "there"},`,
+                headline: "Your Weekly SMS Blast is Set Up",
+                body: `<p>Welcome aboard! <strong>${meta.business_name || "Your business"}</strong> is set up for weekly AI-written SMS blasts to your customer list.</p>
+<p><strong>How it works:</strong></p>
+<ol style="margin:12px 0;padding-left:20px">
+  <li style="margin-bottom:8px">Reply to this email with your <strong>customer list (name + phone as a CSV or spreadsheet)</strong></li>
+  <li style="margin-bottom:8px">Matt will import it securely within 24 hours, handle opt-outs, and stay FCC-compliant</li>
+  <li style="margin-bottom:8px">Every <strong>Tuesday morning</strong>, AI generates a fresh 1–2 sentence tip, reminder, or offer tailored to your business and the season</li>
+  <li style="margin-bottom:8px">Your entire list gets the text automatically — no logins, no dashboards, no clicking send</li>
+</ol>
+<p><strong>What makes the texts good:</strong> Every message is written for <em>your specific business type</em> and the current season. It sounds like you, not a robot.</p>
+<p>Send your list and we'll get you live by this Tuesday.</p>`,
+                cta: { text: "Email Your Customer List", url: "mailto:matt@mattmichelstraining.com?subject=SMS%20Blast%20Customer%20List" },
+              })
+            );
+            await notifyMatt(`💰 New Weekly SMS Blast client — ${meta.business_name || email} ($19/mo)`,
+              `<p>New SMS blast subscriber: <strong>${meta.business_name || email}</strong> — ${email}<br>Business type: ${meta.business_type || "n/a"} · City: ${meta.city || "n/a"}<br>Action: import their customer list when received.</p>`
+            );
+          }
+        } catch (e) { console.error("[WEBHOOK] sms_blast_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── NO-SHOW RE-BOOKER — $29/mo ────────────────────────────────────────
+      if (meta.type === "noshow_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await sb.from("noshow_clients" as any).upsert({
+              email,
+              business_name: meta.business_name || null,
+              name: meta.name || null,
+              phone: meta.phone || null,
+              booking_url: meta.booking_url || null,
+              active: true,
+              stripe_customer_id: session.customer as string || null,
+            }, { onConflict: "email" });
+            await sendM2Email(email, "7-Day Trial Started — No-Show Re-Booker",
+              m2Email({
+                greeting: `Hi ${meta.name || "there"},`,
+                headline: "Your No-Show Re-Booker is Active",
+                body: `<p>Welcome! <strong>${meta.business_name || "Your business"}</strong> is ready to automatically recover no-shows.</p>
+<p><strong>Here's how it works:</strong></p>
+<ol style="margin:12px 0;padding-left:20px">
+  <li style="margin-bottom:8px">Matt will set up the <strong>webhook connection</strong> with your booking system within 24 hours</li>
+  <li style="margin-bottom:8px">When a client no-shows or cancels, we wait <strong>30 minutes</strong></li>
+  <li style="margin-bottom:8px">Then we send them a text: <em>"We missed you — want to reschedule?"</em></li>
+  <li style="margin-bottom:8px">They reply, you get a booking. <strong>47% of no-shows reschedule when asked.</strong></li>
+</ol>
+<p><strong>The math:</strong> At $75–300 per appointment, recovering 2 no-shows per month more than pays for the subscription for the entire year.</p>
+${meta.booking_url ? `<p>Your booking URL on file: <a href="${meta.booking_url}" style="color:#e8621a">${meta.booking_url}</a></p>` : ""}
+<p>Matt will reach out within 24 hours to complete setup.</p>`,
+              })
+            );
+            await notifyMatt(`💰 New No-Show Re-Booker client — ${meta.business_name || email} ($29/mo)`,
+              `<p>New no-show subscriber: <strong>${meta.business_name || email}</strong> — ${email}<br>Phone: ${meta.phone || "n/a"} · Booking URL: ${meta.booking_url || "none"}<br>Action: set up webhook with their booking system.</p>`
+            );
+          }
+        } catch (e) { console.error("[WEBHOOK] noshow_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── ESTIMATE DRIP — $49/mo ────────────────────────────────────────────
+      if (meta.type === "estimate_drip_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await sb.from("estimate_drip_clients" as any).upsert({
+              email,
+              business_name: meta.business_name || null,
+              name: meta.name || null,
+              phone: meta.phone || null,
+              business_type: meta.business_type || null,
+              active: true,
+              stripe_customer_id: session.customer as string || null,
+            }, { onConflict: "email" });
+            await sendM2Email(email, "14-Day Trial Started — Estimate Follow-Up Drip",
+              m2Email({
+                greeting: `Hi ${meta.name || "there"},`,
+                headline: "Your Estimate Follow-Up Drip is Live",
+                body: `<p>Welcome! <strong>${meta.business_name || "Your business"}</strong> will now automatically follow up on every estimate you give.</p>
+<p><strong>The 5-text sequence (per estimate logged):</strong></p>
+<ul style="margin:12px 0;padding-left:20px">
+  <li style="margin-bottom:6px"><strong>2 hours after:</strong> Warm thank-you + quick summary</li>
+  <li style="margin-bottom:6px"><strong>Day 3:</strong> Value reminder, offer to answer questions</li>
+  <li style="margin-bottom:6px"><strong>Day 7:</strong> Urgency nudge — "slot opening up next week"</li>
+  <li style="margin-bottom:6px"><strong>Day 10:</strong> Objection handle — "if price is a concern..."</li>
+  <li style="margin-bottom:6px"><strong>Day 14:</strong> Final check-in, low pressure</li>
+</ul>
+<p><strong>How to log an estimate:</strong> Matt will set up a simple intake form or webhook within 24 hours. You enter a name, phone number, and job type — the sequence fires automatically.</p>
+<p>Every message is AI-written for your specific business type. If they book, the sequence stops automatically.</p>`,
+              })
+            );
+            await notifyMatt(`💰 New Estimate Drip client — ${meta.business_name || email} ($49/mo)`,
+              `<p>New estimate drip subscriber: <strong>${meta.business_name || email}</strong> — ${email}<br>Business type: ${meta.business_type || "n/a"}<br>Action: set up intake webhook/form.</p>`
+            );
+          }
+        } catch (e) { console.error("[WEBHOOK] estimate_drip_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── INVOICE CHASER — $49/mo ───────────────────────────────────────────
+      if (meta.type === "invoice_chaser_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await sb.from("invoice_chaser_clients" as any).upsert({
+              email,
+              business_name: meta.business_name || null,
+              name: meta.name || null,
+              phone: meta.phone || null,
+              active: true,
+              stripe_customer_id: session.customer as string || null,
+            }, { onConflict: "email" });
+            await sendM2Email(email, "7-Day Trial Started — Invoice Chaser",
+              m2Email({
+                greeting: `Hi ${meta.name || "there"},`,
+                headline: "Your Invoice Chaser is Ready",
+                body: `<p>Welcome! <strong>${meta.business_name || "Your business"}</strong> will now automatically follow up on unpaid invoices.</p>
+<p><strong>The 3-text sequence (per invoice logged):</strong></p>
+<ul style="margin:12px 0;padding-left:20px">
+  <li style="margin-bottom:6px"><strong>Day 7 past due:</strong> Friendly reminder — "just a quick heads up"</li>
+  <li style="margin-bottom:6px"><strong>Day 14 past due:</strong> Firm second notice</li>
+  <li style="margin-bottom:6px"><strong>Day 21 past due:</strong> Final notice with urgency</li>
+</ul>
+<p><strong>How to log an invoice:</strong> Matt will set up your intake form within 24 hours. You enter the customer name, phone, invoice amount, and due date — the sequence fires automatically on the right days.</p>
+<p>When a customer pays (or you mark it paid), the sequence stops. No chasing required from you.</p>`,
+              })
+            );
+            await notifyMatt(`💰 New Invoice Chaser client — ${meta.business_name || email} ($49/mo)`,
+              `<p>New invoice chaser subscriber: <strong>${meta.business_name || email}</strong> — ${email}<br>Action: set up intake form/webhook.</p>`
+            );
+          }
+        } catch (e) { console.error("[WEBHOOK] invoice_chaser_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── AFTER-JOB DRIP — $39/mo ───────────────────────────────────────────
+      if (meta.type === "afterjob_drip_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await sb.from("afterjob_drip_clients" as any).upsert({
+              email,
+              business_name: meta.business_name || null,
+              name: meta.name || null,
+              phone: meta.phone || null,
+              business_type: meta.business_type || null,
+              active: true,
+              stripe_customer_id: session.customer as string || null,
+            }, { onConflict: "email" });
+            await sendM2Email(email, "7-Day Trial Started — After-Job Follow-Up",
+              m2Email({
+                greeting: `Hi ${meta.name || "there"},`,
+                headline: "Your After-Job Drip is Active",
+                body: `<p>Welcome! Every completed job at <strong>${meta.business_name || "your business"}</strong> will now trigger a 3-text follow-up sequence automatically.</p>
+<p><strong>The 3-text sequence (per job logged):</strong></p>
+<ul style="margin:12px 0;padding-left:20px">
+  <li style="margin-bottom:6px"><strong>Day 1:</strong> Warm, genuine thank-you text — customers remember this</li>
+  <li style="margin-bottom:6px"><strong>Day 3:</strong> Friendly Google review ask — "takes 30 seconds, means a lot"</li>
+  <li style="margin-bottom:6px"><strong>Day 30:</strong> Light upsell check-in — "any maintenance? Another project?"</li>
+</ul>
+<p><strong>How to log a completed job:</strong> Matt will set up a simple intake webhook within 24 hours. Log a job with the customer name, phone, and job type — the sequence fires automatically.</p>
+<p>Every message is AI-written to sound like <em>you</em> — warm, local, human. Not corporate.</p>`,
+              })
+            );
+            await notifyMatt(`💰 New After-Job Drip client — ${meta.business_name || email} ($39/mo)`,
+              `<p>New after-job drip subscriber: <strong>${meta.business_name || email}</strong> — ${email}<br>Business type: ${meta.business_type || "n/a"}<br>Action: set up job intake webhook.</p>`
+            );
+          }
+        } catch (e) { console.error("[WEBHOOK] afterjob_drip_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── PROMO BLASTER (Seasonal) — $29/mo ────────────────────────────────
+      if (meta.type === "promo_blaster_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await sb.from("promo_blaster_clients" as any).upsert({
+              email,
+              business_name: meta.business_name || null,
+              name: meta.name || null,
+              phone: meta.phone || null,
+              business_type: meta.business_type || null,
+              city: meta.city || null,
+              state: meta.state || "MI",
+              active: true,
+              stripe_customer_id: session.customer as string || null,
+            }, { onConflict: "email" });
+            await sendM2Email(email, "14-Day Trial Started — Seasonal Promo Blasts",
+              m2Email({
+                greeting: `Hi ${meta.name || "there"},`,
+                headline: "Your Seasonal Promos Are Scheduled",
+                body: `<p>Welcome! <strong>${meta.business_name || "Your business"}</strong> is set up for 6 seasonal SMS promo blasts per year — fully automated.</p>
+<p><strong>Your 6 campaigns:</strong></p>
+<ul style="margin:12px 0;padding-left:20px">
+  <li style="margin-bottom:6px">January — New Year Special</li>
+  <li style="margin-bottom:6px">March — Spring Kickoff</li>
+  <li style="margin-bottom:6px">May — Mother's Day</li>
+  <li style="margin-bottom:6px">July — Summer Push</li>
+  <li style="margin-bottom:6px">September — Fall Prep</li>
+  <li style="margin-bottom:6px">November — Holiday Special</li>
+</ul>
+<p><strong>Next step:</strong> Reply to this email with your <strong>customer list (name + phone)</strong> and Matt will import it within 24 hours. Your first campaign fires at the next scheduled date automatically.</p>
+<p>AI tailors each message to your specific business and location — sounds local, not generic.</p>`,
+                cta: { text: "Send Your Customer List", url: "mailto:matt@mattmichelstraining.com?subject=Seasonal%20Promo%20Customer%20List" },
+              })
+            );
+            await notifyMatt(`💰 New Seasonal Promo client — ${meta.business_name || email} ($29/mo)`,
+              `<p>New promo blaster subscriber: <strong>${meta.business_name || email}</strong> — ${email}<br>Business type: ${meta.business_type || "n/a"} · City: ${meta.city || "n/a"}<br>Action: import customer list when received.</p>`
+            );
+          }
+        } catch (e) { console.error("[WEBHOOK] promo_blaster_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── REFERRAL PROGRAM — $39/mo ─────────────────────────────────────────
+      if (meta.type === "referral_program_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await sb.from("referral_program_clients" as any).upsert({
+              email,
+              business_name: meta.business_name || null,
+              name: meta.name || null,
+              phone: meta.phone || null,
+              business_type: meta.business_type || null,
+              reward_description: meta.reward_description || null,
+              active: true,
+              stripe_customer_id: session.customer as string || null,
+            }, { onConflict: "email" });
+            await sendM2Email(email, "30-Day Trial Started — Referral Program",
+              m2Email({
+                greeting: `Hi ${meta.name || "there"},`,
+                headline: "Your Referral Program is Live",
+                body: `<p>Welcome! <strong>${meta.business_name || "Your business"}</strong> now has a fully automated referral program.</p>
+<p><strong>Here's what Matt will set up within 24 hours:</strong></p>
+<ol style="margin:12px 0;padding-left:20px">
+  <li style="margin-bottom:8px">A unique referral link for your business</li>
+  <li style="margin-bottom:8px">Automatic thank-you texts when a referral is logged</li>
+  <li style="margin-bottom:8px">Reward notification texts when a referral converts</li>
+  <li style="margin-bottom:8px">Monthly summary email: who referred who, top referrers, total referrals</li>
+</ol>
+${meta.reward_description ? `<p><strong>Your referral reward:</strong> ${meta.reward_description}</p>` : "<p><strong>Tip:</strong> The best referral rewards are simple — \"$25 off your next service for both of you\" works great.</p>"}
+<p>83% of satisfied customers will refer someone — they just need to be asked and given an easy way to do it. We handle both.</p>`,
+              })
+            );
+            await notifyMatt(`💰 New Referral Program client — ${meta.business_name || email} ($39/mo)`,
+              `<p>New referral program subscriber: <strong>${meta.business_name || email}</strong> — ${email}<br>Reward: ${meta.reward_description || "not set"}<br>Action: set up referral link and tracking.</p>`
+            );
+          }
+        } catch (e) { console.error("[WEBHOOK] referral_program_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── SLOW DAY SMS — $19/mo ─────────────────────────────────────────────
+      if (meta.type === "slow_day_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await sb.from("slow_day_clients" as any).upsert({
+              email,
+              business_name: meta.business_name || null,
+              name: meta.name || null,
+              phone: meta.phone || null,
+              business_type: meta.business_type || null,
+              promo_offer: meta.promo_offer || null,
+              trigger_keyword: "SLOW",
+              active: true,
+              stripe_customer_id: session.customer as string || null,
+            }, { onConflict: "email" });
+            await sendM2Email(email, "7-Day Trial Started — Slow Day SMS Blast",
+              m2Email({
+                greeting: `Hi ${meta.name || "there"},`,
+                headline: "Your Slow Day Blast is Ready",
+                body: `<p>Welcome! <strong>${meta.business_name || "Your business"}</strong> is set up and ready to blast promos on demand.</p>
+<p><strong>How to use it:</strong></p>
+<ol style="margin:12px 0;padding-left:20px">
+  <li style="margin-bottom:8px">Matt will set up your trigger number and import your contact list within 24 hours</li>
+  <li style="margin-bottom:8px">Whenever business is slow, text <strong>"SLOW"</strong> to your M² number</li>
+  <li style="margin-bottom:8px">AI generates a promo based on your business, the season, and your default offer</li>
+  <li style="margin-bottom:8px">Your entire customer list gets the text within minutes</li>
+  <li style="margin-bottom:8px">You get a confirmation: "✅ Blast sent to X customers"</li>
+</ol>
+${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.promo_offer}"</p>` : ""}
+<p><strong>Next step:</strong> Reply with your <strong>customer list (name + phone)</strong> and Matt will get you live.</p>`,
+                cta: { text: "Send Your Customer List", url: "mailto:matt@mattmichelstraining.com?subject=Slow%20Day%20Customer%20List" },
+              })
+            );
+            await notifyMatt(`💰 New Slow Day SMS client — ${meta.business_name || email} ($19/mo)`,
+              `<p>New slow day subscriber: <strong>${meta.business_name || email}</strong> — ${email}<br>Phone: ${meta.phone || "n/a"} · Default offer: ${meta.promo_offer || "none"}<br>Action: set up trigger number, import contact list.</p>`
+            );
+          }
+        } catch (e) { console.error("[WEBHOOK] slow_day_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── NEW HOMEOWNER CAMPAIGN — $79/mo ───────────────────────────────────
+      if (meta.type === "homeowner_campaign_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await sb.from("homeowner_campaign_clients" as any).upsert({
+              email,
+              business_name: meta.business_name || null,
+              name: meta.name || null,
+              phone: meta.phone || null,
+              business_type: meta.business_type || null,
+              service_area: meta.service_area || null,
+              active: true,
+              stripe_customer_id: session.customer as string || null,
+            }, { onConflict: "email" });
+            await sendM2Email(email, "14-Day Trial Started — New Homeowner Campaign",
+              m2Email({
+                greeting: `Hi ${meta.name || "there"},`,
+                headline: "Your New Homeowner Campaign is Live",
+                body: `<p>Welcome! <strong>${meta.business_name || "Your business"}</strong> will now reach new homeowners in your service area every month — automatically.</p>
+<p><strong>Here's what happens:</strong></p>
+<ol style="margin:12px 0;padding-left:20px">
+  <li style="margin-bottom:8px">Matt will configure your service area${meta.service_area ? ` (${meta.service_area})` : ""} within 24–48 hours</li>
+  <li style="margin-bottom:8px">Each month, we pull recent property sale records in your zip codes</li>
+  <li style="margin-bottom:8px">New homeowners receive a <strong>personalized welcome text</strong> from your business</li>
+  <li style="margin-bottom:8px">You're first in their phone before they've picked any service providers</li>
+</ol>
+<p><strong>Why this works:</strong> New homeowners spend $10,000–$15,000 in their first year on home services. They haven't established relationships yet. Reaching them in the first 30 days means you're their go-to provider for the next 10+ years.</p>
+<p>Matt will reach out within 48 hours to finalize your service area and first campaign.</p>`,
+              })
+            );
+            await notifyMatt(`💰 New Homeowner Campaign client — ${meta.business_name || email} ($79/mo)`,
+              `<p>New homeowner campaign subscriber: <strong>${meta.business_name || email}</strong> — ${email}<br>Business type: ${meta.business_type || "n/a"} · Service area: ${meta.service_area || "not set"}<br>Action: configure service area, pull new mover data.</p>`
+            );
+          }
+        } catch (e) { console.error("[WEBHOOK] homeowner_campaign_subscription error:", e); }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 

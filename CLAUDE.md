@@ -16,7 +16,8 @@ $10k+/mo fully automated income. Matt's only job: return calls, texts, and email
 - **AI**: Claude Haiku (`claude-haiku-4-5-20251001`) via Anthropic API
 - **Domain**: mattmichelstraining.com
 - **Repo**: `mamoo85/m2training` (GitHub)
-- **Dev branch**: `claude/analyze-test-coverage-P1QLW`
+- **Supabase Project**: `zmyczlfuufhngzovkjdh`
+- **Dev branch**: `claude/product-testing-fbMNs`
 
 ## Brand
 - Primary orange: `#e8621a`
@@ -53,14 +54,14 @@ $10k+/mo fully automated income. Matt's only job: return calls, texts, and email
 - **Cron**: Monday 8am ET
 - **Affiliates** (sign up at each): Writesonic (30% recurring), ElevenLabs (22%), Surfer SEO (125% CPA), Synthesia (25%), Apollo.io, Hunter.io, LinkedIn Sales Navigator
 
-### 5. Field Rep AI Tools SaaS ← NEW
+### 5. Field Rep AI Tools SaaS
 - **What**: $29/mo access to 4 Claude-powered tools
 - **Price**: $29/mo
 - **Files**: `src/pages/FieldRepTools.tsx`, `supabase/functions/field-rep-ai-tool/index.ts`, `supabase/functions/create-field-rep-checkout/index.ts`
 - **Tables**: `b2b_subscribers` (niche = 'field_rep_tools')
 - **stripe-webhook**: `meta.type === "field_rep_subscription"`
 
-### 6. Social Media AI Service ← NEW
+### 6. Social Media AI Service
 - **What**: AI-generated posts 3x/week to Facebook, Instagram, LinkedIn
 - **Price**: $199/mo standard, $299/mo pro, $149/mo trainer (fitness coaches)
 - **Files**: `src/pages/SocialMediaAI.tsx`, `src/pages/TrainerSocialAI.tsx`, `supabase/functions/social-media-poster/index.ts`, `supabase/functions/create-social-media-checkout/index.ts`
@@ -74,31 +75,43 @@ $10k+/mo fully automated income. Matt's only job: return calls, texts, and email
 - **Prospecting**: `supabase/functions/prospect-local-businesses/index.ts` (daily, 16 industries)
 - **Drip**: `supabase/functions/web-design-drip/index.ts`
 
+### 8–17. SMS & Monitoring Products (10 new products)
+- **Review Monitor** ($25/mo) — `review_monitor_clients`, `supabase/functions/review-monitor/`
+- **Weekly SMS Blast** ($19/mo) — `sms_blast_clients`, `supabase/functions/weekly-sms-sender/`
+- **No-Show Re-Booker** ($25/mo) — `noshow_clients`, `supabase/functions/noshow-trigger/`, `noshow-followup/`
+- **Estimate Follow-Up Drip** ($39/mo) — `estimate_drip_clients`, `supabase/functions/estimate-drip-runner/`
+- **Invoice Chaser** ($29/mo) — `invoice_chaser_clients`, `supabase/functions/invoice-chaser-runner/`
+- **After-Job Drip** ($29/mo) — `afterjob_drip_clients`, `supabase/functions/afterjob-drip-runner/`
+- **Seasonal Promo Blaster** ($29/mo) — `promo_blaster_clients`
+- **Referral Program** ($39/mo) — `referral_program_clients`, `referrals`
+- **Slow Day SMS** ($25/mo) — `slow_day_clients`, `supabase/functions/slow-day-trigger/`
+- **New Homeowner Campaign** ($59/mo) — `homeowner_campaign_clients`
+- **Migration**: `supabase/migrations/20260403000000_ten_new_products.sql`
+- **Crons**: `supabase/migrations/20260403010000_new_product_crons.sql`
+
 ## Deployment
-1. Claude commits to `claude/analyze-test-coverage-P1QLW` and pushes
-2. Matt pushes/merges to main → Lovable auto-deploys frontend
-3. Matt runs new SQL migrations in Supabase Dashboard → SQL Editor
-4. Edge functions deploy automatically
+1. Claude commits to `claude/product-testing-fbMNs` and pushes
+2. Matt merges to main → GitHub Actions auto-runs migrations + deploys edge functions → Lovable auto-deploys frontend
+3. **No manual SQL steps needed** — GitHub Actions handles migrations on every merge to main
+4. Required GitHub Secret: `SUPABASE_ACCESS_TOKEN` (Supabase account access token, not the DB password)
 
 ## Required Supabase Secrets
 - `RESEND_API_KEY`, `ANTHROPIC_API_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
 - `GOOGLE_MAPS_API_KEY` ← already added
+- `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER` ← needed for SMS products
 - `META_ACCESS_TOKEN` ← needed for social media posting
 - `LINKEDIN_ACCESS_TOKEN` ← needed for social media posting
 
-## Matrix Agents (in `/root/.claude/agents/`)
-- **Morpheus** — strategic advisor, evaluates new opportunities
-- **Trinity** — full-stack builder, writes React + Supabase code
-- **Neo** — lead hunter, optimizes prospecting pipeline
-- **Oracle** — revenue analyst, forecasts MRR
-- **Tank** — DevOps operator, manages cron/migrations/deployments
-- **Mouse** — copywriter, writes in Matt's voice
+## Agents (in `/home/user/m2training/.claude/agents/`)
+- **Tom** — lead hunter, web design client acquisition
+- **Oracle** — account watchdog, queries all 10 SMS product tables for health issues
+- **Ops** — project fulfillment, web design client onboarding
+- **Builder** — website generation agent
 
-## Pending Affiliate Signups (Matt needs to do)
-1. Writesonic: writesonic.com/affiliates → get link, update `newsletter-send/index.ts`
-2. ElevenLabs: elevenlabs.io/affiliates → get link, update
-3. Surfer SEO: surferseo.com/affiliate → get link, update
-4. Synthesia: synthesia.io/affiliates → get link, update
+## Testing
+- **Admin Sandbox** (`/admin` → Sandbox tab) — $0 test checkout for every product
+- `supabase/functions/create-test-checkout/` — test session creator (Matt's email only)
+- `AdminOpsCenter` — CRM roster covering all 17 product lines with MRR totals
 
 ## Rules
 - Matt's only manual work: return messages
@@ -106,4 +119,5 @@ $10k+/mo fully automated income. Matt's only job: return calls, texts, and email
 - All new tables get RLS enabled + service_role policy
 - Stripe: always inline price_data, always set metadata.type for webhook routing
 - AI calls: Claude Haiku only (cost-efficient), max_tokens 800-1200
-- **"Create an agent"** always means: create a `.md` file at `/root/.claude/agents/[name].md` with frontmatter (`name`, `description`) followed by full agent instructions. Never create an agent as code unless explicitly asked.
+- Always use project ref `zmyczlfuufhngzovkjdh` — never the old ref `eauvubfpanpeuxsrqesu`
+- **"Create an agent"** always means: create a `.md` file at `/home/user/m2training/.claude/agents/[name].md`

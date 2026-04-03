@@ -18,7 +18,7 @@ SELECT cron.schedule(
   '0 11 * * *',
   $$
   SELECT extensions.http_post(
-    url := 'https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/agent-smith-report',
+    url := 'https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/agent-smith-report',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'Authorization', 'Bearer ' || (

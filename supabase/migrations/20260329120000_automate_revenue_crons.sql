@@ -51,7 +51,7 @@ SELECT cron.schedule(
   '0 13 * * 1',
   $$
   SELECT extensions.http_post(
-    url := 'https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/prospect-local-businesses',
+    url := 'https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/prospect-local-businesses',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'Authorization', 'Bearer ' || (
@@ -69,7 +69,7 @@ SELECT cron.schedule(
   '0 13 * * 3',
   $$
   SELECT extensions.http_post(
-    url := 'https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/prospect-local-businesses',
+    url := 'https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/prospect-local-businesses',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'Authorization', 'Bearer ' || (
@@ -94,7 +94,7 @@ SELECT cron.schedule(
   '0 14 * * *',
   $$
   SELECT extensions.http_post(
-    url := 'https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/web-design-drip',
+    url := 'https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/web-design-drip',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'Authorization', 'Bearer ' || (
@@ -118,7 +118,7 @@ SELECT cron.schedule(
   '0 12 1 * *',
   $$
   SELECT extensions.http_post(
-    url := 'https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/web-design-winback',
+    url := 'https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/web-design-winback',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'Authorization', 'Bearer ' || (
@@ -143,7 +143,7 @@ SELECT cron.schedule(
   '0 11 * * *',
   $$
   SELECT extensions.http_post(
-    url := 'https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/trial-day6-email',
+    url := 'https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/trial-day6-email',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'Authorization', 'Bearer ' || (
@@ -168,7 +168,7 @@ SELECT cron.schedule(
   '0 15 * * *',
   $$
   SELECT extensions.http_post(
-    url := 'https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/send-review-request',
+    url := 'https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/send-review-request',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'Authorization', 'Bearer ' || (
@@ -194,7 +194,7 @@ SELECT cron.schedule(
   '0 12 * * *',
   $$
   SELECT extensions.http_post(
-    url := 'https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/ai-automated-bots',
+    url := 'https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/ai-automated-bots',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'Authorization', 'Bearer ' || (
@@ -219,7 +219,7 @@ SELECT cron.schedule(
   '0 10 * * 1',
   $$
   SELECT extensions.http_post(
-    url := 'https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/sports-newsletter-weekly',
+    url := 'https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/sports-newsletter-weekly',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'Authorization', 'Bearer ' || (
@@ -244,7 +244,7 @@ SELECT cron.schedule(
   '0 13 * * 1',
   $$
   SELECT extensions.http_post(
-    url := 'https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/auto-gbp-posts',
+    url := 'https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/auto-gbp-posts',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'Authorization', 'Bearer ' || (
@@ -270,7 +270,7 @@ SELECT cron.schedule(
   '1 4 * * 1',
   $$
   SELECT extensions.http_post(
-    url := 'https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/weekly-streak-check',
+    url := 'https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/weekly-streak-check',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'Authorization', 'Bearer ' || (
@@ -296,7 +296,7 @@ SELECT cron.schedule(
   '0 */6 * * *',
   $$
   SELECT extensions.http_post(
-    url := 'https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/calculate-affiliate-commissions',
+    url := 'https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/calculate-affiliate-commissions',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'Authorization', 'Bearer ' || (
@@ -321,7 +321,7 @@ SELECT cron.schedule(
   '0 4 * * *',
   $$
   SELECT extensions.http_post(
-    url := 'https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/churn-radar',
+    url := 'https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/churn-radar',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'Authorization', 'Bearer ' || (

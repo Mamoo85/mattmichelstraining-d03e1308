@@ -9,7 +9,7 @@ SELECT cron.schedule(
   '0 13 1 * *',
   $$
   SELECT extensions.http_post(
-    url := 'https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/referral-ask-sender',
+    url := 'https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/referral-ask-sender',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'Authorization', 'Bearer ' || (

@@ -9,7 +9,7 @@ SELECT cron.schedule(
   '0 15 * * 2',
   $$
   SELECT extensions.http_post(
-    url := 'https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/multi-service-drip',
+    url := 'https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/multi-service-drip',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'Authorization', 'Bearer ' || (
@@ -27,7 +27,7 @@ SELECT cron.schedule(
   '0 15 * * 4',
   $$
   SELECT extensions.http_post(
-    url := 'https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/multi-service-drip',
+    url := 'https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/multi-service-drip',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'Authorization', 'Bearer ' || (

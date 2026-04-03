@@ -30,6 +30,17 @@ const PRODUCTS: Product[] = [
   { id: "seo_report_subscription", name: "SEO Reports", price: "$99/mo", description: "Welcome email + seo_report_clients record created.", type: "subscription", category: "Subscription" },
   { id: "chatbot_subscription", name: "AI Chatbot", price: "$79/mo", description: "Welcome email + chatbot_clients record created.", type: "subscription", category: "Subscription" },
   { id: "missed_call_subscription", name: "Missed Call Text", price: "$49/mo", description: "Welcome email + missed_call_clients record created.", type: "subscription", category: "Subscription" },
+  // ── 10 New SMS/Monitoring Products ──────────────────────────────────────────
+  { id: "review_monitor_subscription", name: "Review Monitor", price: "$25/mo", description: "Welcome email + review_monitor_clients record. Monitors Google reviews every 6h.", type: "subscription", category: "SMS Products" },
+  { id: "sms_blast_subscription", name: "Weekly SMS Blast", price: "$19/mo", description: "Welcome email + sms_blast_clients record. Blasts every Tuesday.", type: "subscription", category: "SMS Products" },
+  { id: "noshow_subscription", name: "No-Show Re-Booker", price: "$25/mo", description: "Welcome email + noshow_clients record. Re-books via SMS 30 min after no-show.", type: "subscription", category: "SMS Products" },
+  { id: "estimate_drip_subscription", name: "Estimate Follow-Up Drip", price: "$39/mo", description: "Welcome email + estimate_drip_clients record. 5-step SMS drip per quote.", type: "subscription", category: "SMS Products" },
+  { id: "invoice_chaser_subscription", name: "Invoice Chaser", price: "$29/mo", description: "Welcome email + invoice_chaser_clients record. Day 7/14/21 reminders.", type: "subscription", category: "SMS Products" },
+  { id: "afterjob_drip_subscription", name: "After-Job Drip", price: "$29/mo", description: "Welcome email + afterjob_drip_clients record. 3-touch post-job sequence.", type: "subscription", category: "SMS Products" },
+  { id: "promo_blaster_subscription", name: "Seasonal Promo Blaster", price: "$29/mo", description: "Welcome email + promo_blaster_clients record. 6 campaigns/year auto-sent.", type: "subscription", category: "SMS Products" },
+  { id: "referral_program_subscription", name: "Referral Program", price: "$39/mo", description: "Welcome email + referral_program_clients record. Auto-tracks referrals + rewards.", type: "subscription", category: "SMS Products" },
+  { id: "slow_day_subscription", name: "Slow Day SMS", price: "$25/mo", description: "Welcome email + slow_day_clients record. Keyword trigger → instant promo blast.", type: "subscription", category: "SMS Products" },
+  { id: "homeowner_campaign_subscription", name: "New Homeowner Campaign", price: "$59/mo", description: "Welcome email + homeowner_campaign_clients record. Monthly new-mover texts.", type: "subscription", category: "SMS Products" },
 ];
 
 type TestStatus = "idle" | "loading" | "success" | "error";
@@ -60,7 +71,8 @@ export default function AdminSandbox() {
   const resetStatus = (id: string) => setStatuses(s => ({ ...s, [id]: "idle" }));
 
   const instant = PRODUCTS.filter(p => p.type === "instant");
-  const subs = PRODUCTS.filter(p => p.type === "subscription");
+  const subs = PRODUCTS.filter(p => p.type === "subscription" && p.category === "Subscription");
+  const smsProducts = PRODUCTS.filter(p => p.category === "SMS Products");
 
   const StatusIcon = ({ status }: { status: TestStatus }) => {
     if (status === "loading") return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />;
@@ -153,6 +165,49 @@ export default function AdminSandbox() {
                     disabled={statuses[p.id] === "loading"}
                     variant="outline"
                     className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700 text-sm h-8"
+                  >
+                    {statuses[p.id] === "loading" ? (
+                      <><Loader2 className="h-3 w-3 animate-spin mr-1" /> Opening...</>
+                    ) : (
+                      <><ExternalLink className="h-3 w-3 mr-1" /> Test $0</>
+                    )}
+                  </Button>
+                  {statuses[p.id] && statuses[p.id] !== "loading" && (
+                    <button onClick={() => resetStatus(p.id)} className="text-slate-500 hover:text-slate-300">
+                      <RefreshCw className="h-3 w-3" />
+                    </button>
+                  )}
+                  <StatusIcon status={statuses[p.id] || "idle"} />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      {/* SMS Products */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <h3 className="text-white font-semibold">SMS &amp; Monitoring Products</h3>
+          <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 text-xs">Welcome email + DB record + Twilio setup</Badge>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {smsProducts.map(p => (
+            <Card key={p.id} className="bg-slate-800 border-slate-700 border-l-2 border-l-purple-500/50">
+              <CardHeader className="pb-2">
+                <div className="flex items-start justify-between">
+                  <CardTitle className="text-white text-base">{p.name}</CardTitle>
+                  <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 text-xs shrink-0 ml-2">{p.price}</Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-slate-400 text-xs leading-relaxed">{p.description}</p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={() => runTest(p)}
+                    disabled={statuses[p.id] === "loading"}
+                    variant="outline"
+                    className="flex-1 border-purple-600/50 text-purple-300 hover:bg-purple-900/30 text-sm h-8"
                   >
                     {statuses[p.id] === "loading" ? (
                       <><Loader2 className="h-3 w-3 animate-spin mr-1" /> Opening...</>

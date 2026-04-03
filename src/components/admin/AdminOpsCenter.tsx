@@ -35,6 +35,17 @@ const ALL_SERVICES = [
   { table: "review_request_clients", name: "Review Request SMS", price: "$29/mo", priceNum: 29 },
   { table: "contractor_clients", name: "Contractor Lead Gen", price: "$399/mo", priceNum: 399 },
   { table: "b2b_subscribers", name: "B2B Dental Database", price: "$49/mo", priceNum: 49 },
+  // ── 10 New SMS/Monitoring Products ────────────────────────────────────────
+  { table: "review_monitor_clients", name: "Review Monitor", price: "$25/mo", priceNum: 25 },
+  { table: "sms_blast_clients", name: "Weekly SMS Blast", price: "$19/mo", priceNum: 19 },
+  { table: "noshow_clients", name: "No-Show Re-Booker", price: "$25/mo", priceNum: 25 },
+  { table: "estimate_drip_clients", name: "Estimate Follow-Up Drip", price: "$39/mo", priceNum: 39 },
+  { table: "invoice_chaser_clients", name: "Invoice Chaser", price: "$29/mo", priceNum: 29 },
+  { table: "afterjob_drip_clients", name: "After-Job Drip", price: "$29/mo", priceNum: 29 },
+  { table: "promo_blaster_clients", name: "Seasonal Promo Blaster", price: "$29/mo", priceNum: 29 },
+  { table: "referral_program_clients", name: "Referral Program", price: "$39/mo", priceNum: 39 },
+  { table: "slow_day_clients", name: "Slow Day SMS", price: "$25/mo", priceNum: 25 },
+  { table: "homeowner_campaign_clients", name: "New Homeowner Campaign", price: "$59/mo", priceNum: 59 },
 ] as const;
 
 interface ClientRecord {

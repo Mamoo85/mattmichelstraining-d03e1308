@@ -102,6 +102,17 @@ async function gatherDailyReport(sb: ReturnType<typeof createClient>): Promise<D
     ["gbp_saas_clients", "GBP SaaS", 49, "created_at"],
     ["social_media_clients", "Social Media AI", 199, "created_at"],
     ["b2b_subscribers", "Field Rep Tools", 29, "created_at"],
+    // ── 10 New SMS/Monitoring Products ────────────────────────────────────
+    ["review_monitor_clients", "Review Monitor", 25, "created_at"],
+    ["sms_blast_clients", "Weekly SMS Blast", 19, "created_at"],
+    ["noshow_clients", "No-Show Re-Booker", 25, "created_at"],
+    ["estimate_drip_clients", "Estimate Follow-Up Drip", 39, "created_at"],
+    ["invoice_chaser_clients", "Invoice Chaser", 29, "created_at"],
+    ["afterjob_drip_clients", "After-Job Drip", 29, "created_at"],
+    ["promo_blaster_clients", "Seasonal Promos", 29, "created_at"],
+    ["referral_program_clients", "Referral Program", 39, "created_at"],
+    ["slow_day_clients", "Slow Day SMS", 25, "created_at"],
+    ["homeowner_campaign_clients", "Homeowner Campaign", 59, "created_at"],
   ];
   for (const [table, label, price, dateCol] of subProducts) {
     try {
@@ -212,6 +223,20 @@ function buildBriefingEmail(report: DailyReport): { subject: string; html: strin
       <p style="margin:0 0 8px;font-size:11px;font-weight:800;letter-spacing:2px;color:#7c3aed;text-transform:uppercase;">Waitlist Demand — Build These Next</p>
       ${report.waitlistDemand.map((w, i) => `
         <p style="margin:4px 0;font-size:13px;color:#4c1d95;">${i + 1}. <strong>${w.product}</strong> — ${w.signups} waiting</p>`).join("")}
+    </div>` : "";
+
+  // Setup-incomplete section: SMS/monitoring clients active but not configured
+  // (Added alongside the 10 new product tables — catches onboarding gaps)
+  const setupIncompleteAccounts: { product: string; business: string; issue: string }[] = [];
+  // These are surfaced in detail by sms-product-monitor, but we show a summary here
+  // The DailyReport type doesn't carry these yet — placeholder for future expansion
+  // For now the watchdog SMS handles the detail; morning brief just shows a note if
+  // sms-product-monitor ran and found issues (would need to write to a shared table).
+  // Left as intentional future hook.
+  const setupIncompleteHtml = setupIncompleteAccounts.length > 0 ? `
+    <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:16px 20px;margin:0 0 20px;">
+      <p style="margin:0 0 8px;font-size:11px;font-weight:800;letter-spacing:2px;color:#ea580c;text-transform:uppercase;">Setup Incomplete (${setupIncompleteAccounts.length})</p>
+      ${setupIncompleteAccounts.map(a => `<p style="margin:4px 0;font-size:13px;color:#9a3412;"><strong>${a.business}</strong> — ${a.product}: ${a.issue}</p>`).join("")}
     </div>` : "";
 
   const weeklyHtml = report.isSunday && report.weeklyStats ? `
