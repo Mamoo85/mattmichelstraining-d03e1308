@@ -81,6 +81,35 @@ export default function AdminAutomationHub() {
   const [productsRunning, setProductsRunning] = useState(false);
   const [lastDryRun, setLastDryRun] = useState<{ subject: string; wordCount: number } | null>(null);
 
+  // New product runners
+  const [petMemorialRunning, setPetMemorialRunning] = useState(false);
+  const [darkWebRunning, setDarkWebRunning] = useState(false);
+  const [govContractRunning, setGovContractRunning] = useState(false);
+  const [podcastRunning, setPodcastRunning] = useState(false);
+  const [regulatoryRunning, setRegulatoryRunning] = useState(false);
+  const [competitorRunning, setCompetitorRunning] = useState(false);
+  const [reNewsletterRunning, setReNewsletterRunning] = useState(false);
+  const [trademarkRunning, setTrademarkRunning] = useState(false);
+
+  const runFunction = async (
+    fnName: string,
+    body: Record<string, unknown>,
+    setRunning: (v: boolean) => void,
+    successMsg: string
+  ) => {
+    setRunning(true);
+    try {
+      const { data, error } = await supabase.functions.invoke(fnName, { body });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(successMsg);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : `${fnName} failed`);
+    } finally {
+      setRunning(false);
+    }
+  };
+
   // Fetch newsletter stats
   const { data: newsletterStats } = useQuery({
     queryKey: ["newsletter-automation-stats"],
@@ -285,13 +314,100 @@ export default function AdminAutomationHub() {
             {
               label: "Open SEO Engine",
               onClick: () => {
-                // Navigate to growth tab
                 const event = new CustomEvent("navigate-admin", { detail: "growth" });
                 window.dispatchEvent(event);
               },
               variant: "outline",
             },
           ]}
+        />
+
+        {/* Dark Web Monitor */}
+        <AutomationCard
+          icon={Zap}
+          title="Dark Web Credential Monitor"
+          description="Scans HaveIBeenPwned for exposed credentials — runs weekly per client"
+          status={darkWebRunning ? "running" : "idle"}
+          badge="$49–199/mo"
+          stats={[{ label: "Frequency", value: "Weekly" }, { label: "Source", value: "HIBP" }, { label: "Alert", value: "Email" }]}
+          actions={[{ label: darkWebRunning ? "Scanning..." : "Run Scan Now", onClick: () => runFunction("dark-web-domain-scan", {}, setDarkWebRunning, "Dark web scan complete"), loading: darkWebRunning }]}
+        />
+
+        {/* Gov Contract Monitor */}
+        <AutomationCard
+          icon={RefreshCw}
+          title="Government Contract Monitor"
+          description="Scrapes SAM.gov for matching opportunities — runs daily per client"
+          status={govContractRunning ? "running" : "idle"}
+          badge="$299/mo"
+          stats={[{ label: "Frequency", value: "Daily" }, { label: "Source", value: "SAM.gov" }, { label: "Alert", value: "Email" }]}
+          actions={[{ label: govContractRunning ? "Scanning..." : "Run Now", onClick: () => runFunction("gov-contract-monitor", {}, setGovContractRunning, "Gov contract scan complete"), loading: govContractRunning }]}
+        />
+
+        {/* Podcast Revenue Machine */}
+        <AutomationCard
+          icon={Play}
+          title="Podcast-to-Revenue Machine"
+          description="Checks RSS feeds for new episodes, generates 5 content pieces per episode"
+          status={podcastRunning ? "running" : "idle"}
+          badge="$199/mo"
+          stats={[{ label: "Frequency", value: "6 hrs" }, { label: "Pieces", value: "5/ep" }, { label: "Delivery", value: "Email" }]}
+          actions={[{ label: podcastRunning ? "Checking..." : "Check Feeds Now", onClick: () => runFunction("podcast-content-generator", {}, setPodcastRunning, "Podcast feeds checked"), loading: podcastRunning }]}
+        />
+
+        {/* Regulatory Monitor */}
+        <AutomationCard
+          icon={CheckCircle}
+          title="Regulatory Change Monitor"
+          description="Scrapes Federal Register weekly for industry-specific regulatory changes"
+          status={regulatoryRunning ? "running" : "idle"}
+          badge="$197/mo"
+          stats={[{ label: "Frequency", value: "Weekly" }, { label: "Source", value: "Fed Register" }, { label: "Alert", value: "Email" }]}
+          actions={[{ label: regulatoryRunning ? "Scanning..." : "Run Scan Now", onClick: () => runFunction("regulatory-monitor-scan", {}, setRegulatoryRunning, "Regulatory scan complete"), loading: regulatoryRunning }]}
+        />
+
+        {/* Competitor Pricing */}
+        <AutomationCard
+          icon={TrendingUp}
+          title="Competitor Pricing Intelligence"
+          description="Monitors competitor URLs for price changes — runs weekly per client"
+          status={competitorRunning ? "running" : "idle"}
+          badge="$149/mo"
+          stats={[{ label: "Frequency", value: "Weekly" }, { label: "Detection", value: "Hash diff" }, { label: "Alert", value: "Email" }]}
+          actions={[{ label: competitorRunning ? "Scanning..." : "Run Scan Now", onClick: () => runFunction("competitor-pricing-scan", {}, setCompetitorRunning, "Competitor pricing scan complete"), loading: competitorRunning }]}
+        />
+
+        {/* Real Estate Newsletter */}
+        <AutomationCard
+          icon={Mail}
+          title="Real Estate Newsletter"
+          description="Generates branded market reports and sends to agent's contacts weekly"
+          status={reNewsletterRunning ? "running" : "idle"}
+          badge="$79/mo"
+          stats={[{ label: "Frequency", value: "Weekly" }, { label: "Content", value: "AI Market" }, { label: "Delivery", value: "Resend" }]}
+          actions={[{ label: reNewsletterRunning ? "Sending..." : "Send Now", onClick: () => runFunction("re-newsletter-send", {}, setReNewsletterRunning, "RE newsletters sent"), loading: reNewsletterRunning }]}
+        />
+
+        {/* Trademark Watch */}
+        <AutomationCard
+          icon={Eye}
+          title="Trademark Watch Service"
+          description="Monitors USPTO for newly filed confusingly similar marks — runs weekly"
+          status={trademarkRunning ? "running" : "idle"}
+          badge="$49/mo"
+          stats={[{ label: "Frequency", value: "Weekly" }, { label: "Source", value: "USPTO" }, { label: "Alert", value: "Email" }]}
+          actions={[{ label: trademarkRunning ? "Scanning..." : "Run Scan Now", onClick: () => runFunction("trademark-watch-scan", {}, setTrademarkRunning, "Trademark scan complete"), loading: trademarkRunning }]}
+        />
+
+        {/* Pet Memorial */}
+        <AutomationCard
+          icon={CheckCircle}
+          title="AI Pet Memorial Service"
+          description="One-time: generates poem + tribute + memorial page on payment"
+          status={petMemorialRunning ? "running" : "idle"}
+          badge="$79 one-time"
+          stats={[{ label: "Trigger", value: "On Pay" }, { label: "Output", value: "Poem+Page" }, { label: "Delivery", value: "Email" }]}
+          actions={[{ label: petMemorialRunning ? "Generating..." : "Test Generate", onClick: () => runFunction("generate-pet-memorial", { pet_name: "Buddy", pet_species: "Dog", personality_traits: "Loyal, playful", favorite_memories: "Morning walks", customer_email: "test@test.com", customer_name: "Test User" }, setPetMemorialRunning, "Pet memorial test generated — check test@test.com"), loading: petMemorialRunning }]}
         />
       </div>
 
