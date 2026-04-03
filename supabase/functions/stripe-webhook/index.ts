@@ -752,7 +752,7 @@ serve(async (req) => {
 <p style="margin:0 0 8px">📧 <strong>Daily digest</strong> — new reviews + suggested responses delivered to your inbox</p>
 <p style="margin:0 0 16px">🎯 <strong>Brand voice</strong> — responses match your business tone, not generic AI</p>
 <p style="margin:0 0 8px"><strong>Next step:</strong> Reply to this email with your Google Business Profile URL so we can start monitoring. Or text Matt at (313) 806-4952.</p>`,
-            }) });
+            }) }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Review Response Client — ${meta.businessName || email} ($49/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}</p>` }) });
           }
         } catch (e) { console.error("[WEBHOOK] review_response_subscription error:", e); }
