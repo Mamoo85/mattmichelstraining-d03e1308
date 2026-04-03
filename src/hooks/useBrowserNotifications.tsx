@@ -24,7 +24,7 @@ export function useBrowserNotifications() {
         .order("created_at", { ascending: false });
       if (data && data.length > 0 && Notification.permission === "granted") {
         const n = data[0] as { title: string; body: string | null };
-        new Notification(n.title, { body: n.body || undefined, icon: "/pwa-192x192.png" });
+        new Notification(n.title, { body: n.body || undefined, icon: "/app-icon-192.png" });
       }
       lastChecked = new Date().toISOString();
     }, 10000);

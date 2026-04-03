@@ -92,6 +92,7 @@ interface AuthContextType {
   session: Session | null;
   user: User | null;
   loading: boolean;
+  subscriptionLoading: boolean;
   signOut: () => Promise<void>;
   subscribed: boolean;
   subscriptionTier: TierKey | null;
@@ -103,6 +104,7 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   user: null,
   loading: true,
+  subscriptionLoading: false,
   signOut: async () => {},
   subscribed: false,
   subscriptionTier: null,
@@ -116,26 +118,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [subscribed, setSubscribed] = useState(false);
   const [subscriptionTier, setSubscriptionTier] = useState<TierKey | null>(null);
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
+  const [subscriptionResolved, setSubscriptionResolved] = useState(false);
+
+  const clearSubscriptionState = useCallback(() => {
+    setSubscribed(false);
+    setSubscriptionTier(null);
+    setSubscriptionEnd(null);
+  }, []);
 
   const checkSubscription = useCallback(async () => {
     const { data: { session: currentSession } } = await supabase.auth.getSession();
     if (!currentSession?.access_token) {
-      setSubscribed(false);
-      setSubscriptionTier(null);
-      setSubscriptionEnd(null);
+      clearSubscriptionState();
+      setSubscriptionResolved(true);
       return;
     }
     try {
       const subResult = await supabase.functions.invoke("check-subscription");
-      if (!subResult.error) {
-        setSubscribed(subResult.data?.subscribed ?? false);
-        setSubscriptionTier(getTierByProductId(subResult.data?.product_id ?? null));
-        setSubscriptionEnd(subResult.data?.subscription_end ?? null);
-      }
+      if (subResult.error) throw subResult.error;
+      setSubscribed(subResult.data?.subscribed ?? false);
+      setSubscriptionTier(getTierByProductId(subResult.data?.product_id ?? null));
+      setSubscriptionEnd(subResult.data?.subscription_end ?? null);
     } catch (e) {
       console.warn("[Auth] Subscription check failed:", e);
+      clearSubscriptionState();
+    } finally {
+      setSubscriptionResolved(true);
     }
-  }, []);
+  }, [clearSubscriptionState]);
 
   useEffect(() => {
     let subscription: { unsubscribe: () => void } | null = null;
@@ -147,9 +157,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       signedOutAlready = true;
       supabase.auth.signOut({ scope: "local" }).catch(() => {});
       setSession(null);
-      setSubscribed(false);
-      setSubscriptionTier(null);
-      setSubscriptionEnd(null);
+      clearSubscriptionState();
+      setSubscriptionResolved(true);
     };
 
     try {
@@ -170,11 +179,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setLoading(false);
         }
         if (newSession) {
+          setSubscriptionResolved(false);
           setTimeout(() => checkSubscription(), 0);
         } else {
-          setSubscribed(false);
-          setSubscriptionTier(null);
-          setSubscriptionEnd(null);
+          clearSubscriptionState();
+          setSubscriptionResolved(true);
         }
       });
       subscription = result.data.subscription;
@@ -195,7 +204,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSession(s);
         setLoading(false);
         if (s) {
+          setSubscriptionResolved(false);
           checkSubscription();
+        } else {
+          clearSubscriptionState();
+          setSubscriptionResolved(true);
         }
       }
       // Verify the session is still valid — but only sign out on definitive failures
@@ -237,7 +250,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       clearTimeout(fallbackTimer);
       subscription?.unsubscribe();
     };
-  }, [checkSubscription]);
+  }, [checkSubscription, clearSubscriptionState]);
 
   // Auto-refresh subscription every 5 min while logged in
   useEffect(() => {
@@ -266,6 +279,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       session,
       user: session?.user ?? null,
       loading,
+      subscriptionLoading: !!session && !subscriptionResolved,
       signOut,
       subscribed,
       subscriptionTier,
