@@ -48,9 +48,9 @@ const CoachAssignWorkout = ({ rosterId }: Props) => {
       assigned_by: user.id,
       title: title.trim(),
       description: description.trim(),
-      exercises: exercises.filter((e) => e.title.trim()),
+      exercises: exercises.filter((e) => e.title.trim()) as any,
       due_date: dueDate || null,
-    });
+    } as any);
     if (error) toast.error(error.message);
     else {
       toast.success("Workout assigned! 💪");
