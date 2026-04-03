@@ -23,7 +23,7 @@ const CookieBanner = () => {
     <div className="fixed bottom-0 left-0 right-0 z-[60] bg-card border-t border-border shadow-lg p-3 flex items-center justify-between gap-3">
       <p className="text-xs text-muted-foreground">
         We use cookies to improve your experience.{" "}
-        <Link to="/legal/cookie-policy" className="text-primary underline">Learn more</Link>.
+        <Link to="/legal/cookie-policy" className="text-primary underline">Learn more about our cookie policy</Link>.
       </p>
       <button
         onClick={() => handle("accepted")}
