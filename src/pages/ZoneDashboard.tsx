@@ -26,6 +26,7 @@ import {
 import { AnimatePresence } from "framer-motion";
 
 const NotificationBell = lazy(() => import("@/components/layout/NotificationBell"));
+const PwaInstallBanner = lazy(() => import("@/components/layout/PwaInstallBanner"));
 const CoachChatPanel = lazy(() => import("@/components/dashboard/CoachChatPanel"));
 const QuickActivityLog = lazy(() => import("@/components/dashboard/QuickActivityLog"));
 const FeatureLearningModal = lazy(() => import("@/components/dashboard/FeatureLearningModal"));
