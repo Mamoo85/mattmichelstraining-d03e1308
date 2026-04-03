@@ -51,22 +51,21 @@ export default function AiWebsiteAudit() {
       toast.error("Email and website URL are required");
       return;
     }
-    // Basic URL validation
     let url = form.business_url.trim();
     if (!url.startsWith("http")) url = "https://" + url;
 
     setSubmitting(true);
     try {
-      const { data, error } = await supabase.functions.invoke("create-report-checkout", {
+      // Free lead magnet — trigger audit directly, no checkout
+      const { error } = await supabase.functions.invoke("instant-audit", {
         body: {
-          product_type: "website_audit",
           email: form.email,
-          business_name: form.business_name,
+          business_name: form.business_name || "Your Business",
           business_url: url,
         },
       });
       if (error) throw error;
-      if (data?.url) window.location.href = data.url;
+      window.location.search = "?success=1";
     } catch (err: any) {
       toast.error(err.message || "Something went wrong. Try again or call (313) 806-4952.");
     } finally {
