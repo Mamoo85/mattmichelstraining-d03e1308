@@ -485,7 +485,7 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
       tone: "motivational, practical",
       is_test: "true",
     },
-    success_url: `${SITE}/podcast-revenue?test=true`,
+    success_url: `${SITE}/podcast-revenue-machine?test=true`,
   },
   regulatory_monitor_v2_subscription: {
     name: "TEST — Regulatory Change Monitor ($197/mo)",
