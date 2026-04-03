@@ -315,7 +315,7 @@ export default function AdminTrainingNewsletter() {
           {loading ? (
             <><Loader2 size={15} className="animate-spin mr-2" /> Generating Both Versions…</>
           ) : (
-            <><RefreshCw size={15} className="mr-2" /> Generate — Claude vs Gemini</>
+            <><RefreshCw size={15} className="mr-2" /> Generate — GPT-5 vs Gemini</>
           )}
         </Button>
       </div>
