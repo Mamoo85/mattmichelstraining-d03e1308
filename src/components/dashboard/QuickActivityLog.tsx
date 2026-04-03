@@ -8,6 +8,9 @@ import ReactMarkdown from "react-markdown";
 import { safeLocalStorage } from "@/lib/browserStorage";
 import FeatureLearningModal from "./FeatureLearningModal";
 import { QUICK_ACTIVITY_TIP } from "./featureTips";
+import { ALL_LIFTS } from "@/components/progress/liftConfig";
+import { usePoints } from "@/hooks/usePoints";
+import PRCelebration from "@/components/gamification/PRCelebration";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
