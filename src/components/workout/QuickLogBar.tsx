@@ -5,6 +5,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ALL_LIFTS } from "@/components/progress/liftConfig";
+import { usePoints } from "@/hooks/usePoints";
+import PRCelebration from "@/components/gamification/PRCelebration";
 import QuickLogPRConfirm from "./QuickLogPRConfirm";
 import type { LoggedExerciseData } from "./WorkoutLogger";
 
