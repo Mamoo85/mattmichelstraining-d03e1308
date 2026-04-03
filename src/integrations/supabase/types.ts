@@ -1053,6 +1053,42 @@ export type Database = {
           },
         ]
       }
+      coach_profiles: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          is_active: boolean
+          max_athletes: number
+          school_name: string
+          sport: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          is_active?: boolean
+          max_athletes?: number
+          school_name?: string
+          sport?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_active?: boolean
+          max_athletes?: number
+          school_name?: string
+          sport?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       coaching_documents: {
         Row: {
           content: string
@@ -6255,6 +6291,79 @@ export type Database = {
         }
         Relationships: []
       }
+      team_feed: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_pinned: boolean
+          media_url: string | null
+          roster_id: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_pinned?: boolean
+          media_url?: string | null
+          roster_id: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_pinned?: boolean
+          media_url?: string | null
+          roster_id?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_feed_roster_id_fkey"
+            columns: ["roster_id"]
+            isOneToOne: false
+            referencedRelation: "team_rosters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_feed_reactions: {
+        Row: {
+          created_at: string
+          feed_item_id: string
+          id: string
+          reaction: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          feed_item_id: string
+          id?: string
+          reaction?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          feed_item_id?: string
+          id?: string
+          reaction?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_feed_reactions_feed_item_id_fkey"
+            columns: ["feed_item_id"]
+            isOneToOne: false
+            referencedRelation: "team_feed"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       team_members: {
         Row: {
           athlete_email: string
@@ -6301,30 +6410,115 @@ export type Database = {
       }
       team_rosters: {
         Row: {
+          coach_user_id: string | null
           created_at: string
           id: string
+          invite_code: string | null
           owner_id: string
+          school_name: string | null
+          season: string | null
           sport: string | null
           team_name: string
           updated_at: string
         }
         Insert: {
+          coach_user_id?: string | null
           created_at?: string
           id?: string
+          invite_code?: string | null
           owner_id: string
+          school_name?: string | null
+          season?: string | null
           sport?: string | null
           team_name?: string
           updated_at?: string
         }
         Update: {
+          coach_user_id?: string | null
           created_at?: string
           id?: string
+          invite_code?: string | null
           owner_id?: string
+          school_name?: string | null
+          season?: string | null
           sport?: string | null
           team_name?: string
           updated_at?: string
         }
         Relationships: []
+      }
+      team_workout_completions: {
+        Row: {
+          completed_at: string
+          id: string
+          notes: string | null
+          team_workout_id: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          id?: string
+          notes?: string | null
+          team_workout_id: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          id?: string
+          notes?: string | null
+          team_workout_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_workout_completions_team_workout_id_fkey"
+            columns: ["team_workout_id"]
+            isOneToOne: false
+            referencedRelation: "team_workouts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_workouts: {
+        Row: {
+          assigned_by: string
+          created_at: string
+          description: string | null
+          due_date: string | null
+          exercises: Json
+          id: string
+          roster_id: string
+          title: string
+        }
+        Insert: {
+          assigned_by: string
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          exercises?: Json
+          id?: string
+          roster_id: string
+          title: string
+        }
+        Update: {
+          assigned_by?: string
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          exercises?: Json
+          id?: string
+          roster_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_workouts_roster_id_fkey"
+            columns: ["roster_id"]
+            isOneToOne: false
+            referencedRelation: "team_rosters"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       testimonials: {
         Row: {
@@ -7701,6 +7895,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_team_coach: {
+        Args: { _roster_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_team_member: {
+        Args: { _roster_id: string; _user_id: string }
+        Returns: boolean
+      }
       log_challenge_progress: {
         Args: { _challenge_id: string; _user_id: string; _value: number }
         Returns: number
@@ -7748,7 +7950,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user" | "parent" | "child"
+      app_role: "admin" | "moderator" | "user" | "parent" | "child" | "coach"
       lift_video_status: "pending_review" | "approved" | "rejected" | "archived"
     }
     CompositeTypes: {
@@ -7877,7 +8079,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user", "parent", "child"],
+      app_role: ["admin", "moderator", "user", "parent", "child", "coach"],
       lift_video_status: ["pending_review", "approved", "rejected", "archived"],
     },
   },

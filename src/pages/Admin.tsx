@@ -15,6 +15,7 @@ const AdminClientList = lazy(() => import("@/components/admin/AdminClientList"))
 const AdminSupportCopilot = lazy(() => import("@/components/admin/AdminSupportCopilot"));
 const AdminFamilyManager = lazy(() => import("@/components/admin/AdminFamilyManager"));
 const AdminTeamRosters = lazy(() => import("@/components/admin/AdminTeamRosters"));
+const AdminCoachManager = lazy(() => import("@/components/admin/AdminCoachManager"));
 const AdminParentReports = lazy(() => import("@/components/admin/AdminParentReports"));
 const AdminParentInbox = lazy(() => import("@/components/admin/AdminParentInbox"));
 const AdminCoachInbox = lazy(() => import("@/components/admin/AdminCoachInbox"));
@@ -396,6 +397,7 @@ const Admin = () => {
               <div className="space-y-8">
                 <AdminFamilyManager />
                 <div className="border-t border-border pt-6"><AdminTeamRosters /></div>
+                <div className="border-t border-border pt-6"><AdminCoachManager /></div>
               </div>
             )},
             { key: "parents", label: <span className="flex items-center gap-1">Parent Hub{unreadParentCount > 0 && <Badge variant="destructive" className="text-[8px] px-1.5 py-0 min-w-[18px] h-4">{unreadParentCount}</Badge>}</span>, content: (

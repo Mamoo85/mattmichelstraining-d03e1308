@@ -48,6 +48,9 @@ const BottomTabBar = lazyRetry(() => import("@/components/layout/BottomTabBar"))
 const Index = lazyRetry(() => import("./pages/Index"));
 
 const Coach = lazyRetry(() => import("./pages/Coach"));
+const CoachHub = lazyRetry(() => import("./pages/CoachHub"));
+const MyTeam = lazyRetry(() => import("./pages/MyTeam"));
+const JoinTeam = lazyRetry(() => import("./pages/JoinTeam"));
 const Shop = lazyRetry(() => import("./pages/Shop"));
 const ForParents = lazyRetry(() => import("./pages/ForParents"));
 const Welcome = lazyRetry(() => import("./pages/Welcome"));
@@ -657,6 +660,9 @@ const App = () => (
                     <Route path="/real-estate-newsletter/dashboard" element={<ProtectedRoute><RealEstateDashboard /></ProtectedRoute>} />
                     <Route path="/employee-credential-audit" element={<EmployeeCredentialAudit />} />
                     <Route path="/new-hire-check" element={<NewHireCheck />} />
+                    <Route path="/join/:code" element={<JoinTeam />} />
+                    <Route path="/coach-hub" element={<ProtectedRoute><CoachHub /></ProtectedRoute>} />
+                    <Route path="/my-team" element={<ProtectedRoute><MyTeam /></ProtectedRoute>} />
                     <Route path="*" element={<NotFound />} />
                     </Routes>
                   </div>
