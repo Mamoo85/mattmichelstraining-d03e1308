@@ -44,6 +44,7 @@ const DURATION_OPTIONS = ["30 min", "60 min"];
 
 const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
   const { user } = useAuth();
+  const { awardPoints } = usePoints();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
@@ -55,6 +56,12 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
   const abortRef = useRef<AbortController | null>(null);
   const photoRef = useRef<HTMLInputElement>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [prCelebration, setPrCelebration] = useState<{
+    exerciseName: string;
+    newWeight: number;
+    previousBest: number;
+    reps?: number;
+  } | null>(null);
   
   // Track what info has been provided — sequential prompts
   const [needsIntensity, setNeedsIntensity] = useState(false);
