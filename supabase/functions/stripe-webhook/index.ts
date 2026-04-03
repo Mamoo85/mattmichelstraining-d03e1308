@@ -752,7 +752,7 @@ serve(async (req) => {
 <p style="margin:0 0 8px">📧 <strong>Daily digest</strong> — new reviews + suggested responses delivered to your inbox</p>
 <p style="margin:0 0 16px">🎯 <strong>Brand voice</strong> — responses match your business tone, not generic AI</p>
 <p style="margin:0 0 8px"><strong>Next step:</strong> Reply to this email with your Google Business Profile URL so we can start monitoring. Or text Matt at (313) 806-4952.</p>`,
-            }) });
+            }) }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Review Response Client — ${meta.businessName || email} ($49/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}</p>` }) });
           }
         } catch (e) { console.error("[WEBHOOK] review_response_subscription error:", e); }
@@ -777,7 +777,7 @@ serve(async (req) => {
 <p style="margin:0 0 8px">🎯 <strong>Talk tracks</strong> — exact language to use when prospects mention a competitor</p>
 <p style="margin:0 0 16px">⚡ <strong>Win/loss insights</strong> — what competitors are doing right and where they're vulnerable</p>
 <p style="margin:0;color:#64748b;font-size:13px">Your sales team will never be caught off guard again.</p>`,
-            }) });
+            }) }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Battlecard Client — ${meta.businessName || email} ($39/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Competitors: ${meta.competitorNames || "n/a"}</p>` }) });
           }
         } catch (e) { console.error("[WEBHOOK] battlecard_subscription error:", e); }
@@ -802,7 +802,7 @@ serve(async (req) => {
 <p style="margin:0 0 8px">🏢 <strong>Competitor moves</strong> — new hires, expansions, pricing changes you should know about</p>
 <p style="margin:0 0 16px">💡 <strong>Action items</strong> — 3 specific things to do this week based on the intel</p>
 <p style="margin:0;color:#64748b;font-size:13px">First brief arrives next Monday. Knowledge is revenue.</p>`,
-            }) });
+            }) }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Market Intel Client — ${meta.businessName || email} ($49/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}<br>Location: ${meta.location || "Michigan"}</p>` }) });
           }
         } catch (e) { console.error("[WEBHOOK] market_intel_subscription error:", e); }
@@ -824,7 +824,7 @@ serve(async (req) => {
 <p style="margin:0 0 8px">📅 <strong>Posting schedule included</strong> — we tell you which days to post which caption</p>
 <p style="margin:0 0 16px">✨ <strong>7-day free trial</strong> — first batch arrives this week</p>
 <p style="margin:0;color:#64748b;font-size:13px">Just copy, paste, post. That's it. Social media done in 5 minutes a day.</p>`,
-            }) });
+            }) }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Caption Pack — ${meta.businessName || email} ($29/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Platforms: ${meta.platforms || "n/a"}</p>` }) });
           }
         } catch (e) { console.error("[WEBHOOK] caption_pack_subscription error:", e); }
@@ -846,7 +846,7 @@ serve(async (req) => {
 <p style="margin:0 0 8px">📋 <strong>Copy-paste ready</strong> — formatted for your website, no editing needed</p>
 <p style="margin:0 0 16px">✨ <strong>7-day free trial</strong> — first refresh arrives this week</p>
 <p style="margin:0;color:#64748b;font-size:13px">Google loves fresh content. This is the easiest way to feed it.</p>`,
-            }) });
+            }) }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New FAQ Refresh — ${meta.businessName || email} ($29/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}</p>` }) });
           }
         } catch (e) { console.error("[WEBHOOK] faq_refresh_subscription error:", e); }
@@ -868,7 +868,7 @@ serve(async (req) => {
 <p style="margin:0 0 8px">📋 <strong>Multiple formats</strong> — Indeed, LinkedIn, and general-purpose versions</p>
 <p style="margin:0 0 16px">✨ <strong>7-day free trial started</strong></p>
 <p style="margin:0;color:#64748b;font-size:13px">Reply with your first job description and we'll have it polished by tomorrow.</p>`,
-            }) });
+            }) }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Job Posting — ${meta.businessName || email} ($39/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}</p>` }) });
           }
         } catch (e) { console.error("[WEBHOOK] job_posting_subscription error:", e); }
@@ -890,7 +890,7 @@ serve(async (req) => {
 <p style="margin:0 0 8px">📅 <strong>First issue</strong> — goes out on the 1st of next month</p>
 <p style="margin:0 0 16px">✨ <strong>7-day free trial started</strong></p>
 <p style="margin:0;color:#64748b;font-size:13px">You focus on running your business. We'll keep your customers engaged.</p>`,
-            }) });
+            }) }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Newsletter Service — ${meta.businessName || email} ($49/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}</p>` }) });
           }
         } catch (e) { console.error("[WEBHOOK] newsletter_service_subscription error:", e); }
