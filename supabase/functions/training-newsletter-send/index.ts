@@ -1,6 +1,6 @@
 // Training Newsletter Send — M² Performance Training
 // Monthly newsletter for gym clients: high schoolers, college athletes, moms, dads
-// Supports two AI providers: "anthropic" (Claude Haiku) or "lovable" (Gemini via Lovable gateway)
+// Supports two AI providers: "anthropic" (now via Lovable gateway with different model) or "lovable" (Gemini via Lovable gateway)
 // POST with { provider: "anthropic"|"lovable", topic?: string, preview_only?: true, custom_content?: string }
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
@@ -9,7 +9,6 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 
 const CORS = {
@@ -67,27 +66,7 @@ interface NewsletterContent {
   next_month_tease: string;
 }
 
-async function generateWithAnthropic(topic: string, customContent?: string): Promise<NewsletterContent> {
-  if (!ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY not set");
-
-  const userPrompt = customContent
-    ? `Matt just wrote this raw newsletter draft. Enhance it into a full newsletter while keeping 100% of his voice, opinions, and specific points. Do NOT water it down. Make it punchy and direct. Here's his draft:\n\n${customContent}`
-    : `Write this month's M² training newsletter covering: "${topic}". Make it feel like Matt sat down and just wrote it — raw, direct, real.`;
-
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "x-api-key": ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 1200,
-      system: MATT_SYSTEM_PROMPT,
-      messages: [{
-        role: "user",
-        content: `${userPrompt}
+const JSON_PROMPT_SUFFIX = `
 
 Return JSON with these fields:
 - subject: email subject (punchy, under 55 chars, no hype)
@@ -97,20 +76,9 @@ Return JSON with these fields:
 - body: 3-4 paragraphs of the main content (Matt's raw truth)
 - truth_of_the_month: one bold truth statement, 1-2 sentences max
 - cta_text: call to action (direct, specific, not generic)
-- next_month_tease: always ends with something about foam rolling next month`
-      }],
-    }),
-  });
+- next_month_tease: always ends with something about foam rolling next month`;
 
-  if (!res.ok) throw new Error(`Anthropic error: ${await res.text()}`);
-  const data = await res.json();
-  const raw = data?.content?.[0]?.text || "";
-
-  const jsonMatch = raw.match(/\{[\s\S]*\}/);
-  return JSON.parse(jsonMatch?.[0] || raw);
-}
-
-async function generateWithLovable(topic: string, customContent?: string): Promise<NewsletterContent> {
+async function generateWithGateway(model: string, topic: string, customContent?: string): Promise<NewsletterContent> {
   if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not set");
 
   const userPrompt = customContent
@@ -124,33 +92,35 @@ async function generateWithLovable(topic: string, customContent?: string): Promi
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash-lite",
+      model,
       messages: [{
         role: "system",
         content: MATT_SYSTEM_PROMPT,
       }, {
         role: "user",
-        content: `${userPrompt}
-
-Return JSON with these fields:
-- subject: email subject (punchy, under 55 chars, no hype)
-- preview_text: one-line preview under 90 chars
-- headline: the main article headline
-- opening: 2-3 sentence opener that hooks immediately
-- body: 3-4 paragraphs of the main content (Matt's raw truth)
-- truth_of_the_month: one bold truth statement, 1-2 sentences max
-- cta_text: call to action (direct, specific, not generic)
-- next_month_tease: always ends with something about foam rolling next month`,
+        content: userPrompt + JSON_PROMPT_SUFFIX,
       }],
     }),
   });
 
-  if (!res.ok) throw new Error(`Lovable error: ${await res.text()}`);
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`AI gateway error (${res.status}): ${errText}`);
+  }
   const data = await res.json();
   const raw = data?.choices?.[0]?.message?.content || "";
 
   const jsonMatch = raw.match(/\{[\s\S]*\}/);
   return JSON.parse(jsonMatch?.[0] || raw);
+}
+
+// "Claude" side now uses GPT-5 via gateway; "Lovable" side uses Gemini
+async function generateWithAnthropic(topic: string, customContent?: string): Promise<NewsletterContent> {
+  return generateWithGateway("openai/gpt-5-mini", topic, customContent);
+}
+
+async function generateWithLovable(topic: string, customContent?: string): Promise<NewsletterContent> {
+  return generateWithGateway("google/gemini-2.5-flash-lite", topic, customContent);
 }
 
 function buildEmailHtml(content: NewsletterContent, issueNum: number, dateStr: string): string {
