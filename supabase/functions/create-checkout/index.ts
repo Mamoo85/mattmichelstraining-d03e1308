@@ -155,6 +155,10 @@ serve(async (req) => {
       sessionParams.discounts = [{ coupon: stripeCouponId }];
     } else if (referralCouponId) {
       sessionParams.discounts = [{ coupon: referralCouponId }];
+    } else if (priceId === FOUNDATION_MONTHLY_PRICE_ID) {
+      // Auto-apply 50% launch discount for Foundation monthly
+      sessionParams.discounts = [{ coupon: LAUNCH_COUPON_ID }];
+      logStep("Launch coupon auto-applied", { couponId: LAUNCH_COUPON_ID });
     } else {
       // No custom discount — let Stripe's built-in promo code box appear
       sessionParams.allow_promotion_codes = true;
