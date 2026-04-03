@@ -204,7 +204,7 @@ export default function AiWebsiteAudit() {
         <section className="py-12 px-6 text-center border-t border-border">
           <div className="max-w-xl mx-auto">
             <h2 className="text-2xl font-black text-foreground mb-3">Ready to know the truth about your site?</h2>
-            <p className="text-muted-foreground mb-6">$9. 60 seconds. No fluff, no upsell call.</p>
+            <p className="text-muted-foreground mb-6">Free. 60 seconds. No fluff, no upsell call.</p>
             <a href="#" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="inline-flex items-center gap-2 px-8 py-4 rounded-lg font-black text-sm uppercase tracking-wider" style={{ background: "var(--primary)", color: "white" }}>
               Get My Audit <ArrowRight size={16} />
             </a>
