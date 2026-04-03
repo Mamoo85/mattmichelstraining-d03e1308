@@ -131,10 +131,8 @@ const M2_SERVICES = [
     schedule: "Weekly",
     insert: {
       email: MATT_EMAIL,
-      name: "Matt Michels",
+      business_name: "M² Development",
       industry: "AI automation & SaaS",
-      topics: "AI automation, local business growth, contractor leads, B2B sales, field sales",
-      tone: "conversational, direct, credible — like a Grosse Pointe guy who actually built the thing",
       active: true,
     },
   },
@@ -183,8 +181,20 @@ const AdminM2GrowthHub = () => {
   const { mutate: toggleService, isPending } = useMutation({
     mutationFn: async ({ service, enroll }: { service: typeof M2_SERVICES[0]; enroll: boolean }) => {
       if (enroll) {
-        const { error } = await (supabase.from as any)(service.table).upsert(service.insert, { onConflict: "email" });
-        if (error) throw error;
+        // Check if already exists first to avoid ON CONFLICT issues
+        const { data: existing } = await (supabase.from as any)(service.table)
+          .select("id")
+          .eq("email", MATT_EMAIL)
+          .maybeSingle();
+        if (existing) {
+          const { error } = await (supabase.from as any)(service.table)
+            .update({ active: true })
+            .eq("email", MATT_EMAIL);
+          if (error) throw error;
+        } else {
+          const { error } = await (supabase.from as any)(service.table).insert(service.insert);
+          if (error) throw error;
+        }
       } else {
         const { error } = await (supabase.from as any)(service.table).update({ active: false }).eq("email", MATT_EMAIL);
         if (error) throw error;

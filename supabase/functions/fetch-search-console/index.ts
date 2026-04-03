@@ -10,8 +10,18 @@ const SITE_URL = "https://www.mattmichelstraining.com";
 const GSC_API = "https://www.googleapis.com/webmasters/v3";
 
 async function getAccessToken(): Promise<string> {
-  const keyJson = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_KEY");
-  if (!keyJson) throw new Error("GOOGLE_SERVICE_ACCOUNT_KEY not set");
+  const keyRaw = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_KEY");
+  if (!keyRaw) throw new Error("GOOGLE_SERVICE_ACCOUNT_KEY not set");
+
+  // Support both raw JSON and base64-encoded JSON
+  let keyJson: string;
+  if (keyRaw.trimStart().startsWith("{")) {
+    keyJson = keyRaw;
+  } else {
+    keyJson = new TextDecoder().decode(
+      Uint8Array.from(atob(keyRaw), (c) => c.charCodeAt(0))
+    );
+  }
 
   const key = JSON.parse(keyJson);
   const now = Math.floor(Date.now() / 1000);
