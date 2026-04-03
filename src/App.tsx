@@ -648,7 +648,6 @@ const App = () => (
                     <Route path="/memorial/:slug" element={<MemorialPage />} />
                     <Route path="/gov-contract-monitor" element={<GovContractMonitor />} />
                     <Route path="/gov-contract-monitor/dashboard" element={<ProtectedRoute><GovContractDashboard /></ProtectedRoute>} />
-                    <Route path="/regulatory-monitor" element={<RegulatoryMonitor />} />
                     <Route path="/regulatory-monitor/dashboard" element={<ProtectedRoute><RegulatoryDashboard /></ProtectedRoute>} />
                     <Route path="/trademark-watch" element={<TrademarkWatch />} />
                     <Route path="/trademark-watch/dashboard" element={<ProtectedRoute><TrademarkDashboard /></ProtectedRoute>} />
