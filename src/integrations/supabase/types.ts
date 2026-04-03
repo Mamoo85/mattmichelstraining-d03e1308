@@ -7895,6 +7895,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_active_team_member: {
+        Args: { _roster_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_roster_owner: {
+        Args: { _roster_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_team_coach: {
         Args: { _roster_id: string; _user_id: string }
         Returns: boolean
