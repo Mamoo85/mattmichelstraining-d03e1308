@@ -19,26 +19,21 @@ const PartnerProgram = () => {
     }
     setLoading(true);
     try {
-      // Generate a unique referral code
-      const code = form.name.replace(/[^a-zA-Z0-9]/g, "").substring(0, 8).toUpperCase() + "-M2B";
+      const { data, error } = await supabase.functions.invoke("register-referral-partner", {
+        body: {
+          name: form.name,
+          email: form.email,
+          payout_handle: form.payout_handle || null,
+        },
+      });
 
-      const { error } = await supabase.from("b2b_referral_partners").insert({
-        name: form.name,
-        email: form.email,
-        referral_code: code,
-        payout_handle: form.payout_handle || null,
-      } as any);
-
-      if (error) {
-        if (error.code === "23505") {
-          toast.error("You're already registered! Check your email for your referral code.");
-        } else {
-          throw error;
-        }
+      if (error) throw new Error(error.message || "Something went wrong.");
+      if (data?.error) {
+        toast.error(data.error);
         return;
       }
 
-      setResult({ code });
+      setResult({ code: data.code });
       toast.success("Welcome to the partner program!");
     } catch (err: any) {
       toast.error(err.message || "Something went wrong.");
