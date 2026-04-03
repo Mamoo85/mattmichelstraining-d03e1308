@@ -8,11 +8,13 @@ interface BlurGateProps {
 }
 
 const BlurGate = ({ children, requireSubscription = false }: BlurGateProps) => {
-  const { user, loading, subscribed } = useAuth();
+  const { user, loading, subscribed, subscriptionLoading } = useAuth();
   const navigate = useNavigate();
 
-  // While auth is resolving, just render children — no overlay, no flash
+  // While auth/subscription is resolving, just render children — no overlay, no flash
   if (loading) return <>{children}</>;
+
+  if (user && requireSubscription && subscriptionLoading) return <>{children}</>;
 
   const needsAuth = !user;
   const needsSub = user && requireSubscription && !subscribed;
