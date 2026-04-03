@@ -147,7 +147,10 @@ const PROFILE_TABS: { key: ProfileTab; label: string; icon: typeof User }[] = [
 const Profile = () => {
   const { user, subscribed, subscriptionTier, subscriptionEnd, checkSubscription } = useAuth();
   const { isAdmin } = useIsAdmin();
-  const [activeTab, setActiveTab] = useState<ProfileTab>("profile");
+  const [activeTab, setActiveTab] = useState<ProfileTab>(() => {
+    if (typeof window !== "undefined" && window.location.hash === "#data") return "data";
+    return "profile";
+  });
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [fullName, setFullName] = useState("");
   const [athleteName, setAthleteName] = useState("");
