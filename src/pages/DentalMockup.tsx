@@ -151,7 +151,7 @@ export default function DentalMockup() {
             </div>
             <div className="grid md:grid-cols-2 gap-8 items-start">
               <div className="rounded-2xl overflow-hidden" style={{ background:DARK }}>
-                <img src="https://images.unsplash.com/photo-1629909615184-74f495363b67?w=1200&q=80" alt="CEREC technology" className="w-full object-cover" style={{ height:240 }} />
+                <img src="/images/stewart-cerec.jpg" alt="CEREC technology" className="w-full object-cover" style={{ height:240 }} />
                 <div className="p-8">
                   <div style={{ width:40, height:2, background:T, marginBottom:16 }} />
                   <h3 className="text-xl font-bold mb-4" style={{ color:"white" }}>Your Crown, Built In-Office</h3>
