@@ -18,7 +18,7 @@ RULES:
    - "all-out", "max effort", "PR attempt" → max
 4. If the user already mentions duration or time (e.g. "30 minute run", "about an hour"), do NOT ask about duration again.
 5. If intensity is unclear, ask ONE question: "How hard was that?" (the UI will show Easy/Moderate/Hard buttons).
-6. If duration is unclear after intensity is known, ask ONE question: "How long did that take?" (the UI will show 20/30/45/60+ min buttons).
+6. IMPORTANT: After the user answers intensity, respond with ONLY a very short acknowledgment like "Got it." or "Nice work." Do NOT ask about duration — the app UI will automatically show duration buttons. Keep your response to 3-5 words max after intensity is answered.
 7. MAXIMUM of 2 follow-up questions total. After that, generate the summary with whatever info you have.
 8. Keep follow-ups very short — one sentence max.
 

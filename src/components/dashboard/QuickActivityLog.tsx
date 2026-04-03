@@ -8,6 +8,9 @@ import ReactMarkdown from "react-markdown";
 import { safeLocalStorage } from "@/lib/browserStorage";
 import FeatureLearningModal from "./FeatureLearningModal";
 import { QUICK_ACTIVITY_TIP } from "./featureTips";
+import { ALL_LIFTS } from "@/components/progress/liftConfig";
+import { usePoints } from "@/hooks/usePoints";
+import PRCelebration from "@/components/gamification/PRCelebration";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -41,6 +44,7 @@ const DURATION_OPTIONS = ["30 min", "60 min"];
 
 const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
   const { user } = useAuth();
+  const { awardPoints } = usePoints();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
@@ -52,6 +56,12 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
   const abortRef = useRef<AbortController | null>(null);
   const photoRef = useRef<HTMLInputElement>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [prCelebration, setPrCelebration] = useState<{
+    exerciseName: string;
+    newWeight: number;
+    previousBest: number;
+    reps?: number;
+  } | null>(null);
   
   // Track what info has been provided — sequential prompts
   const [needsIntensity, setNeedsIntensity] = useState(false);
@@ -167,7 +177,7 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
       setStreaming(false);
       abortRef.current = null;
     }
-  }, [messages, streaming]);
+  }, [messages, streaming, intensityAnswered]);
 
   const toggleVoice = useCallback(() => {
     if (!supported) return;
@@ -236,6 +246,55 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
         } else {
           toast({ title: "Workout sheet saved! 📋", description: "Check your workout library." });
         }
+
+        // PR Detection: check each exercise against progress_logs
+        for (const ex of summary.workout_sheet) {
+          const weightStr = ex.weight?.replace(/[^0-9.]/g, "");
+          const weight = weightStr ? parseFloat(weightStr) : 0;
+          if (weight <= 0) continue;
+
+          const liftName = ALL_LIFTS.find(
+            l => l.name.toLowerCase() === ex.title.toLowerCase() ||
+                 ex.title.toLowerCase().includes(l.name.toLowerCase()) ||
+                 l.name.toLowerCase().includes(ex.title.toLowerCase())
+          )?.name;
+          if (!liftName) continue;
+
+          try {
+            const { data: prev } = await supabase
+              .from("progress_logs")
+              .select("weight")
+              .eq("user_id", saveUserId)
+              .eq("exercise_name", liftName)
+              .order("weight", { ascending: false })
+              .limit(1);
+
+            const prevBest = prev?.[0]?.weight || 0;
+            if (weight > prevBest) {
+              // Insert new PR
+              await supabase.from("progress_logs").insert({
+                user_id: saveUserId,
+                exercise_name: liftName,
+                weight: weight,
+                reps: parseInt(ex.reps) || 1,
+              } as any);
+
+              // Award points
+              try { await awardPoints("workout_log", `New PR: ${liftName} ${weight} lbs`); } catch {}
+
+              // Show celebration (first PR found)
+              setPrCelebration({
+                exerciseName: liftName,
+                newWeight: weight,
+                previousBest: prevBest,
+                reps: parseInt(ex.reps) || undefined,
+              });
+              break; // Show one at a time
+            }
+          } catch (err) {
+            console.error("PR check error:", err);
+          }
+        }
       }
 
       // Notify all admins about the new activity
@@ -259,13 +318,13 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
       }
 
       toast({ title: "Activity logged! 💪", description: summary.ai_summary });
-      onClose();
+      if (!prCelebration) onClose();
     } catch (e: any) {
       toast({ title: "Save failed", description: e.message, variant: "destructive" });
     } finally {
       setSaving(false);
     }
-  }, [summary, user, targetUserId, onClose]);
+  }, [summary, user, targetUserId, onClose, awardPoints]);
 
   const dismissTip = useCallback(() => {
     safeLocalStorage.setItem(QUICK_ACTIVITY_TIP.storageKey, "1");
@@ -538,6 +597,21 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
           <Send size={16} color="#fff" />
         </button>
       </div>
+
+      {/* PR Celebration */}
+      {prCelebration && (
+        <PRCelebration
+          exerciseName={prCelebration.exerciseName}
+          newWeight={prCelebration.newWeight}
+          previousBest={prCelebration.previousBest}
+          reps={prCelebration.reps}
+          pointsAwarded={50}
+          onDismiss={() => {
+            setPrCelebration(null);
+            onClose();
+          }}
+        />
+      )}
     </motion.div>
   );
 };

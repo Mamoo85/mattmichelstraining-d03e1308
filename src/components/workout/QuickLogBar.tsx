@@ -5,6 +5,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ALL_LIFTS } from "@/components/progress/liftConfig";
+import { usePoints } from "@/hooks/usePoints";
+import PRCelebration from "@/components/gamification/PRCelebration";
 import QuickLogPRConfirm from "./QuickLogPRConfirm";
 import type { LoggedExerciseData } from "./WorkoutLogger";
 
@@ -35,6 +37,7 @@ function matchProgressLift(parsedName: string): string | null {
 
 const QuickLogBar = ({ exercises, onApplyParsed }: QuickLogBarProps) => {
   const { user } = useAuth();
+  const { awardPoints } = usePoints();
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [listening, setListening] = useState(false);
@@ -45,6 +48,12 @@ const QuickLogBar = ({ exercises, onApplyParsed }: QuickLogBarProps) => {
     previous_best: number;
   }> | null>(null);
   const [pendingSets, setPendingSets] = useState<ParsedSet[] | null>(null);
+  const [prCelebration, setPrCelebration] = useState<{
+    exerciseName: string;
+    newWeight: number;
+    previousBest: number;
+    reps?: number;
+  } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const speechSupported =
@@ -142,10 +151,23 @@ const QuickLogBar = ({ exercises, onApplyParsed }: QuickLogBarProps) => {
     }
 
     toast.success(`${confirmed.length} PR${confirmed.length > 1 ? "s" : ""} logged! 🏆`);
+
+    // Show celebration for the biggest PR
+    const biggest = confirmed.reduce((a, b) => (b.weight_lbs - b.previous_best > a.weight_lbs - a.previous_best ? b : a), confirmed[0]);
+    setPrCelebration({
+      exerciseName: biggest.exercise_name,
+      newWeight: biggest.weight_lbs,
+      previousBest: biggest.previous_best,
+      reps: biggest.reps,
+    });
+
+    // Award points
+    try { await awardPoints("workout_log", `New PR: ${biggest.exercise_name} ${biggest.weight_lbs} lbs`); } catch {}
+
     setPrCandidates(null);
     setPendingSets(null);
     setText("");
-  }, [user, pendingSets, onApplyParsed]);
+  }, [user, pendingSets, onApplyParsed, awardPoints]);
 
   const handlePRDismiss = useCallback(() => {
     // User said "not correct" — don't apply sets, let them re-enter
@@ -254,6 +276,18 @@ const QuickLogBar = ({ exercises, onApplyParsed }: QuickLogBarProps) => {
           candidates={prCandidates}
           onConfirm={handlePRConfirm}
           onDismiss={handlePRDismiss}
+        />
+      )}
+
+      {/* PR Celebration */}
+      {prCelebration && (
+        <PRCelebration
+          exerciseName={prCelebration.exerciseName}
+          newWeight={prCelebration.newWeight}
+          previousBest={prCelebration.previousBest}
+          reps={prCelebration.reps}
+          pointsAwarded={50}
+          onDismiss={() => setPrCelebration(null)}
         />
       )}
     </>
