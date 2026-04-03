@@ -1026,6 +1026,24 @@ serve(async (req) => {
         review_responder_subscription: "Review Responder",
         seo_report_subscription: "SEO Report",
         chatbot_subscription: "AI Chatbot",
+        obituary_service_subscription: "AI Obituary Service",
+        sermon_prep_subscription: "Sermon Prep",
+        hoa_secretary_subscription: "HOA Secretary AI",
+        hoa_violation_subscription: "HOA Violation Letters",
+        rfp_alerts_subscription: "RFP Alert Service",
+        franchise_analyzer_subscription: "Franchise FDD Analyzer",
+        insurance_drip_subscription: "Insurance Lead Drip",
+        str_reputation_subscription: "STR Reputation Manager",
+        grant_discovery_subscription: "Grant Discovery",
+        ag_price_alerts_subscription: "Ag Price Alerts",
+        landlord_letters_subscription: "Landlord-Tenant Letters",
+        regulatory_monitor_subscription: "Regulatory Monitor",
+        trade_show_automation_subscription: "Trade Show Follow-Up",
+        price_intelligence_subscription: "Competitor Price Intel",
+        citation_monitor_subscription: "Citation Monitor",
+        menu_engineering_subscription: "Menu Engineering",
+        fitness_reports_subscription: "Fitness Progress Reports",
+        gov_meeting_tracker_subscription: "Gov Meeting Tracker",
         industrial_newsletter_subscription: "Industrial Newsletter",
         review_monitor_subscription: "Review Monitor",
         sms_blast_subscription: "Weekly SMS Blast",
@@ -2590,6 +2608,61 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             );
           }
         } catch (e) { console.error("[WEBHOOK] homeowner_campaign_subscription error:", e); }
+
+      // ── 18 New Autonomous Products ──────────────────────────────────
+      const newProductHandlers: Array<[string, string, string, number]> = [
+        ["obituary_service_subscription", "obituary_clients", "funeral_home_name", 19900],
+        ["sermon_prep_subscription", "sermon_prep_clients", "church_name", 7900],
+        ["hoa_secretary_subscription", "hoa_secretary_clients", "hoa_name", 14900],
+        ["hoa_violation_subscription", "hoa_violation_clients", "hoa_name", 14900],
+        ["rfp_alerts_subscription", "rfp_alert_clients", "business_name", 14900],
+        ["franchise_analyzer_subscription", "franchise_analyzer_clients", "business_name", 29900],
+        ["insurance_drip_subscription", "insurance_drip_clients", "business_name", 14900],
+        ["str_reputation_subscription", "str_reputation_clients", "contact_name", 7900],
+        ["grant_discovery_subscription", "grant_discovery_clients", "org_name", 19900],
+        ["ag_price_alerts_subscription", "ag_price_alert_clients", "business_name", 7900],
+        ["landlord_letters_subscription", "landlord_letter_clients", "contact_name", 14900],
+        ["regulatory_monitor_subscription", "regulatory_monitor_clients", "business_name", 29900],
+        ["trade_show_automation_subscription", "trade_show_clients", "business_name", 9900],
+        ["price_intelligence_subscription", "price_intelligence_clients", "business_name", 19900],
+        ["citation_monitor_subscription", "citation_monitor_clients", "business_name", 9900],
+        ["menu_engineering_subscription", "menu_engineering_clients", "restaurant_name", 9900],
+        ["fitness_reports_subscription", "fitness_report_clients", "business_name", 7900],
+        ["gov_meeting_tracker_subscription", "gov_meeting_tracker_clients", "business_name", 19900],
+      ];
+
+      for (const [metaType, tableName, nameField, price] of newProductHandlers) {
+        if (meta.type === metaType) {
+          try {
+            const upsertData: Record<string, unknown> = {
+              email: customerEmail,
+              contact_name: meta.name || null,
+              phone: meta.phone || null,
+              active: true,
+              stripe_subscription_id: subscriptionId,
+              stripe_customer_id: customerId,
+            };
+            upsertData[nameField] = meta.businessName || meta.orgName || meta.funeralHomeName || meta.hoaName || meta.churchName || meta.restaurantName || meta.name || null;
+            await sb.from(tableName).upsert(upsertData, { onConflict: "email" });
+            const label = AGENCY_SERVICE_LABELS[metaType] || metaType;
+            const priceStr = `$${(price/100).toFixed(0)}/mo`;
+            await sendM2Email(
+              customerEmail,
+              `Welcome to M² ${label}`,
+              m2Email(
+                `You're in — ${label} is active.`,
+                `Matt will reach out within 24 hours to complete your setup. Everything runs automatically from there.`,
+                customerEmail
+              )
+            );
+            await notifyMatt(
+              `New ${label} Subscriber`,
+              `<p>${customerEmail} (${meta.name || "—"}) subscribed to ${label} at ${priceStr}.</p>`
+            );
+          } catch (e) { console.error(`[WEBHOOK] ${metaType} error:`, e); }
+        }
+      }
+
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 

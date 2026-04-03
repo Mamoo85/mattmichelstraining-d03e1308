@@ -15,7 +15,7 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const TWILIO_SID = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
 const TWILIO_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
 const TWILIO_FROM = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
-const MATT_PHONE = "+13138064952";
+const MATT_PHONE = Deno.env.get("ADMIN_PHONE_NUMBER") || "+13138064952";
 
 const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 

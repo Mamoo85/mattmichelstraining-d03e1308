@@ -144,6 +144,24 @@ const SeasonalPromos = lazyRetry(() => import("./pages/SeasonalPromos"));
 const ReferralProgram = lazyRetry(() => import("./pages/ReferralProgram"));
 const SlowDaySMS = lazyRetry(() => import("./pages/SlowDaySMS"));
 const NewHomeownerCampaign = lazyRetry(() => import("./pages/NewHomeownerCampaign"));
+const ObituaryService = lazyRetry(() => import("./pages/ObituaryService"));
+const SermonPrep = lazyRetry(() => import("./pages/SermonPrep"));
+const HOASecretary = lazyRetry(() => import("./pages/HOASecretary"));
+const HOAViolation = lazyRetry(() => import("./pages/HOAViolation"));
+const RFPAlerts = lazyRetry(() => import("./pages/RFPAlerts"));
+const FranchiseAnalyzer = lazyRetry(() => import("./pages/FranchiseAnalyzer"));
+const InsuranceDrip = lazyRetry(() => import("./pages/InsuranceDrip"));
+const STRReputation = lazyRetry(() => import("./pages/STRReputation"));
+const GrantDiscovery = lazyRetry(() => import("./pages/GrantDiscovery"));
+const AgPriceAlerts = lazyRetry(() => import("./pages/AgPriceAlerts"));
+const LandlordLetters = lazyRetry(() => import("./pages/LandlordLetters"));
+const RegulatoryMonitor = lazyRetry(() => import("./pages/RegulatoryMonitor"));
+const TradeShowAutomation = lazyRetry(() => import("./pages/TradeShowAutomation"));
+const PriceIntelligence = lazyRetry(() => import("./pages/PriceIntelligence"));
+const CitationMonitor = lazyRetry(() => import("./pages/CitationMonitor"));
+const MenuEngineering = lazyRetry(() => import("./pages/MenuEngineering"));
+const FitnessReports = lazyRetry(() => import("./pages/FitnessReports"));
+const GovMeetingTracker = lazyRetry(() => import("./pages/GovMeetingTracker"));
 const SeoAuditService = lazyRetry(() => import("./pages/SeoAuditService"));
 const ContractorChatbot = lazyRetry(() => import("./pages/ContractorChatbot"));
 const IndustrialNewsletter = lazyRetry(() => import("./pages/IndustrialNewsletter"));
@@ -475,6 +493,24 @@ const App = () => (
                     <Route path="/referral-program" element={<ReferralProgram />} />
                     <Route path="/slow-day-sms" element={<SlowDaySMS />} />
                     <Route path="/new-homeowner-campaign" element={<NewHomeownerCampaign />} />
+                    <Route path="/obituary-service" element={<ObituaryService />} />
+                    <Route path="/sermon-prep" element={<SermonPrep />} />
+                    <Route path="/hoa-secretary" element={<HOASecretary />} />
+                    <Route path="/hoa-violation" element={<HOAViolation />} />
+                    <Route path="/rfp-alerts" element={<RFPAlerts />} />
+                    <Route path="/franchise-analyzer" element={<FranchiseAnalyzer />} />
+                    <Route path="/insurance-drip" element={<InsuranceDrip />} />
+                    <Route path="/str-reputation" element={<STRReputation />} />
+                    <Route path="/grant-discovery" element={<GrantDiscovery />} />
+                    <Route path="/ag-price-alerts" element={<AgPriceAlerts />} />
+                    <Route path="/landlord-letters" element={<LandlordLetters />} />
+                    <Route path="/regulatory-monitor" element={<RegulatoryMonitor />} />
+                    <Route path="/trade-show-automation" element={<TradeShowAutomation />} />
+                    <Route path="/price-intelligence" element={<PriceIntelligence />} />
+                    <Route path="/citation-monitor" element={<CitationMonitor />} />
+                    <Route path="/menu-engineering" element={<MenuEngineering />} />
+                    <Route path="/fitness-reports" element={<FitnessReports />} />
+                    <Route path="/gov-meeting-tracker" element={<GovMeetingTracker />} />
                     <Route path="/ai-newsletter-service" element={<AINewsletterService />} />
                     <Route path="/free-trending-products" element={<FreeTrendingProducts />} />
                     <Route path="/free-grant-digest" element={<FreeGrantDigest />} />

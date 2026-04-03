@@ -41,6 +41,24 @@ const PRODUCTS: Product[] = [
   { id: "referral_program_subscription", name: "Referral Program", price: "$39/mo", description: "Welcome email + referral_program_clients record. Auto-tracks referrals + rewards.", type: "subscription", category: "SMS Products" },
   { id: "slow_day_subscription", name: "Slow Day SMS", price: "$25/mo", description: "Welcome email + slow_day_clients record. Keyword trigger → instant promo blast.", type: "subscription", category: "SMS Products" },
   { id: "homeowner_campaign_subscription", name: "New Homeowner Campaign", price: "$59/mo", description: "Welcome email + homeowner_campaign_clients record. Monthly new-mover texts.", type: "subscription", category: "SMS Products" },
+  { id: "obituary_service_subscription", name: "AI Obituary Service", price: "$199/mo", description: "Welcome email + obituary_clients record. Funeral home AI writing.", type: "subscription", category: "Autonomous Products" },
+  { id: "sermon_prep_subscription", name: "Sermon Prep", price: "$79/mo", description: "Welcome email + sermon_prep_clients record. Weekly AI sermon outlines.", type: "subscription", category: "Autonomous Products" },
+  { id: "hoa_secretary_subscription", name: "HOA Secretary AI", price: "$149/mo", description: "Welcome email + hoa_secretary_clients record. AI meeting minutes.", type: "subscription", category: "Autonomous Products" },
+  { id: "hoa_violation_subscription", name: "HOA Violation Letters", price: "$149/mo", description: "Welcome email + hoa_violation_clients record. AI violation letters.", type: "subscription", category: "Autonomous Products" },
+  { id: "rfp_alerts_subscription", name: "RFP Alert Service", price: "$149/mo", description: "Welcome email + rfp_alert_clients record. Daily gov contract alerts.", type: "subscription", category: "Autonomous Products" },
+  { id: "franchise_analyzer_subscription", name: "Franchise FDD Analyzer", price: "$299/mo", description: "Welcome email + franchise_analyzer_clients record. AI FDD risk analysis.", type: "subscription", category: "Autonomous Products" },
+  { id: "insurance_drip_subscription", name: "Insurance Lead Drip", price: "$149/mo", description: "Welcome email + insurance_drip_clients record. AI lead follow-up sequences.", type: "subscription", category: "Autonomous Products" },
+  { id: "str_reputation_subscription", name: "STR Reputation Manager", price: "$79/mo", description: "Welcome email + str_reputation_clients record. Airbnb review monitor.", type: "subscription", category: "Autonomous Products" },
+  { id: "grant_discovery_subscription", name: "Grant Discovery", price: "$199/mo", description: "Welcome email + grant_discovery_clients record. Weekly nonprofit grants.", type: "subscription", category: "Autonomous Products" },
+  { id: "ag_price_alerts_subscription", name: "Ag Price Alerts", price: "$79/mo", description: "Welcome email + ag_price_alert_clients record. Commodity price SMS alerts.", type: "subscription", category: "Autonomous Products" },
+  { id: "landlord_letters_subscription", name: "Landlord-Tenant Letters", price: "$149/mo", description: "Welcome email + landlord_letter_clients record. AI legal letters.", type: "subscription", category: "Autonomous Products" },
+  { id: "regulatory_monitor_subscription", name: "Regulatory Monitor", price: "$299/mo", description: "Welcome email + regulatory_monitor_clients record. Weekly compliance alerts.", type: "subscription", category: "Autonomous Products" },
+  { id: "trade_show_automation_subscription", name: "Trade Show Follow-Up", price: "$99/mo", description: "Welcome email + trade_show_clients record. AI badge-scan sequences.", type: "subscription", category: "Autonomous Products" },
+  { id: "price_intelligence_subscription", name: "Competitor Price Intel", price: "$199/mo", description: "Welcome email + price_intelligence_clients record. Daily price monitoring.", type: "subscription", category: "Autonomous Products" },
+  { id: "citation_monitor_subscription", name: "Citation Monitor", price: "$99/mo", description: "Welcome email + citation_monitor_clients record. NAP consistency weekly.", type: "subscription", category: "Autonomous Products" },
+  { id: "menu_engineering_subscription", name: "Menu Engineering", price: "$99/mo", description: "Welcome email + menu_engineering_clients record. Monthly BCG analysis.", type: "subscription", category: "Autonomous Products" },
+  { id: "fitness_reports_subscription", name: "Fitness Progress Reports", price: "$79/mo", description: "Welcome email + fitness_report_clients record. Monthly client reports.", type: "subscription", category: "Autonomous Products" },
+  { id: "gov_meeting_tracker_subscription", name: "Gov Meeting Tracker", price: "$199/mo", description: "Welcome email + gov_meeting_tracker_clients record. Weekly zoning alerts.", type: "subscription", category: "Autonomous Products" },
 ];
 
 type TestStatus = "idle" | "loading" | "success" | "error";
@@ -73,6 +91,7 @@ export default function AdminSandbox() {
   const instant = PRODUCTS.filter(p => p.type === "instant");
   const subs = PRODUCTS.filter(p => p.type === "subscription" && p.category === "Subscription");
   const smsProducts = PRODUCTS.filter(p => p.category === "SMS Products");
+  const autonomousProducts = PRODUCTS.filter(p => p.category === "Autonomous Products");
 
   const StatusIcon = ({ status }: { status: TestStatus }) => {
     if (status === "loading") return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />;
@@ -208,6 +227,49 @@ export default function AdminSandbox() {
                     disabled={statuses[p.id] === "loading"}
                     variant="outline"
                     className="flex-1 border-purple-600/50 text-purple-300 hover:bg-purple-900/30 text-sm h-8"
+                  >
+                    {statuses[p.id] === "loading" ? (
+                      <><Loader2 className="h-3 w-3 animate-spin mr-1" /> Opening...</>
+                    ) : (
+                      <><ExternalLink className="h-3 w-3 mr-1" /> Test $0</>
+                    )}
+                  </Button>
+                  {statuses[p.id] && statuses[p.id] !== "loading" && (
+                    <button onClick={() => resetStatus(p.id)} className="text-slate-500 hover:text-slate-300">
+                      <RefreshCw className="h-3 w-3" />
+                    </button>
+                  )}
+                  <StatusIcon status={statuses[p.id] || "idle"} />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      {/* Autonomous Products */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <h3 className="text-white font-semibold">Autonomous Products</h3>
+          <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs">Welcome email + DB record + AI automation</Badge>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {autonomousProducts.map(p => (
+            <Card key={p.id} className="bg-slate-800 border-slate-700 border-l-2 border-l-emerald-500/50">
+              <CardHeader className="pb-2">
+                <div className="flex items-start justify-between">
+                  <CardTitle className="text-white text-base">{p.name}</CardTitle>
+                  <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs shrink-0 ml-2">{p.price}</Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-slate-400 text-xs leading-relaxed">{p.description}</p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={() => runTest(p)}
+                    disabled={statuses[p.id] === "loading"}
+                    variant="outline"
+                    className="flex-1 border-emerald-600/50 text-emerald-300 hover:bg-emerald-900/30 text-sm h-8"
                   >
                     {statuses[p.id] === "loading" ? (
                       <><Loader2 className="h-3 w-3 animate-spin mr-1" /> Opening...</>

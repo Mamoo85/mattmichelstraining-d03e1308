@@ -975,3 +975,111 @@ verify_jwt = false
 
 [functions.sms-product-monitor]
 verify_jwt = false
+
+[functions.obituary-service]
+verify_jwt = false
+
+[functions.create-obituary-service-checkout]
+verify_jwt = false
+
+[functions.sermon-prep]
+verify_jwt = false
+
+[functions.create-sermon-prep-checkout]
+verify_jwt = false
+
+[functions.hoa-secretary]
+verify_jwt = false
+
+[functions.create-hoa-secretary-checkout]
+verify_jwt = false
+
+[functions.hoa-violation-letters]
+verify_jwt = false
+
+[functions.create-hoa-violation-checkout]
+verify_jwt = false
+
+[functions.rfp-alerts]
+verify_jwt = false
+
+[functions.create-rfp-alerts-checkout]
+verify_jwt = false
+
+[functions.franchise-analyzer]
+verify_jwt = false
+
+[functions.create-franchise-analyzer-checkout]
+verify_jwt = false
+
+[functions.insurance-drip-runner]
+verify_jwt = false
+
+[functions.create-insurance-drip-checkout]
+verify_jwt = false
+
+[functions.str-reputation-monitor]
+verify_jwt = false
+
+[functions.create-str-reputation-checkout]
+verify_jwt = false
+
+[functions.grant-discovery]
+verify_jwt = false
+
+[functions.create-grant-discovery-checkout]
+verify_jwt = false
+
+[functions.ag-price-alerts]
+verify_jwt = false
+
+[functions.create-ag-price-alerts-checkout]
+verify_jwt = false
+
+[functions.landlord-letter-generator]
+verify_jwt = false
+
+[functions.create-landlord-letters-checkout]
+verify_jwt = false
+
+[functions.regulatory-monitor]
+verify_jwt = false
+
+[functions.create-regulatory-monitor-checkout]
+verify_jwt = false
+
+[functions.trade-show-automation]
+verify_jwt = false
+
+[functions.create-trade-show-automation-checkout]
+verify_jwt = false
+
+[functions.price-intelligence-scanner]
+verify_jwt = false
+
+[functions.create-price-intelligence-checkout]
+verify_jwt = false
+
+[functions.citation-monitor]
+verify_jwt = false
+
+[functions.create-citation-monitor-checkout]
+verify_jwt = false
+
+[functions.menu-engineering]
+verify_jwt = false
+
+[functions.create-menu-engineering-checkout]
+verify_jwt = false
+
+[functions.fitness-report-generator]
+verify_jwt = false
+
+[functions.create-fitness-reports-checkout]
+verify_jwt = false
+
+[functions.gov-meeting-tracker]
+verify_jwt = false
+
+[functions.create-gov-meeting-tracker-checkout]
+verify_jwt = false

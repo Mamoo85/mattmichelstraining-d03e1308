@@ -334,6 +334,96 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
       service_area: "48236, 48230, 48224, Grosse Pointe area",
       is_test: "true",
     },
+  obituary_service_subscription: {
+    name: "TEST — AI Obituary Service ($199/mo)", description: "AI obituary writing for funeral homes. $0 test.",
+    mode: "subscription", metadata: { type: "obituary_service_subscription", email: MATT, name: "Matt Michels", funeralHomeName: "M² Test Funeral Home", phone: "+13138064952", is_test: "true" },
+    success_url: `${SITE}/obituary-service?test=true`,
+  },
+  sermon_prep_subscription: {
+    name: "TEST — Sermon Prep ($79/mo)", description: "Weekly AI sermon outlines for pastors. $0 test.",
+    mode: "subscription", metadata: { type: "sermon_prep_subscription", email: MATT, name: "Matt Michels", churchName: "M² Test Church", denomination: "Non-denominational", phone: "+13138064952", is_test: "true" },
+    success_url: `${SITE}/sermon-prep?test=true`,
+  },
+  hoa_secretary_subscription: {
+    name: "TEST — HOA Secretary AI ($149/mo)", description: "AI HOA meeting minutes. $0 test.",
+    mode: "subscription", metadata: { type: "hoa_secretary_subscription", email: MATT, name: "Matt Michels", hoaName: "M² Test HOA", phone: "+13138064952", is_test: "true" },
+    success_url: `${SITE}/hoa-secretary?test=true`,
+  },
+  hoa_violation_subscription: {
+    name: "TEST — HOA Violation Letters ($149/mo)", description: "AI violation letter generator. $0 test.",
+    mode: "subscription", metadata: { type: "hoa_violation_subscription", email: MATT, name: "Matt Michels", hoaName: "M² Test HOA", state: "MI", phone: "+13138064952", is_test: "true" },
+    success_url: `${SITE}/hoa-violation?test=true`,
+  },
+  rfp_alerts_subscription: {
+    name: "TEST — RFP Alert Service ($149/mo)", description: "Daily government contract alerts. $0 test.",
+    mode: "subscription", metadata: { type: "rfp_alerts_subscription", email: MATT, name: "Matt Michels", businessName: "M² Performance Training", servicesOffered: "Sales training, coaching", geography: "Michigan", phone: "+13138064952", is_test: "true" },
+    success_url: `${SITE}/rfp-alerts?test=true`,
+  },
+  franchise_analyzer_subscription: {
+    name: "TEST — Franchise FDD Analyzer ($299/mo)", description: "AI FDD risk analysis. $0 test.",
+    mode: "subscription", metadata: { type: "franchise_analyzer_subscription", email: MATT, name: "Matt Michels", businessName: "M² Performance Training", phone: "+13138064952", is_test: "true" },
+    success_url: `${SITE}/franchise-analyzer?test=true`,
+  },
+  insurance_drip_subscription: {
+    name: "TEST — Insurance Lead Drip ($149/mo)", description: "AI insurance lead follow-up sequences. $0 test.",
+    mode: "subscription", metadata: { type: "insurance_drip_subscription", email: MATT, name: "Matt Michels", businessName: "M² Insurance Agency", phone: "+13138064952", is_test: "true" },
+    success_url: `${SITE}/insurance-drip?test=true`,
+  },
+  str_reputation_subscription: {
+    name: "TEST — STR Reputation Manager ($79/mo)", description: "Airbnb host reputation monitor. $0 test.",
+    mode: "subscription", metadata: { type: "str_reputation_subscription", email: MATT, name: "Matt Michels", propertyUrls: "https://airbnb.com/rooms/test", propertyCount: "1", phone: "+13138064952", is_test: "true" },
+    success_url: `${SITE}/str-reputation?test=true`,
+  },
+  grant_discovery_subscription: {
+    name: "TEST — Grant Discovery ($199/mo)", description: "Weekly nonprofit grant opportunities. $0 test.",
+    mode: "subscription", metadata: { type: "grant_discovery_subscription", email: MATT, name: "Matt Michels", orgName: "M² Foundation", mission: "Helping field sales reps succeed", geography: "Michigan", causeAreas: "education, workforce development", phone: "+13138064952", is_test: "true" },
+    success_url: `${SITE}/grant-discovery?test=true`,
+  },
+  ag_price_alerts_subscription: {
+    name: "TEST — Ag Price Alerts ($79/mo)", description: "Commodity price SMS alerts. $0 test.",
+    mode: "subscription", metadata: { type: "ag_price_alerts_subscription", email: MATT, name: "Matt Michels", businessName: "M² Farms", commodities: "corn, soybeans", phone: "+13138064952", is_test: "true" },
+    success_url: `${SITE}/ag-price-alerts?test=true`,
+  },
+  landlord_letters_subscription: {
+    name: "TEST — Landlord-Tenant Letters ($149/mo)", description: "AI state-compliant landlord letters. $0 test.",
+    mode: "subscription", metadata: { type: "landlord_letters_subscription", email: MATT, name: "Matt Michels", state: "MI", propertyCount: "3", phone: "+13138064952", is_test: "true" },
+    success_url: `${SITE}/landlord-letters?test=true`,
+  },
+  regulatory_monitor_subscription: {
+    name: "TEST — Regulatory Monitor ($299/mo)", description: "Weekly regulatory change alerts. $0 test.",
+    mode: "subscription", metadata: { type: "regulatory_monitor_subscription", email: MATT, name: "Matt Michels", businessName: "M² Performance Training", industry: "fitness and wellness", regulatoryBodies: "FTC, OSHA", phone: "+13138064952", is_test: "true" },
+    success_url: `${SITE}/regulatory-monitor?test=true`,
+  },
+  trade_show_automation_subscription: {
+    name: "TEST — Trade Show Follow-Up ($99/mo)", description: "AI badge-scan follow-up sequences. $0 test.",
+    mode: "subscription", metadata: { type: "trade_show_automation_subscription", email: MATT, name: "Matt Michels", businessName: "M² Performance Training", phone: "+13138064952", is_test: "true" },
+    success_url: `${SITE}/trade-show-automation?test=true`,
+  },
+  price_intelligence_subscription: {
+    name: "TEST — Competitor Price Intel ($199/mo)", description: "Daily competitor price monitoring. $0 test.",
+    mode: "subscription", metadata: { type: "price_intelligence_subscription", email: MATT, name: "Matt Michels", businessName: "M² Performance Training", competitorUrls: "https://example.com/pricing", phone: "+13138064952", is_test: "true" },
+    success_url: `${SITE}/price-intelligence?test=true`,
+  },
+  citation_monitor_subscription: {
+    name: "TEST — Citation Monitor ($99/mo)", description: "Weekly NAP consistency monitor. $0 test.",
+    mode: "subscription", metadata: { type: "citation_monitor_subscription", email: MATT, name: "Matt Michels", businessName: "M² Performance Training", locationCount: "1", primaryAddress: "Grosse Pointe, MI", phone: "+13138064952", is_test: "true" },
+    success_url: `${SITE}/citation-monitor?test=true`,
+  },
+  menu_engineering_subscription: {
+    name: "TEST — Menu Engineering ($99/mo)", description: "Monthly BCG menu analysis. $0 test.",
+    mode: "subscription", metadata: { type: "menu_engineering_subscription", email: MATT, name: "Matt Michels", restaurantName: "M² Cafe", cuisineType: "American", phone: "+13138064952", is_test: "true" },
+    success_url: `${SITE}/menu-engineering?test=true`,
+  },
+  fitness_reports_subscription: {
+    name: "TEST — Fitness Progress Reports ($79/mo)", description: "Monthly AI client progress reports. $0 test.",
+    mode: "subscription", metadata: { type: "fitness_reports_subscription", email: MATT, name: "Matt Michels", businessName: "M² Performance Training", phone: "+13138064952", is_test: "true" },
+    success_url: `${SITE}/fitness-reports?test=true`,
+  },
+  gov_meeting_tracker_subscription: {
+    name: "TEST — Gov Meeting Tracker ($199/mo)", description: "Weekly zoning and council meeting alerts. $0 test.",
+    mode: "subscription", metadata: { type: "gov_meeting_tracker_subscription", email: MATT, name: "Matt Michels", businessName: "M² Development LLC", targetCities: "Grosse Pointe, Detroit", keywords: "commercial, zoning, variance", phone: "+13138064952", is_test: "true" },
+    success_url: `${SITE}/gov-meeting-tracker?test=true`,
+  },
     success_url: `${SITE}/new-homeowner-campaign?test=true`,
   },
 };

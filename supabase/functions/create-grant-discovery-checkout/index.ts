@@ -15,8 +15,8 @@ serve(async (req) => {
     if (!email) return new Response(JSON.stringify({ error: "email required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-    await sb.from("insurance_drip_clients").upsert(
-      { email, contact_name: name || null, phone: phone || null, business_name: body.businessName || null, active: false },
+    await sb.from("grant_discovery_clients").upsert(
+      { email, contact_name: name || null, phone: phone || null, org_name: body.orgName || null, mission: body.mission || null, geography: body.geography || null, cause_areas: body.causeAreas || null, active: false },
       { onConflict: "email" }
     );
 
@@ -24,10 +24,10 @@ serve(async (req) => {
       mode: "subscription",
       customer_email: email,
       subscription_data: { trial_period_days: 14 },
-      line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 14900, product_data: { name: "Insurance Agent Lead Nurture", description: "Personalized 5-touch follow-up sequences for every lead — by coverage type. Fully automated." } }, quantity: 1 }],
-      metadata: { type: "insurance_drip_subscription", email, name: name || "", phone: phone || "", ...Object.fromEntries(Object.entries(body).filter(([k]) => !["email","name","phone"].includes(k)).map(([k,v]) => [k, String(v)])) },
-      success_url: "https://www.mattmichelstraining.com/insurance-drip?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/insurance-drip",
+      line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 19900, product_data: { name: "Weekly Grant Discovery for Nonprofits", description: "Every Monday: ranked list of grant opportunities matched to your mission, with fit scores and deadlines." } }, quantity: 1 }],
+      metadata: { type: "grant_discovery_subscription", email, name: name || "", phone: phone || "", ...Object.fromEntries(Object.entries(body).filter(([k]) => !["email","name","phone"].includes(k)).map(([k,v]) => [k, String(v)])) },
+      success_url: "https://www.mattmichelstraining.com/grant-discovery?status=success",
+      cancel_url: "https://www.mattmichelstraining.com/grant-discovery",
     });
 
     return new Response(JSON.stringify({ url: session.url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
