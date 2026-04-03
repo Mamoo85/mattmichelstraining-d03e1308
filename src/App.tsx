@@ -270,7 +270,7 @@ const DentalMockupAlt1 = lazyRetry(() => import("./pages/DentalMockupAlt1"));
 const DentalMockupAlt2 = lazyRetry(() => import("./pages/DentalMockupAlt2"));
 const GovContractMonitor = lazyRetry(() => import("./pages/GovContractMonitor"));
 const GovContractDashboard = lazyRetry(() => import("./pages/GovContractDashboard"));
-const RegulatoryMonitor = lazyRetry(() => import("./pages/RegulatoryMonitor"));
+const RegulatoryMonitorPage = lazyRetry(() => import("./pages/RegulatoryMonitor"));
 const RegulatoryDashboard = lazyRetry(() => import("./pages/RegulatoryDashboard"));
 const TrademarkWatch = lazyRetry(() => import("./pages/TrademarkWatch"));
 const TrademarkDashboard = lazyRetry(() => import("./pages/TrademarkDashboard"));
