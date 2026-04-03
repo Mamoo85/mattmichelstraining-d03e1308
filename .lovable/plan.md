@@ -1,163 +1,100 @@
 
 
-# M² Product Overhaul — Final Unified Plan
+# M² Portal & Product Strategy Overhaul
 
-This combines your notes, Claude's analysis, and market research into one execution plan. Every product gets fixed, enhanced, or properly gated. Nothing stays broken.
+## What You Asked For (Broken Into Parts)
 
----
+### Part A: PWA Auto-Install on Mobile
+- Modify `PwaInstallBanner` to auto-trigger the native install prompt (not just show a banner) when a logged-in user visits on mobile
+- Add it to `ZoneDashboard` (the main logged-in landing page), not just the old `Dashboard`
+- Auto-fire `deferredPrompt.prompt()` once per session for authenticated mobile users
 
-## Current State (What I Found)
+### Part B: Browse Without Login (Blur Gating)
+- Remove `ProtectedRoute` wrapper from `/zone-dashboard`, `/progress`, `/nutrition`, `/profile`, `/coach`
+- Create a new `<BlurGate>` component that replaces `ProtectedRoute` + `SubscriptionGuard`:
+  - If user is logged in + subscribed → show content normally
+  - If user is logged in but no subscription → show content with blur overlay + CTA to subscribe
+  - If user is NOT logged in → show content with blur overlay + CTA to sign up / log in
+- Content renders underneath the blur (visible but unreadable), creating FOMO
+- Blur overlay has a centered card: "Sign up to unlock" / "Subscribe to access" with action buttons
+- Pages that stay fully protected (no browsing): `/admin`, `/admin/view-user`, `/client-portal`
 
-- **3,441-line stripe-webhook** with ~20 inline 1-3 sentence HTML email blobs
-- **Competitor report webhook handler EXISTS** at line 3242 (Claude was wrong about it being missing)
-- **Field Rep + B2B access** requires `supabase.auth.getUser()` — breaks after Stripe checkout because no auth account is created
-- **WaitlistGate component** already exists and is used on 16+ pages — ready to reuse
-- **Missed Call** is correctly at $99/mo in code (`unit_amount: 9900`). Market rate for missed call text-back is $97-$297/mo — $99 is competitive
-- **GBP Post Pack** checkout needs price verification (should be $19)
-- All welcome emails are bare-bones inline HTML
+### Part C: 50% Launch Discount (6 Months, Foundation Tier)
+- Create a Stripe coupon: 50% off, duration "repeating" for 6 months, applies to Foundation monthly price ($19.99 → $9.99/mo)
+- No new price IDs needed — just a coupon code applied automatically at checkout
+- Update `create-checkout` to auto-apply this coupon when the tier is Foundation
+- Display the discounted price on the landing page and pricing page: ~~$19.99~~ **$9.99/mo** with "Launch Special — 50% off for 6 months"
+- Can be turned off by removing the coupon ID from the code (or deactivating in Stripe)
 
----
+### Part D: Product Honesty Assessment
 
-## Batch 1: Pricing + Secrets + Quick Gates
+**Your question is the right one: "If free AI can do it in 10 seconds, why would someone pay?"**
 
-**Pricing confirmation/fixes:**
-- Verify GBP Post Pack checkout = $19 (`unit_amount: 1900`)
-- Missed Call stays at $99/mo (market validates this)
-- Website Audit = $9, Competitor Report = $9 (per your notes)
+Here's the honest breakdown:
 
-**Product gates:**
-- Review Responder page → swap checkout for `WaitlistGate` (no GBP OAuth exists, no automation)
-- AI Chatbot → reframe as "done-for-you install within 48 hours" (remove self-install language)
-- Contractor Leads → `WaitlistGate` (on hold per your decision)
-
-**Files:** `ReviewResponder.tsx`, chatbot page, contractor leads page, relevant checkout functions
-
----
-
-## Batch 2: Welcome Email Overhaul (All 8+ Services)
-
-Rewrite every inline HTML email blob in `stripe-webhook/index.ts` with the M² branded template (dark slate header, orange accent, matt-boat.jpg signature). Each email gets:
-
-| Service | What the email needs to say |
-|---|---|
-| **GBP SaaS** ($49/mo) | What AI writes about, 3x/week posting schedule (Mon/Wed/Fri), how to share GBP access, what Pro gets extra (review requests), first post within 48 hours |
-| **Social Media AI** ($199/mo) | 3 platforms, 3x/week posting, what the AI writes, content calendar preview, onboarding link to connect accounts, first post timeline |
-| **Field Rep Tools** ($29/mo) | All 4 tools with descriptions and use cases, quick-start guide, bonus cold email tip from Matt |
-| **B2B Database** ($49/mo) | Total records available, filter/search walkthrough, export instructions, how often data refreshes |
-| **SEO Reports** | 8 sections the report covers, when it arrives, how to read it, sample metric types |
-| **AI Chatbot** | "We build and install it on your site within 48 hours" — setup expectations, what the chatbot handles, FAQ |
-| **Review Responder** | Waitlist confirmation — "we'll notify you when live" |
-| **Missed Call** ($99/mo) | Step-by-step: what happens when a call is missed, instant text fires, custom message coming soon, setup instructions |
-
-Also applies to: Handbook, Grant Finder, Battlecard, Market Intel, Caption Pack, FAQ Refresh — all get the same treatment.
-
-**Files:** `stripe-webhook/index.ts` (rewrite ~15 email blocks)
-
----
-
-## Batch 3: Fix Broken Access Gating (Field Rep + B2B)
-
-**The problem:** After paying via Stripe, users have no Supabase auth account. Pages call `getUser()` which returns null → locked out.
-
-**The fix — build a `verify-subscriber-access` Edge Function:**
-1. User enters the email they paid with on a simple verification form
-2. Edge Function checks `b2b_subscribers` table for `email + active = true`
-3. Returns a time-limited access token (JWT or signed hash, 24hr expiry)
-4. Store token in `sessionStorage` — grant access for that session
-5. Welcome email includes a magic access link with pre-filled email token
-
-**This is fully autonomous** — no manual intervention from Matt.
-
-**Files:** New `verify-subscriber-access/index.ts`, update `FieldRepTools.tsx`, `B2BLeads.tsx`
-
-**DB migration:** Add `access_token` and `token_expires_at` columns to `b2b_subscribers`
-
----
-
-## Batch 4: Product Output Enhancements
-
-### Website Audit ($9) — `instant-audit/index.ts`
-Current: 6 scored sections, ~400 words. Enhanced:
-- **Add 2 new sections:** Page Speed & Performance (Score X/10), Content Freshness & Quality (Score X/10)
-- **Add "Quick Win" vs "Long Game" labels** on every recommendation
-- **Add "How to Fix It" steps** — 2-3 specific DIY instructions per section
-- **Add 5-Point Action Checklist** at the bottom (prioritized)
-- **Upsell block:** "Want us to fix these? Our web design packages start at $499 →" with link
-- **Upsell block 2:** "Get a full competitor analysis to see how you stack up → $9"
-- Increase `max_tokens` to 1500, upgrade model to `gemini-2.5-flash`
-
-### Competitor Report ($9) — `competitor-report/index.ts`
-Current: Market Overview, Competitive Landscape, Review Gap, Positioning, Top 5. Enhanced:
-- **Add "Win Rate %" per competitor** (calculated from rating × review count ratio)
-- **Add SWOT Summary Table** for the business
-- **Add "30-Day Sprint" section** — exact actions for the next 30 days with priority order
-- **Add "How to Beat Each Competitor" section** — tactical advice per competitor
-- **Upsell block:** "Want us to handle your Google presence? GBP Management $49/mo →"
-- **Upsell block 2:** "Get a full website audit to fix what's holding you back → $9"
-
-### GBP Post Pack ($19) — `gbp-post-pack/index.ts`
-Current: 30 posts, 8 types. Enhanced:
-- **Add seasonal calendar layout** — organize posts by recommended month
-- **Add image prompt suggestions** per post (for AI image gen or stock photos)
-- **Add "Best Time to Post" notes** per post type
-- **Add posting instructions** (step-by-step GBP posting guide)
-- **Upsell block:** "Want us to post these automatically? GBP Autopilot $49/mo →"
-
----
-
-## Batch 5: Customization Fields (Make Products Worth the Price)
-
-### Missed Call Text ($99/mo) — Add Custom Message
-- `MissedCallSaaS.tsx`: Add `customMessage` textarea (160 chars, with placeholder: "Hey, I just missed your call — I'll call you right back!")
-- `create-missed-call-subscription/index.ts`: Accept + pass `customMessage` in Stripe metadata
-- `stripe-webhook`: Store `custom_message` in `missed_call_clients`
-- **DB migration:** Add `custom_message` column to `missed_call_clients`
-
-### GBP SaaS ($49/mo) — Client Preferences
-- `LocalMarketing.tsx`: Add 3 fields to signup form: Posting Tone (dropdown), Content Focus (text), Topics to Avoid (text)
-- `create-gbp-subscription/index.ts`: Pass preferences in metadata
-- `stripe-webhook`: Store in `gbp_saas_clients` (new columns)
-- `gbp-saas-poster/index.ts`: Fetch client prefs from DB, inject into AI prompt per client
-- **DB migration:** Add `post_tone`, `content_focus`, `content_avoid` columns to `gbp_saas_clients`
-
-### Social Media AI ($199/mo) — Client Preferences
-- `SocialMediaAI.tsx`: Add brand_voice, content_focus, content_avoid, platform preferences
-- `create-social-media-checkout/index.ts`: Pass in metadata
-- `social-media-poster/index.ts`: Use per-client prefs in generation prompt
-- **DB migration:** Add `brand_voice`, `content_focus`, `content_avoid` columns to `social_media_clients`
-
----
-
-## Batch 6: SEO Reports Delivery + Admin Demo Fix
-
-### SEO Reports — Wire Up Delivery
-- Verify `seo-audit-report` or `deliver-seo-package` actually generates and sends reports
-- If no cron trigger exists, create one (weekly delivery for active clients)
-- If it needs a manual trigger, add an admin button in the dashboard
-
-### Admin Demo Tab
-- Debug `AdminDemoLinkGenerator.tsx` — find why demo names aren't rendering
-- Fix data fetching or display logic
-
----
-
-## Infrastructure Notes (Matt's Manual Actions)
-
-- **Resend:** Upgrade from free plan (100/day) before going live — `resend.com/settings/billing`
-- **STRIPE_SECRET_KEY:** Already present in Lovable Cloud secrets (confirmed)
-
----
-
-## Execution Order
-
-| Batch | Items | Impact |
+| Product | Can Free AI Do It? | Verdict |
 |---|---|---|
-| 1 | Pricing + gates | Stops broken products from taking money |
-| 2 | Email overhaul | Every paying customer gets a real welcome |
-| 3 | Auth gating fix | Field Rep + B2B subscribers can actually use what they paid for |
-| 4 | Product enhancements | Audit, competitor, GBP pack deliver 3x more value with upsells |
-| 5 | Customization fields | Products justify their monthly pricing |
-| 6 | SEO delivery + admin fix | Remaining loose ends |
+| **Website Audit ($9)** | YES — ChatGPT can audit a URL for free | **Bundle into web design funnel as a free lead magnet** |
+| **GBP Post Pack ($9→$19)** | MOSTLY — ChatGPT can generate posts | **Bundle as free bonus with GBP SaaS ($49/mo)** |
+| **Competitor Report ($9)** | PARTIALLY — Free AI can't pull real Google Maps data, ratings, review counts | **KEEP — uses real Google Places API data. Free AI hallucinates competitors** |
+| **Missed Call Text-Back ($99/mo)** | NO — requires Twilio infrastructure, phone number, webhook routing | **KEEP — genuine infrastructure product** |
+| **GBP SaaS ($49/mo)** | NO — requires Google Business API, scheduled posting, OAuth | **KEEP — real automation** |
+| **Social Media AI ($199/mo)** | NO — requires Meta/LinkedIn API tokens, scheduled posting | **KEEP — real automation** |
 
-Each batch is 1-2 implementation messages. Total: ~6 rounds.
+**Products that survive the "10-minute test":**
+1. Missed Call Text-Back — Twilio setup, webhook, phone number provisioning
+2. GBP SaaS — Google API OAuth, automated scheduling, AI content generation
+3. Social Media AI — Multi-platform API integration, content calendar automation
+4. Competitor Report — Real Google Places API data (keep at $9 as lead magnet for web design)
+
+**Products to convert to free lead magnets:**
+1. Website Audit → Free tool on landing page, captures email, funnels to web design
+2. GBP Post Pack → Free bonus included with GBP SaaS signup
+
+### Part E: New Product Ideas (Things That Genuinely Take Work to Set Up)
+
+These are services where AI + infrastructure create real barriers:
+
+1. **Automated Google Review Request System** ($49/mo) — After each job/appointment, auto-sends SMS + email asking for a Google review. Requires Twilio + Google Business integration + customer database. A business owner can't set this up in 10 minutes.
+
+2. **AI Receptionist / After-Hours Auto-Responder** ($79/mo) — Twilio-powered. When nobody answers, an AI texts back AND asks qualifying questions (what service they need, their address, urgency). Logs the lead. Requires phone routing infrastructure.
+
+3. **Automated Reputation Dashboard** ($39/mo) — Monitors Google reviews, sends weekly email digest of new reviews + suggested AI responses + competitor review trends. Requires Google Places API polling + scheduled jobs.
+
+4. **AI-Powered Estimate Follow-Up Drip** ($49/mo) — After a contractor gives an estimate, auto-sends a 5-email sequence over 14 days with social proof, urgency triggers, and a "still deciding?" check-in. Requires email automation infrastructure + CRM integration.
+
+---
+
+## Technical Implementation
+
+### Files to Modify
+- `src/components/layout/PwaInstallBanner.tsx` — auto-trigger for logged-in mobile users
+- `src/pages/ZoneDashboard.tsx` — add PWA banner
+- `src/App.tsx` — swap `ProtectedRoute`/`SubscriptionGuard` for new `BlurGate` on browsable routes
+- `src/components/layout/BlurGate.tsx` — NEW component
+- `src/hooks/useAuth.tsx` — add launch coupon ID constant
+- `src/pages/Pricing.tsx` — show strikethrough pricing
+- `src/components/landing/MembershipTiers.tsx` — show launch discount
+- `supabase/functions/create-checkout/index.ts` — auto-apply Foundation launch coupon
+- `src/pages/AiWebsiteAudit.tsx` — convert to free lead magnet
+- Various landing/pricing pages — update price displays
+
+### Stripe Coupon (Created via Stripe tools)
+- 50% off, repeating, 6 months duration
+- Applied automatically to Foundation monthly checkout only
+
+### BlurGate Component Logic
+```text
+┌─────────────────────────────┐
+│ Check auth state            │
+│   ├─ Logged in + subscribed │ → render children normally
+│   ├─ Logged in + no sub     │ → render children + blur + "Subscribe" CTA
+│   └─ Not logged in          │ → render children + blur + "Sign Up" CTA
+└─────────────────────────────┘
+```
+
+### Code Optimization Pass
+- Review all recently merged code for syntax errors, unused imports, redundant re-renders
+- Fix any TypeScript errors in the build
+- Ensure all Edge Functions deploy cleanly
 
