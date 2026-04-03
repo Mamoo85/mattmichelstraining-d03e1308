@@ -147,9 +147,9 @@ export default function AiWebsiteAudit() {
                 className="w-full flex items-center justify-center gap-2 py-4 rounded-lg font-black text-sm uppercase tracking-wider transition-opacity hover:opacity-90 disabled:opacity-60"
                 style={{ background: "var(--primary)", color: "white" }}
               >
-                {submitting ? <><Loader2 size={16} className="animate-spin" /> Processing…</> : <><FileText size={16} /> Get My Audit Report — $9</>}
+                {submitting ? <><Loader2 size={16} className="animate-spin" /> Generating…</> : <><FileText size={16} /> Get My Free Audit Report</>}
               </button>
-              <p className="text-xs text-center text-muted-foreground">Secure checkout via Stripe. One-time charge, no subscription.</p>
+              <p className="text-xs text-center text-muted-foreground">Free. No credit card required. Report delivered in 60 seconds.</p>
             </form>
 
             <div className="mt-8 p-4 bg-muted/40 rounded-lg border border-border">
