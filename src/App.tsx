@@ -549,17 +549,17 @@ const App = () => (
                     <Route path="/zone" element={<ZonePortal />} />
                     <Route path="/client-portal" element={<ProtectedRoute><ClientPortal /></ProtectedRoute>} />
                     <Route path="/site/:slug" element={<ClientSite />} />
-                    <Route path="/zone-dashboard" element={<ProtectedRoute><ZoneDashboard /></ProtectedRoute>} />
-                    <Route path="/coach" element={<ProtectedRoute><SubscriptionGuard><Coach /></SubscriptionGuard></ProtectedRoute>} />
+                    <Route path="/zone-dashboard" element={<BlurGate requireSubscription><ZoneDashboard /></BlurGate>} />
+                    <Route path="/coach" element={<BlurGate requireSubscription><Coach /></BlurGate>} />
                     <Route path="/trial-welcome" element={<ProtectedRoute><TrialWelcome /></ProtectedRoute>} />
                     <Route path="/assessment" element={<ProtectedRoute><Assessment /></ProtectedRoute>} />
                     <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
                     <Route path="/admin/view-user/:userId" element={<ProtectedRoute><AdminViewUser /></ProtectedRoute>} />
-                    <Route path="/dashboard" element={<ProtectedRoute><SubscriptionGuard><ZoneDashboard /></SubscriptionGuard></ProtectedRoute>} />
-                    <Route path="/ai-insights" element={<ProtectedRoute><SubscriptionGuard><AiInsights /></SubscriptionGuard></ProtectedRoute>} />
-                    <Route path="/profile" element={<ProtectedRoute><SubscriptionGuard><Profile /></SubscriptionGuard></ProtectedRoute>} />
-                    <Route path="/progress" element={<ProtectedRoute><SubscriptionGuard><Progress /></SubscriptionGuard></ProtectedRoute>} />
-                    <Route path="/nutrition" element={<ProtectedRoute><SubscriptionGuard><Nutrition /></SubscriptionGuard></ProtectedRoute>} />
+                    <Route path="/dashboard" element={<BlurGate requireSubscription><ZoneDashboard /></BlurGate>} />
+                    <Route path="/ai-insights" element={<BlurGate requireSubscription><AiInsights /></BlurGate>} />
+                    <Route path="/profile" element={<BlurGate><Profile /></BlurGate>} />
+                    <Route path="/progress" element={<BlurGate requireSubscription><Progress /></BlurGate>} />
+                    <Route path="/nutrition" element={<BlurGate requireSubscription><Nutrition /></BlurGate>} />
                     <Route path="*" element={<NotFound />} />
                     </Routes>
                   </div>

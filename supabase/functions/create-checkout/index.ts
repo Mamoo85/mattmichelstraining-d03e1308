@@ -40,6 +40,10 @@ serve(async (req) => {
     if (!priceId) throw new Error("No priceId provided");
     logStep("Price ID received", { priceId, promoCode: promoCode || "none", referralCode: referralCode || "none", trialDays: trialDays || "none" });
 
+    // Foundation monthly launch coupon — 50% off for 6 months
+    const FOUNDATION_MONTHLY_PRICE_ID = "price_1TELWTD52tPWee46lbQwxNZn";
+    const LAUNCH_COUPON_ID = "OFpofvlD";
+
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { apiVersion: "2025-08-27.basil" });
 
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });

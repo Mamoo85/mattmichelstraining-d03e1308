@@ -68,6 +68,7 @@ export const ANNUAL_TIERS: Record<TierKey, { price_id: string; product_id: strin
 };
 
 export const FIRST_MONTH_COUPON_ID = "JJwqu21q";
+export const LAUNCH_COUPON_ID = "OFpofvlD"; // 50% off Foundation for 6 months
 
 export type TierKey = keyof typeof TIERS;
 
