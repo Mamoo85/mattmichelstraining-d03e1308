@@ -12,6 +12,7 @@ import { TimerProvider, useTimer } from "@/hooks/useTimer";
 import { OfflineSyncProvider } from "@/hooks/useOfflineSync";
 const ProtectedRoute = lazyRetry(() => import("@/components/layout/ProtectedRoute"));
 const SubscriptionGuard = lazyRetry(() => import("@/components/billing/SubscriptionGuard"));
+const BlurGate = lazyRetry(() => import("@/components/layout/BlurGate"));
 import ScrollToTop from "@/components/layout/ScrollToTop";
 import ErrorBoundary from "@/components/layout/ErrorBoundary";
 const OfflineBadge = lazyRetry(() => import("@/components/layout/OfflineBadge"));
