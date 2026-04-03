@@ -59,6 +59,15 @@ const PRODUCTS: Product[] = [
   { id: "menu_engineering_subscription", name: "Menu Engineering", price: "$99/mo", description: "Welcome email + menu_engineering_clients record. Monthly BCG analysis.", type: "subscription", category: "Autonomous Products" },
   { id: "fitness_reports_subscription", name: "Fitness Progress Reports", price: "$79/mo", description: "Welcome email + fitness_report_clients record. Monthly client reports.", type: "subscription", category: "Autonomous Products" },
   { id: "gov_meeting_tracker_subscription", name: "Gov Meeting Tracker", price: "$199/mo", description: "Welcome email + gov_meeting_tracker_clients record. Weekly zoning alerts.", type: "subscription", category: "Autonomous Products" },
+  // ── 8 New Autonomous Products ────────────────────────────────────────────
+  { id: "pet_memorial_subscription", name: "AI Pet Memorial", price: "$79 one-time", description: "Generates poem + tribute + hosted memorial page. Delivered to inbox within minutes.", type: "instant", category: "One-Time" },
+  { id: "dark_web_monitor_subscription", name: "Dark Web Monitor", price: "$49/mo", description: "Welcome email + dark_web_monitor_clients record. Weekly HIBP credential scan.", type: "subscription", category: "Autonomous Products" },
+  { id: "gov_contract_monitor_subscription", name: "Gov Contract Monitor", price: "$299/mo", description: "Welcome email + gov_contract_clients record. Daily SAM.gov opportunity matching.", type: "subscription", category: "Autonomous Products" },
+  { id: "podcast_revenue_subscription", name: "Podcast-to-Revenue Machine", price: "$199/mo", description: "Welcome email + podcast_clients record. Generates blog, LinkedIn, email, YouTube, Twitter per episode.", type: "subscription", category: "Autonomous Products" },
+  { id: "regulatory_monitor_v2_subscription", name: "Regulatory Change Monitor", price: "$197/mo", description: "Welcome email + regulatory_monitor_clients record. Weekly Federal Register digest by industry.", type: "subscription", category: "Autonomous Products" },
+  { id: "competitor_pricing_subscription", name: "Competitor Pricing Intel", price: "$149/mo", description: "Welcome email + competitor_pricing_clients record. Weekly price change detection + AI recommendations.", type: "subscription", category: "Autonomous Products" },
+  { id: "re_newsletter_subscription", name: "Real Estate Newsletter", price: "$79/mo", description: "Welcome email + re_newsletter_clients record. Weekly branded market report sent to agent's contacts.", type: "subscription", category: "Autonomous Products" },
+  { id: "trademark_watch_subscription", name: "Trademark Watch Service", price: "$49/mo", description: "Welcome email + trademark_watch_clients record + first mark. Weekly USPTO similarity scan.", type: "subscription", category: "Autonomous Products" },
 ];
 
 type TestStatus = "idle" | "loading" | "success" | "error";
