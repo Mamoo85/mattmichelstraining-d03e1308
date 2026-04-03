@@ -144,7 +144,7 @@ export default function YoungbloodMockupAlt2() {
         {/* Right accent line */}
         <div style={{ position: "absolute", top: 0, right: "33%", bottom: 0, width: 1, background: `linear-gradient(to bottom, transparent, ${BLUE}44, transparent)` }} />
 
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "80px 24px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 64, alignItems: "center", width: "100%", position: "relative" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "80px 24px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 400px), 1fr))", gap: 48, alignItems: "center", width: "100%", position: "relative" }}>
           <div className="fade-in">
             {/* Status indicator */}
             <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 32 }}>
@@ -201,7 +201,7 @@ export default function YoungbloodMockupAlt2() {
             </div>
           </RevealSection>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: 1, background: BORDER }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 340px), 1fr))", gap: 1, background: BORDER }}>
             {SOLUTIONS.map(s => (
               <RevealSection key={s.id}>
                 <div className="solution-card" style={{ background: "#0A1628", padding: "36px 32px", cursor: "pointer", transition: "border-color 0.2s", border: "1px solid transparent" }}>
