@@ -373,6 +373,9 @@ const ZoneDashboard = () => {
           </div>
         )}
 
+        {/* Data Hub — animated stat flipper */}
+        <DataHubButton />
+
         {/* Coach banner — Pro/Elite only */}
         {isProOrElite && <CoachActivityBanner />}
 
