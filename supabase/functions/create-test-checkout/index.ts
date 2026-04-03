@@ -485,7 +485,7 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
       tone: "motivational, practical",
       is_test: "true",
     },
-    success_url: `${SITE}/podcast-revenue?test=true`,
+    success_url: `${SITE}/podcast-revenue-machine?test=true`,
   },
   regulatory_monitor_v2_subscription: {
     name: "TEST — Regulatory Change Monitor ($197/mo)",
@@ -500,7 +500,7 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
       jurisdiction: "federal",
       is_test: "true",
     },
-    success_url: `${SITE}/regulatory-change-monitor?test=true`,
+    success_url: `${SITE}/regulatory-monitor?test=true`,
   },
   competitor_pricing_subscription: {
     name: "TEST — Competitor Pricing Intel ($149/mo)",
