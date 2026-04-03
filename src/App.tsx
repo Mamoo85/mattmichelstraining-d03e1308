@@ -48,6 +48,9 @@ const BottomTabBar = lazyRetry(() => import("@/components/layout/BottomTabBar"))
 const Index = lazyRetry(() => import("./pages/Index"));
 
 const Coach = lazyRetry(() => import("./pages/Coach"));
+const CoachHub = lazyRetry(() => import("./pages/CoachHub"));
+const MyTeam = lazyRetry(() => import("./pages/MyTeam"));
+const JoinTeam = lazyRetry(() => import("./pages/JoinTeam"));
 const Shop = lazyRetry(() => import("./pages/Shop"));
 const ForParents = lazyRetry(() => import("./pages/ForParents"));
 const Welcome = lazyRetry(() => import("./pages/Welcome"));
