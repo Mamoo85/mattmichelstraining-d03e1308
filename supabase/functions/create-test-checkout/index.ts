@@ -500,7 +500,7 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
       jurisdiction: "federal",
       is_test: "true",
     },
-    success_url: `${SITE}/regulatory-change-monitor?test=true`,
+    success_url: `${SITE}/regulatory-monitor?test=true`,
   },
   competitor_pricing_subscription: {
     name: "TEST — Competitor Pricing Intel ($149/mo)",
