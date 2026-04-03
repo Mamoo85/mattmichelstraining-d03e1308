@@ -831,6 +831,196 @@ serve(async (req) => {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // ── GOVERNMENT CONTRACT OPPORTUNITY MONITOR ──────────────────────────
+      if (meta.type === "gov_contract_monitor") {
+        try {
+          const email = meta.customer_email || customerEmail;
+          if (email) {
+            const govSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+            await govSb.from("gov_contract_clients" as any).insert({
+              customer_email: email,
+              customer_name: meta.customer_name || customerName || null,
+              company_name: meta.company_name || null,
+              naics_codes: meta.naics_codes || null,
+              keywords: meta.keywords || null,
+              set_aside_types: meta.set_aside_types || null,
+              min_contract_value: meta.min_contract_value ? parseInt(meta.min_contract_value) : null,
+              max_contract_value: meta.max_contract_value ? parseInt(meta.max_contract_value) : null,
+              preferred_states: meta.preferred_states || null,
+              stripe_subscription_id: session.subscription as string || null,
+              subscription_status: "active",
+            });
+            // Fire-and-forget initial scan
+            fetch(`${SUPABASE_URL}/functions/v1/gov-contract-monitor`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
+              body: JSON.stringify({ trigger: "new_client", email }),
+            }).catch((e) => console.error("[WEBHOOK] gov-contract-monitor initial scan fire failed:", e));
+            // Welcome email
+            if (RESEND_API_KEY) {
+              await sendM2Email(email, "Your Government Contract Monitor is Active", m2Email({
+                greeting: `Hey${meta.customer_name ? " " + meta.customer_name : ""} —`,
+                headline: "Your Federal Contract Monitor is Live",
+                body: `<p style="margin:0 0 12px"><strong>We're now watching SAM.gov for contracts that match ${meta.company_name || "your company"}.</strong></p>
+<p style="margin:0 0 8px">&#128269; <strong>What we monitor:</strong> SAM.gov opportunities matching your NAICS codes (${meta.naics_codes || "all"}) and keywords (${meta.keywords || "as configured"})</p>
+<p style="margin:0 0 8px">&#129302; <strong>AI scoring (0&#8211;100):</strong> Every opportunity is scored on how well it matches your capabilities, certifications, and set-aside eligibility</p>
+<p style="margin:0 0 8px">&#128203; <strong>Bid/Review/No-Bid:</strong> BID = strong fit (70+), REVIEW = worth evaluating (40&#8211;69), NO-BID = not worth your time (&lt;40)</p>
+<p style="margin:0 0 8px">&#9200; <strong>72-hour deadline alerts:</strong> Separate urgent email when any matched opportunity closes within 3 days</p>
+<p style="margin:0 0 16px">&#128231; <strong>Daily digest:</strong> Opportunities scored 50+ sent each morning with SAM.gov links</p>
+<p style="margin:0 0 8px"><strong>Set-aside types:</strong> ${meta.set_aside_types || "All opportunities monitored"}</p>
+<p style="margin:0;color:#64748b;font-size:13px">Your first scan is running now. Questions? Reply to this email or text me directly.</p>`,
+                cta: { text: "View Your Dashboard", url: "https://www.mattmichelstraining.com/gov-contract-monitor/dashboard" },
+              }));
+              await notifyMatt(`New Gov Contract Monitor — ${meta.company_name || email} ($299/mo)`, `<p><strong>${meta.company_name || email}</strong><br>Email: ${email}<br>NAICS: ${meta.naics_codes || "n/a"}<br>Keywords: ${meta.keywords || "n/a"}<br>Set-Asides: ${meta.set_aside_types || "n/a"}</p>`);
+            }
+          }
+        } catch (e) { console.error("[WEBHOOK] gov_contract_monitor error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── AI REGULATORY CHANGE MONITOR — subscription ──────────────────────
+      if (meta.type === "regulatory_monitor") {
+        try {
+          const email = meta.customer_email || customerEmail;
+          if (email) {
+            const regSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+            await regSb.from("regulatory_monitor_clients" as any).insert({
+              customer_email: email,
+              customer_name: meta.customer_name || customerName || null,
+              company_name: meta.company_name || null,
+              industry: meta.industry || "general",
+              sub_industries: meta.sub_industries || null,
+              state_focus: meta.state_focus || null,
+              stripe_subscription_id: session.subscription as string || null,
+              subscription_status: "active",
+            });
+            // Fire-and-forget initial scan
+            fetch(`${SUPABASE_URL}/functions/v1/regulatory-monitor-scan`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
+              body: JSON.stringify({ trigger: "new_client", email }),
+            }).catch((e) => console.error("[WEBHOOK] regulatory-monitor-scan initial fire failed:", e));
+            // Welcome email
+            if (RESEND_API_KEY) {
+              const industryLabel = meta.industry
+                ? meta.industry.charAt(0).toUpperCase() + meta.industry.slice(1).replace(/_/g, " / ")
+                : "your industry";
+              await sendM2Email(email, "Your AI Regulatory Monitor is Active — First Digest Arriving Shortly", m2Email({
+                greeting: `Hey${meta.customer_name ? " " + meta.customer_name : ""} —`,
+                headline: "Your Regulatory Change Monitor is Live",
+                body: `<p style="margin:0 0 12px"><strong>You'll never be blindsided by a regulatory change again.</strong> We're now monitoring the Federal Register for ${meta.company_name || "your company"}.</p>
+<p style="margin:0 0 8px">&#128269; <strong>What we watch:</strong> Federal Register documents affecting ${industryLabel}${meta.state_focus ? ` with a focus on ${meta.state_focus}` : ""}</p>
+<p style="margin:0 0 8px">&#129302; <strong>AI Plain-English Summaries:</strong> Every regulation translated into what it actually means for your business</p>
+<p style="margin:0 0 8px">&#128203; <strong>Impact levels:</strong> HIGH (act now), MEDIUM (review within 30 days), LOW (informational)</p>
+<p style="margin:0 0 8px">&#128231; <strong>Weekly digest:</strong> Every Monday morning, your personalized regulatory update</p>
+<p style="margin:0 0 16px">&#9200; <strong>First scan:</strong> Running now — you'll receive your first digest within the hour if there are new regulations this week</p>
+<p style="margin:0;color:#64748b;font-size:13px">Questions? Reply to this email or text me directly. I read every message.</p>`,
+                cta: { text: "View Your Dashboard", url: "https://www.mattmichelstraining.com/regulatory-monitor/dashboard" },
+              }));
+              await notifyMatt(`New Regulatory Monitor — ${meta.company_name || email} ($197/mo)`, `<p><strong>${meta.company_name || email}</strong><br>Email: ${email}<br>Industry: ${industryLabel}<br>State Focus: ${meta.state_focus || "National"}<br>Sub-industries: ${meta.sub_industries || "n/a"}</p>`);
+            }
+          }
+        } catch (e) { console.error("[WEBHOOK] regulatory_monitor error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── AI TRADEMARK WATCH — subscription ────────────────────────────────
+      if (meta.type === "trademark_watch") {
+        try {
+          const email = meta.customer_email || customerEmail;
+          if (email) {
+            const tmSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+
+            // Resolve user_id by email
+            const { data: profiles } = await tmSb.from("profiles").select("user_id").eq("email", email).limit(1);
+            const userId = profiles?.[0]?.user_id || null;
+
+            // Insert client record
+            const { data: tmClient, error: clientInsertErr } = await tmSb
+              .from("trademark_watch_clients" as any)
+              .insert({
+                user_id: userId,
+                customer_email: email,
+                customer_name: meta.customer_name || customerName || null,
+                company_name: meta.company_name || null,
+                stripe_subscription_id: session.subscription as string || null,
+                subscription_status: "active",
+                marks_count: 1,
+              })
+              .select()
+              .single();
+
+            if (clientInsertErr) throw clientInsertErr;
+
+            // Insert the first mark from signup metadata
+            if (tmClient && meta.mark_text) {
+              await tmSb.from("trademark_watch_marks" as any).insert({
+                client_id: (tmClient as any).id,
+                mark_text: meta.mark_text,
+                goods_services: meta.goods_services || null,
+                nice_classes: meta.nice_classes || null,
+              });
+            }
+
+            // Fire-and-forget initial scan
+            fetch(`${SUPABASE_URL}/functions/v1/trademark-watch-scan`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
+              body: JSON.stringify({ trigger: "new_client", email }),
+            }).catch((e) => console.error("[WEBHOOK] trademark-watch-scan initial fire failed:", e));
+
+            // Welcome email
+            if (RESEND_API_KEY) {
+              const tmEmailHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+<div style="max-width:560px;margin:0 auto;background:#fff;border-radius:10px;overflow:hidden;border:1px solid #e2e8f0">
+  <div style="background:#0f2547;padding:20px 28px;border-bottom:3px solid #c9a227">
+    <p style="color:#c9a227;font-weight:700;font-size:11px;letter-spacing:.15em;text-transform:uppercase;margin:0 0 4px">M² Development · Trademark Watch</p>
+    <h1 style="color:#fff;margin:0;font-size:20px;font-family:Georgia,serif">Your Trademark Watch is Live</h1>
+  </div>
+  <div style="padding:24px 28px;color:#1e293b;font-size:15px;line-height:1.8">
+    <p style="margin:0 0 16px">Hey${meta.customer_name ? " " + meta.customer_name : ""} —</p>
+    <p style="margin:0 0 12px"><strong>We're now monitoring the USPTO for marks similar to "${meta.mark_text || "your trademark"}".</strong></p>
+    <p style="margin:0 0 8px">&#128269; <strong>What we're watching for:</strong> Newly filed applications that could create a likelihood of confusion with your mark</p>
+    <p style="margin:0 0 8px">&#129302; <strong>AI scoring (0&#8211;100):</strong> Every candidate mark is scored on phonetic similarity, visual similarity, and goods/services overlap</p>
+    <p style="margin:0 0 8px">&#9878; <strong>Oppose / Monitor / Ignore:</strong> Clear action recommendation so you know exactly what to do</p>
+    <p style="margin:0 0 8px">&#128231; <strong>Weekly digest:</strong> Every Sunday morning with all new findings</p>
+    <p style="margin:0 0 16px">&#9203; <strong>30-day window:</strong> We flag opposition candidates immediately — never miss a deadline</p>
+    <p style="margin:0 0 8px"><strong>Your first scan is running now.</strong> You'll receive your first report within 24 hours.</p>
+    <p style="margin:0 0 16px;color:#64748b;font-size:13px">This service is informational. Consult a trademark attorney before filing any opposition.</p>
+    <div style="text-align:center;margin:24px 0"><a href="https://www.mattmichelstraining.com/trademark-watch/dashboard" style="display:inline-block;background:#0f2547;color:#fff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:700;font-size:15px">View Your Dashboard</a></div>
+    <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;align-items:center;gap:12px">
+      <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt" style="width:44px;height:44px;border-radius:50%;object-fit:cover" />
+      <div style="font-size:13px;color:#64748b"><strong style="color:#1e293b">Matt Michels</strong><br>Grosse Pointe, MI · <a href="tel:+13138064952" style="color:#c9a227">(313) 806-4952</a></div>
+    </div>
+  </div>
+  <div style="padding:12px 28px;background:#f8fafc;border-top:1px solid #e2e8f0;text-align:center">
+    <p style="margin:0;color:#94a3b8;font-size:11px">M² Development · mattmichelstraining.com · Grosse Pointe, MI</p>
+  </div>
+</div></body></html>`;
+
+              await fetch("https://api.resend.com/emails", {
+                method: "POST",
+                headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  from: "Matt Michels <matt@mattmichelstraining.com>",
+                  to: [email],
+                  bcc: ["matthewmichels4@gmail.com"],
+                  subject: `Your Trademark Watch is Active — Monitoring "${meta.mark_text || "your mark"}"`,
+                  html: tmEmailHtml,
+                }),
+              });
+
+              await notifyMatt(
+                `New Trademark Watch — ${meta.company_name || email} ($49/mo)`,
+                `<p><strong>${meta.company_name || meta.customer_name || email}</strong><br>Email: ${email}<br>Mark: <strong>${meta.mark_text || "n/a"}</strong><br>Classes: ${meta.nice_classes || "n/a"}<br>G&S: ${meta.goods_services || "n/a"}</p>`
+              );
+            }
+          }
+        } catch (e) { console.error("[WEBHOOK] trademark_watch error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       // ── FAQ REFRESH — subscription ────────────────────────────────────────
       if (meta.type === "faq_refresh_subscription") {
         try {
@@ -894,6 +1084,105 @@ serve(async (req) => {
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Newsletter Service — ${meta.businessName || email} ($49/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}</p>` }) });
           }
         } catch (e) { console.error("[WEBHOOK] newsletter_service_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── AI REAL ESTATE NEWSLETTER — subscription ─────────────────────────
+      if (meta.type === "re_newsletter") {
+        try {
+          const email = meta.customer_email || customerEmail;
+          if (email) {
+            const reSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+            await (reSb.from as any)("re_newsletter_clients").insert({
+              customer_email: email,
+              customer_name: meta.customer_name || customerName || null,
+              agent_name: meta.agent_name || null,
+              brokerage: meta.brokerage || null,
+              phone: meta.phone || null,
+              website: meta.website || null,
+              zip_codes: meta.zip_codes || null,
+              brand_color: meta.brand_color || "#1a4a7a",
+              stripe_subscription_id: session.subscription as string || null,
+              subscription_status: "active",
+            });
+            if (RESEND_API_KEY && email) {
+              await sendM2Email(
+                email,
+                "Your AI Real Estate Newsletter is Live — Upload Your Contacts",
+                m2Email({
+                  greeting: `Hey${meta.agent_name ? " " + meta.agent_name : ""} —`,
+                  headline: "Your AI Real Estate Newsletter is Active",
+                  body: `<p style="margin:0 0 12px"><strong>Every week, your contacts will receive a branded, hyper-local market report with your name on it.</strong> You look like the expert. Zero effort.</p>
+<p style="margin:0 0 8px">&#128205; <strong>Zip codes:</strong> ${meta.zip_codes || "as configured"}</p>
+<p style="margin:0 0 8px">&#128231; <strong>Delivery:</strong> Weekly market update newsletter to every contact you add</p>
+<p style="margin:0 0 16px">&#128279; <strong>Next step:</strong> Log in to your dashboard and upload your contact list</p>
+<p style="margin:0;color:#64748b;font-size:13px">The first newsletter goes out next cycle. Upload your contacts today so nobody gets left out.</p>`,
+                  cta: {
+                    text: "Upload Your Contacts Now",
+                    url: "https://www.mattmichelstraining.com/real-estate-newsletter/dashboard",
+                  },
+                })
+              );
+              await notifyMatt(
+                `New RE Newsletter — ${meta.agent_name || email} ($79/mo)`,
+                `<p><strong>${meta.agent_name || email}</strong><br>Email: ${email}<br>Brokerage: ${meta.brokerage || "n/a"}<br>Zips: ${meta.zip_codes || "n/a"}</p>`
+              );
+            }
+          }
+        } catch (e) { console.error("[WEBHOOK] re_newsletter error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── PET MEMORIAL — one-time purchase ─────────────────────────────────
+      if (meta.type === "pet_memorial") {
+        try {
+          const petName = meta.pet_name || "Unknown";
+          const petEmail = meta.customer_email || customerEmail || "";
+          const random4 = Math.floor(1000 + Math.random() * 9000).toString();
+          const slugBase = petName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+          const slug = `in-memory-of-${slugBase}-${random4}`;
+
+          const { data: memorial } = await sb.from("pet_memorial_submissions").insert({
+            pet_name: petName,
+            pet_species: meta.pet_species || null,
+            pet_breed: meta.pet_breed || null,
+            pet_age: meta.pet_age || null,
+            personality_traits: meta.personality_traits || null,
+            favorite_memories: meta.favorite_memories || null,
+            special_message: meta.special_message || null,
+            customer_email: petEmail,
+            customer_name: meta.customer_name || null,
+            payment_status: "paid",
+            active: true,
+            stripe_session_id: session.id,
+            memorial_url_slug: slug,
+          }).select().single();
+
+          console.log(`[WEBHOOK] Pet memorial created: ${memorial?.id} — ${petName}`);
+
+          // Fire-and-forget: generate poem, tribute, and send email
+          if (SUPABASE_URL && SUPABASE_SERVICE_KEY) {
+            fetch(`${SUPABASE_URL}/functions/v1/generate-pet-memorial`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+              },
+              body: JSON.stringify({
+                pet_name: petName,
+                pet_species: meta.pet_species || "",
+                pet_breed: meta.pet_breed || "",
+                pet_age: meta.pet_age || "",
+                personality_traits: meta.personality_traits || "",
+                favorite_memories: meta.favorite_memories || "",
+                special_message: meta.special_message || "",
+                customer_email: petEmail,
+                customer_name: meta.customer_name || "",
+                submission_id: memorial?.id || null,
+              }),
+            }).catch((e) => console.error("[WEBHOOK] generate-pet-memorial fetch error:", e));
+          }
+        } catch (e) { console.error("[WEBHOOK] pet_memorial error:", e); }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -1069,7 +1358,157 @@ serve(async (req) => {
         testimonial_harvester_subscription: "AI Testimonial Harvester",
         new_mover_marketing_subscription: "AI New Mover Marketing",
         annual_review_subscription: "AI Annual Business Review",
+        podcast_revenue_machine: "Podcast-to-Revenue Machine",
+        gov_contract_monitor: "Government Contract Monitor",
+        competitor_pricing: "Competitor Pricing Intelligence",
       };
+
+      // ── COMPETITOR PRICING INTELLIGENCE ───────────────────────────────────
+      if (meta.type === "competitor_pricing" && customerEmail) {
+        try {
+          const cpSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+
+          // Resolve user_id by email
+          const { data: profileRows } = await cpSb
+            .from("profiles")
+            .select("user_id")
+            .eq("email", customerEmail)
+            .limit(1);
+          const cpUserId = profileRows?.[0]?.user_id || null;
+
+          // Insert client record
+          await cpSb.from("competitor_pricing_clients" as any).insert({
+            user_id: cpUserId,
+            customer_email: customerEmail,
+            customer_name: meta.customer_name || customerName || null,
+            company_name: meta.company_name || null,
+            industry: meta.industry || null,
+            own_pricing_notes: meta.own_pricing_notes || null,
+            stripe_subscription_id: session.subscription as string || null,
+            subscription_status: "active",
+          });
+
+          // Welcome email
+          if (RESEND_API_KEY) {
+            await sendM2Email(
+              customerEmail,
+              "Your Competitor Pricing Intelligence is Active — Add Your Competitors Now",
+              m2Email({
+                greeting: `Hey${meta.customer_name ? " " + meta.customer_name : ""} —`,
+                headline: "Your Competitor Pricing Monitor is Live",
+                body: `<p style="margin:0 0 12px"><strong>We're ready to watch your competitors' pricing pages.</strong> Here's what happens next:</p>
+<p style="margin:0 0 8px">&#128279; <strong>Add your competitor URLs</strong> — log into your dashboard and enter 3–10 competitor pricing pages. Takes 2 minutes.</p>
+<p style="margin:0 0 8px">&#129302; <strong>AI scans every week</strong> — each URL is fetched and compared to the previous version. Any pricing change is flagged immediately.</p>
+<p style="margin:0 0 8px">&#128203; <strong>Monday morning report</strong> — a clean email with what changed, before/after snapshots, and 3 AI recommendations lands in your inbox every week.</p>
+<p style="margin:0 0 16px">&#9888;&#65039; <strong>Important:</strong> Scans won't begin until you add at least one competitor URL in your dashboard.</p>
+<p style="margin:0;color:#64748b;font-size:13px">Questions? Reply to this email or text me. I read every message.</p>`,
+                cta: { text: "Open Your Dashboard", url: "https://www.mattmichelstraining.com/competitor-pricing/dashboard" },
+              })
+            );
+            await notifyMatt(
+              `New Competitor Pricing Client — ${meta.company_name || customerEmail} ($149/mo)`,
+              `<p><strong>${meta.company_name || customerEmail}</strong><br>Email: ${customerEmail}<br>Name: ${meta.customer_name || "n/a"}<br>Industry: ${meta.industry || "n/a"}<br>Pricing notes: ${meta.own_pricing_notes || "n/a"}</p>`
+            );
+          }
+        } catch (e) { console.error("[WEBHOOK] competitor_pricing error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── PODCAST REVENUE MACHINE ────────────────────────────────────────────
+      if (meta.type === "podcast_revenue_machine" && customerEmail) {
+        try {
+          const podcastSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+
+          // Look up user_id by email (may be null if they haven't created an account yet)
+          const { data: profileRows } = await podcastSb
+            .from("profiles")
+            .select("user_id")
+            .eq("email", customerEmail)
+            .limit(1);
+          const podcastUserId = profileRows?.[0]?.user_id || null;
+
+          // Insert client record
+          const { data: podcastClient } = await podcastSb
+            .from("podcast_clients" as any)
+            .insert({
+              user_id: podcastUserId,
+              customer_email: customerEmail,
+              customer_name: meta.customer_name || customerName || null,
+              podcast_name: meta.podcast_name || null,
+              rss_feed_url: meta.rss_feed_url,
+              podcast_niche: meta.podcast_niche || null,
+              target_audience: meta.target_audience || null,
+              tone: meta.tone || "professional",
+              stripe_subscription_id: session.subscription as string || null,
+              subscription_status: "active",
+            })
+            .select()
+            .single();
+
+          // Welcome email to customer
+          if (RESEND_API_KEY) {
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "Matt Michels <matt@mattmichelstraining.com>",
+                to: [customerEmail],
+                bcc: ["matthewmichels4@gmail.com"],
+                subject: `🎙️ Welcome to Podcast-to-Revenue Machine — you're all set`,
+                html: `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<div style="max-width:560px;margin:0 auto;background:#fff;border-radius:10px;overflow:hidden;border:1px solid #e2e8f0;">
+  <div style="background:#1a1a2e;padding:20px 28px;border-bottom:3px solid #FF6B35;">
+    <p style="color:#FF6B35;font-weight:700;font-size:11px;letter-spacing:.15em;text-transform:uppercase;margin:0 0 4px;">M² Development · Podcast-to-Revenue Machine</p>
+    <h1 style="color:#fff;margin:0;font-size:20px;font-family:Georgia,serif;">Welcome! Your RSS feed is connected.</h1>
+  </div>
+  <div style="padding:24px 28px;color:#1e293b;font-size:15px;line-height:1.8;">
+    <p style="margin:0 0 16px;">Hey ${meta.customer_name || "there"} —</p>
+    <p style="margin:0 0 16px;">We've connected to your RSS feed for <strong>${meta.podcast_name || "your podcast"}</strong>.</p>
+    <p style="margin:0 0 16px;">Here's what happens next:</p>
+    <div style="background:#f8fafc;border-left:3px solid #FF6B35;padding:16px 20px;margin:0 0 20px;border-radius:0 6px 6px 0;">
+      <p style="margin:0 0 8px;font-size:14px;color:#1e293b;">🎙️ <strong>The next time you publish an episode</strong>, our system will automatically detect it — usually within 6 hours.</p>
+      <p style="margin:0 0 8px;font-size:14px;color:#1e293b;">✍️ <strong>Claude generates 5 content pieces</strong> — a blog post, LinkedIn post, email newsletter, YouTube description, and a Twitter/X thread.</p>
+      <p style="margin:0;font-size:14px;color:#1e293b;">📬 <strong>Everything lands in your inbox</strong> — copy-paste ready, within hours of going live.</p>
+    </div>
+    <p style="margin:0 0 16px;font-size:14px;color:#64748b;">You don't need to do anything. Just keep recording. We'll handle the repurposing.</p>
+    <p style="margin:0 0 4px;">— Matt</p>
+    <p style="margin:0;font-size:13px;color:#64748b;">M² Development · (313) 806-4952</p>
+  </div>
+  <div style="padding:12px 28px;background:#f8fafc;border-top:1px solid #e2e8f0;text-align:center;">
+    <p style="margin:0;color:#94a3b8;font-size:11px;">M² Development · mattmichelstraining.com · Grosse Pointe, MI</p>
+  </div>
+</div></body></html>`,
+              }),
+            });
+
+            // Notify Matt
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "M² System <matt@mattmichelstraining.com>",
+                to: ["matt@mattmichelstraining.com"],
+                bcc: ["matthewmichels4@gmail.com"],
+                subject: `🎙️ New Podcast Revenue Machine — ${meta.podcast_name || customerEmail} ($199/mo)`,
+                html: `<p><strong>${meta.customer_name || "Unknown"}</strong><br>Email: ${customerEmail}<br>Podcast: ${meta.podcast_name || "n/a"}<br>RSS: ${meta.rss_feed_url}<br>Niche: ${meta.podcast_niche || "n/a"}<br>Tone: ${meta.tone || "professional"}</p>`,
+              }),
+            });
+          }
+
+          // Fire-and-forget initial RSS check
+          if (podcastClient?.id) {
+            fetch(`${SUPABASE_URL}/functions/v1/podcast-content-generator`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
+              body: JSON.stringify({ client_id: podcastClient.id }),
+            }).catch((e) => console.error("[WEBHOOK] podcast initial check fire failed:", e));
+          }
+
+        } catch (e) { console.error("[WEBHOOK] podcast_revenue_machine error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       if (customerEmail && AGENCY_SERVICE_LABELS[meta.type]) {
         try {
           const serviceLabel = AGENCY_SERVICE_LABELS[meta.type];
@@ -4099,6 +4538,96 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
         }
       } catch (refErr) {
         console.error("[WEBHOOK] Referral tracking error:", refErr);
+      }
+
+      // ── DARK WEB MONITOR — direct ($49/mo) ────────────────────────────────
+      if (meta.type === "dark_web_monitor") {
+        try {
+          const email = meta.customer_email || customerEmail;
+          if (email) {
+            await (sb.from as any)("dark_web_monitor_clients").insert({
+              customer_email:         email,
+              customer_name:          meta.customer_name || customerName || null,
+              company_name:           meta.company_name || null,
+              monitored_domain:       meta.monitored_domain || "",
+              plan_type:              "direct",
+              domains_allowed:        1,
+              stripe_subscription_id: session.subscription as string || null,
+              subscription_status:    "active",
+            });
+
+            // Fire-and-forget initial scan
+            fetch(`${SUPABASE_URL}/functions/v1/dark-web-domain-scan`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
+              body: JSON.stringify({ trigger: "initial", client_email: email }),
+            }).catch((e: unknown) => console.error("[WEBHOOK] dark-web initial scan error:", e));
+
+            // Welcome email
+            await sendM2Email(email, "Your Dark Web Monitor is Active — First Scan Starting Now", m2Email({
+              greeting: `Hey${meta.customer_name ? " " + meta.customer_name : ""} —`,
+              headline: "Your Dark Web Monitor is Active",
+              body: `<p style="margin:0 0 12px"><strong>We're scanning the dark web for your domain credentials right now.</strong></p>
+<p style="margin:0 0 8px">🔍 <strong>Domain monitored:</strong> ${meta.monitored_domain}</p>
+<p style="margin:0 0 8px">📬 <strong>Weekly reports</strong> — every week you'll get a full breach report sent to this email</p>
+<p style="margin:0 0 8px">⚠️ <strong>Instant alerts</strong> — if a new breach is found, you'll hear from us immediately</p>
+<p style="margin:0 0 8px">🤖 <strong>AI remediation</strong> — every breach includes specific steps your team should take</p>
+<p style="margin:0 0 16px">🔐 <strong>Powered by HaveIBeenPwned</strong> — the most trusted breach database on the internet</p>
+<p style="margin:0;color:#64748b;font-size:13px">Your first scan report will arrive within the hour. If we find anything, you'll get an immediate alert.</p>`,
+              cta: { text: "View Your Dashboard", url: "https://www.mattmichelstraining.com/dark-web-monitor/dashboard" },
+            }));
+            await notifyMatt(
+              `💰 New Dark Web Monitor — ${meta.company_name || email} ($49/mo)`,
+              `<p><strong>${meta.company_name || email}</strong><br>Email: ${email}<br>Domain: ${meta.monitored_domain || "n/a"}<br>Plan: Direct</p>`
+            );
+          }
+        } catch (e) { console.error("[WEBHOOK] dark_web_monitor error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── DARK WEB MONITOR RESELLER — MSP ($199/mo, 10 domains) ─────────────
+      if (meta.type === "dark_web_monitor_reseller") {
+        try {
+          const email = meta.customer_email || customerEmail;
+          if (email) {
+            await (sb.from as any)("dark_web_monitor_clients").insert({
+              customer_email:         email,
+              customer_name:          meta.customer_name || customerName || null,
+              company_name:           meta.company_name || null,
+              monitored_domain:       meta.monitored_domain || "",
+              plan_type:              "reseller",
+              domains_allowed:        10,
+              stripe_subscription_id: session.subscription as string || null,
+              subscription_status:    "active",
+            });
+
+            // Fire-and-forget initial scan
+            fetch(`${SUPABASE_URL}/functions/v1/dark-web-domain-scan`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
+              body: JSON.stringify({ trigger: "initial", client_email: email }),
+            }).catch((e: unknown) => console.error("[WEBHOOK] dark-web-reseller initial scan error:", e));
+
+            // Welcome email
+            await sendM2Email(email, "Your Dark Web Monitor MSP Plan is Active — Up to 10 Domains", m2Email({
+              greeting: `Hey${meta.customer_name ? " " + meta.customer_name : ""} —`,
+              headline: "Your MSP Dark Web Monitor is Active",
+              body: `<p style="margin:0 0 12px"><strong>Your reseller account is live. You can now monitor up to 10 client domains.</strong></p>
+<p style="margin:0 0 8px">🔍 <strong>First domain:</strong> ${meta.monitored_domain}</p>
+<p style="margin:0 0 8px">📊 <strong>10 domains included</strong> — add client domains through your dashboard</p>
+<p style="margin:0 0 8px">📬 <strong>Weekly reports</strong> per domain — each client gets a branded breach report</p>
+<p style="margin:0 0 8px">⚠️ <strong>Instant alerts</strong> on new findings — you and the client both get notified</p>
+<p style="margin:0 0 16px">🤖 <strong>AI remediation steps</strong> — every breach includes specific recommended actions</p>
+<p style="margin:0;color:#64748b;font-size:13px">Add more domains any time from your dashboard. White-label reports available — reply to this email to discuss.</p>`,
+              cta: { text: "View Your Dashboard", url: "https://www.mattmichelstraining.com/dark-web-monitor/dashboard" },
+            }));
+            await notifyMatt(
+              `💰 New Dark Web Monitor RESELLER — ${meta.company_name || email} ($199/mo)`,
+              `<p><strong>${meta.company_name || email}</strong><br>Email: ${email}<br>Domain: ${meta.monitored_domain || "n/a"}<br>Plan: MSP Reseller (10 domains)</p>`
+            );
+          }
+        } catch (e) { console.error("[WEBHOOK] dark_web_monitor_reseller error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
     // ── LUKE — Capture abandoned checkouts for recovery emails ────────────────

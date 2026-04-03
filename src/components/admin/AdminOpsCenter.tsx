@@ -57,13 +57,21 @@ const ALL_SERVICES = [
   { table: "grant_discovery_clients", name: "Grant Discovery", price: "$199/mo", priceNum: 199 },
   { table: "ag_price_alert_clients", name: "Ag Price Alerts", price: "$79/mo", priceNum: 79 },
   { table: "landlord_letter_clients", name: "Landlord-Tenant Letters", price: "$149/mo", priceNum: 149 },
-  { table: "regulatory_monitor_clients", name: "Regulatory Monitor", price: "$299/mo", priceNum: 299 },
   { table: "trade_show_clients", name: "Trade Show Follow-Up", price: "$99/mo", priceNum: 99 },
   { table: "price_intelligence_clients", name: "Competitor Price Intel", price: "$199/mo", priceNum: 199 },
   { table: "citation_monitor_clients", name: "Citation Monitor", price: "$99/mo", priceNum: 99 },
   { table: "menu_engineering_clients", name: "Menu Engineering", price: "$99/mo", priceNum: 99 },
   { table: "fitness_report_clients", name: "Fitness Progress Reports", price: "$79/mo", priceNum: 79 },
   { table: "gov_meeting_tracker_clients", name: "Gov Meeting Tracker", price: "$199/mo", priceNum: 199 },
+  { table: "podcast_clients", name: "Podcast-to-Revenue Machine", price: "$199/mo", priceNum: 199 },
+  { table: "dark_web_monitor_clients", name: "Dark Web Credential Monitor", price: "$49/mo", priceNum: 49 },
+  { table: "gov_contract_clients", name: "Government Contract Monitor", price: "$299/mo", priceNum: 299 },
+  { table: "regulatory_monitor_clients", name: "Regulatory Change Monitor", price: "$197/mo", priceNum: 197 },
+  { table: "trademark_watch_clients", name: "Trademark Watch Service", price: "$49/mo", priceNum: 49 },
+  { table: "competitor_pricing_clients", name: "Competitor Pricing Intel", price: "$149/mo", priceNum: 149 },
+  { table: "re_newsletter_clients", name: "Real Estate Newsletter", price: "$79/mo", priceNum: 79 },
+  // ── One-Time Products ─────────────────────────────────────────────────────
+  { table: "pet_memorial_submissions", name: "AI Pet Memorial", price: "$79 one-time", priceNum: 79 },
 ] as const;
 
 interface ClientRecord {

@@ -237,6 +237,8 @@ const AIBattlecard = lazyRetry(() => import("./pages/AIBattlecard"));
 const AIMarketIntel = lazyRetry(() => import("./pages/AIMarketIntel"));
 const AIPermitMonitor = lazyRetry(() => import("./pages/AIPermitMonitor"));
 const AIOshaCompliance = lazyRetry(() => import("./pages/AIOshaCompliance"));
+const DarkWebMonitor = lazyRetry(() => import("./pages/DarkWebMonitor"));
+const DarkWebDashboard = lazyRetry(() => import("./pages/DarkWebDashboard"));
 const AICollections = lazyRetry(() => import("./pages/AICollections"));
 const AIInventoryAlerts = lazyRetry(() => import("./pages/AIInventoryAlerts"));
 const AIBirthdayCampaign = lazyRetry(() => import("./pages/AIBirthdayCampaign"));
@@ -250,6 +252,8 @@ const TradeShowFollowUp = lazyRetry(() => import("./pages/TradeShowFollowUp"));
 const TestimonialHarvester = lazyRetry(() => import("./pages/TestimonialHarvester"));
 const NewMoverMarketing = lazyRetry(() => import("./pages/NewMoverMarketing"));
 const AnnualBusinessReview = lazyRetry(() => import("./pages/AnnualBusinessReview"));
+const PodcastRevenueMachine = lazyRetry(() => import("./pages/PodcastRevenueMachine"));
+const PodcastDashboard = lazyRetry(() => import("./pages/PodcastDashboard"));
 const LegalPage = lazyRetry(() => import("./pages/LegalPage"));
 const CookieBanner = lazyRetry(() => import("./components/layout/CookieBanner"));
 const LegalFooterLazy = lazyRetry(() => import("./components/layout/LegalFooter"));
@@ -264,6 +268,19 @@ const YoungbloodMockupAlt1 = lazyRetry(() => import("./pages/YoungbloodMockupAlt
 const YoungbloodMockupAlt2 = lazyRetry(() => import("./pages/YoungbloodMockupAlt2"));
 const DentalMockupAlt1 = lazyRetry(() => import("./pages/DentalMockupAlt1"));
 const DentalMockupAlt2 = lazyRetry(() => import("./pages/DentalMockupAlt2"));
+const GovContractMonitor = lazyRetry(() => import("./pages/GovContractMonitor"));
+const GovContractDashboard = lazyRetry(() => import("./pages/GovContractDashboard"));
+const RegulatoryMonitor = lazyRetry(() => import("./pages/RegulatoryMonitor"));
+const RegulatoryDashboard = lazyRetry(() => import("./pages/RegulatoryDashboard"));
+const TrademarkWatch = lazyRetry(() => import("./pages/TrademarkWatch"));
+const TrademarkDashboard = lazyRetry(() => import("./pages/TrademarkDashboard"));
+const CompetitorPricing = lazyRetry(() => import("./pages/CompetitorPricing"));
+const CompetitorPricingDashboard = lazyRetry(() => import("./pages/CompetitorPricingDashboard"));
+const PetMemorial = lazyRetry(() => import("./pages/PetMemorial"));
+const PetMemorialSuccess = lazyRetry(() => import("./pages/PetMemorial").then(m => ({ default: m.PetMemorialSuccess })));
+const MemorialPage = lazyRetry(() => import("./pages/MemorialPage"));
+const RealEstateNewsletter = lazyRetry(() => import("./pages/RealEstateNewsletter"));
+const RealEstateDashboard = lazyRetry(() => import("./pages/RealEstateDashboard"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -584,6 +601,8 @@ const App = () => (
                     <Route path="/ai-market-intel" element={<AIMarketIntel />} />
                     <Route path="/ai-permit-monitor" element={<AIPermitMonitor />} />
                     <Route path="/ai-osha-compliance" element={<AIOshaCompliance />} />
+                    <Route path="/dark-web-monitor" element={<DarkWebMonitor />} />
+                    <Route path="/dark-web-monitor/dashboard" element={<ProtectedRoute><DarkWebDashboard /></ProtectedRoute>} />
                     <Route path="/ai-collections" element={<AICollections />} />
                     <Route path="/ai-inventory-alerts" element={<AIInventoryAlerts />} />
                     <Route path="/ai-birthday-campaign" element={<AIBirthdayCampaign />} />
@@ -597,6 +616,8 @@ const App = () => (
                     <Route path="/testimonial-harvester" element={<TestimonialHarvester />} />
                     <Route path="/new-mover-marketing" element={<NewMoverMarketing />} />
                     <Route path="/annual-business-review" element={<AnnualBusinessReview />} />
+                    <Route path="/podcast-revenue-machine" element={<PodcastRevenueMachine />} />
+                    <Route path="/podcast-revenue-machine/dashboard" element={<ProtectedRoute><PodcastDashboard /></ProtectedRoute>} />
                     <Route path="/tools/:slug" element={<MicroSaasToolPage />} />
                     <Route path="/legal/:type" element={<LegalPage />} />
                     <Route path="/partner-program" element={<PartnerProgram />} />
@@ -620,6 +641,19 @@ const App = () => (
                     <Route path="/profile" element={<BlurGate><Profile /></BlurGate>} />
                     <Route path="/progress" element={<BlurGate requireSubscription><Progress /></BlurGate>} />
                     <Route path="/nutrition" element={<BlurGate requireSubscription><Nutrition /></BlurGate>} />
+                    <Route path="/pet-memorial" element={<PetMemorial />} />
+                    <Route path="/pet-memorial/success" element={<PetMemorialSuccess />} />
+                    <Route path="/memorial/:slug" element={<MemorialPage />} />
+                    <Route path="/gov-contract-monitor" element={<GovContractMonitor />} />
+                    <Route path="/gov-contract-monitor/dashboard" element={<ProtectedRoute><GovContractDashboard /></ProtectedRoute>} />
+                    <Route path="/regulatory-monitor" element={<RegulatoryMonitor />} />
+                    <Route path="/regulatory-monitor/dashboard" element={<ProtectedRoute><RegulatoryDashboard /></ProtectedRoute>} />
+                    <Route path="/trademark-watch" element={<TrademarkWatch />} />
+                    <Route path="/trademark-watch/dashboard" element={<ProtectedRoute><TrademarkDashboard /></ProtectedRoute>} />
+                    <Route path="/competitor-pricing" element={<CompetitorPricing />} />
+                    <Route path="/competitor-pricing/dashboard" element={<ProtectedRoute><CompetitorPricingDashboard /></ProtectedRoute>} />
+                    <Route path="/real-estate-newsletter" element={<RealEstateNewsletter />} />
+                    <Route path="/real-estate-newsletter/dashboard" element={<ProtectedRoute><RealEstateDashboard /></ProtectedRoute>} />
                     <Route path="*" element={<NotFound />} />
                     </Routes>
                   </div>
