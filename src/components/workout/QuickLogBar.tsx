@@ -278,6 +278,18 @@ const QuickLogBar = ({ exercises, onApplyParsed }: QuickLogBarProps) => {
           onDismiss={handlePRDismiss}
         />
       )}
+
+      {/* PR Celebration */}
+      {prCelebration && (
+        <PRCelebration
+          exerciseName={prCelebration.exerciseName}
+          newWeight={prCelebration.newWeight}
+          previousBest={prCelebration.previousBest}
+          reps={prCelebration.reps}
+          pointsAwarded={50}
+          onDismiss={() => setPrCelebration(null)}
+        />
+      )}
     </>
   );
 };
