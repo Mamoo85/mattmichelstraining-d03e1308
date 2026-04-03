@@ -144,7 +144,7 @@ export default function YoungbloodMockupAlt2() {
         {/* Right accent line */}
         <div style={{ position: "absolute", top: 0, right: "33%", bottom: 0, width: 1, background: `linear-gradient(to bottom, transparent, ${BLUE}44, transparent)` }} />
 
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "80px 24px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 64, alignItems: "center", width: "100%", position: "relative" }}>
+        <div className="grid grid-cols-1 lg:grid-cols-2" style={{ maxWidth: 1200, margin: "0 auto", padding: "80px 24px", gap: 64, alignItems: "center", width: "100%", position: "relative" }}>
           <div className="fade-in">
             {/* Status indicator */}
             <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 32 }}>
@@ -177,7 +177,7 @@ export default function YoungbloodMockupAlt2() {
           </div>
 
           {/* Stats panel */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1, background: BORDER }}>
+          <div className="grid grid-cols-2" style={{ gap: 1, background: BORDER }}>
             {STATS.map(s => (
               <div key={s.label} style={{ background: "#0D1E36", padding: "32px 28px" }}>
                 <div style={{ color: BLUE, fontSize: "clamp(28px, 4vw, 42px)", fontWeight: 700, letterSpacing: "-0.02em", marginBottom: 6 }}>{s.value}</div>
@@ -222,7 +222,7 @@ export default function YoungbloodMockupAlt2() {
       <section style={{ background: NAVY, padding: "80px 24px", borderTop: `1px solid ${BORDER}` }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <RevealSection>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 64, alignItems: "start" }}>
+            <div className="grid grid-cols-1 lg:grid-cols-3" style={{ gap: 64, alignItems: "start" }}>
               <div>
                 <div style={{ color: BLUE, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 12, fontWeight: 600 }}>// Markets Served</div>
                 <h2 style={{ color: WHITE, fontSize: 36, fontWeight: 700, lineHeight: 1.15 }}>Industry<br />Verticals</h2>
@@ -230,7 +230,7 @@ export default function YoungbloodMockupAlt2() {
                   Cross-industry experience means proven solutions faster. We've seen the failure modes. We've built the fixes.
                 </p>
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1, background: BORDER }}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:col-span-2" style={{ gap: 1, background: BORDER }}>
                 {INDUSTRIES.map(ind => (
                   <div key={ind} style={{ background: NAVY, padding: "20px 24px", display: "flex", alignItems: "center", gap: 12 }}>
                     <div style={{ width: 4, height: 4, background: BLUE, flexShrink: 0 }} />
@@ -306,7 +306,7 @@ export default function YoungbloodMockupAlt2() {
             </div>
 
             <form onSubmit={(e) => e.preventDefault()}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1, background: BORDER, marginBottom: 1 }}>
+              <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 1, background: BORDER, marginBottom: 1 }}>
                 {[
                   { label: "Company Name", placeholder: "Acme Manufacturing Co.", type: "text" },
                   { label: "Contact Name", placeholder: "John Smith", type: "text" },
@@ -329,7 +329,7 @@ export default function YoungbloodMockupAlt2() {
                 ))}
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 1, background: BORDER, marginBottom: 1 }}>
+              <div className="grid grid-cols-1 sm:grid-cols-3" style={{ gap: 1, background: BORDER, marginBottom: 1 }}>
                 {[
                   {
                     label: "Product Category", type: "select",
@@ -398,7 +398,7 @@ export default function YoungbloodMockupAlt2() {
 
       {/* Contact Footer */}
       <section style={{ background: NAVY, padding: "64px 24px", borderTop: `1px solid ${BORDER}` }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 48 }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" style={{ maxWidth: 1200, margin: "0 auto", gap: 48 }}>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
               <div style={{ width: 28, height: 28, background: BLUE, display: "flex", alignItems: "center", justifyContent: "center" }}>
