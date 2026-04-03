@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { Navigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import AppNavbar from "@/components/layout/AppNavbar";
