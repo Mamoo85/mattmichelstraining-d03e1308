@@ -660,6 +660,9 @@ const App = () => (
                     <Route path="/real-estate-newsletter/dashboard" element={<ProtectedRoute><RealEstateDashboard /></ProtectedRoute>} />
                     <Route path="/employee-credential-audit" element={<EmployeeCredentialAudit />} />
                     <Route path="/new-hire-check" element={<NewHireCheck />} />
+                    <Route path="/join/:code" element={<JoinTeam />} />
+                    <Route path="/coach-hub" element={<ProtectedRoute><CoachHub /></ProtectedRoute>} />
+                    <Route path="/my-team" element={<ProtectedRoute><MyTeam /></ProtectedRoute>} />
                     <Route path="*" element={<NotFound />} />
                     </Routes>
                   </div>
