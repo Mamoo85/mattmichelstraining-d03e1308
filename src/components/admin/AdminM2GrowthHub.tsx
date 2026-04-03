@@ -131,10 +131,8 @@ const M2_SERVICES = [
     schedule: "Weekly",
     insert: {
       email: MATT_EMAIL,
-      name: "Matt Michels",
+      business_name: "M² Development",
       industry: "AI automation & SaaS",
-      topics: "AI automation, local business growth, contractor leads, B2B sales, field sales",
-      tone: "conversational, direct, credible — like a Grosse Pointe guy who actually built the thing",
       active: true,
     },
   },
