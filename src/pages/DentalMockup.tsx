@@ -1,341 +1,547 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { Phone, Shield, Star, Award, CheckCircle, Lock, ScanLine, Microscope, Stethoscope, MapPin, ArrowRight, Menu, X, FileCheck } from "lucide-react";
+import { Phone, Shield, Star, Award, CheckCircle, MapPin, ArrowRight, Menu, X, Smile, Sparkles, Clock, Heart } from "lucide-react";
 import { RevealSection } from "@/hooks/useInView";
 
-const T = "#0d9488";
-const DARK = "#0f172a";
+const TEAL = "#0d9488";
+const TEAL_DARK = "#0f766e";
+const TEAL_LIGHT = "#ccfbf1";
+const NAVY = "#0f2027";
+const SLATE = "#1e293b";
+const WHITE = "#ffffff";
+const GRAY = "#64748b";
+const GRAY_LIGHT = "#f1f5f9";
+
+const SERVICES = [
+  { icon: Smile, title: "General Dentistry", desc: "Comprehensive cleanings, exams, fillings, and preventative care for the whole family.", highlight: false },
+  { icon: Sparkles, title: "Cosmetic Dentistry", desc: "Veneers, whitening, bonding, and smile makeovers tailored to your unique goals.", highlight: true },
+  { icon: Shield, title: "CEREC Same-Day Crowns", desc: "Digital impressions and milled porcelain crowns ready in a single appointment.", highlight: false },
+  { icon: Heart, title: "Implant Dentistry", desc: "Tooth replacement solutions from single implants to full-arch restorations.", highlight: false },
+  { icon: Clock, title: "Emergency Dental", desc: "Same-day emergency appointments for pain, broken teeth, or lost restorations.", highlight: false },
+  { icon: Award, title: "Invisalign", desc: "Clear aligner therapy for adults and teens — straighter smile without metal braces.", highlight: false },
+];
+
+const TEAM = [
+  { name: "Dr. James Stewart, DDS", role: "Lead Dentist & Founder", since: "Est. 1989", img: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=600&q=80" },
+  { name: "Dr. Sarah Chen, DMD", role: "Cosmetic Specialist", since: "Joined 2014", img: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=600&q=80" },
+];
+
+const REVIEWS = [
+  { name: "Karen M.", stars: 5, text: "Stewart Dental has been my family's dentist for 15 years. The new office is stunning and Dr. Stewart is always gentle and thorough." },
+  { name: "Michael T.", stars: 5, text: "Got my CEREC crown done in one visit! The digital impressions are so much better than the old goop. Highly recommend." },
+  { name: "Lisa P.", stars: 5, text: "Invisalign results exceeded my expectations. Dr. Chen is amazing — so patient and detail-oriented." },
+  { name: "Robert H.", stars: 5, text: "Had a dental emergency on a Friday afternoon and they got me in within the hour. Truly above and beyond." },
+];
+
+const STATS = [
+  { value: "35+", label: "Years Serving Grosse Pointe" },
+  { value: "4,800+", label: "Patient Families" },
+  { value: "4.9★", label: "Google Rating" },
+  { value: "1-Day", label: "CEREC Crowns" },
+];
+
+const INSURANCES = ["Delta Dental", "Aetna", "Cigna", "BlueCross BlueShield", "MetLife", "Guardian", "Humana", "United Concordia"];
 
 export default function DentalMockup() {
-  const [vis, setVis] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [headerVisible, setHeaderVisible] = useState(true);
   const [lastY, setLastY] = useState(0);
-  const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ first:"", last:"", phone:"", email:"", day:"", reason:"" });
 
   useEffect(() => {
-    const fn = () => { const y = window.scrollY; setVis(y < 80 || y < lastY); setLastY(y); };
-    window.addEventListener("scroll", fn, { passive: true });
-    return () => window.removeEventListener("scroll", fn);
+    const onScroll = () => {
+      const y = window.scrollY;
+      setHeaderVisible(y < 80 || y < lastY);
+      setLastY(y);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, [lastY]);
 
-  useEffect(() => { document.body.style.overflow = open ? "hidden" : ""; return () => { document.body.style.overflow = ""; }; }, [open]);
-
   return (
-    <div style={{ fontFamily:"'Inter', system-ui, sans-serif" }}>
+    <>
       <Helmet>
-        <title>Stewart Dental Group — Grosse Pointe Woods Prosthodontist</title>
-        <meta name="description" content="Dr. Robert Stewart, Board-Certified Prosthodontist. Same-day CEREC crowns, dental implants, full-mouth rehabilitation. Grosse Pointe Woods, MI." />
-        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+        <title>Stewart Dental Group | Grosse Pointe Woods, MI</title>
+        <meta name="robots" content="noindex" />
+        <meta name="description" content="Stewart Dental Group — Family & Cosmetic Dentistry in Grosse Pointe Woods, MI. Accepting new patients. Call (313) 882-8711." />
       </Helmet>
 
-      {/* Mobile menu */}
-      {open && (
-        <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center gap-8" style={{ background: DARK }}>
-          <button onClick={() => setOpen(false)} className="absolute top-5 right-5 p-2" style={{ color:"white", background:"none", border:"none", cursor:"pointer" }}><X size={28} /></button>
-          {[["#technology","CEREC Technology"],["#services","Services"],["#doctor","Dr. Stewart"],["#new-patients","Book a Visit"]].map(([h,l]) => (
-            <a key={h} href={h} onClick={() => setOpen(false)} className="text-2xl font-semibold tracking-wide"
-              style={{ color:"white", textDecoration:"none" }}
-              onMouseEnter={e=>(e.currentTarget.style.color=T)} onMouseLeave={e=>(e.currentTarget.style.color="white")}>{l}</a>
-          ))}
-          <a href="#new-patients" onClick={() => setOpen(false)} className="mt-4 px-10 py-4 font-bold text-sm tracking-wider rounded-lg"
-            style={{ background:T, color:"white", textDecoration:"none" }}>SCHEDULE A VISIT</a>
-          <a href="tel:3138828711" style={{ color:T, textDecoration:"none", fontSize:14, fontWeight:600 }}>(313) 882-8711</a>
-        </div>
-      )}
+      <style>{`
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-up { animation: fadeUp 0.7s ease both; }
+        .service-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(13,148,136,0.15); }
+        .service-card { transition: transform 0.25s ease, box-shadow 0.25s ease; }
+        .review-card:hover { border-color: ${TEAL} !important; }
+        .review-card { transition: border-color 0.2s ease; }
+        .btn-primary:hover { background: ${TEAL_DARK} !important; }
+        .btn-primary { transition: background 0.2s ease; }
+      `}</style>
 
-      {/* Demo banner */}
-      <div className="fixed top-0 left-0 right-0 z-[150] text-center py-2 px-4 text-xs font-bold tracking-widest" style={{ background:T, color:"white" }}>
-        REDESIGN CONCEPT · Matt Michels Web Design · 313.806.4952
+      {/* ── Full-Width Demo Banner ── */}
+      <div style={{
+        position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
+        background: TEAL, color: WHITE,
+        padding: "9px 16px",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        gap: 12, flexWrap: "wrap",
+        fontSize: 12, fontWeight: 600, letterSpacing: "0.04em",
+        textAlign: "center",
+      }}>
+        <span>REDESIGN CONCEPT</span>
+        <span style={{ opacity: 0.6 }}>·</span>
+        <Link to="/manufacturing-web-design" style={{ color: WHITE, textDecoration: "underline", textDecorationColor: "rgba(255,255,255,0.5)" }}>
+          Matt Michels Web Design
+        </Link>
+        <span style={{ opacity: 0.6 }}>·</span>
+        <a href="tel:3138064952" style={{ color: WHITE, textDecoration: "none", fontWeight: 700 }}>313.806.4952</a>
       </div>
 
-      {/* Design switcher */}
-      <div className="hidden lg:block fixed bottom-5 left-4 z-[150]">
-        <div className="rounded-xl text-xs overflow-hidden" style={{ background:"rgba(255,255,255,.97)", backdropFilter:"blur(12px)", border:"1px solid #e2e8f0", boxShadow:"0 4px 20px rgba(0,0,0,.08)", minWidth:220 }}>
-          <div className="px-4 py-2.5 border-b border-slate-100">
-            <p className="font-bold uppercase tracking-widest text-[10px]" style={{ color:T }}>See Other Designs</p>
+      {/* ── Header ── */}
+      <header style={{
+        position: "fixed", top: 36, left: 0, right: 0, zIndex: 90,
+        background: "rgba(255,255,255,0.97)",
+        backdropFilter: "blur(12px)",
+        borderBottom: "1px solid rgba(0,0,0,0.08)",
+        transform: headerVisible ? "translateY(0)" : "translateY(-100%)",
+        transition: "transform 0.3s ease",
+      }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64 }}>
+          {/* Logo */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 38, height: 38, borderRadius: "50%", background: TEAL, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Smile size={20} color={WHITE} />
+            </div>
+            <div>
+              <div style={{ color: SLATE, fontWeight: 800, fontSize: 15, lineHeight: 1.1 }}>Stewart Dental Group</div>
+              <div style={{ color: TEAL, fontSize: 10, fontWeight: 500, letterSpacing: "0.06em" }}>GROSSE POINTE WOODS, MI</div>
+            </div>
           </div>
-          <div className="p-2 space-y-1">
-            {[{to:"/demo-dental",l:"Teal / Clinical",active:true},{to:"/demo-dental-alt1",l:"Prestige (Navy & Gold)"},{to:"/demo-dental-alt2",l:"Nordic Wellness"}].map(d => (
-              <Link key={d.to} to={d.to} className="flex items-center gap-2 px-3 py-2 rounded-lg text-left w-full"
-                style={{ background:d.active?`rgba(13,148,136,.08)`:"transparent", color:d.active?T:"#94a3b8", textDecoration:"none" }}>
-                <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background:d.active?T:"#cbd5e1" }} />{d.l}
-              </Link>
+
+          {/* Desktop Nav */}
+          <nav className="hidden lg:flex" style={{ alignItems: "center", gap: 32 }}>
+            {["Services", "About", "Technology", "Reviews", "New Patients"].map(n => (
+              <a key={n} href="#" style={{ color: GRAY, fontSize: 13, fontWeight: 500, textDecoration: "none" }}
+                onMouseEnter={e => (e.currentTarget.style.color = TEAL)}
+                onMouseLeave={e => (e.currentTarget.style.color = GRAY)}
+              >{n}</a>
             ))}
-          </div>
-          <div className="px-4 py-2.5 border-t border-slate-100">
-            <a href="tel:3138064952" className="text-[10px] font-semibold text-slate-400">Matt — (313) 806-4952</a>
-          </div>
-        </div>
-      </div>
+          </nav>
 
-      {/* Header */}
-      <header className="fixed left-0 right-0 z-[100] flex items-center justify-between px-5 transition-transform duration-300"
-        style={{ top:32, height:64, transform:vis?"translateY(0)":"translateY(-100%)", background:"rgba(255,255,255,.97)", backdropFilter:"blur(12px)", borderBottom:"1px solid #e2e8f0" }}>
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background:T }}>
-            <span style={{ color:"white", fontSize:16 }}>+</span>
+          {/* CTA */}
+          <div className="hidden lg:flex" style={{ alignItems: "center", gap: 12 }}>
+            <a href="tel:3138828711" style={{ display: "flex", alignItems: "center", gap: 6, color: TEAL, fontWeight: 700, fontSize: 14, textDecoration: "none" }}>
+              <Phone size={16} /> (313) 882-8711
+            </a>
+            <a href="#appointment" className="btn-primary" style={{ background: TEAL, color: WHITE, padding: "10px 20px", borderRadius: 6, fontSize: 13, fontWeight: 600, textDecoration: "none" }}>
+              Book Appointment
+            </a>
           </div>
-          <span className="text-sm font-bold tracking-wide" style={{ color:DARK }}>STEWART <span style={{ color:T }}>DENTAL GROUP</span></span>
+
+          {/* Hamburger */}
+          <button className="lg:hidden" onClick={() => setMenuOpen(!menuOpen)}
+            style={{ background: "none", border: "none", cursor: "pointer", color: SLATE, padding: 4 }}>
+            {menuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
         </div>
-        <div className="hidden md:flex items-center gap-3">
-          <a href="#new-patients" className="text-xs font-semibold px-4 py-2 rounded-lg" style={{ color:T, border:`1px solid ${T}`, textDecoration:"none" }}>New Patients</a>
-          <a href="tel:3138828711" className="flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-lg" style={{ background:T, color:"white", textDecoration:"none" }}>
-            <Phone size={12} /> (313) 882-8711
-          </a>
-        </div>
-        <button className="md:hidden p-2" onClick={() => setOpen(true)} style={{ border:"none", background:"transparent", cursor:"pointer" }}>
-          <Menu size={24} color={DARK} />
-        </button>
+
+        {/* Mobile Menu */}
+        {menuOpen && (
+          <div style={{
+            position: "fixed", top: 100, left: 0, right: 0, bottom: 0, zIndex: 80,
+            background: "rgba(15,32,39,0.97)",
+            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+            gap: 28,
+          }}>
+            {["Services", "About", "Technology", "Reviews", "New Patients"].map(n => (
+              <a key={n} href="#" onClick={() => setMenuOpen(false)}
+                style={{ color: WHITE, fontSize: 22, fontWeight: 700, textDecoration: "none", letterSpacing: "0.02em" }}
+                onMouseEnter={e => (e.currentTarget.style.color = TEAL_LIGHT)}
+                onMouseLeave={e => (e.currentTarget.style.color = WHITE)}
+              >{n}</a>
+            ))}
+            <a href="tel:3138828711" style={{ color: TEAL_LIGHT, fontSize: 20, fontWeight: 700, textDecoration: "none", marginTop: 8 }}>
+              (313) 882-8711
+            </a>
+            <a href="#appointment" onClick={() => setMenuOpen(false)}
+              style={{ background: TEAL, color: WHITE, padding: "14px 32px", borderRadius: 8, fontSize: 15, fontWeight: 700, textDecoration: "none", marginTop: 8 }}>
+              Book Appointment
+            </a>
+          </div>
+        )}
       </header>
 
-      {/* HERO */}
-      <section className="relative flex items-center justify-center text-center overflow-hidden min-h-screen" style={{ paddingTop:"calc(32px + 64px)", background:DARK }}>
-        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage:"url(https://images.unsplash.com/photo-1588776814546-1ffbb1b72cb7?w=1920&q=80)", opacity:.18 }} />
-        <div className="absolute inset-0" style={{ background:"linear-gradient(to bottom, rgba(15,23,42,.85), rgba(15,23,42,.95))" }} />
-        <div className="relative z-10 max-w-4xl mx-auto px-5 py-24">
-          <div className="inline-flex items-center gap-2 rounded-full border mb-8 px-5 py-2 text-xs font-semibold tracking-widest" style={{ borderColor:`rgba(13,148,136,.5)`, color:T }}>
-            <Award size={12} /> Board-Certified Prosthodontist · Grosse Pointe Woods
+      {/* ── Hero ── */}
+      <section style={{ minHeight: "100vh", paddingTop: 100, position: "relative", overflow: "hidden", display: "flex", alignItems: "center" }}>
+        {/* Background */}
+        <div style={{ position: "absolute", inset: 0 }}>
+          <img
+            src="https://images.unsplash.com/photo-1629909615184-74f495363b67?w=1400&q=80"
+            alt="Modern dental office"
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
+          <div style={{ position: "absolute", inset: 0, background: `linear-gradient(135deg, ${NAVY}F0 0%, ${TEAL_DARK}C0 100%)` }} />
+        </div>
+
+        <div style={{ position: "relative", zIndex: 10, maxWidth: 1200, margin: "0 auto", padding: "80px 24px", width: "100%" }}>
+          <div style={{ maxWidth: 680 }} className="fade-up">
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: 8,
+              background: "rgba(13,148,136,0.2)", border: "1px solid rgba(13,148,136,0.4)",
+              borderRadius: 100, padding: "6px 16px", marginBottom: 24,
+            }}>
+              <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#34d399", boxShadow: "0 0 10px #34d399" }} />
+              <span style={{ color: TEAL_LIGHT, fontSize: 12, fontWeight: 600, letterSpacing: "0.08em" }}>NOW ACCEPTING NEW PATIENTS</span>
+            </div>
+
+            <h1 style={{ color: WHITE, fontSize: "clamp(36px, 5.5vw, 68px)", fontWeight: 800, lineHeight: 1.08, marginBottom: 20 }}>
+              Your Family's<br />
+              <span style={{ color: "#5eead4" }}>Trusted Dental</span><br />
+              Home in Grosse Pointe
+            </h1>
+
+            <p style={{ color: "rgba(255,255,255,0.8)", fontSize: "clamp(15px,2vw,18px)", lineHeight: 1.7, marginBottom: 36, maxWidth: 520 }}>
+              35+ years of gentle, comprehensive dental care for Grosse Pointe families.
+              Modern technology. Warm, unhurried appointments. Results that last.
+            </p>
+
+            <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 48 }}>
+              <a href="tel:3138828711" style={{
+                display: "flex", alignItems: "center", gap: 8,
+                background: WHITE, color: TEAL_DARK,
+                padding: "14px 28px", borderRadius: 8, fontSize: 15, fontWeight: 700,
+                textDecoration: "none",
+              }}>
+                <Phone size={18} /> Call (313) 882-8711
+              </a>
+              <a href="#services" style={{
+                display: "flex", alignItems: "center", gap: 8,
+                border: "2px solid rgba(255,255,255,0.4)", color: WHITE,
+                padding: "14px 28px", borderRadius: 8, fontSize: 15, fontWeight: 600,
+                textDecoration: "none",
+              }}>
+                Our Services <ArrowRight size={17} />
+              </a>
+            </div>
+
+            {/* Trust badges */}
+            <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+              {["ADA Member", "CEREC Certified", "Invisalign Provider", "Accepting Insurance"].map(b => (
+                <div key={b} style={{ display: "flex", alignItems: "center", gap: 6, color: "rgba(255,255,255,0.75)", fontSize: 12, fontWeight: 500 }}>
+                  <CheckCircle size={14} color="#34d399" /> {b}
+                </div>
+              ))}
+            </div>
           </div>
-          <h1 className="mb-6 font-extrabold tracking-tight" style={{ fontSize:"clamp(40px,7vw,76px)", color:"white", lineHeight:1.1 }}>
-            Grosse Pointe's<br />Most Trusted<br /><span style={{ color:T }}>Prosthodontist</span>
-          </h1>
-          <div className="mx-auto mb-6" style={{ width:48, height:2, background:T }} />
-          <p className="mb-10 text-lg max-w-2xl mx-auto" style={{ color:"rgba(148,163,184,.85)", lineHeight:1.75, fontWeight:300 }}>
-            Dr. Robert Stewart has been crafting exceptional smiles in Grosse Pointe Woods for over 36 years. Same-day CEREC crowns, dental implants, and full-mouth rehabilitation — no waiting, no compromise.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-14">
-            <a href="#new-patients" className="flex items-center gap-2 px-8 py-4 rounded-xl font-bold text-sm w-full sm:w-auto justify-center" style={{ background:T, color:"white", textDecoration:"none", boxShadow:`0 8px 30px rgba(13,148,136,.3)` }}>
-              Schedule Your Visit <ArrowRight size={16} />
-            </a>
-            <a href="tel:3138828711" className="flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-sm w-full sm:w-auto justify-center" style={{ border:`2px solid ${T}`, color:T, textDecoration:"none" }}>
-              <Phone size={15} /> (313) 882-8711
-            </a>
-          </div>
-          <div className="flex flex-wrap justify-center gap-6">
-            {[[<Award size={14} key="a" />,"36+ Years"],[<Star size={14} key="s" />,"14× Top Dentist"],[<CheckCircle size={14} key="c" />,"Mayo Clinic Trained"],[<ScanLine size={14} key="sc" />,"Same-Day Crowns"]].map(([icon,label],i) => (
-              <div key={i} className="flex items-center gap-2 text-xs font-semibold" style={{ color:T }}>{icon as React.ReactNode} {label as string}</div>
+        </div>
+
+        {/* Doctor image */}
+        <div className="hidden lg:block" style={{ position: "absolute", right: 0, bottom: 0, top: 100, width: "35%", zIndex: 5, overflow: "hidden" }}>
+          <img
+            src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=600&q=80"
+            alt="Dr. Stewart"
+            style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top center" }}
+          />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(15,32,39,0.8) 0%, transparent 40%)" }} />
+        </div>
+      </section>
+
+      {/* ── Stats ── */}
+      <section style={{ background: TEAL, padding: "0" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <div className="grid grid-cols-2 lg:grid-cols-4">
+            {STATS.map((s, i) => (
+              <div key={s.label} style={{
+                padding: "32px 24px", textAlign: "center",
+                borderRight: i < 3 ? "1px solid rgba(255,255,255,0.2)" : "none",
+              }}>
+                <div style={{ color: WHITE, fontSize: "clamp(28px,4vw,42px)", fontWeight: 800, marginBottom: 4 }}>{s.value}</div>
+                <div style={{ color: "rgba(255,255,255,0.8)", fontSize: 12, fontWeight: 500, letterSpacing: "0.04em" }}>{s.label}</div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Trust bar */}
-      <div className="py-5 px-5" style={{ background:"white", borderBottom:"1px solid #e2e8f0" }}>
-        <div className="max-w-4xl mx-auto flex flex-wrap justify-center gap-6">
-          {[{I:Lock,l:"HIPAA Compliant"},{I:Shield,l:"ADA Guidelines"},{I:FileCheck,l:"Autoclave Sterilized"},{I:CheckCircle,l:"HEPA/ULPA Filtered Air"}].map(({I,l}) => (
-            <div key={l} className="flex items-center gap-2 text-xs font-semibold" style={{ color:"#64748b" }}><I size={14} color={T} /> {l}</div>
+      {/* ── Services ── */}
+      <section id="services" style={{ background: GRAY_LIGHT, padding: "96px 24px" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <RevealSection>
+            <div style={{ textAlign: "center", marginBottom: 56 }}>
+              <div style={{ color: TEAL, fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 10 }}>What We Offer</div>
+              <h2 style={{ color: SLATE, fontSize: "clamp(28px,4vw,46px)", fontWeight: 800, marginBottom: 14 }}>Comprehensive Dental Services</h2>
+              <p style={{ color: GRAY, fontSize: 16, maxWidth: 520, margin: "0 auto", lineHeight: 1.6 }}>
+                From routine cleanings to complete smile transformations — all under one roof in Grosse Pointe Woods.
+              </p>
+            </div>
+          </RevealSection>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style={{ gap: 24 }}>
+            {SERVICES.map(s => (
+              <RevealSection key={s.title}>
+                <div className="service-card" style={{
+                  background: s.highlight ? TEAL : WHITE,
+                  borderRadius: 12, padding: "32px 28px",
+                  border: `1px solid ${s.highlight ? "transparent" : "rgba(0,0,0,0.06)"}`,
+                  cursor: "pointer",
+                }}>
+                  <div style={{
+                    width: 48, height: 48, borderRadius: 10,
+                    background: s.highlight ? "rgba(255,255,255,0.2)" : TEAL_LIGHT,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    marginBottom: 18,
+                  }}>
+                    <s.icon size={24} color={s.highlight ? WHITE : TEAL} />
+                  </div>
+                  <h3 style={{ color: s.highlight ? WHITE : SLATE, fontSize: 18, fontWeight: 700, marginBottom: 10 }}>{s.title}</h3>
+                  <p style={{ color: s.highlight ? "rgba(255,255,255,0.85)" : GRAY, fontSize: 14, lineHeight: 1.65 }}>{s.desc}</p>
+                  <div style={{ marginTop: 20, display: "flex", alignItems: "center", gap: 6, color: s.highlight ? "rgba(255,255,255,0.9)" : TEAL, fontSize: 13, fontWeight: 600 }}>
+                    Learn more <ArrowRight size={14} />
+                  </div>
+                </div>
+              </RevealSection>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Technology Section ── */}
+      <section id="technology" style={{ background: SLATE, padding: "96px 24px" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <div className="grid grid-cols-1 lg:grid-cols-2" style={{ gap: 64, alignItems: "center" }}>
+            <RevealSection>
+              <div>
+                <div style={{ color: TEAL_LIGHT, fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 12 }}>Advanced Technology</div>
+                <h2 style={{ color: WHITE, fontSize: "clamp(28px,4vw,44px)", fontWeight: 800, lineHeight: 1.15, marginBottom: 20 }}>
+                  Same-Day Crowns.<br />
+                  <span style={{ color: "#5eead4" }}>Zero Compromise.</span>
+                </h2>
+                <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 16, lineHeight: 1.7, marginBottom: 28 }}>
+                  Our CEREC system mills precision porcelain restorations in under 2 hours — no temporary crowns, no second appointments.
+                  Digital X-rays reduce radiation by 80%. 3D cone beam imaging for implant planning.
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  {["CEREC Same-Day Crown Milling", "Digital Impression Scanning (no goop!)", "3D Cone Beam CT for Implant Planning", "Digital X-rays (80% less radiation)", "Intraoral Camera for Patient Education"].map(t => (
+                    <div key={t} style={{ display: "flex", alignItems: "center", gap: 10, color: "rgba(255,255,255,0.8)", fontSize: 14 }}>
+                      <CheckCircle size={16} color="#34d399" style={{ flexShrink: 0 }} /> {t}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </RevealSection>
+            <RevealSection>
+              <div style={{ borderRadius: 16, overflow: "hidden", position: "relative" }}>
+                <img
+                  src="https://images.unsplash.com/photo-1629909615184-74f495363b67?w=700&q=80"
+                  alt="CEREC dental technology"
+                  style={{ width: "100%", height: 420, objectFit: "cover" }}
+                />
+                <div style={{
+                  position: "absolute", bottom: 20, left: 20, right: 20,
+                  background: "rgba(13,148,136,0.95)", borderRadius: 10,
+                  padding: "16px 20px", backdropFilter: "blur(8px)",
+                }}>
+                  <div style={{ color: WHITE, fontWeight: 700, fontSize: 15, marginBottom: 4 }}>CEREC Same-Day Crown</div>
+                  <div style={{ color: "rgba(255,255,255,0.8)", fontSize: 13 }}>Digital scan → Design → Mill → Bond. All in one visit.</div>
+                </div>
+              </div>
+            </RevealSection>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Team ── */}
+      <section id="about" style={{ background: WHITE, padding: "96px 24px" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <RevealSection>
+            <div style={{ textAlign: "center", marginBottom: 56 }}>
+              <div style={{ color: TEAL, fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 10 }}>Meet Your Doctors</div>
+              <h2 style={{ color: SLATE, fontSize: "clamp(28px,4vw,44px)", fontWeight: 800 }}>The Stewart Dental Team</h2>
+            </div>
+          </RevealSection>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 32, maxWidth: 860, margin: "0 auto" }}>
+            {TEAM.map(t => (
+              <RevealSection key={t.name}>
+                <div style={{ borderRadius: 14, overflow: "hidden", border: "1px solid rgba(0,0,0,0.08)" }}>
+                  <div style={{ height: 300, overflow: "hidden" }}>
+                    <img src={t.img} alt={t.name} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top" }} />
+                  </div>
+                  <div style={{ padding: "24px 24px", background: GRAY_LIGHT }}>
+                    <div style={{ color: SLATE, fontWeight: 800, fontSize: 17, marginBottom: 4 }}>{t.name}</div>
+                    <div style={{ color: TEAL, fontSize: 13, fontWeight: 600, marginBottom: 6 }}>{t.role}</div>
+                    <div style={{ color: GRAY, fontSize: 12 }}>{t.since}</div>
+                  </div>
+                </div>
+              </RevealSection>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Reviews ── */}
+      <section id="reviews" style={{ background: GRAY_LIGHT, padding: "96px 24px" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <RevealSection>
+            <div style={{ textAlign: "center", marginBottom: 56 }}>
+              <div style={{ color: TEAL, fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 10 }}>Patient Reviews</div>
+              <h2 style={{ color: SLATE, fontSize: "clamp(28px,4vw,44px)", fontWeight: 800, marginBottom: 10 }}>What Patients Are Saying</h2>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, color: GRAY, fontSize: 14 }}>
+                <Star size={16} color="#f59e0b" fill="#f59e0b" /> 4.9 stars · 340+ Google reviews
+              </div>
+            </div>
+          </RevealSection>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" style={{ gap: 20 }}>
+            {REVIEWS.map(r => (
+              <RevealSection key={r.name}>
+                <div className="review-card" style={{
+                  background: WHITE, borderRadius: 12, padding: "24px",
+                  border: "1px solid rgba(0,0,0,0.08)",
+                }}>
+                  <div style={{ display: "flex", gap: 2, marginBottom: 12 }}>
+                    {[...Array(r.stars)].map((_, i) => <Star key={i} size={14} color="#f59e0b" fill="#f59e0b" />)}
+                  </div>
+                  <p style={{ color: SLATE, fontSize: 14, lineHeight: 1.65, marginBottom: 16 }}>"{r.text}"</p>
+                  <div style={{ color: TEAL, fontSize: 13, fontWeight: 700 }}>— {r.name}</div>
+                </div>
+              </RevealSection>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Insurance ── */}
+      <section style={{ background: WHITE, padding: "64px 24px" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", textAlign: "center" }}>
+          <RevealSection>
+            <div style={{ color: GRAY, fontSize: 12, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 24 }}>We Accept Most Major Insurance Plans</div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8" style={{ gap: 12 }}>
+              {INSURANCES.map(ins => (
+                <div key={ins} style={{
+                  background: GRAY_LIGHT, borderRadius: 8,
+                  padding: "10px 12px", fontSize: 11, fontWeight: 600,
+                  color: SLATE, textAlign: "center",
+                }}>{ins}</div>
+              ))}
+            </div>
+          </RevealSection>
+        </div>
+      </section>
+
+      {/* ── Appointment CTA ── */}
+      <section id="appointment" style={{ background: TEAL, padding: "80px 24px" }}>
+        <div style={{ maxWidth: 860, margin: "0 auto", textAlign: "center" }}>
+          <RevealSection>
+            <h2 style={{ color: WHITE, fontSize: "clamp(28px,4vw,48px)", fontWeight: 800, marginBottom: 16 }}>
+              Ready for a Healthier Smile?
+            </h2>
+            <p style={{ color: "rgba(255,255,255,0.85)", fontSize: 17, lineHeight: 1.6, marginBottom: 36 }}>
+              New patients welcome. Most insurance accepted. Same-day emergency appointments available.
+            </p>
+            <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
+              <a href="tel:3138828711" style={{
+                display: "flex", alignItems: "center", gap: 8,
+                background: WHITE, color: TEAL_DARK,
+                padding: "16px 32px", borderRadius: 8, fontSize: 16, fontWeight: 700,
+                textDecoration: "none",
+              }}>
+                <Phone size={20} /> (313) 882-8711
+              </a>
+              <a href="#contact" style={{
+                display: "flex", alignItems: "center", gap: 8,
+                border: "2px solid rgba(255,255,255,0.5)", color: WHITE,
+                padding: "16px 32px", borderRadius: 8, fontSize: 16, fontWeight: 600,
+                textDecoration: "none",
+              }}>
+                Request Online <ArrowRight size={18} />
+              </a>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 24, color: "rgba(255,255,255,0.7)", fontSize: 14 }}>
+              <MapPin size={15} /> 19635 Mack Avenue, Grosse Pointe Woods, MI 48236
+            </div>
+          </RevealSection>
+        </div>
+      </section>
+
+      {/* ── Footer ── */}
+      <footer style={{ background: NAVY, padding: "56px 24px 32px" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" style={{ gap: 40, marginBottom: 40 }}>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+                <div style={{ width: 32, height: 32, borderRadius: "50%", background: TEAL, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Smile size={17} color={WHITE} />
+                </div>
+                <span style={{ color: WHITE, fontWeight: 800, fontSize: 14 }}>Stewart Dental Group</span>
+              </div>
+              <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, lineHeight: 1.65 }}>
+                Serving Grosse Pointe families with comprehensive dental care since 1989.
+              </p>
+            </div>
+            <div>
+              <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 14 }}>Services</div>
+              {["General Dentistry", "Cosmetic Dentistry", "CEREC Crowns", "Dental Implants", "Invisalign", "Emergency Dental"].map(s => (
+                <div key={s} style={{ marginBottom: 10 }}><a href="#" style={{ color: "rgba(255,255,255,0.55)", fontSize: 13, textDecoration: "none" }}>{s}</a></div>
+              ))}
+            </div>
+            <div>
+              <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 14 }}>Office Hours</div>
+              {[
+                { day: "Mon – Thu", hrs: "8:00am – 5:00pm" },
+                { day: "Friday", hrs: "8:00am – 2:00pm" },
+                { day: "Saturday", hrs: "By Appointment" },
+                { day: "Sunday", hrs: "Closed" },
+              ].map(h => (
+                <div key={h.day} style={{ marginBottom: 10, display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 12 }}>{h.day}</span>
+                  <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 12 }}>{h.hrs}</span>
+                </div>
+              ))}
+            </div>
+            <div>
+              <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 14 }}>Contact</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <a href="tel:3138828711" style={{ display: "flex", alignItems: "center", gap: 8, color: "rgba(255,255,255,0.6)", fontSize: 13, textDecoration: "none" }}>
+                  <Phone size={14} color={TEAL} /> (313) 882-8711
+                </a>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 8, color: "rgba(255,255,255,0.6)", fontSize: 13 }}>
+                  <MapPin size={14} color={TEAL} style={{ flexShrink: 0, marginTop: 2 }} />
+                  <span>19635 Mack Avenue<br />Grosse Pointe Woods, MI 48236</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 24, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+            <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 12 }}>© 2026 Stewart Dental Group. All rights reserved.</span>
+            <a href="/manufacturing-web-design" style={{ color: "rgba(255,255,255,0.3)", fontSize: 11, textDecoration: "none" }}>Site by M² Web Design</a>
+          </div>
+        </div>
+      </footer>
+
+      {/* ── Design Switcher ── */}
+      <div className="hidden lg:block" style={{ position: "fixed", bottom: 20, left: 16, zIndex: 60 }}>
+        <div style={{ background: "rgba(15,32,39,0.95)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "10px 14px", minWidth: 220, fontSize: 11 }}>
+          <div style={{ color: TEAL_LIGHT, fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>Design Variant</div>
+          {[
+            { to: "/demo-dental", label: "Teal / Clinical", active: true },
+            { to: "/demo-dental-alt1", label: "Warm / Friendly" },
+            { to: "/demo-dental-alt2", label: "Nordic / Minimal" },
+          ].map(d => (
+            <Link
+              key={d.to}
+              to={d.to}
+              style={{
+                display: "block", padding: "5px 0",
+                color: d.active ? TEAL_LIGHT : "rgba(255,255,255,0.4)",
+                textDecoration: "none", fontWeight: d.active ? 700 : 400,
+                fontSize: 11,
+              }}
+            >
+              {d.active ? "● " : "  "}{d.label}
+            </Link>
           ))}
         </div>
       </div>
-
-      {/* Stats */}
-      <RevealSection>
-        <div className="grid grid-cols-2 md:grid-cols-4" style={{ background:"#f0fdfa", borderTop:"1px solid #ccfbf1" }}>
-          {[["36+","Years in Practice"],["14×","Detroit Top Dentist"],["Mayo","Clinic Trained"],["1 Visit","CEREC Crowns"]].map(([n,l],i) => (
-            <div key={i} className="text-center py-10 px-4">
-              <div className="text-4xl font-extrabold mb-1" style={{ color:DARK }}>{n}</div>
-              <div className="text-xs uppercase tracking-wider" style={{ color:"#64748b" }}>{l}</div>
-            </div>
-          ))}
-        </div>
-      </RevealSection>
-
-      {/* CEREC */}
-      <RevealSection>
-        <section id="technology" className="py-20 px-5" style={{ background:"white" }}>
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-14">
-              <h2 className="text-3xl md:text-4xl font-bold mb-3" style={{ color:DARK }}>The Desktop Laboratory</h2>
-              <p className="text-base max-w-xl mx-auto" style={{ color:"#64748b" }}>We are the lab. Your crown is 3D-scanned, designed, milled, and bonded — all in a single visit.</p>
-            </div>
-            <div className="grid md:grid-cols-2 gap-8 items-start">
-              <div className="rounded-2xl overflow-hidden" style={{ background:DARK }}>
-                <img src="https://images.unsplash.com/photo-1629909615184-74f495363b67?w=1200&q=80" alt="CEREC technology" className="w-full object-cover" style={{ height:240 }} />
-                <div className="p-8">
-                  <div style={{ width:40, height:2, background:T, marginBottom:16 }} />
-                  <h3 className="text-xl font-bold mb-4" style={{ color:"white" }}>Your Crown, Built In-Office</h3>
-                  <p className="text-sm leading-relaxed mb-6" style={{ color:"rgba(148,163,184,.8)" }}>
-                    Unlike most offices that ship impressions to an outside lab — a 2-to-3 week wait — we design, mill, and bond your porcelain crown the same day. No temporaries. No second appointment.
-                  </p>
-                  <blockquote className="pl-4 border-l-2" style={{ borderColor:T }}>
-                    <p className="text-sm italic" style={{ color:"rgba(148,163,184,.9)" }}>"We are all about prosthetic dentistry here. We are ready for you." — Dr. Stewart</p>
-                  </blockquote>
-                </div>
-              </div>
-              <div className="grid gap-4">
-                {[[<ScanLine size={20} color={T} key="sl" />,"3D Digital Scan","Precision optical impressions replace uncomfortable molds. Micron-level accuracy, zero discomfort."],
-                  [<Microscope size={20} color={T} key="m" />,"CAD/CAM Design","Your restoration is designed on-screen in real time — perfect fit and bite before milling begins."],
-                  [<Stethoscope size={20} color={T} key="st" />,"In-Office Milling","All-ceramic porcelain milled from a single block, shade-matched exactly to your smile."],
-                  [<CheckCircle size={20} color={T} key="ck" />,"Same-Day Placement","Crown bonded and polished the same appointment. Leave with your permanent restoration."]].map(([icon,title,desc]) => (
-                  <div key={title as string} className="flex gap-4 items-start p-5 rounded-xl" style={{ border:"1px solid #e2e8f0", background:"#f8fafc" }}>
-                    <div className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center" style={{ background:`rgba(13,148,136,.1)` }}>{icon as React.ReactNode}</div>
-                    <div>
-                      <h4 className="font-semibold text-sm mb-1" style={{ color:DARK }}>{title as string}</h4>
-                      <p className="text-xs leading-relaxed" style={{ color:"#64748b" }}>{desc as string}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-      </RevealSection>
-
-      {/* Services */}
-      <RevealSection>
-        <section id="services" className="py-20 px-5" style={{ background:"#f8fafc" }}>
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-14">
-              <h2 className="text-3xl md:text-4xl font-bold" style={{ color:DARK }}>Our Services</h2>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {[["Same-Day CEREC Crowns","3D-scanned, designed, and milled in our in-office lab. One appointment, no temporaries, no lab wait."],
-                ["Dental Implants","Permanent tooth replacement anchored to your jawbone. Coordinated with top surgical specialists."],
-                ["Bridges & Partials","Precision-fit prosthetics to restore function and confidence when multiple teeth are missing."],
-                ["Complete Dentures","Full-arch restorations engineered for natural appearance, comfort, and stability."],
-                ["Full-Mouth Rehabilitation","Comprehensive reconstruction combining multiple procedures to fully restore your smile."],
-                ["Second Opinions","Unsure about a treatment plan? Dr. Stewart provides thorough consultations for peace of mind."]].map(([n,d]) => (
-                <div key={n as string} className="flex items-start gap-4 p-6 rounded-xl" style={{ background:"white", border:"1px solid #e2e8f0" }}>
-                  <div className="w-2 h-2 rounded-full flex-shrink-0 mt-2" style={{ background:T }} />
-                  <div>
-                    <h3 className="font-bold text-sm mb-2" style={{ color:DARK }}>{n as string}</h3>
-                    <p className="text-xs leading-relaxed" style={{ color:"#64748b" }}>{d as string}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      </RevealSection>
-
-      {/* Doctor */}
-      <RevealSection>
-        <section id="doctor" className="py-20 px-5" style={{ background:"white" }}>
-          <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-12">
-            <div className="flex-shrink-0">
-              <img src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=600&q=80"
-                alt="Dr. Robert Stewart, DDS, MS"
-                className="rounded-2xl object-cover"
-                style={{ width:220, height:280, border:`3px solid ${T}`, display:"block" }} />
-            </div>
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color:T }}>Meet Your Doctor</p>
-              <h2 className="text-2xl md:text-3xl font-bold mb-1" style={{ color:DARK }}>Dr. Robert Stewart, DDS, MS</h2>
-              <p className="text-sm mb-6" style={{ color:T }}>Board-Certified Prosthodontist</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-6">
-                {["DDS, University of Michigan — 1987","MS Prosthodontics, Mayo Clinic — 1990","American Board of Prosthodontics — 1995","14× Detroit Top Dentist"].map(c => (
-                  <div key={c} className="flex items-center gap-2 text-sm" style={{ color:"#475569" }}>
-                    <CheckCircle size={14} color={T} /> {c}
-                  </div>
-                ))}
-              </div>
-              <blockquote className="p-4 rounded-xl text-sm italic leading-relaxed" style={{ background:"#f0fdfa", borderLeft:`3px solid ${T}`, color:DARK }}>
-                "We enjoy the challenge of the most complex dental problems. Many patients worry their case is 'the worst.' <strong style={{ color:T }}>We are ready for you.</strong>"
-              </blockquote>
-            </div>
-          </div>
-        </section>
-      </RevealSection>
-
-      {/* Testimonials */}
-      <RevealSection>
-        <section className="py-20 px-5" style={{ background:"#f0fdfa" }}>
-          <div className="max-w-6xl mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-14" style={{ color:DARK }}>Patient Testimonials</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {[["I have been a patient of Dr. Stewart since 1994. He is a gifted prosthodontist. My beautiful smile can attest to his passion and commitment.","C.P., Grosse Pointe Farms"],
-                ["Dr. Stewart and his team gave me back the confidence to laugh out loud again. The professionalism, compassion and care were nothing short of fantastic.","M.Z., St. Clair Shores"],
-                ["He combines skill, artistry, and personality to create a pleasant dental experience that yields great results. And his shots don't hurt.","S.R., Detroit"],
-                ["Superior service and staff — always accommodating. Staff has consistently been with the practice for many years. I have been a patient for 38 years!","Long-Time Patient"]].map(([q,a]) => (
-                <div key={a as string} className="p-6 rounded-xl" style={{ background:"white", border:"1px solid #ccfbf1" }}>
-                  <div className="flex gap-1 mb-3">{[...Array(5)].map((_,i)=><Star key={i} size={13} fill={T} color={T} />)}</div>
-                  <p className="text-sm italic leading-relaxed mb-3" style={{ color:"#475569" }}>"{q as string}"</p>
-                  <p className="text-xs font-semibold" style={{ color:"#94a3b8" }}>{a as string}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      </RevealSection>
-
-      {/* New patients / form */}
-      <section id="new-patients" className="py-20 px-5" style={{ background:DARK }}>
-        <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-12">
-          <div>
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">New Patients Welcome</h2>
-            <p className="text-sm mb-6" style={{ color:"#64748b" }}>We look forward to meeting you. All information is transmitted securely per HIPAA standards.</p>
-            <form onSubmit={e=>e.preventDefault()} className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                {[["First Name","text","first"],["Last Name","text","last"]].map(([label,type,key]) => (
-                  <div key={key as string}>
-                    <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color:"#64748b" }}>{label as string}</label>
-                    <input type={type as string} value={form[key as keyof typeof form]} onChange={e=>setForm(p=>({...p,[key as string]:e.target.value}))}
-                      className="w-full rounded-lg px-4 py-3 text-sm outline-none"
-                      style={{ background:"rgba(255,255,255,.06)", border:"1px solid rgba(255,255,255,.12)", color:"white" }} />
-                  </div>
-                ))}
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                {[["Phone","tel","phone"],["Email","email","email"]].map(([label,type,key]) => (
-                  <div key={key as string}>
-                    <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color:"#64748b" }}>{label as string}</label>
-                    <input type={type as string} value={form[key as keyof typeof form]} onChange={e=>setForm(p=>({...p,[key as string]:e.target.value}))}
-                      className="w-full rounded-lg px-4 py-3 text-sm outline-none"
-                      style={{ background:"rgba(255,255,255,.06)", border:"1px solid rgba(255,255,255,.12)", color:"white" }} />
-                  </div>
-                ))}
-              </div>
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color:"#64748b" }}>Preferred Day</label>
-                <select value={form.day} onChange={e=>setForm(p=>({...p,day:e.target.value}))} className="w-full rounded-lg px-4 py-3 text-sm outline-none" style={{ background:"rgba(255,255,255,.06)", border:"1px solid rgba(255,255,255,.12)", color:"#94a3b8" }}>
-                  <option value="">Select a day</option>
-                  {["Monday","Tuesday","Thursday"].map(d=><option key={d}>{d}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color:"#64748b" }}>Reason for Visit</label>
-                <select value={form.reason} onChange={e=>setForm(p=>({...p,reason:e.target.value}))} className="w-full rounded-lg px-4 py-3 text-sm outline-none" style={{ background:"rgba(255,255,255,.06)", border:"1px solid rgba(255,255,255,.12)", color:"#94a3b8" }}>
-                  <option value="">Select reason</option>
-                  {["Crown / Same-Day CEREC","Dental Implant Consultation","Bridge or Partial","Complete Dentures","Full-Mouth Rehabilitation","Second Opinion","New Patient Exam"].map(r=><option key={r}>{r}</option>)}
-                </select>
-              </div>
-              <button type="submit" className="w-full rounded-lg py-3 text-sm font-bold uppercase tracking-widest" style={{ background:T, color:"white", border:"none", cursor:"pointer" }}>
-                Request Appointment
-              </button>
-            </form>
-            <div className="flex items-center gap-2 text-xs mt-3" style={{ color:"#475569" }}>
-              <Lock size={12} color={T} /> All forms are HIPAA-compliant and securely encrypted.
-            </div>
-          </div>
-          <div className="flex flex-col gap-6">
-            <div>
-              <h3 className="text-lg font-bold text-white mb-3">Contact</h3>
-              <p className="text-sm flex items-start gap-2" style={{ color:"#64748b" }}><MapPin size={14} color={T} style={{ flexShrink:0, marginTop:2 }} />19635 Mack Avenue, Grosse Pointe Woods, MI 48236</p>
-              <a href="tel:3138828711" className="text-sm font-bold mt-2 flex items-center gap-2" style={{ color:T, textDecoration:"none" }}><Phone size={14} /> (313) 882-8711</a>
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-white mb-3">Office Hours</h3>
-              <div className="space-y-1">
-                {[["Monday","7:30 AM – 4:00 PM"],["Tuesday","7:30 AM – 4:00 PM"],["Wednesday","8:30 AM – 12:30 PM"],["Thursday","7:30 AM – 4:00 PM"],["Fri – Sun","Closed"]].map(([d,t]) => (
-                  <div key={d} className="flex justify-between text-sm" style={{ color:"#64748b" }}>
-                    <span>{d}</span><span className="text-white font-medium">{t}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-white mb-3">Payment</h3>
-              <p className="text-sm" style={{ color:"#64748b" }}>Visa, MasterCard, American Express</p>
-              <p className="text-sm mt-1" style={{ color:"#64748b" }}>CareCredit® financing available</p>
-            </div>
-          </div>
-        </div>
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row justify-between gap-4 pt-10 mt-10" style={{ borderTop:"1px solid rgba(255,255,255,.06)" }}>
-          <p className="text-xs" style={{ color:"#475569" }}>© 2025 Stewart Dental Group. All rights reserved.</p>
-          <Link to="/dental-web-design" className="text-xs" style={{ color:T, textDecoration:"none" }}>Site by Matt Michels Web Design</Link>
-        </div>
-      </section>
-    </div>
+    </>
   );
 }
