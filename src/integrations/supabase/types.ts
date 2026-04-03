@@ -607,9 +607,11 @@ export type Database = {
           auto_publish: boolean | null
           business_name: string
           cms_app_password: string | null
+          cms_app_password_enc: string | null
           cms_type: string | null
           cms_url: string | null
           cms_username: string | null
+          cms_username_enc: string | null
           created_at: string | null
           email: string
           id: string
@@ -624,9 +626,11 @@ export type Database = {
           auto_publish?: boolean | null
           business_name: string
           cms_app_password?: string | null
+          cms_app_password_enc?: string | null
           cms_type?: string | null
           cms_url?: string | null
           cms_username?: string | null
+          cms_username_enc?: string | null
           created_at?: string | null
           email: string
           id?: string
@@ -641,9 +645,11 @@ export type Database = {
           auto_publish?: boolean | null
           business_name?: string
           cms_app_password?: string | null
+          cms_app_password_enc?: string | null
           cms_type?: string | null
           cms_url?: string | null
           cms_username?: string | null
+          cms_username_enc?: string | null
           created_at?: string | null
           email?: string
           id?: string
