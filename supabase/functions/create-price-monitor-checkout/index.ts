@@ -11,8 +11,8 @@ serve(async (req) => {
       customer_email: email,
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, product_data: { name: "AI Competitor Price Monitor", description: "Weekly competitor pricing intelligence reports" }, unit_amount: 4900 }, quantity: 1 }],
       mode: "subscription",
-      success_url: `${req.headers.get("origin") || "https://mattmichelstraining.lovable.app"}/ai-price-monitor?success=true`,
-      cancel_url: `${req.headers.get("origin") || "https://mattmichelstraining.lovable.app"}/ai-price-monitor`,
+      success_url: `${req.headers.get("origin") || "https://www.mattmichelstraining.com"}/ai-price-monitor?success=true`,
+      cancel_url: `${req.headers.get("origin") || "https://www.mattmichelstraining.com"}/ai-price-monitor`,
       metadata: { type: "price_monitor_subscription", business_name: businessName, industry: industry || "" },
       subscription_data: { trial_period_days: 7 },
     });

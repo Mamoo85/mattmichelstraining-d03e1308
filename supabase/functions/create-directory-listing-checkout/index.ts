@@ -30,7 +30,7 @@ serve(async (req) => {
       customerId = customer.id;
     }
 
-    const origin = req.headers.get("origin") || "https://mattmichelstraining.lovable.app";
+    const origin = req.headers.get("origin") || "https://www.mattmichelstraining.com";
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
