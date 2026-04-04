@@ -1,132 +1,145 @@
-// Test social media posting — generates a preview or posts after approval
+// Test social media posting — generates a preview or posts after admin approval
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const META_ACCESS_TOKEN = Deno.env.get("META_ACCESS_TOKEN") || "";
 const META_PAGE_ID = Deno.env.get("META_PAGE_ID") || "";
 const LINKEDIN_ACCESS_TOKEN = Deno.env.get("LINKEDIN_ACCESS_TOKEN") || "";
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
+const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  const body = await req.json().catch(() => ({}));
-  const action = body.action || "check"; // "check" | "preview" | "post_facebook" | "post_linkedin"
-  const message = body.message || "";
+  try {
+    // Admin auth check
+    const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) throw new Error("Not authenticated");
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: authErr } = await sb.auth.getUser(token);
+    if (authErr || !user) throw new Error("Not authenticated");
+    const { data: adminRole } = await sb.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
+    if (!adminRole) throw new Error("Admin only");
 
-  const results: Record<string, unknown> = {};
+    const body = await req.json().catch(() => ({}));
+    const { action } = body;
 
-  // Step 1: Check which secrets are actually available
-  if (action === "check") {
-    results.secrets = {
-      LOVABLE_API_KEY: LOVABLE_API_KEY ? `SET (${LOVABLE_API_KEY.length} chars)` : "MISSING",
-      META_ACCESS_TOKEN: META_ACCESS_TOKEN ? `SET (${META_ACCESS_TOKEN.length} chars)` : "MISSING",
-      META_PAGE_ID: META_PAGE_ID || "MISSING",
-      LINKEDIN_ACCESS_TOKEN: LINKEDIN_ACCESS_TOKEN ? `SET (${LINKEDIN_ACCESS_TOKEN.length} chars)` : "MISSING",
-    };
-    return new Response(JSON.stringify(results), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
+    // ── CHECK: which secrets are configured ──
+    if (action === "check") {
+      return new Response(JSON.stringify({
+        linkedin: !!LINKEDIN_ACCESS_TOKEN,
+        facebook: !!(META_ACCESS_TOKEN && META_PAGE_ID),
+        ai: !!LOVABLE_API_KEY,
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
-  // Step 2: Generate a preview post
-  if (action === "preview") {
-    if (!LOVABLE_API_KEY) {
-      return new Response(JSON.stringify({ error: "LOVABLE_API_KEY not set" }), {
-        status: 500,
+    // ── GENERATE: AI-generate a preview post ──
+    if (action === "generate") {
+      const { platform, businessName, businessType, city, brandVoice, contentFocus, customPrompt } = body;
+      const plat = platform || "linkedin";
+      let prompt = "";
+      if (customPrompt?.trim()) {
+        prompt = customPrompt;
+      } else {
+        const voice = brandVoice ? ` Brand voice: ${brandVoice}.` : "";
+        const focus = contentFocus ? ` Topic focus: ${contentFocus}.` : "";
+        const biz = businessName || "M2 Development";
+        const type = businessType || "local business";
+        const loc = city || "Grosse Pointe";
+        const templates = [
+          `Write a ${plat === "linkedin" ? "professional LinkedIn" : "engaging Facebook"} post for ${biz}, a ${type} in ${loc}.${voice}${focus} 2-3 sentences. Sound like a real local business owner. No excessive hashtags.`,
+          `Write a "did you know" style ${plat === "linkedin" ? "LinkedIn" : "Facebook"} post for ${biz} (${type}, ${loc}).${voice}${focus} Share a useful industry tip. 2-3 sentences.`,
+          `Write a seasonal ${plat === "linkedin" ? "LinkedIn" : "Facebook"} update for ${biz} in ${loc} (${type}).${voice}${focus} 2-3 sentences. Conversational and genuine.`,
+          `Write a client-focused ${plat === "linkedin" ? "LinkedIn" : "Facebook"} post for ${biz} (${type}, ${loc}).${voice}${focus} Mention accepting new clients. 1-2 sentences.`,
+        ];
+        prompt = templates[Math.floor(Math.random() * templates.length)];
+      }
+
+      if (!LOVABLE_API_KEY) throw new Error("AI key not configured");
+
+      const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ model: "google/gemini-2.5-flash-lite", messages: [{ role: "user", content: prompt }] }),
+      });
+      const aiData = await aiRes.json();
+      const content = aiData?.choices?.[0]?.message?.content?.trim() || "Could not generate post.";
+
+      return new Response(JSON.stringify({ content, platform: plat }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash-lite",
-        messages: [{
-          role: "user",
-          content: "Write a 2-3 sentence LinkedIn post from Matt Michels, a Metro Detroit local marketing consultant, about why local contractors lose jobs by missing calls — and how automated text-back solves it. Conversational, no corporate speak."
-        }],
-      }),
-    });
-    const data = await res.json();
-    const preview = data?.choices?.[0]?.message?.content?.trim() || "Could not generate";
-    return new Response(JSON.stringify({ preview }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
 
-  // Step 3: Actually post to Facebook
-  if (action === "post_facebook") {
-    if (!META_ACCESS_TOKEN || !META_PAGE_ID) {
-      return new Response(JSON.stringify({ error: "META_ACCESS_TOKEN or META_PAGE_ID missing" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    const res = await fetch(`https://graph.facebook.com/v19.0/${META_PAGE_ID}/feed`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message, access_token: META_ACCESS_TOKEN }),
-    });
-    const data = await res.json();
-    return new Response(JSON.stringify({ ok: res.ok, status: res.status, data }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
+    // ── POST: actually publish to LinkedIn or Facebook ──
+    if (action === "post") {
+      const { platform, postContent } = body;
+      if (!postContent) throw new Error("No post content");
+      const plat = platform || "linkedin";
 
-  // Step 4: Actually post to LinkedIn
-  if (action === "post_linkedin") {
-    if (!LINKEDIN_ACCESS_TOKEN) {
-      return new Response(JSON.stringify({ error: "LINKEDIN_ACCESS_TOKEN missing" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    // First get person URN
-    const profileRes = await fetch("https://api.linkedin.com/v2/userinfo", {
-      headers: { Authorization: `Bearer ${LINKEDIN_ACCESS_TOKEN}` },
-    });
-    const profileData = await profileRes.json();
-    if (!profileRes.ok) {
-      return new Response(JSON.stringify({ error: "LinkedIn profile fetch failed", status: profileRes.status, data: profileData }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    const authorUrn = `urn:li:person:${profileData.sub}`;
+      if (plat === "linkedin") {
+        if (!LINKEDIN_ACCESS_TOKEN) throw new Error("LINKEDIN_ACCESS_TOKEN not configured");
+        const urnRes = await fetch("https://api.linkedin.com/v2/userinfo", {
+          headers: { Authorization: `Bearer ${LINKEDIN_ACCESS_TOKEN}` },
+        });
+        if (!urnRes.ok) throw new Error(`LinkedIn auth failed (${urnRes.status})`);
+        const urnData = await urnRes.json();
+        const authorUrn = `urn:li:person:${urnData.sub}`;
 
-    const postRes = await fetch("https://api.linkedin.com/v2/ugcPosts", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LINKEDIN_ACCESS_TOKEN}`,
-        "Content-Type": "application/json",
-        "X-Restli-Protocol-Version": "2.0.0",
-      },
-      body: JSON.stringify({
-        author: authorUrn,
-        lifecycleState: "PUBLISHED",
-        specificContent: {
-          "com.linkedin.ugc.ShareContent": {
-            shareCommentary: { text: message },
-            shareMediaCategory: "NONE",
+        const postRes = await fetch("https://api.linkedin.com/v2/ugcPosts", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${LINKEDIN_ACCESS_TOKEN}`,
+            "Content-Type": "application/json",
+            "X-Restli-Protocol-Version": "2.0.0",
           },
-        },
-        visibility: { "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC" },
-      }),
-    });
-    const postData = await postRes.json().catch(() => ({}));
-    return new Response(JSON.stringify({ ok: postRes.ok, status: postRes.status, data: postData }), {
+          body: JSON.stringify({
+            author: authorUrn,
+            lifecycleState: "PUBLISHED",
+            specificContent: { "com.linkedin.ugc.ShareContent": { shareCommentary: { text: postContent }, shareMediaCategory: "NONE" } },
+            visibility: { "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC" },
+          }),
+        });
+        if (!postRes.ok) {
+          const errText = await postRes.text();
+          throw new Error(`LinkedIn post failed (${postRes.status}): ${errText}`);
+        }
+        return new Response(JSON.stringify({ success: true, platform: "linkedin" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (plat === "facebook") {
+        if (!META_ACCESS_TOKEN || !META_PAGE_ID) throw new Error("Facebook tokens not configured");
+        const postRes = await fetch(`https://graph.facebook.com/v19.0/${META_PAGE_ID}/feed`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: postContent, access_token: META_ACCESS_TOKEN }),
+        });
+        if (!postRes.ok) {
+          const errText = await postRes.text();
+          throw new Error(`Facebook post failed (${postRes.status}): ${errText}`);
+        }
+        return new Response(JSON.stringify({ success: true, platform: "facebook" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      throw new Error(`Unknown platform: ${plat}`);
+    }
+
+    throw new Error(`Unknown action: ${action}`);
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return new Response(JSON.stringify({ error: msg }), {
+      status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-
-  return new Response(JSON.stringify({ error: "Unknown action" }), {
-    status: 400,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
 });

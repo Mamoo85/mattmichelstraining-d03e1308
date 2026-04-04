@@ -1,4 +1,5 @@
 import { useState } from "react";
+import SocialMediaLab from "./SocialMediaLab";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -501,6 +502,9 @@ export default function AdminSandbox() {
           {subs.map(p => <ProductCard key={p.id} p={p} badgeClass="bg-slate-600 text-slate-300 border-slate-500" btnClass="bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600" />)}
         </div>
       </div>
+
+      {/* Social Media Lab */}
+      <SocialMediaLab />
 
       {/* SMS Products */}
       <div>
