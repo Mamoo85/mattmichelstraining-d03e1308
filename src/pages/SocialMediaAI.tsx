@@ -40,7 +40,7 @@ const PLANS = [
   },
 ];
 
-const PLATFORM_OPTIONS = ["Facebook", "Instagram", "LinkedIn", "Google Business Profile"];
+const PLATFORM_OPTIONS = ["Facebook", "Instagram", "LinkedIn", "Google Business Profile", "TikTok"];
 
 const FEATURES = [
   { icon: Zap, label: "AI-written posts", sub: "Content generated fresh for your industry and voice" },
