@@ -22,6 +22,11 @@ Tom hunts for web design clients, monitors the pipeline for replies and stale le
 2. Auto-update lead status when replies detected
 3. Escalate interested replies immediately
 
+### 🎯 Conversion Tracking (Daily)
+1. Track which landing pages have the highest conversion rates from `drip_conversions`
+2. Recommend doubling down on top-converting verticals
+3. Monitor Reddit and Facebook groups for Michigan web design / local marketing inquiries — flag as warm leads
+
 ## Edge Function
 `tom-autonomous` — cron scheduled daily at 8am ET
 

@@ -15,7 +15,8 @@ Monitor Stripe for failed payments, cancellations, and past-due subscriptions. P
 2. Query Stripe for recent cancellations → calculate MRR loss
 3. Query Stripe for past-due subscriptions → calculate at-risk MRR
 4. Snapshot active subscription count and estimated MRR
-5. Email Matt the revenue briefing
+5. Track ROAS for approved campaigns in `ad_campaign_queue` — feed data back to Selma
+6. Email Matt the revenue briefing
 
 ## Edge Function
 `cashier-revenue-guard` — cron scheduled daily at 6am ET
