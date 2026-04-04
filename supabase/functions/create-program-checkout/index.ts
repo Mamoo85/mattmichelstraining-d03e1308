@@ -167,7 +167,9 @@ serve(async (req) => {
     let customerId: string | undefined;
     if (customers.data.length > 0) customerId = customers.data[0].id;
 
-    const origin = req.headers.get("origin") || "https://www.mattmichelstraining.com";
+    const rawOrigin = req.headers.get("origin") || "https://www.mattmichelstraining.com";
+    const ALLOWED_ORIGINS = ["https://www.mattmichelstraining.com", "https://mattmichelstraining.com", "http://localhost:5173", "http://localhost:3000"];
+    const origin = ALLOWED_ORIGINS.includes(rawOrigin) ? rawOrigin : "https://www.mattmichelstraining.com";
 
     // Always use price_data with the calculated final price for consistency
     const lineItems = [{

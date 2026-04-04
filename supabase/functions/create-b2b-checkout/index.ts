@@ -38,7 +38,9 @@ serve(async (req) => {
     const svc = SERVICE_CATALOG[serviceKey];
     if (!svc) return new Response(JSON.stringify({ error: `Unknown service: ${serviceKey}` }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-    const origin = req.headers.get("origin") || "https://www.mattmichelstraining.com";
+    const rawOrigin = req.headers.get("origin") || "https://www.mattmichelstraining.com";
+    const ALLOWED_ORIGINS = ["https://www.mattmichelstraining.com", "https://mattmichelstraining.com", "http://localhost:5173", "http://localhost:3000"];
+    const origin = ALLOWED_ORIGINS.includes(rawOrigin) ? rawOrigin : "https://www.mattmichelstraining.com";
 
     // Check for existing Stripe customer
     const customers = await stripe.customers.list({ email, limit: 1 });

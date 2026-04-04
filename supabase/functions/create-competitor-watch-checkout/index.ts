@@ -20,7 +20,9 @@ serve(async (req) => {
 
     if (!email || !businessName) return new Response(JSON.stringify({ error: "email and business name required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-    const origin = req.headers.get("origin") || "https://www.mattmichelstraining.com";
+    const rawOrigin = req.headers.get("origin") || "https://www.mattmichelstraining.com";
+    const ALLOWED_ORIGINS = ["https://www.mattmichelstraining.com", "https://mattmichelstraining.com", "http://localhost:5173", "http://localhost:3000"];
+    const origin = ALLOWED_ORIGINS.includes(rawOrigin) ? rawOrigin : "https://www.mattmichelstraining.com";
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",

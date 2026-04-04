@@ -91,6 +91,13 @@ serve(async (req) => {
   for (const seq of sequences) {
     try {
       const client = seq.afterjob_drip_clients as any;
+      // TCPA: check opt-out registry before sending
+      const { data: optOut } = await sb.from("sms_opt_outs").select("id").eq("phone", seq.customer_phone).maybeSingle();
+      if (optOut) {
+        await sb.from("afterjob_sequences").update({ stopped: true }).eq("id", seq.id);
+        await sb.from("compliance_blocks").insert({ phone: seq.customer_phone, product: "afterjob_drip", sequence_id: seq.id, reason: "opted_out" });
+        continue;
+      }
       const message = await generateMessage(seq.current_step, seq.customer_name, seq.job_type, client?.business_name || "us");
       const ok = await sendSMS(seq.customer_phone, message);
       if (!ok) continue;
