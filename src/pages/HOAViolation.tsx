@@ -41,7 +41,7 @@ const COMPARISON = [
   { tool: "HOA attorneys", price: "$150–300/letter", what: "Per-letter billing, 1-3 day turnaround, still requires you to explain the situation" },
   { tool: "HOA management companies", price: "$200–500/mo bundle", what: "Bundled services you may not need, limited letter volume, slow response" },
   { tool: "CC&R template sites", price: "$50–100/template", what: "Static templates that still require manual drafting and legal review" },
-  { tool: "M² HOA Violation Letters", price: "$149/mo unlimited", what: "AI-generated in 90 seconds, state-specific, full escalation track, all violations logged", highlight: true },
+  { tool: "M2 HOA Violation Letters", price: "$149/mo unlimited", what: "AI-generated in 90 seconds, state-specific, full escalation track, all violations logged", highlight: true },
 ];
 
 export default function HOAViolation() {
@@ -88,7 +88,7 @@ export default function HOAViolation() {
   return (
     <>
       <SEOHead
-        title="HOA Violation Letter Generator — $149/mo | M² Training"
+        title="HOA Violation Letter Generator — $149/mo | M2 Training"
         description="Describe any HOA violation in plain English. Get a legally-compliant formal letter with state-specific notice periods and full escalation language in 90 seconds."
         path="/hoa-violation"
       />

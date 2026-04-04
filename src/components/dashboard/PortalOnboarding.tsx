@@ -49,7 +49,7 @@ const PortalOnboarding = () => {
           {/* Hero image */}
           <img
             src={portalImg}
-            alt="M² Training Portal overview"
+            alt="M2 Training Portal overview"
             className="w-full rounded border border-border object-cover"
             width={800}
             height={512}
@@ -58,7 +58,7 @@ const PortalOnboarding = () => {
           {/* Welcome heading */}
           <div className="text-center space-y-2">
             <h2 className="text-xl font-black uppercase tracking-widest text-foreground">
-              Welcome to M²
+              Welcome to M2
             </h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Your all-in-one training hub — built to help you get stronger, stay consistent, and prove it.
@@ -85,7 +85,7 @@ const PortalOnboarding = () => {
             <div className="flex items-center justify-center gap-2 text-primary">
               <Zap size={16} />
               <p className="text-xs font-bold uppercase tracking-widest">
-                Thank you for being part of the M² team
+                Thank you for being part of the M2 team
               </p>
               <Zap size={16} />
             </div>

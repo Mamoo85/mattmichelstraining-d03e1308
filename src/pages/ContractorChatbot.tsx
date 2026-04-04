@@ -5,7 +5,7 @@ export default function ContractorChatbot() {
   return (
     <>
       <SEOHead
-        title="AI Chatbot for Contractors — Coming Soon | M² Development"
+        title="AI Chatbot for Contractors — Coming Soon | M2 Development"
         description="AI-powered chat widget for contractor websites. Qualifies leads 24/7. Coming soon."
       />
       <WaitlistGate

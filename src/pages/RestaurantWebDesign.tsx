@@ -108,12 +108,12 @@ export default function RestaurantWebDesign() {
   return (
     <>
       <SEOHead
-        title="Restaurant Website Design — $799 Setup | M² Web Design"
+        title="Restaurant Website Design — $799 Setup | M2 Web Design"
         description="Fast, mobile-first websites for restaurants and bars. Menu page, hours, directions, and local SEO that gets you found. From $799 setup + $79/mo."
       />
       <div className="min-h-screen bg-background text-foreground">
         <div className="bg-[#1e293b] text-white px-6 py-14 text-center">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">M² Web Design — Restaurants & Bars</p>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">M2 Web Design — Restaurants & Bars</p>
           <h1 className="text-3xl font-black mb-4">Hungry customers search Google first.<br />Don't make them work to find you.</h1>
           <p className="text-slate-300 text-sm max-w-xl mx-auto leading-relaxed">
             We build fast, beautiful websites for restaurants and bars — with your menu, hours, location, and local SEO so customers find you when they're ready to eat.

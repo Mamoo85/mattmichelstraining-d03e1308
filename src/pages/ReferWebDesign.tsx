@@ -43,8 +43,8 @@ const ReferWebDesign = () => {
   return (
     <>
       <SEOHead
-        title="Refer a Client — Get $50 | M² Web Design"
-        description="Know a business that needs a website? Refer them to M² Development and earn $50 cash when they sign up."
+        title="Refer a Client — Get $50 | M2 Web Design"
+        description="Know a business that needs a website? Refer them to M2 Development and earn $50 cash when they sign up."
       />
 
       <div className="min-h-screen bg-background">

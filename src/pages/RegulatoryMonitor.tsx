@@ -166,14 +166,14 @@ export default function RegulatoryMonitor() {
   return (
     <>
       <SEOHead
-        title="AI Regulatory Change Monitor — Never Miss a Compliance Deadline | M² Development"
+        title="AI Regulatory Change Monitor — Never Miss a Compliance Deadline | M2 Development"
         description="Get weekly AI-generated digests of new Federal Register regulations affecting your industry. Plain-English summaries, impact scoring, and action items. $197/mo."
       />
       <div className="min-h-screen bg-background text-foreground">
 
         {/* Hero */}
         <div className="bg-[#1a2744] text-white px-6 py-20 text-center">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-[#c9a227] mb-3">M² Development</p>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-[#c9a227] mb-3">M2 Development</p>
           <h1 className="text-3xl sm:text-4xl font-black mb-4 leading-tight max-w-3xl mx-auto">
             Never Be Blindsided by a<br />Regulatory Change Again
           </h1>
@@ -421,7 +421,7 @@ export default function RegulatoryMonitor() {
               className="w-16 h-16 rounded-full object-cover flex-shrink-0"
             />
             <div>
-              <p className="font-bold text-sm text-foreground mb-1">Matt Michels · M² Development</p>
+              <p className="font-bold text-sm text-foreground mb-1">Matt Michels · M2 Development</p>
               <p className="text-[13px] text-muted-foreground leading-relaxed">
                 "Business owners shouldn't need a law degree to stay compliant. This monitor
                 does the reading so you can focus on running your business." — Grosse Pointe, MI · (313) 806-4952

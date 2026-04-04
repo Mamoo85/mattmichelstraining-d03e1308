@@ -46,7 +46,7 @@ const ZonePortal = () => {
       <header className="sticky top-0 z-50 flex items-center justify-between px-5 py-4" style={{ background: "rgba(10,10,10,0.85)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm" style={{ background: "linear-gradient(135deg, #f97316, #ea580c)", color: "#fff" }}>
-            M²
+            M2
           </div>
           <div>
             <p className="text-xs font-medium" style={{ color: "#737373" }}>THE ZONE</p>

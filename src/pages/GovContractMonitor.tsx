@@ -96,7 +96,7 @@ export default function GovContractMonitor() {
   return (
     <>
       <SEOHead
-        title="Government Contract Opportunity Monitor — AI-Powered SAM.gov Alerts | M² Development"
+        title="Government Contract Opportunity Monitor — AI-Powered SAM.gov Alerts | M2 Development"
         description="Never miss a federal contract again. AI-scored SAM.gov opportunities delivered daily, matched to your NAICS codes and set-aside certifications. $299/mo."
       />
       <div className="min-h-screen bg-background text-foreground">
@@ -105,7 +105,7 @@ export default function GovContractMonitor() {
         <div className="bg-[#1e3a5f] text-white px-6 py-20 text-center relative overflow-hidden">
           <div className="absolute inset-0 opacity-5" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }}></div>
           <div className="relative max-w-3xl mx-auto">
-            <p className="text-[11px] font-bold uppercase tracking-widest text-[#c59b2b] mb-3">M² Development — Federal Intelligence</p>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-[#c59b2b] mb-3">M2 Development — Federal Intelligence</p>
             <h1 className="text-3xl sm:text-4xl font-black mb-5 leading-tight">
               Never Miss a Federal Contract Again
             </h1>

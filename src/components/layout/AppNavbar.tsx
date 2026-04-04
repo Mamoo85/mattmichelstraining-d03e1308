@@ -110,7 +110,7 @@ const AppNavbar = () => {
           </button>
         ) : (
           <Link to="/" className="flex items-center gap-1.5 group transition-m2 shrink-0">
-            <img src={m2Logo} alt="M² Training" width={36} height={36} className="w-9 h-9 object-contain" />
+            <img src={m2Logo} alt="M2 Training" width={36} height={36} className="w-9 h-9 object-contain" />
           </Link>
         )}
 
@@ -134,7 +134,7 @@ const AppNavbar = () => {
               location.pathname === "/m2-development" ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            M² Dev
+            M2 Dev
           </Link>
 
           <Link

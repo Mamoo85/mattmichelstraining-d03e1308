@@ -87,14 +87,14 @@ export default function RealEstateNewsletter() {
   return (
     <>
       <SEOHead
-        title="AI Hyper-Local Real Estate Newsletter | Look Like the #1 Agent — M² Development"
+        title="AI Hyper-Local Real Estate Newsletter | Look Like the #1 Agent — M2 Development"
         description="Every week, AI generates a branded market report newsletter and sends it to your sphere of influence. You look like the local expert. Zero effort. $79/month."
       />
       <div className="min-h-screen bg-background text-foreground">
 
         {/* Hero */}
         <div className="bg-[#1a4a7a] text-white px-6 py-20 text-center">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-blue-300 mb-3">M² Development · AI Tools for Real Estate Agents</p>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-blue-300 mb-3">M2 Development · AI Tools for Real Estate Agents</p>
           <h1 className="text-3xl sm:text-4xl font-black mb-5 leading-tight max-w-3xl mx-auto">
             Look Like the #1 Agent in Your Market<br className="hidden sm:block" /> — Without Writing a Single Word
           </h1>

@@ -90,7 +90,7 @@ export default function PetMemorial() {
   return (
     <>
       <SEOHead
-        title="AI Pet Memorial & Tribute | M² Development"
+        title="AI Pet Memorial & Tribute | M2 Development"
         description="Honor your beloved pet with a personalized poem, tribute narrative, and permanent memorial page — crafted by AI, shaped by your memories. One-time $79."
       />
       <div className="min-h-screen bg-amber-50 text-stone-800">
@@ -303,7 +303,7 @@ export function PetMemorialSuccess() {
   return (
     <>
       <SEOHead
-        title="Thank You — Pet Memorial in Progress | M² Development"
+        title="Thank You — Pet Memorial in Progress | M2 Development"
         description="Your pet memorial is being created. Check your inbox in a few minutes."
       />
       <div className="min-h-screen bg-amber-50 flex items-center justify-center px-6 py-16">

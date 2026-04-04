@@ -41,7 +41,7 @@ const COMPARISON = [
   { tool: "HOA management company secretary", price: "$200–500/mo", what: "Bundled service, slow turnaround, not dedicated to your HOA" },
   { tool: "Professional HOA secretary service", price: "$150–300/meeting", what: "Per-meeting billing, scheduling headaches, human error" },
   { tool: "Board members doing it themselves", price: "3-4 hrs/meeting", what: "Volunteer burnout, inconsistent format, delayed distribution" },
-  { tool: "M² HOA Secretary AI", price: "$149/mo", what: "10-minute turnaround, auto-distributed, action items tracked", highlight: true },
+  { tool: "M2 HOA Secretary AI", price: "$149/mo", what: "10-minute turnaround, auto-distributed, action items tracked", highlight: true },
 ];
 
 export default function HOASecretary() {

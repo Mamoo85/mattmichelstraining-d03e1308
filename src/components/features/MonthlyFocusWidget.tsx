@@ -242,7 +242,7 @@ const MonthlyFocusWidget = () => {
       const { data: newVal, error } = await supabase.rpc("log_challenge_progress", { _user_id: user.id, _challenge_id: challenge.id, _value: val });
       if (error) throw error;
       setCurrentValue(newVal as number); setProgressInput("");
-      toast({ title: `+${val} logged!`, description: `Total: ${newVal} · +10 M² Points` });
+      toast({ title: `+${val} logged!`, description: `Total: ${newVal} · +10 M2 Points` });
       loadLeaderboard(); loadEntries();
     } catch (e: any) { toast({ title: "Log failed", description: e.message, variant: "destructive" }); }
     setActionLoading(false);

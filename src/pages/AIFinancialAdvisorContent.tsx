@@ -32,7 +32,7 @@ export default function AIFinancialAdvisorContent() {
 
   return (
     <>
-      <SEOHead title="AI Content for Financial Advisors — $149/mo | M² Development" description="AI writes compliance-aware newsletters, LinkedIn posts, and educational content for RIAs and financial planners. $149/month." path="/ai-financial-advisor-content" />
+      <SEOHead title="AI Content for Financial Advisors — $149/mo | M2 Development" description="AI writes compliance-aware newsletters, LinkedIn posts, and educational content for RIAs and financial planners. $149/month." path="/ai-financial-advisor-content" />
       <div className="min-h-screen bg-[#0f0f1a] text-white">
         <section className="pt-20 pb-16 px-4">
           <div className="max-w-3xl mx-auto text-center">

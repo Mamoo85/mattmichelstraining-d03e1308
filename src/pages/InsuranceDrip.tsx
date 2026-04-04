@@ -41,7 +41,7 @@ const COMPARISON = [
   { tool: "OutboundEngine", price: "$299/mo", what: "Automated marketing — generic, not coverage-specific", highlight: false },
   { tool: "AgencyZoom", price: "$150/mo", what: "CRM only — you still write every follow-up yourself", highlight: false },
   { tool: "Manual follow-up", price: "~2 hrs/day", what: "Your time at $50-100/hr = $3,000+/mo in lost productivity", highlight: false },
-  { tool: "M² Insurance Drip", price: "$149/mo", what: "Full AI drip — personalized by coverage type, hands-free", highlight: true },
+  { tool: "M2 Insurance Drip", price: "$149/mo", what: "Full AI drip — personalized by coverage type, hands-free", highlight: true },
 ];
 
 export default function InsuranceDrip() {

@@ -169,7 +169,7 @@ const TrialWelcome = () => {
       <div className="container pt-20 pb-16 max-w-3xl mx-auto px-4">
         {/* HERO */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
-          <img src={m2Logo} alt="M² Training" className="w-20 h-20 object-contain mx-auto mb-4" />
+          <img src={m2Logo} alt="M2 Training" className="w-20 h-20 object-contain mx-auto mb-4" />
           <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tight text-foreground mb-3">
             Real Strength. No Shortcuts.
           </h1>
@@ -184,7 +184,7 @@ const TrialWelcome = () => {
           <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
             <h2 className="text-sm font-bold text-foreground text-center mb-1">Step 1 — Choose Your Path</h2>
             <p className="text-xs text-muted-foreground text-center mb-4">
-              Foundation includes a 14-day free trial of the M² App. Pro and Elite start immediately — custom coaching, no trial needed.
+              Foundation includes a 14-day free trial of the M2 App. Pro and Elite start immediately — custom coaching, no trial needed.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
@@ -194,7 +194,7 @@ const TrialWelcome = () => {
                 icon={User}
                 title="Foundation Trial"
                 charge="$19.99/mo after trial"
-                desc={`Full M² App, ${exerciseCount}+ exercise library, Fix It rehab library, AI Generator, and progress logging.`}
+                desc={`Full M2 App, ${exerciseCount}+ exercise library, Fix It rehab library, AI Generator, and progress logging.`}
                 badge={null}
                 warning={null}
               />
@@ -302,7 +302,7 @@ const TrialWelcome = () => {
                   </h3>
                   <p className="text-xs text-muted-foreground leading-relaxed mb-3">
                     Every new athlete gets a <strong className="text-foreground">complete 2-week intro program</strong> loaded 
-                    into their dashboard automatically — no purchase needed. It's built to show you exactly what M² Training 
+                    into their dashboard automatically — no purchase needed. It's built to show you exactly what M2 Training 
                     looks like from the inside.
                   </p>
                   <div className="bg-muted/50 p-3 mb-3 space-y-1.5">
@@ -464,7 +464,7 @@ const TrialWelcome = () => {
           className="text-center mt-8"
         >
           <p className="text-[10px] text-muted-foreground">
-            © {new Date().getFullYear()} M² Training · Grosse Pointe Park, MI
+            © {new Date().getFullYear()} M2 Training · Grosse Pointe Park, MI
           </p>
         </motion.div>
       </div>

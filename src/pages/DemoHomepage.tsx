@@ -187,7 +187,7 @@ const DemoHomepage = () => (
       {/* Footer */}
       <footer className="border-t border-border py-6 px-4 text-center">
         <p className="text-xs text-muted-foreground">⚠️ TEST PAGE — Not linked to live site</p>
-        <p className="text-xs text-muted-foreground mt-1">© {new Date().getFullYear()} M² Training. All rights reserved.</p>
+        <p className="text-xs text-muted-foreground mt-1">© {new Date().getFullYear()} M2 Training. All rights reserved.</p>
       </footer>
     </div>
   </>

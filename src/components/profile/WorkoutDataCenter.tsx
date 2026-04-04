@@ -107,7 +107,7 @@ const WorkoutDataCenter = () => {
         <tr><th class="num">#</th><th class="exercise">Exercise</th><th class="sets">Sets</th><th class="reps">Reps</th><th class="weight">Weight</th><th class="notes">Notes</th></tr>
         ${rows.map(n => `<tr><td class="num">${n}</td><td class="exercise"></td><td class="sets"></td><td class="reps"></td><td class="weight"></td><td class="notes"></td></tr>`).join("")}
       </table>
-      <p class="footer">M² Training — mattmichelstraining.com</p>
+      <p class="footer">M2 Training — mattmichelstraining.com</p>
       </body></html>
     `;
     const w = window.open("", "_blank");
@@ -191,7 +191,7 @@ const WorkoutDataCenter = () => {
         html += `</table>`;
       }
 
-      html += `<p class="meta" style="margin-top: 32px; text-align: center;">M² Training — mattmichelstraining.com</p></body></html>`;
+      html += `<p class="meta" style="margin-top: 32px; text-align: center;">M2 Training — mattmichelstraining.com</p></body></html>`;
 
       const printWindow = window.open("", "_blank");
       if (printWindow) {

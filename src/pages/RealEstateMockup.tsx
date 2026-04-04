@@ -58,8 +58,8 @@ const RealEstateMockup = () => {
       </div>
 
       <Helmet>
-        <title>Real Estate Website Demo | M² Web Design Detroit</title>
-        <meta name="description" content="See how a real estate agent website looks when built by M² Web Design. Professional lead-generation site for Metro Detroit realtors." />
+        <title>Real Estate Website Demo | M2 Web Design Detroit</title>
+        <meta name="description" content="See how a real estate agent website looks when built by M2 Web Design. Professional lead-generation site for Metro Detroit realtors." />
         <link rel="canonical" href="https://www.mattmichelstraining.com/demo-real-estate" />
       </Helmet>
 

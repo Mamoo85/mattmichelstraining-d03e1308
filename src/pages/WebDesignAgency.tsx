@@ -258,7 +258,7 @@ const WebDesignAgency = () => {
                     <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold uppercase tracking-wide">Grosse Pointe, MI</span>
                   </div>
                   <p className="text-muted-foreground text-sm leading-relaxed mb-3">
-                    I own M² Training — a coaching platform I built from scratch, including a full AI app with 2,000+ users. I use those same development skills to build local business websites that actually rank and convert. When I take on a web design client, you get my personal cell. You're not a ticket in some agency system.
+                    I own M2 Training — a coaching platform I built from scratch, including a full AI app with 2,000+ users. I use those same development skills to build local business websites that actually rank and convert. When I take on a web design client, you get my personal cell. You're not a ticket in some agency system.
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {["Local business owner", "20+ years local market", "Direct cell access", "No outsourcing"].map((t) => (

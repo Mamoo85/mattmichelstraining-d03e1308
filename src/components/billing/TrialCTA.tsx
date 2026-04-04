@@ -33,7 +33,7 @@ const TrialCTA = ({ variant = "banner", className = "" }: TrialCTAProps) => {
         <div className="flex items-start gap-3 mb-4">
           <Shield size={20} className="text-primary flex-shrink-0 mt-0.5" />
           <div>
-            <h3 className="text-sm font-bold text-foreground mb-1">Try the M² App Free for 14 Days</h3>
+            <h3 className="text-sm font-bold text-foreground mb-1">Try the M2 App Free for 14 Days</h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
               Full Foundation portal access. Programs. Progress tracking. Plus a{" "}
               <strong className="text-foreground">free 2-week starter program</strong> loaded into your dashboard 
@@ -74,7 +74,7 @@ const TrialCTA = ({ variant = "banner", className = "" }: TrialCTAProps) => {
         <h3 className="text-sm font-bold text-foreground">Foundation: 14 Days Free. Cancel Anytime.</h3>
       </div>
       <p className="text-xs text-muted-foreground mb-4 max-w-md mx-auto">
-        Full access to the M² App — plus a free 2-week starter program loaded on Day 1. Pro and Elite custom coaching packages start immediately.
+        Full access to the M2 App — plus a free 2-week starter program loaded on Day 1. Pro and Elite custom coaching packages start immediately.
       </p>
       <Link
         to={user ? "/trial-welcome" : "/auth?redirect=/trial-welcome"}

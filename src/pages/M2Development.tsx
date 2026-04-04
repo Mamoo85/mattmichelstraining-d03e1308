@@ -96,8 +96,8 @@ const INDUSTRIES = [
 const M2Development = () => (
   <div className="min-h-screen bg-background">
     <SEOHead
-      title="M² Development | Custom Websites & Digital Marketing | Grosse Pointe"
-      description="Custom websites built to convert — starting at $499. SEO, Google Business Profile management, and AI-powered marketing add-ons. M² Development, Grosse Pointe, MI."
+      title="M2 Development | Custom Websites & Digital Marketing | Grosse Pointe"
+      description="Custom websites built to convert — starting at $499. SEO, Google Business Profile management, and AI-powered marketing add-ons. M2 Development, Grosse Pointe, MI."
       path="/m2-development"
     />
 
@@ -108,7 +108,7 @@ const M2Development = () => (
         backgroundSize: "60px 60px"
       }} />
       <div className="container max-w-4xl mx-auto text-center relative z-10 px-4">
-        <img src="/images/m2-development-logo.png" alt="M² Development" className="mx-auto w-64 sm:w-80 mb-6 drop-shadow-2xl" />
+        <img src="/images/m2-development-logo.png" alt="M2 Development" className="mx-auto w-64 sm:w-80 mb-6 drop-shadow-2xl" />
         <p className="text-cyan-400 text-xs font-bold uppercase tracking-[0.3em] mb-3">
           Web Design · SEO · Local Marketing
         </p>
@@ -314,11 +314,11 @@ const M2Development = () => (
       {/* Footer */}
       <div className="pt-6 border-t border-border text-center space-y-2">
         <p className="text-xs text-muted-foreground">
-          © {new Date().getFullYear()} M² Development · Grosse Pointe Park, MI
+          © {new Date().getFullYear()} M2 Development · Grosse Pointe Park, MI
         </p>
         <p className="text-[10px] text-muted-foreground">
           A division of{" "}
-          <Link to="/" className="text-primary hover:opacity-80">M² Training</Link>
+          <Link to="/" className="text-primary hover:opacity-80">M2 Training</Link>
         </p>
       </div>
     </div>

@@ -32,7 +32,7 @@ export default function AITruckingDocs() {
 
   return (
     <>
-      <SEOHead title="AI Trucking & Fleet Documents — $99/mo | M² Development" description="AI writes safety checklists, driver comms, BOL templates, and HOS reminders for owner-operators and small trucking fleets. $99/month." path="/ai-trucking-docs" />
+      <SEOHead title="AI Trucking & Fleet Documents — $99/mo | M2 Development" description="AI writes safety checklists, driver comms, BOL templates, and HOS reminders for owner-operators and small trucking fleets. $99/month." path="/ai-trucking-docs" />
       <div className="min-h-screen bg-[#0f0f1a] text-white">
         <section className="pt-20 pb-16 px-4">
           <div className="max-w-3xl mx-auto text-center">

@@ -121,7 +121,7 @@ const UpcomingSessions = () => {
               </div>
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <MapPin size={10} />
-                M² Training Studio
+                M2 Training Studio
               </div>
             </div>
 

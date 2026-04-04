@@ -39,8 +39,8 @@ const SIZE_CHART = [
 const Merch = () => (
   <div className="min-h-screen bg-background">
     <SEOHead
-      title="M² Merch — Training Apparel"
-      description="Official M² Training gear. Premium hoodies, tees, tanks, and hats. Rep the brand that keeps athletes moving right."
+      title="M2 Merch — Training Apparel"
+      description="Official M2 Training gear. Premium hoodies, tees, tanks, and hats. Rep the brand that keeps athletes moving right."
       path="/merch"
     />
     <AppNavbar />
@@ -56,11 +56,11 @@ const Merch = () => (
             <div className="flex items-center justify-center gap-2 mb-3">
               <ShoppingBag size={20} className="text-primary" />
               <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary">
-                Official M² Gear
+                Official M2 Gear
               </span>
             </div>
             <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-foreground mb-3">
-              Rep M² Training
+              Rep M2 Training
             </h1>
             <p className="text-muted-foreground text-sm md:text-base max-w-lg mx-auto mb-6">
               You earned it in the gym. Now wear it everywhere else. Premium quality gear printed and shipped direct from Bonfire.

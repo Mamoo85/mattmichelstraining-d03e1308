@@ -18,10 +18,10 @@ const FAQ_SCHEMA = {
   mainEntity: [
     {
       "@type": "Question",
-      name: "What ages does M² Training work with?",
+      name: "What ages does M2 Training work with?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "M² Training works with athletes and adults ages 12 to 60+. Youth programs start with foundational movement patterns before progressing to sport-specific training.",
+        text: "M2 Training works with athletes and adults ages 12 to 60+. Youth programs start with foundational movement patterns before progressing to sport-specific training.",
       },
     },
     {
@@ -29,7 +29,7 @@ const FAQ_SCHEMA = {
       name: "Is youth strength training safe?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "When coached properly, yes. In 20+ years and thousands of athletes, M² Training has maintained a zero-injury record. Programs focus on connective tissue strength and movement quality before adding load.",
+        text: "When coached properly, yes. In 20+ years and thousands of athletes, M2 Training has maintained a zero-injury record. Programs focus on connective tissue strength and movement quality before adding load.",
       },
     },
     {
@@ -37,15 +37,15 @@ const FAQ_SCHEMA = {
       name: "Do you offer online training?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Yes. M² offers monthly online memberships starting at $19.99/mo. The Foundation tier includes a 14-day free trial of the full M² App. Pro and Elite are custom coaching packages that start immediately. All plans include the exercise library, structured programs, injury recovery guides, and direct coaching from Matt.",
+        text: "Yes. M2 offers monthly online memberships starting at $19.99/mo. The Foundation tier includes a 14-day free trial of the full M2 App. Pro and Elite are custom coaching packages that start immediately. All plans include the exercise library, structured programs, injury recovery guides, and direct coaching from Matt.",
       },
     },
     {
       "@type": "Question",
-      name: "What technology does M² Training use?",
+      name: "What technology does M2 Training use?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "M² uses advanced posture analysis, velocity-based training tracking, smart nutrition scanning, and an intelligent workout logger — all accessible from your phone with no extra hardware.",
+        text: "M2 uses advanced posture analysis, velocity-based training tracking, smart nutrition scanning, and an intelligent workout logger — all accessible from your phone with no extra hardware.",
       },
     },
   ],
@@ -103,7 +103,7 @@ const Index = () => (
           </Link>
         </p>
         <p className="text-xs text-muted-foreground">
-          © {new Date().getFullYear()} M² Training · Grosse Pointe Park, MI
+          © {new Date().getFullYear()} M2 Training · Grosse Pointe Park, MI
         </p>
       </div>
     </div>

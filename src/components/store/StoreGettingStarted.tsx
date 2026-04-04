@@ -132,21 +132,21 @@ const StoreGettingStarted = () => {
           <div className="bg-card shadow-m2 p-4 flex gap-3 border-2 border-primary/40">
             <div className="text-primary font-mono font-bold text-lg leading-none mt-0.5">$19.99</div>
             <div>
-              <p className="text-xs font-bold text-foreground">M² Foundation <span className="text-[8px] bg-primary text-primary-foreground px-1.5 py-0.5 uppercase ml-1">Popular</span></p>
+              <p className="text-xs font-bold text-foreground">M2 Foundation <span className="text-[8px] bg-primary text-primary-foreground px-1.5 py-0.5 uppercase ml-1">Popular</span></p>
               <p className="text-[11px] text-muted-foreground">8-week programs + Fix It library + coach form review.</p>
             </div>
           </div>
           <div className="bg-card shadow-m2 p-4 flex gap-3">
             <div className="text-primary font-mono font-bold text-lg leading-none mt-0.5">$49.99</div>
             <div>
-              <p className="text-xs font-bold text-foreground">M² Custom</p>
+              <p className="text-xs font-bold text-foreground">M2 Custom</p>
               <p className="text-[11px] text-muted-foreground">Fully custom program from Matt + in-person or online session (optional) + direct messaging.</p>
             </div>
           </div>
           <div className="bg-card shadow-m2 p-4 flex gap-3">
             <div className="text-primary font-mono font-bold text-lg leading-none mt-0.5">$99.99</div>
             <div>
-              <p className="text-xs font-bold text-foreground">M² Team / Elite</p>
+              <p className="text-xs font-bold text-foreground">M2 Team / Elite</p>
               <p className="text-[11px] text-muted-foreground">Full roster management, team programming, and full-season training plans.</p>
             </div>
           </div>

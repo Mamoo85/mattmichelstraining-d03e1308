@@ -41,7 +41,7 @@ const COMPARISON = [
   { tool: "Rankbreeze", price: "$30–80/mo", what: "Analytics only — no review alerts, no AI responses", highlight: false },
   { tool: "Smartbnb / Hospitable", price: "$24/mo", what: "Guest messaging — not built for reputation management", highlight: false },
   { tool: "Hostfully", price: "$79/mo", what: "Property management system — reviews are an afterthought", highlight: false },
-  { tool: "M² STR Reputation", price: "$79/mo per property", what: "2-hr alerts + AI responses + monthly report + ranking tracking", highlight: true },
+  { tool: "M2 STR Reputation", price: "$79/mo per property", what: "2-hr alerts + AI responses + monthly report + ranking tracking", highlight: true },
 ];
 
 export default function STRReputation() {

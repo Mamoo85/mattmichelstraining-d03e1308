@@ -105,7 +105,7 @@ const GuideStore = () => {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>Athlete Playbooks — M² Training by Matt Michels</title>
+        <title>Athlete Playbooks — M2 Training by Matt Michels</title>
         <meta
           name="description"
           content="Sport-specific training playbooks built by Coach Matt Michels. Football, baseball, basketball, soccer, hockey, and more. Instant email delivery."

@@ -73,7 +73,7 @@ export const printWorkoutLog = (program: PrintProgramData) => {
       (day) => `
       <div class="day-page">
         <div class="page-header">
-          <img src="${M2_LOGO_BASE64}" alt="M²" class="page-logo" />
+          <img src="${M2_LOGO_BASE64}" alt="M2" class="page-logo" />
           <div>
             <div class="page-title">${esc(program.title)}</div>
             <div class="page-meta">Week ${week.week} · Day ${day.day}${meta ? ` · ${meta}` : ""}</div>
@@ -98,7 +98,7 @@ export const printWorkoutLog = (program: PrintProgramData) => {
           </tbody>
         </table>
         ${program.isFixIt ? FIX_IT_DISCLAIMER_HTML : ""}
-        <div class="page-footer">M² Training · www.mattmichelstraining.com</div>
+        <div class="page-footer">M2 Training · www.mattmichelstraining.com</div>
       </div>
     `
     )

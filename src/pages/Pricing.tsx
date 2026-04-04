@@ -38,7 +38,7 @@ const TIER_CARDS: {
     headline: "20 Years of Iron Game Knowledge in Your Pocket.",
     pitch: `Stop guessing. Get the exact digital blueprint I use for my athletes. Full access to the M2 App, my private Exercise Library, the Fix It Rehab Library, and the AI Generator.`,
     features: [
-      "Full M² App access",
+      "Full M2 App access",
       "Exercise video library",
       "Fix It rehab library",
       "AI Workout Generator",
@@ -208,7 +208,7 @@ const Pricing = () => {
             </h2>
             <p className="text-sm text-muted-foreground max-w-lg leading-relaxed">
               20 years of coaching delivered to your phone. The Foundation tier includes a
-              <strong className="text-foreground"> 14-day free trial</strong> of the full M² App. All plans are month-to-month. Cancel anytime. No contracts.
+              <strong className="text-foreground"> 14-day free trial</strong> of the full M2 App. All plans are month-to-month. Cancel anytime. No contracts.
             </p>
             <div className="flex flex-wrap gap-3 pt-1">
               <Link
@@ -306,7 +306,7 @@ const Pricing = () => {
           {(subscribed || isAdmin) && (
             <div className="mt-6 inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-sm text-sm font-bold uppercase tracking-widest">
               <Shield className="w-4 h-4" />
-              You're on {isAdmin ? "M² Coach" : subscriptionTier ? TIERS[subscriptionTier].name : "Free"}
+              You're on {isAdmin ? "M2 Coach" : subscriptionTier ? TIERS[subscriptionTier].name : "Free"}
               {subscriptionEnd && (
                 <span className="text-muted-foreground font-normal normal-case ml-2">
                   · renews {new Date(subscriptionEnd).toLocaleDateString()}

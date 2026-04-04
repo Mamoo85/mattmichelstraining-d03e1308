@@ -55,7 +55,7 @@ const COMPARISON = [
   { tool: "LegalZoom", price: "$300+ per document", what: "Template-based — not state-specific, not situation-specific", highlight: false },
   { tool: "Landlord Studio", price: "$12–36/mo", what: "Property management software — no letter generation at all", highlight: false },
   { tool: "DIY / Google", price: "1–3 hrs per letter", what: "Wrong notice period = letter thrown out. One mistake = restart eviction.", highlight: false },
-  { tool: "M² Landlord Letters", price: "$149/mo unlimited", what: "State-compliant letters in 90 sec — any situation, all properties", highlight: true },
+  { tool: "M2 Landlord Letters", price: "$149/mo unlimited", what: "State-compliant letters in 90 sec — any situation, all properties", highlight: true },
 ];
 
 export default function LandlordLetters() {

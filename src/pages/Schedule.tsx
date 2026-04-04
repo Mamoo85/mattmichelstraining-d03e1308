@@ -293,7 +293,7 @@ const Schedule = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Schedule a Session — M² Training"
+        title="Schedule a Session — M2 Training"
         description="Book an in-person or video training session with Coach Matt. 30-min ($50) and 60-min ($90) sessions. No account required."
         path="/schedule"
       />
@@ -561,7 +561,7 @@ const Schedule = () => {
                   </div>
                   <div className="flex items-center gap-1 bg-muted/80 backdrop-blur-sm px-2 py-0.5">
                     <Cpu size={10} className="text-muted-foreground" />
-                    <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground">M² Edge Tech</span>
+                    <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground">M2 Edge Tech</span>
                   </div>
                 </div>
                 <h3 className="text-sm font-black uppercase tracking-tight text-foreground mb-1 group-hover:text-primary transition-colors">
@@ -571,7 +571,7 @@ const Schedule = () => {
                   Your phone's camera measures bar velocity, counts reps, and shows concentric/eccentric phases live. No extra hardware — just elite training tech.
                 </p>
                 <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary group-hover:gap-2.5 transition-all">
-                  Explore The M² Edge <ArrowRight size={10} />
+                  Explore The M2 Edge <ArrowRight size={10} />
                 </span>
               </div>
             </div>

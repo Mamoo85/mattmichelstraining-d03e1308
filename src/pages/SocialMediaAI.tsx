@@ -113,13 +113,13 @@ export default function SocialMediaAI() {
   return (
     <>
       <SEOHead
-        title="AI Social Media Management — From $74.25/mo Launch Special | M²"
+        title="AI Social Media Management — From $74.25/mo Launch Special | M2"
         description="Your business posts itself. AI writes and publishes to Facebook, Instagram, and LinkedIn — 3x a week. Launch special: 25% off first 3 months, from $74.25/mo."
       />
       <div className="min-h-screen bg-background text-foreground">
         {/* Hero */}
         <div className="bg-[#1e293b] text-white px-6 py-16 text-center">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">M² Social Media AI</p>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">M2 Social Media AI</p>
           <h1 className="text-3xl font-black mb-4 leading-tight">
             Your business posts itself.
           </h1>

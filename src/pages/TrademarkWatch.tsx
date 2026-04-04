@@ -92,14 +92,14 @@ export default function TrademarkWatch() {
   return (
     <>
       <SEOHead
-        title="AI Trademark Watch Service — Monitor USPTO for Copycats | M² Development"
+        title="AI Trademark Watch Service — Monitor USPTO for Copycats | M2 Development"
         description="AI monitors USPTO weekly for newly filed marks that could infringe your trademark. Get similarity scores, opposition recommendations, and never miss the 30-day window. $49/mo per mark."
       />
       <div className="min-h-screen bg-background text-foreground">
 
         {/* Hero */}
         <div className="bg-[#0f2547] text-white px-6 py-20 text-center">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-[#c9a227] mb-3">M² Development · AI Legal Tools</p>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-[#c9a227] mb-3">M2 Development · AI Legal Tools</p>
           <h1 className="text-4xl font-black mb-4 leading-tight max-w-3xl mx-auto">
             Protect Your Brand Before<br />Someone Steals It
           </h1>

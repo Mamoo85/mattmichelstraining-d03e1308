@@ -11,7 +11,7 @@ const COACH_BENEFITS = [
   {
     icon: BarChart3,
     title: "Athlete Progress Tracking",
-    desc: "Every athlete logs lifts in the M² portal. You see progress charts, coaching notes, and strength benchmarks for the entire roster — without spreadsheets or guesswork.",
+    desc: "Every athlete logs lifts in the M2 portal. You see progress charts, coaching notes, and strength benchmarks for the entire roster — without spreadsheets or guesswork.",
   },
   {
     icon: Shield,
@@ -64,7 +64,7 @@ const CoachOnlineTools = () => (
 
       <div className="bg-primary/10 border border-primary/20 p-4 mb-4">
         <p className="text-xs text-muted-foreground leading-relaxed">
-          <span className="text-foreground font-bold">How coaches use M²:</span> Order a custom team program ($20) or subscribe to the 
+          <span className="text-foreground font-bold">How coaches use M2:</span> Order a custom team program ($20) or subscribe to the 
           Team plan ($84.99/mo) for ongoing seasonal programming, athlete tracking, and direct access to Matt for program adjustments.
           Works for middle school, JV, varsity, travel, and club teams across every sport.
         </p>

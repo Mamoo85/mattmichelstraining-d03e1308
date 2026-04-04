@@ -170,7 +170,7 @@ const PostWorkoutSummary = ({
 
     setShared(true);
     setSharing(false);
-    toast.success("+25 M² Points! Workout shared to the community.");
+    toast.success("+25 M2 Points! Workout shared to the community.");
   }, [user, shared, imageFile, notes, exercises, workoutLogId, workoutTitle, totalSets, totalReps, totalVolume, duration]);
 
   return (
@@ -308,7 +308,7 @@ const PostWorkoutSummary = ({
         <div className="bg-card border border-border p-4 space-y-3">
           <span className="text-[10px] font-bold uppercase tracking-widest text-primary">🏆 Share to Community</span>
           <p className="text-[10px] text-muted-foreground">
-            Share your results with fellow Mattletes and earn +25 M² Points!
+            Share your results with fellow Mattletes and earn +25 M2 Points!
           </p>
           <button
             onClick={handleShareToCommunity}

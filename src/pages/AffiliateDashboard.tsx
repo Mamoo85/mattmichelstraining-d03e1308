@@ -71,7 +71,7 @@ const AffiliateDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>Referral Dashboard — M² Training</title>
+        <title>Referral Dashboard — M2 Training</title>
       </Helmet>
       <AppNavbar />
       <div className="container max-w-2xl pt-20 pb-16 space-y-8">

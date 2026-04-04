@@ -20,7 +20,7 @@ interface ReadinessGateProps {
 
 /**
  * Calculate auto-regulation adjustments based on sleep.
- * M² uses 3RM and 5RM — never 1RM.
+ * M2 uses 3RM and 5RM — never 1RM.
  */
 function calculateAdjustments(hoursSlept: number) {
   if (hoursSlept < 5) return { weightPct: -10, swap: true };

@@ -117,13 +117,13 @@ export default function ManufacturingWebDesign() {
   return (
     <>
       <SEOHead
-        title="Manufacturing Website Design Michigan — $499 Setup | M² Web Design"
+        title="Manufacturing Website Design Michigan — $499 Setup | M2 Web Design"
         description="Modern websites for Michigan manufacturers. Product catalogs, RFQ forms, dealer locators, and SEO that ranks. From $499 setup + $49/mo."
       />
       <div className="min-h-screen bg-background text-foreground">
         {/* Hero */}
         <div className="bg-[#1e293b] text-white px-6 py-14 text-center">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">M² Web Design — Manufacturing</p>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">M2 Web Design — Manufacturing</p>
           <h1 className="text-3xl font-black mb-4">Your factory runs at $40M/year.<br />Your website looks like it's from 2009.</h1>
           <p className="text-slate-300 text-sm max-w-xl mx-auto leading-relaxed">
             We build modern, lead-generating websites for Michigan manufacturers — with product catalogs, RFQ forms, dealer locators, and SEO that puts you in front of buyers before they call your competitor.

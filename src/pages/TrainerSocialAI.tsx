@@ -74,13 +74,13 @@ export default function TrainerSocialAI() {
   return (
     <>
       <SEOHead
-        title="Social Media AI for Fitness Trainers — $59.25/mo Launch Special | M² Trainer Social"
+        title="Social Media AI for Fitness Trainers — $59.25/mo Launch Special | M2 Trainer Social"
         description="Your gym stays active online — even when you're busy coaching. AI writes and posts fitness content to your social channels 3x a week. Launch special: $59.25/mo for first 3 months (normally $79)."
       />
       <div className="min-h-screen bg-background text-foreground">
         {/* Hero */}
         <div className="bg-[#1e293b] text-white px-6 py-16 text-center">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">M² Trainer Social AI</p>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">M2 Trainer Social AI</p>
           <h1 className="text-3xl font-black mb-4 leading-tight">
             Your gym stays active online —<br />even when you're busy coaching.
           </h1>

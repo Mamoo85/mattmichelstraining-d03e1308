@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { CheckCircle, Loader2, ArrowRight, Zap, MessageSquare, Users, TrendingUp } from "lucide-react";
 
 const HOW_IT_WORKS = [
-  { step: "01", title: "Pick Your Keyword", desc: "Choose a word like \"SLOW\" or \"PROMO\". Text it to your M² number whenever business needs a boost." },
+  { step: "01", title: "Pick Your Keyword", desc: "Choose a word like \"SLOW\" or \"PROMO\". Text it to your M2 number whenever business needs a boost." },
   { step: "02", title: "AI Writes the Offer", desc: "We generate a personalized promo message based on your business, the season, and the offer you have in mind." },
   { step: "03", title: "Blast Goes Out", desc: "Your entire customer list gets the text within minutes. You get a confirmation with how many were sent." },
 ];
@@ -58,7 +58,7 @@ export default function SlowDaySMS() {
               Slow Day? One Text<br /><span className="text-primary">Fills Your Schedule.</span>
             </h1>
             <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto mb-6">
-              Text "SLOW" to your M² number. In minutes, your entire customer list gets a promo. AI writes it, we send it, you answer the phone. That's it.
+              Text "SLOW" to your M2 number. In minutes, your entire customer list gets a promo. AI writes it, we send it, you answer the phone. That's it.
             </p>
             <div className="text-4xl font-black text-primary mb-1">$25<span className="text-xl text-muted-foreground font-normal">/mo</span></div>
             <p className="text-sm text-muted-foreground mb-2">7-day free trial · Cancel anytime</p>

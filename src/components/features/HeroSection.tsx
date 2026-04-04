@@ -59,7 +59,7 @@ const HeroSection = () => {
               <div className="relative flex flex-col items-center text-center">
                 <img
                   src={m2Logo}
-                  alt="M² Training"
+                  alt="M2 Training"
                   width={256}
                   height={256}
                   fetchPriority="high"
@@ -186,7 +186,7 @@ const HeroSection = () => {
 
         <div className="mt-10 pt-6 border-t border-border text-center pb-16 md:pb-0">
           <p className="text-xs text-muted-foreground break-words">
-            © {new Date().getFullYear()} <span className="font-brand text-sm text-foreground">M²&nbsp;Training</span> · Grosse Pointe Park, MI · Strength done right since 2004.
+            © {new Date().getFullYear()} <span className="font-brand text-sm text-foreground">M2&nbsp;Training</span> · Grosse Pointe Park, MI · Strength done right since 2004.
           </p>
         </div>
       </div>

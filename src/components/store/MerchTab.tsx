@@ -43,11 +43,11 @@ const MerchTab = () => (
       <div className="flex items-center justify-center gap-2 mb-3">
         <ShoppingBag size={20} className="text-primary" />
         <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary">
-          Official M² Gear
+          Official M2 Gear
         </span>
       </div>
       <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-foreground mb-3">
-        Rep M² Training
+        Rep M2 Training
       </h2>
       <p className="text-muted-foreground text-sm md:text-base max-w-lg mx-auto mb-6">
         You earned it in the gym. Now wear it everywhere else. Premium quality gear printed and shipped direct from Bonfire.

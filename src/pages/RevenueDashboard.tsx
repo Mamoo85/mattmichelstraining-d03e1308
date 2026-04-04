@@ -113,7 +113,7 @@ export default function RevenueDashboard() {
 
   return (
     <>
-      <SEOHead title="Revenue Dashboard — M² Training" description="Internal revenue metrics dashboard" />
+      <SEOHead title="Revenue Dashboard — M2 Training" description="Internal revenue metrics dashboard" />
       <div className="min-h-screen bg-background text-foreground p-6">
         <div className="max-w-6xl mx-auto">
           <div className="mb-6">

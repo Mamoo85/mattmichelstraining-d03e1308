@@ -33,7 +33,7 @@ const DashboardReferralCard = memo(() => {
 
   const handleShare = async () => {
     const shareData = {
-      title: "Train with me on M²",
+      title: "Train with me on M2",
       text: "I've been using this training app — try it free for 14 days:",
       url: referralUrl,
     };

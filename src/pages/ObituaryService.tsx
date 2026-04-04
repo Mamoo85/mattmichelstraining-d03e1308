@@ -41,7 +41,7 @@ const COMPARISON = [
   { tool: "Freelance obituary writers", price: "$150–400 each", what: "Per-obituary cost, 24-48hr turnaround, inconsistent quality" },
   { tool: "In-house staff writing", price: "3-4 hrs per obit", what: "Staff time that should go to families and logistics" },
   { tool: "Writing services (online)", price: "$200+ per obit", what: "Generic templates, no funeral-specific expertise" },
-  { tool: "M² Obituary Service", price: "$199/mo unlimited", what: "AI-written in <2 hours, 3 formats, family review built in", highlight: true },
+  { tool: "M2 Obituary Service", price: "$199/mo unlimited", what: "AI-written in <2 hours, 3 formats, family review built in", highlight: true },
 ];
 
 export default function ObituaryService() {
@@ -88,7 +88,7 @@ export default function ObituaryService() {
   return (
     <>
       <SEOHead
-        title="AI Obituary Writing for Funeral Homes — $199/mo Unlimited | M² Training"
+        title="AI Obituary Writing for Funeral Homes — $199/mo Unlimited | M2 Training"
         description="Professional obituaries written by AI in under 2 hours. Formatted for newspaper, website, and social. Family review built in. $199/mo for unlimited obituaries."
         path="/obituary-service"
       />

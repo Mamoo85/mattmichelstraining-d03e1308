@@ -36,7 +36,7 @@ const DashboardHome = memo(({ isNewUser, isInPerson, onViewPoints, onViewReferra
     <div className="space-y-5">
       {isNewUser && !isInPerson && (
         <EmptyStateCard
-          title="Welcome to M²"
+          title="Welcome to M2"
           description="Your training log is empty. Select your starting track and begin Day 1."
           ctaLabel="Select Your Starting Track →"
           ctaTo="/shop"

@@ -156,7 +156,7 @@ export default function AthleteStats({
             {levelLabel}
           </div>
           <div className="text-[8px] mt-0.5" style={{ color: "#a855f7", opacity: 0.5 }}>
-            M² Points
+            M2 Points
           </div>
         </button>
       </div>

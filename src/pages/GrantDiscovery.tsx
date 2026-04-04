@@ -42,7 +42,7 @@ const COMPARISON = [
   { tool: "Foundation Directory Online", price: "$2,500/yr", what: "Candid's database — powerful but requires a trained researcher", highlight: false },
   { tool: "Grant Writer (freelance)", price: "$3,000–10,000 per app", what: "Single application — not a scalable discovery system", highlight: false },
   { tool: "Manual research", price: "10+ hrs/week", what: "Staff time at $20–40/hr = $800–1,600/mo in lost capacity", highlight: false },
-  { tool: "M² Grant Discovery", price: "$199/mo", what: "Weekly ranked list — matched to your mission, ready to act on", highlight: true },
+  { tool: "M2 Grant Discovery", price: "$199/mo", what: "Weekly ranked list — matched to your mission, ready to act on", highlight: true },
 ];
 
 export default function GrantDiscovery() {

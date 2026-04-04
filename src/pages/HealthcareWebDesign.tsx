@@ -108,12 +108,12 @@ export default function HealthcareWebDesign() {
   return (
     <>
       <SEOHead
-        title="Healthcare Practice Website Design — $1,499 Setup | M² Web Design"
+        title="Healthcare Practice Website Design — $1,499 Setup | M2 Web Design"
         description="Professional websites for PT clinics, chiropractic offices, and healthcare practices. Appointment forms, provider bios, and local SEO. From $1,499 + $99/mo."
       />
       <div className="min-h-screen bg-background text-foreground">
         <div className="bg-[#1e293b] text-white px-6 py-14 text-center">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">M² Web Design — Healthcare Practices</p>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">M2 Web Design — Healthcare Practices</p>
           <h1 className="text-3xl font-black mb-4">New patients search Google before they call.<br />Make sure your practice shows up.</h1>
           <p className="text-slate-300 text-sm max-w-xl mx-auto leading-relaxed">
             We build patient-converting websites for healthcare practices — with appointment request forms, provider bios, condition-specific pages, and local SEO that puts you at the top of search.

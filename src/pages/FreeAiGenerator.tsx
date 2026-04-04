@@ -131,7 +131,7 @@ const FreeAiGenerator = () => {
           operatingSystem: "Web",
           offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
           description: "Generate a free, custom workout plan or rehab protocol based on your situation.",
-          provider: { "@type": "Organization", name: "M² Training", url: "https://www.mattmichelstraining.com" },
+          provider: { "@type": "Organization", name: "M2 Training", url: "https://www.mattmichelstraining.com" },
         }}
       />
 
@@ -244,7 +244,7 @@ const FreeAiGenerator = () => {
                       <Zap size={28} className="text-primary mx-auto" />
                       <p className="text-xl font-black text-foreground">Want the full 8-week program?</p>
                       <p className="text-xs text-muted-foreground">
-                        You've used your free generation. Start for <span className="text-foreground font-bold">$4.99</span> to unlock unlimited AI programs, the full M² portal, and direct access to Coach Matt.
+                        You've used your free generation. Start for <span className="text-foreground font-bold">$4.99</span> to unlock unlimited AI programs, the full M2 portal, and direct access to Coach Matt.
                       </p>
                       <Button onClick={() => navigate("/auth?redirect=/trial-welcome")} className="w-full h-12 font-black uppercase tracking-wider text-sm" size="lg">
                         Start for $4.99 <ArrowRight size={16} />
@@ -353,7 +353,7 @@ const FreeAiGenerator = () => {
                   <span className="text-primary">for $4.99.</span>
                 </h3>
                 <p className="text-sm text-muted-foreground max-w-md mx-auto mb-5">
-                  Load this into The M² Portal — with progressive overload built in, automatic weight tracking, form analysis, and direct access to Coach Matt. Your first month is <span className="text-foreground font-bold">$4.99</span>, then $19.99/mo. Cancel anytime.
+                  Load this into The M2 Portal — with progressive overload built in, automatic weight tracking, form analysis, and direct access to Coach Matt. Your first month is <span className="text-foreground font-bold">$4.99</span>, then $19.99/mo. Cancel anytime.
                 </p>
                 <div className="flex flex-col sm:flex-row items-center gap-3 max-w-md mx-auto mb-3">
                   <Input type="email" placeholder="your@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className="flex-1" />

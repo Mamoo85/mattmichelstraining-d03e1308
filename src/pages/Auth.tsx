@@ -30,7 +30,7 @@ const Auth = () => {
           });
           if (error) throw error;
           if (data?.error) throw new Error(data.error);
-          toast({ title: "You're in!", description: "Welcome to M² Training — your portal is ready." });
+          toast({ title: "You're in!", description: "Welcome to M2 Training — your portal is ready." });
         } catch (err: any) {
           console.warn("[IP-INVITE] Redeem error:", err.message);
         }
@@ -223,9 +223,9 @@ const Auth = () => {
     <div className="min-h-[100dvh] bg-background flex items-center justify-center px-4 overflow-y-auto pb-safe">
       <div className="max-w-sm w-full my-8">
         <div className="text-center mb-8">
-          <img src={m2Logo} alt="M² Training" className="w-20 h-20 object-contain rounded-md mx-auto mb-4" />
+          <img src={m2Logo} alt="M2 Training" className="w-20 h-20 object-contain rounded-md mx-auto mb-4" />
           <h1 className="text-xl font-bold tracking-display text-foreground">
-            {mode === "signup" ? "JOIN M² TRAINING" : "ATHLETE LOGIN"}
+            {mode === "signup" ? "JOIN M2 TRAINING" : "ATHLETE LOGIN"}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">Real training. Real results.</p>
         </div>
@@ -237,7 +237,7 @@ const Auth = () => {
               <div>
                 <p className="text-xs font-bold text-foreground mb-1">You've been invited!</p>
                 <p className="text-xs text-muted-foreground">
-                  Create an account or sign in to link with your parent's M² Training account.
+                  Create an account or sign in to link with your parent's M2 Training account.
                 </p>
               </div>
             </div>

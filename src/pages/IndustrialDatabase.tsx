@@ -151,7 +151,7 @@ export default function IndustrialDatabase() {
   if (isSubscriber || successParam === "1") {
     return (
       <>
-        <SEOHead title="Industrial Supplier Database — M² B2B Leads" description="Browse and export industrial supplier contacts nationwide." />
+        <SEOHead title="Industrial Supplier Database — M2 B2B Leads" description="Browse and export industrial supplier contacts nationwide." />
         <div className="min-h-screen bg-background text-foreground p-6">
           <div className="max-w-5xl mx-auto">
             <div className="flex items-center justify-between mb-6">
@@ -227,10 +227,10 @@ export default function IndustrialDatabase() {
   // Paywall view
   return (
     <>
-      <SEOHead title="Industrial Supplier Database — $99/month | M² B2B Leads" description="Every machine shop, metal fabricator, and industrial supplier in the US. Updated weekly. Browse, filter, and export." />
+      <SEOHead title="Industrial Supplier Database — $99/month | M2 B2B Leads" description="Every machine shop, metal fabricator, and industrial supplier in the US. Updated weekly. Browse, filter, and export." />
       <div className="min-h-screen bg-background text-foreground">
         <div className="bg-[#1e293b] text-white px-6 py-14 text-center">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">M² Development</p>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">M2 Development</p>
           <h1 className="text-3xl font-black mb-4">Every industrial supplier<br />in the US.</h1>
           <p className="text-slate-300 max-w-xl mx-auto text-sm leading-relaxed">
             {totalCount > 0 ? `${totalCount.toLocaleString()} verified` : "Thousands of"} machine shops, metal fabricators, CNC shops, injection molders, tool & die shops, and industrial equipment suppliers — with name, phone, email, address, and Google rating. Nationwide. Updated weekly. Export to CSV anytime.

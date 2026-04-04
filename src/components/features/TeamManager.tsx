@@ -116,7 +116,7 @@ const TeamManager = () => {
         toast({ title: "Failed to add", description: error.message, variant: "destructive" });
       }
     } else {
-      toast({ title: "Athlete added!", description: profile?.user_id ? "Linked to their M² account." : "They'll be linked when they create an account." });
+      toast({ title: "Athlete added!", description: profile?.user_id ? "Linked to their M2 account." : "They'll be linked when they create an account." });
       setNewEmail("");
       setNewName("");
       fetchRoster();
@@ -261,7 +261,7 @@ const TeamManager = () => {
           </button>
         </div>
         <p className="text-[10px] text-muted-foreground mt-2">
-          If the athlete already has an M² account, they'll be linked automatically.
+          If the athlete already has an M2 account, they'll be linked automatically.
         </p>
       </div>
 
@@ -310,7 +310,7 @@ const TeamManager = () => {
           <Users size={32} className="mx-auto text-muted-foreground/30 mb-3" />
           <h3 className="text-sm font-bold text-foreground mb-1">No athletes on your roster yet</h3>
           <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-            Add your athletes by email above. If they already have an M² account, they'll be linked instantly.
+            Add your athletes by email above. If they already have an M2 account, they'll be linked instantly.
             If not, they'll be connected when they sign up.
           </p>
         </div>

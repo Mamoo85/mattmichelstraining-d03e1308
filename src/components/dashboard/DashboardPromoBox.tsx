@@ -25,7 +25,7 @@ const PROMOS: PromoCard[] = [
     route: "/custom-program",
   },
   {
-    label: "M² Merch",
+    label: "M2 Merch",
     title: "Rep the Brand",
     desc: "Premium training gear & apparel",
     cta: "Shop Now",

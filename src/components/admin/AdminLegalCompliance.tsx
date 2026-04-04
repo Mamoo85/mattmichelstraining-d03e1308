@@ -98,7 +98,7 @@ export default function AdminLegalCompliance() {
         <Shield className="text-primary" size={20} />
         <div>
           <h2 className="text-lg font-bold">Legal & Compliance — Jess AI</h2>
-          <p className="text-xs text-muted-foreground">AI-generated legal documents for all M² services</p>
+          <p className="text-xs text-muted-foreground">AI-generated legal documents for all M2 services</p>
         </div>
       </div>
 

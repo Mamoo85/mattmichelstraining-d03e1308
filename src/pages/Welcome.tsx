@@ -166,7 +166,7 @@ const AppLane = () => (
     >
       <img
         src={m2Logo}
-        alt="M² Training"
+        alt="M2 Training"
         className="w-20 mx-auto mb-3 object-contain rounded-lg ring-1 ring-border"
       />
       <h1 className="text-2xl md:text-3xl font-black tracking-tight text-foreground mb-2">
@@ -291,7 +291,7 @@ const Welcome = () => (
         className="text-center"
       >
         <p className="text-[10px] text-muted-foreground">
-          © {new Date().getFullYear()} M² Training · Grosse Pointe Park, MI ·
+          © {new Date().getFullYear()} M2 Training · Grosse Pointe Park, MI ·
           Real training, real results.
         </p>
       </motion.div>

@@ -67,7 +67,7 @@ const OpenWorkoutAI = memo(({ onStart, onSkip, onBack }: OpenWorkoutAIProps) => 
           <ChevronLeft size={14} /> Back
         </button>
         <div className="flex items-center gap-3">
-          <img src={m2Logo} alt="M²" className="h-8 w-8 rounded-full object-cover" />
+          <img src={m2Logo} alt="M2" className="h-8 w-8 rounded-full object-cover" />
           <div>
             <h1 className="text-sm font-bold uppercase tracking-widest text-primary">
               Open Workout

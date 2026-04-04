@@ -32,7 +32,7 @@ export default function AIPropertyManagement() {
 
   return (
     <>
-      <SEOHead title="AI Property Management Automation — $99/mo | M² Development" description="AI writes tenant notices, lease renewal letters, maintenance follow-ups, and late payment reminders for landlords and property managers. $99/month." path="/ai-property-management" />
+      <SEOHead title="AI Property Management Automation — $99/mo | M2 Development" description="AI writes tenant notices, lease renewal letters, maintenance follow-ups, and late payment reminders for landlords and property managers. $99/month." path="/ai-property-management" />
       <div className="min-h-screen bg-[#0f0f1a] text-white">
         <section className="pt-20 pb-16 px-4">
           <div className="max-w-3xl mx-auto text-center">

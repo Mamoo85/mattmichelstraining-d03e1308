@@ -55,7 +55,7 @@ const PRCelebrationModal = ({ prs, athleteName, date, onClose }: PRCelebrationMo
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
         await navigator.share({
           title: `New PR: ${currentPR.exerciseTitle}`,
-          text: `🏆 NEW PR: ${currentPR.exerciseTitle} - ${currentPR.weight} lbs × ${currentPR.reps} reps | Trained on the M² Portal`,
+          text: `🏆 NEW PR: ${currentPR.exerciseTitle} - ${currentPR.weight} lbs × ${currentPR.reps} reps | Trained on the M2 Portal`,
           files: [file],
         });
         toast.success("Shared!");

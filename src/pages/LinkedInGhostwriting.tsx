@@ -52,7 +52,7 @@ export default function LinkedInGhostwriting() {
   return (
     <>
       <SEOHead
-        title="LinkedIn Ghostwriting Service — $299/month | M² Content"
+        title="LinkedIn Ghostwriting Service — $299/month | M2 Content"
         description="Get 5 professional LinkedIn posts written every week. AI-powered, your voice, zero effort."
       />
       <div className="min-h-screen bg-background text-foreground">
@@ -60,7 +60,7 @@ export default function LinkedInGhostwriting() {
         <div className="bg-[#1e293b] text-white px-6 py-14 text-center">
           <div className="flex items-center justify-center gap-2 mb-3">
             <Linkedin size={16} className="text-primary" />
-            <p className="text-[11px] font-bold uppercase tracking-widest text-primary">M² Development</p>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-primary">M2 Development</p>
           </div>
           <h1 className="text-3xl font-black mb-4">
             5 LinkedIn posts per week.<br />Written in your voice.<br />Delivered every Monday.

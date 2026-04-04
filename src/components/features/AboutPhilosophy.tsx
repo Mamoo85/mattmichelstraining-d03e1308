@@ -47,7 +47,7 @@ const AboutPhilosophy = () => (
         at the right pace, with the right recovery.
       </p>
 
-      <span className="text-[10px] font-mono text-primary block">— Matt Michels, M² Training</span>
+      <span className="text-[10px] font-mono text-primary block">— Matt Michels, M2 Training</span>
     </div>
   </motion.div>
 );

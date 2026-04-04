@@ -32,7 +32,7 @@ export default function ContractorLeads() {
   return (
     <>
       <SEOHead
-        title="Exclusive Contractor Leads — Any City in the US | M² Lead Network"
+        title="Exclusive Contractor Leads — Any City in the US | M2 Lead Network"
         description="Exclusive roofing, HVAC, plumbing, and electrical leads in your market. No shared leads. One contractor per trade per city. Flat monthly fee."
       />
       <div className="min-h-screen bg-background text-foreground">
@@ -46,7 +46,7 @@ export default function ContractorLeads() {
         </div>
         {/* Hero */}
         <div className="bg-[#1e293b] text-white px-6 py-16 text-center">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">M² Lead Network</p>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">M2 Lead Network</p>
           <h1 className="text-3xl font-black mb-4 leading-tight">Exclusive contractor leads.<br />One company per city.</h1>
           <p className="text-slate-300 text-base max-w-xl mx-auto leading-relaxed">
             Every roofing, HVAC, plumbing, and electrical lead generated in your market goes <strong className="text-white">only to you</strong>. No Angi. No shared bids. Flat monthly fee — cancel anytime.

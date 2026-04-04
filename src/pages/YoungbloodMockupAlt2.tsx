@@ -440,7 +440,7 @@ export default function YoungbloodMockupAlt2() {
         <div style={{ maxWidth: 1200, margin: "40px auto 0", paddingTop: 24, borderTop: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span style={{ color: STEEL, fontSize: 12 }}>© 2026 Youngblood Automation Solutions. All rights reserved.</span>
           <a href="/manufacturing-web-design" style={{ color: STEEL, fontSize: 11, textDecoration: "none", letterSpacing: "0.06em" }}>
-            Site by M² Web Design
+            Site by M2 Web Design
           </a>
         </div>
       </section>

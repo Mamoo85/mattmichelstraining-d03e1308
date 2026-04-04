@@ -38,7 +38,7 @@ export default function AIMedSpaMarketing() {
 
   return (
     <>
-      <SEOHead title="AI Marketing for Med Spas — $149/mo | M² Development" description="AI writes and sends weekly social posts, email campaigns, and Google review requests for your med spa — fully automated. $149/month." path="/ai-med-spa-marketing" />
+      <SEOHead title="AI Marketing for Med Spas — $149/mo | M2 Development" description="AI writes and sends weekly social posts, email campaigns, and Google review requests for your med spa — fully automated. $149/month." path="/ai-med-spa-marketing" />
       <div className="min-h-screen bg-[#0f0f1a] text-white">
         <section className="pt-20 pb-16 px-4">
           <div className="max-w-3xl mx-auto text-center">

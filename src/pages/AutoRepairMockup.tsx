@@ -54,8 +54,8 @@ const AutoRepairMockup = () => {
       </div>
 
       <Helmet>
-        <title>Auto Repair Website Demo | M² Web Design Detroit</title>
-        <meta name="description" content="See how a local auto repair shop website looks when built by M² Web Design. Professional lead-generation site for auto shops in Metro Detroit." />
+        <title>Auto Repair Website Demo | M2 Web Design Detroit</title>
+        <meta name="description" content="See how a local auto repair shop website looks when built by M2 Web Design. Professional lead-generation site for auto shops in Metro Detroit." />
         <link rel="canonical" href="https://www.mattmichelstraining.com/demo-auto-repair" />
       </Helmet>
 

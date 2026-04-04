@@ -16,7 +16,7 @@ interface Props {
 const ForParentsHero = ({ cms }: Props) => (
   <motion.div {...fade(0.05)} className="py-8 md:py-14">
     <div className="flex flex-col sm:flex-row items-start gap-4 mb-6">
-      <img src={m2Logo} alt="M² Training — Youth Strength Training" className="w-14 h-14 md:w-20 md:h-20 object-contain rounded-md flex-shrink-0" />
+      <img src={m2Logo} alt="M2 Training — Youth Strength Training" className="w-14 h-14 md:w-20 md:h-20 object-contain rounded-md flex-shrink-0" />
       <div className="min-w-0">
         <div className="flex items-center gap-2 mb-2">
           <div className="w-0.5 h-4 bg-primary" />

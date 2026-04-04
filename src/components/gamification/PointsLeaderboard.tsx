@@ -31,7 +31,7 @@ const PointsLeaderboard = () => {
         <div className="bg-card border border-border p-5 space-y-4">
           <div className="flex items-center gap-2 mb-1">
             <Zap size={14} className="text-primary" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Your M² Points</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Your M2 Points</span>
           </div>
           <div className="flex items-center gap-4">
             <div className="text-4xl font-mono font-black text-primary">{points.total_points.toLocaleString()}</div>
@@ -110,7 +110,7 @@ const PointsLeaderboard = () => {
       <div className="bg-card border border-border overflow-hidden">
         <div className="px-4 py-2.5 bg-muted flex items-center gap-2">
           <Trophy size={12} className="text-primary" />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">M² Leaderboard</span>
+          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">M2 Leaderboard</span>
           <span className="text-[10px] text-muted-foreground ml-auto">{leaderboard.length} athletes</span>
         </div>
         {leaderboard.length === 0 ? (

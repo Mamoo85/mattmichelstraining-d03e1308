@@ -204,7 +204,7 @@ export default function GetStarted() {
   return (
     <>
       <SEOHead
-        title="Get Started | M² Training"
+        title="Get Started | M2 Training"
         description="Book a free consultation with Matt Michels. No sales pitch, no pressure — just a quick conversation about what you need."
         path="/get-started"
       />
@@ -212,7 +212,7 @@ export default function GetStarted() {
         {/* Hero */}
         <div className="bg-[#1e293b] text-white px-6 py-14 text-center">
           <p className="text-[11px] font-bold uppercase tracking-widest text-[#e8621a] mb-3">
-            M² Development
+            M2 Development
           </p>
           <h1 className="text-3xl font-black mb-4 leading-tight">
             40+ tools to grow your business.<br/>Pick one. We'll handle the rest.

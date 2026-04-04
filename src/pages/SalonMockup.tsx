@@ -57,8 +57,8 @@ const SalonMockup = () => {
       </div>
 
       <Helmet>
-        <title>Barbershop & Salon Website Demo | M² Web Design Detroit</title>
-        <meta name="description" content="See how a barbershop or salon website looks when built by M² Web Design. Professional lead-generation site for hair studios in Metro Detroit." />
+        <title>Barbershop & Salon Website Demo | M2 Web Design Detroit</title>
+        <meta name="description" content="See how a barbershop or salon website looks when built by M2 Web Design. Professional lead-generation site for hair studios in Metro Detroit." />
         <link rel="canonical" href="https://www.mattmichelstraining.com/demo-salon" />
       </Helmet>
 

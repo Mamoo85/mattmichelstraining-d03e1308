@@ -74,7 +74,7 @@ export default function AiGbpPostPack() {
   return (
     <>
       <SEOHead
-        title="30 AI-Written Google Business Profile Posts — $19 | M² Web Design"
+        title="30 AI-Written Google Business Profile Posts — $19 | M2 Web Design"
         description="Get 30 ready-to-publish Google Business Profile posts written specifically for your business. 3 months of content, delivered to your inbox instantly. $19 flat."
         path="/ai-gbp-post-pack"
       />

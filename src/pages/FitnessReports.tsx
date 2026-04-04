@@ -42,7 +42,7 @@ const COMPARISON = [
   { tool: "PT Distinction", price: "$97/mo", what: "Assessment tools and habit tracking — reports are manual" },
   { tool: "TrainHeroic", price: "$20/mo", what: "Programming and performance tracking — no client-facing reports" },
   { tool: "Making reports manually", price: "30–60 min/client/mo", what: "10 clients = up to 10 hours of report writing per month" },
-  { tool: "M² Fitness Reports", price: "$79/mo", what: "Automated, personalized reports to every client, every month — 14-day trial, unlimited clients", highlight: true },
+  { tool: "M2 Fitness Reports", price: "$79/mo", what: "Automated, personalized reports to every client, every month — 14-day trial, unlimited clients", highlight: true },
 ];
 
 const STATS = [
@@ -111,7 +111,7 @@ export default function FitnessReports() {
               You know monthly progress reports would keep your clients engaged, motivated, and paying longer. But who has time to write 20 reports a month?
             </p>
             <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-              M² does it for you. Add your clients and their metrics. On the 1st of every month, every client gets a personalized, professionally designed report in their inbox — without you touching anything.
+              M2 does it for you. Add your clients and their metrics. On the 1st of every month, every client gets a personalized, professionally designed report in their inbox — without you touching anything.
             </p>
             <div className="flex flex-col items-center gap-2 mb-10">
               <div className="text-5xl font-black text-primary">$79<span className="text-2xl text-muted-foreground font-normal">/mo</span></div>

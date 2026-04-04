@@ -41,7 +41,7 @@ const COMPARISON = [
   { tool: "Logos Bible Software", price: "$30–100/mo", what: "Data and commentaries only — you still do all the writing" },
   { tool: "SermonCentral Pro", price: "$50/mo", what: "Other pastors' sermons — generic, not written for you" },
   { tool: "Pastoral study assistant", price: "$800+/mo", what: "Human, part-time, vacation time, turnover" },
-  { tool: "M² Sermon Prep", price: "$79/mo", what: "Your complete outline, illustrations, questions — every Monday", highlight: true },
+  { tool: "M2 Sermon Prep", price: "$79/mo", what: "Your complete outline, illustrations, questions — every Monday", highlight: true },
 ];
 
 export default function SermonPrep() {

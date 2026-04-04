@@ -42,7 +42,7 @@ const COMPARISON = [
   { tool: "Prisync", price: "$99–299/mo", what: "Price tracking, no AI analysis or strategic recommendations" },
   { tool: "Price2Spy", price: "$19–99/mo", what: "Basic scraping only — no alerts, no AI, no strategy" },
   { tool: "Manual monitoring", price: "Hours/week", what: "Someone on your team visits competitor sites — inconsistent, incomplete, and distracting" },
-  { tool: "M² Price Intelligence", price: "$199/mo", what: "Daily scraping + instant alerts + AI strategic recommendations — 14-day trial", highlight: true },
+  { tool: "M2 Price Intelligence", price: "$199/mo", what: "Daily scraping + instant alerts + AI strategic recommendations — 14-day trial", highlight: true },
 ];
 
 const SCENARIOS = [
@@ -111,7 +111,7 @@ export default function PriceIntelligence() {
               Right now, your competitors could be running a promotion, launching a new tier, or quietly cutting prices to steal your accounts — and you have no idea.
             </p>
             <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-              M² monitors their pricing pages every day. The instant something changes, you get an alert. Every week, you get a strategic briefing on what it means and what to do.
+              M2 monitors their pricing pages every day. The instant something changes, you get an alert. Every week, you get a strategic briefing on what it means and what to do.
             </p>
             <div className="flex flex-col items-center gap-2 mb-10">
               <div className="text-5xl font-black text-primary">$199<span className="text-2xl text-muted-foreground font-normal">/mo</span></div>

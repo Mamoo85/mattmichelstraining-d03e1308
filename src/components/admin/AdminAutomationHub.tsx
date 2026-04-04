@@ -241,7 +241,7 @@ export default function AdminAutomationHub() {
         {/* Newsletter */}
         <AutomationCard
           icon={Mail}
-          title="The M² Brief — Weekly Newsletter"
+          title="The M2 Brief — Weekly Newsletter"
           description="Auto-generates and sends a sports performance newsletter every Friday"
           status={newsletterRunning || newsletterDryRunning ? "running" : "idle"}
           badge="Weekly"
@@ -421,7 +421,7 @@ export default function AdminAutomationHub() {
             {[
               { freq: "Daily", machine: "Lead Prospector", action: "Run 1 industry per day across Metro Detroit cities", done: false },
               { freq: "Daily", machine: "Web Design Drip", action: "Process drip queue — sends next email in sequence for due leads", done: false },
-              { freq: "Friday", machine: "M² Brief Newsletter", action: "Auto-generate + send to all newsletter subscribers", done: false },
+              { freq: "Friday", machine: "M2 Brief Newsletter", action: "Auto-generate + send to all newsletter subscribers", done: false },
               { freq: "Monthly", machine: "Digital Product Machine", action: "Generate 3 new niche programs + SEO pages", done: false },
               { freq: "Weekly", machine: "SEO Engine", action: "Generate 5–10 new local SEO pages", done: false },
             ].map(s => (

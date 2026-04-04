@@ -36,7 +36,7 @@ const SEOHead = ({
   jsonLd,
   noindex = false,
 }: SEOHeadProps) => {
-  const fullTitle = title.includes("M²") || title.includes("Matt Michels") ? title : `${title} | Matt Michels Training`;
+  const fullTitle = title.includes("M2") || title.includes("Matt Michels") ? title : `${title} | Matt Michels Training`;
   const canonical = path ? `${SITE_URL}${path}` : undefined;
   const image = ogImage || DEFAULT_OG;
 
@@ -52,7 +52,7 @@ const SEOHead = ({
       author: { "@type": "Person", name: article.author },
       publisher: {
         "@type": "Organization",
-        name: "M² Training",
+        name: "M2 Training",
         url: SITE_URL,
       },
       datePublished: article.publishedTime,
@@ -76,7 +76,7 @@ const SEOHead = ({
         availability: product.availability || "https://schema.org/InStock",
         url: canonical,
       },
-      brand: { "@type": "Brand", name: "M² Training" },
+      brand: { "@type": "Brand", name: "M2 Training" },
     });
   }
 

@@ -202,7 +202,7 @@ const StudioCheckIn = ({ onOpenWorkouts }: { onOpenWorkouts?: () => void }) => {
       setCheckins((prev) => [data as CheckIn, ...prev]);
       setJustCheckedIn(true);
       setShowMilestones(true);
-      toast({ title: "🏋️ Checked in!", description: "Great work showing up today. +50 M² Points!" });
+      toast({ title: "🏋️ Checked in!", description: "Great work showing up today. +50 M2 Points!" });
       setTimeout(() => setJustCheckedIn(false), 3000);
     }
     setChecking(false);
@@ -213,16 +213,16 @@ const StudioCheckIn = ({ onOpenWorkouts }: { onOpenWorkouts?: () => void }) => {
     const achievedMilestones = milestones.filter((m) => m.achieved);
     const topMilestone = achievedMilestones[0];
 
-    let text = `🏋️ Just checked in at M² Training! ${totalDays} total sessions.`;
+    let text = `🏋️ Just checked in at M2 Training! ${totalDays} total sessions.`;
     if (topMilestone) {
-      text = `${topMilestone.emoji} ${topMilestone.label} at M² Training! ${topMilestone.detail} #M2Training #NeverMissADay`;
+      text = `${topMilestone.emoji} ${topMilestone.label} at M2 Training! ${topMilestone.detail} #M2Training #NeverMissADay`;
     } else {
       text += " #M2Training";
     }
 
     if (navigator.share) {
       try {
-        await navigator.share({ title: "M² Training Check-In", text });
+        await navigator.share({ title: "M2 Training Check-In", text });
       } catch {
         // User cancelled — that's fine
       }
@@ -320,9 +320,9 @@ const StudioCheckIn = ({ onOpenWorkouts }: { onOpenWorkouts?: () => void }) => {
                 </div>
                 <button
                   onClick={async () => {
-                    const text = `${m.emoji} ${m.label} at M² Training! ${m.detail} #M2Training`;
+                    const text = `${m.emoji} ${m.label} at M2 Training! ${m.detail} #M2Training`;
                     if (navigator.share) {
-                      try { await navigator.share({ title: "M² Training", text }); } catch {}
+                      try { await navigator.share({ title: "M2 Training", text }); } catch {}
                     } else {
                       await navigator.clipboard.writeText(text);
                       toast({ title: "Copied!", description: "Milestone copied to clipboard." });

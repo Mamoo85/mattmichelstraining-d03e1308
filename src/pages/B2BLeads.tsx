@@ -182,7 +182,7 @@ export default function B2BLeads() {
   if (isSubscriber || successParam === "1") {
     return (
       <>
-        <SEOHead title="Dental Practice Database — M² B2B Leads" description="Browse and export dental practice contacts across the Midwest." />
+        <SEOHead title="Dental Practice Database — M2 B2B Leads" description="Browse and export dental practice contacts across the Midwest." />
         <div className="min-h-screen bg-background text-foreground p-6">
           <div className="max-w-5xl mx-auto">
             <div className="flex items-center justify-between mb-6">
@@ -266,10 +266,10 @@ export default function B2BLeads() {
   // Paywall view
   return (
     <>
-      <SEOHead title="Midwest Dental Practice Database — $149/month | M² B2B Leads" description="Every dental office, orthodontic practice, and oral surgery clinic in the Midwest. Updated daily. Browse, filter, and export." />
+      <SEOHead title="Midwest Dental Practice Database — $149/month | M2 B2B Leads" description="Every dental office, orthodontic practice, and oral surgery clinic in the Midwest. Updated daily. Browse, filter, and export." />
       <div className="min-h-screen bg-background text-foreground">
         <div className="bg-[#1e293b] text-white px-6 py-14 text-center">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">M² B2B Intelligence</p>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">M2 B2B Intelligence</p>
           <h1 className="text-3xl font-black mb-4">Every dental practice<br />in the Midwest.</h1>
           <p className="text-slate-300 max-w-xl mx-auto text-sm leading-relaxed">
             {totalCount > 0 ? `${totalCount.toLocaleString()} verified` : "Thousands of"} dental offices, orthodontic practices, and oral surgery clinics — with name, phone, email, address, and Google rating. Updated daily. Export to CSV anytime.

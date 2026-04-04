@@ -538,7 +538,7 @@ const TrainingHistory = () => {
       {/* Member Since */}
       <div className="text-center pt-3 pb-1">
         <p className="text-[11px] font-mono" style={{ color: "rgba(249,115,22,0.5)" }}>
-          M² member since{" "}
+          M2 member since{" "}
           <span className="font-bold" style={{ color: "#f97316" }}>
             {stats.memberSince ? new Date(stats.memberSince).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "—"}
           </span>

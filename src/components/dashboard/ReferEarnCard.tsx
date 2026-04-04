@@ -31,7 +31,7 @@ const ReferEarnCard = memo(({ onViewAll }: ReferEarnCardProps) => {
         <span className="text-[9px] font-black uppercase tracking-widest bg-primary/10 text-primary px-2 py-1">Invite Your Friends!</span>
       </div>
       <p className="text-sm text-foreground leading-relaxed">
-        Know someone who should be training with M²? Send them your link — it's <strong className="text-primary">completely free</strong> to join right now.
+        Know someone who should be training with M2? Send them your link — it's <strong className="text-primary">completely free</strong> to join right now.
       </p>
       <button
         onClick={handleCopy}

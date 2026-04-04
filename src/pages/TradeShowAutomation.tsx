@@ -41,7 +41,7 @@ const COMPARISON = [
   { tool: "Outreach.io", price: "$100+/seat/mo", what: "Sales engagement platform — built for full sales teams" },
   { tool: "Salesloft", price: "$125+/seat/mo", what: "Enterprise sales cadence tool — complex, expensive" },
   { tool: "Manual follow-up", price: "100+ hours", what: "30 min/contact × 200 contacts — most never get done" },
-  { tool: "M² Trade Show Automation", price: "$99/mo", what: "AI-researched, personalized sequences for every contact — first campaign free", highlight: true },
+  { tool: "M2 Trade Show Automation", price: "$99/mo", what: "AI-researched, personalized sequences for every contact — first campaign free", highlight: true },
 ];
 
 const HOW_IT_WORKS = [
@@ -110,7 +110,7 @@ export default function TradeShowAutomation() {
               You spent $5,000 on the trade show floor. You came back with 200 badge scans. And you followed up with maybe 15 of them — because doing it right takes 30 minutes per contact.
             </p>
             <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-              M² researches every single contact and generates a personalized 3-email sequence for each one. All 200 get a real follow-up. You just approve and launch.
+              M2 researches every single contact and generates a personalized 3-email sequence for each one. All 200 get a real follow-up. You just approve and launch.
             </p>
             <div className="flex flex-col items-center gap-2 mb-10">
               <div className="text-5xl font-black text-primary">$99<span className="text-2xl text-muted-foreground font-normal">/mo</span></div>
@@ -142,7 +142,7 @@ export default function TradeShowAutomation() {
               ))}
             </div>
             <p className="mt-8 text-muted-foreground">
-              Your competitors are doing the same thing — following up with 10% of their leads and hoping for the best. M² gives you systematic follow-up for 100% of them.
+              Your competitors are doing the same thing — following up with 10% of their leads and hoping for the best. M2 gives you systematic follow-up for 100% of them.
             </p>
           </div>
         </section>

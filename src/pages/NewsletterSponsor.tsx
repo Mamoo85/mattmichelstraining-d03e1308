@@ -79,8 +79,8 @@ export default function NewsletterSponsor() {
   return (
     <>
       <SEOHead
-        title="Sponsor the M² Youth Sports Newsletter | Matt Michels"
-        description="Reach 500+ youth sports families in Metro Detroit. Sponsor the M² weekly sports newsletter. Spotlight $99, Feature $199, Presenting Sponsor $299 per issue."
+        title="Sponsor the M2 Youth Sports Newsletter | Matt Michels"
+        description="Reach 500+ youth sports families in Metro Detroit. Sponsor the M2 weekly sports newsletter. Spotlight $99, Feature $199, Presenting Sponsor $299 per issue."
         path="/sponsor"
       />
       <div className="min-h-screen bg-[#0f0f1a] text-white">
@@ -96,7 +96,7 @@ export default function NewsletterSponsor() {
               <span className="text-[#f97316]">Every Week.</span>
             </h1>
             <p className="text-base sm:text-lg text-[#aaa] max-w-2xl mx-auto mb-8 leading-relaxed">
-              The M² weekly newsletter goes to parents of youth athletes across Metro Detroit — families actively looking for training, gear, camps, and services for their kids.
+              The M2 weekly newsletter goes to parents of youth athletes across Metro Detroit — families actively looking for training, gear, camps, and services for their kids.
             </p>
             <Button
               size="lg"

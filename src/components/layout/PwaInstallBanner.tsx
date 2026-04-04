@@ -66,7 +66,7 @@ const PwaInstallBanner = ({ autoTrigger = false }: { autoTrigger?: boolean }) =>
       <div className="flex items-center gap-3 rounded-sm border border-border bg-card p-3 shadow-m2">
         <Download size={20} className="shrink-0 text-primary" />
         <p className="flex-1 text-sm text-foreground-soft">
-          Install the <span className="font-bold text-foreground">M² App</span> for a faster experience.
+          Install the <span className="font-bold text-foreground">M2 App</span> for a faster experience.
         </p>
         <Button size="sm" onClick={handleInstall} className="shrink-0 text-xs font-bold uppercase">
           Install

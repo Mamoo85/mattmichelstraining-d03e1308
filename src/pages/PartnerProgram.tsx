@@ -50,10 +50,10 @@ const PartnerProgram = () => {
 
   return (
     <>
-      <SEOHead title="Partner Program | M² Development" description="Earn commissions by referring businesses to M² Development services." />
+      <SEOHead title="Partner Program | M2 Development" description="Earn commissions by referring businesses to M2 Development services." />
       <div className="min-h-screen bg-background">
         <div className="max-w-xl mx-auto px-4 py-12">
-          <h1 className="text-3xl font-bold text-foreground mb-2">M² Partner Program</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-2">M2 Partner Program</h1>
           <p className="text-muted-foreground mb-8">
             Earn $50 for every business you refer that becomes a paying customer. No cap on earnings.
           </p>

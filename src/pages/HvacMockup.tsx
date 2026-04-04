@@ -171,16 +171,16 @@ const HvacMockup = () => {
       `}</style>
 
       <Helmet>
-        <title>HVAC Website Demo | M² Web Design Detroit</title>
+        <title>HVAC Website Demo | M2 Web Design Detroit</title>
         <meta
           name="description"
-          content="See how a professional HVAC company website looks when built by M² Web Design. Heating, cooling & air quality lead-generation site for Metro Detroit contractors."
+          content="See how a professional HVAC company website looks when built by M2 Web Design. Heating, cooling & air quality lead-generation site for Metro Detroit contractors."
         />
         <link rel="canonical" href="https://www.mattmichelstraining.com/demo-hvac" />
-        <meta property="og:title" content="HVAC Website Demo | M² Web Design Detroit" />
+        <meta property="og:title" content="HVAC Website Demo | M2 Web Design Detroit" />
         <meta
           property="og:description"
-          content="Professional HVAC website mockup by M² Web Design. Click-to-call, 24/7 emergency badges, lead capture forms."
+          content="Professional HVAC website mockup by M2 Web Design. Click-to-call, 24/7 emergency badges, lead capture forms."
         />
         <meta property="og:url" content="https://www.mattmichelstraining.com/demo-hvac" />
         <meta property="og:type" content="website" />
@@ -189,11 +189,11 @@ const HvacMockup = () => {
             "@context": "https://schema.org",
             "@type": "WebPage",
             name: "HVAC Website Demo",
-            description: "Demo HVAC website built by M² Web Design for Metro Detroit contractors.",
+            description: "Demo HVAC website built by M2 Web Design for Metro Detroit contractors.",
             url: "https://www.mattmichelstraining.com/demo-hvac",
             provider: {
               "@type": "ProfessionalService",
-              name: "M² Web Design",
+              name: "M2 Web Design",
               url: "https://www.mattmichelstraining.com/detroit-web-design",
             },
           })}

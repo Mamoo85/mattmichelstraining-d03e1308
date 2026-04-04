@@ -45,8 +45,8 @@ const Install = () => {
   return (
     <>
       <SEOHead
-        title="Install Your M² Training Portal"
-        description="Add the M² Training Portal to your home screen for instant access to workouts, progress tracking, and coaching tools."
+        title="Install Your M2 Training Portal"
+        description="Add the M2 Training Portal to your home screen for instant access to workouts, progress tracking, and coaching tools."
         path="/install"
       />
       <AppNavbar />
@@ -55,13 +55,13 @@ const Install = () => {
           {/* Header */}
           <div className="text-center mb-8">
             <div className="w-20 h-20 mx-auto mb-4 rounded-2xl overflow-hidden shadow-m2">
-              <img src={m2Logo} alt="M² Training" className="w-full h-full object-cover" />
+              <img src={m2Logo} alt="M2 Training" className="w-full h-full object-cover" />
             </div>
             <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-1">
               Your Training Portal
             </span>
             <h1 className="text-2xl font-heading font-black text-foreground mb-2">
-              Install the M² App
+              Install the M2 App
             </h1>
             <p className="text-sm text-muted-foreground">
               Add your portal to your home screen — open it like a real app, no app store needed.
@@ -76,7 +76,7 @@ const Install = () => {
                 <div>
                   <p className="font-bold text-foreground">Already Installed!</p>
                   <p className="text-sm text-muted-foreground">
-                    You're using the M² app right now.
+                    You're using the M2 app right now.
                   </p>
                 </div>
               </CardContent>
@@ -89,7 +89,7 @@ const Install = () => {
                   <div>
                     <p className="font-bold text-foreground">App Installed!</p>
                     <p className="text-sm text-muted-foreground">
-                      Check your home screen for the M² icon.
+                      Check your home screen for the M2 icon.
                     </p>
                   </div>
                 </div>
@@ -108,7 +108,7 @@ const Install = () => {
                 className="w-full text-lg font-bold gap-2"
               >
                 <Download size={20} />
-                Install M² Portal
+                Install M2 Portal
               </Button>
               <p className="text-center text-xs text-muted-foreground">
                 Works on Android, Chrome, Edge, and Samsung Internet.
@@ -154,7 +154,7 @@ const Install = () => {
                     <div>
                       <p className="font-semibold text-foreground">Tap "Add"</p>
                       <p className="text-sm text-muted-foreground">
-                        The M² app icon will appear on your home screen.
+                        The M2 app icon will appear on your home screen.
                       </p>
                     </div>
                   </div>

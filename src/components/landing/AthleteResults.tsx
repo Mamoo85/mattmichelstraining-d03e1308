@@ -41,7 +41,7 @@ const AthleteResults = () => (
         Real athletes. Real results.
       </span>
       <h2 className="text-lg md:text-xl font-black uppercase tracking-tight text-foreground">
-        What happens when you train with M²
+        What happens when you train with M2
       </h2>
     </div>
 
