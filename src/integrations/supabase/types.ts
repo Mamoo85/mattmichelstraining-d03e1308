@@ -350,6 +350,27 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_heartbeats: {
+        Row: {
+          agent_name: string
+          id: string
+          last_beat: string
+          metadata: Json | null
+        }
+        Insert: {
+          agent_name: string
+          id?: string
+          last_beat?: string
+          metadata?: Json | null
+        }
+        Update: {
+          agent_name?: string
+          id?: string
+          last_beat?: string
+          metadata?: Json | null
+        }
+        Relationships: []
+      }
       ai_action_queue: {
         Row: {
           action_type: string
