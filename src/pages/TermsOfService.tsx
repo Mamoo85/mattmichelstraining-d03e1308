@@ -7,7 +7,7 @@ export default function TermsOfService() {
       <section className="mb-8">
         <h2 className="text-xl font-bold mb-3">1. Agreement</h2>
         <p className="leading-relaxed text-slate-700">
-          By using any service offered by M² Performance Training ("we," "us," "our") at mattmichelstraining.com or related domains, you agree to these Terms of Service. If you do not agree, do not use our services.
+          By using any service offered by M2 Development ("we," "us," "our") at mattmichelstraining.com or related domains, you agree to these Terms of Service. If you do not agree, do not use our services.
         </p>
       </section>
 
