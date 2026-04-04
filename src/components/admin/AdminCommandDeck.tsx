@@ -94,30 +94,33 @@ function ActionButton({ action, onExecuted }: { action: QuickAction; onExecuted:
   };
 
   return (
-    <button
-      onClick={run}
-      disabled={state === "running"}
-      className={`group relative flex flex-col gap-2 p-4 rounded-lg border text-left transition-all w-full
-        ${state === "done" ? "border-green-500/60 bg-green-500/10" :
-          state === "error" ? "border-red-500/60 bg-red-500/10" :
-          "border-border bg-card hover:border-primary/40 hover:bg-card/80 active:scale-95"}`}
-    >
-      <div className="flex items-start justify-between gap-2">
-        <div className={`w-8 h-8 rounded flex items-center justify-center flex-shrink-0 ${action.color}`}>
-          {state === "running" ? <Loader2 size={14} className="animate-spin" /> :
-           state === "done" ? <CheckCircle2 size={14} /> :
-           state === "error" ? <AlertTriangle size={14} /> :
-           <Icon size={14} />}
+    <>
+      <ConfirmDialog open={showConfirm} onConfirm={() => { setShowConfirm(false); execute(); }} onCancel={() => setShowConfirm(false)} label={action.label} />
+      <button
+        onClick={run}
+        disabled={state === "running"}
+        className={`group relative flex flex-col gap-2 p-4 rounded-lg border text-left transition-all w-full
+          ${state === "done" ? "border-green-500/60 bg-green-500/10" :
+            state === "error" ? "border-red-500/60 bg-red-500/10" :
+            "border-border bg-card hover:border-primary/40 hover:bg-card/80 active:scale-95"}`}
+      >
+        <div className="flex items-start justify-between gap-2">
+          <div className={`w-8 h-8 rounded flex items-center justify-center flex-shrink-0 ${action.color}`}>
+            {state === "running" ? <Loader2 size={14} className="animate-spin" /> :
+             state === "done" ? <CheckCircle2 size={14} /> :
+             state === "error" ? <AlertTriangle size={14} /> :
+             <Icon size={14} />}
+          </div>
+          {state === "idle" && <ChevronRight size={12} className="text-muted-foreground/40 group-hover:text-muted-foreground mt-1 flex-shrink-0" />}
         </div>
-        {state === "idle" && <ChevronRight size={12} className="text-muted-foreground/40 group-hover:text-muted-foreground mt-1 flex-shrink-0" />}
-      </div>
-      <div>
-        <div className="text-xs font-bold text-foreground leading-tight">{action.label}</div>
-        <div className="text-[10px] text-muted-foreground mt-0.5 leading-snug">
-          {result || action.desc}
+        <div>
+          <div className="text-xs font-bold text-foreground leading-tight">{action.label}</div>
+          <div className="text-[10px] text-muted-foreground mt-0.5 leading-snug">
+            {result || action.desc}
+          </div>
         </div>
-      </div>
-    </button>
+      </button>
+    </>
   );
 }
 
