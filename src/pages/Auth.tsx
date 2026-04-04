@@ -502,7 +502,7 @@ const Auth = () => {
 
           <button
             type="submit"
-            disabled={loading || (mode === "signup" && !termsAccepted)}
+            disabled={loading || (mode === "signup" && !termsAccepted) || (mode === "signup" && signupRole === "self" && isMinor)}
             className="w-full bg-primary text-primary-foreground px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2 flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {loading ? <Loader2 size={15} className="animate-spin" /> : mode === "magic" ? <Mail size={15} /> : <ArrowRight size={15} />}
