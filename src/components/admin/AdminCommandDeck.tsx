@@ -686,11 +686,63 @@ export default function AdminCommandDeck() {
   ];
 
   const categories = Array.from(new Set(QUICK_ACTIONS.map((a) => a.category)));
+  const [history, setHistory] = useState<ExecutionRecord[]>([]);
+
+  const addToHistory = (record: ExecutionRecord) => {
+    setHistory(prev => [record, ...prev].slice(0, MAX_HISTORY));
+  };
+
+  // Agent health from heartbeats
+  const { data: heartbeats } = useQuery({
+    queryKey: ["agent-heartbeats"],
+    queryFn: async () => {
+      const { data } = await supabase.from("agent_heartbeats").select("agent_name, last_beat");
+      return data || [];
+    },
+    refetchInterval: 60000,
+  });
+
+  const getAgentStatus = (agentName: string) => {
+    const beat = heartbeats?.find((h: any) => h.agent_name === agentName);
+    if (!beat) return "unknown";
+    const mins = (Date.now() - new Date(beat.last_beat).getTime()) / 60000;
+    if (mins < 30) return "healthy";
+    if (mins < 120) return "warning";
+    return "down";
+  };
+
+  const AGENTS = ["Oz", "Tom", "Shield", "Cashier", "Pulse", "Selma", "Scarlett", "Ops", "Drill", "Scout", "Hype", "Ref", "Mute"];
 
   return (
     <div className="space-y-6">
       {/* System health */}
       <SystemHealth />
+
+      {/* Agent Health Strip */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Activity size={14} className="text-primary" />
+            Agent Health
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            {AGENTS.map(name => {
+              const status = getAgentStatus(name);
+              const beat = heartbeats?.find((h: any) => h.agent_name === name);
+              const minsAgo = beat ? Math.round((Date.now() - new Date(beat.last_beat).getTime()) / 60000) : null;
+              return (
+                <div key={name} className="flex items-center gap-1.5 bg-card border border-border rounded px-2 py-1" title={minsAgo !== null ? `Last beat: ${minsAgo}m ago` : "No heartbeat recorded"}>
+                  <div className={`w-2 h-2 rounded-full ${status === "healthy" ? "bg-green-400" : status === "warning" ? "bg-yellow-400" : status === "down" ? "bg-red-400 animate-pulse" : "bg-muted-foreground/30"}`} />
+                  <span className="text-[10px] font-medium text-foreground">{name}</span>
+                  {minsAgo !== null && <span className="text-[9px] text-muted-foreground">{minsAgo < 60 ? `${minsAgo}m` : `${Math.round(minsAgo / 60)}h`}</span>}
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Quick fire actions grid */}
       <Card>
@@ -707,13 +759,37 @@ export default function AdminCommandDeck() {
               <div className="text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground mb-2">{cat}</div>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
                 {QUICK_ACTIONS.filter((a) => a.category === cat).map((action) => (
-                  <ActionButton key={action.id} action={action} />
+                  <ActionButton key={action.id} action={action} onExecuted={addToHistory} />
                 ))}
               </div>
             </div>
           ))}
         </CardContent>
       </Card>
+
+      {/* Execution History */}
+      {history.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Clock size={14} className="text-primary" />
+              Recent Executions
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-1">
+              {history.map((h, i) => (
+                <div key={i} className="flex items-center gap-2 text-[10px] py-1 border-b border-border/50 last:border-0">
+                  <div className={`w-1.5 h-1.5 rounded-full ${h.status === "success" ? "bg-green-400" : "bg-red-400"}`} />
+                  <span className="font-medium text-foreground">{h.label}</span>
+                  <span className="text-muted-foreground flex-1 truncate">{h.result}</span>
+                  <span className="text-muted-foreground shrink-0">{h.timestamp.toLocaleTimeString()}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Power Tools */}
       <Card>
