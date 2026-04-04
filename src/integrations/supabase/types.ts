@@ -7561,6 +7561,8 @@ export type Database = {
           created_at: string | null
           email: string
           fb_page_id: string | null
+          gbp_account_id: string | null
+          gbp_location_id: string | null
           id: string
           industry: string | null
           last_post_at: string | null
@@ -7571,6 +7573,8 @@ export type Database = {
           post_count: number | null
           state: string | null
           stripe_customer_id: string | null
+          tiktok_access_token: string | null
+          tiktok_open_id: string | null
         }
         Insert: {
           access_tokens?: Json | null
@@ -7585,6 +7589,8 @@ export type Database = {
           created_at?: string | null
           email: string
           fb_page_id?: string | null
+          gbp_account_id?: string | null
+          gbp_location_id?: string | null
           id?: string
           industry?: string | null
           last_post_at?: string | null
@@ -7595,6 +7601,8 @@ export type Database = {
           post_count?: number | null
           state?: string | null
           stripe_customer_id?: string | null
+          tiktok_access_token?: string | null
+          tiktok_open_id?: string | null
         }
         Update: {
           access_tokens?: Json | null
@@ -7609,6 +7617,8 @@ export type Database = {
           created_at?: string | null
           email?: string
           fb_page_id?: string | null
+          gbp_account_id?: string | null
+          gbp_location_id?: string | null
           id?: string
           industry?: string | null
           last_post_at?: string | null
@@ -7619,6 +7629,8 @@ export type Database = {
           post_count?: number | null
           state?: string | null
           stripe_customer_id?: string | null
+          tiktok_access_token?: string | null
+          tiktok_open_id?: string | null
         }
         Relationships: []
       }
