@@ -164,12 +164,43 @@ const AgentCard = ({ name, role, status, color }: { name: string; role: string; 
 
 /* ── Main Admin Component ───────────────────────────────────────────────────── */
 const Admin = () => {
-  const [activeTool, setActiveTool] = useState<string>("home");
+  const [activeTool, setActiveToolRaw] = useState<string>(() => {
+    const hash = window.location.hash.replace("#", "");
+    return hash || "home";
+  });
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
   const [expandedDomain, setExpandedDomain] = useState<string | null>(null);
   const [testEmailState, setTestEmailState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const { isAdmin, isLoading } = useIsAdmin();
+
+  /* Wrap setActiveTool to push browser history */
+  const setActiveTool = (tool: string) => {
+    setActiveToolRaw(tool);
+    if (tool === "home") {
+      window.history.pushState({ adminTool: "home" }, "", "/admin");
+    } else {
+      window.history.pushState({ adminTool: tool }, "", `/admin#${tool}`);
+    }
+  };
+
+  /* Listen for browser back/forward */
+  useEffect(() => {
+    const handlePopState = (e: PopStateEvent) => {
+      const tool = e.state?.adminTool;
+      if (tool) {
+        setActiveToolRaw(tool);
+      } else {
+        // No admin state = user went back past admin, go to home
+        const hash = window.location.hash.replace("#", "");
+        setActiveToolRaw(hash || "home");
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    // Replace current entry so first back goes to previous page
+    window.history.replaceState({ adminTool: activeTool }, "", window.location.href);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
 
   /* Cross-component navigation events */
   useEffect(() => {
