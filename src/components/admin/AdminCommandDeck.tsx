@@ -29,14 +29,47 @@ interface QuickAction {
   fn: () => Promise<string>;
 }
 
+// ─── Execution History ─────────────────────────────────────────────────────────
+interface ExecutionRecord {
+  id: string;
+  label: string;
+  result: string;
+  status: "success" | "error";
+  timestamp: Date;
+}
+
+const MAX_HISTORY = 15;
+let executionHistory: ExecutionRecord[] = [];
+
+// ─── Confirmation Modal ────────────────────────────────────────────────────────
+function ConfirmDialog({ open, onConfirm, onCancel, label }: { open: boolean; onConfirm: () => void; onCancel: () => void; label: string }) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={onCancel}>
+      <div className="bg-card border border-border p-6 rounded-lg max-w-sm w-full space-y-4" onClick={e => e.stopPropagation()}>
+        <p className="text-sm font-bold text-foreground">Confirm: {label}</p>
+        <p className="text-xs text-muted-foreground">This action will execute immediately and cannot be undone. Continue?</p>
+        <div className="flex gap-2">
+          <Button size="sm" variant="destructive" onClick={onConfirm} className="flex-1">Confirm</Button>
+          <Button size="sm" variant="outline" onClick={onCancel} className="flex-1">Cancel</Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Individual Action Button ──────────────────────────────────────────────────
-function ActionButton({ action }: { action: QuickAction }) {
+function ActionButton({ action, onExecuted }: { action: QuickAction; onExecuted: (record: ExecutionRecord) => void }) {
   const [state, setState] = useState<ActionState>("idle");
   const [result, setResult] = useState<string>("");
+  const [showConfirm, setShowConfirm] = useState(false);
   const { toast } = useToast();
   const Icon = action.icon;
 
-  const run = async () => {
+  const DESTRUCTIVE_IDS = ["mass-trial", "bulk-approve", "newsletter-send", "sms-blast"];
+  const needsConfirm = DESTRUCTIVE_IDS.includes(action.id);
+
+  const execute = async () => {
     setState("running");
     setResult("");
     try {
@@ -44,40 +77,50 @@ function ActionButton({ action }: { action: QuickAction }) {
       setState("done");
       setResult(msg);
       toast({ title: action.label, description: msg });
+      onExecuted({ id: action.id, label: action.label, result: msg, status: "success", timestamp: new Date() });
       setTimeout(() => setState("idle"), 6000);
     } catch (e: any) {
       setState("error");
       setResult(e?.message ?? "Error");
       toast({ title: action.label, description: e?.message ?? "Error", variant: "destructive" });
+      onExecuted({ id: action.id, label: action.label, result: e?.message ?? "Error", status: "error", timestamp: new Date() });
       setTimeout(() => setState("idle"), 6000);
     }
   };
 
+  const run = () => {
+    if (needsConfirm) { setShowConfirm(true); return; }
+    execute();
+  };
+
   return (
-    <button
-      onClick={run}
-      disabled={state === "running"}
-      className={`group relative flex flex-col gap-2 p-4 rounded-lg border text-left transition-all w-full
-        ${state === "done" ? "border-green-500/60 bg-green-500/10" :
-          state === "error" ? "border-red-500/60 bg-red-500/10" :
-          "border-border bg-card hover:border-primary/40 hover:bg-card/80 active:scale-95"}`}
-    >
-      <div className="flex items-start justify-between gap-2">
-        <div className={`w-8 h-8 rounded flex items-center justify-center flex-shrink-0 ${action.color}`}>
-          {state === "running" ? <Loader2 size={14} className="animate-spin" /> :
-           state === "done" ? <CheckCircle2 size={14} /> :
-           state === "error" ? <AlertTriangle size={14} /> :
-           <Icon size={14} />}
+    <>
+      <ConfirmDialog open={showConfirm} onConfirm={() => { setShowConfirm(false); execute(); }} onCancel={() => setShowConfirm(false)} label={action.label} />
+      <button
+        onClick={run}
+        disabled={state === "running"}
+        className={`group relative flex flex-col gap-2 p-4 rounded-lg border text-left transition-all w-full
+          ${state === "done" ? "border-green-500/60 bg-green-500/10" :
+            state === "error" ? "border-red-500/60 bg-red-500/10" :
+            "border-border bg-card hover:border-primary/40 hover:bg-card/80 active:scale-95"}`}
+      >
+        <div className="flex items-start justify-between gap-2">
+          <div className={`w-8 h-8 rounded flex items-center justify-center flex-shrink-0 ${action.color}`}>
+            {state === "running" ? <Loader2 size={14} className="animate-spin" /> :
+             state === "done" ? <CheckCircle2 size={14} /> :
+             state === "error" ? <AlertTriangle size={14} /> :
+             <Icon size={14} />}
+          </div>
+          {state === "idle" && <ChevronRight size={12} className="text-muted-foreground/40 group-hover:text-muted-foreground mt-1 flex-shrink-0" />}
         </div>
-        {state === "idle" && <ChevronRight size={12} className="text-muted-foreground/40 group-hover:text-muted-foreground mt-1 flex-shrink-0" />}
-      </div>
-      <div>
-        <div className="text-xs font-bold text-foreground leading-tight">{action.label}</div>
-        <div className="text-[10px] text-muted-foreground mt-0.5 leading-snug">
-          {result || action.desc}
+        <div>
+          <div className="text-xs font-bold text-foreground leading-tight">{action.label}</div>
+          <div className="text-[10px] text-muted-foreground mt-0.5 leading-snug">
+            {result || action.desc}
+          </div>
         </div>
-      </div>
-    </button>
+      </button>
+    </>
   );
 }
 
@@ -643,11 +686,63 @@ export default function AdminCommandDeck() {
   ];
 
   const categories = Array.from(new Set(QUICK_ACTIONS.map((a) => a.category)));
+  const [history, setHistory] = useState<ExecutionRecord[]>([]);
+
+  const addToHistory = (record: ExecutionRecord) => {
+    setHistory(prev => [record, ...prev].slice(0, MAX_HISTORY));
+  };
+
+  // Agent health from heartbeats
+  const { data: heartbeats } = useQuery({
+    queryKey: ["agent-heartbeats"],
+    queryFn: async () => {
+      const { data } = await supabase.from("agent_heartbeats").select("agent_name, last_beat");
+      return data || [];
+    },
+    refetchInterval: 60000,
+  });
+
+  const getAgentStatus = (agentName: string) => {
+    const beat = heartbeats?.find((h: any) => h.agent_name === agentName);
+    if (!beat) return "unknown";
+    const mins = (Date.now() - new Date(beat.last_beat).getTime()) / 60000;
+    if (mins < 30) return "healthy";
+    if (mins < 120) return "warning";
+    return "down";
+  };
+
+  const AGENTS = ["Oz", "Tom", "Shield", "Cashier", "Pulse", "Selma", "Scarlett", "Ops", "Drill", "Scout", "Hype", "Ref", "Mute"];
 
   return (
     <div className="space-y-6">
       {/* System health */}
       <SystemHealth />
+
+      {/* Agent Health Strip */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Activity size={14} className="text-primary" />
+            Agent Health
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            {AGENTS.map(name => {
+              const status = getAgentStatus(name);
+              const beat = heartbeats?.find((h: any) => h.agent_name === name);
+              const minsAgo = beat ? Math.round((Date.now() - new Date(beat.last_beat).getTime()) / 60000) : null;
+              return (
+                <div key={name} className="flex items-center gap-1.5 bg-card border border-border rounded px-2 py-1" title={minsAgo !== null ? `Last beat: ${minsAgo}m ago` : "No heartbeat recorded"}>
+                  <div className={`w-2 h-2 rounded-full ${status === "healthy" ? "bg-green-400" : status === "warning" ? "bg-yellow-400" : status === "down" ? "bg-red-400 animate-pulse" : "bg-muted-foreground/30"}`} />
+                  <span className="text-[10px] font-medium text-foreground">{name}</span>
+                  {minsAgo !== null && <span className="text-[9px] text-muted-foreground">{minsAgo < 60 ? `${minsAgo}m` : `${Math.round(minsAgo / 60)}h`}</span>}
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Quick fire actions grid */}
       <Card>
@@ -664,13 +759,37 @@ export default function AdminCommandDeck() {
               <div className="text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground mb-2">{cat}</div>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
                 {QUICK_ACTIONS.filter((a) => a.category === cat).map((action) => (
-                  <ActionButton key={action.id} action={action} />
+                  <ActionButton key={action.id} action={action} onExecuted={addToHistory} />
                 ))}
               </div>
             </div>
           ))}
         </CardContent>
       </Card>
+
+      {/* Execution History */}
+      {history.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Clock size={14} className="text-primary" />
+              Recent Executions
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-1">
+              {history.map((h, i) => (
+                <div key={i} className="flex items-center gap-2 text-[10px] py-1 border-b border-border/50 last:border-0">
+                  <div className={`w-1.5 h-1.5 rounded-full ${h.status === "success" ? "bg-green-400" : "bg-red-400"}`} />
+                  <span className="font-medium text-foreground">{h.label}</span>
+                  <span className="text-muted-foreground flex-1 truncate">{h.result}</span>
+                  <span className="text-muted-foreground shrink-0">{h.timestamp.toLocaleTimeString()}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Power Tools */}
       <Card>
