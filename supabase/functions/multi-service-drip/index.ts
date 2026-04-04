@@ -14,6 +14,40 @@ const log = (step: string, data?: any) =>
 const MAX_LEADS_PER_RUN = 5;
 const SEND_DELAY_MS = 500;
 
+// ── INDUSTRY → DEMO LINK MAPPING ──
+const SITE_BASE = "https://www.mattmichelstraining.com";
+const DEMO_MAP: { keywords: string[]; path: string; label: string }[] = [
+  { keywords: ["dental", "dentist", "orthodont", "prosthodont", "oral"], path: "/demo-dental", label: "dental practice" },
+  { keywords: ["medical", "clinic", "doctor", "physician", "health", "urgent care", "chiropr"], path: "/demo-clinic", label: "medical clinic" },
+  { keywords: ["roof", "roofing"], path: "/demo-roofing", label: "roofing company" },
+  { keywords: ["hvac", "heating", "cooling", "air condition"], path: "/demo-hvac", label: "HVAC company" },
+  { keywords: ["plumb"], path: "/demo-plumber", label: "plumbing company" },
+  { keywords: ["electri"], path: "/demo-electrician", label: "electrical contractor" },
+  { keywords: ["landscap", "lawn", "garden", "tree service"], path: "/demo-landscape", label: "landscaping company" },
+  { keywords: ["auto", "mechanic", "car repair", "body shop", "collision"], path: "/demo-auto-repair", label: "auto repair shop" },
+  { keywords: ["clean", "maid", "janitorial"], path: "/demo-cleaning", label: "cleaning service" },
+  { keywords: ["salon", "spa", "barber", "beauty", "nail", "hair"], path: "/demo-salon", label: "salon / spa" },
+  { keywords: ["restaurant", "bar", "cafe", "pizza", "grill", "food", "catering", "bakery"], path: "/demo-restaurant", label: "restaurant" },
+  { keywords: ["law", "attorney", "legal", "lawyer"], path: "/demo-lawyer", label: "law firm" },
+  { keywords: ["real estate", "realtor", "realty", "broker", "property"], path: "/demo-real-estate", label: "real estate" },
+  { keywords: ["manufactur", "industrial", "automation", "boiler", "machine shop", "fabricat", "weld"], path: "/demo-youngblood", label: "industrial / manufacturing" },
+  { keywords: ["pet", "vet", "veterinar", "grooming", "animal"], path: "/demo-petfection", label: "pet business" },
+];
+
+function getDemoLink(industry?: string): { url: string; label: string } | null {
+  if (!industry) return null;
+  const lower = industry.toLowerCase();
+  for (const entry of DEMO_MAP) {
+    if (entry.keywords.some(k => lower.includes(k))) {
+      return { url: `${SITE_BASE}${entry.path}`, label: entry.label };
+    }
+  }
+  if (lower.includes("contract") || lower.includes("home service") || lower.includes("handyman") || lower.includes("paint") || lower.includes("fenc")) {
+    return { url: `${SITE_BASE}/demo-roofing`, label: "contractor" };
+  }
+  return null;
+}
+
 interface ServiceOffer {
   name: string;
   price: string;
@@ -206,17 +240,17 @@ function buildMultiServiceEmailHtml(subject: string, body: string): string {
 }
 
 const STEP_PROMPTS = [
-  // Step 1: Industry-specific intro
-  (biz: string, industry: string, city: string, serviceList: string) =>
-    `Write a SHORT email (under 120 words) to ${biz}, a ${industry || "local business"} in ${city}. Introduce these services that could help them grow. Keep it casual, local, direct. Start with "Hey —". End with "— Matt". Mention you're based in Grosse Pointe MI. Include a CTA: "Takes 30 seconds: mattmichelstraining.com/get-started"\n\nServices:\n${serviceList}`,
+  // Step 1: Industry-specific intro + demo link
+  (biz: string, industry: string, city: string, serviceList: string, demoInfo?: string) =>
+    `Write a SHORT email (under 120 words) to ${biz}, a ${industry || "local business"} in ${city}. Introduce these services that could help them grow. Keep it casual, local, direct. Start with "Hey —". End with "— Matt". Mention you're based in Grosse Pointe MI.${demoInfo ? `\n\nIMPORTANT: Include this demo link naturally — say something like "Here's a site I built for a similar business" or "Check this out": ${demoInfo}` : ""}\n\nInclude a CTA: "Takes 30 seconds: mattmichelstraining.com/get-started"\n\nServices:\n${serviceList}`,
 
-  // Step 2: Social proof follow-up
-  (biz: string, industry: string, city: string, serviceList: string) =>
-    `Write a SHORT follow-up email (under 100 words) to ${biz}. You emailed them a few days ago about automation tools. Now share a quick win story — mention that a similar ${industry} business saved 10+ hours/week using your tools. Be specific about which service helped most. Casual tone. Start with "Hey —". End with "— Matt". CTA: "See what I'd set up for you: mattmichelstraining.com/get-started"`,
+  // Step 2: Social proof follow-up + demo link
+  (biz: string, industry: string, city: string, serviceList: string, demoInfo?: string) =>
+    `Write a SHORT follow-up email (under 100 words) to ${biz}. You emailed them a few days ago about automation tools. Now share a quick win story — mention that a similar ${industry} business saved 10+ hours/week using your tools. Be specific about which service helped most. Casual tone. Start with "Hey —". End with "— Matt".${demoInfo ? `\n\nInclude this link to a demo site you built: ${demoInfo}` : ""}\n\nCTA: "See what I'd set up for you: mattmichelstraining.com/get-started"`,
 
   // Step 3: Final touch with urgency
-  (biz: string, industry: string, city: string, serviceList: string) =>
-    `Write a FINAL short email (under 80 words) to ${biz}. Last message, no hard feelings if not interested. Mention you only work with a limited number of ${industry} businesses per area so you can give real attention. If timing's ever right, your door's open. Start with "Hey —". End with "— Matt". CTA: "mattmichelstraining.com/get-started or text (313) 806-4952"`,
+  (biz: string, industry: string, city: string, serviceList: string, demoInfo?: string) =>
+    `Write a FINAL short email (under 80 words) to ${biz}. Last message, no hard feelings if not interested. Mention you only work with a limited number of ${industry} businesses per area so you can give real attention. If timing's ever right, your door's open. Start with "Hey —". End with "— Matt".${demoInfo ? `\n\nDrop this link as proof of your work: ${demoInfo}` : ""}\n\nCTA: "mattmichelstraining.com/get-started or text (313) 806-4952"`,
 ];
 
 serve(async (req) => {
@@ -303,7 +337,9 @@ serve(async (req) => {
           .join("\n");
 
         const promptFn = STEP_PROMPTS[stepIndex];
-        const prompt = promptFn(businessName, industry, city, serviceList);
+        const demo = getDemoLink(industry);
+        const demoInfo = demo ? `${demo.url} (built for a ${demo.label})` : undefined;
+        const prompt = promptFn(businessName, industry, city, serviceList, demoInfo);
 
         const claudeRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",

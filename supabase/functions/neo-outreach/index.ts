@@ -27,6 +27,42 @@ const DAILY_SEND_LIMIT = 20;
 // Matt's own test emails — never run outreach to these
 const TEST_EMAILS = ["matt@mattmichelstraining.com", "matthewmichels@gmail.com", "matthewmichels4@gmail.com"];
 
+// ── INDUSTRY → DEMO LINK MAPPING ──
+// Maps industry keywords to the best demo site to include in outreach
+const BASE = "https://www.mattmichelstraining.com";
+const DEMO_MAP: { keywords: string[]; path: string; label: string }[] = [
+  { keywords: ["dental", "dentist", "orthodont", "prosthodont", "oral"], path: "/demo-dental", label: "dental practice" },
+  { keywords: ["medical", "clinic", "doctor", "physician", "health", "urgent care", "chiropr"], path: "/demo-clinic", label: "medical clinic" },
+  { keywords: ["roof", "roofing"], path: "/demo-roofing", label: "roofing company" },
+  { keywords: ["hvac", "heating", "cooling", "air condition"], path: "/demo-hvac", label: "HVAC company" },
+  { keywords: ["plumb"], path: "/demo-plumber", label: "plumbing company" },
+  { keywords: ["electri"], path: "/demo-electrician", label: "electrical contractor" },
+  { keywords: ["landscap", "lawn", "garden", "tree service"], path: "/demo-landscape", label: "landscaping company" },
+  { keywords: ["auto", "mechanic", "car repair", "body shop", "collision"], path: "/demo-auto-repair", label: "auto repair shop" },
+  { keywords: ["clean", "maid", "janitorial"], path: "/demo-cleaning", label: "cleaning service" },
+  { keywords: ["salon", "spa", "barber", "beauty", "nail", "hair"], path: "/demo-salon", label: "salon / spa" },
+  { keywords: ["restaurant", "bar", "cafe", "pizza", "grill", "food", "catering", "bakery"], path: "/demo-restaurant", label: "restaurant" },
+  { keywords: ["law", "attorney", "legal", "lawyer"], path: "/demo-lawyer", label: "law firm" },
+  { keywords: ["real estate", "realtor", "realty", "broker", "property"], path: "/demo-real-estate", label: "real estate" },
+  { keywords: ["manufactur", "industrial", "automation", "boiler", "machine shop", "fabricat", "weld"], path: "/demo-youngblood", label: "industrial / manufacturing" },
+  { keywords: ["pet", "vet", "veterinar", "grooming", "animal"], path: "/demo-petfection", label: "pet business" },
+];
+
+function getDemoLink(industry?: string): { url: string; label: string } | null {
+  if (!industry) return null;
+  const lower = industry.toLowerCase();
+  for (const entry of DEMO_MAP) {
+    if (entry.keywords.some(k => lower.includes(k))) {
+      return { url: `${BASE}${entry.path}`, label: entry.label };
+    }
+  }
+  // Default to roofing demo as a general contractor showcase
+  if (lower.includes("contract") || lower.includes("home service") || lower.includes("handyman") || lower.includes("paint") || lower.includes("fenc")) {
+    return { url: `${BASE}/demo-roofing`, label: "contractor" };
+  }
+  return null;
+}
+
 // Determine the best product pitch for each business profile
 function selectPitch(business: { industry?: string; has_website?: boolean; rating?: number; review_count?: number }) {
   // No website → obvious web design pitch
@@ -46,13 +82,19 @@ async function writePersonalizedEmail(business: {
   phone?: string;
   pitch: { product: string; cta: string; price: string };
 }): Promise<{ subject: string; body: string }> {
+  const demo = getDemoLink(business.industry);
+  const demoLine = demo ? `\n\nHere's what I built for a ${demo.label} — takes 10 seconds to look: ${demo.url}` : "";
+
   if (!ANTHROPIC_API_KEY) {
-    // Fallback template if no API key
     return {
       subject: `Quick question about ${business.business_name}`,
-      body: `Hey, my name's Matt Michels — I'm based out of Grosse Pointe and I do web work for local businesses.\n\nI was looking at your Google listing for ${business.business_name} and had a quick question — are you happy with the leads your website is currently bringing in?\n\nIf not, I can do ${business.pitch.cta} for ${business.pitch.price}.\n\nEither way, no pitch deck, no demo call. Just a straight answer on what I'd fix.\n\n— Matt\n(313) 806-4952`,
+      body: `Hey, my name's Matt Michels — I'm based out of Grosse Pointe and I do web work for local businesses.\n\nI was looking at your Google listing for ${business.business_name} and had a quick question — are you happy with the leads your website is currently bringing in?\n\nIf not, I can do ${business.pitch.cta} for ${business.pitch.price}.${demoLine}\n\nEither way, no pitch deck, no demo call. Just a straight answer on what I'd fix.\n\n— Matt\n(313) 806-4952`,
     };
   }
+
+  const demoInstruction = demo
+    ? `\n- MUST include this demo link naturally in the email: ${demo.url} — say something like "Here's one I built for a ${demo.label}" or "Check out what I did for a similar business: ${demo.url}"`
+    : "";
 
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -79,7 +121,7 @@ The pitch: ${business.pitch.cta} (${business.pitch.price}).
 Rules:
 - Opens with "Hey, my name's Matt Michels"
 - References their specific business/industry naturally
-- Pitches the product in one sentence, makes it sound easy
+- Pitches the product in one sentence, makes it sound easy${demoInstruction}
 - Ends with "— Matt" and his phone number: (313) 806-4952
 - Total: 4-6 sentences max
 
@@ -97,7 +139,7 @@ Subject should be under 45 chars, conversational, not salesy.`,
   } catch {
     return {
       subject: `Quick question about ${business.business_name}`,
-      body: `Hey, my name's Matt Michels — based in Grosse Pointe, I work with ${business.industry || "local"} businesses across the Detroit metro.\n\nSaw your listing and wanted to reach out — I can do ${business.pitch.cta} for ${business.pitch.price}. Quick, no obligation.\n\n— Matt\n(313) 806-4952`,
+      body: `Hey, my name's Matt Michels — based in Grosse Pointe, I work with ${business.industry || "local"} businesses across the Detroit metro.\n\nSaw your listing and wanted to reach out — I can do ${business.pitch.cta} for ${business.pitch.price}.${demoLine}\n\n— Matt\n(313) 806-4952`,
     };
   }
 }
