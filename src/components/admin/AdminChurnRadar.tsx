@@ -155,7 +155,7 @@ const AdminChurnRadar = () => {
             <span>Last 7 days: <strong className="text-destructive">0 logs</strong></span>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <button
               onClick={() => handleSendCheckin(alert)}
               disabled={sendingId === alert.id}
@@ -166,14 +166,22 @@ const AdminChurnRadar = () => {
               ) : (
                 <MessageSquare size={12} />
               )}
-              Send Check-In
+              Check-In
+            </button>
+            <button
+              onClick={async () => {
+                const { error } = await supabase.functions.invoke("ai-churn-preventer", { body: { userId: alert.user_id, action: "extend_trial" } });
+                if (!error) { toast({ title: "Trial extended", description: `7-day extension for ${alert.full_name}` }); }
+              }}
+              className="flex items-center justify-center gap-1.5 border border-border text-muted-foreground text-[10px] font-bold uppercase tracking-widest px-3 py-2 hover:text-foreground hover:border-foreground/30 transition-all"
+            >
+              +7 Days
             </button>
             <button
               onClick={() => setDismissTarget(alert)}
               className="flex items-center justify-center gap-1.5 border border-border text-muted-foreground text-[10px] font-bold uppercase tracking-widest px-3 py-2 hover:text-foreground hover:border-foreground/30 transition-all"
             >
               <X size={12} />
-              Dismiss
             </button>
           </div>
         </div>
