@@ -287,6 +287,8 @@ const RealEstateNewsletter = lazyRetry(() => import("./pages/RealEstateNewslette
 const RealEstateDashboard = lazyRetry(() => import("./pages/RealEstateDashboard"));
 const EmployeeCredentialAudit = lazyRetry(() => import("./pages/EmployeeCredentialAudit"));
 const NewHireCheck = lazyRetry(() => import("./pages/NewHireCheck"));
+const StewartDentalProduction = lazyRetry(() => import("./pages/StewartDentalProduction"));
+const StewartDentalPrivacy = lazyRetry(() => import("./pages/StewartDentalPrivacy"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -456,6 +458,8 @@ const App = () => (
                     <Route path="/demo-youngblood-alt1/*" element={<YoungbloodMockupAlt1 />} />
                     <Route path="/demo-dental-alt1" element={<DentalMockupAlt1 />} />
                     <Route path="/demo-dental-alt1/*" element={<DentalMockupAlt1 />} />
+                    <Route path="/stewart-dental" element={<StewartDentalProduction />} />
+                    <Route path="/stewart-dental/privacy" element={<StewartDentalPrivacy />} />
                     <Route path="/demo-dental-alt2" element={<DentalMockupAlt2 />} />
                     <Route path="/demo-dental-alt2/*" element={<DentalMockupAlt2 />} />
                     <Route path="/demo-youngblood-alt2" element={<YoungbloodMockupAlt2 />} />
