@@ -75,7 +75,8 @@ export default function GovContractMonitor() {
         min_contract_value: form.min_contract_value ? parseInt(form.min_contract_value.replace(/\D/g, "")) : undefined,
         max_contract_value: form.max_contract_value ? parseInt(form.max_contract_value.replace(/\D/g, "")) : undefined,
       };
-      const res = await fetch("/functions/v1/create-gov-contract-checkout", {
+      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "";
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/create-gov-contract-checkout`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
