@@ -301,8 +301,13 @@ serve(async (req) => {
       .or("source.is.null,source.not.ilike.waitlist_%,source.eq.training_newsletter");
 
     if (!subscribers || subscribers.length === 0) {
-      console.log("[TRAINING-NEWSLETTER] No subscribers — saving draft only");
-      return new Response(JSON.stringify({ sent: 0, draft_id: draft?.id }), {
+      console.log(`[TRAINING-NEWSLETTER] No subscribers — draft saved for "${content.subject}" via ${provider}`);
+      return new Response(JSON.stringify({
+        sent: 0,
+        draft_id: draft?.id,
+        subject: content.subject,
+        provider,
+      }), {
         headers: { ...CORS, "Content-Type": "application/json" },
       });
     }
