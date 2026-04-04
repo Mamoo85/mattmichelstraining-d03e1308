@@ -458,6 +458,8 @@ const App = () => (
                     <Route path="/demo-youngblood-alt1/*" element={<YoungbloodMockupAlt1 />} />
                     <Route path="/demo-dental-alt1" element={<DentalMockupAlt1 />} />
                     <Route path="/demo-dental-alt1/*" element={<DentalMockupAlt1 />} />
+                    <Route path="/stewart-dental" element={<StewartDentalProduction />} />
+                    <Route path="/stewart-dental/privacy" element={<StewartDentalPrivacy />} />
                     <Route path="/demo-dental-alt2" element={<DentalMockupAlt2 />} />
                     <Route path="/demo-dental-alt2/*" element={<DentalMockupAlt2 />} />
                     <Route path="/demo-youngblood-alt2" element={<YoungbloodMockupAlt2 />} />
