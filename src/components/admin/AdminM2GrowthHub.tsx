@@ -83,7 +83,6 @@ const M2_SERVICES = [
       email: MATT_EMAIL,
       industry: "AI automation services",
       city: "Grosse Pointe",
-      website: "https://mattmichelstraining.com",
       active: true,
     },
   },
