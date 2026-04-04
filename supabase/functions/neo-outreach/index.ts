@@ -21,16 +21,22 @@ const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
 
 const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 const DAILY_SEND_LIMIT = 20;
+// WEB DESIGN IS THE #1 PRIORITY — 80% of outreach should push web design.
+// Only pitch automation products to businesses that already have a great website + strong reviews.
 
 // Matt's own test emails — never run outreach to these
 const TEST_EMAILS = ["matt@mattmichelstraining.com", "matthewmichels@gmail.com", "matthewmichels4@gmail.com"];
 
 // Determine the best product pitch for each business profile
 function selectPitch(business: { industry?: string; has_website?: boolean; rating?: number; review_count?: number }) {
+  // No website → obvious web design pitch
   if (!business.has_website) return { product: "web_design", cta: "a website that actually gets you calls", price: "$499" };
-  if ((business.review_count || 0) > 20 && (business.rating || 0) >= 4.0) return { product: "gbp_saas", cta: "automated Google posts 3x/week to stay visible", price: "$49/mo" };
-  if ((business.review_count || 0) > 5) return { product: "website_audit", cta: "a free website audit — I'll tell you exactly what's costing you customers", price: "$49" };
-  return { product: "website_audit", cta: "a quick website audit", price: "$49" };
+  // Has a website but < 30 reviews or < 4.5 stars → web redesign pitch (most businesses)
+  if ((business.review_count || 0) < 30 || (business.rating || 0) < 4.5) {
+    return { product: "web_design", cta: "a modern website redesign that ranks on Google and converts visitors into calls", price: "$499" };
+  }
+  // Only pitch GBP SaaS to businesses with 30+ reviews AND 4.5+ stars (already doing great online)
+  return { product: "gbp_saas", cta: "automated Google posts 3x/week to stay visible", price: "$49/mo" };
 }
 
 async function writePersonalizedEmail(business: {
