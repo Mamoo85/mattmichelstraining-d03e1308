@@ -11,7 +11,7 @@ const C = "#F8F3EC"; // Cream
 const P = "#FDFAF5"; // Parchment
 
 /* ─── Types ─── */
-type Tab = "procedures" | "faq" | "new-patients" | "privacy";
+type Tab = "procedures" | "faq" | "new-patients" | "gallery" | "privacy";
 
 /* ─── FAQ data (real content from stewartdentalgroup.com) ─── */
 const FAQS: [string, string][] = [
