@@ -238,17 +238,17 @@ function buildMultiServiceEmailHtml(subject: string, body: string): string {
 }
 
 const STEP_PROMPTS = [
-  // Step 1: Industry-specific intro
-  (biz: string, industry: string, city: string, serviceList: string) =>
-    `Write a SHORT email (under 120 words) to ${biz}, a ${industry || "local business"} in ${city}. Introduce these services that could help them grow. Keep it casual, local, direct. Start with "Hey —". End with "— Matt". Mention you're based in Grosse Pointe MI. Include a CTA: "Takes 30 seconds: mattmichelstraining.com/get-started"\n\nServices:\n${serviceList}`,
+  // Step 1: Industry-specific intro + demo link
+  (biz: string, industry: string, city: string, serviceList: string, demoInfo?: string) =>
+    `Write a SHORT email (under 120 words) to ${biz}, a ${industry || "local business"} in ${city}. Introduce these services that could help them grow. Keep it casual, local, direct. Start with "Hey —". End with "— Matt". Mention you're based in Grosse Pointe MI.${demoInfo ? `\n\nIMPORTANT: Include this demo link naturally — say something like "Here's a site I built for a similar business" or "Check this out": ${demoInfo}` : ""}\n\nInclude a CTA: "Takes 30 seconds: mattmichelstraining.com/get-started"\n\nServices:\n${serviceList}`,
 
-  // Step 2: Social proof follow-up
-  (biz: string, industry: string, city: string, serviceList: string) =>
-    `Write a SHORT follow-up email (under 100 words) to ${biz}. You emailed them a few days ago about automation tools. Now share a quick win story — mention that a similar ${industry} business saved 10+ hours/week using your tools. Be specific about which service helped most. Casual tone. Start with "Hey —". End with "— Matt". CTA: "See what I'd set up for you: mattmichelstraining.com/get-started"`,
+  // Step 2: Social proof follow-up + demo link
+  (biz: string, industry: string, city: string, serviceList: string, demoInfo?: string) =>
+    `Write a SHORT follow-up email (under 100 words) to ${biz}. You emailed them a few days ago about automation tools. Now share a quick win story — mention that a similar ${industry} business saved 10+ hours/week using your tools. Be specific about which service helped most. Casual tone. Start with "Hey —". End with "— Matt".${demoInfo ? `\n\nInclude this link to a demo site you built: ${demoInfo}` : ""}\n\nCTA: "See what I'd set up for you: mattmichelstraining.com/get-started"`,
 
   // Step 3: Final touch with urgency
-  (biz: string, industry: string, city: string, serviceList: string) =>
-    `Write a FINAL short email (under 80 words) to ${biz}. Last message, no hard feelings if not interested. Mention you only work with a limited number of ${industry} businesses per area so you can give real attention. If timing's ever right, your door's open. Start with "Hey —". End with "— Matt". CTA: "mattmichelstraining.com/get-started or text (313) 806-4952"`,
+  (biz: string, industry: string, city: string, serviceList: string, demoInfo?: string) =>
+    `Write a FINAL short email (under 80 words) to ${biz}. Last message, no hard feelings if not interested. Mention you only work with a limited number of ${industry} businesses per area so you can give real attention. If timing's ever right, your door's open. Start with "Hey —". End with "— Matt".${demoInfo ? `\n\nDrop this link as proof of your work: ${demoInfo}` : ""}\n\nCTA: "mattmichelstraining.com/get-started or text (313) 806-4952"`,
 ];
 
 serve(async (req) => {
