@@ -23,6 +23,12 @@ interface ProviderResult {
   error?: string;
 }
 
+function getSafeNewsletterText(value?: string | null): string | undefined {
+  const trimmed = value?.trim();
+  if (!trimmed || /^(undefined|null)$/i.test(trimmed)) return undefined;
+  return trimmed;
+}
+
 const TOPICS = [
   "progressive overload — the only thing that actually works",
   "core stability vs mirror muscles — why Instagram is lying to you",
@@ -92,6 +98,14 @@ function ContentCard({
   }
 
   const c = result.content!;
+  const subject = getSafeNewsletterText(c.subject) || "Draft subject unavailable";
+  const previewText = getSafeNewsletterText(c.preview_text) || "Preview text unavailable";
+  const headline = getSafeNewsletterText(c.headline) || "Headline unavailable";
+  const opening = getSafeNewsletterText(c.opening) || "Opening unavailable";
+  const body = getSafeNewsletterText(c.body) || "Content unavailable.";
+  const truthOfTheMonth = getSafeNewsletterText(c.truth_of_the_month) || "Truth of the month unavailable.";
+  const ctaText = getSafeNewsletterText(c.cta_text) || "Book a Session";
+  const nextMonthTease = getSafeNewsletterText(c.next_month_tease) || "Next month we talk about foam rolling.";
 
   return (
     <div className="flex-1 border border-slate-700 rounded-lg overflow-hidden bg-slate-900 flex flex-col">
@@ -123,35 +137,35 @@ function ContentCard({
           <>
             <div>
               <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Subject</p>
-              <p className="text-white font-semibold">{c.subject}</p>
+              <p className="text-white font-semibold">{subject}</p>
             </div>
             <div>
               <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Preview Text</p>
-              <p className="text-slate-300">{c.preview_text}</p>
+              <p className="text-slate-300">{previewText}</p>
             </div>
             <div>
               <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Headline</p>
-              <p className="text-white font-bold text-base">{c.headline}</p>
+              <p className="text-white font-bold text-base">{headline}</p>
             </div>
             <div>
               <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Opening</p>
-              <p className="text-slate-300 italic">{c.opening}</p>
+              <p className="text-slate-300 italic">{opening}</p>
             </div>
             <div>
               <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Body</p>
-              <p className="text-slate-300 whitespace-pre-wrap">{c.body}</p>
+              <p className="text-slate-300 whitespace-pre-wrap">{body}</p>
             </div>
             <div className="bg-slate-800 rounded p-3">
               <p className="text-xs text-orange-400 uppercase tracking-wider mb-1">Truth of the Month</p>
-              <p className="text-white font-semibold">{c.truth_of_the_month}</p>
+              <p className="text-white font-semibold">{truthOfTheMonth}</p>
             </div>
             <div>
               <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">CTA</p>
-              <p className="text-slate-300">{c.cta_text}</p>
+              <p className="text-slate-300">{ctaText}</p>
             </div>
             <div>
               <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Next Month Tease</p>
-              <p className="text-slate-300 italic">{c.next_month_tease}</p>
+              <p className="text-slate-300 italic">{nextMonthTease}</p>
             </div>
           </>
         )}
@@ -210,8 +224,8 @@ export default function AdminTrainingNewsletter() {
         },
       });
       if (error) throw error;
-      setAnthropicResult(data.anthropic || { error: "No result" });
-      setLovableResult(data.lovable || { error: "No result" });
+      setAnthropicResult(data?.anthropic || { error: "No result" });
+      setLovableResult(data?.lovable || { error: "No result" });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
       toast({ title: "Generation failed", description: msg, variant: "destructive" });
@@ -244,10 +258,11 @@ export default function AdminTrainingNewsletter() {
 
   async function handleSend(provider: "anthropic" | "lovable") {
     const setter = provider === "anthropic" ? setAnthropicSending : setLovableSending;
-    const fallbackSubject =
+    const fallbackSubject = getSafeNewsletterText(
       provider === "anthropic"
         ? anthropicResult?.content?.subject
-        : lovableResult?.content?.subject;
+        : lovableResult?.content?.subject
+    );
 
     setter(true);
     try {
@@ -261,7 +276,7 @@ export default function AdminTrainingNewsletter() {
       if (error) throw error;
       toast({
         title: `Sent via ${provider}`,
-        description: `Delivered to ${data?.sent || 0} subscribers. Subject: "${data?.subject || fallbackSubject || "Draft saved"}"`,
+        description: `Delivered to ${data?.sent || 0} subscribers. Subject: "${getSafeNewsletterText(data?.subject) || fallbackSubject || "Draft saved"}"`,
       });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);

@@ -66,6 +66,41 @@ interface NewsletterContent {
   next_month_tease: string;
 }
 
+const INVALID_COPY_PATTERN = /^(undefined|null|n\/a|none)$/i;
+
+function cleanShortText(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  if (!trimmed || INVALID_COPY_PATTERN.test(trimmed)) return undefined;
+  return trimmed.replace(/\s+/g, " ");
+}
+
+function cleanLongText(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  if (!trimmed || INVALID_COPY_PATTERN.test(trimmed)) return undefined;
+  return trimmed;
+}
+
+function normalizeNewsletterContent(input: unknown, topic: string, rawText: string): NewsletterContent {
+  const parsed = input && typeof input === "object" ? input as Partial<NewsletterContent> : {};
+  const safeTopic = cleanShortText(topic) || "this month's training truth";
+  const fallbackHeadline = safeTopic.charAt(0).toUpperCase() + safeTopic.slice(1);
+  const fallbackBody = cleanLongText(rawText)
+    || `This month we're covering ${safeTopic}. Focus on the basics: move well, recover hard, and stop wasting time on fluff.`;
+
+  return {
+    subject: cleanShortText(parsed.subject) || `Matt's Take — ${fallbackHeadline}`,
+    preview_text: cleanShortText(parsed.preview_text) || "Real training talk from Matt Michels.",
+    headline: cleanShortText(parsed.headline) || fallbackHeadline,
+    opening: cleanLongText(parsed.opening) || `This month we're talking about ${safeTopic}. No fluff. Just what actually works.`,
+    body: cleanLongText(parsed.body) || fallbackBody,
+    truth_of_the_month: cleanLongText(parsed.truth_of_the_month) || "Progressive overload works 100% of the time. Add weight, add reps, be consistent.",
+    cta_text: cleanShortText(parsed.cta_text) || "Book a Session",
+    next_month_tease: cleanLongText(parsed.next_month_tease) || "Next month we talk about foam rolling.",
+  };
+}
+
 const JSON_PROMPT_SUFFIX = `
 
 Return JSON with these fields:
@@ -115,14 +150,21 @@ async function generateWithGateway(model: string, topic: string, customContent?:
   const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
     console.error("[TRAINING-NEWSLETTER] No JSON found in AI response:", raw.slice(0, 500));
-    throw new Error("AI response did not contain valid JSON");
+    return normalizeNewsletterContent({
+      headline: topic,
+      opening: cleaned.slice(0, 220),
+      body: cleaned,
+      truth_of_the_month: "Progressive overload works 100% of the time. Add weight, add reps, be consistent.",
+      cta_text: "Book a Session",
+      next_month_tease: "Next month we talk about foam rolling.",
+    }, topic, cleaned);
   }
   try {
-    return JSON.parse(jsonMatch[0]);
+    return normalizeNewsletterContent(JSON.parse(jsonMatch[0]), topic, cleaned);
   } catch (parseErr) {
     console.error("[TRAINING-NEWSLETTER] JSON parse failed:", parseErr, "Raw:", jsonMatch[0].slice(0, 500));
     // Return fallback content
-    return {
+    return normalizeNewsletterContent({
       subject: `The Monthly — ${topic}`,
       preview_text: "Real training talk from Matt Michels.",
       headline: topic,
@@ -131,7 +173,7 @@ async function generateWithGateway(model: string, topic: string, customContent?:
       truth_of_the_month: "Progressive overload works 100% of the time. Add weight, add reps, be consistent.",
       cta_text: "Book a Session",
       next_month_tease: "Next month we talk about foam rolling.",
-    };
+    }, topic, cleaned);
   }
 }
 
