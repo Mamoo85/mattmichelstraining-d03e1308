@@ -289,6 +289,7 @@ const EmployeeCredentialAudit = lazyRetry(() => import("./pages/EmployeeCredenti
 const NewHireCheck = lazyRetry(() => import("./pages/NewHireCheck"));
 const StewartDentalProduction = lazyRetry(() => import("./pages/StewartDentalProduction"));
 const StewartDentalPrivacy = lazyRetry(() => import("./pages/StewartDentalPrivacy"));
+const DJConleyDemo1 = lazyRetry(() => import("./pages/DJConleyDemo1"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
