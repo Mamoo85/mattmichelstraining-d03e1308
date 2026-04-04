@@ -37,7 +37,7 @@ export const InviteEmail = ({
         />
         <Heading style={h1}>You've been invited</Heading>
         <Text style={text}>
-          You've been invited to join M² Performance Training. Click the button below to accept and create your account.
+          You've been invited to join M2 Development. Click the button below to accept and create your account.
         </Text>
         <Button style={button} href={confirmationUrl}>
           Accept Invitation

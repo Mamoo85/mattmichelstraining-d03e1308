@@ -134,7 +134,7 @@ const SEOLandingPage = () => {
         {/* Footer badge */}
         <div className="bg-background py-8 text-center">
           <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
-            © {new Date().getFullYear()} Matt Michels Training · M² Performance
+            © {new Date().getFullYear()} Matt Michels Training · M2 Development
           </p>
         </div>
       </main>
