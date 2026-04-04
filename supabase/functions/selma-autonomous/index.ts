@@ -151,30 +151,34 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, serviceKey);
 
     // 1. Build business state snapshot
-    const snapshot: Array<{ name: string; active: number; price: number; ltv: number; capacity: string; keywords: string[] }> = [];
+    const snapshot: Array<{ name: string; active: number; price: number; ltv: number; capacity: string; keywords: string[]; priority: number }> = [];
 
     for (const product of PRODUCT_TABLES) {
       try {
-        const { count } = await supabase
-          .from(product.table)
-          .select("*", { count: "exact", head: true })
-          .eq("active", true);
+        // web_design_leads uses status instead of active boolean
+        let activeCount = 0;
+        if (product.table === "web_design_leads") {
+          const { count } = await supabase
+            .from(product.table)
+            .select("*", { count: "exact", head: true })
+            .in("status", ["new", "contacted", "drip"]);
+          activeCount = count ?? 0;
+        } else {
+          const { count } = await supabase
+            .from(product.table)
+            .select("*", { count: "exact", head: true })
+            .eq("active", true);
+          activeCount = count ?? 0;
+        }
         
-        const activeCount = count ?? 0;
         const ltv = product.price * product.ltv_months;
         const capacity = activeCount < 3 ? "high" : activeCount < 10 ? "medium" : "low";
         
-        snapshot.push({ name: product.name, active: activeCount, price: product.price, ltv, capacity, keywords: product.keywords });
+        snapshot.push({ name: product.name, active: activeCount, price: product.price, ltv, capacity, keywords: product.keywords, priority: product.priority });
       } catch {
         // Table might not exist yet, skip
       }
     }
-
-    // Also check web design pipeline
-    const { count: webDesignLeads } = await supabase
-      .from("web_design_leads")
-      .select("*", { count: "exact", head: true })
-      .in("status", ["new", "contacted", "drip"]);
 
     // Check recent conversions (last 30 days)
     const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
@@ -197,9 +201,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    // 3. Get REAL keyword data from DataForSEO for high-capacity services
-    const highCapacity = snapshot.filter(s => s.capacity === "high" || s.capacity === "medium");
-    const allKeywords = highCapacity.flatMap(s => s.keywords);
+    // 3. Get REAL keyword data from DataForSEO — PRIORITY 1 services first
+    const tier1 = snapshot.filter(s => s.priority === 1);
+    const tier2 = snapshot.filter(s => s.priority === 2);
+    const priorityKeywords = tier1.flatMap(s => s.keywords);
+    // Also grab tier 2 keywords if budget allows (DataForSEO charges per keyword batch)
+    const tier2Keywords = tier2.flatMap(s => s.keywords).slice(0, 15);
+    const allKeywords = [...priorityKeywords, ...tier2Keywords];
     
     let keywordIntel = "";
     if (dfLogin && dfPassword && allKeywords.length > 0) {
@@ -215,34 +223,49 @@ Deno.serve(async (req) => {
     }
 
     // 4. Use AI to analyze and generate campaign
-    const businessState = snapshot
-      .sort((a, b) => {
-        const capacityOrder: Record<string, number> = { high: 0, medium: 1, low: 2 };
-        return (capacityOrder[a.capacity] ?? 2) - (capacityOrder[b.capacity] ?? 2);
-      })
-      .map(s => `${s.name}: ${s.active} active clients, $${s.price}/mo, LTV $${s.ltv}, capacity: ${s.capacity}`)
+    const tier1State = tier1
+      .map(s => `⭐ [PRIORITY 1] ${s.name}: ${s.active} active clients, $${s.price}/mo, LTV $${s.ltv}, capacity: ${s.capacity}`)
+      .join("\n");
+    const tier2State = tier2
+      .map(s => `  [PRIORITY 2] ${s.name}: ${s.active} active clients, $${s.price}/mo, LTV $${s.ltv}, capacity: ${s.capacity}`)
+      .join("\n");
+    const tier3State = snapshot.filter(s => s.priority === 3)
+      .map(s => `  [PRIORITY 3 — BACKBURNER] ${s.name}: ${s.active} active, $${s.price}/mo`)
       .join("\n");
 
     const prompt = `You are Selma, a PhD economist and head marketer for M² (a B2B marketing automation agency in Grosse Pointe, Michigan).
 
-BUSINESS STATE:
-${businessState}
+BUSINESS STATE — TIERED BY PRIORITY:
 
-Web Design Pipeline: ${webDesignLeads ?? 0} active leads
+=== TIER 1: FOCUS HERE FIRST ===
+${tier1State}
+
+=== TIER 2: SECONDARY (SMS Products) ===
+${tier2State}
+
+=== TIER 3: BACKBURNER — DO NOT PROPOSE UNLESS TIERS 1-2 HAVE NO VIABLE CAMPAIGNS ===
+${tier3State}
+
 Recent Conversions (30d): ${recentConversions ?? 0}
 ${keywordIntel}
 
-TASK: Analyze this data and determine the single best ad campaign opportunity right now.
+TASK: Propose ONE ad campaign. You MUST pick from Tier 1 first. Only go to Tier 2 if NO Tier 1 service has a viable campaign. NEVER pick from Tier 3 unless Tiers 1 and 2 both have zero viable options.
+
+THINK OUTSIDE THE BOX:
+- Consider bundling services (e.g., "Web Design + GBP + Social Media" package deal ad)
+- Consider retargeting audiences (people who visited our pages but didn't convert)
+- Consider Reddit r/smallbusiness, r/entrepreneur, r/sweatystartup for B2B services
+- Consider seasonal angles (spring = contractors, summer = restaurants, fall = HVAC)
+- Consider local Michigan geo-targeting vs national campaigns
+- Consider Facebook/Instagram lookalike audiences based on existing client profiles
 
 RULES:
 - Only propose if projected LTV > 3x projected CAC
-- Prioritize services with HIGH capacity (few clients = room to grow)
-- Consider which platforms (Google, Facebook, Instagram, Reddit) match the service best
 - If real CPC data is provided, use it for precise CAC = CPC × (100 / conversion_rate%). Assume 3-5% landing page conversion rate.
 - Maximum budget: $200/mo for any single campaign
 - If no campaign meets the 3x threshold, respond with EXACTLY: {"no_campaign": true}
 
-If a campaign IS viable, respond in this EXACT JSON format:
+Respond in this EXACT JSON format (no markdown, ONLY valid JSON):
 {
   "service": "Service Name",
   "platform": "Google|Facebook|Instagram|Reddit",
@@ -252,11 +275,9 @@ If a campaign IS viable, respond in this EXACT JSON format:
   "projected_cac": 45,
   "projected_ltv": 400,
   "projected_roas": 3.5,
-  "campaign_content": "FULL campaign text here — ad copy, targeting details, headlines, descriptions, everything ready to paste into Ads Manager",
-  "reasoning": "Why this is the best opportunity right now, citing real CPC data if available"
-}
-
-Respond with ONLY valid JSON, no markdown.`;
+  "campaign_content": "FULL campaign — headlines, descriptions, CTAs, targeting, bidding strategy, landing page recommendation",
+  "reasoning": "Why this is the best opportunity, citing real CPC data"
+}`;
 
     const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
