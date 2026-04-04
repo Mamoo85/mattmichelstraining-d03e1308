@@ -20,7 +20,7 @@ async function sendEmail(to: string | string[], subject: string, html: string) {
     await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from: "M² Training <onboarding@resend.dev>", to: recipients, subject, html }),
+      body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: recipients, subject, html }),
     });
   } catch (e) { console.error("Email error:", e); }
 }

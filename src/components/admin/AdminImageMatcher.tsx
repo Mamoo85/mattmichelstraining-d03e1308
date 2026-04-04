@@ -4,7 +4,7 @@ import { Search, Check, X, ArrowRight, Image as ImageIcon, Loader2 } from "lucid
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
-const BUCKET_BASE = "https://eauvubfpanpeuxsrqesu.supabase.co/storage/v1/object/public/exercise_reference_images/";
+const BUCKET_BASE = "https://zmyczlfuufhngzovkjdh.supabase.co/storage/v1/object/public/exercise_reference_images/";
 
 // Known page-number images from the bucket
 const PAGE_IMAGES = [
