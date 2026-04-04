@@ -260,12 +260,12 @@ supabase functions deploy stripe-webhook</div>
     <p>These automation functions need to be scheduled. Go to Supabase → <strong>Edge Functions → Cron</strong> (or use pg_cron in SQL Editor) and add:</p>
     <div class="code-block">-- Run daily at 9am (review requests + drip emails)
 SELECT cron.schedule('send-review-request-daily', '0 9 * * *',
-  $$SELECT net.http_post(url:='https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/send-review-request', headers:='{"Authorization":"Bearer YOUR_ANON_KEY"}'::jsonb)$$
+  $$SELECT net.http_post(url:='https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/send-review-request', headers:='{"Authorization":"Bearer YOUR_ANON_KEY"}'::jsonb)$$
 );
 
 -- Run weekly Monday 8am (GBP posts for clients)
 SELECT cron.schedule('auto-gbp-posts-weekly', '0 8 * * 1',
-  $$SELECT net.http_post(url:='https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/auto-gbp-posts', headers:='{"Authorization":"Bearer YOUR_ANON_KEY"}'::jsonb)$$
+  $$SELECT net.http_post(url:='https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/auto-gbp-posts', headers:='{"Authorization":"Bearer YOUR_ANON_KEY"}'::jsonb)$$
 );</div>
     <button class="copy-btn" onclick="copyCron()">Copy Cron SQL</button>
     <div class="tip">Replace <code>YOUR_ANON_KEY</code> with your Supabase project's anon key (found in Project Settings → API).</div>
