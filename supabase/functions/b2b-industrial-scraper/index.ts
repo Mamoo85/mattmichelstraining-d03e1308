@@ -26,6 +26,7 @@ const INDUSTRIAL_CITIES = [
 ];
 
 const INDUSTRIAL_TYPES = [
+  // Original 10
   { query: "metal fabrication shop", industry: "metal_fabrication" },
   { query: "CNC machining service", industry: "cnc_machining" },
   { query: "injection molding company", industry: "injection_molding" },
@@ -36,6 +37,27 @@ const INDUSTRIAL_TYPES = [
   { query: "powder coating service", industry: "powder_coating" },
   { query: "sheet metal fabrication", industry: "sheet_metal" },
   { query: "contract manufacturing", industry: "contract_manufacturing" },
+  // 20 new — ideal Addy Machinery / CNC equipment buyers
+  { query: "precision machining company", industry: "precision_machining" },
+  { query: "aerospace parts manufacturer", industry: "aerospace_manufacturing" },
+  { query: "automotive parts manufacturer", industry: "automotive_parts" },
+  { query: "metal stamping company", industry: "stamping" },
+  { query: "wire EDM service", industry: "wire_edm" },
+  { query: "grinding shop surface grinding", industry: "grinding" },
+  { query: "Swiss screw machining", industry: "swiss_screw" },
+  { query: "prototype machining service", industry: "prototype_machining" },
+  { query: "die casting company", industry: "die_casting" },
+  { query: "forging company", industry: "forging" },
+  { query: "gear manufacturer", industry: "gear_manufacturing" },
+  { query: "spring manufacturer", industry: "spring_manufacturing" },
+  { query: "tube bending fabrication", industry: "tube_bending" },
+  { query: "laser cutting service", industry: "laser_cutting" },
+  { query: "waterjet cutting service", industry: "waterjet_cutting" },
+  { query: "anodizing plating service", industry: "anodizing_plating" },
+  { query: "fixture jig manufacturer", industry: "fixture_jig" },
+  { query: "mold maker plastic mold", industry: "mold_making" },
+  { query: "industrial maintenance repair", industry: "industrial_maintenance" },
+  { query: "packaging equipment manufacturer", industry: "packaging_manufacturing" },
 ];
 
 serve(async (req) => {
