@@ -156,9 +156,13 @@ serve(async (req) => {
       );
     }
 
+    // Record heartbeat
+    await sb.from("agent_heartbeats").upsert({ agent_name: "Tom", last_beat: new Date().toISOString() }, { onConflict: "agent_name" });
+
     return new Response(JSON.stringify({
       ok: true,
       hot_leads: hotLeads?.length || 0,
+      classified_interested: classifiedLeads.filter(c => c.intent === "INTERESTED").length,
       stale_leads: staleLeads?.length || 0,
       pipeline_total: pipeline?.length || 0,
       new_this_week: newLeadsThisWeek || 0,
