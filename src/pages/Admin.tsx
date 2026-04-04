@@ -1,39 +1,24 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import { Navigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 import AppNavbar from "@/components/layout/AppNavbar";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  Loader2, Users, Dumbbell, Landmark, FileText, Trash2, ClipboardList,
-  Megaphone, Bot, Globe, DollarSign, Mail, CheckCircle, Zap,
+  Loader2, Users, Dumbbell, DollarSign, Megaphone, Globe,
+  ArrowLeft, ChevronRight, Activity, AlertTriangle,
+  CheckCircle, Mail, Zap,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AdminHelpCard, TAB_HELP, resetAdminHelp } from "@/components/admin/AdminHelpCard";
+import { Button } from "@/components/ui/button";
 
-/* ── Lazy-load ALL admin sub-components ───────────────────────────────────── */
-const AdminCommandDeck        = lazy(() => import("@/components/admin/AdminCommandDeck"));
-const AdminClientList         = lazy(() => import("@/components/admin/AdminClientList"));
-const AdminSupportCopilot     = lazy(() => import("@/components/admin/AdminSupportCopilot"));
-const AdminFamilyManager      = lazy(() => import("@/components/admin/AdminFamilyManager"));
-const AdminTeamRosters        = lazy(() => import("@/components/admin/AdminTeamRosters"));
-const AdminCoachManager       = lazy(() => import("@/components/admin/AdminCoachManager"));
-const AdminTeamSandbox        = lazy(() => import("@/components/admin/AdminTeamSandbox"));
-const AdminParentReports      = lazy(() => import("@/components/admin/AdminParentReports"));
-const AdminParentInbox        = lazy(() => import("@/components/admin/AdminParentInbox"));
-const AdminCoachInbox         = lazy(() => import("@/components/admin/AdminCoachInbox"));
-const AdminPostureRequests    = lazy(() => import("@/components/admin/AdminPostureRequests"));
-const AdminCoachDashboard     = lazy(() => import("@/components/admin/AdminCoachDashboard"));
-const AdminDirectMessages     = lazy(() => import("@/components/admin/AdminDirectMessages"));
-const AdminVideoReview        = lazy(() => import("@/components/admin/AdminVideoReview"));
-const AdminTrialSettings      = lazy(() => import("@/components/admin/AdminTrialSettings"));
-const AdminClientOnboarding   = lazy(() => import("@/components/admin/AdminClientOnboarding"));
-const AdminChurnRadar         = lazy(() => import("@/components/admin/AdminChurnRadar"));
-const AdminSchedule           = lazy(() => import("@/components/admin/AdminSchedule"));
-const AdminVipAccess          = lazy(() => import("@/components/admin/AdminVipAccess"));
+/* ── Lazy-load ALL admin sub-components ─────────────────────────────────────── */
+// AI Bar (always rendered)
+const AdminAiBar = lazy(() => import("@/components/admin/AdminAiBar"));
 
+// Training domain
 const AdminPrograms           = lazy(() => import("@/components/admin/AdminPrograms"));
 const AdminExerciseLibrary    = lazy(() => import("@/components/admin/AdminExerciseLibrary"));
 const AdminWorkoutInventory   = lazy(() => import("@/components/admin/AdminWorkoutInventory"));
@@ -53,6 +38,28 @@ const AdminProgressLogger     = lazy(() => import("@/components/admin/AdminProgr
 const AdminLiftVideoReview    = lazy(() => import("@/components/admin/AdminLiftVideoReview"));
 const AdminProveItReview      = lazy(() => import("@/components/admin/AdminProveItReview"));
 
+// People domain
+const AdminClientList         = lazy(() => import("@/components/admin/AdminClientList"));
+const AdminSupportCopilot     = lazy(() => import("@/components/admin/AdminSupportCopilot"));
+const AdminFamilyManager      = lazy(() => import("@/components/admin/AdminFamilyManager"));
+const AdminTeamRosters        = lazy(() => import("@/components/admin/AdminTeamRosters"));
+const AdminCoachManager       = lazy(() => import("@/components/admin/AdminCoachManager"));
+const AdminTeamSandbox        = lazy(() => import("@/components/admin/AdminTeamSandbox"));
+const AdminParentReports      = lazy(() => import("@/components/admin/AdminParentReports"));
+const AdminParentInbox        = lazy(() => import("@/components/admin/AdminParentInbox"));
+const AdminCoachInbox         = lazy(() => import("@/components/admin/AdminCoachInbox"));
+const AdminPostureRequests    = lazy(() => import("@/components/admin/AdminPostureRequests"));
+const AdminCoachDashboard     = lazy(() => import("@/components/admin/AdminCoachDashboard"));
+const AdminDirectMessages     = lazy(() => import("@/components/admin/AdminDirectMessages"));
+const AdminVideoReview        = lazy(() => import("@/components/admin/AdminVideoReview"));
+const AdminTrialSettings      = lazy(() => import("@/components/admin/AdminTrialSettings"));
+const AdminClientOnboarding   = lazy(() => import("@/components/admin/AdminClientOnboarding"));
+const AdminChurnRadar         = lazy(() => import("@/components/admin/AdminChurnRadar"));
+const AdminSchedule           = lazy(() => import("@/components/admin/AdminSchedule"));
+const AdminVipAccess          = lazy(() => import("@/components/admin/AdminVipAccess"));
+const UserActivityFeed        = lazy(() => import("@/components/admin/UserActivityFeed"));
+
+// Business & Ops domain
 const AdminFinancials         = lazy(() => import("@/components/admin/AdminFinancials"));
 const AdminPromotions         = lazy(() => import("@/components/admin/AdminPromotions"));
 const AdminPointsManager      = lazy(() => import("@/components/admin/AdminPointsManager"));
@@ -66,7 +73,18 @@ const AdminAffiliateManager   = lazy(() => import("@/components/admin/AdminAffil
 const AdminReferrals          = lazy(() => import("@/components/admin/AdminReferrals"));
 const AdminLegalCompliance    = lazy(() => import("@/components/admin/AdminLegalCompliance"));
 const AdminTrash              = lazy(() => import("@/components/admin/AdminTrash"));
+const AdminFulfillment        = lazy(() => import("@/components/admin/AdminFulfillment"));
+const AdminOrders             = lazy(() => import("@/components/admin/AdminOrders"));
+const AdminOpsCenter          = lazy(() => import("@/components/admin/AdminOpsCenter"));
+const AdminSandbox            = lazy(() => import("@/components/admin/AdminSandbox"));
+const AdminBusinessDashboard  = lazy(() => import("@/components/admin/AdminBusinessDashboard"));
+const AdminClientHealth       = lazy(() => import("@/components/admin/AdminClientHealth"));
+const AdminEmailLog           = lazy(() => import("@/components/admin/AdminEmailLog"));
+const AdminMigrations         = lazy(() => import("@/components/admin/AdminMigrations"));
+const AdminB2BPipeline        = lazy(() => import("@/components/admin/AdminB2BPipeline"));
+const AdminSocialMediaOnboarding = lazy(() => import("@/components/admin/AdminSocialMediaOnboarding"));
 
+// Marketing & Content domain
 const AdminFrontPage          = lazy(() => import("@/components/admin/AdminFrontPage"));
 const AdminSiteEditor         = lazy(() => import("@/components/admin/AdminSiteEditor"));
 const AdminTestimonials       = lazy(() => import("@/components/admin/AdminTestimonials"));
@@ -81,7 +99,6 @@ const AdminCmoReports         = lazy(() => import("@/components/admin/AdminCmoRe
 const AdminMediaVault         = lazy(() => import("@/components/admin/AdminMediaVault"));
 const AdminSeoGenerator       = lazy(() => import("@/components/admin/AdminSeoGenerator"));
 const AdminTrainingNewsletter = lazy(() => import("@/components/admin/AdminTrainingNewsletter"));
-
 const AdminM2GrowthHub        = lazy(() => import("@/components/admin/AdminM2GrowthHub"));
 const AdminAdCampaigns        = lazy(() => import("@/components/admin/AdminAdCampaigns"));
 const AdminOutreach           = lazy(() => import("@/components/admin/AdminOutreach"));
@@ -90,9 +107,8 @@ const AdminSearchConsole      = lazy(() => import("@/components/admin/AdminSearc
 const AdminGbpPosts           = lazy(() => import("@/components/admin/AdminGbpPosts"));
 const AdminInstagramPosts     = lazy(() => import("@/components/admin/AdminInstagramPosts"));
 const AdminContentGenerator   = lazy(() => import("@/components/admin/AdminContentGenerator"));
-const UserActivityFeed        = lazy(() => import("@/components/admin/UserActivityFeed"));
-const AdminAiCommandCenter    = lazy(() => import("@/components/admin/AdminAiCommandCenter"));
 
+// Agency domain
 const AdminWebDesignCRM       = lazy(() => import("@/components/admin/AdminWebDesignCRM"));
 const AdminAgencyCRM          = lazy(() => import("@/components/admin/AdminAgencyCRM"));
 const AdminDemoLinkGenerator  = lazy(() => import("@/components/admin/AdminDemoLinkGenerator"));
@@ -100,198 +116,250 @@ const AdminProspector         = lazy(() => import("@/components/admin/AdminProsp
 const AdminAutomationHub      = lazy(() => import("@/components/admin/AdminAutomationHub"));
 const AdminSiteBuilder        = lazy(() => import("@/components/admin/AdminSiteBuilder"));
 const AdminWebDesignAutomations = lazy(() => import("@/components/admin/AdminWebDesignAutomations"));
-const AdminB2BPipeline        = lazy(() => import("@/components/admin/AdminB2BPipeline"));
-const AdminSocialMediaOnboarding = lazy(() => import("@/components/admin/AdminSocialMediaOnboarding"));
 
-const AdminClientHealth       = lazy(() => import("@/components/admin/AdminClientHealth"));
-const AdminBusinessDashboard  = lazy(() => import("@/components/admin/AdminBusinessDashboard"));
-const AdminEmailLog           = lazy(() => import("@/components/admin/AdminEmailLog"));
-const AdminMigrations         = lazy(() => import("@/components/admin/AdminMigrations"));
-const AdminFulfillment        = lazy(() => import("@/components/admin/AdminFulfillment"));
-const AdminOrders             = lazy(() => import("@/components/admin/AdminOrders"));
-const AdminOpsCenter          = lazy(() => import("@/components/admin/AdminOpsCenter"));
-const AdminSandbox            = lazy(() => import("@/components/admin/AdminSandbox"));
+// Command Deck (quick actions)
+const AdminCommandDeck        = lazy(() => import("@/components/admin/AdminCommandDeck"));
 
-/* ── Master tab definitions ────────────────────────────────────────────────── */
-const MASTER_TABS = [
-  { key: "command", label: "Command",  icon: Zap,        desc: "Quick Actions" },
-  { key: "business", label: "Business", icon: DollarSign, desc: "Revenue · Ops" },
-  { key: "ai",       label: "AI Center",icon: Bot,        desc: "All AI Tools" },
-  { key: "roster",   label: "Roster",   icon: Users,      desc: "Users · Support" },
-  { key: "engine",   label: "Engine",   icon: Dumbbell,   desc: "Training · AI" },
-  { key: "vault",    label: "Vault",    icon: Landmark,   desc: "Money · Billing" },
-  { key: "content",  label: "Content",  icon: FileText,   desc: "CMS · Email" },
-  { key: "growth",   label: "Growth",   icon: Megaphone,  desc: "SEO · Outreach" },
-  { key: "webdesign",label: "Web",      icon: Globe,      desc: "Leads · CRM" },
-];
+/* ── Domain definitions ─────────────────────────────────────────────────────── */
+interface Tool {
+  key: string;
+  label: string;
+  component: React.ReactNode;
+  badge?: number;
+}
 
-/* ── Loaders ────────────────────────────────────────────────────────────────── */
+interface Domain {
+  key: string;
+  label: string;
+  icon: React.ElementType;
+  color: string;
+  desc: string;
+  tools: Tool[];
+}
+
+/* ── Loader ─────────────────────────────────────────────────────────────────── */
 const TabLoader = () => (
   <div className="flex justify-center py-12">
     <Loader2 size={20} className="text-primary animate-spin" />
   </div>
 );
 
-/* ── Horizontal-scroll sub-tabs (mobile friendly) ─────────────────────────── */
-function SubTabs({
-  tabs,
-  defaultTab,
-  helpId,
-}: {
-  tabs: { key: string; label: string | React.ReactNode; content: React.ReactNode }[];
-  defaultTab?: string;
-  helpId?: string;
-}) {
-  const [active, setActive] = useState(defaultTab || tabs[0].key);
-  const content = tabs.find((t) => t.key === active)?.content ?? tabs[0].content;
-
-  return (
-    <div className="w-full">
-      {/* Help card for this section */}
-      {helpId && TAB_HELP[helpId] && (
-        <AdminHelpCard id={helpId} {...TAB_HELP[helpId]} />
-      )}
-
-      {/* Horizontal-scroll tab bar — works great on mobile */}
-      <div className="overflow-x-auto pb-1 -mx-2 px-2 mb-4">
-        <div className="flex gap-1 min-w-max">
-          {tabs.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setActive(t.key)}
-              className={cn(
-                "flex-shrink-0 px-3 py-2 rounded text-[10px] font-bold uppercase tracking-widest whitespace-nowrap transition-all",
-                active === t.key
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted"
-              )}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Content */}
-      <Suspense fallback={<TabLoader />}>{content}</Suspense>
-    </div>
-  );
-}
-
 /* ── Main Admin Component ───────────────────────────────────────────────────── */
 const Admin = () => {
-  const [activeTab, setActiveTab] = useState("command");
+  const [activeDomain, setActiveDomain] = useState<string | null>(null);
+  const [activeTool, setActiveTool] = useState<string | null>(null);
   const [testEmailState, setTestEmailState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const { isAdmin, isLoading } = useIsAdmin();
 
   /* Cross-component navigation events */
   useEffect(() => {
-    const handleSwitchTab = (e: Event) => {
+    const handleNavigateAdmin = (e: Event) => {
       const detail = (e as CustomEvent).detail;
-      if (detail === "prospector") {
-        setActiveTab("webdesign");
-        setTimeout(() => {
-          window.dispatchEvent(new CustomEvent("switch-subtab", { detail: "prospector" }));
-        }, 100);
+      if (detail) {
+        // Map old tab keys to new domain keys
+        const domainMap: Record<string, string> = {
+          command: "actions", business: "business", roster: "people",
+          engine: "training", vault: "business", content: "marketing",
+          growth: "marketing", webdesign: "agency", ai: "actions",
+        };
+        setActiveDomain(domainMap[detail] || detail);
+        setActiveTool(null);
       }
     };
-    const handleNavigateAdmin = (e: Event) => {
-      const tab = (e as CustomEvent).detail;
-      if (tab) setActiveTab(tab);
-    };
-    window.addEventListener("switch-webdesign-tab", handleSwitchTab);
     window.addEventListener("navigate-admin", handleNavigateAdmin);
-    return () => {
-      window.removeEventListener("switch-webdesign-tab", handleSwitchTab);
-      window.removeEventListener("navigate-admin", handleNavigateAdmin);
-    };
+    return () => window.removeEventListener("navigate-admin", handleNavigateAdmin);
   }, []);
 
   /* ── Badge counts (30s polling) ──────────────────────────────────────────── */
-  const { data: pendingDraftsCount = 0 } = useQuery({
-    queryKey: ["pending-coach-drafts-count"],
+  const { data: badges } = useQuery({
+    queryKey: ["admin-badge-counts"],
     queryFn: async () => {
-      const { count } = await supabase.from("coach_ai_drafts").select("id", { count: "exact", head: true }).eq("status", "pending");
-      return count ?? 0;
+      const [aiQueue, support, drafts, posture, custom, liftVideos, proveIt, trash] = await Promise.all([
+        supabase.from("ai_action_queue").select("id", { count: "exact", head: true }).eq("status", "pending"),
+        supabase.from("support_tickets").select("id", { count: "exact", head: true }).eq("status", "open"),
+        supabase.from("coach_ai_drafts").select("id", { count: "exact", head: true }).eq("status", "pending"),
+        supabase.from("posture_requests").select("id", { count: "exact", head: true }).eq("status", "pending"),
+        supabase.from("custom_program_requests" as any).select("id", { count: "exact", head: true }).in("status", ["pending", "ready_for_review"]),
+        supabase.from("lift_videos" as any).select("id", { count: "exact", head: true }).eq("status", "pending_review"),
+        supabase.from("pr_submissions" as any).select("id", { count: "exact", head: true }).eq("status", "pending"),
+        supabase.from("admin_trash" as any).select("id", { count: "exact", head: true }),
+      ]);
+      return {
+        aiQueue: aiQueue.count ?? 0,
+        support: support.count ?? 0,
+        drafts: drafts.count ?? 0,
+        posture: posture.count ?? 0,
+        custom: custom.count ?? 0,
+        liftVideos: liftVideos.count ?? 0,
+        proveIt: proveIt.count ?? 0,
+        trash: trash.count ?? 0,
+      };
     },
-    staleTime: 30000, refetchInterval: 30000,
-  });
-  const { data: pendingAiQueueCount = 0 } = useQuery({
-    queryKey: ["pending-ai-queue-count"],
-    queryFn: async () => {
-      const { count } = await supabase.from("ai_action_queue").select("id", { count: "exact", head: true }).eq("status", "pending");
-      return count ?? 0;
-    },
-    staleTime: 30000, refetchInterval: 30000,
-  });
-  const { data: pendingSupportCount = 0 } = useQuery({
-    queryKey: ["pending-support-count"],
-    queryFn: async () => {
-      const { count } = await supabase.from("support_tickets").select("id", { count: "exact", head: true }).eq("status", "open");
-      return count ?? 0;
-    },
-    staleTime: 30000, refetchInterval: 30000,
-  });
-  const { data: unreadParentCount = 0 } = useQuery({
-    queryKey: ["unread-parent-inbox-count"],
-    queryFn: async () => {
-      const { count } = await supabase.from("parent_inbox").select("id", { count: "exact", head: true }).eq("is_read", false).eq("is_deleted", false);
-      return count ?? 0;
-    },
-    staleTime: 30000, refetchInterval: 30000,
-  });
-  const { data: pendingPostureCount = 0 } = useQuery({
-    queryKey: ["pending-posture-count"],
-    queryFn: async () => {
-      const { count } = await supabase.from("posture_requests").select("id", { count: "exact", head: true }).eq("status", "pending");
-      return count ?? 0;
-    },
-    staleTime: 30000, refetchInterval: 30000,
-  });
-  const { data: pendingCustomCount = 0 } = useQuery({
-    queryKey: ["pending-custom-requests-count"],
-    queryFn: async () => {
-      const { count } = await supabase.from("custom_program_requests" as any).select("id", { count: "exact", head: true }).in("status", ["pending", "ready_for_review"]);
-      return count ?? 0;
-    },
-    staleTime: 30000, refetchInterval: 30000,
-  });
-  const { data: pendingLiftVideosCount = 0 } = useQuery({
-    queryKey: ["pending-lift-videos-count"],
-    queryFn: async () => {
-      const { count } = await supabase.from("lift_videos" as any).select("id", { count: "exact", head: true }).eq("status", "pending_review");
-      return count ?? 0;
-    },
-    staleTime: 30000, refetchInterval: 30000,
-  });
-  const { data: pendingProveItCount = 0 } = useQuery({
-    queryKey: ["pending-prove-it-count"],
-    queryFn: async () => {
-      const { count } = await supabase.from("pr_submissions" as any).select("id", { count: "exact", head: true }).eq("status", "pending");
-      return count ?? 0;
-    },
-    staleTime: 30000, refetchInterval: 30000,
-  });
-  const { data: trashCount = 0 } = useQuery({
-    queryKey: ["admin-trash-count"],
-    queryFn: async () => {
-      const { count } = await supabase.from("admin_trash" as any).select("id", { count: "exact", head: true });
-      return count ?? 0;
-    },
-    staleTime: 60000, refetchInterval: 60000,
+    staleTime: 30000,
+    refetchInterval: 30000,
   });
 
-  const totalEngineBadge = pendingDraftsCount + pendingAiQueueCount + pendingCustomCount + pendingLiftVideosCount + pendingProveItCount;
-  const totalRosterBadge = pendingSupportCount + unreadParentCount + pendingPostureCount;
-  const totalCommandBadge = totalEngineBadge + totalRosterBadge;
+  const b = badges ?? { aiQueue: 0, support: 0, drafts: 0, posture: 0, custom: 0, liftVideos: 0, proveIt: 0, trash: 0 };
 
-  /* Badge map for bottom nav */
-  const tabBadge: Record<string, number> = {
-    command: totalCommandBadge,
-    roster: totalRosterBadge,
-    engine: totalEngineBadge,
-    vault: trashCount,
-  };
+  /* ── Domain definitions with all tools ──────────────────────────────────── */
+  const domains: Domain[] = [
+    {
+      key: "training",
+      label: "Training",
+      icon: Dumbbell,
+      color: "#f97316",
+      desc: "Programs · Exercises · AI Generators · Recovery",
+      tools: [
+        { key: "log-lifts", label: "📊 Log Lifts", component: <AdminProgressLogger /> },
+        { key: "programs", label: "Programs", component: <AdminPrograms /> },
+        { key: "exercises", label: "Exercise Library", component: <AdminExerciseLibrary /> },
+        { key: "image-matcher", label: "Image Matcher", component: <AdminImageMatcher /> },
+        { key: "workouts", label: "Workouts", component: <AdminWorkoutInventory /> },
+        { key: "ai-workouts", label: "⚡ AI Workouts", component: <AdminBatchGenerator /> },
+        { key: "user-generated", label: "User Generated", component: <AdminUserGeneratedWorkouts /> },
+        { key: "ai-exercises", label: "⚡ AI Exercises", component: <AdminExerciseGenerator /> },
+        { key: "ai-programs", label: "⚡ AI Programs", component: <AdminProgramCreator /> },
+        { key: "ai-queue", label: "AI Queue", component: <AdminAiQueue />, badge: b.aiQueue },
+        { key: "ai-toolkit", label: "AI Toolkit", component: <AdminAiToolkit /> },
+        { key: "recovery", label: "Recovery Map", component: <AdminRecoveryHeatmap /> },
+        { key: "monthly", label: "Monthly Focus", component: <AdminMonthlyFocus /> },
+        { key: "biomechanics", label: "Biomechanics", component: <AdminBiomechanics /> },
+        { key: "coach-ai", label: "Coach AI", component: <AdminCoachAiQueue />, badge: b.drafts },
+        { key: "custom-req", label: "Custom Requests", component: <AdminCustomRequests />, badge: b.custom },
+        { key: "lift-videos", label: "Lift Videos", component: <AdminLiftVideoReview />, badge: b.liftVideos },
+        { key: "prove-it", label: "Prove It", component: <AdminProveItReview />, badge: b.proveIt },
+      ],
+    },
+    {
+      key: "people",
+      label: "People",
+      icon: Users,
+      color: "#3b82f6",
+      desc: "Users · Support · Coaching · Families · Teams",
+      tools: [
+        { key: "athletes", label: "👥 All Users", component: <AdminClientList /> },
+        { key: "activity", label: "Activity Feed", component: <UserActivityFeed /> },
+        { key: "support", label: "Support", component: <AdminSupportCopilot />, badge: b.support },
+        { key: "coaching", label: "Coach Review", component: (
+          <div className="space-y-8">
+            <AdminCoachInbox />
+            <div className="border-t border-border pt-6"><AdminCoachDashboard /></div>
+            <div className="border-t border-border pt-6"><AdminPostureRequests /></div>
+            <div className="border-t border-border pt-6"><AdminVideoReview /></div>
+          </div>
+        ), badge: b.posture },
+        { key: "messages", label: "Messages", component: <AdminDirectMessages /> },
+        { key: "families", label: "Families", component: <AdminFamilyManager /> },
+        { key: "teams", label: "🏟️ Teams", component: (
+          <div className="space-y-8">
+            <AdminTeamSandbox />
+            <div className="border-t border-border pt-6"><AdminCoachManager /></div>
+            <div className="border-t border-border pt-6"><AdminTeamRosters /></div>
+          </div>
+        )},
+        { key: "parents", label: "Parent Hub", component: (
+          <div className="space-y-8">
+            <AdminParentInbox />
+            <div className="border-t border-border pt-6"><AdminParentReports /></div>
+          </div>
+        )},
+        { key: "onboarding", label: "Onboarding", component: (
+          <div className="space-y-8">
+            <AdminClientOnboarding />
+            <div className="border-t border-border pt-6"><AdminTrialSettings /></div>
+          </div>
+        )},
+        { key: "churn", label: "Churn Radar", component: <AdminChurnRadar /> },
+        { key: "schedule", label: "Schedule", component: <AdminSchedule /> },
+        { key: "vip", label: "VIP Access", component: <AdminVipAccess /> },
+      ],
+    },
+    {
+      key: "business",
+      label: "Business",
+      icon: DollarSign,
+      color: "#22c55e",
+      desc: "Revenue · Orders · Ops · Billing · Legal",
+      tools: [
+        { key: "overview", label: "📊 Overview", component: <AdminBusinessDashboard /> },
+        { key: "fulfillment", label: "🔔 Fulfillment", component: <AdminFulfillment /> },
+        { key: "orders", label: "📦 Orders", component: <AdminOrders /> },
+        { key: "ops", label: "Ops Center", component: <AdminOpsCenter /> },
+        { key: "health", label: "Client Health", component: <AdminClientHealth /> },
+        { key: "revenue", label: "Revenue & Ledger", component: <AdminFinancials /> },
+        { key: "promotions", label: "Promotions", component: <AdminPromotions /> },
+        { key: "points", label: "Points", component: <AdminPointsManager /> },
+        { key: "tiers", label: "Tier Access", component: <AdminTierManager /> },
+        { key: "stripe", label: "Stripe Products", component: <AdminStripeProducts /> },
+        { key: "catalog", label: "Service Catalog", component: <AdminServiceCatalog /> },
+        { key: "gift-cards", label: "Gift Cards", component: <AdminGiftCards /> },
+        { key: "guides", label: "Playbooks Store", component: <AdminGuideStore /> },
+        { key: "affiliates", label: "Affiliates", component: <AdminAffiliateManager /> },
+        { key: "referrals", label: "Referrals", component: <AdminReferrals /> },
+        { key: "pipeline", label: "B2B Pipeline", component: <AdminB2BPipeline /> },
+        { key: "social-setup", label: "Social Setup", component: <AdminSocialMediaOnboarding /> },
+        { key: "legal", label: "Legal", component: <AdminLegalCompliance /> },
+        { key: "sandbox", label: "🧪 Sandbox", component: <AdminSandbox /> },
+        { key: "email-log", label: "📧 Email Log", component: <AdminEmailLog /> },
+        { key: "system", label: "System & Refs", component: <AdminSystemSettings /> },
+        { key: "migrations", label: "DB Migrations", component: <AdminMigrations /> },
+        { key: "trash", label: "🗑 Trash", component: <AdminTrash />, badge: b.trash },
+      ],
+    },
+    {
+      key: "marketing",
+      label: "Marketing",
+      icon: Megaphone,
+      color: "#a855f7",
+      desc: "Content · SEO · Email · Social · Growth",
+      tools: [
+        { key: "m2-hub", label: "🚀 Growth Hub", component: <AdminM2GrowthHub /> },
+        { key: "ad-campaigns", label: "⚡ Ad Campaigns", component: <AdminAdCampaigns /> },
+        { key: "front-page", label: "Front Page", component: <AdminFrontPage /> },
+        { key: "site", label: "Site Editor", component: <AdminSiteEditor /> },
+        { key: "testimonials", label: "Testimonials", component: <AdminTestimonials /> },
+        { key: "learn", label: "Learn Hub", component: <AdminLearnEditor /> },
+        { key: "broadcasts", label: "Broadcasts", component: <AdminBroadcasts /> },
+        { key: "subscribers", label: "Subscribers", component: <AdminSubscriberList /> },
+        { key: "compose", label: "Newsletter", component: <AdminNewsletterComposer /> },
+        { key: "training-newsletter", label: "Training Newsletter", component: <AdminTrainingNewsletter /> },
+        { key: "history", label: "Send History", component: <AdminSendHistory /> },
+        { key: "marketing-ai", label: "Marketing AI", component: (
+          <div className="space-y-8">
+            <AdminMarketingDrafts />
+            <div className="border-t border-border pt-6"><AdminAiBusinessTools /></div>
+          </div>
+        )},
+        { key: "cmo", label: "CMO Reports", component: <AdminCmoReports /> },
+        { key: "media-vault", label: "Media Vault", component: <AdminMediaVault /> },
+        { key: "seo", label: "SEO Engine", component: <AdminSeoGenerator /> },
+        { key: "outreach", label: "Outreach", component: <AdminOutreach /> },
+        { key: "seo-pages", label: "SEO Pages", component: <AdminSeoPages /> },
+        { key: "search", label: "📊 Search Console", component: <AdminSearchConsole /> },
+        { key: "gbp", label: "GBP Posts", component: <AdminGbpPosts /> },
+        { key: "instagram", label: "Instagram", component: <AdminInstagramPosts /> },
+        { key: "content-gen", label: "Content Generator", component: <AdminContentGenerator /> },
+      ],
+    },
+    {
+      key: "agency",
+      label: "Agency",
+      icon: Globe,
+      color: "#06b6d4",
+      desc: "Web Design · CRM · Prospecting · Demos",
+      tools: [
+        { key: "agency-crm", label: "Agency CRM", component: <AdminAgencyCRM /> },
+        { key: "crm", label: "Web Design CRM", component: <AdminWebDesignCRM /> },
+        { key: "site-builder", label: "Site Builder", component: <AdminSiteBuilder /> },
+        { key: "prospector", label: "Prospector", component: <AdminProspector /> },
+        { key: "automation", label: "Automation Hub", component: <AdminAutomationHub /> },
+        { key: "wd-automations", label: "Email Automations", component: <AdminWebDesignAutomations /> },
+        { key: "demo-links", label: "🔗 Demo Links", component: <AdminDemoLinkGenerator /> },
+      ],
+    },
+  ];
+
+  const totalBadge = (d: Domain) => d.tools.reduce((sum, t) => sum + (t.badge ?? 0), 0);
 
   const sendTestEmail = async () => {
     setTestEmailState("sending");
@@ -314,301 +382,211 @@ const Admin = () => {
   }
   if (!isAdmin) return <Navigate to="/dashboard" replace />;
 
-  /* ── Badge pill helper ──────────────────────────────────────────────────── */
-  const Pip = ({ n }: { n: number }) =>
-    n > 0 ? (
-      <span className="absolute -top-1 -right-1.5 bg-destructive text-destructive-foreground text-[8px] font-bold rounded-full min-w-[14px] h-3.5 flex items-center justify-center px-0.5 leading-none">
-        {n > 99 ? "99+" : n}
-      </span>
-    ) : null;
-
-  /* ── Sub-tab label helpers with badges ──────────────────────────────────── */
-  const badgeLabel = (label: string, count: number) =>
-    count > 0 ? (
-      <span className="flex items-center gap-1">
-        {label}
-        <Badge variant="destructive" className="text-[8px] px-1.5 py-0 min-w-[18px] h-4">{count}</Badge>
-      </span>
-    ) : label;
+  const currentDomain = domains.find((d) => d.key === activeDomain);
+  const currentTool = currentDomain?.tools.find((t) => t.key === activeTool);
 
   return (
     <div className="min-h-screen bg-background">
       <AppNavbar />
 
-      {/* ── Page content ──────────────────────────────────────────────────── */}
-      <div className="container pt-20 pb-24 md:pb-12">
+      <div className="container pt-20 pb-24 md:pb-12 max-w-4xl mx-auto">
 
-        {/* ── Desktop top nav — hidden on mobile ──────────────────────────── */}
-        <div className="hidden md:block mb-6">
-          <div className="flex items-center justify-between mb-4">
+        {/* ── Header ──────────────────────────────────────────────────────── */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            {(activeDomain || activeTool) && (
+              <button
+                onClick={() => {
+                  if (activeTool) { setActiveTool(null); }
+                  else { setActiveDomain(null); }
+                }}
+                className="w-8 h-8 rounded-xl flex items-center justify-center transition active:scale-90"
+                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}
+              >
+                <ArrowLeft size={14} className="text-muted-foreground" />
+              </button>
+            )}
             <div>
-              <h1 className="text-lg font-bold text-foreground tracking-display">Command Center</h1>
-              <p className="text-xs text-muted-foreground">Manage everything from one place</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                size="sm" variant="ghost"
-                onClick={resetAdminHelp}
-                className="text-[10px] text-muted-foreground h-7"
-              >
-                Reset Help Tips
-              </Button>
-              <Button
-                size="sm" variant="outline"
-                onClick={sendTestEmail}
-                disabled={testEmailState === "sending"}
-                className="text-xs gap-1.5 border-slate-600 text-slate-300 hover:text-white h-8"
-              >
-                {testEmailState === "sending" && <Loader2 size={12} className="animate-spin" />}
-                {testEmailState === "sent" && <CheckCircle size={12} className="text-green-400" />}
-                {testEmailState === "error" && <Mail size={12} className="text-red-400" />}
-                {testEmailState === "idle" && <Mail size={12} />}
-                {testEmailState === "idle" ? "Test Email" : testEmailState === "sending" ? "Sending…" : testEmailState === "sent" ? "Sent!" : "Failed"}
-              </Button>
+              <h1 className="text-base font-bold text-foreground tracking-tight">
+                {activeTool && currentTool ? currentTool.label :
+                 activeDomain && currentDomain ? currentDomain.label :
+                 "Mission Control"}
+              </h1>
+              <p className="text-[10px] text-muted-foreground">
+                {activeTool ? `${currentDomain?.label} → ${currentTool?.label}` :
+                 activeDomain ? currentDomain?.desc :
+                 "Oz is watching. Everything is running."}
+              </p>
             </div>
           </div>
+          <div className="flex items-center gap-1.5">
+            <Button
+              size="sm" variant="ghost"
+              onClick={sendTestEmail}
+              disabled={testEmailState === "sending"}
+              className="text-[10px] text-muted-foreground h-7 px-2"
+            >
+              {testEmailState === "sending" && <Loader2 size={10} className="animate-spin mr-1" />}
+              {testEmailState === "sent" && <CheckCircle size={10} className="text-green-400 mr-1" />}
+              {testEmailState === "error" && <AlertTriangle size={10} className="text-red-400 mr-1" />}
+              {testEmailState === "idle" && <Mail size={10} className="mr-1" />}
+              {testEmailState === "idle" ? "Test" : testEmailState === "sending" ? "…" : testEmailState === "sent" ? "✓" : "✗"}
+            </Button>
+          </div>
+        </div>
 
-          {/* Desktop tab grid */}
-          <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-1.5">
-            {MASTER_TABS.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.key;
-              const badge = tabBadge[tab.key] ?? 0;
-              return (
+        {/* ── AI Bar (always visible) ────────────────────────────────────── */}
+        <div className="mb-6">
+          <Suspense fallback={<div className="h-12 rounded-2xl bg-muted/10 animate-pulse" />}>
+            <AdminAiBar />
+          </Suspense>
+        </div>
+
+        {/* ── Content Area ───────────────────────────────────────────────── */}
+        <AnimatePresence mode="wait">
+
+          {/* === HOME: Domain cards === */}
+          {!activeDomain && (
+            <motion.div
+              key="home"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-3"
+            >
+              {/* Quick Actions card */}
+              <button
+                onClick={() => { setActiveDomain("actions"); setActiveTool(null); }}
+                className="w-full flex items-center gap-4 p-4 rounded-2xl transition active:scale-[0.98]"
+                style={{
+                  background: "linear-gradient(135deg, rgba(249,115,22,0.08), rgba(234,88,12,0.04))",
+                  border: "1px solid rgba(249,115,22,0.2)",
+                }}
+              >
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(249,115,22,0.15)" }}>
+                  <Zap size={22} style={{ color: "#f97316" }} />
+                </div>
+                <div className="flex-1 text-left">
+                  <span className="text-sm font-bold text-foreground">Quick Actions</span>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Fire automations · Power tools · System controls</p>
+                </div>
+                <ChevronRight size={16} className="text-muted-foreground shrink-0" />
+              </button>
+
+              {/* Domain cards */}
+              {domains.map((d) => {
+                const Icon = d.icon;
+                const badge = totalBadge(d);
+                return (
+                  <button
+                    key={d.key}
+                    onClick={() => { setActiveDomain(d.key); setActiveTool(null); }}
+                    className="w-full flex items-center gap-4 p-4 rounded-2xl transition active:scale-[0.98]"
+                    style={{
+                      background: `${d.color}08`,
+                      border: `1px solid ${d.color}20`,
+                    }}
+                  >
+                    <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${d.color}15` }}>
+                      <Icon size={22} style={{ color: d.color }} />
+                    </div>
+                    <div className="flex-1 text-left">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-foreground">{d.label}</span>
+                        {badge > 0 && (
+                          <Badge variant="destructive" className="text-[8px] px-1.5 py-0 h-4">{badge}</Badge>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">{d.desc}</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      <span className="text-[9px] text-muted-foreground">{d.tools.length} tools</span>
+                      <ChevronRight size={16} className="text-muted-foreground" />
+                    </div>
+                  </button>
+                );
+              })}
+
+              {/* Oz Status */}
+              <div
+                className="flex items-center gap-3 px-4 py-3 rounded-2xl"
+                style={{
+                  background: "rgba(34,197,94,0.05)",
+                  border: "1px solid rgba(34,197,94,0.15)",
+                }}
+              >
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse shrink-0" />
+                <div className="flex-1">
+                  <span className="text-[10px] font-bold text-green-400 uppercase tracking-wider">Agent Oz — Online</span>
+                  <p className="text-[9px] text-muted-foreground">Monitoring all systems · Auto-fixing issues · Generating reports</p>
+                </div>
+                <Activity size={14} className="text-green-500/50 shrink-0" />
+              </div>
+            </motion.div>
+          )}
+
+          {/* === QUICK ACTIONS (CommandDeck) === */}
+          {activeDomain === "actions" && !activeTool && (
+            <motion.div
+              key="actions"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Suspense fallback={<TabLoader />}>
+                <AdminCommandDeck />
+              </Suspense>
+            </motion.div>
+          )}
+
+          {/* === DOMAIN DRILL-DOWN: Tool list === */}
+          {activeDomain && activeDomain !== "actions" && !activeTool && currentDomain && (
+            <motion.div
+              key={`domain-${activeDomain}`}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.2 }}
+              className="grid grid-cols-2 sm:grid-cols-3 gap-2"
+            >
+              {currentDomain.tools.map((tool) => (
                 <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
-                  className={cn(
-                    "relative flex flex-col items-center gap-1 px-2 py-3 rounded-lg border text-center transition-all",
-                    isActive
-                      ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                      : "bg-card text-muted-foreground border-border hover:text-foreground hover:border-primary/40"
-                  )}
+                  key={tool.key}
+                  onClick={() => setActiveTool(tool.key)}
+                  className="relative flex flex-col items-start gap-1.5 p-3.5 rounded-xl text-left transition active:scale-[0.97]"
+                  style={{
+                    background: "rgba(255,255,255,0.03)",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                  }}
                 >
-                  <div className="relative">
-                    <Icon size={16} />
-                    <Pip n={badge} />
-                  </div>
-                  <span className="text-[9px] font-bold uppercase tracking-widest leading-none">{tab.label}</span>
-                  <span className={cn("text-[8px] leading-none", isActive ? "text-primary-foreground/70" : "text-muted-foreground")}>
-                    {tab.desc}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* ── Mobile top bar (title only, nav is at bottom) ───────────────── */}
-        <div className="flex md:hidden items-center justify-between mb-4">
-          <div>
-            <h1 className="text-base font-bold text-foreground">
-              {MASTER_TABS.find((t) => t.key === activeTab)?.label ?? "Admin"}
-            </h1>
-            <p className="text-[10px] text-muted-foreground">
-              {MASTER_TABS.find((t) => t.key === activeTab)?.desc}
-            </p>
-          </div>
-          <Button
-            size="sm" variant="ghost"
-            onClick={resetAdminHelp}
-            className="text-[10px] text-muted-foreground h-7 px-2"
-          >
-            Help
-          </Button>
-        </div>
-
-        {/* ── Tab content ───────────────────────────────────────────────────── */}
-
-        {activeTab === "command" && (
-          <div>
-            <AdminHelpCard id="command" {...TAB_HELP.command} />
-            <Suspense fallback={<TabLoader />}><AdminCommandDeck /></Suspense>
-          </div>
-        )}
-
-        {activeTab === "business" && (
-          <SubTabs helpId="business" tabs={[
-            { key: "fulfillment",  label: "🔔 Fulfillment",      content: <AdminFulfillment /> },
-            { key: "overview",     label: "Overview",             content: <AdminBusinessDashboard /> },
-            { key: "sandbox",      label: "🧪 Sandbox",           content: <AdminSandbox /> },
-            { key: "orders",       label: "📦 Orders",            content: <AdminOrders /> },
-            { key: "health",       label: "Client Health",        content: <AdminClientHealth /> },
-            { key: "ops",          label: "Ops Center",           content: <AdminOpsCenter /> },
-            { key: "pipeline",     label: "Pipeline",             content: <AdminB2BPipeline /> },
-            { key: "social-setup", label: "Social Setup",         content: <AdminSocialMediaOnboarding /> },
-            { key: "email-log",    label: "📧 Email Log",         content: <AdminEmailLog /> },
-            { key: "migrations",   label: "DB Migrations",        content: <AdminMigrations /> },
-          ]} />
-        )}
-
-        {activeTab === "ai" && (
-          <div>
-            <AdminHelpCard id="ai" {...TAB_HELP.ai} />
-            <Suspense fallback={<TabLoader />}><AdminAiCommandCenter /></Suspense>
-          </div>
-        )}
-
-        {activeTab === "roster" && (
-          <SubTabs helpId="roster" tabs={[
-            { key: "athletes",  label: "All Users",       content: <AdminClientList /> },
-            { key: "activity",  label: "Activity Feed",   content: <UserActivityFeed /> },
-            { key: "support",   label: badgeLabel("Support", pendingSupportCount), content: <AdminSupportCopilot /> },
-            { key: "coaching",  label: badgeLabel("Coach Review", pendingPostureCount), content: (
-              <div className="space-y-8">
-                <AdminCoachInbox />
-                <div className="border-t border-border pt-6"><AdminCoachDashboard /></div>
-                <div className="border-t border-border pt-6"><AdminPostureRequests /></div>
-                <div className="border-t border-border pt-6"><AdminVideoReview /></div>
-              </div>
-            )},
-            { key: "messages",   label: "Messages",       content: <AdminDirectMessages /> },
-            { key: "families",   label: "Families",       content: <AdminFamilyManager /> },
-            { key: "teams",      label: "🏟️ Teams",       content: (
-              <div className="space-y-8">
-                <AdminTeamSandbox />
-                <div className="border-t border-border pt-6"><AdminCoachManager /></div>
-                <div className="border-t border-border pt-6"><AdminTeamRosters /></div>
-              </div>
-            )},
-            { key: "parents",    label: badgeLabel("Parent Hub", unreadParentCount), content: (
-              <div className="space-y-8">
-                <AdminParentInbox />
-                <div className="border-t border-border pt-6"><AdminParentReports /></div>
-              </div>
-            )},
-            { key: "onboarding", label: "Onboarding",    content: (
-              <div className="space-y-8">
-                <AdminClientOnboarding />
-                <div className="border-t border-border pt-6"><AdminTrialSettings /></div>
-              </div>
-            )},
-            { key: "schedule",   label: "Schedule",      content: <AdminSchedule /> },
-            { key: "vip",        label: "VIP Access",    content: <AdminVipAccess /> },
-          ]} />
-        )}
-
-        {activeTab === "engine" && (
-          <SubTabs helpId="engine" tabs={[
-            { key: "log-lifts",      label: "Log Lifts",          content: <AdminProgressLogger /> },
-            { key: "programs",       label: "Programs",            content: <AdminPrograms /> },
-            { key: "exercises",      label: "Exercise Lib",        content: <AdminExerciseLibrary /> },
-            { key: "image-matcher",  label: "Image Matcher",       content: <AdminImageMatcher /> },
-            { key: "workouts",       label: "Workouts",            content: <AdminWorkoutInventory /> },
-            { key: "batch",          label: "AI Workouts",         content: <AdminBatchGenerator /> },
-            { key: "user-generated", label: "User Generated",      content: <AdminUserGeneratedWorkouts /> },
-            { key: "exercise-gen",   label: "AI Exercises",        content: <AdminExerciseGenerator /> },
-            { key: "ai-programs",    label: "AI Programs",         content: <AdminProgramCreator /> },
-            { key: "ai-queue",       label: badgeLabel("AI Queue", pendingAiQueueCount), content: <AdminAiQueue /> },
-            { key: "ai-toolkit",     label: "AI Toolkit",          content: <AdminAiToolkit /> },
-            { key: "recovery",       label: "Recovery Map",        content: <AdminRecoveryHeatmap /> },
-            { key: "monthly",        label: "Monthly Focus",       content: <AdminMonthlyFocus /> },
-            { key: "biomechanics",   label: "Biomechanics",        content: <AdminBiomechanics /> },
-            { key: "coach-ai",       label: badgeLabel("Coach AI", pendingDraftsCount), content: <AdminCoachAiQueue /> },
-            { key: "custom-requests",label: badgeLabel("Custom Req", pendingCustomCount), content: <AdminCustomRequests /> },
-            { key: "lift-videos",    label: badgeLabel("Lift Videos", pendingLiftVideosCount), content: <AdminLiftVideoReview /> },
-            { key: "prove-it",       label: badgeLabel("Prove It", pendingProveItCount), content: <AdminProveItReview /> },
-          ]} />
-        )}
-
-        {activeTab === "vault" && (
-          <SubTabs helpId="vault" tabs={[
-            { key: "revenue",        label: "Revenue & Ledger",  content: <AdminFinancials /> },
-            { key: "promotions",     label: "Promotions",        content: <AdminPromotions /> },
-            { key: "points",         label: "Points",            content: <AdminPointsManager /> },
-            { key: "tiers",          label: "Tier Access",       content: <AdminTierManager /> },
-            { key: "system",         label: "System & Refs",     content: <AdminSystemSettings /> },
-            { key: "stripe-products",label: "Stripe Products",   content: <AdminStripeProducts /> },
-            { key: "churn",          label: "Churn Radar",       content: <AdminChurnRadar /> },
-            { key: "catalog",        label: "Service Catalog",   content: <AdminServiceCatalog /> },
-            { key: "gift-cards",     label: "Gift Cards",        content: <AdminGiftCards /> },
-            { key: "guides",         label: "Playbooks Store",   content: <AdminGuideStore /> },
-            { key: "affiliates",     label: "Affiliates",        content: <AdminAffiliateManager /> },
-            { key: "referrals",      label: "Referrals",         content: <AdminReferrals /> },
-            { key: "legal",          label: "Legal",             content: <AdminLegalCompliance /> },
-            { key: "trash",          label: badgeLabel("🗑 Trash", trashCount), content: <AdminTrash /> },
-          ]} />
-        )}
-
-        {activeTab === "content" && (
-          <SubTabs helpId="content" tabs={[
-            { key: "front-page",     label: "Front Page",         content: <AdminFrontPage /> },
-            { key: "site",           label: "Site Editor",        content: <AdminSiteEditor /> },
-            { key: "testimonials",   label: "Testimonials",       content: <AdminTestimonials /> },
-            { key: "learn",          label: "Learn Hub",          content: <AdminLearnEditor /> },
-            { key: "broadcasts",     label: "Broadcasts",         content: <AdminBroadcasts /> },
-            { key: "subscribers",    label: "Subscribers",        content: <AdminSubscriberList /> },
-            { key: "compose",        label: "Newsletter",         content: <AdminNewsletterComposer /> },
-            { key: "history",        label: "Send History",       content: <AdminSendHistory /> },
-            { key: "marketing-ai",   label: "Marketing & AI",     content: (
-              <div className="space-y-8">
-                <AdminMarketingDrafts />
-                <div className="border-t border-border pt-6"><AdminAiBusinessTools /></div>
-              </div>
-            )},
-            { key: "cmo",            label: "CMO Reports",        content: <AdminCmoReports /> },
-            { key: "media-vault",    label: "Media Vault",        content: <AdminMediaVault /> },
-            { key: "seo",            label: "SEO Engine",         content: <AdminSeoGenerator /> },
-          ]} />
-        )}
-
-        {activeTab === "growth" && (
-          <SubTabs helpId="growth" defaultTab="m2-hub" tabs={[
-            { key: "m2-hub",       label: "🚀 M2 Hub",          content: <AdminM2GrowthHub /> },
-            { key: "ad-campaigns", label: "⚡ Ad Campaigns",    content: <AdminAdCampaigns /> },
-            { key: "outreach",     label: "Outreach",           content: <AdminOutreach /> },
-            { key: "seo-pages",    label: "SEO Pages",          content: <AdminSeoPages /> },
-            { key: "search",       label: "📊 Search Console",  content: <AdminSearchConsole /> },
-            { key: "gbp",          label: "GBP Posts",          content: <AdminGbpPosts /> },
-            { key: "instagram",    label: "Instagram",          content: <AdminInstagramPosts /> },
-            { key: "content-gen",  label: "Content Gen",        content: <AdminContentGenerator /> },
-          ]} />
-        )}
-
-        {activeTab === "webdesign" && (
-          <SubTabs helpId="webdesign" defaultTab="pipeline" tabs={[
-            { key: "pipeline",      label: "B2B Pipeline",      content: <AdminB2BPipeline /> },
-            { key: "agency-crm",    label: "Agency CRM",        content: <AdminAgencyCRM /> },
-            { key: "crm",           label: "Web Design CRM",    content: <AdminWebDesignCRM /> },
-            { key: "site-builder",  label: "Site Builder",      content: <AdminSiteBuilder /> },
-            { key: "prospector",    label: "Prospector",        content: <AdminProspector /> },
-            { key: "automation",    label: "Automation Hub",    content: <AdminAutomationHub /> },
-            { key: "wd-automations",label: "Email Automations", content: <AdminWebDesignAutomations /> },
-            { key: "demo-links",    label: "🔗 Demo Links",     content: <AdminDemoLinkGenerator /> },
-          ]} />
-        )}
-      </div>
-
-      {/* ── Mobile bottom nav bar ─────────────────────────────────────────── */}
-      <div className="fixed bottom-0 left-0 right-0 z-[110] bg-card/95 backdrop-blur-md border-t border-border md:hidden">
-        {/* Two rows of 5 and 4 (or scroll) */}
-        <div className="overflow-x-auto">
-          <div className="flex min-w-max px-1 py-1 gap-0.5">
-            {MASTER_TABS.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.key;
-              const badge = tabBadge[tab.key] ?? 0;
-              return (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
-                  className={cn(
-                    "relative flex flex-col items-center gap-0.5 px-3 py-2 rounded transition-all min-w-[56px]",
-                    isActive
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground"
+                  <span className="text-xs font-semibold text-foreground leading-tight">{tool.label}</span>
+                  {(tool.badge ?? 0) > 0 && (
+                    <Badge variant="destructive" className="text-[8px] px-1.5 py-0 h-3.5 absolute top-2 right-2">
+                      {tool.badge}
+                    </Badge>
                   )}
-                >
-                  <div className="relative">
-                    <Icon size={18} />
-                    <Pip n={badge} />
-                  </div>
-                  <span className="text-[8px] font-bold uppercase tracking-widest leading-none">{tab.label}</span>
                 </button>
-              );
-            })}
-          </div>
-        </div>
+              ))}
+            </motion.div>
+          )}
+
+          {/* === TOOL VIEW === */}
+          {activeTool && currentTool && (
+            <motion.div
+              key={`tool-${activeTool}`}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Suspense fallback={<TabLoader />}>
+                {currentTool.component}
+              </Suspense>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
