@@ -318,7 +318,7 @@ const ZoneDashboard = () => {
             className="h-9 w-9 rounded-lg overflow-hidden flex items-center justify-center transition-all active:scale-90"
             style={{ background: "#000", boxShadow: "0 0 14px rgba(249,115,22,0.6)" }}
           >
-            <img src={logoImg} alt="M²" className="h-8 w-8 object-contain" />
+            <img src={logoImg} alt="M2" className="h-8 w-8 object-contain" />
           </button>
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.25em]" style={{ color: "#f97316" }}>THE ZONE</p>
@@ -528,7 +528,7 @@ const ZoneDashboard = () => {
               style={{ background: "rgba(249,115,22,0.08)", border: "1px solid rgba(249,115,22,0.15)" }}
             >
               <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "#f97316" }}>
-                📲 Install the M² App
+                📲 Install the M2 App
               </span>
             </button>
           )}

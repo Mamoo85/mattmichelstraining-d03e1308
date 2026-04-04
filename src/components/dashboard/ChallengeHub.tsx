@@ -306,7 +306,7 @@ const ChallengeHub = () => {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <Zap size={16} className="text-primary" />
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">M² Points</span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">M2 Points</span>
               </div>
               <div className="text-5xl font-mono font-black text-primary tracking-tight leading-none">
                 {points.total_points.toLocaleString()}
@@ -419,7 +419,7 @@ const ChallengeHub = () => {
         <div className="space-y-2">
           <div className="flex items-center gap-2 px-1">
             <Zap size={12} className="text-primary" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">M² Points Leaderboard</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">M2 Points Leaderboard</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {leaderboard.slice(0, 10).map((entry: any, idx: number) => (

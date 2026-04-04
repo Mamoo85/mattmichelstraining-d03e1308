@@ -194,7 +194,7 @@ export default function AdminOpsCenter() {
   };
 
   const sendEmail = (email: string, businessName: string) => {
-    window.open(`mailto:${email}?subject=Following up — ${businessName}&body=Hi there,%0D%0A%0D%0AJust following up on your ${businessName} account. Let me know if you need anything!%0D%0A%0D%0ABest,%0D%0AMatt Michels%0D%0AM² Local Marketing%0D%0A(313) 806-4952`, "_blank");
+    window.open(`mailto:${email}?subject=Following up — ${businessName}&body=Hi there,%0D%0A%0D%0AJust following up on your ${businessName} account. Let me know if you need anything!%0D%0A%0D%0ABest,%0D%0AMatt Michels%0D%0AM2 Local Marketing%0D%0A(313) 806-4952`, "_blank");
   };
 
   const matchesGlobal = (item: { business_name: string; email: string }) =>

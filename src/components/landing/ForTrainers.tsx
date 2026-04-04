@@ -7,7 +7,7 @@ const ForTrainers = () => {
 
   const title = c.title || "For Trainers";
   const subtitle = c.subtitle || "Lease studio time";
-  const description = c.description || "Certified trainers — rent the M² gym by the hour or block. Private, fully equipped, no overhead.";
+  const description = c.description || "Certified trainers — rent the M2 gym by the hour or block. Private, fully equipped, no overhead.";
   const cta = c.cta || "Inquire about availability →";
 
   return (

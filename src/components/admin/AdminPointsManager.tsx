@@ -90,7 +90,7 @@ const AdminPointsManager = () => {
     <div className="space-y-4">
       <div className="flex items-center gap-2">
         <Zap size={16} className="text-primary" />
-        <h3 className="text-sm font-bold uppercase tracking-widest text-foreground">M² Points Manager</h3>
+        <h3 className="text-sm font-bold uppercase tracking-widest text-foreground">M2 Points Manager</h3>
         <span className="text-[10px] text-muted-foreground ml-auto">{users.length} athletes with points</span>
       </div>
 

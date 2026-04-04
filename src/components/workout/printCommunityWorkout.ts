@@ -98,11 +98,11 @@ export const printCommunityWorkout = (data: PrintCommunityWorkoutData) => {
 <body>
   <button class="print-btn" onclick="window.print()">Print / Save PDF</button>
    <div class="header">
-     <img src="${M2_LOGO_BASE64}" alt="M² Training" />
+     <img src="${M2_LOGO_BASE64}" alt="M2 Training" />
      <h1>${esc(data.title)}</h1>
      <div class="creator">Created by ${esc(data.creatorName)} · Mattletes Community</div>
      ${data.description ? `<div class="desc">${esc(data.description)}</div>` : ""}
-     <div class="brand">M² Training — Mattletes Workout Bank</div>
+     <div class="brand">M2 Training — Mattletes Workout Bank</div>
    </div>
   <div class="name-date">
     <div><label>Athlete Name</label><div class="field"></div></div>
@@ -125,7 +125,7 @@ export const printCommunityWorkout = (data: PrintCommunityWorkoutData) => {
     </tbody>
   </table>
   ${data.isFixIt ? FIX_IT_DISCLAIMER_HTML : ""}
-  <div class="footer">Built by M² Training · www.mattmichelstraining.com</div>
+  <div class="footer">Built by M2 Training · www.mattmichelstraining.com</div>
 </body>
 </html>`);
   win.document.close();

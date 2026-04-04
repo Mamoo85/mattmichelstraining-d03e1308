@@ -32,7 +32,7 @@ export default function AIFranchiseOps() {
 
   return (
     <>
-      <SEOHead title="AI Franchise Operations Toolkit — $199/mo | M² Development" description="AI writes staff newsletters, compliance checklists, policy updates, and onboarding docs for franchise owners and multi-location businesses. $199/month." path="/ai-franchise-ops" />
+      <SEOHead title="AI Franchise Operations Toolkit — $199/mo | M2 Development" description="AI writes staff newsletters, compliance checklists, policy updates, and onboarding docs for franchise owners and multi-location businesses. $199/month." path="/ai-franchise-ops" />
       <div className="min-h-screen bg-[#0f0f1a] text-white">
         <section className="pt-20 pb-16 px-4">
           <div className="max-w-3xl mx-auto text-center">

@@ -6,7 +6,7 @@ import GiftCardSection from "@/components/store/GiftCardSection";
 const FAQS = [
   {
     q: "How does the recipient redeem it?",
-    a: "After purchase you'll receive a unique code. Your recipient enters it at checkout when signing up for any M² membership to apply the full balance toward their first payment.",
+    a: "After purchase you'll receive a unique code. Your recipient enters it at checkout when signing up for any M2 membership to apply the full balance toward their first payment.",
   },
   {
     q: "Does the gift card expire?",
@@ -18,7 +18,7 @@ const FAQS = [
   },
   {
     q: "What plans can it be used on?",
-    a: "Any M² membership — Foundation, Guided, Pro, or Elite. One-time program purchases too.",
+    a: "Any M2 membership — Foundation, Guided, Pro, or Elite. One-time program purchases too.",
   },
   {
     q: "Can I choose any amount?",
@@ -28,7 +28,7 @@ const FAQS = [
 
 const REASONS = [
   "Instant email delivery — no shipping, no waiting",
-  "Works for all M² membership tiers and programs",
+  "Works for all M2 membership tiers and programs",
   "No expiration date — they use it when they're ready",
   "Personally delivered from you to them",
 ];
@@ -36,8 +36,8 @@ const REASONS = [
 const GiftCard = () => (
   <div className="min-h-screen bg-background">
     <Helmet>
-      <title>Give the Gift of Athletic Training — M² Gift Cards</title>
-      <meta name="description" content="M² Training gift cards — the perfect gift for any athlete. Instantly emailed, works on any membership tier. $25, $50, $100, or $150." />
+      <title>Give the Gift of Athletic Training — M2 Gift Cards</title>
+      <meta name="description" content="M2 Training gift cards — the perfect gift for any athlete. Instantly emailed, works on any membership tier. $25, $50, $100, or $150." />
     </Helmet>
 
     <AppNavbar />
@@ -53,7 +53,7 @@ const GiftCard = () => (
             Give the Gift of Athletic Training
           </h1>
           <p className="text-muted-foreground text-base max-w-lg mx-auto">
-            Whether it's a birthday, holiday, or "because I believe in you" — an M² gift card puts professional training in their hands instantly.
+            Whether it's a birthday, holiday, or "because I believe in you" — an M2 gift card puts professional training in their hands instantly.
           </p>
         </div>
       </div>

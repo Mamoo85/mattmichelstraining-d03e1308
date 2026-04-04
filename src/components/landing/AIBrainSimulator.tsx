@@ -184,7 +184,7 @@ const AIBrainSimulator = () => {
           <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/70" />
           <span className="w-2.5 h-2.5 rounded-full bg-green-500/70" />
         </div>
-        <p className="text-[9px] uppercase tracking-[3px] text-muted-foreground font-bold">M² AI Generator</p>
+        <p className="text-[9px] uppercase tracking-[3px] text-muted-foreground font-bold">M2 AI Generator</p>
         <Brain size={14} className="text-primary" />
       </div>
 

@@ -31,7 +31,7 @@ export default function AIRealEstateDrip() {
 
   return (
     <>
-      <SEOHead title="AI Real Estate Drip Email — $79/mo | M² Development" description="AI writes and sends monthly drip emails to your real estate leads and past clients. Stay top of mind automatically. $79/month." path="/ai-real-estate-drip" />
+      <SEOHead title="AI Real Estate Drip Email — $79/mo | M2 Development" description="AI writes and sends monthly drip emails to your real estate leads and past clients. Stay top of mind automatically. $79/month." path="/ai-real-estate-drip" />
       <div className="min-h-screen bg-[#0f0f1a] text-white">
         <section className="pt-20 pb-16 px-4">
           <div className="max-w-3xl mx-auto text-center">

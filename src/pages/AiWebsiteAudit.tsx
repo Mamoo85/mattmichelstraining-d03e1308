@@ -76,7 +76,7 @@ export default function AiWebsiteAudit() {
   return (
     <>
       <SEOHead
-        title="Free AI Website Audit — Instant Report | M² Web Design"
+        title="Free AI Website Audit — Instant Report | M2 Web Design"
         description="Get a free AI-powered website audit delivered to your inbox in 60 seconds. SEO, mobile, trust signals, local ranking, and actionable fixes. 100% free."
         path="/ai-website-audit"
       />

@@ -73,7 +73,7 @@ export default function AthleteBlueprint() {
               <h2 className="text-2xl font-black text-white">For Parents</h2>
             </div>
             <p className="text-slate-400 mb-6 leading-relaxed">
-              You'll never wonder "what did they do today?" again. The M² app gives you a live
+              You'll never wonder "what did they do today?" again. The M2 app gives you a live
               dashboard showing every workout, every weight lifted, and coach notes after each session.
             </p>
             <div className="grid grid-cols-2 gap-4 mb-8">
@@ -91,7 +91,7 @@ export default function AthleteBlueprint() {
               <ul className="space-y-4">
                 {[
                   "1 in-person session with Coach Matt per month",
-                  "Custom 3-day-per-week program in the M² app",
+                  "Custom 3-day-per-week program in the M2 app",
                   "Every workout logged and reviewed by Coach Matt",
                   "Parent dashboard — see every session, PR, and note",
                   "24/7 direct messaging for athlete AND parent",
@@ -231,7 +231,7 @@ export default function AthleteBlueprint() {
 
       {/* Footer */}
       <footer className="text-center py-12 text-slate-600 text-sm border-t border-white/5 mt-12">
-        <p>© {new Date().getFullYear()} M² Training · Grosse Pointe, MI · mattmichelstraining.com · 313-806-4952</p>
+        <p>© {new Date().getFullYear()} M2 Training · Grosse Pointe, MI · mattmichelstraining.com · 313-806-4952</p>
       </footer>
     </div>
   );

@@ -103,7 +103,7 @@ const TechSupportButton = () => {
                 <div className="bg-primary/5 border border-primary/20 p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Bot size={12} className="text-primary" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary">M² Support</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary">M2 Support</span>
                   </div>
                   <p className="text-sm text-foreground leading-relaxed">{autoReply}</p>
                 </div>

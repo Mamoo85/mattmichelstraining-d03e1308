@@ -116,7 +116,7 @@ export default function DarkWebMonitor() {
   return (
     <>
       <SEOHead
-        title="AI Dark Web Credential Monitor — Know Before Hackers Act | M² Development"
+        title="AI Dark Web Credential Monitor — Know Before Hackers Act | M2 Development"
         description="Monitor your company domain on the dark web. Get instant alerts when employee credentials are breached. AI-powered remediation steps. $49/mo."
       />
       <div className="min-h-screen bg-gray-950 text-white">
@@ -133,7 +133,7 @@ export default function DarkWebMonitor() {
           />
           <div className="relative max-w-4xl mx-auto px-6 py-24 text-center">
             <div className="inline-flex items-center gap-2 bg-[#00d4ff15] border border-[#00d4ff30] text-[#00d4ff] text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-full mb-8">
-              <Shield size={12} /> M² Development · AI Security
+              <Shield size={12} /> M2 Development · AI Security
             </div>
             <h1 className="text-4xl md:text-5xl font-black leading-tight mb-6">
               Your Company Credentials<br />
@@ -408,7 +408,7 @@ export default function DarkWebMonitor() {
               <img src="/images/matt-boat.jpg" alt="Matt Michels" className="w-10 h-10 rounded-full object-cover border-2 border-[#1e2d4a]" />
               <div className="text-sm">
                 <div className="font-bold text-white">Matt Michels</div>
-                <div className="text-slate-500">M² Development · (313) 806-4952</div>
+                <div className="text-slate-500">M2 Development · (313) 806-4952</div>
               </div>
             </div>
             <div className="flex items-center gap-6 text-xs text-slate-500">

@@ -554,7 +554,7 @@ const Admin = () => {
 
         {activeTab === "growth" && (
           <SubTabs helpId="growth" defaultTab="m2-hub" tabs={[
-            { key: "m2-hub",       label: "🚀 M² Hub",          content: <AdminM2GrowthHub /> },
+            { key: "m2-hub",       label: "🚀 M2 Hub",          content: <AdminM2GrowthHub /> },
             { key: "ad-campaigns", label: "⚡ Ad Campaigns",    content: <AdminAdCampaigns /> },
             { key: "outreach",     label: "Outreach",           content: <AdminOutreach /> },
             { key: "seo-pages",    label: "SEO Pages",          content: <AdminSeoPages /> },

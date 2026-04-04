@@ -20,7 +20,7 @@ export const LEVELS = [
   { key: "grinder", label: "Grinder", min: 500, color: "text-foreground" },
   { key: "competitor", label: "Competitor", min: 1500, color: "text-primary" },
   { key: "beast", label: "Beast", min: 4000, color: "text-primary" },
-  { key: "legend", label: "M² Legend", min: 10000, color: "text-primary" },
+  { key: "legend", label: "M2 Legend", min: 10000, color: "text-primary" },
 ] as const;
 
 export type PointAction = keyof typeof POINT_VALUES;

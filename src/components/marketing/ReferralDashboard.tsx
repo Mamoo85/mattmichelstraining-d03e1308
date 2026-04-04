@@ -25,7 +25,7 @@ const ReferralDashboard = () => {
           <Users size={14} className="text-primary" /> Refer a Friend
         </h3>
         <p className="text-[10px] text-muted-foreground mt-0.5">
-          Share your link and help M² grow — it's completely free to join right now.
+          Share your link and help M2 grow — it's completely free to join right now.
         </p>
       </div>
 

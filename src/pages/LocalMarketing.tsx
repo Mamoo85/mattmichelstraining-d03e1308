@@ -94,7 +94,7 @@ export default function LocalMarketing() {
       <div className="min-h-screen bg-background text-foreground">
         {/* Hero */}
         <div className="bg-[#1e293b] text-white px-6 py-14 text-center">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">M² Local Marketing</p>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">M2 Local Marketing</p>
           <h1 className="text-3xl font-black mb-4">We post to your Google profile.<br />You focus on the work.</h1>
           <p className="text-slate-300 text-sm max-w-xl mx-auto leading-relaxed">
             3 AI-written Google Business Profile posts per week, automatically. Your profile stays active, your local ranking improves, and your phone rings more — without touching it yourself.

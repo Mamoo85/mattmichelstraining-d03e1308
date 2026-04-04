@@ -186,7 +186,7 @@ export default function PodcastDashboard() {
 
         {/* Header */}
         <div className="mb-10">
-          <p className="text-[#FF6B35] text-xs font-bold uppercase tracking-widest mb-2">M² Development</p>
+          <p className="text-[#FF6B35] text-xs font-bold uppercase tracking-widest mb-2">M2 Development</p>
           <h1 className="text-2xl font-black text-white mb-1 flex items-center gap-2">
             <Mic size={22} className="text-[#FF6B35]" />
             Podcast-to-Revenue Machine

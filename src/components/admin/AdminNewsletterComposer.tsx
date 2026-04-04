@@ -9,22 +9,22 @@ const TEMPLATES = [
   {
     name: "Monthly Training Insight",
     subject: "The Real Deal — [Month] Edition",
-    body: `Hey team,\n\nHere's this month's insight from 20+ years of training athletes.\n\n**This Month's Topic: [TOPIC]**\n\n[Write your insight here. Remember — the WHY matters more than the WHAT.]\n\n**The Hard Truth:**\n[One truth bomb your athletes need to hear]\n\n**Quick Tip:**\n[One actionable thing they can do this week]\n\nTrain smart,\nMatt Michels\nM² Training`,
+    body: `Hey team,\n\nHere's this month's insight from 20+ years of training athletes.\n\n**This Month's Topic: [TOPIC]**\n\n[Write your insight here. Remember — the WHY matters more than the WHAT.]\n\n**The Hard Truth:**\n[One truth bomb your athletes need to hear]\n\n**Quick Tip:**\n[One actionable thing they can do this week]\n\nTrain smart,\nMatt Michels\nM2 Training`,
   },
   {
     name: "Injury Prevention Focus",
-    subject: "M² Training: How to Prevent [Injury Type]",
-    body: `Parents & Athletes,\n\nI've seen this injury hundreds of times. Here's what most people get wrong — and how to fix it.\n\n**The Problem:**\n[Describe the common injury pattern]\n\n**Why It Happens (The Science):**\n[Explain the WHY — this is what makes your content unique]\n\n**The Fix:**\n[3-4 specific exercises or protocols]\n\n**When to See a Professional:**\n[Clear guidance on when training alone isn't enough]\n\nStay healthy,\nMatt Michels\nM² Training`,
+    subject: "M2 Training: How to Prevent [Injury Type]",
+    body: `Parents & Athletes,\n\nI've seen this injury hundreds of times. Here's what most people get wrong — and how to fix it.\n\n**The Problem:**\n[Describe the common injury pattern]\n\n**Why It Happens (The Science):**\n[Explain the WHY — this is what makes your content unique]\n\n**The Fix:**\n[3-4 specific exercises or protocols]\n\n**When to See a Professional:**\n[Clear guidance on when training alone isn't enough]\n\nStay healthy,\nMatt Michels\nM2 Training`,
   },
   {
     name: "Sport-Specific Breakdown",
     subject: "The Real Deal: [Sport] Training Secrets",
-    body: `Athletes,\n\nEvery sport has movements that matter more than others. Here's what [sport] athletes need to focus on.\n\n**The #1 Exercise Most [Sport] Athletes Skip:**\n[Exercise name and why it matters]\n\n**The Physics Behind It:**\n[Your signature WHY — force angles, muscle chains, etc.]\n\n**Programming It:**\n- Sets: [X]\n- Reps: [X]\n- When: [In-season vs off-season guidance]\n\n**Common Mistakes:**\n[What you see athletes doing wrong]\n\nGet after it,\nMatt Michels\nM² Training`,
+    body: `Athletes,\n\nEvery sport has movements that matter more than others. Here's what [sport] athletes need to focus on.\n\n**The #1 Exercise Most [Sport] Athletes Skip:**\n[Exercise name and why it matters]\n\n**The Physics Behind It:**\n[Your signature WHY — force angles, muscle chains, etc.]\n\n**Programming It:**\n- Sets: [X]\n- Reps: [X]\n- When: [In-season vs off-season guidance]\n\n**Common Mistakes:**\n[What you see athletes doing wrong]\n\nGet after it,\nMatt Michels\nM2 Training`,
   },
   {
     name: "Parent Education",
-    subject: "M² Training: What Every Sports Parent Needs to Know",
-    body: `Dear Parents,\n\nI've trained thousands of young athletes, and the ones who succeed have one thing in common — parents who understand the process.\n\n**This Month's Parent Lesson:**\n[Topic: rest, nutrition, pressure, early specialization, etc.]\n\n**What the Research Says:**\n[Back it up with facts]\n\n**What You Can Do:**\n[Practical advice for parents]\n\n**What to Avoid:**\n[Common parent mistakes]\n\nYour kid's biggest advantage is a parent who gets it.\n\nMatt Michels\nM² Training`,
+    subject: "M2 Training: What Every Sports Parent Needs to Know",
+    body: `Dear Parents,\n\nI've trained thousands of young athletes, and the ones who succeed have one thing in common — parents who understand the process.\n\n**This Month's Parent Lesson:**\n[Topic: rest, nutrition, pressure, early specialization, etc.]\n\n**What the Research Says:**\n[Back it up with facts]\n\n**What You Can Do:**\n[Practical advice for parents]\n\n**What to Avoid:**\n[Common parent mistakes]\n\nYour kid's biggest advantage is a parent who gets it.\n\nMatt Michels\nM2 Training`,
   },
 ];
 

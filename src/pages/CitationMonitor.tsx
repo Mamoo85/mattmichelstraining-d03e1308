@@ -42,7 +42,7 @@ const COMPARISON = [
   { tool: "Marketing Agency", price: "$500–2,000/mo", what: "Manual citation building and cleanup — high cost, slow turnaround" },
   { tool: "BrightLocal", price: "$29–79/mo", what: "Reports only — no AI analysis, no strategic guidance" },
   { tool: "Moz Local", price: "$129/yr", what: "Limited coverage, no multi-location intelligence" },
-  { tool: "M² Citation Monitor", price: "$99/mo", what: "AI monitoring across 30+ directories + per-location reports — 14-day trial", highlight: true },
+  { tool: "M2 Citation Monitor", price: "$99/mo", what: "AI monitoring across 30+ directories + per-location reports — 14-day trial", highlight: true },
 ];
 
 const NAP_EXAMPLES = [
@@ -111,7 +111,7 @@ export default function CitationMonitor() {
               Google uses your NAP data across dozens of directories to decide where you rank in local search. One inconsistency — a missing suite number, an old phone number, a slightly different business name — silently tanks your ranking.
             </p>
             <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-              M² monitors every directory weekly and delivers an exact report of every inconsistency found, with instructions for fixing each one.
+              M2 monitors every directory weekly and delivers an exact report of every inconsistency found, with instructions for fixing each one.
             </p>
             <div className="flex flex-col items-center gap-2 mb-10">
               <div className="text-5xl font-black text-primary">$99<span className="text-2xl text-muted-foreground font-normal">/mo</span></div>

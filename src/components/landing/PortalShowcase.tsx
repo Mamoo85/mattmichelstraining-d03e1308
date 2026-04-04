@@ -96,7 +96,7 @@ const PortalShowcase = () => (
     {/* The pitch */}
     <div className="bg-card shadow-m2 border-l-4 border-primary p-5 mb-5">
       <p className="text-sm text-muted-foreground leading-relaxed">
-        <span className="text-foreground font-bold">Most online training is a template dressed up as coaching.</span> M² 
+        <span className="text-foreground font-bold">Most online training is a template dressed up as coaching.</span> M2 
         is different because Matt actually coaches — starting at <span className="text-primary font-bold">$20</span> for a custom program.
       </p>
     </div>

@@ -290,7 +290,7 @@ const Profile = () => {
   const handleShare = () => {
     const url = `${window.location.origin}?ref=${user?.id || ""}`;
     if (navigator.share) {
-      navigator.share({ title: "Train with me on M²", url });
+      navigator.share({ title: "Train with me on M2", url });
     } else {
       navigator.clipboard.writeText(url);
       toast({ title: "Referral link copied!" });
@@ -344,7 +344,7 @@ const Profile = () => {
               <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                 {isAdmin ? (
                   <Badge className="flex items-center gap-1 text-[10px] uppercase tracking-widest bg-primary text-primary-foreground">
-                    <Crown size={10} /> M² Coach
+                    <Crown size={10} /> M2 Coach
                   </Badge>
                 ) : subscriptionTier ? (
                   <Badge className="flex items-center gap-1 text-[10px] uppercase tracking-widest">
@@ -570,7 +570,7 @@ const Profile = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Plan</p>
-                    <p className="text-sm font-bold text-foreground">{isAdmin ? "M² Coach" : subscriptionTier ? TIERS[subscriptionTier].name : "Free"}</p>
+                    <p className="text-sm font-bold text-foreground">{isAdmin ? "M2 Coach" : subscriptionTier ? TIERS[subscriptionTier].name : "Free"}</p>
                   </div>
                   <div>
                     <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Price</p>

@@ -42,7 +42,7 @@ const COMPARISON = [
   { tool: "Capitol Clarity", price: "$500+/mo", what: "State-level legislative tracking only — doesn't cover local zoning and council meetings" },
   { tool: "Municode Search", price: "Free / Manual", what: "You manually search city websites, agendas, and meeting minutes — hours per week per city" },
   { tool: "Missing a vote", price: "Months of delay", what: "A zoning denial or permit hold you didn't see coming can set a project back 6–12 months" },
-  { tool: "M² Gov Meeting Tracker", price: "$199/mo", what: "Weekly AI brief covering every city, every board, every keyword — 14-day trial", highlight: true },
+  { tool: "M2 Gov Meeting Tracker", price: "$199/mo", what: "Weekly AI brief covering every city, every board, every keyword — 14-day trial", highlight: true },
 ];
 
 const USE_CASES = [
@@ -122,7 +122,7 @@ export default function GovMeetingTracker() {
               Local government moves fast and without warning. A zoning change, a permit hold, a new ordinance — any one of these can set your project back months or kill a deal entirely. And they happen in meetings most business owners never knew occurred.
             </p>
             <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-              M² monitors city council agendas, planning commissions, and zoning boards across all your target cities every week — and delivers a plain-English brief on everything that matters to your business.
+              M2 monitors city council agendas, planning commissions, and zoning boards across all your target cities every week — and delivers a plain-English brief on everything that matters to your business.
             </p>
             <div className="flex flex-col items-center gap-2 mb-10">
               <div className="text-5xl font-black text-primary">$199<span className="text-2xl text-muted-foreground font-normal">/mo</span></div>
@@ -148,11 +148,11 @@ export default function GovMeetingTracker() {
                   <div className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">{uc.industry}</div>
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
-                      <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Without M²</div>
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Without M2</div>
                       <p className="text-sm text-muted-foreground leading-relaxed">{uc.pain}</p>
                     </div>
                     <div>
-                      <div className="text-[10px] font-bold uppercase tracking-widest text-primary mb-1">With M²</div>
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-primary mb-1">With M2</div>
                       <p className="text-sm text-foreground leading-relaxed">{uc.win}</p>
                     </div>
                   </div>
@@ -186,7 +186,7 @@ export default function GovMeetingTracker() {
         <section className="py-16 px-4 border-b border-border">
           <div className="max-w-2xl mx-auto">
             <h2 className="text-xl font-black text-center mb-2 uppercase tracking-tight">What Others Charge</h2>
-            <p className="text-center text-muted-foreground text-sm mb-8">A government relations consultant costs $2,000–5,000/mo and still misses local zoning meetings. M² misses nothing.</p>
+            <p className="text-center text-muted-foreground text-sm mb-8">A government relations consultant costs $2,000–5,000/mo and still misses local zoning meetings. M2 misses nothing.</p>
             <div className="space-y-3">
               {COMPARISON.map((c) => (
                 <div

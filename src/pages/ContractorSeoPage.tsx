@@ -102,7 +102,7 @@ const ContractorSeoPage = () => {
           description: d.metaDescription,
           provider: {
             "@type": "Organization",
-            name: "M² Development",
+            name: "M2 Development",
             url: "https://www.mattmichelstraining.com",
             telephone: phoneNumber,
             email: emailAddress,
@@ -171,14 +171,14 @@ const ContractorSeoPage = () => {
           </section>
         )}
 
-        {/* Why M² */}
+        {/* Why M2 */}
         <section className="py-16 px-4">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-2xl md:text-3xl font-bold text-foreground text-center mb-6">
-              {category === "contractor" ? `Why ${page.city} ${page.trade} Businesses Choose M²` :
-               category === "webdesign" ? `Why ${page.trade} Businesses in ${page.city} Choose M²` :
-               category === "personal_training" ? `Why ${page.city} Clients Choose M² Training` :
-               `Why ${page.city} Clients Choose M² Coaching`}
+              {category === "contractor" ? `Why ${page.city} ${page.trade} Businesses Choose M2` :
+               category === "webdesign" ? `Why ${page.trade} Businesses in ${page.city} Choose M2` :
+               category === "personal_training" ? `Why ${page.city} Clients Choose M2 Training` :
+               `Why ${page.city} Clients Choose M2 Coaching`}
             </h2>
             <div className="grid gap-6 sm:grid-cols-3 mt-10">
               {cards.map((item, i) => (
@@ -249,7 +249,7 @@ const ContractorSeoPage = () => {
 
         {/* Footer */}
         <footer className="py-6 px-4 text-center text-xs text-muted-foreground bg-muted/20">
-          <p>© {new Date().getFullYear()} M² Development — Web Design & AI Marketing for Local Businesses</p>
+          <p>© {new Date().getFullYear()} M2 Development — Web Design & AI Marketing for Local Businesses</p>
           <p className="mt-1">
             <Link to="/web-design-services" className="text-[#e8621a] hover:underline">Web Design Services</Link>
             {" · "}

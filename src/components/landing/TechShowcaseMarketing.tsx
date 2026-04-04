@@ -75,7 +75,7 @@ const TechShowcaseMarketing = ({ variant = "full" }: Props) => {
           <div className="inline-flex items-center gap-2 bg-primary/10 px-3 py-1 mb-3">
             <Smartphone size={12} className="text-primary" />
             <span className="text-[9px] font-bold uppercase tracking-[3px] text-primary">
-              M² Technology Suite
+              M2 Technology Suite
             </span>
           </div>
           <h2 className="text-xl md:text-2xl font-black uppercase tracking-tight text-foreground mb-2">
@@ -171,7 +171,7 @@ const TechShowcaseMarketing = ({ variant = "full" }: Props) => {
               All of This. <span className="text-primary">$19.99/mo.</span>
             </p>
             <p className="text-xs text-muted-foreground mb-4">
-              All technology is built into the M² member app — included free with every membership.
+              All technology is built into the M2 member app — included free with every membership.
             </p>
             <Button asChild size="lg" className="w-full h-12 font-black uppercase tracking-wider text-sm">
               <Link to="/auth?mode=signup&trial=true">

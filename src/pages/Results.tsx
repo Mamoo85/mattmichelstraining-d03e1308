@@ -17,7 +17,7 @@ const fade = (delay: number) => ({
 const SPORTS_SCHEMA = {
   "@context": "https://schema.org",
   "@type": "SportsActivityLocation",
-  name: "M² Training",
+  name: "M2 Training",
   address: {
     "@type": "PostalAddress",
     streetAddress: "Grosse Pointe Park",
@@ -51,8 +51,8 @@ const PARENT_TESTIMONIALS = [
 const Results = () => (
   <div className="min-h-screen bg-background">
     <SEOHead
-      title="Results — Real Athletes, Real Gains | M² Training"
-      description="See real results from M² Training clients — youth athletes, adults, and sport-specific performance gains in Grosse Pointe and Metro Detroit."
+      title="Results — Real Athletes, Real Gains | M2 Training"
+      description="See real results from M2 Training clients — youth athletes, adults, and sport-specific performance gains in Grosse Pointe and Metro Detroit."
       path="/results"
       jsonLd={SPORTS_SCHEMA}
     />
@@ -138,7 +138,7 @@ const Results = () => (
 
       <div className="pt-8 border-t border-border text-center mt-8">
         <p className="text-xs text-muted-foreground">
-          © {new Date().getFullYear()} M² Training · Grosse Pointe Park, MI ·{" "}
+          © {new Date().getFullYear()} M2 Training · Grosse Pointe Park, MI ·{" "}
           <Link to="/" className="text-primary hover:opacity-80 transition-all">Back to home</Link>
         </p>
       </div>

@@ -108,13 +108,13 @@ export default function DentalWebDesign() {
   return (
     <>
       <SEOHead
-        title="Dental Practice Website Design — $1,499 Setup | M² Web Design"
+        title="Dental Practice Website Design — $1,499 Setup | M2 Web Design"
         description="Modern websites built for dental practices. New patient forms, provider bios, Google SEO, and mobile-first design. From $1,499 setup + $99/mo."
       />
       <div className="min-h-screen bg-background text-foreground">
         {/* Hero */}
         <div className="bg-[#1e293b] text-white px-6 py-14 text-center">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">M² Web Design — Dental Practices</p>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">M2 Web Design — Dental Practices</p>
           <h1 className="text-3xl font-black mb-4">New patients search Google first.<br />Are they finding you — or your competitor?</h1>
           <p className="text-slate-300 text-sm max-w-xl mx-auto leading-relaxed">
             We build professional, patient-converting websites for dental practices — with appointment request forms, provider bios, smile galleries, and SEO that puts you at the top of local search.

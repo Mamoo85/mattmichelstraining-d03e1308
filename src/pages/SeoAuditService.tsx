@@ -62,13 +62,13 @@ export default function SeoAuditService() {
   return (
     <>
       <SEOHead
-        title="Monthly Local SEO Report — $69/month | M² SEO Reports"
+        title="Monthly Local SEO Report — $69/month | M2 SEO Reports"
         description="Automated monthly SEO report card for local businesses. Keyword rankings, GBP health score, competitor comparison, and 5 action items — delivered to your inbox every month."
       />
       <div className="min-h-screen bg-background text-foreground">
         {/* Hero */}
         <div className="bg-[#1e293b] text-white px-6 py-14 text-center">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">M² SEO Reports</p>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">M2 SEO Reports</p>
           <h1 className="text-3xl font-black mb-4">Your monthly SEO report card.<br />Automated. $69/mo.</h1>
           <p className="text-slate-300 text-sm max-w-xl mx-auto leading-relaxed">
             Local SEO agencies charge $500/mo for this. We deliver 80% of the value automatically every month.
@@ -108,7 +108,7 @@ export default function SeoAuditService() {
               </div>
             </div>
             <div className="bg-card border-2 border-primary p-5">
-              <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-2">M² SEO Reports</p>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-2">M2 SEO Reports</p>
               <p className="text-2xl font-black text-primary mb-1">$69<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
               <div className="space-y-1.5 mt-3">
                 {["Monthly automated report", "Keyword ranking data", "AI-written analysis", "5 action items, ranked by impact"].map(i => (

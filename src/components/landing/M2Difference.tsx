@@ -37,7 +37,7 @@ const M2Difference = () => (
     <div className="flex items-end justify-between mb-5">
       <div>
         <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-2">
-          The M² Difference
+          The M2 Difference
         </span>
         <h2 className="text-xl md:text-2xl font-bold text-foreground leading-tight">
           Most online training is a template dressed up as coaching.
@@ -47,12 +47,12 @@ const M2Difference = () => (
         to="/the-edge"
         className="text-[10px] font-bold uppercase tracking-widest text-primary hover:gap-2 transition-all flex items-center gap-1 shrink-0 hidden sm:flex"
       >
-        Explore M² Training Technology <ArrowRight size={10} />
+        Explore M2 Training Technology <ArrowRight size={10} />
       </Link>
     </div>
 
     <p className="text-sm text-muted-foreground max-w-2xl leading-relaxed mb-5">
-      Every M² program comes with a training portal and direct access to Matt.
+      Every M2 program comes with a training portal and direct access to Matt.
       Not a PDF and a "good luck."
     </p>
 

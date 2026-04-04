@@ -28,7 +28,7 @@ const PointsWidget = ({ onViewLeaderboard }: PointsWidgetProps) => {
       {/* Points Header */}
       <div className="flex items-center gap-2 mb-3">
         <Zap size={14} className="text-primary" />
-        <span className="text-[10px] font-bold uppercase tracking-widest text-primary">M² Points</span>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-primary">M2 Points</span>
       </div>
 
       <div className="bg-card border border-border p-4 space-y-4">

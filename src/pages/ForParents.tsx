@@ -18,7 +18,7 @@ const fade = (delay: number) => ({
 const LOCAL_BUSINESS_SCHEMA = {
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
-  name: "M² Training",
+  name: "M2 Training",
   address: {
     "@type": "PostalAddress",
     streetAddress: "Grosse Pointe Park",
@@ -46,7 +46,7 @@ const CONCERNS = [
   {
     icon: Smartphone,
     q: "How do I know they're training correctly when I'm not there?",
-    a: "The M² app lets you monitor every logged workout, see Coach Matt's form check feedback, and track progress week by week. You're always in the loop.",
+    a: "The M2 app lets you monitor every logged workout, see Coach Matt's form check feedback, and track progress week by week. You're always in the loop.",
   },
 ];
 
@@ -70,7 +70,7 @@ const RESULTS = [
 const ForParents = () => (
   <div className="min-h-screen bg-background">
     <SEOHead
-      title="Youth Athlete Training — Grosse Pointe Park, MI | M² Training"
+      title="Youth Athlete Training — Grosse Pointe Park, MI | M2 Training"
       description="Sport-specific strength and performance training for high school athletes in Grosse Pointe and Metro Detroit. Coached by Matt Michels — 20 years, 50+ college athletes, zero training injuries."
       path="/for-parents"
       jsonLd={LOCAL_BUSINESS_SCHEMA}
@@ -229,7 +229,7 @@ const ForParents = () => (
 
       <div className="pt-6 border-t border-border text-center">
         <p className="text-xs text-muted-foreground">
-          © {new Date().getFullYear()} M² Training · Youth Strength Training · Grosse Pointe Park, MI ·{" "}
+          © {new Date().getFullYear()} M2 Training · Youth Strength Training · Grosse Pointe Park, MI ·{" "}
           <Link to="/" className="text-primary hover:opacity-80 transition-all">Back to home</Link>
         </p>
       </div>

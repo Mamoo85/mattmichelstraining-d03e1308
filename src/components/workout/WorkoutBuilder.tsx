@@ -94,7 +94,7 @@ const WorkoutBuilder = ({ onSaved, onClose }: WorkoutBuilderProps) => {
     if (error) {
       toast({ title: "Failed to save", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: shareToBank ? "Workout shared! 🎉 +30 M² Points" : "Workout saved! 💪" });
+      toast({ title: shareToBank ? "Workout shared! 🎉 +30 M2 Points" : "Workout saved! 💪" });
       setSavedWorkout({ title: title.trim(), exercises: [...exercises] });
     }
     setSaving(false);

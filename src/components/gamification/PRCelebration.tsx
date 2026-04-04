@@ -194,7 +194,7 @@ const PRCelebration = ({
               transition={{ delay: 0.9 }}
               className="flex items-center justify-center gap-1"
             >
-              <span className="text-xs font-bold" style={{ color: "#eab308" }}>+{pointsAwarded} M² Points earned</span>
+              <span className="text-xs font-bold" style={{ color: "#eab308" }}>+{pointsAwarded} M2 Points earned</span>
             </motion.div>
 
             {/* Share button */}

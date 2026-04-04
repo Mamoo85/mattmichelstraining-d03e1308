@@ -51,7 +51,7 @@ export default function DarkWebDashboard() {
   return (
     <>
       <SEOHead
-        title="Dark Web Monitor Dashboard | M² Development"
+        title="Dark Web Monitor Dashboard | M2 Development"
         description="Your dark web credential monitoring dashboard"
       />
       <div className="min-h-screen bg-gray-950 text-white">
@@ -59,7 +59,7 @@ export default function DarkWebDashboard() {
         <div className="bg-[#0a0f1e] border-b border-[#1e2d4a]">
           <div className="max-w-5xl mx-auto px-6 py-6 flex items-center justify-between">
             <div>
-              <div className="text-xs font-bold uppercase tracking-widest text-[#00d4ff] mb-1">M² Development</div>
+              <div className="text-xs font-bold uppercase tracking-widest text-[#00d4ff] mb-1">M2 Development</div>
               <h1 className="text-xl font-black text-white flex items-center gap-2">
                 <Shield size={20} className="text-[#00d4ff]" /> Dark Web Monitor
               </h1>
@@ -248,7 +248,7 @@ export default function DarkWebDashboard() {
           <div className="max-w-5xl mx-auto px-6 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <img src="/images/matt-boat.jpg" alt="Matt" className="w-8 h-8 rounded-full object-cover border border-[#1e2d4a]" />
-              <span className="text-xs text-slate-500">M² Development · matt@mattmichelstraining.com</span>
+              <span className="text-xs text-slate-500">M2 Development · matt@mattmichelstraining.com</span>
             </div>
             <div className="text-xs text-slate-600">
               <Clock size={11} className="inline mr-1" />Scans run weekly

@@ -79,7 +79,7 @@ const GbpSection = ({ mode }: { mode: "training" | "webdesign" }) => {
 const AdminGbpPosts = memo(() => (
   <Tabs defaultValue="training" className="w-full">
     <TabsList className="bg-muted/50 mb-4">
-      <TabsTrigger value="training" className="text-[10px] font-bold uppercase tracking-widest">M² Training</TabsTrigger>
+      <TabsTrigger value="training" className="text-[10px] font-bold uppercase tracking-widest">M2 Training</TabsTrigger>
       <TabsTrigger value="webdesign" className="text-[10px] font-bold uppercase tracking-widest">Web Design</TabsTrigger>
     </TabsList>
     <TabsContent value="training"><GbpSection mode="training" /></TabsContent>

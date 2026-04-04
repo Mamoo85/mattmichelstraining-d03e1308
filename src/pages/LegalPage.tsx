@@ -56,7 +56,7 @@ const LegalPage = () => {
 
   return (
     <>
-      <SEOHead title={`${mapped.title} | M² Development`} description={mapped.title} />
+      <SEOHead title={`${mapped.title} | M2 Development`} description={mapped.title} />
       <div className="min-h-screen bg-background">
         <div className="max-w-3xl mx-auto px-4 py-12">
           {isLoading ? (

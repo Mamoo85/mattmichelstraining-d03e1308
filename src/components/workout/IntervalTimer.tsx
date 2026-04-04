@@ -40,7 +40,7 @@ interface TimerSkin {
 }
 
 const SKINS: TimerSkin[] = [
-  { name: "M² Performance", icon: "🏋️", idle: "#0d0d0d", prep: "#92400e", work: "#15803d", rest: "#b91c1c", done: "#ea580c", accent: "#f97316", ring: "#f97316" },
+  { name: "M2 Performance", icon: "🏋️", idle: "#0d0d0d", prep: "#92400e", work: "#15803d", rest: "#b91c1c", done: "#ea580c", accent: "#f97316", ring: "#f97316" },
   { name: "Wild Tiger", icon: "🐯", idle: "#1c1208", prep: "#92400e", work: "#c2410c", rest: "#78350f", done: "#d97706", accent: "#fbbf24", ring: "#f59e0b" },
   { name: "Deep Space", icon: "🚀", idle: "#030318", prep: "#4c1d95", work: "#155e75", rest: "#312e81", done: "#0891b2", accent: "#22d3ee", ring: "#06b6d4" },
   { name: "Cobra Strike", icon: "🐍", idle: "#022c22", prep: "#3f6212", work: "#166534", rest: "#134e4a", done: "#65a30d", accent: "#a3e635", ring: "#84cc16" },

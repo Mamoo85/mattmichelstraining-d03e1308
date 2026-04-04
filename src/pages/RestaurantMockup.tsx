@@ -124,16 +124,16 @@ const RestaurantMockup = () => {
       `}</style>
 
       <Helmet>
-        <title>Restaurant Website Demo | M² Web Design Detroit</title>
+        <title>Restaurant Website Demo | M2 Web Design Detroit</title>
         <meta
           name="description"
-          content="See how a waterfront restaurant website looks when built by M² Web Design. Professional dining site for Metro Detroit restaurants."
+          content="See how a waterfront restaurant website looks when built by M2 Web Design. Professional dining site for Metro Detroit restaurants."
         />
         <link rel="canonical" href="https://www.mattmichelstraining.com/demo-restaurant" />
-        <meta property="og:title" content="Restaurant Website Demo | M² Web Design Detroit" />
+        <meta property="og:title" content="Restaurant Website Demo | M2 Web Design Detroit" />
         <meta
           property="og:description"
-          content="Professional restaurant website mockup by M² Web Design. Menu showcase, event booking, and online reservations."
+          content="Professional restaurant website mockup by M2 Web Design. Menu showcase, event booking, and online reservations."
         />
         <meta property="og:url" content="https://www.mattmichelstraining.com/demo-restaurant" />
         <meta property="og:type" content="website" />
@@ -142,11 +142,11 @@ const RestaurantMockup = () => {
             "@context": "https://schema.org",
             "@type": "WebPage",
             name: "Restaurant Website Demo",
-            description: "Demo restaurant website built by M² Web Design for Metro Detroit dining.",
+            description: "Demo restaurant website built by M2 Web Design for Metro Detroit dining.",
             url: "https://www.mattmichelstraining.com/demo-restaurant",
             provider: {
               "@type": "ProfessionalService",
-              name: "M² Web Design",
+              name: "M2 Web Design",
               url: "https://www.mattmichelstraining.com/detroit-web-design",
             },
           })}

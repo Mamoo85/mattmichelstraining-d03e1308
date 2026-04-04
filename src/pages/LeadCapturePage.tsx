@@ -117,7 +117,7 @@ export default function LeadCapturePage() {
   return (
     <>
       <SEOHead
-        title={`${copy.title} — ${city} | M² Lead Network`}
+        title={`${copy.title} — ${city} | M2 Lead Network`}
         description={copy.description}
       />
       <div className="min-h-screen bg-background text-foreground">

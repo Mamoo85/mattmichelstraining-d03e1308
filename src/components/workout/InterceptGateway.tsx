@@ -188,7 +188,7 @@ const InterceptGateway = ({ onSelect, onExit }: InterceptGatewayProps) => {
   };
 
   const handleTemplateLocked = () => {
-    toast.error("Upgrade to Foundation or higher to unlock M² Templates");
+    toast.error("Upgrade to Foundation or higher to unlock M2 Templates");
     navigate("/pricing");
     onExit();
   };
@@ -424,7 +424,7 @@ const InterceptGateway = ({ onSelect, onExit }: InterceptGatewayProps) => {
             {masterTemplates.length > 0 && (
               <section className="space-y-2">
                 <span className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5" style={{ color: "#fb923c" }}>
-                  <BookOpen size={12} /> M² Master Templates
+                  <BookOpen size={12} /> M2 Master Templates
                 </span>
                 {masterTemplates.map((t) => (
                   <button

@@ -54,13 +54,13 @@ const FreeProgram = () => {
   return (
     <>
       <SEOHead
-        title="Free 4-Week Beginner Strength Program | M² Training"
+        title="Free 4-Week Beginner Strength Program | M2 Training"
         description="Get a free 4-week beginner strength program from Coach Matt Michels. Enter your email and we'll send it right over. No strings attached."
         path="/free-program"
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "WebApplication",
-          name: "M² Free Strength Program",
+          name: "M2 Free Strength Program",
           description: "Free 4-week beginner strength program from a 20-year veteran coach.",
           url: "https://www.mattmichelstraining.com/free-program",
           applicationCategory: "HealthApplication",

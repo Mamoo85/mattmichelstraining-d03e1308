@@ -61,7 +61,7 @@ const Unsubscribe = () => {
       <div className="max-w-md w-full text-center space-y-6">
         <img
           src="/images/m2-development-logo.png"
-          alt="M² Training"
+          alt="M2 Training"
           className="w-12 h-12 mx-auto"
         />
 
@@ -73,7 +73,7 @@ const Unsubscribe = () => {
           <>
             <h1 className="text-2xl font-bold text-foreground">Unsubscribe</h1>
             <p className="text-muted-foreground">
-              Are you sure you want to unsubscribe from M² Training emails?
+              Are you sure you want to unsubscribe from M2 Training emails?
             </p>
             <button
               onClick={handleUnsubscribe}

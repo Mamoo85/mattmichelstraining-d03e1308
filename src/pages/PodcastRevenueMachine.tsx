@@ -107,7 +107,7 @@ export default function PodcastRevenueMachine() {
             backgroundImage: "radial-gradient(ellipse at 50% 0%, rgba(255,107,53,0.12) 0%, transparent 70%)"
           }} />
           <div className="relative max-w-3xl mx-auto">
-            <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#FF6B35] mb-4">M² Development · AI Content Automation</p>
+            <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#FF6B35] mb-4">M2 Development · AI Content Automation</p>
             <h1 className="text-4xl sm:text-5xl font-black leading-tight mb-6">
               Turn Every Episode Into a<br />
               <span className="text-[#FF6B35]">Full Week of Content</span> — Automatically
@@ -241,7 +241,7 @@ export default function PodcastRevenueMachine() {
             </div>
             <div className="flex items-center justify-center gap-6 text-sm text-slate-500">
               <span className="line-through">Hiring a repurposer: $2,000–4,000/mo</span>
-              <span className="text-[#FF6B35] font-bold">M²: $199/mo</span>
+              <span className="text-[#FF6B35] font-bold">M2: $199/mo</span>
             </div>
           </div>
         </section>
@@ -382,7 +382,7 @@ export default function PodcastRevenueMachine() {
             />
             <div>
               <p className="text-white font-bold text-sm">Matt Michels</p>
-              <p className="text-slate-500 text-xs">Grosse Pointe, MI · <a href="tel:+13138064952" className="text-[#FF6B35]">(313) 806-4952</a> · M² Development</p>
+              <p className="text-slate-500 text-xs">Grosse Pointe, MI · <a href="tel:+13138064952" className="text-[#FF6B35]">(313) 806-4952</a> · M2 Development</p>
             </div>
           </div>
         </div>

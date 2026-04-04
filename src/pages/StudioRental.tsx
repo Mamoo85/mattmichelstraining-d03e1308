@@ -294,7 +294,7 @@ const StudioRental = () => {
         {/* FOOTER */}
         <div className="pt-6 border-t border-border text-center space-y-2">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} M² Training · Grosse Pointe Park, MI ·{" "}
+            © {new Date().getFullYear()} M2 Training · Grosse Pointe Park, MI ·{" "}
             <Link to="/" className="text-primary hover:opacity-80 transition-all">Back to home</Link>
           </p>
           <p className="text-[10px] text-muted-foreground">

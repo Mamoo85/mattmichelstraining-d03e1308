@@ -58,7 +58,7 @@ export default function IndustrialNewsletter() {
   return (
     <>
       <SEOHead
-        title="Industrial Sales Intel — Weekly Newsletter | M² Training"
+        title="Industrial Sales Intel — Weekly Newsletter | M2 Training"
         description="Sales intelligence for industrial and manufacturing B2B reps. Manufacturing plant openings, procurement shifts, competitor moves — delivered every Monday. $19/month."
       />
       <div className="min-h-screen bg-background text-foreground">

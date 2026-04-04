@@ -55,7 +55,7 @@ const PRShareCard = forwardRef<HTMLDivElement, PRShareCardProps>(
         <div style={{ position: "absolute", bottom: 0, right: 0, width: 120, height: 4, background: "#FF6B00" }} />
         <div style={{ position: "absolute", bottom: 0, right: 0, width: 4, height: 120, background: "#FF6B00" }} />
 
-        {/* M² Logo */}
+        {/* M2 Logo */}
         <div
           style={{
             fontSize: 48,
@@ -65,7 +65,7 @@ const PRShareCard = forwardRef<HTMLDivElement, PRShareCardProps>(
             marginBottom: 16,
           }}
         >
-          M²
+          M2
         </div>
 
         {/* NEW PR badge */}
@@ -150,7 +150,7 @@ const PRShareCard = forwardRef<HTMLDivElement, PRShareCardProps>(
         >
           <div style={{ width: 200, height: 1, background: "linear-gradient(90deg, transparent, #333, transparent)" }} />
           <div style={{ fontSize: 14, color: "#555", letterSpacing: 3, textTransform: "uppercase" }}>
-            Trained on the M² Portal
+            Trained on the M2 Portal
           </div>
           <div style={{ fontSize: 13, color: "#444", letterSpacing: 1 }}>
             mattmichelstraining.com

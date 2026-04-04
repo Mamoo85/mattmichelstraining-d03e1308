@@ -42,7 +42,7 @@ const COMPARISON = [
   { tool: "Barchart", price: "$99/mo", what: "Market data platform — not built for farmer price targeting", highlight: false },
   { tool: "Bloomberg Terminal", price: "$27,000/yr", what: "Institutional finance tool — overkill, not ag-specific", highlight: false },
   { tool: "Farm advisor / broker", price: "$200–500/hr", what: "Human expertise — available during business hours only", highlight: false },
-  { tool: "M² Ag Price Alerts", price: "$79/mo", what: "SMS price targets + AI morning brief + USDA alerts", highlight: true },
+  { tool: "M2 Ag Price Alerts", price: "$79/mo", what: "SMS price targets + AI morning brief + USDA alerts", highlight: true },
 ];
 
 export default function AgPriceAlerts() {

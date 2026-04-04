@@ -41,7 +41,7 @@ const COMPARISON = [
   { tool: "Franchise attorney review", price: "$2,000–5,000", what: "Gold standard — but slow (1-2 weeks), expensive, and still requires you to digest a 50-page memo" },
   { tool: "Franchise consultant", price: "$500–1,500", what: "Conflict of interest — most earn commissions when you sign. Not truly independent." },
   { tool: "DIY reading", price: "40+ hours", what: "400 pages of dense legal text written specifically to be difficult to understand" },
-  { tool: "M² Franchise Analyzer", price: "$299/mo", what: "Complete AI analysis in 4 hours. All red flags surfaced. Risk score. Plain English. Use attorney to verify, not discover.", highlight: true },
+  { tool: "M2 Franchise Analyzer", price: "$299/mo", what: "Complete AI analysis in 4 hours. All red flags surfaced. Risk score. Plain English. Use attorney to verify, not discover.", highlight: true },
 ];
 
 export default function FranchiseAnalyzer() {
@@ -158,7 +158,7 @@ export default function FranchiseAnalyzer() {
                 </div>
               ))}
             </div>
-            <p className="text-xs text-muted-foreground text-center mt-4">Use M² to discover the issues, then use an attorney to verify. Cut legal costs by 60–80%.</p>
+            <p className="text-xs text-muted-foreground text-center mt-4">Use M2 to discover the issues, then use an attorney to verify. Cut legal costs by 60–80%.</p>
           </div>
         </section>
 

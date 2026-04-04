@@ -102,7 +102,7 @@ const AskCoachMatt = ({ programId, programTitle, weekNumber, dayNumber, exercise
           <p className="text-3xl mb-2">🏋️</p>
           <h4 className="text-sm font-bold text-foreground mb-1">Raise Your Hand in Class</h4>
           <p className="text-xs text-muted-foreground mb-3 max-w-sm mx-auto">
-            Flag Coach Matt works like raising your hand — ask about form, get a video review, or clarify programming. Available with <strong>M² Pro</strong> and above, or included with any purchased program.
+            Flag Coach Matt works like raising your hand — ask about form, get a video review, or clarify programming. Available with <strong>M2 Pro</strong> and above, or included with any purchased program.
           </p>
           <Link
             to="/pricing"

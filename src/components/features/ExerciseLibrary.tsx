@@ -99,7 +99,7 @@ const ExerciseLibrary = () => {
           and physics behind the movement.
         </p>
         <span className="text-[10px] font-mono text-primary mt-2 block">
-          — Matt Michels, M² Training
+          — Matt Michels, M2 Training
         </span>
       </div>
 

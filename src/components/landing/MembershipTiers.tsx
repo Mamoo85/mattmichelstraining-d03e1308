@@ -10,7 +10,7 @@ const MEMBERSHIP_TIERS = [
     price: "$19.99/mo",
     highlightKey: "exercise" as const,
     highlights: [
-      "Full M² App + {count}+ exercise library",
+      "Full M2 App + {count}+ exercise library",
       "Fix It rehab library",
       "AI Workout Generator",
       "Progress logging & tracking",
@@ -66,7 +66,7 @@ const MembershipTiers = memo(() => {
       </h2>
     </div>
     <p className="text-sm text-muted-foreground mb-6 max-w-2xl leading-relaxed">
-      The Foundation includes a 14-day free trial of the M² App. Pro and Elite are custom coaching packages — no trial needed, just results. Upgrade or cancel anytime.
+      The Foundation includes a 14-day free trial of the M2 App. Pro and Elite are custom coaching packages — no trial needed, just results. Upgrade or cancel anytime.
     </p>
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
       {MEMBERSHIP_TIERS.map((t) => (

@@ -162,7 +162,7 @@ const Assessment = () => {
 
   return (
     <>
-      <SEOHead title="Pro Assessment | M² Performance" description="Complete your intake assessment for personalized coaching from Coach Matt." path="/assessment" />
+      <SEOHead title="Pro Assessment | M2 Performance" description="Complete your intake assessment for personalized coaching from Coach Matt." path="/assessment" />
       <AppNavbar />
       <div className="min-h-screen bg-background pt-20 pb-32 px-4">
         <div className="max-w-xl mx-auto">

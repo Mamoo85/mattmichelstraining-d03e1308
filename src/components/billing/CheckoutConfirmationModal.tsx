@@ -28,7 +28,7 @@ const NEXT_STEPS: Record<CheckoutProductType, { icon: typeof FileText; text: str
   },
   foundation: {
     icon: Rocket,
-    text: "You will get instant access to the M² App with the full exercise library, Fix It rehab library, and AI Generator. Start training today.",
+    text: "You will get instant access to the M2 App with the full exercise library, Fix It rehab library, and AI Generator. Start training today.",
   },
   pro: {
     icon: Video,

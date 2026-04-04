@@ -38,7 +38,7 @@ const BlurGate = ({ children, requireSubscription = false }: BlurGateProps) => {
 
           <p className="text-sm text-muted-foreground leading-relaxed">
             {needsAuth
-              ? "Create a free account to browse the M² portal. Subscribe to unlock all features."
+              ? "Create a free account to browse the M2 portal. Subscribe to unlock all features."
               : "You need an active subscription to access this content. Plans start at $9.99/mo."}
           </p>
 

@@ -179,7 +179,7 @@ export default function TrademarkDashboard() {
   return (
     <>
       <SEOHead
-        title="Trademark Watch Dashboard | M² Development"
+        title="Trademark Watch Dashboard | M2 Development"
         description="Monitor your trademarks for potential conflicts. View findings, scores, and recommendations."
       />
       <div className="min-h-screen bg-background text-foreground">

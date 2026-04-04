@@ -29,7 +29,7 @@ const RealityCheck = () => (
       </p>
 
       <p className="text-sm text-foreground text-balance leading-relaxed">
-        At M² Training, I prioritize <span className="text-primary font-semibold">healthy joints and mental resilience</span> over
+        At M2 Training, I prioritize <span className="text-primary font-semibold">healthy joints and mental resilience</span> over
         ego numbers on a board. We build work capacity step-by-step so they can
         <span className="font-semibold"> dominate in college</span>, not just survive senior year.
       </p>
@@ -57,7 +57,7 @@ const RealityCheck = () => (
       </div>
 
       <div className="bg-primary/10 border border-primary/20 p-4">
-        <p className="text-xs font-bold text-primary uppercase tracking-widest mb-2">The M² Way</p>
+        <p className="text-xs font-bold text-primary uppercase tracking-widest mb-2">The M2 Way</p>
         <p className="text-sm text-foreground font-semibold text-balance">
           Let me handle the strength protocol. You handle the bedtime.
           They will get strong. I promise.

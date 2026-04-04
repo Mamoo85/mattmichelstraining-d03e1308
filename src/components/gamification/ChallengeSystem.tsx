@@ -299,7 +299,7 @@ const ChallengeSystem = () => {
 
             {!subscribed && !optedIn && (
               <p className="text-[10px] text-muted-foreground mt-2">
-                Challenges are available to M² members only.
+                Challenges are available to M2 members only.
               </p>
             )}
           </div>

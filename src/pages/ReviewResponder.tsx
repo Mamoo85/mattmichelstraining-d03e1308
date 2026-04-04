@@ -13,13 +13,13 @@ export default function ReviewResponder() {
   return (
     <>
       <SEOHead
-        title="Automated Google Review Responses — Coming Soon | M² Review Responder"
+        title="Automated Google Review Responses — Coming Soon | M2 Review Responder"
         description="Every Google review answered within 2 hours, automatically. AI-crafted responses that sound human. Join the waitlist to be first in line."
       />
       <div className="min-h-screen bg-background text-foreground">
         {/* Hero */}
         <div className="bg-[#1e293b] text-white px-6 py-14 text-center">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">M² Review Responder</p>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">M2 Review Responder</p>
           <h1 className="text-3xl font-black mb-4">Your Google reviews —<br />answered within 2 hours. Automatically.</h1>
           <p className="text-slate-300 text-sm max-w-xl mx-auto leading-relaxed">
             Every 1-star review left unanswered costs you customers. We respond for you — professionally, personally, 24/7.

@@ -32,7 +32,7 @@ export default function AIChurchNewsletter() {
 
   return (
     <>
-      <SEOHead title="AI Church & Nonprofit Newsletter — $29/mo | M² Development" description="AI writes your monthly congregation newsletter, weekly bulletin content, and sermon recaps. $29/month — the most affordable ministry tool available." path="/ai-church-newsletter" />
+      <SEOHead title="AI Church & Nonprofit Newsletter — $29/mo | M2 Development" description="AI writes your monthly congregation newsletter, weekly bulletin content, and sermon recaps. $29/month — the most affordable ministry tool available." path="/ai-church-newsletter" />
       <div className="min-h-screen bg-[#0f0f1a] text-white">
         <section className="pt-20 pb-16 px-4">
           <div className="max-w-3xl mx-auto text-center">

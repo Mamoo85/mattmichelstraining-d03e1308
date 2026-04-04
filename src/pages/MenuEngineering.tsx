@@ -41,7 +41,7 @@ const COMPARISON = [
   { tool: "Menu Engineering Consultant", price: "$2,000–5,000/engagement", what: "One-time analysis, no ongoing monitoring, expensive, slow" },
   { tool: "Restaurant Consultant", price: "$150–300/hr", what: "Hourly billing — a full analysis costs thousands and takes weeks" },
   { tool: "Doing nothing", price: "$0 up front", what: "60% of US restaurants fail within 3 years. Most never analyze their menu." },
-  { tool: "M² Menu Engineering", price: "$99/mo", what: "Monthly AI-powered BCG analysis + revenue leak report + pricing recommendations — 14-day trial", highlight: true },
+  { tool: "M2 Menu Engineering", price: "$99/mo", what: "Monthly AI-powered BCG analysis + revenue leak report + pricing recommendations — 14-day trial", highlight: true },
 ];
 
 const MATRIX_ITEMS = [
@@ -166,7 +166,7 @@ export default function MenuEngineering() {
         <section className="py-16 px-4 border-b border-border">
           <div className="max-w-2xl mx-auto">
             <h2 className="text-xl font-black text-center mb-2 uppercase tracking-tight">What Others Charge</h2>
-            <p className="text-center text-muted-foreground text-sm mb-8">A one-time consultant analysis costs thousands. M² does it every month for $99.</p>
+            <p className="text-center text-muted-foreground text-sm mb-8">A one-time consultant analysis costs thousands. M2 does it every month for $99.</p>
             <div className="space-y-3">
               {COMPARISON.map((c) => (
                 <div

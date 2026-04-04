@@ -152,7 +152,7 @@ const JoinTeam = () => {
           {/* Brand chip */}
           <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-1.5">
             <Zap size={14} className="text-primary" />
-            <span className="text-xs font-bold text-primary uppercase tracking-[0.2em]">M² Teams</span>
+            <span className="text-xs font-bold text-primary uppercase tracking-[0.2em]">M2 Teams</span>
           </div>
 
           {/* Team name */}

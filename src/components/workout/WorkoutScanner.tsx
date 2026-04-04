@@ -241,7 +241,7 @@ const WorkoutScanner = ({ onSaved }: { onSaved?: () => void }) => {
             <div className="flex flex-col items-center py-8 gap-3">
               <Loader2 size={32} className="animate-spin text-primary" />
               <p className="text-sm text-muted-foreground">Reading your workout card…</p>
-              <p className="text-[10px] text-muted-foreground">Matching exercises to M² library</p>
+              <p className="text-[10px] text-muted-foreground">Matching exercises to M2 library</p>
             </div>
           )}
 

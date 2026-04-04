@@ -71,7 +71,7 @@ export default function MemorialPage() {
   if (notFound || !memorial) {
     return (
       <>
-        <SEOHead title="Memorial Not Found | M² Development" description="This memorial page could not be found." />
+        <SEOHead title="Memorial Not Found | M2 Development" description="This memorial page could not be found." />
         <div className="min-h-screen bg-amber-50 flex items-center justify-center px-6">
           <div className="text-center max-w-md">
             <Heart size={40} className="text-amber-300 mx-auto mb-4" />
@@ -195,7 +195,7 @@ export default function MemorialPage() {
             <p className="text-xs text-stone-400 mt-3">
               Created with love by{" "}
               <a href="/pet-memorial" className="text-amber-600 hover:underline">
-                M² Pet Memorial Service
+                M2 Pet Memorial Service
               </a>
             </p>
           </div>

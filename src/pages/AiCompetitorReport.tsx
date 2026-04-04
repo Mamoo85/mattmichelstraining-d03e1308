@@ -88,7 +88,7 @@ export default function AiCompetitorReport() {
   return (
     <>
       <SEOHead
-        title="AI Local Competitor Analysis — $9 | Real Google Maps Data | M² Web Design"
+        title="AI Local Competitor Analysis — $9 | Real Google Maps Data | M2 Web Design"
         description="Get a data-driven competitor analysis for your local market. Real Google Maps data, review gaps, positioning opportunities, and 5 action items. $9, delivered in 2 minutes."
         path="/ai-competitor-report"
       />

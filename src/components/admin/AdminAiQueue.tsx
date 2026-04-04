@@ -205,7 +205,7 @@ const AdminAiQueue = () => {
     // For athlete-facing actions, create a notification so the athlete can see the response
     if (item.target_user_id && ["recovery_advice", "recovery_advisor", "exercise_sub", "exercise_substitution", "intake_analyzer", "form_check", "draft_reply", "coach_reply", "program_reply", "welcome_drip", "weekly_recap", "upsell_nudge"].includes(item.action_type)) {
       const titleMap: Record<string, string> = {
-        welcome_drip: "Welcome to M² Training!",
+        welcome_drip: "Welcome to M2 Training!",
         weekly_recap: "Your Weekly Training Recap",
         upsell_nudge: "Level Up Your Training",
       };

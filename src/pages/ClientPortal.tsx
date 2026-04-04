@@ -134,7 +134,7 @@ const ClientPortal = () => {
 
   return (
     <>
-      <SEOHead title="Client Portal | M² Development" description="Manage your web design project and add-on services." />
+      <SEOHead title="Client Portal | M2 Development" description="Manage your web design project and add-on services." />
       <div className="min-h-screen bg-background">
         {/* Header */}
         <div className="bg-[#1e293b] text-white py-8 px-4">

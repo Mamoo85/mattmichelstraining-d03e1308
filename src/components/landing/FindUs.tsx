@@ -10,7 +10,7 @@ const FindUs = () => (
   >
     <SectionHeader title="Find Us" />
     <div className="bg-card shadow-m2 p-5">
-      <p className="text-sm font-bold text-foreground">M² Training</p>
+      <p className="text-sm font-bold text-foreground">M2 Training</p>
       <p className="text-xs text-muted-foreground mt-1">
         15121 Kercheval Ave
         <br />
@@ -72,7 +72,7 @@ const FindUs = () => (
           to="/about"
           className="text-sm text-primary font-bold hover:opacity-80 transition-m2"
         >
-          About Matt & M² Training →
+          About Matt & M2 Training →
         </Link>
       </div>
     </div>

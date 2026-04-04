@@ -16,7 +16,7 @@ const M2_SERVICES = [
     emoji: "📝",
     schedule: "Monthly",
     insert: {
-      business_name: "M² Development",
+      business_name: "M2 Development",
       contact_name: "Matt Michels",
       email: MATT_EMAIL,
       website: "https://mattmichelstraining.com",
@@ -29,11 +29,11 @@ const M2_SERVICES = [
     key: "ads_copy",
     table: "ads_copy_clients",
     name: "Monthly Ad Copy",
-    desc: "10 fresh Google Ads variations/month for M²'s services",
+    desc: "10 fresh Google Ads variations/month for M2's services",
     emoji: "📢",
     schedule: "Monthly",
     insert: {
-      business_name: "M² Development",
+      business_name: "M2 Development",
       email: MATT_EMAIL,
       industry: "AI automation & SaaS services",
       target_keywords: ["AI automation", "automated marketing", "contractor leads", "AI phone answering", "missed call text back"],
@@ -44,11 +44,11 @@ const M2_SERVICES = [
     key: "newsletter_service",
     table: "newsletter_service_clients",
     name: "Business Newsletter",
-    desc: "AI-written monthly newsletter for M²'s subscribers",
+    desc: "AI-written monthly newsletter for M2's subscribers",
     emoji: "📧",
     schedule: "Monthly",
     insert: {
-      business_name: "M² Development",
+      business_name: "M2 Development",
       email: MATT_EMAIL,
       industry: "AI automation services for small business",
       subscriber_list: [MATT_EMAIL],
@@ -63,7 +63,7 @@ const M2_SERVICES = [
     emoji: "📱",
     schedule: "Monthly",
     insert: {
-      business_name: "M² Development",
+      business_name: "M2 Development",
       contact_name: "Matt Michels",
       email: MATT_EMAIL,
       industry: "AI automation & web development",
@@ -75,11 +75,11 @@ const M2_SERVICES = [
     key: "local_seo",
     table: "local_seo_clients",
     name: "Local SEO Pages",
-    desc: "AI-written SEO landing pages for M²'s service areas",
+    desc: "AI-written SEO landing pages for M2's service areas",
     emoji: "🔍",
     schedule: "Monthly",
     insert: {
-      business_name: "M² Development",
+      business_name: "M2 Development",
       contact_name: "Matt Michels",
       email: MATT_EMAIL,
       industry: "AI automation services",
@@ -96,7 +96,7 @@ const M2_SERVICES = [
     emoji: "🔭",
     schedule: "Weekly",
     insert: {
-      business_name: "M² Development",
+      business_name: "M2 Development",
       email: MATT_EMAIL,
       industry: "AI automation services",
       competitor_urls: [
@@ -131,7 +131,7 @@ const M2_SERVICES = [
     schedule: "Weekly",
     insert: {
       email: MATT_EMAIL,
-      business_name: "M² Development",
+      business_name: "M2 Development",
       industry: "AI automation & SaaS",
       active: true,
     },
@@ -140,11 +140,11 @@ const M2_SERVICES = [
     key: "gbp_saas",
     table: "gbp_saas_clients",
     name: "GBP Auto-Poster",
-    desc: "3x/week AI posts to M²'s Google Business Profile",
+    desc: "3x/week AI posts to M2's Google Business Profile",
     emoji: "📍",
     schedule: "3x/week",
     insert: {
-      business_name: "M² Development",
+      business_name: "M2 Development",
       business_type: "AI automation & web development agency",
       contact_name: "Matt Michels",
       email: MATT_EMAIL,
@@ -201,7 +201,7 @@ const AdminM2GrowthHub = () => {
       }
     },
     onSuccess: (_, { service, enroll }) => {
-      toast.success(enroll ? `✅ M² enrolled in ${service.name}` : `Removed from ${service.name}`);
+      toast.success(enroll ? `✅ M2 enrolled in ${service.name}` : `Removed from ${service.name}`);
       qc.invalidateQueries({ queryKey: ["m2-enrollments"] });
     },
     onError: (e: any) => toast.error(e.message),
@@ -217,7 +217,7 @@ const AdminM2GrowthHub = () => {
       }
     }
     setEnrollingAll(false);
-    toast.success("🚀 M² Development enrolled in all services!");
+    toast.success("🚀 M2 Development enrolled in all services!");
   };
 
   const activeCount = Object.values(enrollments).filter(Boolean).length;
@@ -227,7 +227,7 @@ const AdminM2GrowthHub = () => {
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-sm font-bold text-foreground">M² Self-Service Hub</h2>
+          <h2 className="text-sm font-bold text-foreground">M2 Self-Service Hub</h2>
           <p className="text-xs text-muted-foreground mt-0.5">
             Run every product on your own business for free.{" "}
             <span className="text-primary font-semibold">{activeCount}/{M2_SERVICES.length} active.</span>
@@ -286,7 +286,7 @@ const AdminM2GrowthHub = () => {
                           disabled={isPending}
                           onClick={() => toggleService({ service, enroll: !active })}
                         >
-                          {active ? "Remove M²" : "Enroll M²"}
+                          {active ? "Remove M2" : "Enroll M2"}
                         </Button>
                       </div>
                     );
@@ -300,7 +300,7 @@ const AdminM2GrowthHub = () => {
 
       <div className="p-4 border border-dashed border-border rounded-lg bg-muted/20">
         <p className="text-[11px] text-muted-foreground">
-          <strong className="text-foreground">How this works:</strong> Enrolling M² Development adds your business as a client in each service table.
+          <strong className="text-foreground">How this works:</strong> Enrolling M2 Development adds your business as a client in each service table.
           The automated cron jobs will then generate and email content directly to{" "}
           <span className="text-primary">matt@mattmichelstraining.com</span> on their normal schedule —
           same as any paying customer. Zero extra cost.

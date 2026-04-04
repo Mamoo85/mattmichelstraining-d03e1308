@@ -71,14 +71,14 @@ export default function CompetitorPricing() {
   return (
     <>
       <SEOHead
-        title="Competitor Pricing Intelligence — Know the Moment They Change Their Price | M² Development"
+        title="Competitor Pricing Intelligence — Know the Moment They Change Their Price | M2 Development"
         description="AI-powered weekly competitor price monitoring. Enter 3–10 competitor URLs and get a weekly report with what changed and 3 actionable recommendations. $149/mo."
       />
       <div className="min-h-screen bg-background text-foreground">
 
         {/* Hero */}
         <div className="bg-[#1e293b] text-white px-6 py-20 text-center">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-[#2563eb] mb-3">M² Development · Competitive Intelligence</p>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-[#2563eb] mb-3">M2 Development · Competitive Intelligence</p>
           <h1 className="text-4xl font-black mb-4 leading-tight max-w-2xl mx-auto">
             Know the Moment Your Competitor<br className="hidden sm:block" /> Changes Their Price
           </h1>
@@ -131,7 +131,7 @@ export default function CompetitorPricing() {
           <h2 className="text-2xl font-black text-foreground mb-8">What your Monday email looks like</h2>
           <div className="border border-border rounded-lg overflow-hidden shadow-sm">
             <div className="bg-[#1e293b] px-6 py-4 border-b-2 border-[#2563eb]">
-              <p className="text-[#2563eb] text-xs font-bold uppercase tracking-widest mb-1">M² Development · Competitor Pricing Intelligence</p>
+              <p className="text-[#2563eb] text-xs font-bold uppercase tracking-widest mb-1">M2 Development · Competitor Pricing Intelligence</p>
               <p className="text-white font-bold text-lg">Weekly Pricing Report</p>
               <p className="text-slate-400 text-sm">Acme Corp · April 7, 2026</p>
             </div>
@@ -293,7 +293,7 @@ export default function CompetitorPricing() {
             />
             <div>
               <p className="font-bold text-foreground">Matt Michels</p>
-              <p className="text-xs text-muted-foreground mb-3">Founder, M² Development · Grosse Pointe, MI</p>
+              <p className="text-xs text-muted-foreground mb-3">Founder, M2 Development · Grosse Pointe, MI</p>
               <p className="text-sm text-foreground leading-relaxed">
                 "I built this because I got tired of finding out a competitor changed their prices by accident — a client mentioned it, or I stumbled on it myself weeks later. Now I know the same week it happens. Questions? Text me at (313) 806-4952."
               </p>

@@ -97,7 +97,7 @@ const TechHubModal = memo(({ open, onClose }: TechHubModalProps) => {
         <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto bg-card border-border">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-primary">
-              <Brain size={16} /> M² Technology
+              <Brain size={16} /> M2 Technology
             </DialogTitle>
           </DialogHeader>
 
@@ -164,7 +164,7 @@ const TechHubModal = memo(({ open, onClose }: TechHubModalProps) => {
               </div>
             </button>
             <p className="text-[9px] text-muted-foreground/60 text-center pt-1">
-              Show a friend? They can try one analysis free — then join M² to keep using them.
+              Show a friend? They can try one analysis free — then join M2 to keep using them.
             </p>
           </div>
         </DialogContent>

@@ -76,11 +76,11 @@ const YoungbloodMockup = () => {
   return (
     <div className="min-h-screen text-[#f1f5f9] antialiased" style={{ background: "#0a0f1a", fontFamily: "'Inter', sans-serif" }}>
       <Helmet>
-        <title>Youngblood Automation Redesign Concept | M² Web Design Detroit</title>
-        <meta name="description" content="See how an industrial automation distributor website looks when redesigned by M² Web Design. Enterprise-grade demo for Youngblood Automation." />
+        <title>Youngblood Automation Redesign Concept | M2 Web Design Detroit</title>
+        <meta name="description" content="See how an industrial automation distributor website looks when redesigned by M2 Web Design. Enterprise-grade demo for Youngblood Automation." />
         <link rel="canonical" href="https://www.mattmichelstraining.com/demo-youngblood" />
-        <meta property="og:title" content="Youngblood Automation Redesign | M² Web Design Detroit" />
-        <meta property="og:description" content="Enterprise automation website redesign concept by M² Web Design. Precision engineering meets modern web design." />
+        <meta property="og:title" content="Youngblood Automation Redesign | M2 Web Design Detroit" />
+        <meta property="og:description" content="Enterprise automation website redesign concept by M2 Web Design. Precision engineering meets modern web design." />
         <meta property="og:url" content="https://www.mattmichelstraining.com/demo-youngblood" />
         <meta property="og:type" content="website" />
       </Helmet>

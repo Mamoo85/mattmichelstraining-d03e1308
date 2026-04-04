@@ -32,7 +32,7 @@ export default function AIEcommerceListings() {
 
   return (
     <>
-      <SEOHead title="AI E-commerce Product Listings — $79/mo | M² Development" description="AI writes SEO-optimized product titles, descriptions, and bullet points for Amazon, Shopify, Etsy, and more. Up to 20 listings/month for $79." path="/ai-ecommerce-listings" />
+      <SEOHead title="AI E-commerce Product Listings — $79/mo | M2 Development" description="AI writes SEO-optimized product titles, descriptions, and bullet points for Amazon, Shopify, Etsy, and more. Up to 20 listings/month for $79." path="/ai-ecommerce-listings" />
       <div className="min-h-screen bg-[#0f0f1a] text-white">
         <section className="pt-20 pb-16 px-4">
           <div className="max-w-3xl mx-auto text-center">

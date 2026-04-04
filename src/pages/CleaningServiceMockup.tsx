@@ -55,8 +55,8 @@ const CleaningServiceMockup = () => {
       </div>
 
       <Helmet>
-        <title>Cleaning Service Website Demo | M² Web Design Detroit</title>
-        <meta name="description" content="See how a cleaning service website looks when built by M² Web Design. Professional lead-generation site for cleaning companies in Metro Detroit." />
+        <title>Cleaning Service Website Demo | M2 Web Design Detroit</title>
+        <meta name="description" content="See how a cleaning service website looks when built by M2 Web Design. Professional lead-generation site for cleaning companies in Metro Detroit." />
         <link rel="canonical" href="https://www.mattmichelstraining.com/demo-cleaning" />
       </Helmet>
 

@@ -100,7 +100,7 @@ export default function ParentView() {
       <header className="bg-[#1e1e1d] border-b border-white/5 px-6 py-4 sticky top-0 z-10 flex justify-between items-center">
         <div>
           <h1 className="text-xl font-bold text-white">{mockData.athleteName}'s Training</h1>
-          <span className="text-[10px] uppercase tracking-widest text-[#e8621a] font-bold">M² Parent View</span>
+          <span className="text-[10px] uppercase tracking-widest text-[#e8621a] font-bold">M2 Parent View</span>
         </div>
         <button className="text-slate-400 hover:text-white">
           <Share2 size={20} />

@@ -84,8 +84,8 @@ export default function B2BPartnerPortal() {
   return (
     <>
       <SEOHead
-        title="Partner Program — Earn $100 Per Referral | M² Local Marketing"
-        description="Refer a local business to M² and earn $100 cash for every business that signs up. No cap. Simple tracking. Paid monthly."
+        title="Partner Program — Earn $100 Per Referral | M2 Local Marketing"
+        description="Refer a local business to M2 and earn $100 cash for every business that signs up. No cap. Simple tracking. Paid monthly."
         path="/partners"
       />
       <div className="min-h-screen bg-[#0f0f1a] text-white">
@@ -237,7 +237,7 @@ export default function B2BPartnerPortal() {
                   </div>
                 ))}
                 <p className="text-[10px] text-[#555] leading-relaxed">
-                  Affiliate disclosure: M² earns a commission on referrals to these tools. We only recommend what we'd use ourselves.
+                  Affiliate disclosure: M2 earns a commission on referrals to these tools. We only recommend what we'd use ourselves.
                 </p>
               </div>
             </div>

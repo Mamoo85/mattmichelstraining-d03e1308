@@ -187,14 +187,14 @@ const About = () => {
           <div className="md:col-span-2">
             <img
               src={poiTraining}
-              alt="Matt Michels — Strength Coach, M² Training"
+              alt="Matt Michels — Strength Coach, M2 Training"
               className="w-full aspect-[4/5] object-cover shadow-m2"
             />
           </div>
           {/* Intro */}
           <div className="md:col-span-3">
             <div className="flex items-center gap-3 mb-3">
-              <img src={m2Logo} alt="M² Training" className="w-10 h-10 object-contain" />
+              <img src={m2Logo} alt="M2 Training" className="w-10 h-10 object-contain" />
               <span className="text-[10px] font-bold uppercase tracking-widest text-primary font-mono">
                 About Matt Michels
               </span>
@@ -311,11 +311,11 @@ const About = () => {
       </motion.div>
 
       {/* ═══════════════════════════════════════════
-          4. THE MAN BEHIND M² — Story beats
+          4. THE MAN BEHIND M2 — Story beats
       ═══════════════════════════════════════════ */}
       <motion.div {...fade(0.2)} className="mb-12">
         <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-1">
-          The Man Behind M²
+          The Man Behind M2
         </span>
         <h2 className="text-lg font-bold text-foreground mb-4">
           Born & raised in Grosse Pointe
@@ -432,7 +432,7 @@ const About = () => {
       {/* FOOTER */}
       <div className="pt-6 border-t border-border text-center">
         <p className="text-xs text-muted-foreground">
-          © {new Date().getFullYear()} <span className="font-brand text-sm text-foreground">M² Training</span> · Grosse Pointe Park, MI
+          © {new Date().getFullYear()} <span className="font-brand text-sm text-foreground">M2 Training</span> · Grosse Pointe Park, MI
         </p>
       </div>
     </div>

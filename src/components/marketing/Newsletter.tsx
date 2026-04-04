@@ -19,7 +19,7 @@ const Newsletter = () => (
         <p className="text-xs text-foreground"><span className="text-primary font-bold">The Goal:</span> Strong bodies, healthy minds, and zero pain.</p>
         <p className="text-xs text-foreground"><span className="text-primary font-bold">The Strategy:</span> I'll train them; you get them to bed.</p>
       </div>
-      <span className="text-[10px] font-mono text-primary block">Stay strong, Matt | M² Training</span>
+      <span className="text-[10px] font-mono text-primary block">Stay strong, Matt | M2 Training</span>
     </div>
   </div>
 );

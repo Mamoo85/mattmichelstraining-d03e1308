@@ -61,7 +61,7 @@ const TIPS = [
   {
     icon: Target,
     title: "Train Movements, Not Muscles",
-    content: "Nobody on a field isolates their biceps. Athletic performance comes from training the squat pattern, hip hinge, push, pull, carry, and rotation. Every M² program is built around these fundamental human movements.",
+    content: "Nobody on a field isolates their biceps. Athletic performance comes from training the squat pattern, hip hinge, push, pull, carry, and rotation. Every M2 program is built around these fundamental human movements.",
   },
   {
     icon: Users,
@@ -158,7 +158,7 @@ const ShareButton = ({ title, slug }: { title: string; slug: string }) => {
   const handleShare = async () => {
     if (navigator.share) {
       try {
-        await navigator.share({ title: `M² Training — ${title}`, url });
+        await navigator.share({ title: `M2 Training — ${title}`, url });
         return;
       } catch {}
     }
@@ -421,7 +421,7 @@ const Learn = () => {
           <div className="flex items-center gap-2 mb-1.5">
             <Dumbbell size={14} className="text-primary" />
             <span className="text-[10px] font-bold uppercase tracking-widest text-primary">
-              M² Members
+              M2 Members
             </span>
           </div>
           <p className="text-xs text-muted-foreground leading-relaxed">

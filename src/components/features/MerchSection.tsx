@@ -28,7 +28,7 @@ const MerchSection = () => (
             <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Official Gear</span>
           </div>
           <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-foreground">
-            Rep M² Training
+            Rep M2 Training
           </h2>
           <p className="text-sm text-muted-foreground mt-1 max-w-md">
             You earned it in the gym. Now wear it everywhere else.

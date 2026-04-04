@@ -42,7 +42,7 @@ const NewsletterSubscribe = () => {
   return (
     <>
       <SEOHead
-        title="The M² Brief — Free Weekly Newsletter for Athletes & Parents"
+        title="The M2 Brief — Free Weekly Newsletter for Athletes & Parents"
         description="Weekly training tips, drills, and performance insights for youth athletes and sports parents. Free. No spam. From Coach Matt Michels in Grosse Pointe, MI."
         path="/newsletter"
       />
@@ -56,7 +56,7 @@ const NewsletterSubscribe = () => {
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold tracking-widest uppercase mb-6">
               <Zap size={11} /> Weekly · Free · No Spam
             </div>
-            <div className="text-5xl sm:text-7xl font-black tracking-tight mb-2">M²</div>
+            <div className="text-5xl sm:text-7xl font-black tracking-tight mb-2">M2</div>
             <h1 className="text-2xl sm:text-4xl font-black leading-tight mb-4 tracking-tight">
               The <span className="text-primary">Brief</span>
             </h1>
@@ -70,10 +70,10 @@ const NewsletterSubscribe = () => {
                   <CheckCircle size={28} className="text-primary" />
                 </div>
                 <h2 className="text-xl font-bold">You're in.</h2>
-                <p className="text-muted-foreground text-sm">First issue lands in your inbox on Friday. Welcome to The M² Brief.</p>
+                <p className="text-muted-foreground text-sm">First issue lands in your inbox on Friday. Welcome to The M2 Brief.</p>
                 <Link to="/dashboard">
                   <Button variant="outline" size="sm" className="mt-2">
-                    Explore M² Training <ArrowRight size={13} className="ml-1.5" />
+                    Explore M2 Training <ArrowRight size={13} className="ml-1.5" />
                   </Button>
                 </Link>
               </div>
@@ -140,7 +140,7 @@ const NewsletterSubscribe = () => {
                     I've trained youth athletes in Grosse Pointe for over 20 years. Zero injuries in my career. The Brief is how I share what I've learned — the coaching knowledge that actually changes how athletes develop, written in plain English.
                   </p>
                   <div className="flex flex-wrap gap-2 mt-3">
-                    {["Strength Coach", "Grosse Pointe, MI", "M² Training Founder"].map(t => (
+                    {["Strength Coach", "Grosse Pointe, MI", "M2 Training Founder"].map(t => (
                       <span key={t} className="text-[10px] px-2 py-1 bg-muted rounded-md text-muted-foreground font-medium">{t}</span>
                     ))}
                   </div>
@@ -160,7 +160,7 @@ const NewsletterSubscribe = () => {
                 <div className="p-5 sm:p-6">
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <div className="text-lg font-black tracking-wider text-primary">M² BRIEF</div>
+                      <div className="text-lg font-black tracking-wider text-primary">M2 BRIEF</div>
                       <div className="text-[9px] text-muted-foreground uppercase tracking-widest">The Weekly Sports Performance Newsletter</div>
                     </div>
                     <div className="text-right">
@@ -214,7 +214,7 @@ const NewsletterSubscribe = () => {
         {/* Footer */}
         <footer className="border-t border-border/30 py-6 px-4">
           <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-            <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} M² Training · Grosse Pointe, MI</p>
+            <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} M2 Training · Grosse Pointe, MI</p>
             <div className="flex gap-4 text-xs text-muted-foreground">
               <Link to="/" className="hover:text-foreground">Home</Link>
               <Link to="/pricing" className="hover:text-foreground">Membership</Link>

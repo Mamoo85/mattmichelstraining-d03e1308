@@ -259,7 +259,7 @@ export default function AIBlogPostService() {
                         />
                         {form.cmsType === "wordpress" && (
                           <p className="text-slate-500 text-[11px]">
-                            WordPress → Users → Your Profile → Application Passwords → Generate one for "M² Blog Service"
+                            WordPress → Users → Your Profile → Application Passwords → Generate one for "M2 Blog Service"
                           </p>
                         )}
                       </div>

@@ -72,18 +72,18 @@ const RoofingMockup = () => {
       `}</style>
 
       <Helmet>
-        <title>Roofing Website Demo | M² Web Design Detroit</title>
-        <meta name="description" content="See how a roofing contractor website looks when built by M² Web Design. Professional lead-gen site for roofers in Metro Detroit." />
+        <title>Roofing Website Demo | M2 Web Design Detroit</title>
+        <meta name="description" content="See how a roofing contractor website looks when built by M2 Web Design. Professional lead-gen site for roofers in Metro Detroit." />
         <link rel="canonical" href="https://www.mattmichelstraining.com/demo-roofing" />
-        <meta property="og:title" content="Roofing Website Demo | M² Web Design Detroit" />
-        <meta property="og:description" content="Professional roofing website mockup by M² Web Design. Insurance claim handling, trust badges, quote forms." />
+        <meta property="og:title" content="Roofing Website Demo | M2 Web Design Detroit" />
+        <meta property="og:description" content="Professional roofing website mockup by M2 Web Design. Insurance claim handling, trust badges, quote forms." />
         <meta property="og:url" content="https://www.mattmichelstraining.com/demo-roofing" />
         <meta property="og:type" content="website" />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org", "@type": "WebPage", "name": "Roofing Website Demo",
-          "description": "Demo roofing website built by M² Web Design for Metro Detroit contractors.",
+          "description": "Demo roofing website built by M2 Web Design for Metro Detroit contractors.",
           "url": "https://www.mattmichelstraining.com/demo-roofing",
-          "provider": { "@type": "ProfessionalService", "name": "M² Web Design", "url": "https://www.mattmichelstraining.com/detroit-web-design" }
+          "provider": { "@type": "ProfessionalService", "name": "M2 Web Design", "url": "https://www.mattmichelstraining.com/detroit-web-design" }
         })}</script>
       </Helmet>
 

@@ -54,7 +54,7 @@ const FixItLibrary = () => {
         <p className="text-sm text-foreground leading-relaxed">
           Targeted rehab and prehab protocols. Each exercise includes the <span className="text-primary font-bold">WHY</span> — so you understand the science behind your recovery.
         </p>
-        <span className="text-[10px] font-mono text-primary mt-2 block">— Matt Michels, M² Training</span>
+        <span className="text-[10px] font-mono text-primary mt-2 block">— Matt Michels, M2 Training</span>
       </div>
 
       <FixItDisclaimer />

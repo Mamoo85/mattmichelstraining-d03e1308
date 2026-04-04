@@ -107,10 +107,10 @@ export default function GovContractDashboard() {
   if (!data?.client) {
     return (
       <>
-        <SEOHead title="Contract Dashboard | M² Development" description="Your federal contract opportunity dashboard." />
+        <SEOHead title="Contract Dashboard | M2 Development" description="Your federal contract opportunity dashboard." />
         <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 text-center">
           <div className="max-w-md">
-            <p className="text-[11px] font-bold uppercase tracking-widest text-[#c59b2b] mb-3">M² Development</p>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-[#c59b2b] mb-3">M2 Development</p>
             <h1 className="text-2xl font-black text-foreground mb-3">No Active Subscription</h1>
             <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
               We don't have a Government Contract Monitor subscription linked to your account.
@@ -132,13 +132,13 @@ export default function GovContractDashboard() {
 
   return (
     <>
-      <SEOHead title="Contract Dashboard | M² Development" description="Your matched federal contract opportunities." />
+      <SEOHead title="Contract Dashboard | M2 Development" description="Your matched federal contract opportunities." />
       <div className="min-h-screen bg-background text-foreground">
 
         {/* Header */}
         <div className="bg-[#1e3a5f] text-white px-6 py-8">
           <div className="max-w-5xl mx-auto">
-            <p className="text-[#c59b2b] text-[11px] font-bold uppercase tracking-widest mb-1">M² Development — Federal Contract Intelligence</p>
+            <p className="text-[#c59b2b] text-[11px] font-bold uppercase tracking-widest mb-1">M2 Development — Federal Contract Intelligence</p>
             <h1 className="text-2xl font-black mb-1">{client.company_name || "Your Company"} — Opportunity Dashboard</h1>
             <p className="text-slate-300 text-sm">
               Monitoring NAICS: {client.naics_codes || "not set"} &nbsp;|&nbsp;

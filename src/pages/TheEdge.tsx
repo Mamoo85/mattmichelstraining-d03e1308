@@ -276,7 +276,7 @@ const TrialCTABlock = () => (
       All of This. <span className="text-primary">Inside Your App.</span>
     </h3>
     <p className="text-xs text-muted-foreground max-w-md mx-auto mb-4">
-      Every feature on this page is included free with any M² membership — no add-ons, no upsells.
+      Every feature on this page is included free with any M2 membership — no add-ons, no upsells.
       Just open the app and start training smarter.
     </p>
     <Button asChild size="lg" className="h-12 font-black uppercase tracking-wider text-sm px-8">
@@ -292,8 +292,8 @@ const TrialCTABlock = () => (
 const TheEdge = () => (
   <div className="min-h-screen bg-background">
     <SEOHead
-      title="M² Technology — Advanced Training Tech Built Into Your App"
-      description="Posture analysis, velocity tracking, nutrition scanning, smart workout logging — all built into the M² member app. Included free with every membership starting at $19.99/mo."
+      title="M2 Technology — Advanced Training Tech Built Into Your App"
+      description="Posture analysis, velocity tracking, nutrition scanning, smart workout logging — all built into the M2 member app. Included free with every membership starting at $19.99/mo."
       path="/the-edge"
     />
     <AppNavbar />
@@ -304,14 +304,14 @@ const TheEdge = () => (
         <div className="mb-8 text-center">
           <div className="inline-flex items-center gap-2 bg-primary/10 px-3 py-1 mb-3">
             <Cpu size={14} className="text-primary" />
-            <span className="text-[10px] font-bold uppercase tracking-[3px] text-primary">M² Technology</span>
+            <span className="text-[10px] font-bold uppercase tracking-[3px] text-primary">M2 Technology</span>
           </div>
           <h1 className="text-2xl md:text-4xl font-black uppercase tracking-tight text-foreground mb-3">
             Training Technology<br />
             <span className="text-primary">Built Into Your App</span>
           </h1>
           <p className="text-sm text-muted-foreground max-w-xl mx-auto leading-relaxed mb-2">
-            Every feature below lives inside the M² member app — no extra downloads, no extra hardware, no extra cost.
+            Every feature below lives inside the M2 member app — no extra downloads, no extra hardware, no extra cost.
             Just open your phone and it's all there. Matt's two passions — computer engineering and exercise science —
             fused into one platform no other trainer can match.
           </p>

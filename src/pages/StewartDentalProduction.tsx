@@ -675,7 +675,7 @@ export default function StewartDentalProduction() {
           <div className="pt-6 flex flex-col sm:flex-row justify-between gap-3" style={{ borderTop: "1px solid rgba(201,168,76,.1)" }}>
             <p style={{ color: "rgba(75,85,99,.45)", fontSize: 11 }}>© {new Date().getFullYear()} Stewart Dental Group. All rights reserved. Robert B. Stewart, D.D.S., M.S., P.C.</p>
             <a href="https://www.mattmichelstraining.com/detroit-web-design" target="_blank" rel="noopener noreferrer" style={{ color: G, fontSize: 11, textDecoration: "none" }}>
-              Site by M² Web Design
+              Site by M2 Web Design
             </a>
           </div>
         </div>

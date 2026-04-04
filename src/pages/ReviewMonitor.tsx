@@ -15,7 +15,7 @@ const COMPARISON = [
   { tool: "Birdeye", price: "$299/mo", what: "Review monitoring + reputation suite" },
   { tool: "Podium", price: "$399/mo", what: "Messaging + review management" },
   { tool: "ReviewTrackers", price: "$99/mo", what: "Review monitoring only" },
-  { tool: "M² Review Monitor", price: "$25/mo", what: "Instant alerts + AI responses + weekly digest", highlight: true },
+  { tool: "M2 Review Monitor", price: "$25/mo", what: "Instant alerts + AI responses + weekly digest", highlight: true },
 ];
 
 export default function ReviewMonitor() {

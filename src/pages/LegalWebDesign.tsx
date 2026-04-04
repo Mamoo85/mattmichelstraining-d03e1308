@@ -108,13 +108,13 @@ export default function LegalWebDesign() {
   return (
     <>
       <SEOHead
-        title="Law Firm Website Design — $1,499 Setup | M² Web Design"
+        title="Law Firm Website Design — $1,499 Setup | M2 Web Design"
         description="Professional websites built for attorneys and law firms. Practice area pages, free consultation forms, case results, and local SEO. From $1,499 setup + $99/mo."
       />
       <div className="min-h-screen bg-background text-foreground">
         {/* Hero */}
         <div className="bg-[#1e293b] text-white px-6 py-14 text-center">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">M² Web Design — Law Firms</p>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">M2 Web Design — Law Firms</p>
           <h1 className="text-3xl font-black mb-4">Potential clients Google you before they call.<br />What do they find?</h1>
           <p className="text-slate-300 text-sm max-w-xl mx-auto leading-relaxed">
             We build credibility-first websites for attorneys and law firms — with practice area pages, consultation forms, case results, and local SEO that puts you in front of clients searching for your type of law.

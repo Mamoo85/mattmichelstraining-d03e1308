@@ -112,7 +112,7 @@ const BusinessDirectory = () => {
   return (
     <>
       <SEOHead
-        title="Local Business Directory | M² Development"
+        title="Local Business Directory | M2 Development"
         description="Find trusted local businesses in Michigan and beyond. Free listings for all businesses, premium featured placement available."
         path="/business-directory"
         jsonLd={{
@@ -120,7 +120,7 @@ const BusinessDirectory = () => {
           "@type": "WebPage",
           name: "Local Business Directory",
           description: "Find trusted local businesses. Free listings with premium featured placement.",
-          provider: { "@type": "Organization", name: "M² Development" },
+          provider: { "@type": "Organization", name: "M2 Development" },
         }}
       />
 
@@ -247,7 +247,7 @@ const BusinessDirectory = () => {
 
         {/* Footer */}
         <footer className="py-6 px-4 text-center text-xs text-muted-foreground bg-muted/20">
-          <p>© {new Date().getFullYear()} M² Development — Local Business Directory</p>
+          <p>© {new Date().getFullYear()} M2 Development — Local Business Directory</p>
           <p className="mt-1">
             <Link to="/web-design-services" className="text-[#e8621a] hover:underline">Web Design</Link>
             {" · "}

@@ -31,7 +31,7 @@ export default function AIPodcastShowNotes() {
 
   return (
     <>
-      <SEOHead title="AI Podcast Show Notes — $49/mo | M² Development" description="Send us your episode, get back professional show notes, summaries, timestamps, and SEO descriptions. $49/month, fully automated." path="/ai-podcast-show-notes" />
+      <SEOHead title="AI Podcast Show Notes — $49/mo | M2 Development" description="Send us your episode, get back professional show notes, summaries, timestamps, and SEO descriptions. $49/month, fully automated." path="/ai-podcast-show-notes" />
       <div className="min-h-screen bg-[#0f0f1a] text-white">
         <section className="pt-20 pb-16 px-4">
           <div className="max-w-3xl mx-auto text-center">

@@ -36,7 +36,7 @@ const WelcomeGiftModal = ({ open, onClose }: WelcomeGiftModalProps) => {
               <Gift size={24} className="text-primary" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-foreground uppercase tracking-widest">Welcome to M²</h2>
+              <h2 className="text-base font-bold text-foreground uppercase tracking-widest">Welcome to M2</h2>
               <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
                 Coach Matt just dropped <strong>2 free workouts</strong> into your portal. No strings attached.
               </p>

@@ -429,7 +429,7 @@ export default function DentalMockupAlt2() {
           </div>
           <div style={{ borderTop: "1px solid rgba(250,250,247,0.07)", paddingTop: 20, display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
             <span style={{ color: "rgba(250,250,247,0.25)", fontSize: 12 }}>© 2026 Stewart Dental Group. All rights reserved.</span>
-            <a href="/manufacturing-web-design" style={{ color: "rgba(250,250,247,0.25)", fontSize: 11, textDecoration: "none" }}>Site by M² Web Design</a>
+            <a href="/manufacturing-web-design" style={{ color: "rgba(250,250,247,0.25)", fontSize: 11, textDecoration: "none" }}>Site by M2 Web Design</a>
           </div>
         </div>
       </footer>

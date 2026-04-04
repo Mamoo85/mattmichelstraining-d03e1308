@@ -19,7 +19,7 @@ const OnlineServices = () => {
       <div className="bg-card shadow-m2 p-4">
         <span className="text-[11px] font-bold uppercase tracking-widest text-primary block mb-1">Foundation</span>
         <span className="text-lg font-mono font-bold text-foreground block">$19.99<span className="text-xs text-muted-foreground font-normal">/mo</span></span>
-        <p className="text-[11px] text-muted-foreground mt-1">Full M² App, {exerciseCount}+ exercise library, Fix It rehab, AI Generator.</p>
+        <p className="text-[11px] text-muted-foreground mt-1">Full M2 App, {exerciseCount}+ exercise library, Fix It rehab, AI Generator.</p>
       </div>
       <div className="bg-card shadow-m2 p-4 border-2 border-primary/30 relative">
         <div className="absolute -top-2 right-2 bg-primary text-primary-foreground text-[8px] font-bold uppercase px-2 py-0.5">Popular</div>

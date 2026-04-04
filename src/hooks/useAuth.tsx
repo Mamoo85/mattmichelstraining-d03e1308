@@ -15,7 +15,7 @@ export const TIERS = {
   guided: {
     product_id: "prod_UEfNKQVnbRcu1F",
     price_id: "price_1TGC2SD52tPWee46PsNJp3H7",
-    name: "M² Guided",
+    name: "M2 Guided",
     price: "$59.99",
     priceNum: 59.99,
   },

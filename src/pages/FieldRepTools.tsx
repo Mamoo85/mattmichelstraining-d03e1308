@@ -344,12 +344,12 @@ export default function FieldRepTools() {
   return (
     <>
       <SEOHead
-        title="AI Tools for Field Sales Reps — $29/mo | M² Training"
+        title="AI Tools for Field Sales Reps — $29/mo | M2 Training"
         description="Cold email generator, voicemail scripts, objection handlers, and territory planning — AI tools built for B2B field reps. $29/mo, cancel anytime."
         path="/field-rep-tools"
         type="product"
         product={{
-          name: "M² Field Rep AI Tools",
+          name: "M2 Field Rep AI Tools",
           price: 29,
           currency: "USD",
           availability: "https://schema.org/InStock",
@@ -360,7 +360,7 @@ export default function FieldRepTools() {
 
         {/* ── Hero ── */}
         <div className="bg-[#1e293b] text-white px-6 py-14 text-center">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">M² Field Rep AI Tools</p>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">M2 Field Rep AI Tools</p>
           <h1 className="text-3xl font-black mb-4 leading-tight">
             AI tools built for field reps.<br />
             Cold emails, voicemails, and objection handlers — written in seconds.

@@ -94,7 +94,7 @@ const SelfPostureAnalysis = memo(({ open, onClose }: SelfPostureAnalysisProps) =
   const generatePdfHtml = () => {
     const name = subjectName || "Self";
     const date = analyzedAt ? new Date(analyzedAt).toLocaleDateString() : new Date().toLocaleDateString();
-    return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>M² Posture Analysis - ${name}</title>
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>M2 Posture Analysis - ${name}</title>
 <style>
   body{font-family:system-ui,-apple-system,sans-serif;max-width:800px;margin:0 auto;padding:40px 24px;color:#1e293b;line-height:1.6;}
   h1{color:#e8621a;font-size:28px;border-bottom:3px solid #e8621a;padding-bottom:8px;margin-bottom:4px;}
@@ -108,11 +108,11 @@ const SelfPostureAnalysis = memo(({ open, onClose }: SelfPostureAnalysisProps) =
   ul{padding-left:20px;}
   li{margin-bottom:4px;}
 </style></head><body>
-<div class="header"><div class="logo">M²</div><div class="sub">Performance Training</div></div>
+<div class="header"><div class="logo">M2</div><div class="sub">Performance Training</div></div>
 <h1>Posture Analysis Report</h1>
-<div class="meta">Subject: ${name} | Date: ${date} | Analyzed by M² AI</div>
+<div class="meta">Subject: ${name} | Date: ${date} | Analyzed by M2 AI</div>
 <div>${(analysis || "").replace(/\n/g, "<br>").replace(/## /g, "</div><h2>").replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>").replace(/- /g, "• ")}</div>
-<div class="cta"><a href="https://mattmichelstraining.lovable.app/shop">Ready to fix these issues? Browse M² Training Programs →</a></div>
+<div class="cta"><a href="https://mattmichelstraining.lovable.app/shop">Ready to fix these issues? Browse M2 Training Programs →</a></div>
 <div style="text-align:center;margin-top:16px;font-size:11px;color:#94a3b8;">
   mattmichelstraining.com | matt@mattmichelstraining.com | (313) 806-4952
 </div>
@@ -132,10 +132,10 @@ const SelfPostureAnalysis = memo(({ open, onClose }: SelfPostureAnalysisProps) =
   };
 
   const handleShare = async () => {
-    const text = `Check out my M² Posture Analysis results!\n\n${(analysis || "").slice(0, 500)}...\n\nGet your own free analysis at mattmichelstraining.lovable.app/dashboard`;
+    const text = `Check out my M2 Posture Analysis results!\n\n${(analysis || "").slice(0, 500)}...\n\nGet your own free analysis at mattmichelstraining.lovable.app/dashboard`;
     if (navigator.share) {
       try {
-        await navigator.share({ title: "M² Posture Analysis", text });
+        await navigator.share({ title: "M2 Posture Analysis", text });
       } catch { /* user cancelled */ }
     } else {
       await navigator.clipboard.writeText(text);

@@ -29,7 +29,7 @@ const OnlineSavings = () => (
 
       <p className="text-sm text-muted-foreground leading-relaxed mb-4">
         Most families spend $200–$600/month on in-person youth training and still get generic programming.
-        M² delivers 20 years of experience direct to your phone starting at <span className="text-foreground font-bold">$19.99/month</span>. 
+        M2 delivers 20 years of experience direct to your phone starting at <span className="text-foreground font-bold">$19.99/month</span>. 
         No travel. No scheduling conflicts. Same proven system that's produced 50+ college athletes with zero injuries.
       </p>
 
@@ -46,7 +46,7 @@ const OnlineSavings = () => (
         ))}
         <div className="flex items-center justify-between bg-primary/10 border-2 border-primary/30 p-3">
           <div>
-            <span className="text-xs font-bold text-foreground block">M² Online Training</span>
+            <span className="text-xs font-bold text-foreground block">M2 Online Training</span>
             <span className="text-[10px] text-muted-foreground">Custom programming · any sport · any state · direct coach access</span>
           </div>
           <span className="text-sm font-mono font-bold text-primary">$19.99–$349.99/mo</span>
@@ -59,7 +59,7 @@ const OnlineSavings = () => (
           <MapPin size={16} className="text-primary flex-shrink-0" />
           <div>
             <span className="text-xs font-bold text-foreground block">In-person in Grosse Pointe</span>
-            <span className="text-[10px] text-muted-foreground">Local athletes train at the M² gym</span>
+            <span className="text-[10px] text-muted-foreground">Local athletes train at the M2 gym</span>
           </div>
         </div>
         <div className="flex items-center gap-2 bg-secondary/50 p-3 flex-1">

@@ -272,7 +272,7 @@ const ClientSite = () => {
         {/* Footer */}
         <footer className="py-6 px-4 text-center text-xs text-gray-400 bg-gray-50">
           <p>© {new Date().getFullYear()} {site.business_name}. All rights reserved.</p>
-          <p className="mt-1">Built by <a href="https://www.mattmichelstraining.com/web-design-services" className="hover:underline" style={{ color: primary }}>M² Development</a></p>
+          <p className="mt-1">Built by <a href="https://www.mattmichelstraining.com/web-design-services" className="hover:underline" style={{ color: primary }}>M2 Development</a></p>
         </footer>
       </div>
     </>

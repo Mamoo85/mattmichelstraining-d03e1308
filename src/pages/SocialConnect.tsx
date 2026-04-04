@@ -174,7 +174,7 @@ export default function SocialConnect() {
           </p>
           <div className="mt-6 flex items-center justify-center gap-3">
             <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" className="w-10 h-10 rounded-full object-cover" />
-            <span className="text-sm text-gray-500">— Matt Michels, M² Training</span>
+            <span className="text-sm text-gray-500">— Matt Michels, M2 Training</span>
           </div>
         </div>
       </div>
@@ -189,7 +189,7 @@ export default function SocialConnect() {
         {/* Header */}
         <div className="text-center mb-8">
           <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" className="w-14 h-14 rounded-full object-cover mx-auto mb-3" />
-          <p className="text-sm text-gray-500 mb-4">Matt Michels — M² Training</p>
+          <p className="text-sm text-gray-500 mb-4">Matt Michels — M2 Training</p>
           <h1 className="text-2xl font-bold text-slate-800">
             {firstName ? `Hey ${firstName} — ` : ""}Let's connect your accounts
           </h1>

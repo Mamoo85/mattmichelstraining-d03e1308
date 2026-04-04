@@ -106,13 +106,13 @@ export default function RealEstateWebDesign() {
   return (
     <>
       <SEOHead
-        title="Commercial Real Estate Website Design — $1,499 | M² Web Design"
+        title="Commercial Real Estate Website Design — $1,499 | M2 Web Design"
         description="Professional websites for commercial real estate agents, brokers, and developers. Property listings, inquiry routing, IDX-ready. From $1,499 setup."
       />
       <div className="min-h-screen bg-background text-foreground">
         {/* Hero */}
         <div className="bg-[#1e293b] text-white px-6 py-14 text-center">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">M² Web Design — Commercial Real Estate</p>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">M2 Web Design — Commercial Real Estate</p>
           <h1 className="text-3xl font-black mb-4">Commercial real estate websites<br />that close deals.</h1>
           <p className="text-slate-300 text-sm max-w-xl mx-auto leading-relaxed">
             Property listings, inquiry routing, and SEO that puts you in front of buyers and tenants before they call your competitor. Built for agents, brokers, and developers.

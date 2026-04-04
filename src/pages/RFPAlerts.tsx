@@ -42,7 +42,7 @@ const COMPARISON = [
   { tool: "Bloomberg Government", price: "$2,000+/mo", what: "Enterprise-tier intel. Priced for agencies, not SMBs." },
   { tool: "BidSync / BidNet", price: "$150–500/mo", what: "Keyword match only — no AI scoring, no fit analysis, no SMS alerts" },
   { tool: "Manual SAM.gov search", price: "45 min/day", what: "Every day. Forever. Hope you didn't miss any." },
-  { tool: "M² RFP Alert Service", price: "$149/mo", what: "Daily AI-scored alerts via email + SMS. Fit analysis + full opportunity brief.", highlight: true },
+  { tool: "M2 RFP Alert Service", price: "$149/mo", what: "Daily AI-scored alerts via email + SMS. Fit analysis + full opportunity brief.", highlight: true },
 ];
 
 export default function RFPAlerts() {

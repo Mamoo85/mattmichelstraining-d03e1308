@@ -29,7 +29,7 @@ const TechShowcaseCard = () => (
             <div className="flex items-center gap-1.5 bg-primary/10 px-2 py-1">
               <Cpu size={12} className="text-primary" />
               <span className="text-[9px] font-bold uppercase tracking-widest text-primary">
-                The M² Edge
+                The M2 Edge
               </span>
             </div>
             <span className="text-[9px] text-muted-foreground uppercase tracking-widest">
@@ -41,7 +41,7 @@ const TechShowcaseCard = () => (
             Training Tech Built Into Your App
           </h2>
           <p className="text-xs text-muted-foreground leading-relaxed mb-1 max-w-lg">
-            Advanced posture analysis, real-time velocity tracking, instant nutrition scanning, and smart workout logging — all built into the M² member app. No extra downloads or hardware.
+            Advanced posture analysis, real-time velocity tracking, instant nutrition scanning, and smart workout logging — all built into the M2 member app. No extra downloads or hardware.
           </p>
           <p className="text-[10px] text-primary font-bold mb-4">
             Included free with every membership.

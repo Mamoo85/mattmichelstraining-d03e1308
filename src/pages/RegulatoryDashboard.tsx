@@ -111,7 +111,7 @@ export default function RegulatoryDashboard() {
   return (
     <>
       <SEOHead
-        title="Regulatory Monitor Dashboard | M² Development"
+        title="Regulatory Monitor Dashboard | M2 Development"
         description="Your weekly AI-generated regulatory change digest."
       />
       <div className="min-h-screen bg-background text-foreground">
@@ -119,7 +119,7 @@ export default function RegulatoryDashboard() {
         {/* Header */}
         <div className="bg-[#1a2744] text-white px-6 py-10">
           <div className="max-w-5xl mx-auto">
-            <p className="text-[11px] font-bold uppercase tracking-widest text-[#c9a227] mb-2">M² Development</p>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-[#c9a227] mb-2">M2 Development</p>
             <h1 className="text-2xl font-black mb-1">Regulatory Change Monitor</h1>
             {client && (
               <p className="text-slate-400 text-sm">

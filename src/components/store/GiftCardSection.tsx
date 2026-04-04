@@ -50,10 +50,10 @@ const GiftCardSection = () => {
       <div className="bg-primary/10 border border-primary/20 p-5">
         <div className="flex items-center gap-3 mb-2">
           <Gift size={24} className="text-primary" />
-          <h2 className="text-base font-bold text-foreground">M² Gift Cards</h2>
+          <h2 className="text-base font-bold text-foreground">M2 Gift Cards</h2>
         </div>
         <p className="text-sm text-muted-foreground leading-relaxed">
-          Give the gift of training. M² gift cards can be used toward any program, custom workout,
+          Give the gift of training. M2 gift cards can be used toward any program, custom workout,
           or product in the store. The recipient gets full value — and if you're a subscriber,
           you save on the purchase.
         </p>

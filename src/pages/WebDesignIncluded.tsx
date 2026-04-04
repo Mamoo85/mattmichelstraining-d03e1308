@@ -22,13 +22,13 @@ const CHECKLIST = [
 const WebDesignIncluded = () => (
   <>
     <SEOHead
-      title="What's Included for $499 | M² Web Design Detroit"
+      title="What's Included for $499 | M2 Web Design Detroit"
       description="Exactly what you get when you hire Matt Michels to build your local business website. Copywriting, mobile design, hosting, SEO, and more — all for $499 flat."
       path="/whats-included"
       jsonLd={{
         "@context": "https://schema.org",
         "@type": "WebPage",
-        name: "What's Included — M² Web Design",
+        name: "What's Included — M2 Web Design",
         description: "Full breakdown of the $499 web design package for local businesses in Metro Detroit.",
         url: "https://www.mattmichelstraining.com/whats-included",
       }}
