@@ -7,7 +7,7 @@ export default function PrivacyPolicy() {
       <section className="mb-8">
         <h2 className="text-xl font-bold mb-3">1. Who We Are</h2>
         <p className="leading-relaxed text-slate-700">
-          M² Performance Training ("we," "us," or "our") operates mattmichelstraining.com and related services. Owner: Matt Michels, Grosse Pointe, MI. Contact: matt@mattmichelstraining.com | (313) 806-4952.
+          M2 Development ("we," "us," or "our") operates mattmichelstraining.com and related services. Owner: Matt Michels, Grosse Pointe, MI. Contact: matt@mattmichelstraining.com | (313) 806-4952.
         </p>
       </section>
 
