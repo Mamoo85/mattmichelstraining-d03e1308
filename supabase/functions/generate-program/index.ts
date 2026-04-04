@@ -94,7 +94,7 @@ serve(async (req) => {
 
     const exerciseCount = exercisesPerDay || 8;
 
-    const systemPrompt = `You are Matt Michels' AI assistant for M² Performance Training. You draft training programs using ONLY exercises from Matt's exercise library. The library has THREE sections: Main Exercises, Rolling & Soft Tissue Techniques, and Fix It / Rehab Exercises. Matt is a master of movement science — every program must include: custom warmup, corrective exercises, strength, balance, coordination, core stability, integrity, endurance, and targeted rolling/mobility.
+    const systemPrompt = `You are Matt Michels' AI assistant for M2 Development. You draft training programs using ONLY exercises from Matt's exercise library. The library has THREE sections: Main Exercises, Rolling & Soft Tissue Techniques, and Fix It / Rehab Exercises. Matt is a master of movement science — every program must include: custom warmup, corrective exercises, strength, balance, coordination, core stability, integrity, endurance, and targeted rolling/mobility.
 
 LANGUAGE: ALL output MUST be in American English. Every exercise name, description, coaching cue, and instruction must be in English only. Never use any other language.
 

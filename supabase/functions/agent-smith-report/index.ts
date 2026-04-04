@@ -200,7 +200,7 @@ serve(async (req) => {
           model: "google/gemini-2.5-flash-lite", 
           messages: [{
             role: "user",
-            content: `You are Agent Smith, an AI business analyst for M² Performance Training. Analyze this daily business snapshot and write 2-3 sentences about business health, trends, and one actionable recommendation. Be direct and specific — no fluff.
+            content: `You are Agent Smith, an AI business analyst for M2 Development. Analyze this daily business snapshot and write 2-3 sentences about business health, trends, and one actionable recommendation. Be direct and specific — no fluff.
 
 MRR: $${totalMrr} (Contractor leads: $${mrr.contractor}, Dental DB: $${mrr.dental}, Field Rep Tools: $${mrr.fieldRep}, GBP Basic: $${mrr.gbpBasic}, GBP Pro: $${mrr.gbpPro}, Social Standard: $${mrr.socialStandard}, Social Pro: $${mrr.socialPro}, Social Trainer: $${mrr.socialTrainer})
 Revenue last 7 days: $${revenue7d.toFixed(2)}
@@ -408,7 +408,7 @@ Goal: $10,000/mo MRR`
   <tr><td style="padding:16px 28px;border:1px solid #e2e8f0;border-top:none;">
     <div style="display:flex;align-items:center;gap:12px;">
       <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Matt Michels">
-      <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>M² Performance Training · (313) 806-4952</div>
+      <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>M2 Development · (313) 806-4952</div>
         <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" />
     </div>
   </td></tr>

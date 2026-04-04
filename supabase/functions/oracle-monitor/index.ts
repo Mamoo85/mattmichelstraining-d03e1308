@@ -282,7 +282,7 @@ function buildBriefingEmail(report: DailyReport): { subject: string; html: strin
     <p style="font-size:12px;color:#94a3b8;margin:16px 0 0;line-height:1.6;">This is your automated Oracle report. Reply or text <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a> if something looks wrong.</p>
   </td></tr>
   <tr><td style="background:#f8fafc;padding:12px 24px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 10px 10px;font-size:11px;color:#94a3b8;">
-    M² Performance Training · Oracle Monitor v1.0
+    M2 Development · Oracle Monitor v1.0
   </td></tr>
 </table></td></tr></table>
 </body></html>`;

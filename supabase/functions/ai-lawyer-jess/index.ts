@@ -18,7 +18,7 @@ const DOCUMENT_TYPES = [
   { type: "saas_agreement", title: "SaaS Subscription Agreement", description: "Auto-renewal terms, cancellation policy, 7-day trial terms" },
   { type: "ai_disclosure", title: "AI Usage Disclosure", description: "FTC-required disclosure for AI-generated customer communications" },
   { type: "affiliate_disclosure", title: "Affiliate Disclosure", description: "FTC-required disclosure for newsletter affiliate links" },
-  { type: "coaching_waiver", title: "Coaching & Training Liability Waiver", description: "Injury liability waiver for M² Performance Training" },
+  { type: "coaching_waiver", title: "Coaching & Training Liability Waiver", description: "Injury liability waiver for M2 Development" },
   { type: "minor_waiver", title: "Minor Athlete Parental Consent", description: "Parental consent for under-18 athletes" },
   { type: "referral_terms", title: "Referral Program Terms & Conditions", description: "Governs referral reward eligibility, anti-fraud rules, payout terms for both in-person training and B2B partner referral programs" },
   { type: "cookie_policy", title: "Cookie Consent Policy", description: "GDPR/UK-compliant cookie usage policy covering analytics, session cookies, and third-party integrations" },
@@ -62,10 +62,10 @@ serve(async (req) => {
         });
       }
 
-      const systemPrompt = `You are Jess, an AI legal assistant specializing in small business compliance. You generate legally sound documents for a Michigan-based SaaS and coaching business called M² Development / M² Performance Training, owned by Matt Michels in Grosse Pointe, MI.
+      const systemPrompt = `You are Jess, an AI legal assistant specializing in small business compliance. You generate legally sound documents for a Michigan-based SaaS and coaching business called M² Development / M2 Development, owned by Matt Michels in Grosse Pointe, MI.
 
 Business details:
-- Legal entity: M² Development (DBA M² Performance Training)
+- Legal entity: M² Development (DBA M2 Development)
 - Owner: Matt Michels
 - Address: Grosse Pointe, MI (use "Grosse Pointe, MI 48230" as mailing address)
 - Email: matt@mattmichelstraining.com | Phone: (313) 806-4952

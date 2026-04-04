@@ -176,7 +176,7 @@ async function sendEmail(sectionsHtml: string, monthName: string): Promise<void>
   <div style="max-width:820px;margin:0 auto;padding:32px 16px;">
 
     <div style="background:#1e293b;border-radius:8px 8px 0 0;padding:24px 28px;">
-      <div style="color:#e8621a;font-size:22px;font-weight:800;margin-bottom:4px;">M² Performance Training</div>
+      <div style="color:#e8621a;font-size:22px;font-weight:800;margin-bottom:4px;">M2 Development</div>
       <div style="color:#94a3b8;font-size:14px;">Monthly SEO Blog Posts — ${escapeHtml(monthName)}</div>
     </div>
 

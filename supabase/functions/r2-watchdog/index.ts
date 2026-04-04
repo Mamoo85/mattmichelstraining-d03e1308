@@ -166,7 +166,7 @@ function buildAlertEmail(checks: HealthCheck[]): { subject: string; html: string
     <p style="font-size:12px;color:#94a3b8;">R2 runs every 2 hours. Text <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a> if you need help diagnosing.</p>
   </td></tr>
   <tr><td style="background:#f8fafc;padding:10px 24px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 8px 8px;font-size:11px;color:#94a3b8;">
-    R2-D2 Watchdog · M² Performance Training
+    R2-D2 Watchdog · M2 Development
   </td></tr>
 </table></td></tr></table>
 </body></html>`;

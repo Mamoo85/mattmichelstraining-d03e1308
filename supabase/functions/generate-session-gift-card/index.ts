@@ -35,7 +35,7 @@ serve(async (req) => {
 <body style="margin:0;padding:40px;font-family:Arial,sans-serif;background:#1e293b;">
   <div style="max-width:500px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.2);">
     <div style="background:#e8621a;padding:32px;text-align:center;">
-      <h1 style="color:#fff;margin:0;font-size:28px;">M² Performance Training</h1>
+      <h1 style="color:#fff;margin:0;font-size:28px;">M2 Development</h1>
       <p style="color:rgba(255,255,255,0.9);margin:8px 0 0;">Gift Card</p>
     </div>
     <div style="padding:32px;text-align:center;">

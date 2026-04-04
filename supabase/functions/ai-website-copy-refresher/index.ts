@@ -85,7 +85,7 @@ function buildClientEmail(client: CopyClient, copyHtml: string, month: string): 
 <table width="100%" cellpadding="0" cellspacing="0" style="max-width:680px;">
 
   <tr><td style="background:#1e293b;padding:20px 28px;border-radius:10px 10px 0 0;">
-    <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;">M² Performance Training</h1>
+    <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;">M2 Development</h1>
     <p style="margin:6px 0 0;color:#e8621a;font-size:14px;">Monthly Website Copy Refresh — ${month}</p>
   </td></tr>
 
@@ -184,7 +184,7 @@ serve(async (_req) => {
   ${errors.length > 0
     ? `<p><strong style="color:#dc2626;">Errors (${errors.length}):</strong></p><ul>${errors.map((e) => `<li>${e}</li>`).join("")}</ul>`
     : "<p style='color:#16a34a;'>No errors. All copy delivered successfully.</p>"}
-  <p style="color:#64748b;font-size:12px;">M² Performance Training · Auto-generated report</p>
+  <p style="color:#64748b;font-size:12px;">M2 Development · Auto-generated report</p>
 </body>
 </html>`;
 

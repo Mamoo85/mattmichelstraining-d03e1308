@@ -99,7 +99,7 @@ function wrapProposalHtml(
             alt="Matt Michels" width="48" height="48"
             style="border-radius:50%;vertical-align:middle;margin-right:12px;">
           <span style="font-size:13px;color:#475569;vertical-align:middle;">
-            ${businessName} · Prepared by M² Performance Training
+            ${businessName} · Prepared by M2 Development
           </span>
           <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" />
           <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" />

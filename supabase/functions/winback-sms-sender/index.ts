@@ -92,7 +92,7 @@ serve(async (_req) => {
     }
 
     const now = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
-    const mattHtml = `<!DOCTYPE html><html><body style="font-family:sans-serif;padding:24px;color:#1e293b;"><h2 style="color:#e8621a;">Winback SMS Campaign — ${now}</h2><p><strong>Total SMS sent:</strong> ${totalSent}</p><p><strong>Clients processed:</strong> ${clients.length}</p><h3 style="margin-top:20px;">Per-Client Summary</h3><ul>${reportRows.map((r) => `<li>${r}</li>`).join("")}</ul>${globalErrors.length > 0 ? `<p style="color:#dc2626;"><strong>Fatal errors:</strong></p><ul>${globalErrors.map((e) => `<li>${e}</li>`).join("")}</ul>` : ""}<p style="color:#64748b;font-size:12px;">M² Performance Training · Auto-generated report</p></body></html>`;
+    const mattHtml = `<!DOCTYPE html><html><body style="font-family:sans-serif;padding:24px;color:#1e293b;"><h2 style="color:#e8621a;">Winback SMS Campaign — ${now}</h2><p><strong>Total SMS sent:</strong> ${totalSent}</p><p><strong>Clients processed:</strong> ${clients.length}</p><h3 style="margin-top:20px;">Per-Client Summary</h3><ul>${reportRows.map((r) => `<li>${r}</li>`).join("")}</ul>${globalErrors.length > 0 ? `<p style="color:#dc2626;"><strong>Fatal errors:</strong></p><ul>${globalErrors.map((e) => `<li>${e}</li>`).join("")}</ul>` : ""}<p style="color:#64748b;font-size:12px;">M2 Development · Auto-generated report</p></body></html>`;
     await sendEmail(MATT_EMAIL, `[M²] Winback SMS Report — ${totalSent} messages sent`, mattHtml);
 
     return new Response(JSON.stringify({ ok: true, sent: totalSent }), { headers: { "Content-Type": "application/json" } });

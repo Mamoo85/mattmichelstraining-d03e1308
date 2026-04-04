@@ -66,7 +66,7 @@ async function sendReminderToTrainers(sb: ReturnType<typeof createClient>): Prom
 <p style="margin-top:16px;color:#64748b;font-size:14px;">Your clients love seeing their progress documented — it's one of the best retention tools you have.</p>
 <div class="footer">
   <img src="https://mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;vertical-align:middle;margin-right:8px;" alt="Matt">
-  <span>Matt Michels | M² Performance Training | matt@mattmichelstraining.com | (313) 806-4952</span>
+  <span>Matt Michels | M2 Development | matt@mattmichelstraining.com | (313) 806-4952</span>
 </div>
 </body>
 </html>`;
@@ -261,7 +261,7 @@ FORMAT AS JSON:
 ${parsed.reportHtml || `<p>Hi ${clientName},</p><pre>${parsed.reportText || rawText}</pre>`}
 <div class="footer">
   <strong>${trainerName}</strong><br>
-  Powered by M² Performance Training | matt@mattmichelstraining.com
+  Powered by M2 Development | matt@mattmichelstraining.com
 </div>
 </body>
 </html>`;
