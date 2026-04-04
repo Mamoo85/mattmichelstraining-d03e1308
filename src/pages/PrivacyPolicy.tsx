@@ -35,7 +35,7 @@ export default function PrivacyPolicy() {
       <section className="mb-8">
         <h2 className="text-xl font-bold mb-3">4. SMS / Text Message Communications</h2>
         <p className="leading-relaxed text-slate-700 mb-3">
-          By providing your phone number and checking the SMS consent box on any of our forms, you agree to receive automated text messages from M² Performance Training, including service updates, marketing messages, and reminders.
+          By providing your phone number and checking the SMS consent box on any of our forms, you agree to receive automated text messages from M2 Development, including service updates, marketing messages, and reminders.
         </p>
         <ul className="list-disc pl-6 space-y-2 text-slate-700 leading-relaxed">
           <li><strong>Message frequency varies</strong> depending on the service.</li>
