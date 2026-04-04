@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Copy, Check, ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
+import { Loader2, Copy, Check, ExternalLink, ChevronDown, ChevronUp, ThumbsUp, ThumbsDown, Brain } from "lucide-react";
 import { toast } from "sonner";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 const SERVICES = [
   {
