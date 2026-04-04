@@ -5,7 +5,7 @@ import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import m2Logo from "@/assets/m2-logo.jpg";
-import { ArrowRight, Loader2, Gift, Users, Mail, User, UserPlus } from "lucide-react";
+import { ArrowRight, Loader2, Gift, Users, Mail, User, UserPlus, AlertTriangle } from "lucide-react";
 import NutritionSneakPeek from "@/components/auth/NutritionSneakPeek";
 
 type SignupRole = "self" | "parent";
