@@ -109,8 +109,115 @@ const AdminAdCampaigns = () => {
     }
   };
 
+  const queryClient = useQueryClient();
+
+  // Selma's campaign queue
+  const { data: selmaQueue } = useQuery({
+    queryKey: ["selma-campaign-queue"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("ad_campaign_queue" as any)
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      return data as any[];
+    },
+  });
+
+  const updateCampaignStatus = useMutation({
+    mutationFn: async ({ id, status, notes }: { id: string; status: string; notes?: string }) => {
+      const { error } = await supabase
+        .from("ad_campaign_queue" as any)
+        .update({ status, admin_notes: notes || null, reviewed_at: new Date().toISOString() } as any)
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["selma-campaign-queue"] });
+      toast.success("Campaign updated");
+    },
+  });
+
+  const pendingCampaigns = selmaQueue?.filter((c: any) => c.status === "pending") || [];
+
   return (
     <div className="space-y-6">
+      {/* Selma's AI Campaign Queue */}
+      {selmaQueue && selmaQueue.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Brain size={14} className="text-primary" />
+            <h2 className="text-sm font-bold text-foreground">Selma's Campaign Proposals</h2>
+            {pendingCampaigns.length > 0 && (
+              <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-bold">
+                {pendingCampaigns.length} PENDING
+              </span>
+            )}
+          </div>
+          <div className="space-y-2">
+            {selmaQueue.map((campaign: any) => (
+              <div key={campaign.id} className={`border rounded-lg p-3 ${
+                campaign.status === "pending" ? "border-primary/40 bg-primary/5" :
+                campaign.status === "approved" ? "border-green-500/30 bg-green-500/5" :
+                "border-border bg-muted/20"
+              }`}>
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold">{campaign.service}</span>
+                      <span className="text-[10px] text-muted-foreground">{campaign.platform}</span>
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${
+                        campaign.status === "pending" ? "bg-yellow-500/20 text-yellow-400" :
+                        campaign.status === "approved" ? "bg-green-500/20 text-green-400" :
+                        "bg-red-500/20 text-red-400"
+                      }`}>{campaign.status.toUpperCase()}</span>
+                    </div>
+                    <div className="flex items-center gap-3 mt-1 text-[10px] text-muted-foreground">
+                      <span>Budget: ${campaign.monthly_budget}/mo</span>
+                      <span>CAC: ${campaign.projected_cac}</span>
+                      <span>LTV: ${campaign.projected_ltv}</span>
+                      <span className="text-green-400">{campaign.projected_roas}x ROAS</span>
+                    </div>
+                  </div>
+                  {campaign.status === "pending" && (
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-[10px] gap-1 border-green-500/40 text-green-400 hover:bg-green-500/10"
+                        onClick={() => updateCampaignStatus.mutate({ id: campaign.id, status: "approved" })}
+                      >
+                        <ThumbsUp size={10} /> Approve
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-[10px] gap-1 border-red-500/40 text-red-400 hover:bg-red-500/10"
+                        onClick={() => updateCampaignStatus.mutate({ id: campaign.id, status: "rejected", notes: "Not now" })}
+                      >
+                        <ThumbsDown size={10} /> Skip
+                      </Button>
+                    </div>
+                  )}
+                </div>
+                {campaign.campaign_content && (
+                  <details className="mt-2">
+                    <summary className="text-[10px] text-primary cursor-pointer hover:underline">View full campaign</summary>
+                    <pre className="mt-2 p-3 text-[10px] whitespace-pre-wrap font-mono bg-background/50 rounded border border-border max-h-[300px] overflow-y-auto">
+                      {campaign.campaign_content}
+                    </pre>
+                  </details>
+                )}
+                <p className="text-[9px] text-muted-foreground mt-1">
+                  {new Date(campaign.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div>
         <h2 className="text-sm font-bold text-foreground">Ad Campaign Generator</h2>
         <p className="text-xs text-muted-foreground mt-0.5">
