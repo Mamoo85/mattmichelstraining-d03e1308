@@ -119,6 +119,57 @@ export type Database = {
         }
         Relationships: []
       }
+      ad_campaign_queue: {
+        Row: {
+          admin_notes: string | null
+          campaign_content: string
+          created_at: string
+          id: string
+          keywords: string[] | null
+          monthly_budget: number | null
+          platform: string
+          projected_cac: number | null
+          projected_ltv: number | null
+          projected_roas: number | null
+          reviewed_at: string | null
+          service: string
+          status: string
+          target_audience: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          campaign_content: string
+          created_at?: string
+          id?: string
+          keywords?: string[] | null
+          monthly_budget?: number | null
+          platform: string
+          projected_cac?: number | null
+          projected_ltv?: number | null
+          projected_roas?: number | null
+          reviewed_at?: string | null
+          service: string
+          status?: string
+          target_audience?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          campaign_content?: string
+          created_at?: string
+          id?: string
+          keywords?: string[] | null
+          monthly_budget?: number | null
+          platform?: string
+          projected_cac?: number | null
+          projected_ltv?: number | null
+          projected_roas?: number | null
+          reviewed_at?: string | null
+          service?: string
+          status?: string
+          target_audience?: string | null
+        }
+        Relationships: []
+      }
       admin_media_files: {
         Row: {
           created_at: string

@@ -82,6 +82,36 @@ serve(async (req) => {
         <p>${happyClients.length} clients have been with you 30+ days. Pick 3-5 to ask for a written testimonial or quick video.</p>`;
     }
 
+    // NEW: 5. Auto-generate before/after case study drafts for newly live sites
+    const lovableKey = Deno.env.get("LOVABLE_API_KEY");
+    let caseStudyHtml = "";
+    if (lovableKey && recentLaunches?.length) {
+      const newest = recentLaunches[0];
+      try {
+        const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${lovableKey}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "google/gemini-2.5-flash-lite",
+            messages: [{ role: "user", content: `Write a short 3-paragraph case study for M² Performance Training's web design service. Client: ${newest.business_name}. Format: Problem → Solution → Result. Keep it concise and professional. Use real-sounding metrics.` }],
+          }),
+        });
+        if (aiRes.ok) {
+          const aiData = await aiRes.json();
+          const caseStudy = aiData?.choices?.[0]?.message?.content || "";
+          if (caseStudy.length > 50) {
+            caseStudyHtml = `<h3 style="color:#84cc16;">📝 Auto-Draft Case Study: ${newest.business_name}</h3>
+              <div style="background:#1a2e05;padding:12px;border-radius:8px;font-size:13px;">${caseStudy.replace(/\n/g, "<br/>")}</div>
+              <p style="font-size:11px;color:#94a3b8;">Review and post to your website or social media</p>`;
+          }
+        }
+      } catch (e) {
+        console.log("[HYPE] Case study generation failed:", e);
+      }
+    }
+
+    html += caseStudyHtml;
+
     const hasOpportunities = (recentLaunches?.length || 0) > 0 || (happyClients?.length || 0) > 3;
     if (hasOpportunities) {
       await sendHypeEmail(
@@ -95,6 +125,7 @@ serve(async (req) => {
       review_candidates: recentLaunches?.length || 0,
       testimonial_candidates: happyClients?.length || 0,
       published_portfolio: publishedSites?.length || 0,
+      case_study_drafted: caseStudyHtml.length > 0,
     }), { headers: { ...CORS, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("[HYPE]", e);

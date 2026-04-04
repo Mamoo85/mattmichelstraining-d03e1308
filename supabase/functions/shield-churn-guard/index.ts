@@ -109,6 +109,31 @@ serve(async (req) => {
         <ul>${failures?.map(f => `<li>${f.function_name} → ${f.customer_email}: ${(f.error_message || "").slice(0, 80)}</li>`).join("") || ""}</ul>`;
     }
 
+    // NEW: 7. Monitor trial-to-paid conversion rates per product
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
+    const { data: recentConversions } = await sb
+      .from("drip_conversions")
+      .select("service_interested, stripe_checkout_completed")
+      .gte("converted_at", thirtyDaysAgo);
+
+    let conversionHtml = "";
+    if (recentConversions?.length) {
+      const byService: Record<string, { total: number; paid: number }> = {};
+      recentConversions.forEach(c => {
+        const svc = c.service_interested || "unknown";
+        if (!byService[svc]) byService[svc] = { total: 0, paid: 0 };
+        byService[svc].total++;
+        if (c.stripe_checkout_completed) byService[svc].paid++;
+      });
+
+      const lowConversion = Object.entries(byService).filter(([, s]) => s.total >= 3 && (s.paid / s.total) < 0.3);
+      if (lowConversion.length) {
+        conversionHtml = `<h3 style="color:#f59e0b;">📉 Low Conversion Alert (&lt;30%)</h3>
+          <ul>${lowConversion.map(([svc, s]) => `<li><strong>${svc}</strong>: ${s.paid}/${s.total} converted (${Math.round(s.paid / s.total * 100)}%)</li>`).join("")}</ul>`;
+        warnings.push(conversionHtml);
+      }
+    }
+
     const hasIssues = critical.length > 0 || warnings.length > 0 || (failCount && failCount > 0);
 
     if (hasIssues) {
@@ -118,6 +143,7 @@ serve(async (req) => {
         ${critical.length ? `<h3>🔴 CRITICAL — Paying but not receiving value</h3>${critical.join("")}` : ""}
         ${warnings.length ? `<h3>🟡 WARNING — Going stale</h3>${warnings.join("")}` : ""}
         ${failHtml}
+        ${conversionHtml}
         <p style="margin-top:16px;color:#94a3b8;">Shield runs daily. If MRR at risk exceeds $100, you'll get a text too.</p>`
       );
     }

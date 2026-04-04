@@ -104,10 +104,24 @@ serve(async (req) => {
       <p>Active subscriptions: <strong>${activeSubs.data?.length || 0}</strong></p>
       <p>Estimated MRR: <strong style="color:#10b981;font-size:18px;">$${totalMrr.toFixed(2)}/mo</strong></p>`;
 
+    // NEW: 5. Track ROAS — feed data back to Selma via ad_campaign_queue
+    const { data: approvedCampaigns } = await sb
+      .from("ad_campaign_queue")
+      .select("id, service, platform, monthly_budget, projected_roas")
+      .eq("status", "approved")
+      .limit(10);
+
+    let roasHtml = "";
+    if (approvedCampaigns?.length) {
+      roasHtml = `<h3 style="color:#10b981;">📊 Active Campaign Budgets</h3>
+        <ul>${approvedCampaigns.map(c => `<li>${c.service} (${c.platform}): $${c.monthly_budget}/mo — projected ${c.projected_roas}x ROAS</li>`).join("")}</ul>
+        <p style="font-size:11px;color:#94a3b8;">Actual ROAS tracking requires Google/Meta API integration</p>`;
+    }
+
     if (alerts.length > 0) {
       await sendCashierEmail(
         `💰 Cashier: ${failedCharges.data?.length || 0} failed, ${cancelledSubs.data?.length || 0} cancelled, MRR $${totalMrr.toFixed(0)}`,
-        alerts.join("") + summaryHtml
+        alerts.join("") + summaryHtml + roasHtml
       );
     }
 
@@ -118,6 +132,7 @@ serve(async (req) => {
       past_due: pastDue.data?.length || 0,
       active_subs: activeSubs.data?.length || 0,
       estimated_mrr: totalMrr,
+      active_campaigns: approvedCampaigns?.length || 0,
     }), { headers: { ...CORS, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("[CASHIER]", e);

@@ -97,11 +97,33 @@ serve(async (req) => {
       <p>Suppressed emails: <strong>${suppressedCount || 0}</strong></p>
     `;
 
+    // NEW: 6. Track landing page conversion rates
+    const { data: conversions } = await sb
+      .from("drip_conversions")
+      .select("service_interested, source")
+      .gte("converted_at", new Date(now.getTime() - 30 * 86400000).toISOString());
+
+    const conversionsByService: Record<string, number> = {};
+    conversions?.forEach(c => {
+      const key = c.service_interested || c.source || "unknown";
+      conversionsByService[key] = (conversionsByService[key] || 0) + 1;
+    });
+
+    let conversionHtml = "";
+    if (Object.keys(conversionsByService).length > 0) {
+      const sorted = Object.entries(conversionsByService).sort((a, b) => b[1] - a[1]);
+      conversionHtml = `<h3>🎯 Top Converting Services (30d)</h3>
+        <table style="width:100%;border-collapse:collapse;">
+          ${sorted.slice(0, 5).map(([service, count]) => `<tr><td style="padding:4px 8px;border-bottom:1px solid #334155;">${service}</td><td style="text-align:right;padding:4px 8px;border-bottom:1px solid #334155;font-weight:bold;">${count}</td></tr>`).join("")}
+        </table>
+        <p style="color:#22d3ee;">💡 Double down on <strong>${sorted[0][0]}</strong> — it's your top converter</p>`;
+    }
+
     // Only email if there's something to report
     if (alerts.length > 0 || (pipeline?.length || 0) > 0) {
       await sendTomEmail(
         `🎯 Tom Daily: ${hotLeads?.length || 0} hot, ${staleLeads?.length || 0} stale, ${newLeadsThisWeek || 0} new`,
-        alerts.join("") + pipelineHtml + summaryHtml
+        alerts.join("") + pipelineHtml + summaryHtml + conversionHtml
       );
     }
 
@@ -111,6 +133,7 @@ serve(async (req) => {
       stale_leads: staleLeads?.length || 0,
       pipeline_total: pipeline?.length || 0,
       new_this_week: newLeadsThisWeek || 0,
+      top_converting_services: conversionsByService,
     }), { headers: { ...CORS, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("[TOM]", e);

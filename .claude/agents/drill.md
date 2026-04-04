@@ -16,7 +16,8 @@ Monitor all content delivery channels (GBP posts, blog posts, social media, news
 3. Social Media Poster: check active clients for posts in last 7 days
 4. Newsletter: check if last send was within 8 days
 5. Content Queue: count pending items needing approval
-6. Email Matt if any content gaps found
+6. Audit published landing pages for missing CTAs, broken links, or outdated pricing
+7. Email Matt if any content gaps found
 
 ## Edge Function
 `drill-content-engine` — cron scheduled daily at 11am ET
