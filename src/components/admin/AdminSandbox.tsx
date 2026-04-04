@@ -16,20 +16,21 @@ interface Product {
 }
 
 const PRODUCTS: Product[] = [
-  // Instant delivery
-  { id: "website_audit", name: "Website Audit", price: "$49", description: "Full audit delivered within minutes. Tests instant-audit edge function.", type: "instant", category: "One-Time" },
+  // Instant delivery — Founding Client pricing
+  { id: "website_audit", name: "Website Audit", price: "$9", description: "Full audit delivered within minutes. Tests instant-audit edge function.", type: "instant", category: "One-Time" },
   { id: "gbp_post_pack", name: "GBP Post Pack", price: "$49", description: "30 Google posts delivered to inbox. Tests gbp-post-pack edge function.", type: "instant", category: "One-Time" },
-  { id: "competitor_report", name: "Competitor Report", price: "$49", description: "Full competitor analysis. Tests competitor-report edge function.", type: "instant", category: "One-Time" },
+  { id: "competitor_report", name: "Competitor Report", price: "$9", description: "Full competitor analysis. Tests competitor-report edge function.", type: "instant", category: "One-Time" },
   // Subscriptions
   { id: "gbp_saas_subscription", name: "GBP SaaS", price: "$49/mo", description: "Welcome email + client record created. Posts start Mon/Wed/Fri.", type: "subscription", category: "Subscription" },
-  { id: "social_media_subscription", name: "Social Media AI", price: "$199/mo", description: "Welcome email + social_media_clients record. Posts start Mon/Wed/Fri.", type: "subscription", category: "Subscription" },
+  { id: "social_media_subscription", name: "Social Media AI", price: "$99/mo", description: "Welcome email + social_media_clients record. Posts start Mon/Wed/Fri.", type: "subscription", category: "Subscription" },
   { id: "field_rep_subscription", name: "Field Rep Tools", price: "$29/mo", description: "Welcome email + b2b_subscribers record. Portal access active.", type: "subscription", category: "Subscription" },
-  { id: "contractor_lead_subscription", name: "Contractor Leads", price: "$399/mo", description: "Welcome email + contractor_clients record created.", type: "subscription", category: "Subscription" },
   { id: "b2b_database_subscription", name: "B2B Database", price: "$49/mo", description: "Welcome email + b2b_subscribers record. Database access active.", type: "subscription", category: "Subscription" },
   { id: "review_responder_subscription", name: "Review Responder", price: "$79/mo", description: "Welcome email + review_responder_clients record created.", type: "subscription", category: "Subscription" },
   { id: "seo_report_subscription", name: "SEO Reports", price: "$99/mo", description: "Welcome email + seo_report_clients record created.", type: "subscription", category: "Subscription" },
-  { id: "chatbot_subscription", name: "AI Chatbot", price: "$79/mo", description: "Welcome email + chatbot_clients record created.", type: "subscription", category: "Subscription" },
-  { id: "missed_call_subscription", name: "Missed Call Text", price: "$49/mo", description: "Welcome email + missed_call_clients record created.", type: "subscription", category: "Subscription" },
+  { id: "missed_call_subscription", name: "Missed Call Text", price: "$99/mo", description: "Welcome email + missed_call_clients record created. Admin-only product.", type: "subscription", category: "Subscription" },
+  // ── GATED: Not publicly selling yet ──
+  // { id: "contractor_lead_subscription", name: "Contractor Leads", price: "$399/mo", ... },
+  // { id: "chatbot_subscription", name: "AI Chatbot", price: "$79/mo", ... },
   // ── 10 New SMS/Monitoring Products ──────────────────────────────────────────
   { id: "review_monitor_subscription", name: "Review Monitor", price: "$25/mo", description: "Welcome email + review_monitor_clients record. Monitors Google reviews every 6h.", type: "subscription", category: "SMS Products" },
   { id: "sms_blast_subscription", name: "Weekly SMS Blast", price: "$19/mo", description: "Welcome email + sms_blast_clients record. Blasts every Tuesday.", type: "subscription", category: "SMS Products" },
