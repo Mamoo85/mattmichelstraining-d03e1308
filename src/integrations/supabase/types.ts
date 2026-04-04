@@ -3206,6 +3206,36 @@ export type Database = {
         }
         Relationships: []
       }
+      matt_jokes: {
+        Row: {
+          attribution: string
+          category: string
+          created_at: string
+          id: string
+          joke_text: string
+          use_in_emails: boolean
+          use_in_sites: boolean
+        }
+        Insert: {
+          attribution?: string
+          category?: string
+          created_at?: string
+          id?: string
+          joke_text: string
+          use_in_emails?: boolean
+          use_in_sites?: boolean
+        }
+        Update: {
+          attribution?: string
+          category?: string
+          created_at?: string
+          id?: string
+          joke_text?: string
+          use_in_emails?: boolean
+          use_in_sites?: boolean
+        }
+        Relationships: []
+      }
       meeting_prep_clients: {
         Row: {
           active: boolean | null
