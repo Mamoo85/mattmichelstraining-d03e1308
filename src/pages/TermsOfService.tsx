@@ -84,7 +84,7 @@ export default function TermsOfService() {
           <li>The parent or guardian consents to the minor's participation in the training platform, including workout logging, coach messaging, and community features.</li>
           <li>The parent or guardian acknowledges the inherent risks of physical training and accepts responsibility for supervising the minor's use of the platform and adherence to proper form and technique.</li>
           <li>The parent or guardian retains the right to access, review, and manage the minor's account at any time.</li>
-          <li>We do not require parents or guardians to indemnify or reimburse M2 Development for claims arising from a minor's injuries. Consistent with <em>MK v. Auburnfly, LLC</em> (Mich. Ct. App. 2024), we do not include parental indemnification provisions in this agreement.</li>
+          <li>We do not require parents or guardians to indemnify or reimburse Matt Michels Training for claims arising from a minor's injuries. Consistent with <em>MK v. Auburnfly, LLC</em> (Mich. Ct. App. 2024), we do not include parental indemnification provisions in this agreement.</li>
           <li>Nothing in this agreement waives or limits a minor's independent legal rights under Michigan law.</li>
         </ul>
       </section>
