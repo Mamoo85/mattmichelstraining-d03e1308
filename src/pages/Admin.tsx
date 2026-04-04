@@ -504,7 +504,7 @@ const Admin = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => { setActiveTool("home"); setExpandedDomain(null); }}
+                onClick={() => { window.history.back(); }}
                 className="h-8 px-2 text-muted-foreground hover:text-foreground"
               >
                 <ArrowLeft size={14} className="mr-1" />
