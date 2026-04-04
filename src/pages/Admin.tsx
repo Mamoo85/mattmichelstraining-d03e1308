@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense, useMemo } from "react";
 import { Navigate } from "react-router-dom";
 import AppNavbar from "@/components/layout/AppNavbar";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -6,16 +6,13 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Loader2, Users, Dumbbell, DollarSign, Megaphone, Globe,
-  Activity, AlertTriangle, CheckCircle, Mail, Zap, ChevronDown,
+  Activity, AlertTriangle, CheckCircle, Mail, Zap, Search,
+  ChevronRight, X, ArrowLeft,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
-  SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
-  SidebarProvider, SidebarTrigger,
-} from "@/components/ui/sidebar";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Input } from "@/components/ui/input";
+import { motion, AnimatePresence } from "framer-motion";
 
 /* ── Lazy-load ALL admin sub-components ─────────────────────────────────────── */
 const AdminAiBar = lazy(() => import("@/components/admin/AdminAiBar"));
@@ -145,9 +142,32 @@ const TabLoader = () => (
   </div>
 );
 
+/* ── Agent Status Card ──────────────────────────────────────────────────────── */
+const AgentCard = ({ name, role, status, color }: { name: string; role: string; status: "online" | "scheduled" | "idle"; color: string }) => (
+  <div
+    className="flex items-center gap-2.5 px-3 py-2 rounded-xl border transition-all hover:scale-[1.02]"
+    style={{
+      background: `${color}08`,
+      borderColor: `${color}20`,
+    }}
+  >
+    <div
+      className={`w-2 h-2 rounded-full shrink-0 ${status === "online" ? "animate-pulse" : ""}`}
+      style={{ background: status === "online" ? "#22c55e" : status === "scheduled" ? "#f59e0b" : "#6b7280" }}
+    />
+    <div className="min-w-0 flex-1">
+      <p className="text-[11px] font-bold text-foreground truncate">{name}</p>
+      <p className="text-[9px] text-muted-foreground truncate">{role}</p>
+    </div>
+  </div>
+);
+
 /* ── Main Admin Component ───────────────────────────────────────────────────── */
 const Admin = () => {
   const [activeTool, setActiveTool] = useState<string>("home");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [expandedDomain, setExpandedDomain] = useState<string | null>(null);
   const [testEmailState, setTestEmailState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const { isAdmin, isLoading } = useIsAdmin();
 
@@ -167,6 +187,23 @@ const Admin = () => {
     };
     window.addEventListener("navigate-admin", handleNavigateAdmin);
     return () => window.removeEventListener("navigate-admin", handleNavigateAdmin);
+  }, []);
+
+  /* Cmd+K shortcut */
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        document.getElementById("admin-search")?.focus();
+      }
+      if (e.key === "Escape") {
+        setSearchQuery("");
+        setSearchFocused(false);
+        (document.activeElement as HTMLElement)?.blur();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   /* ── Badge counts (30s polling) ──────────────────────────────────────────── */
@@ -201,7 +238,7 @@ const Admin = () => {
   const b = badges ?? { aiQueue: 0, support: 0, drafts: 0, posture: 0, custom: 0, liftVideos: 0, proveIt: 0, trash: 0 };
 
   /* ── Domain definitions ──────────────────────────────────────────────────── */
-  const domains: Domain[] = [
+  const domains: Domain[] = useMemo(() => [
     {
       key: "actions",
       label: "⚡ Quick Actions",
@@ -360,7 +397,22 @@ const Admin = () => {
         { key: "demo-links", label: "🔗 Demo Links", component: <AdminDemoLinkGenerator /> },
       ],
     },
-  ];
+  ], [b]);
+
+  /* ── Search filtering ────────────────────────────────────────────────────── */
+  const filteredTools = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const q = searchQuery.toLowerCase();
+    const results: { tool: Tool; domain: Domain }[] = [];
+    for (const d of domains) {
+      for (const t of d.tools) {
+        if (t.label.toLowerCase().includes(q) || t.key.toLowerCase().includes(q)) {
+          results.push({ tool: t, domain: d });
+        }
+      }
+    }
+    return results.slice(0, 8);
+  }, [searchQuery, domains]);
 
   /* ── Find active tool component ──────────────────────────────────────────── */
   const findTool = (key: string): Tool | undefined => {
@@ -390,6 +442,15 @@ const Admin = () => {
     }
   };
 
+  const handleToolClick = (toolKey: string) => {
+    setActiveTool(toolKey);
+    setSearchQuery("");
+    setSearchFocused(false);
+    setExpandedDomain(null);
+  };
+
+  const totalPending = b.aiQueue + b.support + b.drafts + b.posture + b.custom + b.liftVideos + b.proveIt;
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -403,87 +464,54 @@ const Admin = () => {
     <div className="min-h-screen bg-background">
       <AppNavbar />
 
-      <SidebarProvider defaultOpen={true}>
-        <div className="flex w-full pt-16">
-          {/* ── SIDEBAR ──────────────────────────────────────────────────── */}
-          <Sidebar collapsible="icon" className="border-r border-border/30 pt-16 z-30">
-            <SidebarContent className="pt-2 pb-20">
-              {/* Oz Status */}
-              <div className="px-3 py-2">
-                <div
-                  className="flex items-center gap-2 px-2.5 py-2 rounded-lg"
-                  style={{ background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.12)" }}
-                >
-                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shrink-0" />
-                  <span className="text-[9px] font-bold text-green-400 uppercase tracking-wider group-data-[collapsible=icon]:hidden">
-                    Oz Online
-                  </span>
-                  <Activity size={10} className="text-green-500/40 ml-auto shrink-0 group-data-[collapsible=icon]:hidden" />
+      <div className="pt-16 px-3 sm:px-4 max-w-6xl mx-auto">
+
+        {/* ── HEADER: Title + Agent Strip ──────────────────────────────── */}
+        <div className="py-4">
+          {activeTool !== "home" ? (
+            <div className="flex items-center gap-2 mb-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => { setActiveTool("home"); setExpandedDomain(null); }}
+                className="h-8 px-2 text-muted-foreground hover:text-foreground"
+              >
+                <ArrowLeft size={14} className="mr-1" />
+                <span className="text-[11px]">Back</span>
+              </Button>
+              {currentDomain && (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] text-muted-foreground">{currentDomain.label}</span>
+                  <ChevronRight size={10} className="text-muted-foreground" />
+                  <span className="text-[11px] font-semibold text-foreground">{currentTool?.label}</span>
                 </div>
+              )}
+              <div className="ml-auto">
+                <Button
+                  size="sm" variant="ghost"
+                  onClick={sendTestEmail}
+                  disabled={testEmailState === "sending"}
+                  className="text-[10px] text-muted-foreground h-7 px-2"
+                >
+                  {testEmailState === "sending" && <Loader2 size={10} className="animate-spin mr-1" />}
+                  {testEmailState === "sent" && <CheckCircle size={10} className="text-green-400 mr-1" />}
+                  {testEmailState === "error" && <AlertTriangle size={10} className="text-red-400 mr-1" />}
+                  {testEmailState === "idle" && <Mail size={10} className="mr-1" />}
+                  Test
+                </Button>
               </div>
-
-              {domains.map((domain) => {
-                const Icon = domain.icon;
-                const domainBadge = domain.tools.reduce((sum, t) => sum + (t.badge ?? 0), 0);
-                const isActiveDomain = currentDomain?.key === domain.key;
-
-                return (
-                  <Collapsible key={domain.key} defaultOpen={isActiveDomain || domain.key === "actions"}>
-                    <SidebarGroup>
-                      <CollapsibleTrigger asChild>
-                        <SidebarGroupLabel className="cursor-pointer hover:bg-muted/30 rounded-md transition flex items-center gap-2 px-3 py-1.5">
-                          <Icon size={13} style={{ color: domain.color }} className="shrink-0" />
-                          <span className="flex-1 text-left text-[11px] group-data-[collapsible=icon]:hidden">{domain.label}</span>
-                          {domainBadge > 0 && (
-                            <Badge variant="destructive" className="text-[7px] px-1 py-0 h-3.5 group-data-[collapsible=icon]:hidden">
-                              {domainBadge}
-                            </Badge>
-                          )}
-                          <ChevronDown size={10} className="text-muted-foreground transition-transform group-data-[collapsible=icon]:hidden [&[data-state=open]>svg]:rotate-180" />
-                        </SidebarGroupLabel>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <SidebarGroupContent>
-                          <SidebarMenu>
-                            {domain.tools.map((tool) => (
-                              <SidebarMenuItem key={tool.key}>
-                                <SidebarMenuButton
-                                  onClick={() => setActiveTool(tool.key)}
-                                  isActive={activeTool === tool.key}
-                                  className="text-[11px] py-1.5 h-auto"
-                                >
-                                  <span className="flex-1 truncate">{tool.label}</span>
-                                  {(tool.badge ?? 0) > 0 && (
-                                    <Badge variant="destructive" className="text-[7px] px-1 py-0 h-3.5 ml-auto">
-                                      {tool.badge}
-                                    </Badge>
-                                  )}
-                                </SidebarMenuButton>
-                              </SidebarMenuItem>
-                            ))}
-                          </SidebarMenu>
-                        </SidebarGroupContent>
-                      </CollapsibleContent>
-                    </SidebarGroup>
-                  </Collapsible>
-                );
-              })}
-            </SidebarContent>
-          </Sidebar>
-
-          {/* ── MAIN CONTENT ─────────────────────────────────────────────── */}
-          <main className="flex-1 min-w-0">
-            <div className="max-w-5xl mx-auto px-4 py-4">
-              {/* Top bar: toggle + title + test email */}
-              <div className="flex items-center gap-3 mb-4">
-                <SidebarTrigger className="shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <h1 className="text-sm font-bold text-foreground truncate">
-                    {activeTool === "home" ? "Mission Control" : currentTool?.label ?? "Mission Control"}
+            </div>
+          ) : (
+            <>
+              {/* Title Row */}
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h1 className="text-lg font-black text-foreground tracking-tight">
+                    M² Mission Control
                   </h1>
-                  {currentDomain && activeTool !== "home" && (
-                    <p className="text-[10px] text-muted-foreground truncate">
-                      {currentDomain.label} → {currentTool?.label}
+                  {totalPending > 0 && (
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      {totalPending} item{totalPending !== 1 ? "s" : ""} need attention
                     </p>
                   )}
                 </div>
@@ -491,73 +519,220 @@ const Admin = () => {
                   size="sm" variant="ghost"
                   onClick={sendTestEmail}
                   disabled={testEmailState === "sending"}
-                  className="text-[10px] text-muted-foreground h-7 px-2 shrink-0"
+                  className="text-[10px] text-muted-foreground h-7 px-2"
                 >
+                  {testEmailState === "idle" && <Mail size={10} className="mr-1" />}
                   {testEmailState === "sending" && <Loader2 size={10} className="animate-spin mr-1" />}
                   {testEmailState === "sent" && <CheckCircle size={10} className="text-green-400 mr-1" />}
                   {testEmailState === "error" && <AlertTriangle size={10} className="text-red-400 mr-1" />}
-                  {testEmailState === "idle" && <Mail size={10} className="mr-1" />}
-                  {testEmailState === "idle" ? "Test" : testEmailState === "sending" ? "…" : testEmailState === "sent" ? "✓" : "✗"}
+                  Test
                 </Button>
               </div>
 
-              {/* AI Bar (always visible) */}
-              <div className="mb-6">
-                <Suspense fallback={<div className="h-12 rounded-2xl bg-muted/10 animate-pulse" />}>
-                  <AdminAiBar />
-                </Suspense>
+              {/* Agent Status Strip */}
+              <div className="grid grid-cols-3 gap-2 mb-4">
+                <AgentCard name="Oz" role="System Monitor" status="online" color="#22c55e" />
+                <AgentCard name="Selma" role="Head Marketer" status="scheduled" color="#a855f7" />
+                <AgentCard name="Scarlett" role="Creative Strategy" status="scheduled" color="#f43f5e" />
               </div>
-
-              {/* Content */}
-              {activeTool === "home" ? (
-                <div className="space-y-6">
-                  {/* Dashboard home: quick stats */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    {[
-                      { label: "AI Queue", value: b.aiQueue, color: "#f97316" },
-                      { label: "Support", value: b.support, color: "#3b82f6" },
-                      { label: "Coach AI", value: b.drafts, color: "#a855f7" },
-                      { label: "Custom Req", value: b.custom, color: "#22c55e" },
-                    ].map((stat) => (
-                      <div
-                        key={stat.label}
-                        className="rounded-xl p-4 text-center"
-                        style={{ background: `${stat.color}08`, border: `1px solid ${stat.color}15` }}
-                      >
-                        <p className="text-2xl font-black text-foreground">{stat.value}</p>
-                        <p className="text-[10px] text-muted-foreground mt-1">{stat.label}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Oz status */}
-                  <div
-                    className="flex items-center gap-3 px-4 py-3 rounded-2xl"
-                    style={{ background: "rgba(34,197,94,0.05)", border: "1px solid rgba(34,197,94,0.15)" }}
-                  >
-                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse shrink-0" />
-                    <div className="flex-1">
-                      <span className="text-[10px] font-bold text-green-400 uppercase tracking-wider">Agent Oz — Online</span>
-                      <p className="text-[9px] text-muted-foreground">Monitoring all systems · Auto-fixing issues · Generating reports</p>
-                    </div>
-                    <Activity size={14} className="text-green-500/50 shrink-0" />
-                  </div>
-
-                  <p className="text-xs text-muted-foreground text-center">
-                    Pick a tool from the sidebar to get started. Oz is watching everything.
-                  </p>
-                </div>
-              ) : currentTool ? (
-                <Suspense fallback={<TabLoader />}>
-                  {currentTool.component}
-                </Suspense>
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-12">Tool not found.</p>
-              )}
-            </div>
-          </main>
+            </>
+          )}
         </div>
-      </SidebarProvider>
+
+        {/* ── SEARCH BAR (always visible) ─────────────────────────────── */}
+        <div className="relative mb-4">
+          <div
+            className={`relative flex items-center rounded-2xl border transition-all ${
+              searchFocused
+                ? "border-primary/50 bg-card shadow-lg shadow-primary/5"
+                : "border-border/40 bg-card/50"
+            }`}
+          >
+            <Search size={14} className="absolute left-3 text-muted-foreground" />
+            <Input
+              id="admin-search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
+              placeholder="Search tools or ⌘K..."
+              className="border-0 bg-transparent pl-9 pr-8 h-10 text-[12px] focus-visible:ring-0 placeholder:text-muted-foreground/50"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 text-muted-foreground hover:text-foreground"
+              >
+                <X size={12} />
+              </button>
+            )}
+          </div>
+
+          {/* Search Results Dropdown */}
+          <AnimatePresence>
+            {searchFocused && filteredTools.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                className="absolute z-50 top-12 left-0 right-0 bg-card border border-border rounded-xl shadow-2xl overflow-hidden"
+              >
+                {filteredTools.map(({ tool, domain }) => (
+                  <button
+                    key={tool.key}
+                    onMouseDown={() => handleToolClick(tool.key)}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted/30 transition text-left"
+                  >
+                    <domain.icon size={13} style={{ color: domain.color }} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] font-medium text-foreground truncate">{tool.label}</p>
+                      <p className="text-[9px] text-muted-foreground">{domain.label}</p>
+                    </div>
+                    {(tool.badge ?? 0) > 0 && (
+                      <Badge variant="destructive" className="text-[7px] px-1 py-0 h-3.5">
+                        {tool.badge}
+                      </Badge>
+                    )}
+                    <ChevronRight size={10} className="text-muted-foreground" />
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* ── AI BAR ──────────────────────────────────────────────────── */}
+        {activeTool === "home" && (
+          <div className="mb-5">
+            <Suspense fallback={<div className="h-12 rounded-2xl bg-muted/10 animate-pulse" />}>
+              <AdminAiBar />
+            </Suspense>
+          </div>
+        )}
+
+        {/* ── CONTENT ─────────────────────────────────────────────────── */}
+        {activeTool === "home" ? (
+          <div className="space-y-4 pb-20">
+            {/* Quick Stats Row */}
+            <div className="grid grid-cols-4 gap-2">
+              {[
+                { label: "AI Queue", value: b.aiQueue, color: "#f97316", tool: "ai-queue" },
+                { label: "Support", value: b.support, color: "#3b82f6", tool: "support" },
+                { label: "Coach AI", value: b.drafts, color: "#a855f7", tool: "coach-ai" },
+                { label: "Requests", value: b.custom, color: "#22c55e", tool: "custom-req" },
+              ].map((stat) => (
+                <button
+                  key={stat.label}
+                  onClick={() => handleToolClick(stat.tool)}
+                  className="rounded-xl p-3 text-center transition-all hover:scale-[1.03] active:scale-95"
+                  style={{
+                    background: `${stat.color}08`,
+                    border: `1px solid ${stat.color}15`,
+                  }}
+                >
+                  <p className="text-xl font-black text-foreground">{stat.value}</p>
+                  <p className="text-[9px] text-muted-foreground mt-0.5">{stat.label}</p>
+                </button>
+              ))}
+            </div>
+
+            {/* Domain Cards Grid */}
+            <div className="space-y-3">
+              {domains.map((domain) => {
+                const Icon = domain.icon;
+                const domainBadge = domain.tools.reduce((sum, t) => sum + (t.badge ?? 0), 0);
+                const isExpanded = expandedDomain === domain.key;
+
+                return (
+                  <motion.div
+                    key={domain.key}
+                    layout
+                    className="rounded-2xl border overflow-hidden transition-colors"
+                    style={{
+                      background: isExpanded ? `${domain.color}06` : "hsl(var(--card))",
+                      borderColor: isExpanded ? `${domain.color}25` : "hsl(var(--border) / 0.3)",
+                    }}
+                  >
+                    {/* Domain Header — clickable to expand */}
+                    <button
+                      onClick={() => setExpandedDomain(isExpanded ? null : domain.key)}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/10 transition"
+                    >
+                      <div
+                        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                        style={{ background: `${domain.color}15` }}
+                      >
+                        <Icon size={15} style={{ color: domain.color }} />
+                      </div>
+                      <div className="flex-1 text-left min-w-0">
+                        <p className="text-[12px] font-bold text-foreground">{domain.label}</p>
+                        <p className="text-[9px] text-muted-foreground">
+                          {domain.tools.length} tool{domain.tools.length !== 1 ? "s" : ""}
+                        </p>
+                      </div>
+                      {domainBadge > 0 && (
+                        <Badge variant="destructive" className="text-[8px] px-1.5 py-0 h-4">
+                          {domainBadge}
+                        </Badge>
+                      )}
+                      <ChevronRight
+                        size={14}
+                        className={`text-muted-foreground transition-transform ${isExpanded ? "rotate-90" : ""}`}
+                      />
+                    </button>
+
+                    {/* Expanded Tool List */}
+                    <AnimatePresence>
+                      {isExpanded && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="px-3 pb-3 grid grid-cols-2 gap-1.5">
+                            {domain.tools.map((tool) => (
+                              <button
+                                key={tool.key}
+                                onClick={() => handleToolClick(tool.key)}
+                                className="flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-all hover:bg-muted/20 active:scale-[0.98]"
+                              >
+                                <span className="text-[11px] text-foreground truncate flex-1">
+                                  {tool.label}
+                                </span>
+                                {(tool.badge ?? 0) > 0 && (
+                                  <Badge variant="destructive" className="text-[7px] px-1 py-0 h-3.5 shrink-0">
+                                    {tool.badge}
+                                  </Badge>
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+        ) : currentTool ? (
+          <div className="pb-20">
+            {/* AI Bar in tool view too */}
+            <div className="mb-4">
+              <Suspense fallback={<div className="h-12 rounded-2xl bg-muted/10 animate-pulse" />}>
+                <AdminAiBar />
+              </Suspense>
+            </div>
+            <Suspense fallback={<TabLoader />}>
+              {currentTool.component}
+            </Suspense>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground text-center py-12">Tool not found.</p>
+        )}
+      </div>
     </div>
   );
 };
