@@ -5,19 +5,92 @@ const cors = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Priority tiers: 1 = focus first (Matt's top services), 2 = secondary, 3 = backburner
 const PRODUCT_TABLES = [
-  { table: "gbp_saas_clients", name: "GBP Auto-Poster", price: 49, ltv_months: 8, keywords: ["google business profile management", "GBP automation", "google my business posting service"] },
-  { table: "blog_post_clients", name: "Blog Writer", price: 99, ltv_months: 10, keywords: ["automated blog writing service", "AI blog posts for business", "blog content service"] },
-  { table: "social_media_clients", name: "Social Media AI", price: 199, ltv_months: 6, keywords: ["social media management service", "AI social media posts", "automated social media"] },
-  { table: "chatbot_clients", name: "AI Chatbot", price: 79, ltv_months: 12, keywords: ["AI chatbot for small business", "website chatbot service", "business chatbot"] },
-  { table: "review_monitor_clients", name: "Review Monitor", price: 25, ltv_months: 14, keywords: ["review monitoring service", "online review alerts", "reputation monitoring"] },
-  { table: "sms_blast_clients", name: "Weekly SMS Blast", price: 19, ltv_months: 10, keywords: ["SMS marketing service", "text message marketing", "bulk SMS for business"] },
-  { table: "contractor_clients", name: "Contractor Lead Gen", price: 399, ltv_months: 8, keywords: ["contractor leads", "roofing leads", "HVAC leads", "plumber leads"] },
-  { table: "competitor_watch_clients", name: "Competitor Watch", price: 49, ltv_months: 10, keywords: ["competitor monitoring service", "competitive intelligence small business"] },
-  { table: "estimate_generator_clients", name: "Estimate Generator", price: 39, ltv_months: 10, keywords: ["estimate generator for contractors", "contractor estimate tool"] },
-  { table: "noshow_clients", name: "No-Show Re-Booker", price: 25, ltv_months: 14, keywords: ["no show appointment followup", "missed appointment text", "rebooking service"] },
-  { table: "invoice_chaser_clients", name: "Invoice Chaser", price: 29, ltv_months: 12, keywords: ["invoice reminder service", "automated invoice followup", "payment reminder text"] },
-  { table: "collections_clients", name: "Collections", price: 49, ltv_months: 10, keywords: ["automated collections service", "past due invoice chaser"] },
+  // === TIER 1: TOP PRIORITY — focus campaigns here ===
+  { table: "web_design_leads", name: "Web Design Services", price: 1499, ltv_months: 12, priority: 1, keywords: [
+    "web design for small business", "affordable web design near me", "small business website design",
+    "local business website builder", "web design Michigan", "web design Grosse Pointe",
+    "contractor website design", "restaurant website design", "dental website design",
+    "real estate agent website", "manufacturing web design", "website redesign service",
+    "professional web design agency", "web designer for hire", "custom website design",
+    "WordPress web design service", "business website cost", "best web design company near me",
+    "web design for contractors", "web design for restaurants"
+  ]},
+  { table: "gbp_saas_clients", name: "GBP Auto-Poster", price: 74, ltv_months: 10, priority: 1, keywords: [
+    "google business profile management", "GBP automation", "google my business posting service",
+    "google business profile posts automated", "GBP post scheduler", "google my business management tool",
+    "local SEO automation", "google business profile marketing", "GMB posting service",
+    "google maps marketing service", "local business marketing automation"
+  ]},
+  { table: "social_media_clients", name: "Social Media AI", price: 199, ltv_months: 6, priority: 1, keywords: [
+    "social media management service", "AI social media posts", "automated social media",
+    "social media marketing for small business", "social media content creation service",
+    "Facebook posting service for business", "Instagram marketing automation",
+    "social media manager near me", "affordable social media management",
+    "AI social media marketing", "social media for contractors"
+  ]},
+  { table: "blog_post_clients", name: "Blog Writer", price: 99, ltv_months: 10, priority: 1, keywords: [
+    "automated blog writing service", "AI blog posts for business", "blog content service",
+    "SEO blog writing service", "monthly blog posts for business", "content marketing service",
+    "blog writing for small business", "AI content writer for business"
+  ]},
+  { table: "chatbot_clients", name: "AI Chatbot", price: 79, ltv_months: 12, priority: 1, keywords: [
+    "AI chatbot for small business", "website chatbot service", "business chatbot",
+    "live chat alternative for small business", "AI customer service bot",
+    "chatbot for contractor website", "lead capture chatbot"
+  ]},
+
+  // === TIER 2: SMS PRODUCTS — solid recurring, expand when Tier 1 is covered ===
+  { table: "review_monitor_clients", name: "Review Monitor", price: 25, ltv_months: 14, priority: 2, keywords: [
+    "review monitoring service", "online review alerts", "reputation monitoring",
+    "google review monitoring", "bad review alert service", "reputation management small business"
+  ]},
+  { table: "sms_blast_clients", name: "Weekly SMS Blast", price: 19, ltv_months: 10, priority: 2, keywords: [
+    "SMS marketing service", "text message marketing", "bulk SMS for business",
+    "SMS marketing for restaurants", "text blast service small business"
+  ]},
+  { table: "noshow_clients", name: "No-Show Re-Booker", price: 25, ltv_months: 14, priority: 2, keywords: [
+    "no show appointment followup", "missed appointment text", "rebooking service",
+    "appointment no show recovery", "automated rebooking text"
+  ]},
+  { table: "invoice_chaser_clients", name: "Invoice Chaser", price: 29, ltv_months: 12, priority: 2, keywords: [
+    "invoice reminder service", "automated invoice followup", "payment reminder text",
+    "overdue invoice automation", "invoice collection service small business"
+  ]},
+  { table: "estimate_drip_clients", name: "Estimate Follow-Up Drip", price: 39, ltv_months: 10, priority: 2, keywords: [
+    "estimate follow up automation", "contractor estimate drip", "quote follow up service"
+  ]},
+  { table: "afterjob_drip_clients", name: "After-Job Review Drip", price: 29, ltv_months: 10, priority: 2, keywords: [
+    "post job review request", "after service review automation", "review request service"
+  ]},
+  { table: "referral_program_clients", name: "Referral Program", price: 39, ltv_months: 12, priority: 2, keywords: [
+    "referral program for small business", "automated referral rewards", "customer referral system"
+  ]},
+  { table: "slow_day_clients", name: "Slow Day SMS", price: 25, ltv_months: 10, priority: 2, keywords: [
+    "slow day promotion text", "last minute appointment filler", "same day booking promotion"
+  ]},
+  { table: "homeowner_campaign_clients", name: "New Homeowner Campaign", price: 59, ltv_months: 8, priority: 2, keywords: [
+    "new homeowner marketing", "new mover leads for contractors", "new homeowner mailer service"
+  ]},
+  { table: "promo_blaster_clients", name: "Seasonal Promo Blaster", price: 29, ltv_months: 10, priority: 2, keywords: [
+    "seasonal promotion SMS", "holiday marketing automation", "seasonal text blast service"
+  ]},
+
+  // === TIER 3: BACKBURNER — lower priority, promote only if strong opportunity ===
+  { table: "contractor_clients", name: "Contractor Lead Gen", price: 399, ltv_months: 8, priority: 3, keywords: [
+    "contractor leads", "roofing leads", "HVAC leads", "plumber leads",
+    "contractor lead generation", "exclusive contractor leads"
+  ]},
+  { table: "competitor_watch_clients", name: "Competitor Watch", price: 49, ltv_months: 10, priority: 3, keywords: [
+    "competitor monitoring service", "competitive intelligence small business"
+  ]},
+  { table: "estimate_generator_clients", name: "Estimate Generator", price: 39, ltv_months: 10, priority: 3, keywords: [
+    "estimate generator for contractors", "contractor estimate tool"
+  ]},
+  { table: "collections_clients", name: "Collections", price: 49, ltv_months: 10, priority: 3, keywords: [
+    "automated collections service", "past due invoice chaser"
+  ]},
 ];
 
 // DataForSEO: fetch real keyword volume + CPC
@@ -78,30 +151,34 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, serviceKey);
 
     // 1. Build business state snapshot
-    const snapshot: Array<{ name: string; active: number; price: number; ltv: number; capacity: string; keywords: string[] }> = [];
+    const snapshot: Array<{ name: string; active: number; price: number; ltv: number; capacity: string; keywords: string[]; priority: number }> = [];
 
     for (const product of PRODUCT_TABLES) {
       try {
-        const { count } = await supabase
-          .from(product.table)
-          .select("*", { count: "exact", head: true })
-          .eq("active", true);
+        // web_design_leads uses status instead of active boolean
+        let activeCount = 0;
+        if (product.table === "web_design_leads") {
+          const { count } = await supabase
+            .from(product.table)
+            .select("*", { count: "exact", head: true })
+            .in("status", ["new", "contacted", "drip"]);
+          activeCount = count ?? 0;
+        } else {
+          const { count } = await supabase
+            .from(product.table)
+            .select("*", { count: "exact", head: true })
+            .eq("active", true);
+          activeCount = count ?? 0;
+        }
         
-        const activeCount = count ?? 0;
         const ltv = product.price * product.ltv_months;
         const capacity = activeCount < 3 ? "high" : activeCount < 10 ? "medium" : "low";
         
-        snapshot.push({ name: product.name, active: activeCount, price: product.price, ltv, capacity, keywords: product.keywords });
+        snapshot.push({ name: product.name, active: activeCount, price: product.price, ltv, capacity, keywords: product.keywords, priority: product.priority });
       } catch {
         // Table might not exist yet, skip
       }
     }
-
-    // Also check web design pipeline
-    const { count: webDesignLeads } = await supabase
-      .from("web_design_leads")
-      .select("*", { count: "exact", head: true })
-      .in("status", ["new", "contacted", "drip"]);
 
     // Check recent conversions (last 30 days)
     const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
@@ -124,9 +201,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    // 3. Get REAL keyword data from DataForSEO for high-capacity services
-    const highCapacity = snapshot.filter(s => s.capacity === "high" || s.capacity === "medium");
-    const allKeywords = highCapacity.flatMap(s => s.keywords);
+    // 3. Get REAL keyword data from DataForSEO — PRIORITY 1 services first
+    const tier1 = snapshot.filter(s => s.priority === 1);
+    const tier2 = snapshot.filter(s => s.priority === 2);
+    const priorityKeywords = tier1.flatMap(s => s.keywords);
+    // Also grab tier 2 keywords if budget allows (DataForSEO charges per keyword batch)
+    const tier2Keywords = tier2.flatMap(s => s.keywords).slice(0, 15);
+    const allKeywords = [...priorityKeywords, ...tier2Keywords];
     
     let keywordIntel = "";
     if (dfLogin && dfPassword && allKeywords.length > 0) {
@@ -142,34 +223,49 @@ Deno.serve(async (req) => {
     }
 
     // 4. Use AI to analyze and generate campaign
-    const businessState = snapshot
-      .sort((a, b) => {
-        const capacityOrder: Record<string, number> = { high: 0, medium: 1, low: 2 };
-        return (capacityOrder[a.capacity] ?? 2) - (capacityOrder[b.capacity] ?? 2);
-      })
-      .map(s => `${s.name}: ${s.active} active clients, $${s.price}/mo, LTV $${s.ltv}, capacity: ${s.capacity}`)
+    const tier1State = tier1
+      .map(s => `⭐ [PRIORITY 1] ${s.name}: ${s.active} active clients, $${s.price}/mo, LTV $${s.ltv}, capacity: ${s.capacity}`)
+      .join("\n");
+    const tier2State = tier2
+      .map(s => `  [PRIORITY 2] ${s.name}: ${s.active} active clients, $${s.price}/mo, LTV $${s.ltv}, capacity: ${s.capacity}`)
+      .join("\n");
+    const tier3State = snapshot.filter(s => s.priority === 3)
+      .map(s => `  [PRIORITY 3 — BACKBURNER] ${s.name}: ${s.active} active, $${s.price}/mo`)
       .join("\n");
 
     const prompt = `You are Selma, a PhD economist and head marketer for M² (a B2B marketing automation agency in Grosse Pointe, Michigan).
 
-BUSINESS STATE:
-${businessState}
+BUSINESS STATE — TIERED BY PRIORITY:
 
-Web Design Pipeline: ${webDesignLeads ?? 0} active leads
+=== TIER 1: FOCUS HERE FIRST ===
+${tier1State}
+
+=== TIER 2: SECONDARY (SMS Products) ===
+${tier2State}
+
+=== TIER 3: BACKBURNER — DO NOT PROPOSE UNLESS TIERS 1-2 HAVE NO VIABLE CAMPAIGNS ===
+${tier3State}
+
 Recent Conversions (30d): ${recentConversions ?? 0}
 ${keywordIntel}
 
-TASK: Analyze this data and determine the single best ad campaign opportunity right now.
+TASK: Propose ONE ad campaign. You MUST pick from Tier 1 first. Only go to Tier 2 if NO Tier 1 service has a viable campaign. NEVER pick from Tier 3 unless Tiers 1 and 2 both have zero viable options.
+
+THINK OUTSIDE THE BOX:
+- Consider bundling services (e.g., "Web Design + GBP + Social Media" package deal ad)
+- Consider retargeting audiences (people who visited our pages but didn't convert)
+- Consider Reddit r/smallbusiness, r/entrepreneur, r/sweatystartup for B2B services
+- Consider seasonal angles (spring = contractors, summer = restaurants, fall = HVAC)
+- Consider local Michigan geo-targeting vs national campaigns
+- Consider Facebook/Instagram lookalike audiences based on existing client profiles
 
 RULES:
 - Only propose if projected LTV > 3x projected CAC
-- Prioritize services with HIGH capacity (few clients = room to grow)
-- Consider which platforms (Google, Facebook, Instagram, Reddit) match the service best
 - If real CPC data is provided, use it for precise CAC = CPC × (100 / conversion_rate%). Assume 3-5% landing page conversion rate.
 - Maximum budget: $200/mo for any single campaign
 - If no campaign meets the 3x threshold, respond with EXACTLY: {"no_campaign": true}
 
-If a campaign IS viable, respond in this EXACT JSON format:
+Respond in this EXACT JSON format (no markdown, ONLY valid JSON):
 {
   "service": "Service Name",
   "platform": "Google|Facebook|Instagram|Reddit",
@@ -179,11 +275,9 @@ If a campaign IS viable, respond in this EXACT JSON format:
   "projected_cac": 45,
   "projected_ltv": 400,
   "projected_roas": 3.5,
-  "campaign_content": "FULL campaign text here — ad copy, targeting details, headlines, descriptions, everything ready to paste into Ads Manager",
-  "reasoning": "Why this is the best opportunity right now, citing real CPC data if available"
-}
-
-Respond with ONLY valid JSON, no markdown.`;
+  "campaign_content": "FULL campaign — headlines, descriptions, CTAs, targeting, bidding strategy, landing page recommendation",
+  "reasoning": "Why this is the best opportunity, citing real CPC data"
+}`;
 
     const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
