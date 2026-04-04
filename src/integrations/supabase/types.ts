@@ -1353,6 +1353,7 @@ export type Database = {
           industry: string | null
           last_sent_at: string | null
           stripe_customer_id: string | null
+          subscription_status: string | null
         }
         Insert: {
           active?: boolean | null
@@ -1363,6 +1364,7 @@ export type Database = {
           industry?: string | null
           last_sent_at?: string | null
           stripe_customer_id?: string | null
+          subscription_status?: string | null
         }
         Update: {
           active?: boolean | null
@@ -1373,6 +1375,7 @@ export type Database = {
           industry?: string | null
           last_sent_at?: string | null
           stripe_customer_id?: string | null
+          subscription_status?: string | null
         }
         Relationships: []
       }
@@ -1743,6 +1746,7 @@ export type Database = {
           plan_type: string | null
           send_count: number | null
           stripe_customer_id: string | null
+          subscription_status: string | null
         }
         Insert: {
           active?: boolean | null
@@ -1755,6 +1759,7 @@ export type Database = {
           plan_type?: string | null
           send_count?: number | null
           stripe_customer_id?: string | null
+          subscription_status?: string | null
         }
         Update: {
           active?: boolean | null
@@ -1767,6 +1772,7 @@ export type Database = {
           plan_type?: string | null
           send_count?: number | null
           stripe_customer_id?: string | null
+          subscription_status?: string | null
         }
         Relationships: []
       }
@@ -2558,6 +2564,7 @@ export type Database = {
           preferred_states: string | null
           set_aside_types: string | null
           stripe_customer_id: string | null
+          subscription_status: string | null
         }
         Insert: {
           active?: boolean | null
@@ -2574,6 +2581,7 @@ export type Database = {
           preferred_states?: string | null
           set_aside_types?: string | null
           stripe_customer_id?: string | null
+          subscription_status?: string | null
         }
         Update: {
           active?: boolean | null
@@ -2590,6 +2598,7 @@ export type Database = {
           preferred_states?: string | null
           set_aside_types?: string | null
           stripe_customer_id?: string | null
+          subscription_status?: string | null
         }
         Relationships: []
       }
@@ -4433,6 +4442,7 @@ export type Database = {
           podcast_name: string | null
           rss_url: string | null
           stripe_customer_id: string | null
+          subscription_status: string | null
         }
         Insert: {
           active?: boolean | null
@@ -4445,6 +4455,7 @@ export type Database = {
           podcast_name?: string | null
           rss_url?: string | null
           stripe_customer_id?: string | null
+          subscription_status?: string | null
         }
         Update: {
           active?: boolean | null
@@ -4457,6 +4468,7 @@ export type Database = {
           podcast_name?: string | null
           rss_url?: string | null
           stripe_customer_id?: string | null
+          subscription_status?: string | null
         }
         Relationships: []
       }
@@ -5360,6 +5372,7 @@ export type Database = {
           last_sent_at: string | null
           send_count: number | null
           stripe_customer_id: string | null
+          subscription_status: string | null
           zip_codes: string[] | null
         }
         Insert: {
@@ -5373,6 +5386,7 @@ export type Database = {
           last_sent_at?: string | null
           send_count?: number | null
           stripe_customer_id?: string | null
+          subscription_status?: string | null
           zip_codes?: string[] | null
         }
         Update: {
@@ -5386,6 +5400,7 @@ export type Database = {
           last_sent_at?: string | null
           send_count?: number | null
           stripe_customer_id?: string | null
+          subscription_status?: string | null
           zip_codes?: string[] | null
         }
         Relationships: []
@@ -5635,6 +5650,7 @@ export type Database = {
           keywords: string | null
           last_sent_at: string | null
           stripe_customer_id: string | null
+          subscription_status: string | null
         }
         Insert: {
           active?: boolean | null
@@ -5646,6 +5662,7 @@ export type Database = {
           keywords?: string | null
           last_sent_at?: string | null
           stripe_customer_id?: string | null
+          subscription_status?: string | null
         }
         Update: {
           active?: boolean | null
@@ -5657,6 +5674,7 @@ export type Database = {
           keywords?: string | null
           last_sent_at?: string | null
           stripe_customer_id?: string | null
+          subscription_status?: string | null
         }
         Relationships: []
       }
@@ -7521,6 +7539,7 @@ export type Database = {
           industry: string | null
           last_sent_at: string | null
           stripe_customer_id: string | null
+          subscription_status: string | null
         }
         Insert: {
           active?: boolean | null
@@ -7531,6 +7550,7 @@ export type Database = {
           industry?: string | null
           last_sent_at?: string | null
           stripe_customer_id?: string | null
+          subscription_status?: string | null
         }
         Update: {
           active?: boolean | null
@@ -7541,6 +7561,7 @@ export type Database = {
           industry?: string | null
           last_sent_at?: string | null
           stripe_customer_id?: string | null
+          subscription_status?: string | null
         }
         Relationships: []
       }
