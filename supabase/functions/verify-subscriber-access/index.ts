@@ -23,11 +23,41 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || ""
     );
 
+    // Check if user is an admin (admins bypass subscription check)
+    const normalizedEmail = email.toLowerCase().trim();
+    const { data: adminProfile } = await sb
+      .from("profiles")
+      .select("user_id")
+      .eq("email", normalizedEmail)
+      .limit(1)
+      .maybeSingle();
+
+    if (adminProfile) {
+      const { data: adminRole } = await sb
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", adminProfile.user_id)
+        .eq("role", "admin")
+        .maybeSingle();
+
+      if (adminRole) {
+        const token = btoa(JSON.stringify({
+          email: normalizedEmail,
+          niche: niche || "admin",
+          exp: Date.now() + 24 * 60 * 60 * 1000,
+        }));
+        return new Response(JSON.stringify({ verified: true, token, niche: niche || "admin" }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     // Check b2b_subscribers for active subscription
     let query = sb
       .from("b2b_subscribers")
       .select("id, email, niche, active")
-      .eq("email", email.toLowerCase().trim())
+      .eq("email", normalizedEmail)
       .eq("active", true);
 
     if (niche) {
