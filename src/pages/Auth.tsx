@@ -137,7 +137,7 @@ const Auth = () => {
         password,
         options: {
           emailRedirectTo: buildAuthRedirectUrl("/welcome"),
-          data: { full_name: `${firstName.trim()} ${lastName.trim()}`, athlete_name: signupRole === "self" ? athleteName : "", account_role: accountRole },
+          data: { full_name: `${firstName.trim()} ${lastName.trim()}`, athlete_name: signupRole === "self" ? athleteName : "", account_role: accountRole, date_of_birth: dateOfBirth || null },
         },
       });
       if (signUpError) {
