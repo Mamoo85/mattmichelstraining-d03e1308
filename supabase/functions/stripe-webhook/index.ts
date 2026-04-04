@@ -4697,6 +4697,51 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
       return new Response(JSON.stringify({ received: true }), { status: 200 });
     }
 
+      // ── CATCH-ALL: any subscription type not explicitly handled above ──────
+      // Writes to saas_subscriptions so no paid subscriber is ever lost.
+      if (meta.type && meta.type.endsWith("_subscription") && (meta.email || customerEmail)) {
+        try {
+          const email = meta.email || customerEmail;
+          await sb.from("saas_subscriptions" as any).upsert({
+            email,
+            product_type: meta.type,
+            business_name: meta.business_name || null,
+            name: meta.name || null,
+            phone: meta.phone || null,
+            city: meta.city || null,
+            state: meta.state || "MI",
+            active: true,
+            stripe_customer_id: session.customer as string || null,
+            stripe_session_id: session.id,
+            metadata: meta,
+          }, { onConflict: "email,product_type" });
+          await sendM2Email(
+            email,
+            "You're in — we're setting things up for you",
+            m2Email({
+              greeting: `Hi ${meta.name || "there"},`,
+              headline: "Your subscription is confirmed",
+              body: `<p>Thanks for subscribing! We've received your payment and <strong>${meta.business_name ? meta.business_name + " is" : "you are"} all set</strong>.</p>
+<p>Matt will reach out within 24 hours to complete your onboarding and make sure everything is running smoothly.</p>
+<p>Questions in the meantime? Text or call anytime.</p>`,
+              cta: { text: "Text Matt Now", url: "sms:+13138064952" },
+            })
+          );
+          await notifyMatt(
+            `💰 New subscriber — ${meta.type.replace(/_/g, " ")} — ${meta.business_name || email}`,
+            `<p><strong>Product:</strong> ${meta.type}<br>
+<strong>Email:</strong> ${email}<br>
+<strong>Business:</strong> ${meta.business_name || "n/a"}<br>
+<strong>Name:</strong> ${meta.name || "n/a"}<br>
+<strong>Phone:</strong> ${meta.phone || "n/a"}<br>
+<strong>City:</strong> ${meta.city || "n/a"}</p>
+<p><em>This was handled by the catch-all handler — this product may need a dedicated webhook block.</em></p>`
+          );
+          console.log(`[WEBHOOK] catch-all: handled ${meta.type} for ${email}`);
+        } catch (e) { console.error("[WEBHOOK] catch-all subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
     return new Response(JSON.stringify({ received: true }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
