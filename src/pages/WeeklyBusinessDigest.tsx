@@ -157,7 +157,7 @@ export default function WeeklyBusinessDigest() {
               ))}
             </div>
             <div className="mt-6 pt-4 border-t border-slate-700 text-xs text-slate-500">
-              Personalized for your business by AI · M² Performance Training · Unsubscribe
+              Personalized for your business by AI · M2 Development · Unsubscribe
             </div>
           </div>
         </div>
