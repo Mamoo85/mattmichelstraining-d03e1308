@@ -4436,42 +4436,60 @@ export type Database = {
           business_name: string
           created_at: string | null
           customer_email: string | null
+          customer_name: string | null
           email: string
           episode_count: number | null
           id: string
           last_checked_at: string | null
+          last_episode_guid: string | null
           podcast_name: string | null
+          podcast_niche: string | null
+          rss_feed_url: string | null
           rss_url: string | null
           stripe_customer_id: string | null
           subscription_status: string | null
+          target_audience: string | null
+          tone: string | null
         }
         Insert: {
           active?: boolean | null
           business_name: string
           created_at?: string | null
           customer_email?: string | null
+          customer_name?: string | null
           email: string
           episode_count?: number | null
           id?: string
           last_checked_at?: string | null
+          last_episode_guid?: string | null
           podcast_name?: string | null
+          podcast_niche?: string | null
+          rss_feed_url?: string | null
           rss_url?: string | null
           stripe_customer_id?: string | null
           subscription_status?: string | null
+          target_audience?: string | null
+          tone?: string | null
         }
         Update: {
           active?: boolean | null
           business_name?: string
           created_at?: string | null
           customer_email?: string | null
+          customer_name?: string | null
           email?: string
           episode_count?: number | null
           id?: string
           last_checked_at?: string | null
+          last_episode_guid?: string | null
           podcast_name?: string | null
+          podcast_niche?: string | null
+          rss_feed_url?: string | null
           rss_url?: string | null
           stripe_customer_id?: string | null
           subscription_status?: string | null
+          target_audience?: string | null
+          tone?: string | null
         }
         Relationships: []
       }
@@ -7536,8 +7554,10 @@ export type Database = {
         Row: {
           active: boolean | null
           business_name: string
+          company_name: string | null
           created_at: string | null
           customer_email: string | null
+          customer_name: string | null
           email: string
           id: string
           industry: string | null
@@ -7548,8 +7568,10 @@ export type Database = {
         Insert: {
           active?: boolean | null
           business_name: string
+          company_name?: string | null
           created_at?: string | null
           customer_email?: string | null
+          customer_name?: string | null
           email: string
           id?: string
           industry?: string | null
@@ -7560,8 +7582,10 @@ export type Database = {
         Update: {
           active?: boolean | null
           business_name?: string
+          company_name?: string | null
           created_at?: string | null
           customer_email?: string | null
+          customer_name?: string | null
           email?: string
           id?: string
           industry?: string | null
