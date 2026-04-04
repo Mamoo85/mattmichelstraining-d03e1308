@@ -21,58 +21,67 @@ serve(async (req) => {
     const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
     const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
 
-    // Subscriber distribution
-    const { data: profiles } = await sb.from("profiles").select("subscription_tier, created_at, updated_at");
-    const tierCounts: Record<string, number> = {};
-    let recentSignups = 0;
-    for (const p of profiles || []) {
-      tierCounts[p.subscription_tier] = (tierCounts[p.subscription_tier] || 0) + 1;
-      if (p.created_at >= sevenDaysAgo) recentSignups++;
-    }
+    // Subscriber distribution — use count queries instead of fetching all rows
+    const { count: totalUsers } = await sb.from("profiles").select("*", { count: "exact", head: true });
+    const { count: freeUsers } = await sb.from("profiles").select("*", { count: "exact", head: true }).eq("subscription_tier", "free");
+    const { count: basicUsers } = await sb.from("profiles").select("*", { count: "exact", head: true }).eq("subscription_tier", "basic");
+    const { count: foundationUsers } = await sb.from("profiles").select("*", { count: "exact", head: true }).eq("subscription_tier", "foundation");
+    const { count: customUsers } = await sb.from("profiles").select("*", { count: "exact", head: true }).eq("subscription_tier", "custom");
+    const { count: teamUsers } = await sb.from("profiles").select("*", { count: "exact", head: true }).eq("subscription_tier", "team");
+    const { count: recentSignups } = await sb.from("profiles").select("*", { count: "exact", head: true }).gte("created_at", sevenDaysAgo);
 
-    // Activity data for churn context
-    const { data: recentLogs } = await sb.from("progress_logs").select("user_id, logged_at").gte("logged_at", thirtyDaysAgo);
-    const { data: workoutLogs } = await sb.from("workout_logs").select("user_id, completed_at").gte("completed_at", thirtyDaysAgo);
+    const tierCounts: Record<string, number> = {
+      free: freeUsers || 0,
+      basic: basicUsers || 0,
+      foundation: foundationUsers || 0,
+      custom: customUsers || 0,
+      team: teamUsers || 0,
+    };
 
+    // Activity counts (not full rows)
+    const { count: progressCount30d } = await sb.from("progress_logs").select("*", { count: "exact", head: true }).gte("logged_at", thirtyDaysAgo);
+    const { count: workoutCount30d } = await sb.from("workout_logs").select("*", { count: "exact", head: true }).gte("completed_at", thirtyDaysAgo);
+    
+    // Active users in last 7 days — fetch only user_ids with limit
+    const { data: recentLogUsers } = await sb.from("progress_logs").select("user_id").gte("logged_at", sevenDaysAgo).limit(500);
+    const { data: recentWorkoutUsers } = await sb.from("workout_logs").select("user_id").gte("completed_at", sevenDaysAgo).limit(500);
     const activeUsers = new Set([
-      ...(recentLogs || []).filter(l => l.logged_at >= sevenDaysAgo).map(l => l.user_id),
-      ...(workoutLogs || []).filter(w => w.completed_at >= sevenDaysAgo).map(w => w.user_id),
+      ...(recentLogUsers || []).map(l => l.user_id),
+      ...(recentWorkoutUsers || []).map(w => w.user_id),
     ]);
 
-    const totalPaying = Object.entries(tierCounts).filter(([k]) => k !== "free").reduce((s, [, v]) => s + v, 0);
+    const totalPaying = (basicUsers || 0) + (foundationUsers || 0) + (customUsers || 0) + (teamUsers || 0);
     const tierPrices: Record<string, number> = { basic: 14.99, foundation: 49.99, custom: 99.99, team: 39.99 };
     const currentMRR = Object.entries(tierCounts).reduce((sum, [tier, count]) => sum + (tierPrices[tier] || 0) * count, 0);
 
     // Newsletter subscribers
     const { count: subscriberCount } = await sb.from("newsletter_subscribers").select("id", { count: "exact", head: true }).eq("is_active", true);
 
-    // ── 2. Build simulated analytics snapshot ──
-    // Since we can't call the Lovable Analytics API from an edge function,
-    // we build a business-data-driven analytics context from internal tables
-    const { data: recentNutritionLogs } = await sb.from("nutrition_logs").select("id", { count: "exact", head: true }).gte("logged_at", sevenDaysAgo);
-    const { data: recentChallengeEntries } = await sb.from("challenge_entries").select("id", { count: "exact", head: true }).gte("logged_at", sevenDaysAgo);
+    // Feature usage counts
+    const { count: nutritionCount7d } = await sb.from("nutrition_logs").select("*", { count: "exact", head: true }).gte("logged_at", sevenDaysAgo);
+    const { count: challengeCount7d } = await sb.from("challenge_entries").select("*", { count: "exact", head: true }).gte("logged_at", sevenDaysAgo);
 
     const rawAnalytics = {
       period: `${new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10)} to ${new Date().toISOString().slice(0, 10)}`,
       business_metrics: {
-        total_users: profiles?.length || 0,
+        total_users: totalUsers || 0,
         paying_subscribers: totalPaying,
         free_users: tierCounts["free"] || 0,
         tier_distribution: tierCounts,
         current_mrr: currentMRR.toFixed(2),
-        new_signups_7d: recentSignups,
+        new_signups_7d: recentSignups || 0,
         active_users_7d: activeUsers.size,
         newsletter_subscribers: subscriberCount || 0,
       },
       engagement: {
-        progress_logs_30d: recentLogs?.length || 0,
-        workout_logs_30d: workoutLogs?.length || 0,
+        progress_logs_30d: progressCount30d || 0,
+        workout_logs_30d: workoutCount30d || 0,
         active_users_7d: activeUsers.size,
         inactive_paying_users: totalPaying - activeUsers.size,
       },
       feature_usage: {
-        nutrition_logs_7d: recentNutritionLogs?.length || 0,
-        challenge_entries_7d: recentChallengeEntries?.length || 0,
+        nutrition_logs_7d: nutritionCount7d || 0,
+        challenge_entries_7d: challengeCount7d || 0,
       },
     };
 
