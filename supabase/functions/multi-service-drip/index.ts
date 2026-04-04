@@ -12,6 +12,40 @@ const log = (step: string, data?: any) =>
 const MAX_LEADS_PER_RUN = 20;
 const SEND_DELAY_MS = 300;
 
+// ── INDUSTRY → DEMO LINK MAPPING ──
+const SITE_BASE = "https://www.mattmichelstraining.com";
+const DEMO_MAP: { keywords: string[]; path: string; label: string }[] = [
+  { keywords: ["dental", "dentist", "orthodont", "prosthodont", "oral"], path: "/demo-dental", label: "dental practice" },
+  { keywords: ["medical", "clinic", "doctor", "physician", "health", "urgent care", "chiropr"], path: "/demo-clinic", label: "medical clinic" },
+  { keywords: ["roof", "roofing"], path: "/demo-roofing", label: "roofing company" },
+  { keywords: ["hvac", "heating", "cooling", "air condition"], path: "/demo-hvac", label: "HVAC company" },
+  { keywords: ["plumb"], path: "/demo-plumber", label: "plumbing company" },
+  { keywords: ["electri"], path: "/demo-electrician", label: "electrical contractor" },
+  { keywords: ["landscap", "lawn", "garden", "tree service"], path: "/demo-landscape", label: "landscaping company" },
+  { keywords: ["auto", "mechanic", "car repair", "body shop", "collision"], path: "/demo-auto-repair", label: "auto repair shop" },
+  { keywords: ["clean", "maid", "janitorial"], path: "/demo-cleaning", label: "cleaning service" },
+  { keywords: ["salon", "spa", "barber", "beauty", "nail", "hair"], path: "/demo-salon", label: "salon / spa" },
+  { keywords: ["restaurant", "bar", "cafe", "pizza", "grill", "food", "catering", "bakery"], path: "/demo-restaurant", label: "restaurant" },
+  { keywords: ["law", "attorney", "legal", "lawyer"], path: "/demo-lawyer", label: "law firm" },
+  { keywords: ["real estate", "realtor", "realty", "broker", "property"], path: "/demo-real-estate", label: "real estate" },
+  { keywords: ["manufactur", "industrial", "automation", "boiler", "machine shop", "fabricat", "weld"], path: "/demo-youngblood", label: "industrial / manufacturing" },
+  { keywords: ["pet", "vet", "veterinar", "grooming", "animal"], path: "/demo-petfection", label: "pet business" },
+];
+
+function getDemoLink(industry?: string): { url: string; label: string } | null {
+  if (!industry) return null;
+  const lower = industry.toLowerCase();
+  for (const entry of DEMO_MAP) {
+    if (entry.keywords.some(k => lower.includes(k))) {
+      return { url: `${SITE_BASE}${entry.path}`, label: entry.label };
+    }
+  }
+  if (lower.includes("contract") || lower.includes("home service") || lower.includes("handyman") || lower.includes("paint") || lower.includes("fenc")) {
+    return { url: `${SITE_BASE}/demo-roofing`, label: "contractor" };
+  }
+  return null;
+}
+
 interface ServiceOffer {
   name: string;
   price: string;

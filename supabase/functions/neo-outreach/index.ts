@@ -76,13 +76,19 @@ async function writePersonalizedEmail(business: {
   phone?: string;
   pitch: { product: string; cta: string; price: string };
 }): Promise<{ subject: string; body: string }> {
+  const demo = getDemoLink(business.industry);
+  const demoLine = demo ? `\n\nHere's what I built for a ${demo.label} — takes 10 seconds to look: ${demo.url}` : "";
+
   if (!ANTHROPIC_API_KEY) {
-    // Fallback template if no API key
     return {
       subject: `Quick question about ${business.business_name}`,
-      body: `Hey, my name's Matt Michels — I'm based out of Grosse Pointe and I do web work for local businesses.\n\nI was looking at your Google listing for ${business.business_name} and had a quick question — are you happy with the leads your website is currently bringing in?\n\nIf not, I can do ${business.pitch.cta} for ${business.pitch.price}.\n\nEither way, no pitch deck, no demo call. Just a straight answer on what I'd fix.\n\n— Matt\n(313) 806-4952`,
+      body: `Hey, my name's Matt Michels — I'm based out of Grosse Pointe and I do web work for local businesses.\n\nI was looking at your Google listing for ${business.business_name} and had a quick question — are you happy with the leads your website is currently bringing in?\n\nIf not, I can do ${business.pitch.cta} for ${business.pitch.price}.${demoLine}\n\nEither way, no pitch deck, no demo call. Just a straight answer on what I'd fix.\n\n— Matt\n(313) 806-4952`,
     };
   }
+
+  const demoInstruction = demo
+    ? `\n- MUST include this demo link naturally in the email: ${demo.url} — say something like "Here's one I built for a ${demo.label}" or "Check out what I did for a similar business: ${demo.url}"`
+    : "";
 
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -109,7 +115,7 @@ The pitch: ${business.pitch.cta} (${business.pitch.price}).
 Rules:
 - Opens with "Hey, my name's Matt Michels"
 - References their specific business/industry naturally
-- Pitches the product in one sentence, makes it sound easy
+- Pitches the product in one sentence, makes it sound easy${demoInstruction}
 - Ends with "— Matt" and his phone number: (313) 806-4952
 - Total: 4-6 sentences max
 
@@ -127,7 +133,7 @@ Subject should be under 45 chars, conversational, not salesy.`,
   } catch {
     return {
       subject: `Quick question about ${business.business_name}`,
-      body: `Hey, my name's Matt Michels — based in Grosse Pointe, I work with ${business.industry || "local"} businesses across the Detroit metro.\n\nSaw your listing and wanted to reach out — I can do ${business.pitch.cta} for ${business.pitch.price}. Quick, no obligation.\n\n— Matt\n(313) 806-4952`,
+      body: `Hey, my name's Matt Michels — based in Grosse Pointe, I work with ${business.industry || "local"} businesses across the Detroit metro.\n\nSaw your listing and wanted to reach out — I can do ${business.pitch.cta} for ${business.pitch.price}.${demoLine}\n\n— Matt\n(313) 806-4952`,
     };
   }
 }
