@@ -277,6 +277,7 @@ const Admin = () => {
       color: "#f97316",
       tools: [
         { key: "command-deck", label: "Command Deck", component: <AdminCommandDeck /> },
+        { key: "lead-command", label: "Lead Command Center", component: <AdminProspector /> },
       ],
     },
     {
