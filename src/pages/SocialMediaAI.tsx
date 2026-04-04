@@ -29,10 +29,10 @@ const PLANS = [
     launchPrice: "$111.75",
     per: "/month",
     badge: "🚀 Launch Special — 25% off first 3 months",
-    description: "Everything + Instagram + Google Business Profile, 5 posts/week.",
+    description: "Everything + Instagram + Google Business Profile + TikTok, 5 posts/week.",
     includes: [
       "Everything in Standard",
-      "Instagram + Google Business Profile",
+      "Instagram + GBP + TikTok",
       "5 posts per week",
       "Monthly analytics report",
     ],
