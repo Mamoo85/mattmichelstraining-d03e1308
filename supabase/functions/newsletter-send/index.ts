@@ -11,6 +11,16 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
+const JSON_HEADERS = { "Content-Type": "application/json" };
+
+const INVALID_NEWSLETTER_VALUE = /^(undefined|null|n\/a|none)$/i;
+
+function cleanNewsletterText(value: unknown, fallback: string): string {
+  if (typeof value !== "string") return fallback;
+  const trimmed = value.trim();
+  if (!trimmed || INVALID_NEWSLETTER_VALUE.test(trimmed)) return fallback;
+  return trimmed;
+}
 
 const AFFILIATE_LINKS = {
   apollo: "https://www.apollo.io/?via=m2",
@@ -190,7 +200,11 @@ Be direct and tactical. These are experienced reps who hate fluff. Write like yo
 </table>
 </body></html>`;
 
-  return { subject: parsed.subject, html, preview: parsed.preview_text };
+  return {
+    subject: cleanNewsletterText(parsed.subject, `The Field Rep Weekly — ${topic}`),
+    html,
+    preview: cleanNewsletterText(parsed.preview_text, "Tactics for this week."),
+  };
 }
 
 serve(async (req) => {
@@ -225,7 +239,10 @@ serve(async (req) => {
             subject: `[PREVIEW] ${subject}`,
             html: html.replace("{{unsubscribe_token}}", "preview") }) });
       }
-      return new Response(JSON.stringify({ draft_id: draft?.id, preview_sent: true }), { status: 200 });
+      return new Response(JSON.stringify({ draft_id: draft?.id, preview_sent: true, subject }), {
+        status: 200,
+        headers: JSON_HEADERS,
+      });
     }
 
     // Fetch all active subscribers
@@ -236,7 +253,10 @@ serve(async (req) => {
 
     if (!subscribers || subscribers.length === 0) {
       console.log("[NEWSLETTER] No subscribers yet — saving draft only");
-      return new Response(JSON.stringify({ sent: 0, draft_id: draft?.id }), { status: 200 });
+      return new Response(JSON.stringify({ sent: 0, draft_id: draft?.id, subject }), {
+        status: 200,
+        headers: JSON_HEADERS,
+      });
     }
 
     // Send in batches of 50 (Resend batch limit)
@@ -268,9 +288,15 @@ serve(async (req) => {
     }
 
     console.log(`[NEWSLETTER] Sent to ${sent} subscribers — "${subject}"`);
-    return new Response(JSON.stringify({ sent, subject }), { status: 200 });
+    return new Response(JSON.stringify({ sent, subject }), {
+      status: 200,
+      headers: JSON_HEADERS,
+    });
   } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
     console.error("[NEWSLETTER] Error:", e);
-    return new Response(JSON.stringify({ error: msg }), { status: 500 });
+    return new Response(JSON.stringify({ error: msg }), {
+      status: 500,
+      headers: JSON_HEADERS,
+    });
   }
 });
