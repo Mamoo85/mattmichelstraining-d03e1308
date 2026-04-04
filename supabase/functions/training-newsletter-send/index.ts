@@ -10,6 +10,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
+const APP_BASE_URL = (Deno.env.get("APP_BASE_URL") || "https://mattmichelstraining.lovable.app").replace(/\/$/, "");
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -186,6 +187,65 @@ async function generateWithLovable(topic: string, customContent?: string): Promi
   return generateWithGateway("google/gemini-2.5-flash-lite", topic, customContent);
 }
 
+function ensureResendConfigured() {
+  if (!RESEND_API_KEY) {
+    throw new Error("RESEND_API_KEY not set");
+  }
+}
+
+function generateUnsubscribeToken() {
+  return crypto.randomUUID().replace(/-/g, "");
+}
+
+async function getUnsubscribeTokenMap(sb: any, emails: string[]) {
+  const normalizedEmails = [...new Set(
+    emails
+      .map((email) => email.trim().toLowerCase())
+      .filter(Boolean),
+  )];
+
+  const tokenMap = new Map<string, string>();
+  if (normalizedEmails.length === 0) return tokenMap;
+
+  const { data: existingTokens, error: existingTokensError } = await sb
+    .from("email_unsubscribe_tokens")
+    .select("email, token")
+    .in("email", normalizedEmails);
+
+  if (existingTokensError) {
+    throw new Error(`Failed to load unsubscribe tokens: ${existingTokensError.message}`);
+  }
+
+  for (const row of existingTokens || []) {
+    if (row?.email && row?.token) {
+      tokenMap.set(String(row.email).toLowerCase(), String(row.token));
+    }
+  }
+
+  const missingEmails = normalizedEmails.filter((email) => !tokenMap.has(email));
+
+  if (missingEmails.length > 0) {
+    const rows = missingEmails.map((email) => ({
+      email,
+      token: generateUnsubscribeToken(),
+    }));
+
+    const { error: insertError } = await sb
+      .from("email_unsubscribe_tokens")
+      .upsert(rows, { onConflict: "email" });
+
+    if (insertError) {
+      throw new Error(`Failed to create unsubscribe tokens: ${insertError.message}`);
+    }
+
+    for (const row of rows) {
+      tokenMap.set(row.email, row.token);
+    }
+  }
+
+  return tokenMap;
+}
+
 function buildEmailHtml(content: NewsletterContent, issueNum: number, dateStr: string): string {
   return `<!DOCTYPE html>
 <html>
@@ -247,7 +307,7 @@ function buildEmailHtml(content: NewsletterContent, issueNum: number, dateStr: s
   <!-- Footer -->
   <tr><td style="background:#f8fafc;padding:16px 28px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 10px 10px;font-size:12px;color:#94a3b8;line-height:1.6;">
     M2 Development · <a href="mailto:matt@mattmichelstraining.com" style="color:#e8621a;">matt@mattmichelstraining.com</a><br>
-    <a href="${SUPABASE_URL}/functions/v1/newsletter-unsubscribe?token={{unsubscribe_token}}" style="color:#94a3b8;">Unsubscribe</a>
+    <a href="${APP_BASE_URL}/unsubscribe?token={{unsubscribe_token}}" style="color:#94a3b8;">Unsubscribe</a>
   </td></tr>
 
 </table>
@@ -318,31 +378,45 @@ serve(async (req) => {
       .single();
 
     if (previewOnly) {
-      if (RESEND_API_KEY) {
-        await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify({
-            from: "M² Training <matt@mattmichelstraining.com>",
-            to: ["matt@mattmichelstraining.com"],
-            subject: `[PREVIEW — ${provider.toUpperCase()}] ${content.subject}`,
-            html: html.replace("{{unsubscribe_token}}", "preview"),
-          }),
-        });
+      ensureResendConfigured();
+      const previewResponse = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          from: "M² Training <matt@mattmichelstraining.com>",
+          to: ["matt@mattmichelstraining.com"],
+          subject: `[PREVIEW — ${provider.toUpperCase()}] ${content.subject}`,
+          html: html.replace("{{unsubscribe_token}}", "preview"),
+        }),
+      });
+
+      if (!previewResponse.ok) {
+        throw new Error(`Preview email failed (${previewResponse.status}): ${await previewResponse.text()}`);
       }
+
       return new Response(JSON.stringify({ draft_id: draft?.id, preview_sent: true, provider, content }), {
         headers: { ...CORS, "Content-Type": "application/json" },
       });
     }
 
     // Fetch training newsletter subscribers
-    const { data: subscribers } = await sb
+    const { data: subscribers, error: subscribersError } = await sb
       .from("newsletter_subscribers")
-      .select("email, name, unsubscribe_token")
-      .eq("active", true)
+      .select("email")
+      .eq("is_active", true)
       .or("source.is.null,source.not.ilike.waitlist_%,source.eq.training_newsletter");
 
-    if (!subscribers || subscribers.length === 0) {
+    if (subscribersError) {
+      throw new Error(`Failed to load subscribers: ${subscribersError.message}`);
+    }
+
+    const recipientEmails = [...new Set(
+      (subscribers || [])
+        .map((sub) => sub.email?.trim().toLowerCase())
+        .filter(Boolean),
+    )] as string[];
+
+    if (recipientEmails.length === 0) {
       console.log(`[TRAINING-NEWSLETTER] No subscribers — draft saved for "${content.subject}" via ${provider}`);
       return new Response(JSON.stringify({
         sent: 0,
@@ -354,35 +428,56 @@ serve(async (req) => {
       });
     }
 
+    ensureResendConfigured();
+    const unsubscribeTokenMap = await getUnsubscribeTokenMap(sb, recipientEmails);
+
     let sent = 0;
+    const failures: string[] = [];
     const batchSize = 50;
-    for (let i = 0; i < subscribers.length; i += batchSize) {
-      const batch = subscribers.slice(i, i + batchSize);
-      await Promise.allSettled(
-        batch.map((sub) =>
-          fetch("https://api.resend.com/emails", {
+    for (let i = 0; i < recipientEmails.length; i += batchSize) {
+      const batch = recipientEmails.slice(i, i + batchSize);
+      const batchResults = await Promise.allSettled(
+        batch.map(async (email) => {
+          const response = await fetch("https://api.resend.com/emails", {
             method: "POST",
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
               from: "Matt Michels <matt@mattmichelstraining.com>",
-              to: [sub.email],
+              to: [email],
               subject: content.subject,
-              html: html.replace("{{unsubscribe_token}}", sub.unsubscribe_token || ""),
+              html: html.replace("{{unsubscribe_token}}", unsubscribeTokenMap.get(email) || ""),
             }),
-          })
-        )
+          });
+
+          if (!response.ok) {
+            throw new Error(`${email}: ${response.status} ${await response.text()}`);
+          }
+
+          return email;
+        }),
       );
-      sent += batch.length;
+
+      for (const result of batchResults) {
+        if (result.status === "fulfilled") {
+          sent += 1;
+        } else {
+          failures.push(result.reason instanceof Error ? result.reason.message : String(result.reason));
+        }
+      }
     }
 
-    if (draft) {
+    if (sent === 0 && failures.length > 0) {
+      throw new Error(`Newsletter send failed: ${failures[0]}`);
+    }
+
+    if (draft && sent > 0) {
       await sb.from("training_newsletter_sends")
         .update({ status: "sent", sent_at: new Date().toISOString(), recipient_count: sent })
         .eq("id", draft.id);
     }
 
     console.log(`[TRAINING-NEWSLETTER] Sent to ${sent} subscribers via ${provider} — "${content.subject}"`);
-    return new Response(JSON.stringify({ sent, subject: content.subject, provider }), {
+    return new Response(JSON.stringify({ sent, failed: failures.length, subject: content.subject, provider }), {
       headers: { ...CORS, "Content-Type": "application/json" },
     });
   } catch (e: unknown) {
