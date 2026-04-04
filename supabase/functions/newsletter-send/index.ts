@@ -81,8 +81,9 @@ Be direct and tactical. These are experienced reps who hate fluff. Write like yo
 
   let parsed;
   try {
-    const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    parsed = JSON.parse(jsonMatch?.[0] || raw);
+    const cleaned = raw.replace(/```(?:json)?\s*/gi, "").replace(/```\s*/g, "").trim();
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+    parsed = JSON.parse(jsonMatch?.[0] || cleaned);
   } catch {
     parsed = {
       subject: `The Field Rep Weekly — ${topic}`,
