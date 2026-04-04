@@ -6146,6 +6146,7 @@ export type Database = {
           is_active: boolean
           price_cents: number
           prompt_template: string | null
+          slug: string | null
           sort_order: number
           sport: string
           stripe_price_id: string | null
@@ -6159,6 +6160,7 @@ export type Database = {
           is_active?: boolean
           price_cents?: number
           prompt_template?: string | null
+          slug?: string | null
           sort_order?: number
           sport?: string
           stripe_price_id?: string | null
@@ -6172,6 +6174,7 @@ export type Database = {
           is_active?: boolean
           price_cents?: number
           prompt_template?: string | null
+          slug?: string | null
           sort_order?: number
           sport?: string
           stripe_price_id?: string | null
