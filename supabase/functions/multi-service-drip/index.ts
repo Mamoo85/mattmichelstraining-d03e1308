@@ -9,8 +9,10 @@ const corsHeaders = {
 const log = (step: string, data?: any) =>
   console.log(`[MULTI-SERVICE-DRIP] ${step}${data ? " — " + JSON.stringify(data) : ""}`);
 
-const MAX_LEADS_PER_RUN = 20;
-const SEND_DELAY_MS = 300;
+// THROTTLED: Web design outreach is the priority. Automation pitches are secondary.
+// Only 5 per run, with longer delays between steps so web design drip has room.
+const MAX_LEADS_PER_RUN = 5;
+const SEND_DELAY_MS = 500;
 
 interface ServiceOffer {
   name: string;
@@ -277,9 +279,11 @@ serve(async (req) => {
         // Find next step
         let stepIndex = -1;
         const STEP_DELAYS = [0, 3, 4]; // days between steps
+        // Longer delays so web design drip dominates inbox real estate
+        const ADJUSTED_STEP_DELAYS = [7, 7, 7]; // wait 7 days between each automation pitch
         for (let i = 0; i < DRIP_TEMPLATES.length; i++) {
           if (!sentTemplates.has(DRIP_TEMPLATES[i])) {
-            if (i === 0 || daysSinceLastSent >= STEP_DELAYS[i]) {
+            if (i === 0 || daysSinceLastSent >= ADJUSTED_STEP_DELAYS[i]) {
               stepIndex = i;
             }
             break;
