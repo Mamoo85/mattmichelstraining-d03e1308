@@ -85,8 +85,31 @@ serve(async (req) => {
         return sum + ((item?.price?.unit_amount || 0) / 100);
       }, 0);
       alerts.push(`<h3 style="color:#f97316;">⚠️ ${pastDue.data.length} Past-Due Subscriptions — $${atRisk.toFixed(2)}/mo at risk</h3>
-        <p>These customers' cards failed but subscriptions haven't been cancelled yet. Reach out before Stripe cancels them.</p>
+        <p>These customers' cards failed but subscriptions haven't been cancelled yet.</p>
         <ul>${pastDue.data.slice(0, 10).map((s: any) => `<li>${s.customer}</li>`).join("")}</ul>`);
+
+      // DUNNING: Auto-send payment failure emails for past-due subscriptions
+      for (const sub of pastDue.data.slice(0, 5)) {
+        const custEmail = sub.customer_email || sub.metadata?.email;
+        if (!custEmail) continue;
+        try {
+          await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              from: "M² Development <matt@mattmichelstraining.com>",
+              to: [custEmail],
+              subject: "⚠️ Your payment needs attention",
+              html: `<div style="font-family:sans-serif;max-width:600px;margin:auto;padding:24px;">
+                <h2>Your subscription payment failed</h2>
+                <p>We tried to process your payment but it was declined. Please update your payment method to keep your service active.</p>
+                <p>If you have questions, reply to this email or call Matt at (313) 806-4952.</p>
+                <p style="margin-top:16px;">— Matt Michels, M² Development</p>
+              </div>`,
+            }),
+          });
+        } catch (e) { console.log("[CASHIER] Dunning email failed:", e); }
+      }
     }
 
     // 4. Active subscription count & MRR snapshot
@@ -125,11 +148,15 @@ serve(async (req) => {
       );
     }
 
+    // Record heartbeat
+    await sb.from("agent_heartbeats").upsert({ agent_name: "Cashier", last_beat: new Date().toISOString() }, { onConflict: "agent_name" });
+
     return new Response(JSON.stringify({
       ok: true,
       failed_payments: failedCharges.data?.length || 0,
       cancellations: cancelledSubs.data?.length || 0,
       past_due: pastDue.data?.length || 0,
+      dunning_emails_sent: Math.min(pastDue.data?.length || 0, 5),
       active_subs: activeSubs.data?.length || 0,
       estimated_mrr: totalMrr,
       active_campaigns: approvedCampaigns?.length || 0,

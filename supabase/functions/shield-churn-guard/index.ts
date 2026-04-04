@@ -136,6 +136,40 @@ serve(async (req) => {
 
     const hasIssues = critical.length > 0 || warnings.length > 0 || (failCount && failCount > 0);
 
+    // WIN-BACK: For critical clients (paying but never received value), auto-send value email
+    if (critical.length > 0 && RESEND_API_KEY) {
+      for (const product of PRODUCT_TABLES) {
+        try {
+          const { data: neverDelivered } = await sb
+            .from(product.table)
+            .select("email, business_name")
+            .eq("active", true)
+            .is(product.lastField, null)
+            .lt("created_at", sevenDaysAgo)
+            .limit(3);
+
+          for (const client of (neverDelivered || [])) {
+            if (!client.email) continue;
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "Matt Michels <matt@mattmichelstraining.com>",
+                to: [client.email],
+                subject: `Quick check-in on your ${product.name} setup`,
+                html: `<div style="font-family:sans-serif;max-width:600px;margin:auto;padding:24px;">
+                  <p>Hey ${client.business_name ? client.business_name.split(' ')[0] : 'there'},</p>
+                  <p>I noticed your ${product.name} service hasn't sent its first delivery yet. I want to make sure everything is set up right.</p>
+                  <p>Can you reply to this email or call me at (313) 806-4952? I'll personally make sure you're getting value from day one.</p>
+                  <p>— Matt</p>
+                </div>`,
+              }),
+            });
+          }
+        } catch (e) { console.log(`[SHIELD] Win-back email failed for ${product.name}:`, e); }
+      }
+    }
+
     if (hasIssues) {
       await sendShieldEmail(
         `🛡️ Shield Alert: $${mrrAtRisk}/mo at risk, ${critical.length} critical`,
@@ -144,9 +178,12 @@ serve(async (req) => {
         ${warnings.length ? `<h3>🟡 WARNING — Going stale</h3>${warnings.join("")}` : ""}
         ${failHtml}
         ${conversionHtml}
-        <p style="margin-top:16px;color:#94a3b8;">Shield runs daily. If MRR at risk exceeds $100, you'll get a text too.</p>`
+        <p style="margin-top:16px;color:#94a3b8;">Shield runs daily. Win-back emails auto-sent to critical clients.</p>`
       );
     }
+
+    // Record heartbeat
+    await sb.from("agent_heartbeats").upsert({ agent_name: "Shield", last_beat: new Date().toISOString() }, { onConflict: "agent_name" });
 
     return new Response(JSON.stringify({
       ok: true,

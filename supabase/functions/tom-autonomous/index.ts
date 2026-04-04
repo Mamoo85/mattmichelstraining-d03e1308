@@ -36,7 +36,7 @@ serve(async (req) => {
     const alerts: string[] = [];
     const now = new Date();
 
-    // 1. Check for leads that have replied (notes contain "replied" or "interested")
+    // 1. Check for leads that have replied — classify intent with AI
     const { data: hotLeads } = await sb
       .from("web_design_leads")
       .select("id, business_name, email, city, notes, status")
@@ -45,10 +45,39 @@ serve(async (req) => {
       .neq("status", "closed_lost")
       .limit(20);
 
+    // AI intent classification for hot leads
+    const classifiedLeads: Array<{ lead: any; intent: string }> = [];
     if (hotLeads?.length) {
-      alerts.push(`<h3 style="color:#f59e0b;">🔥 ${hotLeads.length} HOT LEADS (replied/interested)</h3>
-        <ul>${hotLeads.map(l => `<li><strong>${l.business_name}</strong> (${l.city}) — ${l.status}<br/><em>${(l.notes || "").slice(0, 100)}</em></li>`).join("")}</ul>
-        <p style="color:#f97316;font-weight:bold;">⚡ These need follow-up TODAY</p>`);
+      const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
+      for (const lead of hotLeads.slice(0, 10)) {
+        try {
+          const aiRes = await fetch("https://api.lovable.dev/v1/chat/completions", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              model: "google/gemini-2.5-flash-lite",
+              max_tokens: 50,
+              messages: [{ role: "user", content: `Classify this lead reply into one category: INTERESTED, NOT_INTERESTED, OUT_OF_OFFICE, WRONG_PERSON. Reply with ONLY the category.\n\nBusiness: ${lead.business_name}\nNotes: ${(lead.notes || "").slice(0, 300)}` }],
+            }),
+          });
+          const aiData = await aiRes.json();
+          const intent = aiData.choices?.[0]?.message?.content?.trim() || "UNKNOWN";
+          classifiedLeads.push({ lead, intent });
+        } catch { classifiedLeads.push({ lead, intent: "UNKNOWN" }); }
+      }
+
+      const interested = classifiedLeads.filter(c => c.intent === "INTERESTED");
+      const others = classifiedLeads.filter(c => c.intent !== "INTERESTED");
+
+      if (interested.length) {
+        alerts.push(`<h3 style="color:#10b981;">🔥 ${interested.length} GENUINELY INTERESTED LEADS</h3>
+          <ul>${interested.map(c => `<li><strong>${c.lead.business_name}</strong> (${c.lead.city}) — ${c.lead.status}<br/><em>${(c.lead.notes || "").slice(0, 100)}</em></li>`).join("")}</ul>
+          <p style="color:#f97316;font-weight:bold;">⚡ These need follow-up TODAY</p>`);
+      }
+      if (others.length) {
+        alerts.push(`<h3 style="color:#94a3b8;">📋 ${others.length} Other Replies (auto-classified)</h3>
+          <ul>${others.map(c => `<li>${c.lead.business_name} — <strong>${c.intent}</strong></li>`).join("")}</ul>`);
+      }
     }
 
     // 2. Stale leads — in drip but no activity in 14+ days
@@ -127,9 +156,13 @@ serve(async (req) => {
       );
     }
 
+    // Record heartbeat
+    await sb.from("agent_heartbeats").upsert({ agent_name: "Tom", last_beat: new Date().toISOString() }, { onConflict: "agent_name" });
+
     return new Response(JSON.stringify({
       ok: true,
       hot_leads: hotLeads?.length || 0,
+      classified_interested: classifiedLeads.filter(c => c.intent === "INTERESTED").length,
       stale_leads: staleLeads?.length || 0,
       pipeline_total: pipeline?.length || 0,
       new_this_week: newLeadsThisWeek || 0,
