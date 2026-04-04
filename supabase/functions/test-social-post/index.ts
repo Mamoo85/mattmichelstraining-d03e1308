@@ -42,24 +42,31 @@ serve(async (req) => {
 
     // ── GENERATE: AI-generate a preview post ──
     if (action === "generate") {
-      const { platform, businessName, businessType, city, brandVoice, contentFocus, customPrompt } = body;
+      const { contentType, platform, businessName, businessType, city, brandVoice, postTopic, contentFocus, targetAudience, customPrompt } = body;
       const plat = platform || "linkedin";
+      const cType = contentType || "social_post";
       let prompt = "";
       if (customPrompt?.trim()) {
         prompt = customPrompt;
       } else {
         const voice = brandVoice ? ` Brand voice: ${brandVoice}.` : "";
         const focus = contentFocus ? ` Topic focus: ${contentFocus}.` : "";
+        const topic = postTopic ? ` Post topic: ${postTopic}.` : "";
+        const audience = targetAudience ? ` Target audience: ${targetAudience}.` : "";
         const biz = businessName || "M2 Development";
         const type = businessType || "local business";
         const loc = city || "Grosse Pointe";
-        const templates = [
-          `Write a ${plat === "linkedin" ? "professional LinkedIn" : "engaging Facebook"} post for ${biz}, a ${type} in ${loc}.${voice}${focus} 2-3 sentences. Sound like a real local business owner. No excessive hashtags.`,
-          `Write a "did you know" style ${plat === "linkedin" ? "LinkedIn" : "Facebook"} post for ${biz} (${type}, ${loc}).${voice}${focus} Share a useful industry tip. 2-3 sentences.`,
-          `Write a seasonal ${plat === "linkedin" ? "LinkedIn" : "Facebook"} update for ${biz} in ${loc} (${type}).${voice}${focus} 2-3 sentences. Conversational and genuine.`,
-          `Write a client-focused ${plat === "linkedin" ? "LinkedIn" : "Facebook"} post for ${biz} (${type}, ${loc}).${voice}${focus} Mention accepting new clients. 1-2 sentences.`,
-        ];
-        prompt = templates[Math.floor(Math.random() * templates.length)];
+
+        const typePrompts: Record<string, string> = {
+          social_post: `Write a ${plat === "linkedin" ? "professional LinkedIn" : "engaging Facebook"} post for ${biz}, a ${type} in ${loc}.${voice}${focus}${topic}${audience} 2-4 sentences. Sound like a real local business owner. End with a clear CTA. 1-3 relevant hashtags max.`,
+          gbp_post: `Write a Google Business Profile post for ${biz}, a ${type} in ${loc}.${voice}${focus}${topic}${audience} Under 300 words. Include a local keyword naturally. End with a strong CTA. No hashtags.`,
+          newsletter_excerpt: `Write a short newsletter content block for ${biz} (${type}, ${loc}).${voice}${focus}${topic}${audience} 2-3 paragraphs. Informative and valuable. Include one actionable tip. Written as email newsletter content.`,
+          blog_teaser: `Write a blog post teaser/excerpt for ${biz} (${type}, ${loc}).${voice}${focus}${topic}${audience} 3-4 paragraphs. SEO-friendly. Include a compelling headline at the start. Educational tone.`,
+          ad_copy: `Write Google/Facebook ad copy for ${biz} (${type}, ${loc}).${voice}${focus}${topic}${audience} Format:\nHEADLINE (under 30 chars)\nDESCRIPTION (under 90 chars)\nLONG DESCRIPTION (2-3 sentences)\nCTA button text\n\nMake it compelling and action-oriented.`,
+          email_outreach: `Write a cold B2B outreach email for ${biz} selling ${type} services in ${loc}.${voice}${focus}${topic}${audience} Subject line on the first line prefixed with "SUBJECT: ". Then the email body. Keep it under 150 words. Personable, not corporate. Clear value prop. One CTA.`,
+        };
+
+        prompt = typePrompts[cType] || typePrompts.social_post;
       }
 
       if (!LOVABLE_API_KEY) throw new Error("AI key not configured");
