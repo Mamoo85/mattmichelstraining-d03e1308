@@ -110,6 +110,7 @@ serve(async (req) => {
           });
         } catch (e) { console.log("[CASHIER] Dunning email failed:", e); }
       }
+    }
 
     // 4. Active subscription count & MRR snapshot
     const activeSubs = await stripeGet("/subscriptions?limit=100&status=active");
