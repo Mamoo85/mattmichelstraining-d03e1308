@@ -147,11 +147,15 @@ serve(async (req) => {
       );
     }
 
+    // Record heartbeat
+    await sb.from("agent_heartbeats").upsert({ agent_name: "Cashier", last_beat: new Date().toISOString() }, { onConflict: "agent_name" });
+
     return new Response(JSON.stringify({
       ok: true,
       failed_payments: failedCharges.data?.length || 0,
       cancellations: cancelledSubs.data?.length || 0,
       past_due: pastDue.data?.length || 0,
+      dunning_emails_sent: Math.min(pastDue.data?.length || 0, 5),
       active_subs: activeSubs.data?.length || 0,
       estimated_mrr: totalMrr,
       active_campaigns: approvedCampaigns?.length || 0,
