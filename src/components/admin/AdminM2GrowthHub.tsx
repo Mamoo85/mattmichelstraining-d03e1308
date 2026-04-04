@@ -67,7 +67,6 @@ const M2_SERVICES = [
       contact_name: "Matt Michels",
       email: MATT_EMAIL,
       industry: "AI automation & web development",
-      platforms: "LinkedIn, Facebook, Instagram",
       active: true,
     },
   },
