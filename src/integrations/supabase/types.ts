@@ -4224,6 +4224,7 @@ export type Database = {
           daily_carbs_goal: number | null
           daily_fat_goal: number | null
           daily_protein_goal: number | null
+          date_of_birth: string | null
           email: string | null
           free_program_redeemed: boolean
           full_name: string | null
@@ -4251,6 +4252,7 @@ export type Database = {
           daily_carbs_goal?: number | null
           daily_fat_goal?: number | null
           daily_protein_goal?: number | null
+          date_of_birth?: string | null
           email?: string | null
           free_program_redeemed?: boolean
           full_name?: string | null
@@ -4278,6 +4280,7 @@ export type Database = {
           daily_carbs_goal?: number | null
           daily_fat_goal?: number | null
           daily_protein_goal?: number | null
+          date_of_birth?: string | null
           email?: string | null
           free_program_redeemed?: boolean
           full_name?: string | null
