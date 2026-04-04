@@ -50,7 +50,7 @@ export default function CompetitorPricing() {
     setError("");
     setLoading(true);
     try {
-      const res = await fetch("/functions/v1/create-competitor-pricing-checkout", {
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-competitor-pricing-checkout`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),

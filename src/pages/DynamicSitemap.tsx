@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-const SITEMAP_URL = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/generate-sitemap`;
+const SITEMAP_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-sitemap`;
 
 const DynamicSitemap = () => {
   useEffect(() => {

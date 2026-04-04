@@ -71,7 +71,7 @@ export default function CompetitorPricingDashboard() {
     setAddLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch("/functions/v1/add-competitor-url", {
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/add-competitor-url`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
