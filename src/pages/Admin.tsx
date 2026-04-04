@@ -1,21 +1,23 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import { Navigate } from "react-router-dom";
-import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
 import AppNavbar from "@/components/layout/AppNavbar";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Loader2, Users, Dumbbell, DollarSign, Megaphone, Globe,
-  ArrowLeft, ChevronRight, Activity, AlertTriangle,
-  CheckCircle, Mail, Zap,
+  Activity, AlertTriangle, CheckCircle, Mail, Zap, ChevronDown,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
+  SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
+  SidebarProvider, SidebarTrigger,
+} from "@/components/ui/sidebar";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 /* ── Lazy-load ALL admin sub-components ─────────────────────────────────────── */
-// AI Bar (always rendered)
 const AdminAiBar = lazy(() => import("@/components/admin/AdminAiBar"));
 
 // Training domain
@@ -117,10 +119,10 @@ const AdminAutomationHub      = lazy(() => import("@/components/admin/AdminAutom
 const AdminSiteBuilder        = lazy(() => import("@/components/admin/AdminSiteBuilder"));
 const AdminWebDesignAutomations = lazy(() => import("@/components/admin/AdminWebDesignAutomations"));
 
-// Command Deck (quick actions)
+// Command Deck
 const AdminCommandDeck        = lazy(() => import("@/components/admin/AdminCommandDeck"));
 
-/* ── Domain definitions ─────────────────────────────────────────────────────── */
+/* ── Types ──────────────────────────────────────────────────────────────────── */
 interface Tool {
   key: string;
   label: string;
@@ -133,7 +135,6 @@ interface Domain {
   label: string;
   icon: React.ElementType;
   color: string;
-  desc: string;
   tools: Tool[];
 }
 
@@ -146,8 +147,7 @@ const TabLoader = () => (
 
 /* ── Main Admin Component ───────────────────────────────────────────────────── */
 const Admin = () => {
-  const [activeDomain, setActiveDomain] = useState<string | null>(null);
-  const [activeTool, setActiveTool] = useState<string | null>(null);
+  const [activeTool, setActiveTool] = useState<string>("home");
   const [testEmailState, setTestEmailState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const { isAdmin, isLoading } = useIsAdmin();
 
@@ -156,14 +156,13 @@ const Admin = () => {
     const handleNavigateAdmin = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (detail) {
-        // Map old tab keys to new domain keys
-        const domainMap: Record<string, string> = {
-          command: "actions", business: "business", roster: "people",
-          engine: "training", vault: "business", content: "marketing",
-          growth: "marketing", webdesign: "agency", ai: "actions",
+        const toolMap: Record<string, string> = {
+          command: "command-deck", business: "biz-overview",
+          roster: "athletes", engine: "programs",
+          vault: "revenue", content: "front-page",
+          growth: "m2-hub", webdesign: "agency-crm", ai: "command-deck",
         };
-        setActiveDomain(domainMap[detail] || detail);
-        setActiveTool(null);
+        setActiveTool(toolMap[detail] || detail);
       }
     };
     window.addEventListener("navigate-admin", handleNavigateAdmin);
@@ -201,14 +200,22 @@ const Admin = () => {
 
   const b = badges ?? { aiQueue: 0, support: 0, drafts: 0, posture: 0, custom: 0, liftVideos: 0, proveIt: 0, trash: 0 };
 
-  /* ── Domain definitions with all tools ──────────────────────────────────── */
+  /* ── Domain definitions ──────────────────────────────────────────────────── */
   const domains: Domain[] = [
+    {
+      key: "actions",
+      label: "⚡ Quick Actions",
+      icon: Zap,
+      color: "#f97316",
+      tools: [
+        { key: "command-deck", label: "Command Deck", component: <AdminCommandDeck /> },
+      ],
+    },
     {
       key: "training",
       label: "Training",
       icon: Dumbbell,
       color: "#f97316",
-      desc: "Programs · Exercises · AI Generators · Recovery",
       tools: [
         { key: "log-lifts", label: "📊 Log Lifts", component: <AdminProgressLogger /> },
         { key: "programs", label: "Programs", component: <AdminPrograms /> },
@@ -235,7 +242,6 @@ const Admin = () => {
       label: "People",
       icon: Users,
       color: "#3b82f6",
-      desc: "Users · Support · Coaching · Families · Teams",
       tools: [
         { key: "athletes", label: "👥 All Users", component: <AdminClientList /> },
         { key: "activity", label: "Activity Feed", component: <UserActivityFeed /> },
@@ -279,9 +285,8 @@ const Admin = () => {
       label: "Business",
       icon: DollarSign,
       color: "#22c55e",
-      desc: "Revenue · Orders · Ops · Billing · Legal",
       tools: [
-        { key: "overview", label: "📊 Overview", component: <AdminBusinessDashboard /> },
+        { key: "biz-overview", label: "📊 Overview", component: <AdminBusinessDashboard /> },
         { key: "fulfillment", label: "🔔 Fulfillment", component: <AdminFulfillment /> },
         { key: "orders", label: "📦 Orders", component: <AdminOrders /> },
         { key: "ops", label: "Ops Center", component: <AdminOpsCenter /> },
@@ -311,7 +316,6 @@ const Admin = () => {
       label: "Marketing",
       icon: Megaphone,
       color: "#a855f7",
-      desc: "Content · SEO · Email · Social · Growth",
       tools: [
         { key: "m2-hub", label: "🚀 Growth Hub", component: <AdminM2GrowthHub /> },
         { key: "ad-campaigns", label: "⚡ Ad Campaigns", component: <AdminAdCampaigns /> },
@@ -346,7 +350,6 @@ const Admin = () => {
       label: "Agency",
       icon: Globe,
       color: "#06b6d4",
-      desc: "Web Design · CRM · Prospecting · Demos",
       tools: [
         { key: "agency-crm", label: "Agency CRM", component: <AdminAgencyCRM /> },
         { key: "crm", label: "Web Design CRM", component: <AdminWebDesignCRM /> },
@@ -359,7 +362,21 @@ const Admin = () => {
     },
   ];
 
-  const totalBadge = (d: Domain) => d.tools.reduce((sum, t) => sum + (t.badge ?? 0), 0);
+  /* ── Find active tool component ──────────────────────────────────────────── */
+  const findTool = (key: string): Tool | undefined => {
+    for (const d of domains) {
+      const t = d.tools.find((t) => t.key === key);
+      if (t) return t;
+    }
+    return undefined;
+  };
+
+  const findDomainForTool = (key: string): Domain | undefined => {
+    return domains.find((d) => d.tools.some((t) => t.key === key));
+  };
+
+  const currentTool = findTool(activeTool);
+  const currentDomain = findDomainForTool(activeTool);
 
   const sendTestEmail = async () => {
     setTestEmailState("sending");
@@ -382,212 +399,165 @@ const Admin = () => {
   }
   if (!isAdmin) return <Navigate to="/dashboard" replace />;
 
-  const currentDomain = domains.find((d) => d.key === activeDomain);
-  const currentTool = currentDomain?.tools.find((t) => t.key === activeTool);
-
   return (
     <div className="min-h-screen bg-background">
       <AppNavbar />
 
-      <div className="container pt-20 pb-24 md:pb-12 max-w-4xl mx-auto">
-
-        {/* ── Header ──────────────────────────────────────────────────────── */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            {(activeDomain || activeTool) && (
-              <button
-                onClick={() => {
-                  if (activeTool) { setActiveTool(null); }
-                  else { setActiveDomain(null); }
-                }}
-                className="w-8 h-8 rounded-xl flex items-center justify-center transition active:scale-90"
-                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}
-              >
-                <ArrowLeft size={14} className="text-muted-foreground" />
-              </button>
-            )}
-            <div>
-              <h1 className="text-base font-bold text-foreground tracking-tight">
-                {activeTool && currentTool ? currentTool.label :
-                 activeDomain && currentDomain ? currentDomain.label :
-                 "Mission Control"}
-              </h1>
-              <p className="text-[10px] text-muted-foreground">
-                {activeTool ? `${currentDomain?.label} → ${currentTool?.label}` :
-                 activeDomain ? currentDomain?.desc :
-                 "Oz is watching. Everything is running."}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Button
-              size="sm" variant="ghost"
-              onClick={sendTestEmail}
-              disabled={testEmailState === "sending"}
-              className="text-[10px] text-muted-foreground h-7 px-2"
-            >
-              {testEmailState === "sending" && <Loader2 size={10} className="animate-spin mr-1" />}
-              {testEmailState === "sent" && <CheckCircle size={10} className="text-green-400 mr-1" />}
-              {testEmailState === "error" && <AlertTriangle size={10} className="text-red-400 mr-1" />}
-              {testEmailState === "idle" && <Mail size={10} className="mr-1" />}
-              {testEmailState === "idle" ? "Test" : testEmailState === "sending" ? "…" : testEmailState === "sent" ? "✓" : "✗"}
-            </Button>
-          </div>
-        </div>
-
-        {/* ── AI Bar (always visible) ────────────────────────────────────── */}
-        <div className="mb-6">
-          <Suspense fallback={<div className="h-12 rounded-2xl bg-muted/10 animate-pulse" />}>
-            <AdminAiBar />
-          </Suspense>
-        </div>
-
-        {/* ── Content Area ───────────────────────────────────────────────── */}
-        <AnimatePresence mode="wait">
-
-          {/* === HOME: Domain cards === */}
-          {!activeDomain && (
-            <motion.div
-              key="home"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2 }}
-              className="space-y-3"
-            >
-              {/* Quick Actions card */}
-              <button
-                onClick={() => { setActiveDomain("actions"); setActiveTool(null); }}
-                className="w-full flex items-center gap-4 p-4 rounded-2xl transition active:scale-[0.98]"
-                style={{
-                  background: "linear-gradient(135deg, rgba(249,115,22,0.08), rgba(234,88,12,0.04))",
-                  border: "1px solid rgba(249,115,22,0.2)",
-                }}
-              >
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(249,115,22,0.15)" }}>
-                  <Zap size={22} style={{ color: "#f97316" }} />
+      <SidebarProvider defaultOpen={true}>
+        <div className="flex w-full pt-16">
+          {/* ── SIDEBAR ──────────────────────────────────────────────────── */}
+          <Sidebar collapsible="icon" className="border-r border-border/30 pt-16 z-30">
+            <SidebarContent className="pt-2 pb-20">
+              {/* Oz Status */}
+              <div className="px-3 py-2">
+                <div
+                  className="flex items-center gap-2 px-2.5 py-2 rounded-lg"
+                  style={{ background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.12)" }}
+                >
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shrink-0" />
+                  <span className="text-[9px] font-bold text-green-400 uppercase tracking-wider group-data-[collapsible=icon]:hidden">
+                    Oz Online
+                  </span>
+                  <Activity size={10} className="text-green-500/40 ml-auto shrink-0 group-data-[collapsible=icon]:hidden" />
                 </div>
-                <div className="flex-1 text-left">
-                  <span className="text-sm font-bold text-foreground">Quick Actions</span>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">Fire automations · Power tools · System controls</p>
-                </div>
-                <ChevronRight size={16} className="text-muted-foreground shrink-0" />
-              </button>
+              </div>
 
-              {/* Domain cards */}
-              {domains.map((d) => {
-                const Icon = d.icon;
-                const badge = totalBadge(d);
+              {domains.map((domain) => {
+                const Icon = domain.icon;
+                const domainBadge = domain.tools.reduce((sum, t) => sum + (t.badge ?? 0), 0);
+                const isActiveDomain = currentDomain?.key === domain.key;
+
                 return (
-                  <button
-                    key={d.key}
-                    onClick={() => { setActiveDomain(d.key); setActiveTool(null); }}
-                    className="w-full flex items-center gap-4 p-4 rounded-2xl transition active:scale-[0.98]"
-                    style={{
-                      background: `${d.color}08`,
-                      border: `1px solid ${d.color}20`,
-                    }}
-                  >
-                    <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${d.color}15` }}>
-                      <Icon size={22} style={{ color: d.color }} />
-                    </div>
-                    <div className="flex-1 text-left">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-foreground">{d.label}</span>
-                        {badge > 0 && (
-                          <Badge variant="destructive" className="text-[8px] px-1.5 py-0 h-4">{badge}</Badge>
-                        )}
-                      </div>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">{d.desc}</p>
-                    </div>
-                    <div className="flex flex-col items-end gap-1 shrink-0">
-                      <span className="text-[9px] text-muted-foreground">{d.tools.length} tools</span>
-                      <ChevronRight size={16} className="text-muted-foreground" />
-                    </div>
-                  </button>
+                  <Collapsible key={domain.key} defaultOpen={isActiveDomain || domain.key === "actions"}>
+                    <SidebarGroup>
+                      <CollapsibleTrigger asChild>
+                        <SidebarGroupLabel className="cursor-pointer hover:bg-muted/30 rounded-md transition flex items-center gap-2 px-3 py-1.5">
+                          <Icon size={13} style={{ color: domain.color }} className="shrink-0" />
+                          <span className="flex-1 text-left text-[11px] group-data-[collapsible=icon]:hidden">{domain.label}</span>
+                          {domainBadge > 0 && (
+                            <Badge variant="destructive" className="text-[7px] px-1 py-0 h-3.5 group-data-[collapsible=icon]:hidden">
+                              {domainBadge}
+                            </Badge>
+                          )}
+                          <ChevronDown size={10} className="text-muted-foreground transition-transform group-data-[collapsible=icon]:hidden [&[data-state=open]>svg]:rotate-180" />
+                        </SidebarGroupLabel>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <SidebarGroupContent>
+                          <SidebarMenu>
+                            {domain.tools.map((tool) => (
+                              <SidebarMenuItem key={tool.key}>
+                                <SidebarMenuButton
+                                  onClick={() => setActiveTool(tool.key)}
+                                  isActive={activeTool === tool.key}
+                                  className="text-[11px] py-1.5 h-auto"
+                                >
+                                  <span className="flex-1 truncate">{tool.label}</span>
+                                  {(tool.badge ?? 0) > 0 && (
+                                    <Badge variant="destructive" className="text-[7px] px-1 py-0 h-3.5 ml-auto">
+                                      {tool.badge}
+                                    </Badge>
+                                  )}
+                                </SidebarMenuButton>
+                              </SidebarMenuItem>
+                            ))}
+                          </SidebarMenu>
+                        </SidebarGroupContent>
+                      </CollapsibleContent>
+                    </SidebarGroup>
+                  </Collapsible>
                 );
               })}
+            </SidebarContent>
+          </Sidebar>
 
-              {/* Oz Status */}
-              <div
-                className="flex items-center gap-3 px-4 py-3 rounded-2xl"
-                style={{
-                  background: "rgba(34,197,94,0.05)",
-                  border: "1px solid rgba(34,197,94,0.15)",
-                }}
-              >
-                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse shrink-0" />
-                <div className="flex-1">
-                  <span className="text-[10px] font-bold text-green-400 uppercase tracking-wider">Agent Oz — Online</span>
-                  <p className="text-[9px] text-muted-foreground">Monitoring all systems · Auto-fixing issues · Generating reports</p>
-                </div>
-                <Activity size={14} className="text-green-500/50 shrink-0" />
-              </div>
-            </motion.div>
-          )}
-
-          {/* === QUICK ACTIONS (CommandDeck) === */}
-          {activeDomain === "actions" && !activeTool && (
-            <motion.div
-              key="actions"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2 }}
-            >
-              <Suspense fallback={<TabLoader />}>
-                <AdminCommandDeck />
-              </Suspense>
-            </motion.div>
-          )}
-
-          {/* === DOMAIN DRILL-DOWN: Tool list === */}
-          {activeDomain && activeDomain !== "actions" && !activeTool && currentDomain && (
-            <motion.div
-              key={`domain-${activeDomain}`}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2 }}
-              className="grid grid-cols-2 sm:grid-cols-3 gap-2"
-            >
-              {currentDomain.tools.map((tool) => (
-                <button
-                  key={tool.key}
-                  onClick={() => setActiveTool(tool.key)}
-                  className="relative flex flex-col items-start gap-1.5 p-3.5 rounded-xl text-left transition active:scale-[0.97]"
-                  style={{
-                    background: "rgba(255,255,255,0.03)",
-                    border: "1px solid rgba(255,255,255,0.06)",
-                  }}
-                >
-                  <span className="text-xs font-semibold text-foreground leading-tight">{tool.label}</span>
-                  {(tool.badge ?? 0) > 0 && (
-                    <Badge variant="destructive" className="text-[8px] px-1.5 py-0 h-3.5 absolute top-2 right-2">
-                      {tool.badge}
-                    </Badge>
+          {/* ── MAIN CONTENT ─────────────────────────────────────────────── */}
+          <main className="flex-1 min-w-0">
+            <div className="max-w-5xl mx-auto px-4 py-4">
+              {/* Top bar: toggle + title + test email */}
+              <div className="flex items-center gap-3 mb-4">
+                <SidebarTrigger className="shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-sm font-bold text-foreground truncate">
+                    {activeTool === "home" ? "Mission Control" : currentTool?.label ?? "Mission Control"}
+                  </h1>
+                  {currentDomain && activeTool !== "home" && (
+                    <p className="text-[10px] text-muted-foreground truncate">
+                      {currentDomain.label} → {currentTool?.label}
+                    </p>
                   )}
-                </button>
-              ))}
-            </motion.div>
-          )}
+                </div>
+                <Button
+                  size="sm" variant="ghost"
+                  onClick={sendTestEmail}
+                  disabled={testEmailState === "sending"}
+                  className="text-[10px] text-muted-foreground h-7 px-2 shrink-0"
+                >
+                  {testEmailState === "sending" && <Loader2 size={10} className="animate-spin mr-1" />}
+                  {testEmailState === "sent" && <CheckCircle size={10} className="text-green-400 mr-1" />}
+                  {testEmailState === "error" && <AlertTriangle size={10} className="text-red-400 mr-1" />}
+                  {testEmailState === "idle" && <Mail size={10} className="mr-1" />}
+                  {testEmailState === "idle" ? "Test" : testEmailState === "sending" ? "…" : testEmailState === "sent" ? "✓" : "✗"}
+                </Button>
+              </div>
 
-          {/* === TOOL VIEW === */}
-          {activeTool && currentTool && (
-            <motion.div
-              key={`tool-${activeTool}`}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2 }}
-            >
-              <Suspense fallback={<TabLoader />}>
-                {currentTool.component}
-              </Suspense>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+              {/* AI Bar (always visible) */}
+              <div className="mb-6">
+                <Suspense fallback={<div className="h-12 rounded-2xl bg-muted/10 animate-pulse" />}>
+                  <AdminAiBar />
+                </Suspense>
+              </div>
+
+              {/* Content */}
+              {activeTool === "home" ? (
+                <div className="space-y-6">
+                  {/* Dashboard home: quick stats */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {[
+                      { label: "AI Queue", value: b.aiQueue, color: "#f97316" },
+                      { label: "Support", value: b.support, color: "#3b82f6" },
+                      { label: "Coach AI", value: b.drafts, color: "#a855f7" },
+                      { label: "Custom Req", value: b.custom, color: "#22c55e" },
+                    ].map((stat) => (
+                      <div
+                        key={stat.label}
+                        className="rounded-xl p-4 text-center"
+                        style={{ background: `${stat.color}08`, border: `1px solid ${stat.color}15` }}
+                      >
+                        <p className="text-2xl font-black text-foreground">{stat.value}</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">{stat.label}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Oz status */}
+                  <div
+                    className="flex items-center gap-3 px-4 py-3 rounded-2xl"
+                    style={{ background: "rgba(34,197,94,0.05)", border: "1px solid rgba(34,197,94,0.15)" }}
+                  >
+                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse shrink-0" />
+                    <div className="flex-1">
+                      <span className="text-[10px] font-bold text-green-400 uppercase tracking-wider">Agent Oz — Online</span>
+                      <p className="text-[9px] text-muted-foreground">Monitoring all systems · Auto-fixing issues · Generating reports</p>
+                    </div>
+                    <Activity size={14} className="text-green-500/50 shrink-0" />
+                  </div>
+
+                  <p className="text-xs text-muted-foreground text-center">
+                    Pick a tool from the sidebar to get started. Oz is watching everything.
+                  </p>
+                </div>
+              ) : currentTool ? (
+                <Suspense fallback={<TabLoader />}>
+                  {currentTool.component}
+                </Suspense>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-12">Tool not found.</p>
+              )}
+            </div>
+          </main>
+        </div>
+      </SidebarProvider>
     </div>
   );
 };
