@@ -333,7 +333,9 @@ serve(async (req) => {
           .join("\n");
 
         const promptFn = STEP_PROMPTS[stepIndex];
-        const prompt = promptFn(businessName, industry, city, serviceList);
+        const demo = getDemoLink(industry);
+        const demoInfo = demo ? `${demo.url} (built for a ${demo.label})` : undefined;
+        const prompt = promptFn(businessName, industry, city, serviceList, demoInfo);
 
         const claudeRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
