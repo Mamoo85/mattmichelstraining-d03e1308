@@ -4435,6 +4435,7 @@ export type Database = {
           active: boolean | null
           business_name: string
           created_at: string | null
+          customer_email: string | null
           email: string
           episode_count: number | null
           id: string
@@ -4448,6 +4449,7 @@ export type Database = {
           active?: boolean | null
           business_name: string
           created_at?: string | null
+          customer_email?: string | null
           email: string
           episode_count?: number | null
           id?: string
@@ -4461,6 +4463,7 @@ export type Database = {
           active?: boolean | null
           business_name?: string
           created_at?: string | null
+          customer_email?: string | null
           email?: string
           episode_count?: number | null
           id?: string
@@ -7534,6 +7537,7 @@ export type Database = {
           active: boolean | null
           business_name: string
           created_at: string | null
+          customer_email: string | null
           email: string
           id: string
           industry: string | null
@@ -7545,6 +7549,7 @@ export type Database = {
           active?: boolean | null
           business_name: string
           created_at?: string | null
+          customer_email?: string | null
           email: string
           id?: string
           industry?: string | null
@@ -7556,6 +7561,7 @@ export type Database = {
           active?: boolean | null
           business_name?: string
           created_at?: string | null
+          customer_email?: string | null
           email?: string
           id?: string
           industry?: string | null
