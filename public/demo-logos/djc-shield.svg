@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240" width="200" height="240">
+  <defs>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1B4F8A;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#0d3060;stop-opacity:1"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="rgba(0,0,0,0.35)"/>
+    </filter>
+  </defs>
+
+  <!-- D.J. CONLEY text above shield -->
+  <text x="100" y="22" font-family="Arial Black, sans-serif" font-size="18" font-weight="900" fill="#1B4F8A" text-anchor="middle" letter-spacing="2">D.J. CONLEY</text>
+
+  <!-- Shield shape -->
+  <path d="M100 38 L168 60 L168 138 Q168 180 100 210 Q32 180 32 138 L32 60 Z"
+        fill="url(#shieldGrad)" filter="url(#shadow)" stroke="#0d3060" stroke-width="1.5"/>
+
+  <!-- Shield inner border -->
+  <path d="M100 47 L158 66 L158 135 Q158 172 100 198 Q42 172 42 135 L42 66 Z"
+        fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+
+  <!-- Flame icon - outer flame -->
+  <path d="M100 80 C100 80 118 95 118 112 C118 128 108 138 100 138 C92 138 82 128 82 112 C82 95 100 80 100 80Z"
+        fill="#E07B39" opacity="0.9"/>
+  <!-- Flame icon - inner flame -->
+  <path d="M100 92 C100 92 112 103 112 115 C112 124 107 130 100 130 C93 130 88 124 88 115 C88 103 100 92 100 92Z"
+        fill="#FFB366" opacity="0.95"/>
+  <!-- Flame inner core -->
+  <path d="M100 104 C100 104 106 111 106 117 C106 122 103 126 100 126 C97 126 94 122 94 117 C94 111 100 104 100 104Z"
+        fill="#FFF5E6" opacity="0.85"/>
+
+  <!-- ASSOCIATES text below shield -->
+  <text x="100" y="228" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="#1B4F8A" text-anchor="middle" letter-spacing="3">ASSOCIATES</text>
+</svg>

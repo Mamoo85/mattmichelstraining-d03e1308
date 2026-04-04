@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240" width="200" height="240">
+  <!-- Main pad as leaf shape -->
+  <!-- Outer leaf oval -->
+  <ellipse cx="100" cy="110" rx="42" ry="54" fill="#7A9E7E"/>
+  <!-- Leaf center vein -->
+  <line x1="100" y1="62" x2="100" y2="160" stroke="rgba(255,255,255,0.6)" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Leaf side veins -->
+  <line x1="100" y1="85" x2="75" y2="100" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="100" y1="85" x2="125" y2="100" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="100" y1="105" x2="72" y2="118" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="100" y1="105" x2="128" y2="118" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="100" y1="125" x2="78" y2="136" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="100" y1="125" x2="122" y2="136" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" stroke-linecap="round"/>
+
+  <!-- Four toe pads as small circles -->
+  <circle cx="62" cy="68" r="16" fill="#7A9E7E"/>
+  <circle cx="84" cy="52" r="16" fill="#7A9E7E"/>
+  <circle cx="116" cy="52" r="16" fill="#7A9E7E"/>
+  <circle cx="138" cy="68" r="16" fill="#7A9E7E"/>
+
+  <!-- PETfection text below -->
+  <text x="100" y="204" font-family="Arial Black, sans-serif" font-size="24" font-weight="900" fill="#C4703D" text-anchor="middle" letter-spacing="-0.5">PET</text>
+  <text x="100" y="204" font-family="Arial, sans-serif" font-size="24" font-weight="400" fill="#7A9E7E" text-anchor="middle" dx="36">fection</text>
+</svg>

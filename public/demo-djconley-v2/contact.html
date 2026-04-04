@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact Us — D.J. Conley Associates | (248) 589-8220</title>
+  <meta name="description" content="Contact D.J. Conley Associates for boiler sales, service, parts, and emergency response in SE Michigan. Call (248) 589-8220 or submit a service request.">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .page-hero { background: var(--surface); border-bottom: 1px solid var(--border); padding: 64px 0 56px; }
+    .page-hero-badge { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); background: var(--accent-dim); border: 1px solid var(--accent-glow); border-radius: 2px; padding: 5px 14px; margin-bottom: 20px; }
+    .page-hero h1 { font-size: clamp(32px, 5vw, 52px); font-weight: 900; color: var(--text); line-height: 1.1; margin-bottom: 16px; }
+    .page-hero p { font-size: 18px; color: var(--muted); max-width: 600px; line-height: 1.7; }
+    .contact-layout { display: grid; grid-template-columns: 1fr 420px; gap: 48px; align-items: start; }
+    @media (max-width: 900px) { .contact-layout { grid-template-columns: 1fr; } }
+    .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 40px; }
+    .form-card h2 { font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+    .form-card p { font-size: 14px; color: var(--muted); margin-bottom: 28px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+    .form-group { margin-bottom: 20px; }
+    .form-label { display: block; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+    .form-input, .form-select, .form-textarea {
+      width: 100%; background: var(--bg); border: 1px solid var(--border-strong); border-radius: var(--radius);
+      color: var(--text); font-size: 15px; padding: 12px 14px; font-family: var(--font);
+      transition: border-color var(--transition);
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: var(--accent); }
+    .form-select option { background: var(--surface); }
+    .form-textarea { resize: vertical; min-height: 120px; }
+    .form-submit { width: 100%; padding: 14px; font-size: 16px; font-weight: 700; }
+    .emergency-callout { background: linear-gradient(135deg, #7a1a00, #3d0d00); border: 1px solid var(--accent); border-radius: var(--radius-lg); padding: 28px; margin-bottom: 24px; }
+    .emergency-callout .emergency-icon { font-size: 28px; margin-bottom: 12px; }
+    .emergency-callout h3 { font-size: 18px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+    .emergency-callout p { font-size: 14px; color: rgba(232,237,242,0.8); line-height: 1.6; margin-bottom: 16px; }
+    .emergency-number { display: block; font-size: 28px; font-weight: 900; color: var(--accent); text-decoration: none; letter-spacing: -0.5px; }
+    .emergency-number:hover { color: #ff8c5a; }
+    .info-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 28px; margin-bottom: 20px; }
+    .info-card h3 { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .info-row { display: flex; gap: 12px; margin-bottom: 14px; align-items: flex-start; font-size: 14px; color: var(--muted); line-height: 1.5; }
+    .info-row:last-child { margin-bottom: 0; }
+    .info-icon { flex-shrink: 0; font-size: 16px; margin-top: 1px; }
+    .area-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .area-tag { font-size: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 2px; padding: 4px 10px; color: var(--muted); }
+    .sidebar-stack { display: flex; flex-direction: column; gap: 0; }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="container">
+    <div class="header-inner">
+      <a href="index.html" class="logo">
+        <span class="logo-name">D.J. <span class="logo-accent">Conley</span> Associates</span>
+        <span class="logo-tagline">Industrial Boiler Specialists · Est. 1974</span>
+      </a>
+      <nav class="nav">
+        <a href="index.html">Home</a>
+        <a href="services.html">Services</a>
+        <a href="about.html">About</a>
+        <a href="projects.html">Projects</a>
+        <a href="contact.html" class="active">Contact</a>
+      </nav>
+      <div class="header-cta">
+        <a href="tel:2485898220" class="header-phone">(248) 589-8220</a>
+        <a href="#form" class="btn btn-primary">Get a Quote</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- PAGE HERO -->
+<div class="page-hero">
+  <div class="container">
+    <div class="page-hero-badge">Get in Touch</div>
+    <h1>Let's Talk About<br>Your Boiler System.</h1>
+    <p>New equipment, service, parts, emergency response — whatever you need, reach out and we'll get back to you fast. We're based in Troy and we know SE Michigan.</p>
+  </div>
+</div>
+
+<!-- CONTACT SECTION -->
+<section class="section">
+  <div class="container">
+    <div class="contact-layout">
+
+      <!-- FORM -->
+      <div id="form" class="form-card">
+        <h2>Send Us a Message</h2>
+        <p>Fill out the form and we'll respond within one business day. For emergencies, call us directly — don't wait on email.</p>
+
+        <form action="#" method="POST">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="first-name">First Name *</label>
+              <input class="form-input" type="text" id="first-name" name="first_name" placeholder="Pat" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="last-name">Last Name *</label>
+              <input class="form-input" type="text" id="last-name" name="last_name" placeholder="Michels" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="company">Company / Facility Name *</label>
+            <input class="form-input" type="text" id="company" name="company" placeholder="Acme Manufacturing" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="email">Email Address *</label>
+              <input class="form-input" type="email" id="email" name="email" placeholder="you@company.com" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="phone">Phone Number</label>
+              <input class="form-input" type="tel" id="phone" name="phone" placeholder="(248) 555-0100">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="service-type">Service Type *</label>
+            <select class="form-select" id="service-type" name="service_type" required>
+              <option value="" disabled selected>Select a service type...</option>
+              <optgroup label="Equipment">
+                <option value="new-boiler">New Boiler Purchase / Replacement</option>
+                <option value="rental">Boiler Rental (Emergency or Planned)</option>
+                <option value="energy-recovery">Energy Recovery / Economizer</option>
+              </optgroup>
+              <optgroup label="Service &amp; Maintenance">
+                <option value="emergency-repair">Emergency Repair — Down Now</option>
+                <option value="scheduled-repair">Scheduled Repair</option>
+                <option value="preventative-maintenance">Preventative Maintenance Agreement</option>
+                <option value="annual-inspection">Annual Inspection &amp; Tuneup</option>
+                <option value="burner-service">Burner Service &amp; Combustion Analysis</option>
+              </optgroup>
+              <optgroup label="Parts">
+                <option value="oem-parts">OEM Parts Order</option>
+                <option value="parts-identification">Parts Identification Help</option>
+              </optgroup>
+              <optgroup label="Other">
+                <option value="system-assessment">Free System Assessment</option>
+                <option value="other">Other / General Inquiry</option>
+              </optgroup>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="boiler-make">Current Boiler Make &amp; Model (if known)</label>
+            <input class="form-input" type="text" id="boiler-make" name="boiler_make" placeholder="e.g. Cleaver-Brooks CB-200, 1998">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="message">Tell Us More *</label>
+            <textarea class="form-textarea" id="message" name="message" placeholder="Describe your situation, what's happening, timeline, or what you're looking for. The more detail, the faster we can help." required></textarea>
+          </div>
+
+          <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+            <input type="checkbox" id="emergency" name="is_emergency" style="width: 16px; height: 16px; accent-color: var(--accent);">
+            <label for="emergency" style="font-size: 14px; color: var(--muted); cursor: pointer;">This is an emergency — my boiler is currently down or at risk of failure</label>
+          </div>
+
+          <button type="submit" class="btn btn-primary form-submit">Send Message</button>
+        </form>
+      </div>
+
+      <!-- SIDEBAR -->
+      <div class="sidebar-stack">
+
+        <!-- EMERGENCY CALLOUT -->
+        <div class="emergency-callout" style="margin-bottom: 20px;">
+          <div class="emergency-icon">⚡</div>
+          <h3>Boiler Down Right Now?</h3>
+          <p>Don't fill out a form. Pick up the phone. We respond to emergency calls around the clock — including nights, weekends, and holidays.</p>
+          <a href="tel:2485898220" class="emergency-number">(248) 589-8220</a>
+          <div style="font-size: 12px; color: rgba(232,237,242,0.6); margin-top: 10px; text-transform: uppercase; letter-spacing: 0.1em;">Emergency &amp; Sales Line · Always Available</div>
+        </div>
+
+        <!-- OFFICE INFO -->
+        <div class="info-card" style="margin-bottom: 20px;">
+          <h3>🏭 Our Office</h3>
+          <div class="info-row">
+            <span class="info-icon">📍</span>
+            <div>2694 Elliott Drive<br>Troy, MI 48083</div>
+          </div>
+          <div class="info-row">
+            <span class="info-icon">📞</span>
+            <div><a href="tel:2485898220" style="color: var(--accent); font-weight: 600;">(248) 589-8220</a></div>
+          </div>
+          <div class="info-row">
+            <span class="info-icon">🕐</span>
+            <div>
+              <div style="color: var(--text); font-weight: 600; margin-bottom: 2px;">Office Hours</div>
+              Monday – Friday: 7:30 AM – 4:30 PM
+            </div>
+          </div>
+          <div class="info-row">
+            <span class="info-icon">⚡</span>
+            <div>
+              <div style="color: var(--accent); font-weight: 600; margin-bottom: 2px;">Emergency Response</div>
+              24 hours / 7 days / 365 days
+            </div>
+          </div>
+        </div>
+
+        <!-- SERVICE AREA -->
+        <div class="info-card">
+          <h3>📍 SE Michigan Service Area</h3>
+          <p style="font-size: 14px; color: var(--muted); margin-bottom: 0;">We serve the full Detroit Metro area and surrounding Southeast Michigan counties.</p>
+          <div class="area-tags">
+            <span class="area-tag">Oakland County</span>
+            <span class="area-tag">Macomb County</span>
+            <span class="area-tag">Wayne County</span>
+            <span class="area-tag">Washtenaw County</span>
+            <span class="area-tag">Livingston County</span>
+            <span class="area-tag">Monroe County</span>
+            <span class="area-tag">St. Clair County</span>
+            <span class="area-tag">Lapeer County</span>
+            <span class="area-tag">Troy</span>
+            <span class="area-tag">Detroit</span>
+            <span class="area-tag">Ann Arbor</span>
+            <span class="area-tag">Flint Area</span>
+            <span class="area-tag">Sterling Heights</span>
+            <span class="area-tag">Warren</span>
+            <span class="area-tag">Dearborn</span>
+            <span class="area-tag">Pontiac</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="logo">
+          <span class="logo-name">D.J. <span class="logo-accent">Conley</span> Associates</span>
+          <span class="logo-tagline">Industrial Boiler Specialists</span>
+        </div>
+        <p>Authorized Cleaver-Brooks representative serving Southeast Michigan since 1974. Sales, service, OEM parts, rentals, and energy recovery — the complete boiler resource.</p>
+      </div>
+      <div>
+        <div class="footer-heading">Navigation</div>
+        <div class="footer-links">
+          <a href="index.html">Home</a>
+          <a href="services.html">Services</a>
+          <a href="about.html">About Us</a>
+          <a href="projects.html">Projects</a>
+          <a href="contact.html">Contact</a>
+        </div>
+      </div>
+      <div>
+        <div class="footer-heading">Services</div>
+        <div class="footer-links">
+          <a href="services.html">New Boiler Sales</a>
+          <a href="services.html">Service &amp; Repair</a>
+          <a href="services.html">OEM Parts</a>
+          <a href="services.html">Boiler Rentals</a>
+          <a href="services.html">Preventative Maintenance</a>
+          <a href="services.html">Energy Recovery</a>
+        </div>
+      </div>
+      <div>
+        <div class="footer-heading">Contact</div>
+        <div class="footer-contact-item">
+          <span>📍</span>
+          <div>2694 Elliott Drive<br>Troy, MI 48083</div>
+        </div>
+        <div class="footer-contact-item">
+          <span>📞</span>
+          <div><a href="tel:2485898220" style="color: var(--accent);">(248) 589-8220</a></div>
+        </div>
+        <div class="footer-contact-item">
+          <span>🕐</span>
+          <div>Mon–Fri: 7:30 AM – 4:30 PM<br><strong style="color: var(--accent);">Emergency: Always Available</strong></div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-bottom-text">© 2025 D.J. Conley Associates, Inc. · 2694 Elliott Drive, Troy, MI 48083 · (248) 589-8220</div>
+      <div class="footer-bottom-text">Demo site by <a href="mailto:matt@m2training.com">M² Performance Training</a> · matt@m2training.com · (313) 806-4952</div>
+    </div>
+  </div>
+</footer>
+
+<div class="mobile-emergency">
+  <a href="tel:2485898220">⚡ Emergency / Sales — Call Now: (248) 589-8220</a>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ingredients — PETfection | We Read Every Label So You Don't Have To</title>
+  <meta name="description" content="Discover the star ingredients in PETfection products and what's never included. Lavender, chamomile, aloe, peppermint, and more — all chosen for your pet's safety.">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .page-hero { background: linear-gradient(135deg, var(--sage-dark), var(--charcoal)); padding: 72px 0 60px; }
+    .page-hero h1 { color: var(--white); margin-bottom: 14px; }
+    .page-hero p { color: rgba(255,255,255,0.82); font-size: 1.1rem; max-width: 580px; line-height: 1.7; }
+    .star-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 28px; }
+    .star-card { background: var(--white); border-radius: 16px; padding: 32px 28px; box-shadow: var(--card-shadow); border-left: 4px solid var(--sage); transition: transform 0.2s; }
+    .star-card:hover { transform: translateY(-4px); }
+    .star-header { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+    .star-emoji { font-size: 2.4rem; flex-shrink: 0; }
+    .star-name { font-size: 1.15rem; font-weight: 800; color: var(--charcoal); }
+    .star-latin { font-size: 0.8rem; color: var(--sage-dark); font-style: italic; font-weight: 400; }
+    .star-why { font-size: 0.88rem; color: var(--sage-dark); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+    .star-desc { font-size: 0.92rem; color: #5a4a3e; line-height: 1.65; margin-bottom: 14px; }
+    .star-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .star-tag { background: #edf5ee; color: var(--sage-dark); font-size: 0.75rem; font-weight: 700; padding: 3px 10px; border-radius: 10px; }
+    .never-section { background: #fdf5f0; border-radius: 20px; padding: 48px; }
+    .never-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin-top: 28px; }
+    .never-item { background: var(--white); border: 1.5px solid #f0d5c8; border-radius: 12px; padding: 18px 20px; display: flex; gap: 12px; align-items: flex-start; }
+    .never-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 1px; }
+    .never-name { font-size: 0.92rem; font-weight: 700; color: var(--charcoal); margin-bottom: 3px; }
+    .never-why { font-size: 0.8rem; color: #7a6a5e; line-height: 1.45; }
+    .always-section { background: #edf5ee; border-radius: 20px; padding: 48px; }
+    .always-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; margin-top: 24px; }
+    .always-item { background: var(--white); border: 1.5px solid #c5ddc7; border-radius: 12px; padding: 14px 18px; display: flex; align-items: center; gap: 10px; font-size: 0.9rem; font-weight: 600; color: var(--charcoal); }
+    .always-item::before { content: '✓'; color: var(--sage); font-weight: 900; font-size: 1rem; flex-shrink: 0; }
+    .section-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--terracotta); margin-bottom: 10px; }
+    .site-footer { background: var(--charcoal); color: rgba(255,255,255,0.7); padding: 56px 0 32px; }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 40px; }
+    @media (max-width: 900px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
+    .footer-col h4 { color: var(--white); font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700; margin-bottom: 14px; }
+    .footer-col a { display: block; color: rgba(255,255,255,0.6); font-size: 0.88rem; margin-bottom: 8px; text-decoration: none; }
+    .footer-col a:hover { color: var(--honey); }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px; font-size: 0.8rem; color: rgba(255,255,255,0.35); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <span class="logo-pet">PET</span>
+      <span class="logo-fection">fection</span>
+      <span class="logo-tagline">100% Natural · Made in Michigan</span>
+    </a>
+    <nav>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="shop.html">Shop</a></li>
+        <li><a href="about.html">Our Story</a></li>
+        <li><a href="ingredients.html" class="active">Ingredients</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="shop.html" class="nav-cta">Shop Now</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<!-- PAGE HERO -->
+<div class="page-hero">
+  <div class="container">
+    <h1>We Read Every Label<br>So You Don't Have To.</h1>
+    <p>Every ingredient in every PETfection product was chosen intentionally — for what it does, how it works, and whether Sheena would trust it on her own pet. Here's what's in our formulas and why.</p>
+  </div>
+</div>
+
+<!-- STAR INGREDIENTS -->
+<section class="section" style="background: var(--bg-linen);">
+  <div class="container">
+    <div style="margin-bottom: 40px;">
+      <div class="section-label">What We Use</div>
+      <h2>Star Ingredients &amp; Why We Chose Them</h2>
+      <p style="color: #7a6a5e; font-size: 1rem; margin-top: 10px; max-width: 580px;">These are the hero botanicals and natural compounds that form the backbone of PETfection's formulas.</p>
+    </div>
+    <div class="star-grid">
+
+      <div class="star-card">
+        <div class="star-header">
+          <span class="star-emoji">💜</span>
+          <div>
+            <div class="star-name">Lavender</div>
+            <div class="star-latin">Lavandula angustifolia</div>
+          </div>
+        </div>
+        <div class="star-why">Why we use it</div>
+        <p class="star-desc">Lavender's calming properties are well-documented in both human and animal aromatherapy research. The linalool compounds in lavender essential oil interact with the nervous system to reduce anxiety and promote relaxation — making it a cornerstone of our calming spray and shampoo line.</p>
+        <div class="star-tags">
+          <span class="star-tag">Calming</span>
+          <span class="star-tag">Antimicrobial</span>
+          <span class="star-tag">Skin-soothing</span>
+        </div>
+      </div>
+
+      <div class="star-card">
+        <div class="star-header">
+          <span class="star-emoji">🌼</span>
+          <div>
+            <div class="star-name">Chamomile</div>
+            <div class="star-latin">Matricaria chamomilla</div>
+          </div>
+        </div>
+        <div class="star-why">Why we use it</div>
+        <p class="star-desc">Chamomile is one of the most well-studied anti-inflammatory botanicals. Its active compound, bisabolol, reduces skin redness and irritation while supporting the skin barrier. We use it in topicals and hot spot formulas for its proven skin-calming action without harsh steroids or synthetic anti-inflammatories.</p>
+        <div class="star-tags">
+          <span class="star-tag">Anti-inflammatory</span>
+          <span class="star-tag">Skin barrier support</span>
+          <span class="star-tag">Gentle</span>
+        </div>
+      </div>
+
+      <div class="star-card">
+        <div class="star-header">
+          <span class="star-emoji">🥕</span>
+          <div>
+            <div class="star-name">Carrot Seed Oil</div>
+            <div class="star-latin">Daucus carota</div>
+          </div>
+        </div>
+        <div class="star-why">Why we use it</div>
+        <p class="star-desc">Carrot seed oil is rich in beta-carotene (pro-vitamin A) and antioxidants that support skin cell regeneration and wound healing. We include it in our paw cream and topicals because it helps damaged skin — cracked paws, dry spots, minor abrasions — heal faster and more completely.</p>
+        <div class="star-tags">
+          <span class="star-tag">Vitamin A source</span>
+          <span class="star-tag">Wound healing</span>
+          <span class="star-tag">Cell regeneration</span>
+        </div>
+      </div>
+
+      <div class="star-card">
+        <div class="star-header">
+          <span class="star-emoji">🌿</span>
+          <div>
+            <div class="star-name">Peppermint</div>
+            <div class="star-latin">Mentha piperita</div>
+          </div>
+        </div>
+        <div class="star-why">Why we use it</div>
+        <p class="star-desc">Peppermint's menthol provides a natural cooling sensation that soothes overheated paws and irritated skin. It also acts as a natural breath freshener through its antimicrobial properties. We use it at pet-safe dilution rates — concentrated peppermint can be overpowering for dogs' sensitive noses, so balance matters.</p>
+        <div class="star-tags">
+          <span class="star-tag">Cooling</span>
+          <span class="star-tag">Breath freshening</span>
+          <span class="star-tag">Antimicrobial</span>
+        </div>
+      </div>
+
+      <div class="star-card">
+        <div class="star-header">
+          <span class="star-emoji">🌸</span>
+          <div>
+            <div class="star-name">Geranium</div>
+            <div class="star-latin">Pelargonium graveolens</div>
+          </div>
+        </div>
+        <div class="star-why">Why we use it</div>
+        <p class="star-desc">Geranium essential oil has documented antimicrobial properties and is effective against a range of bacteria and fungi. It's one of the reasons our bug repellent spray works — insects dislike the scent of geranium. It also helps with minor skin infections and supports skin barrier integrity in topical applications.</p>
+        <div class="star-tags">
+          <span class="star-tag">Antimicrobial</span>
+          <span class="star-tag">Insect repellent</span>
+          <span class="star-tag">Skin support</span>
+        </div>
+      </div>
+
+      <div class="star-card">
+        <div class="star-header">
+          <span class="star-emoji">🌵</span>
+          <div>
+            <div class="star-name">Aloe Vera</div>
+            <div class="star-latin">Aloe barbadensis miller</div>
+          </div>
+        </div>
+        <div class="star-why">Why we use it</div>
+        <p class="star-desc">Aloe vera is a workhorse ingredient — deeply soothing, cooling, and hydrating. Its polysaccharides form a natural film over irritated or burned skin, locking in moisture while reducing inflammation. We use food-grade inner leaf aloe in our hot spot spray, ear cleaner, and shampoo base for its gentle, immediate relief.</p>
+        <div class="star-tags">
+          <span class="star-tag">Soothing</span>
+          <span class="star-tag">Hydrating</span>
+          <span class="star-tag">Cooling</span>
+        </div>
+      </div>
+
+      <div class="star-card">
+        <div class="star-header">
+          <span class="star-emoji">🌾</span>
+          <div>
+            <div class="star-name">Sesame Oil</div>
+            <div class="star-latin">Sesamum indicum</div>
+          </div>
+        </div>
+        <div class="star-why">Why we use it</div>
+        <p class="star-desc">Sesame oil is one of the most deeply penetrating carrier oils available. Unlike petroleum-based moisturizers that sit on top of the skin, sesame oil absorbs quickly and carries active ingredients deeper into the dermal layers. It's also naturally rich in vitamin E and sesamolin, which provide antioxidant protection against environmental damage.</p>
+        <div class="star-tags">
+          <span class="star-tag">Deep moisturizing</span>
+          <span class="star-tag">Vitamin E</span>
+          <span class="star-tag">Antioxidant</span>
+        </div>
+      </div>
+
+      <div class="star-card">
+        <div class="star-header">
+          <span class="star-emoji">🥥</span>
+          <div>
+            <div class="star-name">Fractionated Coconut Oil</div>
+            <div class="star-latin">Cocos nucifera</div>
+          </div>
+        </div>
+        <div class="star-why">Why we use it</div>
+        <p class="star-desc">Fractionated coconut oil (not the solid kind) is a lightweight carrier that's odorless, colorless, and stays liquid. It's an ideal base for our paw cream and topicals because it moisturizes without feeling greasy, mixes well with essential oils, and has natural antimicrobial lauric acid that supports skin health.</p>
+        <div class="star-tags">
+          <span class="star-tag">Lightweight carrier</span>
+          <span class="star-tag">Antimicrobial</span>
+          <span class="star-tag">Non-greasy</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- WHAT'S NEVER IN OUR PRODUCTS -->
+<section class="section" style="background: var(--white);">
+  <div class="container">
+    <div class="never-section">
+      <div class="section-label">What We Reject</div>
+      <h2>What's NEVER in a PETfection Product</h2>
+      <p style="color: #7a6a5e; font-size: 1rem; margin-top: 10px; max-width: 580px;">We maintain a strict "never list." If an ingredient appears on it, it doesn't enter any of our formulas — no exceptions, no loopholes.</p>
+      <div class="never-grid">
+        <div class="never-item">
+          <span class="never-icon">🚫</span>
+          <div>
+            <div class="never-name">Parabens</div>
+            <div class="never-why">Synthetic preservatives linked to hormonal disruption. We use natural preservatives instead.</div>
+          </div>
+        </div>
+        <div class="never-item">
+          <span class="never-icon">🚫</span>
+          <div>
+            <div class="never-name">Sulfates (SLS/SLES)</div>
+            <div class="never-why">Harsh detergents that strip natural oils and irritate sensitive pet skin. Not necessary in a properly formulated shampoo.</div>
+          </div>
+        </div>
+        <div class="never-item">
+          <span class="never-icon">🚫</span>
+          <div>
+            <div class="never-name">Artificial Fragrances</div>
+            <div class="never-why">Synthetic fragrance blends can contain hundreds of undisclosed chemicals. Dogs' noses are 10,000x more sensitive than ours — we only use essential oils.</div>
+          </div>
+        </div>
+        <div class="never-item">
+          <span class="never-icon">🚫</span>
+          <div>
+            <div class="never-name">Artificial Dyes</div>
+            <div class="never-why">Color additives serve no function and some are derived from petroleum. Our products are naturally colored by their botanical ingredients.</div>
+          </div>
+        </div>
+        <div class="never-item">
+          <span class="never-icon">🚫</span>
+          <div>
+            <div class="never-name">Petroleum-Based Ingredients</div>
+            <div class="never-why">Mineral oil, petrolatum, and similar compounds create a surface moisture barrier but don't nourish skin. We use plant-based oils that actually penetrate and heal.</div>
+          </div>
+        </div>
+        <div class="never-item">
+          <span class="never-icon">🚫</span>
+          <div>
+            <div class="never-name">Formaldehyde Releasers</div>
+            <div class="never-why">DMDM hydantoin and similar compounds slowly release formaldehyde as a preservative. A known carcinogen — full stop.</div>
+          </div>
+        </div>
+        <div class="never-item">
+          <span class="never-icon">🚫</span>
+          <div>
+            <div class="never-name">Phthalates</div>
+            <div class="never-why">Plasticizers often used to make fragrance last longer. Endocrine disruptors with no place in pet care.</div>
+          </div>
+        </div>
+        <div class="never-item">
+          <span class="never-icon">🚫</span>
+          <div>
+            <div class="never-name">PEG Compounds</div>
+            <div class="never-why">Polyethylene glycols are petroleum-derived and often contaminated with 1,4-dioxane, a probable human carcinogen.</div>
+          </div>
+        </div>
+        <div class="never-item">
+          <span class="never-icon">🚫</span>
+          <div>
+            <div class="never-name">DEET or Synthetic Pesticides</div>
+            <div class="never-why">Neurotoxic to dogs and cats at higher concentrations. Our bug repellent relies on geranium, citronella, and other botanical deterrents.</div>
+          </div>
+        </div>
+        <div class="never-item">
+          <span class="never-icon">🚫</span>
+          <div>
+            <div class="never-name">Propylene Glycol</div>
+            <div class="never-why">A synthetic humectant that can be toxic to cats. We use natural humectants like aloe and vegetable glycerin instead.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHAT'S ALWAYS IN OUR PRODUCTS -->
+<section class="section" style="background: var(--bg-linen);">
+  <div class="container">
+    <div class="always-section">
+      <div class="section-label">What We Commit To</div>
+      <h2>Every PETfection Product Always Has</h2>
+      <div class="always-grid">
+        <div class="always-item">Plant-based active ingredients</div>
+        <div class="always-item">Organic essential oils (where applicable)</div>
+        <div class="always-item">Pet-safe dilution ratios</div>
+        <div class="always-item">Natural preservatives only</div>
+        <div class="always-item">Cold-pressed carrier oils</div>
+        <div class="always-item">Cruelty-free formulation</div>
+        <div class="always-item">Readable, understandable labels</div>
+        <div class="always-item">Michigan small-batch production</div>
+        <div class="always-item">Sheena's personal approval on every formula</div>
+        <div class="always-item">Ingredients you can research yourself</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section style="background: var(--sage); padding: 64px 0; text-align: center;">
+  <div class="container">
+    <h2 style="color: var(--white); margin-bottom: 12px;">Ready to Make the Switch?</h2>
+    <p style="color: rgba(255,255,255,0.85); font-size: 1rem; margin-bottom: 28px;">Shop our full line of natural, ingredient-transparent pet care products.</p>
+    <a href="shop.html" class="btn btn-primary" style="font-size: 1rem; padding: 14px 36px;">Shop All Products</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="nav-logo" style="display: inline-flex;">
+          <span class="logo-pet">PET</span>
+          <span class="logo-fection">fection</span>
+        </div>
+        <p style="font-size: 0.85rem; color: rgba(255,255,255,0.55); margin-top: 12px;">100% natural, organic pet products made with love in Saint Clair Shores, Michigan.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Shop</h4>
+        <a href="shop.html#sprays">Sprays</a>
+        <a href="shop.html#shampoos">Shampoos</a>
+        <a href="shop.html#topicals">Topicals</a>
+        <a href="shop.html#gifts">Gift Baskets</a>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a href="about.html">Our Story</a>
+        <a href="ingredients.html">Ingredients</a>
+        <a href="contact.html">Contact</a>
+      </div>
+      <div class="footer-col">
+        <h4>Find Us</h4>
+        <a href="#">Amazon</a>
+        <a href="#">Etsy</a>
+        <a href="#">Instagram</a>
+        <a href="contact.html#retailers">Retailers</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 PETfection by Sheena Michels · Saint Clair Shores, MI</span>
+      <span>Demo site by M² Performance Training · matt@m2training.com · (313) 806-4952</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

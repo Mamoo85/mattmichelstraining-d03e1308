@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shop — PETfection Natural Pet Products</title>
+  <meta name="description" content="Shop PETfection's full line of 100% natural pet care products. Sprays, shampoos, topicals, accessories, toys, treats, and gift baskets. Subscribe and save 15%.">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .page-hero { background: linear-gradient(135deg, var(--charcoal), #5c3d2a); padding: 56px 0 48px; }
+    .page-hero h1 { color: var(--white); margin-bottom: 10px; }
+    .page-hero p { color: rgba(255,255,255,0.75); font-size: 1.05rem; }
+    .filter-tabs { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 40px; }
+    .filter-tab { padding: 8px 20px; border-radius: 24px; font-size: 0.88rem; font-weight: 700; cursor: pointer; border: 2px solid var(--border); background: var(--white); color: var(--charcoal); transition: all 0.2s; text-decoration: none; }
+    .filter-tab:hover, .filter-tab.active { background: var(--sage); color: var(--white); border-color: var(--sage); }
+    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 28px; }
+    .product-card { background: var(--white); border-radius: 16px; overflow: hidden; box-shadow: var(--card-shadow); transition: transform 0.2s, box-shadow 0.2s; }
+    .product-card:hover { transform: translateY(-5px); box-shadow: var(--card-shadow-hover); }
+    .product-image { background: #EDE8DF; padding: 36px; text-align: center; font-size: 4rem; position: relative; }
+    .product-badge { position: absolute; top: 12px; left: 12px; background: var(--terracotta); color: var(--white); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 10px; border-radius: 10px; }
+    .product-body { padding: 20px; }
+    .product-category { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--sage-dark); margin-bottom: 6px; }
+    .product-name { font-size: 1.05rem; font-weight: 800; color: var(--charcoal); margin-bottom: 8px; line-height: 1.25; }
+    .product-desc { font-size: 0.85rem; color: #7a6a5e; line-height: 1.55; margin-bottom: 14px; }
+    .product-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .product-price { font-size: 1.3rem; font-weight: 900; color: var(--charcoal); }
+    .product-price .save { font-size: 0.75rem; font-weight: 600; color: var(--sage-dark); margin-left: 4px; }
+    .add-btn { background: var(--terracotta); color: var(--white); border: none; border-radius: 24px; padding: 8px 18px; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
+    .add-btn:hover { background: var(--terracotta-dark); }
+    .subscribe-callout { background: linear-gradient(120deg, var(--sage) 0%, var(--sage-dark) 100%); border-radius: 16px; padding: 40px; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; margin-bottom: 48px; }
+    .subscribe-callout h3 { color: var(--white); font-size: 1.3rem; margin-bottom: 6px; }
+    .subscribe-callout p { color: rgba(255,255,255,0.85); font-size: 0.9rem; }
+    .save-badge { background: var(--honey); color: var(--charcoal); font-size: 1.5rem; font-weight: 900; padding: 16px 28px; border-radius: 12px; white-space: nowrap; }
+    .section-anchor { scroll-margin-top: 80px; }
+    .cat-section-header { display: flex; align-items: baseline; gap: 16px; margin-bottom: 28px; padding-bottom: 16px; border-bottom: 2px solid var(--border); }
+    .cat-section-header h2 { font-size: 1.6rem; color: var(--charcoal); }
+    .cat-section-header .count { font-size: 0.85rem; color: var(--sage-dark); font-weight: 600; }
+    .site-footer { background: var(--charcoal); color: rgba(255,255,255,0.7); padding: 56px 0 32px; }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 40px; }
+    @media (max-width: 900px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
+    .footer-col h4 { color: var(--white); font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700; margin-bottom: 14px; }
+    .footer-col a { display: block; color: rgba(255,255,255,0.6); font-size: 0.88rem; margin-bottom: 8px; text-decoration: none; }
+    .footer-col a:hover { color: var(--honey); }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px; font-size: 0.8rem; color: rgba(255,255,255,0.35); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <span class="logo-pet">PET</span>
+      <span class="logo-fection">fection</span>
+      <span class="logo-tagline">100% Natural · Made in Michigan</span>
+    </a>
+    <nav>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="shop.html" class="active">Shop</a></li>
+        <li><a href="about.html">Our Story</a></li>
+        <li><a href="ingredients.html">Ingredients</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="shop.html" class="nav-cta">Shop Now</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<!-- PAGE HERO -->
+<div class="page-hero">
+  <div class="container">
+    <h1>Shop PETfection</h1>
+    <p>100% natural, organic pet care — made in Michigan. No harsh chemicals. No fillers. Just pure.</p>
+  </div>
+</div>
+
+<section class="section" style="background: var(--bg-linen);">
+  <div class="container">
+
+    <!-- SUBSCRIBE CALLOUT -->
+    <div class="subscribe-callout">
+      <div>
+        <h3>Subscribe &amp; Save 15%</h3>
+        <p>Set up auto-delivery on your pet's favorites and never run out. Cancel or pause anytime — no hassle.</p>
+      </div>
+      <div class="save-badge">SAVE 15%</div>
+      <a href="contact.html" class="btn btn-secondary">Learn More</a>
+    </div>
+
+    <!-- FILTER TABS -->
+    <div class="filter-tabs">
+      <a href="#all" class="filter-tab active">All Products</a>
+      <a href="#sprays" class="filter-tab">Sprays</a>
+      <a href="#shampoos" class="filter-tab">Shampoos</a>
+      <a href="#topicals" class="filter-tab">Topicals</a>
+      <a href="#accessories" class="filter-tab">Accessories</a>
+      <a href="#toys" class="filter-tab">Toys</a>
+      <a href="#treats" class="filter-tab">Treats</a>
+      <a href="#gifts" class="filter-tab">Gift Baskets</a>
+    </div>
+
+    <!-- SPRAYS -->
+    <div id="sprays" class="section-anchor" style="margin-bottom: 56px;">
+      <div class="cat-section-header">
+        <h2>Sprays</h2><span class="count">8 products</span>
+      </div>
+      <div class="product-grid">
+        <div class="product-card">
+          <div class="product-image"><span class="product-badge">Best Seller</span>🌿</div>
+          <div class="product-body">
+            <div class="product-category">Sprays</div>
+            <div class="product-name">Calming Spray</div>
+            <div class="product-desc">Lavender &amp; chamomile to naturally ease anxiety during storms, travel, or vet visits.</div>
+            <div class="product-footer"><span class="product-price">$18</span><button class="add-btn">Add to Cart</button></div>
+          </div>
+        </div>
+        <div class="product-card">
+          <div class="product-image">💨</div>
+          <div class="product-body">
+            <div class="product-category">Sprays</div>
+            <div class="product-name">Deodorizer Spray</div>
+            <div class="product-desc">Natural odor neutralizer that leaves your pet smelling fresh without synthetic fragrance.</div>
+            <div class="product-footer"><span class="product-price">$16</span><button class="add-btn">Add to Cart</button></div>
+          </div>
+        </div>
+        <div class="product-card">
+          <div class="product-image">🔴</div>
+          <div class="product-body">
+            <div class="product-category">Sprays</div>
+            <div class="product-name">Hot Spot Spray</div>
+            <div class="product-desc">Soothing aloe and herbal blend for irritated skin, hot spots, and minor skin issues.</div>
+            <div class="product-footer"><span class="product-price">$20</span><button class="add-btn">Add to Cart</button></div>
+          </div>
+        </div>
+        <div class="product-card">
+          <div class="product-image">🦟</div>
+          <div class="product-body">
+            <div class="product-category">Sprays</div>
+            <div class="product-name">Bug Repellent Spray</div>
+            <div class="product-desc">Natural geranium and citronella blend to repel insects without DEET or pesticides.</div>
+            <div class="product-footer"><span class="product-price">$18</span><button class="add-btn">Add to Cart</button></div>
+          </div>
+        </div>
+        <div class="product-card">
+          <div class="product-image">👂</div>
+          <div class="product-body">
+            <div class="product-category">Sprays</div>
+            <div class="product-name">Ear Cleaner Spray</div>
+            <div class="product-desc">Gentle, alcohol-free ear cleaning solution to maintain ear health and reduce odor.</div>
+            <div class="product-footer"><span class="product-price">$16</span><button class="add-btn">Add to Cart</button></div>
+          </div>
+        </div>
+        <div class="product-card">
+          <div class="product-image">😮</div>
+          <div class="product-body">
+            <div class="product-category">Sprays</div>
+            <div class="product-name">Breath Freshener Spray</div>
+            <div class="product-desc">Peppermint and parsley-based freshener that neutralizes pet breath naturally.</div>
+            <div class="product-footer"><span class="product-price">$14</span><button class="add-btn">Add to Cart</button></div>
+          </div>
+        </div>
+        <div class="product-card">
+          <div class="product-image">☀️</div>
+          <div class="product-body">
+            <div class="product-category">Sprays</div>
+            <div class="product-name">Sunscreen Spray</div>
+            <div class="product-desc">Mineral-based SPF protection for dogs with thin coats, pink skin, or exposed areas.</div>
+            <div class="product-footer"><span class="product-price">$20</span><button class="add-btn">Add to Cart</button></div>
+          </div>
+        </div>
+        <div class="product-card">
+          <div class="product-image">🌸</div>
+          <div class="product-body">
+            <div class="product-category">Sprays</div>
+            <div class="product-name">Cologne Spray</div>
+            <div class="product-desc">Light, natural botanical scent for between baths. No alcohol, no harsh chemicals.</div>
+            <div class="product-footer"><span class="product-price">$16</span><button class="add-btn">Add to Cart</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SHAMPOOS -->
+    <div id="shampoos" class="section-anchor" style="margin-bottom: 56px;">
+      <div class="cat-section-header">
+        <h2>Shampoos</h2><span class="count">4 products</span>
+      </div>
+      <div class="product-grid">
+        <div class="product-card">
+          <div class="product-image"><span class="product-badge">Best Seller</span>💜</div>
+          <div class="product-body">
+            <div class="product-category">Shampoos</div>
+            <div class="product-name">Lavender Shampoo</div>
+            <div class="product-desc">Gentle, calming lavender shampoo for sensitive skin. Leaves coat soft and lightly scented.</div>
+            <div class="product-footer"><span class="product-price">$22</span><button class="add-btn">Add to Cart</button></div>
+          </div>
+        </div>
+        <div class="product-card">
+          <div class="product-image">🌿</div>
+          <div class="product-body">
+            <div class="product-category">Shampoos</div>
+            <div class="product-name">Cinna-Mint Shampoo</div>
+            <div class="product-desc">Cinnamon and peppermint formula that deep cleans, stimulates circulation, and smells amazing.</div>
+            <div class="product-footer"><span class="product-price">$22</span><button class="add-btn">Add to Cart</button></div>
+          </div>
+        </div>
+        <div class="product-card">
+          <div class="product-image">🤍</div>
+          <div class="product-body">
+            <div class="product-category">Shampoos</div>
+            <div class="product-name">Unscented Shampoo</div>
+            <div class="product-desc">Fragrance-free formula for pets with sensitivities or allergies. Pure and gentle.</div>
+            <div class="product-footer"><span class="product-price">$22</span><button class="add-btn">Add to Cart</button></div>
+          </div>
+        </div>
+        <div class="product-card">
+          <div class="product-image">🦨</div>
+          <div class="product-body">
+            <div class="product-category">Shampoos</div>
+            <div class="product-name">Skunk Neutralizer Shampoo</div>
+            <div class="product-desc">Natural enzyme-based formula that actually eliminates skunk odor — not just covers it.</div>
+            <div class="product-footer"><span class="product-price">$28</span><button class="add-btn">Add to Cart</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOPICALS -->
+    <div id="topicals" class="section-anchor" style="margin-bottom: 56px;">
+      <div class="cat-section-header">
+        <h2>Topicals</h2><span class="count">3 products</span>
+      </div>
+      <div class="product-grid">
+        <div class="product-card">
+          <div class="product-image"><span class="product-badge">Original</span>🐾</div>
+          <div class="product-body">
+            <div class="product-category">Topicals</div>
+            <div class="product-name">Paw Cream — Lavender + Peppermint</div>
+            <div class="product-desc">The original PETfection product. Moisturizes, heals, and protects paws in all seasons.</div>
+            <div class="product-footer"><span class="product-price">$24</span><button class="add-btn">Add to Cart</button></div>
+          </div>
+        </div>
+        <div class="product-card">
+          <div class="product-image">☀️</div>
+          <div class="product-body">
+            <div class="product-category">Topicals</div>
+            <div class="product-name">Sunscreen Balm</div>
+            <div class="product-desc">Mineral SPF balm for ears, nose bridge, and exposed skin. Water-resistant formula.</div>
+            <div class="product-footer"><span class="product-price">$22</span><button class="add-btn">Add to Cart</button></div>
+          </div>
+        </div>
+        <div class="product-card">
+          <div class="product-image">💅</div>
+          <div class="product-body">
+            <div class="product-category">Topicals</div>
+            <div class="product-name">Nail Oil</div>
+            <div class="product-desc">Nourishing oil blend that conditions nails and cuticles to prevent cracking and brittleness.</div>
+            <div class="product-footer"><span class="product-price">$18</span><button class="add-btn">Add to Cart</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACCESSORIES -->
+    <div id="accessories" class="section-anchor" style="margin-bottom: 56px;">
+      <div class="cat-section-header">
+        <h2>Accessories</h2><span class="count">4 products</span>
+      </div>
+      <div class="product-grid">
+        <div class="product-card">
+          <div class="product-image">🪮</div>
+          <div class="product-body">
+            <div class="product-category">Accessories</div>
+            <div class="product-name">Bamboo Grooming Brush</div>
+            <div class="product-desc">Sustainably harvested bamboo handle with natural bristles. Gentle on all coat types.</div>
+            <div class="product-footer"><span class="product-price">$28</span><button class="add-btn">Add to Cart</button></div>
+          </div>
+        </div>
+        <div class="product-card">
+          <div class="product-image">🌱</div>
+          <div class="product-body">
+            <div class="product-category">Accessories</div>
+            <div class="product-name">Hemp Brush</div>
+            <div class="product-desc">Natural hemp fiber brush ideal for short-coat deshedding and circulation massage.</div>
+            <div class="product-footer"><span class="product-price">$24</span><button class="add-btn">Add to Cart</button></div>
+          </div>
+        </div>
+        <div class="product-card">
+          <div class="product-image">🧺</div>
+          <div class="product-body">
+            <div class="product-category">Accessories</div>
+            <div class="product-name">Microfiber Pet Towel</div>
+            <div class="product-desc">Ultra-absorbent microfiber towel designed for post-bath drying. Machine washable.</div>
+            <div class="product-footer"><span class="product-price">$22</span><button class="add-btn">Add to Cart</button></div>
+          </div>
+        </div>
+        <div class="product-card">
+          <div class="product-image">♻️</div>
+          <div class="product-body">
+            <div class="product-category">Accessories</div>
+            <div class="product-name">Compostable Poop Bags</div>
+            <div class="product-desc">100% compostable, leak-proof bags. Because eco-friendly goes all the way to the walk.</div>
+            <div class="product-footer"><span class="product-price">$14</span><button class="add-btn">Add to Cart</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GIFT BASKETS -->
+    <div id="gifts" class="section-anchor" style="margin-bottom: 32px;">
+      <div class="cat-section-header">
+        <h2>Gift Baskets</h2><span class="count">6 curated sets</span>
+      </div>
+      <div class="product-grid">
+        <div class="product-card">
+          <div class="product-image"><span class="product-badge">Popular Gift</span>🛁</div>
+          <div class="product-body">
+            <div class="product-category">Gift Baskets</div>
+            <div class="product-name">Dog Spa Day Basket</div>
+            <div class="product-desc">The ultimate pamper set: lavender shampoo, paw cream, deodorizer spray, bamboo brush &amp; towel.</div>
+            <div class="product-footer"><span class="product-price">$68</span><button class="add-btn">Add to Cart</button></div>
+          </div>
+        </div>
+        <div class="product-card">
+          <div class="product-image">💜</div>
+          <div class="product-body">
+            <div class="product-category">Gift Baskets</div>
+            <div class="product-name">Lovin' Lavender Basket</div>
+            <div class="product-desc">All lavender, all natural: calming spray, lavender shampoo, and lavender paw cream.</div>
+            <div class="product-footer"><span class="product-price">$52</span><button class="add-btn">Add to Cart</button></div>
+          </div>
+        </div>
+        <div class="product-card">
+          <div class="product-image">🐶</div>
+          <div class="product-body">
+            <div class="product-category">Gift Baskets</div>
+            <div class="product-name">New Puppy Basket</div>
+            <div class="product-desc">Everything for the newest family member: unscented shampoo, calming spray, paw cream &amp; toys.</div>
+            <div class="product-footer"><span class="product-price">$58</span><button class="add-btn">Add to Cart</button></div>
+          </div>
+        </div>
+        <div class="product-card">
+          <div class="product-image">🌞</div>
+          <div class="product-body">
+            <div class="product-category">Gift Baskets</div>
+            <div class="product-name">Sunny Pup Basket</div>
+            <div class="product-desc">Summer-ready: sunscreen spray, sunscreen balm, bug repellent, and cologne spray.</div>
+            <div class="product-footer"><span class="product-price">$62</span><button class="add-btn">Add to Cart</button></div>
+          </div>
+        </div>
+        <div class="product-card">
+          <div class="product-image">❄️</div>
+          <div class="product-body">
+            <div class="product-category">Gift Baskets</div>
+            <div class="product-name">Winter Care Basket</div>
+            <div class="product-desc">Cold-weather essentials: paw cream, nail oil, calming spray, and microfiber towel.</div>
+            <div class="product-footer"><span class="product-price">$58</span><button class="add-btn">Add to Cart</button></div>
+          </div>
+        </div>
+        <div class="product-card">
+          <div class="product-image">🎀</div>
+          <div class="product-body">
+            <div class="product-category">Gift Baskets</div>
+            <div class="product-name">Custom Gift Basket</div>
+            <div class="product-desc">Build your own basket — choose 4 or more products, we'll wrap it beautifully.</div>
+            <div class="product-footer"><span class="product-price">From $45</span><button class="add-btn" onclick="location.href='contact.html'">Customize</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="nav-logo" style="display: inline-flex;">
+          <span class="logo-pet">PET</span>
+          <span class="logo-fection">fection</span>
+        </div>
+        <p style="font-size: 0.85rem; color: rgba(255,255,255,0.55); margin-top: 12px;">100% natural, organic pet products made with love in Saint Clair Shores, Michigan.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Shop</h4>
+        <a href="#sprays">Sprays</a>
+        <a href="#shampoos">Shampoos</a>
+        <a href="#topicals">Topicals</a>
+        <a href="#accessories">Accessories</a>
+        <a href="#gifts">Gift Baskets</a>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a href="about.html">Our Story</a>
+        <a href="ingredients.html">Ingredients</a>
+        <a href="contact.html">Contact</a>
+      </div>
+      <div class="footer-col">
+        <h4>Find Us</h4>
+        <a href="#">Amazon</a>
+        <a href="#">Etsy</a>
+        <a href="#">Instagram</a>
+        <a href="contact.html#retailers">Retailers</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 PETfection by Sheena Michels · Saint Clair Shores, MI</span>
+      <span>Demo site by M² Performance Training · matt@m2training.com · (313) 806-4952</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

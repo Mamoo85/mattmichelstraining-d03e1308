@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 80" width="400" height="80">
+  <defs>
+    <linearGradient id="flameGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" style="stop-color:#E07B39"/>
+      <stop offset="60%" style="stop-color:#FFB366"/>
+      <stop offset="100%" style="stop-color:#FFF5E6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Boiler flame icon left of text -->
+  <!-- Outer flame -->
+  <path d="M32 62 C32 62 44 50 44 36 C44 28 40 22 36 16 C36 16 42 18 46 26 C48 20 46 12 42 8 C42 8 54 16 54 32 C54 44 48 54 38 58 C42 54 44 48 44 42 C40 48 36 56 32 62Z"
+        fill="url(#flameGrad)"/>
+  <!-- Inner flame highlight -->
+  <path d="M38 54 C38 54 46 46 46 36 C46 30 44 26 42 22 C42 22 48 28 48 36 C48 44 44 50 38 54Z"
+        fill="#FFF5E6" opacity="0.5"/>
+
+  <!-- D.J. CONLEY main text -->
+  <text x="70" y="44" font-family="Arial Black, sans-serif" font-size="30" font-weight="900" fill="#1B4F8A" letter-spacing="1">D.J. CONLEY</text>
+
+  <!-- Tagline -->
+  <text x="70" y="62" font-family="Arial, sans-serif" font-size="10.5" font-weight="700" fill="#E07B39" letter-spacing="2.5">ASSOCIATES · TROY, MICHIGAN · EST. 1974</text>
+</svg>

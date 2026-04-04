@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact — PETfection | Questions, Wholesale &amp; Retail Inquiries</title>
+  <meta name="description" content="Contact PETfection by Sheena Michels. Questions about products, wholesale and groomer inquiries, and Michigan retailer information.">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .page-hero { background: linear-gradient(135deg, var(--charcoal), var(--sage-dark)); padding: 64px 0 52px; }
+    .page-hero h1 { color: var(--white); margin-bottom: 12px; }
+    .page-hero p { color: rgba(255,255,255,0.82); font-size: 1.05rem; max-width: 520px; line-height: 1.7; }
+    .contact-layout { display: grid; grid-template-columns: 1fr 380px; gap: 48px; align-items: start; }
+    @media (max-width: 900px) { .contact-layout { grid-template-columns: 1fr; } }
+    .form-card { background: var(--white); border-radius: 20px; padding: 40px; box-shadow: var(--card-shadow); }
+    .form-card h2 { font-size: 1.4rem; color: var(--charcoal); margin-bottom: 8px; }
+    .form-card p { font-size: 0.9rem; color: #7a6a5e; margin-bottom: 28px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+    .form-group { margin-bottom: 20px; }
+    .form-label { display: block; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #7a6a5e; margin-bottom: 7px; }
+    .form-input, .form-select, .form-textarea {
+      width: 100%; background: var(--bg-linen); border: 1.5px solid var(--border);
+      border-radius: 10px; color: var(--charcoal); font-size: 0.95rem;
+      padding: 11px 14px; font-family: inherit; transition: border-color 0.2s;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: var(--sage); }
+    .form-select option { background: var(--white); }
+    .form-textarea { resize: vertical; min-height: 110px; }
+    .sidebar-card { background: var(--white); border-radius: 16px; padding: 28px; box-shadow: var(--card-shadow); margin-bottom: 20px; }
+    .sidebar-card h3 { font-size: 1rem; font-weight: 800; color: var(--charcoal); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .info-row { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 12px; font-size: 0.88rem; color: #5a4a3e; line-height: 1.5; }
+    .info-row:last-child { margin-bottom: 0; }
+    .info-icon { flex-shrink: 0; font-size: 1.1rem; margin-top: 1px; }
+    .social-links { display: flex; flex-direction: column; gap: 10px; }
+    .social-link { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg-linen); border-radius: 10px; text-decoration: none; color: var(--charcoal); font-size: 0.9rem; font-weight: 600; transition: background 0.2s; }
+    .social-link:hover { background: #e8e0d4; }
+    .social-icon { font-size: 1.4rem; flex-shrink: 0; }
+    .wholesale-card { background: linear-gradient(135deg, var(--sage), var(--sage-dark)); border-radius: 16px; padding: 28px; }
+    .wholesale-card h3 { color: var(--white); font-size: 1.05rem; margin-bottom: 10px; }
+    .wholesale-card p { color: rgba(255,255,255,0.85); font-size: 0.88rem; line-height: 1.6; margin-bottom: 16px; }
+    .retailer-mini-list { display: flex; flex-direction: column; gap: 6px; }
+    .retailer-mini { font-size: 0.82rem; color: #7a6a5e; display: flex; align-items: center; gap: 8px; }
+    .retailer-mini::before { content: '📍'; font-size: 0.9rem; flex-shrink: 0; }
+    .section-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--terracotta); margin-bottom: 10px; }
+    .site-footer { background: var(--charcoal); color: rgba(255,255,255,0.7); padding: 56px 0 32px; }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 40px; }
+    @media (max-width: 900px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
+    .footer-col h4 { color: var(--white); font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700; margin-bottom: 14px; }
+    .footer-col a { display: block; color: rgba(255,255,255,0.6); font-size: 0.88rem; margin-bottom: 8px; text-decoration: none; }
+    .footer-col a:hover { color: var(--honey); }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px; font-size: 0.8rem; color: rgba(255,255,255,0.35); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <span class="logo-pet">PET</span>
+      <span class="logo-fection">fection</span>
+      <span class="logo-tagline">100% Natural · Made in Michigan</span>
+    </a>
+    <nav>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="shop.html">Shop</a></li>
+        <li><a href="about.html">Our Story</a></li>
+        <li><a href="ingredients.html">Ingredients</a></li>
+        <li><a href="contact.html" class="active">Contact</a></li>
+        <li><a href="shop.html" class="nav-cta">Shop Now</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<!-- PAGE HERO -->
+<div class="page-hero">
+  <div class="container">
+    <h1>Get in Touch</h1>
+    <p>Questions about products, a wholesale or groomer inquiry, or just want to share a photo of your pup using PETfection — we'd love to hear from you.</p>
+  </div>
+</div>
+
+<!-- CONTACT SECTION -->
+<section class="section" style="background: var(--bg-linen);">
+  <div class="container">
+    <div class="contact-layout">
+
+      <!-- FORM -->
+      <div class="form-card">
+        <h2>Send a Message</h2>
+        <p>Fill out the form below and Sheena will get back to you personally, usually within one business day.</p>
+
+        <form action="#" method="POST">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="first-name">First Name *</label>
+              <input class="form-input" type="text" id="first-name" name="first_name" placeholder="Your first name" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="last-name">Last Name *</label>
+              <input class="form-input" type="text" id="last-name" name="last_name" placeholder="Your last name" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="email">Email Address *</label>
+            <input class="form-input" type="email" id="email" name="email" placeholder="you@email.com" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="inquiry-type">What's This About? *</label>
+            <select class="form-select" id="inquiry-type" name="inquiry_type" required>
+              <option value="" disabled selected>Select a topic...</option>
+              <option value="product-question">Product Question</option>
+              <option value="order">Order / Shipping Question</option>
+              <option value="wholesale">Wholesale Inquiry (Retailer)</option>
+              <option value="groomer">Groomer Partnership Inquiry</option>
+              <option value="custom-basket">Custom Gift Basket</option>
+              <option value="ingredients">Ingredients Question</option>
+              <option value="press">Press / Media</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="wholesale-fields" style="display: none;">
+            <label class="form-label" for="business-name">Business Name</label>
+            <input class="form-input" type="text" id="business-name" name="business_name" placeholder="Your store or salon name">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="pet-type">Your Pet(s)</label>
+            <input class="form-input" type="text" id="pet-type" name="pet_type" placeholder="e.g. Golden Retriever, 3-year-old female">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="message">Message *</label>
+            <textarea class="form-textarea" id="message" name="message" placeholder="Tell us what's on your mind. The more detail you share, the better we can help." required></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px; font-size: 1rem;">Send Message</button>
+        </form>
+      </div>
+
+      <!-- SIDEBAR -->
+      <div>
+
+        <!-- CONTACT INFO -->
+        <div class="sidebar-card">
+          <h3>🐾 PETfection</h3>
+          <div class="info-row">
+            <span class="info-icon">📍</span>
+            <div>Saint Clair Shores, Michigan</div>
+          </div>
+          <div class="info-row">
+            <span class="info-icon">📧</span>
+            <div><a href="mailto:sheena@petfection.com" style="color: var(--sage-dark); font-weight: 600;">sheena@petfection.com</a></div>
+          </div>
+          <div class="info-row">
+            <span class="info-icon">⏱️</span>
+            <div>Responses within 1 business day</div>
+          </div>
+        </div>
+
+        <!-- SOCIAL LINKS -->
+        <div class="sidebar-card">
+          <h3>📱 Follow Along</h3>
+          <div class="social-links">
+            <a href="#" class="social-link">
+              <span class="social-icon">📸</span>
+              <div>
+                <div style="font-weight: 800;">Instagram</div>
+                <div style="font-size: 0.78rem; color: #7a6a5e;">@petfectionorganicpetproducts</div>
+              </div>
+            </a>
+            <a href="#" class="social-link">
+              <span class="social-icon">📦</span>
+              <div>
+                <div style="font-weight: 800;">Amazon Store</div>
+                <div style="font-size: 0.78rem; color: #7a6a5e;">PETfection by Sheena Michels</div>
+              </div>
+            </a>
+            <a href="#" class="social-link">
+              <span class="social-icon">🛍️</span>
+              <div>
+                <div style="font-weight: 800;">Etsy Shop</div>
+                <div style="font-size: 0.78rem; color: #7a6a5e;">PETfection handcrafted products</div>
+              </div>
+            </a>
+          </div>
+        </div>
+
+        <!-- WHOLESALE / GROOMER -->
+        <div id="wholesale" class="wholesale-card">
+          <h3>🏪 Wholesale &amp; Groomer Inquiries</h3>
+          <p>Are you a pet retailer or groomer interested in carrying PETfection? We'd love to work with you. Use the contact form and select "Wholesale" or "Groomer" as your inquiry type.</p>
+          <div style="font-size: 0.82rem; color: rgba(255,255,255,0.75); margin-bottom: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;">Currently in these Michigan stores:</div>
+          <div class="retailer-mini-list">
+            <div class="retailer-mini" style="color: rgba(255,255,255,0.8);">Premier Pet Supply (7 locations)</div>
+            <div class="retailer-mini" style="color: rgba(255,255,255,0.8);">Bow Wow Baketique</div>
+            <div class="retailer-mini" style="color: rgba(255,255,255,0.8);">Bubbles N Barks</div>
+            <div class="retailer-mini" style="color: rgba(255,255,255,0.8);">Grosse Pointe Pet Salon</div>
+            <div class="retailer-mini" style="color: rgba(255,255,255,0.8);">JP's Dog Grooming</div>
+            <div class="retailer-mini" style="color: rgba(255,255,255,0.8);">Lou's Pet Shop</div>
+            <div class="retailer-mini" style="color: rgba(255,255,255,0.8);">Maestros Dog Haus</div>
+            <div class="retailer-mini" style="color: rgba(255,255,255,0.8);">Stewie's Healthy Paws</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="nav-logo" style="display: inline-flex;">
+          <span class="logo-pet">PET</span>
+          <span class="logo-fection">fection</span>
+        </div>
+        <p style="font-size: 0.85rem; color: rgba(255,255,255,0.55); margin-top: 12px;">100% natural, organic pet products made with love in Saint Clair Shores, Michigan.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Shop</h4>
+        <a href="shop.html#sprays">Sprays</a>
+        <a href="shop.html#shampoos">Shampoos</a>
+        <a href="shop.html#topicals">Topicals</a>
+        <a href="shop.html#gifts">Gift Baskets</a>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a href="about.html">Our Story</a>
+        <a href="ingredients.html">Ingredients</a>
+        <a href="contact.html">Contact</a>
+      </div>
+      <div class="footer-col">
+        <h4>Find Us</h4>
+        <a href="#">Amazon</a>
+        <a href="#">Etsy</a>
+        <a href="#">Instagram</a>
+        <a href="#retailers">Retailers</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 PETfection by Sheena Michels · Saint Clair Shores, MI</span>
+      <span>Demo site by M² Performance Training · matt@m2training.com · (313) 806-4952</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
