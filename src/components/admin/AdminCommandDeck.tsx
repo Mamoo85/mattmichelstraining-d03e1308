@@ -29,14 +29,47 @@ interface QuickAction {
   fn: () => Promise<string>;
 }
 
+// ─── Execution History ─────────────────────────────────────────────────────────
+interface ExecutionRecord {
+  id: string;
+  label: string;
+  result: string;
+  status: "success" | "error";
+  timestamp: Date;
+}
+
+const MAX_HISTORY = 15;
+let executionHistory: ExecutionRecord[] = [];
+
+// ─── Confirmation Modal ────────────────────────────────────────────────────────
+function ConfirmDialog({ open, onConfirm, onCancel, label }: { open: boolean; onConfirm: () => void; onCancel: () => void; label: string }) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={onCancel}>
+      <div className="bg-card border border-border p-6 rounded-lg max-w-sm w-full space-y-4" onClick={e => e.stopPropagation()}>
+        <p className="text-sm font-bold text-foreground">Confirm: {label}</p>
+        <p className="text-xs text-muted-foreground">This action will execute immediately and cannot be undone. Continue?</p>
+        <div className="flex gap-2">
+          <Button size="sm" variant="destructive" onClick={onConfirm} className="flex-1">Confirm</Button>
+          <Button size="sm" variant="outline" onClick={onCancel} className="flex-1">Cancel</Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Individual Action Button ──────────────────────────────────────────────────
-function ActionButton({ action }: { action: QuickAction }) {
+function ActionButton({ action, onExecuted }: { action: QuickAction; onExecuted: (record: ExecutionRecord) => void }) {
   const [state, setState] = useState<ActionState>("idle");
   const [result, setResult] = useState<string>("");
+  const [showConfirm, setShowConfirm] = useState(false);
   const { toast } = useToast();
   const Icon = action.icon;
 
-  const run = async () => {
+  const DESTRUCTIVE_IDS = ["mass-trial", "bulk-approve", "newsletter-send", "sms-blast"];
+  const needsConfirm = DESTRUCTIVE_IDS.includes(action.id);
+
+  const execute = async () => {
     setState("running");
     setResult("");
     try {
@@ -44,13 +77,20 @@ function ActionButton({ action }: { action: QuickAction }) {
       setState("done");
       setResult(msg);
       toast({ title: action.label, description: msg });
+      onExecuted({ id: action.id, label: action.label, result: msg, status: "success", timestamp: new Date() });
       setTimeout(() => setState("idle"), 6000);
     } catch (e: any) {
       setState("error");
       setResult(e?.message ?? "Error");
       toast({ title: action.label, description: e?.message ?? "Error", variant: "destructive" });
+      onExecuted({ id: action.id, label: action.label, result: e?.message ?? "Error", status: "error", timestamp: new Date() });
       setTimeout(() => setState("idle"), 6000);
     }
+  };
+
+  const run = () => {
+    if (needsConfirm) { setShowConfirm(true); return; }
+    execute();
   };
 
   return (
