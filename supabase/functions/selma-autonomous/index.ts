@@ -6,23 +6,63 @@ const cors = {
 };
 
 const PRODUCT_TABLES = [
-  { table: "gbp_saas_clients", name: "GBP Auto-Poster", price: 49, ltv_months: 8 },
-  { table: "blog_post_clients", name: "Blog Writer", price: 99, ltv_months: 10 },
-  { table: "social_media_clients", name: "Social Media AI", price: 199, ltv_months: 6 },
-  { table: "chatbot_clients", name: "AI Chatbot", price: 79, ltv_months: 12 },
-  { table: "review_monitor_clients", name: "Review Monitor", price: 25, ltv_months: 14 },
-  { table: "sms_blast_clients", name: "Weekly SMS Blast", price: 19, ltv_months: 10 },
-  { table: "contractor_clients", name: "Contractor Lead Gen", price: 399, ltv_months: 8 },
-  { table: "competitor_watch_clients", name: "Competitor Watch", price: 49, ltv_months: 10 },
-  { table: "battlecard_clients", name: "Battlecards", price: 79, ltv_months: 8 },
-  { table: "estimate_generator_clients", name: "Estimate Generator", price: 39, ltv_months: 10 },
-  { table: "directory_submitter_clients", name: "Directory Submitter", price: 29, ltv_months: 12 },
-  { table: "faq_refresh_clients", name: "FAQ Refresh", price: 29, ltv_months: 12 },
-  { table: "ads_copy_clients", name: "Ads Copy", price: 49, ltv_months: 8 },
-  { table: "noshow_clients", name: "No-Show Re-Booker", price: 25, ltv_months: 14 },
-  { table: "invoice_chaser_clients", name: "Invoice Chaser", price: 29, ltv_months: 12 },
-  { table: "collections_clients", name: "Collections", price: 49, ltv_months: 10 },
+  { table: "gbp_saas_clients", name: "GBP Auto-Poster", price: 49, ltv_months: 8, keywords: ["google business profile management", "GBP automation", "google my business posting service"] },
+  { table: "blog_post_clients", name: "Blog Writer", price: 99, ltv_months: 10, keywords: ["automated blog writing service", "AI blog posts for business", "blog content service"] },
+  { table: "social_media_clients", name: "Social Media AI", price: 199, ltv_months: 6, keywords: ["social media management service", "AI social media posts", "automated social media"] },
+  { table: "chatbot_clients", name: "AI Chatbot", price: 79, ltv_months: 12, keywords: ["AI chatbot for small business", "website chatbot service", "business chatbot"] },
+  { table: "review_monitor_clients", name: "Review Monitor", price: 25, ltv_months: 14, keywords: ["review monitoring service", "online review alerts", "reputation monitoring"] },
+  { table: "sms_blast_clients", name: "Weekly SMS Blast", price: 19, ltv_months: 10, keywords: ["SMS marketing service", "text message marketing", "bulk SMS for business"] },
+  { table: "contractor_clients", name: "Contractor Lead Gen", price: 399, ltv_months: 8, keywords: ["contractor leads", "roofing leads", "HVAC leads", "plumber leads"] },
+  { table: "competitor_watch_clients", name: "Competitor Watch", price: 49, ltv_months: 10, keywords: ["competitor monitoring service", "competitive intelligence small business"] },
+  { table: "estimate_generator_clients", name: "Estimate Generator", price: 39, ltv_months: 10, keywords: ["estimate generator for contractors", "contractor estimate tool"] },
+  { table: "noshow_clients", name: "No-Show Re-Booker", price: 25, ltv_months: 14, keywords: ["no show appointment followup", "missed appointment text", "rebooking service"] },
+  { table: "invoice_chaser_clients", name: "Invoice Chaser", price: 29, ltv_months: 12, keywords: ["invoice reminder service", "automated invoice followup", "payment reminder text"] },
+  { table: "collections_clients", name: "Collections", price: 49, ltv_months: 10, keywords: ["automated collections service", "past due invoice chaser"] },
 ];
+
+// DataForSEO: fetch real keyword volume + CPC
+async function getKeywordData(keywords: string[], login: string, password: string): Promise<Array<{ keyword: string; volume: number; cpc: number; competition: number }>> {
+  const results: Array<{ keyword: string; volume: number; cpc: number; competition: number }> = [];
+  
+  try {
+    const body = keywords.map(k => ({
+      keyword: k,
+      location_code: 2840, // United States
+      language_code: "en",
+    }));
+
+    const res = await fetch("https://api.dataforseo.com/v3/keywords_data/google_ads/search_volume/live", {
+      method: "POST",
+      headers: {
+        "Authorization": "Basic " + btoa(`${login}:${password}`),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      console.error(`DataForSEO error: ${res.status}`);
+      return results;
+    }
+
+    const data = await res.json();
+    const tasks = data?.tasks ?? [];
+    for (const task of tasks) {
+      for (const item of task?.result ?? []) {
+        results.push({
+          keyword: item.keyword ?? "",
+          volume: item.search_volume ?? 0,
+          cpc: item.cpc ?? 0,
+          competition: item.competition ?? 0,
+        });
+      }
+    }
+  } catch (err) {
+    console.error("DataForSEO fetch failed:", err);
+  }
+
+  return results;
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
@@ -32,11 +72,13 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     const lovableKey = Deno.env.get("LOVABLE_API_KEY") ?? "";
     const resendKey = Deno.env.get("RESEND_API_KEY") ?? "";
+    const dfLogin = Deno.env.get("DATAFORSEO_LOGIN") ?? "";
+    const dfPassword = Deno.env.get("DATAFORSEO_PASSWORD") ?? "";
 
     const supabase = createClient(supabaseUrl, serviceKey);
 
     // 1. Build business state snapshot
-    const snapshot: Array<{ name: string; active: number; price: number; ltv: number; capacity: string }> = [];
+    const snapshot: Array<{ name: string; active: number; price: number; ltv: number; capacity: string; keywords: string[] }> = [];
 
     for (const product of PRODUCT_TABLES) {
       try {
@@ -49,7 +91,7 @@ Deno.serve(async (req) => {
         const ltv = product.price * product.ltv_months;
         const capacity = activeCount < 3 ? "high" : activeCount < 10 ? "medium" : "low";
         
-        snapshot.push({ name: product.name, active: activeCount, price: product.price, ltv, capacity });
+        snapshot.push({ name: product.name, active: activeCount, price: product.price, ltv, capacity, keywords: product.keywords });
       } catch {
         // Table might not exist yet, skip
       }
@@ -82,7 +124,24 @@ Deno.serve(async (req) => {
       });
     }
 
-    // 3. Use AI to analyze and generate campaign
+    // 3. Get REAL keyword data from DataForSEO for high-capacity services
+    const highCapacity = snapshot.filter(s => s.capacity === "high" || s.capacity === "medium");
+    const allKeywords = highCapacity.flatMap(s => s.keywords);
+    
+    let keywordIntel = "";
+    if (dfLogin && dfPassword && allKeywords.length > 0) {
+      const kwData = await getKeywordData(allKeywords, dfLogin, dfPassword);
+      if (kwData.length > 0) {
+        keywordIntel = "\n\nREAL GOOGLE ADS KEYWORD DATA (from DataForSEO — actual CPC & volume):\n" +
+          kwData.map(k => `• "${k.keyword}" — Volume: ${k.volume}/mo, CPC: $${k.cpc.toFixed(2)}, Competition: ${(k.competition * 100).toFixed(0)}%`)
+          .join("\n");
+        keywordIntel += "\n\nUSE THESE REAL CPC NUMBERS for your CAC calculations. Do NOT estimate — use the actual data above.";
+      }
+    } else {
+      keywordIntel = "\n\n(No DataForSEO data available — use your best AI estimates for CPC)";
+    }
+
+    // 4. Use AI to analyze and generate campaign
     const businessState = snapshot
       .sort((a, b) => {
         const capacityOrder: Record<string, number> = { high: 0, medium: 1, low: 2 };
@@ -91,13 +150,14 @@ Deno.serve(async (req) => {
       .map(s => `${s.name}: ${s.active} active clients, $${s.price}/mo, LTV $${s.ltv}, capacity: ${s.capacity}`)
       .join("\n");
 
-    const prompt = `You are Selma, a PhD economist and head marketer for M² (a B2B marketing automation agency in Michigan).
+    const prompt = `You are Selma, a PhD economist and head marketer for M² (a B2B marketing automation agency in Grosse Pointe, Michigan).
 
 BUSINESS STATE:
 ${businessState}
 
 Web Design Pipeline: ${webDesignLeads ?? 0} active leads
 Recent Conversions (30d): ${recentConversions ?? 0}
+${keywordIntel}
 
 TASK: Analyze this data and determine the single best ad campaign opportunity right now.
 
@@ -105,7 +165,8 @@ RULES:
 - Only propose if projected LTV > 3x projected CAC
 - Prioritize services with HIGH capacity (few clients = room to grow)
 - Consider which platforms (Google, Facebook, Instagram, Reddit) match the service best
-- Be realistic with CPC estimates for Michigan/US market
+- If real CPC data is provided, use it for precise CAC = CPC × (100 / conversion_rate%). Assume 3-5% landing page conversion rate.
+- Maximum budget: $200/mo for any single campaign
 - If no campaign meets the 3x threshold, respond with EXACTLY: {"no_campaign": true}
 
 If a campaign IS viable, respond in this EXACT JSON format:
@@ -119,7 +180,7 @@ If a campaign IS viable, respond in this EXACT JSON format:
   "projected_ltv": 400,
   "projected_roas": 3.5,
   "campaign_content": "FULL campaign text here — ad copy, targeting details, headlines, descriptions, everything ready to paste into Ads Manager",
-  "reasoning": "Why this is the best opportunity right now"
+  "reasoning": "Why this is the best opportunity right now, citing real CPC data if available"
 }
 
 Respond with ONLY valid JSON, no markdown.`;
@@ -140,8 +201,6 @@ Respond with ONLY valid JSON, no markdown.`;
 
     const aiData = await aiRes.json();
     const raw = aiData?.choices?.[0]?.message?.content || "";
-    
-    // Clean potential markdown wrapping
     const cleaned = raw.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
     
     let campaign;
@@ -160,14 +219,14 @@ Respond with ONLY valid JSON, no markdown.`;
       });
     }
 
-    // 4. Validate the 3x threshold
+    // 5. Validate the 3x threshold
     if (campaign.projected_ltv < campaign.projected_cac * 3) {
       return new Response(JSON.stringify({ status: "rejected", reason: "Campaign did not meet 3x LTV/CAC threshold" }), {
         headers: { ...cors, "Content-Type": "application/json" },
       });
     }
 
-    // 5. Insert into queue
+    // 6. Insert into queue
     const { error: insertError } = await supabase.from("ad_campaign_queue").insert({
       service: campaign.service,
       platform: campaign.platform,
@@ -183,15 +242,13 @@ Respond with ONLY valid JSON, no markdown.`;
 
     if (insertError) throw new Error(`Insert error: ${insertError.message}`);
 
-    // 6. Email Matt
+    // 7. Email Matt
     if (resendKey) {
-      const GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
-      await fetch(`${GATEWAY_URL}/emails`, {
+      await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${lovableKey}`,
-          "X-Connection-Api-Key": resendKey,
+          Authorization: `Bearer ${resendKey}`,
         },
         body: JSON.stringify({
           from: "Selma — M² Marketing <matt@mattmichelstraining.com>",
@@ -206,6 +263,7 @@ Respond with ONLY valid JSON, no markdown.`;
             <p><strong>Projected CAC:</strong> $${campaign.projected_cac}</p>
             <p><strong>Projected LTV:</strong> $${campaign.projected_ltv}</p>
             <p><strong>Projected ROAS:</strong> ${campaign.projected_roas}x</p>
+            <p><strong>Data Source:</strong> ${dfLogin ? "✅ Real DataForSEO CPC data" : "⚠️ AI estimates"}</p>
             <hr/>
             <p><strong>Reasoning:</strong> ${campaign.reasoning}</p>
             <hr/>
@@ -215,7 +273,7 @@ Respond with ONLY valid JSON, no markdown.`;
       });
     }
 
-    return new Response(JSON.stringify({ status: "campaign_proposed", service: campaign.service, platform: campaign.platform }), {
+    return new Response(JSON.stringify({ status: "campaign_proposed", service: campaign.service, platform: campaign.platform, data_source: dfLogin ? "dataforseo" : "ai_estimate" }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });
   } catch (e: unknown) {
