@@ -143,7 +143,7 @@ export default function StewartDentalProduction() {
     ["#cerec", "CEREC Technology"],
     ["#services", "Services"],
     ["#doctor", "Meet Dr. Stewart"],
-    
+    ["#gallery-section", "Gallery"],
     ["#faq-section", "FAQ"],
     ["#new-patients-section", "New Patients"],
     ["#appointment", "Contact"],
