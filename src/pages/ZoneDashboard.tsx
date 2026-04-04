@@ -25,6 +25,7 @@ import {
   QUICK_ACTIVITY_TIP,
 } from "@/components/dashboard/featureTips";
 import { AnimatePresence } from "framer-motion";
+import MonthlyAnnouncementModal from "@/components/dashboard/MonthlyAnnouncementModal";
 
 const NotificationBell = lazy(() => import("@/components/layout/NotificationBell"));
 const PwaInstallBanner = lazy(() => import("@/components/layout/PwaInstallBanner"));
