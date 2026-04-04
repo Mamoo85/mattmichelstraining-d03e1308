@@ -91,7 +91,7 @@ export default function PrivacyPolicy() {
       <section className="mb-8">
         <h2 className="text-xl font-bold mb-3">11. Contact</h2>
         <p className="leading-relaxed text-slate-700">
-          Matt Michels — M2 Development<br />
+          Matt Michels — Matt Michels Training / M2 Development<br />
           Grosse Pointe, MI<br />
           matt@mattmichelstraining.com<br />
           (313) 806-4952
