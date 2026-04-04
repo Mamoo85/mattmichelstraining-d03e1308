@@ -18,11 +18,11 @@ jobs:
           version: latest
 
       - name: Run database migrations
-        run: supabase db push --project-ref zmyczlfuufhngzovkjdh
+        run: supabase db push --project-ref eauvubfpanpeuxsrqesu
 
       - name: Sync secrets to Supabase
         run: |
-          supabase secrets set --project-ref zmyczlfuufhngzovkjdh \
+          supabase secrets set --project-ref eauvubfpanpeuxsrqesu \
             RESEND_API_KEY="${{ secrets.RESEND_API_KEY }}" \
             ANTHROPIC_API_KEY="${{ secrets.ANTHROPIC_API_KEY }}" \
             STRIPE_SECRET_KEY="${{ secrets.STRIPE_SECRET_KEY }}" \
@@ -35,4 +35,4 @@ jobs:
             LINKEDIN_ACCESS_TOKEN="${{ secrets.LINKEDIN_ACCESS_TOKEN }}"
 
       - name: Deploy all edge functions
-        run: supabase functions deploy --project-ref zmyczlfuufhngzovkjdh
+        run: supabase functions deploy --project-ref eauvubfpanpeuxsrqesu
