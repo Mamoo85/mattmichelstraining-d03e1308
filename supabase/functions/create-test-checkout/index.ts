@@ -597,7 +597,7 @@ serve(async (req) => {
       });
     }
 
-    const { product } = await req.json();
+    const { product, overrides } = await req.json();
     const email = userEmail;
 
     const config = TEST_PRODUCTS[product];
@@ -605,6 +605,25 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: `Unknown product: ${product}`, available: Object.keys(TEST_PRODUCTS) }), {
         status: 400, headers: { ...CORS, "Content-Type": "application/json" },
       });
+    }
+
+    // Merge admin-provided overrides into metadata (custom fields from the sandbox modal)
+    if (overrides && typeof overrides === "object") {
+      for (const [key, value] of Object.entries(overrides)) {
+        if (typeof value === "string" && value.trim()) {
+          // For gbp_post_pack, special handling: overrides go into business_info JSON
+          if (product === "gbp_post_pack" && ["industry", "city", "business_info"].includes(key)) {
+            try {
+              const info = JSON.parse(config.metadata.business_info || "{}");
+              info[key] = value.trim();
+              config.metadata.business_info = JSON.stringify(info);
+            } catch { /* skip */ }
+          } else {
+            config.metadata[key] = value.trim();
+          }
+        }
+      }
+      console.log(`[TEST-CHECKOUT] Applied overrides for ${product}:`, Object.keys(overrides));
     }
 
     // For employee_credential_audit, pre-create the audit record and use the real UUID
