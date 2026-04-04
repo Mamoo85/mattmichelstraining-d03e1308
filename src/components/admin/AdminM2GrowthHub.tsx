@@ -113,6 +113,7 @@ const M2_SERVICES = [
     emoji: "📊",
     schedule: "Weekly",
     insert: {
+      business_name: "M2 Development",
       email: MATT_EMAIL,
       industry: "AI automation",
       location: "United States",
