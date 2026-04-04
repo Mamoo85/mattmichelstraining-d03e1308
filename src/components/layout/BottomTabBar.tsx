@@ -68,6 +68,7 @@ const HIDDEN_PATHS = [
   "/demo-landscaping", "/demo-plumber", "/demo-electrician",
   "/demo-lawyer", "/demo-clinic", "/demo-roofing",
   "/demo-youngblood", "/demo-dental", "/demo-home",
+  "/demo-real-estate",
   "/detroit-web-design", "/whats-included",
   "/matrix", "/matrix-training", "/matrix-merch",
   "/admin",

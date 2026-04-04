@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
 const ALL_SERVICES = [
-  { table: "social_media_clients", name: "Social Media AI", price: "$199/mo", priceNum: 199 },
+  { table: "social_media_clients", name: "Social Media AI", price: "$99/mo", priceNum: 99 },
   { table: "gbp_saas_clients", name: "GBP SaaS", price: "$49/mo", priceNum: 49 },
   { table: "newsletter_service_clients", name: "AI Newsletter", price: "$99/mo", priceNum: 99 },
   { table: "faq_refresh_clients", name: "FAQ Refresh", price: "$29/mo", priceNum: 29 },

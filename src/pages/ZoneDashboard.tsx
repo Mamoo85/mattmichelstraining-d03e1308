@@ -25,6 +25,7 @@ import {
   QUICK_ACTIVITY_TIP,
 } from "@/components/dashboard/featureTips";
 import { AnimatePresence } from "framer-motion";
+import MonthlyAnnouncementModal from "@/components/dashboard/MonthlyAnnouncementModal";
 
 const NotificationBell = lazy(() => import("@/components/layout/NotificationBell"));
 const PwaInstallBanner = lazy(() => import("@/components/layout/PwaInstallBanner"));
@@ -301,6 +302,7 @@ const ZoneDashboard = () => {
 
   return (
     <ZoneThemeWrapper className="min-h-screen pb-24" style={{ background: "#0a0a0a", color: "#e5e5e5" }}>
+      <MonthlyAnnouncementModal />
       {/* Header */}
       <header
         className="sticky top-0 z-50 flex items-center justify-between px-4 py-2.5"

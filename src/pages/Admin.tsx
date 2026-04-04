@@ -538,8 +538,7 @@ const Admin = () => {
             { key: "learn",          label: "Learn Hub",          content: <AdminLearnEditor /> },
             { key: "broadcasts",     label: "Broadcasts",         content: <AdminBroadcasts /> },
             { key: "subscribers",    label: "Subscribers",        content: <AdminSubscriberList /> },
-            { key: "compose",        label: "Compose",            content: <AdminNewsletterComposer /> },
-            { key: "training-newsletter", label: "🏋️ Training NL", content: <AdminTrainingNewsletter /> },
+            { key: "compose",        label: "Newsletter",         content: <AdminNewsletterComposer /> },
             { key: "history",        label: "Send History",       content: <AdminSendHistory /> },
             { key: "marketing-ai",   label: "Marketing & AI",     content: (
               <div className="space-y-8">
