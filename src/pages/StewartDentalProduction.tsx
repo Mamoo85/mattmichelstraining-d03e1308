@@ -627,7 +627,7 @@ export default function StewartDentalProduction() {
               For clinical intake and PHI collection, we use HIPAA-compliant practice management software.
             </p>
             <p style={{ color: "#9ca3af", fontSize: 11 }}>
-              For our full privacy policy or HIPAA questions, please call our office at (313) 882-8711.
+              <a href="/stewart-dental/privacy" style={{ color: G, textDecoration: "underline" }}>Read our full Privacy Policy</a> · For HIPAA questions, call (313) 882-8711.
             </p>
           </div>
         </section>
