@@ -7,7 +7,7 @@ export default function PrivacyPolicy() {
       <section className="mb-8">
         <h2 className="text-xl font-bold mb-3">1. Who We Are</h2>
         <p className="leading-relaxed text-slate-700">
-          M2 Development ("we," "us," or "our") operates mattmichelstraining.com and related services. Owner: Matt Michels, Grosse Pointe, MI. Contact: matt@mattmichelstraining.com | (313) 806-4952.
+          Matt Michels Training (fitness and coaching services) and M2 Development (web design, marketing, and business automation) — collectively "we," "us," or "our" — operate mattmichelstraining.com and related services. Owner: Matt Michels, Grosse Pointe, MI. Contact: matt@mattmichelstraining.com | (313) 806-4952.
         </p>
       </section>
 
@@ -35,7 +35,7 @@ export default function PrivacyPolicy() {
       <section className="mb-8">
         <h2 className="text-xl font-bold mb-3">4. SMS / Text Message Communications</h2>
         <p className="leading-relaxed text-slate-700 mb-3">
-          By providing your phone number and checking the SMS consent box on any of our forms, you agree to receive automated text messages from M2 Development, including service updates, marketing messages, and reminders.
+          By providing your phone number and checking the SMS consent box on any of our forms, you agree to receive automated text messages from Matt Michels Training or M2 Development (depending on the service), including service updates, marketing messages, and reminders.
         </p>
         <ul className="list-disc pl-6 space-y-2 text-slate-700 leading-relaxed">
           <li><strong>Message frequency varies</strong> depending on the service.</li>
@@ -91,7 +91,7 @@ export default function PrivacyPolicy() {
       <section className="mb-8">
         <h2 className="text-xl font-bold mb-3">11. Contact</h2>
         <p className="leading-relaxed text-slate-700">
-          Matt Michels — M2 Development<br />
+          Matt Michels — Matt Michels Training / M2 Development<br />
           Grosse Pointe, MI<br />
           matt@mattmichelstraining.com<br />
           (313) 806-4952
