@@ -244,6 +244,11 @@ export default function AdminTrainingNewsletter() {
 
   async function handleSend(provider: "anthropic" | "lovable") {
     const setter = provider === "anthropic" ? setAnthropicSending : setLovableSending;
+    const fallbackSubject =
+      provider === "anthropic"
+        ? anthropicResult?.content?.subject
+        : lovableResult?.content?.subject;
+
     setter(true);
     try {
       const { data, error } = await supabase.functions.invoke("training-newsletter-send", {
@@ -256,7 +261,7 @@ export default function AdminTrainingNewsletter() {
       if (error) throw error;
       toast({
         title: `Sent via ${provider}`,
-        description: `Delivered to ${data?.sent || 0} subscribers. Subject: "${data?.subject}"`,
+        description: `Delivered to ${data?.sent || 0} subscribers. Subject: "${data?.subject || fallbackSubject || "Draft saved"}"`,
       });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
