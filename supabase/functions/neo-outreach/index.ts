@@ -25,6 +25,42 @@ const DAILY_SEND_LIMIT = 20;
 // Matt's own test emails — never run outreach to these
 const TEST_EMAILS = ["matt@mattmichelstraining.com", "matthewmichels@gmail.com", "matthewmichels4@gmail.com"];
 
+// ── INDUSTRY → DEMO LINK MAPPING ──
+// Maps industry keywords to the best demo site to include in outreach
+const BASE = "https://www.mattmichelstraining.com";
+const DEMO_MAP: { keywords: string[]; path: string; label: string }[] = [
+  { keywords: ["dental", "dentist", "orthodont", "prosthodont", "oral"], path: "/demo-dental", label: "dental practice" },
+  { keywords: ["medical", "clinic", "doctor", "physician", "health", "urgent care", "chiropr"], path: "/demo-clinic", label: "medical clinic" },
+  { keywords: ["roof", "roofing"], path: "/demo-roofing", label: "roofing company" },
+  { keywords: ["hvac", "heating", "cooling", "air condition"], path: "/demo-hvac", label: "HVAC company" },
+  { keywords: ["plumb"], path: "/demo-plumber", label: "plumbing company" },
+  { keywords: ["electri"], path: "/demo-electrician", label: "electrical contractor" },
+  { keywords: ["landscap", "lawn", "garden", "tree service"], path: "/demo-landscape", label: "landscaping company" },
+  { keywords: ["auto", "mechanic", "car repair", "body shop", "collision"], path: "/demo-auto-repair", label: "auto repair shop" },
+  { keywords: ["clean", "maid", "janitorial"], path: "/demo-cleaning", label: "cleaning service" },
+  { keywords: ["salon", "spa", "barber", "beauty", "nail", "hair"], path: "/demo-salon", label: "salon / spa" },
+  { keywords: ["restaurant", "bar", "cafe", "pizza", "grill", "food", "catering", "bakery"], path: "/demo-restaurant", label: "restaurant" },
+  { keywords: ["law", "attorney", "legal", "lawyer"], path: "/demo-lawyer", label: "law firm" },
+  { keywords: ["real estate", "realtor", "realty", "broker", "property"], path: "/demo-real-estate", label: "real estate" },
+  { keywords: ["manufactur", "industrial", "automation", "boiler", "machine shop", "fabricat", "weld"], path: "/demo-youngblood", label: "industrial / manufacturing" },
+  { keywords: ["pet", "vet", "veterinar", "grooming", "animal"], path: "/demo-petfection", label: "pet business" },
+];
+
+function getDemoLink(industry?: string): { url: string; label: string } | null {
+  if (!industry) return null;
+  const lower = industry.toLowerCase();
+  for (const entry of DEMO_MAP) {
+    if (entry.keywords.some(k => lower.includes(k))) {
+      return { url: `${BASE}${entry.path}`, label: entry.label };
+    }
+  }
+  // Default to roofing demo as a general contractor showcase
+  if (lower.includes("contract") || lower.includes("home service") || lower.includes("handyman") || lower.includes("paint") || lower.includes("fenc")) {
+    return { url: `${BASE}/demo-roofing`, label: "contractor" };
+  }
+  return null;
+}
+
 // Determine the best product pitch for each business profile
 function selectPitch(business: { industry?: string; has_website?: boolean; rating?: number; review_count?: number }) {
   if (!business.has_website) return { product: "web_design", cta: "a website that actually gets you calls", price: "$499" };
