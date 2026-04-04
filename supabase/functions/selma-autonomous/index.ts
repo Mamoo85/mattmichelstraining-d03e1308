@@ -9,72 +9,110 @@ const cors = {
 const PRODUCT_TABLES = [
   // === TIER 1: TOP PRIORITY — focus campaigns here ===
   { table: "web_design_leads", name: "Web Design Services", price: 1499, ltv_months: 12, priority: 1, keywords: [
+    // Core commercial intent
     "web design for small business", "affordable web design near me", "small business website design",
     "local business website builder", "web design Michigan", "web design Grosse Pointe",
-    "contractor website design", "restaurant website design", "dental website design",
-    "real estate agent website", "manufacturing web design", "website redesign service",
     "professional web design agency", "web designer for hire", "custom website design",
     "WordPress web design service", "business website cost", "best web design company near me",
-    "web design for contractors", "web design for restaurants"
+    "website redesign service", "website design quote", "hire web designer",
+    // Industry-specific verticals
+    "contractor website design", "restaurant website design", "dental website design",
+    "real estate agent website", "manufacturing web design", "HVAC website design",
+    "plumber website design", "electrician website design", "roofing company website",
+    "landscaping website design", "auto repair shop website", "salon website design",
+    "law firm website design", "gym website design", "medical practice website",
+    // Problem/solution keywords
+    "my business needs a website", "website not getting leads", "outdated website redesign",
+    "mobile friendly website for business", "website that generates leads",
+    "convert website visitors to customers", "SEO friendly web design",
+    // Location variants
+    "web design Detroit", "web design metro Detroit", "web design St Clair Shores",
+    "web design Macomb County", "web design Wayne County", "web design Oakland County"
   ]},
   { table: "gbp_saas_clients", name: "GBP Auto-Poster", price: 74, ltv_months: 10, priority: 1, keywords: [
     "google business profile management", "GBP automation", "google my business posting service",
     "google business profile posts automated", "GBP post scheduler", "google my business management tool",
     "local SEO automation", "google business profile marketing", "GMB posting service",
-    "google maps marketing service", "local business marketing automation"
+    "google maps marketing service", "local business marketing automation",
+    "google business profile SEO", "how to rank on google maps", "google my business optimization",
+    "GBP management service", "local SEO service for small business"
   ]},
   { table: "social_media_clients", name: "Social Media AI", price: 199, ltv_months: 6, priority: 1, keywords: [
     "social media management service", "AI social media posts", "automated social media",
     "social media marketing for small business", "social media content creation service",
     "Facebook posting service for business", "Instagram marketing automation",
     "social media manager near me", "affordable social media management",
-    "AI social media marketing", "social media for contractors"
+    "AI social media marketing", "social media for contractors",
+    "social media for restaurants", "social media for dentists", "social media for salons",
+    "done for you social media", "social media posting service monthly"
   ]},
   { table: "blog_post_clients", name: "Blog Writer", price: 99, ltv_months: 10, priority: 1, keywords: [
     "automated blog writing service", "AI blog posts for business", "blog content service",
     "SEO blog writing service", "monthly blog posts for business", "content marketing service",
-    "blog writing for small business", "AI content writer for business"
+    "blog writing for small business", "AI content writer for business",
+    "blog posts for SEO", "weekly blog writing service", "affordable content marketing"
   ]},
   { table: "chatbot_clients", name: "AI Chatbot", price: 79, ltv_months: 12, priority: 1, keywords: [
     "AI chatbot for small business", "website chatbot service", "business chatbot",
     "live chat alternative for small business", "AI customer service bot",
-    "chatbot for contractor website", "lead capture chatbot"
+    "chatbot for contractor website", "lead capture chatbot",
+    "24/7 chatbot for business", "chatbot for lead generation", "automated customer support bot"
   ]},
 
   // === TIER 2: SMS PRODUCTS — solid recurring, expand when Tier 1 is covered ===
   { table: "review_monitor_clients", name: "Review Monitor", price: 25, ltv_months: 14, priority: 2, keywords: [
     "review monitoring service", "online review alerts", "reputation monitoring",
-    "google review monitoring", "bad review alert service", "reputation management small business"
+    "google review monitoring", "bad review alert service", "reputation management small business",
+    "review tracking tool", "get notified of new reviews", "online reputation monitoring tool",
+    "negative review alert", "review management for contractors"
   ]},
   { table: "sms_blast_clients", name: "Weekly SMS Blast", price: 19, ltv_months: 10, priority: 2, keywords: [
     "SMS marketing service", "text message marketing", "bulk SMS for business",
-    "SMS marketing for restaurants", "text blast service small business"
+    "SMS marketing for restaurants", "text blast service small business",
+    "weekly text promotions", "SMS customer engagement", "text marketing for salons",
+    "text message promotions service", "automated text marketing"
   ]},
   { table: "noshow_clients", name: "No-Show Re-Booker", price: 25, ltv_months: 14, priority: 2, keywords: [
     "no show appointment followup", "missed appointment text", "rebooking service",
-    "appointment no show recovery", "automated rebooking text"
+    "appointment no show recovery", "automated rebooking text",
+    "reduce no shows", "no show text reminder", "missed appointment recovery service",
+    "no show followup for salons", "no show followup for dentists"
   ]},
   { table: "invoice_chaser_clients", name: "Invoice Chaser", price: 29, ltv_months: 12, priority: 2, keywords: [
     "invoice reminder service", "automated invoice followup", "payment reminder text",
-    "overdue invoice automation", "invoice collection service small business"
+    "overdue invoice automation", "invoice collection service small business",
+    "late payment reminder service", "automated payment reminders", "invoice followup texts",
+    "contractor invoice chaser", "get paid faster service"
   ]},
   { table: "estimate_drip_clients", name: "Estimate Follow-Up Drip", price: 39, ltv_months: 10, priority: 2, keywords: [
-    "estimate follow up automation", "contractor estimate drip", "quote follow up service"
+    "estimate follow up automation", "contractor estimate drip", "quote follow up service",
+    "automated estimate reminders", "close more estimates", "quote followup text service",
+    "contractor proposal follow up", "estimate conversion tool"
   ]},
   { table: "afterjob_drip_clients", name: "After-Job Review Drip", price: 29, ltv_months: 10, priority: 2, keywords: [
-    "post job review request", "after service review automation", "review request service"
+    "post job review request", "after service review automation", "review request service",
+    "get more google reviews", "automated review request text", "review generation service",
+    "ask for reviews automatically", "contractor review tool"
   ]},
   { table: "referral_program_clients", name: "Referral Program", price: 39, ltv_months: 12, priority: 2, keywords: [
-    "referral program for small business", "automated referral rewards", "customer referral system"
+    "referral program for small business", "automated referral rewards", "customer referral system",
+    "referral marketing service", "word of mouth marketing tool", "referral tracking software",
+    "customer referral program setup", "refer a friend program for business"
   ]},
   { table: "slow_day_clients", name: "Slow Day SMS", price: 25, ltv_months: 10, priority: 2, keywords: [
-    "slow day promotion text", "last minute appointment filler", "same day booking promotion"
+    "slow day promotion text", "last minute appointment filler", "same day booking promotion",
+    "fill empty appointments", "slow day deal blaster", "last minute deals text service",
+    "fill schedule gaps service", "same day appointment marketing"
   ]},
   { table: "homeowner_campaign_clients", name: "New Homeowner Campaign", price: 59, ltv_months: 8, priority: 2, keywords: [
-    "new homeowner marketing", "new mover leads for contractors", "new homeowner mailer service"
+    "new homeowner marketing", "new mover leads for contractors", "new homeowner mailer service",
+    "new homeowner direct mail", "new mover marketing", "target new homeowners",
+    "new construction homeowner leads", "welcome to neighborhood marketing"
   ]},
   { table: "promo_blaster_clients", name: "Seasonal Promo Blaster", price: 29, ltv_months: 10, priority: 2, keywords: [
-    "seasonal promotion SMS", "holiday marketing automation", "seasonal text blast service"
+    "seasonal promotion SMS", "holiday marketing automation", "seasonal text blast service",
+    "holiday promo texts", "seasonal marketing for contractors", "spring marketing campaign",
+    "holiday deals text blast", "seasonal business promotions"
   ]},
 
   // === TIER 3: BACKBURNER — lower priority, promote only if strong opportunity ===
