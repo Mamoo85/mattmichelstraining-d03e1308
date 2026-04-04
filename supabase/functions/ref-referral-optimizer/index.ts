@@ -96,6 +96,38 @@ serve(async (req) => {
         <p>💡 <em>Send a nudge with fresh marketing materials or increased commission offer</em></p>`;
     }
 
+    // NEW: 7. Identify top-performing referrers and draft thank-you emails
+    const lovableKey = Deno.env.get("LOVABLE_API_KEY");
+    let thankYouHtml = "";
+    if (lovableKey && topPartners.length > 0) {
+      const topPartner = partners?.find(p => p.id === topPartners[0][0]);
+      if (topPartner && topPartners[0][1].conversions >= 2) {
+        try {
+          const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${lovableKey}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              model: "google/gemini-2.5-flash-lite",
+              messages: [{ role: "user", content: `Write a short, warm thank-you email from Matt at M² to ${topPartner.name} who has referred ${topPartners[0][1].conversions} clients and earned $${topPartners[0][1].revenue.toFixed(2)}. Mention a bonus offer of 10% extra commission for the next 30 days. Keep it under 100 words, casual and appreciative.` }],
+            }),
+          });
+          if (aiRes.ok) {
+            const aiData = await aiRes.json();
+            const draft = aiData?.choices?.[0]?.message?.content || "";
+            if (draft.length > 20) {
+              thankYouHtml = `<h3 style="color:#f59e0b;">✉️ Draft Thank-You for ${topPartner.name}</h3>
+                <div style="background:#2d1b0e;padding:12px;border-radius:8px;font-size:13px;">${draft.replace(/\n/g, "<br/>")}</div>
+                <p style="font-size:11px;color:#94a3b8;">Review and send manually to ${topPartner.email}</p>`;
+            }
+          }
+        } catch (e) {
+          console.log("[REF] Thank-you draft failed:", e);
+        }
+      }
+    }
+
+    html += thankYouHtml;
+
     const hasAlerts = inactivePartners.length > 0 || (conversions?.length || 0) > 0;
     if (hasAlerts) {
       await sendRefEmail(
@@ -110,6 +142,7 @@ serve(async (req) => {
       conversions_30d: conversions?.length || 0,
       inactive_partners: inactivePartners.length,
       app_referral_codes: appReferralCodes || 0,
+      thank_you_drafted: thankYouHtml.length > 0,
     }), { headers: { ...CORS, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("[REF]", e);

@@ -105,6 +105,27 @@ serve(async (req) => {
       issues.push(`<div style="padding:6px;border-left:3px solid #3b82f6;">📋 <strong>Content Queue</strong>: ${pendingContent.length} items pending approval</div>`);
     }
 
+    // NEW: 6. Audit landing pages for missing CTAs or broken checkout flows
+    const { data: sites } = await sb
+      .from("generated_sites")
+      .select("business_name, slug, sections, is_published")
+      .eq("is_published", true)
+      .limit(20);
+
+    let landingAuditHtml = "";
+    if (sites?.length) {
+      const sitesWithoutCta = sites.filter(s => {
+        const sections = typeof s.sections === "string" ? JSON.parse(s.sections) : s.sections;
+        const hasCta = JSON.stringify(sections).toLowerCase().includes("cta") || 
+                       JSON.stringify(sections).toLowerCase().includes("contact") ||
+                       JSON.stringify(sections).toLowerCase().includes("get started");
+        return !hasCta;
+      });
+      if (sitesWithoutCta.length > 0) {
+        issues.push(`<div style="padding:6px;border-left:3px solid #ef4444;">🔗 <strong>Landing Page Audit</strong>: ${sitesWithoutCta.length} published sites may be missing CTAs<br/>${sitesWithoutCta.slice(0, 3).map(s => `• ${s.business_name} (/${s.slug})`).join("<br/>")}</div>`);
+      }
+    }
+
     const hasIssues = issues.length > 0;
     const html = `
       ${issues.length ? `<h3 style="color:#f59e0b;">⚠️ Content Gaps</h3>${issues.join("<br/>")}` : ""}

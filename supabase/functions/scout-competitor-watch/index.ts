@@ -79,9 +79,63 @@ serve(async (req) => {
         <ul>${overdueBattlecards.map(c => `<li>${c.business_name}</li>`).join("")}</ul>`;
     }
 
-    const hasIssues = overdueWatch.length > 0 || overdueBattlecards.length > 0;
+    // NEW: 5. Monitor Google Ads Transparency — scrape competitor ad info via Firecrawl
+    const firecrawlKey = Deno.env.get("FIRECRAWL_API_KEY");
+    let competitorAdHtml = "";
+    if (firecrawlKey && watchClients?.length) {
+      // Pick first client with competitor URLs to check
+      const clientWithUrls = watchClients.find(c => c.competitor_urls?.length);
+      if (clientWithUrls?.competitor_urls?.[0]) {
+        try {
+          const scrapeRes = await fetch("https://api.firecrawl.dev/v1/scrape", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${firecrawlKey}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ url: clientWithUrls.competitor_urls[0], formats: ["markdown"], onlyMainContent: true }),
+          });
+          if (scrapeRes.ok) {
+            const scrapeData = await scrapeRes.json();
+            const content = scrapeData?.data?.markdown || scrapeData?.markdown || "";
+            if (content.length > 100) {
+              competitorAdHtml = `<h3 style="color:#c084fc;">🕵️ Competitor Site Snapshot: ${clientWithUrls.competitor_urls[0]}</h3>
+                <p style="font-size:12px;max-height:200px;overflow:hidden;">${content.slice(0, 500)}...</p>`;
+            }
+          }
+        } catch (e) {
+          console.log("[SCOUT] Firecrawl scrape failed:", e);
+        }
+      }
+    }
+
+    // NEW: 6. Track competitor pricing changes via scraping
+    let pricingHtml = "";
+    if (firecrawlKey && watchClients?.length) {
+      const pricingClient = watchClients.find(c => c.competitor_urls?.length && c.competitor_urls.length > 1);
+      if (pricingClient?.competitor_urls?.[1]) {
+        try {
+          const priceRes = await fetch("https://api.firecrawl.dev/v1/scrape", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${firecrawlKey}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ url: pricingClient.competitor_urls[1], formats: ["markdown"], onlyMainContent: true }),
+          });
+          if (priceRes.ok) {
+            const priceData = await priceRes.json();
+            const priceContent = priceData?.data?.markdown || priceData?.markdown || "";
+            if (priceContent.match(/\$\d+/)) {
+              pricingHtml = `<h3 style="color:#c084fc;">💲 Competitor Pricing Snapshot</h3>
+                <p style="font-size:12px;">${priceContent.match(/\$\d[\d,.]*/g)?.slice(0, 5).join(", ") || "No prices found"}</p>`;
+            }
+          }
+        } catch (e) {
+          console.log("[SCOUT] Pricing scrape failed:", e);
+        }
+      }
+    }
+
+    html += competitorAdHtml + pricingHtml;
+
+    const hasIssues = overdueWatch.length > 0 || overdueBattlecards.length > 0 || competitorAdHtml.length > 0;
     if (hasIssues) {
-      await sendScoutEmail(`🔭 Scout: ${overdueWatch.length + overdueBattlecards.length} overdue intelligence reports`, html);
+      await sendScoutEmail(`🔭 Scout: ${overdueWatch.length + overdueBattlecards.length} overdue, competitor intel attached`, html);
     }
 
     return new Response(JSON.stringify({
@@ -90,6 +144,7 @@ serve(async (req) => {
       overdue_reports: overdueWatch.length,
       overdue_battlecards: overdueBattlecards.length,
       upsell_opportunity: upsellOpportunity > 0 ? upsellOpportunity : 0,
+      competitor_scrape: competitorAdHtml.length > 0,
     }), { headers: { ...CORS, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("[SCOUT]", e);
