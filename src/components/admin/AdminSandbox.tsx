@@ -503,6 +503,9 @@ export default function AdminSandbox() {
         </div>
       </div>
 
+      {/* Social Media Lab */}
+      <SocialMediaLab />
+
       {/* SMS Products */}
       <div>
         <div className="flex items-center gap-2 mb-3">
