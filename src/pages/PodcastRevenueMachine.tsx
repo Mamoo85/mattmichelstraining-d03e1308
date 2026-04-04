@@ -79,7 +79,7 @@ export default function PodcastRevenueMachine() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/functions/v1/create-podcast-checkout", {
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-podcast-checkout`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),

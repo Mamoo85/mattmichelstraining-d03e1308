@@ -6,7 +6,7 @@ serve(async (req) => {
   try {
     const { email, businessName, contactName, industry, targetTitle } = await req.json();
     if (!email) return new Response(JSON.stringify({ error: "email required" }), { status: 400, headers: cors });
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, { apiVersion: "2024-12-18.acacia" });
+    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, { apiVersion: "2025-08-27.basil" });
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "subscription",
