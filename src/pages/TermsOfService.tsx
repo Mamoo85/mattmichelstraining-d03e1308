@@ -72,7 +72,7 @@ export default function TermsOfService() {
       <section className="mb-8">
         <h2 className="text-xl font-bold mb-3">8. Limitation of Liability</h2>
         <p className="leading-relaxed text-slate-700">
-          To the maximum extent permitted by law, M² Performance Training is not liable for any indirect, incidental, or consequential damages arising from your use of our services. Our total liability to you shall not exceed the amount you paid us in the 30 days prior to the claim.
+          To the maximum extent permitted by law, M2 Development is not liable for any indirect, incidental, or consequential damages arising from your use of our services. Our total liability to you shall not exceed the amount you paid us in the 30 days prior to the claim.
         </p>
       </section>
 
