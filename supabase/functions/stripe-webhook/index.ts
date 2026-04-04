@@ -3048,7 +3048,7 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
           }
         } catch (e) { console.error("[WEBHOOK] homeowner_campaign_subscription error:", e); }
 
-      // ── 18 New Autonomous Products ──────────────────────────────────
+      // ── 27 Autonomous Products ──────────────────────────────────
       const newProductHandlers: Array<[string, string, string, number]> = [
         ["obituary_service_subscription", "obituary_clients", "funeral_home_name", 19900],
         ["sermon_prep_subscription", "sermon_prep_clients", "church_name", 7900],
@@ -3068,6 +3068,15 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
         ["menu_engineering_subscription", "menu_engineering_clients", "restaurant_name", 9900],
         ["fitness_reports_subscription", "fitness_report_clients", "business_name", 7900],
         ["gov_meeting_tracker_subscription", "gov_meeting_tracker_clients", "business_name", 19900],
+        ["abandoned_cart_subscription", "abandoned_cart_clients", "business_name", 6900],
+        ["annual_review_subscription", "annual_review_clients", "business_name", 7900],
+        ["client_report_subscription", "client_report_clients", "business_name", 5900],
+        ["linkedin_outreach_subscription", "linkedin_outreach_clients", "business_name", 7900],
+        ["new_mover_marketing_subscription", "new_mover_clients", "business_name", 5900],
+        ["podcast_pitch_subscription", "podcast_pitch_clients", "business_name", 4900],
+        ["restaurant_menu_subscription", "restaurant_menu_clients", "business_name", 3900],
+        ["testimonial_harvester_subscription", "testimonial_harvester_clients", "business_name", 3900],
+        ["trade_show_followup_subscription", "trade_show_followup_clients", "business_name", 4900],
       ];
 
       for (const [metaType, tableName, nameField, price] of newProductHandlers) {
