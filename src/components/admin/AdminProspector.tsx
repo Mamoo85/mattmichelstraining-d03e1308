@@ -12,10 +12,22 @@ import { toast } from "sonner";
 import { Search, Mail, Zap, Users, TrendingUp, Play, RefreshCw, Loader2, Eye, Pencil, Send, Trash2, Filter } from "lucide-react";
 
 const INDUSTRIES = [
+  // Service / Contractor
   "plumber", "electrician", "roofer", "HVAC contractor", "auto repair shop",
   "cleaning service", "landscaper", "contractor", "painter", "handyman",
   "dentist", "law firm", "medical clinic", "real estate agent", "salon / barbershop",
   "restaurant", "fitness studio", "accountant", "deck builder",
+  // Industrial / Manufacturing (Addy Machinery-style leads)
+  "machine shop", "metal fabrication shop", "CNC machining service",
+  "tool and die maker", "injection molding company", "sheet metal fabrication",
+  "precision machining", "aerospace manufacturer", "automotive parts manufacturer",
+  "stamping company", "wire EDM service", "grinding shop",
+  "Swiss screw machining", "prototype machining", "die casting company",
+  "forging company", "gear manufacturer", "spring manufacturer",
+  "tube bending shop", "laser cutting service", "waterjet cutting service",
+  "powder coating service", "anodizing / plating shop", "contract manufacturer",
+  "fixture / jig builder", "mold maker", "industrial maintenance service",
+  "welding shop", "industrial supply distributor", "packaging manufacturer",
 ];
 
 const CITIES = [
