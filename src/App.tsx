@@ -287,6 +287,8 @@ const RealEstateNewsletter = lazyRetry(() => import("./pages/RealEstateNewslette
 const RealEstateDashboard = lazyRetry(() => import("./pages/RealEstateDashboard"));
 const EmployeeCredentialAudit = lazyRetry(() => import("./pages/EmployeeCredentialAudit"));
 const NewHireCheck = lazyRetry(() => import("./pages/NewHireCheck"));
+const StewartDentalProduction = lazyRetry(() => import("./pages/StewartDentalProduction"));
+const StewartDentalPrivacy = lazyRetry(() => import("./pages/StewartDentalPrivacy"));
 
 export const queryClient = new QueryClient({
   defaultOptions: {
