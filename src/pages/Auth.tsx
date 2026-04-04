@@ -380,6 +380,37 @@ const Auth = () => {
                   />
                 </div>
               )}
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Date of Birth</label>
+                <input
+                  type="date"
+                  value={dateOfBirth}
+                  onChange={(e) => setDateOfBirth(e.target.value)}
+                  className="w-full bg-card border border-border px-3 py-3 text-sm text-foreground focus:ring-1 focus:ring-primary outline-none"
+                  required
+                  max={new Date().toISOString().split("T")[0]}
+                />
+              </div>
+              {isMinor && signupRole === "self" && (
+                <div className="bg-destructive/10 border border-destructive/30 p-4 rounded">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle size={16} className="text-destructive flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-xs font-bold text-foreground mb-1">Athletes under 18 need a parent account</p>
+                      <p className="text-xs text-muted-foreground mb-2">
+                        Michigan law requires parental consent for users under 18 on interactive platforms. Switch to "Parent + Athlete" to create both accounts together.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setSignupRole("parent")}
+                        className="text-xs font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-colors"
+                      >
+                        Switch to Parent Signup →
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </>
           )}
           <div>
