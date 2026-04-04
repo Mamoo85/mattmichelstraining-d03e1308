@@ -77,6 +77,19 @@ const Auth = () => {
   const [childPassword, setChildPassword] = useState("");
   const [childName, setChildName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [dateOfBirth, setDateOfBirth] = useState("");
+
+  const calculateAge = (dob: string) => {
+    if (!dob) return null;
+    const birth = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+    return age;
+  };
+
+  const isMinor = dateOfBirth ? (calculateAge(dateOfBirth) ?? 99) < 18 : false;
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
