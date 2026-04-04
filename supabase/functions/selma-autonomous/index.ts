@@ -5,19 +5,92 @@ const cors = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Priority tiers: 1 = focus first (Matt's top services), 2 = secondary, 3 = backburner
 const PRODUCT_TABLES = [
-  { table: "gbp_saas_clients", name: "GBP Auto-Poster", price: 49, ltv_months: 8, keywords: ["google business profile management", "GBP automation", "google my business posting service"] },
-  { table: "blog_post_clients", name: "Blog Writer", price: 99, ltv_months: 10, keywords: ["automated blog writing service", "AI blog posts for business", "blog content service"] },
-  { table: "social_media_clients", name: "Social Media AI", price: 199, ltv_months: 6, keywords: ["social media management service", "AI social media posts", "automated social media"] },
-  { table: "chatbot_clients", name: "AI Chatbot", price: 79, ltv_months: 12, keywords: ["AI chatbot for small business", "website chatbot service", "business chatbot"] },
-  { table: "review_monitor_clients", name: "Review Monitor", price: 25, ltv_months: 14, keywords: ["review monitoring service", "online review alerts", "reputation monitoring"] },
-  { table: "sms_blast_clients", name: "Weekly SMS Blast", price: 19, ltv_months: 10, keywords: ["SMS marketing service", "text message marketing", "bulk SMS for business"] },
-  { table: "contractor_clients", name: "Contractor Lead Gen", price: 399, ltv_months: 8, keywords: ["contractor leads", "roofing leads", "HVAC leads", "plumber leads"] },
-  { table: "competitor_watch_clients", name: "Competitor Watch", price: 49, ltv_months: 10, keywords: ["competitor monitoring service", "competitive intelligence small business"] },
-  { table: "estimate_generator_clients", name: "Estimate Generator", price: 39, ltv_months: 10, keywords: ["estimate generator for contractors", "contractor estimate tool"] },
-  { table: "noshow_clients", name: "No-Show Re-Booker", price: 25, ltv_months: 14, keywords: ["no show appointment followup", "missed appointment text", "rebooking service"] },
-  { table: "invoice_chaser_clients", name: "Invoice Chaser", price: 29, ltv_months: 12, keywords: ["invoice reminder service", "automated invoice followup", "payment reminder text"] },
-  { table: "collections_clients", name: "Collections", price: 49, ltv_months: 10, keywords: ["automated collections service", "past due invoice chaser"] },
+  // === TIER 1: TOP PRIORITY — focus campaigns here ===
+  { table: "web_design_leads", name: "Web Design Services", price: 1499, ltv_months: 12, priority: 1, keywords: [
+    "web design for small business", "affordable web design near me", "small business website design",
+    "local business website builder", "web design Michigan", "web design Grosse Pointe",
+    "contractor website design", "restaurant website design", "dental website design",
+    "real estate agent website", "manufacturing web design", "website redesign service",
+    "professional web design agency", "web designer for hire", "custom website design",
+    "WordPress web design service", "business website cost", "best web design company near me",
+    "web design for contractors", "web design for restaurants"
+  ]},
+  { table: "gbp_saas_clients", name: "GBP Auto-Poster", price: 74, ltv_months: 10, priority: 1, keywords: [
+    "google business profile management", "GBP automation", "google my business posting service",
+    "google business profile posts automated", "GBP post scheduler", "google my business management tool",
+    "local SEO automation", "google business profile marketing", "GMB posting service",
+    "google maps marketing service", "local business marketing automation"
+  ]},
+  { table: "social_media_clients", name: "Social Media AI", price: 199, ltv_months: 6, priority: 1, keywords: [
+    "social media management service", "AI social media posts", "automated social media",
+    "social media marketing for small business", "social media content creation service",
+    "Facebook posting service for business", "Instagram marketing automation",
+    "social media manager near me", "affordable social media management",
+    "AI social media marketing", "social media for contractors"
+  ]},
+  { table: "blog_post_clients", name: "Blog Writer", price: 99, ltv_months: 10, priority: 1, keywords: [
+    "automated blog writing service", "AI blog posts for business", "blog content service",
+    "SEO blog writing service", "monthly blog posts for business", "content marketing service",
+    "blog writing for small business", "AI content writer for business"
+  ]},
+  { table: "chatbot_clients", name: "AI Chatbot", price: 79, ltv_months: 12, priority: 1, keywords: [
+    "AI chatbot for small business", "website chatbot service", "business chatbot",
+    "live chat alternative for small business", "AI customer service bot",
+    "chatbot for contractor website", "lead capture chatbot"
+  ]},
+
+  // === TIER 2: SMS PRODUCTS — solid recurring, expand when Tier 1 is covered ===
+  { table: "review_monitor_clients", name: "Review Monitor", price: 25, ltv_months: 14, priority: 2, keywords: [
+    "review monitoring service", "online review alerts", "reputation monitoring",
+    "google review monitoring", "bad review alert service", "reputation management small business"
+  ]},
+  { table: "sms_blast_clients", name: "Weekly SMS Blast", price: 19, ltv_months: 10, priority: 2, keywords: [
+    "SMS marketing service", "text message marketing", "bulk SMS for business",
+    "SMS marketing for restaurants", "text blast service small business"
+  ]},
+  { table: "noshow_clients", name: "No-Show Re-Booker", price: 25, ltv_months: 14, priority: 2, keywords: [
+    "no show appointment followup", "missed appointment text", "rebooking service",
+    "appointment no show recovery", "automated rebooking text"
+  ]},
+  { table: "invoice_chaser_clients", name: "Invoice Chaser", price: 29, ltv_months: 12, priority: 2, keywords: [
+    "invoice reminder service", "automated invoice followup", "payment reminder text",
+    "overdue invoice automation", "invoice collection service small business"
+  ]},
+  { table: "estimate_drip_clients", name: "Estimate Follow-Up Drip", price: 39, ltv_months: 10, priority: 2, keywords: [
+    "estimate follow up automation", "contractor estimate drip", "quote follow up service"
+  ]},
+  { table: "afterjob_drip_clients", name: "After-Job Review Drip", price: 29, ltv_months: 10, priority: 2, keywords: [
+    "post job review request", "after service review automation", "review request service"
+  ]},
+  { table: "referral_program_clients", name: "Referral Program", price: 39, ltv_months: 12, priority: 2, keywords: [
+    "referral program for small business", "automated referral rewards", "customer referral system"
+  ]},
+  { table: "slow_day_clients", name: "Slow Day SMS", price: 25, ltv_months: 10, priority: 2, keywords: [
+    "slow day promotion text", "last minute appointment filler", "same day booking promotion"
+  ]},
+  { table: "homeowner_campaign_clients", name: "New Homeowner Campaign", price: 59, ltv_months: 8, priority: 2, keywords: [
+    "new homeowner marketing", "new mover leads for contractors", "new homeowner mailer service"
+  ]},
+  { table: "promo_blaster_clients", name: "Seasonal Promo Blaster", price: 29, ltv_months: 10, priority: 2, keywords: [
+    "seasonal promotion SMS", "holiday marketing automation", "seasonal text blast service"
+  ]},
+
+  // === TIER 3: BACKBURNER — lower priority, promote only if strong opportunity ===
+  { table: "contractor_clients", name: "Contractor Lead Gen", price: 399, ltv_months: 8, priority: 3, keywords: [
+    "contractor leads", "roofing leads", "HVAC leads", "plumber leads",
+    "contractor lead generation", "exclusive contractor leads"
+  ]},
+  { table: "competitor_watch_clients", name: "Competitor Watch", price: 49, ltv_months: 10, priority: 3, keywords: [
+    "competitor monitoring service", "competitive intelligence small business"
+  ]},
+  { table: "estimate_generator_clients", name: "Estimate Generator", price: 39, ltv_months: 10, priority: 3, keywords: [
+    "estimate generator for contractors", "contractor estimate tool"
+  ]},
+  { table: "collections_clients", name: "Collections", price: 49, ltv_months: 10, priority: 3, keywords: [
+    "automated collections service", "past due invoice chaser"
+  ]},
 ];
 
 // DataForSEO: fetch real keyword volume + CPC
