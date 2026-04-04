@@ -110,8 +110,29 @@ async function generateWithGateway(model: string, topic: string, customContent?:
   const data = await res.json();
   const raw = data?.choices?.[0]?.message?.content || "";
 
-  const jsonMatch = raw.match(/\{[\s\S]*\}/);
-  return JSON.parse(jsonMatch?.[0] || raw);
+  // Strip markdown code fences if present
+  const cleaned = raw.replace(/```(?:json)?\s*/gi, "").replace(/```\s*/g, "").trim();
+  const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    console.error("[TRAINING-NEWSLETTER] No JSON found in AI response:", raw.slice(0, 500));
+    throw new Error("AI response did not contain valid JSON");
+  }
+  try {
+    return JSON.parse(jsonMatch[0]);
+  } catch (parseErr) {
+    console.error("[TRAINING-NEWSLETTER] JSON parse failed:", parseErr, "Raw:", jsonMatch[0].slice(0, 500));
+    // Return fallback content
+    return {
+      subject: `The Monthly — ${topic}`,
+      preview_text: "Real training talk from Matt Michels.",
+      headline: topic,
+      opening: cleaned.slice(0, 200),
+      body: cleaned.slice(200, 800) || "Check mattmichelstraining.com for this month's training content.",
+      truth_of_the_month: "Progressive overload works 100% of the time. Add weight, add reps, be consistent.",
+      cta_text: "Book a Session",
+      next_month_tease: "Next month we talk about foam rolling.",
+    };
+  }
 }
 
 // "Claude" side now uses GPT-5 via gateway; "Lovable" side uses Gemini
