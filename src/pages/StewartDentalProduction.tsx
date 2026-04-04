@@ -396,6 +396,39 @@ export default function StewartDentalProduction() {
         </section>
       </RevealSection>
 
+      {/* ═══════════ Case Gallery ═══════════ */}
+      <RevealSection>
+        <section id="gallery-section" className="py-20 px-5" style={{ background: C }}>
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-14">
+              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: G }}>Results</p>
+              <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(28px,4vw,44px)", color: N, fontWeight: 400 }}>Case Gallery</h2>
+              <p className="mt-3 text-sm max-w-2xl mx-auto" style={{ color: "#6b7280" }}>
+                We are constantly recording results from our patients. In the majority of work shown, CEREC CAD/CAM crowns were used for restorations over implants and crowns. These restorations can be made to be extremely life-like!
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[["CEREC Crown Restoration", "Full porcelain crown designed and placed in a single visit using our in-office CAD/CAM system.", "https://images.unsplash.com/photo-1606811841689-23dfddce3e95?w=600&q=80"],
+                ["Implant-Supported Bridge", "Multiple missing teeth replaced with implant-supported prosthetics for permanent, natural-looking results.", "https://images.unsplash.com/photo-1588776814546-1ffbb1b72cb7?w=600&q=80"],
+                ["Full-Mouth Rehabilitation", "Complete reconstruction combining CEREC crowns, implants, and veneers for a total smile transformation.", "https://images.unsplash.com/photo-1598256989800-fe5f95da9787?w=600&q=80"],
+                ["Veneer Smile Makeover", "Custom ceramic veneers to restore a beautiful, natural smile with precise shade matching.", "https://images.unsplash.com/photo-1609840114035-3c981b782dfe?w=600&q=80"],
+                ["Denture Aesthetics", "Complete denture designed to create a natural, confident smile — indistinguishable from natural teeth.", "https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=600&q=80"],
+                ["Bridge Over Natural Teeth", "Zirconia-reinforced ceramic bridge using CAD/CAM digital impressions for precision fit.", "https://images.unsplash.com/photo-1629909615184-74f495363b67?w=600&q=80"]].map(([title, desc, img], i) => (
+                <div key={i} className="rounded-xl overflow-hidden" style={{ background: "white", border: "1px solid rgba(201,168,76,.15)" }}>
+                  <img src={img} alt={title as string} className="w-full object-cover" style={{ height: 180 }} loading="lazy" />
+                  <div className="p-5">
+                    <h4 style={{ fontFamily: "'Playfair Display', serif", color: N, fontSize: 15, fontWeight: 500, marginBottom: 4 }}>{title}</h4>
+                    <p style={{ color: "#6b7280", fontSize: 12, lineHeight: 1.7 }}>{desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-center mt-8 text-xs" style={{ color: "#9ca3af" }}>
+              Actual patient photos available in-office with signed consent. These are representative case descriptions.
+            </p>
+          </div>
+        </section>
+      </RevealSection>
 
       {/* ═══════════ Testimonials ═══════════ */}
       <RevealSection>
