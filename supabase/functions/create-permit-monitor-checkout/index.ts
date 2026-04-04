@@ -15,8 +15,8 @@ serve(async (req) => {
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, product_data: { name: "AI Permit & License Monitor" }, unit_amount: 7900 }, quantity: 1 }],
       subscription_data: { trial_period_days: 7, metadata: { type: "permit_monitor_subscription", businessName, email, industry: industry || "", city: city || "" } },
       metadata: { type: "permit_monitor_subscription", businessName, email, industry: industry || "", city: city || "" },
-      success_url: `${req.headers.get("origin") || "https://mattmichelstraining.lovable.app"}/ai-permit-monitor?success=true`,
-      cancel_url: `${req.headers.get("origin") || "https://mattmichelstraining.lovable.app"}/ai-permit-monitor`,
+      success_url: `${req.headers.get("origin") || "https://www.mattmichelstraining.com"}/ai-permit-monitor?success=true`,
+      cancel_url: `${req.headers.get("origin") || "https://www.mattmichelstraining.com"}/ai-permit-monitor`,
     });
     return new Response(JSON.stringify({ url: session.url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);

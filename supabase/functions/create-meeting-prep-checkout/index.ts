@@ -11,8 +11,8 @@ serve(async (req) => {
       customer_email: email,
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, product_data: { name: "AI Meeting Prep Agent", description: "On-demand company research & briefing documents" }, unit_amount: 2900 }, quantity: 1 }],
       mode: "subscription",
-      success_url: `${req.headers.get("origin") || "https://mattmichelstraining.lovable.app"}/ai-meeting-prep?success=true`,
-      cancel_url: `${req.headers.get("origin") || "https://mattmichelstraining.lovable.app"}/ai-meeting-prep`,
+      success_url: `${req.headers.get("origin") || "https://www.mattmichelstraining.com"}/ai-meeting-prep?success=true`,
+      cancel_url: `${req.headers.get("origin") || "https://www.mattmichelstraining.com"}/ai-meeting-prep`,
       metadata: { type: "meeting_prep_subscription", business_name: businessName, industry: industry || "" },
       subscription_data: { trial_period_days: 7 },
     });

@@ -15,8 +15,8 @@ serve(async (req) => {
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, product_data: { name: "AI Birthday/Anniversary Campaign" }, unit_amount: 2900 }, quantity: 1 }],
       subscription_data: { trial_period_days: 7, metadata: { type: "birthday_campaign_subscription", businessName, email, industry: industry || "" } },
       metadata: { type: "birthday_campaign_subscription", businessName, email, industry: industry || "" },
-      success_url: `${req.headers.get("origin") || "https://mattmichelstraining.lovable.app"}/ai-birthday-campaign?success=true`,
-      cancel_url: `${req.headers.get("origin") || "https://mattmichelstraining.lovable.app"}/ai-birthday-campaign`,
+      success_url: `${req.headers.get("origin") || "https://www.mattmichelstraining.com"}/ai-birthday-campaign?success=true`,
+      cancel_url: `${req.headers.get("origin") || "https://www.mattmichelstraining.com"}/ai-birthday-campaign`,
     });
     return new Response(JSON.stringify({ url: session.url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);

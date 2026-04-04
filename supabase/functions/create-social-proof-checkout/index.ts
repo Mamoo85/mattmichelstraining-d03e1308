@@ -11,8 +11,8 @@ serve(async (req) => {
       customer_email: email,
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, product_data: { name: "AI Social Proof Collector", description: "Automated review & testimonial collection system" }, unit_amount: 3900 }, quantity: 1 }],
       mode: "subscription",
-      success_url: `${req.headers.get("origin") || "https://mattmichelstraining.lovable.app"}/ai-social-proof?success=true`,
-      cancel_url: `${req.headers.get("origin") || "https://mattmichelstraining.lovable.app"}/ai-social-proof`,
+      success_url: `${req.headers.get("origin") || "https://www.mattmichelstraining.com"}/ai-social-proof?success=true`,
+      cancel_url: `${req.headers.get("origin") || "https://www.mattmichelstraining.com"}/ai-social-proof`,
       metadata: { type: "social_proof_subscription", business_name: businessName, industry: industry || "" },
       subscription_data: { trial_period_days: 7 },
     });

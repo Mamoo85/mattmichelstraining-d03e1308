@@ -11,8 +11,8 @@ serve(async (req) => {
       customer_email: email,
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, product_data: { name: "AI Local Directory Submitter", description: "Monthly directory audit & NAP consistency management" }, unit_amount: 3900 }, quantity: 1 }],
       mode: "subscription",
-      success_url: `${req.headers.get("origin") || "https://mattmichelstraining.lovable.app"}/ai-directory-submitter?success=true`,
-      cancel_url: `${req.headers.get("origin") || "https://mattmichelstraining.lovable.app"}/ai-directory-submitter`,
+      success_url: `${req.headers.get("origin") || "https://www.mattmichelstraining.com"}/ai-directory-submitter?success=true`,
+      cancel_url: `${req.headers.get("origin") || "https://www.mattmichelstraining.com"}/ai-directory-submitter`,
       metadata: { type: "directory_submitter_subscription", business_name: businessName, industry: industry || "" },
       subscription_data: { trial_period_days: 7 },
     });
