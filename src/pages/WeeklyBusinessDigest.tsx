@@ -138,7 +138,7 @@ export default function WeeklyBusinessDigest() {
           <div className="bg-slate-750 border-b border-slate-700 px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-3">
             <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white font-black text-xs shrink-0">M2</div>
             <div className="min-w-0">
-              <p className="text-white text-sm font-semibold">M² Performance Training</p>
+              <p className="text-white text-sm font-semibold">M2 Development</p>
               <p className="text-slate-400 text-xs truncate">matt@mattmichelstraining.com · Monday 8:00 AM</p>
             </div>
           </div>
@@ -157,7 +157,7 @@ export default function WeeklyBusinessDigest() {
               ))}
             </div>
             <div className="mt-6 pt-4 border-t border-slate-700 text-xs text-slate-500">
-              Personalized for your business by AI · M² Performance Training · Unsubscribe
+              Personalized for your business by AI · M2 Development · Unsubscribe
             </div>
           </div>
         </div>

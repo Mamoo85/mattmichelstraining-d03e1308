@@ -44,7 +44,7 @@ serve(async (_req) => {
           headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
             model: "google/gemini-2.5-flash-lite",
-            messages: [{ role: "user", content: `Write a very short, personal check-in email from Matt at M² Performance to ${client.business} about their ${client.service.replace(/_/g, " ")} service. It's been ${client.daysSince} days since their last delivery. Ask if everything's okay, offer to adjust the service, remind them of the value. Under 100 words. Warm and genuine.` }],
+            messages: [{ role: "user", content: `Write a very short, personal check-in email from Matt at M2 Development to ${client.business} about their ${client.service.replace(/_/g, " ")} service. It's been ${client.daysSince} days since their last delivery. Ask if everything's okay, offer to adjust the service, remind them of the value. Under 100 words. Warm and genuine.` }],
           }),
         });
         const aiData = await aiRes.json();

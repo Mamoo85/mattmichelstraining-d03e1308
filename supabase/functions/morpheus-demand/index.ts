@@ -194,7 +194,7 @@ serve(async (req) => {
     <p style="font-size:12px;color:#94a3b8;line-height:1.6;">Morpheus runs every Sunday at 8am ET. Numbers are estimates based on subscription table counts. Questions: <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a></p>
   </td></tr>
   <tr><td style="background:#f8fafc;padding:10px 28px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 10px 10px;font-size:11px;color:#94a3b8;">
-    Morpheus Strategic Intelligence · M² Performance Training
+    Morpheus Strategic Intelligence · M2 Development
   </td></tr>
 </table></td></tr></table>
 </body></html>`;

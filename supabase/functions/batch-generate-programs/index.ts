@@ -125,7 +125,7 @@ CRITICAL RULES FOR ALL PROGRAMS:
 - ONLY use exercise IDs from the provided library`;
 
     const systemPrompt = isFoundation
-      ? `You are Matt Michels' AI assistant for M² Performance Training youth foundation programs. These are AGE-APPROPRIATE programs for young athletes.
+      ? `You are Matt Michels' AI assistant for M2 Development youth foundation programs. These are AGE-APPROPRIATE programs for young athletes.
 ${libraryContext}
 ADDITIONAL FOUNDATION RULES:
 - Structure as 4 weeks, 3 days/week with 5-8 exercises per day

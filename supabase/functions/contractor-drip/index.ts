@@ -157,7 +157,7 @@ function buildHtml(body: string): string {
 <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;vertical-align:middle;" alt="Matt">
 <span style="margin-left:12px;font-size:13px;color:#334155;vertical-align:middle;"><strong>Matt Michels</strong> · Grosse Pointe, MI · (313) 806-4952</span>
 </div></td></tr>
-<tr><td style="background:#f8fafc;padding:12px 24px;font-size:11px;color:#94a3b8;border-top:1px solid #e2e8f0;">M² Performance Training · Grosse Pointe, MI</td></tr>
+<tr><td style="background:#f8fafc;padding:12px 24px;font-size:11px;color:#94a3b8;border-top:1px solid #e2e8f0;">M2 Development · Grosse Pointe, MI</td></tr>
 </table></td></tr></table></body></html>`;
 }
 

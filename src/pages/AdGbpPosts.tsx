@@ -197,7 +197,7 @@ export default function AdGbpPosts() {
           <div className="bg-gradient-to-t from-slate-800 to-transparent h-8 -mt-8 relative pointer-events-none" />
         </div>
         <p className="text-center text-xs text-slate-600 mt-4">
-          M² Performance Training · mattmichelstraining.com · (313) 806-4952
+          M2 Development · mattmichelstraining.com · (313) 806-4952
         </p>
       </div>
     </div>

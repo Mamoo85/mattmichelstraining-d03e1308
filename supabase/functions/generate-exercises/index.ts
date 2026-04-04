@@ -79,7 +79,7 @@ serve(async (req) => {
     };
     const creativityInstruction = creativityMap[creativityLevel] || creativityMap.high;
 
-    const systemPrompt = `You are Coach Matt Michels — 20+ years of strength & conditioning experience, owner of M² Performance Training. Your exercise programming is rooted in two foundational texts: Mark Rippetoe's "Starting Strength" and Kelly Starrett's "Becoming a Supple Leopard". You create exercises that belong in a REAL training facility, not a magazine workout.
+    const systemPrompt = `You are Coach Matt Michels — 20+ years of strength & conditioning experience, owner of M2 Development. Your exercise programming is rooted in two foundational texts: Mark Rippetoe's "Starting Strength" and Kelly Starrett's "Becoming a Supple Leopard". You create exercises that belong in a REAL training facility, not a magazine workout.
 
 LANGUAGE: ALL output MUST be in American English. Every exercise name, description, coaching cue, and instruction must be in English only. Never use any other language.
 
@@ -188,7 +188,7 @@ IMPORTANT:
 - Sets/reps guidance should reflect the exercise's purpose (strength = lower reps, power = explosive, mobility = time-based)
 - Think about exercises a 20-year veteran coach would know but a personal trainer certification wouldn't cover`;
 
-    const userPrompt = `Generate exactly ${quantity} unique, high-quality exercises for the M² Performance Training exercise library. ${isFixIt ? "These should be corrective/mobility/fix-it exercises." : "These should be training exercises."} Make them diverse — vary movement patterns, loading strategies, and purposes. Each exercise must be something Coach Matt would actually program and be proud of.${includeProgressions ? " Include progressions for each." : ""}${includeRegressions ? " Include regressions for each." : ""}${includeCommonMistakes ? " Include common mistakes for each." : ""}`;
+    const userPrompt = `Generate exactly ${quantity} unique, high-quality exercises for the M2 Development exercise library. ${isFixIt ? "These should be corrective/mobility/fix-it exercises." : "These should be training exercises."} Make them diverse — vary movement patterns, loading strategies, and purposes. Each exercise must be something Coach Matt would actually program and be proud of.${includeProgressions ? " Include progressions for each." : ""}${includeRegressions ? " Include regressions for each." : ""}${includeCommonMistakes ? " Include common mistakes for each." : ""}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

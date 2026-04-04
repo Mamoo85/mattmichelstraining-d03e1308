@@ -133,7 +133,7 @@ function buildOnboardingEmail(content: StepContent, product: string): string {
 <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:20px 16px;">
 <table width="100%" cellpadding="0" cellspacing="0" style="max-width:540px;">
   <tr><td style="background:#1e293b;padding:14px 24px;border-radius:8px 8px 0 0;">
-    <p style="margin:0;color:#e8621a;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;">M² Performance Training</p>
+    <p style="margin:0;color:#e8621a;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;">M2 Development</p>
   </td></tr>
   <tr><td style="background:#fff;padding:28px 28px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
     ${content.body.split("\n\n").map(p => `<p style="margin:0 0 16px;font-size:15px;color:#334155;line-height:1.8;">${p.replace(/\n/g, "<br>")}</p>`).join("")}
@@ -145,7 +145,7 @@ function buildOnboardingEmail(content: StepContent, product: string): string {
     </div>
   </td></tr>
   <tr><td style="background:#f8fafc;padding:10px 24px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 8px 8px;font-size:11px;color:#94a3b8;">
-    M² Performance Training · Reply to this email to reach Matt directly.
+    M2 Development · Reply to this email to reach Matt directly.
   </td></tr>
 </table></td></tr></table>
 </body></html>`;

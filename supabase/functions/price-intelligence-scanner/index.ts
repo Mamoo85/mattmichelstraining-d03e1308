@@ -229,7 +229,7 @@ FORMAT AS JSON:
 </div>
 <div class="footer">
   <img src="https://mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;vertical-align:middle;margin-right:8px;" alt="Matt">
-  <span>Matt Michels | M² Performance Training | matt@mattmichelstraining.com</span>
+  <span>Matt Michels | M2 Development | matt@mattmichelstraining.com</span>
 </div>
 </body>
 </html>`;
@@ -269,7 +269,7 @@ FORMAT AS JSON:
 ${parsed.weeklyReportHtml}
 <div class="footer">
   <img src="https://mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;vertical-align:middle;margin-right:8px;" alt="Matt">
-  <span>Matt Michels | M² Performance Training | matt@mattmichelstraining.com</span>
+  <span>Matt Michels | M2 Development | matt@mattmichelstraining.com</span>
 </div>
 </body>
 </html>`;

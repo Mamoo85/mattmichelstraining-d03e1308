@@ -69,7 +69,7 @@ function friendEmailHtml(p: ReferralPayload): string {
 
     <div style="background:#1e293b;border-radius:8px 8px 0 0;padding:20px 24px;">
       <div style="color:#e8621a;font-size:20px;font-weight:800;">Matt Michels</div>
-      <div style="color:#94a3b8;font-size:13px;">M² Performance Training — Metro Detroit</div>
+      <div style="color:#94a3b8;font-size:13px;">M2 Development — Metro Detroit</div>
     </div>
 
     <div style="background:#ffffff;border-radius:0 0 8px 8px;padding:28px 24px;">
@@ -125,7 +125,7 @@ function mattEmailHtml(p: ReferralPayload): string {
 
     <div style="background:#1e293b;border-radius:8px 8px 0 0;padding:20px 24px;">
       <div style="color:#e8621a;font-size:20px;font-weight:800;">New Referral Lead</div>
-      <div style="color:#94a3b8;font-size:13px;">M² Performance Training</div>
+      <div style="color:#94a3b8;font-size:13px;">M2 Development</div>
     </div>
 
     <div style="background:#ffffff;border-radius:0 0 8px 8px;padding:28px 24px;">
@@ -181,7 +181,7 @@ function referrerEmailHtml(p: ReferralPayload): string {
 
     <div style="background:#1e293b;border-radius:8px 8px 0 0;padding:20px 24px;">
       <div style="color:#e8621a;font-size:20px;font-weight:800;">Thanks for the referral!</div>
-      <div style="color:#94a3b8;font-size:13px;">M² Performance Training</div>
+      <div style="color:#94a3b8;font-size:13px;">M2 Development</div>
     </div>
 
     <div style="background:#ffffff;border-radius:0 0 8px 8px;padding:28px 24px;">

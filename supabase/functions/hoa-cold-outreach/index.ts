@@ -139,7 +139,7 @@ async function sendEmail(to: string, subject: string, bodyText: string): Promise
     <hr style="border:none;border-top:1px solid #e2e8f0;margin:0 0 16px;">
     <div style="display:flex;align-items:center;gap:12px;">
       <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Matt Michels">
-      <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>M² Performance Training · (313) 806-4952<br><a href="mailto:matt@mattmichelstraining.com" style="color:#e8621a;text-decoration:none;">matt@mattmichelstraining.com</a></div>
+      <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>M2 Development · (313) 806-4952<br><a href="mailto:matt@mattmichelstraining.com" style="color:#e8621a;text-decoration:none;">matt@mattmichelstraining.com</a></div>
     </div>
   </td></tr>
 </table>

@@ -52,7 +52,7 @@ serve(async (req) => {
       .map((p: any) => `- "${p.title}" | ${p.category} | ${p.level} | $${p.price}`)
       .join("\n");
 
-    const systemPrompt = `You are an expert posture and biomechanics analyst for M² Performance Training, coached by Matt Michels.
+    const systemPrompt = `You are an expert posture and biomechanics analyst for M2 Development, coached by Matt Michels.
 
 Analyze the two photos (front view and side view) for postural deviations and movement dysfunctions.
 

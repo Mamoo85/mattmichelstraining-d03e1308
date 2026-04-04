@@ -196,7 +196,7 @@ export default function AdminClientHealth() {
               Internal — Your Own Business ({internalClients.length} services)
             </CardTitle>
             <p className="text-[10px] text-muted-foreground">
-              These are services running for M² Performance Training. They don't count toward revenue.
+              These are services running for M2 Development. They don't count toward revenue.
             </p>
           </CardHeader>
           <CardContent>

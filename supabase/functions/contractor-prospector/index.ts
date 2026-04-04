@@ -243,7 +243,7 @@ ${htmlBody}
 </div>
 </td></tr>
 <tr><td style="background:#f8fafc;padding:12px 24px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;">
-M² Performance Training · Grosse Pointe, MI
+M2 Development · Grosse Pointe, MI
 </td></tr>
 </table></td></tr></table></body></html>`;
 }

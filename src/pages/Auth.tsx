@@ -5,7 +5,7 @@ import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import m2Logo from "@/assets/m2-logo.jpg";
-import { ArrowRight, Loader2, Gift, Users, Mail, User, UserPlus } from "lucide-react";
+import { ArrowRight, Loader2, Gift, Users, Mail, User, UserPlus, AlertTriangle } from "lucide-react";
 import NutritionSneakPeek from "@/components/auth/NutritionSneakPeek";
 
 type SignupRole = "self" | "parent";
@@ -77,6 +77,19 @@ const Auth = () => {
   const [childPassword, setChildPassword] = useState("");
   const [childName, setChildName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [dateOfBirth, setDateOfBirth] = useState("");
+
+  const calculateAge = (dob: string) => {
+    if (!dob) return null;
+    const birth = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+    return age;
+  };
+
+  const isMinor = dateOfBirth ? (calculateAge(dateOfBirth) ?? 99) < 18 : false;
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -124,7 +137,7 @@ const Auth = () => {
         password,
         options: {
           emailRedirectTo: buildAuthRedirectUrl("/welcome"),
-          data: { full_name: `${firstName.trim()} ${lastName.trim()}`, athlete_name: signupRole === "self" ? athleteName : "", account_role: accountRole },
+          data: { full_name: `${firstName.trim()} ${lastName.trim()}`, athlete_name: signupRole === "self" ? athleteName : "", account_role: accountRole, date_of_birth: dateOfBirth || null },
         },
       });
       if (signUpError) {
@@ -367,6 +380,37 @@ const Auth = () => {
                   />
                 </div>
               )}
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Date of Birth</label>
+                <input
+                  type="date"
+                  value={dateOfBirth}
+                  onChange={(e) => setDateOfBirth(e.target.value)}
+                  className="w-full bg-card border border-border px-3 py-3 text-sm text-foreground focus:ring-1 focus:ring-primary outline-none"
+                  required
+                  max={new Date().toISOString().split("T")[0]}
+                />
+              </div>
+              {isMinor && signupRole === "self" && (
+                <div className="bg-destructive/10 border border-destructive/30 p-4 rounded">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle size={16} className="text-destructive flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-xs font-bold text-foreground mb-1">Athletes under 18 need a parent account</p>
+                      <p className="text-xs text-muted-foreground mb-2">
+                        Michigan law requires parental consent for users under 18 on interactive platforms. Switch to "Parent + Athlete" to create both accounts together.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setSignupRole("parent")}
+                        className="text-xs font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-colors"
+                      >
+                        Switch to Parent Signup →
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </>
           )}
           <div>
@@ -458,7 +502,7 @@ const Auth = () => {
 
           <button
             type="submit"
-            disabled={loading || (mode === "signup" && !termsAccepted)}
+            disabled={loading || (mode === "signup" && !termsAccepted) || (mode === "signup" && signupRole === "self" && isMinor)}
             className="w-full bg-primary text-primary-foreground px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-m2 flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {loading ? <Loader2 size={15} className="animate-spin" /> : mode === "magic" ? <Mail size={15} /> : <ArrowRight size={15} />}

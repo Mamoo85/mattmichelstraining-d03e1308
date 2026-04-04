@@ -223,7 +223,7 @@ ${parsed.reportHtml || ""}
 
 <div class="footer">
   <img src="https://mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;vertical-align:middle;margin-right:8px;" alt="Matt">
-  <span>Matt Michels | M² Performance Training | matt@mattmichelstraining.com | (313) 806-4952</span>
+  <span>Matt Michels | M2 Development | matt@mattmichelstraining.com | (313) 806-4952</span>
 </div>
 </body>
 </html>`;

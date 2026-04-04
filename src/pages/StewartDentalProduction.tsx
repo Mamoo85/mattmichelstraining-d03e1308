@@ -11,7 +11,7 @@ const C = "#F8F3EC"; // Cream
 const P = "#FDFAF5"; // Parchment
 
 /* ─── Types ─── */
-type Tab = "procedures" | "faq" | "new-patients" | "gallery" | "privacy";
+type Tab = "procedures" | "faq" | "new-patients" | "privacy";
 
 /* ─── FAQ data (real content from stewartdentalgroup.com) ─── */
 const FAQS: [string, string][] = [
@@ -143,7 +143,7 @@ export default function StewartDentalProduction() {
     ["#cerec", "CEREC Technology"],
     ["#services", "Services"],
     ["#doctor", "Meet Dr. Stewart"],
-    ["#gallery-section", "Gallery"],
+    
     ["#faq-section", "FAQ"],
     ["#new-patients-section", "New Patients"],
     ["#appointment", "Contact"],
@@ -396,44 +396,6 @@ export default function StewartDentalProduction() {
         </section>
       </RevealSection>
 
-      {/* ═══════════ Before & After Gallery ═══════════ */}
-      <RevealSection>
-        <section id="gallery-section" className="py-20 px-5" style={{ background: C }}>
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-14">
-              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: G }}>Results</p>
-              <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(28px,4vw,44px)", color: N, fontWeight: 400 }}>Before &amp; After Gallery</h2>
-              <p className="mt-3 text-sm max-w-2xl mx-auto" style={{ color: "#6b7280" }}>
-                We are constantly recording results from our patients. In the majority of work shown, CEREC CAD/CAM crowns were used for restorations over implants and crowns. These restorations can be made to be extremely life-like!
-              </p>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[["CEREC Crown Restoration", "Full porcelain crown designed and placed in a single visit using our in-office CAD/CAM system."],
-                ["Implant-Supported Bridge", "Multiple missing teeth replaced with implant-supported prosthetics for permanent, natural-looking results."],
-                ["Full-Mouth Rehabilitation", "Complete reconstruction combining CEREC crowns, implants, and veneers for a total smile transformation."],
-                ["Veneer Smile Makeover", "Custom ceramic veneers to restore a beautiful, natural smile with precise shade matching."],
-                ["Denture Aesthetics", "Complete denture designed to create a natural, confident smile — indistinguishable from natural teeth."],
-                ["Bridge Over Natural Teeth", "Zirconia-reinforced ceramic bridge using CAD/CAM digital impressions for precision fit."]].map(([title, desc], i) => (
-                <div key={i} className="rounded-xl overflow-hidden" style={{ background: "white", border: "1px solid rgba(201,168,76,.15)" }}>
-                  <div className="flex h-36">
-                    <div className="flex-1 flex items-center justify-center text-xs font-bold uppercase tracking-widest" style={{ background: "rgba(11,20,38,.05)", color: "#9ca3af" }}>Before</div>
-                    <div className="w-px" style={{ background: G }} />
-                    <div className="flex-1 flex items-center justify-center text-xs font-bold uppercase tracking-widest" style={{ background: "rgba(201,168,76,.06)", color: G }}>After</div>
-                  </div>
-                  <div className="p-5">
-                    <h4 style={{ fontFamily: "'Playfair Display', serif", color: N, fontSize: 15, fontWeight: 500, marginBottom: 4 }}>{title}</h4>
-                    <p style={{ color: "#6b7280", fontSize: 12, lineHeight: 1.7 }}>{desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <p className="text-center mt-8 text-xs" style={{ color: "#9ca3af" }}>
-              <AlertCircle size={12} className="inline mr-1" style={{ verticalAlign: "middle" }} />
-              Actual patient photos available in-office with signed consent. These are representative case descriptions.
-            </p>
-          </div>
-        </section>
-      </RevealSection>
 
       {/* ═══════════ Testimonials ═══════════ */}
       <RevealSection>

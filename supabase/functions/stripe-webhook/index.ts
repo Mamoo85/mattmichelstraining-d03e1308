@@ -123,7 +123,7 @@ const GUIDE_MAP: Record<string, { title: string; filename: string; content: stri
     filename: "M2-Baseball-Guide.pdf",
     content: `
       <h2 style="color:#e85d04;margin-bottom:8px;">Top 5 Exercises for Baseball Players</h2>
-      <p style="font-size:14px;color:#666;margin-bottom:20px;">By Matt Michels · M² Performance Training</p>
+      <p style="font-size:14px;color:#666;margin-bottom:20px;">By Matt Michels · M2 Development</p>
       <hr style="border:1px solid #e85d04;margin:20px 0;">
       <h3>1. Med Ball Rotational Slam</h3>
       <p><strong>Sets/Reps:</strong> 3×8 each side | <strong>Rest:</strong> 60s</p>
@@ -147,7 +147,7 @@ const GUIDE_MAP: Record<string, { title: string; filename: string; content: stri
     filename: "M2-Football-Guide.pdf",
     content: `
       <h2 style="color:#e85d04;">Top 5 Exercises for Football</h2>
-      <p style="font-size:14px;color:#666;">By Matt Michels · M² Performance Training</p>
+      <p style="font-size:14px;color:#666;">By Matt Michels · M2 Development</p>
       <h3>1. Trap Bar Deadlift</h3><p>4×5 · Explosive hip extension for blocks, tackles, sprints.</p>
       <h3>2. Box Jump</h3><p>4×4 · Rate of force development. Football is won in the first 3 steps.</p>
       <h3>3. Bench Press</h3><p>4×6 · Upper body pressing for hand fighting and blocking.</p>
@@ -1902,7 +1902,7 @@ serve(async (req) => {
             name: "The Middle School Foundation (Top 10)",
             html: `
               <h2 style="color:#e85d04;margin-bottom:8px;">The Middle School Foundation — Top 10 Exercises</h2>
-              <p style="font-size:14px;color:#666;margin-bottom:20px;">By Matt Michels · M² Performance Training</p>
+              <p style="font-size:14px;color:#666;margin-bottom:20px;">By Matt Michels · M2 Development</p>
               <hr style="border:1px solid #e2e8f0;margin:20px 0;">
               <p style="font-size:14px;line-height:1.8;">Before your athlete lifts heavy, runs fast, or competes hard — they need a foundation. These 10 movements build movement quality, joint integrity, and the base that prevents injuries for years.</p>
               <h3 style="color:#1e293b;">1. Goblet Squat</h3><p><strong>Sets/Reps:</strong> 3×10 | <strong>Why:</strong> Teaches hip hinge, builds quad and glute strength, forces upright torso. The safest first squat for any athlete.</p>
@@ -1923,7 +1923,7 @@ serve(async (req) => {
             name: "High School Armor (Top 10)",
             html: `
               <h2 style="color:#e85d04;margin-bottom:8px;">High School Armor — Top 10 Exercises</h2>
-              <p style="font-size:14px;color:#666;margin-bottom:20px;">By Matt Michels · M² Performance Training</p>
+              <p style="font-size:14px;color:#666;margin-bottom:20px;">By Matt Michels · M2 Development</p>
               <hr style="border:1px solid #e2e8f0;margin:20px 0;">
               <p style="font-size:14px;line-height:1.8;">High school is where injuries spike — because athletes increase intensity without building structural integrity first. These 10 exercises build the durability, explosive power, and connective tissue strength that keeps varsity athletes on the field.</p>
               <h3 style="color:#1e293b;">1. Romanian Deadlift (RDL)</h3><p><strong>Sets/Reps:</strong> 3×8 | <strong>Why:</strong> Posterior chain development. The hamstrings and glutes are the body's shock absorbers — this is how you build them.</p>
@@ -1944,7 +1944,7 @@ serve(async (req) => {
             name: "The Road Warrior (Top 10 Travel Fixes)",
             html: `
               <h2 style="color:#e85d04;margin-bottom:8px;">The Road Warrior — Top 10 Travel Fixes</h2>
-              <p style="font-size:14px;color:#666;margin-bottom:20px;">By Matt Michels · M² Performance Training</p>
+              <p style="font-size:14px;color:#666;margin-bottom:20px;">By Matt Michels · M2 Development</p>
               <hr style="border:1px solid #e2e8f0;margin:20px 0;">
               <p style="font-size:14px;line-height:1.8;">Hotel room. Tournament weekend. No equipment. No excuses. These 10 movements keep your body functioning when travel takes you away from training. Use them as a warmup, a maintenance session, or a recovery day circuit.</p>
               <h3 style="color:#1e293b;">1. 90/90 Hip Switch</h3><p><strong>Sets/Reps:</strong> 2×5 each | <strong>Why:</strong> Restores hip internal/external rotation lost from sitting in a car or plane. Do this first — everything else works better after it.</p>
@@ -1981,7 +1981,7 @@ serve(async (req) => {
       <p>— Matt Michels</p>
     </td></tr>
     <tr><td style="background:#f8fafc;padding:16px 32px;border-top:1px solid #e2e8f0;font-size:12px;color:#94a3b8;">
-      M² Performance Training · <a href="mailto:matt@mattmichelstraining.com" style="color:#e8621a;">matt@mattmichelstraining.com</a> · <a href="tel:+13138064952" style="color:#94a3b8;">(313) 806-4952</a>
+      M2 Development · <a href="mailto:matt@mattmichelstraining.com" style="color:#e8621a;">matt@mattmichelstraining.com</a> · <a href="tel:+13138064952" style="color:#94a3b8;">(313) 806-4952</a>
     </td></tr>
   </table>
 </td></tr>
@@ -2026,7 +2026,7 @@ serve(async (req) => {
           </div>
           <div style="background:#222;padding:24px;margin-bottom:20px;">${guide.content}</div>
           <div style="text-align:center;padding:20px;border-top:1px solid #333;">
-            <p style="color:#666;font-size:11px;">M² Performance Training · Detroit, MI</p>
+            <p style="color:#666;font-size:11px;">M2 Development · Detroit, MI</p>
           </div>
         </div>
       `;
@@ -4529,7 +4529,7 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
                     to: [referrerProfile.email],
                     bcc: ["matthewmichels4@gmail.com"],
                     subject: "🎉 You earned a free training session!",
-                    html: `<p>Hey ${referrerProfile.athlete_name || referrerProfile.full_name || ""},</p><p>Your friend just booked a session at M² Performance Training — and that means you earned a <strong>free session</strong>!</p><p>Head to <a href="https://www.mattmichelstraining.com/schedule">Schedule</a> to book yours.</p><p>— Matt</p>`,
+                    html: `<p>Hey ${referrerProfile.athlete_name || referrerProfile.full_name || ""},</p><p>Your friend just booked a session at M2 Development — and that means you earned a <strong>free session</strong>!</p><p>Head to <a href="https://www.mattmichelstraining.com/schedule">Schedule</a> to book yours.</p><p>— Matt</p>`,
                   }),
                 }).catch(() => {});
               }

@@ -106,7 +106,7 @@ async function sendWeeklySummary(client: any, reviewCount: number, responseCount
             <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:40px;height:40px;border-radius:50%;object-fit:cover;" />
             <div>
               <p style="font-size:13px;font-weight:700;margin:0;">Matt Michels</p>
-              <p style="font-size:12px;color:#64748b;margin:0;">M² Performance Training — (313) 806-4952</p>
+              <p style="font-size:12px;color:#64748b;margin:0;">M2 Development — (313) 806-4952</p>
             </div>
         <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" />
           </div>

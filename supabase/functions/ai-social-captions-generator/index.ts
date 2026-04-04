@@ -81,7 +81,7 @@ function buildClientEmail(client: CaptionsClient, captions: string, month: strin
 <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;">
 
   <tr><td style="background:#1e293b;padding:20px 28px;border-radius:10px 10px 0 0;">
-    <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;">M² Performance Training</h1>
+    <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;">M2 Development</h1>
     <p style="margin:6px 0 0;color:#e8621a;font-size:14px;">Social Media Captions — ${month}</p>
   </td></tr>
 
@@ -104,7 +104,7 @@ function buildClientEmail(client: CaptionsClient, captions: string, month: strin
 
   <tr><td style="background:#f1f5f9;padding:16px 28px;border-radius:0 0 10px 10px;border:1px solid #e2e8f0;border-top:none;">
     <p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;">
-      M² Performance Training · matt@mattmichelstraining.com · (313) 806-4952
+      M2 Development · matt@mattmichelstraining.com · (313) 806-4952
     </p>
   </td></tr>
 
@@ -167,7 +167,7 @@ serve(async (_req) => {
   <h2 style="color:#e8621a;">Social Captions Generator — ${month} Run Complete</h2>
   <p><strong>Captions sent:</strong> ${sent} / ${clients.length} clients</p>
   ${errors.length > 0 ? `<p><strong>Errors:</strong></p><ul>${errors.map((e) => `<li>${e}</li>`).join("")}</ul>` : "<p>No errors. All good!</p>"}
-  <p style="color:#64748b;font-size:12px;">M² Performance Training · Auto-generated report</p>
+  <p style="color:#64748b;font-size:12px;">M2 Development · Auto-generated report</p>
 </body>
 </html>`;
 

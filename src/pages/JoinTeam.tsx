@@ -334,7 +334,7 @@ const JoinTeam = () => {
             </Button>
           )}
           <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
-            Powered by M² Performance Training
+            Powered by M2 Development
           </p>
         </div>
       </section>

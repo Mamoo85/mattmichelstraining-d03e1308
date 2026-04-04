@@ -34,7 +34,7 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
     metadata: {
       type: "website_audit",
       email: MATT,
-      business_name: "M² Performance Training",
+      business_name: "M2 Development",
       business_url: "mattmichelstraining.com",
       is_test: "true",
     },
@@ -47,7 +47,7 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
     metadata: {
       type: "gbp_post_pack",
       email: MATT,
-      business_name: "M² Performance Training",
+      business_name: "M2 Development",
       business_info: JSON.stringify({ industry: "fitness training", city: "Grosse Pointe", business_info: "Performance training for athletes and families" }),
       is_test: "true",
     },
@@ -60,7 +60,7 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
     metadata: {
       type: "competitor_report",
       email: MATT,
-      business_name: "M² Performance Training",
+      business_name: "M2 Development",
       industry: "fitness training",
       city: "Grosse Pointe",
       is_test: "true",
@@ -77,7 +77,7 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
       type: "gbp_saas_subscription",
       email: MATT,
       plan: "basic",
-      businessName: "M² Performance Training",
+      businessName: "M2 Development",
       is_test: "true",
     },
     success_url: `${SITE}/local-marketing?test=true`,
@@ -90,7 +90,7 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
       type: "social_media_subscription",
       email: MATT,
       plan: "standard",
-      businessName: "M² Performance Training",
+      businessName: "M2 Development",
       is_test: "true",
     },
     success_url: `${SITE}/social-media-ai?test=true`,
@@ -139,7 +139,7 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
     metadata: {
       type: "review_responder_subscription",
       email: MATT,
-      businessName: "M² Performance Training",
+      businessName: "M2 Development",
       is_test: "true",
     },
     success_url: `${SITE}/review-responder?test=true`,
@@ -151,7 +151,7 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
     metadata: {
       type: "seo_report_subscription",
       email: MATT,
-      businessName: "M² Performance Training",
+      businessName: "M2 Development",
       website: "mattmichelstraining.com",
       is_test: "true",
     },
@@ -164,7 +164,7 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
     metadata: {
       type: "chatbot_subscription",
       email: MATT,
-      businessName: "M² Performance Training",
+      businessName: "M2 Development",
       is_test: "true",
     },
     success_url: `${SITE}/contractor-chatbot?test=true`,
@@ -176,7 +176,7 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
     metadata: {
       type: "missed_call_subscription",
       email: MATT,
-      businessName: "M² Performance Training",
+      businessName: "M2 Development",
       is_test: "true",
     },
     success_url: `${SITE}/missed-call-text?test=true`,
@@ -190,7 +190,7 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
     metadata: {
       type: "review_monitor_subscription",
       email: MATT,
-      business_name: "M² Performance Training",
+      business_name: "M2 Development",
       name: "Matt Michels",
       phone: "+13138064952",
       is_test: "true",
@@ -204,7 +204,7 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
     metadata: {
       type: "sms_blast_subscription",
       email: MATT,
-      business_name: "M² Performance Training",
+      business_name: "M2 Development",
       name: "Matt Michels",
       phone: "+13138064952",
       business_type: "fitness training",
@@ -220,7 +220,7 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
     metadata: {
       type: "noshow_subscription",
       email: MATT,
-      business_name: "M² Performance Training",
+      business_name: "M2 Development",
       name: "Matt Michels",
       phone: "+13138064952",
       booking_url: "https://www.mattmichelstraining.com/schedule",
@@ -235,7 +235,7 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
     metadata: {
       type: "estimate_drip_subscription",
       email: MATT,
-      business_name: "M² Performance Training",
+      business_name: "M2 Development",
       name: "Matt Michels",
       phone: "+13138064952",
       business_type: "fitness training",
@@ -250,7 +250,7 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
     metadata: {
       type: "invoice_chaser_subscription",
       email: MATT,
-      business_name: "M² Performance Training",
+      business_name: "M2 Development",
       name: "Matt Michels",
       phone: "+13138064952",
       is_test: "true",
@@ -264,7 +264,7 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
     metadata: {
       type: "afterjob_drip_subscription",
       email: MATT,
-      business_name: "M² Performance Training",
+      business_name: "M2 Development",
       name: "Matt Michels",
       phone: "+13138064952",
       business_type: "fitness training",
@@ -279,7 +279,7 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
     metadata: {
       type: "promo_blaster_subscription",
       email: MATT,
-      business_name: "M² Performance Training",
+      business_name: "M2 Development",
       name: "Matt Michels",
       phone: "+13138064952",
       business_type: "fitness training",
@@ -295,7 +295,7 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
     metadata: {
       type: "referral_program_subscription",
       email: MATT,
-      business_name: "M² Performance Training",
+      business_name: "M2 Development",
       name: "Matt Michels",
       phone: "+13138064952",
       business_type: "fitness training",
@@ -311,7 +311,7 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
     metadata: {
       type: "slow_day_subscription",
       email: MATT,
-      business_name: "M² Performance Training",
+      business_name: "M2 Development",
       name: "Matt Michels",
       phone: "+13138064952",
       business_type: "fitness training",
@@ -327,7 +327,7 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
     metadata: {
       type: "homeowner_campaign_subscription",
       email: MATT,
-      business_name: "M² Performance Training",
+      business_name: "M2 Development",
       name: "Matt Michels",
       phone: "+13138064952",
       business_type: "fitness training",
@@ -358,12 +358,12 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
   },
   rfp_alerts_subscription: {
     name: "TEST — RFP Alert Service ($149/mo)", description: "Daily government contract alerts. $0 test.",
-    mode: "subscription", metadata: { type: "rfp_alerts_subscription", email: MATT, name: "Matt Michels", businessName: "M² Performance Training", servicesOffered: "Sales training, coaching", geography: "Michigan", phone: "+13138064952", is_test: "true" },
+    mode: "subscription", metadata: { type: "rfp_alerts_subscription", email: MATT, name: "Matt Michels", businessName: "M2 Development", servicesOffered: "Sales training, coaching", geography: "Michigan", phone: "+13138064952", is_test: "true" },
     success_url: `${SITE}/rfp-alerts?test=true`,
   },
   franchise_analyzer_subscription: {
     name: "TEST — Franchise FDD Analyzer ($299/mo)", description: "AI FDD risk analysis. $0 test.",
-    mode: "subscription", metadata: { type: "franchise_analyzer_subscription", email: MATT, name: "Matt Michels", businessName: "M² Performance Training", phone: "+13138064952", is_test: "true" },
+    mode: "subscription", metadata: { type: "franchise_analyzer_subscription", email: MATT, name: "Matt Michels", businessName: "M2 Development", phone: "+13138064952", is_test: "true" },
     success_url: `${SITE}/franchise-analyzer?test=true`,
   },
   insurance_drip_subscription: {
@@ -393,22 +393,22 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
   },
   regulatory_monitor_subscription: {
     name: "TEST — Regulatory Monitor ($299/mo)", description: "Weekly regulatory change alerts. $0 test.",
-    mode: "subscription", metadata: { type: "regulatory_monitor_subscription", email: MATT, name: "Matt Michels", businessName: "M² Performance Training", industry: "fitness and wellness", regulatoryBodies: "FTC, OSHA", phone: "+13138064952", is_test: "true" },
+    mode: "subscription", metadata: { type: "regulatory_monitor_subscription", email: MATT, name: "Matt Michels", businessName: "M2 Development", industry: "fitness and wellness", regulatoryBodies: "FTC, OSHA", phone: "+13138064952", is_test: "true" },
     success_url: `${SITE}/regulatory-monitor?test=true`,
   },
   trade_show_automation_subscription: {
     name: "TEST — Trade Show Follow-Up ($99/mo)", description: "AI badge-scan follow-up sequences. $0 test.",
-    mode: "subscription", metadata: { type: "trade_show_automation_subscription", email: MATT, name: "Matt Michels", businessName: "M² Performance Training", phone: "+13138064952", is_test: "true" },
+    mode: "subscription", metadata: { type: "trade_show_automation_subscription", email: MATT, name: "Matt Michels", businessName: "M2 Development", phone: "+13138064952", is_test: "true" },
     success_url: `${SITE}/trade-show-automation?test=true`,
   },
   price_intelligence_subscription: {
     name: "TEST — Competitor Price Intel ($199/mo)", description: "Daily competitor price monitoring. $0 test.",
-    mode: "subscription", metadata: { type: "price_intelligence_subscription", email: MATT, name: "Matt Michels", businessName: "M² Performance Training", competitorUrls: "https://example.com/pricing", phone: "+13138064952", is_test: "true" },
+    mode: "subscription", metadata: { type: "price_intelligence_subscription", email: MATT, name: "Matt Michels", businessName: "M2 Development", competitorUrls: "https://example.com/pricing", phone: "+13138064952", is_test: "true" },
     success_url: `${SITE}/price-intelligence?test=true`,
   },
   citation_monitor_subscription: {
     name: "TEST — Citation Monitor ($99/mo)", description: "Weekly NAP consistency monitor. $0 test.",
-    mode: "subscription", metadata: { type: "citation_monitor_subscription", email: MATT, name: "Matt Michels", businessName: "M² Performance Training", locationCount: "1", primaryAddress: "Grosse Pointe, MI", phone: "+13138064952", is_test: "true" },
+    mode: "subscription", metadata: { type: "citation_monitor_subscription", email: MATT, name: "Matt Michels", businessName: "M2 Development", locationCount: "1", primaryAddress: "Grosse Pointe, MI", phone: "+13138064952", is_test: "true" },
     success_url: `${SITE}/citation-monitor?test=true`,
   },
   menu_engineering_subscription: {
@@ -418,7 +418,7 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
   },
   fitness_reports_subscription: {
     name: "TEST — Fitness Progress Reports ($79/mo)", description: "Monthly AI client progress reports. $0 test.",
-    mode: "subscription", metadata: { type: "fitness_reports_subscription", email: MATT, name: "Matt Michels", businessName: "M² Performance Training", phone: "+13138064952", is_test: "true" },
+    mode: "subscription", metadata: { type: "fitness_reports_subscription", email: MATT, name: "Matt Michels", businessName: "M2 Development", phone: "+13138064952", is_test: "true" },
     success_url: `${SITE}/fitness-reports?test=true`,
   },
   gov_meeting_tracker_subscription: {
@@ -480,7 +480,7 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
       type: "podcast_revenue_subscription",
       email: MATT,
       name: "Matt Michels",
-      podcast_name: "M² Performance Podcast",
+      podcast_name: "M2 Development Podcast",
       rss_url: "https://feeds.buzzsprout.com/test",
       tone: "motivational, practical",
       is_test: "true",
@@ -495,7 +495,7 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
       type: "regulatory_monitor_v2_subscription",
       email: MATT,
       name: "Matt Michels",
-      business_name: "M² Performance Training",
+      business_name: "M2 Development",
       industry: "fitness_wellness",
       jurisdiction: "federal",
       is_test: "true",
@@ -510,7 +510,7 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
       type: "competitor_pricing_subscription",
       email: MATT,
       name: "Matt Michels",
-      business_name: "M² Performance Training",
+      business_name: "M2 Development",
       competitor_urls: "https://anytimefitness.com/pricing,https://orangetheory.com/en-us/membership",
       is_test: "true",
     },
@@ -554,7 +554,7 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
       type: "employee_credential_audit",
       audit_id: "test-audit-id-placeholder",
       email: MATT,
-      company_name: "M² Performance Training",
+      company_name: "M2 Development",
       is_test: "true",
     },
     success_url: `${SITE}/employee-credential-audit?test=true`,
@@ -614,7 +614,7 @@ serve(async (req) => {
         .from("employee_credential_audits")
         .insert({
           customer_email: MATT,
-          company_name: "M² Performance Training",
+          company_name: "M2 Development",
           employee_emails: ["matt@mattmichelstraining.com", "test@example.com"],
           status: "pending",
           is_test: true,

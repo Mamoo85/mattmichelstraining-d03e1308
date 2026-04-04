@@ -1,4 +1,4 @@
-// Training Newsletter Send — M² Performance Training
+// Training Newsletter Send — M2 Development
 // Monthly newsletter for gym clients: high schoolers, college athletes, moms, dads
 // Supports two AI providers: "anthropic" (now via Lovable gateway with different model) or "lovable" (Gemini via Lovable gateway)
 // POST with { provider: "anthropic"|"lovable", topic?: string, preview_only?: true, custom_content?: string }
@@ -16,7 +16,7 @@ const CORS = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const MATT_SYSTEM_PROMPT = `You write the monthly training newsletter for M² Performance Training. Your author is Matt Michels — Grosse Pointe, MI. 10+ years B2B field sales, now running a performance training business.
+const MATT_SYSTEM_PROMPT = `You write the monthly training newsletter for M2 Development. Your author is Matt Michels — Grosse Pointe, MI. 10+ years B2B field sales, now running a performance training business.
 
 AUDIENCE: High schoolers, college athletes, moms, dads. NOT professional athletes. Real people who want to do this right.
 
@@ -134,7 +134,7 @@ function buildEmailHtml(content: NewsletterContent, issueNum: number, dateStr: s
 
   <!-- Header -->
   <tr><td style="background:#1e293b;padding:20px 28px;border-radius:10px 10px 0 0;">
-    <p style="margin:0;color:#e8621a;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">M² Performance Training</p>
+    <p style="margin:0;color:#e8621a;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">M2 Development</p>
     <p style="margin:4px 0 0;color:#94a3b8;font-size:12px;">Issue #${issueNum} · ${dateStr} · Real Training. Real Results.</p>
   </td></tr>
 
@@ -177,13 +177,13 @@ function buildEmailHtml(content: NewsletterContent, issueNum: number, dateStr: s
   <tr><td style="padding:16px 28px;border:1px solid #e2e8f0;border-top:none;">
     <div style="display:flex;align-items:center;gap:12px;">
       <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Matt Michels">
-      <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>M² Performance Training · Grosse Pointe, MI<br><span style="color:#64748b;">(313) 806-4952</span></div>
+      <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>M2 Development · Grosse Pointe, MI<br><span style="color:#64748b;">(313) 806-4952</span></div>
     </div>
   </td></tr>
 
   <!-- Footer -->
   <tr><td style="background:#f8fafc;padding:16px 28px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 10px 10px;font-size:12px;color:#94a3b8;line-height:1.6;">
-    M² Performance Training · <a href="mailto:matt@mattmichelstraining.com" style="color:#e8621a;">matt@mattmichelstraining.com</a><br>
+    M2 Development · <a href="mailto:matt@mattmichelstraining.com" style="color:#e8621a;">matt@mattmichelstraining.com</a><br>
     <a href="${SUPABASE_URL}/functions/v1/newsletter-unsubscribe?token={{unsubscribe_token}}" style="color:#94a3b8;">Unsubscribe</a>
   </td></tr>
 

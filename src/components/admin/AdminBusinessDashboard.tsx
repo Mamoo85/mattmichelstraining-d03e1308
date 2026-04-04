@@ -374,7 +374,7 @@ const AdminBusinessDashboard = () => {
             </CardTitle>
             {showAllClients ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </div>
-          <p className="text-[10px] text-muted-foreground">These are services running for your own business (M² Performance Training). They don't generate revenue.</p>
+          <p className="text-[10px] text-muted-foreground">These are services running for your own business (M2 Development). They don't generate revenue.</p>
         </CardHeader>
         {showAllClients && (
           <CardContent>

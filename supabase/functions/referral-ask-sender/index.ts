@@ -110,7 +110,7 @@ function buildReferralEmailHtml(bodyText: string): string {
       </div>
     </td></tr>
     <tr><td style="background:#f8fafc;padding:12px 24px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;text-align:center;">
-      M² Performance Training · Grosse Pointe, MI ·
+      M2 Development · Grosse Pointe, MI ·
       <a href="https://www.mattmichelstraining.com" style="color:#94a3b8;">mattmichelstraining.com</a>
     </td></tr>
   </table>
