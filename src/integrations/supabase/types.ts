@@ -1295,6 +1295,128 @@ export type Database = {
         }
         Relationships: []
       }
+      competitor_pricing_changes: {
+        Row: {
+          client_id: string | null
+          created_at: string | null
+          diff_summary: string | null
+          id: string
+          new_hash: string | null
+          notified: boolean | null
+          old_hash: string | null
+          url_id: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string | null
+          diff_summary?: string | null
+          id?: string
+          new_hash?: string | null
+          notified?: boolean | null
+          old_hash?: string | null
+          url_id?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string | null
+          diff_summary?: string | null
+          id?: string
+          new_hash?: string | null
+          notified?: boolean | null
+          old_hash?: string | null
+          url_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competitor_pricing_changes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "competitor_pricing_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competitor_pricing_changes_url_id_fkey"
+            columns: ["url_id"]
+            isOneToOne: false
+            referencedRelation: "competitor_pricing_urls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competitor_pricing_clients: {
+        Row: {
+          active: boolean | null
+          business_name: string
+          created_at: string | null
+          email: string
+          id: string
+          industry: string | null
+          last_sent_at: string | null
+          stripe_customer_id: string | null
+          subscription_status: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          business_name: string
+          created_at?: string | null
+          email: string
+          id?: string
+          industry?: string | null
+          last_sent_at?: string | null
+          stripe_customer_id?: string | null
+          subscription_status?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          business_name?: string
+          created_at?: string | null
+          email?: string
+          id?: string
+          industry?: string | null
+          last_sent_at?: string | null
+          stripe_customer_id?: string | null
+          subscription_status?: string | null
+        }
+        Relationships: []
+      }
+      competitor_pricing_urls: {
+        Row: {
+          client_id: string | null
+          created_at: string | null
+          id: string
+          label: string | null
+          last_checked_at: string | null
+          last_hash: string | null
+          url: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string | null
+          id?: string
+          label?: string | null
+          last_checked_at?: string | null
+          last_hash?: string | null
+          url: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string | null
+          id?: string
+          label?: string | null
+          last_checked_at?: string | null
+          last_hash?: string | null
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competitor_pricing_urls_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "competitor_pricing_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       competitor_watch_clients: {
         Row: {
           active: boolean | null
@@ -1611,6 +1733,95 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      dark_web_monitor_clients: {
+        Row: {
+          active: boolean | null
+          business_name: string
+          created_at: string | null
+          email: string
+          id: string
+          last_sent_at: string | null
+          monitored_domain: string
+          plan_type: string | null
+          send_count: number | null
+          stripe_customer_id: string | null
+          subscription_status: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          business_name: string
+          created_at?: string | null
+          email: string
+          id?: string
+          last_sent_at?: string | null
+          monitored_domain: string
+          plan_type?: string | null
+          send_count?: number | null
+          stripe_customer_id?: string | null
+          subscription_status?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          business_name?: string
+          created_at?: string | null
+          email?: string
+          id?: string
+          last_sent_at?: string | null
+          monitored_domain?: string
+          plan_type?: string | null
+          send_count?: number | null
+          stripe_customer_id?: string | null
+          subscription_status?: string | null
+        }
+        Relationships: []
+      }
+      dark_web_monitor_findings: {
+        Row: {
+          breach_date: string | null
+          breach_name: string | null
+          client_id: string | null
+          created_at: string | null
+          data_classes: string[] | null
+          domain: string | null
+          email_found: string | null
+          id: string
+          notified: boolean | null
+          severity: string | null
+        }
+        Insert: {
+          breach_date?: string | null
+          breach_name?: string | null
+          client_id?: string | null
+          created_at?: string | null
+          data_classes?: string[] | null
+          domain?: string | null
+          email_found?: string | null
+          id?: string
+          notified?: boolean | null
+          severity?: string | null
+        }
+        Update: {
+          breach_date?: string | null
+          breach_name?: string | null
+          client_id?: string | null
+          created_at?: string | null
+          data_classes?: string[] | null
+          domain?: string | null
+          email_found?: string | null
+          id?: string
+          notified?: boolean | null
+          severity?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dark_web_monitor_findings_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "dark_web_monitor_clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       delivery_failures: {
         Row: {
@@ -2336,6 +2547,119 @@ export type Database = {
           stripe_customer_id?: string | null
         }
         Relationships: []
+      }
+      gov_contract_clients: {
+        Row: {
+          active: boolean | null
+          business_name: string
+          created_at: string | null
+          customer_name: string | null
+          email: string
+          id: string
+          keywords: string | null
+          last_sent_at: string | null
+          max_contract_value: number | null
+          min_contract_value: number | null
+          naics_codes: string | null
+          preferred_states: string | null
+          set_aside_types: string | null
+          stripe_customer_id: string | null
+          subscription_status: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          business_name: string
+          created_at?: string | null
+          customer_name?: string | null
+          email: string
+          id?: string
+          keywords?: string | null
+          last_sent_at?: string | null
+          max_contract_value?: number | null
+          min_contract_value?: number | null
+          naics_codes?: string | null
+          preferred_states?: string | null
+          set_aside_types?: string | null
+          stripe_customer_id?: string | null
+          subscription_status?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          business_name?: string
+          created_at?: string | null
+          customer_name?: string | null
+          email?: string
+          id?: string
+          keywords?: string | null
+          last_sent_at?: string | null
+          max_contract_value?: number | null
+          min_contract_value?: number | null
+          naics_codes?: string | null
+          preferred_states?: string | null
+          set_aside_types?: string | null
+          stripe_customer_id?: string | null
+          subscription_status?: string | null
+        }
+        Relationships: []
+      }
+      gov_contract_opportunities: {
+        Row: {
+          agency: string | null
+          ai_score: number | null
+          ai_summary: string | null
+          client_id: string | null
+          created_at: string | null
+          id: string
+          naics_code: string | null
+          notice_id: string | null
+          notified: boolean | null
+          posted_date: string | null
+          response_deadline: string | null
+          set_aside: string | null
+          title: string | null
+          url: string | null
+        }
+        Insert: {
+          agency?: string | null
+          ai_score?: number | null
+          ai_summary?: string | null
+          client_id?: string | null
+          created_at?: string | null
+          id?: string
+          naics_code?: string | null
+          notice_id?: string | null
+          notified?: boolean | null
+          posted_date?: string | null
+          response_deadline?: string | null
+          set_aside?: string | null
+          title?: string | null
+          url?: string | null
+        }
+        Update: {
+          agency?: string | null
+          ai_score?: number | null
+          ai_summary?: string | null
+          client_id?: string | null
+          created_at?: string | null
+          id?: string
+          naics_code?: string | null
+          notice_id?: string | null
+          notified?: boolean | null
+          posted_date?: string | null
+          response_deadline?: string | null
+          set_aside?: string | null
+          title?: string | null
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gov_contract_opportunities_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "gov_contract_clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       grant_finder_clients: {
         Row: {
@@ -4019,6 +4343,54 @@ export type Database = {
         }
         Relationships: []
       }
+      pet_memorial_submissions: {
+        Row: {
+          created_at: string | null
+          customer_email: string
+          customer_name: string | null
+          favorite_memories: string | null
+          id: string
+          memorial_html: string | null
+          personality_traits: string | null
+          pet_name: string
+          pet_species: string | null
+          poem: string | null
+          status: string | null
+          stripe_session_id: string | null
+          tribute: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          customer_email: string
+          customer_name?: string | null
+          favorite_memories?: string | null
+          id?: string
+          memorial_html?: string | null
+          personality_traits?: string | null
+          pet_name: string
+          pet_species?: string | null
+          poem?: string | null
+          status?: string | null
+          stripe_session_id?: string | null
+          tribute?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          customer_email?: string
+          customer_name?: string | null
+          favorite_memories?: string | null
+          id?: string
+          memorial_html?: string | null
+          personality_traits?: string | null
+          pet_name?: string
+          pet_species?: string | null
+          poem?: string | null
+          status?: string | null
+          stripe_session_id?: string | null
+          tribute?: string | null
+        }
+        Relationships: []
+      }
       phone_answering_clients: {
         Row: {
           active: boolean | null
@@ -4057,6 +4429,110 @@ export type Database = {
           twilio_number?: string | null
         }
         Relationships: []
+      }
+      podcast_clients: {
+        Row: {
+          active: boolean | null
+          business_name: string
+          created_at: string | null
+          customer_email: string | null
+          customer_name: string | null
+          email: string
+          episode_count: number | null
+          id: string
+          last_checked_at: string | null
+          last_episode_guid: string | null
+          podcast_name: string | null
+          podcast_niche: string | null
+          rss_feed_url: string | null
+          rss_url: string | null
+          stripe_customer_id: string | null
+          subscription_status: string | null
+          target_audience: string | null
+          tone: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          business_name: string
+          created_at?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          email: string
+          episode_count?: number | null
+          id?: string
+          last_checked_at?: string | null
+          last_episode_guid?: string | null
+          podcast_name?: string | null
+          podcast_niche?: string | null
+          rss_feed_url?: string | null
+          rss_url?: string | null
+          stripe_customer_id?: string | null
+          subscription_status?: string | null
+          target_audience?: string | null
+          tone?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          business_name?: string
+          created_at?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          email?: string
+          episode_count?: number | null
+          id?: string
+          last_checked_at?: string | null
+          last_episode_guid?: string | null
+          podcast_name?: string | null
+          podcast_niche?: string | null
+          rss_feed_url?: string | null
+          rss_url?: string | null
+          stripe_customer_id?: string | null
+          subscription_status?: string | null
+          target_audience?: string | null
+          tone?: string | null
+        }
+        Relationships: []
+      }
+      podcast_episodes: {
+        Row: {
+          client_id: string | null
+          content_pieces: Json | null
+          created_at: string | null
+          episode_title: string | null
+          episode_url: string | null
+          id: string
+          notified: boolean | null
+          published_at: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          content_pieces?: Json | null
+          created_at?: string | null
+          episode_title?: string | null
+          episode_url?: string | null
+          id?: string
+          notified?: boolean | null
+          published_at?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          content_pieces?: Json | null
+          created_at?: string | null
+          episode_title?: string | null
+          episode_url?: string | null
+          id?: string
+          notified?: boolean | null
+          published_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "podcast_episodes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "podcast_clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       point_transactions: {
         Row: {
@@ -4905,6 +5381,121 @@ export type Database = {
         }
         Relationships: []
       }
+      re_newsletter_clients: {
+        Row: {
+          active: boolean | null
+          agent_name: string | null
+          brokerage: string | null
+          business_name: string
+          created_at: string | null
+          email: string
+          id: string
+          last_sent_at: string | null
+          send_count: number | null
+          stripe_customer_id: string | null
+          subscription_status: string | null
+          zip_codes: string[] | null
+        }
+        Insert: {
+          active?: boolean | null
+          agent_name?: string | null
+          brokerage?: string | null
+          business_name: string
+          created_at?: string | null
+          email: string
+          id?: string
+          last_sent_at?: string | null
+          send_count?: number | null
+          stripe_customer_id?: string | null
+          subscription_status?: string | null
+          zip_codes?: string[] | null
+        }
+        Update: {
+          active?: boolean | null
+          agent_name?: string | null
+          brokerage?: string | null
+          business_name?: string
+          created_at?: string | null
+          email?: string
+          id?: string
+          last_sent_at?: string | null
+          send_count?: number | null
+          stripe_customer_id?: string | null
+          subscription_status?: string | null
+          zip_codes?: string[] | null
+        }
+        Relationships: []
+      }
+      re_newsletter_contacts: {
+        Row: {
+          client_id: string | null
+          created_at: string | null
+          email: string
+          id: string
+          name: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string | null
+          email: string
+          id?: string
+          name?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "re_newsletter_contacts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "re_newsletter_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      re_newsletter_issues: {
+        Row: {
+          client_id: string | null
+          created_at: string | null
+          html_content: string | null
+          id: string
+          recipients: number | null
+          subject: string | null
+          zip_code: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string | null
+          html_content?: string | null
+          id?: string
+          recipients?: number | null
+          subject?: string | null
+          zip_code?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string | null
+          html_content?: string | null
+          id?: string
+          recipients?: number | null
+          subject?: string | null
+          zip_code?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "re_newsletter_issues_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "re_newsletter_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reactivation_contacts: {
         Row: {
           client_id: string
@@ -5068,6 +5659,101 @@ export type Database = {
           subscription_tier?: string | null
         }
         Relationships: []
+      }
+      regulatory_monitor_clients: {
+        Row: {
+          active: boolean | null
+          business_name: string
+          created_at: string | null
+          email: string
+          id: string
+          industry: string | null
+          keywords: string | null
+          last_sent_at: string | null
+          stripe_customer_id: string | null
+          subscription_status: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          business_name: string
+          created_at?: string | null
+          email: string
+          id?: string
+          industry?: string | null
+          keywords?: string | null
+          last_sent_at?: string | null
+          stripe_customer_id?: string | null
+          subscription_status?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          business_name?: string
+          created_at?: string | null
+          email?: string
+          id?: string
+          industry?: string | null
+          keywords?: string | null
+          last_sent_at?: string | null
+          stripe_customer_id?: string | null
+          subscription_status?: string | null
+        }
+        Relationships: []
+      }
+      regulatory_monitor_items: {
+        Row: {
+          abstract: string | null
+          agencies: string | null
+          ai_summary: string | null
+          client_id: string | null
+          created_at: string | null
+          document_number: string | null
+          document_type: string | null
+          id: string
+          notified: boolean | null
+          publication_date: string | null
+          relevance_score: number | null
+          title: string | null
+          url: string | null
+        }
+        Insert: {
+          abstract?: string | null
+          agencies?: string | null
+          ai_summary?: string | null
+          client_id?: string | null
+          created_at?: string | null
+          document_number?: string | null
+          document_type?: string | null
+          id?: string
+          notified?: boolean | null
+          publication_date?: string | null
+          relevance_score?: number | null
+          title?: string | null
+          url?: string | null
+        }
+        Update: {
+          abstract?: string | null
+          agencies?: string | null
+          ai_summary?: string | null
+          client_id?: string | null
+          created_at?: string | null
+          document_number?: string | null
+          document_type?: string | null
+          id?: string
+          notified?: boolean | null
+          publication_date?: string | null
+          relevance_score?: number | null
+          title?: string | null
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "regulatory_monitor_items_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "regulatory_monitor_clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reputation_clients: {
         Row: {
@@ -6863,6 +7549,143 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      trademark_watch_clients: {
+        Row: {
+          active: boolean | null
+          business_name: string
+          company_name: string | null
+          created_at: string | null
+          customer_email: string | null
+          customer_name: string | null
+          email: string
+          id: string
+          industry: string | null
+          last_sent_at: string | null
+          stripe_customer_id: string | null
+          subscription_status: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          business_name: string
+          company_name?: string | null
+          created_at?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          email: string
+          id?: string
+          industry?: string | null
+          last_sent_at?: string | null
+          stripe_customer_id?: string | null
+          subscription_status?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          business_name?: string
+          company_name?: string | null
+          created_at?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          email?: string
+          id?: string
+          industry?: string | null
+          last_sent_at?: string | null
+          stripe_customer_id?: string | null
+          subscription_status?: string | null
+        }
+        Relationships: []
+      }
+      trademark_watch_findings: {
+        Row: {
+          applicant: string | null
+          client_id: string | null
+          created_at: string | null
+          filing_date: string | null
+          id: string
+          mark_id: string | null
+          notified: boolean | null
+          serial_number: string | null
+          similar_mark: string | null
+          similarity_score: number | null
+          status: string | null
+        }
+        Insert: {
+          applicant?: string | null
+          client_id?: string | null
+          created_at?: string | null
+          filing_date?: string | null
+          id?: string
+          mark_id?: string | null
+          notified?: boolean | null
+          serial_number?: string | null
+          similar_mark?: string | null
+          similarity_score?: number | null
+          status?: string | null
+        }
+        Update: {
+          applicant?: string | null
+          client_id?: string | null
+          created_at?: string | null
+          filing_date?: string | null
+          id?: string
+          mark_id?: string | null
+          notified?: boolean | null
+          serial_number?: string | null
+          similar_mark?: string | null
+          similarity_score?: number | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trademark_watch_findings_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "trademark_watch_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trademark_watch_findings_mark_id_fkey"
+            columns: ["mark_id"]
+            isOneToOne: false
+            referencedRelation: "trademark_watch_marks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trademark_watch_marks: {
+        Row: {
+          client_id: string | null
+          created_at: string | null
+          id: string
+          last_checked_at: string | null
+          mark_text: string
+          serial_number: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string | null
+          id?: string
+          last_checked_at?: string | null
+          mark_text: string
+          serial_number?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string | null
+          id?: string
+          last_checked_at?: string | null
+          mark_text?: string
+          serial_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trademark_watch_marks_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "trademark_watch_clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       training_programs: {
         Row: {
