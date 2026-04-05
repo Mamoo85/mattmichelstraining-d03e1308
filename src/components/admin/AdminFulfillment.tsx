@@ -389,6 +389,31 @@ export default function AdminFulfillment() {
         </button>
       </div>
 
+      {/* Summary Row */}
+      <div className="grid grid-cols-3 gap-2">
+        <div className="flex items-center gap-2 p-3 rounded-xl bg-green-500/8 border border-green-500/20">
+          <CheckCircle2 size={14} className="text-green-400" />
+          <div>
+            <span className="text-lg font-black text-green-400">{active.length}</span>
+            <span className="text-[9px] text-white/40 ml-1.5 uppercase tracking-widest">Active</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 p-3 rounded-xl bg-blue-500/8 border border-blue-500/20">
+          <Loader2 size={14} className="text-blue-400" />
+          <div>
+            <span className="text-lg font-black text-blue-400">{inProgress.length}</span>
+            <span className="text-[9px] text-white/40 ml-1.5 uppercase tracking-widest">Onboarding</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 p-3 rounded-xl bg-orange-500/8 border border-orange-500/20">
+          <AlertCircle size={14} className="text-orange-400" />
+          <div>
+            <span className="text-lg font-black text-orange-400">{needsAction.length}</span>
+            <span className="text-[9px] text-white/40 ml-1.5 uppercase tracking-widest">Need Action</span>
+          </div>
+        </div>
+      </div>
+
       {/* Filter tabs */}
       <div className="flex gap-1 bg-white/4 rounded-full p-1 w-fit">
         {([
