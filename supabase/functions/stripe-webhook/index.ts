@@ -2284,15 +2284,27 @@ serve(async (req) => {
             }
 
             if (clientId) {
-              await sb.from("service_subscriptions" as any).insert({
+              const { data: subRow2 } = await sb.from("service_subscriptions" as any).insert({
                 client_id: clientId,
                 service_type: svcInfo.label,
                 stripe_subscription_id: (session.subscription as string) || null,
                 status: "active",
                 fulfillment_stage: "New Lead - Action Required",
                 monthly_price: svcInfo.price,
-              });
+              }).select("id").single();
               console.log(`[WEBHOOK] Unified pipeline: ${svcInfo.label} for ${clientEmail} → b2b_clients`);
+
+              // Fire auto-onboard for eligible products
+              fetch(`${SUPABASE_URL}/functions/v1/auto-onboard`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`, "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  service_type: meta.type,
+                  client_email: clientEmail,
+                  business_name: meta.businessName || meta.business_name || meta.customer_name || clientEmail,
+                  subscription_id: subRow2?.id || null,
+                }),
+              }).catch((e: any) => console.error("[WEBHOOK] auto-onboard fire error:", e));
             }
           }
         } catch (e) { console.error("[WEBHOOK] Unified b2b pipeline error:", e); }
