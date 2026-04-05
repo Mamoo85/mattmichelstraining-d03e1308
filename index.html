@@ -201,6 +201,15 @@
       </ul>
       <p>Located at 15121 Kercheval Ave, Grosse Pointe Park, MI 48230. Call (313) 806-4952.</p>
     </noscript>
+    <script>
+      // Fallback: remove hero-shell after 8s even if React fails to mount (stale PWA cache)
+      setTimeout(function() {
+        var shell = document.getElementById('hero-shell');
+        if (shell) {
+          shell.innerHTML = '<div style="text-align:center;padding:2rem"><p style="color:hsl(0 0% 55%);font-size:14px">Loading took too long.</p><button onclick="location.reload()" style="margin-top:1rem;padding:10px 24px;background:hsl(18 82% 52%);color:#fff;border:none;font-weight:700;font-size:14px;cursor:pointer">Reload App</button></div>';
+        }
+      }, 8000);
+    </script>
     <script type="module" src="/src/main.tsx"></script>
     <!-- Facebook Pixel — deferred load -->
     <script>
