@@ -76,6 +76,14 @@ const ALL_SERVICES = [
   { table: "pet_memorial_submissions", name: "AI Pet Memorial", price: "$79 one-time", priceNum: 79 },
   { table: "employee_credential_audits", name: "Employee Credential Audit", price: "$149 one-time", priceNum: 149 },
   { table: "new_hire_breach_checks", name: "New Hire Breach Screen", price: "$9.99/check", priceNum: 9.99 },
+  // ── Wave 4: Seven New Products (April 2026) ──────────────────────────────
+  { table: "storm_lead_clients", name: "Storm Damage Leads", price: "$29/mo", priceNum: 29 },
+  { table: "recall_alert_clients", name: "Recall Alert Service", price: "$19/mo", priceNum: 19 },
+  { table: "permit_watch_clients", name: "Permit Watch", price: "$29/mo", priceNum: 29 },
+  { table: "speed_audit_clients", name: "Website Speed Audit", price: "$29/mo", priceNum: 29 },
+  { table: "bedtime_story_clients", name: "AI Bedtime Stories", price: "$4.99/mo", priceNum: 4.99 },
+  { table: "crime_digest_clients", name: "Neighborhood Crime Digest", price: "$19/mo", priceNum: 19 },
+  { table: "license_monitor_clients", name: "Business License Monitor", price: "$25/mo", priceNum: 25 },
 ] as const;
 
 interface ClientRecord {

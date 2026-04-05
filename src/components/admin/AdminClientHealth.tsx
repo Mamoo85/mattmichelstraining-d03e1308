@@ -45,6 +45,14 @@ const SERVICE_TABLES = [
   { table: "birthday_campaign_clients", service: "Birthday Campaign", price: "$29/mo", lastField: "last_sent_at", freq: 30 },
   { table: "appointment_reminders", service: "Appointment Reminders", price: "$29/mo", lastField: "last_sent_at", freq: 1 },
   { table: "review_request_clients", service: "Review Request SMS", price: "$29/mo", lastField: "last_sent_at", freq: 7 },
+  // ── Wave 4: Seven New Products ────────────────────────────────────────────
+  { table: "storm_lead_clients", service: "Storm Damage Leads", price: "$29/mo", lastField: null, freq: 0 },
+  { table: "recall_alert_clients", service: "Recall Alert Service", price: "$19/mo", lastField: null, freq: 0 },
+  { table: "permit_watch_clients", service: "Permit Watch", price: "$29/mo", lastField: "last_report_at", freq: 7 },
+  { table: "speed_audit_clients", service: "Website Speed Audit", price: "$29/mo", lastField: "last_report_at", freq: 30 },
+  { table: "bedtime_story_clients", service: "AI Bedtime Stories", price: "$4.99/mo", lastField: null, freq: 0 },
+  { table: "crime_digest_clients", service: "Neighborhood Crime Digest", price: "$19/mo", lastField: null, freq: 0 },
+  { table: "license_monitor_clients", service: "Business License Monitor", price: "$25/mo", lastField: null, freq: 0 },
 ] as const;
 
 function daysBetween(dateStr: string | null): number | null {
