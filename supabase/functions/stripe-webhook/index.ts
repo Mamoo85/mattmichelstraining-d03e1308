@@ -1534,14 +1534,26 @@ serve(async (req) => {
             .select("id")
             .single();
           if (upserted?.id) {
-            await (sb.from as any)("service_subscriptions").insert({
+            const { data: subRow } = await (sb.from as any)("service_subscriptions").insert({
               client_id: upserted.id,
               email: customerEmail,
               service_type: serviceLabel,
               stripe_subscription_id: session.subscription as string || null,
               stripe_customer_id: session.customer as string || null,
               status: "active",
-            });
+            }).select("id").single();
+
+            // Fire auto-onboard for eligible products
+            fetch(`${SUPABASE_URL}/functions/v1/auto-onboard`, {
+              method: "POST",
+              headers: { Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                service_type: meta.type,
+                client_email: customerEmail,
+                business_name: meta.businessName || meta.business_name || customerName || customerEmail,
+                subscription_id: subRow?.id || null,
+              }),
+            }).catch((e: any) => console.error("[WEBHOOK] auto-onboard fire error:", e));
           }
         } catch (e) { console.error("[WEBHOOK] b2b_clients fulfillment write error:", e); }
       }
