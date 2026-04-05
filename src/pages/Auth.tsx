@@ -181,7 +181,7 @@ const Auth = () => {
       if (error) {
         setError(error.message);
       } else {
-        setSuccess("Login successful. Redirecting...");
+        navigate(searchParams.get("redirect") || "/dashboard");
       }
     }
     setLoading(false);
