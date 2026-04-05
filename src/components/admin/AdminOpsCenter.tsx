@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AdminHelpCard } from "./AdminHelpCard";
+import { getAdminGuide } from "@/lib/admin-guides";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Activity, Mail, Phone, ChevronDown, ChevronRight, Users, Copy, Search, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -216,8 +218,12 @@ export default function AdminOpsCenter() {
     return <div className="flex justify-center py-12"><Loader2 className="animate-spin text-primary" size={24} /></div>;
   }
 
+  const guide = getAdminGuide("ops");
+
   return (
     <div className="space-y-6">
+      {guide && <AdminHelpCard id={guide.id} title={guide.title} body={guide.body} tips={guide.tips} />}
+
       <div className="flex items-center gap-3">
         <Activity className="text-primary" size={20} />
         <div>
