@@ -265,6 +265,9 @@ const PartnerProgram = lazyRetry(() => import("./pages/PartnerProgram"));
 const AiWebsiteAudit = lazyRetry(() => import("./pages/AiWebsiteAudit"));
 const DigitalFoundation = lazyRetry(() => import("./pages/DigitalFoundation"));
 const Portfolio = lazyRetry(() => import("./pages/Portfolio"));
+const AdDigitalFoundation = lazyRetry(() => import("./pages/AdDigitalFoundation"));
+const AdFreeAudit = lazyRetry(() => import("./pages/AdFreeAudit"));
+const VisibilityScore = lazyRetry(() => import("./pages/VisibilityScore"));
 const AiGbpPostPack = lazyRetry(() => import("./pages/AiGbpPostPack"));
 const AiCompetitorReport = lazyRetry(() => import("./pages/AiCompetitorReport"));
 const AdCompetitorReport = lazyRetry(() => import("./pages/AdCompetitorReport"));
@@ -454,6 +457,9 @@ const App = () => (
                     <Route path="/ai-website-audit" element={<AiWebsiteAudit />} />
                     <Route path="/digital-foundation" element={<DigitalFoundation />} />
                     <Route path="/portfolio" element={<Portfolio />} />
+                    <Route path="/ad/digital-foundation" element={<AdDigitalFoundation />} />
+                    <Route path="/ad/free-audit" element={<AdFreeAudit />} />
+                    <Route path="/visibility-score" element={<VisibilityScore />} />
                     <Route path="/ai-gbp-post-pack" element={<AiGbpPostPack />} />
                     <Route path="/ai-competitor-report" element={<AiCompetitorReport />} />
                     <Route path="/ad/website-audit" element={<AdWebsiteAudit />} />
