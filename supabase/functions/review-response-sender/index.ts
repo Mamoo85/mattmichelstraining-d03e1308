@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { generateText } from "../_shared/ai.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,7 +16,6 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ message: "No active review response clients" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
     const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY");
     let processed = 0;
@@ -37,14 +37,8 @@ Deno.serve(async (req) => {
           }
         }
 
-        const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: "google/gemini-2.5-flash-lite", 
-            messages: [{
-              role: "user",
-              content: `You are a review response specialist for ${client.business_name} (${client.industry || "local business"}). 
+        const responseDigest = await generateText(
+          `You are a review response specialist for ${client.business_name} (${client.industry || "local business"}).
 Brand voice: ${client.brand_voice || "Professional, friendly, grateful for feedback, solution-oriented for complaints."}
 
 Based on recent reviews found online:
@@ -56,10 +50,9 @@ Generate a daily review response digest as HTML email:
 3. Add response tips section
 4. Include a "copy & paste" format for easy posting
 
-Dark-themed professional HTML.` }] }) });
-
-        const aiData = await aiRes.json();
-        const responseDigest = aiData?.choices?.[0]?.message?.content || "Unable to generate review responses.";
+Dark-themed professional HTML.`,
+          1200
+        ) || "Unable to generate review responses.";
 
         await fetch("https://api.resend.com/emails", {
           method: "POST",

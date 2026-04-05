@@ -1,11 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { sendSMS } from "../_shared/twilio.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
-const TWILIO_API_KEY = Deno.env.get("TWILIO_API_KEY") || "";
-
-const GATEWAY_URL = "https://connector-gateway.lovable.dev/twilio";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -31,22 +28,6 @@ async function supabaseQuery(path: string, body?: unknown, method = "GET") {
   return null;
 }
 
-async function sendSms(from: string, to: string, body: string) {
-  if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
-  if (!TWILIO_API_KEY) throw new Error("TWILIO_API_KEY is not configured");
-
-  const res = await fetch(`${GATEWAY_URL}/Messages.json`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${LOVABLE_API_KEY}`,
-      "X-Connection-Api-Key": TWILIO_API_KEY,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams({ From: from, To: to, Body: body }).toString(),
-  });
-  if (!res.ok) throw new Error(`Twilio gateway error: ${await res.text()}`);
-  return res.json();
-}
 
 function buildStepMessage(step: number, prospectName: string, businessName: string, service: string): string {
   if (step === 1) return `Hi ${prospectName}! This is ${businessName} following up on your recent quote for ${service}. Any questions? We'd love to earn your business! — ${businessName}`;
@@ -83,7 +64,7 @@ serve(async (req) => {
 
         const client = clients[0];
         const message = buildStepMessage(seq.step, seq.prospect_name, client.business_name, seq.service);
-        await sendSms(client.twilio_number, seq.prospect_phone, message);
+        await sendSMS(seq.prospect_phone, client.twilio_number, message);
 
         await supabaseQuery(`quote_followup_sequences?id=eq.${seq.id}`, { sent_at: new Date().toISOString() }, "PATCH");
 

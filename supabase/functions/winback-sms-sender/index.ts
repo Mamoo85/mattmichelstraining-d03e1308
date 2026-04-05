@@ -1,14 +1,12 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendSMS } from "../_shared/twilio.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
-const TWILIO_API_KEY = Deno.env.get("TWILIO_API_KEY") || "";
+const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
 
-
-const GATEWAY_URL = "https://connector-gateway.lovable.dev/twilio";
 const MATT_EMAIL = "matt@mattmichelstraining.com";
 const FROM_EMAIL = "Matt Michels <matt@mattmichelstraining.com>";
 
@@ -16,34 +14,20 @@ const FROM_EMAIL = "Matt Michels <matt@mattmichelstraining.com>";
 const EMAIL_SIGNATURE = `<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 806-4952</div><img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div>`;
 
 async function generateWinbackMessage(client: any): Promise<string> {
-  if (!LOVABLE_API_KEY) return `We miss you at ${client.business_name}! Come back and see what's new. Reply STOP to opt out.`;
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  if (!ANTHROPIC_API_KEY) return `We miss you at ${client.business_name}! Come back and see what's new. Reply STOP to opt out.`;
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
-    headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+    headers: { "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash-lite",
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 200,
       messages: [{ role: "user", content: `Write a short, friendly win-back SMS for ${client.business_name} (${client.industry}). Make the customer feel missed and offer a reason to come back. Under 160 characters. End with 'Reply STOP to opt out.'` }],
     }),
   });
   if (!res.ok) throw new Error(`AI error: ${await res.text()}`);
   const data = await res.json();
-  const text = (data?.choices?.[0]?.message?.content || "").trim();
+  const text = (data?.content?.[0]?.text || "").trim();
   return text.length <= 160 ? text : text.slice(0, 157) + "...";
-}
-
-async function sendSms(to: string, from: string, body: string): Promise<void> {
-  if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
-  if (!TWILIO_API_KEY) throw new Error("TWILIO_API_KEY is not configured");
-  const res = await fetch(`${GATEWAY_URL}/Messages.json`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${LOVABLE_API_KEY}`,
-      "X-Connection-Api-Key": TWILIO_API_KEY,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams({ To: to, From: from, Body: body }).toString(),
-  });
-  if (!res.ok) throw new Error(`Twilio gateway error: ${await res.text()}`);
 }
 
 async function sendEmail(to: string, subject: string,
@@ -78,7 +62,7 @@ serve(async (_req) => {
         const clientErrors: string[] = [];
 
         for (const contact of contacts) {
-          try { await sendSms(contact.phone, client.twilio_number, message); clientSent++; totalSent++; }
+          try { await sendSMS(contact.phone, client.twilio_number, message); clientSent++; totalSent++; }
           catch (smsErr) { clientErrors.push(`SMS failed to ${contact.phone}: ${(smsErr as Error).message}`); }
         }
 

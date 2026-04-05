@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { generateText } from "../_shared/ai.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -260,7 +261,6 @@ serve(async (req) => {
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 
     const serviceClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
@@ -341,30 +341,9 @@ serve(async (req) => {
         const demoInfo = demo ? `${demo.url} (built for a ${demo.label})` : undefined;
         const prompt = promptFn(businessName, industry, city, serviceList, demoInfo);
 
-        const claudeRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${LOVABLE_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "google/gemini-2.5-flash-lite",
-            messages: [
-              { role: "system", content: "You are Matt Michels, local business consultant in Grosse Pointe MI. Casual, direct, personal tone. You run M² Development." },
-              { role: "user", content: prompt },
-            ],
-          }),
-        });
-
-        if (!claudeRes.ok) {
-          const errText = await claudeRes.text();
-          log("AI API error", { leadId, error: errText });
-          continue;
-        }
-
-        const claudeJson = await claudeRes.json();
+        const generatedBody = await generateText(prompt, 800);
         const emailBody: string =
-          claudeJson?.choices?.[0]?.message?.content?.trim() ||
+          generatedBody ||
           `Hey —\n\nI wanted to reach out about a few tools that might help ${businessName} get more calls and grow.\n\nHere's what I offer:\n${serviceList}\n\nAll automated — no extra work on your end.\n\nmattmichelstraining.com/get-started\n\n— Matt`;
 
         const subjectLines = [

@@ -1,7 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
+import { generateText } from "../_shared/ai.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -66,27 +65,11 @@ serve(async (req) => {
         const currentStep = contact.current_step || 1;
         const stepPrompt = STEP_PROMPTS[currentStep];
 
-        // Generate email with Claude
-        const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: "google/gemini-2.5-flash-lite", 
-            messages: [
-              {
-                role: "user",
-                content: `You are writing on behalf of ${client.business_name} (${client.industry || "local business"}). The customer's name is ${contact.contact_name}. ${stepPrompt}\n\nReturn ONLY the email body as HTML (no subject line, no wrapping). Use a friendly, professional tone. Sign off as the ${client.business_name} team.` },
-            ] }) });
-
-        if (!aiRes.ok) {
-          console.error("Claude API error:", await aiRes.text());
-          errors++;
-          continue;
-        }
-
-        const aiData = await aiRes.json();
-        const emailBody = aiData?.choices?.[0]?.message?.content;
+        // Generate email with AI
+        const emailBody = await generateText(
+          `You are writing on behalf of ${client.business_name} (${client.industry || "local business"}). The customer's name is ${contact.contact_name}. ${stepPrompt}\n\nReturn ONLY the email body as HTML (no subject line, no wrapping). Use a friendly, professional tone. Sign off as the ${client.business_name} team.`,
+          800
+        );
 
         const stepSubjects: Record<number, string> = {
           1: `Welcome to ${client.business_name}!`,

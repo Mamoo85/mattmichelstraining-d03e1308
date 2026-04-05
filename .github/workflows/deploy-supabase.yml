@@ -34,7 +34,9 @@ jobs:
             META_ACCESS_TOKEN="${{ secrets.META_ACCESS_TOKEN }}" \
             LINKEDIN_ACCESS_TOKEN="${{ secrets.LINKEDIN_ACCESS_TOKEN }}" \
             N8N_MCP_URL="${{ secrets.N8N_MCP_URL }}" \
-            N8N_ACCESS_TOKEN="${{ secrets.N8N_ACCESS_TOKEN }}"
+            N8N_ACCESS_TOKEN="${{ secrets.N8N_ACCESS_TOKEN }}" \
+            LOVABLE_API_KEY="${{ secrets.LOVABLE_API_KEY }}" \
+            TWILIO_API_KEY="${{ secrets.TWILIO_API_KEY }}"
 
       - name: Deploy all edge functions
         run: supabase functions deploy --project-ref zmyczlfuufhngzovkjdh

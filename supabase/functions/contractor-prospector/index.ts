@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { generateText } from "../_shared/ai.ts";
 
 const log = (step: string, data?: any) =>
   console.log(`[CONTRACTOR-PROSPECTOR] ${step}${data ? " — " + JSON.stringify(data) : ""}`);
@@ -102,7 +103,6 @@ async function scoutScoreLead(
   hasWebsite: boolean,
   hasPhone: boolean,
   issues: string[],
-  lovableApiKey: string,
 ): Promise<{ score: number; reasoning: string; bestOffer: string }> {
   const prompt = `You are the SCOUT — an AI lead qualification agent for Matt Michels, a local business automation consultant in Grosse Pointe, MI. You evaluate whether a local business is worth cold-emailing.
 
@@ -133,21 +133,7 @@ Respond with ONLY a JSON object:
 {"score": 8, "reasoning": "one sentence why", "bestOffer": "leads"}`;
 
   try {
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash-lite",
-        max_tokens: 200,
-        messages: [{ role: "user", content: prompt }],
-      }),
-    });
-
-    const data = await res.json();
-    const text = (data.choices?.[0]?.message?.content || "").trim();
+    const text = await generateText(prompt, 200);
     const cleaned = text.replace(/```json\s*/g, "").replace(/```/g, "").trim();
     const parsed = JSON.parse(cleaned);
     return {
@@ -172,7 +158,6 @@ async function sniperGenerateEmail(
   issues: string[],
   offer: { offer: string; pitch: string; price: string },
   scoutReasoning: string,
-  lovableApiKey: string,
 ): Promise<{ subject: string; body: string }> {
   const cityShort = city.replace(" MI", "");
   const issueText = issues.length > 0 ? issues.join(", ") : "limited online presence";
@@ -203,23 +188,7 @@ SUBJECT: [subject line]
 BODY:
 [4-sentence email]`;
 
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "google/gemini-2.5-flash-lite",
-      max_tokens: 400,
-      messages: [{ role: "user", content: prompt }],
-    }),
-  });
-
-  if (!res.ok) throw new Error(`Sniper Claude API ${res.status}: ${await res.text()}`);
-
-  const data = await res.json();
-  const text = data.choices?.[0]?.message?.content || "";
+  const text = await generateText(prompt, 400);
   const subjectMatch = text.match(/SUBJECT:\s*(.+)/);
   const bodyMatch = text.match(/BODY:\s*([\s\S]+)/);
 
@@ -263,7 +232,6 @@ async function getDailySendCount(sb: any): Promise<number> {
 serve(async () => {
   try {
     const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY")!;
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
@@ -341,7 +309,6 @@ serve(async () => {
           name, trade, city.replace(" MI", ""),
           rating, reviewCount,
           !!website, !!phone, issues,
-          LOVABLE_API_KEY,
         );
         log("Scout scored", { name, score: scout.score, reasoning: scout.reasoning });
 
@@ -376,7 +343,6 @@ serve(async () => {
           ({ subject, body } = await sniperGenerateEmail(
             name, trade, city.replace(" MI", ""),
             issues, finalOffer, scout.reasoning,
-            LOVABLE_API_KEY,
           ));
         } catch (sniperErr) {
           log("Sniper failed — skipping lead", { name, error: String(sniperErr) });

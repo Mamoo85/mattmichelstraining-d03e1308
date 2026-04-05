@@ -1,9 +1,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+import { generateText } from "../_shared/ai.ts";
+
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 
 interface Review {
@@ -32,27 +33,15 @@ async function draftResponse(businessName: string, review: Review): Promise<stri
   const reviewerName = review.reviewer.displayName || "there";
   const reviewText = review.comment || "";
 
-  if (!LOVABLE_API_KEY) {
-    if (stars >= 4) return `Thank you so much for your kind words, ${reviewerName}! We truly appreciate you taking the time to share your experience with ${businessName}. It means a lot to our team!`;
-    return `Thank you for your feedback, ${reviewerName}. We're sorry your experience didn't meet expectations. We'd love the opportunity to make it right — please reach out to us directly so we can address your concerns.`;
-  }
-
   const prompt = stars >= 4
     ? `Write a warm, genuine Google review response for ${businessName}. The customer (${reviewerName}) left a ${stars}-star review: "${reviewText}". Keep it under 400 characters. Sound like a real local business owner — grateful, personal, not robotic. Do not use exclamation points excessively.`
     : `Write a professional, de-escalating Google review response for ${businessName}. The customer (${reviewerName}) left a ${stars}-star review: "${reviewText}". Keep it under 400 characters. Acknowledge their concern, apologize sincerely, and invite them to contact you directly to resolve the issue. Sound human, not like a PR department.`;
 
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: {
-            Authorization: `Bearer ${LOVABLE_API_KEY}`,
-            "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "google/gemini-2.5-flash-lite", 
-      messages: [{ role: "user", content: prompt }] }) });
+  const text = await generateText(prompt, 800);
+  if (text) return text.slice(0, 400);
 
-  const data = await res.json();
-  const text = data?.choices?.[0]?.message?.content?.trim() || "";
-  return text.slice(0, 400);
+  if (stars >= 4) return `Thank you so much for your kind words, ${reviewerName}! We truly appreciate you taking the time to share your experience with ${businessName}. It means a lot to our team!`;
+  return `Thank you for your feedback, ${reviewerName}. We're sorry your experience didn't meet expectations. We'd love the opportunity to make it right — please reach out to us directly so we can address your concerns.`;
 }
 
 async function postReply(locationId: string, reviewId: string, accessToken: string, comment: string): Promise<boolean> {

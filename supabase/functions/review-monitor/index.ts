@@ -4,6 +4,7 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { generateText } from "../_shared/ai.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -12,7 +13,6 @@ const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
 const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
 const TWILIO_FROM_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 
 async function getPlaceReviews(placeId: string): Promise<any[]> {
   const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=reviews&key=${GOOGLE_MAPS_API_KEY}`;
@@ -23,7 +23,6 @@ async function getPlaceReviews(placeId: string): Promise<any[]> {
 }
 
 async function generateSuggestedResponse(reviewText: string, rating: number, businessName: string): Promise<string> {
-  if (!LOVABLE_API_KEY) return "";
   const prompt = `Write a professional, warm response to this Google review for ${businessName}.
 
 Review (${rating}/5 stars): "${reviewText}"
@@ -38,13 +37,7 @@ Rules:
 
 Just write the response text, no formatting.`;
 
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ model: "google/gemini-2.5-flash-lite", messages: [{ role: "user", content: prompt }] }),
-  });
-  const data = await res.json();
-  return data?.choices?.[0]?.message?.content?.trim() || "";
+  return await generateText(prompt, 1024);
 }
 
 async function sendSMS(to: string, body: string): Promise<void> {

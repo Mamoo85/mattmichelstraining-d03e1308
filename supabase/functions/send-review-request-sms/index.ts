@@ -1,12 +1,9 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { sendSMS } from "../_shared/twilio.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
-const TWILIO_API_KEY = Deno.env.get("TWILIO_API_KEY") || "";
-
-const GATEWAY_URL = "https://connector-gateway.lovable.dev/twilio";
-const DEFAULT_TWILIO_NUMBER = Deno.env.get("TWILIO_DEFAULT_NUMBER") || "";
+const DEFAULT_TWILIO_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -32,25 +29,6 @@ async function supabaseQuery(path: string, body?: unknown, method = "GET") {
   return null;
 }
 
-async function sendSms(from: string, to: string, body: string) {
-  if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
-  if (!TWILIO_API_KEY) throw new Error("TWILIO_API_KEY is not configured");
-
-  const res = await fetch(`${GATEWAY_URL}/Messages.json`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${LOVABLE_API_KEY}`,
-      "X-Connection-Api-Key": TWILIO_API_KEY,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams({ From: from, To: to, Body: body }).toString(),
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Twilio gateway error: ${text}`);
-  }
-  return res.json();
-}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
@@ -92,7 +70,7 @@ serve(async (req) => {
     const greeting = customerName ? `Hi ${customerName}` : "Hi there";
     const message = `${greeting}! Thanks for choosing ${client.business_name}. We'd love your feedback — could you leave us a quick Google review? ${client.google_review_url} Reply STOP to opt out.`;
 
-    await sendSms(fromNumber, customerPhone, message);
+    await sendSMS(customerPhone, fromNumber, message);
 
     await supabaseQuery(
       `review_request_clients?id=eq.${client.id}`,

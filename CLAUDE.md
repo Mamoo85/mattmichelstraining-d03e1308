@@ -75,7 +75,7 @@ $10k+/mo fully automated income. Matt's only job: return calls, texts, and email
 - **Prospecting**: `supabase/functions/prospect-local-businesses/index.ts` (daily, 16 industries)
 - **Drip**: `supabase/functions/web-design-drip/index.ts`
 
-### 8–17. SMS & Monitoring Products (10 new products)
+### 8–17. SMS & Monitoring Products (10 products)
 - **Review Monitor** ($25/mo) — `review_monitor_clients`, `supabase/functions/review-monitor/`
 - **Weekly SMS Blast** ($19/mo) — `sms_blast_clients`, `supabase/functions/weekly-sms-sender/`
 - **No-Show Re-Booker** ($25/mo) — `noshow_clients`, `supabase/functions/noshow-trigger/`, `noshow-followup/`
@@ -89,6 +89,69 @@ $10k+/mo fully automated income. Matt's only job: return calls, texts, and email
 - **Migration**: `supabase/migrations/20260403000000_ten_new_products.sql`
 - **Crons**: `supabase/migrations/20260403010000_new_product_crons.sql`
 
+### Wave 2 Products (April 2026 — migrations 20260403xxxxxx)
+- **Pet Memorial Service** — `pet_memorial_clients`
+- **Dark Web Monitor** — `dark_web_monitor_clients`
+- **Gov Contract Monitor** — `gov_contract_monitor_clients`
+- **Podcast Revenue Machine** — `podcast_revenue_clients`
+- **Regulatory Monitor** — `regulatory_monitor_clients`
+- **Competitor Pricing** — `competitor_pricing_clients`
+- **Real Estate Newsletter** — `real_estate_newsletter_clients`
+- **Trademark Watch** — `trademark_watch_clients`
+- **Employee Credential Audit** — `employee_credential_audit_clients`
+- **New Hire Breach Screen** — `new_hire_breach_clients`
+
+### Wave 3 Products (30 products — `20260404000000_thirty_new_products.sql`)
+Each product has a dedicated `*_clients` table with RLS + service_role policy.
+
+Products: Commercial Lease Abstractor, Patent Watch Intelligence, PE/Investor Sector Intelligence, Franchise Disclosure Analyzer, Regulatory Change Monitor, Nonprofit Grant Discovery, Government RFP Alert, AI Obituary Service, Competitor Price Intelligence, AI LinkedIn Ghostwriter, HOA Board Secretary AI, Local Gov Meeting Tracker, Agricultural Price Alert, Podcast Production Automation, Luxury Real Estate Intelligence, Trade Show Follow-Up, Corporate R&D Paper Intelligence, Insurance Agent Lead Drip, Credit Dispute Letter Factory, Airbnb/STR Reputation Manager, Restaurant Menu Engineering, AI Sermon Prep, Personal Trainer Progress Reports, Medical Bill Dispute Letters, HOA Violation Letter Generator, Multi-Location Citation Monitor, Supplement Stack Analyzer, Trade Association Intelligence, Children's Story Subscription, Landlord-Tenant Correspondence AI.
+
+**SMS Compliance Table**: `sms_opt_outs` (E.164 phone, `opted_out_at`, `source`) + `compliance_blocks` audit log — ALWAYS query before any Twilio send.
+
+## Codebase Scale
+- **243** frontend pages in `src/pages/`
+- **435** Supabase Edge Functions in `supabase/functions/`
+- **343** migration files (all dated 2026)
+- **31** AI agents in `.claude/agents/`
+- **57+** product lines across 3 waves
+
+This is a large codebase. Navigate by product name patterns in this document — don't scan all files. New product checklist: 1 migration, 1–2 edge functions, 1 page, 1 admin CRM entry.
+
+## Frontend Architecture
+
+### Page Loading
+All pages use `lazyRetry()` — a custom wrapper around `React.lazy()` that retries failed chunk loads 3 times. Never use plain `React.lazy()` directly.
+
+### Provider Stack (outermost → innermost, `src/App.tsx`)
+`PersistQueryClientProvider` → `TooltipProvider` → `AuthProvider` → `TimerProvider` → `OfflineSyncProvider`
+
+### Route Guards
+- `ProtectedRoute` — requires authentication
+- `SubscriptionGuard` — requires active subscription
+- `BlurGate` — blurs content without subscription
+
+### Component Directories (`src/components/`)
+`admin/`, `auth/`, `billing/`, `checkout/`, `dashboard/`, `exercise/`, `features/`, `gamification/`, `generator/`, `landing/`, `layout/`, `marketing/`, `nutrition/`, `pricing/`, `profile/`, `programs/`, `progress/`, `sessions/`, `shared/`, `store/`, `teams/`, `ui/`, `workout/`, `zone/`
+
+### Data Fetching
+TanStack Query v5 with localStorage persistence via `PersistQueryClientProvider`.
+
+### Build
+- Dev server: port `8080`
+- Build target: `es2020` + `safari14`
+- Code splitting: vendor chunks for react, supabase, query, ui, motion, charts
+- PWA: `vite-plugin-pwa` + workbox
+- Required env vars: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+
+## Edge Function Conventions
+- 435 functions in `supabase/functions/[name]/index.ts` — navigate by product name
+- Shared utilities: `supabase/functions/_shared/email-templates/`, `_shared/transactional-email-templates/`
+- Autonomous scheduled functions: `tom-autonomous`, `oz-autonomous`, `scarlett-autonomous`, `selma-autonomous`, `ops-autonomous`
+- AI calls: Claude Haiku only (`claude-haiku-4-5-20251001`), `max_tokens` 800–1200
+- Stripe: always inline `price_data`, always set `metadata.type` for webhook routing
+- SMS: query `sms_opt_outs` (by E.164 phone) before every Twilio send — TCPA compliance
+- New functions inherit secrets automatically via GitHub Actions on next merge to main
+
 ## Deployment
 1. Claude commits to `claude/product-testing-fbMNs` and pushes
 2. Matt merges to main → GitHub Actions auto-runs migrations + deploys edge functions → Lovable auto-deploys frontend
@@ -101,12 +164,49 @@ $10k+/mo fully automated income. Matt's only job: return calls, texts, and email
 - `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER` ← needed for SMS products
 - `META_ACCESS_TOKEN` ← needed for social media posting
 - `LINKEDIN_ACCESS_TOKEN` ← needed for social media posting
+- `N8N_MCP_URL`, `N8N_ACCESS_TOKEN` ← needed for n8n automation integrations
 
-## Agents (in `/home/user/m2training/.claude/agents/`)
-- **Tom** — lead hunter, web design client acquisition
-- **Oracle** — account watchdog, queries all 10 SMS product tables for health issues
-- **Ops** — project fulfillment, web design client onboarding
-- **Builder** — website generation agent
+## Agents (31 total — in `.claude/agents/`)
+
+### Core (original)
+- **Tom** (`Tom.agent.md`) — lead hunter, web design client acquisition
+- **Oracle** (`Oracle.agent.md`) — account watchdog, queries all product tables for health issues
+- **Ops** (`ops-autonomous.md`) — project fulfillment, web design client onboarding
+- **Builder** (via `builder` skill) — website generation
+
+### Autonomous Loop Agents (paired edge functions)
+- **tom-autonomous** — continuous lead gen pipeline
+- **oz-autonomous** — growth + ops overseer
+- **scarlett-autonomous** — creative marketing & ad strategy
+- **selma-autonomous** — head of marketing & ad strategy
+
+### Specialized Agents
+- **Aff** — affiliate revenue tracker
+- **Cashier** — revenue & payment monitor
+- **Comply** — TCPA/CAN-SPAM/Stripe/Meta/Twilio compliance
+- **Critic** — negative feedback aggregator
+- **Drill** — content pipeline monitor
+- **Guard** — security & access guard
+- **Hype** — social proof & testimonial harvester
+- **Invest** — revenue reinvestment strategist
+- **Launch** — go-to-market orchestrator
+- **Luna** — victory monitor & growth celebrator
+- **Mirror** — retention creative strategist
+- **Mute** — SMS/email opt-out & TCPA compliance monitor
+- **Nova** — new client onboarding orchestrator
+- **Pulse** — SMS product health monitor
+- **Red** — security auditor & stress tester
+- **Ref** — referral program monitor
+- **Rev** — revenue operations
+- **Scout** — competitive intelligence monitor
+- **Shield** — churn prevention monitor
+- **Solo** — direct acquisition optimizer
+- **Trim** — content quality & freshness auditor
+- **Upsell** — cross-sell & upgrade identifier
+- **Vera** — lead qualification filter
+- **Zero** — ad spend auditor & campaign kill switch
+
+> **"Create an agent"** = create a `.md` file at `.claude/agents/[name].md`
 
 ## Testing
 - **Admin Sandbox** (`/admin` → Sandbox tab) — $0 test checkout for every product
@@ -121,3 +221,4 @@ $10k+/mo fully automated income. Matt's only job: return calls, texts, and email
 - AI calls: Claude Haiku only (cost-efficient), max_tokens 800-1200
 - Always use project ref `zmyczlfuufhngzovkjdh` — never the old ref `eauvubfpanpeuxsrqesu`
 - **"Create an agent"** always means: create a `.md` file at `/home/user/m2training/.claude/agents/[name].md`
+- SMS sends: always query `sms_opt_outs` table (E.164 phone format) before sending — TCPA requires immediate opt-out honoring; failures logged to `compliance_blocks`

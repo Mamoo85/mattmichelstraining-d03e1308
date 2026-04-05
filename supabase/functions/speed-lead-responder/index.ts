@@ -1,9 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
-const TWILIO_API_KEY = Deno.env.get("TWILIO_API_KEY") || "";
-const GATEWAY_URL = "https://connector-gateway.lovable.dev/twilio";
+import { sendSMS } from "../_shared/twilio.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -28,18 +25,8 @@ serve(async (req) => {
 
     const smsBody = `Hi ${leadName}! Thanks for reaching out to ${client.business_name}. We got your message and someone will be in touch shortly. Reply here if you need anything right away!`;
 
-    if (LOVABLE_API_KEY && TWILIO_API_KEY) {
-      const smsRes = await fetch(`${GATEWAY_URL}/Messages.json`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "X-Connection-Api-Key": TWILIO_API_KEY,
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({ To: leadPhone, From: client.twilio_number, Body: smsBody }),
-      });
-      if (!smsRes.ok) console.error("Twilio gateway SMS failed:", await smsRes.text());
-    }
+    const smsResult = await sendSMS(leadPhone, client.twilio_number, smsBody, "speed_lead");
+    if (!smsResult.success && !smsResult.skipped) console.error("SMS send failed:", smsResult.error);
 
     const resendRes = await fetch("https://api.resend.com/emails", {
       method: "POST",

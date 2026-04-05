@@ -3,13 +3,12 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendSMS } from "../_shared/twilio.ts";
+import { generateText } from "../_shared/ai.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
-const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
 const TWILIO_FROM_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 
 // Hours after job completion to send each step
@@ -20,39 +19,21 @@ async function generateMessage(step: number, customerName: string, jobType: stri
   const greeting = firstName ? `Hi ${firstName}` : "Hi";
   const job = jobType || "the work";
 
-  if (!LOVABLE_API_KEY) {
-    const defaults = [
-      `${greeting}, thanks for choosing ${businessName} for ${job}! We really appreciate your business. Don't hesitate to reach out if you need anything.`,
-      `${greeting}, we hope you're enjoying the results from your recent ${job}! If you have a moment, we'd love a Google review — it means a lot to a small business. Thanks!`,
-      `${greeting}, just checking in from ${businessName}! It's been about a month since we completed your ${job}. Time for any maintenance or have another project in mind? Give us a call!`,
-    ];
-    return defaults[step] || defaults[0];
-  }
-
   const prompts = [
     `Write a warm 1-2 sentence thank-you SMS from ${businessName} to ${firstName || "a customer"} after completing ${job}. Genuine, not salesy. Under 140 chars.`,
     `Write a friendly 1-2 sentence SMS from ${businessName} asking ${firstName || "a happy customer"} for a Google review after their recent ${job}. Mention it takes 30 seconds. No link needed. Under 160 chars.`,
     `Write a 1-2 sentence check-in/upsell SMS from ${businessName} to ${firstName || "a past customer"} about 30 days after completing ${job}. Ask if they need anything else or have another project. Light, no pressure. Under 160 chars.`,
   ];
 
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ model: "google/gemini-2.5-flash-lite", messages: [{ role: "user", content: prompts[step] }] }),
-  });
-  const data = await res.json();
-  return data?.choices?.[0]?.message?.content?.trim() || `Thanks for your business — ${businessName}`;
-}
+  const result = await generateText(prompts[step], 200);
+  if (result) return result;
 
-async function sendSMS(to: string, body: string): Promise<boolean> {
-  try {
-    const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`, {
-      method: "POST",
-      headers: { Authorization: `Basic ${btoa(TWILIO_ACCOUNT_SID + ":" + TWILIO_AUTH_TOKEN)}`, "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ To: to, From: TWILIO_FROM_NUMBER, Body: body }),
-    });
-    return res.ok;
-  } catch { return false; }
+  const defaults = [
+    `${greeting}, thanks for choosing ${businessName} for ${job}! We really appreciate your business. Don't hesitate to reach out if you need anything.`,
+    `${greeting}, we hope you're enjoying the results from your recent ${job}! If you have a moment, we'd love a Google review — it means a lot to a small business. Thanks!`,
+    `${greeting}, just checking in from ${businessName}! It's been about a month since we completed your ${job}. Time for any maintenance or have another project in mind? Give us a call!`,
+  ];
+  return defaults[step] || defaults[0];
 }
 
 serve(async (req) => {
@@ -91,16 +72,14 @@ serve(async (req) => {
   for (const seq of sequences) {
     try {
       const client = seq.afterjob_drip_clients as any;
-      // TCPA: check opt-out registry before sending
-      const { data: optOut } = await sb.from("sms_opt_outs").select("id").eq("phone", seq.customer_phone).maybeSingle();
-      if (optOut) {
+      const message = await generateMessage(seq.current_step, seq.customer_name, seq.job_type, client?.business_name || "us");
+      // sendSMS handles TCPA opt-out check internally
+      const result = await sendSMS(seq.customer_phone, TWILIO_FROM_NUMBER, message, "afterjob_drip");
+      if (result.skipped) {
         await sb.from("afterjob_sequences").update({ stopped: true }).eq("id", seq.id);
-        await sb.from("compliance_blocks").insert({ phone: seq.customer_phone, product: "afterjob_drip", sequence_id: seq.id, reason: "opted_out" });
         continue;
       }
-      const message = await generateMessage(seq.current_step, seq.customer_name, seq.job_type, client?.business_name || "us");
-      const ok = await sendSMS(seq.customer_phone, message);
-      if (!ok) continue;
+      if (!result.success) continue;
 
       sent++;
       const nextStep = seq.current_step + 1;

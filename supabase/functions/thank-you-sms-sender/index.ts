@@ -1,31 +1,14 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendSMS } from "../_shared/twilio.ts";
 
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
-const TWILIO_API_KEY = Deno.env.get("TWILIO_API_KEY") || "";
-const GATEWAY_URL = "https://connector-gateway.lovable.dev/twilio";
+const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-async function sendSms(to: string, from: string, body: string) {
-  if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
-  if (!TWILIO_API_KEY) throw new Error("TWILIO_API_KEY is not configured");
-
-  const res = await fetch(`${GATEWAY_URL}/Messages.json`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${LOVABLE_API_KEY}`,
-      "X-Connection-Api-Key": TWILIO_API_KEY,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams({ To: to, From: from, Body: body }),
-  });
-  if (!res.ok) throw new Error(`Twilio gateway error: ${await res.text()}`);
-  return res.json();
-}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -44,24 +27,25 @@ serve(async (req) => {
     }
 
     let thankYouMessage = `Thanks so much for choosing ${client.business_name}, ${customerName}! We truly appreciate your business.`;
-    if (LOVABLE_API_KEY) {
+    if (ANTHROPIC_API_KEY) {
       try {
-        const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        const aiResponse = await fetch("https://api.anthropic.com/v1/messages", {
           method: "POST",
-          headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+          headers: { "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: "google/gemini-2.5-flash-lite",
+            model: "claude-haiku-4-5-20251001",
+            max_tokens: 200,
             messages: [{ role: "user", content: `Write a single warm, personalized thank-you sentence from ${client.business_name} (a ${client.industry} business) to a customer named ${customerName}. Keep it under 140 characters. Be genuine, not corporate. Do not use quotes around the message.` }],
           }),
         });
         if (aiResponse.ok) {
           const aiData = await aiResponse.json();
-          thankYouMessage = aiData?.choices?.[0]?.message?.content?.trim() || thankYouMessage;
+          thankYouMessage = aiData?.content?.[0]?.text?.trim() || thankYouMessage;
         }
       } catch { /* use default */ }
     }
 
-    await sendSms(customerPhone, client.twilio_number, thankYouMessage);
+    await sendSMS(customerPhone, client.twilio_number, thankYouMessage);
 
     await supabase.from("thank_you_sms_clients").update({ thanks_sent: (client.thanks_sent || 0) + 1 }).eq("id", client.id);
 

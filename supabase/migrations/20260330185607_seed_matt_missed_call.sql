@@ -8,15 +8,15 @@ INSERT INTO public.missed_call_clients (
   twilio_number,
   response_message,
   active
-) VALUES (
+)
+SELECT
   'M² Performance Training',
   'Matt Michels',
-  'matt@m2training.com',
+  'matt@mattmichelstraining.com',
   '+13138064952',
   '+13139921219',
   'Hey! Just missed your call — I''ll call you right back. How can I help you? — Matt @ M² Training',
   true
-)
-ON CONFLICT (email) DO UPDATE SET
-  twilio_number = EXCLUDED.twilio_number,
-  active = true;
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.missed_call_clients WHERE twilio_number = '+13139921219'
+);

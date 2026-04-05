@@ -3,15 +3,13 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { generateText } from "../_shared/ai.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 
 async function generatePost(businessName: string, businessType: string, city: string): Promise<string> {
-  if (!LOVABLE_API_KEY) return `${businessName} is here to help with all your ${businessType} needs in ${city}. Call us today!`;
-
   const postTypes = [
     `Write a Google Business Profile post for ${businessName}, a ${businessType} in ${city}. Focus on a seasonal tip or service reminder. 1-3 sentences. No hashtags. Sound like a real local business owner, not a marketer.`,
     `Write a short Google Business Profile update for ${businessName} (${businessType}, ${city}) highlighting their reliability and local experience. 1-3 sentences. Conversational and genuine.`,
@@ -21,17 +19,8 @@ async function generatePost(businessName: string, businessType: string, city: st
 
   const prompt = postTypes[Math.floor(Date.now() / 86400000) % postTypes.length];
 
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: {
-            Authorization: `Bearer ${LOVABLE_API_KEY}`,
-            "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "google/gemini-2.5-flash-lite", 
-      messages: [{ role: "user", content: prompt }] }) });
-
-  const data = await res.json();
-  return data?.choices?.[0]?.message?.content?.trim() || `${businessName} — serving ${city} with quality ${businessType} services. Call today!`;
+  const text = await generateText(prompt, 1024);
+  return text || `${businessName} — serving ${city} with quality ${businessType} services. Call today!`;
 }
 
 async function postToGBP(locationId: string, accessToken: string, content: string): Promise<boolean> {

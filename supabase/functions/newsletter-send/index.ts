@@ -6,11 +6,11 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { generateText } from "../_shared/ai.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const JSON_HEADERS = { "Content-Type": "application/json" };
 
 const INVALID_NEWSLETTER_VALUE = /^(undefined|null|n\/a|none)$/i;
@@ -41,8 +41,6 @@ const AFFILIATE_LINKS = {
   lemlist: "https://www.lemlist.com/?via=matt" };
 
 async function generateNewsletterContent(): Promise<{ subject: string; html: string; preview: string }> {
-  if (!LOVABLE_API_KEY) throw new Error("No LOVABLE_API_KEY");
-
   const weekNumber = Math.floor(Date.now() / (7 * 24 * 60 * 60 * 1000));
   const topics = [
     "cold call opening lines that actually work",
@@ -60,16 +58,7 @@ async function generateNewsletterContent(): Promise<{ subject: string; html: str
   ];
   const topic = topics[weekNumber % topics.length];
 
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: {
-            Authorization: `Bearer ${LOVABLE_API_KEY}`,
-            "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "google/gemini-2.5-flash-lite", 
-      messages: [{
-        role: "user",
-        content: `Write a weekly newsletter for B2B field sales reps (medical device, dental equipment, industrial) covering: "${topic}".
+  const raw = await generateText(`Write a weekly newsletter for B2B field sales reps (medical device, dental equipment, industrial) covering: "${topic}".
 
 Format as JSON with these fields:
 - subject: email subject line (punchy, under 60 chars)
@@ -82,12 +71,7 @@ Format as JSON with these fields:
 - tool_tip: one specific tip for using that tool (2-3 sentences)
 - stat: one interesting industry stat about sales or prospecting
 
-Be direct and tactical. These are experienced reps who hate fluff. Write like you've been in the field.`
-      }]
-    }) });
-
-  const data = await res.json();
-  const raw = data?.choices?.[0]?.message?.content || "";
+Be direct and tactical. These are experienced reps who hate fluff. Write like you've been in the field.`, 1024);
 
   let parsed;
   try {

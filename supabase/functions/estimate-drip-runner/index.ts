@@ -3,13 +3,12 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendSMS } from "../_shared/twilio.ts";
+import { generateText } from "../_shared/ai.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
-const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
 const TWILIO_FROM_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 
 // Step delays from quote time
@@ -24,26 +23,9 @@ const STEP_PROMPTS = [
 ];
 
 async function generateStepMessage(step: number, prospectName: string, jobType: string, businessName: string): Promise<string> {
-  if (!LOVABLE_API_KEY) return `Hi${prospectName ? " " + prospectName : ""}, just checking in on your ${jobType || "project"} estimate. Any questions? — ${businessName}`;
   const prompt = STEP_PROMPTS[step](prospectName, jobType, businessName);
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ model: "google/gemini-2.5-flash-lite", messages: [{ role: "user", content: prompt }] }),
-  });
-  const data = await res.json();
-  return data?.choices?.[0]?.message?.content?.trim() || `Following up on your estimate — ${businessName}`;
-}
-
-async function sendSMS(to: string, body: string): Promise<boolean> {
-  try {
-    const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`, {
-      method: "POST",
-      headers: { Authorization: `Basic ${btoa(TWILIO_ACCOUNT_SID + ":" + TWILIO_AUTH_TOKEN)}`, "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ To: to, From: TWILIO_FROM_NUMBER, Body: body }),
-    });
-    return res.ok;
-  } catch { return false; }
+  const result = await generateText(prompt, 200);
+  return result || `Hi${prospectName ? " " + prospectName : ""}, just checking in on your ${jobType || "project"} estimate. Any questions? — ${businessName}`;
 }
 
 serve(async (req) => {
@@ -83,16 +65,14 @@ serve(async (req) => {
   for (const seq of sequences) {
     try {
       const client = seq.estimate_drip_clients as any;
-      // TCPA: check opt-out registry before sending
-      const { data: optOut } = await sb.from("sms_opt_outs").select("id").eq("phone", seq.prospect_phone).maybeSingle();
-      if (optOut) {
+      const message = await generateStepMessage(seq.current_step, seq.prospect_name, seq.job_type, client?.business_name || "us");
+      // sendSMS handles TCPA opt-out check internally
+      const result = await sendSMS(seq.prospect_phone, TWILIO_FROM_NUMBER, message, "estimate_drip");
+      if (result.skipped) {
         await sb.from("estimate_sequences").update({ stopped: true }).eq("id", seq.id);
-        await sb.from("compliance_blocks").insert({ phone: seq.prospect_phone, product: "estimate_drip", sequence_id: seq.id, reason: "opted_out" });
         continue;
       }
-      const message = await generateStepMessage(seq.current_step, seq.prospect_name, seq.job_type, client?.business_name || "us");
-      const ok = await sendSMS(seq.prospect_phone, message);
-      if (!ok) continue;
+      if (!result.success) continue;
 
       sent++;
       const nextStep = seq.current_step + 1;

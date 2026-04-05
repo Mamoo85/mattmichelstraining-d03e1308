@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { generateText } from "../_shared/ai.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -287,15 +288,9 @@ ${bodyHtml}
 // ── Agent 1: THE SCOUT — Recon & Qualification ──
 async function runScoutAgent(
   business: string, industry: string, city: string,
-  website: string, rating: number, reviewCount: number, lovableKey: string
+  website: string, rating: number, reviewCount: number
 ): Promise<{ target_service_to_pitch: string; custom_flaw_observation: string; lead_score: number }> {
-  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${lovableKey}` },
-    body: JSON.stringify({
-      model: "google/gemini-2.5-flash-lite",
-      messages: [
-        { role: "system", content: `You are an autonomous B2B Lead Qualification Agent for a web design and automation agency run by Matt Michels in Grosse Pointe, MI. Analyze scraped data about businesses and find their specific digital pain point.
+  const prompt = `You are an autonomous B2B Lead Qualification Agent for a web design and automation agency run by Matt Michels in Grosse Pointe, MI. Analyze scraped data about businesses and find their specific digital pain point.
 
 Instructions:
 - Check against these triggers:
@@ -305,24 +300,19 @@ Instructions:
 - Output a strictly formatted JSON object with keys: target_service_to_pitch, custom_flaw_observation, lead_score (1-10).
 - custom_flaw_observation must be a single, natural-sounding sentence pointing out the flaw.
 - lead_score: 1-3 = low priority, 4-6 = moderate, 7-10 = high priority (send email).
-- Respond with ONLY the JSON object, no markdown, no explanation.` },
-        { role: "user", content: `Business: "${business}"
+- Respond with ONLY the JSON object, no markdown, no explanation.
+
+Business: "${business}"
 Industry: ${industry}
 City: ${city}
 Website: ${website || "NONE - No website found"}
 Google Rating: ${rating || "Unknown"}
 Google Reviews: ${reviewCount || 0}
-Has Website: ${website ? "Yes" : "No"}` }
-      ],
-      temperature: 0.3,
-    }),
-  });
+Has Website: ${website ? "Yes" : "No"}`;
 
-  if (!response.ok) throw new Error(`Scout AI error: ${response.status}`);
-  const data = await response.json();
-  const content = data.choices?.[0]?.message?.content ?? "{}";
+  const raw = await generateText(prompt, 300);
   try {
-    const cleaned = content.replace(/```json\s*/g, "").replace(/```/g, "").trim();
+    const cleaned = raw.replace(/```json\s*/g, "").replace(/```/g, "").trim();
     return JSON.parse(cleaned);
   } catch {
     return { target_service_to_pitch: "web_design", custom_flaw_observation: "I noticed your online presence could use some work.", lead_score: 5 };
@@ -332,17 +322,11 @@ Has Website: ${website ? "Yes" : "No"}` }
 // ── Agent 2: THE SNIPER — Outbound Copywriter ──
 async function runSniperAgent(
   business: string, industry: string, city: string,
-  customFlaw: string, targetService: string, lovableKey: string,
+  customFlaw: string, targetService: string,
   landingPage: { path: string; price: string; monthly: string }
 ): Promise<string> {
   const siteUrl = `mattmichelstraining.com${landingPage.path}`;
-  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${lovableKey}` },
-    body: JSON.stringify({
-      model: "google/gemini-2.5-flash-lite",
-      messages: [
-        { role: "system", content: `You are an elite, autonomous B2B Outbound Sales Agent. Your job is to write cold emails that get busy business owners to reply. You will be provided with a business name, industry, and a Custom Flaw Observation from our Recon Agent.
+  const prompt = `You are an elite, autonomous B2B Outbound Sales Agent. Your job is to write cold emails that get busy business owners to reply. You will be provided with a business name, industry, and a Custom Flaw Observation from our Recon Agent.
 
 Strict Rules:
 - No Corporate Fluff: Never use words like 'synergy,' 'optimize,' or 'innovative solutions.' Speak like a peer.
@@ -357,20 +341,15 @@ Strict Rules:
   ---
   [email body]
 - No pleasantries like 'Here is your email:'.
-- Sign off as Matt, (313) 806-4952.` },
-        { role: "user", content: `Business: "${business}" (${industry} in ${city})
+- Sign off as Matt, (313) 806-4952.
+
+Business: "${business}" (${industry} in ${city})
 Custom Flaw Observation: "${customFlaw}"
 Target Service: ${targetService}
 Landing Page URL: ${siteUrl}
-Price: ${landingPage.price} setup + ${landingPage.monthly}` }
-      ],
-      temperature: 0.7,
-    }),
-  });
+Price: ${landingPage.price} setup + ${landingPage.monthly}`;
 
-  if (!response.ok) throw new Error(`Sniper AI error: ${response.status}`);
-  const data = await response.json();
-  return data.choices?.[0]?.message?.content ?? "";
+  return await generateText(prompt, 600);
 }
 
 // ── Check daily volume cap ──
@@ -389,16 +368,11 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_PUBLISHABLE_KEY") || Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    if (!LOVABLE_API_KEY) {
-      return new Response(JSON.stringify({ error: "LOVABLE_API_KEY not configured" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
     if (!GOOGLE_MAPS_API_KEY) {
       return new Response(JSON.stringify({ error: "GOOGLE_MAPS_API_KEY not configured" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -449,17 +423,7 @@ serve(async (req) => {
         const leadCity = lead.city || "Michigan";
         const leadIndustry = lead.industry || "local business";
 
-        const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: "google/gemini-2.5-flash-lite",
-            messages: [{ role: "user", content: `Write a 280-char max LinkedIn connection request note from Matt Michels (web design/local marketing, Grosse Pointe MI) to ${ownerName} at ${businessName} in ${leadCity}. Reference their specific industry: ${leadIndustry}. Casual, local, not salesy. No hashtags. Return only the note text.` }],
-          }),
-        });
-
-        const aiData = await aiRes.json();
-        const message = (aiData?.choices?.[0]?.message?.content || "").trim().slice(0, 280);
+        const message = (await generateText(`Write a 280-char max LinkedIn connection request note from Matt Michels (web design/local marketing, Grosse Pointe MI) to ${ownerName} at ${businessName} in ${leadCity}. Reference their specific industry: ${leadIndustry}. Casual, local, not salesy. No hashtags. Return only the note text.`, 300)).slice(0, 280);
 
         await serviceClient.from("outreach_leads").update({ linkedin_message: message }).eq("id", lead.id);
         rows.push({ id: lead.id, business_name: businessName, owner_name: ownerName, message });
@@ -632,7 +596,7 @@ serve(async (req) => {
 
         // ── AGENT 1: THE SCOUT — Qualify the lead ──
         const scoutResult = await runScoutAgent(
-          businessName, industry, city, website, rating, reviewCount, LOVABLE_API_KEY
+          businessName, industry, city, website, rating, reviewCount
         );
         log("Scout result", { business: businessName, score: scoutResult.lead_score, service: scoutResult.target_service_to_pitch, flaw: scoutResult.custom_flaw_observation });
 
@@ -644,7 +608,7 @@ serve(async (req) => {
         if (scoutResult.lead_score >= 7 && contactEmail && RESEND_API_KEY && !capReached) {
           const sniperOutput = await runSniperAgent(
             businessName, industry, city,
-            scoutResult.custom_flaw_observation, scoutResult.target_service_to_pitch, LOVABLE_API_KEY,
+            scoutResult.custom_flaw_observation, scoutResult.target_service_to_pitch,
             landingPage
           );
 

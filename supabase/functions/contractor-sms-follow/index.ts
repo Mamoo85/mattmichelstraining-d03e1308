@@ -1,24 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendSMS } from "../_shared/twilio.ts";
 
 const log = (step: string, data?: any) =>
   console.log(`[CONTRACTOR-SMS] ${step}${data ? " — " + JSON.stringify(data) : ""}`);
-
-const GATEWAY_URL = "https://connector-gateway.lovable.dev/twilio/Messages.json";
-
-async function sendSms(to: string, body: string, lovableKey: string, twilioKey: string, fromNumber: string) {
-  const res = await fetch(GATEWAY_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${lovableKey}`,
-      "X-Connection-Api-Key": twilioKey,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams({ To: to, From: fromNumber, Body: body }),
-  });
-  if (!res.ok) throw new Error(`Twilio error: ${await res.text()}`);
-  return res.json();
-}
 
 // SMS text per offer
 const SMS1: Record<string, (biz: string, city: string) => string> = {
@@ -41,13 +26,11 @@ const SMS2: Record<string, (biz: string, city: string) => string> = {
 
 serve(async () => {
   try {
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
-    const TWILIO_API_KEY = Deno.env.get("TWILIO_API_KEY")!;
-    const TWILIO_DEFAULT_NUMBER = Deno.env.get("TWILIO_DEFAULT_NUMBER")!;
+    const TWILIO_DEFAULT_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || Deno.env.get("TWILIO_DEFAULT_NUMBER") || "";
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-    if (!LOVABLE_API_KEY || !TWILIO_API_KEY || !TWILIO_DEFAULT_NUMBER) {
-      return new Response(JSON.stringify({ error: "Missing Twilio credentials" }), { status: 500 });
+    if (!TWILIO_DEFAULT_NUMBER) {
+      return new Response(JSON.stringify({ error: "Missing TWILIO_PHONE_NUMBER" }), { status: 500 });
     }
 
     let sent = 0;
@@ -67,13 +50,17 @@ serve(async () => {
       const msg = (SMS1[offer] || SMS1.leads)(lead.business_name || "your business", lead.city || "your area");
 
       try {
-        await sendSms(lead.phone, msg, LOVABLE_API_KEY, TWILIO_API_KEY, TWILIO_DEFAULT_NUMBER);
-        await sb.from("outreach_leads").update({
-          sms_sent: true,
-          sms_sent_at: new Date().toISOString(),
-        }).eq("id", lead.id);
-        sent++;
-        log("SMS 1 sent", { phone: lead.phone, offer });
+        const result = await sendSMS(lead.phone, TWILIO_DEFAULT_NUMBER, msg, "contractor_sms_follow");
+        if (result.success) {
+          await sb.from("outreach_leads").update({
+            sms_sent: true,
+            sms_sent_at: new Date().toISOString(),
+          }).eq("id", lead.id);
+          sent++;
+          log("SMS 1 sent", { phone: lead.phone, offer });
+        } else {
+          log("SMS 1 failed", { phone: lead.phone, error: result.error });
+        }
         await new Promise(r => setTimeout(r, 500));
       } catch (e) {
         log("SMS 1 failed", { phone: lead.phone, error: String(e) });
@@ -99,13 +86,17 @@ serve(async () => {
       const msg = (SMS2[offer] || SMS2.leads)(lead.business_name || "your business", lead.city || "your area");
 
       try {
-        await sendSms(lead.phone, msg, LOVABLE_API_KEY, TWILIO_API_KEY, TWILIO_DEFAULT_NUMBER);
-        await sb.from("outreach_leads").update({
-          sms_2_sent: true,
-          sms_2_sent_at: new Date().toISOString(),
-        }).eq("id", lead.id);
-        sent++;
-        log("SMS 2 sent", { phone: lead.phone, offer });
+        const result = await sendSMS(lead.phone, TWILIO_DEFAULT_NUMBER, msg, "contractor_sms_follow");
+        if (result.success) {
+          await sb.from("outreach_leads").update({
+            sms_2_sent: true,
+            sms_2_sent_at: new Date().toISOString(),
+          }).eq("id", lead.id);
+          sent++;
+          log("SMS 2 sent", { phone: lead.phone, offer });
+        } else {
+          log("SMS 2 failed", { phone: lead.phone, error: result.error });
+        }
         await new Promise(r => setTimeout(r, 500));
       } catch (e) {
         log("SMS 2 failed", { phone: lead.phone, error: String(e) });

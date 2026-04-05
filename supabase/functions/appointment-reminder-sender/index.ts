@@ -1,35 +1,11 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
-const TWILIO_API_KEY = Deno.env.get("TWILIO_API_KEY") || "";
-const GATEWAY_URL = "https://connector-gateway.lovable.dev/twilio";
+import { sendSMS } from "../_shared/twilio.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
-
-async function sendSms(to: string, from: string, body: string) {
-  if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
-  if (!TWILIO_API_KEY) throw new Error("TWILIO_API_KEY is not configured");
-
-  const res = await fetch(`${GATEWAY_URL}/Messages.json`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${LOVABLE_API_KEY}`,
-      "X-Connection-Api-Key": TWILIO_API_KEY,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams({ To: to, From: from, Body: body }),
-  });
-
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Twilio gateway error: ${errText}`);
-  }
-  return res.json();
-}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -68,7 +44,7 @@ serve(async (req) => {
 
       const message = `Hi ${reminder.contact_name}! This is a reminder from ${client.business_name}: you have an appointment tomorrow at ${apptTime}. Reply CONFIRM to confirm or call us to reschedule.`;
 
-      await sendSms(reminder.contact_phone, client.twilio_number, message);
+      await sendSMS(reminder.contact_phone, client.twilio_number, message, "appointment_reminder");
       await supabase.from("appointment_reminders").update({ reminded_24h: true }).eq("id", reminder.id);
       sent24++;
     }
@@ -92,7 +68,7 @@ serve(async (req) => {
 
       const message = `Hi ${reminder.contact_name}! Just a heads up — your appointment with ${client.business_name} is coming up at ${apptTime} today. See you soon!`;
 
-      await sendSms(reminder.contact_phone, client.twilio_number, message);
+      await sendSMS(reminder.contact_phone, client.twilio_number, message, "appointment_reminder");
       await supabase.from("appointment_reminders").update({ reminded_1h: true }).eq("id", reminder.id);
       sent1h++;
     }

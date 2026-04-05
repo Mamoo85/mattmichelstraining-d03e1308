@@ -3,16 +3,15 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendSMS } from "../_shared/twilio.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
-const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
 const TWILIO_FROM_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
+const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
 
 async function generatePromo(businessName: string, businessType: string, promoOffer: string): Promise<string> {
-  if (!LOVABLE_API_KEY || !promoOffer) {
+  if (!promoOffer) {
     return `${businessName} here — we have an opening TODAY and want to take care of you. ${promoOffer || "Call us now to book!"} Reply STOP to unsubscribe.`;
   }
 
@@ -22,25 +21,18 @@ Rules: 1-2 sentences, urgent but friendly, ends with a call-to-action. Under 140
 
 Just write the SMS text, nothing else.`;
 
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ model: "google/gemini-2.5-flash-lite", messages: [{ role: "user", content: prompt }] }),
-  });
-  const data = await res.json();
-  const msg = data?.choices?.[0]?.message?.content?.trim() || `${businessName}: ${promoOffer} — call now!`;
-  return `${msg}\n\nReply STOP to unsubscribe.`;
-}
-
-async function sendSMS(to: string, body: string): Promise<boolean> {
   try {
-    const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`, {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
-      headers: { Authorization: `Basic ${btoa(TWILIO_ACCOUNT_SID + ":" + TWILIO_AUTH_TOKEN)}`, "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ To: to, From: TWILIO_FROM_NUMBER, Body: body }),
+      headers: { "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "Content-Type": "application/json" },
+      body: JSON.stringify({ model: "claude-haiku-4-5-20251001", max_tokens: 200, messages: [{ role: "user", content: prompt }] }),
     });
-    return res.ok;
-  } catch { return false; }
+    const data = await res.json();
+    const msg = data?.content?.[0]?.text?.trim() || `${businessName}: ${promoOffer} — call now!`;
+    return `${msg}\n\nReply STOP to unsubscribe.`;
+  } catch {
+    return `${businessName} here — we have an opening TODAY and want to take care of you. ${promoOffer} Reply STOP to unsubscribe.`;
+  }
 }
 
 serve(async (req) => {
@@ -71,7 +63,7 @@ serve(async (req) => {
   if (messageBody !== triggerKeyword) {
     // Not the trigger keyword — send help message
     const helpMsg = `M² Promo System: Text "${triggerKeyword}" to fire your promo blast. Contacts: ${client.contact_count || 0}`;
-    await sendSMS(fromPhone, helpMsg);
+    await sendSMS(fromPhone, TWILIO_FROM_NUMBER, helpMsg);
     return new Response(`<?xml version="1.0"?><Response></Response>`, { headers: { "Content-Type": "text/xml" } });
   }
 
@@ -89,7 +81,7 @@ serve(async (req) => {
   if (contacts?.length) {
     for (const contact of contacts) {
       if (contact.phone) {
-        await sendSMS(contact.phone, promoMessage);
+        await sendSMS(contact.phone, TWILIO_FROM_NUMBER, promoMessage);
         sent++;
         await new Promise(r => setTimeout(r, 100));
       }
@@ -99,7 +91,7 @@ serve(async (req) => {
   await sb.from("slow_day_clients").update({ last_blast_at: new Date().toISOString() }).eq("id", client.id);
 
   // Confirm to owner
-  await sendSMS(fromPhone, `✅ Promo blast sent to ${sent} customers! Message: "${promoMessage.split("\n")[0]}"`);
+  await sendSMS(fromPhone, TWILIO_FROM_NUMBER, `✅ Promo blast sent to ${sent} customers! Message: "${promoMessage.split("\n")[0]}"`);
 
   console.log(`[slow-day-trigger] ${client.business_name} fired promo to ${sent} contacts`);
   return new Response(`<?xml version="1.0"?><Response></Response>`, { headers: { "Content-Type": "text/xml" } });

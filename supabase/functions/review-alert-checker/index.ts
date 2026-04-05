@@ -1,9 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
-const TWILIO_API_KEY = Deno.env.get("TWILIO_API_KEY") || "";
-const GATEWAY_URL = "https://connector-gateway.lovable.dev/twilio";
+import { sendSMS } from "../_shared/twilio.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -30,17 +27,9 @@ serve(async (req) => {
 
     const smsBody = `${client.business_name}: New ${rating}-star review from ${reviewerName} on ${platform}! Check it now.`;
 
-    if (client.phone_number && LOVABLE_API_KEY && TWILIO_API_KEY) {
-      const smsRes = await fetch(`${GATEWAY_URL}/Messages.json`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "X-Connection-Api-Key": TWILIO_API_KEY,
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({ To: client.phone_number, From: client.twilio_number || "", Body: smsBody }),
-      });
-      if (!smsRes.ok) console.error("Twilio gateway SMS failed:", await smsRes.text());
+    if (client.phone_number) {
+      const smsResult = await sendSMS(client.phone_number, client.twilio_number || Deno.env.get("TWILIO_PHONE_NUMBER") || "", smsBody, "review_alert");
+      if (!smsResult.success && !smsResult.skipped) console.error("Twilio SMS failed:", smsResult.error);
     }
 
     const stars = "⭐".repeat(Math.min(rating, 5));
