@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Copy, Check, ExternalLink, ChevronDown, ChevronUp, ThumbsUp, ThumbsDown, Brain } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { AdminHelpCard } from "./AdminHelpCard";
+import { getAdminGuide } from "@/lib/admin-guides";
 
 // ── Ad-Ready Landing Pages ─────────────────────────────────────────────────
 const AD_PAGES = [
@@ -153,8 +155,12 @@ const AdminAdCampaigns = () => {
 
   const pendingCampaigns = selmaQueue?.filter((c: any) => c.status === "pending") || [];
 
+  const guide = getAdminGuide("ad-campaigns");
+
   return (
     <div className="space-y-6">
+      {guide && <AdminHelpCard id={guide.id} title={guide.title} body={guide.body} tips={guide.tips} />}
+
       {/* Ad-Ready URLs */}
       <div>
         <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
