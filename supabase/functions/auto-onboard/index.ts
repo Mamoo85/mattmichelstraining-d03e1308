@@ -91,6 +91,104 @@ const TEMPLATES: Record<string, OnboardTemplate> = {
       <p><strong>Quick question:</strong> What's the best phone number to text leads to? And what's your primary service area (city/zip)?</p>
       <p>Reply anytime and I'll get everything configured!</p>`,
   },
+  storm_lead_subscription: {
+    subject: "Welcome to Storm Damage Leads — You're All Set!",
+    nextStage: "📧 Welcome Email Sent",
+    body: (name) => `
+      <p>Hey ${name}!</p>
+      <p>Welcome to Storm Damage Lead Blaster! Here's how it works:</p>
+      <ul>
+        <li>I monitor NOAA weather alerts for your zip codes 24/7</li>
+        <li>When severe weather hits your area, you get an instant SMS alert</li>
+        <li>You'll be the first contractor calling homeowners after a storm</li>
+      </ul>
+      <p><strong>Quick question:</strong> What zip codes do you want me to monitor? And what's your trade (roofing, siding, etc.)?</p>
+      <p>Reply with those details and I'll activate your alerts immediately!</p>`,
+  },
+  recall_alert_subscription: {
+    subject: "Welcome to Recall Alerts — Daily Monitoring Active",
+    nextStage: "📧 Welcome Email Sent",
+    body: (name) => `
+      <p>Hey ${name}!</p>
+      <p>Welcome to your FDA & CPSC Recall Alert service! Starting tomorrow, you'll receive:</p>
+      <ul>
+        <li>Daily AI-summarized recall alerts from FDA and CPSC</li>
+        <li>Only recalls relevant to your industry</li>
+        <li>Plain-English summaries — no legal jargon</li>
+      </ul>
+      <p><strong>Quick question:</strong> What industry are you in, and what product categories should I watch? (e.g., food service, childcare, automotive parts)</p>
+      <p>Reply and I'll configure your filters!</p>`,
+  },
+  permit_watch_subscription: {
+    subject: "Welcome to Permit Watch — Scanning Starts Tomorrow",
+    nextStage: "📧 Welcome Email Sent",
+    body: (name) => `
+      <p>Hey ${name}!</p>
+      <p>Welcome to Permit Watch! Here's what you'll get:</p>
+      <ul>
+        <li>Daily scans of building permits filed in your area</li>
+        <li>Matched to your trades so you only see relevant permits</li>
+        <li>Early intel on new construction = first to reach the homeowner</li>
+      </ul>
+      <p><strong>Quick question:</strong> What city/area should I monitor, and what trades do you cover? (e.g., plumbing, electrical, HVAC)</p>
+      <p>Reply and I'll start scanning!</p>`,
+  },
+  speed_audit_subscription: {
+    subject: "Welcome to Website Speed Audits — First Report Coming Soon",
+    nextStage: "📧 Welcome Email Sent",
+    body: (name) => `
+      <p>Hey ${name}!</p>
+      <p>Welcome to your monthly Website Speed Audit service! Here's what to expect:</p>
+      <ul>
+        <li>Monthly mobile + desktop performance reports</li>
+        <li>AI-written plain-English recommendations</li>
+        <li>Google PageSpeed scores with actionable fixes</li>
+      </ul>
+      <p>Your first report will arrive within 48 hours. No setup needed — I already have your website URL from checkout.</p>
+      <p>Reply if you have any questions!</p>`,
+  },
+  bedtime_story_subscription: {
+    subject: "Welcome to AI Bedtime Stories — Tonight's Story Awaits! ✨",
+    nextStage: "📧 Welcome Email Sent",
+    body: (name) => `
+      <p>Hey ${name}!</p>
+      <p>Welcome to AI Bedtime Stories! Every evening at 7 PM, your child will receive a brand-new, personalized bedtime story.</p>
+      <ul>
+        <li>Your child is the <strong>hero</strong> of every story</li>
+        <li>Stories are tailored to their age and interests</li>
+        <li>Each story has a gentle moral and happy ending</li>
+      </ul>
+      <p>The first story arrives tonight! If you'd like to update your child's interests or details, just reply to this email.</p>`,
+  },
+  crime_digest_subscription: {
+    subject: "Welcome to Neighborhood Crime Digest — Weekly Reports Starting",
+    nextStage: "📧 Welcome Email Sent",
+    body: (name) => `
+      <p>Hey ${name}!</p>
+      <p>Welcome to your weekly Neighborhood Crime Digest! Every Monday morning, you'll receive:</p>
+      <ul>
+        <li>AI-summarized crime reports for your zip code</li>
+        <li>Trend analysis (up/down vs. last week)</li>
+        <li>Safety recommendations for your area</li>
+      </ul>
+      <p>Your first report arrives next Monday. No setup needed — I have your zip code from checkout.</p>
+      <p>Reply if you have questions!</p>`,
+  },
+  license_monitor_subscription: {
+    subject: "Welcome to License Monitor — Never Miss a Renewal",
+    nextStage: "📧 Welcome Email Sent",
+    body: (name) => `
+      <p>Hey ${name}!</p>
+      <p>Welcome to Business License Expiry Monitor! To set up your reminders, I need:</p>
+      <ul>
+        <li><strong>License name</strong> (e.g., Contractor License, Business Registration)</li>
+        <li><strong>License number</strong> (optional)</li>
+        <li><strong>Expiry date</strong></li>
+        <li><strong>Issuing body</strong> (e.g., State of Michigan, City of Detroit)</li>
+      </ul>
+      <p>You'll get reminders at 90, 60, 30, 14, and 7 days before expiry — so you never miss a deadline.</p>
+      <p>Reply with your license details and I'll set everything up!</p>`,
+  },
 };
 
 // Generic SMS product template
