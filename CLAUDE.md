@@ -164,18 +164,41 @@ TanStack Query v5 with localStorage persistence via `PersistQueryClientProvider`
 - New functions inherit secrets automatically via GitHub Actions on next merge to main
 
 ## Deployment
-1. Claude commits to dev branch and pushes
-2. Matt merges to main → GitHub Actions auto-runs migrations + deploys edge functions → Lovable auto-deploys frontend
-3. **No manual SQL steps needed** — GitHub Actions handles migrations on every merge to main
-4. Required GitHub Secret: `SUPABASE_ACCESS_TOKEN` (Supabase account access token, not the DB password)
+- **Primary**: Lovable Cloud — runs edge functions, hosts frontend, all secrets configured there
+- **Secondary**: Supabase project `zmyczlfuufhngzovkjdh` — deployed via GitHub Actions on merge to main (migrations + edge functions). Only relevant if using this project directly.
+- Claude commits to dev branch → Matt merges to main → Lovable auto-deploys frontend + edge functions
+- GitHub Actions also deploys to the secondary Supabase project (requires `SUPABASE_ACCESS_TOKEN` GitHub secret)
 
-## Required Supabase Secrets
-- `RESEND_API_KEY`, `ANTHROPIC_API_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
-- `GOOGLE_MAPS_API_KEY` ← already added
-- `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER` ← needed for SMS products
-- `META_ACCESS_TOKEN` ← needed for social media posting
-- `LINKEDIN_ACCESS_TOKEN` ← needed for social media posting
-- `N8N_MCP_URL`, `N8N_ACCESS_TOKEN` ← needed for n8n automation integrations
+## Secrets (all configured in Lovable Cloud)
+All secrets below are already set in Lovable Cloud and working. Do NOT add secrets to the secondary Supabase project unless specifically needed there.
+
+### Core
+- `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` — payments
+- `RESEND_API_KEY` — all email sends
+- `ANTHROPIC_API_KEY` — AI features (Claude Haiku)
+- `LOVABLE_API_KEY` — used by many edge functions
+
+### Google
+- `GOOGLE_MAPS_API_KEY` — prospecting, GBP
+- `GOOGLE_PAGESPEED_API_KEY` — Website Speed Audit
+- `GOOGLE_SERVICE_ACCOUNT_KEY`, `GOOGLE_PRIVATE_KEY_B64`, `GOOGLE_CALENDAR_ID` — calendar
+
+### SMS (Twilio)
+- `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`, `TWILIO_API_KEY`
+
+### Social Media
+- `META_ACCESS_TOKEN`, `META_APP_ID`, `META_APP_SECRET`, `META_PAGE_ID` — Facebook/Instagram
+- `LINKEDIN_ACCESS_TOKEN`, `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET` — LinkedIn
+
+### Data & Monitoring
+- `FIRECRAWL_API_KEY` — web scraping (Grant Finder, Market Intel, etc.)
+- `DATAFORSEO_LOGIN`, `DATAFORSEO_PASSWORD` — SEO agents
+- `HIBP_API_KEY` — Dark Web Monitor, Breach Screen
+- `SAM_GOV_API_KEY` — Government Contract Monitor
+- `NOAA_API_KEY` — Storm Damage Lead Blaster
+
+### Automation
+- `N8N_MCP_URL`, `N8N_ACCESS_TOKEN` — n8n integrations
 
 ## Agents (31 total — in `.claude/agents/`)
 
