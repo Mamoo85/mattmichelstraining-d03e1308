@@ -1365,6 +1365,13 @@ serve(async (req) => {
         podcast_revenue_machine: "Podcast-to-Revenue Machine",
         gov_contract_monitor: "Government Contract Monitor",
         competitor_pricing: "Competitor Pricing Intelligence",
+        storm_lead_subscription: "Storm Damage Lead Blaster",
+        recall_alert_subscription: "Recall Alert Service",
+        permit_watch_subscription: "Permit Watch",
+        speed_audit_subscription: "Website Speed Audit",
+        bedtime_story_subscription: "AI Bedtime Stories",
+        crime_digest_subscription: "Neighborhood Crime Digest",
+        license_monitor_subscription: "Business License Monitor",
       };
 
       // ── COMPETITOR PRICING INTELLIGENCE ───────────────────────────────────
