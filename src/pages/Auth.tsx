@@ -179,6 +179,9 @@ const Auth = () => {
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) setError(error.message);
+      else if (!inviteToken) {
+        navigate(searchParams.get("redirect") || "/dashboard");
+      }
     }
     setLoading(false);
   };

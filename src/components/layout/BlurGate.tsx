@@ -1,6 +1,6 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
-import { Lock, UserPlus, CreditCard, Loader2 } from "lucide-react";
+import { Lock, UserPlus, CreditCard } from "lucide-react";
 
 interface BlurGateProps {
   children: React.ReactNode;
@@ -11,15 +11,9 @@ const BlurGate = ({ children, requireSubscription = false }: BlurGateProps) => {
   const { user, loading, subscribed, subscriptionLoading } = useAuth();
   const navigate = useNavigate();
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 size={24} className="text-primary animate-spin" />
-      </div>
-    );
-  }
+  // While auth/subscription is resolving, just render children — no overlay, no flash
+  if (loading) return <>{children}</>;
 
-  // Keep content visible while subscription state resolves to avoid a paywall flash for signed-in users.
   if (user && requireSubscription && subscriptionLoading) return <>{children}</>;
 
   const needsAuth = !user;
