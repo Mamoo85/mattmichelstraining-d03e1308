@@ -1,6 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { Client } from "https://deno.land/x/postgres@v0.17.0/mod.ts";
 
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY") || SUPABASE_SERVICE_ROLE_KEY;
+const SUPABASE_DB_URL = Deno.env.get("SUPABASE_DB_URL");
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -11,15 +16,14 @@ serve(async (req) => {
 
   // Auth: require service_role key OR authenticated admin user
   const authHeader = req.headers.get("Authorization") || "";
-  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-  const isServiceRole = authHeader === `Bearer ${serviceKey}`;
+  const isServiceRole = authHeader === `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`;
 
   if (!isServiceRole) {
     // Check if caller is an authenticated admin via Supabase anon key + JWT
     const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
     const sb = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY") || serviceKey,
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY,
       { global: { headers: { Authorization: authHeader } } }
     );
     const { data: { user } } = await sb.auth.getUser();
@@ -28,7 +32,7 @@ serve(async (req) => {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const sbAdmin = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey);
+    const sbAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     const { data: isAdmin } = await sbAdmin.rpc("has_role", { _user_id: user.id, _role: "admin" });
     if (!isAdmin) {
       return new Response(JSON.stringify({ error: "Admin access required" }), {
@@ -38,7 +42,7 @@ serve(async (req) => {
   }
 
   // Direct Postgres connection
-  const dbUrl = Deno.env.get("SUPABASE_DB_URL");
+  const dbUrl = SUPABASE_DB_URL;
   if (!dbUrl) {
     return new Response(JSON.stringify({ error: "SUPABASE_DB_URL not set" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
