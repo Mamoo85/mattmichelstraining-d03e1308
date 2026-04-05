@@ -419,6 +419,7 @@ const Admin = () => {
       tools: [
         { key: "crm", label: "🏗️ Web Design CRM", component: <AdminWebDesignCRM /> },
         { key: "prospector", label: "🔍 Prospector", component: <AdminProspector /> },
+        { key: "scouting", label: "📊 Scouting Dashboard", component: <AdminScoutingDashboard /> },
         { key: "agency-crm", label: "Agency CRM", component: <AdminAgencyCRM /> },
         { key: "site-builder", label: "Site Builder", component: <AdminSiteBuilder /> },
         { key: "automation", label: "Automation Hub", component: <AdminAutomationHub /> },
