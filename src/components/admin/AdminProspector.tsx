@@ -224,34 +224,39 @@ export default function AdminProspector() {
   const [isExpanded, setIsExpanded] = useState(false);
 
   // ── Data fetchers ──
-  const fetchProspects = async () => {
-    const { data } = await supabase.from("outreach_leads").select("*").order("created_at", { ascending: false }).limit(500);
-    return (data || []).map(normalizeOutreach);
+  const fetchTable = async (table: string, normalizer: (r: any) => UnifiedLead) => {
+    const { data } = await (supabase as any).from(table).select("*").order("created_at", { ascending: false }).limit(500);
+    return (data || []).map(normalizer);
   };
-  const fetchContractorLeads = async () => {
-    const { data } = await supabase.from("contractor_leads").select("*").order("created_at", { ascending: false }).limit(500);
-    return (data || []).map(normalizeContractorLead);
-  };
-  const fetchB2BClients = async () => {
-    const { data } = await supabase.from("b2b_clients").select("*").order("created_at", { ascending: false }).limit(500);
-    return (data || []).map(normalizeB2B);
-  };
-  const fetchWebDesignLeads = async () => {
-    const { data } = await supabase.from("web_design_leads").select("*").order("created_at", { ascending: false }).limit(500);
-    return (data || []).map(normalizeWebDesign);
+
+  const SOURCE_MAP: Record<string, { table: string; fn: (r: any) => UnifiedLead }> = {
+    prospects: { table: "outreach_leads", fn: normalizeOutreach },
+    contractor: { table: "contractor_leads", fn: normalizeContractorLead },
+    dental: { table: "b2b_clients", fn: normalizeB2B },
+    webdesign: { table: "web_design_leads", fn: normalizeWebDesign },
+    social: { table: "social_media_clients", fn: normalizeSocialMedia },
+    gbp: { table: "gbp_saas_clients", fn: normalizeGBP },
+    newsletter: { table: "newsletter_subscribers", fn: normalizeNewsletter },
+    estimate: { table: "estimate_drip_clients", fn: normalizeEstimateDrip },
+    noshow: { table: "noshow_clients", fn: normalizeNoshow },
+    invoice: { table: "invoice_chaser_clients", fn: normalizeInvoiceChaser },
+    reviews: { table: "review_monitor_clients", fn: normalizeReviewMonitor },
+    homeowner: { table: "homeowner_campaign_clients", fn: normalizeHomeowner },
+    referral: { table: "referral_program_clients", fn: normalizeReferral },
+    conversions: { table: "drip_conversions", fn: normalizeDripConversion },
   };
 
   const fetchLeads = async () => {
     setLoadingLeads(true);
     try {
       let results: UnifiedLead[] = [];
-      if (activeTab === "prospects") results = await fetchProspects();
-      else if (activeTab === "contractor") results = await fetchContractorLeads();
-      else if (activeTab === "dental") results = await fetchB2BClients();
-      else if (activeTab === "webdesign") results = await fetchWebDesignLeads();
-      else if (activeTab === "all") {
-        const [a, b, c, d] = await Promise.all([fetchProspects(), fetchContractorLeads(), fetchB2BClients(), fetchWebDesignLeads()]);
-        results = [...a, ...b, ...c, ...d];
+      if (activeTab === "all") {
+        const promises = Object.values(SOURCE_MAP).map(s => fetchTable(s.table, s.fn));
+        const arrays = await Promise.all(promises);
+        results = arrays.flat();
+      } else if (SOURCE_MAP[activeTab]) {
+        const s = SOURCE_MAP[activeTab];
+        results = await fetchTable(s.table, s.fn);
       }
       setLeads(results);
     } catch { toast.error("Failed to load leads"); }
