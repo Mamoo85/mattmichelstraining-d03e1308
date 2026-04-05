@@ -155,6 +155,29 @@ export default function AdminClientHealth() {
         <p className="text-xs text-muted-foreground">Service delivery status for all B2B subscribers</p>
       </div>
 
+      {/* Health Score */}
+      {realCounts.total > 0 && (() => {
+        const healthPct = Math.round((realCounts.green / realCounts.total) * 100);
+        const barColor = healthPct >= 80 ? "bg-green-500" : healthPct >= 50 ? "bg-yellow-500" : "bg-red-500";
+        const textColor = healthPct >= 80 ? "text-green-400" : healthPct >= 50 ? "text-yellow-400" : "text-red-400";
+        return (
+          <Card className="border-border/40 bg-card/50">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[9px] uppercase tracking-widest font-bold text-muted-foreground">Overall Health Score</span>
+                <span className={`text-2xl font-black ${textColor}`}>{healthPct}%</span>
+              </div>
+              <div className="w-full h-2 bg-muted/30 rounded-full overflow-hidden">
+                <div className={`h-full ${barColor} rounded-full transition-all`} style={{ width: `${healthPct}%` }} />
+              </div>
+              <p className="text-[9px] text-muted-foreground mt-1">
+                {realCounts.green} of {realCounts.total} services delivering on schedule
+              </p>
+            </CardContent>
+          </Card>
+        );
+      })()}
+
       {/* Stats - Real clients only */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
