@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useCallback, ReactNode 
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { safeLocalStorage } from "@/lib/browserStorage";
+import { queryClient } from "@/lib/queryClient";
 
 // Tier mapping: product_id → tier key
 export const TIERS = {
@@ -260,12 +261,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [session, checkSubscription]);
 
   const signOut = async () => {
-    try {
-      const { queryClient } = await import("@/lib/queryClient");
-      queryClient.clear();
-    } catch (e) {
-      console.warn("[Auth] Failed to clear query cache on sign out:", e);
-    }
+    queryClient.clear();
     safeLocalStorage.removeItem("m2-query-cache");
     safeLocalStorage.removeItem("m2_offline_queue");
     // Use scope: "local" first to clear local state immediately,

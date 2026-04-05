@@ -4,7 +4,7 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 30_000,
-      gcTime: 24 * 60 * 60_000, // 24h — keep in cache for offline
+      gcTime: 24 * 60 * 60_000,
       refetchOnWindowFocus: false,
       retry: 1,
       networkMode: "offlineFirst",
