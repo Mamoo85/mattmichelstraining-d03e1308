@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AdminHelpCard } from "./AdminHelpCard";
 import { getAdminGuide } from "@/lib/admin-guides";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, AlertTriangle, CheckCircle, Clock, Building2 } from "lucide-react";
+import { Loader2, AlertTriangle, CheckCircle, Clock, Building2, Mail } from "lucide-react";
 
 const INTERNAL_EMAILS = ["matt@mattmichelstraining.com", "matt@mattmichelstraining.com", "matthewmichels4@gmail.com"];
 const isInternalEmail = (email: string) => INTERNAL_EMAILS.includes(email?.toLowerCase());
