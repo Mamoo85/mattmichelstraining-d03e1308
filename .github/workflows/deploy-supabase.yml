@@ -32,11 +32,26 @@ jobs:
             TWILIO_AUTH_TOKEN="${{ secrets.TWILIO_AUTH_TOKEN }}" \
             TWILIO_PHONE_NUMBER="${{ secrets.TWILIO_PHONE_NUMBER }}" \
             META_ACCESS_TOKEN="${{ secrets.META_ACCESS_TOKEN }}" \
+            META_APP_ID="${{ secrets.META_APP_ID }}" \
+            META_APP_SECRET="${{ secrets.META_APP_SECRET }}" \
+            META_PAGE_ID="${{ secrets.META_PAGE_ID }}" \
             LINKEDIN_ACCESS_TOKEN="${{ secrets.LINKEDIN_ACCESS_TOKEN }}" \
+            LINKEDIN_CLIENT_ID="${{ secrets.LINKEDIN_CLIENT_ID }}" \
+            LINKEDIN_CLIENT_SECRET="${{ secrets.LINKEDIN_CLIENT_SECRET }}" \
             N8N_MCP_URL="${{ secrets.N8N_MCP_URL }}" \
             N8N_ACCESS_TOKEN="${{ secrets.N8N_ACCESS_TOKEN }}" \
             LOVABLE_API_KEY="${{ secrets.LOVABLE_API_KEY }}" \
-            TWILIO_API_KEY="${{ secrets.TWILIO_API_KEY }}"
+            TWILIO_API_KEY="${{ secrets.TWILIO_API_KEY }}" \
+            NOAA_API_KEY="${{ secrets.NOAA_API_KEY }}" \
+            GOOGLE_PAGESPEED_API_KEY="${{ secrets.GOOGLE_PAGESPEED_API_KEY }}" \
+            GOOGLE_CALENDAR_ID="${{ secrets.GOOGLE_CALENDAR_ID }}" \
+            GOOGLE_SERVICE_ACCOUNT_KEY="${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}" \
+            GOOGLE_PRIVATE_KEY_B64="${{ secrets.GOOGLE_PRIVATE_KEY_B64 }}" \
+            DATAFORSEO_LOGIN="${{ secrets.DATAFORSEO_LOGIN }}" \
+            DATAFORSEO_PASSWORD="${{ secrets.DATAFORSEO_PASSWORD }}" \
+            FIRECRAWL_API_KEY="${{ secrets.FIRECRAWL_API_KEY }}" \
+            ADMIN_PHONE_NUMBER="${{ secrets.ADMIN_PHONE_NUMBER }}" \
+            APP_BASE_URL="${{ secrets.APP_BASE_URL }}"
 
       - name: Deploy all edge functions
         run: supabase functions deploy --project-ref zmyczlfuufhngzovkjdh
