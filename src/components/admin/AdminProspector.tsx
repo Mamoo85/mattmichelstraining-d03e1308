@@ -105,6 +105,96 @@ function normalizeWebDesign(r: any): UnifiedLead {
     created_at: r.created_at, raw: r,
   };
 }
+function normalizeSocialMedia(r: any): UnifiedLead {
+  return {
+    id: r.id, source_table: "social_media_clients", business_name: r.business_name,
+    contact_name: r.contact_name, email: r.email, phone: r.phone,
+    city: null, state: null, industry: r.industry, website: null,
+    status: r.active ? "active" : "inactive", lead_score: null, notes: null,
+    created_at: r.created_at, raw: r,
+  };
+}
+function normalizeGBP(r: any): UnifiedLead {
+  return {
+    id: r.id, source_table: "gbp_saas_clients", business_name: r.business_name,
+    contact_name: r.contact_name, email: r.email, phone: r.phone,
+    city: null, state: null, industry: r.industry, website: null,
+    status: r.active ? "active" : "inactive", lead_score: null, notes: null,
+    created_at: r.created_at, raw: r,
+  };
+}
+function normalizeNewsletter(r: any): UnifiedLead {
+  return {
+    id: r.id, source_table: "newsletter_subscribers", business_name: r.name || r.email,
+    contact_name: r.name, email: r.email, phone: null,
+    city: null, state: null, industry: r.niche, website: null,
+    status: r.status || "subscribed", lead_score: null, notes: null,
+    created_at: r.created_at, raw: r,
+  };
+}
+function normalizeEstimateDrip(r: any): UnifiedLead {
+  return {
+    id: r.id, source_table: "estimate_drip_clients", business_name: r.business_name,
+    contact_name: r.contact_name, email: r.email, phone: r.phone,
+    city: null, state: null, industry: r.industry, website: null,
+    status: r.active ? "active" : "inactive", lead_score: null, notes: null,
+    created_at: r.created_at, raw: r,
+  };
+}
+function normalizeNoshow(r: any): UnifiedLead {
+  return {
+    id: r.id, source_table: "noshow_clients", business_name: r.business_name,
+    contact_name: r.contact_name, email: r.email, phone: r.phone,
+    city: null, state: null, industry: r.industry, website: null,
+    status: r.active ? "active" : "inactive", lead_score: null, notes: null,
+    created_at: r.created_at, raw: r,
+  };
+}
+function normalizeInvoiceChaser(r: any): UnifiedLead {
+  return {
+    id: r.id, source_table: "invoice_chaser_clients", business_name: r.business_name,
+    contact_name: r.contact_name, email: r.email, phone: r.phone,
+    city: null, state: null, industry: r.industry, website: null,
+    status: r.active ? "active" : "inactive", lead_score: null, notes: null,
+    created_at: r.created_at, raw: r,
+  };
+}
+function normalizeReviewMonitor(r: any): UnifiedLead {
+  return {
+    id: r.id, source_table: "review_monitor_clients", business_name: r.business_name,
+    contact_name: r.contact_name, email: r.email, phone: r.phone,
+    city: null, state: null, industry: r.industry, website: null,
+    status: r.active ? "active" : "inactive", lead_score: null, notes: null,
+    created_at: r.created_at, raw: r,
+  };
+}
+function normalizeHomeowner(r: any): UnifiedLead {
+  return {
+    id: r.id, source_table: "homeowner_campaign_clients", business_name: r.business_name,
+    contact_name: r.contact_name, email: r.email, phone: r.phone,
+    city: null, state: null, industry: r.industry, website: null,
+    status: r.active ? "active" : "inactive", lead_score: null, notes: null,
+    created_at: r.created_at, raw: r,
+  };
+}
+function normalizeReferral(r: any): UnifiedLead {
+  return {
+    id: r.id, source_table: "referral_program_clients", business_name: r.business_name,
+    contact_name: r.contact_name, email: r.email, phone: r.phone,
+    city: null, state: null, industry: r.industry, website: null,
+    status: r.active ? "active" : "inactive", lead_score: null, notes: null,
+    created_at: r.created_at, raw: r,
+  };
+}
+function normalizeDripConversion(r: any): UnifiedLead {
+  return {
+    id: r.id, source_table: "drip_conversions", business_name: r.business_name || r.email,
+    contact_name: null, email: r.email, phone: null,
+    city: null, state: null, industry: r.industry, website: null,
+    status: "converted", lead_score: null, notes: r.service_interested,
+    created_at: r.converted_at, raw: r,
+  };
+}
 
 // ── Component ──
 export default function AdminProspector() {
