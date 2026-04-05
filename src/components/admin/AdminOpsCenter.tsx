@@ -84,6 +84,9 @@ const ALL_SERVICES = [
   { table: "bedtime_story_clients", name: "AI Bedtime Stories", price: "$4.99/mo", priceNum: 4.99 },
   { table: "crime_digest_clients", name: "Neighborhood Crime Digest", price: "$19/mo", priceNum: 19 },
   { table: "license_monitor_clients", name: "Business License Monitor", price: "$25/mo", priceNum: 25 },
+  // ── High-Ticket Products ─────────────────────────────────────────────────
+  { table: "reg_filing_clients", name: "Regulatory Filing Monitor", price: "$497/mo", priceNum: 497 },
+  { table: "bid_intel_clients", name: "Bid Intelligence", price: "$599/mo", priceNum: 599 },
 ] as const;
 
 interface ClientRecord {
