@@ -651,6 +651,11 @@ const Admin = () => {
               <AdminCommandCenter onNavigate={handleToolClick} />
             </Suspense>
 
+            {/* Smart Notifications */}
+            <Suspense fallback={null}>
+              <AdminNotificationCenter />
+            </Suspense>
+
             {/* Domain Cards Grid */}
             <div className="space-y-3">
               {domains.map((domain) => {
