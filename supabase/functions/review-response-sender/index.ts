@@ -5,19 +5,22 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY");
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     const { data: clients } = await supabase.from("review_response_clients").select("*").eq("active", true).limit(50);
 
     if (!clients?.length) {
       return new Response(JSON.stringify({ message: "No active review response clients" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-    const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY");
     let processed = 0;
 
     for (const client of clients) {
