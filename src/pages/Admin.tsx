@@ -370,6 +370,7 @@ const Admin = () => {
         { key: "promotions", label: "Promotions", component: <AdminPromotions /> },
         { key: "stripe", label: "Stripe Products", component: <AdminStripeProducts /> },
         { key: "affiliates", label: "Affiliates", component: <AdminAffiliateManager /> },
+        { key: "notifications", label: "🔔 Notifications", component: <AdminNotificationCenter /> },
         { key: "email-log", label: "📧 Email Log", component: <AdminEmailLog /> },
         { key: "system", label: "System & Refs", component: <AdminSystemSettings /> },
         { key: "trash", label: "🗑 Trash", component: <AdminTrash />, badge: b.trash },
