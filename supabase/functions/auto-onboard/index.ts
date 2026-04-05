@@ -189,6 +189,37 @@ const TEMPLATES: Record<string, OnboardTemplate> = {
       <p>You'll get reminders at 90, 60, 30, 14, and 7 days before expiry — so you never miss a deadline.</p>
       <p>Reply with your license details and I'll set everything up!</p>`,
   },
+  reg_filing_monitor: {
+    subject: "Welcome to Regulatory Filing Monitor — Quick Setup",
+    nextStage: "📧 Welcome Email Sent",
+    body: (name) => `
+      <p>Hey ${name}!</p>
+      <p>Welcome to your AI Regulatory Filing Monitor! To configure your alerts, I need:</p>
+      <ul>
+        <li><strong>NAICS codes</strong> — your primary codes (I can look these up if needed)</li>
+        <li><strong>State</strong> — which state EPA portal to monitor</li>
+        <li><strong>Phone number</strong> — for urgent SMS alerts when deadlines are within 30 days</li>
+        <li><strong>Specific regulations</strong> — any you're already tracking that I should prioritize</li>
+      </ul>
+      <p>Your first scan is running now. You'll receive your first regulatory brief within 24 hours.</p>
+      <p>Reply with those details and I'll configure everything!</p>`,
+  },
+  bid_intel_monitor: {
+    subject: "Welcome to Bid Intelligence — Let's Find You Work",
+    nextStage: "📧 Welcome Email Sent",
+    body: (name) => `
+      <p>Hey ${name}!</p>
+      <p>Welcome to Bid Intelligence & Proposal Factory! To start scanning for bids, I need:</p>
+      <ul>
+        <li><strong>Your trade(s)</strong> — electrical, mechanical, plumbing, concrete, etc.</li>
+        <li><strong>Service territory</strong> — which cities/counties you'll bid on</li>
+        <li><strong>Plan room logins</strong> — any specific plan rooms you already use (optional)</li>
+        <li><strong>Historical pricing</strong> — a sample bid or rate sheet so the AI can draft proposals in your pricing range</li>
+        <li><strong>Phone number</strong> — for SMS alerts when bids are due within 72 hours</li>
+      </ul>
+      <p>Your first bid scan is running now. You'll see matching opportunities within 24 hours.</p>
+      <p>Reply with those details!</p>`,
+  },
 };
 
 // Generic SMS product template
