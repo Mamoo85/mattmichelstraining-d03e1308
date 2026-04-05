@@ -222,3 +222,11 @@ TanStack Query v5 with localStorage persistence via `PersistQueryClientProvider`
 - Always use project ref `zmyczlfuufhngzovkjdh` — never the old ref `eauvubfpanpeuxsrqesu`
 - **"Create an agent"** always means: create a `.md` file at `/home/user/m2training/.claude/agents/[name].md`
 - SMS sends: always query `sms_opt_outs` table (E.164 phone format) before sending — TCPA requires immediate opt-out honoring; failures logged to `compliance_blocks`
+
+## Code Quality Rules (enforced every session)
+- **stripe-webhook**: Always use `sendM2Email()` and `notifyMatt()` helpers — never raw `fetch()` to Resend
+- **stripe-webhook**: Always use `${SUPABASE_URL}/functions/v1/...` for function URLs — never hardcode the project ref in URLs
+- **Edge functions**: Read env vars at top-level (module scope), not inside request handlers
+- **Edge functions**: Parallelize independent async ops with `Promise.all()` — especially email sends
+- **Twilio**: Use shared `_shared/twilio.ts` for SMS sends; check `sms_opt_outs` before every send
+- **No dead code**: Delete unused imports, variables, and functions — don't comment them out
