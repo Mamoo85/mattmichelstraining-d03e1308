@@ -531,26 +531,44 @@ export default function AdminProspector() {
             </Button>
           </div>
 
-          {/* Tabs */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-2">
-            <TabsList className="h-8 w-full grid grid-cols-5 text-[10px]">
-              <TabsTrigger value="all" className="text-[10px] px-1">
-                <Globe size={10} className="mr-0.5 hidden sm:inline" /> All
-              </TabsTrigger>
-              <TabsTrigger value="prospects" className="text-[10px] px-1">
-                <TrendingUp size={10} className="mr-0.5 hidden sm:inline" /> Prospects
-              </TabsTrigger>
-              <TabsTrigger value="contractor" className="text-[10px] px-1">
-                <Wrench size={10} className="mr-0.5 hidden sm:inline" /> Contractor
-              </TabsTrigger>
-              <TabsTrigger value="dental" className="text-[10px] px-1">
-                <Stethoscope size={10} className="mr-0.5 hidden sm:inline" /> B2B
-              </TabsTrigger>
-              <TabsTrigger value="webdesign" className="text-[10px] px-1">
-                <Building2 size={10} className="mr-0.5 hidden sm:inline" /> Web Design
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+          {/* Tabs - scrollable */}
+          <div className="mt-2 overflow-x-auto scrollbar-hide">
+            <div className="flex gap-1 pb-1 min-w-max">
+              {[
+                { key: "all", label: "All", icon: Globe },
+                { key: "prospects", label: "Prospects", icon: TrendingUp },
+                { key: "contractor", label: "Contractor", icon: Wrench },
+                { key: "dental", label: "B2B", icon: Stethoscope },
+                { key: "webdesign", label: "Web Design", icon: Building2 },
+                { key: "social", label: "Social", icon: Megaphone },
+                { key: "gbp", label: "GBP", icon: MapPin },
+                { key: "newsletter", label: "Newsletter", icon: Rss },
+                { key: "estimate", label: "Estimate", icon: Receipt },
+                { key: "noshow", label: "No-Show", icon: CalendarX },
+                { key: "invoice", label: "Invoice", icon: Receipt },
+                { key: "reviews", label: "Reviews", icon: Star },
+                { key: "homeowner", label: "Homeowner", icon: Home },
+                { key: "referral", label: "Referral", icon: UserPlus },
+                { key: "conversions", label: "Converted", icon: TrendingUp },
+              ].map(tab => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.key}
+                    onClick={() => setActiveTab(tab.key)}
+                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold whitespace-nowrap transition-colors ${
+                      activeTab === tab.key
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted/40 text-muted-foreground hover:bg-muted/60"
+                    }`}
+                  >
+                    <Icon size={10} />
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
           {/* Search + Filters */}
           <div className="space-y-2 mt-3">
