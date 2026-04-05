@@ -112,7 +112,9 @@ serve(async (req) => {
     const startDate = new Date();
     startDate.setDate(endDate.getDate() - daysBack);
 
+    console.log("[GSC] Getting access token...");
     const accessToken = await getAccessToken();
+    console.log("[GSC] Access token obtained, querying GSC API...");
     const encodedSite = encodeURIComponent(SITE_URL);
 
     // Fetch page-level data
