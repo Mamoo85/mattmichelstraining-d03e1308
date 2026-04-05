@@ -30,6 +30,8 @@ async function getUserIdByEmail(sb: any, email: string): Promise<string | null> 
 }
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
+const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
 
 // ── M² BRANDED EMAIL TEMPLATE HELPER ─────────────────────────────────────
 function m2Email(opts: { greeting: string; headline: string; body: string; cta?: { text: string; url: string }; signature?: string }): string {
@@ -3167,9 +3169,7 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
       if (meta.type === "missed_call_subscription") {
         try {
           const email = meta.email || customerEmail;
-          const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
-          const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
-          const MISSED_CALL_HANDLER_URL = "https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/missed-call-handler";
+          const MISSED_CALL_HANDLER_URL = `${SUPABASE_URL}/functions/v1/missed-call-handler`;
 
           // Auto-provision a Twilio number in the customer's area code
           let twilioNumber = "";
@@ -3240,36 +3240,25 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
 <li>That's it — missed calls now get instant texts, automatically</li>
 </ol>`;
 
-          if (RESEND_API_KEY && email) {
-            await fetch("https://api.resend.com/emails", {
-              method: "POST",
-              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-              body: JSON.stringify({
-                from: "Matt Michels <matt@mattmichelstraining.com>",
-                to: [email], bcc: ["matthewmichels4@gmail.com"],
-                subject: twilioNumber ? "Your Missed Call Text-Back number is ready" : "Your Missed Call Text-Back is being set up",
-                html: m2Email({
-                  greeting: `Hey${meta.name ? " " + meta.name : ""} —`,
-                  headline: twilioNumber ? "Your Text-Back Number Is Ready" : "Your Missed Call Text-Back is Being Set Up",
-                  body: `<p style="margin:0 0 12px"><strong>Every missed call is a potential customer walking away. Not anymore.</strong></p>
+          await Promise.all([
+            sendM2Email(
+              email,
+              twilioNumber ? "Your Missed Call Text-Back number is ready" : "Your Missed Call Text-Back is being set up",
+              m2Email({
+                greeting: `Hey${meta.name ? " " + meta.name : ""} —`,
+                headline: twilioNumber ? "Your Text-Back Number Is Ready" : "Your Missed Call Text-Back is Being Set Up",
+                body: `<p style="margin:0 0 12px"><strong>Every missed call is a potential customer walking away. Not anymore.</strong></p>
 <p style="margin:0 0 8px">⚡ <strong>Instant response</strong> — text fires within seconds of the missed call</p>
 <p style="margin:0 0 8px">🔄 <strong>24/7 coverage</strong> — works nights, weekends, holidays</p>
 <p style="margin:0 0 16px">✨ <strong>7-day free trial</strong> — your trial has started</p>
 ${fwdInstructions}`,
-                }),
               }),
-            });
-            await fetch("https://api.resend.com/emails", {
-              method: "POST",
-              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-              body: JSON.stringify({
-                from: "M² Notifications <matt@mattmichelstraining.com>",
-                to: ["matthewmichels@mattmichelstraining.com", "matt@mattmichelstraining.com"],
-                subject: `${twilioNumber ? "✅ AUTO-SETUP COMPLETE" : "🔔 NEEDS SETUP"} — Missed Call SMS: ${meta.businessName || email}`,
-                html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Phone: ${meta.phone || "n/a"}<br>Twilio #: ${twilioNumber || "NOT PROVISIONED — provision manually"}</p>`,
-              }),
-            });
-          }
+            ),
+            notifyMatt(
+              `${twilioNumber ? "✅ AUTO-SETUP COMPLETE" : "🔔 NEEDS SETUP"} — Missed Call SMS: ${meta.businessName || email}`,
+              `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Phone: ${meta.phone || "n/a"}<br>Twilio #: ${twilioNumber || "NOT PROVISIONED — provision manually"}</p>`,
+            ),
+          ]);
         } catch (e) { console.error("[WEBHOOK] missed_call_subscription error:", e); }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
