@@ -41,17 +41,6 @@ Write just the SMS text, nothing else.`;
   return data?.content?.[0]?.text?.trim() || `${businessName} here — quick reminder we're taking bookings this week. Give us a call!`;
 }
 
-async function sendSMS(to: string, body: string): Promise<boolean> {
-  try {
-    const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`, {
-      method: "POST",
-      headers: { Authorization: `Basic ${btoa(TWILIO_ACCOUNT_SID + ":" + TWILIO_AUTH_TOKEN)}`, "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ To: to, From: TWILIO_FROM_NUMBER, Body: body }),
-    });
-    return res.ok;
-  } catch { return false; }
-}
-
 serve(async () => {
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
@@ -71,8 +60,8 @@ serve(async () => {
       let sent = 0;
       for (const contact of contacts) {
         if (contact.phone) {
-          const ok = await sendSMS(contact.phone, smsText);
-          if (ok) sent++;
+          const result = await sendSMS(contact.phone, TWILIO_FROM_NUMBER, smsText, "weekly_sms_blast");
+          if (result.success) sent++;
           // Rate limit: 1 per 100ms
           await new Promise(r => setTimeout(r, 100));
         }

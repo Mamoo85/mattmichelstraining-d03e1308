@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AdminHelpCard } from "./AdminHelpCard";
+import { getAdminGuide } from "@/lib/admin-guides";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Activity, Mail, Phone, ChevronDown, ChevronRight, Users, Copy, Search, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -74,6 +76,14 @@ const ALL_SERVICES = [
   { table: "pet_memorial_submissions", name: "AI Pet Memorial", price: "$79 one-time", priceNum: 79 },
   { table: "employee_credential_audits", name: "Employee Credential Audit", price: "$149 one-time", priceNum: 149 },
   { table: "new_hire_breach_checks", name: "New Hire Breach Screen", price: "$9.99/check", priceNum: 9.99 },
+  // ── Wave 4: Seven New Products (April 2026) ──────────────────────────────
+  { table: "storm_lead_clients", name: "Storm Damage Leads", price: "$29/mo", priceNum: 29 },
+  { table: "recall_alert_clients", name: "Recall Alert Service", price: "$19/mo", priceNum: 19 },
+  { table: "permit_watch_clients", name: "Permit Watch", price: "$29/mo", priceNum: 29 },
+  { table: "speed_audit_clients", name: "Website Speed Audit", price: "$29/mo", priceNum: 29 },
+  { table: "bedtime_story_clients", name: "AI Bedtime Stories", price: "$4.99/mo", priceNum: 4.99 },
+  { table: "crime_digest_clients", name: "Neighborhood Crime Digest", price: "$19/mo", priceNum: 19 },
+  { table: "license_monitor_clients", name: "Business License Monitor", price: "$25/mo", priceNum: 25 },
 ] as const;
 
 interface ClientRecord {
@@ -216,8 +226,12 @@ export default function AdminOpsCenter() {
     return <div className="flex justify-center py-12"><Loader2 className="animate-spin text-primary" size={24} /></div>;
   }
 
+  const guide = getAdminGuide("ops");
+
   return (
     <div className="space-y-6">
+      {guide && <AdminHelpCard id={guide.id} title={guide.title} body={guide.body} tips={guide.tips} />}
+
       <div className="flex items-center gap-3">
         <Activity className="text-primary" size={20} />
         <div>

@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { AdminHelpCard } from "./AdminHelpCard";
+import { getAdminGuide } from "@/lib/admin-guides";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -536,8 +538,12 @@ export default function AdminWebDesignCRM() {
 
   // ── Render ────────────────────────────────────────────────────────────────
 
+  const guide = getAdminGuide("crm");
+
   return (
     <div className="space-y-6 p-6">
+      {guide && <AdminHelpCard id={guide.id} title={guide.title} body={guide.body} tips={guide.tips} whenSomeoneBuys={guide.whenSomeoneBuys} />}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

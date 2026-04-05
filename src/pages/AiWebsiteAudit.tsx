@@ -118,7 +118,7 @@ export default function AiWebsiteAudit() {
                   required
                   className="w-full bg-background border border-border rounded-lg px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
-                <p className="text-xs text-muted-foreground mt-1.5">Your audit report will be sent here within 60 seconds of payment.</p>
+                <p className="text-xs text-muted-foreground mt-1.5">Your audit report will be sent here within 60 seconds.</p>
               </div>
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Business Name</label>
@@ -153,8 +153,8 @@ export default function AiWebsiteAudit() {
             </form>
 
             <div className="mt-8 p-4 bg-muted/40 rounded-lg border border-border">
-              <p className="text-sm font-semibold text-foreground mb-1">Not ready to pay yet?</p>
-              <p className="text-xs text-muted-foreground">Call Matt directly and he'll answer your questions for free: <a href="tel:3138064952" className="text-primary font-semibold">(313) 806-4952</a></p>
+              <p className="text-sm font-semibold text-foreground mb-1">Want help fixing what the audit finds?</p>
+              <p className="text-xs text-muted-foreground">Check out our <a href="/digital-foundation" className="text-primary font-semibold">Digital Foundation package</a> or call Matt: <a href="tel:3138064952" className="text-primary font-semibold">(313) 806-4952</a></p>
             </div>
           </div>
 

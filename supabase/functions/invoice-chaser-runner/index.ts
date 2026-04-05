@@ -3,11 +3,10 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendSMS } from "../_shared/twilio.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
-const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
 const TWILIO_FROM_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
@@ -23,17 +22,6 @@ function buildMessage(step: number, customerName: string, businessName: string, 
     `Hi${name}, final notice: your invoice${amt} from ${businessName} remains unpaid at ${daysLate} days past due. Please contact us immediately to resolve this — we'd like to avoid escalating further.`,
   ];
   return msgs[Math.min(step, msgs.length - 1)];
-}
-
-async function sendSMS(to: string, body: string): Promise<boolean> {
-  try {
-    const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`, {
-      method: "POST",
-      headers: { Authorization: `Basic ${btoa(TWILIO_ACCOUNT_SID + ":" + TWILIO_AUTH_TOKEN)}`, "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ To: to, From: TWILIO_FROM_NUMBER, Body: body }),
-    });
-    return res.ok;
-  } catch { return false; }
 }
 
 serve(async (req) => {
@@ -77,8 +65,8 @@ serve(async (req) => {
       const daysLate = Math.floor((now.getTime() - new Date(inv.due_date).getTime()) / 86400000);
       const message = buildMessage(inv.reminders_sent, inv.customer_name, client?.business_name || "us", inv.invoice_amount, daysLate);
 
-      const ok = await sendSMS(inv.customer_phone, message);
-      if (!ok) continue;
+      const result = await sendSMS(inv.customer_phone, TWILIO_FROM_NUMBER, message, "invoice_chaser");
+      if (!result.success) continue;
 
       sent++;
       const nextStep = inv.reminders_sent + 1;

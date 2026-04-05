@@ -17,7 +17,7 @@ $10k+/mo fully automated income. Matt's only job: return calls, texts, and email
 - **Domain**: mattmichelstraining.com
 - **Repo**: `mamoo85/m2training` (GitHub)
 - **Supabase Project**: `zmyczlfuufhngzovkjdh`
-- **Dev branch**: `claude/product-testing-fbMNs`
+- **Dev branch**: `claude/model-opus-plan-6tKhr`
 
 ## Brand
 - Primary orange: `#e8621a`
@@ -108,14 +108,25 @@ Products: Commercial Lease Abstractor, Patent Watch Intelligence, PE/Investor Se
 
 **SMS Compliance Table**: `sms_opt_outs` (E.164 phone, `opted_out_at`, `source`) + `compliance_blocks` audit log — ALWAYS query before any Twilio send.
 
-## Codebase Scale
-- **243** frontend pages in `src/pages/`
-- **435** Supabase Edge Functions in `supabase/functions/`
-- **343** migration files (all dated 2026)
-- **31** AI agents in `.claude/agents/`
-- **57+** product lines across 3 waves
+### Wave 4 Products (April 2026 — `20260405080000_seven_new_products.sql`)
+- **Storm Damage Lead Blaster** ($29/mo) — `storm_lead_clients`, `storm_alerts_sent`, `supabase/functions/storm-lead-blaster/`, route: `/storm-leads`
+- **Recall Alert Service** ($19/mo) — `recall_alert_clients`, `supabase/functions/recall-alert-checker/`, route: `/recall-alerts`
+- **Permit Watch** ($29/mo) — `permit_watch_clients`, `supabase/functions/permit-watch-scanner/`, route: `/permit-watch`
+- **Website Speed Audit** ($29/mo) — `speed_audit_clients`, `supabase/functions/website-speed-audit/`, route: `/website-speed-audit`
+- **AI Bedtime Stories** ($4.99/mo) — `bedtime_story_clients`, `supabase/functions/bedtime-story-sender/`, route: `/bedtime-stories`
+- **Neighborhood Crime Digest** ($19/mo) — `crime_digest_clients`, `supabase/functions/crime-digest-sender/`, route: `/crime-digest`
+- **Business License Monitor** ($25/mo) — `license_monitor_clients`, `license_monitor_items`, `supabase/functions/license-expiry-checker/`, route: `/license-monitor`
+- **Local Tech Support** ($49 session / $29/mo) — `tech_support_tickets`, route: `/tech-support`
 
-This is a large codebase. Navigate by product name patterns in this document — don't scan all files. New product checklist: 1 migration, 1–2 edge functions, 1 page, 1 admin CRM entry.
+## Codebase Scale
+- **255** frontend pages in `src/pages/`
+- **453** Supabase Edge Functions in `supabase/functions/`
+- **345** migration files (all dated 2026)
+- **31** AI agents in `.claude/agents/`
+- **64+** product lines across 4 waves
+- **281** routes in `src/App.tsx`
+
+This is a large codebase. Navigate by product name patterns in this document — don't scan all files. New product checklist: 1 migration, 1–2 edge functions, 1 page, 1 admin CRM entry (AdminOpsCenter + AdminClientHealth).
 
 ## Frontend Architecture
 
@@ -144,8 +155,8 @@ TanStack Query v5 with localStorage persistence via `PersistQueryClientProvider`
 - Required env vars: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
 
 ## Edge Function Conventions
-- 435 functions in `supabase/functions/[name]/index.ts` — navigate by product name
-- Shared utilities: `supabase/functions/_shared/email-templates/`, `_shared/transactional-email-templates/`
+- 453 functions in `supabase/functions/[name]/index.ts` — navigate by product name
+- Shared utilities: `supabase/functions/_shared/ai.ts` (generateText, generateJSON), `_shared/twilio.ts` (sendSMS with TCPA), `_shared/email-templates/`, `_shared/transactional-email-templates/`
 - Autonomous scheduled functions: `tom-autonomous`, `oz-autonomous`, `scarlett-autonomous`, `selma-autonomous`, `ops-autonomous`
 - AI calls: Claude Haiku only (`claude-haiku-4-5-20251001`), `max_tokens` 800–1200
 - Stripe: always inline `price_data`, always set `metadata.type` for webhook routing
@@ -153,7 +164,7 @@ TanStack Query v5 with localStorage persistence via `PersistQueryClientProvider`
 - New functions inherit secrets automatically via GitHub Actions on next merge to main
 
 ## Deployment
-1. Claude commits to `claude/product-testing-fbMNs` and pushes
+1. Claude commits to dev branch and pushes
 2. Matt merges to main → GitHub Actions auto-runs migrations + deploys edge functions → Lovable auto-deploys frontend
 3. **No manual SQL steps needed** — GitHub Actions handles migrations on every merge to main
 4. Required GitHub Secret: `SUPABASE_ACCESS_TOKEN` (Supabase account access token, not the DB password)
@@ -211,7 +222,7 @@ TanStack Query v5 with localStorage persistence via `PersistQueryClientProvider`
 ## Testing
 - **Admin Sandbox** (`/admin` → Sandbox tab) — $0 test checkout for every product
 - `supabase/functions/create-test-checkout/` — test session creator (Matt's email only)
-- `AdminOpsCenter` — CRM roster covering all 17 product lines with MRR totals
+- `AdminOpsCenter` — CRM roster covering all 64+ product lines with MRR totals
 
 ## Rules
 - Matt's only manual work: return messages
@@ -219,7 +230,7 @@ TanStack Query v5 with localStorage persistence via `PersistQueryClientProvider`
 - All new tables get RLS enabled + service_role policy
 - Stripe: always inline price_data, always set metadata.type for webhook routing
 - AI calls: Claude Haiku only (cost-efficient), max_tokens 800-1200
-- Always use project ref `zmyczlfuufhngzovkjdh` — never the old ref `eauvubfpanpeuxsrqesu`
+- Always use project ref `zmyczlfuufhngzovkjdh`
 - **"Create an agent"** always means: create a `.md` file at `/home/user/m2training/.claude/agents/[name].md`
 - SMS sends: always query `sms_opt_outs` table (E.164 phone format) before sending — TCPA requires immediate opt-out honoring; failures logged to `compliance_blocks`
 
@@ -228,5 +239,8 @@ TanStack Query v5 with localStorage persistence via `PersistQueryClientProvider`
 - **stripe-webhook**: Always use `${SUPABASE_URL}/functions/v1/...` for function URLs — never hardcode the project ref in URLs
 - **Edge functions**: Read env vars at top-level (module scope), not inside request handlers
 - **Edge functions**: Parallelize independent async ops with `Promise.all()` — especially email sends
-- **Twilio**: Use shared `_shared/twilio.ts` for SMS sends; check `sms_opt_outs` before every send
+- **Twilio**: ALWAYS use `import { sendSMS } from "../_shared/twilio.ts"` for SMS sends — NEVER define a local sendSMS function. The shared version checks `sms_opt_outs` before every send (TCPA compliance). Signature: `sendSMS(to, from, body, product?)`
 - **No dead code**: Delete unused imports, variables, and functions — don't comment them out
+- **Auto-onboard**: When adding new products, add a welcome email template to `supabase/functions/auto-onboard/index.ts` TEMPLATES dict
+- **Admin dashboards**: When adding new products, add entries to BOTH `AdminOpsCenter.tsx` ALL_SERVICES array AND `AdminClientHealth.tsx` SERVICE_TABLES array
+- **JWT verification**: Most edge functions have `verify_jwt = false` in `supabase/config.toml` — this is intentional for public checkout/webhook endpoints. Internal auth is handled within functions.

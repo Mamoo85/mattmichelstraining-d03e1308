@@ -118,6 +118,10 @@ const AdminWebDesignAutomations = lazy(() => import("@/components/admin/AdminWeb
 
 // Command Deck
 const AdminCommandDeck        = lazy(() => import("@/components/admin/AdminCommandDeck"));
+const AdminPurchaseAlert      = lazy(() => import("@/components/admin/AdminPurchaseAlert"));
+const AdminCommandCenter      = lazy(() => import("@/components/admin/AdminCommandCenter"));
+const AdminNotificationCenter = lazy(() => import("@/components/admin/AdminNotificationCenter"));
+const AdminScoutingDashboard  = lazy(() => import("@/components/admin/AdminScoutingDashboard"));
 
 /* ── Types ──────────────────────────────────────────────────────────────────── */
 interface Tool {
@@ -356,62 +360,55 @@ const Admin = () => {
       color: "#22c55e",
       tools: [
         { key: "biz-overview", label: "📊 Overview", component: <AdminBusinessDashboard /> },
+        { key: "revenue", label: "💰 Revenue & Ledger", component: <AdminFinancials /> },
         { key: "fulfillment", label: "🔔 Fulfillment", component: <AdminFulfillment /> },
-        { key: "orders", label: "📦 Orders", component: <AdminOrders /> },
         { key: "ops", label: "Ops Center", component: <AdminOpsCenter /> },
-        { key: "health", label: "Client Health", component: <AdminClientHealth /> },
-        { key: "revenue", label: "Revenue & Ledger", component: <AdminFinancials /> },
-        { key: "promotions", label: "Promotions", component: <AdminPromotions /> },
-        { key: "points", label: "Points", component: <AdminPointsManager /> },
-        { key: "tiers", label: "Tier Access", component: <AdminTierManager /> },
-        { key: "stripe", label: "Stripe Products", component: <AdminStripeProducts /> },
-        { key: "catalog", label: "Service Catalog", component: <AdminServiceCatalog /> },
-        { key: "gift-cards", label: "Gift Cards", component: <AdminGiftCards /> },
-        { key: "guides", label: "Playbooks Store", component: <AdminGuideStore /> },
-        { key: "affiliates", label: "Affiliates", component: <AdminAffiliateManager /> },
-        { key: "referrals", label: "Referrals", component: <AdminReferrals /> },
         { key: "pipeline", label: "B2B Pipeline", component: <AdminB2BPipeline /> },
-        { key: "social-setup", label: "Social Setup", component: <AdminSocialMediaOnboarding /> },
-        { key: "legal", label: "Legal", component: <AdminLegalCompliance /> },
+        { key: "referrals", label: "Referrals", component: <AdminReferrals /> },
         { key: "sandbox", label: "🧪 Sandbox", component: <AdminSandbox /> },
+        { key: "orders", label: "Orders", component: <AdminOrders /> },
+        { key: "health", label: "Client Health", component: <AdminClientHealth /> },
+        { key: "promotions", label: "Promotions", component: <AdminPromotions /> },
+        { key: "stripe", label: "Stripe Products", component: <AdminStripeProducts /> },
+        { key: "affiliates", label: "Affiliates", component: <AdminAffiliateManager /> },
+        { key: "notifications", label: "🔔 Notifications", component: <AdminNotificationCenter /> },
         { key: "email-log", label: "📧 Email Log", component: <AdminEmailLog /> },
         { key: "system", label: "System & Refs", component: <AdminSystemSettings /> },
-        { key: "migrations", label: "DB Migrations", component: <AdminMigrations /> },
         { key: "trash", label: "🗑 Trash", component: <AdminTrash />, badge: b.trash },
       ],
     },
     {
       key: "marketing",
-      label: "Marketing",
+      label: "Marketing & Ads",
       icon: Megaphone,
       color: "#a855f7",
       tools: [
-        { key: "m2-hub", label: "🚀 Growth Hub", component: <AdminM2GrowthHub /> },
         { key: "ad-campaigns", label: "⚡ Ad Campaigns", component: <AdminAdCampaigns /> },
-        { key: "front-page", label: "Front Page", component: <AdminFrontPage /> },
-        { key: "site", label: "Site Editor", component: <AdminSiteEditor /> },
-        { key: "testimonials", label: "Testimonials", component: <AdminTestimonials /> },
-        { key: "learn", label: "Learn Hub", component: <AdminLearnEditor /> },
+        { key: "m2-hub", label: "🚀 Growth Hub", component: <AdminM2GrowthHub /> },
+        { key: "outreach", label: "📧 Outreach", component: <AdminOutreach /> },
+        { key: "search", label: "📊 Search Console", component: <AdminSearchConsole /> },
+        { key: "gbp", label: "GBP Posts", component: <AdminGbpPosts /> },
+        { key: "seo", label: "SEO Engine", component: <AdminSeoGenerator /> },
         { key: "broadcasts", label: "Broadcasts", component: <AdminBroadcasts /> },
-        { key: "subscribers", label: "Subscribers", component: <AdminSubscriberList /> },
         { key: "compose", label: "Newsletter", component: <AdminNewsletterComposer /> },
-        { key: "training-newsletter", label: "Training Newsletter", component: <AdminTrainingNewsletter /> },
-        { key: "history", label: "Send History", component: <AdminSendHistory /> },
+        { key: "testimonials", label: "Testimonials", component: <AdminTestimonials /> },
+        { key: "media-vault", label: "Media Vault", component: <AdminMediaVault /> },
+        { key: "subscribers", label: "Subscribers", component: <AdminSubscriberList /> },
         { key: "marketing-ai", label: "Marketing AI", component: (
           <div className="space-y-8">
             <AdminMarketingDrafts />
             <div className="border-t border-border pt-6"><AdminAiBusinessTools /></div>
           </div>
         )},
-        { key: "cmo", label: "CMO Reports", component: <AdminCmoReports /> },
-        { key: "media-vault", label: "Media Vault", component: <AdminMediaVault /> },
-        { key: "seo", label: "SEO Engine", component: <AdminSeoGenerator /> },
-        { key: "outreach", label: "Outreach", component: <AdminOutreach /> },
+        { key: "site", label: "Site Editor", component: <AdminSiteEditor /> },
+        { key: "front-page", label: "Front Page", component: <AdminFrontPage /> },
         { key: "seo-pages", label: "SEO Pages", component: <AdminSeoPages /> },
-        { key: "search", label: "📊 Search Console", component: <AdminSearchConsole /> },
-        { key: "gbp", label: "GBP Posts", component: <AdminGbpPosts /> },
         { key: "instagram", label: "Instagram", component: <AdminInstagramPosts /> },
         { key: "content-gen", label: "Content Generator", component: <AdminContentGenerator /> },
+        { key: "cmo", label: "CMO Reports", component: <AdminCmoReports /> },
+        { key: "training-newsletter", label: "Training Newsletter", component: <AdminTrainingNewsletter /> },
+        { key: "history", label: "Send History", component: <AdminSendHistory /> },
+        { key: "learn", label: "Learn Hub", component: <AdminLearnEditor /> },
       ],
     },
     {
@@ -420,10 +417,11 @@ const Admin = () => {
       icon: Globe,
       color: "#06b6d4",
       tools: [
+        { key: "crm", label: "🏗️ Web Design CRM", component: <AdminWebDesignCRM /> },
+        { key: "prospector", label: "🔍 Prospector", component: <AdminProspector /> },
+        { key: "scouting", label: "📊 Scouting Dashboard", component: <AdminScoutingDashboard /> },
         { key: "agency-crm", label: "Agency CRM", component: <AdminAgencyCRM /> },
-        { key: "crm", label: "Web Design CRM", component: <AdminWebDesignCRM /> },
         { key: "site-builder", label: "Site Builder", component: <AdminSiteBuilder /> },
-        { key: "prospector", label: "Prospector", component: <AdminProspector /> },
         { key: "automation", label: "Automation Hub", component: <AdminAutomationHub /> },
         { key: "wd-automations", label: "Email Automations", component: <AdminWebDesignAutomations /> },
         { key: "demo-links", label: "🔗 Demo Links", component: <AdminDemoLinkGenerator /> },
@@ -645,28 +643,20 @@ const Admin = () => {
         {/* ── CONTENT ─────────────────────────────────────────────────── */}
         {activeTool === "home" ? (
           <div className="space-y-4 pb-20">
-            {/* Quick Stats Row */}
-            <div className="grid grid-cols-4 gap-2">
-              {[
-                { label: "AI Queue", value: b.aiQueue, color: "#f97316", tool: "ai-queue" },
-                { label: "Support", value: b.support, color: "#3b82f6", tool: "support" },
-                { label: "Coach AI", value: b.drafts, color: "#a855f7", tool: "coach-ai" },
-                { label: "Requests", value: b.custom, color: "#22c55e", tool: "custom-req" },
-              ].map((stat) => (
-                <button
-                  key={stat.label}
-                  onClick={() => handleToolClick(stat.tool)}
-                  className="rounded-xl p-3 text-center transition-all hover:scale-[1.03] active:scale-95"
-                  style={{
-                    background: `${stat.color}08`,
-                    border: `1px solid ${stat.color}15`,
-                  }}
-                >
-                  <p className="text-xl font-black text-foreground">{stat.value}</p>
-                  <p className="text-[9px] text-muted-foreground mt-0.5">{stat.label}</p>
-                </button>
-              ))}
-            </div>
+            {/* Purchase Alert Banner — shows when new purchases need onboarding */}
+            <Suspense fallback={null}>
+              <AdminPurchaseAlert />
+            </Suspense>
+
+            {/* Command Center Dashboard */}
+            <Suspense fallback={<div className="h-40 rounded-2xl bg-muted/10 animate-pulse" />}>
+              <AdminCommandCenter onNavigate={handleToolClick} />
+            </Suspense>
+
+            {/* Smart Notifications */}
+            <Suspense fallback={null}>
+              <AdminNotificationCenter />
+            </Suspense>
 
             {/* Domain Cards Grid */}
             <div className="space-y-3">

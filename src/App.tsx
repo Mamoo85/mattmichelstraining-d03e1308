@@ -258,11 +258,24 @@ const NewMoverMarketing = lazyRetry(() => import("./pages/NewMoverMarketing"));
 const AnnualBusinessReview = lazyRetry(() => import("./pages/AnnualBusinessReview"));
 const PodcastRevenueMachine = lazyRetry(() => import("./pages/PodcastRevenueMachine"));
 const PodcastDashboard = lazyRetry(() => import("./pages/PodcastDashboard"));
+const StormDamageLeads = lazyRetry(() => import("./pages/StormDamageLeads"));
+const RecallAlertService = lazyRetry(() => import("./pages/RecallAlertService"));
+const PermitWatch = lazyRetry(() => import("./pages/PermitWatch"));
+const WebsiteSpeedAudits = lazyRetry(() => import("./pages/WebsiteSpeedAudits"));
+const BedtimeStories = lazyRetry(() => import("./pages/BedtimeStories"));
+const CrimeDigest = lazyRetry(() => import("./pages/CrimeDigest"));
+const LicenseMonitor = lazyRetry(() => import("./pages/LicenseMonitor"));
+const TechSupportServices = lazyRetry(() => import("./pages/TechSupportServices"));
 const LegalPage = lazyRetry(() => import("./pages/LegalPage"));
 const CookieBanner = lazyRetry(() => import("./components/layout/CookieBanner"));
 const LegalFooterLazy = lazyRetry(() => import("./components/layout/LegalFooter"));
 const PartnerProgram = lazyRetry(() => import("./pages/PartnerProgram"));
 const AiWebsiteAudit = lazyRetry(() => import("./pages/AiWebsiteAudit"));
+const DigitalFoundation = lazyRetry(() => import("./pages/DigitalFoundation"));
+const Portfolio = lazyRetry(() => import("./pages/Portfolio"));
+const AdDigitalFoundation = lazyRetry(() => import("./pages/AdDigitalFoundation"));
+const AdFreeAudit = lazyRetry(() => import("./pages/AdFreeAudit"));
+const VisibilityScore = lazyRetry(() => import("./pages/VisibilityScore"));
 const AiGbpPostPack = lazyRetry(() => import("./pages/AiGbpPostPack"));
 const AiCompetitorReport = lazyRetry(() => import("./pages/AiCompetitorReport"));
 const AdCompetitorReport = lazyRetry(() => import("./pages/AdCompetitorReport"));
@@ -450,6 +463,11 @@ const App = () => (
                     <Route path="/demo-dental/*" element={<DentalMockup />} />
                     <Route path="/proposal/stewart-dental" element={<ProposalStewartDental />} />
                     <Route path="/ai-website-audit" element={<AiWebsiteAudit />} />
+                    <Route path="/digital-foundation" element={<DigitalFoundation />} />
+                    <Route path="/portfolio" element={<Portfolio />} />
+                    <Route path="/ad/digital-foundation" element={<AdDigitalFoundation />} />
+                    <Route path="/ad/free-audit" element={<AdFreeAudit />} />
+                    <Route path="/visibility-score" element={<VisibilityScore />} />
                     <Route path="/ai-gbp-post-pack" element={<AiGbpPostPack />} />
                     <Route path="/ai-competitor-report" element={<AiCompetitorReport />} />
                     <Route path="/ad/website-audit" element={<AdWebsiteAudit />} />
@@ -632,6 +650,14 @@ const App = () => (
                     <Route path="/annual-business-review" element={<AnnualBusinessReview />} />
                     <Route path="/podcast-revenue-machine" element={<PodcastRevenueMachine />} />
                     <Route path="/podcast-revenue-machine/dashboard" element={<ProtectedRoute><PodcastDashboard /></ProtectedRoute>} />
+                    <Route path="/storm-leads" element={<StormDamageLeads />} />
+                    <Route path="/recall-alerts" element={<RecallAlertService />} />
+                    <Route path="/permit-watch" element={<PermitWatch />} />
+                    <Route path="/website-speed-audit" element={<WebsiteSpeedAudits />} />
+                    <Route path="/bedtime-stories" element={<BedtimeStories />} />
+                    <Route path="/crime-digest" element={<CrimeDigest />} />
+                    <Route path="/license-monitor" element={<LicenseMonitor />} />
+                    <Route path="/tech-support" element={<TechSupportServices />} />
                     <Route path="/tools/:slug" element={<MicroSaasToolPage />} />
                     <Route path="/legal/:type" element={<LegalPage />} />
                     <Route path="/partner-program" element={<PartnerProgram />} />

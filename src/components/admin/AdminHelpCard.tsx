@@ -34,17 +34,25 @@ export function resetAdminHelp() {
   } catch {}
 }
 
+interface GuideScenario {
+  trigger: string;
+  steps: string[];
+}
+
 interface AdminHelpCardProps {
   id: string;
   title: string;
   body: string;
   tips?: string[];
+  scenarios?: GuideScenario[];
+  whenSomeoneBuys?: string;
   color?: string;
 }
 
-export function AdminHelpCard({ id, title, body, tips, color = "border-primary/30 bg-primary/5" }: AdminHelpCardProps) {
+export function AdminHelpCard({ id, title, body, tips, scenarios, whenSomeoneBuys, color = "border-primary/30 bg-primary/5" }: AdminHelpCardProps) {
   const [dismissed, setDismissed] = useState(() => isHelpDismissed(id));
   const [collapsed, setCollapsed] = useState(false);
+  const [showScenarios, setShowScenarios] = useState(false);
 
   if (dismissed) return null;
 
@@ -79,8 +87,17 @@ export function AdminHelpCard({ id, title, body, tips, color = "border-primary/3
       {!collapsed && (
         <div className="px-4 pb-4">
           <p className="text-[11px] text-muted-foreground leading-relaxed mb-3">{body}</p>
+
+          {/* When Someone Buys callout */}
+          {whenSomeoneBuys && (
+            <div className="rounded-md border border-orange-500/20 bg-orange-500/5 p-2.5 mb-3">
+              <p className="text-[10px] font-bold text-orange-400 mb-1">When someone buys this:</p>
+              <p className="text-[10px] text-muted-foreground leading-relaxed">{whenSomeoneBuys}</p>
+            </div>
+          )}
+
           {tips && tips.length > 0 && (
-            <ul className="space-y-1">
+            <ul className="space-y-1 mb-3">
               {tips.map((tip, i) => (
                 <li key={i} className="flex items-start gap-1.5">
                   <span className="text-primary mt-0.5 flex-shrink-0">·</span>
@@ -89,9 +106,40 @@ export function AdminHelpCard({ id, title, body, tips, color = "border-primary/3
               ))}
             </ul>
           )}
+
+          {/* Scenarios accordion */}
+          {scenarios && scenarios.length > 0 && (
+            <div className="mb-3">
+              <button
+                onClick={() => setShowScenarios((s) => !s)}
+                className="flex items-center gap-1.5 text-[10px] font-bold text-primary hover:text-primary/80 transition"
+              >
+                {showScenarios ? <ChevronUp size={10} /> : <ChevronDown size={10} />}
+                Common Scenarios ({scenarios.length})
+              </button>
+              {showScenarios && (
+                <div className="mt-2 space-y-2">
+                  {scenarios.map((s, i) => (
+                    <div key={i} className="rounded-md border border-border/40 bg-muted/10 p-2.5">
+                      <p className="text-[10px] font-bold text-foreground mb-1.5">{s.trigger}</p>
+                      <ol className="space-y-0.5">
+                        {s.steps.map((step, j) => (
+                          <li key={j} className="text-[10px] text-muted-foreground flex gap-1.5">
+                            <span className="text-primary font-bold shrink-0">{j + 1}.</span>
+                            {step}
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           <button
             onClick={handleDismiss}
-            className="mt-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground border border-border rounded px-2 py-1"
+            className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground border border-border rounded px-2 py-1"
           >
             Got it — don't show again
           </button>

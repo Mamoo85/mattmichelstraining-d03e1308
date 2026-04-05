@@ -8,30 +8,10 @@ import {
   ChevronDown, ChevronRight, CheckCircle2, Circle,
   Mail, ExternalLink, Copy, Phone, Globe, AlertCircle, Loader2
 } from "lucide-react";
-
-/* ── Types ─────────────────────────────────────────────────── */
-interface FulfillmentStep {
-  label: string;
-  description: string;
-  action: "send_email" | "manual_check" | "field_input" | "navigate" | "complete" | "check_website";
-  emailSubject?: string;
-  emailBody?: string;
-  checkUrl?: string;
-  checkText?: string;
-  fieldLabel?: string;
-  fieldPlaceholder?: string;
-  dbField?: "phone" | "website" | "notes";
-  navigateTo?: string;
-  navigateText?: string;
-  nextStage: string;
-}
-
-interface ProductGuide {
-  name: string;
-  icon: string;
-  needsSetup: boolean;
-  steps: FulfillmentStep[];
-}
+import { getGuide, AUTO_PRODUCTS } from "@/lib/fulfillment-guides";
+import type { FulfillmentStep, ProductGuide } from "@/lib/fulfillment-guides";
+import { AdminHelpCard } from "./AdminHelpCard";
+import { getAdminGuide } from "@/lib/admin-guides";
 
 interface ClientRow {
   sub_id: string;
@@ -47,244 +27,7 @@ interface ClientRow {
   started_at: string;
 }
 
-/* ── Fulfillment Guides ─────────────────────────────────────── */
-const GUIDES: Record<string, ProductGuide> = {
-  gbp_saas_subscription: {
-    name: "GBP SaaS", icon: "📍", needsSetup: true,
-    steps: [
-      {
-        label: "Send GBP Access Request Email",
-        description: "Ask customer to add matt@mattmichelstraining.com as a Manager on their Google Business Profile.",
-        action: "send_email",
-        emailSubject: "Action needed: Add me to your Google Business Profile",
-        emailBody: `Hey [NAME],\n\nYour GBP posting service is set up on my end. To start pushing posts to your Google Business Profile I just need you to add my Google account as a Manager.\n\nHere's how (takes 2 minutes):\n1. Go to business.google.com\n2. Click your business\n3. Business Profile settings → Managers → Add\n4. Enter: matt@mattmichelstraining.com\n5. Set role to Manager → Invite\n\nI'll take it from there.\n\n— Matt\n(313) 806-4952`,
-        nextStage: "📧 Awaiting GBP Access",
-      },
-      {
-        label: "Accept Invitation in Google Business",
-        description: "Check your Google Business account for the invitation and accept it.",
-        action: "manual_check",
-        checkUrl: "https://business.google.com",
-        checkText: "Open Google Business",
-        nextStage: "⚙️ Configuring",
-      },
-      {
-        label: "Save Their GBP Profile ID",
-        description: "Get their GBP profile/location ID and save it to their record so the cron job picks them up.",
-        action: "field_input",
-        fieldLabel: "GBP Profile ID",
-        fieldPlaceholder: "e.g. 123456789",
-        dbField: "notes",
-        nextStage: "🧪 Testing",
-      },
-      {
-        label: "Verify First Post Goes Out",
-        description: "Posts run Mon/Wed/Fri at 10am ET. Confirm first post published successfully.",
-        action: "complete",
-        nextStage: "✅ Active",
-      },
-    ],
-  },
-
-  social_media_subscription: {
-    name: "Social Media AI", icon: "📱", needsSetup: true,
-    steps: [
-      {
-        label: "Send Account Connection Link",
-        description: "Email customer the link to connect their Facebook, Instagram, and LinkedIn accounts.",
-        action: "send_email",
-        emailSubject: "Connect your social accounts — 2 minutes",
-        emailBody: `Hey [NAME],\n\nYour Social Media AI service is active! To start posting automatically I need you to connect your accounts.\n\nConnect here:\nhttps://mattmichelstraining.com/social-connect\n\nYou'll link Facebook, Instagram, and LinkedIn in one quick flow. Once connected I'll post 3x per week automatically — Mon, Wed, Fri.\n\n— Matt\n(313) 806-4952`,
-        nextStage: "📧 Awaiting Account Connection",
-      },
-      {
-        label: "Verify Accounts Connected",
-        description: "Check the Social Media Setup tab to confirm all platforms are connected for this client.",
-        action: "navigate",
-        navigateTo: "/admin",
-        navigateText: "Go to Social Media Setup Tab",
-        nextStage: "⚙️ Verifying",
-      },
-      {
-        label: "Confirm Live",
-        description: "First posts will go out next Mon/Wed/Fri. Mark active once confirmed.",
-        action: "complete",
-        nextStage: "✅ Active",
-      },
-    ],
-  },
-
-  missed_call_subscription: {
-    name: "Missed Call SMS", icon: "📞", needsSetup: true,
-    steps: [
-      {
-        label: "Get Their Business Phone Number",
-        description: "Email the customer asking for the phone number customers call.",
-        action: "send_email",
-        emailSubject: "Quick question — Missed Call SMS setup",
-        emailBody: `Hey [NAME],\n\nYour Missed Call Text-Back is ready. I just need one thing:\n\nWhat's your main business phone number — the one customers call?\n\nReply here or text me at (313) 806-4952 and I'll have it live same day.\n\n— Matt`,
-        nextStage: "📧 Awaiting Phone Number",
-      },
-      {
-        label: "Save Their Business Phone Number",
-        description: "Enter their business phone number to save it to their profile.",
-        action: "field_input",
-        fieldLabel: "Business Phone Number",
-        fieldPlaceholder: "(313) 555-1234",
-        dbField: "phone",
-        nextStage: "⚙️ Configuring",
-      },
-      {
-        label: "Test the System",
-        description: "Call their business number and don't answer. Within 60 seconds they should receive an auto-text.",
-        action: "manual_check",
-        checkText: "Test Passed ✓",
-        nextStage: "🧪 Testing",
-      },
-      {
-        label: "Send Go-Live Confirmation",
-        description: "Let the customer know it's live and working.",
-        action: "send_email",
-        emailSubject: "Your Missed Call SMS is live ✓",
-        emailBody: `Hey [NAME],\n\nYou're all set — Missed Call Text-Back is live.\n\nAnytime someone calls and you don't answer, they'll automatically get a text within 60 seconds.\n\nLet me know if you have any questions.\n\n— Matt\n(313) 806-4952`,
-        nextStage: "✅ Active",
-      },
-    ],
-  },
-
-  chatbot_subscription: {
-    name: "AI Chatbot", icon: "🤖", needsSetup: true,
-    steps: [
-      {
-        label: "Embed Code Was Auto-Sent",
-        description: "The embed code was automatically emailed at purchase. Confirm they got it.",
-        action: "manual_check",
-        checkText: "Email Confirmed ✓",
-        nextStage: "📧 Awaiting Install",
-      },
-      {
-        label: "Verify Chatbot on Their Website",
-        description: "Visit their site and confirm the chatbot widget appears in the bottom corner.",
-        action: "check_website",
-        nextStage: "🧪 Testing",
-      },
-      {
-        label: "Mark Active",
-        description: "Chatbot is live and working.",
-        action: "complete",
-        nextStage: "✅ Active",
-      },
-    ],
-  },
-
-  web_design: {
-    name: "Web Design", icon: "🌐", needsSetup: true,
-    steps: [
-      {
-        label: "Send Intake Questionnaire",
-        description: "Email the client to collect brand details, goals, content, and assets.",
-        action: "send_email",
-        emailSubject: "Let's build your website — quick intake inside",
-        emailBody: `Hey [NAME],\n\nExcited to get started! Before I dive in, I need a few things:\n\n1. Business name and tagline\n2. Primary service(s) or product(s)\n3. Top 3 competitors\n4. Logo (attach or link)\n5. Brand colors (or preferred scheme)\n6. 2-3 websites you like the look of\n7. #1 goal of the site (book calls, generate leads, sell products)\n8. Any photos (attach or link)\n\nOnce I have these I'll move fast.\n\n— Matt\n(313) 806-4952`,
-        nextStage: "📋 Awaiting Intake",
-      },
-      {
-        label: "Review Intake & Confirm Scope",
-        description: "Review what the client sent. Reply to confirm scope and timeline.",
-        action: "manual_check",
-        checkText: "Intake Reviewed ✓",
-        nextStage: "🔨 Building",
-      },
-      {
-        label: "Build the Site",
-        description: "Build the site. Manual work step.",
-        action: "manual_check",
-        checkText: "Site Built ✓",
-        nextStage: "👁 In Review",
-      },
-      {
-        label: "Send Preview Link",
-        description: "Send the client a link to review before launch.",
-        action: "send_email",
-        emailSubject: "Your website preview is ready",
-        emailBody: `Hey [NAME],\n\nYour site is ready for review!\n\nPreview: [PASTE PREVIEW URL]\n\nLet me know any changes within 48 hours. I'll do up to 2 rounds of revisions then we launch.\n\n— Matt\n(313) 806-4952`,
-        nextStage: "📝 Revisions",
-      },
-      {
-        label: "Apply Revisions",
-        description: "Make requested changes from client review.",
-        action: "manual_check",
-        checkText: "Revisions Done ✓",
-        nextStage: "🚀 Ready to Launch",
-      },
-      {
-        label: "Launch & Request Google Review",
-        description: "Point their domain live, then email asking for a Google review.",
-        action: "send_email",
-        emailSubject: "Your website is live! 🎉 One small favor...",
-        emailBody: `Hey [NAME],\n\nYour site is live!\n\nIf you're happy with it, I'd really appreciate a quick Google review:\nhttps://g.page/r/[YOUR_REVIEW_LINK]\n\nTakes 30 seconds and helps other local businesses find me.\n\nThanks for trusting me with your online presence.\n\n— Matt\n(313) 806-4952`,
-        nextStage: "✅ Active",
-      },
-    ],
-  },
-
-  contractor_lead_subscription: {
-    name: "Contractor Leads", icon: "🏗️", needsSetup: true,
-    steps: [
-      {
-        label: "Confirm Lead Source is Active",
-        description: "Verify ads or lead source are running and sending leads to the contractor_leads table.",
-        action: "manual_check",
-        checkText: "Lead Source Confirmed ✓",
-        nextStage: "⚙️ Configuring",
-      },
-      {
-        label: "Send Welcome & Expectations Email",
-        description: "Set expectations: leads will arrive via email/SMS as they come in.",
-        action: "send_email",
-        emailSubject: "Your contractor lead service is active",
-        emailBody: `Hey [NAME],\n\nYour exclusive contractor lead service is active.\n\nHere's how it works:\n• When a new lead comes in for your trade in your area, you'll get an instant email and/or text\n• You'll have the lead's name, phone, and job description\n• Call or text them immediately — speed to lead wins the job\n\nFirst leads should start arriving within 48 hours.\n\n— Matt\n(313) 806-4952`,
-        nextStage: "✅ Active",
-      },
-    ],
-  },
-};
-
-/* Default guide for any product not explicitly listed */
-const DEFAULT_GUIDE: ProductGuide = {
-  name: "New Service", icon: "⚡", needsSetup: true,
-  steps: [
-    {
-      label: "Send Welcome & Setup Email",
-      description: "Email the customer confirming their purchase and explaining what happens next.",
-      action: "send_email",
-      emailSubject: "Your service is being set up",
-      emailBody: `Hey [NAME],\n\nThanks for signing up! I'm setting up your service now and will be in touch within 24 hours with next steps.\n\nQuestions? Reply here or text (313) 806-4952.\n\n— Matt`,
-      nextStage: "📧 Contacted",
-    },
-    {
-      label: "Complete Setup",
-      description: "Perform any manual setup steps required for this service.",
-      action: "manual_check",
-      checkText: "Setup Complete ✓",
-      nextStage: "✅ Active",
-    },
-  ],
-};
-
-/* Products that are 100% automatic — no action needed */
-const AUTO_PRODUCTS = new Set([
-  "website_audit", "gbp_post_pack", "competitor_report",
-  "field_rep_subscription", "b2b_database_subscription",
-  "review_responder_subscription", "seo_report_subscription",
-]);
-
-function getGuide(serviceType: string): ProductGuide {
-  if (AUTO_PRODUCTS.has(serviceType)) {
-    return { name: serviceType, icon: "✅", needsSetup: false, steps: [] };
-  }
-  return GUIDES[serviceType] ?? { ...DEFAULT_GUIDE, name: serviceType };
-}
+/* Guides imported from shared module — see src/lib/fulfillment-guides.ts */
 
 /* ── Helpers ────────────────────────────────────────────────── */
 function fmtPrice(cents: number | null) {
@@ -626,8 +369,12 @@ export default function AdminFulfillment() {
     : filter === "active" ? active
     : clients;
 
+  const guide = getAdminGuide("fulfillment");
+
   return (
     <div className="space-y-4">
+      {guide && <AdminHelpCard id={guide.id} title={guide.title} body={guide.body} tips={guide.tips} scenarios={guide.scenarios} whenSomeoneBuys={guide.whenSomeoneBuys} />}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -640,6 +387,31 @@ export default function AdminFulfillment() {
         >
           Refresh
         </button>
+      </div>
+
+      {/* Summary Row */}
+      <div className="grid grid-cols-3 gap-2">
+        <div className="flex items-center gap-2 p-3 rounded-xl bg-green-500/8 border border-green-500/20">
+          <CheckCircle2 size={14} className="text-green-400" />
+          <div>
+            <span className="text-lg font-black text-green-400">{active.length}</span>
+            <span className="text-[9px] text-white/40 ml-1.5 uppercase tracking-widest">Active</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 p-3 rounded-xl bg-blue-500/8 border border-blue-500/20">
+          <Loader2 size={14} className="text-blue-400" />
+          <div>
+            <span className="text-lg font-black text-blue-400">{inProgress.length}</span>
+            <span className="text-[9px] text-white/40 ml-1.5 uppercase tracking-widest">Onboarding</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 p-3 rounded-xl bg-orange-500/8 border border-orange-500/20">
+          <AlertCircle size={14} className="text-orange-400" />
+          <div>
+            <span className="text-lg font-black text-orange-400">{needsAction.length}</span>
+            <span className="text-[9px] text-white/40 ml-1.5 uppercase tracking-widest">Need Action</span>
+          </div>
+        </div>
       </div>
 
       {/* Filter tabs */}

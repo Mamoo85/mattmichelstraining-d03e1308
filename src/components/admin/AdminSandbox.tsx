@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { AdminHelpCard } from "./AdminHelpCard";
+import { getAdminGuide } from "@/lib/admin-guides";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -404,8 +406,12 @@ export default function AdminSandbox() {
     </Card>
   );
 
+  const guide = getAdminGuide("sandbox");
+
   return (
     <div className="space-y-6">
+      {guide && <AdminHelpCard id={guide.id} title={guide.title} body={guide.body} tips={guide.tips} />}
+
       {/* Customization Modal */}
       <Dialog open={!!modalProduct} onOpenChange={(open) => { if (!open) setModalProduct(null); }}>
         <DialogContent className="bg-slate-900 border-slate-700 max-w-md max-h-[80vh] overflow-y-auto">

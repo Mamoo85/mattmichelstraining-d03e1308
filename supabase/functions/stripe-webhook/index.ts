@@ -55,7 +55,8 @@ function m2Email(opts: { greeting: string; headline: string; body: string; cta?:
     </div>
   </div>
   <div style="padding:12px 28px;background:#f8fafc;border-top:1px solid #e2e8f0;text-align:center">
-    <p style="margin:0;color:#94a3b8;font-size:11px">M² Development · mattmichelstraining.com · Grosse Pointe, MI</p>
+    <p style="margin:0;color:#94a3b8;font-size:11px">M² Development · Grosse Pointe, MI 48230</p>
+    <p style="margin:4px 0 0;color:#94a3b8;font-size:10px"><a href="https://mattmichelstraining.com" style="color:#94a3b8">mattmichelstraining.com</a> · <a href="mailto:matt@mattmichelstraining.com?subject=Unsubscribe" style="color:#94a3b8">Unsubscribe</a></p>
   </div>
 </div></body></html>`;
 }
@@ -997,7 +998,8 @@ serve(async (req) => {
     </div>
   </div>
   <div style="padding:12px 28px;background:#f8fafc;border-top:1px solid #e2e8f0;text-align:center">
-    <p style="margin:0;color:#94a3b8;font-size:11px">M² Development · mattmichelstraining.com · Grosse Pointe, MI</p>
+    <p style="margin:0;color:#94a3b8;font-size:11px">M² Development · Grosse Pointe, MI 48230</p>
+    <p style="margin:4px 0 0;color:#94a3b8;font-size:10px"><a href="https://mattmichelstraining.com" style="color:#94a3b8">mattmichelstraining.com</a> · <a href="mailto:matt@mattmichelstraining.com?subject=Unsubscribe" style="color:#94a3b8">Unsubscribe</a></p>
   </div>
 </div></body></html>`;
 
@@ -1363,6 +1365,13 @@ serve(async (req) => {
         podcast_revenue_machine: "Podcast-to-Revenue Machine",
         gov_contract_monitor: "Government Contract Monitor",
         competitor_pricing: "Competitor Pricing Intelligence",
+        storm_lead_subscription: "Storm Damage Lead Blaster",
+        recall_alert_subscription: "Recall Alert Service",
+        permit_watch_subscription: "Permit Watch",
+        speed_audit_subscription: "Website Speed Audit",
+        bedtime_story_subscription: "AI Bedtime Stories",
+        crime_digest_subscription: "Neighborhood Crime Digest",
+        license_monitor_subscription: "Business License Monitor",
       };
 
       // ── COMPETITOR PRICING INTELLIGENCE ───────────────────────────────────
@@ -1532,16 +1541,48 @@ serve(async (req) => {
             .select("id")
             .single();
           if (upserted?.id) {
-            await (sb.from as any)("service_subscriptions").insert({
+            const { data: subRow } = await (sb.from as any)("service_subscriptions").insert({
               client_id: upserted.id,
               email: customerEmail,
               service_type: serviceLabel,
               stripe_subscription_id: session.subscription as string || null,
               stripe_customer_id: session.customer as string || null,
               status: "active",
-            });
+            }).select("id").single();
+
+            // Fire auto-onboard for eligible products
+            fetch(`${SUPABASE_URL}/functions/v1/auto-onboard`, {
+              method: "POST",
+              headers: { Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                service_type: meta.type,
+                client_email: customerEmail,
+                business_name: meta.businessName || meta.business_name || customerName || customerEmail,
+                subscription_id: subRow?.id || null,
+              }),
+            }).catch((e: any) => console.error("[WEBHOOK] auto-onboard fire error:", e));
           }
         } catch (e) { console.error("[WEBHOOK] b2b_clients fulfillment write error:", e); }
+      }
+
+      // ── TECH SUPPORT SESSION ──────────────────────────────────────────────
+      if (meta.type === "tech_support_session" && customerEmail) {
+        try {
+          const tsSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+          await (tsSb.from as any)("tech_support_tickets").insert({
+            name: meta.name || customerName || null,
+            email: customerEmail,
+            phone: meta.phone || null,
+            issue_description: meta.issue || null,
+            tier: meta.tier || "one-time",
+            stripe_session_id: session.id,
+          });
+          await sendM2Email(customerEmail, "Tech Support — We Got Your Request!", m2Email({
+            heading: "We're on it!",
+            body: `<p>Hey ${meta.name || "there"}!</p><p>Your tech support request has been received. Matt will reach out within 24 hours to schedule your ${meta.tier === "subscription" ? "first monthly" : "remote"} session.</p><p>In the meantime, feel free to reply to this email with any extra details about the issue.</p>`,
+          }));
+          await notifyMatt(`🔧 New Tech Support — ${meta.name || customerEmail} ($${meta.tier === "subscription" ? "29/mo" : "49"})`, `<p><strong>${meta.name || customerEmail}</strong><br>Email: ${customerEmail}<br>Phone: ${meta.phone || "n/a"}<br>Tier: ${meta.tier || "one-time"}<br>Issue: ${meta.issue || "not provided"}</p>`);
+        } catch (e) { console.error("[WEBHOOK] tech_support_session error:", e); }
       }
 
       // ── SPORT GUIDE (AI-generated, DB-driven) ──────────────────────────────
@@ -2270,15 +2311,27 @@ serve(async (req) => {
             }
 
             if (clientId) {
-              await sb.from("service_subscriptions" as any).insert({
+              const { data: subRow2 } = await sb.from("service_subscriptions" as any).insert({
                 client_id: clientId,
                 service_type: svcInfo.label,
                 stripe_subscription_id: (session.subscription as string) || null,
                 status: "active",
                 fulfillment_stage: "New Lead - Action Required",
                 monthly_price: svcInfo.price,
-              });
+              }).select("id").single();
               console.log(`[WEBHOOK] Unified pipeline: ${svcInfo.label} for ${clientEmail} → b2b_clients`);
+
+              // Fire auto-onboard for eligible products
+              fetch(`${SUPABASE_URL}/functions/v1/auto-onboard`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`, "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  service_type: meta.type,
+                  client_email: clientEmail,
+                  business_name: meta.businessName || meta.business_name || meta.customer_name || clientEmail,
+                  subscription_id: subRow2?.id || null,
+                }),
+              }).catch((e: any) => console.error("[WEBHOOK] auto-onboard fire error:", e));
             }
           }
         } catch (e) { console.error("[WEBHOOK] Unified b2b pipeline error:", e); }
@@ -3260,6 +3313,61 @@ ${fwdInstructions}`,
             ),
           ]);
         } catch (e) { console.error("[WEBHOOK] missed_call_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── DIGITAL FOUNDATION — website + GBP + missed call bundle ──────────
+      if (meta.type === "digital_foundation") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            // Provision GBP client
+            await (sb.from as any)("gbp_saas_clients").upsert({
+              email,
+              business_name: meta.businessName || email,
+              contact_name: meta.name || null,
+              phone: meta.phone || null,
+              active: true,
+              plan: "basic",
+              stripe_subscription_id: session.subscription as string || null,
+            }, { onConflict: "email" });
+
+            // Provision Missed Call client (Twilio number provisioned separately via missed_call flow)
+            await (sb.from as any)("missed_call_clients").upsert({
+              email,
+              business_name: meta.businessName || email,
+              contact_name: meta.name || null,
+              business_phone: meta.phone || null,
+              active: false,
+              stripe_subscription_id: session.subscription as string || null,
+            }, { onConflict: "email" });
+          }
+
+          await Promise.all([
+            sendM2Email(
+              email,
+              "Welcome to Your Digital Foundation — Let's Build Your Site",
+              m2Email({
+                greeting: `Hey${meta.name ? " " + meta.name : ""} —`,
+                headline: "Your Digital Foundation Is Locked In",
+                body: `<p style="margin:0 0 12px"><strong>Here's what happens next:</strong></p>
+<ol style="margin:0 0 16px;padding-left:20px;color:#475569">
+<li><strong>Matt reaches out today</strong> to discuss your new website — design, pages, and content</li>
+<li><strong>Your site goes live within 5-7 business days</strong></li>
+<li><strong>Google auto-posts start immediately</strong> after your Google Business Profile is connected</li>
+<li><strong>Missed Call Text-Back</strong> gets set up once your site is live</li>
+</ol>
+<p style="margin:0 0 8px">Your 7-day free trial has started. You won't be charged until day 8.</p>
+<p style="margin:0 0 8px">Plan: <strong>${meta.plan === "starter" ? "$499 setup + $149/mo" : "$1,500 setup + $99/mo"}</strong></p>
+<p style="margin:0 0 8px">Reply to this email or call anytime — I respond personally.</p>`,
+              }),
+            ),
+            notifyMatt(
+              `🏗️ NEW DIGITAL FOUNDATION CLIENT: ${meta.businessName || email}`,
+              `<p><strong>${meta.businessName || email}</strong><br>Name: ${meta.name || "n/a"}<br>Email: ${email}<br>Phone: ${meta.phone || "n/a"}<br>Website: ${meta.website || "none"}<br>Plan: ${meta.plan === "starter" ? "$499 + $149/mo" : "$1,500 + $99/mo"}</p><p><strong>Action items:</strong></p><ol><li>Call/text the client to kick off website design</li><li>Connect their GBP for auto-posting</li><li>Provision Twilio number for missed call text-back</li></ol>`,
+            ),
+          ]);
+        } catch (e) { console.error("[WEBHOOK] digital_foundation error:", e); }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 

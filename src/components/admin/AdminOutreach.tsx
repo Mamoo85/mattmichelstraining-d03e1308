@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { AdminHelpCard } from "./AdminHelpCard";
+import { getAdminGuide } from "@/lib/admin-guides";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -229,8 +231,12 @@ const AdminOutreach = memo(() => {
   const won = leadsForColumn("won").length;
   const total = leads.length;
 
+  const guide = getAdminGuide("outreach");
+
   return (
     <div className="space-y-4">
+      {guide && <AdminHelpCard id={guide.id} title={guide.title} body={guide.body} tips={guide.tips} />}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">

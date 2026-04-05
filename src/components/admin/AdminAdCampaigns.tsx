@@ -4,6 +4,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Copy, Check, ExternalLink, ChevronDown, ChevronUp, ThumbsUp, ThumbsDown, Brain } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { AdminHelpCard } from "./AdminHelpCard";
+import { getAdminGuide } from "@/lib/admin-guides";
+
+// ── Ad-Ready Landing Pages ─────────────────────────────────────────────────
+const AD_PAGES = [
+  { name: "Digital Foundation (Ad)", path: "/ad/digital-foundation", tag: "Google + Meta" },
+  { name: "Free Audit (Ad)", path: "/ad/free-audit", tag: "Meta" },
+  { name: "Visibility Score", path: "/visibility-score", tag: "Sales Demo" },
+  { name: "Digital Foundation", path: "/digital-foundation", tag: "Organic" },
+  { name: "Free Audit", path: "/ai-website-audit", tag: "Organic" },
+  { name: "Portfolio", path: "/portfolio", tag: "Social Proof" },
+];
+
+const DOMAIN = "https://www.mattmichelstraining.com";
 
 const SERVICES = [
   {
@@ -141,8 +155,44 @@ const AdminAdCampaigns = () => {
 
   const pendingCampaigns = selmaQueue?.filter((c: any) => c.status === "pending") || [];
 
+  const guide = getAdminGuide("ad-campaigns");
+
   return (
     <div className="space-y-6">
+      {guide && <AdminHelpCard id={guide.id} title={guide.title} body={guide.body} tips={guide.tips} />}
+
+      {/* Ad-Ready URLs */}
+      <div>
+        <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
+          🎯 Ad-Ready Landing Pages
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(AD_PAGES.map(p => `${p.name}: ${DOMAIN}${p.path}`).join("\n"));
+              toast.success("All URLs copied");
+            }}
+            className="text-[10px] text-primary hover:underline font-normal"
+          >
+            Copy all
+          </button>
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+          {AD_PAGES.map((p) => (
+            <div key={p.path} className="flex items-center justify-between p-2 rounded border border-border bg-card">
+              <div className="min-w-0">
+                <span className="text-xs font-bold">{p.name}</span>
+                <span className="text-[9px] ml-1.5 px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{p.tag}</span>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                <CopyButton text={`${DOMAIN}${p.path}`} label="URL" />
+                <a href={p.path} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground">
+                  <ExternalLink size={11} />
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Selma's AI Campaign Queue */}
       {selmaQueue && selmaQueue.length > 0 && (
         <div className="space-y-3">

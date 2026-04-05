@@ -1,8 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AdminHelpCard } from "./AdminHelpCard";
+import { getAdminGuide } from "@/lib/admin-guides";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, AlertTriangle, CheckCircle, Clock, Building2 } from "lucide-react";
+import { Loader2, AlertTriangle, CheckCircle, Clock, Building2, Mail } from "lucide-react";
 
 const INTERNAL_EMAILS = ["matt@mattmichelstraining.com", "matt@mattmichelstraining.com", "matthewmichels4@gmail.com"];
 const isInternalEmail = (email: string) => INTERNAL_EMAILS.includes(email?.toLowerCase());
@@ -43,6 +45,14 @@ const SERVICE_TABLES = [
   { table: "birthday_campaign_clients", service: "Birthday Campaign", price: "$29/mo", lastField: "last_sent_at", freq: 30 },
   { table: "appointment_reminders", service: "Appointment Reminders", price: "$29/mo", lastField: "last_sent_at", freq: 1 },
   { table: "review_request_clients", service: "Review Request SMS", price: "$29/mo", lastField: "last_sent_at", freq: 7 },
+  // ── Wave 4: Seven New Products ────────────────────────────────────────────
+  { table: "storm_lead_clients", service: "Storm Damage Leads", price: "$29/mo", lastField: null, freq: 0 },
+  { table: "recall_alert_clients", service: "Recall Alert Service", price: "$19/mo", lastField: null, freq: 0 },
+  { table: "permit_watch_clients", service: "Permit Watch", price: "$29/mo", lastField: "last_report_at", freq: 7 },
+  { table: "speed_audit_clients", service: "Website Speed Audit", price: "$29/mo", lastField: "last_report_at", freq: 30 },
+  { table: "bedtime_story_clients", service: "AI Bedtime Stories", price: "$4.99/mo", lastField: null, freq: 0 },
+  { table: "crime_digest_clients", service: "Neighborhood Crime Digest", price: "$19/mo", lastField: null, freq: 0 },
+  { table: "license_monitor_clients", service: "Business License Monitor", price: "$25/mo", lastField: null, freq: 0 },
 ] as const;
 
 function daysBetween(dateStr: string | null): number | null {
@@ -138,16 +148,52 @@ export default function AdminClientHealth() {
           )}
         </div>
         <div className="text-[10px] font-bold text-muted-foreground">{c.price}</div>
+        {(c.status === "yellow" || c.status === "red") && c.email && (
+          <a
+            href={`mailto:${c.email}?subject=${encodeURIComponent(`Checking in — ${c.service}`)}&body=${encodeURIComponent(`Hi ${c.businessName},\n\nJust checking in on your ${c.service} service. Wanted to make sure everything is running smoothly on your end.\n\nLet me know if you need anything!\n\nBest,\nMatt`)}`}
+            className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded text-[8px] font-bold bg-primary/10 text-primary hover:bg-primary/20 transition"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Mail size={9} /> Check-in
+          </a>
+        )}
       </div>
     </div>
   );
 
+  const guide = getAdminGuide("health");
+
   return (
     <div className="space-y-6">
+      {guide && <AdminHelpCard id={guide.id} title={guide.title} body={guide.body} tips={guide.tips} />}
+
       <div>
         <h2 className="text-lg font-bold">Client Health Dashboard</h2>
         <p className="text-xs text-muted-foreground">Service delivery status for all B2B subscribers</p>
       </div>
+
+      {/* Health Score */}
+      {realCounts.total > 0 && (() => {
+        const healthPct = Math.round((realCounts.green / realCounts.total) * 100);
+        const barColor = healthPct >= 80 ? "bg-green-500" : healthPct >= 50 ? "bg-yellow-500" : "bg-red-500";
+        const textColor = healthPct >= 80 ? "text-green-400" : healthPct >= 50 ? "text-yellow-400" : "text-red-400";
+        return (
+          <Card className="border-border/40 bg-card/50">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[9px] uppercase tracking-widest font-bold text-muted-foreground">Overall Health Score</span>
+                <span className={`text-2xl font-black ${textColor}`}>{healthPct}%</span>
+              </div>
+              <div className="w-full h-2 bg-muted/30 rounded-full overflow-hidden">
+                <div className={`h-full ${barColor} rounded-full transition-all`} style={{ width: `${healthPct}%` }} />
+              </div>
+              <p className="text-[9px] text-muted-foreground mt-1">
+                {realCounts.green} of {realCounts.total} services delivering on schedule
+              </p>
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {/* Stats - Real clients only */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
