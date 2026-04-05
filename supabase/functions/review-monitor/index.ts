@@ -5,12 +5,11 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { generateText } from "../_shared/ai.ts";
+import { sendSMS } from "../_shared/twilio.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY") || "";
-const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
-const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
 const TWILIO_FROM_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 
@@ -38,15 +37,6 @@ Rules:
 Just write the response text, no formatting.`;
 
   return await generateText(prompt, 1024);
-}
-
-async function sendSMS(to: string, body: string): Promise<void> {
-  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_FROM_NUMBER) return;
-  await fetch(`https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`, {
-    method: "POST",
-    headers: { Authorization: `Basic ${btoa(TWILIO_ACCOUNT_SID + ":" + TWILIO_AUTH_TOKEN)}`, "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ To: to, From: TWILIO_FROM_NUMBER, Body: body }),
-  });
 }
 
 serve(async () => {
@@ -83,7 +73,7 @@ serve(async () => {
         // SMS alert to owner
         if (client.phone) {
           const smsBody = `⭐ New Google Review for ${client.business_name}\n\n${stars} — ${authorName}\n"${reviewText}${review.text?.length > 200 ? "…" : ""}"\n\nSuggested response:\n"${suggestedResponse}"\n\n– M² Review Monitor`;
-          await sendSMS(client.phone, smsBody);
+          await sendSMS(client.phone, TWILIO_FROM_NUMBER, smsBody, "review_monitor");
           alerts++;
         }
 
