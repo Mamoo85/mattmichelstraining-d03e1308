@@ -263,6 +263,8 @@ const CookieBanner = lazyRetry(() => import("./components/layout/CookieBanner"))
 const LegalFooterLazy = lazyRetry(() => import("./components/layout/LegalFooter"));
 const PartnerProgram = lazyRetry(() => import("./pages/PartnerProgram"));
 const AiWebsiteAudit = lazyRetry(() => import("./pages/AiWebsiteAudit"));
+const DigitalFoundation = lazyRetry(() => import("./pages/DigitalFoundation"));
+const Portfolio = lazyRetry(() => import("./pages/Portfolio"));
 const AiGbpPostPack = lazyRetry(() => import("./pages/AiGbpPostPack"));
 const AiCompetitorReport = lazyRetry(() => import("./pages/AiCompetitorReport"));
 const AdCompetitorReport = lazyRetry(() => import("./pages/AdCompetitorReport"));
@@ -450,6 +452,8 @@ const App = () => (
                     <Route path="/demo-dental/*" element={<DentalMockup />} />
                     <Route path="/proposal/stewart-dental" element={<ProposalStewartDental />} />
                     <Route path="/ai-website-audit" element={<AiWebsiteAudit />} />
+                    <Route path="/digital-foundation" element={<DigitalFoundation />} />
+                    <Route path="/portfolio" element={<Portfolio />} />
                     <Route path="/ai-gbp-post-pack" element={<AiGbpPostPack />} />
                     <Route path="/ai-competitor-report" element={<AiCompetitorReport />} />
                     <Route path="/ad/website-audit" element={<AdWebsiteAudit />} />
