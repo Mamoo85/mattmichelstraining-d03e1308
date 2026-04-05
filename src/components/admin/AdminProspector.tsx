@@ -632,7 +632,7 @@ export default function AdminProspector() {
         </CardHeader>
 
         <CardContent>
-          <div className="max-h-[500px] overflow-y-auto space-y-1">
+          <div className={`${isExpanded ? "max-h-none" : "max-h-[500px]"} overflow-y-auto space-y-1`}>
             {filtered.length === 0 && !loadingLeads && (
               <p className="text-xs text-muted-foreground text-center py-8">No leads found matching your filters.</p>
             )}
