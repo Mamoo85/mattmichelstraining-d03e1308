@@ -118,6 +118,7 @@ const AdminWebDesignAutomations = lazy(() => import("@/components/admin/AdminWeb
 
 // Command Deck
 const AdminCommandDeck        = lazy(() => import("@/components/admin/AdminCommandDeck"));
+const AdminPurchaseAlert      = lazy(() => import("@/components/admin/AdminPurchaseAlert"));
 
 /* ── Types ──────────────────────────────────────────────────────────────────── */
 interface Tool {
@@ -637,6 +638,11 @@ const Admin = () => {
         {/* ── CONTENT ─────────────────────────────────────────────────── */}
         {activeTool === "home" ? (
           <div className="space-y-4 pb-20">
+            {/* Purchase Alert Banner — shows when new purchases need onboarding */}
+            <Suspense fallback={null}>
+              <AdminPurchaseAlert />
+            </Suspense>
+
             {/* Quick Stats Row */}
             <div className="grid grid-cols-4 gap-2">
               {[
