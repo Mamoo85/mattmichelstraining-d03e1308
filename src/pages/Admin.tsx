@@ -121,6 +121,7 @@ const AdminCommandDeck        = lazy(() => import("@/components/admin/AdminComma
 const AdminPurchaseAlert      = lazy(() => import("@/components/admin/AdminPurchaseAlert"));
 const AdminCommandCenter      = lazy(() => import("@/components/admin/AdminCommandCenter"));
 const AdminNotificationCenter = lazy(() => import("@/components/admin/AdminNotificationCenter"));
+const AdminScoutingDashboard  = lazy(() => import("@/components/admin/AdminScoutingDashboard"));
 
 /* ── Types ──────────────────────────────────────────────────────────────────── */
 interface Tool {
