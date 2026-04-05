@@ -140,6 +140,15 @@ export default function AdminClientHealth() {
           )}
         </div>
         <div className="text-[10px] font-bold text-muted-foreground">{c.price}</div>
+        {(c.status === "yellow" || c.status === "red") && c.email && (
+          <a
+            href={`mailto:${c.email}?subject=${encodeURIComponent(`Checking in — ${c.service}`)}&body=${encodeURIComponent(`Hi ${c.businessName},\n\nJust checking in on your ${c.service} service. Wanted to make sure everything is running smoothly on your end.\n\nLet me know if you need anything!\n\nBest,\nMatt`)}`}
+            className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded text-[8px] font-bold bg-primary/10 text-primary hover:bg-primary/20 transition"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Mail size={9} /> Check-in
+          </a>
+        )}
       </div>
     </div>
   );
