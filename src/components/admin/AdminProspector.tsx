@@ -401,11 +401,20 @@ export default function AdminProspector() {
 
   const leadsWithEmail = filtered.filter(l => l.email);
   const sourceLabel: Record<string, string> = {
-    outreach_leads: "Prospect", contractor_leads: "Contractor", b2b_clients: "B2B/Dental", web_design_leads: "Web Design",
+    outreach_leads: "Prospect", contractor_leads: "Contractor", b2b_clients: "B2B/Dental",
+    web_design_leads: "Web Design", social_media_clients: "Social", gbp_saas_clients: "GBP",
+    newsletter_subscribers: "Newsletter", estimate_drip_clients: "Estimate", noshow_clients: "No-Show",
+    invoice_chaser_clients: "Invoice", review_monitor_clients: "Reviews", homeowner_campaign_clients: "Homeowner",
+    referral_program_clients: "Referral", drip_conversions: "Converted",
   };
   const sourceBadgeColor: Record<string, string> = {
     outreach_leads: "bg-primary/20 text-primary", contractor_leads: "bg-orange-500/20 text-orange-400",
     b2b_clients: "bg-blue-500/20 text-blue-400", web_design_leads: "bg-purple-500/20 text-purple-400",
+    social_media_clients: "bg-pink-500/20 text-pink-400", gbp_saas_clients: "bg-emerald-500/20 text-emerald-400",
+    newsletter_subscribers: "bg-yellow-500/20 text-yellow-400", estimate_drip_clients: "bg-cyan-500/20 text-cyan-400",
+    noshow_clients: "bg-red-500/20 text-red-400", invoice_chaser_clients: "bg-amber-500/20 text-amber-400",
+    review_monitor_clients: "bg-indigo-500/20 text-indigo-400", homeowner_campaign_clients: "bg-lime-500/20 text-lime-400",
+    referral_program_clients: "bg-teal-500/20 text-teal-400", drip_conversions: "bg-green-500/20 text-green-400",
   };
 
   const SortButton = ({ field, label }: { field: SortField; label: string }) => (
