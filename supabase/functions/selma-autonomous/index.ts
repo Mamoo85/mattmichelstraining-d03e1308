@@ -131,6 +131,13 @@ const PRODUCT_TABLES = [
   ]},
 ];
 
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") ?? "";
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
+const DATAFORSEO_LOGIN = Deno.env.get("DATAFORSEO_LOGIN") ?? "";
+const DATAFORSEO_PASSWORD = Deno.env.get("DATAFORSEO_PASSWORD") ?? "";
+
 // DataForSEO: fetch real keyword volume + CPC
 async function getKeywordData(keywords: string[], login: string, password: string): Promise<Array<{ keyword: string; volume: number; cpc: number; competition: number }>> {
   const results: Array<{ keyword: string; volume: number; cpc: number; competition: number }> = [];
@@ -179,14 +186,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-    const lovableKey = Deno.env.get("LOVABLE_API_KEY") ?? "";
-    const resendKey = Deno.env.get("RESEND_API_KEY") ?? "";
-    const dfLogin = Deno.env.get("DATAFORSEO_LOGIN") ?? "";
-    const dfPassword = Deno.env.get("DATAFORSEO_PASSWORD") ?? "";
-
-    const supabase = createClient(supabaseUrl, serviceKey);
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     // 1. Build business state snapshot
     const snapshot: Array<{ name: string; active: number; price: number; ltv: number; capacity: string; keywords: string[]; priority: number }> = [];
