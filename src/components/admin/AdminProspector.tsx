@@ -221,6 +221,7 @@ export default function AdminProspector() {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [editingLead, setEditingLead] = useState<UnifiedLead | null>(null);
   const [sendingId, setSendingId] = useState<string | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // ── Data fetchers ──
   const fetchProspects = async () => {
