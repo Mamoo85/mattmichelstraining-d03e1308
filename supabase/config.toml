@@ -1089,3 +1089,24 @@ verify_jwt = false
 
 [functions.hoa-cold-outreach]
 verify_jwt = false
+
+[functions.create-reg-filing-checkout]
+verify_jwt = false
+
+[functions.create-bid-intel-checkout]
+verify_jwt = false
+
+[functions.reg-filing-scan]
+verify_jwt = false
+
+[functions.bid-intel-scan]
+verify_jwt = false
+
+[functions.reg-filing-approve]
+verify_jwt = false
+
+[functions.bid-intel-approve]
+verify_jwt = false
+
+[functions.morning-digest]
+verify_jwt = false

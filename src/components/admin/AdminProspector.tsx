@@ -37,11 +37,6 @@ const INDUSTRIES = [
   "welding shop", "industrial supply distributor", "packaging manufacturer",
 ];
 
-const CITIES = [
-  "Detroit MI", "Grosse Pointe MI", "Harper Woods MI", "Eastpointe MI",
-  "St. Clair Shores MI", "Warren MI", "Roseville MI", "Sterling Heights MI",
-  "Royal Oak MI", "Ferndale MI", "Dearborn MI", "Livonia MI", "Cleveland OH",
-];
 
 // ── Shared Lead Interface ──
 interface UnifiedLead {
@@ -202,9 +197,13 @@ export default function AdminProspector() {
   const [activeTab, setActiveTab] = useState("prospects");
 
   // Prospecting controls
-  const [industry, setIndustry] = useState("plumber");
-  const [city, setCity] = useState("Grosse Pointe MI");
+  const [query, setQuery] = useState("");
+  const [location, setLocation] = useState("Grosse Pointe, MI");
+  const [radius, setRadius] = useState("10");
   const [limit, setLimit] = useState("10");
+  const [minGapScore, setMinGapScore] = useState("30");
+  const [hasWebsite, setHasWebsite] = useState("any");
+  const [maxReviews, setMaxReviews] = useState("");
   const [running, setRunning] = useState(false);
   const [dripRunning, setDripRunning] = useState(false);
   const [lastRun, setLastRun] = useState<RunResult | null>(null);
@@ -312,7 +311,7 @@ export default function AdminProspector() {
   const runProspecting = async () => {
     setRunning(true);
     try {
-      const { data, error } = await supabase.functions.invoke("prospect-local-businesses", { body: { industry, city, limit: parseInt(limit, 10) } });
+      const { data, error } = await supabase.functions.invoke("prospect-local-businesses", { body: { query: query || undefined, location, radius: parseInt(radius, 10), limit: parseInt(limit, 10), minGapScore: parseInt(minGapScore, 10), hasWebsite: hasWebsite !== "any" ? hasWebsite : undefined, maxReviews: maxReviews ? parseInt(maxReviews, 10) : undefined } });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setLastRun(data);
@@ -455,25 +454,57 @@ export default function AdminProspector() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div>
-              <Label className="text-xs">Industry</Label>
-              <Select value={industry} onValueChange={setIndustry}>
-                <SelectTrigger className="text-xs h-8 mt-1"><SelectValue /></SelectTrigger>
-                <SelectContent>{INDUSTRIES.map(i => <SelectItem key={i} value={i} className="text-xs">{i}</SelectItem>)}</SelectContent>
-              </Select>
+              <Label className="text-xs">Search (blank = all industries)</Label>
+              <Input value={query} onChange={e => setQuery(e.target.value)} placeholder="e.g. plumber, dentist, machine shop..." className="text-xs h-8 mt-1" />
+              <div className="flex flex-wrap gap-1 mt-1.5">
+                {["plumber", "electrician", "dentist", "roofer", "HVAC", "restaurant", "law firm", "machine shop"].map(q => (
+                  <Badge key={q} variant={query === q ? "default" : "outline"} className="text-[9px] cursor-pointer px-1.5 py-0" onClick={() => setQuery(query === q ? "" : q)}>{q}</Badge>
+                ))}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label className="text-xs">Location</Label>
+                <Input value={location} onChange={e => setLocation(e.target.value)} placeholder="City, ST" className="text-xs h-8 mt-1" />
+              </div>
+              <div>
+                <Label className="text-xs">Radius (miles)</Label>
+                <Select value={radius} onValueChange={setRadius}>
+                  <SelectTrigger className="text-xs h-8 mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>{["5", "10", "15", "25", "50"].map(r => <SelectItem key={r} value={r} className="text-xs">{r} mi</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <div>
+                <Label className="text-xs">Max Leads</Label>
+                <Select value={limit} onValueChange={setLimit}>
+                  <SelectTrigger className="text-xs h-8 mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>{["5", "10", "15", "25"].map(l => <SelectItem key={l} value={l} className="text-xs">{l}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Min Gap</Label>
+                <Select value={minGapScore} onValueChange={setMinGapScore}>
+                  <SelectTrigger className="text-xs h-8 mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>{["0", "10", "20", "30", "50", "70"].map(s => <SelectItem key={s} value={s} className="text-xs">{s}+</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Website</Label>
+                <Select value={hasWebsite} onValueChange={setHasWebsite}>
+                  <SelectTrigger className="text-xs h-8 mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="any" className="text-xs">Any</SelectItem>
+                    <SelectItem value="yes" className="text-xs">Has site</SelectItem>
+                    <SelectItem value="no" className="text-xs">No site</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div>
-              <Label className="text-xs">City / Area</Label>
-              <Select value={city} onValueChange={setCity}>
-                <SelectTrigger className="text-xs h-8 mt-1"><SelectValue /></SelectTrigger>
-                <SelectContent>{CITIES.map(c => <SelectItem key={c} value={c} className="text-xs">{c}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Max Leads</Label>
-              <Select value={limit} onValueChange={setLimit}>
-                <SelectTrigger className="text-xs h-8 mt-1"><SelectValue /></SelectTrigger>
-                <SelectContent>{["5", "10", "15", "25"].map(l => <SelectItem key={l} value={l} className="text-xs">{l}</SelectItem>)}</SelectContent>
-              </Select>
+              <Label className="text-xs">Max Reviews (optional)</Label>
+              <Input value={maxReviews} onChange={e => setMaxReviews(e.target.value.replace(/\D/g, ""))} placeholder="e.g. 20" className="text-xs h-8 mt-1" />
             </div>
             <Button onClick={runProspecting} disabled={running} className="w-full text-xs font-bold" size="sm">
               {running ? <><Loader2 size={12} className="animate-spin mr-1.5" /> Prospecting...</> : <><Play size={12} className="mr-1.5" /> Run Prospecting</>}

@@ -53,6 +53,9 @@ const SERVICE_TABLES = [
   { table: "bedtime_story_clients", service: "AI Bedtime Stories", price: "$4.99/mo", lastField: null, freq: 0 },
   { table: "crime_digest_clients", service: "Neighborhood Crime Digest", price: "$19/mo", lastField: null, freq: 0 },
   { table: "license_monitor_clients", service: "Business License Monitor", price: "$25/mo", lastField: null, freq: 0 },
+  // ── High-Ticket Products ─────────────────────────────────────────────────
+  { table: "reg_filing_clients", service: "Regulatory Filing Monitor", price: "$497/mo", lastField: "last_scan_at", freq: 1 },
+  { table: "bid_intel_clients", service: "Bid Intelligence", price: "$599/mo", lastField: "last_scan_at", freq: 1 },
 ] as const;
 
 function daysBetween(dateStr: string | null): number | null {

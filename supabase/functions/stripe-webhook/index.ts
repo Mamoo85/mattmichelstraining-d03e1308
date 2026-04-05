@@ -881,6 +881,88 @@ serve(async (req) => {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // ── REGULATORY FILING MONITOR ($497/mo) — manufacturer compliance ────
+      if (meta.type === "reg_filing_monitor") {
+        try {
+          const email = meta.customer_email || customerEmail;
+          if (email) {
+            const rfSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+            await rfSb.from("reg_filing_clients" as any).insert({
+              customer_email: email,
+              customer_name: meta.customer_name || customerName || null,
+              company_name: meta.company_name || null,
+              naics_codes: meta.naics_codes || null,
+              state: meta.state || null,
+              additional_states: meta.additional_states || null,
+              phone: meta.phone || null,
+              stripe_subscription_id: session.subscription as string || null,
+              subscription_status: "active",
+            });
+            fetch(`${SUPABASE_URL}/functions/v1/reg-filing-scan`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
+              body: JSON.stringify({ trigger: "new_client", email }),
+            }).catch((e) => console.error("[WEBHOOK] reg-filing-scan initial fire failed:", e));
+            if (RESEND_API_KEY) {
+              await sendM2Email(email, "Your Regulatory Filing Monitor is Active", m2Email({
+                greeting: `Hey${meta.customer_name ? " " + meta.customer_name : ""} —`,
+                headline: "Your Regulatory Filing Monitor is Live",
+                body: `<p style="margin:0 0 12px"><strong>We're now monitoring the Federal Register and ${meta.state || "your state"} EPA portal for regulations affecting ${meta.company_name || "your company"}.</strong></p>
+<p style="margin:0 0 8px">&#128269; <strong>Daily scans:</strong> Federal Register API + state EPA portals filtered by your NAICS codes (${meta.naics_codes || "as configured"})</p>
+<p style="margin:0 0 8px">&#128203; <strong>Draft filings:</strong> AI auto-generates compliance filing drafts when action is required</p>
+<p style="margin:0 0 8px">&#9200; <strong>Deadline calendar:</strong> Reminders at 30, 14, 7, 3, and 1 day before every filing deadline</p>
+<p style="margin:0 0 8px">&#128241; <strong>SMS alerts:</strong> Critical regulatory changes sent immediately to ${meta.phone || "your phone"}</p>
+<p style="margin:0;color:#64748b;font-size:13px">Your first scan is running now. You'll receive your first regulatory brief within 24 hours. Reply with any questions!</p>`,
+                cta: { text: "View Your Dashboard", url: "https://www.mattmichelstraining.com/regulatory-filing-monitor/dashboard" },
+              }));
+              await notifyMatt(`New Reg Filing Monitor — ${meta.company_name || email} ($497/mo)`, `<p><strong>${meta.company_name || email}</strong><br>Email: ${email}<br>NAICS: ${meta.naics_codes || "n/a"}<br>State: ${meta.state || "n/a"}<br>Phone: ${meta.phone || "n/a"}</p>`);
+            }
+          }
+        } catch (e) { console.error("[WEBHOOK] reg_filing_monitor error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── BID INTELLIGENCE & PROPOSAL FACTORY ($599/mo) — subcontractor bids ─
+      if (meta.type === "bid_intel_monitor") {
+        try {
+          const email = meta.customer_email || customerEmail;
+          if (email) {
+            const biSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+            await biSb.from("bid_intel_clients" as any).insert({
+              customer_email: email,
+              customer_name: meta.customer_name || customerName || null,
+              company_name: meta.company_name || null,
+              trade: meta.trade || "general",
+              service_territory: meta.service_territory || null,
+              max_bid_radius_miles: meta.max_bid_radius_miles ? parseInt(meta.max_bid_radius_miles) : 50,
+              phone: meta.phone || null,
+              stripe_subscription_id: session.subscription as string || null,
+              subscription_status: "active",
+            });
+            fetch(`${SUPABASE_URL}/functions/v1/bid-intel-scan`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
+              body: JSON.stringify({ trigger: "new_client", email }),
+            }).catch((e) => console.error("[WEBHOOK] bid-intel-scan initial fire failed:", e));
+            if (RESEND_API_KEY) {
+              await sendM2Email(email, "Your Bid Intelligence Monitor is Active", m2Email({
+                greeting: `Hey${meta.customer_name ? " " + meta.customer_name : ""} —`,
+                headline: "Bid Intelligence & Proposal Factory is Live",
+                body: `<p style="margin:0 0 12px"><strong>We're now scanning bid boards for ${meta.trade || "your trade"} opportunities in ${meta.service_territory || "your area"}.</strong></p>
+<p style="margin:0 0 8px">&#128269; <strong>Daily scans:</strong> SAM.gov, BidNet, state procurement portals — filtered by your trade and territory</p>
+<p style="margin:0 0 8px">&#129302; <strong>AI scoring (0-100):</strong> Every bid scored on trade match, location, project size, and deadline feasibility</p>
+<p style="margin:0 0 8px">&#128203; <strong>Auto-proposals:</strong> First-draft proposals generated for high-match opportunities (70+ score)</p>
+<p style="margin:0 0 8px">&#128241; <strong>72-hour alerts:</strong> SMS when any matched bid is due within 3 days</p>
+<p style="margin:0;color:#64748b;font-size:13px">Your first scan is running now. You'll see matching opportunities within 24 hours. Reply with any questions!</p>`,
+                cta: { text: "View Your Bid Board", url: "https://www.mattmichelstraining.com/bid-intelligence/dashboard" },
+              }));
+              await notifyMatt(`New Bid Intelligence — ${meta.company_name || email} ($599/mo)`, `<p><strong>${meta.company_name || email}</strong><br>Email: ${email}<br>Trade: ${meta.trade || "n/a"}<br>Territory: ${meta.service_territory || "n/a"}<br>Phone: ${meta.phone || "n/a"}</p>`);
+            }
+          }
+        } catch (e) { console.error("[WEBHOOK] bid_intel_monitor error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       // ── AI REGULATORY CHANGE MONITOR — subscription ──────────────────────
       if (meta.type === "regulatory_monitor") {
         try {
