@@ -226,9 +226,35 @@ async function scrapeEmailFromWebsite(websiteUrl: string): Promise<string | null
   }
 }
 
+// ── Geocode an address to lat/lng ──
+async function geocodeAddress(address: string, apiKey: string): Promise<{ lat: number; lng: number }> {
+  const res = await fetch(
+    `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`
+  );
+  const data = await res.json();
+  if (data.results?.[0]) {
+    const loc = data.results[0].geometry.location;
+    return { lat: loc.lat, lng: loc.lng };
+  }
+  throw new Error(`Could not geocode: ${address}`);
+}
+
 // ── Google Maps Places API: Text Search ──
-async function searchGoogleMaps(query: string, apiKey: string): Promise<any[]> {
+async function searchGoogleMaps(
+  query: string,
+  apiKey: string,
+  locationBias?: { lat: number; lng: number; radiusMeters: number },
+): Promise<any[]> {
   const url = `https://places.googleapis.com/v1/places:searchText`;
+  const body: any = { textQuery: query, maxResultCount: 20 };
+  if (locationBias) {
+    body.locationBias = {
+      circle: {
+        center: { latitude: locationBias.lat, longitude: locationBias.lng },
+        radiusMeters: locationBias.radiusMeters,
+      },
+    };
+  }
   const res = await fetch(url, {
     method: "POST",
     headers: {
@@ -236,7 +262,7 @@ async function searchGoogleMaps(query: string, apiKey: string): Promise<any[]> {
       "X-Goog-Api-Key": apiKey,
       "X-Goog-FieldMask": "places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.websiteUri,places.rating,places.userRatingCount,places.id,places.googleMapsUri",
     },
-    body: JSON.stringify({ textQuery: query, maxResultCount: 20 }),
+    body: JSON.stringify(body),
   });
 
   if (!res.ok) {
@@ -398,7 +424,13 @@ serve(async (req) => {
 
     let body: any = {};
     try { body = await req.json(); } catch { /* cron may send empty body */ }
-    let { industry, city, limit = 10, mode } = body;
+    let { query, location, radius = 10, limit = 10, mode, minGapScore = 30, hasWebsite, maxReviews,
+          // legacy support
+          industry, city } = body;
+
+    // Legacy: convert old-style industry/city to new format
+    if (!query && industry) query = industry;
+    if (!location && city) location = city;
 
     // ── LINKEDIN BATCH MODE ──
     if (mode === "linkedin_batch") {
@@ -511,21 +543,35 @@ serve(async (req) => {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // ── DEFAULT MODE: Day-rotation prospecting via Google Maps ──
-    if (!industry) {
+    // ── DEFAULT MODE: Radius-based prospecting via Google Maps ──
+    // For cron runs (no body), fall back to day-rotation
+    if (!query) {
       const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
-      industry = INDUSTRY_ROTATION[dayOfYear % INDUSTRY_ROTATION.length];
+      query = INDUSTRY_ROTATION[dayOfYear % INDUSTRY_ROTATION.length];
+      // Keep legacy industry for landing page lookup
+      if (!industry) industry = query;
     }
-    if (!city) {
+    if (!location) {
       const dayOfMonth = new Date().getDate();
-      city = CITY_ROTATION[dayOfMonth % CITY_ROTATION.length];
+      location = CITY_ROTATION[dayOfMonth % CITY_ROTATION.length];
     }
 
-    const landingPage = getIndustryPage(industry);
-    log("Starting prospecting run", { industry, city, limit, source: "google_maps", landingPage: landingPage.path });
+    const landingPage = getIndustryPage(industry || query);
+    log("Starting prospecting run", { query, location, radius, limit, minGapScore, source: "google_maps", landingPage: landingPage.path });
 
-    // Step 1: Google Maps Text Search
-    const places = await searchGoogleMaps(`${industry} in ${city}`, GOOGLE_MAPS_API_KEY);
+    // Step 1: Geocode location + Google Maps Text Search with radius
+    let locationBias: { lat: number; lng: number; radiusMeters: number } | undefined;
+    try {
+      const coords = await geocodeAddress(location, GOOGLE_MAPS_API_KEY);
+      const radiusMeters = Math.min((radius || 10) * 1609, 50000); // miles → meters, max 50km
+      locationBias = { lat: coords.lat, lng: coords.lng, radiusMeters };
+      log("Geocoded location", { location, ...coords, radiusMeters });
+    } catch (geoErr) {
+      log("Geocoding failed, searching without location bias", { error: String(geoErr) });
+    }
+
+    const searchQuery = query.includes(" in ") ? query : `${query} in ${location}`;
+    const places = await searchGoogleMaps(searchQuery, GOOGLE_MAPS_API_KEY, locationBias);
     log("Google Maps results", { count: places.length });
 
     if (places.length === 0) {
@@ -550,14 +596,19 @@ serve(async (req) => {
 
       try {
         const gapScore = scoreDigitalGap(place);
-        if (gapScore < 30) { skipped++; continue; }
+        if (gapScore < (minGapScore || 30)) { skipped++; continue; }
 
-        const businessName = place.displayName?.text || `${industry} in ${city}`;
+        const businessName = place.displayName?.text || `${query} in ${location}`;
         const website = place.websiteUri || "";
         const phone = place.nationalPhoneNumber || "";
         const address = place.formattedAddress || "";
         const rating = place.rating || 0;
         const reviewCount = place.userRatingCount || 0;
+
+        // Apply optional filters
+        if (hasWebsite === "yes" && !website) { skipped++; continue; }
+        if (hasWebsite === "no" && website) { skipped++; continue; }
+        if (maxReviews && reviewCount > maxReviews) { skipped++; continue; }
 
         // Dedup check against outreach_leads
         const { data: existing } = await serviceClient
@@ -596,7 +647,7 @@ serve(async (req) => {
 
         // ── AGENT 1: THE SCOUT — Qualify the lead ──
         const scoutResult = await runScoutAgent(
-          businessName, industry, city, website, rating, reviewCount
+          businessName, industry || query, location, website, rating, reviewCount
         );
         log("Scout result", { business: businessName, score: scoutResult.lead_score, service: scoutResult.target_service_to_pitch, flaw: scoutResult.custom_flaw_observation });
 
@@ -607,7 +658,7 @@ serve(async (req) => {
 
         if (scoutResult.lead_score >= 7 && contactEmail && RESEND_API_KEY && !capReached) {
           const sniperOutput = await runSniperAgent(
-            businessName, industry, city,
+            businessName, industry || query, location,
             scoutResult.custom_flaw_observation, scoutResult.target_service_to_pitch,
             landingPage
           );
@@ -641,9 +692,9 @@ serve(async (req) => {
                 email: contactEmail,
                 phone: phone || null,
                 status: "new",
-                description: `SOURCE: auto_prospected | INDUSTRY: ${industry} | CITY: ${city} | LANDING_PAGE: ${landingPage.path}`,
+                description: `SOURCE: auto_prospected | INDUSTRY: ${industry || query} | LOCATION: ${location} | LANDING_PAGE: ${landingPage.path}`,
               });
-              log("Bridged into web_design_leads for drip", { email: contactEmail, industry });
+              log("Bridged into web_design_leads for drip", { email: contactEmail, industry: industry || query });
             }
           } else {
             emailStatus = "send_failed";
@@ -661,8 +712,8 @@ serve(async (req) => {
           .insert({
             business_name: businessName,
             email: contactEmail,
-            industry,
-            city,
+            industry: industry || query,
+            city: location,
             phone,
             website_status: website ? "has_website" : "no_website",
             lead_score: scoutResult.lead_score,
@@ -687,7 +738,7 @@ serve(async (req) => {
       }
     }
 
-    log("Run complete", { found: places.length, queued, emailed, skipped, industry, city, source: "google_maps" });
+    log("Run complete", { found: places.length, queued, emailed, skipped, query, location, radius, source: "google_maps" });
 
     return new Response(
       JSON.stringify({
@@ -696,10 +747,11 @@ serve(async (req) => {
         emailed,
         skipped,
         leads: newLeads,
-        industry,
-        city,
+        query,
+        location,
+        radius,
         source: "google_maps",
-        message: `Prospecting complete. ${queued} leads found, ${emailed} cold emails sent to ${industry} businesses in ${city}.`,
+        message: `Prospecting complete. ${queued} leads found, ${emailed} cold emails sent for "${query}" within ${radius}mi of ${location}.`,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
