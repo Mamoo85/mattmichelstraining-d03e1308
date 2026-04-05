@@ -431,7 +431,13 @@ export default function AdminProspector() {
           <h2 className="text-lg font-bold">Lead Command Center</h2>
           <p className="text-xs text-muted-foreground">Prospect, search, sort & outreach across all lead sources</p>
         </div>
-        <Badge variant="outline" className="text-xs">Unified CRM</Badge>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="text-xs h-7 gap-1" onClick={() => setIsExpanded(!isExpanded)}>
+            {isExpanded ? <Minimize size={12} /> : <Expand size={12} />}
+            {isExpanded ? "Collapse" : "Expand"}
+          </Button>
+          <Badge variant="outline" className="text-xs">Unified CRM</Badge>
+        </div>
       </div>
 
       {/* Prospecting + Drip Controls */}
