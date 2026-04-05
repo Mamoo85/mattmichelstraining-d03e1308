@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState, useEffect, memo } from "react";
-import { QueryClient } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
@@ -303,21 +303,6 @@ const NewHireCheck = lazyRetry(() => import("./pages/NewHireCheck"));
 const StewartDentalProduction = lazyRetry(() => import("./pages/StewartDentalProduction"));
 const StewartDentalPrivacy = lazyRetry(() => import("./pages/StewartDentalPrivacy"));
 const DJConleyDemo1 = lazyRetry(() => import("./pages/DJConleyDemo1"));
-
-export const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 30_000,
-      gcTime: 24 * 60 * 60_000, // 24h — keep in cache for offline
-      refetchOnWindowFocus: false,
-      retry: 1,
-      networkMode: "offlineFirst",
-    },
-    mutations: {
-      networkMode: "offlineFirst",
-    },
-  },
-});
 
 const persister = createSyncStoragePersister({
   storage: safeLocalStorage,

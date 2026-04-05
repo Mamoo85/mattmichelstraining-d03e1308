@@ -261,7 +261,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     try {
-      const { queryClient } = await import("@/App");
+      const { queryClient } = await import("@/lib/queryClient");
       queryClient.clear();
     } catch (e) {
       console.warn("[Auth] Failed to clear query cache on sign out:", e);
