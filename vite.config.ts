@@ -81,6 +81,9 @@ export default defineConfig(({ mode }) => {
         },
         includeAssets: ["favicon.ico", "favicon.png", "apple-touch-icon.png", "robots.txt"],
         workbox: {
+          cleanupOutdatedCaches: true,
+          clientsClaim: true,
+          skipWaiting: true,
           navigateFallbackDenylist: [/^\/~oauth/, /[?#].*access_token/, /[?#].*type=recovery/],
           globPatterns: ["**/*.{js,css,html,ico,png,jpg,svg,woff2}"],
         },
