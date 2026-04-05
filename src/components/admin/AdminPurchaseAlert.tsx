@@ -26,6 +26,13 @@ interface PendingClient {
   started_at: string;
 }
 
+interface B2BClientRow {
+  id: string;
+  email: string;
+  business_name: string;
+  phone: string | null;
+}
+
 export default function AdminPurchaseAlert() {
   const [expandedClient, setExpandedClient] = useState<string | null>(null);
 
@@ -49,7 +56,10 @@ export default function AdminPurchaseAlert() {
         .select("id, business_name, email, phone")
         .in("id", clientIds);
 
-      const clientMap = new Map((clients || []).map((c: any) => [c.id, c]));
+      const typedClients = (clients ?? []) as B2BClientRow[];
+      const clientMap = new Map<string, B2BClientRow>(
+        typedClients.map((client) => [client.id, client])
+      );
 
       return subs
         .map((s: any) => {
