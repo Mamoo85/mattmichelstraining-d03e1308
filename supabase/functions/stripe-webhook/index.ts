@@ -3263,6 +3263,61 @@ ${fwdInstructions}`,
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // ── DIGITAL FOUNDATION — website + GBP + missed call bundle ──────────
+      if (meta.type === "digital_foundation") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            // Provision GBP client
+            await (sb.from as any)("gbp_saas_clients").upsert({
+              email,
+              business_name: meta.businessName || email,
+              contact_name: meta.name || null,
+              phone: meta.phone || null,
+              active: true,
+              plan: "basic",
+              stripe_subscription_id: session.subscription as string || null,
+            }, { onConflict: "email" });
+
+            // Provision Missed Call client (Twilio number provisioned separately via missed_call flow)
+            await (sb.from as any)("missed_call_clients").upsert({
+              email,
+              business_name: meta.businessName || email,
+              contact_name: meta.name || null,
+              business_phone: meta.phone || null,
+              active: false,
+              stripe_subscription_id: session.subscription as string || null,
+            }, { onConflict: "email" });
+          }
+
+          await Promise.all([
+            sendM2Email(
+              email,
+              "Welcome to Your Digital Foundation — Let's Build Your Site",
+              m2Email({
+                greeting: `Hey${meta.name ? " " + meta.name : ""} —`,
+                headline: "Your Digital Foundation Is Locked In",
+                body: `<p style="margin:0 0 12px"><strong>Here's what happens next:</strong></p>
+<ol style="margin:0 0 16px;padding-left:20px;color:#475569">
+<li><strong>Matt reaches out today</strong> to discuss your new website — design, pages, and content</li>
+<li><strong>Your site goes live within 5-7 business days</strong></li>
+<li><strong>Google auto-posts start immediately</strong> after your Google Business Profile is connected</li>
+<li><strong>Missed Call Text-Back</strong> gets set up once your site is live</li>
+</ol>
+<p style="margin:0 0 8px">Your 7-day free trial has started. You won't be charged until day 8.</p>
+<p style="margin:0 0 8px">Plan: <strong>${meta.plan === "starter" ? "$499 setup + $149/mo" : "$1,500 setup + $99/mo"}</strong></p>
+<p style="margin:0 0 8px">Reply to this email or call anytime — I respond personally.</p>`,
+              }),
+            ),
+            notifyMatt(
+              `🏗️ NEW DIGITAL FOUNDATION CLIENT: ${meta.businessName || email}`,
+              `<p><strong>${meta.businessName || email}</strong><br>Name: ${meta.name || "n/a"}<br>Email: ${email}<br>Phone: ${meta.phone || "n/a"}<br>Website: ${meta.website || "none"}<br>Plan: ${meta.plan === "starter" ? "$499 + $149/mo" : "$1,500 + $99/mo"}</p><p><strong>Action items:</strong></p><ol><li>Call/text the client to kick off website design</li><li>Connect their GBP for auto-posting</li><li>Provision Twilio number for missed call text-back</li></ol>`,
+            ),
+          ]);
+        } catch (e) { console.error("[WEBHOOK] digital_foundation error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       // ── REPUTATION DASHBOARD — subscription ───────────────────────────────
       if (meta.type === "reputation_dashboard_subscription") {
         try {
