@@ -3,14 +3,13 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendSMS } from "../_shared/twilio.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
 const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY") || "";
-const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
-const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
 const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 
 async function notifyMatt(subject: string, html: string) {
@@ -24,21 +23,6 @@ async function notifyMatt(subject: string, html: string) {
       html,
     }),
   });
-}
-
-async function sendSMS(to: string, body: string) {
-  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_PHONE_NUMBER) return;
-  await fetch(
-    `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Basic ${btoa(TWILIO_ACCOUNT_SID + ":" + TWILIO_AUTH_TOKEN)}`,
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: new URLSearchParams({ To: to, From: TWILIO_PHONE_NUMBER, Body: body }),
-    }
-  );
 }
 
 async function firecrawlSearch(query: string): Promise<Array<{ url: string; markdown: string; title: string }>> {
@@ -251,7 +235,7 @@ Return ONLY the JSON array, no other text.`;
       if (highPriority.length && client.phone) {
         const topOpp = highPriority[0];
         const smsBody = `M² RFP Alert 🔥\n${highPriority.length} high-priority ${highPriority.length === 1 ? "contract" : "contracts"} found for ${businessName}!\n\nTop match: ${topOpp.title} (${topOpp.fit_score}/100)\nDeadline: ${topOpp.deadline}\n\nCheck your email for full details.`;
-        await sendSMS(client.phone, smsBody);
+        await sendSMS(client.phone, TWILIO_PHONE_NUMBER, smsBody, "rfp_alerts");
       }
 
       // Update last_alert_at

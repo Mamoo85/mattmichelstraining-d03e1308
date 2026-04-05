@@ -9,11 +9,10 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendSMS } from "../_shared/twilio.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const TWILIO_SID = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
-const TWILIO_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
 const TWILIO_FROM = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 const MATT_PHONE = Deno.env.get("ADMIN_PHONE_NUMBER") || "+13138064952";
 
@@ -25,22 +24,6 @@ interface Issue {
   business: string;
   detail: string;
   mrrAtRisk: number;
-}
-
-async function sendSMS(to: string, body: string): Promise<void> {
-  if (!TWILIO_SID || !TWILIO_TOKEN || !TWILIO_FROM) {
-    console.log("[sms-product-monitor] Twilio not configured — SMS skipped");
-    return;
-  }
-  const url = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_SID}/Messages.json`;
-  const auth = btoa(`${TWILIO_SID}:${TWILIO_TOKEN}`);
-  const body_params = new URLSearchParams({ To: to, From: TWILIO_FROM, Body: body });
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { Authorization: `Basic ${auth}`, "Content-Type": "application/x-www-form-urlencoded" },
-    body: body_params.toString(),
-  });
-  if (!res.ok) console.error("[sms-product-monitor] Twilio error:", await res.text());
 }
 
 serve(async (req) => {
@@ -261,7 +244,7 @@ serve(async (req) => {
   lines.push("\nmattmichelstraining.com/admin");
 
   const smsBody = lines.join("\n");
-  await sendSMS(MATT_PHONE, smsBody);
+  await sendSMS(MATT_PHONE, TWILIO_FROM, smsBody, "sms_product_monitor");
 
   return new Response(JSON.stringify({ status: "issues_found", criticals: criticals.length, warnings: warnings.length, mrrAtRisk: totalMrrAtRisk, smsSent: true }), {
     headers: { ...CORS, "Content-Type": "application/json" },
