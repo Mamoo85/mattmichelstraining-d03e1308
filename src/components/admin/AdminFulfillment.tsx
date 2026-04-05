@@ -8,30 +8,8 @@ import {
   ChevronDown, ChevronRight, CheckCircle2, Circle,
   Mail, ExternalLink, Copy, Phone, Globe, AlertCircle, Loader2
 } from "lucide-react";
-
-/* ── Types ─────────────────────────────────────────────────── */
-interface FulfillmentStep {
-  label: string;
-  description: string;
-  action: "send_email" | "manual_check" | "field_input" | "navigate" | "complete" | "check_website";
-  emailSubject?: string;
-  emailBody?: string;
-  checkUrl?: string;
-  checkText?: string;
-  fieldLabel?: string;
-  fieldPlaceholder?: string;
-  dbField?: "phone" | "website" | "notes";
-  navigateTo?: string;
-  navigateText?: string;
-  nextStage: string;
-}
-
-interface ProductGuide {
-  name: string;
-  icon: string;
-  needsSetup: boolean;
-  steps: FulfillmentStep[];
-}
+import { getGuide, AUTO_PRODUCTS } from "@/lib/fulfillment-guides";
+import type { FulfillmentStep, ProductGuide } from "@/lib/fulfillment-guides";
 
 interface ClientRow {
   sub_id: string;
