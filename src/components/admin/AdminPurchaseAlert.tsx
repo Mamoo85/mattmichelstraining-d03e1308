@@ -49,7 +49,7 @@ export default function AdminPurchaseAlert() {
         .select("id, business_name, email, phone")
         .in("id", clientIds);
 
-      const clientMap = new Map((clients || []).map((c: any) => [c.id, c]));
+      const clientMap = new Map((clients as any[] || []).map((c: any) => [c.id, c]));
 
       return subs
         .map((s: any) => {
