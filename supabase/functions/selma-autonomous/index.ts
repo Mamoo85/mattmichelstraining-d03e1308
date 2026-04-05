@@ -248,8 +248,8 @@ Deno.serve(async (req) => {
     const allKeywords = [...priorityKeywords, ...tier2Keywords];
     
     let keywordIntel = "";
-    if (dfLogin && dfPassword && allKeywords.length > 0) {
-      const kwData = await getKeywordData(allKeywords, dfLogin, dfPassword);
+    if (DATAFORSEO_LOGIN && DATAFORSEO_PASSWORD && allKeywords.length > 0) {
+      const kwData = await getKeywordData(allKeywords, DATAFORSEO_LOGIN, DATAFORSEO_PASSWORD);
       if (kwData.length > 0) {
         keywordIntel = "\n\nREAL GOOGLE ADS KEYWORD DATA (from DataForSEO — actual CPC & volume):\n" +
           kwData.map(k => `• "${k.keyword}" — Volume: ${k.volume}/mo, CPC: $${k.cpc.toFixed(2)}, Competition: ${(k.competition * 100).toFixed(0)}%`)
@@ -320,7 +320,7 @@ Respond in this EXACT JSON format (no markdown, ONLY valid JSON):
     const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${lovableKey}`,
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -375,12 +375,12 @@ Respond in this EXACT JSON format (no markdown, ONLY valid JSON):
     if (insertError) throw new Error(`Insert error: ${insertError.message}`);
 
     // 7. Email Matt
-    if (resendKey) {
+    if (RESEND_API_KEY) {
       await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${resendKey}`,
+          Authorization: `Bearer ${RESEND_API_KEY}`,
         },
         body: JSON.stringify({
           from: "Selma — M² Marketing <matt@mattmichelstraining.com>",
@@ -395,7 +395,7 @@ Respond in this EXACT JSON format (no markdown, ONLY valid JSON):
             <p><strong>Projected CAC:</strong> $${campaign.projected_cac}</p>
             <p><strong>Projected LTV:</strong> $${campaign.projected_ltv}</p>
             <p><strong>Projected ROAS:</strong> ${campaign.projected_roas}x</p>
-            <p><strong>Data Source:</strong> ${dfLogin ? "✅ Real DataForSEO CPC data" : "⚠️ AI estimates"}</p>
+            <p><strong>Data Source:</strong> ${DATAFORSEO_LOGIN ? "✅ Real DataForSEO CPC data" : "⚠️ AI estimates"}</p>
             <hr/>
             <p><strong>Reasoning:</strong> ${campaign.reasoning}</p>
             <hr/>
@@ -405,7 +405,7 @@ Respond in this EXACT JSON format (no markdown, ONLY valid JSON):
       });
     }
 
-    return new Response(JSON.stringify({ status: "campaign_proposed", service: campaign.service, platform: campaign.platform, data_source: dfLogin ? "dataforseo" : "ai_estimate" }), {
+    return new Response(JSON.stringify({ status: "campaign_proposed", service: campaign.service, platform: campaign.platform, data_source: DATAFORSEO_LOGIN ? "dataforseo" : "ai_estimate" }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });
   } catch (e: unknown) {
