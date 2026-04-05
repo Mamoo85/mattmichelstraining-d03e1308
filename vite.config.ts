@@ -59,15 +59,8 @@ function asyncCss(): Plugin {
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
-  const supabaseUrl = env.VITE_SUPABASE_URL || SUPABASE_URL_FALLBACK;
-  const supabasePublishableKey =
-    env.VITE_SUPABASE_PUBLISHABLE_KEY || env.VITE_SUPABASE_ANON_KEY || SUPABASE_PUBLISHABLE_KEY_FALLBACK;
 
   return {
-    define: {
-      "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(supabaseUrl),
-      "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(supabasePublishableKey),
-    },
     server: {
       host: "::",
       port: 8080,
