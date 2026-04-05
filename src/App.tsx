@@ -279,6 +279,8 @@ const WebsiteSpeedAudits = lazyRetry(() => import("./pages/WebsiteSpeedAudits"))
 const BedtimeStories = lazyRetry(() => import("./pages/BedtimeStories"));
 const CrimeDigest = lazyRetry(() => import("./pages/CrimeDigest"));
 const LicenseMonitor = lazyRetry(() => import("./pages/LicenseMonitor"));
+const RegulatoryFilingMonitor = lazyRetry(() => import("./pages/RegulatoryFilingMonitor"));
+const BidIntelligence = lazyRetry(() => import("./pages/BidIntelligence"));
 const TechSupportServices = lazyRetry(() => import("./pages/TechSupportServices"));
 const LegalPage = lazyRetry(() => import("./pages/LegalPage"));
 const CookieBanner = lazyRetry(() => import("./components/layout/CookieBanner"));
@@ -656,6 +658,8 @@ const App = () => (
                     <Route path="/bedtime-stories" element={<BedtimeStories />} />
                     <Route path="/crime-digest" element={<CrimeDigest />} />
                     <Route path="/license-monitor" element={<LicenseMonitor />} />
+                    <Route path="/regulatory-filing-monitor" element={<RegulatoryFilingMonitor />} />
+                    <Route path="/bid-intelligence" element={<BidIntelligence />} />
                     <Route path="/tech-support" element={<TechSupportServices />} />
                     <Route path="/tools/:slug" element={<MicroSaasToolPage />} />
                     <Route path="/legal/:type" element={<LegalPage />} />
