@@ -32,7 +32,9 @@ jobs:
             TWILIO_AUTH_TOKEN="${{ secrets.TWILIO_AUTH_TOKEN }}" \
             TWILIO_PHONE_NUMBER="${{ secrets.TWILIO_PHONE_NUMBER }}" \
             META_ACCESS_TOKEN="${{ secrets.META_ACCESS_TOKEN }}" \
-            LINKEDIN_ACCESS_TOKEN="${{ secrets.LINKEDIN_ACCESS_TOKEN }}"
+            LINKEDIN_ACCESS_TOKEN="${{ secrets.LINKEDIN_ACCESS_TOKEN }}" \
+            N8N_MCP_URL="${{ secrets.N8N_MCP_URL }}" \
+            N8N_ACCESS_TOKEN="${{ secrets.N8N_ACCESS_TOKEN }}"
 
       - name: Deploy all edge functions
         run: supabase functions deploy --project-ref zmyczlfuufhngzovkjdh
