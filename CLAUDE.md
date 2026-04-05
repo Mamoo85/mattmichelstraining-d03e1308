@@ -118,6 +118,12 @@ Products: Commercial Lease Abstractor, Patent Watch Intelligence, PE/Investor Se
 - **Business License Monitor** ($25/mo) — `license_monitor_clients`, `license_monitor_items`, `supabase/functions/license-expiry-checker/`, route: `/license-monitor`
 - **Local Tech Support** ($49 session / $29/mo) — `tech_support_tickets`, route: `/tech-support`
 
+### Wave 5 High-Ticket Products (April 2026 — `20260405140000` + `20260405140001`)
+- **Regulatory Filing Monitor** ($497/mo) — `reg_filing_clients`, `reg_filing_items`, `reg_filing_drafts`, `reg_filing_deadlines`, `supabase/functions/reg-filing-scan/`, `reg-filing-approve/`, `create-reg-filing-checkout/`, route: `/regulatory-filing-monitor`
+- **Bid Intelligence & Proposal Factory** ($599/mo) — `bid_intel_clients`, `bid_intel_opportunities`, `bid_intel_proposals`, `supabase/functions/bid-intel-scan/`, `bid-intel-approve/`, `create-bid-intel-checkout/`, route: `/bid-intelligence`
+- **Morning Digest** — `supabase/functions/morning-digest/` (daily 6:30am ET consolidated approval email to Matt)
+- **Crons**: `20260405140002_new_product_crons.sql` — reg-filing-scan 6am ET, deadline check 8am ET, bid-intel-scan 7am ET, morning-digest 6:30am ET
+
 ## Codebase Scale
 - **255** frontend pages in `src/pages/`
 - **453** Supabase Edge Functions in `supabase/functions/`
