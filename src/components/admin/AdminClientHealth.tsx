@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AdminHelpCard } from "./AdminHelpCard";
+import { getAdminGuide } from "@/lib/admin-guides";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, AlertTriangle, CheckCircle, Clock, Building2 } from "lucide-react";
 
@@ -142,8 +144,12 @@ export default function AdminClientHealth() {
     </div>
   );
 
+  const guide = getAdminGuide("health");
+
   return (
     <div className="space-y-6">
+      {guide && <AdminHelpCard id={guide.id} title={guide.title} body={guide.body} tips={guide.tips} />}
+
       <div>
         <h2 className="text-lg font-bold">Client Health Dashboard</h2>
         <p className="text-xs text-muted-foreground">Service delivery status for all B2B subscribers</p>

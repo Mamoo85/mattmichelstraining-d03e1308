@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import { getGuide, AUTO_PRODUCTS } from "@/lib/fulfillment-guides";
 import type { FulfillmentStep, ProductGuide } from "@/lib/fulfillment-guides";
+import { AdminHelpCard } from "./AdminHelpCard";
+import { getAdminGuide } from "@/lib/admin-guides";
 
 interface ClientRow {
   sub_id: string;
@@ -367,8 +369,12 @@ export default function AdminFulfillment() {
     : filter === "active" ? active
     : clients;
 
+  const guide = getAdminGuide("fulfillment");
+
   return (
     <div className="space-y-4">
+      {guide && <AdminHelpCard id={guide.id} title={guide.title} body={guide.body} tips={guide.tips} scenarios={guide.scenarios} whenSomeoneBuys={guide.whenSomeoneBuys} />}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

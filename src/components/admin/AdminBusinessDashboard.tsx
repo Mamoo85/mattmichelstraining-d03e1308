@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { AdminHelpCard } from "./AdminHelpCard";
+import { getAdminGuide } from "@/lib/admin-guides";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -213,8 +215,12 @@ const AdminBusinessDashboard = () => {
   }, {});
   const hotLeads = data.outreachLeads.filter((l: any) => l.status === "replied" || l.status === "Responded");
 
+  const guide = getAdminGuide("biz-overview");
+
   return (
     <div className="space-y-6">
+      {guide && <AdminHelpCard id={guide.id} title={guide.title} body={guide.body} tips={guide.tips} />}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
