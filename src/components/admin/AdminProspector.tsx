@@ -7,13 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import {
   Search, Mail, Zap, Users, TrendingUp, Play, RefreshCw, Loader2,
   Pencil, Send, Trash2, Filter, ArrowUpDown, ArrowDown, ArrowUp,
-  Building2, Wrench, Stethoscope, Globe, Phone, MapPin, Star
+  Building2, Wrench, Stethoscope, Globe, Phone, MapPin, Star,
+  Expand, Minimize, Megaphone, Rss, MessageSquare, Receipt, CalendarX,
+  Hammer, Home, UserPlus
 } from "lucide-react";
 
 // ── Constants ──
@@ -103,6 +104,96 @@ function normalizeWebDesign(r: any): UnifiedLead {
     created_at: r.created_at, raw: r,
   };
 }
+function normalizeSocialMedia(r: any): UnifiedLead {
+  return {
+    id: r.id, source_table: "social_media_clients", business_name: r.business_name,
+    contact_name: r.contact_name, email: r.email, phone: r.phone,
+    city: null, state: null, industry: r.industry, website: null,
+    status: r.active ? "active" : "inactive", lead_score: null, notes: null,
+    created_at: r.created_at, raw: r,
+  };
+}
+function normalizeGBP(r: any): UnifiedLead {
+  return {
+    id: r.id, source_table: "gbp_saas_clients", business_name: r.business_name,
+    contact_name: r.contact_name, email: r.email, phone: r.phone,
+    city: null, state: null, industry: r.industry, website: null,
+    status: r.active ? "active" : "inactive", lead_score: null, notes: null,
+    created_at: r.created_at, raw: r,
+  };
+}
+function normalizeNewsletter(r: any): UnifiedLead {
+  return {
+    id: r.id, source_table: "newsletter_subscribers", business_name: r.name || r.email,
+    contact_name: r.name, email: r.email, phone: null,
+    city: null, state: null, industry: r.niche, website: null,
+    status: r.status || "subscribed", lead_score: null, notes: null,
+    created_at: r.created_at, raw: r,
+  };
+}
+function normalizeEstimateDrip(r: any): UnifiedLead {
+  return {
+    id: r.id, source_table: "estimate_drip_clients", business_name: r.business_name,
+    contact_name: r.contact_name, email: r.email, phone: r.phone,
+    city: null, state: null, industry: r.industry, website: null,
+    status: r.active ? "active" : "inactive", lead_score: null, notes: null,
+    created_at: r.created_at, raw: r,
+  };
+}
+function normalizeNoshow(r: any): UnifiedLead {
+  return {
+    id: r.id, source_table: "noshow_clients", business_name: r.business_name,
+    contact_name: r.contact_name, email: r.email, phone: r.phone,
+    city: null, state: null, industry: r.industry, website: null,
+    status: r.active ? "active" : "inactive", lead_score: null, notes: null,
+    created_at: r.created_at, raw: r,
+  };
+}
+function normalizeInvoiceChaser(r: any): UnifiedLead {
+  return {
+    id: r.id, source_table: "invoice_chaser_clients", business_name: r.business_name,
+    contact_name: r.contact_name, email: r.email, phone: r.phone,
+    city: null, state: null, industry: r.industry, website: null,
+    status: r.active ? "active" : "inactive", lead_score: null, notes: null,
+    created_at: r.created_at, raw: r,
+  };
+}
+function normalizeReviewMonitor(r: any): UnifiedLead {
+  return {
+    id: r.id, source_table: "review_monitor_clients", business_name: r.business_name,
+    contact_name: r.contact_name, email: r.email, phone: r.phone,
+    city: null, state: null, industry: r.industry, website: null,
+    status: r.active ? "active" : "inactive", lead_score: null, notes: null,
+    created_at: r.created_at, raw: r,
+  };
+}
+function normalizeHomeowner(r: any): UnifiedLead {
+  return {
+    id: r.id, source_table: "homeowner_campaign_clients", business_name: r.business_name,
+    contact_name: r.contact_name, email: r.email, phone: r.phone,
+    city: null, state: null, industry: r.industry, website: null,
+    status: r.active ? "active" : "inactive", lead_score: null, notes: null,
+    created_at: r.created_at, raw: r,
+  };
+}
+function normalizeReferral(r: any): UnifiedLead {
+  return {
+    id: r.id, source_table: "referral_program_clients", business_name: r.business_name,
+    contact_name: r.contact_name, email: r.email, phone: r.phone,
+    city: null, state: null, industry: r.industry, website: null,
+    status: r.active ? "active" : "inactive", lead_score: null, notes: null,
+    created_at: r.created_at, raw: r,
+  };
+}
+function normalizeDripConversion(r: any): UnifiedLead {
+  return {
+    id: r.id, source_table: "drip_conversions", business_name: r.business_name || r.email,
+    contact_name: null, email: r.email, phone: null,
+    city: null, state: null, industry: r.industry, website: null,
+    status: "converted", lead_score: null, notes: r.service_interested,
+    created_at: r.converted_at, raw: r,
+  };
+}
 
 // ── Component ──
 export default function AdminProspector() {
@@ -129,36 +220,42 @@ export default function AdminProspector() {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [editingLead, setEditingLead] = useState<UnifiedLead | null>(null);
   const [sendingId, setSendingId] = useState<string | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // ── Data fetchers ──
-  const fetchProspects = async () => {
-    const { data } = await supabase.from("outreach_leads").select("*").order("created_at", { ascending: false }).limit(500);
-    return (data || []).map(normalizeOutreach);
+  const fetchTable = async (table: string, normalizer: (r: any) => UnifiedLead) => {
+    const { data } = await (supabase as any).from(table).select("*").order("created_at", { ascending: false }).limit(500);
+    return (data || []).map(normalizer);
   };
-  const fetchContractorLeads = async () => {
-    const { data } = await supabase.from("contractor_leads").select("*").order("created_at", { ascending: false }).limit(500);
-    return (data || []).map(normalizeContractorLead);
-  };
-  const fetchB2BClients = async () => {
-    const { data } = await supabase.from("b2b_clients").select("*").order("created_at", { ascending: false }).limit(500);
-    return (data || []).map(normalizeB2B);
-  };
-  const fetchWebDesignLeads = async () => {
-    const { data } = await supabase.from("web_design_leads").select("*").order("created_at", { ascending: false }).limit(500);
-    return (data || []).map(normalizeWebDesign);
+
+  const SOURCE_MAP: Record<string, { table: string; fn: (r: any) => UnifiedLead }> = {
+    prospects: { table: "outreach_leads", fn: normalizeOutreach },
+    contractor: { table: "contractor_leads", fn: normalizeContractorLead },
+    dental: { table: "b2b_clients", fn: normalizeB2B },
+    webdesign: { table: "web_design_leads", fn: normalizeWebDesign },
+    social: { table: "social_media_clients", fn: normalizeSocialMedia },
+    gbp: { table: "gbp_saas_clients", fn: normalizeGBP },
+    newsletter: { table: "newsletter_subscribers", fn: normalizeNewsletter },
+    estimate: { table: "estimate_drip_clients", fn: normalizeEstimateDrip },
+    noshow: { table: "noshow_clients", fn: normalizeNoshow },
+    invoice: { table: "invoice_chaser_clients", fn: normalizeInvoiceChaser },
+    reviews: { table: "review_monitor_clients", fn: normalizeReviewMonitor },
+    homeowner: { table: "homeowner_campaign_clients", fn: normalizeHomeowner },
+    referral: { table: "referral_program_clients", fn: normalizeReferral },
+    conversions: { table: "drip_conversions", fn: normalizeDripConversion },
   };
 
   const fetchLeads = async () => {
     setLoadingLeads(true);
     try {
       let results: UnifiedLead[] = [];
-      if (activeTab === "prospects") results = await fetchProspects();
-      else if (activeTab === "contractor") results = await fetchContractorLeads();
-      else if (activeTab === "dental") results = await fetchB2BClients();
-      else if (activeTab === "webdesign") results = await fetchWebDesignLeads();
-      else if (activeTab === "all") {
-        const [a, b, c, d] = await Promise.all([fetchProspects(), fetchContractorLeads(), fetchB2BClients(), fetchWebDesignLeads()]);
-        results = [...a, ...b, ...c, ...d];
+      if (activeTab === "all") {
+        const promises = Object.values(SOURCE_MAP).map(s => fetchTable(s.table, s.fn));
+        const arrays = await Promise.all(promises);
+        results = arrays.flat();
+      } else if (SOURCE_MAP[activeTab]) {
+        const s = SOURCE_MAP[activeTab];
+        results = await fetchTable(s.table, s.fn);
       }
       setLeads(results);
     } catch { toast.error("Failed to load leads"); }
@@ -303,11 +400,20 @@ export default function AdminProspector() {
 
   const leadsWithEmail = filtered.filter(l => l.email);
   const sourceLabel: Record<string, string> = {
-    outreach_leads: "Prospect", contractor_leads: "Contractor", b2b_clients: "B2B/Dental", web_design_leads: "Web Design",
+    outreach_leads: "Prospect", contractor_leads: "Contractor", b2b_clients: "B2B/Dental",
+    web_design_leads: "Web Design", social_media_clients: "Social", gbp_saas_clients: "GBP",
+    newsletter_subscribers: "Newsletter", estimate_drip_clients: "Estimate", noshow_clients: "No-Show",
+    invoice_chaser_clients: "Invoice", review_monitor_clients: "Reviews", homeowner_campaign_clients: "Homeowner",
+    referral_program_clients: "Referral", drip_conversions: "Converted",
   };
   const sourceBadgeColor: Record<string, string> = {
     outreach_leads: "bg-primary/20 text-primary", contractor_leads: "bg-orange-500/20 text-orange-400",
     b2b_clients: "bg-blue-500/20 text-blue-400", web_design_leads: "bg-purple-500/20 text-purple-400",
+    social_media_clients: "bg-pink-500/20 text-pink-400", gbp_saas_clients: "bg-emerald-500/20 text-emerald-400",
+    newsletter_subscribers: "bg-yellow-500/20 text-yellow-400", estimate_drip_clients: "bg-cyan-500/20 text-cyan-400",
+    noshow_clients: "bg-red-500/20 text-red-400", invoice_chaser_clients: "bg-amber-500/20 text-amber-400",
+    review_monitor_clients: "bg-indigo-500/20 text-indigo-400", homeowner_campaign_clients: "bg-lime-500/20 text-lime-400",
+    referral_program_clients: "bg-teal-500/20 text-teal-400", drip_conversions: "bg-green-500/20 text-green-400",
   };
 
   const SortButton = ({ field, label }: { field: SortField; label: string }) => (
@@ -324,7 +430,13 @@ export default function AdminProspector() {
           <h2 className="text-lg font-bold">Lead Command Center</h2>
           <p className="text-xs text-muted-foreground">Prospect, search, sort & outreach across all lead sources</p>
         </div>
-        <Badge variant="outline" className="text-xs">Unified CRM</Badge>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="text-xs h-7 gap-1" onClick={() => setIsExpanded(!isExpanded)}>
+            {isExpanded ? <Minimize size={12} /> : <Expand size={12} />}
+            {isExpanded ? "Collapse" : "Expand"}
+          </Button>
+          <Badge variant="outline" className="text-xs">Unified CRM</Badge>
+        </div>
       </div>
 
       {/* Prospecting + Drip Controls */}
@@ -418,26 +530,44 @@ export default function AdminProspector() {
             </Button>
           </div>
 
-          {/* Tabs */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-2">
-            <TabsList className="h-8 w-full grid grid-cols-5 text-[10px]">
-              <TabsTrigger value="all" className="text-[10px] px-1">
-                <Globe size={10} className="mr-0.5 hidden sm:inline" /> All
-              </TabsTrigger>
-              <TabsTrigger value="prospects" className="text-[10px] px-1">
-                <TrendingUp size={10} className="mr-0.5 hidden sm:inline" /> Prospects
-              </TabsTrigger>
-              <TabsTrigger value="contractor" className="text-[10px] px-1">
-                <Wrench size={10} className="mr-0.5 hidden sm:inline" /> Contractor
-              </TabsTrigger>
-              <TabsTrigger value="dental" className="text-[10px] px-1">
-                <Stethoscope size={10} className="mr-0.5 hidden sm:inline" /> B2B
-              </TabsTrigger>
-              <TabsTrigger value="webdesign" className="text-[10px] px-1">
-                <Building2 size={10} className="mr-0.5 hidden sm:inline" /> Web Design
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+          {/* Tabs - scrollable */}
+          <div className="mt-2 overflow-x-auto scrollbar-hide">
+            <div className="flex gap-1 pb-1 min-w-max">
+              {[
+                { key: "all", label: "All", icon: Globe },
+                { key: "prospects", label: "Prospects", icon: TrendingUp },
+                { key: "contractor", label: "Contractor", icon: Wrench },
+                { key: "dental", label: "B2B", icon: Stethoscope },
+                { key: "webdesign", label: "Web Design", icon: Building2 },
+                { key: "social", label: "Social", icon: Megaphone },
+                { key: "gbp", label: "GBP", icon: MapPin },
+                { key: "newsletter", label: "Newsletter", icon: Rss },
+                { key: "estimate", label: "Estimate", icon: Receipt },
+                { key: "noshow", label: "No-Show", icon: CalendarX },
+                { key: "invoice", label: "Invoice", icon: Receipt },
+                { key: "reviews", label: "Reviews", icon: Star },
+                { key: "homeowner", label: "Homeowner", icon: Home },
+                { key: "referral", label: "Referral", icon: UserPlus },
+                { key: "conversions", label: "Converted", icon: TrendingUp },
+              ].map(tab => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.key}
+                    onClick={() => setActiveTab(tab.key)}
+                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold whitespace-nowrap transition-colors ${
+                      activeTab === tab.key
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted/40 text-muted-foreground hover:bg-muted/60"
+                    }`}
+                  >
+                    <Icon size={10} />
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
           {/* Search + Filters */}
           <div className="space-y-2 mt-3">
@@ -501,7 +631,7 @@ export default function AdminProspector() {
         </CardHeader>
 
         <CardContent>
-          <div className="max-h-[500px] overflow-y-auto space-y-1">
+          <div className={`${isExpanded ? "max-h-none" : "max-h-[500px]"} overflow-y-auto space-y-1`}>
             {filtered.length === 0 && !loadingLeads && (
               <p className="text-xs text-muted-foreground text-center py-8">No leads found matching your filters.</p>
             )}
