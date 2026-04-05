@@ -4,9 +4,6 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 
-const SUPABASE_URL_FALLBACK = "https://zmyczlfuufhngzovkjdh.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY_FALLBACK =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpte...YOUR_ANON_KEY...";
 
 /**
  * Injects <link rel="preload"> for the LCP hero image so the browser
