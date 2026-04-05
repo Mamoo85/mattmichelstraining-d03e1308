@@ -128,17 +128,17 @@ const BUNDLES = [
   },
 ];
 
+const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const lovableKey = Deno.env.get("LOVABLE_API_KEY") ?? "";
+const resendKey = Deno.env.get("RESEND_API_KEY") ?? "";
+const dfLogin = Deno.env.get("DATAFORSEO_LOGIN") ?? "";
+const dfPassword = Deno.env.get("DATAFORSEO_PASSWORD") ?? "";
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-    const lovableKey = Deno.env.get("LOVABLE_API_KEY") ?? "";
-    const resendKey = Deno.env.get("RESEND_API_KEY") ?? "";
-    const dfLogin = Deno.env.get("DATAFORSEO_LOGIN") ?? "";
-    const dfPassword = Deno.env.get("DATAFORSEO_PASSWORD") ?? "";
-
     const supabase = createClient(supabaseUrl, serviceKey);
 
     // 1. Build business state
