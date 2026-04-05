@@ -3,6 +3,36 @@ import { HelmetProvider } from "react-helmet-async";
 import App from "./App.tsx";
 import "./index.css";
 
+const isInIframe = (() => {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.self !== window.top;
+  } catch {
+    return true;
+  }
+})();
+
+const isPreviewHost = typeof window !== "undefined" && (
+  window.location.hostname.includes("id-preview--") ||
+  window.location.hostname.includes("lovableproject.com")
+);
+
+const cleanupServiceWorkers = async () => {
+  if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
+
+  try {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(registrations.map((registration) => registration.unregister()));
+
+    if ("caches" in window) {
+      const cacheKeys = await caches.keys();
+      await Promise.all(cacheKeys.map((key) => caches.delete(key)));
+    }
+  } catch {
+    // Ignore cleanup failures and let the app continue
+  }
+};
+
 // Defer print stylesheet — inject as <link media="print"> to avoid JS→CSS dependency chain
 if (typeof window !== "undefined") {
   window.addEventListener("load", () => {
@@ -46,7 +76,12 @@ createRoot(document.getElementById("root")!).render(
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     try {
-      navigator.serviceWorker.register("/registerSW.js").catch(() => {});
+      if (isPreviewHost || isInIframe) {
+        void cleanupServiceWorkers();
+        return;
+      }
+
+      navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {});
     } catch {
       // Privacy browsers may block SW registration entirely
     }

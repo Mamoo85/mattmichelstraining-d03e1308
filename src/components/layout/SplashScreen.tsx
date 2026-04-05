@@ -11,6 +11,7 @@ const SplashScreen = () => {
     // Remove the static hero shell once React has mounted and will render real content
     const shell = document.getElementById("hero-shell");
     if (shell) shell.remove();
+    window.dispatchEvent(new Event("m2:app-mounted"));
   }, []);
 
   return null;
