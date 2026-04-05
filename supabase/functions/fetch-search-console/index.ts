@@ -78,6 +78,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    console.log("[GSC] Starting fetch-search-console");
     // Auth check
     const authHeader = req.headers.get("authorization");
     const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
@@ -88,6 +89,7 @@ serve(async (req) => {
       const token = authHeader.replace("Bearer ", "");
       const { data: { user }, error } = await sb.auth.getUser(token);
       if (error || !user) {
+        console.error("[GSC] Auth failed:", error?.message);
         return new Response(JSON.stringify({ error: "Unauthorized" }), {
           status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -95,10 +97,12 @@ serve(async (req) => {
       // Check admin
       const { data: roles } = await sb.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin");
       if (!roles?.length) {
+        console.error("[GSC] Not admin, user_id:", user.id);
         return new Response(JSON.stringify({ error: "Forbidden" }), {
           status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+      console.log("[GSC] Auth OK, admin verified");
     }
 
     const body = req.method === "POST" ? await req.json() : {};
