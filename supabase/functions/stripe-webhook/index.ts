@@ -3167,16 +3167,79 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
       if (meta.type === "missed_call_subscription") {
         try {
           const email = meta.email || customerEmail;
+          const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
+          const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
+          const MISSED_CALL_HANDLER_URL = "https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/missed-call-handler";
+
+          // Auto-provision a Twilio number in the customer's area code
+          let twilioNumber = "";
+          if (TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN) {
+            try {
+              const areaCode = (meta.phone || "").replace(/\D/g, "").slice(0, 3) || "313";
+              const twilioAuth = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
+
+              // Search for available local numbers
+              const searchRes = await fetch(
+                `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/AvailablePhoneNumbers/US/Local.json?AreaCode=${areaCode}&SmsEnabled=true&VoiceEnabled=true`,
+                { headers: { Authorization: `Basic ${twilioAuth}` } }
+              );
+              const searchData = await searchRes.json();
+              const available = searchData?.available_phone_numbers?.[0]?.phone_number;
+
+              if (available) {
+                // Purchase the number and configure webhooks
+                const buyRes = await fetch(
+                  `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/IncomingPhoneNumbers.json`,
+                  {
+                    method: "POST",
+                    headers: { Authorization: `Basic ${twilioAuth}`, "Content-Type": "application/x-www-form-urlencoded" },
+                    body: new URLSearchParams({
+                      PhoneNumber: available,
+                      FriendlyName: `M2 - ${meta.businessName || email}`,
+                      StatusCallback: MISSED_CALL_HANDLER_URL,
+                      StatusCallbackMethod: "POST",
+                      VoiceUrl: MISSED_CALL_HANDLER_URL,
+                      VoiceMethod: "POST",
+                    }),
+                  }
+                );
+                const buyData = await buyRes.json();
+                twilioNumber = buyData?.phone_number || "";
+                console.log(`[WEBHOOK] Provisioned Twilio number ${twilioNumber} for ${email}`);
+              }
+            } catch (twilioErr) {
+              console.error("[WEBHOOK] Twilio provisioning error:", twilioErr);
+            }
+          }
+
           if (email) {
             await (sb.from as any)("missed_call_clients").upsert({
               email,
               contact_name: meta.name || null,
               business_name: meta.businessName || email,
               business_phone: meta.phone || null,
-              active: true,
+              twilio_number: twilioNumber || null,
+              active: !!twilioNumber,
               stripe_subscription_id: session.subscription as string || null,
             }, { onConflict: "email" });
           }
+
+          const fwdInstructions = twilioNumber
+            ? `<p style="margin:0 0 8px"><strong>Your dedicated text-back number: ${twilioNumber}</strong></p>
+<p style="margin:0 0 8px"><strong>Setup (2 minutes on your phone):</strong></p>
+<ol style="margin:0 0 16px;padding-left:20px;color:#475569">
+<li>On your iPhone: Settings → Phone → Call Forwarding → turn ON → enter <strong>${twilioNumber}</strong></li>
+<li>On Android: Phone app → Settings → Call Forwarding → Forward when unanswered → enter <strong>${twilioNumber}</strong></li>
+<li>That's it — missed calls now trigger an instant text to the caller</li>
+</ol>
+<p style="margin:0 0 8px">Reply to this email if you need help with the forwarding setup.</p>`
+            : `<p style="margin:0 0 8px"><strong>Setup (5 minutes):</strong></p>
+<ol style="margin:0 0 16px;padding-left:20px;color:#475569">
+<li>Matt will contact you within a few hours with your dedicated number</li>
+<li>You forward missed calls to that number</li>
+<li>That's it — missed calls now get instant texts, automatically</li>
+</ol>`;
+
           if (RESEND_API_KEY && email) {
             await fetch("https://api.resend.com/emails", {
               method: "POST",
@@ -3184,23 +3247,16 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
               body: JSON.stringify({
                 from: "Matt Michels <matt@mattmichelstraining.com>",
                 to: [email], bcc: ["matthewmichels4@gmail.com"],
-                subject: "Your Missed Call Text-Back is being set up",
+                subject: twilioNumber ? "Your Missed Call Text-Back number is ready" : "Your Missed Call Text-Back is being set up",
                 html: m2Email({
-              greeting: `Hey${meta.name ? " " + meta.name : ""} —`,
-              headline: "Your Missed Call Text-Back is Being Set Up",
-              body: `<p style="margin:0 0 12px"><strong>Every missed call is a potential customer walking away. Not anymore.</strong></p>
-<p style="margin:0 0 8px">📱 <strong>How it works:</strong> Someone calls your business and you can't answer → they instantly get a text: <em>"Hey, sorry I missed your call! I'll get right back to you."</em></p>
+                  greeting: `Hey${meta.name ? " " + meta.name : ""} —`,
+                  headline: twilioNumber ? "Your Text-Back Number Is Ready" : "Your Missed Call Text-Back is Being Set Up",
+                  body: `<p style="margin:0 0 12px"><strong>Every missed call is a potential customer walking away. Not anymore.</strong></p>
 <p style="margin:0 0 8px">⚡ <strong>Instant response</strong> — text fires within seconds of the missed call</p>
 <p style="margin:0 0 8px">🔄 <strong>24/7 coverage</strong> — works nights, weekends, holidays</p>
-<p style="margin:0 0 8px">📊 <strong>Lead capture</strong> — every missed call + text is logged for follow-up</p>
 <p style="margin:0 0 16px">✨ <strong>7-day free trial</strong> — your trial has started</p>
-<p style="margin:0 0 8px"><strong>Setup (5 minutes):</strong></p>
-<ol style="margin:0 0 16px;padding-left:20px;color:#475569">
-<li>Matt will text you within 24 hours to set up call forwarding</li>
-<li>You forward missed calls to your new M² number</li>
-<li>That's it — missed calls now get instant texts, automatically</li>
-</ol>`,
-            }),
+${fwdInstructions}`,
+                }),
               }),
             });
             await fetch("https://api.resend.com/emails", {
@@ -3208,9 +3264,9 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
               headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
               body: JSON.stringify({
                 from: "M² Notifications <matt@mattmichelstraining.com>",
-                to: ["matthewmichels@mattmichelstraining.com", "matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"],
-                subject: `🔔 NEW — Missed Call SMS: ${meta.businessName || email}`,
-                html: `<p><strong>New Missed Call subscriber needs setup:</strong><br><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Phone: ${meta.phone || "n/a"}</p><p><a href="https://www.mattmichelstraining.com/admin" style="display:inline-block;background:#e8621a;color:white;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:bold;">👉 Open Fulfillment Hub — Start Setup</a></p>`,
+                to: ["matthewmichels@mattmichelstraining.com", "matt@mattmichelstraining.com"],
+                subject: `${twilioNumber ? "✅ AUTO-SETUP COMPLETE" : "🔔 NEEDS SETUP"} — Missed Call SMS: ${meta.businessName || email}`,
+                html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Phone: ${meta.phone || "n/a"}<br>Twilio #: ${twilioNumber || "NOT PROVISIONED — provision manually"}</p>`,
               }),
             });
           }
