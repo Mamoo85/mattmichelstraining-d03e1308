@@ -163,6 +163,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       const result = supabase.auth.onAuthStateChange((event, newSession) => {
+        // INITIAL_SESSION can arrive before storage restoration is complete.
+        // Wait for getSession() to be the source of truth for first-load auth state.
+        if (event === "INITIAL_SESSION") {
+          setSession(newSession);
+          return;
+        }
+
         // If the refresh token is invalid/expired, clear the dead session
         if (event === "TOKEN_REFRESHED" && !newSession) {
           console.warn("[Auth] Token refresh failed — clearing stale session");
