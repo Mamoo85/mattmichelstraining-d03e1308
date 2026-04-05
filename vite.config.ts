@@ -76,6 +76,9 @@ export default defineConfig(({ mode }) => {
       VitePWA({
         registerType: "autoUpdate",
         injectRegister: false,
+        devOptions: {
+          enabled: false,
+        },
         includeAssets: ["favicon.ico", "favicon.png", "apple-touch-icon.png", "robots.txt"],
         workbox: {
           navigateFallbackDenylist: [/^\/~oauth/, /[?#].*access_token/, /[?#].*type=recovery/],
@@ -89,7 +92,7 @@ export default defineConfig(({ mode }) => {
           background_color: "#0d0d0d",
           display: "standalone",
           orientation: "portrait",
-          start_url: "/dashboard",
+          start_url: "/",
           scope: "/",
           icons: [
             {
