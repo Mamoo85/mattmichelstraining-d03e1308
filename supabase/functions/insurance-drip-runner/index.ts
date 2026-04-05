@@ -3,32 +3,16 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendSMS } from "../_shared/twilio.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
-const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
-const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
 const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 
 // Days until next send for each step
 const STEP_DELAYS_DAYS = [0, 3, 7, 14, 21];
-
-async function sendSMS(to: string, body: string) {
-  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_PHONE_NUMBER) return;
-  await fetch(
-    `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Basic ${btoa(TWILIO_ACCOUNT_SID + ":" + TWILIO_AUTH_TOKEN)}`,
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: new URLSearchParams({ To: to, From: TWILIO_PHONE_NUMBER, Body: body }),
-    }
-  );
-}
 
 function daysFromNow(days: number): string {
   const d = new Date();
@@ -183,7 +167,7 @@ Write ONLY the email body — no subject line, no "Hi" greeting on its own line 
           `Hi ${prospectName} — ${agentName} here. Quick tip on ${coverageType}: check your email, I sent something you might find useful. No pitch, just helpful info.`,
           `Hi ${prospectName}, ${agentName} again. Sent you a note about what other ${coverageType} clients have been doing. Worth a 30-second read. Talk soon!`,
         ];
-        await sendSMS(prospectPhone, smsMessages[step]);
+        await sendSMS(prospectPhone, TWILIO_PHONE_NUMBER, smsMessages[step], "insurance_drip");
       }
 
       // Calculate next send date based on upcoming step
