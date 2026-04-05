@@ -72,9 +72,19 @@ createRoot(document.getElementById("root")!).render(
   </HelmetProvider>
 );
 
-// Register service worker after first paint to avoid blocking FCP
+// Clear stale service worker caches, then register fresh SW
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
+    // Purge old caches so stale chunks don't block the app
+    if ("caches" in window) {
+      caches.keys().then((names) => {
+        for (const name of names) {
+          if (name.includes("workbox") || name.includes("precache")) {
+            caches.delete(name);
+          }
+        }
+      }).catch(() => {});
+    }
     try {
       if (isPreviewHost || isInIframe) {
         void cleanupServiceWorkers();
