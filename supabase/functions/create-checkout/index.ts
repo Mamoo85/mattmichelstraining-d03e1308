@@ -164,13 +164,11 @@ serve(async (req) => {
       sessionParams.allow_promotion_codes = true;
     }
 
-    // Store promo ID and referral code in metadata
-    const metadata: any = {};
+    // Store type + promo/referral in metadata for webhook routing
+    const metadata: any = { type: "training_subscription" };
     if (promoId) metadata.promo_id = promoId;
     if (referralCodeValue) metadata.referral_code = referralCodeValue;
-    if (Object.keys(metadata).length > 0) {
-      sessionParams.metadata = metadata;
-    }
+    sessionParams.metadata = metadata;
 
     const session = await stripe.checkout.sessions.create(sessionParams);
     logStep("Checkout session created", { sessionId: session.id });
