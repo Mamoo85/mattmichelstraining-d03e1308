@@ -1565,6 +1565,26 @@ serve(async (req) => {
         } catch (e) { console.error("[WEBHOOK] b2b_clients fulfillment write error:", e); }
       }
 
+      // ── TECH SUPPORT SESSION ──────────────────────────────────────────────
+      if (meta.type === "tech_support_session" && customerEmail) {
+        try {
+          const tsSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+          await (tsSb.from as any)("tech_support_tickets").insert({
+            name: meta.name || customerName || null,
+            email: customerEmail,
+            phone: meta.phone || null,
+            issue_description: meta.issue || null,
+            tier: meta.tier || "one-time",
+            stripe_session_id: session.id,
+          });
+          await sendM2Email(customerEmail, "Tech Support — We Got Your Request!", m2Email({
+            heading: "We're on it!",
+            body: `<p>Hey ${meta.name || "there"}!</p><p>Your tech support request has been received. Matt will reach out within 24 hours to schedule your ${meta.tier === "subscription" ? "first monthly" : "remote"} session.</p><p>In the meantime, feel free to reply to this email with any extra details about the issue.</p>`,
+          }));
+          await notifyMatt(`🔧 New Tech Support — ${meta.name || customerEmail} ($${meta.tier === "subscription" ? "29/mo" : "49"})`, `<p><strong>${meta.name || customerEmail}</strong><br>Email: ${customerEmail}<br>Phone: ${meta.phone || "n/a"}<br>Tier: ${meta.tier || "one-time"}<br>Issue: ${meta.issue || "not provided"}</p>`);
+        } catch (e) { console.error("[WEBHOOK] tech_support_session error:", e); }
+      }
+
       // ── SPORT GUIDE (AI-generated, DB-driven) ──────────────────────────────
       if (meta.type === "sport_guide" && meta.guide_id && customerEmail) {
         try {
