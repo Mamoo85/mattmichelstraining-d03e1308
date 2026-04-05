@@ -118,7 +118,7 @@ const AdminBusinessDashboard = () => {
 
       addClients(contractorRes.data, "Contractor Lead Gen", 399, "last_lead_at");
       addClients(gbpRes.data, "GBP SaaS", 0, "last_posted_at"); // price varies by plan
-      addClients(socialRes.data, "Social Media AI", 0, null);
+      addClients(socialRes.data, "Social Media AI", 0, "last_posted_at");
       addClients(adsRes.data, "Google Ads Copy", 39, "last_sent_at");
       addClients(blogRes.data, "Blog Posts", 79, "last_sent_at");
       addClients(battlecardRes.data, "Competitive Battlecard", 39, "last_sent_at");
