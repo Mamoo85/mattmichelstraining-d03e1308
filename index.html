@@ -218,6 +218,65 @@
           shell.innerHTML = '<div style="text-align:center;padding:2rem"><p style="color:hsl(0 0% 55%);font-size:14px">' + message + '</p><button onclick="location.reload()" style="margin-top:1rem;padding:10px 24px;background:hsl(18 82% 52%);color:#fff;border:none;font-weight:700;font-size:14px;cursor:pointer">Reload App</button></div>';
         }
 
+        function showRepairing() {
+          var shell = document.getElementById('hero-shell');
+          if (!shell) return;
+          shell.innerHTML = '<div style="text-align:center;padding:2rem"><p style="color:hsl(0 0% 55%);font-size:14px">Repairing app…</p></div>';
+        }
+
+        function hardReload() {
+          var nextUrl = new URL(location.href);
+          nextUrl.searchParams.set('m2-recovery', String(Date.now()));
+          location.replace(nextUrl.toString());
+        }
+
+        function clearWorkersAndReload() {
+          showRepairing();
+
+          return navigator.serviceWorker.getRegistrations()
+            .then(function(registrations) {
+              return Promise.all(registrations.map(function(registration) {
+                return registration.unregister();
+              }));
+            })
+            .then(function() {
+              if (!('caches' in window)) return;
+              return caches.keys().then(function(keys) {
+                return Promise.all(keys.map(function(key) {
+                  return caches.delete(key);
+                }));
+              });
+            })
+            .then(function() {
+              hardReload();
+            });
+        }
+
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations()
+            .then(function(registrations) {
+              if (mounted) return;
+
+              var hasLegacyWorker = registrations.some(function(registration) {
+                var active = registration.active && registration.active.scriptURL ? registration.active.scriptURL : '';
+                var waiting = registration.waiting && registration.waiting.scriptURL ? registration.waiting.scriptURL : '';
+                var installing = registration.installing && registration.installing.scriptURL ? registration.installing.scriptURL : '';
+                return /\/registerSW\.js(?:$|\?)/.test(active) || /\/registerSW\.js(?:$|\?)/.test(waiting) || /\/registerSW\.js(?:$|\?)/.test(installing);
+              });
+
+              if (!hasLegacyWorker) return;
+
+              try {
+                sessionStorage.setItem('m2_app_recovery_attempted', '1');
+              } catch (e) {}
+
+              return clearWorkersAndReload().catch(function() {
+                renderReload('Loading took too long.');
+              });
+            })
+            .catch(function() {});
+        }
+
         setTimeout(function() {
           if (mounted) return;
 
@@ -235,27 +294,7 @@
               sessionStorage.setItem('m2_app_recovery_attempted', '1');
             } catch (e) {}
 
-            if (shell) {
-              shell.innerHTML = '<div style="text-align:center;padding:2rem"><p style="color:hsl(0 0% 55%);font-size:14px">Repairing app…</p></div>';
-            }
-
-            navigator.serviceWorker.getRegistrations()
-              .then(function(registrations) {
-                return Promise.all(registrations.map(function(registration) {
-                  return registration.unregister();
-                }));
-              })
-              .then(function() {
-                if (!('caches' in window)) return;
-                return caches.keys().then(function(keys) {
-                  return Promise.all(keys.map(function(key) {
-                    return caches.delete(key);
-                  }));
-                });
-              })
-              .then(function() {
-                location.reload();
-              })
+            clearWorkersAndReload()
               .catch(function() {
                 renderReload('Loading took too long.');
               });
