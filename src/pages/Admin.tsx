@@ -119,6 +119,7 @@ const AdminWebDesignAutomations = lazy(() => import("@/components/admin/AdminWeb
 // Command Deck
 const AdminCommandDeck        = lazy(() => import("@/components/admin/AdminCommandDeck"));
 const AdminPurchaseAlert      = lazy(() => import("@/components/admin/AdminPurchaseAlert"));
+const AdminCommandCenter      = lazy(() => import("@/components/admin/AdminCommandCenter"));
 
 /* ── Types ──────────────────────────────────────────────────────────────────── */
 interface Tool {
@@ -643,28 +644,10 @@ const Admin = () => {
               <AdminPurchaseAlert />
             </Suspense>
 
-            {/* Quick Stats Row */}
-            <div className="grid grid-cols-4 gap-2">
-              {[
-                { label: "AI Queue", value: b.aiQueue, color: "#f97316", tool: "ai-queue" },
-                { label: "Support", value: b.support, color: "#3b82f6", tool: "support" },
-                { label: "Coach AI", value: b.drafts, color: "#a855f7", tool: "coach-ai" },
-                { label: "Requests", value: b.custom, color: "#22c55e", tool: "custom-req" },
-              ].map((stat) => (
-                <button
-                  key={stat.label}
-                  onClick={() => handleToolClick(stat.tool)}
-                  className="rounded-xl p-3 text-center transition-all hover:scale-[1.03] active:scale-95"
-                  style={{
-                    background: `${stat.color}08`,
-                    border: `1px solid ${stat.color}15`,
-                  }}
-                >
-                  <p className="text-xl font-black text-foreground">{stat.value}</p>
-                  <p className="text-[9px] text-muted-foreground mt-0.5">{stat.label}</p>
-                </button>
-              ))}
-            </div>
+            {/* Command Center Dashboard */}
+            <Suspense fallback={<div className="h-40 rounded-2xl bg-muted/10 animate-pulse" />}>
+              <AdminCommandCenter onNavigate={handleToolClick} />
+            </Suspense>
 
             {/* Domain Cards Grid */}
             <div className="space-y-3">
