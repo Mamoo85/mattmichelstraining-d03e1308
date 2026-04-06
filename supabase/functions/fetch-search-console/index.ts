@@ -61,16 +61,19 @@ async function getAccessToken(): Promise<string> {
   // Exchange for access token
   const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "Accept-Encoding": "identity",
+    },
     body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`,
   });
 
+  const tokenText = await tokenRes.text();
   if (!tokenRes.ok) {
-    const err = await tokenRes.text();
-    throw new Error(`Token exchange failed: ${err}`);
+    throw new Error(`Token exchange failed: ${tokenText}`);
   }
 
-  const tokenData = await tokenRes.json();
+  const tokenData = JSON.parse(tokenText);
   return tokenData.access_token;
 }
 
@@ -125,6 +128,7 @@ serve(async (req) => {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
+          "Accept-Encoding": "identity",
         },
         body: JSON.stringify({
           startDate: startDate.toISOString().split("T")[0],
@@ -136,12 +140,12 @@ serve(async (req) => {
       }
     );
 
+    const pageText = await pageRes.text();
     if (!pageRes.ok) {
-      const errText = await pageRes.text();
-      throw new Error(`GSC API error [${pageRes.status}]: ${errText}`);
+      throw new Error(`GSC API error [${pageRes.status}]: ${pageText}`);
     }
 
-    const pageData = await pageRes.json();
+    const pageData = JSON.parse(pageText);
     const rows = pageData.rows || [];
 
     // Upsert into database

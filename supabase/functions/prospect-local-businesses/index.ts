@@ -257,7 +257,7 @@ async function searchGoogleMaps(
     body.locationBias = {
       circle: {
         center: { latitude: locationBias.lat, longitude: locationBias.lng },
-        radiusMeters: locationBias.radiusMeters,
+        radius: locationBias.radiusMeters,
       },
     };
   }

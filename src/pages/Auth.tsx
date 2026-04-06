@@ -18,39 +18,6 @@ const Auth = () => {
   const inviteToken = searchParams.get("invite");
   const ipToken = searchParams.get("ip");
 
-  useEffect(() => {
-    if (authLoading || !user) return;
-
-    const handlePostAuth = async () => {
-      // Redeem in-person invite token if present
-      if (ipToken) {
-        try {
-          const { data, error } = await supabase.functions.invoke("admin-user-manage", {
-            body: { action: "redeem_ip_invite", token: ipToken },
-          });
-          if (error) throw error;
-          if (data?.error) throw new Error(data.error);
-          toast({ title: "You're in!", description: "Welcome to M2 Training — your portal is ready." });
-        } catch (err: any) {
-          console.warn("[IP-INVITE] Redeem error:", err.message);
-        }
-        navigate("/dashboard", { replace: true });
-        return;
-      }
-
-      // Redeem parent invite token if present
-      if (inviteToken) {
-        await redeemInvite(inviteToken);
-        return;
-      }
-
-      const redirect = searchParams.get("redirect") || "/dashboard";
-      navigate(redirect, { replace: true });
-    };
-
-    handlePostAuth();
-  }, [user, authLoading]);
-
   const redeemInvite = async (token: string) => {
     try {
       const { data, error } = await supabase.functions.invoke("redeem-parent-invite", {
@@ -72,7 +39,6 @@ const Auth = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [athleteName, setAthleteName] = useState("");
-  // Parent flow: child fields
   const [childEmail, setChildEmail] = useState("");
   const [childPassword, setChildPassword] = useState("");
   const [childName, setChildName] = useState("");
@@ -111,6 +77,121 @@ const Auth = () => {
 
     return url.toString();
   }, [inviteToken, ipToken, searchParams]);
+
+  const stripAuthCallbackArtifacts = useCallback(() => {
+    if (typeof window === "undefined") return;
+
+    const url = new URL(window.location.href);
+    const hashParams = new URLSearchParams(url.hash.startsWith("#") ? url.hash.slice(1) : url.hash);
+    let changed = false;
+
+    ["code", "error", "error_code", "error_description", "state"].forEach((key) => {
+      if (url.searchParams.has(key)) {
+        url.searchParams.delete(key);
+        changed = true;
+      }
+    });
+
+    ["access_token", "refresh_token", "expires_in", "expires_at", "provider_token", "provider_refresh_token", "token_type", "type"].forEach((key) => {
+      if (hashParams.has(key)) {
+        hashParams.delete(key);
+        changed = true;
+      }
+    });
+
+    if (!changed) return;
+
+    const nextHash = hashParams.toString();
+    url.hash = nextHash ? `#${nextHash}` : "";
+    window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    const finishAuthCallback = async () => {
+      if (typeof window === "undefined") return;
+
+      const url = new URL(window.location.href);
+      const hashParams = new URLSearchParams(url.hash.startsWith("#") ? url.hash.slice(1) : "");
+      const accessToken = hashParams.get("access_token") || url.searchParams.get("access_token");
+      const refreshToken = hashParams.get("refresh_token") || url.searchParams.get("refresh_token");
+      const code = url.searchParams.get("code");
+      const errorDescription = hashParams.get("error_description") || url.searchParams.get("error_description");
+      const errorMessage = hashParams.get("error") || url.searchParams.get("error");
+      const hasCallbackPayload = Boolean(accessToken && refreshToken) || Boolean(code) || Boolean(errorDescription) || Boolean(errorMessage);
+
+      if (!hasCallbackPayload) return;
+
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+
+        if (sessionData.session) {
+          stripAuthCallbackArtifacts();
+          return;
+        }
+
+        if (errorDescription || errorMessage) {
+          throw new Error(errorDescription || errorMessage);
+        }
+
+        if (accessToken && refreshToken) {
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          if (error) throw error;
+        } else if (code) {
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+          if (error) throw error;
+          if (!data.session) throw new Error("No session returned from sign-in");
+        }
+
+        if (!active) return;
+        stripAuthCallbackArtifacts();
+      } catch (err: any) {
+        if (!active) return;
+        setError(err?.message || "Unable to finish sign-in. Please try again.");
+      }
+    };
+
+    void finishAuthCallback();
+
+    return () => {
+      active = false;
+    };
+  }, [stripAuthCallbackArtifacts]);
+
+  useEffect(() => {
+    if (authLoading || !user) return;
+
+    const handlePostAuth = async () => {
+      if (ipToken) {
+        try {
+          const { data, error } = await supabase.functions.invoke("admin-user-manage", {
+            body: { action: "redeem_ip_invite", token: ipToken },
+          });
+          if (error) throw error;
+          if (data?.error) throw new Error(data.error);
+          toast({ title: "You're in!", description: "Welcome to M2 Training — your portal is ready." });
+        } catch (err: any) {
+          console.warn("[IP-INVITE] Redeem error:", err.message);
+        }
+        navigate("/dashboard", { replace: true });
+        return;
+      }
+
+      if (inviteToken) {
+        await redeemInvite(inviteToken);
+        return;
+      }
+
+      const redirect = searchParams.get("redirect") || "/dashboard";
+      navigate(redirect, { replace: true });
+    };
+
+    void handlePostAuth();
+  }, [authLoading, inviteToken, ipToken, navigate, redeemInvite, searchParams, toast, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

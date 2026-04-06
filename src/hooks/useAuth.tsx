@@ -149,80 +149,85 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [clearSubscriptionState]);
 
   useEffect(() => {
-    let subscription: { unsubscribe: () => void } | null = null;
-    let initialDone = false;
+    let authSubscription: { unsubscribe: () => void } | null = null;
+    let initialHydrated = false;
     let signedOutAlready = false;
+    let active = true;
+
+    const finalizeLoading = () => {
+      if (initialHydrated || !active) return;
+      initialHydrated = true;
+      setLoading(false);
+    };
+
+    const syncSessionState = (nextSession: Session | null) => {
+      if (!active) return;
+
+      setSession(nextSession);
+
+      if (nextSession) {
+        setSubscriptionResolved(false);
+        setTimeout(() => {
+          if (!active) return;
+          void checkSubscription();
+        }, 0);
+      } else {
+        clearSubscriptionState();
+        setSubscriptionResolved(true);
+      }
+    };
 
     const safeClearSession = () => {
-      if (signedOutAlready) return;
+      if (signedOutAlready || !active) return;
       signedOutAlready = true;
       supabase.auth.signOut({ scope: "local" }).catch(() => {});
-      setSession(null);
-      clearSubscriptionState();
-      setSubscriptionResolved(true);
+      syncSessionState(null);
     };
 
     try {
       const result = supabase.auth.onAuthStateChange((event, newSession) => {
-        // If the refresh token is invalid/expired, clear the dead session
+        if (event === "INITIAL_SESSION") {
+          return;
+        }
+
         if (event === "TOKEN_REFRESHED" && !newSession) {
           console.warn("[Auth] Token refresh failed — clearing stale session");
           safeClearSession();
-          if (!initialDone) { initialDone = true; setLoading(false); }
+          finalizeLoading();
           return;
         }
+
         if (event === "SIGNED_OUT") {
           signedOutAlready = true;
         }
-        setSession(newSession);
-        if (!initialDone) {
-          initialDone = true;
-          setLoading(false);
-        }
-        if (newSession) {
-          setSubscriptionResolved(false);
-          setTimeout(() => checkSubscription(), 0);
-        } else {
-          clearSubscriptionState();
-          setSubscriptionResolved(true);
-        }
+
+        syncSessionState(newSession);
+        finalizeLoading();
       });
-      subscription = result.data.subscription;
+
+      authSubscription = result.data.subscription;
     } catch (e) {
       console.warn("[Auth] onAuthStateChange blocked or failed:", e);
     }
 
     const fallbackTimer = setTimeout(() => {
-      if (!initialDone) {
-        initialDone = true;
-        setLoading(false);
-      }
+      finalizeLoading();
     }, 3000);
 
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
-      if (!initialDone) {
-        initialDone = true;
-        setSession(s);
-        setLoading(false);
-        if (s) {
-          setSubscriptionResolved(false);
-          checkSubscription();
-        } else {
-          clearSubscriptionState();
-          setSubscriptionResolved(true);
-        }
-      }
-      // Verify the session is still valid — but only sign out on definitive failures
-      // Use a delayed check to allow token refresh to complete first
-      if (s) {
+    supabase.auth.getSession().then(({ data: { session: restoredSession } }) => {
+      if (signedOutAlready || !active) return;
+
+      syncSessionState(restoredSession);
+      finalizeLoading();
+
+      if (restoredSession) {
         setTimeout(() => {
-          if (signedOutAlready) return;
+          if (signedOutAlready || !active) return;
           supabase.auth.getUser().then(({ error: userError }) => {
-            if (signedOutAlready) return;
+            if (signedOutAlready || !active) return;
             if (userError) {
               const msg = userError.message || "";
               const status = (userError as any).status;
-              // Only clear on definitive auth failures, not transient network errors
               if (
                 msg.includes("session_not_found") ||
                 msg.includes("invalid claim") ||
@@ -235,7 +240,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 console.warn("[Auth] Stale session detected — signing out:", msg);
                 safeClearSession();
               }
-              // For other errors (network, 500, etc.), keep the session — it may recover
             }
           }).catch(() => {
             // Network error — don't sign out, session may still be valid
@@ -243,15 +247,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }, 1500);
       }
     }).catch(() => {
-      if (!initialDone) {
-        initialDone = true;
-        setLoading(false);
-      }
+      finalizeLoading();
     });
 
     return () => {
+      active = false;
       clearTimeout(fallbackTimer);
-      subscription?.unsubscribe();
+      authSubscription?.unsubscribe();
     };
   }, [checkSubscription, clearSubscriptionState]);
 
