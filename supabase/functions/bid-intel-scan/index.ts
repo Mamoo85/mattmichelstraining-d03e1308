@@ -76,17 +76,17 @@ async function aiScoreOpportunity(opp: any, trade: string, territory: string): P
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${LOVABLE_API_KEY}` },
       body: JSON.stringify({
-        model: "anthropic/claude-haiku-4-5-20251001",
+        model: "anthropic/claude-sonnet-4-6",
         max_tokens: 800,
+        response_format: { type: "json_object" },
         messages: [{
           role: "user",
-          content: `Score this bid opportunity 0-100 for a ${trade} subcontractor in ${territory}. Factors: trade match (40pts), location proximity (30pts), project size fit (15pts), timeline feasibility (15pts). Return JSON only: {"fit_score":number,"trade_match":"string","reasoning":"string","title":"string","estimated_value":"string or null"}\n\nOpportunity:\nTitle: ${opp.title}\nDescription: ${opp.description?.substring(0, 2000)}\nLocation: ${opp.location}\nDue: ${opp.bid_due_date || "Unknown"}\nValue: ${opp.estimated_value || "Unknown"}`,
+          content: `Score this bid opportunity 0-100 for a ${trade} subcontractor in ${territory}. Factors: trade match (40pts), location proximity (30pts), project size fit (15pts), timeline feasibility (15pts). Return JSON: {"fit_score":number,"trade_match":"string","reasoning":"string","title":"string","estimated_value":"string or null"}\n\nOpportunity:\nTitle: ${opp.title}\nDescription: ${opp.description?.substring(0, 2000)}\nLocation: ${opp.location}\nDue: ${opp.bid_due_date || "Unknown"}\nValue: ${opp.estimated_value || "Unknown"}`,
         }],
       }),
     });
     const data = await res.json();
-    const content = data.choices?.[0]?.message?.content || "{}";
-    return JSON.parse(content.replace(/```json?\n?/g, "").replace(/```/g, "").trim());
+    return JSON.parse(data.choices?.[0]?.message?.content || "{}");
   } catch { return { fit_score: 0 }; }
 }
 
@@ -96,17 +96,17 @@ async function generateProposal(client: any, opp: any, score: any): Promise<any>
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${LOVABLE_API_KEY}` },
       body: JSON.stringify({
-        model: "anthropic/claude-haiku-4-5-20251001",
+        model: "anthropic/claude-sonnet-4-6",
         max_tokens: 1200,
+        response_format: { type: "json_object" },
         messages: [{
           role: "user",
-          content: `Generate a professional bid proposal draft for ${client.company_name}, a ${client.trade} subcontractor. Opportunity: ${opp.title}. ${opp.description?.substring(0, 1000)}. Use these historical rates: ${JSON.stringify(client.historical_pricing || {})}. Return JSON only: {"proposal_html":"<html string>","estimated_total":"dollar amount string"}`,
+          content: `Generate a professional bid proposal draft for ${client.company_name}, a ${client.trade} subcontractor. Opportunity: ${opp.title}. ${opp.description?.substring(0, 1000)}. Use these historical rates: ${JSON.stringify(client.historical_pricing || {})}. Return JSON: {"proposal_html":"<html string>","estimated_total":"dollar amount string"}`,
         }],
       }),
     });
     const data = await res.json();
-    const content = data.choices?.[0]?.message?.content || "{}";
-    return JSON.parse(content.replace(/```json?\n?/g, "").replace(/```/g, "").trim());
+    return JSON.parse(data.choices?.[0]?.message?.content || "{}");
   } catch { return null; }
 }
 

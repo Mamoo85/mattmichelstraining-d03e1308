@@ -56,17 +56,17 @@ async function aiSummarize(text: string, clientState: string): Promise<any> {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${LOVABLE_API_KEY}` },
       body: JSON.stringify({
-        model: "anthropic/claude-haiku-4-5-20251001",
+        model: "anthropic/claude-sonnet-4-6",
         max_tokens: 1000,
+        response_format: { type: "json_object" },
         messages: [{
           role: "user",
-          content: `You are a regulatory compliance analyst. Summarize this regulation for a ${clientState} manufacturer. Return JSON only: {"title":"string","agency":"string","impact_level":"critical|high|medium|low","action_required":true/false,"deadline":"YYYY-MM-DD or null","summary":"string","draft_filing_needed":true/false}\n\nRegulation:\n${text.substring(0, 3000)}`,
+          content: `You are a regulatory compliance analyst. Summarize this regulation for a ${clientState} manufacturer. Return JSON: {"title":"string","agency":"string","impact_level":"critical|high|medium|low","action_required":true/false,"deadline":"YYYY-MM-DD or null","summary":"string","draft_filing_needed":true/false}\n\nRegulation:\n${text.substring(0, 3000)}`,
         }],
       }),
     });
     const data = await res.json();
-    const content = data.choices?.[0]?.message?.content || "{}";
-    return JSON.parse(content.replace(/```json?\n?/g, "").replace(/```/g, "").trim());
+    return JSON.parse(data.choices?.[0]?.message?.content || "{}");
   } catch { return null; }
 }
 
@@ -148,8 +148,9 @@ async function processClient(client: any): Promise<{ items: number; criticals: n
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${LOVABLE_API_KEY}` },
           body: JSON.stringify({
-            model: "anthropic/claude-haiku-4-5-20251001",
+            model: "anthropic/claude-sonnet-4-6",
             max_tokens: 1200,
+            response_format: { type: "json_object" },
             messages: [{
               role: "user",
               content: `Draft a compliance filing response for ${client.company_name} regarding: ${analysis.title}. Summary: ${analysis.summary}. Deadline: ${analysis.deadline || "TBD"}. Return JSON: {"filing_type":"string","draft_html":"<html string>"}`,
@@ -158,7 +159,7 @@ async function processClient(client: any): Promise<{ items: number; criticals: n
         });
         try {
           const draftData = await draftRes.json();
-          const draft = JSON.parse(draftData.choices?.[0]?.message?.content?.replace(/```json?\n?/g, "").replace(/```/g, "").trim() || "{}");
+          const draft = JSON.parse(draftData.choices?.[0]?.message?.content || "{}");
           if (draft.draft_html) {
             await supabase.from("reg_filing_drafts").insert({
               client_id: client.id,
