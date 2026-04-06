@@ -100,7 +100,7 @@ const DataHubButton = () => {
     if (slides.length <= 1) return;
     const interval = setInterval(() => {
       setActiveSlide((prev) => (prev + 1) % slides.length);
-    }, 2500);
+    }, 10000);
     return () => clearInterval(interval);
   }, [slides.length]);
 
