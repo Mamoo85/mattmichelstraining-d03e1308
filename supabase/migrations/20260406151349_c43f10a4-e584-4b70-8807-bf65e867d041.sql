@@ -1,0 +1,1 @@
+DROP POLICY "Authenticated can view active listings" ON public.business_listings;
