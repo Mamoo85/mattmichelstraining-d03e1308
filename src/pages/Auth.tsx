@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import m2Logo from "@/assets/m2-logo.jpg";
@@ -193,27 +192,19 @@ const Auth = () => {
     setSuccess("");
     console.log("[GOOGLE-AUTH] Starting Google sign-in, origin:", window.location.origin);
     try {
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: buildAuthRedirectUrl("/dashboard"),
+        },
       });
-      console.log("[GOOGLE-AUTH] Result:", JSON.stringify(result, null, 2));
-      if (result?.error) {
-        const msg = result.error.message || "Google sign-in failed";
-        console.error("[GOOGLE-AUTH] Error:", msg);
-        if (msg.toLowerCase().includes("interrupted") || msg.toLowerCase().includes("popup")) {
-          setError("Sign-in was interrupted. Please try again — make sure popups aren't blocked.");
-        } else {
-          setError(msg);
-        }
+      if (oauthError) {
+        console.error("[GOOGLE-AUTH] Error:", oauthError.message);
+        setError(oauthError.message || "Google sign-in failed");
       }
     } catch (e: any) {
       console.error("[GOOGLE-AUTH] Catch:", e);
-      const msg = e.message || "Google sign-in failed";
-      if (msg.toLowerCase().includes("interrupted") || msg.toLowerCase().includes("popup")) {
-        setError("Connection interrupted. Check your internet and try again.");
-      } else {
-        setError(msg);
-      }
+      setError(e.message || "Google sign-in failed");
     } finally {
       setGoogleLoading(false);
     }
