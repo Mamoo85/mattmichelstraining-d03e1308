@@ -1454,6 +1454,16 @@ serve(async (req) => {
         bedtime_story_subscription: "AI Bedtime Stories",
         crime_digest_subscription: "Neighborhood Crime Digest",
         license_monitor_subscription: "Business License Monitor",
+        commercial_lease_subscription: "Commercial Lease Abstractor",
+        patent_watch_subscription: "Patent Watch Intelligence",
+        pe_intelligence_subscription: "PE/Investor Sector Intelligence",
+        rd_intelligence_subscription: "Corporate R&D Intelligence",
+        credit_dispute_subscription: "Credit Dispute Letter Factory",
+        medical_bill_subscription: "Medical Bill Dispute Letters",
+        supplement_analyzer_subscription: "Supplement Stack Analyzer",
+        trade_association_subscription: "Trade Association Intelligence",
+        childrens_story_subscription: "Children's Story Subscription",
+        luxury_re_subscription: "Luxury Real Estate Intelligence",
       };
 
       // ── COMPETITOR PRICING INTELLIGENCE ───────────────────────────────────
@@ -3214,6 +3224,16 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
         ["restaurant_menu_subscription", "restaurant_menu_clients", "business_name", 3900],
         ["testimonial_harvester_subscription", "testimonial_harvester_clients", "business_name", 3900],
         ["trade_show_followup_subscription", "trade_show_followup_clients", "business_name", 4900],
+        ["commercial_lease_subscription", "commercial_lease_clients", "company_name", 14900],
+        ["patent_watch_subscription", "patent_watch_clients", "company_name", 19900],
+        ["pe_intelligence_subscription", "pe_intelligence_clients", "company_name", 29900],
+        ["rd_intelligence_subscription", "rd_intelligence_clients", "company_name", 19900],
+        ["credit_dispute_subscription", "credit_dispute_clients", "contact_name", 7900],
+        ["medical_bill_subscription", "medical_bill_clients", "contact_name", 7900],
+        ["supplement_analyzer_subscription", "supplement_analyzer_clients", "contact_name", 1900],
+        ["trade_association_subscription", "trade_association_clients", "company_name", 14900],
+        ["childrens_story_subscription", "childrens_story_clients", "contact_name", 999],
+        ["luxury_re_subscription", "luxury_re_clients", "company_name", 29900],
       ];
 
       for (const [metaType, tableName, nameField, price] of newProductHandlers) {
@@ -3227,7 +3247,7 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
               stripe_subscription_id: subscriptionId,
               stripe_customer_id: customerId,
             };
-            upsertData[nameField] = meta.businessName || meta.orgName || meta.funeralHomeName || meta.hoaName || meta.churchName || meta.restaurantName || meta.name || null;
+            upsertData[nameField] = meta.company_name || meta.businessName || meta.orgName || meta.funeralHomeName || meta.hoaName || meta.churchName || meta.restaurantName || meta.child_name || meta.name || null;
             await sb.from(tableName).upsert(upsertData, { onConflict: "email" });
             const label = AGENCY_SERVICE_LABELS[metaType] || metaType;
             const priceStr = `$${(price/100).toFixed(0)}/mo`;
