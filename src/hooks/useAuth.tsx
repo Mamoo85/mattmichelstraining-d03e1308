@@ -226,7 +226,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               if (
                 msg.includes("session_not_found") ||
                 msg.includes("invalid claim") ||
+                msg.includes("invalid JWT") ||
                 msg.includes("JWT expired") ||
+                msg.includes("token is unverifiable") ||
                 status === 401 ||
                 status === 403
               ) {
