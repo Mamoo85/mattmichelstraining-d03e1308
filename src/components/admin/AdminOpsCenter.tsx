@@ -137,14 +137,30 @@ export default function AdminOpsCenter() {
       let totalClients = 0;
       const rosterMap = new Map<string, RosterEntry>();
 
-      for (const svc of ALL_SERVICES) {
-        try {
-          const { data: rows } = await (supabase.from as any)(svc.table)
-            .select("business_name, email, phone, created_at")
-            .eq("active", true)
-            .limit(200);
+      // Batch queries in parallel (groups of 15) to prevent main-thread blocking
+      const BATCH_SIZE = 15;
+      for (let i = 0; i < ALL_SERVICES.length; i += BATCH_SIZE) {
+        const batch = ALL_SERVICES.slice(i, i + BATCH_SIZE);
+        const results = await Promise.all(
+          batch.map(async (svc) => {
+            try {
+              const { data: rows } = await (supabase.from as any)(svc.table)
+                .select("business_name, email, phone, created_at")
+                .eq("active", true)
+                .limit(200);
+              return { svc, rows: rows || [], error: false };
+            } catch {
+              return { svc, rows: [] as any[], error: true };
+            }
+          })
+        );
 
-          const clients: ClientRecord[] = (rows || []).map((r: any) => ({
+        for (const { svc, rows, error } of results) {
+          if (error) {
+            services.push({ name: svc.name, price: svc.price, priceNum: svc.priceNum, activeCount: 0, totalRevenue: 0, clients: [] });
+            continue;
+          }
+          const clients: ClientRecord[] = rows.map((r: any) => ({
             business_name: r.business_name || "Unknown",
             email: r.email || "N/A",
             phone: r.phone || undefined,
@@ -174,8 +190,6 @@ export default function AdminOpsCenter() {
               });
             }
           }
-        } catch {
-          services.push({ name: svc.name, price: svc.price, priceNum: svc.priceNum, activeCount: 0, totalRevenue: 0, clients: [] });
         }
       }
 

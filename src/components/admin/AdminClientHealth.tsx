@@ -85,31 +85,42 @@ export default function AdminClientHealth() {
     queryKey: ["admin-client-health"],
     queryFn: async () => {
       const rows: ClientRow[] = [];
-      for (const cfg of SERVICE_TABLES) {
-        try {
-          const { data } = await (supabase.from as any)(cfg.table)
-            .select("business_name, email, active, industry" + (cfg.lastField ? `, ${cfg.lastField}` : ""))
-            .eq("active", true)
-            .limit(100);
-          if (data) {
-            for (const r of data) {
-              const lastVal = cfg.lastField ? r[cfg.lastField] : null;
-              const days = daysBetween(lastVal);
-              rows.push({
-                service: cfg.service,
-                price: cfg.price,
-                businessName: r.business_name,
-                email: r.email,
-                industry: r.industry || null,
-                active: r.active,
-                lastDelivery: lastVal ? new Date(lastVal).toLocaleDateString() : null,
-                daysSince: days,
-                status: getStatus(days, cfg.freq),
-                isInternal: isInternalEmail(r.email),
-              });
+      // Batch queries in parallel (groups of 15) to prevent main-thread blocking
+      const BATCH_SIZE = 15;
+      for (let i = 0; i < SERVICE_TABLES.length; i += BATCH_SIZE) {
+        const batch = SERVICE_TABLES.slice(i, i + BATCH_SIZE);
+        const results = await Promise.all(
+          batch.map(async (cfg) => {
+            try {
+              const { data } = await (supabase.from as any)(cfg.table)
+                .select("business_name, email, active, industry" + (cfg.lastField ? `, ${cfg.lastField}` : ""))
+                .eq("active", true)
+                .limit(100);
+              return { cfg, data: data || [] };
+            } catch {
+              return { cfg, data: [] as any[] };
             }
+          })
+        );
+
+        for (const { cfg, data } of results) {
+          for (const r of data) {
+            const lastVal = cfg.lastField ? r[cfg.lastField] : null;
+            const days = daysBetween(lastVal);
+            rows.push({
+              service: cfg.service,
+              price: cfg.price,
+              businessName: r.business_name,
+              email: r.email,
+              industry: r.industry || null,
+              active: r.active,
+              lastDelivery: lastVal ? new Date(lastVal).toLocaleDateString() : null,
+              daysSince: days,
+              status: getStatus(days, cfg.freq),
+              isInternal: isInternalEmail(r.email),
+            });
           }
-        } catch {}
+        }
       }
       return rows.sort((a, b) => {
         // Internal goes last
