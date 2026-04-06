@@ -50,6 +50,3 @@ jobs:
             FIRECRAWL_API_KEY="${{ secrets.FIRECRAWL_API_KEY }}" \
             ADMIN_PHONE_NUMBER="${{ secrets.ADMIN_PHONE_NUMBER }}" \
             APP_BASE_URL="${{ secrets.APP_BASE_URL }}"
-
-      - name: Deploy all edge functions
-        run: supabase functions deploy --project-ref zmyczlfuufhngzovkjdh
