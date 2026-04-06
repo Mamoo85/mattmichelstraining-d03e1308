@@ -77,17 +77,22 @@ serve(async (_req) => {
         // Auto-publish if CMS credentials are configured
         let published = false;
         if (client.auto_publish && client.cms_type && client.cms_url) {
+          // Decrypt CMS credentials from encrypted columns
+          const { data: creds } = await sb.rpc("decrypt_cms_credentials", { _client_id: client.id });
+          const cmsUsername = creds?.[0]?.cms_username;
+          const cmsPassword = creds?.[0]?.cms_app_password;
+
           const posts = content.split("---POST---").filter((p: string) => p.trim());
           for (const post of posts) {
             const titleMatch = post.match(/<h1[^>]*>(.*?)<\/h1>/i);
             const title = titleMatch ? titleMatch[1] : `${client.business_name} Blog — ${month}`;
             const body = post.replace(/<h1[^>]*>.*?<\/h1>/i, "").trim();
 
-            if (client.cms_type === "wordpress" && client.cms_username && client.cms_app_password) {
-              await publishToWordPress(client.cms_url, client.cms_username, client.cms_app_password, title, body);
+            if (client.cms_type === "wordpress" && cmsUsername && cmsPassword) {
+              await publishToWordPress(client.cms_url, cmsUsername, cmsPassword, title, body);
               published = true;
-            } else if (client.cms_type === "wix" && client.cms_username && client.cms_app_password) {
-              await publishToWix(client.cms_username, client.cms_app_password, title, body);
+            } else if (client.cms_type === "wix" && cmsUsername && cmsPassword) {
+              await publishToWix(cmsUsername, cmsPassword, title, body);
               published = true;
             }
           }
