@@ -1464,6 +1464,7 @@ serve(async (req) => {
         trade_association_subscription: "Trade Association Intelligence",
         childrens_story_subscription: "Children's Story Subscription",
         luxury_re_subscription: "Luxury Real Estate Intelligence",
+        revenue_preventer_bundle: "Revenue Preventer Bundle",
       };
 
       // ── COMPETITOR PRICING INTELLIGENCE ───────────────────────────────────
