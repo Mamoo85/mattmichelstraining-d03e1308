@@ -17,8 +17,11 @@ jobs:
         with:
           version: latest
 
+      - name: Link Supabase project
+        run: supabase link --project-ref zmyczlfuufhngzovkjdh
+
       - name: Run database migrations
-        run: supabase db push --project-ref zmyczlfuufhngzovkjdh
+        run: supabase db push
 
       - name: Sync secrets to Supabase
         run: |
