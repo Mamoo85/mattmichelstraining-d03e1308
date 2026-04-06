@@ -264,16 +264,12 @@
         setTimeout(function() {
           if (mounted) return;
 
-          var shell = document.getElementById('hero-shell');
-          var isPreviewHost = location.hostname.indexOf('id-preview--') > -1 || location.hostname.indexOf('lovableproject.com') > -1;
-          var isStandalone = !!(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
           var attempted = false;
-
           try {
             attempted = sessionStorage.getItem('m2_app_recovery_attempted') === '1';
           } catch (e) {}
 
-          if (!attempted && (isPreviewHost || isStandalone) && 'serviceWorker' in navigator) {
+          if (!attempted && 'serviceWorker' in navigator) {
             try {
               sessionStorage.setItem('m2_app_recovery_attempted', '1');
             } catch (e) {}
@@ -287,7 +283,7 @@
           }
 
           renderReload('Loading took too long.');
-        }, 8000);
+        }, 12000);
       })();
     </script>
     <script type="module" src="/src/main.tsx"></script>
