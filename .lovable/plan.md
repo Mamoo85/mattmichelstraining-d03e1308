@@ -1,46 +1,46 @@
 
 
-# Fix the Prospecting Pipeline
+# Fix JWT Mismatch, Harden Auth Recovery, Fix Lazy Imports
 
-## The Problem
-Neo (your cold outreach engine) and the Prospector (your lead finder) reference `prospect_businesses` and `prospect_outreach` tables that **do not exist in the database**. The migration file exists but was never applied. This means zero leads are being found and zero cold emails are being sent — the entire acquisition pipeline is offline.
+## Problem Summary
+1. `src/integrations/supabase/client.ts` falls back to old project `zmyczlfu...` when env vars are missing at build time, causing "unrecognized JWT kid" errors
+2. Auth page needs stronger recovery when stale/mismatched JWTs are detected
+3. `src/pages/Index.tsx` uses raw `React.lazy()` instead of the project's `lazyRetry()` pattern, causing "Failed to fetch dynamically imported module" crashes
 
-Additionally, `prospect_businesses` is missing an `email` column, which Neo's code explicitly references (`prospect.email`). Without it, no emails can be sent even after the table exists.
+## Plan
 
-## What Will Be Built
+### 1. Lock build to correct backend via vite.config.ts
+Add `define` block to force the correct Supabase URL and key as build-time constants, so even if the auto-generated client file has stale fallbacks, the env vars win:
 
-### Step 1: Database Migration
-Create and apply a migration that builds:
+```ts
+define: {
+  'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(
+    env.VITE_SUPABASE_URL || "https://eauvubfpanpeuxsrqesu.supabase.co"
+  ),
+  'import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY': JSON.stringify(
+    env.VITE_SUPABASE_PUBLISHABLE_KEY || env.VITE_SUPABASE_ANON_KEY || "eyJhbGci..."
+  ),
+}
+```
 
-- **`prospect_businesses`** — the lead database for Neo and Prospector
-  - All existing columns from the migration file (business_name, address, city, state, phone, website, industry, google_place_id, review_count, rating, tier, has_website, outreach_status, notes, source)
-  - **Add `email` column** (text, nullable) — this is the critical missing piece Neo needs
-  - RLS enabled, service_role policy
-  - Indexes on tier, outreach_status, industry, created_at
+### 2. Harden auth recovery in Auth.tsx
+- In the `clearStaleToken` effect, also catch `session_not_found` and `JWT expired` patterns
+- After clearing a stale session, also clear the TanStack Query cache to prevent stale data from persisting
+- In `finishAuthCallback`, if `getSession()` returns a session but `getUser()` fails with JWT errors, clear and retry the callback tokens instead of silently succeeding
 
-- **`prospect_outreach`** — tracks every email Neo sends
-  - prospect_id (FK to prospect_businesses), email, business_name, industry, outreach_type, subject, status, sent_at, replied_at
-  - RLS enabled, service_role policy
-  - Index on sent_at for daily cap counting
+### 3. Strengthen useAuth.tsx mismatch handling
+- In the `safeClearSession` path and `getUser()` validation, also match `unrecognized JWT kid` in the error message list (it's currently missing — only `invalid JWT`, `invalid claim`, `JWT expired`, `token is unverifiable` are checked)
 
-### Step 2: Fix Neo Outreach Edge Function
-- The function currently queries `prospect_businesses` correctly but the `email` field doesn't exist in the original schema — confirm the new migration adds it
-- No code changes needed to `neo-outreach/index.ts` if the email column is added to the table
+### 4. Extract lazyRetry to shared utility & fix Index.tsx
+- Create `src/lib/lazyRetry.ts` exporting `retryLazyImport` and `lazyRetry` (move from App.tsx)
+- Update `src/App.tsx` to import from `@/lib/lazyRetry`
+- Update `src/pages/Index.tsx` to use `lazyRetry()` for all its lazy imports (`ChallengeTeaser`, `DoNotPressButton`, `FirstMonthPromo`, `AiGeneratorShowcase`, `ProveItShowcase`, `InstagramSocialBox`)
 
-### Step 3: Verify Prospector Edge Function
-- `prospect-local-businesses/index.ts` (764 lines) inserts into `prospect_businesses` — verify it populates the email field when available from Google Maps data
-- If the prospector doesn't extract emails, add email extraction from the business website (via Firecrawl) during the scoring pass
-
-## Technical Details
-
-**Migration SQL** will use `CREATE TABLE IF NOT EXISTS` to be safe, with:
-- `google_place_id TEXT UNIQUE` to prevent duplicate prospect entries
-- Partial index on `outreach_status = 'new'` for Neo's hot query path
-- The email column as nullable since not all prospects will have emails discoverable
-
-**Files modified:**
-- 1 new migration file
-- Possibly `supabase/functions/prospect-local-businesses/index.ts` if email extraction is missing
-
-**No frontend changes needed** — this is all backend pipeline infrastructure.
+### Files Changed
+- `vite.config.ts` — add `define` block
+- `src/lib/lazyRetry.ts` — new file (extracted from App.tsx)
+- `src/App.tsx` — import `lazyRetry` from shared utility
+- `src/pages/Index.tsx` — switch to `lazyRetry` imports
+- `src/pages/Auth.tsx` — broaden stale-token detection
+- `src/hooks/useAuth.tsx` — add `unrecognized JWT kid` to error pattern list
 
