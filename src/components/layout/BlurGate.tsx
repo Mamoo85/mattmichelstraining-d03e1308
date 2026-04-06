@@ -1,6 +1,7 @@
 import { useAuth } from "@/hooks/useAuth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Lock, UserPlus, CreditCard } from "lucide-react";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 interface BlurGateProps {
   children: React.ReactNode;
@@ -9,11 +10,16 @@ interface BlurGateProps {
 
 const BlurGate = ({ children, requireSubscription = false }: BlurGateProps) => {
   const { user, loading, subscribed, subscriptionLoading } = useAuth();
+  const { isAdmin, isLoading: adminLoading } = useIsAdmin();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const authUrl = `/auth?redirect=${encodeURIComponent(`${location.pathname}${location.search}${location.hash}`)}`;
 
   // While auth/subscription is resolving, just render children — no overlay, no flash
   if (loading) return <>{children}</>;
-
+  if (user && adminLoading) return <>{children}</>;
+  if (user && isAdmin) return <>{children}</>;
   if (user && requireSubscription && subscriptionLoading) return <>{children}</>;
 
   const needsAuth = !user;
@@ -46,13 +52,13 @@ const BlurGate = ({ children, requireSubscription = false }: BlurGateProps) => {
             {needsAuth ? (
               <>
                 <button
-                  onClick={() => navigate("/auth")}
+                  onClick={() => navigate(authUrl)}
                   className="w-full flex items-center justify-center gap-2 py-3 bg-primary text-primary-foreground text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-opacity"
                 >
                   <UserPlus size={14} /> Sign Up Free
                 </button>
                 <button
-                  onClick={() => navigate("/auth")}
+                  onClick={() => navigate(authUrl)}
                   className="w-full py-2.5 border border-border text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Already have an account? Log In

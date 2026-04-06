@@ -181,7 +181,7 @@ const Auth = () => {
       if (error) {
         setError(error.message);
       } else {
-        navigate(searchParams.get("redirect") || "/dashboard");
+        setSuccess("Signed in — redirecting...");
       }
     }
     setLoading(false);
@@ -191,10 +191,11 @@ const Auth = () => {
     setGoogleLoading(true);
     setError("");
     setSuccess("");
-    console.log("[GOOGLE-AUTH] Starting Google sign-in, origin:", window.location.origin);
+    const redirectUrl = buildAuthRedirectUrl("/dashboard");
+    console.log("[GOOGLE-AUTH] Starting Google sign-in, redirect:", redirectUrl);
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+        redirect_uri: redirectUrl,
       });
       console.log("[GOOGLE-AUTH] Result:", JSON.stringify(result, null, 2));
       if (result?.error) {
@@ -205,6 +206,8 @@ const Auth = () => {
         } else {
           setError(msg);
         }
+      } else if (!result?.redirected) {
+        setSuccess("Signed in — redirecting...");
       }
     } catch (e: any) {
       console.error("[GOOGLE-AUTH] Catch:", e);
