@@ -700,13 +700,13 @@ const App = () => (
                     <Route path="/zone" element={<ZonePortal />} />
                     <Route path="/client-portal" element={<ProtectedRoute><ClientPortal /></ProtectedRoute>} />
                     <Route path="/site/:slug" element={<ClientSite />} />
-                    <Route path="/zone-dashboard" element={<BlurGate requireSubscription><ZoneDashboard /></BlurGate>} />
-                    <Route path="/coach" element={<BlurGate requireSubscription><Coach /></BlurGate>} />
-                    <Route path="/trial-welcome" element={<ProtectedRoute><TrialWelcome /></ProtectedRoute>} />
-                    <Route path="/assessment" element={<ProtectedRoute><Assessment /></ProtectedRoute>} />
-                    <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
-                    <Route path="/admin/view-user/:userId" element={<ProtectedRoute><AdminViewUser /></ProtectedRoute>} />
-                    <Route path="/dashboard" element={<BlurGate requireSubscription><ZoneDashboard /></BlurGate>} />
+                     <Route path="/zone-dashboard" element={<ZoneDashboard />} />
+                     <Route path="/coach" element={<BlurGate requireSubscription><Coach /></BlurGate>} />
+                     <Route path="/trial-welcome" element={<ProtectedRoute><TrialWelcome /></ProtectedRoute>} />
+                     <Route path="/assessment" element={<ProtectedRoute><Assessment /></ProtectedRoute>} />
+                     <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
+                     <Route path="/admin/view-user/:userId" element={<ProtectedRoute><AdminViewUser /></ProtectedRoute>} />
+                     <Route path="/dashboard" element={<ZoneDashboard />} />
                     <Route path="/ai-insights" element={<BlurGate requireSubscription><AiInsights /></BlurGate>} />
                     <Route path="/profile" element={<BlurGate><Profile /></BlurGate>} />
                     <Route path="/progress" element={<BlurGate requireSubscription><Progress /></BlurGate>} />
