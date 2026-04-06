@@ -56,6 +56,16 @@ const SERVICE_TABLES = [
   // ── High-Ticket Products ─────────────────────────────────────────────────
   { table: "reg_filing_clients", service: "Regulatory Filing Monitor", price: "$497/mo", lastField: "last_scan_at", freq: 1 },
   { table: "bid_intel_clients", service: "Bid Intelligence", price: "$599/mo", lastField: "last_scan_at", freq: 1 },
+  { table: "commercial_lease_clients", service: "Commercial Lease Abstractor", price: "$149/mo", lastField: null, freq: 0 },
+  { table: "patent_watch_clients", service: "Patent Watch Intelligence", price: "$199/mo", lastField: null, freq: 7 },
+  { table: "pe_intelligence_clients", service: "PE/Investor Sector Intelligence", price: "$299/mo", lastField: null, freq: 7 },
+  { table: "rd_intelligence_clients", service: "R&D Paper Intelligence", price: "$199/mo", lastField: null, freq: 7 },
+  { table: "credit_dispute_clients", service: "Credit Dispute Letters", price: "$79/mo", lastField: null, freq: 0 },
+  { table: "medical_bill_clients", service: "Medical Bill Dispute Letters", price: "$79/mo", lastField: null, freq: 0 },
+  { table: "supplement_analyzer_clients", service: "Supplement Stack Analyzer", price: "$19/mo", lastField: null, freq: 30 },
+  { table: "trade_association_clients", service: "Trade Association Intelligence", price: "$149/mo", lastField: null, freq: 7 },
+  { table: "story_subscription_clients", service: "Children\'s Story Subscription", price: "$9.99/mo", lastField: null, freq: 7 },
+  { table: "luxury_re_clients", service: "Luxury Real Estate Intelligence", price: "$299/mo", lastField: null, freq: 7 },
 ] as const;
 
 function daysBetween(dateStr: string | null): number | null {

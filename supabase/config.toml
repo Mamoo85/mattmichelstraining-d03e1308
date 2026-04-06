@@ -1383,3 +1383,33 @@ verify_jwt = false
 [functions.yoda-retain]
 verify_jwt = false
 
+
+[functions.create-commercial-lease-checkout]
+verify_jwt = false
+
+[functions.create-patent-watch-checkout]
+verify_jwt = false
+
+[functions.create-pe-intelligence-checkout]
+verify_jwt = false
+
+[functions.create-rd-intelligence-checkout]
+verify_jwt = false
+
+[functions.create-credit-dispute-checkout]
+verify_jwt = false
+
+[functions.create-medical-bill-checkout]
+verify_jwt = false
+
+[functions.create-supplement-analyzer-checkout]
+verify_jwt = false
+
+[functions.create-trade-association-checkout]
+verify_jwt = false
+
+[functions.create-childrens-story-checkout]
+verify_jwt = false
+
+[functions.create-luxury-re-checkout]
+verify_jwt = false

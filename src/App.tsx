@@ -282,6 +282,16 @@ const CrimeDigest = lazyRetry(() => import("./pages/CrimeDigest"));
 const LicenseMonitor = lazyRetry(() => import("./pages/LicenseMonitor"));
 const RegulatoryFilingMonitor = lazyRetry(() => import("./pages/RegulatoryFilingMonitor"));
 const BidIntelligence = lazyRetry(() => import("./pages/BidIntelligence"));
+const CommercialLease = lazyRetry(() => import("./pages/CommercialLease"));
+const PatentWatch = lazyRetry(() => import("./pages/PatentWatch"));
+const PEIntelligence = lazyRetry(() => import("./pages/PEIntelligence"));
+const RDIntelligence = lazyRetry(() => import("./pages/RDIntelligence"));
+const CreditDispute = lazyRetry(() => import("./pages/CreditDispute"));
+const MedicalBillDispute = lazyRetry(() => import("./pages/MedicalBillDispute"));
+const SupplementAnalyzer = lazyRetry(() => import("./pages/SupplementAnalyzer"));
+const TradeAssociationIntel = lazyRetry(() => import("./pages/TradeAssociationIntel"));
+const ChildrensStories = lazyRetry(() => import("./pages/ChildrensStories"));
+const LuxuryRealEstate = lazyRetry(() => import("./pages/LuxuryRealEstate"));
 const TechSupportServices = lazyRetry(() => import("./pages/TechSupportServices"));
 const RevenuePreventer = lazyRetry(() => import("./pages/RevenuePreventer"));
 const FreeComplianceScan = lazyRetry(() => import("./pages/FreeComplianceScan"));
@@ -664,6 +674,16 @@ const App = () => (
                     <Route path="/license-monitor" element={<LicenseMonitor />} />
                     <Route path="/regulatory-filing-monitor" element={<RegulatoryFilingMonitor />} />
                     <Route path="/bid-intelligence" element={<BidIntelligence />} />
+                    <Route path="/commercial-lease" element={<CommercialLease />} />
+                    <Route path="/patent-watch" element={<PatentWatch />} />
+                    <Route path="/pe-intelligence" element={<PEIntelligence />} />
+                    <Route path="/rd-intelligence" element={<RDIntelligence />} />
+                    <Route path="/credit-dispute" element={<CreditDispute />} />
+                    <Route path="/medical-bill-dispute" element={<MedicalBillDispute />} />
+                    <Route path="/supplement-analyzer" element={<SupplementAnalyzer />} />
+                    <Route path="/trade-association-intel" element={<TradeAssociationIntel />} />
+                    <Route path="/childrens-stories" element={<ChildrensStories />} />
+                    <Route path="/luxury-re-intel" element={<LuxuryRealEstate />} />
                     <Route path="/tech-support" element={<TechSupportServices />} />
                     <Route path="/revenue-preventer" element={<RevenuePreventer />} />
                     <Route path="/free-compliance-scan" element={<FreeComplianceScan />} />

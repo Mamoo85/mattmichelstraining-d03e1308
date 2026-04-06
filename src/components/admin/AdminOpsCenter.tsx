@@ -87,6 +87,17 @@ const ALL_SERVICES = [
   // ── High-Ticket Products ─────────────────────────────────────────────────
   { table: "reg_filing_clients", name: "Regulatory Filing Monitor", price: "$497/mo", priceNum: 497 },
   { table: "bid_intel_clients", name: "Bid Intelligence", price: "$599/mo", priceNum: 599 },
+  // ── Wave 3: Remaining Products ───────────────────────────────────────────
+  { table: "commercial_lease_clients", name: "Commercial Lease Abstractor", price: "$149/mo", priceNum: 149 },
+  { table: "patent_watch_clients", name: "Patent Watch Intelligence", price: "$199/mo", priceNum: 199 },
+  { table: "pe_intelligence_clients", name: "PE/Investor Sector Intelligence", price: "$299/mo", priceNum: 299 },
+  { table: "rd_intelligence_clients", name: "R&D Paper Intelligence", price: "$199/mo", priceNum: 199 },
+  { table: "credit_dispute_clients", name: "Credit Dispute Letter Factory", price: "$79/mo", priceNum: 79 },
+  { table: "medical_bill_clients", name: "Medical Bill Dispute Letters", price: "$79/mo", priceNum: 79 },
+  { table: "supplement_analyzer_clients", name: "Supplement Stack Analyzer", price: "$19/mo", priceNum: 19 },
+  { table: "trade_association_clients", name: "Trade Association Intelligence", price: "$149/mo", priceNum: 149 },
+  { table: "story_subscription_clients", name: "Children's Story Subscription", price: "$9.99/mo", priceNum: 9.99 },
+  { table: "luxury_re_clients", name: "Luxury Real Estate Intelligence", price: "$299/mo", priceNum: 299 },
 ] as const;
 
 interface ClientRecord {
