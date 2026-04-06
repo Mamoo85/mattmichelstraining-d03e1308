@@ -234,6 +234,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 msg.includes("invalid JWT") ||
                 msg.includes("JWT expired") ||
                 msg.includes("token is unverifiable") ||
+                msg.includes("unrecognized JWT kid") ||
                 status === 401 ||
                 status === 403
               ) {

@@ -149,8 +149,28 @@ const Auth = () => {
         const { data: sessionData } = await supabase.auth.getSession();
 
         if (sessionData.session) {
-          stripAuthCallbackArtifacts();
-          return;
+          // Validate the existing session isn't stale/mismatched
+          const { error: userErr } = await supabase.auth.getUser();
+          if (userErr) {
+            const msg = userErr.message || "";
+            if (
+              msg.includes("invalid JWT") ||
+              msg.includes("unrecognized JWT kid") ||
+              msg.includes("token is unverifiable") ||
+              msg.includes("session_not_found") ||
+              msg.includes("JWT expired")
+            ) {
+              console.warn("[Auth] Stale session during callback — clearing:", msg);
+              await supabase.auth.signOut({ scope: "local" });
+              // Fall through to use the callback tokens instead
+            } else {
+              stripAuthCallbackArtifacts();
+              return;
+            }
+          } else {
+            stripAuthCallbackArtifacts();
+            return;
+          }
         }
 
         if (errorDescription || errorMessage) {
