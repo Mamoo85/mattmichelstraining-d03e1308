@@ -282,6 +282,9 @@ const LicenseMonitor = lazyRetry(() => import("./pages/LicenseMonitor"));
 const RegulatoryFilingMonitor = lazyRetry(() => import("./pages/RegulatoryFilingMonitor"));
 const BidIntelligence = lazyRetry(() => import("./pages/BidIntelligence"));
 const TechSupportServices = lazyRetry(() => import("./pages/TechSupportServices"));
+const RevenuePreventer = lazyRetry(() => import("./pages/RevenuePreventer"));
+const FreeComplianceScan = lazyRetry(() => import("./pages/FreeComplianceScan"));
+const FreeBidReport = lazyRetry(() => import("./pages/FreeBidReport"));
 const LegalPage = lazyRetry(() => import("./pages/LegalPage"));
 const CookieBanner = lazyRetry(() => import("./components/layout/CookieBanner"));
 const LegalFooterLazy = lazyRetry(() => import("./components/layout/LegalFooter"));
@@ -661,6 +664,9 @@ const App = () => (
                     <Route path="/regulatory-filing-monitor" element={<RegulatoryFilingMonitor />} />
                     <Route path="/bid-intelligence" element={<BidIntelligence />} />
                     <Route path="/tech-support" element={<TechSupportServices />} />
+                    <Route path="/revenue-preventer" element={<RevenuePreventer />} />
+                    <Route path="/free-compliance-scan" element={<FreeComplianceScan />} />
+                    <Route path="/free-bid-report" element={<FreeBidReport />} />
                     <Route path="/tools/:slug" element={<MicroSaasToolPage />} />
                     <Route path="/legal/:type" element={<LegalPage />} />
                     <Route path="/partner-program" element={<PartnerProgram />} />
