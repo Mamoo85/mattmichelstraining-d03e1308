@@ -786,11 +786,9 @@ export type Database = {
           active: boolean | null
           auto_publish: boolean | null
           business_name: string
-          cms_app_password: string | null
           cms_app_password_enc: string | null
           cms_type: string | null
           cms_url: string | null
-          cms_username: string | null
           cms_username_enc: string | null
           created_at: string | null
           email: string
@@ -805,11 +803,9 @@ export type Database = {
           active?: boolean | null
           auto_publish?: boolean | null
           business_name: string
-          cms_app_password?: string | null
           cms_app_password_enc?: string | null
           cms_type?: string | null
           cms_url?: string | null
-          cms_username?: string | null
           cms_username_enc?: string | null
           created_at?: string | null
           email: string
@@ -824,11 +820,9 @@ export type Database = {
           active?: boolean | null
           auto_publish?: boolean | null
           business_name?: string
-          cms_app_password?: string | null
           cms_app_password_enc?: string | null
           cms_type?: string | null
           cms_url?: string | null
-          cms_username?: string | null
           cms_username_enc?: string | null
           created_at?: string | null
           email?: string
@@ -9874,6 +9868,13 @@ export type Database = {
       check_user_visibility: {
         Args: { _field: string; _target_user_id: string }
         Returns: boolean
+      }
+      decrypt_cms_credentials: {
+        Args: { _client_id: string }
+        Returns: {
+          cms_app_password: string
+          cms_username: string
+        }[]
       }
       delete_email: {
         Args: { message_id: number; queue_name: string }
