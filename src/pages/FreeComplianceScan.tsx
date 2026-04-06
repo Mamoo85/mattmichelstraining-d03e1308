@@ -39,6 +39,17 @@ export default function FreeComplianceScan() {
         description: `Lead magnet: Free Compliance Scan. Industry: ${form.industry}. State: ${form.state}.`,
         notes: "Source: /free-compliance-scan lead magnet",
       });
+      // Also insert into prospect_businesses so Neo can follow up automatically
+      await supabase.from("prospect_businesses" as any).insert({
+        business_name: form.businessName,
+        email: form.email,
+        industry: form.industry || "manufacturing",
+        state: form.state,
+        tier: "A",
+        outreach_status: "new",
+        source: "lead_magnet_compliance_scan",
+        notes: `Inbound lead from /free-compliance-scan. Industry: ${form.industry}.`,
+      });
       setSubmitted(true);
     } catch (err: any) {
       toast.error("Something went wrong. Please try again.");

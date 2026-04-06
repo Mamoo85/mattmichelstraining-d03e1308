@@ -10,6 +10,7 @@
 //   - Auto follow-up on day 3 and day 7 if no response
 //   - Daily cap: 20 emails to protect sender reputation
 //   - Never contacts a prospect twice if they replied or said no
+//   - Checks suppressed_emails before every send (CAN-SPAM compliance)
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -21,14 +22,11 @@ const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
 
 const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 const DAILY_SEND_LIMIT = 20;
-// WEB DESIGN IS THE #1 PRIORITY — 80% of outreach should push web design.
-// Only pitch automation products to businesses that already have a great website + strong reviews.
 
 // Matt's own test emails — never run outreach to these
 const TEST_EMAILS = ["matt@mattmichelstraining.com", "matthewmichels@gmail.com", "matthewmichels4@gmail.com"];
 
 // ── INDUSTRY → DEMO LINK MAPPING ──
-// Maps industry keywords to the best demo site to include in outreach
 const BASE = "https://www.mattmichelstraining.com";
 const DEMO_MAP: { keywords: string[]; path: string; label: string }[] = [
   { keywords: ["dental", "dentist", "orthodont", "prosthodont", "oral"], path: "/demo-dental", label: "dental practice" },
@@ -56,7 +54,6 @@ function getDemoLink(industry?: string): { url: string; label: string } | null {
       return { url: `${BASE}${entry.path}`, label: entry.label };
     }
   }
-  // Default to roofing demo as a general contractor showcase
   if (lower.includes("contract") || lower.includes("home service") || lower.includes("handyman") || lower.includes("paint") || lower.includes("fenc")) {
     return { url: `${BASE}/demo-roofing`, label: "contractor" };
   }
@@ -64,7 +61,6 @@ function getDemoLink(industry?: string): { url: string; label: string } | null {
 }
 
 // ── INDUSTRY CLASSIFICATION ──
-// Classifies a prospect as "manufacturer" or "subcontractor" to inject the right add-on pitch
 const MANUFACTURER_KEYWORDS = [
   "manufactur", "fabricat", "machine shop", "industrial", "chemical", "plastics",
   "metal", "steel", "weld", "foundry", "stamping", "die cast", "assembly",
@@ -91,30 +87,37 @@ function classifyIndustry(industry?: string): "manufacturer" | "subcontractor" |
 function selectPitch(business: { industry?: string; has_website?: boolean; rating?: number; review_count?: number }) {
   const classification = classifyIndustry(business.industry);
 
-  // No website → web design pitch with industry-specific add-on mention
   if (!business.has_website) {
     if (classification === "manufacturer") {
-      return { product: "web_design", cta: "a website that actually gets you calls — and it comes pre-loaded with our compliance monitoring dashboard so you never miss an EPA or OSHA filing", price: "$499" };
+      return { product: "web_design", cta: "a website that actually gets you calls — and it comes pre-loaded with our compliance monitoring dashboard so you never miss an EPA or OSHA filing. We actually put together a free scan for manufacturers like you — check it out here: https://www.mattmichelstraining.com/free-compliance-scan", price: "$499" };
     }
     if (classification === "subcontractor") {
-      return { product: "web_design", cta: "a website that actually gets you calls — plus it comes with our AI bid board that finds open jobs in your area automatically", price: "$499" };
+      return { product: "web_design", cta: "a website that actually gets you calls — plus it comes with our AI bid board that finds open jobs in your area automatically. We put together a free report showing open bids in your trade — grab it here: https://www.mattmichelstraining.com/free-bid-report", price: "$499" };
     }
     return { product: "web_design", cta: "a website that actually gets you calls", price: "$499" };
   }
 
-  // Has a website but low reviews → web redesign pitch
   if ((business.review_count || 0) < 30 || (business.rating || 0) < 4.5) {
     if (classification === "manufacturer") {
-      return { product: "web_design", cta: "a modern website redesign that ranks on Google — we'll also set up automated compliance monitoring for your EPA/OSHA filings at no extra cost", price: "$499" };
+      return { product: "web_design", cta: "a modern website redesign that ranks on Google — we'll also set up automated compliance monitoring for your EPA/OSHA filings at no extra cost. Here's a free scan we run for manufacturers: https://www.mattmichelstraining.com/free-compliance-scan", price: "$499" };
     }
     if (classification === "subcontractor") {
-      return { product: "web_design", cta: "a modern website redesign that ranks on Google — plus we'll activate our bid intelligence tool that finds open commercial jobs matching your trade", price: "$499" };
+      return { product: "web_design", cta: "a modern website redesign that ranks on Google — plus we'll activate our bid intelligence tool that finds open commercial jobs matching your trade. Grab your free bid report here: https://www.mattmichelstraining.com/free-bid-report", price: "$499" };
     }
     return { product: "web_design", cta: "a modern website redesign that ranks on Google and converts visitors into calls", price: "$499" };
   }
 
-  // Strong online presence → GBP SaaS
   return { product: "gbp_saas", cta: "automated Google posts 3x/week to stay visible", price: "$49/mo" };
+}
+
+// ── SUPPRESSION CHECK ──
+async function isEmailSuppressed(sb: any, email: string): Promise<boolean> {
+  const { data } = await sb
+    .from("suppressed_emails")
+    .select("email")
+    .eq("email", email.toLowerCase())
+    .maybeSingle();
+  return !!data;
 }
 
 async function writePersonalizedEmail(business: {
@@ -130,7 +133,7 @@ async function writePersonalizedEmail(business: {
   if (!ANTHROPIC_API_KEY) {
     return {
       subject: `Quick question about ${business.business_name}`,
-      body: `Hey, my name's Matt Michels — I'm based out of Grosse Pointe and I do web work for local businesses.\n\nI was looking at your Google listing for ${business.business_name} and had a quick question — are you happy with the leads your website is currently bringing in?\n\nIf not, I can do ${business.pitch.cta} for ${business.pitch.price}.${demoLine}\n\nEither way, no pitch deck, no demo call. Just a straight answer on what I'd fix.\n\n— Matt\n(313) 806-4952`,
+      body: `Hey, my name's Matt Michels — I'm based out of Grosse Pointe and I do web work for local businesses.\n\nI was looking at your Google listing for ${business.business_name} and had a quick question — are you happy with the leads your website is currently bringing in?\n\nIf not, I can do ${business.pitch.cta} for ${business.pitch.price}.${demoLine}\n\n— Matt\n(313) 806-4952`,
     };
   }
 
@@ -222,14 +225,13 @@ serve(async (req) => {
       .limit(remaining);
 
     if (!prospects || prospects.length === 0) {
-      // Also check B-tier if no A-tier available
       console.log("[NEO] No A-tier prospects. Checking B-tier.");
       const { data: bProspects } = await sb
         .from("prospect_businesses")
         .select("id, business_name, email, industry, city, phone, has_website, rating, review_count, website")
         .eq("tier", "B")
         .eq("outreach_status", "new")
-        .limit(Math.min(remaining, 5)); // more conservative with B-tier
+        .limit(Math.min(remaining, 5));
 
       if (!bProspects || bProspects.length === 0) {
         console.log("[NEO] No prospects to contact today.");
@@ -243,7 +245,15 @@ serve(async (req) => {
 
     for (const prospect of allProspects) {
       if (sent >= remaining) break;
-      if (!prospect.email) continue; // skip prospects without a valid email address
+      if (!prospect.email) continue;
+
+      // ── CAN-SPAM: skip suppressed emails ──
+      if (TEST_EMAILS.includes(prospect.email.toLowerCase())) continue;
+      if (await isEmailSuppressed(sb, prospect.email)) {
+        console.log(`[NEO] Skipping suppressed email: ${prospect.business_name}`);
+        await sb.from("prospect_businesses").update({ outreach_status: "suppressed" }).eq("id", prospect.id);
+        continue;
+      }
 
       const pitch = selectPitch(prospect);
       const { subject, body: emailBody } = await writePersonalizedEmail({
@@ -254,7 +264,6 @@ serve(async (req) => {
         pitch,
       });
 
-      // Build the HTML email (plain-text style so it lands in primary inbox)
       const html = `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;color:#1e293b;line-height:1.8;max-width:520px;">
         ${emailBody.split("\n").map(line => line ? `<p style="margin:0 0 12px;">${line}</p>` : "<br>").join("")}
         <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e2e8f0;">
@@ -264,7 +273,6 @@ serve(async (req) => {
       </div>`;
 
       if (!dryRun && RESEND_API_KEY) {
-        // Send via Resend (using Matt's email so replies come directly to him)
         const sendRes = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
@@ -281,7 +289,6 @@ serve(async (req) => {
         }
       }
 
-      // Track the outreach
       if (!dryRun) {
         await sb.from("prospect_outreach").insert({
           prospect_id: prospect.id,
@@ -292,35 +299,38 @@ serve(async (req) => {
           subject,
           status: "sent",
         });
-
-        // Update prospect status
         await sb.from("prospect_businesses").update({ outreach_status: "contacted" }).eq("id", prospect.id);
       }
 
       results.push({ business: prospect.business_name, email_sent_to: prospect.email, subject });
       sent++;
-
-      // Small delay to avoid rate limits
       await new Promise(r => setTimeout(r, 200));
     }
 
-    // Also send follow-ups: day 3 and day 7
+    // ── FOLLOW-UPS ──
     const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     const fourDaysAgo = new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString();
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     const eightDaysAgo = new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString();
 
+    // Day-3 follow-up
     const { data: followUp1Needed } = await sb
       .from("prospect_outreach")
       .select("prospect_id, email, business_name, industry")
       .eq("outreach_type", "initial")
       .eq("status", "sent")
-      .gte("sent_at", threeDaysAgo)
-      .lt("sent_at", fourDaysAgo)
+      .gte("sent_at", fourDaysAgo)
+      .lt("sent_at", threeDaysAgo)
       .limit(5);
 
     for (const f of followUp1Needed || []) {
       if (sent >= remaining) break;
+      if (await isEmailSuppressed(sb, f.email)) continue;
+
+      // Check no follow_up_1 already sent
+      const { count } = await sb.from("prospect_outreach").select("*", { count: "exact", head: true }).eq("prospect_id", f.prospect_id).eq("outreach_type", "follow_up_1");
+      if ((count || 0) > 0) continue;
+
       const followSubject = `Re: ${f.business_name}`;
       const followHtml = `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;color:#1e293b;line-height:1.8;max-width:520px;">
         <p style="margin:0 0 12px;">Hey, just following up on my note from a few days ago.</p>
@@ -335,6 +345,53 @@ serve(async (req) => {
           body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [f.email], subject: followSubject, html: followHtml }),
         });
         await sb.from("prospect_outreach").insert({ prospect_id: f.prospect_id, email: f.email, business_name: f.business_name, outreach_type: "follow_up_1", subject: followSubject, status: "sent" });
+      }
+      sent++;
+    }
+
+    // Day-7 breakup email (Email 3 — casual last nudge)
+    const { data: followUp2Needed } = await sb
+      .from("prospect_outreach")
+      .select("prospect_id, email, business_name, industry")
+      .eq("outreach_type", "follow_up_1")
+      .eq("status", "sent")
+      .gte("sent_at", eightDaysAgo)
+      .lt("sent_at", sevenDaysAgo)
+      .limit(5);
+
+    for (const f of followUp2Needed || []) {
+      if (sent >= remaining) break;
+      if (await isEmailSuppressed(sb, f.email)) continue;
+
+      // Check no follow_up_2 already sent
+      const { count } = await sb.from("prospect_outreach").select("*", { count: "exact", head: true }).eq("prospect_id", f.prospect_id).eq("outreach_type", "follow_up_2");
+      if ((count || 0) > 0) continue;
+
+      const classification = classifyIndustry(f.industry);
+      let leadMagnetLine = "";
+      if (classification === "subcontractor") {
+        leadMagnetLine = `\n<p style="margin:0 0 12px;">Either way — we put together a free report showing open bids in your area. Might be useful even if we never work together: <a href="https://www.mattmichelstraining.com/free-bid-report" style="color:#e8621a;">Free Bid Report</a></p>`;
+      } else if (classification === "manufacturer") {
+        leadMagnetLine = `\n<p style="margin:0 0 12px;">Either way — we run free compliance scans for manufacturers. Might save you a headache: <a href="https://www.mattmichelstraining.com/free-compliance-scan" style="color:#e8621a;">Free Compliance Scan</a></p>`;
+      }
+
+      const breakupSubject = `closing the loop — ${f.business_name}`;
+      const breakupHtml = `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;color:#1e293b;line-height:1.8;max-width:520px;">
+        <p style="margin:0 0 12px;">Hey — just wanted to close the loop. I reached out a couple times about ${f.business_name}'s web presence.</p>
+        <p style="margin:0 0 12px;">Totally get it if the timing's not right. I'll stop bugging you.</p>${leadMagnetLine}
+        <p style="margin:0 0 12px;">If anything changes down the road, you've got my number.</p>
+        <p style="margin:0 0 12px;">— Matt<br>(313) 806-4952</p>
+      </div>`;
+
+      if (!dryRun && RESEND_API_KEY) {
+        await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [f.email], subject: breakupSubject, html: breakupHtml }),
+        });
+        await sb.from("prospect_outreach").insert({ prospect_id: f.prospect_id, email: f.email, business_name: f.business_name, outreach_type: "follow_up_2", subject: breakupSubject, status: "sent" });
+        // Mark prospect as fully sequenced
+        await sb.from("prospect_businesses").update({ outreach_status: "sequenced" }).eq("id", f.prospect_id);
       }
       sent++;
     }
