@@ -1,4 +1,5 @@
 import { lazy, Suspense, useState, useEffect, memo } from "react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import { queryClient } from "@/lib/queryClient";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
@@ -721,6 +722,7 @@ const App = () => (
               <Suspense fallback={null}><CookieBanner /></Suspense>
               <Suspense fallback={null}><BottomTabBar /></Suspense>
               <Suspense fallback={null}><OfflineBadge /></Suspense>
+              <SpeedInsights />
             </BrowserRouter>
           </TooltipProvider>
         </OfflineSyncProvider>
