@@ -12,23 +12,29 @@ const log = (step: string, data?: any) =>
 
 // ── Industry rotation ──
 const INDUSTRY_ROTATION = [
-  "plumber", "electrician", "HVAC contractor", "roofer", "landscaper",
-  "auto repair shop", "cleaning service", "tree service", "pressure washing",
-  "painting contractor", "carpet cleaning", "moving company", "towing company",
-  "locksmith", "pest control", "pool service", "junk removal",
-  "concrete contractor", "deck builder", "fence contractor",
-  "tattoo studio", "nail salon", "barber shop", "dog grooming",
-  "catering company", "food truck", "party rental", "home inspector",
-  "mobile mechanic", "chimney sweep", "metal fabrication shop",
-  "commercial real estate broker", "industrial equipment dealer",
-  "plastic injection molding company", "commercial contractor",
-  "commercial property management",
-  // High-value verticals — higher price tiers
+  // ── PRIORITY: Manufacturing & Commercial Construction (weighted 3x) ──
+  "manufacturing company", "machine shop", "fabrication shop",
+  "metal fabrication shop", "plastic injection molding company",
+  "industrial equipment dealer", "commercial contractor",
+  "manufacturing company", "machine shop", "fabrication shop",
+  "manufacturing company", "commercial contractor", "industrial equipment dealer",
+  // ── PRIORITY: Subcontractors (weighted 2x) ──
+  "plumber", "electrician", "HVAC contractor", "roofer",
+  "concrete contractor", "fence contractor", "deck builder",
+  "plumber", "electrician", "HVAC contractor", "roofer",
+  // ── Standard rotation ──
+  "landscaper", "auto repair shop", "cleaning service", "tree service",
+  "pressure washing", "painting contractor", "carpet cleaning",
+  "moving company", "towing company", "locksmith", "pest control",
+  "pool service", "junk removal", "tattoo studio", "nail salon",
+  "barber shop", "dog grooming", "catering company", "food truck",
+  "party rental", "home inspector", "mobile mechanic", "chimney sweep",
+  "commercial real estate broker", "commercial property management",
+  // High-value verticals
   "dental practice", "dentist", "orthodontist",
   "law firm", "attorney", "personal injury attorney",
   "physical therapy clinic", "chiropractic office", "urgent care clinic",
   "restaurant", "bar and grill", "pizza restaurant",
-  "manufacturing company", "machine shop", "fabrication shop",
   "real estate agent", "mortgage broker",
   "accounting firm", "insurance agency",
   "gym", "fitness studio", "crossfit gym",

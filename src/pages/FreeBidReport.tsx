@@ -29,6 +29,7 @@ export default function FreeBidReport() {
     }
     setLoading(true);
     try {
+      // Insert into CRM leads table
       await supabase.from("web_design_leads" as any).insert({
         name: form.businessName,
         business: form.businessName,
@@ -38,6 +39,18 @@ export default function FreeBidReport() {
         status: "new",
         description: `Lead magnet: Free Bid Report. Trade: ${form.trade}. Area: ${form.city}, ${form.state}.`,
         notes: "Source: /free-bid-report lead magnet",
+      });
+      // Also insert into prospect_businesses so Neo can follow up automatically
+      await supabase.from("prospect_businesses" as any).insert({
+        business_name: form.businessName,
+        email: form.email,
+        industry: form.trade,
+        city: form.city,
+        state: form.state,
+        tier: "A",
+        outreach_status: "new",
+        source: "lead_magnet_bid_report",
+        notes: `Inbound lead from /free-bid-report. Trade: ${form.trade}.`,
       });
       setSubmitted(true);
     } catch (err: any) {
