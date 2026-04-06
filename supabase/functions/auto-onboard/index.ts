@@ -220,6 +220,145 @@ const TEMPLATES: Record<string, OnboardTemplate> = {
       <p>Your first bid scan is running now. You'll see matching opportunities within 24 hours.</p>
       <p>Reply with those details!</p>`,
   },
+  commercial_lease_subscription: {
+    subject: "Welcome to Commercial Lease Abstractor — Send Your Leases",
+    nextStage: "📧 Welcome Email Sent",
+    body: (name) => `
+      <p>Hey ${name}!</p>
+      <p>Welcome to the Commercial Lease Abstractor! To get started, I need:</p>
+      <ul>
+        <li><strong>Your commercial lease PDFs</strong> — email them as attachments or share a Drive/Dropbox link</li>
+        <li><strong>Priority items</strong> — renewal dates, escalation clauses, anything you're specifically tracking</li>
+      </ul>
+      <p>First lease abstracts delivered within 48 hours of receiving your documents.</p>
+      <p>Reply with your leases and I'll get to work!</p>`,
+  },
+  patent_watch_subscription: {
+    subject: "Welcome to Patent Watch Intelligence — Let's Configure",
+    nextStage: "📧 Welcome Email Sent",
+    body: (name) => `
+      <p>Hey ${name}!</p>
+      <p>Welcome to Patent Watch Intelligence! To start monitoring, I need:</p>
+      <ul>
+        <li><strong>Your industry/technology area</strong> — what patents matter to your business</li>
+        <li><strong>Competitor names</strong> — companies whose patent activity you want tracked</li>
+        <li><strong>Key terms/classifications</strong> — any specific patent classes or keywords</li>
+      </ul>
+      <p>Your first patent intelligence briefing arrives within 48 hours.</p>
+      <p>Reply with those details!</p>`,
+  },
+  pe_intelligence_subscription: {
+    subject: "Welcome to PE/Investor Intelligence — Quick Setup",
+    nextStage: "📧 Welcome Email Sent",
+    body: (name) => `
+      <p>Hey ${name}!</p>
+      <p>Welcome to PE & Investor Sector Intelligence! To configure your monitoring, I need:</p>
+      <ul>
+        <li><strong>Your sector(s)</strong> — which industries you're tracking deal flow in</li>
+        <li><strong>Target deal size</strong> — what range matters to you</li>
+        <li><strong>Geographic focus</strong> — specific regions or national</li>
+      </ul>
+      <p>First sector briefing arrives within 48 hours.</p>
+      <p>Reply with your criteria!</p>`,
+  },
+  rd_intelligence_subscription: {
+    subject: "Welcome to R&D Intelligence — Let's Set Up Your Feed",
+    nextStage: "📧 Welcome Email Sent",
+    body: (name) => `
+      <p>Hey ${name}!</p>
+      <p>Welcome to Corporate R&D Paper Intelligence! To start monitoring, I need:</p>
+      <ul>
+        <li><strong>Research topics/keywords</strong> — what areas of R&D matter to you</li>
+        <li><strong>Key institutions or companies</strong> — whose research output to prioritize</li>
+        <li><strong>Industry context</strong> — how you'll use these insights</li>
+      </ul>
+      <p>First research briefing arrives within 48 hours.</p>
+      <p>Reply with your topics!</p>`,
+  },
+  credit_dispute_subscription: {
+    subject: "Welcome to Credit Dispute Letters — Send Your Reports",
+    nextStage: "📧 Welcome Email Sent",
+    body: (name) => `
+      <p>Hey ${name}!</p>
+      <p>Welcome to the Credit Dispute Letter Factory! To get started:</p>
+      <ul>
+        <li><strong>Pull your credit reports</strong> from annualcreditreport.com (all 3 bureaus)</li>
+        <li><strong>Email them to me</strong> as PDFs or screenshots</li>
+        <li><strong>Flag any specific items</strong> you know are incorrect</li>
+      </ul>
+      <p>First batch of dispute letters goes out within 48 hours of receiving your reports.</p>
+      <p>Reply with your reports!</p>`,
+  },
+  medical_bill_subscription: {
+    subject: "Welcome to Medical Bill Disputes — Send Your Bills",
+    nextStage: "📧 Welcome Email Sent",
+    body: (name) => `
+      <p>Hey ${name}!</p>
+      <p>Welcome to Medical Bill Dispute Letters! To get started:</p>
+      <ul>
+        <li><strong>Send your medical bills</strong> — photos, PDFs, or screenshots</li>
+        <li><strong>Include your EOB</strong> (Explanation of Benefits) if you have it</li>
+        <li><strong>Note any charges</strong> that look wrong or confusing</li>
+      </ul>
+      <p>First dispute letters go out within 48 hours of receiving your bills.</p>
+      <p>Reply with your bills!</p>`,
+  },
+  supplement_analyzer_subscription: {
+    subject: "Welcome to Supplement Stack Analyzer — Send Your Stack",
+    nextStage: "📧 Welcome Email Sent",
+    body: (name) => `
+      <p>Hey ${name}!</p>
+      <p>Welcome to the Supplement Stack Analyzer! To get your first analysis:</p>
+      <ul>
+        <li><strong>List every supplement</strong> you're currently taking (name, brand, dosage)</li>
+        <li><strong>Your goals</strong> — performance, longevity, sleep, focus, recovery, etc.</li>
+        <li><strong>Any medications</strong> — so we can flag interactions</li>
+      </ul>
+      <p>First analysis delivered within 48 hours.</p>
+      <p>Reply with your stack!</p>`,
+  },
+  trade_association_subscription: {
+    subject: "Welcome to Trade Association Intelligence — Quick Setup",
+    nextStage: "📧 Welcome Email Sent",
+    body: (name) => `
+      <p>Hey ${name}!</p>
+      <p>Welcome to Trade Association Intelligence! To configure your monitoring:</p>
+      <ul>
+        <li><strong>List your associations</strong> — national, state, and regional (e.g., NFIB, NAM, state chamber)</li>
+        <li><strong>Your industry</strong> — so I can prioritize relevant regulations</li>
+        <li><strong>Compliance deadlines</strong> — any you're already tracking</li>
+      </ul>
+      <p>First weekly digest arrives Monday.</p>
+      <p>Reply with your associations!</p>`,
+  },
+  childrens_story_subscription: {
+    subject: "Welcome — Your Child's First Story Arrives Sunday!",
+    nextStage: "📧 Welcome Email Sent",
+    body: (name) => `
+      <p>Hey ${name}!</p>
+      <p>Welcome to personalized bedtime stories! To make the stories perfect:</p>
+      <ul>
+        <li><strong>Child's name and age</strong> — already on file from signup</li>
+        <li><strong>Favorite things</strong> — animals, characters, places, hobbies</li>
+        <li><strong>Any themes to avoid</strong> — scary stuff, specific topics, etc.</li>
+      </ul>
+      <p>First story arrives this Sunday evening — ready for bedtime!</p>
+      <p>Reply with any extra details you'd like included!</p>`,
+  },
+  luxury_re_subscription: {
+    subject: "Welcome to Luxury Market Intelligence — Configuring Now",
+    nextStage: "📧 Welcome Email Sent",
+    body: (name) => `
+      <p>Hey ${name}!</p>
+      <p>Welcome to Luxury Real Estate Intelligence! I'm configuring your market monitoring now. To dial it in:</p>
+      <ul>
+        <li><strong>Target zip codes</strong> — which luxury markets to monitor</li>
+        <li><strong>Price floor</strong> — minimum price tier for "luxury" in your market</li>
+        <li><strong>Property types</strong> — SFR, condos, waterfront, estates, etc.</li>
+      </ul>
+      <p>First weekly briefing arrives Monday.</p>
+      <p>Reply with your market details!</p>`,
+  },
 };
 
 // Generic SMS product template
