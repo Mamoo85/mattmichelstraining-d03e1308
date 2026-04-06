@@ -5822,6 +5822,119 @@ export type Database = {
         }
         Relationships: []
       }
+      prospect_businesses: {
+        Row: {
+          address: string | null
+          business_name: string
+          city: string | null
+          created_at: string | null
+          email: string | null
+          google_place_id: string | null
+          has_website: boolean | null
+          id: string
+          industry: string | null
+          notes: string | null
+          outreach_status: string | null
+          phone: string | null
+          rating: number | null
+          review_count: number | null
+          source: string | null
+          state: string | null
+          tier: string | null
+          updated_at: string | null
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          business_name: string
+          city?: string | null
+          created_at?: string | null
+          email?: string | null
+          google_place_id?: string | null
+          has_website?: boolean | null
+          id?: string
+          industry?: string | null
+          notes?: string | null
+          outreach_status?: string | null
+          phone?: string | null
+          rating?: number | null
+          review_count?: number | null
+          source?: string | null
+          state?: string | null
+          tier?: string | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          business_name?: string
+          city?: string | null
+          created_at?: string | null
+          email?: string | null
+          google_place_id?: string | null
+          has_website?: boolean | null
+          id?: string
+          industry?: string | null
+          notes?: string | null
+          outreach_status?: string | null
+          phone?: string | null
+          rating?: number | null
+          review_count?: number | null
+          source?: string | null
+          state?: string | null
+          tier?: string | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
+      prospect_outreach: {
+        Row: {
+          business_name: string | null
+          email: string | null
+          id: string
+          industry: string | null
+          outreach_type: string | null
+          prospect_id: string | null
+          replied_at: string | null
+          sent_at: string | null
+          status: string | null
+          subject: string | null
+        }
+        Insert: {
+          business_name?: string | null
+          email?: string | null
+          id?: string
+          industry?: string | null
+          outreach_type?: string | null
+          prospect_id?: string | null
+          replied_at?: string | null
+          sent_at?: string | null
+          status?: string | null
+          subject?: string | null
+        }
+        Update: {
+          business_name?: string | null
+          email?: string | null
+          id?: string
+          industry?: string | null
+          outreach_type?: string | null
+          prospect_id?: string | null
+          replied_at?: string | null
+          sent_at?: string | null
+          status?: string | null
+          subject?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prospect_outreach_prospect_id_fkey"
+            columns: ["prospect_id"]
+            isOneToOne: false
+            referencedRelation: "prospect_businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       protocol_exercise_flags: {
         Row: {
           admin_response: string | null
