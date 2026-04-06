@@ -172,7 +172,7 @@ serve(async (req) => {
     // Find A-tier prospects not yet contacted
     const { data: prospects } = await sb
       .from("prospect_businesses")
-      .select("id, business_name, industry, city, phone, has_website, rating, review_count, website")
+      .select("id, business_name, email, industry, city, phone, has_website, rating, review_count, website")
       .eq("tier", "A")
       .eq("outreach_status", "new")
       .not("phone", "is", null)
