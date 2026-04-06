@@ -128,6 +128,7 @@ serve(async (req) => {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
+          "Accept-Encoding": "identity",
         },
         body: JSON.stringify({
           startDate: startDate.toISOString().split("T")[0],
@@ -139,12 +140,12 @@ serve(async (req) => {
       }
     );
 
+    const pageText = await pageRes.text();
     if (!pageRes.ok) {
-      const errText = await pageRes.text();
-      throw new Error(`GSC API error [${pageRes.status}]: ${errText}`);
+      throw new Error(`GSC API error [${pageRes.status}]: ${pageText}`);
     }
 
-    const pageData = await pageRes.json();
+    const pageData = JSON.parse(pageText);
     const rows = pageData.rows || [];
 
     // Upsert into database
