@@ -184,7 +184,7 @@ serve(async (req) => {
       console.log("[NEO] No A-tier prospects. Checking B-tier.");
       const { data: bProspects } = await sb
         .from("prospect_businesses")
-        .select("id, business_name, industry, city, phone, has_website, rating, review_count")
+        .select("id, business_name, email, industry, city, phone, has_website, rating, review_count, website")
         .eq("tier", "B")
         .eq("outreach_status", "new")
         .limit(Math.min(remaining, 5)); // more conservative with B-tier
