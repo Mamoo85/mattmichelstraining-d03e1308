@@ -357,6 +357,9 @@ verify_jwt = false
 [functions.create-dark-web-monitor-checkout]
 verify_jwt = false
 
+[functions.create-revenue-preventer-checkout]
+verify_jwt = false
+
 [functions.create-direct-mail-checkout]
 verify_jwt = false
 
