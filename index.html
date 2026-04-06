@@ -129,22 +129,6 @@
   <meta property="og:image:alt" content="Matt Michels Training — M2 Elite Strength &amp; Conditioning">
   <meta name="twitter:image" content="https://www.mattmichelstraining.com/pwa-512x512.png">
   <meta name="twitter:card" content="summary_large_image">
-  <!-- Facebook Pixel — deferred to avoid blocking FCP -->
-  <script>
-    window.addEventListener('load', function(){
-      !function(f,b,e,v,n,t,s)
-      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-      n.queue=[];t=b.createElement(e);t.async=!0;
-      t.src=v;s=b.getElementsByTagName(e)[0];
-      s.parentNode.insertBefore(t,s)}(window, document,'script',
-      'https://connect.facebook.net/en_US/fbevents.js');
-      fbq('init', '4303244103266841');
-      fbq('track', 'PageView');
-    }, {once: true});
-  </script>
-  <!-- End Facebook Pixel -->
 </head>
 
   <body>
@@ -280,16 +264,12 @@
         setTimeout(function() {
           if (mounted) return;
 
-          var shell = document.getElementById('hero-shell');
-          var isPreviewHost = location.hostname.indexOf('id-preview--') > -1 || location.hostname.indexOf('lovableproject.com') > -1;
-          var isStandalone = !!(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
           var attempted = false;
-
           try {
             attempted = sessionStorage.getItem('m2_app_recovery_attempted') === '1';
           } catch (e) {}
 
-          if (!attempted && (isPreviewHost || isStandalone) && 'serviceWorker' in navigator) {
+          if (!attempted && 'serviceWorker' in navigator) {
             try {
               sessionStorage.setItem('m2_app_recovery_attempted', '1');
             } catch (e) {}
@@ -303,7 +283,7 @@
           }
 
           renderReload('Loading took too long.');
-        }, 8000);
+        }, 12000);
       })();
     </script>
     <script type="module" src="/src/main.tsx"></script>
