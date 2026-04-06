@@ -63,15 +63,57 @@ function getDemoLink(industry?: string): { url: string; label: string } | null {
   return null;
 }
 
+// ── INDUSTRY CLASSIFICATION ──
+// Classifies a prospect as "manufacturer" or "subcontractor" to inject the right add-on pitch
+const MANUFACTURER_KEYWORDS = [
+  "manufactur", "fabricat", "machine shop", "industrial", "chemical", "plastics",
+  "metal", "steel", "weld", "foundry", "stamping", "die cast", "assembly",
+  "processing", "packaging", "boiler", "automation", "cnc", "tooling",
+  "food processing", "pharma", "textil", "lumber", "paper", "glass",
+];
+const SUBCONTRACTOR_KEYWORDS = [
+  "electric", "plumb", "hvac", "heating", "cooling", "roof", "concrete",
+  "excavat", "demol", "drywall", "paint", "floor", "tile", "masonry",
+  "insulation", "fire protect", "sprinkler", "iron work", "steel erect",
+  "sheet metal", "glazing", "landscape", "paving", "fenc", "weld",
+  "mechanical", "piping", "scaffold", "crane",
+];
+
+function classifyIndustry(industry?: string): "manufacturer" | "subcontractor" | "general" {
+  if (!industry) return "general";
+  const lower = industry.toLowerCase();
+  if (MANUFACTURER_KEYWORDS.some(k => lower.includes(k))) return "manufacturer";
+  if (SUBCONTRACTOR_KEYWORDS.some(k => lower.includes(k))) return "subcontractor";
+  return "general";
+}
+
 // Determine the best product pitch for each business profile
 function selectPitch(business: { industry?: string; has_website?: boolean; rating?: number; review_count?: number }) {
-  // No website → obvious web design pitch
-  if (!business.has_website) return { product: "web_design", cta: "a website that actually gets you calls", price: "$499" };
-  // Has a website but < 30 reviews or < 4.5 stars → web redesign pitch (most businesses)
+  const classification = classifyIndustry(business.industry);
+
+  // No website → web design pitch with industry-specific add-on mention
+  if (!business.has_website) {
+    if (classification === "manufacturer") {
+      return { product: "web_design", cta: "a website that actually gets you calls — and it comes pre-loaded with our compliance monitoring dashboard so you never miss an EPA or OSHA filing", price: "$499" };
+    }
+    if (classification === "subcontractor") {
+      return { product: "web_design", cta: "a website that actually gets you calls — plus it comes with our AI bid board that finds open jobs in your area automatically", price: "$499" };
+    }
+    return { product: "web_design", cta: "a website that actually gets you calls", price: "$499" };
+  }
+
+  // Has a website but low reviews → web redesign pitch
   if ((business.review_count || 0) < 30 || (business.rating || 0) < 4.5) {
+    if (classification === "manufacturer") {
+      return { product: "web_design", cta: "a modern website redesign that ranks on Google — we'll also set up automated compliance monitoring for your EPA/OSHA filings at no extra cost", price: "$499" };
+    }
+    if (classification === "subcontractor") {
+      return { product: "web_design", cta: "a modern website redesign that ranks on Google — plus we'll activate our bid intelligence tool that finds open commercial jobs matching your trade", price: "$499" };
+    }
     return { product: "web_design", cta: "a modern website redesign that ranks on Google and converts visitors into calls", price: "$499" };
   }
-  // Only pitch GBP SaaS to businesses with 30+ reviews AND 4.5+ stars (already doing great online)
+
+  // Strong online presence → GBP SaaS
   return { product: "gbp_saas", cta: "automated Google posts 3x/week to stay visible", price: "$49/mo" };
 }
 

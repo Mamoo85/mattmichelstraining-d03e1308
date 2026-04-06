@@ -1,5 +1,6 @@
-// Morning Digest — daily 7am ET cron
-// Sends Matt a single consolidated email with everything needing approval
+// Morning Digest — daily 6:30am ET cron
+// Sends Matt a single consolidated email with everything needing attention:
+// Pipeline stats, revenue snapshot, outreach approvals, regulatory/bid items
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -34,42 +35,105 @@ function formatDate(dateStr: string): string {
 
 serve(async () => {
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+  const today = new Date();
+  const todayStr = today.toISOString().split("T")[0];
+  const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
 
-  // Run all three queries in parallel
-  const [filingDraftsRes, bidProposalsRes, deadlinesRes] = await Promise.all([
-    sb
-      .from("reg_filing_drafts")
-      .select("id, title, created_at, reg_filing_clients(company_name)")
-      .eq("status", "pending_approval"),
-    sb
-      .from("bid_intel_proposals")
-      .select("id, created_at, bid_intel_clients(company_name), bid_intel_opportunities(title)")
-      .eq("status", "pending_approval"),
-    sb
-      .from("reg_filing_deadlines")
-      .select("id, title, due_date, reg_filing_clients(company_name)")
-      .eq("status", "upcoming")
-      .gte("due_date", new Date().toISOString().split("T")[0])
-      .lte("due_date", new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0]),
+  // Run ALL queries in parallel
+  const [
+    filingDraftsRes, bidProposalsRes, deadlinesRes,
+    // Pipeline stats
+    prospectsNewRes, prospectsTotalRes, outreachTodayRes, outreachWeekRes,
+    repliedRes, webLeadsRes,
+    // Revenue
+    activeClientsRes,
+  ] = await Promise.all([
+    // Existing regulatory/bid queries
+    sb.from("reg_filing_drafts").select("id, title, created_at, reg_filing_clients(company_name)").eq("status", "pending_approval"),
+    sb.from("bid_intel_proposals").select("id, created_at, bid_intel_clients(company_name), bid_intel_opportunities(title)").eq("status", "pending_approval"),
+    sb.from("reg_filing_deadlines").select("id, title, due_date, reg_filing_clients(company_name)").eq("status", "upcoming")
+      .gte("due_date", todayStr).lte("due_date", new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0]),
+    // Pipeline
+    sb.from("prospect_businesses").select("id", { count: "exact", head: true }).eq("outreach_status", "new"),
+    sb.from("prospect_businesses").select("id", { count: "exact", head: true }),
+    sb.from("prospect_outreach").select("id", { count: "exact", head: true }).gte("sent_at", todayStr),
+    sb.from("prospect_outreach").select("id", { count: "exact", head: true }).gte("sent_at", sevenDaysAgo),
+    sb.from("prospect_outreach").select("id", { count: "exact", head: true }).not("replied_at", "is", null),
+    sb.from("web_design_leads").select("id, status", { count: "exact", head: false }).gte("created_at", thirtyDaysAgo),
+    // Revenue: count active B2B clients
+    sb.from("b2b_clients").select("id", { count: "exact", head: true }),
   ]);
 
   const filingDrafts = filingDraftsRes.data || [];
   const bidProposals = bidProposalsRes.data || [];
   const deadlines = deadlinesRes.data || [];
 
-  // Skip if nothing to report
-  if (!filingDrafts.length && !bidProposals.length && !deadlines.length) {
-    return new Response(JSON.stringify({ ok: true, sent: false, reason: "nothing pending" }), { status: 200 });
-  }
+  const prospectsNew = prospectsNewRes.count || 0;
+  const prospectsTotal = prospectsTotalRes.count || 0;
+  const emailsSentToday = outreachTodayRes.count || 0;
+  const emailsSentWeek = outreachWeekRes.count || 0;
+  const totalReplies = repliedRes.count || 0;
+  const webLeads = webLeadsRes.data || [];
+  const totalClients = activeClientsRes.count || 0;
+
+  // Categorize web design leads
+  const newLeads = webLeads.filter((l: any) => l.status === "new").length;
+  const contactedLeads = webLeads.filter((l: any) => ["contacted", "Emailed", "drip"].includes(l.status)).length;
+  const interestedLeads = webLeads.filter((l: any) => ["interested", "replied", "hot"].includes(l.status)).length;
 
   // Build email sections
   let sections = "";
 
+  // Pipeline Overview (always shown)
+  sections += `
+    <tr><td style="padding:24px 0 8px 0">
+      <h2 style="margin:0;font-size:18px;color:#1e293b;border-bottom:2px solid #e8621a;padding-bottom:6px">
+        📊 Pipeline Overview
+      </h2>
+    </td></tr>
+    <tr><td style="padding:12px 0">
+      <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
+        <tr>
+          <td style="padding:8px 12px;background:#f8fafc;border:1px solid #e2e8f0;width:50%"><strong style="color:#1e293b">${prospectsTotal}</strong> <span style="color:#64748b;font-size:13px">Total Prospects</span></td>
+          <td style="padding:8px 12px;background:#f8fafc;border:1px solid #e2e8f0;width:50%"><strong style="color:#e8621a">${prospectsNew}</strong> <span style="color:#64748b;font-size:13px">Ready to Contact</span></td>
+        </tr>
+        <tr>
+          <td style="padding:8px 12px;border:1px solid #e2e8f0"><strong style="color:#1e293b">${emailsSentToday}</strong> <span style="color:#64748b;font-size:13px">Emails Today</span></td>
+          <td style="padding:8px 12px;border:1px solid #e2e8f0"><strong style="color:#1e293b">${emailsSentWeek}</strong> <span style="color:#64748b;font-size:13px">Emails This Week</span></td>
+        </tr>
+        <tr>
+          <td style="padding:8px 12px;background:#f8fafc;border:1px solid #e2e8f0"><strong style="color:#16a34a">${totalReplies}</strong> <span style="color:#64748b;font-size:13px">Total Replies</span></td>
+          <td style="padding:8px 12px;background:#f8fafc;border:1px solid #e2e8f0"><strong style="color:#1e293b">${totalClients}</strong> <span style="color:#64748b;font-size:13px">Active Clients</span></td>
+        </tr>
+      </table>
+    </td></tr>`;
+
+  // Web Design Lead Summary (30-day)
+  if (webLeads.length > 0) {
+    sections += `
+    <tr><td style="padding:16px 0 4px 0">
+      <span style="font-size:13px;color:#64748b">Web Design Leads (30 days): <strong>${newLeads}</strong> new · <strong>${contactedLeads}</strong> in drip · <strong style="color:#16a34a">${interestedLeads}</strong> interested</span>
+    </td></tr>`;
+  }
+
+  // Hot Leads Alert
+  if (interestedLeads > 0) {
+    sections += `
+    <tr><td style="padding:12px 0">
+      <div style="background:#fef3cd;border:1px solid #f59e0b;border-radius:6px;padding:12px 16px">
+        <strong style="color:#92400e">🔥 ${interestedLeads} hot lead${interestedLeads !== 1 ? "s" : ""} need follow-up!</strong>
+        <br><span style="color:#92400e;font-size:13px">Check your Lead Command Center for details.</span>
+      </div>
+    </td></tr>`;
+  }
+
+  // Filing Drafts
   if (filingDrafts.length) {
     sections += `
       <tr><td style="padding:24px 0 8px 0">
         <h2 style="margin:0;font-size:18px;color:#1e293b;border-bottom:2px solid #e8621a;padding-bottom:6px">
-          Filing Drafts Pending Approval (${filingDrafts.length})
+          📋 Filing Drafts Pending Approval (${filingDrafts.length})
         </h2>
       </td></tr>`;
 
@@ -94,11 +158,12 @@ serve(async () => {
     }
   }
 
+  // Bid Proposals
   if (bidProposals.length) {
     sections += `
       <tr><td style="padding:24px 0 8px 0">
         <h2 style="margin:0;font-size:18px;color:#1e293b;border-bottom:2px solid #e8621a;padding-bottom:6px">
-          Bid Proposals Pending Approval (${bidProposals.length})
+          🏗️ Bid Proposals Pending Approval (${bidProposals.length})
         </h2>
       </td></tr>`;
 
@@ -124,17 +189,17 @@ serve(async () => {
     }
   }
 
+  // Deadlines
   if (deadlines.length) {
     sections += `
       <tr><td style="padding:24px 0 8px 0">
         <h2 style="margin:0;font-size:18px;color:#1e293b;border-bottom:2px solid #e8621a;padding-bottom:6px">
-          Upcoming Deadlines — Next 7 Days (${deadlines.length})
+          ⏰ Upcoming Deadlines — Next 7 Days (${deadlines.length})
         </h2>
       </td></tr>`;
 
     for (const dl of deadlines) {
       const company = dl.reg_filing_clients?.company_name || "Unknown";
-
       sections += `
       <tr><td style="padding:8px 0;border-bottom:1px solid #e2e8f0">
         <strong style="color:#1e293b">${dl.title || "Untitled Deadline"}</strong><br>
@@ -143,9 +208,17 @@ serve(async () => {
     }
   }
 
-  // Build full email
-  const totalItems = filingDrafts.length + bidProposals.length + deadlines.length;
-  const today = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+  // Count action items
+  const actionItems = filingDrafts.length + bidProposals.length + interestedLeads;
+  const todayFormatted = today.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+
+  const subjectParts: string[] = [];
+  if (actionItems > 0) subjectParts.push(`${actionItems} action item${actionItems !== 1 ? "s" : ""}`);
+  if (emailsSentToday > 0) subjectParts.push(`${emailsSentToday} emails sent`);
+  if (prospectsNew > 0) subjectParts.push(`${prospectsNew} prospects ready`);
+  const subject = subjectParts.length > 0
+    ? `Morning Digest — ${subjectParts.join(" · ")}`
+    : `Morning Digest — All clear ✓`;
 
   const html = `
 <!DOCTYPE html>
@@ -162,12 +235,15 @@ serve(async () => {
               <span style="color:#e8621a;font-size:20px;font-weight:700">M&sup2;</span>
               <span style="color:#fff;font-size:20px;font-weight:700"> Morning Digest</span>
             </td>
-            <td align="right" style="color:#94a3b8;font-size:13px">${today}</td>
+            <td align="right" style="color:#94a3b8;font-size:13px">${todayFormatted}</td>
           </tr></table>
         </td></tr>
-        <!-- Summary -->
-        <tr><td style="padding:20px 24px;background:#fef3cd;border-bottom:1px solid #e2e8f0">
-          <span style="font-size:15px;color:#1e293b"><strong>${totalItems}</strong> item${totalItems !== 1 ? "s" : ""} need${totalItems === 1 ? "s" : ""} your attention today.</span>
+        <!-- Summary Bar -->
+        <tr><td style="padding:16px 24px;background:${actionItems > 0 ? "#fef3cd" : "#f0fdf4"};border-bottom:1px solid #e2e8f0">
+          <span style="font-size:15px;color:#1e293b">${actionItems > 0
+            ? `<strong>${actionItems}</strong> item${actionItems !== 1 ? "s" : ""} need${actionItems === 1 ? "s" : ""} your attention today.`
+            : "✅ Nothing urgent — pipeline is running smoothly."
+          }</span>
         </td></tr>
         <!-- Sections -->
         <tr><td style="padding:0 24px 24px 24px">
@@ -194,10 +270,17 @@ serve(async () => {
     body: JSON.stringify({
       from: "matt@mattmichelstraining.com",
       to: "matt@mattmichelstraining.com",
-      subject: `Morning Digest — ${totalItems} item${totalItems !== 1 ? "s" : ""} pending`,
+      subject,
       html,
     }),
   });
 
-  return new Response(JSON.stringify({ ok: true, sent: true, filings: filingDrafts.length, proposals: bidProposals.length, deadlines: deadlines.length }), { status: 200 });
+  return new Response(JSON.stringify({
+    ok: true,
+    sent: true,
+    filings: filingDrafts.length,
+    proposals: bidProposals.length,
+    deadlines: deadlines.length,
+    pipeline: { prospectsNew, prospectsTotal, emailsSentToday, emailsSentWeek, totalReplies, totalClients },
+  }), { status: 200 });
 });
