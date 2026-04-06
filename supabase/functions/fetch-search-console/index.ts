@@ -61,16 +61,19 @@ async function getAccessToken(): Promise<string> {
   // Exchange for access token
   const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "Accept-Encoding": "identity",
+    },
     body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`,
   });
 
+  const tokenText = await tokenRes.text();
   if (!tokenRes.ok) {
-    const err = await tokenRes.text();
-    throw new Error(`Token exchange failed: ${err}`);
+    throw new Error(`Token exchange failed: ${tokenText}`);
   }
 
-  const tokenData = await tokenRes.json();
+  const tokenData = JSON.parse(tokenText);
   return tokenData.access_token;
 }
 
