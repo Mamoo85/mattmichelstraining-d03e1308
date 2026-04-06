@@ -664,6 +664,9 @@ const App = () => (
                     <Route path="/regulatory-filing-monitor" element={<RegulatoryFilingMonitor />} />
                     <Route path="/bid-intelligence" element={<BidIntelligence />} />
                     <Route path="/tech-support" element={<TechSupportServices />} />
+                    <Route path="/revenue-preventer" element={<RevenuePreventer />} />
+                    <Route path="/free-compliance-scan" element={<FreeComplianceScan />} />
+                    <Route path="/free-bid-report" element={<FreeBidReport />} />
                     <Route path="/tools/:slug" element={<MicroSaasToolPage />} />
                     <Route path="/legal/:type" element={<LegalPage />} />
                     <Route path="/partner-program" element={<PartnerProgram />} />
