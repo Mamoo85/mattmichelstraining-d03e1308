@@ -59,6 +59,28 @@ const Auth = () => {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  // Clear stale Lovable-issued JWT tokens on mount (ES256 tokens that Supabase can't verify)
+  useEffect(() => {
+    const clearStaleToken = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (!data.session) return;
+        const { error: userError } = await supabase.auth.getUser();
+        if (userError) {
+          const msg = userError.message || "";
+          if (msg.includes("invalid JWT") || msg.includes("token is unverifiable") || msg.includes("unrecognized JWT kid")) {
+            console.warn("[Auth] Clearing stale Lovable JWT:", msg);
+            await supabase.auth.signOut({ scope: "local" });
+          }
+        }
+      } catch {
+        // If getSession itself throws, clear everything
+        await supabase.auth.signOut({ scope: "local" }).catch(() => {});
+      }
+    };
+    clearStaleToken();
+  }, []);
   const [termsAccepted, setTermsAccepted] = useState(false);
 
   const buildAuthRedirectUrl = useCallback((fallbackPath: string) => {
@@ -260,7 +282,13 @@ const Auth = () => {
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
-        setError(error.message);
+        const msg = error.message || "";
+        if (msg.includes("invalid JWT") || msg.includes("token is unverifiable")) {
+          await supabase.auth.signOut({ scope: "local" }).catch(() => {});
+          setError("Session expired. Please try again.");
+        } else {
+          setError(msg);
+        }
       } else {
         setSuccess("Signed in — redirecting...");
       }
