@@ -335,7 +335,7 @@ export default function AdminSandbox() {
       }
       const { data, error } = await supabase.functions.invoke("create-test-checkout", { body });
       if (error || !data?.url) throw new Error(error?.message || "No checkout URL returned");
-      window.open(data.url, "_blank");
+      window.location.href = data.url;
       setStatuses(s => ({ ...s, [product.id]: "success" }));
       toast({ title: `${product.name} test launched`, description: "Complete the $0 checkout — then check your email." });
     } catch (e: unknown) {

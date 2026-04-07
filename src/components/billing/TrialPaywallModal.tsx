@@ -56,7 +56,7 @@ const TrialPaywallModal = ({ open, onClose, hardLock }: TrialPaywallModalProps) 
         body: { priceId },
       });
       if (error) throw error;
-      if (data?.url) window.open(data.url, "_blank");
+      if (data?.url) window.location.href = data.url;
     } catch (e: any) {
       toast({ title: "Checkout error", description: e.message, variant: "destructive" });
     } finally {
@@ -68,7 +68,7 @@ const TrialPaywallModal = ({ open, onClose, hardLock }: TrialPaywallModalProps) 
     try {
       const { data, error } = await supabase.functions.invoke("customer-portal");
       if (error) throw error;
-      if (data?.url) window.open(data.url, "_blank");
+      if (data?.url) window.location.href = data.url;
     } catch (e: any) {
       toast({ title: "Portal error", description: e.message, variant: "destructive" });
     }

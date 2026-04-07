@@ -16,7 +16,7 @@ export default function AIInventoryAlerts() {
     try {
       const { data, error } = await supabase.functions.invoke("create-inventory-alert-checkout", { body: form });
       if (error) throw error;
-      if (data?.url) window.open(data.url, "_blank");
+      if (data?.url) window.location.href = data.url;
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally { setLoading(false); }

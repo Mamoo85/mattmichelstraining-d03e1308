@@ -18,7 +18,7 @@ export default function AIGrantFinder() {
     try {
       const { data, error } = await supabase.functions.invoke("create-grant-finder-checkout", { body: { ...form, employeeCount: parseInt(form.employeeCount) || undefined } });
       if (error) throw error;
-      if (data?.url) window.open(data.url, "_blank");
+      if (data?.url) window.location.href = data.url;
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {

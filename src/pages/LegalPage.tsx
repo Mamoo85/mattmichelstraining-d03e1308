@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import SEOHead from "@/components/layout/SEOHead";
 import { Loader2 } from "lucide-react";
+import DOMPurify from "dompurify";
 
 const LEGAL_TYPE_MAP: Record<string, { title: string; slug: string }> = {
   terms: { title: "Terms of Service", slug: "terms_of_service" },
@@ -67,7 +68,7 @@ const LegalPage = () => {
             <article>
               <div
                 className="prose prose-sm sm:prose max-w-none text-foreground [&_h1]:text-foreground [&_h2]:text-foreground [&_h3]:text-foreground [&_p]:text-muted-foreground [&_li]:text-muted-foreground [&_a]:text-primary"
-                dangerouslySetInnerHTML={{ __html: doc.content }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(doc.content) }}
               />
               <p className="text-xs text-muted-foreground mt-8 border-t border-border pt-4">
                 Version {doc.version} · Last updated{" "}

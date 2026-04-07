@@ -163,7 +163,7 @@ const ShopGrid = ({ showCustomOnly = false }: { showCustomOnly?: boolean }) => {
       });
       if (error) throw error;
       if (data?.url) {
-        window.open(data.url, "_blank");
+        window.location.href = data.url;
       }
     } catch (e: any) {
       toast({ title: "Payment error", description: e.message || "Something went wrong", variant: "destructive" });

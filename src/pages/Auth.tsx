@@ -307,12 +307,12 @@ const Auth = () => {
     setError("");
     setSuccess("");
     const redirectUrl = buildAuthRedirectUrl("/dashboard");
-    console.log("[GOOGLE-AUTH] Starting Google sign-in, redirect:", redirectUrl);
+    if (import.meta.env.DEV) console.log("[GOOGLE-AUTH] Starting Google sign-in, redirect:", redirectUrl);
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: redirectUrl,
       });
-      console.log("[GOOGLE-AUTH] Result:", JSON.stringify(result, null, 2));
+      if (import.meta.env.DEV) console.log("[GOOGLE-AUTH] Result:", JSON.stringify(result, null, 2));
       if (result?.error) {
         const msg = result.error.message || "Google sign-in failed";
         console.error("[GOOGLE-AUTH] Error:", msg);

@@ -159,7 +159,7 @@ const Pricing = () => {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       if (data?.url) {
-        window.open(data.url, "_blank");
+        window.location.href = data.url;
       }
     } catch (e: any) {
       toast({ title: "Checkout error", description: e.message, variant: "destructive" });
@@ -173,7 +173,7 @@ const Pricing = () => {
       const { data, error } = await supabase.functions.invoke("customer-portal");
       if (error) throw error;
       if (data?.url) {
-        window.open(data.url, "_blank");
+        window.location.href = data.url;
       }
     } catch (e: any) {
       toast({ title: "Portal error", description: e.message, variant: "destructive" });
