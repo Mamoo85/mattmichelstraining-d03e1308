@@ -306,6 +306,7 @@ const NewHireCheck = lazyRetry(() => import("./pages/NewHireCheck"));
 const StewartDentalProduction = lazyRetry(() => import("./pages/StewartDentalProduction"));
 const StewartDentalPrivacy = lazyRetry(() => import("./pages/StewartDentalPrivacy"));
 const DJConleyDemo1 = lazyRetry(() => import("./pages/DJConleyDemo1"));
+const CommunicationsCenter = lazyRetry(() => import("./pages/CommunicationsCenter"));
 
 const persister = createSyncStoragePersister({
   storage: safeLocalStorage,
