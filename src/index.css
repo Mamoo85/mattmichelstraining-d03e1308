@@ -9,9 +9,9 @@
     font-size: 20px; /* bumped from default 16px → +4px site-wide */
   }
   :root {
-    --background: 0 0% 5%;
+    --background: 0 0% 6%;
     --foreground: 0 0% 95%;
-    --card: 0 0% 9%;
+    --card: 0 0% 8%;
     --card-foreground: 0 0% 95%;
     --popover: 0 0% 9%;
     --popover-foreground: 0 0% 95%;
@@ -46,6 +46,7 @@
     --m2-dim: 0 0% 40%;
     --m2-text-dim: 0 0% 65%;
     --foreground-soft: 0 0% 82%;
+    --m2-rust: 18 82% 42%;
 
     /* Synthwave / Lift Tracker tokens */
     --synth-bg: 240 15% 4%;
@@ -56,8 +57,12 @@
     --synth-glow-cyan: 0 0 12px hsl(185 100% 48% / 0.5);
     --synth-glow-pink: 0 0 12px hsl(300 100% 46% / 0.4);
     --synth-glow-orange: 0 0 12px hsl(14 100% 57% / 0.4);
-  }
 
+    /* Glass tokens */
+    --glass-bg: 0 0% 100% / 0.04;
+    --glass-border: 0 0% 100% / 0.08;
+    --glass-blur: 20px;
+  }
 }
 
 @layer base {
@@ -69,11 +74,10 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: 'DM Sans', 'Inter', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
-    /* Safe area insets for notches and home indicator */
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
     padding-left: env(safe-area-inset-left);
@@ -107,7 +111,7 @@
     }
   }
 
-  /* Broken image fallback — branded gray placeholder */
+  /* Broken image fallback */
   img {
     min-height: 1px;
   }
@@ -134,6 +138,10 @@
     text-transform: uppercase;
     letter-spacing: 0.04em;
   }
+  .font-display {
+    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+    font-weight: 800;
+  }
   .shadow-m2 {
     box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 2px 4px rgba(0,0,0,0.3);
   }
@@ -149,22 +157,18 @@
   .transition-m2 {
     transition: all 150ms cubic-bezier(0.2, 0, 0, 1);
   }
-  /* Safe area bottom padding utility */
   .pb-safe {
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }
   .pb-bottom-nav {
     padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
   }
-  /* Safe area margin bottom utility */
   .mb-safe {
     margin-bottom: env(safe-area-inset-bottom);
   }
-  /* Dynamic viewport height — survives iOS keyboard */
   .min-h-dvh {
     min-height: 100dvh;
   }
-  /* Hide scrollbar utility */
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -182,6 +186,27 @@
   .animate-log-success {
     animation: log-success 0.5s ease-in-out;
   }
+}
+
+/* ── Glassmorphism Cards ───────────────────────────────── */
+.glass-card {
+  background: hsla(var(--glass-bg));
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid hsla(var(--glass-border));
+  border-radius: var(--radius);
+}
+
+/* ── Scroll Reveal ─────────────────────────────────────── */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+[data-reveal].revealed {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 /* ── Zone Theme Utilities ──────────────────────────────── */
@@ -215,4 +240,3 @@
   border: 1px solid rgba(249, 115, 22, 0.12);
   box-shadow: 0 0 30px rgba(249, 115, 22, 0.06);
 }
-

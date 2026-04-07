@@ -66,6 +66,7 @@ export default {
           "surface-hover": "hsl(var(--m2-surface-hover))",
           dim: "hsl(var(--m2-dim))",
           "text-dim": "hsl(var(--m2-text-dim))",
+          rust: "hsl(var(--m2-rust))",
         },
       },
       borderRadius: {
@@ -74,7 +75,8 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['DM Sans', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
         mono: ['"Geist Mono"', '"SF Mono"', '"Fira Code"', 'monospace'],
         brand: ['Oswald', 'Impact', '"Arial Black"', 'sans-serif'],
       },
