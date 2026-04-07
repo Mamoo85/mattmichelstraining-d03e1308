@@ -1,0 +1,71 @@
+graph TD
+    subgraph PAGES["Pages (Routes)"]
+        direction TB
+        PUB["Public Pages"]
+        AUTH_P["Auth-Protected Pages"]
+        ADMIN_P["Admin Page"]
+
+        PUB --- P_INDEX["/ Index (Landing)"]
+        PUB --- P_AUTH["/auth Auth"]
+        PUB --- P_WELCOME["/welcome Welcome"]
+        PUB --- P_SHOP["/shop Shop"]
+        PUB --- P_PARENTS["/for-parents ForParents"]
+        PUB --- P_PRICING["/pricing Pricing"]
+        PUB --- P_ABOUT["/about About"]
+        PUB --- P_SCHEDULE["/schedule Schedule"]
+        PUB --- P_MERCH["/merch Merch"]
+        PUB --- P_LEARN["/learn Learn"]
+        PUB --- P_EDGE["/the-edge TheEdge"]
+        PUB --- P_INSTALL["/install Install"]
+
+        AUTH_P --- P_DASH["/dashboard Dashboard"]
+        AUTH_P --- P_COACH["/coach Coach"]
+        AUTH_P --- P_PROFILE["/profile Profile"]
+        AUTH_P --- P_PROGRESS["/progress Progress"]
+        AUTH_P --- P_NUTRITION["/nutrition Nutrition"]
+        AUTH_P --- P_TRIAL["/trial-welcome TrialWelcome"]
+
+        ADMIN_P --- P_ADMIN["/admin Admin"]
+    end
+
+    subgraph COMPONENTS["Components"]
+        direction TB
+        C_ROOT["Root-Level (39 files) - Navbar, Modals, Guards, Widgets"]
+        C_ADMIN["admin/ (53 files) - Full Admin Dashboard"]
+        C_LANDING["landing/ (32 files) - Marketing Sections"]
+        C_DASH["dashboard/ (9 files) - Client Dashboard Tabs"]
+        C_WORKOUT["workout/ (23 files) - Workout Engine"]
+        C_PROGRESS["progress/ (11 files) - Lift Tracking, Charts"]
+        C_NUTRITION["nutrition/ (4 files) - Macro Tracking"]
+        C_PROGRAMS["programs/ (4 files) - Program Views"]
+        C_STORE["store/ (6 files) - Shop Tabs"]
+        C_EXERCISE["exercise/ (1 file) - Video Embed"]
+        C_AUTH_C["auth/ (1 file) - Nutrition Sneak Peek"]
+        C_UI["ui/ (50+ files) - shadcn Primitives"]
+    end
+
+    subgraph HOOKS["Hooks (15 files)"]
+        direction TB
+        H_AUTH["useAuth - Session Management"]
+        H_ADMIN["useIsAdmin - Role Check"]
+        H_TIER["useTierAccess - Subscription Gates"]
+        H_TRIAL["useTrialStatus - Trial Logic"]
+        H_POINTS["usePoints - Gamification"]
+        H_OTHER["useTimer, useAiStream, useReferral, useOfflineSync, etc."]
+    end
+
+    subgraph EDGE["Edge Functions (62 functions)"]
+        direction TB
+        EF_AI["AI Functions (14) - ai-admin-assist, ai-athlete-stream, ai-meal-prep, etc."]
+        EF_STRIPE["Stripe/Billing (12) - create-checkout, stripe-webhook, cancel-subscription, etc."]
+        EF_SESSION["Sessions (5) - create-session-checkout, verify-session-booking, cancel-session, etc."]
+        EF_PROGRAM["Programs (5) - generate-program, batch-generate, verify-program-purchase, etc."]
+        EF_EMAIL["Email (5) - send-newsletter, process-email-queue, trial emails, etc."]
+        EF_FAMILY["Family/Teams (4) - create-child-account, redeem-parent-invite, update-family-tier, etc."]
+        EF_OTHER["Other (17) - google-calendar-sync, churn-radar, scan-workout, etc."]
+    end
+
+    PAGES --> COMPONENTS
+    PAGES --> HOOKS
+    COMPONENTS --> HOOKS
+    HOOKS --> EDGE

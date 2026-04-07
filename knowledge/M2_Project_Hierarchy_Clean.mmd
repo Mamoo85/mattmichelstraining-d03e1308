@@ -1,0 +1,96 @@
+graph TD
+    subgraph ROUTES["Pages - 20 Routes"]
+        direction TB
+        PUBLIC["Public (12)"]
+        PROTECTED["Protected (6)"]
+        ADMIN_R["Admin (1)"]
+        NOTFOUND["404 Catch-all"]
+
+        PUBLIC --- R1["/ Index"]
+        PUBLIC --- R2["/auth /welcome /shop"]
+        PUBLIC --- R3["/for-parents /pricing /about"]
+        PUBLIC --- R4["/schedule /merch /learn"]
+        PUBLIC --- R5["/the-edge /install"]
+
+        PROTECTED --- R6["/dashboard /coach /profile"]
+        PROTECTED --- R7["/progress /nutrition /trial-welcome"]
+
+        ADMIN_R --- R8["/admin"]
+    end
+
+    subgraph COMP["Components - Organized"]
+        direction TB
+
+        LAYOUT["layout/ (12 files)
+        AppNavbar, SEOHead, ProtectedRoute,
+        ErrorBoundary, ScrollToTop, OfflineBadge,
+        NotificationBell, AnnouncementBanner,
+        PwaInstallBanner, TechSupportButton,
+        NavLink, LogoAnimations"]
+
+        SHARED["shared/ (3 files)
+        ConfirmActionModal, EmptyStateCard,
+        SectionHeader"]
+
+        BILLING["billing/ (6 files)
+        SubscriptionGuard, PaywallGate,
+        TrialCTA, TrialPaywallModal,
+        CheckoutConfirmationModal, FamilyBilling"]
+
+        GAMIFICATION["gamification/ (5 files)
+        PointsWidget, PointsLeaderboard,
+        ChallengeSystem, ChallengeLeaderboard,
+        LevelUpCelebration"]
+
+        SESSIONS["sessions/ (4 files)
+        CoachMessaging, GiftSessionModal,
+        UpcomingSessions, StudioCheckIn"]
+
+        MARKETING["marketing/ (3 files)
+        ReferralDashboard, Newsletter,
+        NewsletterSignup"]
+
+        FEATURES["features/ (17 files)
+        HeroSection, ExerciseLibrary, FixItLibrary,
+        ProgressCharts, MyPrograms, ShopGrid,
+        MonthlyFocusWidget, TeamManager,
+        ParentChildManager, ProtocolTable,
+        SupportTicketForm, PrivacySettingsCard,
+        AboutPhilosophy, ForCoaches, MerchSection,
+        RealityCheck, ValuePitch"]
+
+        EXISTING["Existing Subfolders (unchanged)"]
+        EXISTING --- EX1["admin/ (53 files)"]
+        EXISTING --- EX2["landing/ (32 files)"]
+        EXISTING --- EX3["dashboard/ (9 files)"]
+        EXISTING --- EX4["workout/ (23 files)"]
+        EXISTING --- EX5["progress/ (11 files)"]
+        EXISTING --- EX6["nutrition/ (4 files)"]
+        EXISTING --- EX7["programs/ (4 files)"]
+        EXISTING --- EX8["store/ (6 files)"]
+        EXISTING --- EX9["ui/ (50+ shadcn)"]
+    end
+
+    subgraph HOOKS_S["Hooks - 15 files"]
+        direction TB
+        H1["useAuth, useIsAdmin, useTierAccess"]
+        H2["useTrialStatus, usePoints, useTimer"]
+        H3["useAiStream, useReferral, useOfflineSync"]
+        H4["useSiteContent, useFamilyUserIds, useGeoState"]
+        H5["useWorkoutSave, use-mobile, use-toast"]
+    end
+
+    subgraph EDGE_S["Edge Functions - 62 functions"]
+        direction TB
+        E1["AI (14): ai-admin-assist, ai-athlete-stream, ai-meal-prep..."]
+        E2["Stripe (12): create-checkout, stripe-webhook, customer-portal..."]
+        E3["Sessions (5): create-session-checkout, verify-session-booking..."]
+        E4["Programs (5): generate-program, batch-generate-programs..."]
+        E5["Email (5): send-newsletter, process-email-queue, trial emails..."]
+        E6["Family (4): create-child-account, redeem-parent-invite..."]
+        E7["Other (17): google-calendar-sync, churn-radar, scan-workout..."]
+    end
+
+    ROUTES --> COMP
+    COMP --> HOOKS_S
+    HOOKS_S --> EDGE_S
