@@ -249,9 +249,9 @@ function MassTrialExtension() {
       const newDate = new Date(cutoff.getTime() + Number(days) * 86400000).toISOString();
       const { data, error } = await supabase
         .from("profiles")
-        .update({ trial_ends_at: newDate } as any)
+        .update({ trial_started_at: newDate } as any)
         .eq("subscription_tier", "free")
-        .not("trial_ends_at", "is", null)
+        .not("trial_started_at", "is", null)
         .select("id");
       if (error) throw error;
       const count = data?.length ?? 0;
