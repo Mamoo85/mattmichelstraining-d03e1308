@@ -16,7 +16,7 @@ export default function AIBirthdayCampaign() {
     try {
       const { data, error } = await supabase.functions.invoke("create-birthday-campaign-checkout", { body: form });
       if (error) throw error;
-      if (data?.url) window.open(data.url, "_blank");
+      if (data?.url) window.location.href = data.url;
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally { setLoading(false); }
