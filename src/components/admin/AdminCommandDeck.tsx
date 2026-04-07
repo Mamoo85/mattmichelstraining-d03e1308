@@ -249,9 +249,9 @@ function MassTrialExtension() {
       const newDate = new Date(cutoff.getTime() + Number(days) * 86400000).toISOString();
       const { data, error } = await supabase
         .from("profiles")
-        .update({ trial_ends_at: newDate } as any)
+        .update({ trial_started_at: newDate } as any)
         .eq("subscription_tier", "free")
-        .not("trial_ends_at", "is", null)
+        .not("trial_started_at", "is", null)
         .select("id");
       if (error) throw error;
       const count = data?.length ?? 0;
@@ -349,16 +349,16 @@ function ExportClientList() {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, full_name, email, subscription_tier, created_at, trial_ends_at")
+        .select("id, full_name, email, subscription_tier, created_at, trial_started_at")
         .order("created_at", { ascending: false })
         .limit(5000);
       if (error) throw error;
       const rows = [
-        ["ID", "Name", "Email", "Tier", "Joined", "Trial Ends"],
+        ["ID", "Name", "Email", "Tier", "Joined", "Trial Started"],
         ...(data ?? []).map((p: any) => [
           p.id, p.full_name ?? "", p.email ?? "", p.subscription_tier ?? "",
           p.created_at ? new Date(p.created_at).toLocaleDateString() : "",
-          p.trial_ends_at ? new Date(p.trial_ends_at).toLocaleDateString() : "",
+          p.trial_started_at ? new Date(p.trial_started_at).toLocaleDateString() : "",
         ]),
       ];
       const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");

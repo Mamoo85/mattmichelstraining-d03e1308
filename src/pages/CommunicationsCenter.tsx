@@ -665,7 +665,7 @@ export default function CommunicationsCenter() {
   const { data: leads = [], isLoading } = useQuery({
     queryKey: ["comms-leads"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("leads")
         .select("*")
         .order("created_at", { ascending: false })
@@ -679,7 +679,7 @@ export default function CommunicationsCenter() {
     queryKey: ["comms-messages", activeLead?.id],
     queryFn: async () => {
       if (!activeLead) return [];
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("messages")
         .select("*")
         .eq("lead_id", activeLead.id)
@@ -699,7 +699,7 @@ export default function CommunicationsCenter() {
 
   const handleMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("leads")
         .update({ status: "Handled" })
         .eq("id", id);
