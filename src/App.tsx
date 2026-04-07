@@ -73,6 +73,7 @@ const ElectricianMockup = lazyRetry(() => import("./pages/ElectricianMockup"));
 const LawyerMockup = lazyRetry(() => import("./pages/LawyerMockup"));
 const ClinicMockup = lazyRetry(() => import("./pages/ClinicMockup"));
 const RoofingMockup = lazyRetry(() => import("./pages/RoofingMockup"));
+const PetfectionDemo = lazyRetry(() => import("./pages/PetfectionDemo"));
 const YoungbloodMockup = lazyRetry(() => import("./pages/YoungbloodMockup"));
 const DentalMockup = lazyRetry(() => import("./pages/DentalMockup"));
 const ProposalStewartDental = lazyRetry(() => import("./pages/ProposalStewartDental"));
@@ -489,6 +490,8 @@ const App = () => (
                     <Route path="/demo-cleaning/*" element={<CleaningServiceMockup />} />
                     <Route path="/demo-salon" element={<SalonMockup />} />
                     <Route path="/demo-salon/*" element={<SalonMockup />} />
+                    <Route path="/demo-petfection" element={<PetfectionDemo />} />
+                    <Route path="/demo-petfection/*" element={<PetfectionDemo />} />
                     <Route path="/local-business-score" element={<LocalBusinessScore />} />
                     <Route path="/newsletter" element={<NewsletterSubscribe />} />
                     <Route path="/gift" element={<GiftCard />} />
