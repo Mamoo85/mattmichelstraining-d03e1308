@@ -21,7 +21,7 @@ const PageShell = ({ children, className = "", hideBottomNav }: PageShellProps) 
     >
       <AppNavbar />
       <main className="pt-14">{children}</main>
-      {!hideBottomNav && <BottomNav />}
+      {!hideBottomNav && <BottomTabBar />}
     </div>
   );
 };
