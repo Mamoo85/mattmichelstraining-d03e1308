@@ -1,84 +1,110 @@
 
 
-# DJ Conley Sales Package — Visual PDFs + Meeting Materials
+# 2026 Design System Upgrade — All Public Pages
 
-## Context
-- Your pricing tiers: $499 (Standard) / $1,499 (Professional) / $3,499 (Business). You want $3,499 — that IS your top tier.
-- The owner is a "good ol' boys" guy — means he runs on relationships, handshakes, word-of-mouth. He doesn't trust digital marketing because his business has always come from people who know people. This is actually your biggest advantage: **you're not selling him e-commerce or social media — you're selling him a digital business card that makes him look as good as his reputation already is.**
-- Key insight: Don't lead with automation or AI. Lead with **credibility and professionalism**. His peers and customers Google him — what they find should match the 51-year legacy.
+## The Problem
+255 pages, each with hardcoded styles. Editing them one-by-one would take weeks and create maintenance hell. Instead, we upgrade the **design system layer** so every page inherits the new look automatically, then update the ~10 shared layout/section components that 90% of pages already use.
 
-## What Gets Built
+## Strategy: Cascade, Don't Copy-Paste
 
-### PDF 1: "The DJ Conley Digital Presence Report" (4-5 pages)
-A visual before/after comparison — NOT a sales pitch. Framed as a "report" so it feels informative, not salesy.
+```text
+Layer 1: CSS Variables + Global Styles (index.css)     ← touches ALL pages
+Layer 2: Shared Layout Components (AppNavbar, SEOHead)  ← touches ALL pages
+Layer 3: Reusable Section Components (new)              ← opt-in per page
+Layer 4: Page-Category Batch Updates (~6 patterns)      ← covers 200+ pages
+Layer 5: High-Traffic Page Polish (Index, Pricing, etc) ← 8-10 pages
+```
 
-**Page 1 — Cover**: "Digital Presence Assessment — D.J. Conley Associates" with their logo colors (navy/red), their address, the date. Clean, professional, no fluff.
+## What Changes
 
-**Page 2 — "What Your Customers See Today"**: Side-by-side screenshots showing their current site on mobile vs. one of your demos on mobile. Visual impact — no paragraphs needed. Simple caption: "Your reputation is 51 years strong. Your website should match."
+### Step 1: Global Design Tokens (index.css + tailwind.config.ts)
+- Add `--glass-bg`, `--glass-border`, `--glass-blur` CSS tokens
+- Add `--font-display` (Plus Jakarta Sans) and `--font-body` (DM Sans) tokens
+- Update `body` font-family to DM Sans, add `.font-display` utility for Plus Jakarta Sans
+- Add Google Fonts `<link>` to `index.html` for both fonts
+- Add glassmorphism utilities: `.glass-card`, `.glass-hero`, `.glass-stats`
+- Add scroll-animation utility: `.animate-on-scroll` with Intersection Observer JS snippet in a global hook
+- Soften the dark palette slightly: `--background` from pure `0 0% 5%` to `0 0% 6%`, `--card` from `0 0% 9%` to `0 0% 8%` with a subtle warm shift
+- Add `--m2-rust` accent token: `18 82% 42%` (your existing primary is close — this is refinement)
 
-**Page 3 — "The 3 Things Costing You Calls"**: Three visual blocks with icons:
-1. **Mobile Experience** — screenshot of their current site on phone (broken/cramped) vs. your demo (clean/tappable)
-2. **Google First Impression** — mock Google search result showing how their listing looks now vs. with proper meta/schema
-3. **Speed** — simple gauge graphic: "Current site: 4.2s load / Your new site: 1.1s load"
+### Step 2: New Shared Components (5 files)
+Create reusable 2026-style building blocks:
 
-**Page 4 — "What We'd Build For You"**: Three phone-sized mockup frames showing v1, v2, v3 demos — labeled "Option A: Classic Steel", "Option B: Dark Industrial", "Option C: Clean Corporate". Caption: "Pick the one that feels like DJ Conley."
+1. **`src/components/layout/PageShell.tsx`** — wraps any page with `<AppNavbar />`, consistent padding, scroll-animation observer, and optional glassmorphic hero slot. Pages that already use `<AppNavbar />` + `<div className="min-h-screen bg-background">` can swap to `<PageShell>`.
 
-**Page 5 — "The Package"**: Simple, clean breakdown — NO pricing tiers, just ONE number:
-- Custom 10+ page website
-- Mobile-optimized
-- Google Business Profile optimization
-- Emergency service banner
-- Product catalog with all Cleaver-Brooks lines
-- 51 years of history told right
-- **$3,499 one-time + $99/mo maintenance**
-- "60-day free marketing tools included"
+2. **`src/components/layout/GlassHero.tsx`** — frosted glass hero section with `backdrop-blur-xl`, translucent background, pill badge, headline, subline, and CTA. Replaces the 31+ pages using `bg-[#0f0f1a]` hardcoded hero patterns.
 
-### PDF 2: "Revenue You're Leaving on the Table" (3-4 pages)
-This is the automation pitch — but framed as **money lost**, not technology gained. Visual-heavy.
+3. **`src/components/layout/StatsStrip.tsx`** — animated counter bar with glassmorphism. Accepts array of `{value, label}`. Intersection Observer triggers count-up animation.
 
-**Page 1 — Cover**: "Revenue Preventer Report — What Happens When You Miss a Call" — dark, bold, urgent.
+4. **`src/components/layout/FeatureGrid.tsx`** — asymmetric card grid with glass treatment and 3D hover tilt. Replaces the repeated `grid md:grid-cols-2 gap-4` + icon card pattern used across 50+ product pages.
 
-**Page 2 — "The Missed Call Problem"**: Visual flowchart:
-- Phone rings → You're on a job site → Call goes to voicemail → Customer calls your competitor → **You lost $8,000**
-- VS: Phone rings → You're on a job site → **Auto-text in 60 seconds**: "Hey, DJ Conley here — saw your call. What do you need?" → Customer responds → **You got the job**
-- Big stat callout: "67% of callers who go to voicemail never call back" (industry stat)
+5. **`src/hooks/useScrollReveal.ts`** — Intersection Observer hook that adds `.revealed` class for CSS-driven fade-in + slide-up. Applied globally via PageShell.
 
-**Page 3 — "The Follow-Up Gap"**: Visual timeline showing what happens after you send a quote:
-- Day 1: Quote sent → silence
-- Day 3: Nothing
-- Day 7: Customer went with someone else
-- VS with automation: Day 1: Quote sent → Day 2: "Just checking in" text → Day 5: "Any questions?" email → Day 7: "Ready when you are" → **Close rate up 40%**
+### Step 3: Update Existing Shared Components
+- **`AppNavbar.tsx`** — add glassmorphism treatment (`backdrop-blur-xl bg-background/80`), warm hover states, Plus Jakarta Sans for logo/brand text
+- **`WaitlistGate.tsx`** — glassmorphic card with warm glow border, improved typography hierarchy
+- **`HeroSection.tsx`** (Index hero) — glassmorphic overlay on stats, scroll-triggered animations, typography upgrade
 
-**Page 4 — "Your Numbers"**: Simple math visual:
-- "If you miss 2 calls/week..."
-- "And each job averages $5,000..."
-- "That's $40,000/month walking out the door"
-- "Missed Call Text-Back: $included with maintenance"
-- No tech jargon. Just money.
+### Step 4: Batch-Update Page Categories
 
-### Design Approach
-- **Color palette**: Navy `#003B71` + Red `#C0392B` + Concrete `#f5f0eb` — matches DJ Conley's existing brand
-- **Typography**: Plus Jakarta Sans (bold headers) + DM Sans (body) — same as the demo sites
-- **Style**: Clean, industrial, zero fluff. Every page is 70% visual, 30% text. No bullet-point walls.
-- **Generated with**: ReportLab (Python PDF generation) with embedded images
+**Category A: Dark `bg-[#0f0f1a]` pages (~31 pages)**
+These all use the same hardcoded dark background. Search-and-replace `bg-[#0f0f1a]` → `bg-background` and `text-[#f97316]` → `text-primary`. This alone modernizes them by inheriting the global theme instead of fighting it.
 
-### Image Generation
-- Use Nano banana (gemini-2.5-flash-image) to generate:
-  1. A mobile phone mockup frame showing the DJ Conley demo
-  2. A "missed call" visual scenario (phone with missed call notification on a job site)
-  3. Before/after Google search result comparison
-  4. Speed gauge comparison graphic
+**Category B: WaitlistGate-only pages (~20 pages)**
+Pages like AIHandbook, ContractorChatbot that are just a wrapper around `<WaitlistGate>`. Wrap in `<PageShell>` + swap to `<GlassHero>` header. Since WaitlistGate itself gets upgraded in Step 3, these pages improve automatically.
 
-## Implementation Steps
-1. Generate 4 visual assets using AI image generation (edge function or script)
-2. Build PDF 1 with ReportLab — cover + 4 content pages
-3. Build PDF 2 with ReportLab — cover + 3 content pages
-4. QA both PDFs — convert to images, inspect every page
-5. Output to `/mnt/documents/djconley-presence-report.pdf` and `/mnt/documents/djconley-revenue-report.pdf`
+**Category C: Product sales pages with hero + features + CTA (~60 pages)**
+Pages like MissedCallSaaS, RevenuePreventer, ContractorLeads. Replace inline hero markup with `<GlassHero>`, inline feature grids with `<FeatureGrid>`, and stats with `<StatsStrip>`.
 
-## Meeting Strategy Note
-- **$3,499 is the right number** — it's your Business tier. For a 51-year-old company with industrial clients, this is a no-brainer if positioned right.
-- **Don't show the pricing sheet with tiers** — showing cheaper options lets him negotiate down. Show ONE price, ONE package, everything included.
-- **"Good ol' boys" translation**: He trusts people, not websites. So your pitch is: "Your website should do for strangers what your handshake does for everyone who already knows you."
-- **Don't sell automation hard** — mention it as "included tools" that come with the maintenance. If he bites, expand. If not, the website alone justifies $3,499.
+**Category D: Mockup/demo pages (~15 pages)**
+Already have their own style. Light touch — add `<PageShell>` wrapper and glassmorphic nav only.
+
+**Category E: Content/info pages (~10 pages)**
+About, Learn, ForParents, Schedule, etc. Typography upgrade via global fonts + add scroll animations.
+
+**Category F: Admin, Dashboard, Zone pages — EXCLUDED**
+No changes to ZoneDashboard, ZonePortal, Dashboard, Admin, Profile, Progress, or any protected route dashboards.
+
+### Step 5: High-Traffic Page Polish
+Individual attention on the 8 pages that get the most traffic:
+- `Index.tsx` — full glassmorphic hero, animated stats, scroll reveals
+- `Pricing.tsx` — glass tier cards with 3D hover, animated feature reveals
+- `About.tsx` — typography overhaul, glass quote cards, scroll timeline
+- `Shop.tsx` — glass tab bar, card hover effects
+- `AllServices.tsx` — glass category headers, asymmetric service grid
+- `WebDesignServices.tsx` — glassmorphic pricing tiers, animated add-on cards
+- `RevenuePreventer.tsx` — full 2026 treatment as flagship product page
+- `GetStarted.tsx` — glass form card, trust bar
+
+## What's NOT Changing
+- User dashboards (Dashboard, ZoneDashboard, ZonePortal, Profile, Progress)
+- Admin panel (Admin, AdminViewUser)
+- Auth pages (Auth — already has its own treatment)
+- Zone theme (ZoneThemeWrapper already has a distinct dark theme)
+- Any database tables, edge functions, or backend logic
+- Core functionality of any page
+
+## Files Created
+- `src/components/layout/PageShell.tsx`
+- `src/components/layout/GlassHero.tsx`
+- `src/components/layout/StatsStrip.tsx`
+- `src/components/layout/FeatureGrid.tsx`
+- `src/hooks/useScrollReveal.ts`
+
+## Files Modified
+- `index.html` — add Plus Jakarta Sans + DM Sans font links
+- `src/index.css` — new tokens, glassmorphism utilities, scroll animation keyframes
+- `tailwind.config.ts` — add glass, font-display utilities
+- `src/components/layout/AppNavbar.tsx` — glass treatment
+- `src/components/WaitlistGate.tsx` — glass card upgrade
+- `src/components/features/HeroSection.tsx` — glass overlay + animations
+- ~100-150 product/service pages — swap to shared components (batched)
+
+## Implementation Approach
+This will be done in phases across multiple messages:
+1. **Phase 1**: Global styles + new shared components (the foundation)
+2. **Phase 2**: Update existing shared components + high-traffic pages
+3. **Phase 3**: Batch-update Category A-C pages (bulk search-replace + component swaps)
+
+Total estimated scope: 3-4 implementation messages.
 
