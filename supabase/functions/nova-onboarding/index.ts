@@ -119,15 +119,15 @@ async function processTable(
   daysAgo: number,
   dayNumber: 3 | 7,
 ): Promise<number> {
-  const targetDate = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
-  const start = new Date(targetDate); start.setHours(0, 0, 0, 0);
-  const end = new Date(targetDate); end.setHours(23, 59, 59, 999);
+  // Fetch all active clients created AT LEAST daysAgo days ago.
+  // alreadySent() deduplication ensures each client gets each step exactly once,
+  // so if a cron run was missed the email still goes out on the next run.
+  const threshold = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString();
 
   const { data: clients } = await (supabase.from as any)(table)
     .select(`${emailCol}, ${nameCol}, active`)
     .eq("active", true)
-    .gte("created_at", start.toISOString())
-    .lte("created_at", end.toISOString());
+    .lte("created_at", threshold);
 
   if (!clients?.length) return 0;
 

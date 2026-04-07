@@ -731,8 +731,8 @@ export default function AdminCommandDeck() {
           <div className="flex flex-wrap gap-2">
             {AGENTS.map(name => {
               const status = getAgentStatus(name);
-              const beat = heartbeats?.find((h: any) => h.agent_name === name);
-              const minsAgo = beat ? Math.round((Date.now() - new Date(beat.last_beat).getTime()) / 60000) : null;
+              const beat = heartbeats?.find((h: any) => h.agent_name === name.toLowerCase());
+              const minsAgo = beat ? Math.round((Date.now() - new Date(beat.last_run_at).getTime()) / 60000) : null;
               return (
                 <div key={name} className="flex items-center gap-1.5 bg-card border border-border rounded px-2 py-1" title={minsAgo !== null ? `Last beat: ${minsAgo}m ago` : "No heartbeat recorded"}>
                   <div className={`w-2 h-2 rounded-full ${status === "healthy" ? "bg-green-400" : status === "warning" ? "bg-yellow-400" : status === "down" ? "bg-red-400 animate-pulse" : "bg-muted-foreground/30"}`} />

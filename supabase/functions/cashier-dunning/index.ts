@@ -8,6 +8,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
 const STRIPE_SECRET_KEY = Deno.env.get("STRIPE_SECRET_KEY")!;
+const STRIPE_BILLING_PORTAL_URL = Deno.env.get("STRIPE_BILLING_PORTAL_URL") || "https://billing.stripe.com/p/login/live_placeholder";
 const MATT_EMAIL = "matt@mattmichelstraining.com";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
@@ -20,7 +21,7 @@ interface DunningRecord {
 }
 
 async function sendDunningEmail(record: DunningRecord) {
-  const portalUrl = `https://billing.stripe.com/p/login/test_placeholder`;
+  const portalUrl = STRIPE_BILLING_PORTAL_URL;
 
   const subjects: Record<number, string> = {
     1: "Your payment didn't go through — action needed",
@@ -66,25 +67,37 @@ async function sendDunningEmail(record: DunningRecord) {
 }
 
 async function getFailedChargesLast24h(): Promise<DunningRecord[]> {
-  // Query Stripe for charges that failed in the last 24 hours
   const since = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
-  const res = await fetch(
-    `https://api.stripe.com/v1/charges?created[gte]=${since}&limit=100`,
-    { headers: { Authorization: `Bearer ${STRIPE_SECRET_KEY}` } }
-  );
-  const data = await res.json();
-  if (!data.data) return [];
+  const all: any[] = [];
+  let startingAfter: string | null = null;
 
-  const failed = data.data.filter(
-    (c: any) => c.status === "failed" && c.customer && c.billing_details?.email
-  );
+  // Paginate through all failed charges (Stripe max 100/page)
+  while (true) {
+    const params = new URLSearchParams({
+      "created[gte]": String(since),
+      limit: "100",
+    });
+    if (startingAfter) params.set("starting_after", startingAfter);
 
-  return failed.map((c: any) => ({
-    customer_email: c.billing_details.email,
-    stripe_customer_id: c.customer,
-    day_number: 1,
-    amount_cents: c.amount,
-  }));
+    const res = await fetch(`https://api.stripe.com/v1/charges?${params}`, {
+      headers: { Authorization: `Bearer ${STRIPE_SECRET_KEY}` },
+    });
+    const data = await res.json();
+    if (!data.data?.length) break;
+
+    all.push(...data.data);
+    if (!data.has_more) break;
+    startingAfter = data.data[data.data.length - 1].id;
+  }
+
+  return all
+    .filter((c: any) => c.status === "failed" && c.customer && c.billing_details?.email)
+    .map((c: any) => ({
+      customer_email: c.billing_details.email,
+      stripe_customer_id: c.customer,
+      day_number: 1,
+      amount_cents: c.amount,
+    }));
 }
 
 async function alreadySentToday(email: string, day: number): Promise<boolean> {

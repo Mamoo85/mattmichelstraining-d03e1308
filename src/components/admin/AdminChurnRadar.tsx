@@ -112,12 +112,16 @@ const AdminChurnRadar = () => {
     if (error) {
       toast({ title: "Failed", description: error.message, variant: "destructive" });
     } else {
-      await supabase
+      const { error: updateError } = await supabase
         .from("retention_alerts")
         .update({ status: "offer_sent", resolved_at: new Date().toISOString() })
         .eq("id", alert.id);
-      setAlerts((prev) => prev.filter((a) => a.id !== alert.id));
-      toast({ title: "20% off offer sent", description: `Discount email sent to ${alert.email}` });
+      if (updateError) {
+        toast({ title: "Failed to update alert", description: updateError.message, variant: "destructive" });
+      } else {
+        setAlerts((prev) => prev.filter((a) => a.id !== alert.id));
+        toast({ title: "20% off offer sent", description: `Discount email sent to ${alert.email}` });
+      }
     }
     setDiscountingId(null);
   };

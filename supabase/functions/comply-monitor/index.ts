@@ -75,33 +75,29 @@ async function sendAlert(violations: Violation[]) {
 async function checkTcpaOptOuts(): Promise<Violation[]> {
   const violations: Violation[] = [];
 
-  // Get all opted-out phones
-  const { data: optOuts } = await supabase
-    .from("sms_opt_outs")
-    .select("phone_number");
-
-  if (!optOuts || optOuts.length === 0) return violations;
-  const optedOutPhones = new Set(optOuts.map((o) => o.phone_number));
-
-  // Check each SMS table for active clients with opted-out phones
+  // Use an inner-join approach: for each SMS table, fetch only active clients
+  // whose phone_number exists in sms_opt_outs — no full table scans in memory.
   for (const { table, phoneCol } of SMS_CLIENT_TABLES) {
-    const { data: clients } = await (supabase.from as any)(table)
-      .select(`id, ${phoneCol}, active`)
-      .eq("active", true);
+    // Supabase doesn't support cross-table joins via the REST API, so we use
+    // a lightweight RPC that runs a parameterized EXISTS query server-side.
+    const { data: hits, error } = await supabase.rpc("find_opted_out_active_clients", {
+      p_table: table,
+      p_phone_col: phoneCol,
+    });
 
-    if (!clients) continue;
+    if (error) {
+      console.warn(`[comply-monitor] RPC error for ${table}:`, error.message);
+      continue;
+    }
 
-    for (const client of clients) {
-      const phone = client[phoneCol];
-      if (phone && optedOutPhones.has(phone)) {
-        violations.push({
-          check_type: "tcpa",
-          severity: "critical",
-          description: `Active client with opted-out phone ${phone} in ${table} — SMS sends must stop immediately`,
-          affected_table: table,
-          affected_id: client.id,
-        });
-      }
+    for (const row of hits ?? []) {
+      violations.push({
+        check_type: "tcpa",
+        severity: "critical",
+        description: `Active client with opted-out phone ${row.phone} in ${table} — SMS sends must stop immediately`,
+        affected_table: table,
+        affected_id: row.id,
+      });
     }
   }
 
@@ -133,19 +129,20 @@ async function checkComplianceBlocks(): Promise<Violation[]> {
 async function checkCanSpam(): Promise<Violation[]> {
   const violations: Violation[] = [];
 
-  // Check last 5 newsletter sends have an unsubscribe_url recorded
-  const { data: sends } = await supabase
+  // Only flag if newsletter_sends has an unsubscribe_included column that is false,
+  // indicating a send actually went out without an unsubscribe link.
+  const { data: badSends } = await supabase
     .from("newsletter_sends")
     .select("id, sent_at, subject")
+    .eq("unsubscribe_included", false)
     .order("sent_at", { ascending: false })
-    .limit(5);
+    .limit(10);
 
-  if (sends && sends.length > 0) {
-    // If newsletter_sends table exists but has no unsubscribe tracking column, flag as info
+  if (badSends && badSends.length > 0) {
     violations.push({
       check_type: "canspam",
-      severity: "info",
-      description: `Last ${sends.length} newsletter sends found — verify unsubscribe links are included in all emails`,
+      severity: "critical",
+      description: `${badSends.length} newsletter send${badSends.length > 1 ? "s" : ""} recorded WITHOUT an unsubscribe link — CAN-SPAM violation`,
       affected_table: "newsletter_sends",
     });
   }

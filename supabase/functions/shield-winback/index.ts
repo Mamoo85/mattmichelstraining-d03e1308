@@ -154,11 +154,12 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Always process pending sequences
-    const { sent } = await processSequences();
+    // Only batch-process sequences on cron (GET/no-body), not on webhook POST
+    const isCronRun = req.method !== "POST";
+    const { sent } = isCronRun ? await processSequences() : { sent: 0 };
 
     await updateHeartbeat("ok");
-    console.log(`[shield-winback] Done: ${sent} win-back emails sent`);
+    if (isCronRun) console.log(`[shield-winback] Done: ${sent} win-back emails sent`);
 
     return new Response(JSON.stringify({ ok: true, sent }), {
       headers: { "Content-Type": "application/json" },
