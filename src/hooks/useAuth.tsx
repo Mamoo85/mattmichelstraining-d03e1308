@@ -3,6 +3,7 @@ import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { safeLocalStorage } from "@/lib/browserStorage";
 import { queryClient } from "@/lib/queryClient";
+import { isStaleJWTError } from "@/lib/jwtErrors";
 
 // Tier mapping: product_id → tier key
 export const TIERS = {
@@ -228,16 +229,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             if (userError) {
               const msg = userError.message || "";
               const status = (userError as any).status;
-              if (
-                msg.includes("session_not_found") ||
-                msg.includes("invalid claim") ||
-                msg.includes("invalid JWT") ||
-                msg.includes("JWT expired") ||
-                msg.includes("token is unverifiable") ||
-                msg.includes("unrecognized JWT kid") ||
-                status === 401 ||
-                status === 403
-              ) {
+              if (isStaleJWTError(msg) || status === 401 || status === 403) {
                 console.warn("[Auth] Stale session detected — signing out:", msg);
                 safeClearSession();
               }

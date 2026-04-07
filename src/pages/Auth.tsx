@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/hooks/useAuth";
+import { isStaleJWTError } from "@/lib/jwtErrors";
 import { useToast } from "@/hooks/use-toast";
 import m2Logo from "@/assets/m2-logo.jpg";
 import { ArrowRight, Loader2, Gift, Users, Mail, User, UserPlus, AlertTriangle } from "lucide-react";
@@ -63,19 +64,10 @@ const Auth = () => {
   // Clear stale Lovable-issued JWT tokens on mount (ES256 tokens that Supabase can't verify)
   useEffect(() => {
     const clearStaleToken = async () => {
-      try {
-        const { data } = await supabase.auth.getSession();
-        if (!data.session) return;
-        const { error: userError } = await supabase.auth.getUser();
-        if (userError) {
-          const msg = userError.message || "";
-          if (msg.includes("invalid JWT") || msg.includes("token is unverifiable") || msg.includes("unrecognized JWT kid")) {
-            console.warn("[Auth] Clearing stale Lovable JWT:", msg);
-            await supabase.auth.signOut({ scope: "local" });
-          }
-        }
-      } catch {
-        // If getSession itself throws, clear everything
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (!user && !userError) return;
+      if (userError && isStaleJWTError(userError.message || "")) {
+        console.warn("[Auth] Clearing stale Lovable JWT:", userError.message);
         await supabase.auth.signOut({ scope: "local" }).catch(() => {});
       }
     };
@@ -153,13 +145,7 @@ const Auth = () => {
           const { error: userErr } = await supabase.auth.getUser();
           if (userErr) {
             const msg = userErr.message || "";
-            if (
-              msg.includes("invalid JWT") ||
-              msg.includes("unrecognized JWT kid") ||
-              msg.includes("token is unverifiable") ||
-              msg.includes("session_not_found") ||
-              msg.includes("JWT expired")
-            ) {
+            if (isStaleJWTError(msg)) {
               console.warn("[Auth] Stale session during callback — clearing:", msg);
               await supabase.auth.signOut({ scope: "local" });
               // Fall through to use the callback tokens instead
@@ -303,7 +289,7 @@ const Auth = () => {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
         const msg = error.message || "";
-        if (msg.includes("invalid JWT") || msg.includes("token is unverifiable")) {
+        if (isStaleJWTError(msg)) {
           await supabase.auth.signOut({ scope: "local" }).catch(() => {});
           setError("Session expired. Please try again.");
         } else {

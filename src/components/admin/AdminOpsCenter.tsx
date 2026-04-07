@@ -137,25 +137,21 @@ export default function AdminOpsCenter() {
       let totalClients = 0;
       const rosterMap = new Map<string, RosterEntry>();
 
-      // Batch queries in parallel (groups of 15) to prevent main-thread blocking
-      const BATCH_SIZE = 15;
-      for (let i = 0; i < ALL_SERVICES.length; i += BATCH_SIZE) {
-        const batch = ALL_SERVICES.slice(i, i + BATCH_SIZE);
-        const results = await Promise.all(
-          batch.map(async (svc) => {
-            try {
-              const { data: rows } = await (supabase.from as any)(svc.table)
-                .select("business_name, email, phone, created_at")
-                .eq("active", true)
-                .limit(200);
-              return { svc, rows: rows || [], error: false };
-            } catch {
-              return { svc, rows: [] as any[], error: true };
-            }
-          })
-        );
+      const results = await Promise.all(
+        ALL_SERVICES.map(async (svc) => {
+          try {
+            const { data: rows } = await (supabase.from as any)(svc.table)
+              .select("business_name, email, phone, created_at")
+              .eq("active", true)
+              .limit(200);
+            return { svc, rows: rows || [], error: false };
+          } catch {
+            return { svc, rows: [] as any[], error: true };
+          }
+        })
+      );
 
-        for (const { svc, rows, error } of results) {
+      for (const { svc, rows, error } of results) {
           if (error) {
             services.push({ name: svc.name, price: svc.price, priceNum: svc.priceNum, activeCount: 0, totalRevenue: 0, clients: [] });
             continue;
@@ -190,7 +186,6 @@ export default function AdminOpsCenter() {
               });
             }
           }
-        }
       }
 
       const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
