@@ -96,7 +96,7 @@ const AppNavbar = () => {
   const appActive = appLinks.some((l) => location.pathname === l.to);
 
   return (
-    <nav aria-label="Main navigation" className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm shadow-m2 pt-[env(safe-area-inset-top)]">
+    <nav aria-label="Main navigation" className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50 pt-[env(safe-area-inset-top)]">
       <div className="container flex items-center justify-between h-14">
         {/* Logo / Timer toggle */}
         {user && ["/dashboard", "/progress", "/coach", "/nutrition", "/profile"].includes(location.pathname) ? (
