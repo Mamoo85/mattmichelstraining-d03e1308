@@ -1,0 +1,543 @@
+NLB CORP. - INTERNATIONAL HAZARD COMMUNICATION COMPLIANCE
+Corporate Policy #1053c - Multi-Jurisdictional Cross-Reference
+
+Prepared for: Erika Hielscher, EHS Manager, NLB Corporation
+Prepared by: M2 Regulatory Compliance Services
+Date: April 6, 2026
+Jurisdictions Covered: USA (OSHA), United Kingdom (HSE), United Arab Emirates (JAFZA)
+
+================================================================================
+EXECUTIVE SUMMARY
+================================================================================
+
+NLB Corporate Policy #1053c (Hazard Communication) and Appendix A (Spill Response
+Procedures) were reviewed against regulatory requirements in three jurisdictions:
+
+  USA:  OSHA Hazard Communication Standard, 29 CFR 1910.1200 (GHS-aligned)
+  UK:   HSE - Control of Substances Hazardous to Health Regulations 2002 (COSHH),
+        GB CLP Regulation, REACH UK
+  UAE:  Federal Law No. 8 of 1980 (Labour Law, Chapter 5 - Occupational Safety &
+        Health), JAFZA Health & Safety Guidelines, Ministerial Resolutions
+
+FINDING: NLB Policy #1053c is well-constructed for U.S. OSHA compliance. However,
+12 material gaps exist for UK operations and 11 material gaps exist for UAE/JAFZA
+operations. The addendums below detail each gap with the required action.
+
+
+================================================================================
+SECTION 1: BASE CORPORATE POLICY (USA - OSHA)
+================================================================================
+
+NLB Corporate Policy #1053c, dated July 29, 2024, satisfies the following U.S.
+federal requirements:
+
+Requirement                    OSHA Standard              NLB Policy Section         Status
+------------------------------ -------------------------- -------------------------- ----------
+Written HazCom program         29 CFR 1910.1200(e)        Policy statement, pg. 1    COMPLIANT
+Chemical inventory list        29 CFR 1910.1200(e)(1)(i)  "List of Hazardous         COMPLIANT
+                                                          Chemicals," pg. 1
+Safety Data Sheets (SDS)       29 CFR 1910.1200(g)        "Hazard Determination,"    COMPLIANT
+                                                          pg. 1
+Container labeling (GHS)       29 CFR 1910.1200(f)        "Labeling," pg. 2          COMPLIANT
+Employee training - initial    29 CFR 1910.1200(h)        "Employee Information and  COMPLIANT
+                                                          Training," pg. 3
+Employee training - new        29 CFR 1910.1200(h)        "Employee Information and  COMPLIANT
+chemicals                                                 Training," pg. 3
+Non-routine task procedures    29 CFR 1910.1200(h)(3)     "Hazardous Non-Routine     COMPLIANT
+                                                          Tasks," pg. 3
+Multi-employer worksite        29 CFR 1910.1200(e)(2)     "Multi-Employer            COMPLIANT
+                                                          Worksites," pg. 3
+Pipe/piping identification     29 CFR 1910.1200(f)(6)     "Pipes and Piping          COMPLIANT
+                                                          Systems," pg. 3
+Spill response procedures      29 CFR 1910.120 (HAZWOPER) Appendix A                 COMPLIANT
+Training records               29 CFR 1910.1200(h)        HR maintains records,      COMPLIANT
+                                                          pg. 3
+
+U.S. Compliance Status: SATISFACTORY - No material gaps identified for domestic
+operations.
+
+
+================================================================================
+SECTION 2: UNITED KINGDOM ADDENDUM
+================================================================================
+
+Applicable Regulations:
+  - Control of Substances Hazardous to Health Regulations 2002 (COSHH) - SI 2002/2677
+  - GB CLP Regulation (Classification, Labelling and Packaging) - retained EU
+    Regulation (EC) No 1272/2008
+  - UK REACH - Registration, Evaluation, Authorisation and Restriction of Chemicals
+  - Management of Health and Safety at Work Regulations 1999
+  - Safety Representatives and Safety Committees Regulations 1977
+  - Reporting of Injuries, Diseases and Dangerous Occurrences Regulations 2013 (RIDDOR)
+  - Health and Safety at Work etc. Act 1974 (HSWA)
+  - Dangerous Substances and Explosive Atmospheres Regulations 2002 (DSEAR)
+  - Workplace (Health, Safety and Welfare) Regulations 1992
+
+--------------------------------------------------------------------------------
+ADDENDUM UK-1: COSHH Risk Assessment Requirement
+--------------------------------------------------------------------------------
+Regulation: COSHH Reg. 6 - Assessment of the risk to health created by work
+involving substances hazardous to health
+
+NLB Gap: Policy #1053c relies on SDS from suppliers for hazard determination. UK
+law requires a formal, documented COSHH risk assessment for every hazardous
+substance or process - beyond what an SDS provides.
+
+Required Action for UK Operations:
+  - Conduct and document a COSHH risk assessment for each hazardous substance used
+    at UK facilities
+  - Assessments must consider: the nature of the substance, level/type/duration of
+    exposure, circumstances of the work, conclusions from monitoring or health
+    surveillance
+  - Assessments must be reviewed regularly and immediately upon any material change
+  - Records must be retained for a minimum of 40 years where personal exposure is
+    involved
+
+Responsible Party: UK Site EHS Coordinator, reporting to NLB Corporate EHS Manager
+
+--------------------------------------------------------------------------------
+ADDENDUM UK-2: Workplace Exposure Limits (WELs)
+--------------------------------------------------------------------------------
+Regulation: COSHH Reg. 7 and HSE document EH40/2005 (as amended)
+
+NLB Gap: Policy references OSHA Permissible Exposure Limits (PELs). UK uses
+Workplace Exposure Limits (WELs) published in EH40, which differ in values and
+methodology.
+
+Required Action for UK Operations:
+  - All exposure monitoring at UK sites must reference WELs (not OSHA PELs)
+  - Where a WEL exists, exposure must be reduced so far as is reasonably practicable
+    and, in any case, below the WEL
+  - Short-term exposure limits (STELs) of 15 minutes apply for many substances
+    (OSHA uses 8-hr TWA primarily)
+  - UK WELs are legally binding; OSHA PELs are not directly applicable
+
+Key Differences in Limits (examples):
+
+  Substance                OSHA PEL (8-hr TWA)      UK WEL (8-hr TWA)
+  ----------------------   ----------------------   ----------------------
+  Toluene                  200 ppm                  50 ppm
+  Methyl ethyl ketone      200 ppm                  200 ppm
+  Isocyanates (as NCO)     0.02 ppm (ceiling)       0.02 mg/m3 (8-hr)
+
+Note: Full WEL comparison must be prepared for all chemicals on NLB's chemical
+inventory at UK sites.
+
+--------------------------------------------------------------------------------
+ADDENDUM UK-3: Health Surveillance
+--------------------------------------------------------------------------------
+Regulation: COSHH Reg. 11 - Health surveillance
+
+NLB Gap: Policy #1053c does not address health surveillance. UK requires mandatory
+health surveillance for employees exposed to specific hazardous substances.
+
+Required Action for UK Operations:
+  - Implement a health surveillance program for workers exposed to substances listed
+    in COSHH Schedule 6 (e.g., isocyanates, certain solvents, lead compounds,
+    chromium compounds)
+  - Health surveillance must be conducted by a qualified occupational health
+    professional
+  - Individual health records must be maintained for at least 40 years
+  - Workers have the right to access their health records
+
+--------------------------------------------------------------------------------
+ADDENDUM UK-4: GB CLP Labeling Requirements
+--------------------------------------------------------------------------------
+Regulation: GB CLP Regulation (retained EU Reg. 1272/2008, as amended for GB)
+
+NLB Gap: Policy references OSHA GHS labeling and HMIS labels. UK requires
+compliance with GB CLP, which is GHS-aligned but has GB-specific requirements
+post-Brexit.
+
+Required Action for UK Operations:
+  - Labels at UK sites must comply with GB CLP (not US OSHA GHS or HMIS)
+  - GB CLP requires: product identifier, signal word, hazard statements, precautionary
+    statements, GHS pictograms, supplier identification, and GB-specific UFI (Unique
+    Formula Identifier) where applicable
+  - HMIS labels are NOT recognized in the UK - do not use as a substitute for GB
+    CLP labels
+  - Poison Centre notification may be required for certain mixtures
+
+--------------------------------------------------------------------------------
+ADDENDUM UK-5: UK REACH - Chemical Registration
+--------------------------------------------------------------------------------
+Regulation: UK REACH (retained EU Reg. 1907/2006, as amended for GB)
+
+NLB Gap: Not addressed in Policy #1053c.
+
+Required Action for UK Operations:
+  - Any hazardous chemicals manufactured in or imported to the UK in quantities above
+    1 tonne/year must be registered under UK REACH with the Health and Safety
+    Executive
+  - Downstream users must check that their use is covered in the supplier's
+    registration
+  - Safety Data Sheets provided to UK sites must comply with UK REACH Annex II format
+
+--------------------------------------------------------------------------------
+ADDENDUM UK-6: Competent Person Requirement
+--------------------------------------------------------------------------------
+Regulation: Management of Health and Safety at Work Regulations 1999, Reg. 7
+
+NLB Gap: Policy assigns responsibility to the "Environmental, Health, & Safety
+Manager." UK law specifically requires the appointment of one or more competent
+persons with sufficient training, experience, and knowledge.
+
+Required Action for UK Operations:
+  - Formally appoint a "Competent Person" for UK operations (may be the UK Site
+    Manager or a dedicated H&S officer)
+  - Competent Person must hold a recognized UK qualification (e.g., NEBOSH National
+    General Certificate minimum, NEBOSH Diploma preferred)
+  - Document the appointment and qualifications
+
+--------------------------------------------------------------------------------
+ADDENDUM UK-7: Safety Representatives and Consultation
+--------------------------------------------------------------------------------
+Regulation: Safety Representatives and Safety Committees Regulations 1977; Health
+and Safety (Consultation with Employees) Regulations 1996
+
+NLB Gap: Not addressed in Policy #1053c.
+
+Required Action for UK Operations:
+  - If a recognized trade union is present, union-appointed Safety Representatives
+    have legal rights to: inspect the workplace, investigate incidents, attend safety
+    committee meetings, and be consulted on health and safety matters
+  - If no trade union is present, NLB must consult directly with employees or their
+    elected representatives on matters affecting their health and safety
+  - This includes consultation on any changes to hazardous chemicals, processes, or
+    procedures
+
+--------------------------------------------------------------------------------
+ADDENDUM UK-8: RIDDOR Incident Reporting
+--------------------------------------------------------------------------------
+Regulation: Reporting of Injuries, Diseases and Dangerous Occurrences Regulations
+2013 (RIDDOR)
+
+NLB Gap: Appendix A addresses internal spill reporting but not external regulatory
+reporting. UK requires mandatory reporting to HSE.
+
+Required Action for UK Operations:
+  - Report to HSE (via online portal) any:
+      o Dangerous occurrence involving hazardous substances (including uncontrolled
+        releases)
+      o Occupational disease caused by chemical exposure
+      o Injury resulting from chemical exposure that leads to over-7-day
+        incapacitation
+      o Fatal or specified injuries
+  - Reports must be made without delay (within 10 days for over-7-day injuries)
+  - Records of all reportable incidents must be retained for at least 3 years
+
+--------------------------------------------------------------------------------
+ADDENDUM UK-9: Bilingual/Multilingual Training Requirement
+--------------------------------------------------------------------------------
+Regulation: HSWA 1974, s.2; COSHH Reg. 12(4)
+
+NLB Gap: Policy states labels must be "in English (although other languages may
+also be included)." UK law requires training and information to be provided in a
+language understood by the worker.
+
+Required Action for UK Operations:
+  - All HazCom training must be delivered in a language the employee understands
+  - Translated SDS summaries or toolbox talks must be available for non-English-
+    speaking workers
+  - This is a legal duty, not optional
+
+--------------------------------------------------------------------------------
+ADDENDUM UK-10: DSEAR - Explosive Atmospheres
+--------------------------------------------------------------------------------
+Regulation: Dangerous Substances and Explosive Atmospheres Regulations 2002 (DSEAR)
+
+NLB Gap: Not addressed in Policy #1053c.
+
+Required Action for UK Operations:
+  - Where flammable or explosive substances are used (paints, solvents, thinners -
+    referenced in Appendix A), a DSEAR risk assessment is required
+  - ATEX zoning must be implemented where explosive atmospheres may form
+  - This is in addition to COSHH assessments
+
+--------------------------------------------------------------------------------
+ADDENDUM UK-11: Emergency Plan Requirements
+--------------------------------------------------------------------------------
+Regulation: COSHH Reg. 13 - Arrangements to deal with accidents, incidents, and
+emergencies
+
+NLB Gap: Appendix A covers spill response but does not meet the prescriptive
+requirements of COSHH Reg. 13.
+
+Required Action for UK Operations:
+  - Develop a UK-specific emergency plan that includes:
+      o Specific emergency procedures for foreseeable chemical incidents (not just
+        spills)
+      o Identification of employees designated to carry out emergency procedures
+      o Availability and testing of first-aid and decontamination facilities
+      o Information on specific hazards available to emergency services responding
+        to incidents
+      o Regular drills and testing of emergency procedures (documented)
+
+--------------------------------------------------------------------------------
+ADDENDUM UK-12: Spill Response - Environmental Reporting
+--------------------------------------------------------------------------------
+Regulation: Environmental Permitting Regulations 2016; Environmental Protection Act
+1990, s.34
+
+NLB Gap: Appendix A addresses internal environmental contamination consideration
+but does not address UK environmental reporting obligations.
+
+Required Action for UK Operations:
+  - Any spill that enters or threatens to enter controlled waters, drains, or land
+    must be reported immediately to the Environment Agency (England) or Natural
+    Resources Wales
+  - Duty of Care for waste disposal under s.34 EPA 1990 - all spill waste must be
+    classified, handled, and disposed of via licensed waste carriers with appropriate
+    Waste Transfer Notes
+  - Hazardous waste must be consigned through registered hazardous waste carriers
+
+
+================================================================================
+SECTION 3: UNITED ARAB EMIRATES / JAFZA ADDENDUM
+================================================================================
+
+Applicable Regulations:
+  - UAE Federal Law No. 8 of 1980 (Labour Law) - Chapter 5: Safety, Occupational
+    Health and Social Care
+  - UAE Federal Decree Law No. 33 of 2021 (updated Labour Law provisions)
+  - Ministerial Resolution No. 401 of 2015 (Midday Work Ban)
+  - Ministerial Resolution No. 591 of 2016 (Worker Housing Standards)
+  - JAFZA Health & Safety Guidelines (Jebel Ali Free Zone Authority)
+  - Dubai Civil Defence regulations
+  - UAE Federal Law No. 24 of 1999 (Protection and Development of the Environment)
+
+--------------------------------------------------------------------------------
+ADDENDUM UAE-1: JAFZA HSE Registration
+--------------------------------------------------------------------------------
+Regulation: JAFZA Rules & Regulations, Health & Safety Guidelines
+
+NLB Gap: Not addressed in Policy #1053c.
+
+Required Action for UAE/JAFZA Operations:
+  - Register with JAFZA HSE Department as a licensed entity
+  - Submit NLB's HSE plan to JAFZA for approval prior to commencing operations
+  - Appoint a designated HSE Officer for the JAFZA facility (must be approved by
+    JAFZA)
+  - JAFZA conducts periodic inspections - NLB must maintain compliance at all times
+  - Annual HSE performance reports must be submitted to JAFZA
+
+--------------------------------------------------------------------------------
+ADDENDUM UAE-2: Midday Work Ban - Heat Stress
+--------------------------------------------------------------------------------
+Regulation: UAE Ministerial Resolution No. 401 of 2015
+
+NLB Gap: Not addressed in Policy #1053c. No equivalent exists in OSHA or UK HSE.
+
+Required Action for UAE Operations:
+  - OUTDOOR WORK IS PROHIBITED BETWEEN 12:30 PM AND 3:00 PM FROM JUNE 15 TO
+    SEPTEMBER 15
+  - This applies to all outdoor workers, including those handling chemicals outdoors
+  - Employers must provide shaded rest areas, potable water, and cooling facilities
+  - Heat stress first-aid training must be provided to all outdoor workers
+  - Violations are subject to fines of AED 5,000 per worker per incident and
+    potential business suspension
+
+--------------------------------------------------------------------------------
+ADDENDUM UAE-3: Arabic Language Requirement
+--------------------------------------------------------------------------------
+Regulation: UAE Federal Law No. 8 of 1980, Art. 4; JAFZA HSE Guidelines
+
+NLB Gap: Policy states labels must be "in English (although other languages may
+also be included)." UAE requires Arabic.
+
+Required Action for UAE Operations:
+  - All safety signage, chemical labels, and warning signs must be in Arabic AND
+    English at minimum
+  - SDS documents must be available in Arabic for local regulatory submissions
+  - Training materials and emergency procedures must be available in Arabic and,
+    where applicable, in languages understood by the workforce (e.g., Hindi, Urdu,
+    Tagalog for labor workers)
+  - Arabic is the official language for all government/regulatory filings
+
+--------------------------------------------------------------------------------
+ADDENDUM UAE-4: Pre-Employment and Periodic Medical Examinations
+--------------------------------------------------------------------------------
+Regulation: UAE Federal Law No. 8 of 1980, Art. 93-94; JAFZA HSE Guidelines
+
+NLB Gap: Policy #1053c does not address medical fitness requirements. UAE
+requirements are more extensive than OSHA medical surveillance.
+
+Required Action for UAE Operations:
+  - All workers must undergo pre-employment medical fitness examinations
+  - Workers exposed to hazardous chemicals must have periodic medical examinations
+    (at least annually)
+  - Medical fitness certificates must be maintained on file and available for JAFZA
+    inspection
+  - Workers found medically unfit for chemical work must be reassigned or terminated
+    with appropriate benefits
+  - All medical records must be retained for the duration of employment plus 5 years
+
+--------------------------------------------------------------------------------
+ADDENDUM UAE-5: Chemical Import Permits and Registration
+--------------------------------------------------------------------------------
+Regulation: JAFZA Rules & Regulations; UAE Federal Law No. 24 of 1999
+(Environmental Law)
+
+NLB Gap: Not addressed in Policy #1053c.
+
+Required Action for UAE/JAFZA Operations:
+  - All hazardous chemicals imported into JAFZA require prior approval and import
+    permits from JAFZA authorities
+  - A Hazardous Materials Inventory must be submitted to JAFZA upon request
+  - Certain chemicals may be restricted or banned under UAE environmental law -
+    cross-check NLB's chemical inventory against UAE restricted substances list
+  - Material transport within JAFZA must comply with JAFZA's dangerous goods
+    transportation guidelines
+
+--------------------------------------------------------------------------------
+ADDENDUM UAE-6: Dubai Civil Defence Approval
+--------------------------------------------------------------------------------
+Regulation: Dubai Civil Defence Code; JAFZA Fire Safety Requirements
+
+NLB Gap: Appendix A addresses internal emergency response. UAE requires external
+government approval of fire safety and emergency plans.
+
+Required Action for UAE Operations:
+  - Fire safety plans must be submitted to and approved by Dubai Civil Defence
+  - Emergency response procedures involving hazardous chemicals must be reviewed by
+    Dubai Civil Defence
+  - Fire suppression and detection systems must comply with Dubai Civil Defence
+    specifications (not NFPA alone)
+  - Annual fire safety inspections by Dubai Civil Defence are mandatory
+  - Fire drills must be conducted at intervals specified by Civil Defence (typically
+    quarterly)
+
+--------------------------------------------------------------------------------
+ADDENDUM UAE-7: Penalties and Criminal Liability
+--------------------------------------------------------------------------------
+Regulation: UAE Federal Law No. 8 of 1980, Arts. 98-102; UAE Penal Code
+
+NLB Gap: Policy #1053c does not address legal penalties. UAE penalties are
+significantly more severe than OSHA fines.
+
+Required Action for UAE Operations:
+  - Employees and management should be aware that UAE law imposes:
+      o Criminal penalties including imprisonment for safety violations resulting
+        in injury or death
+      o Fines ranging from AED 10,000 to AED 1,000,000 for safety violations
+      o Potential deportation of responsible foreign nationals
+      o Facility closure orders for repeat or serious violations
+  - NLB should engage UAE legal counsel to review liability exposure
+
+--------------------------------------------------------------------------------
+ADDENDUM UAE-8: Worker Accommodation Standards
+--------------------------------------------------------------------------------
+Regulation: Ministerial Resolution No. 591 of 2016
+
+NLB Gap: Not addressed in Policy #1053c. Only applicable if NLB provides housing.
+
+Required Action for UAE Operations (if applicable):
+  - If NLB provides worker accommodation in the UAE, facilities must meet minimum
+    standards for: space per worker, ventilation, sanitation, kitchen/dining,
+    recreation areas, and fire safety
+  - Hazardous chemicals and PPE must not be stored in accommodation areas
+  - Regular inspections of accommodation facilities are required by JAFZA
+
+--------------------------------------------------------------------------------
+ADDENDUM UAE-9: Contractor HSE Management
+--------------------------------------------------------------------------------
+Regulation: JAFZA HSE Guidelines - Contractor Management
+
+NLB Gap: Policy addresses multi-employer worksites and contractor SDS sharing.
+JAFZA requirements are more prescriptive.
+
+Required Action for UAE/JAFZA Operations:
+  - All contractors operating at NLB's JAFZA facility must submit their own HSE
+    plan to JAFZA for approval
+  - Permit-to-Work (PTW) system is required for all contractor activities involving
+    hazardous chemicals
+  - NLB is responsible for auditing contractor HSE compliance within its JAFZA
+    facility
+  - Contractor workers must receive site-specific induction covering NLB's chemical
+    hazards
+
+--------------------------------------------------------------------------------
+ADDENDUM UAE-10: SDS Format and Submission
+--------------------------------------------------------------------------------
+Regulation: JAFZA HSE Guidelines; UAE Federal standards (GHS-aligned)
+
+NLB Gap: Policy relies on supplier SDS in OSHA GHS format. UAE has additional
+requirements.
+
+Required Action for UAE Operations:
+  - SDS documents must comply with GHS format (16-section format - aligned with
+    OSHA)
+  - Arabic translation of SDS must be available for regulatory submissions
+  - JAFZA may request copies of SDS for any chemicals stored or used at the facility
+  - SDS must be readily accessible to workers at all times (not just "available
+    online")
+
+--------------------------------------------------------------------------------
+ADDENDUM UAE-11: Environmental Spill Reporting
+--------------------------------------------------------------------------------
+Regulation: UAE Federal Law No. 24 of 1999; JAFZA Environmental Guidelines
+
+NLB Gap: Appendix A addresses internal spill response but does not address UAE
+environmental reporting obligations.
+
+Required Action for UAE Operations:
+  - Any spill that affects or threatens the environment must be reported immediately
+    to JAFZA Environmental Department
+  - Spills affecting marine environments (Jebel Ali port area) must also be reported
+    to the Federal Environmental Agency
+  - Environmental remediation costs are the responsibility of the polluter
+  - Failure to report environmental contamination is a criminal offense under UAE law
+
+
+================================================================================
+APPENDIX: REGULATORY REFERENCE TABLE
+================================================================================
+
+Requirement              USA (OSHA)                  UK (HSE)                    UAE (JAFZA)
+----------------------   --------------------------  --------------------------  --------------------------
+Written HazCom Program   29 CFR 1910.1200(e)         COSHH Reg. 6               JAFZA HSE Guidelines
+Chemical Inventory       29 CFR 1910.1200(e)(1)      COSHH Reg. 6(1)            JAFZA Hazardous Materials
+                                                                                 Inventory
+Safety Data Sheets       29 CFR 1910.1200(g)         UK REACH Annex II          GHS 16-section + Arabic
+Container Labeling       29 CFR 1910.1200(f) - GHS   GB CLP Regulation          GHS + Arabic requirement
+Employee Training        29 CFR 1910.1200(h)         COSHH Reg. 12              Federal Law No. 8, Art. 92
+Exposure Limits          OSHA PELs                   WELs (EH40/2005)           No published OELs;
+                         (29 CFR 1910.1000)                                      defer to ACGIH TLVs
+Health Surveillance      Substance-specific          COSHH Reg. 11              Federal Law No. 8,
+                         standards                                               Art. 93-94
+Incident Reporting       OSHA 300 Log /              RIDDOR 2013                JAFZA HSE incident
+                         29 CFR 1904                                             reporting
+Spill Response           29 CFR 1910.120             COSHH Reg. 13; EPA 1990    Federal Law No. 24/1999;
+                         (HAZWOPER)                                              JAFZA Env.
+Emergency Plans          29 CFR 1910.38              COSHH Reg. 13; DSEAR       Dubai Civil Defence
+                                                                                 approval
+Contractor Management    29 CFR 1910.1200(e)(2)      CDM Regulations 2015       JAFZA PTW system
+Language Requirements    English (+ optional)        Language worker             Arabic AND English
+                                                      understands                mandatory
+Heat Stress              General Duty Clause         Not specified               Ministerial Resolution
+                         (advisory)                  (risk-based)               401/2015
+Chemical Import Permits  Not applicable              UK REACH registration       JAFZA import permit
+                         domestically                                            required
+Criminal Penalties       Civil fines                 HSWA s.33 - criminal        Criminal penalties
+                         (OSHA citations)            prosecution possible        including imprisonment
+
+
+================================================================================
+DOCUMENT CONTROL
+================================================================================
+
+Version: 1.0
+Date: April 6, 2026
+Author: M2 Regulatory Compliance Services
+Notes: Initial cross-reference analysis
+
+DISCLAIMER: This document provides a regulatory cross-reference analysis based on
+current understanding of applicable laws and regulations. It does not constitute
+legal advice. NLB Corporation should engage qualified legal counsel in each
+jurisdiction to validate specific compliance requirements before implementing these
+addendums.
+
+================================================================================
+Prepared by M2 Regulatory Compliance Services
+matt@mattmichelstraining.com | (313) 806-4952
+================================================================================
