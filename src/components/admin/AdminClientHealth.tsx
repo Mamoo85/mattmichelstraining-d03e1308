@@ -66,6 +66,7 @@ const SERVICE_TABLES = [
   { table: "trade_association_clients", service: "Trade Association Intelligence", price: "$149/mo", lastField: null, freq: 7 },
   { table: "story_subscription_clients", service: "Children\'s Story Subscription", price: "$9.99/mo", lastField: null, freq: 7 },
   { table: "luxury_re_clients", service: "Luxury Real Estate Intelligence", price: "$299/mo", lastField: null, freq: 7 },
+  { table: "leads", service: "SMS Leads (Comms Center)", price: "$0/mo", lastField: null, freq: 0 },
 ] as const;
 
 function daysBetween(dateStr: string | null): number | null {

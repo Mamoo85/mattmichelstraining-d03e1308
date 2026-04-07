@@ -17,7 +17,7 @@ $10k+/mo fully automated income. Matt's only job: return calls, texts, and email
 - **Domain**: mattmichelstraining.com
 - **Repo**: `mamoo85/m2training` (GitHub)
 - **Supabase Project**: `zmyczlfuufhngzovkjdh`
-- **Dev branch**: `claude/model-opus-plan-6tKhr`
+- **Dev branch**: `claude/add-claude-documentation-0AKHd`
 
 ## Brand
 - Primary orange: `#e8621a`
@@ -125,12 +125,12 @@ Products: Commercial Lease Abstractor, Patent Watch Intelligence, PE/Investor Se
 - **Crons**: `20260405140002_new_product_crons.sql` — reg-filing-scan 6am ET, deadline check 8am ET, bid-intel-scan 7am ET, morning-digest 6:30am ET
 
 ## Codebase Scale
-- **255** frontend pages in `src/pages/`
-- **453** Supabase Edge Functions in `supabase/functions/`
-- **345** migration files (all dated 2026)
+- **270** frontend pages in `src/pages/`
+- **472** Supabase Edge Functions in `supabase/functions/`
+- **357** migration files (all dated 2026)
 - **31** AI agents in `.claude/agents/`
 - **64+** product lines across 4 waves
-- **281** routes in `src/App.tsx`
+- **297** routes in `src/App.tsx`
 
 This is a large codebase. Navigate by product name patterns in this document — don't scan all files. New product checklist: 1 migration, 1–2 edge functions, 1 page, 1 admin CRM entry (AdminOpsCenter + AdminClientHealth).
 
@@ -138,9 +138,11 @@ This is a large codebase. Navigate by product name patterns in this document —
 
 ### Page Loading
 All pages use `lazyRetry()` — a custom wrapper around `React.lazy()` that retries failed chunk loads 3 times. Never use plain `React.lazy()` directly.
+- **Location**: `src/lib/lazyRetry.ts`
+- **Import**: `import { lazyRetry } from "@/lib/lazyRetry"`
 
 ### Provider Stack (outermost → innermost, `src/App.tsx`)
-`PersistQueryClientProvider` → `TooltipProvider` → `AuthProvider` → `TimerProvider` → `OfflineSyncProvider`
+`PersistQueryClientProvider` → `SplashScreen` → `AuthProvider` → `TimerProvider` → `OfflineSyncProvider` → `TooltipProvider`
 
 ### Route Guards
 - `ProtectedRoute` — requires authentication
@@ -149,6 +151,12 @@ All pages use `lazyRetry()` — a custom wrapper around `React.lazy()` that retr
 
 ### Component Directories (`src/components/`)
 `admin/`, `auth/`, `billing/`, `checkout/`, `dashboard/`, `exercise/`, `features/`, `gamification/`, `generator/`, `landing/`, `layout/`, `marketing/`, `nutrition/`, `pricing/`, `profile/`, `programs/`, `progress/`, `sessions/`, `shared/`, `store/`, `teams/`, `ui/`, `workout/`, `zone/`
+
+### Utilities (`src/lib/`)
+`addons.ts`, `admin-guides.ts`, `browserStorage.ts`, `fbpixel.ts`, `fulfillment-guides.ts`, `gtag.ts`, `jwtErrors.ts`, `lazyRetry.ts`, `queryClient.ts`, `siteTemplates.ts`, `utils.ts`
+
+### Hooks (`src/hooks/`)
+`use-mobile.tsx`, `use-toast.ts`, `useAiStream.tsx`, `useAuth.tsx`, `useBrowserNotifications.tsx`, `useExerciseCount.tsx`, `useFamilyUserIds.tsx`, `useGeoState.tsx`, `useInView.tsx`, `useIsAdmin.tsx`, `useOfflineSync.tsx`, `usePoints.tsx`, `useReferral.tsx`, `useSiteContent.tsx`, `useTierAccess.tsx`, `useTimer.tsx`, `useTrialStatus.tsx`, `useWorkoutSave.tsx`
 
 ### Data Fetching
 TanStack Query v5 with localStorage persistence via `PersistQueryClientProvider`.
@@ -272,4 +280,4 @@ All secrets below are already set in Lovable Cloud and working. Do NOT add secre
 - **No dead code**: Delete unused imports, variables, and functions — don't comment them out
 - **Auto-onboard**: When adding new products, add a welcome email template to `supabase/functions/auto-onboard/index.ts` TEMPLATES dict
 - **Admin dashboards**: When adding new products, add entries to BOTH `AdminOpsCenter.tsx` ALL_SERVICES array AND `AdminClientHealth.tsx` SERVICE_TABLES array
-- **JWT verification**: Most edge functions have `verify_jwt = false` in `supabase/config.toml` — this is intentional for public checkout/webhook endpoints. Internal auth is handled within functions.
+- **JWT verification**: Most edge functions have `verify_jwt = false` in `supabase/config.toml` — this is intentional for public checkout/webhook endpoints. Internal auth is handled within functions. Exception: `process-email-queue` uses `verify_jwt = true`.
