@@ -98,6 +98,7 @@ const ALL_SERVICES = [
   { table: "trade_association_clients", name: "Trade Association Intelligence", price: "$149/mo", priceNum: 149 },
   { table: "story_subscription_clients", name: "Children's Story Subscription", price: "$9.99/mo", priceNum: 9.99 },
   { table: "luxury_re_clients", name: "Luxury Real Estate Intelligence", price: "$299/mo", priceNum: 299 },
+  { table: "leads", name: "Communications Center (SMS CRM)", price: "$0/mo", priceNum: 0 },
 ] as const;
 
 interface ClientRecord {
