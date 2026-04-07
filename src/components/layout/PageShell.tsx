@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
 import AppNavbar from "./AppNavbar";
-import BottomNav from "./BottomNav";
+import BottomTabBar from "./BottomTabBar";
 
 interface PageShellProps {
   children: ReactNode;
