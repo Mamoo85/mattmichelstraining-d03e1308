@@ -1,5 +1,18 @@
 # M² Performance Training — Claude Code Context
 
+## Knowledge Base
+All internal reference documents live in `knowledge/` at the repo root.
+At the start of any session referencing agents, products, or admin tools, pull the latest:
+```bash
+git fetch origin main && git checkout origin/main -- knowledge/
+```
+
+- `knowledge/M2_Agent_Roster.md` — All 30 agents, status, schedules, improvement roadmap
+- `knowledge/M2_Admin_Controls_Guide.md` — Every admin tool with step-by-step guides and enhancements
+- `knowledge/M2_Product_Catalog.md` — All 36 products, pricing, margins, edge functions, flows
+- `knowledge/M2_Ad_Strategy_Action_Plan.md` — Paid ads roadmap and campaign blueprints
+- `knowledge/M2_Project_Hierarchy.mmd` — System architecture diagram (Mermaid)
+
 ## Owner
 **Matt Michels** — Grosse Pointe, MI | matt@mattmichelstraining.com | (313) 806-4952
 Family: wife + young son. Local guy. 10+ years B2B field sales background.

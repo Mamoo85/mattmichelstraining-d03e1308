@@ -696,16 +696,17 @@ export default function AdminCommandDeck() {
   const { data: heartbeats } = useQuery({
     queryKey: ["agent-heartbeats"],
     queryFn: async () => {
-      const { data } = await supabase.from("agent_heartbeats").select("agent_name, last_beat");
+      const { data } = await supabase.from("agent_heartbeats").select("agent_name, last_run_at, last_status");
       return data || [];
     },
     refetchInterval: 60000,
   });
 
   const getAgentStatus = (agentName: string) => {
-    const beat = heartbeats?.find((h: any) => h.agent_name === agentName);
+    const beat = heartbeats?.find((h: any) => h.agent_name === agentName.toLowerCase());
     if (!beat) return "unknown";
-    const mins = (Date.now() - new Date(beat.last_beat).getTime()) / 60000;
+    if (beat.last_status === "error") return "down";
+    const mins = (Date.now() - new Date(beat.last_run_at).getTime()) / 60000;
     if (mins < 30) return "healthy";
     if (mins < 120) return "warning";
     return "down";

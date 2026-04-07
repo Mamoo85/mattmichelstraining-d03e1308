@@ -389,6 +389,19 @@ serve(async (req) => {
         } else {
           await syncTierToProfile(sb, email, "free", customerId);
         }
+
+        // Trigger Shield win-back sequence
+        const productName = (subscription.items?.data?.[0]?.price?.nickname) || "M² subscription";
+        await fetch(`${SUPABASE_URL}/functions/v1/shield-winback`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            customer_email: email,
+            product: productName,
+            stripe_subscription_id: subscription.id,
+          }),
+        });
+        console.log(`[WEBHOOK] Shield win-back triggered for ${email}`);
       }
     }
 

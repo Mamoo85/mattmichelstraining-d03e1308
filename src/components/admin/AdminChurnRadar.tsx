@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, AlertTriangle, MessageSquare, X, TrendingDown } from "lucide-react";
+import { Loader2, AlertTriangle, MessageSquare, X, TrendingDown, Tag } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import ConfirmActionModal from "@/components/shared/ConfirmActionModal";
 
@@ -27,6 +27,7 @@ const AdminChurnRadar = () => {
   const [alerts, setAlerts] = useState<ChurnAlert[]>([]);
   const [loading, setLoading] = useState(true);
   const [sendingId, setSendingId] = useState<string | null>(null);
+  const [discountingId, setDiscountingId] = useState<string | null>(null);
   const [dismissTarget, setDismissTarget] = useState<ChurnAlert | null>(null);
 
   const fetchAlerts = async () => {
@@ -81,7 +82,6 @@ const AdminChurnRadar = () => {
     if (error) {
       toast({ title: "Failed to send", description: error.message, variant: "destructive" });
     } else {
-      // Mark alert as contacted
       await supabase
         .from("retention_alerts")
         .update({ status: "contacted", resolved_at: new Date().toISOString() })
@@ -91,6 +91,35 @@ const AdminChurnRadar = () => {
       toast({ title: "Check-in sent", description: `Message sent to ${alert.full_name}` });
     }
     setSendingId(null);
+  };
+
+  const handleSendDiscount = async (alert: ChurnAlert) => {
+    if (!alert.email) {
+      toast({ title: "No email", description: "No email on file for this client", variant: "destructive" });
+      return;
+    }
+    setDiscountingId(alert.id);
+    const { error } = await supabase.functions.invoke("send-retention-offer", {
+      body: {
+        user_id: alert.user_id,
+        email: alert.email,
+        full_name: alert.full_name,
+        subscription_tier: alert.subscription_tier,
+        discount_percent: 20,
+        coupon_code: "STAYM2",
+      },
+    });
+    if (error) {
+      toast({ title: "Failed", description: error.message, variant: "destructive" });
+    } else {
+      await supabase
+        .from("retention_alerts")
+        .update({ status: "offer_sent", resolved_at: new Date().toISOString() })
+        .eq("id", alert.id);
+      setAlerts((prev) => prev.filter((a) => a.id !== alert.id));
+      toast({ title: "20% off offer sent", description: `Discount email sent to ${alert.email}` });
+    }
+    setDiscountingId(null);
   };
 
   const handleDismiss = async () => {
@@ -161,12 +190,16 @@ const AdminChurnRadar = () => {
               disabled={sendingId === alert.id}
               className="flex-1 flex items-center justify-center gap-1.5 bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-widest px-3 py-2 hover:opacity-90 transition-all disabled:opacity-50"
             >
-              {sendingId === alert.id ? (
-                <Loader2 size={12} className="animate-spin" />
-              ) : (
-                <MessageSquare size={12} />
-              )}
+              {sendingId === alert.id ? <Loader2 size={12} className="animate-spin" /> : <MessageSquare size={12} />}
               Check-In
+            </button>
+            <button
+              onClick={() => handleSendDiscount(alert)}
+              disabled={discountingId === alert.id}
+              className="flex items-center justify-center gap-1.5 border border-primary/40 text-primary text-[10px] font-bold uppercase tracking-widest px-3 py-2 hover:bg-primary/10 transition-all disabled:opacity-50"
+            >
+              {discountingId === alert.id ? <Loader2 size={12} className="animate-spin" /> : <Tag size={12} />}
+              20% Off
             </button>
             <button
               onClick={async () => {
