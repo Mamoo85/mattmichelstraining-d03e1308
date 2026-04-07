@@ -17,7 +17,7 @@ $10k+/mo fully automated income. Matt's only job: return calls, texts, and email
 - **Domain**: mattmichelstraining.com
 - **Repo**: `mamoo85/m2training` (GitHub)
 - **Supabase Project**: `zmyczlfuufhngzovkjdh`
-- **Dev branch**: `claude/model-opus-plan-6tKhr`
+- **Dev branch**: `claude/add-claude-documentation-0AKHd`
 
 ## Brand
 - Primary orange: `#e8621a`
