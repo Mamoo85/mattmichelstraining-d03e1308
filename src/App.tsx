@@ -1,9 +1,10 @@
-import { lazy, Suspense, useState, useEffect, memo } from "react";
+import { Suspense, useState, useEffect, memo } from "react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { queryClient } from "@/lib/queryClient";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { lazyRetry } from "@/lib/lazyRetry";
 // Defer toast providers — only triggered on user action, not needed for FCP
 const Sonner = lazyRetry(() => import("@/components/ui/sonner").then(m => ({ default: m.Toaster })));
 const Toaster = lazyRetry(() => import("@/components/ui/toaster").then(m => ({ default: m.Toaster })));
@@ -23,34 +24,6 @@ import { useReferralCapture } from "@/hooks/useReferral";
 import { safeLocalStorage } from "@/lib/browserStorage";
 
 // CSS-only spinner — avoids pulling lucide-react into the entry chunk
-
-const LAZY_IMPORT_RETRY_PATTERN = /loading chunk|failed to fetch|dynamically imported module|import|loading css chunk|load failed|typeerror.*module/i;
-
-const retryLazyImport = async (importFn: () => Promise<any>, retries: number): Promise<any> => {
-  try {
-    const module = await importFn();
-
-    if (!module?.default) {
-      throw new Error("Lazy import resolved without a default export");
-    }
-
-    return module;
-  } catch (error) {
-    const err = error instanceof Error ? error : new Error(String(error));
-
-    if (retries > 0 && LAZY_IMPORT_RETRY_PATTERN.test(err.message)) {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      return retryLazyImport(importFn, retries - 1);
-    }
-
-    throw err;
-  }
-};
-
-// Retry wrapper for lazy imports — retries up to 3 times on chunk load failure
-function lazyRetry(importFn: () => Promise<any>, retries = 3): ReturnType<typeof lazy> {
-  return lazy(() => retryLazyImport(importFn, retries));
-}
 
 const AnnouncementBanner = lazyRetry(() => import("@/components/layout/AnnouncementBanner"));
 

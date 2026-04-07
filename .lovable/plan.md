@@ -1,46 +1,47 @@
 
 
-# Fix the Prospecting Pipeline
+# Fix Admin Panel Freezing — Sequential Query Bottleneck
 
-## The Problem
-Neo (your cold outreach engine) and the Prospector (your lead finder) reference `prospect_businesses` and `prospect_outreach` tables that **do not exist in the database**. The migration file exists but was never applied. This means zero leads are being found and zero cold emails are being sent — the entire acquisition pipeline is offline.
+## Root Cause
 
-Additionally, `prospect_businesses` is missing an `email` column, which Neo's code explicitly references (`prospect.email`). Without it, no emails can be sent even after the table exists.
+The "Page Unresponsive" freeze is caused by **sequential database queries in a for-loop** inside two admin components:
 
-## What Will Be Built
+- **AdminOpsCenter.tsx** — loops through **82 service tables**, awaiting each query one at a time (~82 sequential HTTP round-trips)
+- **AdminClientHealth.tsx** — loops through **41 service tables** the same way (~41 sequential round-trips)
 
-### Step 1: Database Migration
-Create and apply a migration that builds:
+Each query takes ~100-300ms. Sequentially, that's **8-25 seconds of blocking** inside a single `queryFn`. The browser's main thread can't process user interactions (like clicking "Demo Links") while this waterfall is running, causing the "Page Unresponsive" dialog.
 
-- **`prospect_businesses`** — the lead database for Neo and Prospector
-  - All existing columns from the migration file (business_name, address, city, state, phone, website, industry, google_place_id, review_count, rating, tier, has_website, outreach_status, notes, source)
-  - **Add `email` column** (text, nullable) — this is the critical missing piece Neo needs
-  - RLS enabled, service_role policy
-  - Indexes on tier, outreach_status, industry, created_at
+Secondary issue: all 80+ admin components use plain `lazy()` instead of the project's `lazyRetry()` pattern, which can cause chunk-load crashes.
 
-- **`prospect_outreach`** — tracks every email Neo sends
-  - prospect_id (FK to prospect_businesses), email, business_name, industry, outreach_type, subject, status, sent_at, replied_at
-  - RLS enabled, service_role policy
-  - Index on sent_at for daily cap counting
+## Plan
 
-### Step 2: Fix Neo Outreach Edge Function
-- The function currently queries `prospect_businesses` correctly but the `email` field doesn't exist in the original schema — confirm the new migration adds it
-- No code changes needed to `neo-outreach/index.ts` if the email column is added to the table
+### 1. Parallelize AdminOpsCenter queries (82 → batched)
+Convert the sequential `for (const svc of ALL_SERVICES) { await ... }` loop into batched `Promise.all()` — groups of 15 concurrent queries instead of 82 sequential ones. This drops the total time from ~20s to ~2s.
 
-### Step 3: Verify Prospector Edge Function
-- `prospect-local-businesses/index.ts` (764 lines) inserts into `prospect_businesses` — verify it populates the email field when available from Google Maps data
-- If the prospector doesn't extract emails, add email extraction from the business website (via Firecrawl) during the scoring pass
+### 2. Parallelize AdminClientHealth queries (41 → batched)  
+Same fix: convert the sequential for-loop into batched `Promise.all()` chunks.
 
-## Technical Details
+### 3. Switch Admin.tsx lazy imports to lazyRetry()
+Replace all ~80 plain `lazy()` calls with `lazyRetry()` from `@/lib/lazyRetry` to match the project standard and prevent chunk-load crashes.
 
-**Migration SQL** will use `CREATE TABLE IF NOT EXISTS` to be safe, with:
-- `google_place_id TEXT UNIQUE` to prevent duplicate prospect entries
-- Partial index on `outreach_status = 'new'` for Neo's hot query path
-- The email column as nullable since not all prospects will have emails discoverable
+### 4. Audit other sequential-query components
+Check `AdminMediaVault` (sequential storage bucket listing), `AdminCommandDeck` (sequential AI triage), and `AdminM2GrowthHub` (sequential enrollment) for similar patterns — add batching where needed during data fetching.
 
-**Files modified:**
-- 1 new migration file
-- Possibly `supabase/functions/prospect-local-businesses/index.ts` if email extraction is missing
+## Files Changed
+- `src/components/admin/AdminOpsCenter.tsx` — batch queries with `Promise.all()`
+- `src/components/admin/AdminClientHealth.tsx` — batch queries with `Promise.all()`
+- `src/pages/Admin.tsx` — switch `lazy()` → `lazyRetry()` for all imports
 
-**No frontend changes needed** — this is all backend pipeline infrastructure.
+## Technical Detail
+
+```text
+BEFORE (blocks for ~20s):
+  query table 1 → wait → query table 2 → wait → ... → query table 82 → wait → done
+
+AFTER (completes in ~2s):
+  batch 1: [table 1..15] → all in parallel → wait
+  batch 2: [table 16..30] → all in parallel → wait
+  ...
+  batch 6: [table 76..82] → all in parallel → wait → done
+```
 

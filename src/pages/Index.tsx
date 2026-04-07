@@ -1,16 +1,17 @@
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
 import { Link } from "react-router-dom";
 import AppNavbar from "@/components/layout/AppNavbar";
 import HeroSection from "@/components/features/HeroSection";
 import SEOHead from "@/components/layout/SEOHead";
 import LocalTopBar from "@/components/landing/LocalTopBar";
+import { lazyRetry } from "@/lib/lazyRetry";
 
-const ChallengeTeaser = lazy(() => import("@/components/landing/ChallengeTeaser"));
-const DoNotPressButton = lazy(() => import("@/components/landing/DoNotPressButton"));
-const FirstMonthPromo = lazy(() => import("@/components/landing/FirstMonthPromo"));
-const AiGeneratorShowcase = lazy(() => import("@/components/landing/AiGeneratorShowcase"));
-const ProveItShowcase = lazy(() => import("@/components/landing/ProveItShowcase"));
-const InstagramSocialBox = lazy(() => import("@/components/landing/InstagramSocialBox"));
+const ChallengeTeaser = lazyRetry(() => import("@/components/landing/ChallengeTeaser"));
+const DoNotPressButton = lazyRetry(() => import("@/components/landing/DoNotPressButton"));
+const FirstMonthPromo = lazyRetry(() => import("@/components/landing/FirstMonthPromo"));
+const AiGeneratorShowcase = lazyRetry(() => import("@/components/landing/AiGeneratorShowcase"));
+const ProveItShowcase = lazyRetry(() => import("@/components/landing/ProveItShowcase"));
+const InstagramSocialBox = lazyRetry(() => import("@/components/landing/InstagramSocialBox"));
 
 const FAQ_SCHEMA = {
   "@context": "https://schema.org",
