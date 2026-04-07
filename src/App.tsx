@@ -680,6 +680,7 @@ const App = () => (
                      <Route path="/assessment" element={<ProtectedRoute><Assessment /></ProtectedRoute>} />
                      <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
                      <Route path="/admin/view-user/:userId" element={<ProtectedRoute><AdminViewUser /></ProtectedRoute>} />
+                     <Route path="/comms-center" element={<ProtectedRoute><CommunicationsCenter /></ProtectedRoute>} />
                      <Route path="/dashboard" element={<ZoneDashboard />} />
                     <Route path="/ai-insights" element={<BlurGate requireSubscription><AiInsights /></BlurGate>} />
                     <Route path="/profile" element={<BlurGate><Profile /></BlurGate>} />
