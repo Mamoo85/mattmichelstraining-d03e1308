@@ -1,48 +1,124 @@
 
 
-# PETfection Sales Package — PDFs + Email
+# 🔍 Production Launch Code Audit — Matt Michels Training
 
-## Deliverables
+## Executive Summary
 
-### 1. PDF for Sheena: "PETfection Digital Presence Proposal"
-A polished, visual 5-page PDF she can review on her own time. Earthy brand colors (charcoal #3D2B1F, terracotta #C4703D, sage #7A9E7E, warm linen #F5F0E8).
+After systematic review of the entire codebase — TypeScript compilation, production build, route structure, security patterns, SEO markup, forms, and performance — **this site is in strong launch shape**. The build compiles cleanly with zero errors, the architecture is solid, and most best practices are already in place. Below are findings organized by severity.
 
-**Page 1 — Cover**: "PETfection × M² Development" with tagline. Clean, premium feel.
+---
 
-**Page 2 — The Problem**: Her Shopify site is down. She's paying monthly fees for zero sales. Side-by-side cost comparison: Shopify fees vs. our platform (no platform fee, just hosting). Quick stat callouts from the existing pitch (est. revenue loss, conversion gap).
+## 🔴 CRITICAL (Launch Blockers)
 
-**Page 3 — The Demo**: Screenshots/descriptions of the demo site with live link: `https://m2training.lovable.app/demo-petfection/`. What it includes (shop, ingredients page, about, contact). Mobile-first, fully custom.
+### 1. XSS Risk: Unsanitized HTML from Database Rendered via `dangerouslySetInnerHTML`
 
-**Page 4 — What Runs Automatically (Zero Work for Sheena)**: Visual grid of automation systems — Review Monitor, After-Order Drip, SMS Promos, Subscribe & Save, Seasonal Campaigns, Google Business Profile posting. Each with a one-liner and "Your effort: None."
+**Files:** `SEOLandingPage.tsx`, `LegalPage.tsx`, `AdminLegalCompliance.tsx`
 
-**Page 5 — The Deal**: $499 one-time setup. Free automation beta. Performance-based upside later. "If we don't make you money, you don't owe anything else." Contact info footer.
+These pages render raw HTML from the database directly into the DOM without sanitization. If an admin account is compromised or AI-generated content contains malicious scripts, this is a stored XSS vector.
 
-No tiered pricing shown — one price, one package, everything included. This is the lesson from the DJ Conley prep.
+**Fix:** Install `dompurify` and wrap all `dangerouslySetInnerHTML` content:
+```tsx
+import DOMPurify from "dompurify";
+// ...
+dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }}
+```
 
-### 2. PDF for Matt (You): "PETfection — Internal Playbook"
-A 2-3 page reference doc with:
-- Technical migration checklist (Stripe connect, product catalog DB table, domain pointing, SEO setup)
-- List of every automation to deploy and its edge function name
-- Estimated timeline (2 weeks to live)
-- Talking points for follow-up call
-- What to say if she pushes back on price
-- Revenue projections to reference in conversation
+The pages in `ClientReportGenerator.tsx`, `PodcastPitchService.tsx`, `RestaurantMenuCopy.tsx` use it with hardcoded `desc` strings in the component — those are safe since the HTML is not user-supplied.
 
-### 3. Email Body (in your voice)
-The polished version of the email draft you shared, with demo links filled in pointing to `https://m2training.lovable.app/demo-petfection/` and the pitch page at `https://m2training.lovable.app/pitches/pitch-petfection.html`.
+### 2. Oversized Chunk: `pose-detection.esm` at 2.4 MB
 
-## Demo Links
-- Demo site: `https://m2training.lovable.app/demo-petfection/`
-- Full pitch page: `https://m2training.lovable.app/pitches/pitch-petfection.html`
+The TensorFlow pose detection library ships a **2.4 MB** chunk. If any user path lazy-loads this (e.g., form-check videos), it will tank Core Web Vitals on mobile.
 
-## Implementation
-- Python/ReportLab for both PDFs
-- Brand fonts: Plus Jakarta Sans + DM Sans
-- Color palette: #3D2B1F, #C4703D, #7A9E7E, #F5F0E8
-- Output to `/mnt/documents/PETfection_Proposal_Sheena.pdf` and `/mnt/documents/PETfection_Internal_Playbook.pdf`
-- Email body saved as `/mnt/documents/PETfection_Email_Draft.md`
-- Full QA cycle on all PDF pages
+**Fix:** Verify this is truly lazy-loaded and only imported from a protected route. If it's reachable from a public page, move it behind an explicit user action (e.g., "Start Camera" button triggers the import). Add it to `manualChunks` to isolate it:
+```ts
+"vendor-pose": ["@tensorflow-models/pose-detection"],
+```
 
-## Files Changed
-- No codebase changes — standalone artifacts only
+### 3. Service Worker Precache Failure
+
+Build output shows: `precache 7 entries (0.00 KiB)` and a glob error: `Cannot read properties of undefined (reading 'sync')`. This means the service worker is deploying but precaching **nothing** — users who visit once and go offline will see a blank page.
+
+**Fix:** Either fix the workbox glob config or, since you're launching tonight, consider temporarily disabling PWA precache and using network-first strategy only. The `injectRegister: false` is already set, so the risk is low, but the broken precache should be fixed post-launch.
+
+---
+
+## 🟡 MODERATE (Fix Soon — Not Launch Blockers)
+
+### 4. `console.log` in Production Auth Flow
+
+`Auth.tsx` line 310-315 logs the Google OAuth redirect URL and full result object to console. This leaks auth flow details to anyone who opens DevTools.
+
+**Fix:** Remove or gate behind `import.meta.env.DEV`:
+```tsx
+if (import.meta.env.DEV) console.log("[GOOGLE-AUTH]...");
+```
+
+### 5. `window.open` for Stripe Checkout (Popup Blocker Risk)
+
+15+ checkout pages use `window.open(data.url, "_blank")` to redirect to Stripe. Many mobile browsers and popup blockers will silently block this, causing users to click "Subscribe" and see nothing happen. **This loses revenue.**
+
+**Fix:** Use `window.location.href = data.url` instead of `window.open` for all Stripe checkout redirects. The user expects a navigation, not a popup.
+
+### 6. Duplicate Facebook Pixel `noscript` Tags
+
+`index.html` has the FB pixel `<noscript><img>` fallback at **both** line 140 (inside `<body>` before `#root`) and line 302 (after scripts). This fires the PageView event twice for noscript users and inflates analytics.
+
+**Fix:** Remove the duplicate at line 140.
+
+### 7. Missing `rel="noopener noreferrer"` on Some External Links
+
+Most external links are correctly attributed, but a sweep of 162 files with `href="tel:"` and `href="mailto:"` patterns shows inconsistent usage. While `tel:` and `mailto:` links don't need `noopener`, any `target="_blank"` links to external sites should always include it.
+
+### 8. Vite `define` Hardcodes Supabase Anon Key
+
+`vite.config.ts` lines 127-132 hardcode the anon key as a fallback. This is the **publishable** key so it's not a security issue, but it means if the `.env` file isn't loaded properly (e.g., Vercel misconfiguration), the app will silently connect to the wrong project or fail. Verify Vercel environment variables match.
+
+---
+
+## 🟢 MINOR (Optimization — Post-Launch)
+
+### 9. 270+ Lazy Imports in App.tsx
+
+While `lazyRetry` handles chunk failures gracefully, having 270+ lazy imports in a single file impacts developer experience and increases the initial route-matching overhead. Consider grouping related routes into sub-routers (e.g., `DemoRoutes`, `ServiceRoutes`, `AdminRoutes`).
+
+### 10. Font Loading: 8 Font Families Loaded
+
+`index.html` preloads 2 Google Fonts stylesheets covering 8 font families. Even with `media="print"` deferral trick, this is ~150-200KB of font data. Consider auditing which fonts are actually used across public pages and trimming unused weights.
+
+### 11. Google Analytics Deferred by 2 Seconds
+
+GA is loaded with a `setTimeout(2000)` after `window.load`. This is good for performance but means the first 2+ seconds of user interaction are untracked. Standard practice is to load after `requestIdleCallback` instead.
+
+### 12. `&amp;` in Error Boundary Button Text
+
+`ErrorBoundary.tsx` line 126 shows `Clear cache &amp; reload` — the `&amp;` is correct JSX but visually renders as `&` which is fine. No action needed.
+
+### 13. Missing `<h1>` on Some Product Pages
+
+Many product/service pages likely use the shared layout pattern. Verify each public page has exactly one `<h1>` tag for SEO. The SEO landing pages correctly use `<h1>` for the heading.
+
+---
+
+## ✅ What's Already Solid
+
+- **TypeScript**: Zero compilation errors
+- **Production build**: Clean, no warnings except the expected chunk size warning for pose-detection
+- **Error handling**: Robust `ErrorBoundary` with auto-retry, chunk load retry via `lazyRetry`, and broken image fallback
+- **Security**: No API keys exposed in frontend, all secrets server-side, RLS enforced, `service_role` patterns correct
+- **SEO**: Structured data (JSON-LD) for business + sports location, proper meta tags, OG/Twitter cards, `noscript` fallback content, semantic HTML
+- **SPA routing**: Wildcard routes for demos, auth callbacks properly handled
+- **Form handling**: All checkout forms use try/catch with toast error feedback, email validation present
+- **Accessibility**: Viewport meta allows scaling (`user-scalable=yes`), semantic heading structure in index.html
+- **Performance**: Lazy loading everything, deferred third-party scripts, manual chunks for vendor splitting, critical CSS inlined
+
+---
+
+## Recommended Fix Priority for Tonight
+
+1. **Install DOMPurify** and sanitize `dangerouslySetInnerHTML` in `SEOLandingPage.tsx` and `LegalPage.tsx` — 10 min fix
+2. **Change `window.open` to `window.location.href`** for all Stripe checkouts — 15 min bulk find-replace
+3. **Remove duplicate FB pixel noscript** — 1 min fix
+4. **Remove `console.log` from Auth.tsx** — 2 min fix
+
+Everything else can wait until after launch.
 
