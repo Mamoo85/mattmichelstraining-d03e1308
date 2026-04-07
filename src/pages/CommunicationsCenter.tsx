@@ -665,7 +665,7 @@ export default function CommunicationsCenter() {
   const { data: leads = [], isLoading } = useQuery({
     queryKey: ["comms-leads"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("leads")
         .select("*")
         .order("created_at", { ascending: false })
