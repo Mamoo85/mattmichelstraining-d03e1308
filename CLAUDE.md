@@ -138,9 +138,11 @@ This is a large codebase. Navigate by product name patterns in this document —
 
 ### Page Loading
 All pages use `lazyRetry()` — a custom wrapper around `React.lazy()` that retries failed chunk loads 3 times. Never use plain `React.lazy()` directly.
+- **Location**: `src/lib/lazyRetry.ts`
+- **Import**: `import { lazyRetry } from "@/lib/lazyRetry"`
 
 ### Provider Stack (outermost → innermost, `src/App.tsx`)
-`PersistQueryClientProvider` → `TooltipProvider` → `AuthProvider` → `TimerProvider` → `OfflineSyncProvider`
+`PersistQueryClientProvider` → `SplashScreen` → `AuthProvider` → `TimerProvider` → `OfflineSyncProvider` → `TooltipProvider`
 
 ### Route Guards
 - `ProtectedRoute` — requires authentication
