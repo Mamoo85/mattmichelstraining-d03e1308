@@ -5472,6 +5472,7 @@ export type Database = {
           account_role: string
           athlete_name: string | null
           auto_regulate: boolean
+          avatar_url: string | null
           created_at: string
           daily_calorie_goal: number | null
           daily_carbs_goal: number | null
@@ -5500,6 +5501,7 @@ export type Database = {
           account_role?: string
           athlete_name?: string | null
           auto_regulate?: boolean
+          avatar_url?: string | null
           created_at?: string
           daily_calorie_goal?: number | null
           daily_carbs_goal?: number | null
@@ -5528,6 +5530,7 @@ export type Database = {
           account_role?: string
           athlete_name?: string | null
           auto_regulate?: boolean
+          avatar_url?: string | null
           created_at?: string
           daily_calorie_goal?: number | null
           daily_carbs_goal?: number | null
