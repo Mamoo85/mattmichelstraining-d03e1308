@@ -679,7 +679,7 @@ export default function CommunicationsCenter() {
     queryKey: ["comms-messages", activeLead?.id],
     queryFn: async () => {
       if (!activeLead) return [];
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("messages")
         .select("*")
         .eq("lead_id", activeLead.id)
