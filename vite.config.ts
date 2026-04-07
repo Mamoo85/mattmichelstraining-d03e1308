@@ -156,6 +156,7 @@ export default defineConfig(({ mode }) => {
             ],
             "vendor-motion": ["framer-motion"],
             "vendor-charts": ["recharts"],
+            "vendor-pose": ["@tensorflow-models/pose-detection"],
           },
         },
       },

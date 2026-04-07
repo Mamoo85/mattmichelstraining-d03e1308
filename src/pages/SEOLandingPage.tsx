@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import SEOHead from "@/components/layout/SEOHead";
 import { Loader2, Dumbbell, ArrowLeft, MapPin, Users } from "lucide-react";
+import DOMPurify from "dompurify";
 import { Button } from "@/components/ui/button";
 
 const SEOLandingPage = () => {
@@ -102,7 +103,7 @@ const SEOLandingPage = () => {
               prose-a:text-primary prose-a:no-underline hover:prose-a:underline
               prose-ul:text-muted-foreground prose-ol:text-muted-foreground
               prose-li:marker:text-primary"
-            dangerouslySetInnerHTML={{ __html: content }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }}
           />
         </section>
 
