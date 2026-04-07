@@ -152,6 +152,12 @@ All pages use `lazyRetry()` — a custom wrapper around `React.lazy()` that retr
 ### Component Directories (`src/components/`)
 `admin/`, `auth/`, `billing/`, `checkout/`, `dashboard/`, `exercise/`, `features/`, `gamification/`, `generator/`, `landing/`, `layout/`, `marketing/`, `nutrition/`, `pricing/`, `profile/`, `programs/`, `progress/`, `sessions/`, `shared/`, `store/`, `teams/`, `ui/`, `workout/`, `zone/`
 
+### Utilities (`src/lib/`)
+`addons.ts`, `admin-guides.ts`, `browserStorage.ts`, `fbpixel.ts`, `fulfillment-guides.ts`, `gtag.ts`, `jwtErrors.ts`, `lazyRetry.ts`, `queryClient.ts`, `siteTemplates.ts`, `utils.ts`
+
+### Hooks (`src/hooks/`)
+`use-mobile.tsx`, `use-toast.ts`, `useAiStream.tsx`, `useAuth.tsx`, `useBrowserNotifications.tsx`, `useExerciseCount.tsx`, `useFamilyUserIds.tsx`, `useGeoState.tsx`, `useInView.tsx`, `useIsAdmin.tsx`, `useOfflineSync.tsx`, `usePoints.tsx`, `useReferral.tsx`, `useSiteContent.tsx`, `useTierAccess.tsx`, `useTimer.tsx`, `useTrialStatus.tsx`, `useWorkoutSave.tsx`
+
 ### Data Fetching
 TanStack Query v5 with localStorage persistence via `PersistQueryClientProvider`.
 
