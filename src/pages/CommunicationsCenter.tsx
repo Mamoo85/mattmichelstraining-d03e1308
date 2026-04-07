@@ -699,7 +699,7 @@ export default function CommunicationsCenter() {
 
   const handleMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("leads")
         .update({ status: "Handled" })
         .eq("id", id);
