@@ -125,12 +125,12 @@ Products: Commercial Lease Abstractor, Patent Watch Intelligence, PE/Investor Se
 - **Crons**: `20260405140002_new_product_crons.sql` — reg-filing-scan 6am ET, deadline check 8am ET, bid-intel-scan 7am ET, morning-digest 6:30am ET
 
 ## Codebase Scale
-- **255** frontend pages in `src/pages/`
-- **453** Supabase Edge Functions in `supabase/functions/`
-- **345** migration files (all dated 2026)
+- **270** frontend pages in `src/pages/`
+- **472** Supabase Edge Functions in `supabase/functions/`
+- **357** migration files (all dated 2026)
 - **31** AI agents in `.claude/agents/`
 - **64+** product lines across 4 waves
-- **281** routes in `src/App.tsx`
+- **297** routes in `src/App.tsx`
 
 This is a large codebase. Navigate by product name patterns in this document — don't scan all files. New product checklist: 1 migration, 1–2 edge functions, 1 page, 1 admin CRM entry (AdminOpsCenter + AdminClientHealth).
 
