@@ -44,11 +44,11 @@ const WaitlistGate = ({ productName, description }: WaitlistGateProps) => {
   }
 
   return (
-    <div className="max-w-md mx-auto bg-card border border-border rounded-lg p-6 text-center space-y-4">
+    <div className="max-w-md mx-auto glass-card p-6 text-center space-y-4 hover:border-primary/20 transition-colors">
       <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
         <Bell size={12} /> Coming Soon
       </div>
-      <h3 className="text-lg font-bold text-foreground">{productName}</h3>
+      <h3 className="text-lg font-display font-bold text-foreground">{productName}</h3>
       {description && <p className="text-sm text-muted-foreground">{description}</p>}
       <form onSubmit={handleSubmit} className="flex gap-2">
         <Input
