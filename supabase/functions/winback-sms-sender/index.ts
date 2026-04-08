@@ -5,7 +5,7 @@ import { sendSMS } from "../_shared/twilio.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 
 const MATT_EMAIL = "matt@mattmichelstraining.com";
 const FROM_EMAIL = "Matt Michels <matt@mattmichelstraining.com>";
@@ -15,18 +15,21 @@ const EMAIL_SIGNATURE = `<div style="margin-top:24px;padding-top:16px;border-top
 
 async function generateWinbackMessage(client: any): Promise<string> {
   if (!ANTHROPIC_API_KEY) return `We miss you at ${client.business_name}! Come back and see what's new. Reply STOP to opt out.`;
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
-    headers: { "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "Content-Type": "application/json" },
+    headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
     body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
+      model: "google/gemini-2.5-flash-lite",
       max_tokens: 200,
       messages: [{ role: "user", content: `Write a short, friendly win-back SMS for ${client.business_name} (${client.industry}). Make the customer feel missed and offer a reason to come back. Under 160 characters. End with 'Reply STOP to opt out.'` }],
     }),
   });
   if (!res.ok) throw new Error(`AI error: ${await res.text()}`);
   const data = await res.json();
-  const text = (data?.content?.[0]?.text || "").trim();
+  const text = (data?.choices?.[0]?.message?.content || "").trim();
   return text.length <= 160 ? text : text.slice(0, 157) + "...";
 }
 

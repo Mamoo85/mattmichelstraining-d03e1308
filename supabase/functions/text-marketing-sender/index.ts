@@ -5,7 +5,7 @@ import { sendSMS } from "../_shared/twilio.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 
 serve(async (req) => {
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
@@ -35,18 +35,21 @@ serve(async (req) => {
         let campaignText = `Hey! ${client.business_name} here. Hope your month is going great! Reply STOP to unsubscribe.`;
         if (ANTHROPIC_API_KEY) {
           try {
-            const claudeRes = await fetch("https://api.anthropic.com/v1/messages", {
+            const claudeRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
               method: "POST",
-              headers: { "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "Content-Type": "application/json" },
+              headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
               body: JSON.stringify({
-                model: "claude-haiku-4-5-20251001",
+                model: "google/gemini-2.5-flash-lite",
                 max_tokens: 800,
                 messages: [{ role: "user", content: `Write a short, friendly SMS marketing message for ${client.business_name} (industry: ${client.industry || "local business"}). Promote their services, create a sense of urgency or value, be conversational and under 160 characters. End with "Reply STOP to unsubscribe." Return only the message text.` }],
               }),
             });
             if (claudeRes.ok) {
               const claudeData = await claudeRes.json();
-              campaignText = claudeData?.content?.[0]?.text?.trim() || campaignText;
+              campaignText = claudeData?.choices?.[0]?.message?.content?.trim() || campaignText;
             }
           } catch { /* use default */ }
         }

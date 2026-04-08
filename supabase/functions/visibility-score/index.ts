@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
 const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY") || "";
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -227,15 +227,14 @@ serve(async (req) => {
     if (ANTHROPIC_API_KEY) {
       try {
         const failedChecks = checks.filter((c) => c.status === "fail").map((c) => c.label + ": " + c.detail);
-        const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
+        const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
           headers: {
-            "x-api-key": ANTHROPIC_API_KEY,
-            "anthropic-version": "2023-06-01",
-            "Content-Type": "application/json",
-          },
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
           body: JSON.stringify({
-            model: "claude-haiku-4-5-20251001",
+            model: "google/gemini-2.5-flash-lite",
             max_tokens: 300,
             messages: [
               {
@@ -246,7 +245,7 @@ serve(async (req) => {
           }),
         });
         const aiData = await aiRes.json();
-        summary = aiData.content?.[0]?.text || "";
+        summary = aiData.choices?.[0]?.message?.content || "";
       } catch (e) {
         console.error("[VISIBILITY] AI summary error:", e);
       }

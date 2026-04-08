@@ -61,7 +61,7 @@ Return ONLY valid JSON:
     });
 
     const ai = await response.json();
-    const raw = ai.content?.[0]?.text || "";
+    const raw = ai.choices?.[0]?.message?.content || "";
 
     let pageData: Record<string, unknown>;
     try {

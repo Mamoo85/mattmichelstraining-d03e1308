@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendSMS } from "../_shared/twilio.ts";
 
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -29,18 +29,21 @@ serve(async (req) => {
     let thankYouMessage = `Thanks so much for choosing ${client.business_name}, ${customerName}! We truly appreciate your business.`;
     if (ANTHROPIC_API_KEY) {
       try {
-        const aiResponse = await fetch("https://api.anthropic.com/v1/messages", {
+        const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
-          headers: { "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "Content-Type": "application/json" },
+          headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
           body: JSON.stringify({
-            model: "claude-haiku-4-5-20251001",
+            model: "google/gemini-2.5-flash-lite",
             max_tokens: 200,
             messages: [{ role: "user", content: `Write a single warm, personalized thank-you sentence from ${client.business_name} (a ${client.industry} business) to a customer named ${customerName}. Keep it under 140 characters. Be genuine, not corporate. Do not use quotes around the message.` }],
           }),
         });
         if (aiResponse.ok) {
           const aiData = await aiResponse.json();
-          thankYouMessage = aiData?.content?.[0]?.text?.trim() || thankYouMessage;
+          thankYouMessage = aiData?.choices?.[0]?.message?.content?.trim() || thankYouMessage;
         }
       } catch { /* use default */ }
     }

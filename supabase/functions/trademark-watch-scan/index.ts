@@ -4,7 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -79,7 +79,7 @@ Guidelines:
 - score 40-69: recommend "monitor" (watch for further development)
 - score 0-39: recommend "ignore" (low conflict risk)`;
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -87,7 +87,7 @@ Guidelines:
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      model: "claude-haiku-4-5",
+      model: "google/gemini-2.5-flash-lite",
       max_tokens: 256,
       messages: [{ role: "user", content: prompt }],
     }),
@@ -99,7 +99,7 @@ Guidelines:
   }
 
   const data = await res.json();
-  const text = data.content?.[0]?.text || "{}";
+  const text = data.choices?.[0]?.message?.content || "{}";
   try {
     const parsed = JSON.parse(text.trim());
     return {
