@@ -103,6 +103,12 @@ interface MapResult {
   claimed: boolean | null;
 }
 
+// ── Hybrid Result (DataForSEO + OpenRouter Gap Analysis) ──
+interface HybridResult extends MapResult {
+  gap_analysis: string | null;
+  gap_status: "pending" | "analyzing" | "done" | "skipped" | "error";
+}
+
 // ── Shared Lead Interface (All Leads tab) ──
 interface UnifiedLead {
   id: string;
@@ -347,6 +353,11 @@ export default function AdminProspector() {
   const [mapResults, setMapResults] = useState<MapResult[]>([]);
   const [selectedResults, setSelectedResults] = useState<Set<number>>(new Set());
 
+  // ── Hybrid Search State ──
+  const [hybridMode, setHybridMode] = useState(false);
+  const [hybridSearching, setHybridSearching] = useState(false);
+  const [hybridResults, setHybridResults] = useState<HybridResult[]>([]);
+
   // ── Pipeline Tab State ──
   const [pipelineLeads, setPipelineLeads] = useState<PipelineLead[]>([]);
   const [loadingPipeline, setLoadingPipeline] = useState(false);
@@ -393,6 +404,23 @@ export default function AdminProspector() {
       toast.success(`Found ${data?.results?.length || 0} businesses`);
     } catch (err) { toast.error(err instanceof Error ? err.message : "Search failed"); }
     finally { setSearching(false); }
+  };
+
+  // ── Hybrid Prospector Search (DataForSEO + OpenRouter Gap Analysis) ──
+  const runHybridSearch = async () => {
+    if (!searchIndustry) { toast.error("Select an industry"); return; }
+    setHybridSearching(true);
+    setHybridResults([]);
+    try {
+      const { data, error } = await supabase.functions.invoke("hybrid-prospector", {
+        body: { industry: searchIndustry, location: searchLocation, limit: parseInt(searchLimit) },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setHybridResults(data?.results || []);
+      toast.success(`Found ${data?.total || 0} businesses with gap analysis`);
+    } catch (err) { toast.error(err instanceof Error ? err.message : "Hybrid search failed"); }
+    finally { setHybridSearching(false); }
   };
 
   // ── Add to Pipeline ──
@@ -774,9 +802,16 @@ export default function AdminProspector() {
                   </Select>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Button onClick={runMapsSearch} disabled={searching} className="text-xs" size="sm">
-                  {searching ? <><Loader2 size={12} className="animate-spin mr-1.5" /> Searching...</> : <><Search size={12} className="mr-1.5" /> Search Google Maps</>}
+              <div className="flex items-center gap-2 flex-wrap">
+                <Button onClick={runMapsSearch} disabled={searching || hybridSearching} className="text-xs" size="sm">
+                  {searching ? <><Loader2 size={12} className="animate-spin mr-1.5" /> Searching...</> : <><Search size={12} className="mr-1.5" /> Quick Search</>}
+                </Button>
+                <Button onClick={runHybridSearch} disabled={hybridSearching || searching} size="sm" className="text-xs bg-cyan-600 hover:bg-cyan-700 text-white gap-1.5">
+                  {hybridSearching ? (
+                    <><Loader2 size={12} className="animate-spin" /> Scanning & Analyzing...</>
+                  ) : (
+                    <><Zap size={12} /> Hybrid Search + Gap Analysis</>
+                  )}
                 </Button>
                 {mapResults.length > 0 && (
                   <Button
@@ -796,6 +831,14 @@ export default function AdminProspector() {
                   </Button>
                 )}
               </div>
+              {hybridSearching && (
+                <div className="flex items-center gap-2 p-2 rounded-md bg-cyan-500/10 border border-cyan-500/20">
+                  <Loader2 size={14} className="animate-spin text-cyan-400" />
+                  <span className="text-[11px] text-cyan-400 font-medium">
+                    Step 1: Finding businesses via Google Maps → Step 2: Running gap analysis on each website...
+                  </span>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -876,7 +919,99 @@ export default function AdminProspector() {
             </Card>
           )}
 
-          {/* Legacy Prospecting + Drip */}
+          {/* ═══ HYBRID RESULTS TABLE ═══ */}
+          {hybridResults.length > 0 && (
+            <Card className="border-cyan-500/30 bg-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Zap size={14} className="text-cyan-400" />
+                  <span className="text-cyan-400">Hybrid Results — Gap Analysis</span>
+                  <Badge className="text-[10px] bg-cyan-500/20 text-cyan-400 border-cyan-500/30">{hybridResults.length} leads</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-cyan-500/20 text-muted-foreground">
+                        <th className="text-left py-2 font-semibold">Business Name</th>
+                        <th className="text-left py-2 font-semibold">Phone</th>
+                        <th className="text-left py-2 font-semibold">Website</th>
+                        <th className="text-left py-2 font-semibold">Automation Gap Analysis</th>
+                        <th className="text-left py-2 font-semibold w-16">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {hybridResults.map((r, i) => (
+                        <tr key={i} className="border-b border-border/20 hover:bg-cyan-500/5 transition-colors">
+                          <td className="py-2.5 font-medium pr-3">
+                            <div className="flex items-center gap-1.5">
+                              <Building2 size={11} className="text-muted-foreground shrink-0" />
+                              <span>{r.title}</span>
+                            </div>
+                            {r.rating && (
+                              <span className="text-[9px] flex items-center gap-0.5 text-yellow-400 mt-0.5 ml-4">
+                                <Star size={8} className="fill-yellow-400" /> {r.rating} ({r.reviews || 0})
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-2.5 text-muted-foreground">
+                            {r.phone ? (
+                              <a href={`tel:${r.phone}`} className="flex items-center gap-1 hover:text-foreground">
+                                <Phone size={9} /> {r.phone}
+                              </a>
+                            ) : <span className="text-destructive/60">—</span>}
+                          </td>
+                          <td className="py-2.5">
+                            {r.website ? (
+                              <a href={r.website.startsWith("http") ? r.website : `https://${r.website}`} target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:text-cyan-300 hover:underline flex items-center gap-1 max-w-[180px] truncate">
+                                <ExternalLink size={9} className="shrink-0" /> {r.website.replace(/^https?:\/\//, "").slice(0, 30)}
+                              </a>
+                            ) : <span className="text-destructive/60">No site</span>}
+                          </td>
+                          <td className="py-2.5 max-w-[350px]">
+                            {r.gap_status === "done" && r.gap_analysis ? (
+                              <p className="text-amber-400/90 leading-snug text-[11px]">⚠ {r.gap_analysis}</p>
+                            ) : r.gap_status === "error" ? (
+                              <p className="text-destructive/60 text-[10px]">Analysis failed</p>
+                            ) : r.gap_status === "skipped" ? (
+                              <p className="text-muted-foreground text-[10px]">Skipped (no API key)</p>
+                            ) : (
+                              <div className="flex items-center gap-1.5 text-muted-foreground">
+                                <Loader2 size={10} className="animate-spin" /> Analyzing...
+                              </div>
+                            )}
+                          </td>
+                          <td className="py-2.5">
+                            {r.gap_status === "done" ? (
+                              <Badge className="text-[8px] bg-green-500/20 text-green-400 border-0">✓ Done</Badge>
+                            ) : r.gap_status === "error" ? (
+                              <Badge className="text-[8px] bg-destructive/20 text-destructive border-0">Error</Badge>
+                            ) : r.gap_status === "skipped" ? (
+                              <Badge variant="outline" className="text-[8px]">Skip</Badge>
+                            ) : (
+                              <Badge className="text-[8px] bg-cyan-500/20 text-cyan-400 border-0 animate-pulse">Live</Badge>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/30">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs gap-1"
+                    onClick={() => addToPipeline(hybridResults)}
+                  >
+                    <Plus size={12} /> Add All {hybridResults.length} to Pipeline
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <div className="grid sm:grid-cols-2 gap-4">
             <Card className="border-border/40">
               <CardHeader className="pb-3">
