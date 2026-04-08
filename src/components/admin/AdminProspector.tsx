@@ -294,14 +294,16 @@ function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, aud
 }
 
 // ── Kanban Column ──
-function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, auditingId, sendingId }: {
+function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, onDeepResearch, auditingId, sendingId, researchingId }: {
   stage: typeof PIPELINE_STAGES[0];
   leads: PipelineLead[];
   onAudit: (lead: PipelineLead) => void;
   onSendN8n: (lead: PipelineLead) => void;
   onMoveStage: (lead: PipelineLead, stage: string) => void;
+  onDeepResearch: (lead: PipelineLead) => void;
   auditingId: string | null;
   sendingId: string | null;
+  researchingId: string | null;
 }) {
   return (
     <div className="flex-1 min-w-[220px] max-w-[300px]">
@@ -318,8 +320,10 @@ function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, auditingI
               onAudit={onAudit}
               onSendN8n={onSendN8n}
               onMoveStage={onMoveStage}
+              onDeepResearch={onDeepResearch}
               auditing={auditingId === lead.id}
               sending={sendingId === lead.id}
+              researching={researchingId === lead.id}
             />
           ))}
         </SortableContext>
@@ -349,6 +353,7 @@ export default function AdminProspector() {
   const [auditingId, setAuditingId] = useState<string | null>(null);
   const [sendingId, setSendingId] = useState<string | null>(null);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
+  const [researchingId, setResearchingId] = useState<string | null>(null);
 
   // ── All Leads Tab State ──
   const [activeLeadTab, setActiveLeadTab] = useState("all");
