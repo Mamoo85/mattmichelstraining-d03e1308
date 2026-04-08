@@ -101,17 +101,25 @@ serve(async (req) => {
     }
 
     const truncatedMarkdown = markdown.slice(0, 4000);
-    const prompt = `You are a web design sales consultant helping a B2B sales rep pitch website redesign services. Analyze this ${industry || "local"} business website for "${business_name || "this business"}".
+    const prompt = `You are a web design & AI automation sales consultant for Detroit Web Agency. Analyze this ${industry || "local"} business website for "${business_name || "this business"}".
 
-Return EXACTLY 3 specific, actionable pain points about their website that would cost them customers or leads. Be specific — reference actual missing elements you can see (or not see) in the content. Each pain point should be 1-2 sentences.
+Focus on TWO categories of pain points:
+1. Website & Online Presence Gaps — missing booking forms, no mobile optimization, weak SEO, no reviews/testimonials, slow load times, outdated design, no chat widget.
+2. "Missed Call" Gaps — no after-hours call handling, no AI receptionist, no auto-text-back for missed calls, no voicemail-to-text, no appointment scheduling automation. These are revenue leaks where potential customers call and get no answer.
 
-Format as a JSON array of 3 strings. Example: ["No online booking — visitors can't schedule without calling.", "No testimonials or reviews shown — zero social proof.", "Mobile menu is broken — 60% of traffic can't navigate."]
+Return EXACTLY 4 specific, actionable pain points (at least 1 must be a "Missed Call" gap). Be specific — reference actual missing elements you can see (or not see) in the content. Each pain point should be 1-2 sentences.
+
+Format as a JSON array of 4 strings. Example: ["No online booking — visitors can't schedule without calling, and there's no after-hours solution.", "No AI receptionist or missed-call text-back — every unanswered call is a lost customer.", "No testimonials or reviews shown — zero social proof.", "Mobile menu is broken — 60% of traffic can't navigate."]
 
 Website content:
 ${truncatedMarkdown}`;
 
-    // Step 3: Deep Research via Perplexity Sonar (live web intel)
-    const sonarQuery = `Search the web for recent news, services, reviews, and business developments for "${business_name || "this business"}" ${industry ? `in the ${industry} industry` : ""}. What are their current pain points, recent changes, or competitive weaknesses? Return 3 bullet points of factual, recent intel.`;
+    // Step 3: Deep Research via Perplexity Sonar Reasoning (live web intel + missed call gaps)
+    const sonarQuery = `Search the web for "${business_name || "this business"}" ${industry ? `in the ${industry} industry` : ""}. Find:
+1. Their current online presence — website quality, Google reviews, social media activity, local SEO rankings.
+2. "Missed Call" gaps — do they have after-hours call handling? An AI receptionist? Auto-text-back for missed calls? Online booking?
+3. Recent business developments, promotions, or competitive weaknesses.
+Return 4 bullet points of factual, recent intel focused on what Detroit Web Agency could sell them.`;
 
     // Run both AI calls in parallel
     const [aiRes, sonarResult] = await Promise.all([
@@ -137,7 +145,7 @@ ${truncatedMarkdown}`;
     let pain_points: string[];
     try {
       const parsed = JSON.parse(content);
-      pain_points = Array.isArray(parsed) ? parsed.slice(0, 3) : (parsed.pain_points || parsed.points || []).slice(0, 3);
+      pain_points = Array.isArray(parsed) ? parsed.slice(0, 4) : (parsed.pain_points || parsed.points || []).slice(0, 4);
     } catch {
       pain_points = [content.slice(0, 200)];
     }
