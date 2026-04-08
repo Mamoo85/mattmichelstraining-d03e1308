@@ -92,6 +92,10 @@ const BottomTabBar = () => {
     toggleTimer();
   }, [toggleTimer]);
 
+  // Hide entirely on agency domain
+  const isAgency = typeof window !== "undefined" && ["detroitwebagent.com", "www.detroitwebagent.com"].includes(window.location.hostname);
+  if (isAgency) return null;
+
   const allMorePaths = [
     ...CLIENT_LINKS, ...TRAIN_LINKS, ...APP_LINKS, ...STUDIO_LINKS,
   ].map((l) => l.to);

@@ -123,7 +123,7 @@ const AppNavbar = () => {
   const agencyToolsActive = agencyToolsLinks.some((l) => location.pathname === l.to);
 
   return (
-    <nav aria-label="Main navigation" className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50 pt-[env(safe-area-inset-top)]">
+    <nav aria-label="Main navigation" className={`fixed top-0 left-0 right-0 z-50 pt-[env(safe-area-inset-top)] ${isAgency ? "backdrop-blur-xl border-b" : "bg-background/80 backdrop-blur-xl border-b border-border/50"}`} style={isAgency ? { background: "rgba(10,10,15,0.85)", borderColor: "rgba(148,163,184,0.08)" } : undefined}>
       <div className="container flex items-center justify-between h-14">
         {/* Logo / Timer toggle */}
         {!isAgency && user && ["/dashboard", "/progress", "/coach", "/nutrition", "/profile"].includes(location.pathname) ? (
@@ -138,7 +138,7 @@ const AppNavbar = () => {
         ) : (
           <Link to="/" className="flex items-center gap-1.5 group transition-m2 shrink-0">
             {isAgency ? (
-              <span className="text-sm font-black uppercase tracking-wider text-foreground">Detroit Web Agency</span>
+              <span className="text-sm font-black uppercase tracking-wider" style={{ color: "#f1f5f9" }}>Detroit Web Agency</span>
             ) : (
               <img src={m2Logo} alt="M2 Training" width={36} height={36} className="w-9 h-9 object-contain" />
             )}
@@ -150,7 +150,22 @@ const AppNavbar = () => {
           {isAgency ? (
             <>
               <NavDropdown label="Services" items={agencyServicesLinks} active={agencyServicesActive} />
-              <NavDropdown label="Tools" items={agencyToolsLinks} active={agencyToolsActive} />
+              <Link
+                to="/pricing"
+                className={`flex items-center gap-1 px-2.5 py-2 text-[11px] font-bold uppercase tracking-widest transition-m2 ${
+                  location.pathname === "/pricing" ? "text-cyan-400 bg-cyan-400/10" : "text-slate-400 hover:text-white"
+                }`}
+              >
+                Pricing
+              </Link>
+              <Link
+                to="/auth"
+                className={`flex items-center gap-1 px-2.5 py-2 text-[11px] font-bold uppercase tracking-widest transition-m2 ${
+                  location.pathname === "/auth" ? "text-cyan-400 bg-cyan-400/10" : "text-slate-400 hover:text-white"
+                }`}
+              >
+                Prospector Login
+              </Link>
             </>
           ) : (
             <>
@@ -234,9 +249,13 @@ const AppNavbar = () => {
           {/* Primary CTA */}
           <Link
             to={isAgency ? "/ai-website-audit" : "/schedule"}
-            className="ml-1 px-4 py-2 text-[11px] font-bold uppercase tracking-widest rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-m2"
+            className={`ml-1 px-4 py-2 text-[11px] font-bold uppercase tracking-widest rounded-md transition-m2 ${
+              isAgency
+                ? "bg-cyan-500 text-slate-950 hover:bg-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.4)]"
+                : "bg-primary text-primary-foreground hover:opacity-90"
+            }`}
           >
-            {isAgency ? "Free Diagnostic" : "Schedule"}
+            {isAgency ? "Contact Us" : "Schedule"}
           </Link>
 
           {user ? (
@@ -258,21 +277,33 @@ const AppNavbar = () => {
           )}
         </div>
 
-        {/* Mobile: bell + avatar */}
+        {/* Mobile: bell + avatar / agency mobile CTA */}
         <div className="md:hidden flex items-center gap-2">
-          {user && <Suspense fallback={null}><NotificationBell /></Suspense>}
-          {user ? (
-            <Link to="/profile" className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center">
-              <User size={16} className="text-primary" />
+          {isAgency ? (
+            <Link
+              to="/ai-website-audit"
+              className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest rounded-md"
+              style={{ background: "linear-gradient(135deg, #06b6d4, #22d3ee)", color: "#020617" }}
+            >
+              Free Audit
             </Link>
           ) : (
-            <Link
-              to="/auth"
-              aria-label="Login"
-              className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-widest text-primary"
-            >
-              <LogIn size={14} />
-            </Link>
+            <>
+              {user && <Suspense fallback={null}><NotificationBell /></Suspense>}
+              {user ? (
+                <Link to="/profile" className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center">
+                  <User size={16} className="text-primary" />
+                </Link>
+              ) : (
+                <Link
+                  to="/auth"
+                  aria-label="Login"
+                  className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-widest text-primary"
+                >
+                  <LogIn size={14} />
+                </Link>
+              )}
+            </>
           )}
         </div>
       </div>
