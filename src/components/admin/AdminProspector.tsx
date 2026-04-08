@@ -17,7 +17,7 @@ import {
   Building2, Wrench, Stethoscope, Globe, Phone, MapPin, Star,
   Expand, Minimize, Megaphone, Rss, MessageSquare, Receipt, CalendarX,
   Hammer, Home, UserPlus, Plus, CheckCircle, ExternalLink, GripVertical,
-  Crosshair, BarChart3, Kanban
+  Crosshair, BarChart3, Kanban, FileText, Eye, EyeOff
 } from "lucide-react";
 import {
   DndContext,
@@ -26,7 +26,6 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
-  DragOverEvent,
   DragOverlay,
   DragStartEvent,
 } from "@dnd-kit/core";
@@ -62,9 +61,9 @@ const SEARCH_INDUSTRIES = [
 // ── Pipeline Stages ──
 const PIPELINE_STAGES = [
   { key: "new_lead", label: "New Lead", color: "bg-blue-500/20 text-blue-400 border-blue-500/30" },
-  { key: "website_audited", label: "Website Audited", color: "bg-amber-500/20 text-amber-400 border-amber-500/30" },
-  { key: "outreach_sent", label: "Outreach Sent", color: "bg-purple-500/20 text-purple-400 border-purple-500/30" },
-  { key: "call_booked", label: "Call Booked", color: "bg-green-500/20 text-green-400 border-green-500/30" },
+  { key: "website_audited", label: "Audited", color: "bg-amber-500/20 text-amber-400 border-amber-500/30" },
+  { key: "outreach_sent", label: "Outreach", color: "bg-purple-500/20 text-purple-400 border-purple-500/30" },
+  { key: "call_booked", label: "Booked", color: "bg-green-500/20 text-green-400 border-green-500/30" },
 ];
 
 // ── Pipeline Lead Interface ──
@@ -88,6 +87,14 @@ interface PipelineLead {
   n8n_sent_at: string | null;
   source: string | null;
   created_at: string | null;
+  gap_analysis: string | null;
+  drip_step: number;
+  drip_status: string;
+  last_drip_at: string | null;
+  drip_subject: string | null;
+  drip_body: string | null;
+  has_facebook: boolean;
+  has_instagram: boolean;
 }
 
 // ── DataForSEO Result ──
@@ -103,13 +110,13 @@ interface MapResult {
   claimed: boolean | null;
 }
 
-// ── Hybrid Result (DataForSEO + OpenRouter Gap Analysis) ──
+// ── Hybrid Result ──
 interface HybridResult extends MapResult {
   gap_analysis: string | null;
   gap_status: "pending" | "analyzing" | "done" | "skipped" | "error";
 }
 
-// ── Shared Lead Interface (All Leads tab) ──
+// ── Shared Lead Interface ──
 interface UnifiedLead {
   id: string;
   source_table: string;
@@ -130,6 +137,10 @@ interface UnifiedLead {
 
 type SortField = "lead_score" | "email" | "created_at" | "business_name";
 type SortDir = "asc" | "desc";
+
+// Pipeline filter/sort types
+type PipelineFilter = "all" | "has_email" | "no_email" | "has_website" | "no_website" | "has_reviews" | "no_facebook" | "no_instagram";
+type PipelineSort = "reviews_desc" | "rating_desc" | "name_asc" | "newest" | "drip_status";
 
 // ── Normalize functions per table ──
 function normalizeOutreach(r: any): UnifiedLead {
@@ -175,16 +186,27 @@ function normalizeDripConversion(r: any): UnifiedLead {
   return { id: r.id, source_table: "drip_conversions", business_name: r.business_name || r.email, contact_name: null, email: r.email, phone: null, city: null, state: null, industry: r.industry, website: null, status: "converted", lead_score: null, notes: r.service_interested, created_at: r.converted_at, raw: r };
 }
 
-// ── Kanban Lead Card (Sortable) ──
-function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, auditing, sending, researching }: {
+// ── Drip Status Badge ──
+function DripBadge({ step, status }: { step: number; status: string }) {
+  if (status === "completed") return <Badge className="text-[8px] bg-green-500/20 text-green-400 border-0">Drip Done ✓</Badge>;
+  if (status === "active") return <Badge className="text-[8px] bg-purple-500/20 text-purple-400 border-0">Step {step}/4</Badge>;
+  if (status === "drafted") return <Badge className="text-[8px] bg-amber-500/20 text-amber-400 border-0">Draft Ready</Badge>;
+  return null;
+}
+
+// ── Kanban Lead Card ──
+function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onDrip, onPreviewDrip, auditing, sending, researching, dripping }: {
   lead: PipelineLead;
   onAudit: (lead: PipelineLead) => void;
   onSendN8n: (lead: PipelineLead) => void;
   onMoveStage: (lead: PipelineLead, stage: string) => void;
   onDeepResearch: (lead: PipelineLead) => void;
+  onDrip: (lead: PipelineLead, action: "draft" | "send" | "send_existing") => void;
+  onPreviewDrip: (lead: PipelineLead) => void;
   auditing: boolean;
   sending: boolean;
   researching: boolean;
+  dripping: boolean;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: lead.id,
@@ -212,7 +234,7 @@ function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, aud
               </span>
             )}
             {lead.review_count != null && (
-              <span className="text-[10px] text-muted-foreground">({lead.review_count} reviews)</span>
+              <span className="text-[10px] text-muted-foreground">({lead.review_count})</span>
             )}
             {lead.city && (
               <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
@@ -220,16 +242,66 @@ function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, aud
               </span>
             )}
           </div>
-          {lead.industry && <span className="text-[9px] text-muted-foreground">{lead.industry}</span>}
+          {/* Contact info row */}
+          <div className="flex items-center gap-2 mt-1 flex-wrap">
+            {lead.email ? (
+              <span className="text-[9px] text-green-400 flex items-center gap-0.5">
+                <Mail size={8} /> ✓
+              </span>
+            ) : (
+              <span className="text-[9px] text-destructive/60 flex items-center gap-0.5">
+                <Mail size={8} /> ✗
+              </span>
+            )}
+            {lead.phone ? (
+              <a href={`tel:${lead.phone}`} className="text-[9px] text-primary/80 flex items-center gap-0.5 hover:text-primary">
+                <Phone size={8} /> {lead.phone}
+              </a>
+            ) : (
+              <span className="text-[9px] text-destructive/60 flex items-center gap-0.5">
+                <Phone size={8} /> ✗
+              </span>
+            )}
+          </div>
+          {/* Presence indicators */}
+          <div className="flex items-center gap-1.5 mt-1">
+            {lead.website ? (
+              <Badge className="text-[7px] h-3.5 px-1 bg-green-500/20 text-green-400 border-0">Web ✓</Badge>
+            ) : (
+              <Badge className="text-[7px] h-3.5 px-1 bg-red-500/20 text-red-400 border-0">No Site</Badge>
+            )}
+            {!lead.has_facebook && <Badge className="text-[7px] h-3.5 px-1 bg-red-500/20 text-red-400 border-0">No FB</Badge>}
+            {!lead.has_instagram && <Badge className="text-[7px] h-3.5 px-1 bg-red-500/20 text-red-400 border-0">No IG</Badge>}
+          </div>
+          {lead.industry && <span className="text-[9px] text-muted-foreground block mt-0.5">{lead.industry}</span>}
         </div>
       </div>
+
+      {/* Drip status */}
+      {(lead.drip_step > 0 || lead.drip_status !== "not_started") && (
+        <div className="border-t border-border/30 pt-1.5">
+          <DripBadge step={lead.drip_step} status={lead.drip_status} />
+          {lead.last_drip_at && (
+            <p className="text-[8px] text-muted-foreground mt-0.5">
+              Last sent: {new Date(lead.last_drip_at).toLocaleDateString()}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Pain points */}
       {lead.pain_points && lead.pain_points.length > 0 && (
         <div className="space-y-1 border-t border-border/30 pt-2">
-          {lead.pain_points.map((p, i) => (
+          {lead.pain_points.slice(0, 2).map((p, i) => (
             <p key={i} className="text-[9px] text-amber-400/90 leading-tight">⚠ {p}</p>
           ))}
+        </div>
+      )}
+
+      {/* Gap analysis snippet */}
+      {lead.gap_analysis && (
+        <div className="border-t border-border/30 pt-1.5">
+          <p className="text-[8px] text-cyan-400/80 leading-tight truncate">🔍 {lead.gap_analysis.slice(0, 80)}...</p>
         </div>
       )}
 
@@ -237,26 +309,17 @@ function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, aud
       {lead.deep_research?.summary && (
         <div className="space-y-1 border-t border-border/30 pt-2">
           <p className="text-[9px] font-semibold text-cyan-400 flex items-center gap-1">
-            <Globe size={9} /> Live Web Intel
+            <Globe size={9} /> Web Intel
           </p>
           <p className="text-[9px] text-foreground/80 leading-tight whitespace-pre-line">
-            {lead.deep_research.summary.slice(0, 500)}
+            {lead.deep_research.summary.slice(0, 300)}
           </p>
-          {lead.deep_research.citations?.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-1">
-              {lead.deep_research.citations.slice(0, 3).map((c, i) => (
-                <a key={i} href={c} target="_blank" rel="noopener noreferrer" className="text-[8px] text-cyan-400/70 hover:text-cyan-300 underline truncate max-w-[120px]">
-                  [{i + 1}]
-                </a>
-              ))}
-            </div>
-          )}
         </div>
       )}
 
       {/* Actions */}
       <div className="flex items-center gap-1 pt-1 border-t border-border/30 flex-wrap">
-        {lead.pipeline_stage === "new_lead" && (
+        {lead.pipeline_stage === "new_lead" && lead.website && (
           <Button variant="outline" size="sm" className="h-6 text-[9px] px-2 gap-1" disabled={auditing} onClick={() => onAudit(lead)}>
             {auditing ? <Loader2 size={10} className="animate-spin" /> : <Crosshair size={10} />}
             Audit
@@ -264,24 +327,36 @@ function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, aud
         )}
         {!lead.deep_research && (
           <Button variant="outline" size="sm" className="h-6 text-[9px] px-2 gap-1 border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10" disabled={researching} onClick={() => onDeepResearch(lead)}>
-            {researching ? (
+            {researching ? <Loader2 size={10} className="animate-spin" /> : <Globe size={10} />}
+            Research
+          </Button>
+        )}
+        {/* Drip actions — only if lead has email */}
+        {lead.email && lead.drip_status !== "completed" && (
+          <>
+            {lead.drip_status === "drafted" ? (
               <>
-                <Loader2 size={10} className="animate-spin" />
-                <span>Scouring the live web...</span>
+                <Button variant="outline" size="sm" className="h-6 text-[9px] px-2 gap-1 text-amber-400 border-amber-500/30" onClick={() => onPreviewDrip(lead)}>
+                  <Eye size={10} /> Preview
+                </Button>
+                <Button variant="outline" size="sm" className="h-6 text-[9px] px-2 gap-1 text-green-400 border-green-500/30" disabled={dripping} onClick={() => onDrip(lead, "send_existing")}>
+                  {dripping ? <Loader2 size={10} className="animate-spin" /> : <Send size={10} />}
+                  Send
+                </Button>
               </>
             ) : (
               <>
-                <Globe size={10} />
-                Deep Research
+                <Button variant="outline" size="sm" className="h-6 text-[9px] px-2 gap-1 text-purple-400 border-purple-500/30" disabled={dripping} onClick={() => onDrip(lead, "draft")}>
+                  {dripping ? <Loader2 size={10} className="animate-spin" /> : <FileText size={10} />}
+                  Draft
+                </Button>
+                <Button variant="outline" size="sm" className="h-6 text-[9px] px-2 gap-1 text-green-400 border-green-500/30" disabled={dripping} onClick={() => onDrip(lead, "send")}>
+                  {dripping ? <Loader2 size={10} className="animate-spin" /> : <Send size={10} />}
+                  Send
+                </Button>
               </>
             )}
-          </Button>
-        )}
-        {(lead.pipeline_stage === "website_audited" || lead.pain_points?.length) && !lead.n8n_sent_at && (
-          <Button variant="outline" size="sm" className="h-6 text-[9px] px-2 gap-1" disabled={sending} onClick={() => onSendN8n(lead)}>
-            {sending ? <Loader2 size={10} className="animate-spin" /> : <Send size={10} />}
-            n8n
-          </Button>
+          </>
         )}
         {lead.pipeline_stage !== "call_booked" && (
           <Button variant="ghost" size="sm" className="h-6 text-[9px] px-2 gap-1 text-green-400" onClick={() => onMoveStage(lead, "call_booked")}>
@@ -300,16 +375,19 @@ function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, aud
 }
 
 // ── Kanban Column ──
-function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, onDeepResearch, auditingId, sendingId, researchingId }: {
+function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, onDeepResearch, onDrip, onPreviewDrip, auditingId, sendingId, researchingId, drippingId }: {
   stage: typeof PIPELINE_STAGES[0];
   leads: PipelineLead[];
   onAudit: (lead: PipelineLead) => void;
   onSendN8n: (lead: PipelineLead) => void;
   onMoveStage: (lead: PipelineLead, stage: string) => void;
   onDeepResearch: (lead: PipelineLead) => void;
+  onDrip: (lead: PipelineLead, action: "draft" | "send" | "send_existing") => void;
+  onPreviewDrip: (lead: PipelineLead) => void;
   auditingId: string | null;
   sendingId: string | null;
   researchingId: string | null;
+  drippingId: string | null;
 }) {
   return (
     <div className="flex-1 min-w-[220px] max-w-[300px]">
@@ -327,9 +405,12 @@ function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, onDeepRes
               onSendN8n={onSendN8n}
               onMoveStage={onMoveStage}
               onDeepResearch={onDeepResearch}
+              onDrip={onDrip}
+              onPreviewDrip={onPreviewDrip}
               auditing={auditingId === lead.id}
               sending={sendingId === lead.id}
               researching={researchingId === lead.id}
+              dripping={drippingId === lead.id}
             />
           ))}
         </SortableContext>
@@ -354,7 +435,6 @@ export default function AdminProspector() {
   const [selectedResults, setSelectedResults] = useState<Set<number>>(new Set());
 
   // ── Hybrid Search State ──
-  const [hybridMode, setHybridMode] = useState(false);
   const [hybridSearching, setHybridSearching] = useState(false);
   const [hybridResults, setHybridResults] = useState<HybridResult[]>([]);
 
@@ -365,6 +445,10 @@ export default function AdminProspector() {
   const [sendingId, setSendingId] = useState<string | null>(null);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [researchingId, setResearchingId] = useState<string | null>(null);
+  const [drippingId, setDrippingId] = useState<string | null>(null);
+  const [pipelineFilter, setPipelineFilter] = useState<PipelineFilter>("all");
+  const [pipelineSort, setPipelineSort] = useState<PipelineSort>("newest");
+  const [previewLead, setPreviewLead] = useState<PipelineLead | null>(null);
 
   // ── All Leads Tab State ──
   const [activeLeadTab, setActiveLeadTab] = useState("all");
@@ -406,7 +490,7 @@ export default function AdminProspector() {
     finally { setSearching(false); }
   };
 
-  // ── Hybrid Prospector Search (DataForSEO + OpenRouter Gap Analysis) ──
+  // ── Hybrid Prospector Search ──
   const runHybridSearch = async () => {
     if (!searchIndustry) { toast.error("Select an industry"); return; }
     setHybridSearching(true);
@@ -424,9 +508,11 @@ export default function AdminProspector() {
   };
 
   // ── Add to Pipeline ──
-  const addToPipeline = async (results: MapResult[]) => {
+  const addToPipeline = async (results: (MapResult | HybridResult)[]) => {
     try {
+      let added = 0;
       for (const r of results) {
+        const isHybrid = "gap_analysis" in r;
         const { error } = await (supabase as any).from("prospect_pipeline").insert({
           business_name: r.title,
           phone: r.phone,
@@ -439,11 +525,16 @@ export default function AdminProspector() {
           gbp_claimed: r.claimed,
           google_place_id: r.place_id,
           pipeline_stage: "new_lead",
-          source: "dataforseo",
+          source: isHybrid ? "hybrid" : "dataforseo",
+          gap_analysis: isHybrid ? (r as HybridResult).gap_analysis : null,
         });
-        if (error) console.error("Insert error:", error);
+        if (error) {
+          console.error("Insert error:", error);
+        } else {
+          added++;
+        }
       }
-      toast.success(`Added ${results.length} leads to pipeline`);
+      toast.success(`Added ${added} leads to pipeline`);
       setSelectedResults(new Set());
       fetchPipeline();
     } catch (err) { toast.error("Failed to add to pipeline"); }
@@ -453,10 +544,19 @@ export default function AdminProspector() {
   const fetchPipeline = useCallback(async () => {
     setLoadingPipeline(true);
     try {
-      const { data } = await (supabase as any).from("prospect_pipeline").select("*").order("created_at", { ascending: false });
+      const { data, error } = await (supabase as any).from("prospect_pipeline").select("*").order("created_at", { ascending: false });
+      if (error) {
+        console.error("Pipeline fetch error:", error);
+        toast.error("Failed to load pipeline: " + error.message);
+        return;
+      }
       setPipelineLeads((data || []).map((d: any) => ({
         ...d,
         pain_points: d.pain_points ? (Array.isArray(d.pain_points) ? d.pain_points : []) : null,
+        drip_step: d.drip_step || 0,
+        drip_status: d.drip_status || "not_started",
+        has_facebook: d.has_facebook ?? false,
+        has_instagram: d.has_instagram ?? false,
       })));
     } catch { toast.error("Failed to load pipeline"); }
     finally { setLoadingPipeline(false); }
@@ -481,17 +581,24 @@ export default function AdminProspector() {
         await (supabase as any).from("prospect_pipeline").update({
           pain_points: data.pain_points,
           deep_research: data.deep_research || null,
+          gap_analysis: data.gap_analysis || data.pain_points?.join("; ") || null,
           pipeline_stage: "website_audited",
           updated_at: new Date().toISOString(),
         }).eq("id", lead.id);
-        setPipelineLeads(prev => prev.map(l => l.id === lead.id ? { ...l, pain_points: data.pain_points, deep_research: data.deep_research || null, pipeline_stage: "website_audited" } : l));
-        toast.success("Audit complete — pain points + deep research found");
+        setPipelineLeads(prev => prev.map(l => l.id === lead.id ? {
+          ...l,
+          pain_points: data.pain_points,
+          deep_research: data.deep_research || null,
+          gap_analysis: data.gap_analysis || data.pain_points?.join("; ") || null,
+          pipeline_stage: "website_audited",
+        } : l));
+        toast.success("Audit complete — pain points captured");
       }
     } catch (err) { toast.error(err instanceof Error ? err.message : "Audit failed"); }
     finally { setAuditingId(null); }
   };
 
-  // ── Deep Research (standalone) ──
+  // ── Deep Research ──
   const deepResearch = async (lead: PipelineLead) => {
     setResearchingId(lead.id);
     try {
@@ -512,10 +619,45 @@ export default function AdminProspector() {
           updated_at: new Date().toISOString(),
         }).eq("id", lead.id);
         setPipelineLeads(prev => prev.map(l => l.id === lead.id ? { ...l, deep_research: researchData } : l));
-        toast.success("Deep research complete — live web intel captured");
+        toast.success("Deep research complete");
       }
     } catch (err) { toast.error(err instanceof Error ? err.message : "Research failed"); }
     finally { setResearchingId(null); }
+  };
+
+  // ── Pipeline Drip ──
+  const runPipelineDrip = async (lead: PipelineLead, action: "draft" | "send" | "send_existing") => {
+    if (!lead.email) { toast.error("Lead has no email"); return; }
+    setDrippingId(lead.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("pipeline-drip-send", {
+        body: { leadId: lead.id, action },
+      });
+      if (error) throw error;
+      if (data?.error) { toast.error(data.error); return; }
+
+      if (action === "draft") {
+        toast.success("Draft generated — review before sending");
+        setPipelineLeads(prev => prev.map(l => l.id === lead.id ? {
+          ...l,
+          drip_subject: data.subject,
+          drip_body: data.body,
+          drip_status: "drafted",
+        } : l));
+      } else {
+        toast.success(`Email sent to ${lead.business_name} (Step ${data.step}/4)`);
+        setPipelineLeads(prev => prev.map(l => l.id === lead.id ? {
+          ...l,
+          drip_step: data.step,
+          drip_status: data.step >= 4 ? "completed" : "active",
+          drip_subject: null,
+          drip_body: null,
+          last_drip_at: new Date().toISOString(),
+          pipeline_stage: "outreach_sent",
+        } : l));
+      }
+    } catch (err) { toast.error(err instanceof Error ? err.message : "Drip failed"); }
+    finally { setDrippingId(null); }
   };
 
   // ── Send to n8n ──
@@ -546,18 +688,58 @@ export default function AdminProspector() {
     if (!over) return;
     const overId = over.id as string;
     const activeId = active.id as string;
-    // Check if dropped on a column
     const targetStage = PIPELINE_STAGES.find(s => s.key === overId);
     if (targetStage) {
       updatePipelineStage(activeId, targetStage.key);
       return;
     }
-    // Check if dropped on another card — find that card's stage
     const targetLead = pipelineLeads.find(l => l.id === overId);
     if (targetLead) {
       updatePipelineStage(activeId, targetLead.pipeline_stage);
     }
   };
+
+  // ── Pipeline filtering & sorting ──
+  const filteredPipelineLeads = useMemo(() => {
+    let result = [...pipelineLeads];
+    switch (pipelineFilter) {
+      case "has_email": result = result.filter(l => !!l.email); break;
+      case "no_email": result = result.filter(l => !l.email); break;
+      case "has_website": result = result.filter(l => !!l.website); break;
+      case "no_website": result = result.filter(l => !l.website); break;
+      case "has_reviews": result = result.filter(l => (l.review_count || 0) > 0); break;
+      case "no_facebook": result = result.filter(l => !l.has_facebook); break;
+      case "no_instagram": result = result.filter(l => !l.has_instagram); break;
+    }
+    switch (pipelineSort) {
+      case "reviews_desc": result.sort((a, b) => (b.review_count || 0) - (a.review_count || 0)); break;
+      case "rating_desc": result.sort((a, b) => (b.google_rating || 0) - (a.google_rating || 0)); break;
+      case "name_asc": result.sort((a, b) => a.business_name.localeCompare(b.business_name)); break;
+      case "drip_status": result.sort((a, b) => a.drip_step - b.drip_step); break;
+      default: result.sort((a, b) => (b.created_at || "").localeCompare(a.created_at || "")); break;
+    }
+    return result;
+  }, [pipelineLeads, pipelineFilter, pipelineSort]);
+
+  const pipelineByStage = useMemo(() => {
+    const map: Record<string, PipelineLead[]> = {};
+    PIPELINE_STAGES.forEach(s => { map[s.key] = []; });
+    filteredPipelineLeads.forEach(l => {
+      if (map[l.pipeline_stage]) map[l.pipeline_stage].push(l);
+      else map["new_lead"].push(l);
+    });
+    return map;
+  }, [filteredPipelineLeads]);
+
+  // Pipeline stats
+  const pipelineStats = useMemo(() => ({
+    total: pipelineLeads.length,
+    withEmail: pipelineLeads.filter(l => !!l.email).length,
+    withReviews: pipelineLeads.filter(l => (l.review_count || 0) > 0).length,
+    noWebsite: pipelineLeads.filter(l => !l.website).length,
+    dripping: pipelineLeads.filter(l => l.drip_status === "active").length,
+    drafted: pipelineLeads.filter(l => l.drip_status === "drafted").length,
+  }), [pipelineLeads]);
 
   // ── All Leads Data ──
   const fetchTable = async (table: string, normalizer: (r: any) => UnifiedLead) => {
@@ -602,12 +784,6 @@ export default function AdminProspector() {
   useEffect(() => { if (mainTab === "pipeline") fetchPipeline(); }, [mainTab, fetchPipeline]);
 
   // ── Filtering + Sorting ──
-  const uniqueIndustries = useMemo(() => [...new Set(leads.map(l => l.industry).filter(Boolean))].sort(), [leads]);
-  const uniqueAreas = useMemo(() => {
-    const areas = leads.map(l => [l.city, l.state].filter(Boolean).join(", ")).filter(Boolean);
-    return [...new Set(areas)].sort();
-  }, [leads]);
-
   const filtered = useMemo(() => {
     let result = leads;
     if (searchQuery) {
@@ -722,16 +898,6 @@ export default function AdminProspector() {
 
   const guide = getAdminGuide("prospector");
 
-  const pipelineByStage = useMemo(() => {
-    const map: Record<string, PipelineLead[]> = {};
-    PIPELINE_STAGES.forEach(s => { map[s.key] = []; });
-    pipelineLeads.forEach(l => {
-      if (map[l.pipeline_stage]) map[l.pipeline_stage].push(l);
-      else map["new_lead"].push(l);
-    });
-    return map;
-  }, [pipelineLeads]);
-
   return (
     <div className="space-y-4">
       {guide && <AdminHelpCard id={guide.id} title={guide.title} body={guide.body} tips={guide.tips} scenarios={guide.scenarios} />}
@@ -740,7 +906,7 @@ export default function AdminProspector() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold">Lead Generation & Pipeline Manager</h2>
-          <p className="text-xs text-muted-foreground">Search, audit, outreach & track leads across all sources</p>
+          <p className="text-xs text-muted-foreground">Search, audit, drip & track leads</p>
         </div>
         <Badge variant="outline" className="text-xs">Unified CRM</Badge>
       </div>
@@ -815,15 +981,10 @@ export default function AdminProspector() {
                 </Button>
                 {mapResults.length > 0 && (
                   <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs gap-1"
+                    variant="outline" size="sm" className="text-xs gap-1"
                     onClick={() => {
-                      if (selectedResults.size > 0) {
-                        addToPipeline(mapResults.filter((_, i) => selectedResults.has(i)));
-                      } else {
-                        addToPipeline(mapResults);
-                      }
+                      if (selectedResults.size > 0) addToPipeline(mapResults.filter((_, i) => selectedResults.has(i)));
+                      else addToPipeline(mapResults);
                     }}
                   >
                     <Plus size={12} />
@@ -835,14 +996,14 @@ export default function AdminProspector() {
                 <div className="flex items-center gap-2 p-2 rounded-md bg-cyan-500/10 border border-cyan-500/20">
                   <Loader2 size={14} className="animate-spin text-cyan-400" />
                   <span className="text-[11px] text-cyan-400 font-medium">
-                    Step 1: Finding businesses via Google Maps → Step 2: Running gap analysis on each website...
+                    Step 1: Finding businesses → Step 2: Running gap analysis...
                   </span>
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Results Table */}
+          {/* Quick Search Results */}
           {mapResults.length > 0 && (
             <Card className="border-border/40">
               <CardHeader className="pb-2">
@@ -857,8 +1018,7 @@ export default function AdminProspector() {
                     <thead>
                       <tr className="border-b border-border/40 text-muted-foreground">
                         <th className="text-left py-2 pr-2 w-8">
-                          <input
-                            type="checkbox"
+                          <input type="checkbox"
                             checked={selectedResults.size === mapResults.length && mapResults.length > 0}
                             onChange={e => {
                               if (e.target.checked) setSelectedResults(new Set(mapResults.map((_, i) => i)));
@@ -879,9 +1039,7 @@ export default function AdminProspector() {
                       {mapResults.map((r, i) => (
                         <tr key={i} className="border-b border-border/20 hover:bg-muted/20">
                           <td className="py-2 pr-2">
-                            <input
-                              type="checkbox"
-                              checked={selectedResults.has(i)}
+                            <input type="checkbox" checked={selectedResults.has(i)}
                               onChange={e => {
                                 const next = new Set(selectedResults);
                                 if (e.target.checked) next.add(i); else next.delete(i);
@@ -899,7 +1057,13 @@ export default function AdminProspector() {
                             ) : "—"}
                           </td>
                           <td className="py-2 text-muted-foreground">{r.reviews ?? "—"}</td>
-                          <td className="py-2 text-muted-foreground">{r.phone || "—"}</td>
+                          <td className="py-2">
+                            {r.phone ? (
+                              <a href={`tel:${r.phone}`} className="text-primary/80 hover:text-primary flex items-center gap-0.5">
+                                <Phone size={9} /> {r.phone}
+                              </a>
+                            ) : <span className="text-muted-foreground">—</span>}
+                          </td>
                           <td className="py-2">
                             {r.website ? (
                               <a href={r.website.startsWith("http") ? r.website : `https://${r.website}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-0.5">
@@ -919,7 +1083,7 @@ export default function AdminProspector() {
             </Card>
           )}
 
-          {/* ═══ HYBRID RESULTS TABLE ═══ */}
+          {/* Hybrid Results */}
           {hybridResults.length > 0 && (
             <Card className="border-cyan-500/30 bg-card">
               <CardHeader className="pb-2">
@@ -937,7 +1101,7 @@ export default function AdminProspector() {
                         <th className="text-left py-2 font-semibold">Business Name</th>
                         <th className="text-left py-2 font-semibold">Phone</th>
                         <th className="text-left py-2 font-semibold">Website</th>
-                        <th className="text-left py-2 font-semibold">Automation Gap Analysis</th>
+                        <th className="text-left py-2 font-semibold">Gap Analysis</th>
                         <th className="text-left py-2 font-semibold w-16">Status</th>
                       </tr>
                     </thead>
@@ -955,9 +1119,9 @@ export default function AdminProspector() {
                               </span>
                             )}
                           </td>
-                          <td className="py-2.5 text-muted-foreground">
+                          <td className="py-2.5">
                             {r.phone ? (
-                              <a href={`tel:${r.phone}`} className="flex items-center gap-1 hover:text-foreground">
+                              <a href={`tel:${r.phone}`} className="text-primary/80 hover:text-primary flex items-center gap-1">
                                 <Phone size={9} /> {r.phone}
                               </a>
                             ) : <span className="text-destructive/60">—</span>}
@@ -975,7 +1139,7 @@ export default function AdminProspector() {
                             ) : r.gap_status === "error" ? (
                               <p className="text-destructive/60 text-[10px]">Analysis failed</p>
                             ) : r.gap_status === "skipped" ? (
-                              <p className="text-muted-foreground text-[10px]">Skipped (no API key)</p>
+                              <p className="text-muted-foreground text-[10px]">Skipped</p>
                             ) : (
                               <div className="flex items-center gap-1.5 text-muted-foreground">
                                 <Loader2 size={10} className="animate-spin" /> Analyzing...
@@ -984,11 +1148,9 @@ export default function AdminProspector() {
                           </td>
                           <td className="py-2.5">
                             {r.gap_status === "done" ? (
-                              <Badge className="text-[8px] bg-green-500/20 text-green-400 border-0">✓ Done</Badge>
+                              <Badge className="text-[8px] bg-green-500/20 text-green-400 border-0">✓</Badge>
                             ) : r.gap_status === "error" ? (
-                              <Badge className="text-[8px] bg-destructive/20 text-destructive border-0">Error</Badge>
-                            ) : r.gap_status === "skipped" ? (
-                              <Badge variant="outline" className="text-[8px]">Skip</Badge>
+                              <Badge className="text-[8px] bg-destructive/20 text-destructive border-0">Err</Badge>
                             ) : (
                               <Badge className="text-[8px] bg-cyan-500/20 text-cyan-400 border-0 animate-pulse">Live</Badge>
                             )}
@@ -999,12 +1161,7 @@ export default function AdminProspector() {
                   </table>
                 </div>
                 <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/30">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs gap-1"
-                    onClick={() => addToPipeline(hybridResults)}
-                  >
+                  <Button variant="outline" size="sm" className="text-xs gap-1" onClick={() => addToPipeline(hybridResults)}>
                     <Plus size={12} /> Add All {hybridResults.length} to Pipeline
                   </Button>
                 </div>
@@ -1030,7 +1187,7 @@ export default function AdminProspector() {
             <Card className="border-border/40">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <Mail size={14} className="text-primary" /> Drip Email Sequence
+                  <Mail size={14} className="text-primary" /> Legacy Drip Sequence
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -1051,11 +1208,54 @@ export default function AdminProspector() {
       {/* ═══════════ PIPELINE TAB (Kanban) ═══════════ */}
       {mainTab === "pipeline" && (
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-muted-foreground">Drag leads between columns to update their stage</p>
+          {/* Stats bar */}
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+            {[
+              { label: "Total", value: pipelineStats.total, color: "text-foreground" },
+              { label: "Has Email", value: pipelineStats.withEmail, color: "text-green-400" },
+              { label: "Has Reviews", value: pipelineStats.withReviews, color: "text-yellow-400" },
+              { label: "No Website", value: pipelineStats.noWebsite, color: "text-red-400" },
+              { label: "Dripping", value: pipelineStats.dripping, color: "text-purple-400" },
+              { label: "Drafts", value: pipelineStats.drafted, color: "text-amber-400" },
+            ].map(s => (
+              <div key={s.label} className="text-center p-2 bg-muted/20 rounded-lg">
+                <p className={`text-lg font-bold ${s.color}`}>{s.value}</p>
+                <p className="text-[9px] text-muted-foreground">{s.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Filter & Sort bar */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <Select value={pipelineFilter} onValueChange={(v) => setPipelineFilter(v as PipelineFilter)}>
+              <SelectTrigger className="text-xs h-7 w-32"><Filter size={10} className="mr-1" /><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all" className="text-xs">All Leads</SelectItem>
+                <SelectItem value="has_email" className="text-xs">✓ Has Email</SelectItem>
+                <SelectItem value="no_email" className="text-xs">✗ No Email</SelectItem>
+                <SelectItem value="has_website" className="text-xs">✓ Has Website</SelectItem>
+                <SelectItem value="no_website" className="text-xs">✗ No Website</SelectItem>
+                <SelectItem value="has_reviews" className="text-xs">⭐ Has Reviews</SelectItem>
+                <SelectItem value="no_facebook" className="text-xs">✗ No Facebook</SelectItem>
+                <SelectItem value="no_instagram" className="text-xs">✗ No Instagram</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={pipelineSort} onValueChange={(v) => setPipelineSort(v as PipelineSort)}>
+              <SelectTrigger className="text-xs h-7 w-32"><ArrowUpDown size={10} className="mr-1" /><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest" className="text-xs">Newest First</SelectItem>
+                <SelectItem value="reviews_desc" className="text-xs">Most Reviews</SelectItem>
+                <SelectItem value="rating_desc" className="text-xs">Highest Rating</SelectItem>
+                <SelectItem value="name_asc" className="text-xs">Name A→Z</SelectItem>
+                <SelectItem value="drip_status" className="text-xs">Drip Progress</SelectItem>
+              </SelectContent>
+            </Select>
             <Button variant="outline" size="sm" className="text-xs h-7 gap-1" onClick={fetchPipeline} disabled={loadingPipeline}>
               <RefreshCw size={10} className={loadingPipeline ? "animate-spin" : ""} /> Refresh
             </Button>
+            <span className="text-[10px] text-muted-foreground ml-auto">
+              Showing {filteredPipelineLeads.length} of {pipelineLeads.length}
+            </span>
           </div>
 
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
@@ -1069,19 +1269,42 @@ export default function AdminProspector() {
                     onSendN8n={sendToN8n}
                     onMoveStage={(lead, s) => updatePipelineStage(lead.id, s)}
                     onDeepResearch={deepResearch}
+                    onDrip={runPipelineDrip}
+                    onPreviewDrip={setPreviewLead}
                     auditingId={auditingId}
                     sendingId={sendingId}
                     researchingId={researchingId}
+                    drippingId={drippingId}
                   />
                 </SortableContext>
               ))}
             </div>
           </DndContext>
 
+          {/* Drip sequence info card */}
+          <Card className="border-purple-500/30 bg-purple-500/5">
+            <CardContent className="py-3">
+              <p className="text-xs font-semibold text-purple-400 mb-2 flex items-center gap-1.5"><Mail size={12} /> Sniper Drip Sequence (4-Step)</p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {[
+                  { step: 1, label: "Audit Hook", desc: "Reference specific gap, offer pre-built demo" },
+                  { step: 2, label: "Follow-Up", desc: "Check if they saw demo, add new observation" },
+                  { step: 3, label: "Value-Add", desc: "Industry tip + new site observation" },
+                  { step: 4, label: "Final Touch", desc: "Direct closing, reference original gap" },
+                ].map(s => (
+                  <div key={s.step} className="p-2 bg-card rounded-lg border border-border/30">
+                    <p className="text-[10px] font-bold text-purple-400">Step {s.step}: {s.label}</p>
+                    <p className="text-[9px] text-muted-foreground mt-0.5">{s.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
           {pipelineLeads.length === 0 && !loadingPipeline && (
             <Card className="border-border/40 border-dashed">
               <CardContent className="py-12 text-center">
-                <p className="text-sm text-muted-foreground">No leads in pipeline yet. Use the <strong>Search</strong> tab to find businesses and add them.</p>
+                <p className="text-sm text-muted-foreground">No leads in pipeline yet. Use <strong>Search</strong> to find businesses and add them.</p>
               </CardContent>
             </Card>
           )}
@@ -1206,7 +1429,11 @@ export default function AdminProspector() {
                     <div className="flex items-center gap-3 mt-0.5 flex-wrap">
                       {lead.email ? <span className="text-[10px] text-primary/80 truncate">{lead.email}</span> : <span className="text-[10px] text-destructive/60 italic">no email</span>}
                       {(lead.city || lead.state) && <span className="text-[10px] text-muted-foreground flex items-center gap-0.5"><MapPin size={8} /> {[lead.city, lead.state].filter(Boolean).join(", ")}</span>}
-                      {lead.phone && <span className="text-[10px] text-muted-foreground flex items-center gap-0.5"><Phone size={8} /> {lead.phone}</span>}
+                      {lead.phone && (
+                        <a href={`tel:${lead.phone}`} className="text-[10px] text-primary/80 hover:text-primary flex items-center gap-0.5">
+                          <Phone size={8} /> {lead.phone}
+                        </a>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity shrink-0">
@@ -1243,6 +1470,58 @@ export default function AdminProspector() {
           </CardContent>
         </Card>
       )}
+
+      {/* ═══ Drip Preview Dialog ═══ */}
+      <Dialog open={!!previewLead} onOpenChange={(open) => { if (!open) setPreviewLead(null); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-sm flex items-center gap-2">
+              <Eye size={14} /> Draft Preview — {previewLead?.business_name}
+            </DialogTitle>
+          </DialogHeader>
+          {previewLead && (
+            <div className="space-y-3">
+              <div>
+                <Label className="text-xs text-muted-foreground">Subject</Label>
+                <p className="text-sm font-medium mt-1">{previewLead.drip_subject || "No subject"}</p>
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground">Body</Label>
+                <div className="mt-1 p-3 bg-muted/20 rounded-lg text-sm whitespace-pre-line leading-relaxed">
+                  {previewLead.drip_body || "No body"}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <p className="text-[10px] text-muted-foreground">Sending to: {previewLead.email}</p>
+                <DripBadge step={previewLead.drip_step + 1} status="active" />
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1 text-xs gap-1"
+                  disabled={drippingId === previewLead.id}
+                  onClick={() => {
+                    runPipelineDrip(previewLead, "draft");
+                    setPreviewLead(null);
+                  }}
+                >
+                  <RefreshCw size={12} /> Re-Draft
+                </Button>
+                <Button
+                  className="flex-1 text-xs gap-1"
+                  disabled={drippingId === previewLead.id}
+                  onClick={() => {
+                    runPipelineDrip(previewLead, "send_existing");
+                    setPreviewLead(null);
+                  }}
+                >
+                  <Send size={12} /> Approve & Send
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
