@@ -12,8 +12,8 @@ serve(async (req) => {
       subscription_data: { trial_period_days: 7 },
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 4900, product_data: { name: "AI Proposal Generator — $49/month", description: "Unlimited AI-written professional proposals. Submit project details, get a polished proposal back in minutes." } }, quantity: 1 }],
       metadata: { type: "proposal_generator_subscription", email, name: name || "", businessName, industry: industry || "" },
-      success_url: "https://www.mattmichelstraining.com/ai-proposal?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/ai-proposal",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/ai-proposal?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/ai-proposal`,
     });
     return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: { ...cors, "Content-Type": "application/json" } });
   } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e); return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...cors, "Content-Type": "application/json" } }); }

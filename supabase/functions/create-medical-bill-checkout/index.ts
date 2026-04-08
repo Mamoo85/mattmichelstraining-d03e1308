@@ -25,8 +25,8 @@ serve(async (req) => {
       customer_email: email,
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 7900, product_data: { name: "Medical Bill Dispute Letters", description: "AI writes itemized dispute letters for incorrect medical charges. Reference the correct billing codes, demand audits, and challenge overcharges automatically." } }, quantity: 1 }],
       metadata: { type: "medical_bill_subscription", email, name: name || "", phone: phone || "" },
-      success_url: "https://www.mattmichelstraining.com/medical-bill-dispute?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/medical-bill-dispute",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/medical-bill-dispute?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/medical-bill-dispute`,
     });
 
     return new Response(JSON.stringify({ url: session.url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

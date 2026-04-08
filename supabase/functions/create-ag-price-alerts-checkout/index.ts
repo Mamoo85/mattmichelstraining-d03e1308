@@ -26,8 +26,8 @@ serve(async (req) => {
       subscription_data: { trial_period_days: 14 },
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 7900, product_data: { name: "Agricultural Price Alert System", description: "SMS alert when your commodity prices hit your target. Daily AI morning brief on markets." } }, quantity: 1 }],
       metadata: { type: "ag_price_alerts_subscription", email, name: name || "", phone: phone || "", ...Object.fromEntries(Object.entries(body).filter(([k]) => !["email","name","phone"].includes(k)).map(([k,v]) => [k, String(v)])) },
-      success_url: "https://www.mattmichelstraining.com/ag-price-alerts?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/ag-price-alerts",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/ag-price-alerts?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/ag-price-alerts`,
     });
 
     return new Response(JSON.stringify({ url: session.url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

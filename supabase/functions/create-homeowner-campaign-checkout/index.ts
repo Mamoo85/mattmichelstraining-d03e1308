@@ -22,8 +22,8 @@ serve(async (req) => {
       subscription_data: { trial_period_days: 14 },
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 5900, product_data: { name: "New Homeowner Campaign", description: "Automatically reaches new movers in your target ZIP with a personalized welcome offer — before your competitors do." } }, quantity: 1 }],
       metadata: { type: "homeowner_campaign_subscription", email, name: name || "", businessName, phone: phone || "", businessType: businessType || "", targetZip, offerHeadline: offerHeadline || "" },
-      success_url: "https://www.mattmichelstraining.com/new-homeowner-campaign?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/new-homeowner-campaign",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/new-homeowner-campaign?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/new-homeowner-campaign`,
     });
 
     return new Response(JSON.stringify({ url: session.url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

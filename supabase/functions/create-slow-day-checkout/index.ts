@@ -22,8 +22,8 @@ serve(async (req) => {
       subscription_data: { trial_period_days: 7 },
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 2500, product_data: { name: "Slow Day Push SMS", description: "Text a keyword when you're slow — 200 customers instantly get your promo. One job pays for months." } }, quantity: 1 }],
       metadata: { type: "slow_day_subscription", email, name: name || "", businessName, phone: phone || "", businessType: businessType || "", promoOffer: promoOffer || "" },
-      success_url: "https://www.mattmichelstraining.com/slow-day-sms?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/slow-day-sms",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/slow-day-sms?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/slow-day-sms`,
     });
 
     return new Response(JSON.stringify({ url: session.url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

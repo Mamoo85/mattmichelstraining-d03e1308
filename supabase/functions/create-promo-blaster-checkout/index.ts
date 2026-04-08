@@ -22,8 +22,8 @@ serve(async (req) => {
       subscription_data: { trial_period_days: 14 },
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 2900, product_data: { name: "Seasonal Promo Blaster", description: "12 pre-built seasonal campaigns auto-sent to your customer list all year. Set once, runs forever." } }, quantity: 1 }],
       metadata: { type: "promo_blaster_subscription", email, name: name || "", businessName, phone: phone || "", businessType: businessType || "", city: city || "", state: state || "MI" },
-      success_url: "https://www.mattmichelstraining.com/seasonal-promos?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/seasonal-promos",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/seasonal-promos?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/seasonal-promos`,
     });
 
     return new Response(JSON.stringify({ url: session.url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

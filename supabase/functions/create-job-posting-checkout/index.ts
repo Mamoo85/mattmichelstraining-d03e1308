@@ -21,8 +21,8 @@ serve(async (req) => {
       subscription_data: { trial_period_days: 7 },
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 1900, product_data: { name: "AI Job Posting Writer — $19/month", description: "Unlimited AI-generated job postings optimized for Indeed & LinkedIn." } }, quantity: 1 }],
       metadata: { type: "job_posting_subscription", email, name: name || "", businessName },
-      success_url: "https://www.mattmichelstraining.com/ai-job-postings?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/ai-job-postings",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/ai-job-postings?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/ai-job-postings`,
     });
     return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);

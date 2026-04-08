@@ -12,8 +12,8 @@ serve(async (req) => {
       subscription_data: { trial_period_days: 7 },
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 4900, product_data: { name: "AI Website Copy Refresh — $49/month", description: "Monthly AI-rewritten homepage and FAQ copy emailed ready to paste into your website." } }, quantity: 1 }],
       metadata: { type: "website_copy_subscription", email, name: name || "", businessName, website: website || "", industry: industry || "", city: city || "" },
-      success_url: "https://www.mattmichelstraining.com/ai-website-copy?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/ai-website-copy",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/ai-website-copy?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/ai-website-copy`,
     });
     return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: { ...cors, "Content-Type": "application/json" } });
   } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e); return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...cors, "Content-Type": "application/json" } }); }

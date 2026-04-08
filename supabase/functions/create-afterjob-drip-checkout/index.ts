@@ -22,8 +22,8 @@ serve(async (req) => {
       subscription_data: { trial_period_days: 7 },
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 2900, product_data: { name: "After-Job Follow-Up Drip", description: "3-touch automated sequence after every completed job: thank you → review request → upsell offer." } }, quantity: 1 }],
       metadata: { type: "afterjob_drip_subscription", email, name: name || "", businessName, phone: phone || "", businessType: businessType || "" },
-      success_url: "https://www.mattmichelstraining.com/after-job-followup?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/after-job-followup",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/after-job-followup?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/after-job-followup`,
     });
 
     return new Response(JSON.stringify({ url: session.url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

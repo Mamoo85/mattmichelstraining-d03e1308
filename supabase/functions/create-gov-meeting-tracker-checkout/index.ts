@@ -26,8 +26,8 @@ serve(async (req) => {
       subscription_data: { trial_period_days: 14 },
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 19900, product_data: { name: "Local Government Meeting Tracker", description: "Weekly brief on every city council vote, planning decision, and zoning change in your target cities." } }, quantity: 1 }],
       metadata: { type: "gov_meeting_tracker_subscription", email, name: name || "", phone: phone || "", ...Object.fromEntries(Object.entries(body).filter(([k]) => !["email","name","phone"].includes(k)).map(([k,v]) => [k, String(v)])) },
-      success_url: "https://www.mattmichelstraining.com/gov-meeting-tracker?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/gov-meeting-tracker",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/gov-meeting-tracker?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/gov-meeting-tracker`,
     });
 
     return new Response(JSON.stringify({ url: session.url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

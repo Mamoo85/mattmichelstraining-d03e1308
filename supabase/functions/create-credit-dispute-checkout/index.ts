@@ -25,8 +25,8 @@ serve(async (req) => {
       customer_email: email,
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 7900, product_data: { name: "Credit Dispute Letter Factory", description: "AI generates FCRA-compliant dispute letters for each negative item on your credit report. Unlimited letters, unlimited bureaus." } }, quantity: 1 }],
       metadata: { type: "credit_dispute_subscription", email, name: name || "", phone: phone || "" },
-      success_url: "https://www.mattmichelstraining.com/credit-dispute?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/credit-dispute",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/credit-dispute?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/credit-dispute`,
     });
 
     return new Response(JSON.stringify({ url: session.url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

@@ -25,8 +25,8 @@ serve(async (req) => {
       customer_email: email,
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 29900, product_data: { name: "Luxury Real Estate Intelligence", description: "Weekly briefing on luxury market moves, off-market listings, buyer demand signals, and high-net-worth migration trends in your target markets." } }, quantity: 1 }],
       metadata: { type: "luxury_re_subscription", email, name: name || "", phone: phone || "", company_name: company_name || "", markets: markets || "" },
-      success_url: "https://www.mattmichelstraining.com/luxury-re-intel?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/luxury-re-intel",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/luxury-re-intel?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/luxury-re-intel`,
     });
 
     return new Response(JSON.stringify({ url: session.url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

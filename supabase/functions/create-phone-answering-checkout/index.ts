@@ -34,8 +34,8 @@ serve(async (req) => {
         quantity: 1,
       }],
       metadata: { type: "phone_answering_subscription", email, name: name || "", businessName, phone: phone || "" },
-      success_url: "https://www.mattmichelstraining.com/ai-phone-answering?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/ai-phone-answering",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/ai-phone-answering?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/ai-phone-answering`,
     });
     return new Response(JSON.stringify({ url: session.url }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },

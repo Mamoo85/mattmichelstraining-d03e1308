@@ -12,8 +12,8 @@ serve(async (req) => {
       subscription_data: { trial_period_days: 7 },
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 14900, product_data: { name: "AI Med Spa Marketing — $149/month", description: "Weekly social posts, monthly email campaign, and automated Google review requests for med spas." } }, quantity: 1 }],
       metadata: { type: "med_spa_marketing", email, name: name || "", businessName, city: city || "", services: services || "" },
-      success_url: "https://www.mattmichelstraining.com/ai-med-spa-marketing?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/ai-med-spa-marketing",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/ai-med-spa-marketing?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/ai-med-spa-marketing`,
     });
     return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: { ...cors, "Content-Type": "application/json" } });
   } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e); return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...cors, "Content-Type": "application/json" } }); }

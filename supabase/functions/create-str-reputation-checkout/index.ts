@@ -26,8 +26,8 @@ serve(async (req) => {
       subscription_data: { trial_period_days: 14 },
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 7900, product_data: { name: "Airbnb & STR Host Reputation Manager", description: "AI monitors reviews and drafts personalized responses within 2 hours. Monthly reputation report included." } }, quantity: 1 }],
       metadata: { type: "str_reputation_subscription", email, name: name || "", phone: phone || "", ...Object.fromEntries(Object.entries(body).filter(([k]) => !["email","name","phone"].includes(k)).map(([k,v]) => [k, String(v)])) },
-      success_url: "https://www.mattmichelstraining.com/str-reputation?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/str-reputation",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/str-reputation?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/str-reputation`,
     });
 
     return new Response(JSON.stringify({ url: session.url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

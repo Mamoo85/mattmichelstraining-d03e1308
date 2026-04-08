@@ -25,8 +25,8 @@ serve(async (req) => {
       customer_email: email,
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 29900, product_data: { name: "PE/Investor Sector Intelligence", description: "Weekly briefing on PE deal activity, fund moves, and investment trends in your sector. Know who's buying before it's public." } }, quantity: 1 }],
       metadata: { type: "pe_intelligence_subscription", email, name: name || "", phone: phone || "", company_name: company_name || "", sector: sector || "" },
-      success_url: "https://www.mattmichelstraining.com/pe-intelligence?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/pe-intelligence",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/pe-intelligence?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/pe-intelligence`,
     });
 
     return new Response(JSON.stringify({ url: session.url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

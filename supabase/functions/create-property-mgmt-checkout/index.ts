@@ -12,8 +12,8 @@ serve(async (req) => {
       subscription_data: { trial_period_days: 7 },
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 9900, product_data: { name: "AI Property Management Automation — $99/month", description: "AI-written tenant notices, lease renewals, late payment reminders, and maintenance follow-ups." } }, quantity: 1 }],
       metadata: { type: "property_management", email, name: name || "", businessName, units: units || "" },
-      success_url: "https://www.mattmichelstraining.com/ai-property-management?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/ai-property-management",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/ai-property-management?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/ai-property-management`,
     });
     return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: { ...cors, "Content-Type": "application/json" } });
   } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e); return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...cors, "Content-Type": "application/json" } }); }

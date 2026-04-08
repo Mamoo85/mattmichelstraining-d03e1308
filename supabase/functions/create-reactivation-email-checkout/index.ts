@@ -12,8 +12,8 @@ serve(async (req) => {
       subscription_data: { trial_period_days: 7 },
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 3900, product_data: { name: "AI Customer Reactivation Email — $39/month", description: "Monthly personalized emails to your inactive customers." } }, quantity: 1 }],
       metadata: { type: "reactivation_email_subscription", email, name: name || "", businessName, industry: industry || "" },
-      success_url: "https://www.mattmichelstraining.com/reactivation-emails?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/reactivation-emails",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/reactivation-emails?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/reactivation-emails`,
     });
     return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e); return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }); }

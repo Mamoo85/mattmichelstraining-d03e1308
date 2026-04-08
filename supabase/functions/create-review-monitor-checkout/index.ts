@@ -21,8 +21,8 @@ serve(async (req) => {
       customer_email: email,
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 2500, product_data: { name: "Google Review Monitor + Alert", description: "Instant SMS when you get a new Google review + suggested AI response. Weekly digest included." } }, quantity: 1 }],
       metadata: { type: "review_monitor_subscription", email, name: name || "", businessName, phone: phone || "" },
-      success_url: "https://www.mattmichelstraining.com/review-monitor?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/review-monitor",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/review-monitor?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/review-monitor`,
     });
 
     return new Response(JSON.stringify({ url: session.url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

@@ -25,8 +25,8 @@ serve(async (req) => {
       customer_email: email,
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 19900, product_data: { name: "Patent Watch Intelligence", description: "Weekly digest of new patent filings in your technology space. Know what competitors are building before it ships." } }, quantity: 1 }],
       metadata: { type: "patent_watch_subscription", email, name: name || "", phone: phone || "", company_name: company_name || "", industry: industry || "" },
-      success_url: "https://www.mattmichelstraining.com/patent-watch?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/patent-watch",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/patent-watch?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/patent-watch`,
     });
 
     return new Response(JSON.stringify({ url: session.url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

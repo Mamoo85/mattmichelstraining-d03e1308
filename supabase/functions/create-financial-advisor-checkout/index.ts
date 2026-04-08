@@ -12,8 +12,8 @@ serve(async (req) => {
       subscription_data: { trial_period_days: 7 },
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 14900, product_data: { name: "AI Financial Advisor Content — $149/month", description: "Compliance-aware newsletters, LinkedIn posts, and educational content for RIAs and financial planners." } }, quantity: 1 }],
       metadata: { type: "financial_advisor_content", email, name: name || "", businessName, firm: firm || "" },
-      success_url: "https://www.mattmichelstraining.com/ai-financial-advisor-content?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/ai-financial-advisor-content",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/ai-financial-advisor-content?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/ai-financial-advisor-content`,
     });
     return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: { ...cors, "Content-Type": "application/json" } });
   } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e); return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...cors, "Content-Type": "application/json" } }); }

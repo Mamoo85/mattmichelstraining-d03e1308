@@ -21,8 +21,8 @@ serve(async (req) => {
       subscription_data: { trial_period_days: 7 },
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 2900, product_data: { name: "Automated Contractor Invoicing — $29/month", description: "AI-generated invoices with Stripe payment links and automatic follow-ups." } }, quantity: 1 }],
       metadata: { type: "contractor_invoicing_subscription", email, name: name || "", businessName, phone: phone || "" },
-      success_url: "https://www.mattmichelstraining.com/contractor-invoicing?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/contractor-invoicing",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/contractor-invoicing?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/contractor-invoicing`,
     });
     return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
