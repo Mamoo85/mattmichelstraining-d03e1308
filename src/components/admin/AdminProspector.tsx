@@ -1293,7 +1293,49 @@ export default function AdminProspector() {
             </Button>
             <span className="text-[10px] text-muted-foreground ml-auto">
               Showing {filteredPipelineLeads.length} of {pipelineLeads.length}
+              {selectedPipelineIds.size > 0 && ` · ${selectedPipelineIds.size} selected`}
             </span>
+          </div>
+
+          {/* Batch Email Actions */}
+          <div className="flex items-center gap-2 flex-wrap p-2 bg-muted/20 rounded-lg border border-border/30">
+            <Button
+              variant="outline" size="sm" className="text-xs h-7 gap-1"
+              onClick={() => {
+                if (selectedPipelineIds.size === filteredPipelineLeads.filter(l => !!l.email).length) {
+                  setSelectedPipelineIds(new Set());
+                } else {
+                  setSelectedPipelineIds(new Set(filteredPipelineLeads.filter(l => !!l.email).map(l => l.id)));
+                }
+              }}
+            >
+              <CheckCircle size={10} />
+              {selectedPipelineIds.size > 0 ? "Deselect All" : `Select All w/ Email (${pipelineStats.withEmail})`}
+            </Button>
+            <Button
+              size="sm" className="text-xs h-7 gap-1 bg-amber-600 hover:bg-amber-700 text-white"
+              disabled={batchProcessing}
+              onClick={() => runBatchDrip("draft_all")}
+            >
+              {batchProcessing ? <Loader2 size={10} className="animate-spin" /> : <FileText size={10} />}
+              Draft {selectedPipelineIds.size > 0 ? selectedPipelineIds.size : "All"}
+            </Button>
+            <Button
+              size="sm" className="text-xs h-7 gap-1 bg-purple-600 hover:bg-purple-700 text-white"
+              disabled={batchProcessing}
+              onClick={() => runBatchDrip("send_drafted")}
+            >
+              {batchProcessing ? <Loader2 size={10} className="animate-spin" /> : <Send size={10} />}
+              Send Drafted
+            </Button>
+            <Button
+              size="sm" className="text-xs h-7 gap-1 bg-primary hover:bg-primary/90 text-primary-foreground"
+              disabled={batchProcessing}
+              onClick={() => runBatchDrip("send_all")}
+            >
+              {batchProcessing ? <Loader2 size={10} className="animate-spin" /> : <Mail size={10} />}
+              Generate & Send {selectedPipelineIds.size > 0 ? selectedPipelineIds.size : "All"}
+            </Button>
           </div>
 
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
