@@ -413,7 +413,9 @@ const App = () => (
                 <Suspense fallback={<PageLoader />}>
                   <div className="pb-16">
                     <Routes>
-                    <Route path="/" element={<Index />} />
+                    <Route path="/" element={getDomainBrand() === "agency" ? <AgencyHome /> : <Index />} />
+                    <Route path="/agency" element={<AgencyHome />} />
+                    <Route path="/computer-repair" element={<ComputerRepair />} />
                     <Route path="/unsubscribe" element={<Unsubscribe />} />
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/login" element={<Navigate to="/auth" replace />} />
