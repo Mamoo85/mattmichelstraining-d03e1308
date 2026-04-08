@@ -84,6 +84,7 @@ interface PipelineLead {
   google_place_id: string | null;
   pipeline_stage: string;
   pain_points: string[] | null;
+  deep_research: { summary: string; citations: string[]; researched_at: string } | null;
   n8n_sent_at: string | null;
   source: string | null;
   created_at: string | null;
