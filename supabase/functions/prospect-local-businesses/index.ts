@@ -292,16 +292,15 @@ async function sendColdEmail(
       method: "POST",
       headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: "Matt Michels <matt@mattmichelstraining.com>",
+        from: "Matt Michels <matt@detroitwebagent.com>",
         to: [to],
-        reply_to: "matt@mattmichelstraining.com",
+        reply_to: "matt@detroitwebagent.com",
         subject,
         html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;line-height:1.8;color:#1e293b;max-width:520px;margin:0 auto;padding:24px 0;">
 ${bodyHtml}
 <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;align-items:center;gap:12px;">
-  <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Matt Michels">
-  <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>M² Development · Grosse Pointe, MI<br>(313) 806-4952</div>
-        <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" />
+  <img src="https://www.detroitwebagent.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Matt Michels">
+  <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>Detroit Web Agency · Grosse Pointe, MI<br>(313) 806-4952</div>
 </div>
 </div>`,
       }),
@@ -357,7 +356,7 @@ async function runSniperAgent(
   customFlaw: string, targetService: string,
   landingPage: { path: string; price: string; monthly: string }
 ): Promise<string> {
-  const siteUrl = `mattmichelstraining.com${landingPage.path}`;
+  const siteUrl = `detroitwebagent.com${landingPage.path}`;
   const prompt = `You are an elite, autonomous B2B Outbound Sales Agent. Your job is to write cold emails that get busy business owners to reply. You will be provided with a business name, industry, and a Custom Flaw Observation from our Recon Agent.
 
 Strict Rules:
@@ -476,7 +475,7 @@ serve(async (req) => {
           <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;color:#334155;font-size:13px;">${r.message}</td>
         </tr>`).join("");
 
-      const emailHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"><table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;"><tr><td align="center" style="padding:24px 16px;"><table width="100%" cellpadding="0" cellspacing="0" style="max-width:700px;"><tr><td style="background:#1e293b;padding:20px 28px;border-radius:10px 10px 0 0;"><p style="margin:0;color:#e8621a;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">LinkedIn Batch</p><p style="margin:4px 0 0;color:#94a3b8;font-size:12px;">${dateStr}</p></td></tr><tr><td style="background:#fff;padding:28px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;"><p style="margin:0 0 16px;font-size:15px;color:#1e293b;font-weight:700;">${rows.length} LinkedIn messages ready to send</p><table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-radius:6px;overflow:hidden;"><thead><tr style="background:#f1f5f9;"><th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0;">Business</th><th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0;">Owner</th><th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0;">LinkedIn Note</th></tr></thead><tbody>${tableRows}</tbody></table></td></tr><tr><td style="padding:16px 28px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 10px 10px;"><div style="display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Matt Michels"><div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>Grosse Pointe, MI · (313) 806-4952</div></div></td></tr></table></td></tr></table></body></html>`;
+      const emailHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"><table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;"><tr><td align="center" style="padding:24px 16px;"><table width="100%" cellpadding="0" cellspacing="0" style="max-width:700px;"><tr><td style="background:#1e293b;padding:20px 28px;border-radius:10px 10px 0 0;"><p style="margin:0;color:#22d3ee;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">LinkedIn Batch</p><p style="margin:4px 0 0;color:#94a3b8;font-size:12px;">${dateStr}</p></td></tr><tr><td style="background:#fff;padding:28px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;"><p style="margin:0 0 16px;font-size:15px;color:#1e293b;font-weight:700;">${rows.length} LinkedIn messages ready to send</p><table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-radius:6px;overflow:hidden;"><thead><tr style="background:#f1f5f9;"><th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0;">Business</th><th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0;">Owner</th><th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0;">LinkedIn Note</th></tr></thead><tbody>${tableRows}</tbody></table></td></tr><tr><td style="padding:16px 28px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 10px 10px;"><div style="display:flex;align-items:center;gap:12px;"><img src="https://www.detroitwebagent.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Matt Michels"><div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>Detroit Web Agency · Grosse Pointe, MI · (313) 806-4952</div></div></td></tr></table></td></tr></table></body></html>`;
 
       const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
       if (RESEND_API_KEY) {
@@ -484,9 +483,9 @@ serve(async (req) => {
           method: "POST",
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            from: "M² System <matt@mattmichelstraining.com>",
-            to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"],
-            reply_to: "matt@mattmichelstraining.com",
+            from: "Detroit Web Agency <matt@detroitwebagent.com>",
+            to: ["matt@detroitwebagent.com"], bcc: ["matthewmichels4@gmail.com"],
+            reply_to: "matt@detroitwebagent.com",
             subject: `${rows.length} LinkedIn messages ready to send — ${dateStr}`,
             html: emailHtml,
           }),

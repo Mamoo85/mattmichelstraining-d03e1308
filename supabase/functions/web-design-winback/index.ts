@@ -24,7 +24,7 @@ function buildWinbackEmail(lead: any): string {
 <tr><td align="center" style="padding:32px 16px;">
   <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border:1px solid #e0e0e0;">
     <tr><td style="background:#1a1a2e;padding:20px 24px;text-align:center;">
-      <div style="font-size:18px;font-weight:900;color:#f97316;">MATT MICHELS WEB DESIGN</div>
+      <div style="font-size:18px;font-weight:900;color:#22d3ee;">DETROIT WEB AGENCY</div>
       <div style="font-size:9px;color:#aaa;letter-spacing:3px;text-transform:uppercase;margin-top:2px;">Grosse Pointe, MI</div>
     </td></tr>
     <tr><td style="padding:28px;">
@@ -49,18 +49,18 @@ function buildWinbackEmail(lead: any): string {
         If you want to see what I've built lately or get a quick quote, just reply or text me. No pressure — just wanted to check back in.
       </p>
 
-      <a href="https://mattmichelstraining.com/detroit-web-design" style="display:inline-block;background:#f97316;color:#fff;padding:12px 24px;text-decoration:none;font-size:13px;font-weight:900;letter-spacing:1px;text-transform:uppercase;margin-bottom:20px;">See Recent Work</a>
+      <a href="https://www.detroitwebagent.com/detroit-web-design" style="display:inline-block;background:#22d3ee;color:#0a0a0f;padding:12px 24px;text-decoration:none;font-size:13px;font-weight:900;letter-spacing:1px;text-transform:uppercase;margin-bottom:20px;">See Recent Work</a>
 
       <p style="color:#1a1a2e;font-size:14px;font-weight:bold;margin-top:16px;">— Matt</p>
-      <p style="color:#888;font-size:12px;">(313) 806-4952 · matt@mattmichelstraining.com</p>
+      <p style="color:#888;font-size:12px;">(313) 806-4952 · matt@detroitwebagent.com</p>
     </td></tr>
     <tr><td style="background:#f8f8f8;padding:12px;text-align:center;border-top:1px solid #eee;">
-      <p style="color:#aaa;font-size:11px;margin:0;">Matt Michels Web Design · Grosse Pointe, MI</p>
+      <p style="color:#aaa;font-size:11px;margin:0;">Detroit Web Agency · Grosse Pointe, MI</p>
     </td></tr>
   </table>
 </td></tr>
 </table>
-<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 806-4952</div><img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div>
+<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.detroitwebagent.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Detroit Web Agency · Grosse Pointe, MI · (313) 806-4952</div></div>
 </body>
 </html>`;
 }
@@ -120,7 +120,7 @@ serve(async (req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "Matt Michels <matt@mattmichelstraining.com>",
+          from: "Matt Michels <matt@detroitwebagent.com>",
           to: [lead.email], bcc: ["matthewmichels4@gmail.com"],
           subject: `Checking back in — ${lead.business || "your website project"}`,
           html,
