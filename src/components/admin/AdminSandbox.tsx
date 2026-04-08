@@ -11,7 +11,8 @@ import { getAdminGuide } from "@/lib/admin-guides";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ExternalLink, Loader2, CheckCircle, AlertCircle, Zap, RefreshCw, Settings2 } from "lucide-react";
+import { ExternalLink, Loader2, CheckCircle, AlertCircle, Zap, RefreshCw, Settings2, Eye, Heart, ShieldAlert } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Product {
   id: string;
