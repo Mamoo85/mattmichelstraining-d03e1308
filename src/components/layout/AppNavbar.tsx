@@ -277,21 +277,33 @@ const AppNavbar = () => {
           )}
         </div>
 
-        {/* Mobile: bell + avatar */}
+        {/* Mobile: bell + avatar / agency mobile CTA */}
         <div className="md:hidden flex items-center gap-2">
-          {user && <Suspense fallback={null}><NotificationBell /></Suspense>}
-          {user ? (
-            <Link to="/profile" className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center">
-              <User size={16} className="text-primary" />
+          {isAgency ? (
+            <Link
+              to="/ai-website-audit"
+              className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest rounded-md"
+              style={{ background: "linear-gradient(135deg, #06b6d4, #22d3ee)", color: "#020617" }}
+            >
+              Free Audit
             </Link>
           ) : (
-            <Link
-              to="/auth"
-              aria-label="Login"
-              className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-widest text-primary"
-            >
-              <LogIn size={14} />
-            </Link>
+            <>
+              {user && <Suspense fallback={null}><NotificationBell /></Suspense>}
+              {user ? (
+                <Link to="/profile" className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center">
+                  <User size={16} className="text-primary" />
+                </Link>
+              ) : (
+                <Link
+                  to="/auth"
+                  aria-label="Login"
+                  className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-widest text-primary"
+                >
+                  <LogIn size={14} />
+                </Link>
+              )}
+            </>
           )}
         </div>
       </div>
