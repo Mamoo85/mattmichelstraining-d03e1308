@@ -40,7 +40,8 @@ serve(async (req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "M² System <matt@mattmichelstraining.com>",
+          from: "Detroit Web Agency <matt@detroitwebagent.com>",
+          reply_to: "matt@detroitwebagent.com",
           to: ["matt@mattmichelstraining.com"],
           bcc: ["matthewmichels4@gmail.com"],
           subject: `🔗 New Web Design Referral — ${friend_business || friend_email}`,
@@ -59,7 +60,8 @@ serve(async (req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "Matt Michels <matt@mattmichelstraining.com>",
+          from: "Matt Michels | Detroit Web Agency <matt@detroitwebagent.com>",
+          reply_to: "matt@detroitwebagent.com",
           to: [friend_email],
           bcc: ["matthewmichels4@gmail.com"],
           subject: `${referrer_name || "A friend"} thinks you'd be a great fit — free website consultation`,
@@ -71,7 +73,7 @@ serve(async (req) => {
     <p><strong>${referrer_name || "Someone you know"}</strong> thought you might benefit from a professional website for ${friend_business ? `<strong>${friend_business}</strong>` : "your business"}.</p>
     <p>I'm Matt Michels — I build websites for local businesses starting at $499. No templates, no page builders — real custom sites that actually generate leads.</p>
     <p>I'd love to offer you a <strong>free 15-minute consultation</strong> to see if we'd be a good fit. No pressure, no pitch — just an honest conversation about what your business needs online.</p>
-    <p><a href="https://www.mattmichelstraining.com/web-design-services?ref=${code}" style="display:inline-block;background:#e8621a;color:#fff;padding:12px 24px;text-decoration:none;font-weight:700;font-size:14px;margin:8px 0;">See My Work & Pricing →</a></p>
+    <p><a href="https://www.detroitwebagent.com/web-design-services?ref=${code}" style="display:inline-block;background:#e8621a;color:#fff;padding:12px 24px;text-decoration:none;font-weight:700;font-size:14px;margin:8px 0;">See My Work & Pricing →</a></p>
     <p>Or just reply to this email — I respond personally within a few hours.</p>
     <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;align-items:center;gap:12px;">
       <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" />
@@ -90,7 +92,8 @@ serve(async (req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "Matt Michels <matt@mattmichelstraining.com>",
+          from: "Matt Michels | Detroit Web Agency <matt@detroitwebagent.com>",
+          reply_to: "matt@detroitwebagent.com",
           to: [referrer_email],
           bcc: ["matthewmichels4@gmail.com"],
           subject: "Your referral is in — $50 coming your way if they sign up!",
