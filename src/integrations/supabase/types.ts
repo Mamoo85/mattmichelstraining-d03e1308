@@ -5939,12 +5939,20 @@ export type Database = {
           contact_name: string | null
           created_at: string | null
           deep_research: Json | null
+          drip_body: string | null
+          drip_status: string | null
+          drip_step: number | null
+          drip_subject: string | null
           email: string | null
+          gap_analysis: string | null
           gbp_claimed: boolean | null
           google_place_id: string | null
           google_rating: number | null
+          has_facebook: boolean | null
+          has_instagram: boolean | null
           id: string
           industry: string | null
+          last_drip_at: string | null
           n8n_sent_at: string | null
           pain_points: Json | null
           phone: string | null
@@ -5961,12 +5969,20 @@ export type Database = {
           contact_name?: string | null
           created_at?: string | null
           deep_research?: Json | null
+          drip_body?: string | null
+          drip_status?: string | null
+          drip_step?: number | null
+          drip_subject?: string | null
           email?: string | null
+          gap_analysis?: string | null
           gbp_claimed?: boolean | null
           google_place_id?: string | null
           google_rating?: number | null
+          has_facebook?: boolean | null
+          has_instagram?: boolean | null
           id?: string
           industry?: string | null
+          last_drip_at?: string | null
           n8n_sent_at?: string | null
           pain_points?: Json | null
           phone?: string | null
@@ -5983,12 +5999,20 @@ export type Database = {
           contact_name?: string | null
           created_at?: string | null
           deep_research?: Json | null
+          drip_body?: string | null
+          drip_status?: string | null
+          drip_step?: number | null
+          drip_subject?: string | null
           email?: string | null
+          gap_analysis?: string | null
           gbp_claimed?: boolean | null
           google_place_id?: string | null
           google_rating?: number | null
+          has_facebook?: boolean | null
+          has_instagram?: boolean | null
           id?: string
           industry?: string | null
+          last_drip_at?: string | null
           n8n_sent_at?: string | null
           pain_points?: Json | null
           phone?: string | null
