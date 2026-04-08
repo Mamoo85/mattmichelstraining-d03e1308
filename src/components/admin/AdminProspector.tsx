@@ -919,7 +919,99 @@ export default function AdminProspector() {
             </Card>
           )}
 
-          {/* Legacy Prospecting + Drip */}
+          {/* ═══ HYBRID RESULTS TABLE ═══ */}
+          {hybridResults.length > 0 && (
+            <Card className="border-cyan-500/30 bg-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Zap size={14} className="text-cyan-400" />
+                  <span className="text-cyan-400">Hybrid Results — Gap Analysis</span>
+                  <Badge className="text-[10px] bg-cyan-500/20 text-cyan-400 border-cyan-500/30">{hybridResults.length} leads</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-cyan-500/20 text-muted-foreground">
+                        <th className="text-left py-2 font-semibold">Business Name</th>
+                        <th className="text-left py-2 font-semibold">Phone</th>
+                        <th className="text-left py-2 font-semibold">Website</th>
+                        <th className="text-left py-2 font-semibold">Automation Gap Analysis</th>
+                        <th className="text-left py-2 font-semibold w-16">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {hybridResults.map((r, i) => (
+                        <tr key={i} className="border-b border-border/20 hover:bg-cyan-500/5 transition-colors">
+                          <td className="py-2.5 font-medium pr-3">
+                            <div className="flex items-center gap-1.5">
+                              <Building2 size={11} className="text-muted-foreground shrink-0" />
+                              <span>{r.title}</span>
+                            </div>
+                            {r.rating && (
+                              <span className="text-[9px] flex items-center gap-0.5 text-yellow-400 mt-0.5 ml-4">
+                                <Star size={8} className="fill-yellow-400" /> {r.rating} ({r.reviews || 0})
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-2.5 text-muted-foreground">
+                            {r.phone ? (
+                              <a href={`tel:${r.phone}`} className="flex items-center gap-1 hover:text-foreground">
+                                <Phone size={9} /> {r.phone}
+                              </a>
+                            ) : <span className="text-destructive/60">—</span>}
+                          </td>
+                          <td className="py-2.5">
+                            {r.website ? (
+                              <a href={r.website.startsWith("http") ? r.website : `https://${r.website}`} target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:text-cyan-300 hover:underline flex items-center gap-1 max-w-[180px] truncate">
+                                <ExternalLink size={9} className="shrink-0" /> {r.website.replace(/^https?:\/\//, "").slice(0, 30)}
+                              </a>
+                            ) : <span className="text-destructive/60">No site</span>}
+                          </td>
+                          <td className="py-2.5 max-w-[350px]">
+                            {r.gap_status === "done" && r.gap_analysis ? (
+                              <p className="text-amber-400/90 leading-snug text-[11px]">⚠ {r.gap_analysis}</p>
+                            ) : r.gap_status === "error" ? (
+                              <p className="text-destructive/60 text-[10px]">Analysis failed</p>
+                            ) : r.gap_status === "skipped" ? (
+                              <p className="text-muted-foreground text-[10px]">Skipped (no API key)</p>
+                            ) : (
+                              <div className="flex items-center gap-1.5 text-muted-foreground">
+                                <Loader2 size={10} className="animate-spin" /> Analyzing...
+                              </div>
+                            )}
+                          </td>
+                          <td className="py-2.5">
+                            {r.gap_status === "done" ? (
+                              <Badge className="text-[8px] bg-green-500/20 text-green-400 border-0">✓ Done</Badge>
+                            ) : r.gap_status === "error" ? (
+                              <Badge className="text-[8px] bg-destructive/20 text-destructive border-0">Error</Badge>
+                            ) : r.gap_status === "skipped" ? (
+                              <Badge variant="outline" className="text-[8px]">Skip</Badge>
+                            ) : (
+                              <Badge className="text-[8px] bg-cyan-500/20 text-cyan-400 border-0 animate-pulse">Live</Badge>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/30">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs gap-1"
+                    onClick={() => addToPipeline(hybridResults)}
+                  >
+                    <Plus size={12} /> Add All {hybridResults.length} to Pipeline
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <div className="grid sm:grid-cols-2 gap-4">
             <Card className="border-border/40">
               <CardHeader className="pb-3">
