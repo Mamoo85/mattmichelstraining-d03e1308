@@ -251,6 +251,11 @@ const PRODUCT_FIELDS: Record<string, CustomField[]> = {
     { key: "candidate_name", label: "Candidate Name", default: "Test Candidate" },
     { key: "candidate_email", label: "Candidate Email", default: "test@example.com" },
   ],
+  seo_guard_subscription: [
+    { key: "website_url", label: "Website URL", default: "https://mattmichelstraining.com" },
+    { key: "keywords", label: "Keywords (comma separated)", default: "personal training grosse pointe, fitness coach detroit" },
+    { key: "phone", label: "Phone", default: "+13138064952" },
+  ],
 };
 
 const PRODUCTS: Product[] = [
