@@ -838,7 +838,7 @@ export default function AdminProspector() {
                     Step 1: Finding businesses via Google Maps → Step 2: Running gap analysis on each website...
                   </span>
                 </div>
-              )
+              )}
             </CardContent>
           </Card>
 
