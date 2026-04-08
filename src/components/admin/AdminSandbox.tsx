@@ -11,7 +11,8 @@ import { getAdminGuide } from "@/lib/admin-guides";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ExternalLink, Loader2, CheckCircle, AlertCircle, Zap, RefreshCw, Settings2 } from "lucide-react";
+import { ExternalLink, Loader2, CheckCircle, AlertCircle, Zap, RefreshCw, Settings2, Eye, Heart, ShieldAlert } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Product {
   id: string;
@@ -316,7 +317,33 @@ export default function AdminSandbox() {
   const [statuses, setStatuses] = useState<Record<string, TestStatus>>({});
   const [modalProduct, setModalProduct] = useState<Product | null>(null);
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
+  const [previewData, setPreviewData] = useState<any>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
   const { toast } = useToast();
+
+  const PREVIEWABLE = ["pet_memorial_subscription", "employee_credential_audit"];
+
+  const runPreview = async (product: Product, overrides?: Record<string, string>) => {
+    setModalProduct(null);
+    setPreviewLoading(true);
+    setPreviewData(null);
+    try {
+      const body: Record<string, unknown> = { product: product.id };
+      if (overrides) {
+        const filtered: Record<string, string> = {};
+        Object.entries(overrides).forEach(([k, v]) => { if (v.trim()) filtered[k] = v.trim(); });
+        if (Object.keys(filtered).length > 0) body.overrides = filtered;
+      }
+      const { data, error } = await supabase.functions.invoke("generate-sample-preview", { body });
+      if (error) throw error;
+      setPreviewData(data);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      toast({ title: "Preview failed", description: msg, variant: "destructive" });
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
 
   const hasCustomFields = (productId: string) => !!PRODUCT_FIELDS[productId]?.length;
 
@@ -375,38 +402,59 @@ export default function AdminSandbox() {
       </CardHeader>
       <CardContent className="space-y-3">
         <p className="text-slate-400 text-xs leading-relaxed">{p.description}</p>
-        <div className="flex items-center gap-2">
-          {hasCustomFields(p.id) ? (
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            {hasCustomFields(p.id) ? (
+              <Button
+                onClick={() => openCustomize(p)}
+                disabled={statuses[p.id] === "loading"}
+                className={`flex-1 text-sm h-8 ${btnClass}`}
+              >
+                {statuses[p.id] === "loading" ? (
+                  <><Loader2 className="h-3 w-3 animate-spin mr-1" /> Opening...</>
+                ) : (
+                  <><Settings2 className="h-3 w-3 mr-1" /> Customize &amp; Test</>
+                )}
+              </Button>
+            ) : (
+              <Button
+                onClick={() => runTest(p)}
+                disabled={statuses[p.id] === "loading"}
+                className={`flex-1 text-sm h-8 ${btnClass}`}
+              >
+                {statuses[p.id] === "loading" ? (
+                  <><Loader2 className="h-3 w-3 animate-spin mr-1" /> Opening...</>
+                ) : (
+                  <><ExternalLink className="h-3 w-3 mr-1" /> Test $0</>
+                )}
+              </Button>
+            )}
+            {statuses[p.id] && statuses[p.id] !== "loading" && (
+              <button onClick={() => resetStatus(p.id)} className="text-slate-500 hover:text-slate-300">
+                <RefreshCw className="h-3 w-3" />
+              </button>
+            )}
+            <StatusIcon status={statuses[p.id] || "idle"} />
+          </div>
+          {PREVIEWABLE.includes(p.id) && (
             <Button
-              onClick={() => openCustomize(p)}
-              disabled={statuses[p.id] === "loading"}
-              className={`flex-1 text-sm h-8 ${btnClass}`}
+              onClick={() => {
+                const fields = PRODUCT_FIELDS[p.id] || [];
+                const defaults: Record<string, string> = {};
+                fields.forEach(f => { defaults[f.key] = f.default; });
+                runPreview(p, defaults);
+              }}
+              disabled={previewLoading}
+              variant="outline"
+              className="w-full text-sm h-8 border-emerald-600/50 text-emerald-400 hover:bg-emerald-900/30"
             >
-              {statuses[p.id] === "loading" ? (
-                <><Loader2 className="h-3 w-3 animate-spin mr-1" /> Opening...</>
+              {previewLoading ? (
+                <><Loader2 className="h-3 w-3 animate-spin mr-1" /> Generating...</>
               ) : (
-                <><Settings2 className="h-3 w-3 mr-1" /> Customize &amp; Test</>
-              )}
-            </Button>
-          ) : (
-            <Button
-              onClick={() => runTest(p)}
-              disabled={statuses[p.id] === "loading"}
-              className={`flex-1 text-sm h-8 ${btnClass}`}
-            >
-              {statuses[p.id] === "loading" ? (
-                <><Loader2 className="h-3 w-3 animate-spin mr-1" /> Opening...</>
-              ) : (
-                <><ExternalLink className="h-3 w-3 mr-1" /> Test $0</>
+                <><Eye className="h-3 w-3 mr-1" /> Preview Sample</>
               )}
             </Button>
           )}
-          {statuses[p.id] && statuses[p.id] !== "loading" && (
-            <button onClick={() => resetStatus(p.id)} className="text-slate-500 hover:text-slate-300">
-              <RefreshCw className="h-3 w-3" />
-            </button>
-          )}
-          <StatusIcon status={statuses[p.id] || "idle"} />
         </div>
       </CardContent>
     </Card>
@@ -452,7 +500,20 @@ export default function AdminSandbox() {
               </div>
             ))}
           </div>
-          <DialogFooter className="flex gap-2">
+          <DialogFooter className="flex flex-wrap gap-2">
+            {modalProduct && PREVIEWABLE.includes(modalProduct.id) && (
+              <Button
+                variant="outline"
+                className="border-emerald-600/50 text-emerald-400 hover:bg-emerald-900/30"
+                disabled={previewLoading}
+                onClick={() => {
+                  if (modalProduct) runPreview(modalProduct, fieldValues);
+                }}
+              >
+                {previewLoading ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Eye className="h-3 w-3 mr-1" />}
+                Preview Sample
+              </Button>
+            )}
             <Button
               variant="outline"
               className="border-slate-600 text-slate-300 hover:bg-slate-700"
@@ -471,6 +532,97 @@ export default function AdminSandbox() {
             >
               <Zap className="h-3 w-3 mr-1" />
               Test $0 with Custom Values
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Preview Results Modal */}
+      <Dialog open={!!previewData} onOpenChange={(open) => { if (!open) setPreviewData(null); }}>
+        <DialogContent className="bg-slate-900 border-slate-700 max-w-2xl max-h-[85vh]">
+          <DialogHeader>
+            <DialogTitle className="text-white flex items-center gap-2">
+              {previewData?.type === "pet_memorial" ? (
+                <><Heart className="h-5 w-5 text-amber-500" /> Pet Memorial Preview</>
+              ) : (
+                <><ShieldAlert className="h-5 w-5 text-red-500" /> Credential Audit Preview</>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[65vh] pr-4">
+            {previewData?.type === "pet_memorial" && (
+              <div className="space-y-6">
+                <div className="bg-stone-800 rounded-lg p-6 text-center">
+                  <Badge className="bg-amber-700/30 text-amber-300 border-amber-600/40 mb-3">In Loving Memory</Badge>
+                  <h3 className="text-2xl font-bold text-amber-50 font-serif">{previewData.pet_name}</h3>
+                  <p className="text-amber-300 text-sm">{previewData.breed} · {previewData.species}</p>
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-widest text-amber-500 mb-3">A Poem from {previewData.pet_name}</h4>
+                  <div className="bg-slate-800 border-l-4 border-amber-500 rounded-r-lg p-4">
+                    {previewData.poem?.split("\n").filter(Boolean).map((line: string, i: number) => (
+                      <p key={i} className="text-slate-300 italic font-serif leading-loose text-sm">{line}</p>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-widest text-amber-500 mb-3">A Tribute to {previewData.pet_name}</h4>
+                  {previewData.tribute?.split("\n\n").filter(Boolean).map((para: string, i: number) => (
+                    <p key={i} className="text-slate-300 text-sm leading-relaxed mb-3">{para}</p>
+                  ))}
+                </div>
+                <div className="bg-amber-900/20 border border-amber-700/30 rounded-lg p-4">
+                  <h4 className="text-xs font-bold uppercase tracking-widest text-amber-500 mb-2">Social Caption</h4>
+                  <p className="text-slate-300 text-sm">{previewData.social_caption}</p>
+                </div>
+              </div>
+            )}
+            {previewData?.type === "employee_credential_audit" && (
+              <div className="space-y-5">
+                <div className="bg-slate-800 rounded-lg p-4">
+                  <h3 className="text-white font-bold text-lg mb-1">{previewData.company_name}</h3>
+                  <p className="text-slate-400 text-sm">{previewData.summary}</p>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="bg-slate-800 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-bold text-white">{previewData.emails_scanned}</p>
+                    <p className="text-slate-400 text-xs">Emails Scanned</p>
+                  </div>
+                  <div className="bg-slate-800 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-bold text-orange-400">{previewData.total_breaches_found}</p>
+                    <p className="text-slate-400 text-xs">Breaches Found</p>
+                  </div>
+                  <div className="bg-slate-800 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-bold text-red-400">{previewData.critical_accounts}</p>
+                    <p className="text-slate-400 text-xs">Critical</p>
+                  </div>
+                </div>
+                {previewData.results?.map((r: any, i: number) => (
+                  <div key={i} className="bg-slate-800 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-white text-sm font-mono">{r.email}</span>
+                      <Badge className={r.severity === "critical" ? "bg-red-500/20 text-red-400 border-red-500/30" : r.severity === "clean" ? "bg-green-500/20 text-green-400 border-green-500/30" : "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"}>
+                        {r.severity} — {r.breach_count} breach(es)
+                      </Badge>
+                    </div>
+                    {r.breaches?.slice(0, 3).map((b: any, j: number) => (
+                      <div key={j} className="ml-3 mt-2 border-l-2 border-slate-600 pl-3">
+                        <p className="text-slate-300 text-xs font-bold">{b.name} <span className="text-slate-500 font-normal">({b.date})</span></p>
+                        <p className="text-slate-500 text-xs">{b.data_classes?.join(", ")}</p>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+                <div className="bg-blue-900/20 border border-blue-700/30 rounded-lg p-4">
+                  <h4 className="text-blue-400 text-xs font-bold uppercase tracking-widest mb-2">Recommendation</h4>
+                  <p className="text-slate-300 text-sm">{previewData.recommendation}</p>
+                </div>
+              </div>
+            )}
+          </ScrollArea>
+          <DialogFooter>
+            <Button variant="outline" className="border-slate-600 text-slate-300" onClick={() => setPreviewData(null)}>
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>
