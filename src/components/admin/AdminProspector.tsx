@@ -691,6 +691,39 @@ export default function AdminProspector() {
     finally { setBatchProcessing(false); }
   };
 
+  // ── Fetch Sent Emails ──
+  const fetchSentEmails = useCallback(async () => {
+    setLoadingSent(true);
+    try {
+      const { data, error } = await (supabase as any)
+        .from("prospect_email_log")
+        .select("*")
+        .order("sent_at", { ascending: false })
+        .limit(500);
+      if (error) throw error;
+      setSentEmails(data || []);
+    } catch { toast.error("Failed to load sent emails"); }
+    finally { setLoadingSent(false); }
+  }, []);
+
+  // ── Archive Outreach-Sent Leads ──
+  const archiveSentLeads = async () => {
+    const sentLeads = pipelineLeads.filter(l => l.pipeline_stage === "outreach_sent");
+    if (sentLeads.length === 0) { toast.info("No outreach-sent leads to archive"); return; }
+    setArchiving(true);
+    try {
+      const ids = sentLeads.map(l => l.id);
+      const { error } = await (supabase as any)
+        .from("prospect_pipeline")
+        .update({ pipeline_stage: "archived" })
+        .in("id", ids);
+      if (error) throw error;
+      toast.success(`Archived ${ids.length} leads`);
+      fetchPipeline();
+    } catch { toast.error("Archive failed"); }
+    finally { setArchiving(false); }
+  };
+
   // ── Send to n8n ──
   const sendToN8n = async (lead: PipelineLead) => {
     setSendingId(lead.id);
