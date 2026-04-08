@@ -20,7 +20,7 @@ async function sonarResearch(query: string): Promise<string> {
         "X-Title": "M2 Competitor Watch",
       },
       body: JSON.stringify({
-        model: "perplexity/sonar",
+        model: "perplexity/sonar-reasoning",
         messages: [{ role: "user", content: query }],
         max_tokens: 600,
       }),
