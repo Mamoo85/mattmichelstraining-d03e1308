@@ -7156,6 +7156,116 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_guard_clients: {
+        Row: {
+          active: boolean | null
+          business_name: string | null
+          created_at: string | null
+          email: string
+          gsc_property_url: string | null
+          id: string
+          keywords: string[] | null
+          last_report_at: string | null
+          last_scan_at: string | null
+          phone: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          trial_ends_at: string | null
+          website_url: string
+        }
+        Insert: {
+          active?: boolean | null
+          business_name?: string | null
+          created_at?: string | null
+          email: string
+          gsc_property_url?: string | null
+          id?: string
+          keywords?: string[] | null
+          last_report_at?: string | null
+          last_scan_at?: string | null
+          phone?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_ends_at?: string | null
+          website_url: string
+        }
+        Update: {
+          active?: boolean | null
+          business_name?: string | null
+          created_at?: string | null
+          email?: string
+          gsc_property_url?: string | null
+          id?: string
+          keywords?: string[] | null
+          last_report_at?: string | null
+          last_scan_at?: string | null
+          phone?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_ends_at?: string | null
+          website_url?: string
+        }
+        Relationships: []
+      }
+      seo_guard_scans: {
+        Row: {
+          ai_summary: string | null
+          alert_sent: boolean | null
+          citation_score: number | null
+          client_id: string | null
+          created_at: string | null
+          deindexed_pages: string[] | null
+          id: string
+          indexed_pages: number | null
+          js_gap_detected: boolean | null
+          js_visibility_score: number | null
+          keyword_ranks: Json | null
+          rank_drops: Json | null
+          report_sent_at: string | null
+          scan_date: string
+        }
+        Insert: {
+          ai_summary?: string | null
+          alert_sent?: boolean | null
+          citation_score?: number | null
+          client_id?: string | null
+          created_at?: string | null
+          deindexed_pages?: string[] | null
+          id?: string
+          indexed_pages?: number | null
+          js_gap_detected?: boolean | null
+          js_visibility_score?: number | null
+          keyword_ranks?: Json | null
+          rank_drops?: Json | null
+          report_sent_at?: string | null
+          scan_date: string
+        }
+        Update: {
+          ai_summary?: string | null
+          alert_sent?: boolean | null
+          citation_score?: number | null
+          client_id?: string | null
+          created_at?: string | null
+          deindexed_pages?: string[] | null
+          id?: string
+          indexed_pages?: number | null
+          js_gap_detected?: boolean | null
+          js_visibility_score?: number | null
+          keyword_ranks?: Json | null
+          rank_drops?: Json | null
+          report_sent_at?: string | null
+          scan_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seo_guard_scans_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "seo_guard_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       seo_landing_pages: {
         Row: {
           created_at: string
