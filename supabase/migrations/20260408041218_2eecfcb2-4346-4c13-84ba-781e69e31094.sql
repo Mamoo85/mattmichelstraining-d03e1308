@@ -1,0 +1,1 @@
+ALTER TABLE public.prospect_pipeline ADD COLUMN IF NOT EXISTS deep_research JSONB;

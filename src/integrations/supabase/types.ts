@@ -5938,6 +5938,7 @@ export type Database = {
           city: string | null
           contact_name: string | null
           created_at: string | null
+          deep_research: Json | null
           email: string | null
           gbp_claimed: boolean | null
           google_place_id: string | null
@@ -5959,6 +5960,7 @@ export type Database = {
           city?: string | null
           contact_name?: string | null
           created_at?: string | null
+          deep_research?: Json | null
           email?: string | null
           gbp_claimed?: boolean | null
           google_place_id?: string | null
@@ -5980,6 +5982,7 @@ export type Database = {
           city?: string | null
           contact_name?: string | null
           created_at?: string | null
+          deep_research?: Json | null
           email?: string | null
           gbp_claimed?: boolean | null
           google_place_id?: string | null

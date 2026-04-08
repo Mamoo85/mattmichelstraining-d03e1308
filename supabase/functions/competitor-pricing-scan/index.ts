@@ -13,6 +13,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
+const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -203,11 +204,36 @@ serve(async (req) => {
             const oldSnippet = "Prior version — content hash changed";
             const newSnippet = text.slice(0, 600);
 
+            // Enrich with live Sonar research
+            let sonarContext = "";
+            if (OPENROUTER_API_KEY && trackedUrl.competitor_name) {
+              try {
+                const sonarRes = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                  method: "POST",
+                  headers: {
+                    Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+                    "Content-Type": "application/json",
+                    "HTTP-Referer": "https://mattmichelstraining.com",
+                    "X-Title": "M2 Pricing Intelligence",
+                  },
+                  body: JSON.stringify({
+                    model: "perplexity/sonar",
+                    messages: [{ role: "user", content: `What are ${trackedUrl.competitor_name}'s current publicly listed prices and any recent pricing announcements or promotions?` }],
+                    max_tokens: 400,
+                  }),
+                });
+                if (sonarRes.ok) {
+                  const sonarData = await sonarRes.json();
+                  sonarContext = sonarData?.choices?.[0]?.message?.content || "";
+                }
+              } catch { /* sonar enrichment is optional */ }
+            }
+
             const diffPrompt = `A competitor's pricing page has changed. Here is the new content (first 600 chars of visible text):
 
 "${newSnippet}"
 
-The previous content was different. Based on this new content, in 1-2 concise sentences describe what appears to have changed about their pricing, packages, or offers. Be specific. If nothing pricing-related is clear, say "General content update detected."`;
+${sonarContext ? `Live web research about their pricing:\n"${sonarContext.slice(0, 500)}"\n\n` : ""}The previous content was different. Based on this new content and any live research, in 1-2 concise sentences describe what appears to have changed about their pricing, packages, or offers. Be specific. If nothing pricing-related is clear, say "General content update detected."`;
 
             const changeSummary = await callClaude(diffPrompt);
 

@@ -84,6 +84,7 @@ interface PipelineLead {
   google_place_id: string | null;
   pipeline_stage: string;
   pain_points: string[] | null;
+  deep_research: { summary: string; citations: string[]; researched_at: string } | null;
   n8n_sent_at: string | null;
   source: string | null;
   created_at: string | null;
@@ -169,13 +170,15 @@ function normalizeDripConversion(r: any): UnifiedLead {
 }
 
 // ── Kanban Lead Card (Sortable) ──
-function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, auditing, sending }: {
+function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, auditing, sending, researching }: {
   lead: PipelineLead;
   onAudit: (lead: PipelineLead) => void;
   onSendN8n: (lead: PipelineLead) => void;
   onMoveStage: (lead: PipelineLead, stage: string) => void;
+  onDeepResearch: (lead: PipelineLead) => void;
   auditing: boolean;
   sending: boolean;
+  researching: boolean;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: lead.id,
@@ -224,12 +227,48 @@ function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, auditing, sending }
         </div>
       )}
 
+      {/* Deep Research results */}
+      {lead.deep_research?.summary && (
+        <div className="space-y-1 border-t border-border/30 pt-2">
+          <p className="text-[9px] font-semibold text-cyan-400 flex items-center gap-1">
+            <Globe size={9} /> Live Web Intel
+          </p>
+          <p className="text-[9px] text-foreground/80 leading-tight whitespace-pre-line">
+            {lead.deep_research.summary.slice(0, 500)}
+          </p>
+          {lead.deep_research.citations?.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-1">
+              {lead.deep_research.citations.slice(0, 3).map((c, i) => (
+                <a key={i} href={c} target="_blank" rel="noopener noreferrer" className="text-[8px] text-cyan-400/70 hover:text-cyan-300 underline truncate max-w-[120px]">
+                  [{i + 1}]
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Actions */}
-      <div className="flex items-center gap-1 pt-1 border-t border-border/30">
+      <div className="flex items-center gap-1 pt-1 border-t border-border/30 flex-wrap">
         {lead.pipeline_stage === "new_lead" && (
           <Button variant="outline" size="sm" className="h-6 text-[9px] px-2 gap-1" disabled={auditing} onClick={() => onAudit(lead)}>
             {auditing ? <Loader2 size={10} className="animate-spin" /> : <Crosshair size={10} />}
             Audit
+          </Button>
+        )}
+        {!lead.deep_research && (
+          <Button variant="outline" size="sm" className="h-6 text-[9px] px-2 gap-1 border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10" disabled={researching} onClick={() => onDeepResearch(lead)}>
+            {researching ? (
+              <>
+                <Loader2 size={10} className="animate-spin" />
+                <span>Scouring the live web...</span>
+              </>
+            ) : (
+              <>
+                <Globe size={10} />
+                Deep Research
+              </>
+            )}
           </Button>
         )}
         {(lead.pipeline_stage === "website_audited" || lead.pain_points?.length) && !lead.n8n_sent_at && (
@@ -255,14 +294,16 @@ function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, auditing, sending }
 }
 
 // ── Kanban Column ──
-function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, auditingId, sendingId }: {
+function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, onDeepResearch, auditingId, sendingId, researchingId }: {
   stage: typeof PIPELINE_STAGES[0];
   leads: PipelineLead[];
   onAudit: (lead: PipelineLead) => void;
   onSendN8n: (lead: PipelineLead) => void;
   onMoveStage: (lead: PipelineLead, stage: string) => void;
+  onDeepResearch: (lead: PipelineLead) => void;
   auditingId: string | null;
   sendingId: string | null;
+  researchingId: string | null;
 }) {
   return (
     <div className="flex-1 min-w-[220px] max-w-[300px]">
@@ -279,8 +320,10 @@ function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, auditingI
               onAudit={onAudit}
               onSendN8n={onSendN8n}
               onMoveStage={onMoveStage}
+              onDeepResearch={onDeepResearch}
               auditing={auditingId === lead.id}
               sending={sendingId === lead.id}
+              researching={researchingId === lead.id}
             />
           ))}
         </SortableContext>
@@ -310,6 +353,7 @@ export default function AdminProspector() {
   const [auditingId, setAuditingId] = useState<string | null>(null);
   const [sendingId, setSendingId] = useState<string | null>(null);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
+  const [researchingId, setResearchingId] = useState<string | null>(null);
 
   // ── All Leads Tab State ──
   const [activeLeadTab, setActiveLeadTab] = useState("all");
@@ -408,14 +452,42 @@ export default function AdminProspector() {
       if (data?.pain_points) {
         await (supabase as any).from("prospect_pipeline").update({
           pain_points: data.pain_points,
+          deep_research: data.deep_research || null,
           pipeline_stage: "website_audited",
           updated_at: new Date().toISOString(),
         }).eq("id", lead.id);
-        setPipelineLeads(prev => prev.map(l => l.id === lead.id ? { ...l, pain_points: data.pain_points, pipeline_stage: "website_audited" } : l));
-        toast.success("Audit complete — 3 pain points found");
+        setPipelineLeads(prev => prev.map(l => l.id === lead.id ? { ...l, pain_points: data.pain_points, deep_research: data.deep_research || null, pipeline_stage: "website_audited" } : l));
+        toast.success("Audit complete — pain points + deep research found");
       }
     } catch (err) { toast.error(err instanceof Error ? err.message : "Audit failed"); }
     finally { setAuditingId(null); }
+  };
+
+  // ── Deep Research (standalone) ──
+  const deepResearch = async (lead: PipelineLead) => {
+    setResearchingId(lead.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("openrouter-research", {
+        body: {
+          query: `Search the web for recent news, services, reviews, and business developments for "${lead.business_name}" ${lead.industry ? `in the ${lead.industry} industry` : ""} ${lead.city ? `in ${lead.city}` : ""}. What are their current pain points, recent changes, or competitive weaknesses? Return 3 concise bullet points of factual, recent intel.`,
+        },
+      });
+      if (error) throw error;
+      if (data?.content) {
+        const researchData = {
+          summary: data.content,
+          citations: data.citations || [],
+          researched_at: new Date().toISOString(),
+        };
+        await (supabase as any).from("prospect_pipeline").update({
+          deep_research: researchData,
+          updated_at: new Date().toISOString(),
+        }).eq("id", lead.id);
+        setPipelineLeads(prev => prev.map(l => l.id === lead.id ? { ...l, deep_research: researchData } : l));
+        toast.success("Deep research complete — live web intel captured");
+      }
+    } catch (err) { toast.error(err instanceof Error ? err.message : "Research failed"); }
+    finally { setResearchingId(null); }
   };
 
   // ── Send to n8n ──
@@ -861,8 +933,10 @@ export default function AdminProspector() {
                     onAudit={auditWebsite}
                     onSendN8n={sendToN8n}
                     onMoveStage={(lead, s) => updatePipelineStage(lead.id, s)}
+                    onDeepResearch={deepResearch}
                     auditingId={auditingId}
                     sendingId={sendingId}
+                    researchingId={researchingId}
                   />
                 </SortableContext>
               ))}
