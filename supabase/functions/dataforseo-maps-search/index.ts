@@ -65,14 +65,16 @@ serve(async (req) => {
     const task = raw.tasks?.[0];
     const items = task?.result?.[0]?.items || [];
 
+    console.log(`[DATAFORSEO-MAPS] Item types found: ${[...new Set(items.map((i: any) => i.type))].join(", ") || "none"}, total items: ${items.length}`);
+
     const results = items
-      .filter((item: any) => item.type === "maps_search")
+      .filter((item: any) => item.type === "maps_search" || item.type === "maps_paid" || item.type === "organic")
       .slice(0, limit)
       .map((item: any) => ({
         title: item.title || "",
         rating: item.rating?.value ?? null,
         reviews: item.rating?.votes_count ?? 0,
-        address: item.address || "",
+        address: item.address || item.address_info?.address || "",
         phone: item.phone || null,
         website: item.url || item.domain || null,
         category: item.category || "",
