@@ -123,7 +123,7 @@ const AppNavbar = () => {
   const agencyToolsActive = agencyToolsLinks.some((l) => location.pathname === l.to);
 
   return (
-    <nav aria-label="Main navigation" className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50 pt-[env(safe-area-inset-top)]">
+    <nav aria-label="Main navigation" className={`fixed top-0 left-0 right-0 z-50 pt-[env(safe-area-inset-top)] ${isAgency ? "backdrop-blur-xl border-b" : "bg-background/80 backdrop-blur-xl border-b border-border/50"}`} style={isAgency ? { background: "rgba(10,10,15,0.85)", borderColor: "rgba(148,163,184,0.08)" } : undefined}>
       <div className="container flex items-center justify-between h-14">
         {/* Logo / Timer toggle */}
         {!isAgency && user && ["/dashboard", "/progress", "/coach", "/nutrition", "/profile"].includes(location.pathname) ? (
@@ -138,7 +138,7 @@ const AppNavbar = () => {
         ) : (
           <Link to="/" className="flex items-center gap-1.5 group transition-m2 shrink-0">
             {isAgency ? (
-              <span className="text-sm font-black uppercase tracking-wider text-foreground">Detroit Web Agency</span>
+              <span className="text-sm font-black uppercase tracking-wider" style={{ color: "#f1f5f9" }}>Detroit Web Agency</span>
             ) : (
               <img src={m2Logo} alt="M2 Training" width={36} height={36} className="w-9 h-9 object-contain" />
             )}
