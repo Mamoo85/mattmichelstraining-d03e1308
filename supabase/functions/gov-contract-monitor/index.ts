@@ -175,24 +175,6 @@ Respond with ONLY a JSON object (no markdown, no explanation):
   "recommendation": <"bid" | "review" | "no-bid">,
   "summary": <2 sentences: why this is or isn't a good fit>
 }`;
-- Company: ${client.company_name}
-- NAICS codes they work in: ${client.naics_codes || "not specified"}
-- Keywords/capabilities: ${client.keywords || "not specified"}
-- Set-aside types they qualify for: ${client.set_aside_types || "not specified"}
-
-OPPORTUNITY:
-- Title: ${opp.title}
-- Agency: ${opp.fullParentPathName || "Unknown Agency"}
-- NAICS Code: ${opp.naicsCode || "N/A"}
-- Set-Aside Type: ${opp.typeOfSetAside || "Full and Open"}
-- Response Deadline: ${opp.responseDeadLine || "N/A"}
-
-Respond with ONLY a JSON object (no markdown, no explanation):
-{
-  "score": <integer 0-100, how well this matches the company>,
-  "recommendation": <"bid" | "review" | "no-bid">,
-  "summary": <2 sentences: why this is or isn't a good fit>
-}`;
 
   try {
     const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -205,7 +187,7 @@ Respond with ONLY a JSON object (no markdown, no explanation):
       body: JSON.stringify({
         model: "claude-haiku-4-5",
         max_tokens: 256,
-        messages: [{ role: "user", content: prompt }],
+        messages: [{ role: "user", content: fullPrompt }],
       }),
     });
 
