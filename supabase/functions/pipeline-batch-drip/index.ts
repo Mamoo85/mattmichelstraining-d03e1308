@@ -168,7 +168,8 @@ Return ONLY valid JSON, no markdown.`;
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            from: "Matt Michels | Detroit Web Agency <matt@mattmichelstraining.com>",
+            from: "Matt Michels | Detroit Web Agency <matt@detroitwebagent.com>",
+            reply_to: "matt@detroitwebagent.com",
             to: [lead.email],
             bcc: ["matthewmichels4@gmail.com"],
             subject,
@@ -190,6 +191,18 @@ Return ONLY valid JSON, no markdown.`;
           }
           throw new Error(`Email send failed: ${emailRes.status} ${errText}`);
         }
+
+        // Log to prospect_email_log
+        const resendData = await emailRes.json();
+        await sb.from("prospect_email_log").insert({
+          pipeline_lead_id: lead.id,
+          business_name: lead.business_name,
+          recipient_email: lead.email,
+          subject,
+          drip_step: currentStep,
+          status: "sent",
+          resend_id: resendData?.id || null,
+        });
 
         // Update pipeline lead
         await sb.from("prospect_pipeline").update({

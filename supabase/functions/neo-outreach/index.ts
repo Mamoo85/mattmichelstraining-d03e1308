@@ -280,8 +280,10 @@ serve(async (req) => {
           method: "POST",
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            from: "Matt Michels <matt@mattmichelstraining.com>",
+            from: "Matt Michels <matt@detroitwebagent.com>",
+            reply_to: "matt@detroitwebagent.com",
             to: [prospect.email],
+            bcc: ["matthewmichels4@gmail.com"],
             subject,
             html,
           }),
@@ -345,7 +347,7 @@ serve(async (req) => {
         await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [f.email], subject: followSubject, html: followHtml }),
+          body: JSON.stringify({ from: "Matt Michels <matt@detroitwebagent.com>", reply_to: "matt@detroitwebagent.com", to: [f.email], bcc: ["matthewmichels4@gmail.com"], subject: followSubject, html: followHtml }),
         });
         await sb.from("prospect_outreach").insert({ prospect_id: f.prospect_id, email: f.email, business_name: f.business_name, outreach_type: "follow_up_1", subject: followSubject, status: "sent" });
       }
@@ -390,7 +392,7 @@ serve(async (req) => {
         await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [f.email], subject: breakupSubject, html: breakupHtml }),
+          body: JSON.stringify({ from: "Matt Michels <matt@detroitwebagent.com>", reply_to: "matt@detroitwebagent.com", to: [f.email], bcc: ["matthewmichels4@gmail.com"], subject: breakupSubject, html: breakupHtml }),
         });
         await sb.from("prospect_outreach").insert({ prospect_id: f.prospect_id, email: f.email, business_name: f.business_name, outreach_type: "follow_up_2", subject: breakupSubject, status: "sent" });
         // Mark prospect as fully sequenced
