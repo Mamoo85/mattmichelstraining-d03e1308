@@ -13,8 +13,8 @@ serve(async (req) => {
       customer_email: email,
       metadata: { type: "trade_show_followup_subscription", email, businessName: businessName || email, contactName: contactName || "", industry: industry || "", targetTitle: targetTitle || "" },
       line_items: [{ price_data: { currency: "usd", unit_amount: 4900, recurring: { interval: "month" }, product_data: { name: "AI Trade Show Follow-Up" } }, quantity: 1 }],
-      success_url: `${req.headers.get("origin") || "https://mattmichelstraining.com"}/trade-show-followup?status=success`,
-      cancel_url: `${req.headers.get("origin") || "https://mattmichelstraining.com"}/trade-show-followup`,
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/trade-show-followup?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/trade-show-followup`,
     });
     return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: { ...cors, "Content-Type": "application/json" } });
   } catch (e) { return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: cors }); }

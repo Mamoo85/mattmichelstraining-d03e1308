@@ -13,8 +13,8 @@ serve(async (req) => {
       customer_email: email,
       metadata: { type: "annual_review_subscription", email, businessName: businessName || email, contactName: contactName || "", industry: industry || "", targetTitle: targetTitle || "" },
       line_items: [{ price_data: { currency: "usd", unit_amount: 7900, recurring: { interval: "month" }, product_data: { name: "AI Annual Business Review" } }, quantity: 1 }],
-      success_url: `${req.headers.get("origin") || "https://mattmichelstraining.com"}/annual-business-review?status=success`,
-      cancel_url: `${req.headers.get("origin") || "https://mattmichelstraining.com"}/annual-business-review`,
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/annual-business-review?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/annual-business-review`,
     });
     return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: { ...cors, "Content-Type": "application/json" } });
   } catch (e) { return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: cors }); }

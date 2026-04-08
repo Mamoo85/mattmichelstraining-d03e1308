@@ -27,7 +27,7 @@ serve(async (req) => {
       });
     }
 
-    const siteUrl = Deno.env.get("PUBLIC_SITE_URL") || "https://mattmichelstraining.com";
+    const siteUrl = Deno.env.get("PUBLIC_SITE_URL") || "https://www.detroitwebagent.com";
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",

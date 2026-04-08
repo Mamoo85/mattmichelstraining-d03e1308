@@ -29,7 +29,7 @@ serve(async (req) => {
     });
 
     const rawOrigin =
-      req.headers.get("origin") || "https://www.mattmichelstraining.com";
+      req.headers.get("origin") || "https://www.detroitwebagent.com";
     const ALLOWED = [
       "https://www.mattmichelstraining.com",
       "https://mattmichelstraining.com",
