@@ -426,7 +426,7 @@ function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, onDeepRes
 
 // ── Component ──
 export default function AdminProspector() {
-  const [mainTab, setMainTab] = useState<"search" | "pipeline" | "leads">("search");
+  const [mainTab, setMainTab] = useState<"search" | "pipeline" | "sent" | "leads">("search");
 
   // ── Search Tab State ──
   const [searchIndustry, setSearchIndustry] = useState("");
@@ -453,6 +453,11 @@ export default function AdminProspector() {
   const [previewLead, setPreviewLead] = useState<PipelineLead | null>(null);
   const [selectedPipelineIds, setSelectedPipelineIds] = useState<Set<string>>(new Set());
   const [batchProcessing, setBatchProcessing] = useState(false);
+
+  // ── Sent Log State ──
+  const [sentEmails, setSentEmails] = useState<any[]>([]);
+  const [loadingSent, setLoadingSent] = useState(false);
+  const [archiving, setArchiving] = useState(false);
 
   // ── All Leads Tab State ──
   const [activeLeadTab, setActiveLeadTab] = useState("all");
@@ -686,6 +691,39 @@ export default function AdminProspector() {
     finally { setBatchProcessing(false); }
   };
 
+  // ── Fetch Sent Emails ──
+  const fetchSentEmails = useCallback(async () => {
+    setLoadingSent(true);
+    try {
+      const { data, error } = await (supabase as any)
+        .from("prospect_email_log")
+        .select("*")
+        .order("sent_at", { ascending: false })
+        .limit(500);
+      if (error) throw error;
+      setSentEmails(data || []);
+    } catch { toast.error("Failed to load sent emails"); }
+    finally { setLoadingSent(false); }
+  }, []);
+
+  // ── Archive Outreach-Sent Leads ──
+  const archiveSentLeads = async () => {
+    const sentLeads = pipelineLeads.filter(l => l.pipeline_stage === "outreach_sent");
+    if (sentLeads.length === 0) { toast.info("No outreach-sent leads to archive"); return; }
+    setArchiving(true);
+    try {
+      const ids = sentLeads.map(l => l.id);
+      const { error } = await (supabase as any)
+        .from("prospect_pipeline")
+        .update({ pipeline_stage: "archived" })
+        .in("id", ids);
+      if (error) throw error;
+      toast.success(`Archived ${ids.length} leads`);
+      fetchPipeline();
+    } catch { toast.error("Archive failed"); }
+    finally { setArchiving(false); }
+  };
+
   // ── Send to n8n ──
   const sendToN8n = async (lead: PipelineLead) => {
     setSendingId(lead.id);
@@ -808,6 +846,7 @@ export default function AdminProspector() {
 
   useEffect(() => { if (mainTab === "leads") fetchLeads(); }, [activeLeadTab, mainTab]);
   useEffect(() => { if (mainTab === "pipeline") fetchPipeline(); }, [mainTab, fetchPipeline]);
+  useEffect(() => { if (mainTab === "sent") fetchSentEmails(); }, [mainTab, fetchSentEmails]);
 
   // ── Filtering + Sorting ──
   const filtered = useMemo(() => {
@@ -942,6 +981,7 @@ export default function AdminProspector() {
         {[
           { key: "search" as const, label: "Search", icon: Search },
           { key: "pipeline" as const, label: "Pipeline", icon: Kanban },
+          { key: "sent" as const, label: "Sent Log", icon: Mail },
           { key: "leads" as const, label: "All Leads", icon: Users },
         ].map(t => (
           <button
@@ -1336,6 +1376,16 @@ export default function AdminProspector() {
               {batchProcessing ? <Loader2 size={10} className="animate-spin" /> : <Mail size={10} />}
               Generate & Send {selectedPipelineIds.size > 0 ? selectedPipelineIds.size : "All"}
             </Button>
+            <div className="ml-auto">
+              <Button
+                variant="outline" size="sm" className="text-xs h-7 gap-1 border-red-500/30 text-red-400 hover:bg-red-500/10"
+                disabled={archiving}
+                onClick={archiveSentLeads}
+              >
+                {archiving ? <Loader2 size={10} className="animate-spin" /> : <Trash2 size={10} />}
+                Clear Sent ({pipelineLeads.filter(l => l.pipeline_stage === "outreach_sent").length})
+              </Button>
+            </div>
           </div>
 
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
@@ -1387,6 +1437,82 @@ export default function AdminProspector() {
                 <p className="text-sm text-muted-foreground">No leads in pipeline yet. Use <strong>Search</strong> to find businesses and add them.</p>
               </CardContent>
             </Card>
+          )}
+        </div>
+      )}
+
+      {/* ═══════════ SENT LOG TAB ═══════════ */}
+      {mainTab === "sent" && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold flex items-center gap-2">
+              <Mail size={14} className="text-primary" /> Prospect Email Log
+            </h3>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-[10px]">{sentEmails.length} emails</Badge>
+              <Button variant="outline" size="sm" className="text-xs h-7 gap-1" onClick={fetchSentEmails} disabled={loadingSent}>
+                <RefreshCw size={10} className={loadingSent ? "animate-spin" : ""} /> Refresh
+              </Button>
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {[
+              { label: "Total Sent", value: sentEmails.length, color: "text-foreground" },
+              { label: "Step 1", value: sentEmails.filter((e: any) => e.drip_step === 1).length, color: "text-blue-400" },
+              { label: "Step 2", value: sentEmails.filter((e: any) => e.drip_step === 2).length, color: "text-purple-400" },
+              { label: "Step 3+", value: sentEmails.filter((e: any) => (e.drip_step || 0) >= 3).length, color: "text-green-400" },
+            ].map(s => (
+              <div key={s.label} className="text-center p-2 bg-muted/20 rounded-lg">
+                <p className={`text-lg font-bold ${s.color}`}>{s.value}</p>
+                <p className="text-[9px] text-muted-foreground">{s.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {loadingSent ? (
+            <div className="text-center py-8">
+              <Loader2 className="animate-spin mx-auto text-muted-foreground" size={20} />
+              <p className="text-xs text-muted-foreground mt-2">Loading sent emails...</p>
+            </div>
+          ) : sentEmails.length === 0 ? (
+            <Card className="border-border/40 border-dashed">
+              <CardContent className="py-12 text-center">
+                <Mail size={24} className="mx-auto text-muted-foreground mb-2" />
+                <p className="text-sm text-muted-foreground">No emails sent yet. Use the Pipeline tab to draft and send emails.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-1.5 max-h-[600px] overflow-y-auto">
+              {sentEmails.map((email: any) => (
+                <Card key={email.id} className="border-border/30">
+                  <CardContent className="p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <Badge className="text-[8px] bg-green-500/20 text-green-400 border-0">{email.status || "sent"}</Badge>
+                          <Badge variant="outline" className="text-[8px]">Step {email.drip_step || "?"}</Badge>
+                          {email.resend_id && (
+                            <span className="text-[8px] text-muted-foreground font-mono">{email.resend_id.slice(0, 12)}...</span>
+                          )}
+                        </div>
+                        <p className="text-xs font-semibold truncate">{email.business_name || "Unknown"}</p>
+                        <p className="text-[10px] text-muted-foreground truncate">{email.recipient_email}</p>
+                        {email.subject && (
+                          <p className="text-[10px] text-foreground/70 truncate mt-0.5">📧 {email.subject}</p>
+                        )}
+                      </div>
+                      <span className="text-[9px] text-muted-foreground whitespace-nowrap">
+                        {email.sent_at ? new Date(email.sent_at).toLocaleString("en-US", {
+                          month: "short", day: "numeric", hour: "numeric", minute: "2-digit", hour12: true,
+                        }) : "—"}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           )}
         </div>
       )}
