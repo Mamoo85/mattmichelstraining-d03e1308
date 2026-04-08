@@ -76,7 +76,7 @@ serve(async (req) => {
     <p><a href="https://www.detroitwebagent.com/web-design-services?ref=${code}" style="display:inline-block;background:#e8621a;color:#fff;padding:12px 24px;text-decoration:none;font-weight:700;font-size:14px;margin:8px 0;">See My Work & Pricing →</a></p>
     <p>Or just reply to this email — I respond personally within a few hours.</p>
     <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;align-items:center;gap:12px;">
-      <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" />
+      <img src="https://www.detroitwebagent.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" />
       <div style="font-size:13px;color:#94a3b8;">
         <strong style="color:#1e293b;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 806-4952
       </div>
