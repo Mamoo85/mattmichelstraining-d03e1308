@@ -27,6 +27,74 @@ interface HybridResult extends MapBusiness {
   gap_status: "pending" | "analyzing" | "done" | "skipped" | "error";
 }
 
+// ── Sonar fallback: find businesses via live web search ──
+async function sonarFindBusinesses(industry: string, location: string, limit: number): Promise<MapBusiness[]> {
+  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+      "Content-Type": "application/json",
+      "HTTP-Referer": "https://detroitwebagent.com",
+      "X-Title": "Detroit Web Agency Prospector",
+    },
+    body: JSON.stringify({
+      model: "perplexity/sonar-reasoning",
+      messages: [
+        {
+          role: "system",
+          content: `You are a local business research tool. Return ONLY valid JSON — no markdown, no code fences, no explanation.`,
+        },
+        {
+          role: "user",
+          content: `Search the web for ${limit} real "${industry}" businesses in or near "${location}". For each, find their name, phone number, website URL, street address, and Google star rating.
+
+Return ONLY a JSON array. Each object: {"title":"Name","phone":"555-1234","website":"https://example.com","address":"123 Main St","rating":4.5,"reviews":42,"category":"${industry}"}
+
+Use null for missing fields. Return up to ${limit} businesses.`,
+        },
+      ],
+      max_tokens: 2000,
+    }),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    console.error(`[HYBRID] Sonar search error: ${res.status} ${errText.slice(0, 300)}`);
+    throw new Error(`Sonar returned ${res.status}`);
+  }
+
+  const data = await res.json();
+  const content = data?.choices?.[0]?.message?.content || "[]";
+
+  let jsonStr = content;
+  const fenceMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (fenceMatch) jsonStr = fenceMatch[1].trim();
+  const arrayMatch = jsonStr.match(/\[[\s\S]*\]/);
+  if (arrayMatch) jsonStr = arrayMatch[0];
+
+  let parsed: any[];
+  try {
+    parsed = JSON.parse(jsonStr);
+    if (!Array.isArray(parsed)) parsed = [];
+  } catch {
+    console.error("[HYBRID] Sonar JSON parse failed:", jsonStr.slice(0, 300));
+    parsed = [];
+  }
+
+  return parsed.slice(0, limit).map((item: any) => ({
+    title: item.title || item.name || "",
+    rating: item.rating ?? null,
+    reviews: item.reviews ?? 0,
+    address: item.address || "",
+    phone: item.phone || null,
+    website: item.website || item.url || null,
+    category: item.category || industry,
+    place_id: null,
+    claimed: null,
+  }));
+}
+
+// ── Gap Analysis via OpenRouter ──
 async function analyzeGap(url: string, businessName: string): Promise<string> {
   const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
@@ -60,7 +128,7 @@ Return ONLY one concise sentence describing the biggest automation gap you found
 
   if (!res.ok) {
     const errText = await res.text();
-    console.error(`[HYBRID] Sonar error for ${url}: ${res.status} ${errText.slice(0, 200)}`);
+    console.error(`[HYBRID] Sonar gap error for ${url}: ${res.status} ${errText.slice(0, 200)}`);
     throw new Error(`Sonar returned ${res.status}`);
   }
 
@@ -83,56 +151,71 @@ serve(async (req) => {
       );
     }
 
-    if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) {
-      return new Response(
-        JSON.stringify({ error: "DataForSEO credentials not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // ── Step 1: DataForSEO Google Maps Search ──
+    // ── Step 1: Find businesses (DataForSEO → Sonar fallback) ──
     const keyword = `${industry} in ${location}`;
-    console.log(`[HYBRID] Step 1: Searching "${keyword}", limit: ${limit}`);
+    let businesses: MapBusiness[] = [];
+    let source = "sonar";
 
-    const auth = btoa(`${DATAFORSEO_LOGIN}:${DATAFORSEO_PASSWORD}`);
-    const mapsRes = await fetch("https://api.dataforseo.com/v3/serp/google/maps/live/advanced", {
-      method: "POST",
-      headers: {
-        Authorization: `Basic ${auth}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify([
-        { keyword, location_name: location, language_code: "en", depth: Math.min(limit, 100) },
-      ]),
-    });
+    if (DATAFORSEO_LOGIN && DATAFORSEO_PASSWORD) {
+      console.log(`[HYBRID] Step 1: Trying DataForSEO for "${keyword}"`);
+      const auth = btoa(`${DATAFORSEO_LOGIN}:${DATAFORSEO_PASSWORD}`);
 
-    const raw = await mapsRes.json();
+      try {
+        const mapsRes = await fetch("https://api.dataforseo.com/v3/serp/google/maps/live/advanced", {
+          method: "POST",
+          headers: {
+            Authorization: `Basic ${auth}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify([
+            { keyword, location_name: location, language_code: "en", depth: Math.min(limit, 100) },
+          ]),
+        });
 
-    if (!mapsRes.ok || raw.status_code !== 20000) {
-      console.error("[HYBRID] DataForSEO error:", JSON.stringify(raw).slice(0, 500));
-      return new Response(
-        JSON.stringify({ error: raw.status_message || "DataForSEO request failed", step: "dataforseo" }),
-        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+        const raw = await mapsRes.json();
+        const taskStatus = raw.tasks?.[0]?.status_code;
+
+        if (mapsRes.ok && raw.status_code === 20000 && taskStatus === 20000) {
+          const items = raw.tasks?.[0]?.result?.[0]?.items || [];
+          businesses = items
+            .filter((item: any) => item.type === "maps_search" || item.type === "maps_paid" || item.type === "organic")
+            .slice(0, limit)
+            .map((item: any) => ({
+              title: item.title || "",
+              rating: item.rating?.value ?? null,
+              reviews: item.rating?.votes_count ?? 0,
+              address: item.address || item.address_info?.address || "",
+              phone: item.phone || null,
+              website: item.url || item.domain || null,
+              category: item.category || "",
+              place_id: item.place_id || null,
+              claimed: item.is_claimed ?? null,
+            }));
+          source = "dataforseo";
+          console.log(`[HYBRID] DataForSEO returned ${businesses.length} businesses`);
+        } else {
+          console.warn(`[HYBRID] DataForSEO task_status=${taskStatus}, falling back to Sonar`);
+        }
+      } catch (dfErr) {
+        console.warn(`[HYBRID] DataForSEO error, falling back to Sonar:`, dfErr);
+      }
     }
 
-    const items = raw.tasks?.[0]?.result?.[0]?.items || [];
-    const businesses: MapBusiness[] = items
-      .filter((item: any) => item.type === "maps_search" || item.type === "maps_paid" || item.type === "organic")
-      .slice(0, limit)
-      .map((item: any) => ({
-        title: item.title || "",
-        rating: item.rating?.value ?? null,
-        reviews: item.rating?.votes_count ?? 0,
-        address: item.address || item.address_info?.address || "",
-        phone: item.phone || null,
-        website: item.url || item.domain || null,
-        category: item.category || "",
-        place_id: item.place_id || null,
-        claimed: item.is_claimed ?? null,
-      }));
+    // Sonar fallback
+    if (businesses.length === 0) {
+      if (!OPENROUTER_API_KEY) {
+        return new Response(
+          JSON.stringify({ error: "DataForSEO returned no results and no OPENROUTER_API_KEY configured. Your DataForSEO plan may not include the Google Maps SERP API (error 40501)." }),
+          { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      console.log(`[HYBRID] Step 1: Using Sonar fallback for "${keyword}"`);
+      businesses = await sonarFindBusinesses(industry, location, limit);
+      source = "sonar";
+      console.log(`[HYBRID] Sonar returned ${businesses.length} businesses`);
+    }
 
-    console.log(`[HYBRID] Step 1 complete: ${businesses.length} businesses found`);
+    console.log(`[HYBRID] Step 1 complete: ${businesses.length} businesses (source: ${source})`);
 
     // ── Step 2: Gap Analysis via OpenRouter (only for businesses with websites) ──
     const results: HybridResult[] = [];
@@ -148,7 +231,6 @@ serve(async (req) => {
 
       console.log(`[HYBRID] Step 2: Analyzing ${withSites.length} websites (${withoutSites.length} skipped — no URL)`);
 
-      // Analyze in parallel batches of 3 to avoid rate limits
       const batchSize = 3;
       for (let i = 0; i < withSites.length; i += batchSize) {
         const batch = withSites.slice(i, i + batchSize);
@@ -166,7 +248,6 @@ serve(async (req) => {
         }
       }
 
-      // Add businesses without websites
       for (const b of withoutSites) {
         results.push({
           ...b,
@@ -176,10 +257,10 @@ serve(async (req) => {
       }
     }
 
-    console.log(`[HYBRID] Complete: ${results.length} results with gap analysis`);
+    console.log(`[HYBRID] Complete: ${results.length} results with gap analysis (source: ${source})`);
 
     return new Response(
-      JSON.stringify({ success: true, results, total: results.length }),
+      JSON.stringify({ success: true, results, total: results.length, source }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
