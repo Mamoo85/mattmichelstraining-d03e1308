@@ -1,12 +1,29 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const HIBP_API_KEY = Deno.env.get("HIBP_API_KEY") || "";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+async function aiGenerate(prompt: string): Promise<string> {
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${LOVABLE_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages: [{ role: "user", content: prompt }],
+    }),
+  });
+  if (!res.ok) throw new Error(`AI error: ${res.status}`);
+  const data = await res.json();
+  return data?.choices?.[0]?.message?.content?.trim() || "";
+}
 
 async function generatePetMemorialSample(overrides: Record<string, string>) {
   const petName = overrides.pet_name || "Buddy";
@@ -31,23 +48,7 @@ Create a memorial as JSON with exactly these fields:
 
 Respond with ONLY valid JSON.`;
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "x-api-key": ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "claude-haiku-4-5",
-      max_tokens: 1200,
-      messages: [{ role: "user", content: prompt }],
-    }),
-  });
-
-  if (!res.ok) throw new Error(`Claude error: ${res.status}`);
-  const data = await res.json();
-  const text = data?.content?.[0]?.text?.trim() || "";
+  const text = await aiGenerate(prompt);
   const match = text.match(/\{[\s\S]*\}/);
   if (!match) throw new Error("Failed to parse AI response");
   const parsed = JSON.parse(match[0]);
@@ -66,7 +67,6 @@ Respond with ONLY valid JSON.`;
 
 async function generateCredentialAuditSample(overrides: Record<string, string>) {
   const companyName = overrides.company_name || "M2 Development";
-  // Use a known-breached test email from HIBP for demo purposes
   const testEmails = ["test@example.com"];
 
   const results: Array<{
@@ -110,7 +110,6 @@ async function generateCredentialAuditSample(overrides: Record<string, string>) 
     }
   }
 
-  // Generate a sample summary
   const totalBreaches = results.reduce((a, r) => a + r.breach_count, 0);
   const criticalCount = results.filter(r => r.severity === "critical").length;
 
