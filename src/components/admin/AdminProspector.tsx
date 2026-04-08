@@ -103,6 +103,12 @@ interface MapResult {
   claimed: boolean | null;
 }
 
+// ── Hybrid Result (DataForSEO + OpenRouter Gap Analysis) ──
+interface HybridResult extends MapResult {
+  gap_analysis: string | null;
+  gap_status: "pending" | "analyzing" | "done" | "skipped" | "error";
+}
+
 // ── Shared Lead Interface (All Leads tab) ──
 interface UnifiedLead {
   id: string;
