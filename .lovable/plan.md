@@ -1,124 +1,173 @@
 
 
-# 🔍 Production Launch Code Audit — Matt Michels Training
+# Combined Implementation Plan: Revenue Suite + Prospector Overhaul
 
-## Executive Summary
-
-After systematic review of the entire codebase — TypeScript compilation, production build, route structure, security patterns, SEO markup, forms, and performance — **this site is in strong launch shape**. The build compiles cleanly with zero errors, the architecture is solid, and most best practices are already in place. Below are findings organized by severity.
+This merges the previously approved P0-A through P1 work with Matt's new "Lead Generation & Pipeline Manager" overhaul of the Prospector tool.
 
 ---
 
-## 🔴 CRITICAL (Launch Blockers)
+## Section 1: Previously Approved Work (unchanged)
 
-### 1. XSS Risk: Unsanitized HTML from Database Rendered via `dangerouslySetInnerHTML`
+### P0-A: Fix AdminSandbox.tsx
+- Fix GBP Post Pack price $49 → $19
+- Remove 15 non-deliverable products
+- Add "Requires Setup" badges to GBP SaaS, Social Media AI, Missed Call, Social Connect
+- Add "Fire Now" button for GBP SaaS
 
-**Files:** `SEOLandingPage.tsx`, `LegalPage.tsx`, `AdminLegalCompliance.tsx`
+### P0-B: Pricing Fixes
+- GBP subscription: $49 → $199/mo
+- Social Media: Standard $99→$199, Pro $149→$299, Trainer stays $79
 
-These pages render raw HTML from the database directly into the DOM without sanitization. If an admin account is compromised or AI-generated content contains malicious scripts, this is a stored XSS vector.
+### P0-C: Revenue Suite Bundle
+- New landing page at `/revenue-suite`
+- New checkout edge function ($299/mo)
+- Webhook handler upserts into all 8 SMS product tables
+- Route added to App.tsx
 
-**Fix:** Install `dompurify` and wrap all `dangerouslySetInnerHTML` content:
-```tsx
-import DOMPurify from "dompurify";
-// ...
-dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }}
+### P0-D: Navbar "For Business" Dropdown
+- Links to All Services, Revenue Suite, Digital Foundation, Website Audit
+
+### P1: Agent Updates (5 markdown files)
+- selma.md, tom-autonomous.md, nova.md, upsell.md, scarlett.md
+
+---
+
+## Section 2: Prospector Overhaul — "Lead Generation & Pipeline Manager"
+
+### 2A: New Database Table — `prospect_pipeline`
+
+Migration to create a Kanban pipeline table:
+
+```sql
+CREATE TABLE public.prospect_pipeline (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  business_name TEXT NOT NULL,
+  contact_name TEXT,
+  email TEXT,
+  phone TEXT,
+  website TEXT,
+  city TEXT,
+  state TEXT,
+  industry TEXT,
+  google_rating NUMERIC(2,1),
+  review_count INTEGER,
+  gbp_claimed BOOLEAN,
+  google_place_id TEXT,
+  pipeline_stage TEXT NOT NULL DEFAULT 'new_lead',
+  pain_points JSONB,
+  n8n_sent_at TIMESTAMPTZ,
+  source TEXT DEFAULT 'dataforseo',
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE public.prospect_pipeline ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "service_role_all" ON public.prospect_pipeline FOR ALL TO service_role USING (true) WITH CHECK (true);
+CREATE INDEX idx_pipeline_stage ON public.prospect_pipeline(pipeline_stage);
+CREATE INDEX idx_pipeline_industry ON public.prospect_pipeline(industry);
 ```
 
-The pages in `ClientReportGenerator.tsx`, `PodcastPitchService.tsx`, `RestaurantMenuCopy.tsx` use it with hardcoded `desc` strings in the component — those are safe since the HTML is not user-supplied.
+Pipeline stages: `new_lead` → `website_audited` → `outreach_sent` → `call_booked`
 
-### 2. Oversized Chunk: `pose-detection.esm` at 2.4 MB
+### 2B: Edge Function — `dataforseo-maps-search`
 
-The TensorFlow pose detection library ships a **2.4 MB** chunk. If any user path lazy-loads this (e.g., form-check videos), it will tank Core Web Vitals on mobile.
+New edge function: `supabase/functions/dataforseo-maps-search/index.ts`
 
-**Fix:** Verify this is truly lazy-loaded and only imported from a protected route. If it's reachable from a public page, move it behind an explicit user action (e.g., "Start Camera" button triggers the import). Add it to `manualChunks` to isolate it:
-```ts
-"vendor-pose": ["@tensorflow-models/pose-detection"],
-```
+- Accepts: `{ industry, location, limit }` (location = city name or zip code)
+- Calls DataForSEO Google Maps SERP API (`/v3/serp/google/maps/live/advanced`)
+- Uses existing `DATAFORSEO_LOGIN` + `DATAFORSEO_PASSWORD` secrets (already configured)
+- Returns: array of `{ title, rating, reviews, address, phone, website, category, place_id, claimed }` 
+- Cost: ~$3/1000 requests — extremely cheap
 
-### 3. Service Worker Precache Failure
+### 2C: Edge Function — `prospect-website-audit`
 
-Build output shows: `precache 7 entries (0.00 KiB)` and a glob error: `Cannot read properties of undefined (reading 'sync')`. This means the service worker is deploying but precaching **nothing** — users who visit once and go offline will see a blank page.
+New edge function: `supabase/functions/prospect-website-audit/index.ts`
 
-**Fix:** Either fix the workbox glob config or, since you're launching tonight, consider temporarily disabling PWA precache and using network-first strategy only. The `injectRegister: false` is already set, so the risk is low, but the broken precache should be fixed post-launch.
+- Accepts: `{ url, business_name, industry }`
+- Step 1: Calls existing Firecrawl scrape endpoint (reuse `FIRECRAWL_API_KEY`) to get homepage markdown
+- Step 2: Passes markdown to Lovable AI Gateway (gemini-2.5-flash-lite) with prompt: "You are a web design sales consultant. Analyze this business website and return exactly 3 specific pain points that would cost them customers. Be specific — reference actual missing elements." 
+- Returns: `{ pain_points: string[] }`
+- Cost: Firecrawl free tier (500 credits) + Lovable AI Gateway (no additional cost)
 
----
+### 2D: Edge Function — `send-lead-to-n8n`
 
-## 🟡 MODERATE (Fix Soon — Not Launch Blockers)
+New edge function: `supabase/functions/send-lead-to-n8n/index.ts`
 
-### 4. `console.log` in Production Auth Flow
+- Accepts: `{ lead, pain_points }`
+- Reads `N8N_MCP_URL` from env (already configured)
+- POSTs JSON payload to n8n webhook URL with: business name, contact info, Google rating, review count, pain points array
+- Updates `prospect_pipeline.n8n_sent_at` timestamp
+- Returns success/failure
 
-`Auth.tsx` line 310-315 logs the Google OAuth redirect URL and full result object to console. This leaks auth flow details to anyone who opens DevTools.
+### 2E: Rebuild AdminProspector.tsx (~800 lines → ~1200 lines)
 
-**Fix:** Remove or gate behind `import.meta.env.DEV`:
-```tsx
-if (import.meta.env.DEV) console.log("[GOOGLE-AUTH]...");
-```
+Complete overhaul of `src/components/admin/AdminProspector.tsx`:
 
-### 5. `window.open` for Stripe Checkout (Popup Blocker Risk)
+**Tab Structure** (replaces current tabs):
+1. **Search** — DataForSEO Maps search + results table
+2. **Pipeline** — Kanban board
+3. **All Leads** — existing unified lead catalog (preserved)
 
-15+ checkout pages use `window.open(data.url, "_blank")` to redirect to Stripe. Many mobile browsers and popup blockers will silently block this, causing users to click "Subscribe" and see nothing happen. **This loses revenue.**
+**Search Tab:**
+- Searchable industry dropdown with 50+ categories (HVAC, Plumbing, Electrical, Roofing, Landscaping, Medical Spas, Dental Clinics, Law Firms, Industrial Automation, etc.)
+- City/Zip input field
+- Results displayed in sortable data table: Business Name, Rating (stars), Reviews, Phone, Website, Claimed (Y/N)
+- "Add to Pipeline" button on each row → inserts into `prospect_pipeline` with stage `new_lead`
+- Bulk select + "Add Selected" for batch pipeline insertion
 
-**Fix:** Use `window.location.href = data.url` instead of `window.open` for all Stripe checkout redirects. The user expects a navigation, not a popup.
+**Pipeline Tab (Kanban Board):**
+- Install `@dnd-kit/core` + `@dnd-kit/sortable` for drag-and-drop
+- 4 columns: New Lead | Website Audited | Outreach Sent | Call Booked
+- Lead cards show: name, industry, rating, review count, city
+- Each card has 3 action buttons:
+  - **Analyze Website** → calls `prospect-website-audit`, displays 3 pain points on card, moves to "Website Audited"
+  - **Send to n8n** → calls `send-lead-to-n8n` with lead data + pain points, shows green success toast, moves to "Outreach Sent"
+  - **Mark Booked** → moves to "Call Booked"
+- Drag-and-drop between columns to manually move leads
+- Card count badges on each column header
 
-### 6. Duplicate Facebook Pixel `noscript` Tags
+**All Leads Tab:**
+- Preserves the existing unified lead catalog with all 14 source tables, filters, sorting, edit/delete/email actions — no changes to this functionality
 
-`index.html` has the FB pixel `<noscript><img>` fallback at **both** line 140 (inside `<body>` before `#root`) and line 302 (after scripts). This fires the PageView event twice for noscript users and inflates analytics.
+### 2F: Dependencies
 
-**Fix:** Remove the duplicate at line 140.
-
-### 7. Missing `rel="noopener noreferrer"` on Some External Links
-
-Most external links are correctly attributed, but a sweep of 162 files with `href="tel:"` and `href="mailto:"` patterns shows inconsistent usage. While `tel:` and `mailto:` links don't need `noopener`, any `target="_blank"` links to external sites should always include it.
-
-### 8. Vite `define` Hardcodes Supabase Anon Key
-
-`vite.config.ts` lines 127-132 hardcode the anon key as a fallback. This is the **publishable** key so it's not a security issue, but it means if the `.env` file isn't loaded properly (e.g., Vercel misconfiguration), the app will silently connect to the wrong project or fail. Verify Vercel environment variables match.
-
----
-
-## 🟢 MINOR (Optimization — Post-Launch)
-
-### 9. 270+ Lazy Imports in App.tsx
-
-While `lazyRetry` handles chunk failures gracefully, having 270+ lazy imports in a single file impacts developer experience and increases the initial route-matching overhead. Consider grouping related routes into sub-routers (e.g., `DemoRoutes`, `ServiceRoutes`, `AdminRoutes`).
-
-### 10. Font Loading: 8 Font Families Loaded
-
-`index.html` preloads 2 Google Fonts stylesheets covering 8 font families. Even with `media="print"` deferral trick, this is ~150-200KB of font data. Consider auditing which fonts are actually used across public pages and trimming unused weights.
-
-### 11. Google Analytics Deferred by 2 Seconds
-
-GA is loaded with a `setTimeout(2000)` after `window.load`. This is good for performance but means the first 2+ seconds of user interaction are untracked. Standard practice is to load after `requestIdleCallback` instead.
-
-### 12. `&amp;` in Error Boundary Button Text
-
-`ErrorBoundary.tsx` line 126 shows `Clear cache &amp; reload` — the `&amp;` is correct JSX but visually renders as `&` which is fine. No action needed.
-
-### 13. Missing `<h1>` on Some Product Pages
-
-Many product/service pages likely use the shared layout pattern. Verify each public page has exactly one `<h1>` tag for SEO. The SEO landing pages correctly use `<h1>` for the heading.
+- `@dnd-kit/core` and `@dnd-kit/sortable` — lightweight drag-and-drop library (~15kb gzipped)
 
 ---
 
-## ✅ What's Already Solid
+## Files Changed (Complete List)
 
-- **TypeScript**: Zero compilation errors
-- **Production build**: Clean, no warnings except the expected chunk size warning for pose-detection
-- **Error handling**: Robust `ErrorBoundary` with auto-retry, chunk load retry via `lazyRetry`, and broken image fallback
-- **Security**: No API keys exposed in frontend, all secrets server-side, RLS enforced, `service_role` patterns correct
-- **SEO**: Structured data (JSON-LD) for business + sports location, proper meta tags, OG/Twitter cards, `noscript` fallback content, semantic HTML
-- **SPA routing**: Wildcard routes for demos, auth callbacks properly handled
-- **Form handling**: All checkout forms use try/catch with toast error feedback, email validation present
-- **Accessibility**: Viewport meta allows scaling (`user-scalable=yes`), semantic heading structure in index.html
-- **Performance**: Lazy loading everything, deferred third-party scripts, manual chunks for vendor splitting, critical CSS inlined
+| File | Action | Section |
+|------|--------|---------|
+| `src/components/admin/AdminSandbox.tsx` | Edit | P0-A |
+| `supabase/functions/create-gbp-subscription/index.ts` | Edit | P0-B |
+| `supabase/functions/create-social-media-checkout/index.ts` | Edit | P0-B |
+| `src/pages/BundleRevenueSuite.tsx` | NEW | P0-C |
+| `supabase/functions/create-bundle-revenue-suite-checkout/index.ts` | NEW | P0-C |
+| `src/App.tsx` | Edit | P0-C + P0-D |
+| `supabase/functions/stripe-webhook/index.ts` | Edit | P0-C |
+| `src/components/layout/AppNavbar.tsx` | Edit | P0-D |
+| `.claude/agents/selma.md` | Edit | P1 |
+| `.claude/agents/tom-autonomous.md` | Edit | P1 |
+| `.claude/agents/nova.md` | Edit | P1 |
+| `.claude/agents/upsell.md` | Edit | P1 |
+| `.claude/agents/scarlett.md` | Edit | P1 |
+| Migration: `prospect_pipeline` table | NEW | 2A |
+| `supabase/functions/dataforseo-maps-search/index.ts` | NEW | 2B |
+| `supabase/functions/prospect-website-audit/index.ts` | NEW | 2C |
+| `supabase/functions/send-lead-to-n8n/index.ts` | NEW | 2D |
+| `src/components/admin/AdminProspector.tsx` | Rebuild | 2E |
+| `package.json` | Edit (add dnd-kit) | 2F |
 
 ---
 
-## Recommended Fix Priority for Tonight
+## Cost Summary
 
-1. **Install DOMPurify** and sanitize `dangerouslySetInnerHTML` in `SEOLandingPage.tsx` and `LegalPage.tsx` — 10 min fix
-2. **Change `window.open` to `window.location.href`** for all Stripe checkouts — 15 min bulk find-replace
-3. **Remove duplicate FB pixel noscript** — 1 min fix
-4. **Remove `console.log` from Auth.tsx** — 2 min fix
-
-Everything else can wait until after launch.
+| Service | Usage | Cost |
+|---------|-------|------|
+| DataForSEO Maps | ~$3 per 1,000 searches | Already configured |
+| Firecrawl | 500 free credits/mo | Already configured |
+| Lovable AI Gateway | Website audits | No additional cost |
+| n8n | Webhook trigger | Already configured |
+| dnd-kit | Kanban UI library | Free/open source |
 
