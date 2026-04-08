@@ -426,7 +426,7 @@ function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, onDeepRes
 
 // ── Component ──
 export default function AdminProspector() {
-  const [mainTab, setMainTab] = useState<"search" | "pipeline" | "leads">("search");
+  const [mainTab, setMainTab] = useState<"search" | "pipeline" | "sent" | "leads">("search");
 
   // ── Search Tab State ──
   const [searchIndustry, setSearchIndustry] = useState("");
