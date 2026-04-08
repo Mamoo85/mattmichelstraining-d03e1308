@@ -27,7 +27,7 @@ serve(async (req) => {
     }
 
     let thankYouMessage = `Thanks so much for choosing ${client.business_name}, ${customerName}! We truly appreciate your business.`;
-    if (ANTHROPIC_API_KEY) {
+    if (LOVABLE_API_KEY) {
       try {
         const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",

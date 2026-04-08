@@ -3,7 +3,7 @@
 //
 // REQUIRED SECRETS (add via Supabase Dashboard > Project Settings > Edge Functions > Secrets):
 //   SAM_GOV_API_KEY  — free API key from https://api.data.gov/signup
-//   ANTHROPIC_API_KEY — Claude API key for AI scoring
+//   LOVABLE_API_KEY — Claude API key for AI scoring
 //   RESEND_API_KEY    — for sending email digests
 //   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY — standard Supabase secrets
 
@@ -123,7 +123,7 @@ async function scoreOpportunity(
   opp: SamOpportunity,
   client: { company_name: string; naics_codes: string; keywords: string; set_aside_types: string }
 ): Promise<ScoringResult> {
-  if (!ANTHROPIC_API_KEY) {
+  if (!LOVABLE_API_KEY) {
     return { score: 50, recommendation: "review", summary: "AI scoring unavailable — manual review required." };
   }
 

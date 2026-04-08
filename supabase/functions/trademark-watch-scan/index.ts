@@ -53,7 +53,7 @@ async function analyzeWithClaude(
   candidateGs: string,
   applicant: string
 ): Promise<{ score: number; recommendation: "oppose" | "monitor" | "ignore"; analysis: string }> {
-  if (!ANTHROPIC_API_KEY) {
+  if (!LOVABLE_API_KEY) {
     return { score: 50, recommendation: "monitor", analysis: "AI analysis unavailable — manual review recommended." };
   }
 
@@ -83,8 +83,7 @@ Guidelines:
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-api-key": ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
+      Authorization: `Bearer ${LOVABLE_API_KEY}`,
     },
     body: JSON.stringify({
       model: "google/gemini-2.5-flash-lite",

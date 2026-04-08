@@ -73,7 +73,7 @@ async function generateNewsletterContent(
   brokerage: string,
   zillowData: { medianPrice?: string; dom?: string } | null
 ): Promise<NewsletterContent> {
-  if (!ANTHROPIC_API_KEY) throw new Error("No ANTHROPIC_API_KEY");
+  if (!LOVABLE_API_KEY) throw new Error("No LOVABLE_API_KEY");
 
   const season = getSeason();
   const monthYear = getMonthYear();

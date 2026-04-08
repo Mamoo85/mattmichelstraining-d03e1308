@@ -33,7 +33,7 @@ serve(async (req) => {
         if (!contacts?.length) { console.warn(`[TEXT-MARKETING] No contacts for ${client.email}`); continue; }
 
         let campaignText = `Hey! ${client.business_name} here. Hope your month is going great! Reply STOP to unsubscribe.`;
-        if (ANTHROPIC_API_KEY) {
+        if (LOVABLE_API_KEY) {
           try {
             const claudeRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
               method: "POST",

@@ -64,7 +64,7 @@ function extractCompanyName(result: FirecrawlResult): string {
 }
 
 async function generateColdEmail(companyName: string, touchNumber: number): Promise<string> {
-  if (!ANTHROPIC_API_KEY) return "";
+  if (!LOVABLE_API_KEY) return "";
 
   let prompt = "";
   if (touchNumber === 1) {

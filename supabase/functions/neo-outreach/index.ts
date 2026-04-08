@@ -130,7 +130,7 @@ async function writePersonalizedEmail(business: {
   const demo = getDemoLink(business.industry);
   const demoLine = demo ? `\n\nHere's what I built for a ${demo.label} — takes 10 seconds to look: ${demo.url}` : "";
 
-  if (!ANTHROPIC_API_KEY) {
+  if (!LOVABLE_API_KEY) {
     return {
       subject: `Quick question about ${business.business_name}`,
       body: `Hey, my name's Matt Michels — I'm based out of Grosse Pointe and I do web work for local businesses.\n\nI was looking at your Google listing for ${business.business_name} and had a quick question — are you happy with the leads your website is currently bringing in?\n\nIf not, I can do ${business.pitch.cta} for ${business.pitch.price}.${demoLine}\n\n— Matt\n(313) 806-4952`,

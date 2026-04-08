@@ -224,7 +224,7 @@ serve(async (req) => {
 
     // AI summary
     let summary = "";
-    if (ANTHROPIC_API_KEY) {
+    if (LOVABLE_API_KEY) {
       try {
         const failedChecks = checks.filter((c) => c.status === "fail").map((c) => c.label + ": " + c.detail);
         const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
