@@ -981,6 +981,7 @@ export default function AdminProspector() {
         {[
           { key: "search" as const, label: "Search", icon: Search },
           { key: "pipeline" as const, label: "Pipeline", icon: Kanban },
+          { key: "sent" as const, label: "Sent Log", icon: Mail },
           { key: "leads" as const, label: "All Leads", icon: Users },
         ].map(t => (
           <button
