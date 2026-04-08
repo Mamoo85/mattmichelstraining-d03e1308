@@ -24,7 +24,6 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Fetch the lead
     const { data: lead, error: fetchError } = await supabase
       .from("outreach_leads")
       .select("*")
@@ -56,7 +55,7 @@ serve(async (req) => {
       .map((line: string) => line.trim() === "" ? "<br>" : `<p style="margin:0 0 8px 0;font-family:Arial,sans-serif;font-size:14px;color:#333;">${line}</p>`)
       .join("\n");
 
-    // Send via Resend
+    // Send via Resend — Detroit Web Agency branding
     const resendRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -64,7 +63,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Matt Michels <matt@mattmichelstraining.com>",
+        from: "Matt Michels | Detroit Web Agency <matt@mattmichelstraining.com>",
         to: [lead.email],
         bcc: ["matthewmichels4@gmail.com"],
         subject: emailSubject,
