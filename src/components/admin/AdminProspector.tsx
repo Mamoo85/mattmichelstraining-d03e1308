@@ -451,6 +451,8 @@ export default function AdminProspector() {
   const [pipelineFilter, setPipelineFilter] = useState<PipelineFilter>("all");
   const [pipelineSort, setPipelineSort] = useState<PipelineSort>("newest");
   const [previewLead, setPreviewLead] = useState<PipelineLead | null>(null);
+  const [selectedPipelineIds, setSelectedPipelineIds] = useState<Set<string>>(new Set());
+  const [batchProcessing, setBatchProcessing] = useState(false);
 
   // ── All Leads Tab State ──
   const [activeLeadTab, setActiveLeadTab] = useState("all");
