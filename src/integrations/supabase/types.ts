@@ -5885,6 +5885,56 @@ export type Database = {
         }
         Relationships: []
       }
+      prospect_email_log: {
+        Row: {
+          business_name: string | null
+          clicked_at: string | null
+          drip_step: number | null
+          id: string
+          opened_at: string | null
+          pipeline_lead_id: string | null
+          recipient_email: string
+          resend_id: string | null
+          sent_at: string | null
+          status: string | null
+          subject: string | null
+        }
+        Insert: {
+          business_name?: string | null
+          clicked_at?: string | null
+          drip_step?: number | null
+          id?: string
+          opened_at?: string | null
+          pipeline_lead_id?: string | null
+          recipient_email: string
+          resend_id?: string | null
+          sent_at?: string | null
+          status?: string | null
+          subject?: string | null
+        }
+        Update: {
+          business_name?: string | null
+          clicked_at?: string | null
+          drip_step?: number | null
+          id?: string
+          opened_at?: string | null
+          pipeline_lead_id?: string | null
+          recipient_email?: string
+          resend_id?: string | null
+          sent_at?: string | null
+          status?: string | null
+          subject?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prospect_email_log_pipeline_lead_id_fkey"
+            columns: ["pipeline_lead_id"]
+            isOneToOne: false
+            referencedRelation: "prospect_pipeline"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       prospect_outreach: {
         Row: {
           business_name: string | null
