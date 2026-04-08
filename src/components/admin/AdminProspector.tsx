@@ -406,6 +406,23 @@ export default function AdminProspector() {
     finally { setSearching(false); }
   };
 
+  // ── Hybrid Prospector Search (DataForSEO + OpenRouter Gap Analysis) ──
+  const runHybridSearch = async () => {
+    if (!searchIndustry) { toast.error("Select an industry"); return; }
+    setHybridSearching(true);
+    setHybridResults([]);
+    try {
+      const { data, error } = await supabase.functions.invoke("hybrid-prospector", {
+        body: { industry: searchIndustry, location: searchLocation, limit: parseInt(searchLimit) },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setHybridResults(data?.results || []);
+      toast.success(`Found ${data?.total || 0} businesses with gap analysis`);
+    } catch (err) { toast.error(err instanceof Error ? err.message : "Hybrid search failed"); }
+    finally { setHybridSearching(false); }
+  };
+
   // ── Add to Pipeline ──
   const addToPipeline = async (results: MapResult[]) => {
     try {
