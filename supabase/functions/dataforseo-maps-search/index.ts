@@ -54,6 +54,8 @@ serve(async (req) => {
 
     const raw = await response.json();
 
+    console.log(`[DATAFORSEO-MAPS] Response status_code: ${raw.status_code}, tasks: ${raw.tasks?.length}, task0 status: ${raw.tasks?.[0]?.status_code}, result items: ${raw.tasks?.[0]?.result?.[0]?.items?.length ?? 0}`);
+
     if (!response.ok || raw.status_code !== 20000) {
       console.error("[DATAFORSEO-MAPS] API error:", JSON.stringify(raw).slice(0, 500));
       return new Response(
