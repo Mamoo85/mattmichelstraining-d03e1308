@@ -5,6 +5,7 @@ import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { lazyRetry } from "@/lib/lazyRetry";
+import { getDomainBrand } from "@/lib/domainConfig";
 // Defer toast providers — only triggered on user action, not needed for FCP
 const Sonner = lazyRetry(() => import("@/components/ui/sonner").then(m => ({ default: m.Toaster })));
 const Toaster = lazyRetry(() => import("@/components/ui/toaster").then(m => ({ default: m.Toaster })));
@@ -34,6 +35,8 @@ const BottomTabBar = lazyRetry(() => import("@/components/layout/BottomTabBar"))
 
 // Lazy-load ALL pages including Index for faster initial JS parse
 const Index = lazyRetry(() => import("./pages/Index"));
+const AgencyHome = lazyRetry(() => import("./pages/AgencyHome"));
+const ComputerRepair = lazyRetry(() => import("./pages/ComputerRepair"));
 
 const Coach = lazyRetry(() => import("./pages/Coach"));
 const CoachHub = lazyRetry(() => import("./pages/CoachHub"));
