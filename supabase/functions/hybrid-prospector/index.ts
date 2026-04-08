@@ -3,6 +3,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 const DATAFORSEO_LOGIN = Deno.env.get("DATAFORSEO_LOGIN") || "";
 const DATAFORSEO_PASSWORD = Deno.env.get("DATAFORSEO_PASSWORD") || "";
 const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
+const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY") || "";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -14,6 +15,7 @@ interface MapBusiness {
   title: string;
   phone: string | null;
   website: string | null;
+  email: string | null;
   rating: number | null;
   reviews: number | null;
   address: string | null;
@@ -25,6 +27,7 @@ interface MapBusiness {
 interface HybridResult extends MapBusiness {
   gap_analysis: string | null;
   gap_status: "pending" | "analyzing" | "done" | "skipped" | "error";
+  email_status: "found" | "not_found" | "skipped" | "error";
 }
 
 // ── Sonar fallback: find businesses via live web search ──
@@ -88,10 +91,104 @@ Use null for missing fields. Return up to ${limit} businesses.`,
     address: item.address || "",
     phone: item.phone || null,
     website: item.website || item.url || null,
+    email: item.email || null,
     category: item.category || industry,
     place_id: null,
     claimed: null,
   }));
+}
+
+// ── Email extraction helpers ──
+const EMAIL_REGEX = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
+const JUNK_DOMAINS = ["example.com","google.com","facebook.com","wix.com","squarespace.com","sentry.io","w3.org","wordpress.org","jquery.com","schema.org","gravatar.com","googleapis.com","gstatic.com","cloudflare.com","bootstrapcdn.com"];
+
+function extractEmailsFromText(text: string): string[] {
+  const raw = text.match(EMAIL_REGEX) || [];
+  return raw.filter(e => {
+    const l = e.toLowerCase();
+    return !JUNK_DOMAINS.some(d => l.endsWith(`@${d}`) || l.includes(d))
+      && !/\.(png|jpg|svg|js|css|gif|webp)$/i.test(l)
+      && l.length < 60 && l.length > 5;
+  });
+}
+
+// ── Firecrawl-powered email scraping (homepage + contact page) ──
+async function scrapeEmailFromSite(websiteUrl: string): Promise<string | null> {
+  if (!FIRECRAWL_API_KEY) {
+    // Fallback: basic fetch + regex
+    return basicScrapeEmail(websiteUrl);
+  }
+
+  let formattedUrl = websiteUrl.trim();
+  if (!formattedUrl.startsWith("http")) formattedUrl = `https://${formattedUrl}`;
+
+  try {
+    // Step 1: Scrape homepage
+    const homeRes = await fetch("https://api.firecrawl.dev/v1/scrape", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ url: formattedUrl, formats: ["markdown", "html"], onlyMainContent: false }),
+    });
+
+    if (homeRes.ok) {
+      const homeData = await homeRes.json();
+      const markdown = homeData?.data?.markdown || homeData?.markdown || "";
+      const html = homeData?.data?.html || homeData?.html || "";
+      const combined = markdown + " " + html;
+      const emails = extractEmailsFromText(combined);
+      if (emails.length > 0) {
+        console.log(`[HYBRID] Email found on homepage: ${emails[0]}`);
+        return emails[0];
+      }
+    }
+
+    // Step 2: Try common contact pages
+    const contactPaths = ["/contact", "/contact-us", "/about", "/about-us"];
+    for (const path of contactPaths) {
+      try {
+        const contactUrl = new URL(path, formattedUrl).href;
+        const contactRes = await fetch("https://api.firecrawl.dev/v1/scrape", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ url: contactUrl, formats: ["markdown", "html"], onlyMainContent: false }),
+        });
+
+        if (contactRes.ok) {
+          const contactData = await contactRes.json();
+          const markdown = contactData?.data?.markdown || contactData?.markdown || "";
+          const html = contactData?.data?.html || contactData?.html || "";
+          const emails = extractEmailsFromText(markdown + " " + html);
+          if (emails.length > 0) {
+            console.log(`[HYBRID] Email found on ${path}: ${emails[0]}`);
+            return emails[0];
+          }
+        }
+      } catch {
+        // Skip failed contact page
+      }
+    }
+
+    console.log(`[HYBRID] No email found via Firecrawl for ${formattedUrl}`);
+    return null;
+  } catch (err) {
+    console.warn(`[HYBRID] Firecrawl email scrape error for ${formattedUrl}:`, err);
+    return basicScrapeEmail(websiteUrl);
+  }
+}
+
+// ── Basic fetch fallback (no Firecrawl) ──
+async function basicScrapeEmail(websiteUrl: string): Promise<string | null> {
+  try {
+    let formattedUrl = websiteUrl.trim();
+    if (!formattedUrl.startsWith("http")) formattedUrl = `https://${formattedUrl}`;
+    const controller = new AbortController();
+    setTimeout(() => controller.abort(), 5000);
+    const res = await fetch(formattedUrl, { signal: controller.signal, headers: { "User-Agent": "Mozilla/5.0" } });
+    if (!res.ok) return null;
+    const html = await res.text();
+    const emails = extractEmailsFromText(html);
+    return emails[0] || null;
+  } catch { return null; }
 }
 
 // ── Gap Analysis via OpenRouter ──
@@ -187,6 +284,7 @@ serve(async (req) => {
               address: item.address || item.address_info?.address || "",
               phone: item.phone || null,
               website: item.url || item.domain || null,
+              email: null, // Will be enriched later
               category: item.category || "",
               place_id: item.place_id || null,
               claimed: item.is_claimed ?? null,
@@ -217,23 +315,43 @@ serve(async (req) => {
 
     console.log(`[HYBRID] Step 1 complete: ${businesses.length} businesses (source: ${source})`);
 
-    // ── Step 2: Gap Analysis via OpenRouter (only for businesses with websites) ──
+    // ── Step 2: Email Discovery via Firecrawl (for businesses with websites) ──
+    const withWebsites = businesses.filter(b => b.website);
+    console.log(`[HYBRID] Step 2: Scraping ${withWebsites.length} websites for emails`);
+
+    const emailBatchSize = 3;
+    for (let i = 0; i < withWebsites.length; i += emailBatchSize) {
+      const batch = withWebsites.slice(i, i + emailBatchSize);
+      const emailResults = await Promise.allSettled(
+        batch.map(b => scrapeEmailFromSite(b.website!))
+      );
+      for (let j = 0; j < batch.length; j++) {
+        const result = emailResults[j];
+        if (result.status === "fulfilled" && result.value) {
+          batch[j].email = result.value;
+        }
+      }
+    }
+
+    const emailsFound = businesses.filter(b => b.email).length;
+    console.log(`[HYBRID] Step 2 complete: ${emailsFound}/${businesses.length} emails discovered`);
+
+    // ── Step 3: Gap Analysis via OpenRouter (only for businesses with websites) ──
     const results: HybridResult[] = [];
 
     if (!OPENROUTER_API_KEY) {
       console.warn("[HYBRID] No OPENROUTER_API_KEY — skipping gap analysis");
       for (const b of businesses) {
-        results.push({ ...b, gap_analysis: null, gap_status: "skipped" });
+        results.push({ ...b, gap_analysis: null, gap_status: "skipped", email_status: b.email ? "found" : "not_found" });
       }
     } else {
-      const withSites = businesses.filter(b => b.website);
       const withoutSites = businesses.filter(b => !b.website);
 
-      console.log(`[HYBRID] Step 2: Analyzing ${withSites.length} websites (${withoutSites.length} skipped — no URL)`);
+      console.log(`[HYBRID] Step 3: Analyzing ${withWebsites.length} websites (${withoutSites.length} skipped — no URL)`);
 
       const batchSize = 3;
-      for (let i = 0; i < withSites.length; i += batchSize) {
-        const batch = withSites.slice(i, i + batchSize);
+      for (let i = 0; i < withWebsites.length; i += batchSize) {
+        const batch = withWebsites.slice(i, i + batchSize);
         const analyses = await Promise.allSettled(
           batch.map(b => analyzeGap(b.website!, b.title))
         );
@@ -244,6 +362,7 @@ serve(async (req) => {
             ...batch[j],
             gap_analysis: result.status === "fulfilled" ? result.value : "Analysis failed — site may be blocking requests",
             gap_status: result.status === "fulfilled" ? "done" : "error",
+            email_status: batch[j].email ? "found" : "not_found",
           });
         }
       }
@@ -253,6 +372,7 @@ serve(async (req) => {
           ...b,
           gap_analysis: "No website found — missing entire online presence. Prime candidate for web design services.",
           gap_status: "done",
+          email_status: b.email ? "found" : "not_found",
         });
       }
     }
@@ -260,7 +380,7 @@ serve(async (req) => {
     console.log(`[HYBRID] Complete: ${results.length} results with gap analysis (source: ${source})`);
 
     return new Response(
-      JSON.stringify({ success: true, results, total: results.length, source }),
+      JSON.stringify({ success: true, results, total: results.length, source, emails_found: results.filter(r => r.email).length }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
