@@ -66,12 +66,25 @@ serve(async (req) => {
     let draftedCount = 0;
     let errorCount = 0;
 
+    // Minimum days between drip steps (step 1→2: 3 days, 2→3: 4 days, 3→4: 7 days)
+    const MIN_DAYS_BETWEEN_STEPS: Record<number, number> = { 2: 3, 3: 4, 4: 7 };
+
     for (const lead of emailableLeads) {
       try {
         const currentStep = (lead.drip_step || 0) + 1;
         if (currentStep > 4) {
           results.push({ id: lead.id, business: lead.business_name, status: "skipped_complete" });
           continue;
+        }
+
+        // Enforce minimum delay between drip steps
+        if (currentStep > 1 && lead.last_drip_at) {
+          const daysSinceLastDrip = (Date.now() - new Date(lead.last_drip_at).getTime()) / 86400000;
+          const minDays = MIN_DAYS_BETWEEN_STEPS[currentStep] || 3;
+          if (daysSinceLastDrip < minDays) {
+            results.push({ id: lead.id, business: lead.business_name, status: `skipped_too_soon_${Math.round(minDays - daysSinceLastDrip)}d_left` });
+            continue;
+          }
         }
 
         let subject = lead.drip_subject;
