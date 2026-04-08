@@ -181,6 +181,11 @@ Return ONLY valid JSON, no markdown.`;
     if (!emailRes.ok) {
       const errText = await emailRes.text();
       console.error("Resend error:", errText);
+      if (emailRes.status === 429) {
+        return new Response(JSON.stringify({ error: "Daily email quota exceeded — try again tomorrow or upgrade your Resend plan" }), {
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       throw new Error(`Email send failed: ${emailRes.status}`);
     }
 
