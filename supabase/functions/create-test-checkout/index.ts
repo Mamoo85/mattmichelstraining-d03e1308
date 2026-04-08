@@ -572,6 +572,21 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
     },
     success_url: `${SITE}/new-hire-check?test=true`,
   },
+  seo_guard_subscription: {
+    name: "TEST — SEO Guard ($29/mo)",
+    description: "Weekly JS visibility, keyword rank tracking, citation health, SMS alerts. $0 test.",
+    mode: "subscription" as const,
+    metadata: {
+      type: "seo_guard_subscription",
+      email: MATT,
+      business_name: "M2 Development",
+      website_url: "https://mattmichelstraining.com",
+      keywords: "personal training grosse pointe, fitness coach detroit",
+      phone: "3138064952",
+      is_test: "true",
+    },
+    success_url: `${SITE}/seo-guard?status=success&test=true`,
+  },
 };
 
 serve(async (req) => {
