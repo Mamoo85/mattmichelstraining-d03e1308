@@ -34,7 +34,7 @@ serve(async (req) => {
     }
 
     const rawOrigin = req.headers.get("origin") || "https://www.detroitwebagent.com";
-    const origin = ALLOWED_ORIGINS.includes(rawOrigin) ? rawOrigin : "https://www.mattmichelstraining.com";
+    const origin = ALLOWED_ORIGINS.includes(rawOrigin) ? rawOrigin : "https://www.detroitwebagent.com";
 
     // Two tiers: standard ($1500 setup + $99/mo) or starter ($499 setup + $149/mo)
     const isStarter = plan === "starter";
