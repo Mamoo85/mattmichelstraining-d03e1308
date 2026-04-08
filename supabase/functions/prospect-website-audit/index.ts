@@ -22,9 +22,9 @@ async function sonarResearch(query: string): Promise<{ content: string; citation
         "X-Title": "M2 Development Research",
       },
       body: JSON.stringify({
-        model: "perplexity/sonar",
+        model: "perplexity/sonar-reasoning",
         messages: [{ role: "user", content: query }],
-        max_tokens: 600,
+        max_tokens: 1200,
       }),
     });
     if (!res.ok) return { content: "", citations: [] };

@@ -47,9 +47,9 @@ serve(async (req) => {
         "X-Title": "M2 Development Research",
       },
       body: JSON.stringify({
-        model: "perplexity/sonar",
+        model: "perplexity/sonar-reasoning",
         messages,
-        max_tokens: max_tokens || 800,
+        max_tokens: max_tokens || 1200,
       }),
     });
 
