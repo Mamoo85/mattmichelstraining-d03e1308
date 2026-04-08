@@ -147,56 +147,65 @@ const AppNavbar = () => {
 
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-0.5">
-          <NavDropdown label="Train" items={trainLinks} active={trainActive} />
-          <NavDropdown label="The App" items={appLinks} active={appActive} />
-          <NavDropdown label="For Business" items={businessLinks} active={businessActive} />
+          {isAgency ? (
+            <>
+              <NavDropdown label="Services" items={agencyServicesLinks} active={agencyServicesActive} />
+              <NavDropdown label="Tools" items={agencyToolsLinks} active={agencyToolsActive} />
+            </>
+          ) : (
+            <>
+              <NavDropdown label="Train" items={trainLinks} active={trainActive} />
+              <NavDropdown label="The App" items={appLinks} active={appActive} />
+              <NavDropdown label="For Business" items={businessLinks} active={businessActive} />
 
-          <Link
-            to="/results"
-            className={`flex items-center gap-1 px-2.5 py-2 text-[11px] font-bold uppercase tracking-widest transition-m2 ${
-              location.pathname === "/results" ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Results
-          </Link>
+              <Link
+                to="/results"
+                className={`flex items-center gap-1 px-2.5 py-2 text-[11px] font-bold uppercase tracking-widest transition-m2 ${
+                  location.pathname === "/results" ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Results
+              </Link>
 
-          <Link
-            to="/m2-development"
-            className={`flex items-center gap-1 px-2.5 py-2 text-[11px] font-bold uppercase tracking-widest transition-m2 ${
-              location.pathname === "/m2-development" ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            M2 Dev
-          </Link>
+              <Link
+                to="/m2-development"
+                className={`flex items-center gap-1 px-2.5 py-2 text-[11px] font-bold uppercase tracking-widest transition-m2 ${
+                  location.pathname === "/m2-development" ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                M2 Dev
+              </Link>
 
-          <Link
-            to="/studio-rental"
-            className={`flex items-center gap-1 px-2.5 py-2 text-[11px] font-bold uppercase tracking-widest transition-m2 ${
-              location.pathname === "/studio-rental" ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Studio
-          </Link>
+              <Link
+                to="/studio-rental"
+                className={`flex items-center gap-1 px-2.5 py-2 text-[11px] font-bold uppercase tracking-widest transition-m2 ${
+                  location.pathname === "/studio-rental" ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Studio
+              </Link>
 
-          <a
-            href={INSTAGRAM_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-2 py-2 text-muted-foreground hover:text-primary transition-m2"
-            aria-label="Instagram"
-          >
-            <Instagram size={16} />
-          </a>
+              <a
+                href={INSTAGRAM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-2 py-2 text-muted-foreground hover:text-primary transition-m2"
+                aria-label="Instagram"
+              >
+                <Instagram size={16} />
+              </a>
 
-          <a
-            href={FACEBOOK_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-2 py-2 text-muted-foreground hover:text-primary transition-m2"
-            aria-label="Facebook"
-          >
-            <Facebook size={16} />
-          </a>
+              <a
+                href={FACEBOOK_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-2 py-2 text-muted-foreground hover:text-primary transition-m2"
+                aria-label="Facebook"
+              >
+                <Facebook size={16} />
+              </a>
+            </>
+          )}
 
           {isAdmin && (
             <Link
