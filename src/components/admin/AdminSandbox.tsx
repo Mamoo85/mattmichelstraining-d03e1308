@@ -251,6 +251,11 @@ const PRODUCT_FIELDS: Record<string, CustomField[]> = {
     { key: "candidate_name", label: "Candidate Name", default: "Test Candidate" },
     { key: "candidate_email", label: "Candidate Email", default: "test@example.com" },
   ],
+  seo_guard_subscription: [
+    { key: "website_url", label: "Website URL", default: "https://mattmichelstraining.com" },
+    { key: "keywords", label: "Keywords (comma separated)", default: "personal training grosse pointe, fitness coach detroit" },
+    { key: "phone", label: "Phone", default: "+13138064952" },
+  ],
 };
 
 const PRODUCTS: Product[] = [
@@ -302,6 +307,7 @@ const PRODUCTS: Product[] = [
   { id: "trademark_watch_subscription", name: "Trademark Watch Service", price: "$49/mo", description: "Weekly USPTO similarity scan.", type: "subscription", category: "Autonomous Products" },
   { id: "employee_credential_audit", name: "Employee Credential Audit", price: "$149 one-time", description: "HIBP breach report for employees.", type: "instant", category: "One-Time" },
   { id: "new_hire_breach_check", name: "New Hire Breach Screen", price: "$9.99/check", description: "Check candidate email against HIBP.", type: "instant", category: "One-Time" },
+  { id: "seo_guard_subscription", name: "SEO Guard", price: "$29/mo (7-day trial)", description: "Weekly JS visibility, keyword rank tracking, citation health, SMS alerts.", type: "subscription", category: "Subscription" },
 ];
 
 type TestStatus = "idle" | "loading" | "success" | "error";

@@ -269,6 +269,7 @@ const LuxuryRealEstate = lazyRetry(() => import("./pages/LuxuryRealEstate"));
 const TechSupportServices = lazyRetry(() => import("./pages/TechSupportServices"));
 const RevenuePreventer = lazyRetry(() => import("./pages/RevenuePreventer"));
 const BundleRevenueSuite = lazyRetry(() => import("./pages/BundleRevenueSuite"));
+const SeoGuard = lazyRetry(() => import("./pages/SeoGuard"));
 const FreeComplianceScan = lazyRetry(() => import("./pages/FreeComplianceScan"));
 const FreeBidReport = lazyRetry(() => import("./pages/FreeBidReport"));
 const LegalPage = lazyRetry(() => import("./pages/LegalPage"));
@@ -667,6 +668,7 @@ const App = () => (
                     <Route path="/revenue-preventer" element={<RevenuePreventer />} />
                     <Route path="/free-compliance-scan" element={<FreeComplianceScan />} />
                     <Route path="/free-bid-report" element={<FreeBidReport />} />
+                    <Route path="/seo-guard" element={<SeoGuard />} />
                     <Route path="/tools/:slug" element={<MicroSaasToolPage />} />
                     <Route path="/legal/:type" element={<LegalPage />} />
                     <Route path="/partner-program" element={<PartnerProgram />} />

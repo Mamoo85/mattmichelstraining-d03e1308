@@ -4863,6 +4863,45 @@ ${fwdInstructions}`,
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // ── SEO GUARD — $29/mo with 7-day trial ──────────────────────────────
+      if (meta.type === "seo_guard_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await (sb.from as any)("seo_guard_clients").upsert({
+              email,
+              business_name: meta.business_name || null,
+              website_url: meta.website_url || "",
+              phone: meta.phone || null,
+              keywords: meta.keywords ? meta.keywords.split(",").map((k: string) => k.trim()).filter(Boolean) : [],
+              active: true,
+              stripe_customer_id: session.customer as string || null,
+              stripe_subscription_id: session.subscription as string || null,
+              trial_ends_at: new Date(Date.now() + 7 * 86400000).toISOString(),
+            }, { onConflict: "email" });
+
+            await sendM2Email(email, "Your SEO Guard is Active — First Report Arrives Monday", m2Email({
+              greeting: `Hey${meta.business_name ? " " + meta.business_name + " team" : ""} —`,
+              headline: "Your SEO Guard is Active",
+              body: `<p style="margin:0 0 12px"><strong>We're now monitoring your website for SEO issues every week.</strong></p>
+<p style="margin:0 0 8px">🔍 <strong>Website monitored:</strong> ${meta.website_url}</p>
+<p style="margin:0 0 8px">📊 <strong>Keywords tracked:</strong> ${meta.keywords || "none set yet"}</p>
+<p style="margin:0 0 8px">📬 <strong>Weekly reports</strong> — every Monday you'll get a full SEO check</p>
+<p style="margin:0 0 8px">📱 <strong>SMS alerts</strong> — if a keyword drops 3+ spots or Google de-indexes a page</p>
+<p style="margin:0 0 8px">🤖 <strong>Monthly AI audit</strong> — plain-English summary of your biggest issues + fixes</p>
+<p style="margin:0 0 16px">🆓 <strong>7-day free trial</strong> — your first bill is in 7 days</p>
+<p style="margin:0;color:#64748b;font-size:13px">Your first report will arrive next Monday morning.</p>`,
+              cta: { text: "Text Matt With Questions", url: "sms:+13138064952" },
+            }));
+            await notifyMatt(
+              `💰 New SEO Guard — ${meta.business_name || email} ($29/mo trial)`,
+              `<p><strong>${meta.business_name || email}</strong><br>Email: ${email}<br>URL: ${meta.website_url || "n/a"}<br>Keywords: ${meta.keywords || "none"}<br>Phone: ${meta.phone || "n/a"}</p>`
+            );
+          }
+        } catch (e) { console.error("[WEBHOOK] seo_guard error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       // ── DARK WEB MONITOR RESELLER — MSP ($199/mo, 10 domains) ─────────────
       if (meta.type === "dark_web_monitor_reseller") {
         try {
