@@ -82,6 +82,10 @@ const BottomTabBar = () => {
 
   const [moreOpen, setMoreOpen] = useState(false);
 
+  // Hide entirely on agency domain
+  const isAgency = typeof window !== "undefined" && ["detroitwebagent.com", "www.detroitwebagent.com"].includes(window.location.hostname);
+  if (isAgency) return null;
+
   const handleSignOut = useCallback(() => {
     signOut();
     setMoreOpen(false);

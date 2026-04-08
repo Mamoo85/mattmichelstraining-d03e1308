@@ -150,7 +150,22 @@ const AppNavbar = () => {
           {isAgency ? (
             <>
               <NavDropdown label="Services" items={agencyServicesLinks} active={agencyServicesActive} />
-              <NavDropdown label="Tools" items={agencyToolsLinks} active={agencyToolsActive} />
+              <Link
+                to="/pricing"
+                className={`flex items-center gap-1 px-2.5 py-2 text-[11px] font-bold uppercase tracking-widest transition-m2 ${
+                  location.pathname === "/pricing" ? "text-cyan-400 bg-cyan-400/10" : "text-slate-400 hover:text-white"
+                }`}
+              >
+                Pricing
+              </Link>
+              <Link
+                to="/auth"
+                className={`flex items-center gap-1 px-2.5 py-2 text-[11px] font-bold uppercase tracking-widest transition-m2 ${
+                  location.pathname === "/auth" ? "text-cyan-400 bg-cyan-400/10" : "text-slate-400 hover:text-white"
+                }`}
+              >
+                Prospector Login
+              </Link>
             </>
           ) : (
             <>
@@ -234,9 +249,13 @@ const AppNavbar = () => {
           {/* Primary CTA */}
           <Link
             to={isAgency ? "/ai-website-audit" : "/schedule"}
-            className="ml-1 px-4 py-2 text-[11px] font-bold uppercase tracking-widest rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-m2"
+            className={`ml-1 px-4 py-2 text-[11px] font-bold uppercase tracking-widest rounded-md transition-m2 ${
+              isAgency
+                ? "bg-cyan-500 text-slate-950 hover:bg-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.4)]"
+                : "bg-primary text-primary-foreground hover:opacity-90"
+            }`}
           >
-            {isAgency ? "Free Diagnostic" : "Schedule"}
+            {isAgency ? "Contact Us" : "Schedule"}
           </Link>
 
           {user ? (
