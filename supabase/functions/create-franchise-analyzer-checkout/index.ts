@@ -26,8 +26,8 @@ serve(async (req) => {
       subscription_data: { trial_period_days: 14 },
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 29900, product_data: { name: "Franchise FDD Analyzer", description: "Complete risk analysis of any Franchise Disclosure Document — fees, territory, red flags, risk score. 4-hour turnaround." } }, quantity: 1 }],
       metadata: { type: "franchise_analyzer_subscription", email, name: name || "", phone: phone || "", ...Object.fromEntries(Object.entries(body).filter(([k]) => !["email","name","phone"].includes(k)).map(([k,v]) => [k, String(v)])) },
-      success_url: "https://www.mattmichelstraining.com/franchise-analyzer?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/franchise-analyzer",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/franchise-analyzer?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/franchise-analyzer`,
     });
 
     return new Response(JSON.stringify({ url: session.url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

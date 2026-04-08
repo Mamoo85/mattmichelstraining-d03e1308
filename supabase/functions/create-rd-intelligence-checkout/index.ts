@@ -25,8 +25,8 @@ serve(async (req) => {
       customer_email: email,
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 19900, product_data: { name: "Corporate R&D Paper Intelligence", description: "Weekly digest of academic papers, preprints, and research publications relevant to your industry. Stay ahead of what's coming." } }, quantity: 1 }],
       metadata: { type: "rd_intelligence_subscription", email, name: name || "", phone: phone || "", company_name: company_name || "" },
-      success_url: "https://www.mattmichelstraining.com/rd-intelligence?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/rd-intelligence",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/rd-intelligence?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/rd-intelligence`,
     });
 
     return new Response(JSON.stringify({ url: session.url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

@@ -12,8 +12,8 @@ serve(async (req) => {
       subscription_data: { trial_period_days: 7 },
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 4900, product_data: { name: "Business KPI Weekly Email — $49/month", description: "Weekly email summarizing your key business metrics with AI recommendations." } }, quantity: 1 }],
       metadata: { type: "kpi_email_subscription", email, name: name || "", businessName, industry: industry || "", website: website || "" },
-      success_url: "https://www.mattmichelstraining.com/kpi-email?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/kpi-email",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/kpi-email?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/kpi-email`,
     });
     return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e); return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }); }

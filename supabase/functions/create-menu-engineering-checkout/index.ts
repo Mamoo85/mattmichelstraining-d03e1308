@@ -26,8 +26,8 @@ serve(async (req) => {
       subscription_data: { trial_period_days: 14 },
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 9900, product_data: { name: "Restaurant Menu Engineering Report", description: "Monthly BCG matrix analysis of your menu — stars, plowhorses, puzzles, dogs, and what to do about each." } }, quantity: 1 }],
       metadata: { type: "menu_engineering_subscription", email, name: name || "", phone: phone || "", ...Object.fromEntries(Object.entries(body).filter(([k]) => !["email","name","phone"].includes(k)).map(([k,v]) => [k, String(v)])) },
-      success_url: "https://www.mattmichelstraining.com/menu-engineering?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/menu-engineering",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/menu-engineering?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/menu-engineering`,
     });
 
     return new Response(JSON.stringify({ url: session.url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

@@ -26,8 +26,8 @@ serve(async (req) => {
       subscription_data: { trial_period_days: 14 },
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 7900, product_data: { name: "Personal Trainer Client Progress Reports", description: "Beautiful monthly progress reports delivered directly to every client's inbox. Unlimited clients." } }, quantity: 1 }],
       metadata: { type: "fitness_reports_subscription", email, name: name || "", phone: phone || "", ...Object.fromEntries(Object.entries(body).filter(([k]) => !["email","name","phone"].includes(k)).map(([k,v]) => [k, String(v)])) },
-      success_url: "https://www.mattmichelstraining.com/fitness-reports?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/fitness-reports",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/fitness-reports?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/fitness-reports`,
     });
 
     return new Response(JSON.stringify({ url: session.url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

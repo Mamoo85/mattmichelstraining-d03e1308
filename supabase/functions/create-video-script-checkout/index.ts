@@ -14,8 +14,8 @@ serve(async (req) => {
       subscription_data: { trial_period_days: 7 },
       line_items: [{ price: "price_1THQqzD52tPWee46tFaBcvfH", quantity: 1 }],
       metadata: { type: "video_script_subscription", email, name: name || "", businessName, industry: industry || "" },
-      success_url: "https://mattmichelstraining.com/ai-video-scripts?status=success",
-      cancel_url: "https://mattmichelstraining.com/ai-video-scripts",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/ai-video-scripts?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/ai-video-scripts`,
     });
     return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e); return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }); }

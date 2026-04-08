@@ -12,8 +12,8 @@ serve(async (req) => {
       subscription_data: { trial_period_days: 7 },
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 4900, product_data: { name: "AI Hiring Assistant — $49/month", description: "Screen resumes, score candidates, auto-email qualified applicants." } }, quantity: 1 }],
       metadata: { type: "hiring_assistant_subscription", email, name: name || "", businessName, industry: industry || "", city: city || "" },
-      success_url: "https://www.mattmichelstraining.com/hiring-assistant?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/hiring-assistant",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/hiring-assistant?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/hiring-assistant`,
     });
     return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e); return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }); }

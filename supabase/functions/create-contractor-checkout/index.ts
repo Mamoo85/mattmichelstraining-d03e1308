@@ -27,9 +27,9 @@ serve(async (req) => {
     const isSmall = smallMarkets.some(m => city.toLowerCase().includes(m));
     const monthlyPrice = isSmall ? 29900 : 39900;
     const tradeLabel = trade.charAt(0).toUpperCase() + trade.slice(1);
-    const rawOrigin = req.headers.get("origin") || "https://www.mattmichelstraining.com";
-    const ALLOWED_ORIGINS = ["https://www.mattmichelstraining.com", "https://mattmichelstraining.com", "http://localhost:5173", "http://localhost:3000"];
-    const origin = ALLOWED_ORIGINS.includes(rawOrigin) ? rawOrigin : "https://www.mattmichelstraining.com";
+    const rawOrigin = req.headers.get("origin") || "https://www.detroitwebagent.com";
+    const ALLOWED_ORIGINS = ["https://www.mattmichelstraining.com", "https://mattmichelstraining.com", "http://localhost:5173", "http://localhost:3000", "https://www.detroitwebagent.com", "https://detroitwebagent.com"];
+    const origin = ALLOWED_ORIGINS.includes(rawOrigin) ? rawOrigin : "https://www.detroitwebagent.com";
 
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 

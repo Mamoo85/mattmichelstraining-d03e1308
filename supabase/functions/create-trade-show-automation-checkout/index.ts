@@ -26,8 +26,8 @@ serve(async (req) => {
 
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 9900, product_data: { name: "Trade Show Follow-Up Automation", description: "Upload your badge scans. AI researches each contact and launches personalized follow-up sequences automatically." } }, quantity: 1 }],
       metadata: { type: "trade_show_automation_subscription", email, name: name || "", phone: phone || "", ...Object.fromEntries(Object.entries(body).filter(([k]) => !["email","name","phone"].includes(k)).map(([k,v]) => [k, String(v)])) },
-      success_url: "https://www.mattmichelstraining.com/trade-show-automation?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/trade-show-automation",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/trade-show-automation?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/trade-show-automation`,
     });
 
     return new Response(JSON.stringify({ url: session.url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

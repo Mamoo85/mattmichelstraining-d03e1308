@@ -12,8 +12,8 @@ serve(async (req) => {
       subscription_data: { trial_period_days: 7 },
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 5900, product_data: { name: "AI Local SEO Pages — $59/month", description: "Monthly city-specific landing page content for your top service areas." } }, quantity: 1 }],
       metadata: { type: "local_seo_subscription", email, name: name || "", businessName, industry: industry || "", city: city || "", website: website || "" },
-      success_url: "https://www.mattmichelstraining.com/local-seo-pages?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/local-seo-pages",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/local-seo-pages?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/local-seo-pages`,
     });
     return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e); return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }); }

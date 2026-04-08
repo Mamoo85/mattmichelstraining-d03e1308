@@ -44,8 +44,8 @@ serve(async (req) => {
         email,
         name: name || "",
       },
-      success_url: "https://www.mattmichelstraining.com/field-rep-tools?success=1",
-      cancel_url: "https://www.mattmichelstraining.com/field-rep-tools",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/field-rep-tools?success=1`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/field-rep-tools`,
     });
 
     return new Response(

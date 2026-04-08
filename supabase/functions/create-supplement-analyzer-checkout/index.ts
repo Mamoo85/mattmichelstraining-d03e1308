@@ -25,8 +25,8 @@ serve(async (req) => {
       customer_email: email,
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 1900, product_data: { name: "Supplement Stack Analyzer", description: "Monthly AI analysis of your supplement stack — interactions, redundancies, timing optimization, and evidence review. Personalized to your goals." } }, quantity: 1 }],
       metadata: { type: "supplement_analyzer_subscription", email, name: name || "", phone: phone || "" },
-      success_url: "https://www.mattmichelstraining.com/supplement-analyzer?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/supplement-analyzer",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/supplement-analyzer?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/supplement-analyzer`,
     });
 
     return new Response(JSON.stringify({ url: session.url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

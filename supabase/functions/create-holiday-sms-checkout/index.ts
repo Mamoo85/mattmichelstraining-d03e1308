@@ -12,8 +12,8 @@ serve(async (req) => {
       subscription_data: { trial_period_days: 7 },
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 3900, product_data: { name: "Holiday SMS Blast — $39/month", description: "Automated holiday and seasonal SMS to your customer list. 8 blasts per year." } }, quantity: 1 }],
       metadata: { type: "holiday_sms_subscription", email, name: name || "", businessName, industry: industry || "" },
-      success_url: "https://www.mattmichelstraining.com/holiday-sms?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/holiday-sms",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/holiday-sms?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/holiday-sms`,
     });
     return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: { ...cors, "Content-Type": "application/json" } });
   } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e); return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...cors, "Content-Type": "application/json" } }); }

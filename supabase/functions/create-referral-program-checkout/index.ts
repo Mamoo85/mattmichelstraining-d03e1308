@@ -22,8 +22,8 @@ serve(async (req) => {
       subscription_data: { trial_period_days: 30 },
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 3900, product_data: { name: "Automated Referral Program", description: "Auto-sends referral offers after jobs. Tracks codes, auto-rewards referrers. Turns happy customers into salespeople." } }, quantity: 1 }],
       metadata: { type: "referral_program_subscription", email, name: name || "", businessName, phone: phone || "", businessType: businessType || "", rewardAmount: String(rewardAmount || 25) },
-      success_url: "https://www.mattmichelstraining.com/referral-program?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/referral-program",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/referral-program?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/referral-program`,
     });
 
     return new Response(JSON.stringify({ url: session.url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

@@ -25,8 +25,8 @@ serve(async (req) => {
       customer_email: email,
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 999, product_data: { name: "Children's Story Subscription", description: "4 original bedtime stories per month, personalized with your child's name and favorite themes. New story every week, delivered by email." } }, quantity: 1 }],
       metadata: { type: "childrens_story_subscription", email, name: name || "", phone: phone || "", child_name: child_name || "" },
-      success_url: "https://www.mattmichelstraining.com/childrens-stories?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/childrens-stories",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/childrens-stories?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/childrens-stories`,
     });
 
     return new Response(JSON.stringify({ url: session.url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

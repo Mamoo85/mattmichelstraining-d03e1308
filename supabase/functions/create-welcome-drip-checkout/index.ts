@@ -12,8 +12,8 @@ serve(async (req) => {
       subscription_data: { trial_period_days: 7 },
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 4900, product_data: { name: "AI Email Welcome Drip — $49/month", description: "5-email welcome sequence automatically sent to every new customer." } }, quantity: 1 }],
       metadata: { type: "welcome_drip_subscription", email, name: name || "", businessName, industry: industry || "" },
-      success_url: "https://www.mattmichelstraining.com/welcome-drip?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/welcome-drip",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/welcome-drip?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/welcome-drip`,
     });
     return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e); return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }); }

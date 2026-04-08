@@ -66,8 +66,8 @@ serve(async (req) => {
         businessName,
         phone,
       },
-      success_url: "https://www.mattmichelstraining.com/missed-call-text?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/missed-call-text",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/missed-call-text?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/missed-call-text`,
     });
 
     return new Response(

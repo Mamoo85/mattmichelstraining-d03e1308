@@ -12,8 +12,8 @@ serve(async (req) => {
       subscription_data: { trial_period_days: 7 },
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 19900, product_data: { name: "AI Franchise Operations Toolkit — $199/month", description: "Monthly staff newsletters, compliance checklists, policy updates, and onboarding docs for all locations." } }, quantity: 1 }],
       metadata: { type: "franchise_ops", email, name: name || "", businessName, locations: locations || "" },
-      success_url: "https://www.mattmichelstraining.com/ai-franchise-ops?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/ai-franchise-ops",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/ai-franchise-ops?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/ai-franchise-ops`,
     });
     return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: { ...cors, "Content-Type": "application/json" } });
   } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e); return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...cors, "Content-Type": "application/json" } }); }

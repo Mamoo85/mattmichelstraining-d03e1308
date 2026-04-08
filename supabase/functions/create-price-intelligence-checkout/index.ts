@@ -26,8 +26,8 @@ serve(async (req) => {
       subscription_data: { trial_period_days: 14 },
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 19900, product_data: { name: "Competitor Price Intelligence", description: "Daily competitor price monitoring with instant alerts and strategic recommendations." } }, quantity: 1 }],
       metadata: { type: "price_intelligence_subscription", email, name: name || "", phone: phone || "", ...Object.fromEntries(Object.entries(body).filter(([k]) => !["email","name","phone"].includes(k)).map(([k,v]) => [k, String(v)])) },
-      success_url: "https://www.mattmichelstraining.com/price-intelligence?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/price-intelligence",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/price-intelligence?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/price-intelligence`,
     });
 
     return new Response(JSON.stringify({ url: session.url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

@@ -22,8 +22,8 @@ serve(async (req) => {
       subscription_data: { trial_period_days: 7 },
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 2900, product_data: { name: "Invoice Chaser", description: "Automated SMS + email reminders for unpaid invoices at 7, 14, and 21 days. Stops automatically when paid." } }, quantity: 1 }],
       metadata: { type: "invoice_chaser_subscription", email, name: name || "", businessName, phone: phone || "" },
-      success_url: "https://www.mattmichelstraining.com/invoice-chaser?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/invoice-chaser",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/invoice-chaser?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/invoice-chaser`,
     });
 
     return new Response(JSON.stringify({ url: session.url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

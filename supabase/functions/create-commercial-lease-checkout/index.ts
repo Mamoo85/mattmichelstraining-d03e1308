@@ -25,8 +25,8 @@ serve(async (req) => {
       customer_email: email,
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 14900, product_data: { name: "Commercial Lease Abstractor", description: "AI extracts key dates, clauses, and obligations from commercial leases. Monthly summary delivered automatically." } }, quantity: 1 }],
       metadata: { type: "commercial_lease_subscription", email, name: name || "", phone: phone || "", company_name: company_name || "" },
-      success_url: "https://www.mattmichelstraining.com/commercial-lease?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/commercial-lease",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/commercial-lease?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/commercial-lease`,
     });
 
     return new Response(JSON.stringify({ url: session.url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

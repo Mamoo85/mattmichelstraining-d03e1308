@@ -27,7 +27,7 @@ serve(async (req) => {
 
     const stripe = new Stripe(STRIPE_SECRET_KEY, { apiVersion: "2025-08-27.basil" });
 
-    const rawOrigin = req.headers.get("origin") || "https://www.mattmichelstraining.com";
+    const rawOrigin = req.headers.get("origin") || "https://www.detroitwebagent.com";
     const ALLOWED = ["https://www.mattmichelstraining.com", "https://mattmichelstraining.com", "http://localhost:5173"];
     const origin = ALLOWED.includes(rawOrigin) ? rawOrigin : "https://www.mattmichelstraining.com";
 

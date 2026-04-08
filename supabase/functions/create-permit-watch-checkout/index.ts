@@ -17,7 +17,7 @@ serve(async (req) => {
     const { email, business_name } = body;
     if (!email) return new Response(JSON.stringify({ error: "Email required" }), { status: 400, headers: corsHeaders });
 
-    const origin = req.headers.get("origin") || "https://mattmichelstraining.com";
+    const origin = req.headers.get("origin") || "https://www.detroitwebagent.com";
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",

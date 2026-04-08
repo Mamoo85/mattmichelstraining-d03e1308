@@ -26,8 +26,8 @@ serve(async (req) => {
       subscription_data: { trial_period_days: 14 },
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 19900, product_data: { name: "Weekly Grant Discovery for Nonprofits", description: "Every Monday: ranked list of grant opportunities matched to your mission, with fit scores and deadlines." } }, quantity: 1 }],
       metadata: { type: "grant_discovery_subscription", email, name: name || "", phone: phone || "", ...Object.fromEntries(Object.entries(body).filter(([k]) => !["email","name","phone"].includes(k)).map(([k,v]) => [k, String(v)])) },
-      success_url: "https://www.mattmichelstraining.com/grant-discovery?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/grant-discovery",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/grant-discovery?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/grant-discovery`,
     });
 
     return new Response(JSON.stringify({ url: session.url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

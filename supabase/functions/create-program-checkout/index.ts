@@ -167,9 +167,9 @@ serve(async (req) => {
     let customerId: string | undefined;
     if (customers.data.length > 0) customerId = customers.data[0].id;
 
-    const rawOrigin = req.headers.get("origin") || "https://www.mattmichelstraining.com";
-    const ALLOWED_ORIGINS = ["https://www.mattmichelstraining.com", "https://mattmichelstraining.com", "http://localhost:5173", "http://localhost:3000"];
-    const origin = ALLOWED_ORIGINS.includes(rawOrigin) ? rawOrigin : "https://www.mattmichelstraining.com";
+    const rawOrigin = req.headers.get("origin") || "https://www.detroitwebagent.com";
+    const ALLOWED_ORIGINS = ["https://www.mattmichelstraining.com", "https://mattmichelstraining.com", "http://localhost:5173", "http://localhost:3000", "https://www.detroitwebagent.com", "https://detroitwebagent.com"];
+    const origin = ALLOWED_ORIGINS.includes(rawOrigin) ? rawOrigin : "https://www.detroitwebagent.com";
 
     // Always use price_data with the calculated final price for consistency
     const lineItems = [{

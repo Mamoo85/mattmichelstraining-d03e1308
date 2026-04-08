@@ -12,8 +12,8 @@ serve(async (req) => {
       subscription_data: { trial_period_days: 7 },
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 2900, product_data: { name: "Customer Satisfaction Survey — $29/month", description: "Auto-survey customers after each job. Monthly NPS report." } }, quantity: 1 }],
       metadata: { type: "satisfaction_survey_subscription", email, name: name || "", businessName, phone: phone || "" },
-      success_url: "https://www.mattmichelstraining.com/satisfaction-survey?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/satisfaction-survey",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/satisfaction-survey?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/satisfaction-survey`,
     });
     return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e); return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }); }

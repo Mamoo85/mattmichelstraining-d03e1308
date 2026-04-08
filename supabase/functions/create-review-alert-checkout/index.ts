@@ -12,8 +12,8 @@ serve(async (req) => {
       subscription_data: { trial_period_days: 7 },
       line_items: [{ price: "price_1THQqnD52tPWee46T0OZev5A", quantity: 1 }],
       metadata: { type: "review_alert_subscription", email, name: name || "", businessName, phone: phone || "" },
-      success_url: "https://www.mattmichelstraining.com/review-alerts?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/review-alerts",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/review-alerts?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/review-alerts`,
     });
     return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e); return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }); }

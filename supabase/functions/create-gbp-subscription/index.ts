@@ -25,7 +25,7 @@ serve(async (req: Request) => {
       );
     }
 
-    const siteUrl = Deno.env.get("PUBLIC_SITE_URL") || "https://mattmichelstraining.com";
+    const siteUrl = Deno.env.get("PUBLIC_SITE_URL") || "https://www.detroitwebagent.com";
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
       apiVersion: "2025-08-27.basil",

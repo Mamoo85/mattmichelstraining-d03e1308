@@ -21,8 +21,8 @@ serve(async (req) => {
       subscription_data: { trial_period_days: 7 },
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 7900, product_data: { name: "AI Reputation Dashboard — $79/month", description: "Weekly AI reputation reports across Google, Yelp, Facebook & BBB." } }, quantity: 1 }],
       metadata: { type: "reputation_dashboard_subscription", email, name: name || "", businessName, website: website || "" },
-      success_url: "https://www.mattmichelstraining.com/ai-reputation?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/ai-reputation",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/ai-reputation?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/ai-reputation`,
     });
     return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);

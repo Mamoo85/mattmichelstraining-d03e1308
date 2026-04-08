@@ -35,8 +35,8 @@ serve(async (req) => {
         quantity: 1,
       }],
       metadata: { type: "text_marketing_subscription", email, name: name || "", businessName, phone: phone || "", industry: industry || "" },
-      success_url: "https://www.mattmichelstraining.com/text-message-marketing?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/text-message-marketing",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/text-message-marketing?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/text-message-marketing`,
     });
     return new Response(JSON.stringify({ url: session.url }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },

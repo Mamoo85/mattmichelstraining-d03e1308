@@ -22,8 +22,8 @@ serve(async (req) => {
       subscription_data: { trial_period_days: 7 },
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 2500, product_data: { name: "No-Show Re-Booker", description: "Auto-texts cancelled/no-show clients 30 minutes later to reschedule. One rebooked appointment pays for months." } }, quantity: 1 }],
       metadata: { type: "noshow_subscription", email, name: name || "", businessName, phone: phone || "", bookingUrl: bookingUrl || "" },
-      success_url: "https://www.mattmichelstraining.com/no-show-rebooker?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/no-show-rebooker",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/no-show-rebooker?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/no-show-rebooker`,
     });
 
     return new Response(JSON.stringify({ url: session.url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

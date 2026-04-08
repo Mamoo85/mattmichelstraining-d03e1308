@@ -21,8 +21,8 @@ serve(async (req) => {
       customer_email: email,
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 1900, product_data: { name: "Weekly SMS Blast", description: "AI-written weekly SMS to your customer list every Tuesday. We write it, we send it, you get results." } }, quantity: 1 }],
       metadata: { type: "sms_blast_subscription", email, name: name || "", businessName, phone: phone || "", businessType: businessType || "", city: city || "", state: state || "MI" },
-      success_url: "https://www.mattmichelstraining.com/weekly-sms-blast?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/weekly-sms-blast",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/weekly-sms-blast?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/weekly-sms-blast`,
     });
 
     return new Response(JSON.stringify({ url: session.url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

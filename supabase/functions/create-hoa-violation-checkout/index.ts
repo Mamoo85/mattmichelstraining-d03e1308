@@ -26,8 +26,8 @@ serve(async (req) => {
       subscription_data: { trial_period_days: 7 },
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 14900, product_data: { name: "HOA Violation Letter Generator", description: "Legally-compliant HOA violation letters generated in 90 seconds. Unlimited monthly." } }, quantity: 1 }],
       metadata: { type: "hoa_violation_subscription", email, name: name || "", phone: phone || "", ...Object.fromEntries(Object.entries(body).filter(([k]) => !["email","name","phone"].includes(k)).map(([k,v]) => [k, String(v)])) },
-      success_url: "https://www.mattmichelstraining.com/hoa-violation?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/hoa-violation",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/hoa-violation?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/hoa-violation`,
     });
 
     return new Response(JSON.stringify({ url: session.url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

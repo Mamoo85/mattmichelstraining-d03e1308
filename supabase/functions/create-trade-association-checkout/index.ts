@@ -25,8 +25,8 @@ serve(async (req) => {
       customer_email: email,
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 14900, product_data: { name: "Trade Association Intelligence", description: "Weekly briefing on policy changes, regulatory updates, and industry moves from your trade associations — summarized and delivered to your inbox." } }, quantity: 1 }],
       metadata: { type: "trade_association_subscription", email, name: name || "", phone: phone || "", company_name: company_name || "" },
-      success_url: "https://www.mattmichelstraining.com/trade-association-intel?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/trade-association-intel",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/trade-association-intel?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/trade-association-intel`,
     });
 
     return new Response(JSON.stringify({ url: session.url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

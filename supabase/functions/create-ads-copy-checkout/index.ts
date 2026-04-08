@@ -21,8 +21,8 @@ serve(async (req) => {
       subscription_data: { trial_period_days: 7 },
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 3900, product_data: { name: "AI Google Ads Copy Generator — $39/month", description: "10 AI-generated Google Ads copy variations delivered monthly." } }, quantity: 1 }],
       metadata: { type: "ads_copy_subscription", email, name: name || "", businessName, city, services: services || "" },
-      success_url: "https://www.mattmichelstraining.com/ai-ads-copy?status=success",
-      cancel_url: "https://www.mattmichelstraining.com/ai-ads-copy",
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/ai-ads-copy?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/ai-ads-copy`,
     });
     return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
