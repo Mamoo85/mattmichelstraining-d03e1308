@@ -12,7 +12,7 @@ const FEATURES = [
   { icon: BarChart3, title: "Keyword Rank Alerts", desc: "SMS the moment a keyword drops more than 3 spots so you can act fast." },
   { icon: Shield, title: "Citation Health", desc: "Monthly check that your name, address, and phone match everywhere online." },
   { icon: Bell, title: "Indexation Monitor", desc: "Instant alert if Google removes a page from search results." },
-  { icon: FileText, title: "Monthly AI Report", desc: "Plain-English summary of your biggest SEO issues + how to fix them." },
+  { icon: FileText, title: "Monthly Performance Report", desc: "Plain-English summary of your biggest SEO issues + how to fix them." },
   { icon: Smartphone, title: "7-Day Free Trial", desc: "Try it risk-free. First report arrives Monday morning. Cancel anytime." },
 ];
 
@@ -91,7 +91,7 @@ export default function SeoGuard() {
           <div className="flex items-center justify-center gap-6 text-sm text-slate-400">
             <span>✅ Weekly scans</span>
             <span>✅ SMS alerts</span>
-            <span>✅ AI reports</span>
+            <span>✅ Automated reports</span>
           </div>
         </div>
       </section>
@@ -152,7 +152,7 @@ export default function SeoGuard() {
 
       {/* Footer */}
       <footer className="text-center py-8 text-sm text-muted-foreground border-t border-border">
-        <p>M² Development · Grosse Pointe, MI · <a href="tel:+13138064952" className="text-orange-500">(313) 806-4952</a></p>
+        <p>Detroit Web Agency · Grosse Pointe, MI · <a href="tel:+13138064952" className="text-orange-500">(313) 806-4952</a></p>
       </footer>
     </div>
   );

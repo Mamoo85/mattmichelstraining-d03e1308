@@ -142,6 +142,12 @@
     font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
     font-weight: 800;
   }
+  .font-industrial {
+    font-family: 'Rajdhani', 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
   .shadow-m2 {
     box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 2px 4px rgba(0,0,0,0.3);
   }

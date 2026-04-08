@@ -40,7 +40,7 @@ const businessLinks: DropdownItem[] = [
 const agencyServicesLinks: DropdownItem[] = [
   { to: "/all-services", label: "All Services" },
   { to: "/web-design-services", label: "Web Design" },
-  { to: "/ai-website-audit", label: "Free Website Audit" },
+  { to: "/ai-website-audit", label: "Free Site Diagnostic" },
   { to: "/seo-guard", label: "SEO Guard" },
 ];
 
@@ -236,7 +236,7 @@ const AppNavbar = () => {
             to={isAgency ? "/ai-website-audit" : "/schedule"}
             className="ml-1 px-4 py-2 text-[11px] font-bold uppercase tracking-widest rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-m2"
           >
-            {isAgency ? "Free Audit" : "Schedule"}
+            {isAgency ? "Free Diagnostic" : "Schedule"}
           </Link>
 
           {user ? (
