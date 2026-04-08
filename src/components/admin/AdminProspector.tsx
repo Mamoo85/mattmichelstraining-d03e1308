@@ -353,6 +353,11 @@ export default function AdminProspector() {
   const [mapResults, setMapResults] = useState<MapResult[]>([]);
   const [selectedResults, setSelectedResults] = useState<Set<number>>(new Set());
 
+  // ── Hybrid Search State ──
+  const [hybridMode, setHybridMode] = useState(false);
+  const [hybridSearching, setHybridSearching] = useState(false);
+  const [hybridResults, setHybridResults] = useState<HybridResult[]>([]);
+
   // ── Pipeline Tab State ──
   const [pipelineLeads, setPipelineLeads] = useState<PipelineLead[]>([]);
   const [loadingPipeline, setLoadingPipeline] = useState(false);
