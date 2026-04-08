@@ -64,8 +64,6 @@ export const SITE_TEMPLATES: Record<string, SiteTemplate> = {
       { key: "contact", type: "contact", label: "Contact", promptHint: "Office address, phone, email, office hours. Mention virtual consultation availability." },
     ],
   },
-};
-
   techSeo: {
     key: "techSeo",
     name: "Tech / SaaS / SEO",
