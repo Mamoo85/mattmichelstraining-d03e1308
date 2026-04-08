@@ -1376,6 +1376,16 @@ export default function AdminProspector() {
               {batchProcessing ? <Loader2 size={10} className="animate-spin" /> : <Mail size={10} />}
               Generate & Send {selectedPipelineIds.size > 0 ? selectedPipelineIds.size : "All"}
             </Button>
+            <div className="ml-auto">
+              <Button
+                variant="outline" size="sm" className="text-xs h-7 gap-1 border-red-500/30 text-red-400 hover:bg-red-500/10"
+                disabled={archiving}
+                onClick={archiveSentLeads}
+              >
+                {archiving ? <Loader2 size={10} className="animate-spin" /> : <Trash2 size={10} />}
+                Clear Sent ({pipelineLeads.filter(l => l.pipeline_stage === "outreach_sent").length})
+              </Button>
+            </div>
           </div>
 
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
