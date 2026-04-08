@@ -1,100 +1,80 @@
+## Plan: Switch Prospector Emails to detroitwebagent.com + Add Sent Tracking & Clear Functionality
+
+### Problem Summary
+
+1. **Wrong sender domain**: All prospector drip emails send from `matt@mattmichelstraining.com` — need to switch to `matt@detroitwebagent.com`
+2. **No sent tracking**: No way to see which businesses have been emailed, open rates, or email history
+3. **No clear/reset**: Can't clear out the pipeline or move sent leads out of the way
+4. **Resend domain**: User says `detroitwebagent.com` is set up at Resend directly (not via Lovable Emails). The prospector functions already use Resend API directly, so this is just a `from` address change — the domain must be verified in Resend's dashboard.
+
+### Changes
+
+**1. Update sender address in 3 edge functions**
 
 
-# Detroit Web Agency — Industrial Rebrand & Copy Scrub
+| File                                          | Current `from`                 | New `from`                 |
+| --------------------------------------------- | ------------------------------ | -------------------------- |
+| `pipeline-drip-send/index.ts` (line 173)      | `matt@mattmichelstraining.com` | `matt@detroitwebagent.com` |
+| `pipeline-batch-drip/index.ts` (line 171)     | `matt@mattmichelstraining.com` | `matt@detroitwebagent.com` |
+| `neo-outreach/index.ts` (lines 283, 348, 393) | `matt@mattmichelstraining.com` | `matt@detroitwebagent.com` |
 
-## Summary
 
-Strip all "AI" buzzwords from the agency-facing pages, rebrand to an industrial "Digital Engines" voice, update the color palette to deep slate + electric cyan CTAs, and add industrial typography. The training side remains completely untouched.
+Also add `reply-to: matt@detroitwebagent.com` header so replies go to the new inbox. Keep BCC to `matthewmichels4@gmail.com` so everything lands in Gmail.
 
----
+**2. Create `prospect_email_log` table (migration)**
 
-## Technical Details
-
-### 1. Domain Config Update — `src/lib/domainConfig.ts`
-
-Change the tagline from "AI-Powered Web Design & Automation..." to:
-**"High-Performance Websites & Automated Systems for Michigan Businesses"**
-
-### 2. AgencyHome.tsx — Full Rewrite
-
-**Hero:**
-- H1: "Building Digital Engines for Michigan Businesses."
-- Sub: "We engineer high-performance websites and automated systems that capture leads, book appointments, and do the heavy lifting for you."
-- Primary CTA: "Run a Free Site Audit" (cyan/cobalt button)
-- Secondary CTA: "View All Services"
-
-**Services grid — rename everything:**
-- "Web Design" → stays (already clean)
-- "AI Receptionist" → **"24/7 Call Routing Engine"** — "Never miss a call. Our automated voice system answers, qualifies, and books leads around the clock."
-- "SEO Guard" → stays (already clean)
-- "Website Audit" → **"Free Site Diagnostic"** — "Our automated scanner reveals exactly what's costing you leads."
-- "Reputation Manager" → **"Review Command Center"** — "Monitor reviews, respond instantly, build 5-star social proof."
-- "Computer Repair" → stays
-
-**Stats bar:**
-- "AI Receptionist" → **"Call Engine"**
-
-**Trust section — scrub copy:**
-- "AI-powered prospecting finds YOUR customers" → **"Automated prospecting finds YOUR customers"**
-
-**CTA section:**
-- "Get a free, AI-powered audit" → **"Get a free automated audit of your website in under 60 seconds."**
-
-Remove `Bot` icon import, replace with `PhoneCall` or `PhoneForwarded`.
-
-### 3. ComputerRepair.tsx — Add M2 Branding
-
-Add "M2 Computer Repair" subtitle/badge in the hero. Already clean of AI buzzwords — no copy changes needed.
-
-### 4. SeoGuard.tsx — Copy Scrub
-
-- Line 15: "Monthly AI Report" → **"Monthly Performance Report"**
-- Line 94: "✅ AI reports" → **"✅ Automated reports"**
-- Line 155: "M² Development" → **"Detroit Web Agency"**
-
-### 5. AppNavbar.tsx — Scrub Nav Labels
-
-- Line 43: "Free Website Audit" label → **"Free Site Diagnostic"**
-- CTA button (line 239): "Free Audit" → **"Free Diagnostic"**
-
-### 6. Color Palette — Agency-Only CSS Class
-
-Add an `.agency-theme` CSS utility or use inline Tailwind on AgencyHome. The existing dark theme is already slate-based. Changes:
-- Primary CTA buttons: switch from `bg-blue-600` → **`bg-cyan-500 hover:bg-cyan-400 text-slate-950`** (electric cyan, dark text — industrial punch)
-- Service card hover borders: `border-blue-500/50` → `border-cyan-500/50`
-- Accent icon color: `text-blue-500` → `text-cyan-400`
-- Hero gradient: keep `from-blue-950 via-slate-900 to-slate-950` (already industrial)
-
-### 7. Typography — Agency Headings
-
-Add Rajdhani font via `index.html` link tag (Google Fonts). Create a `.font-industrial` utility:
-```css
-.font-industrial {
-  font-family: 'Rajdhani', 'Plus Jakarta Sans', system-ui, sans-serif;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-}
+```sql
+CREATE TABLE public.prospect_email_log (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  pipeline_lead_id uuid REFERENCES prospect_pipeline(id) ON DELETE CASCADE,
+  business_name text,
+  recipient_email text NOT NULL,
+  subject text,
+  drip_step integer,
+  status text DEFAULT 'sent',  -- sent, opened, clicked, bounced, failed
+  resend_id text,              -- Resend message ID for tracking
+  sent_at timestamptz DEFAULT now(),
+  opened_at timestamptz,
+  clicked_at timestamptz
+);
+ALTER TABLE public.prospect_email_log ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "admin_all_prospect_email_log" ON public.prospect_email_log
+  FOR ALL TO authenticated USING (public.has_role(auth.uid(), 'admin'));
 ```
-Apply to AgencyHome H1/H2s and ComputerRepair headings only. Training pages use existing `font-display` / `font-brand`.
 
-### 8. LegalFooter.tsx — No Changes Needed
+**3. Log every send in edge functions**
 
-Already pulls from `getBrandConfig()` which shows "Detroit Web Agency". Clean.
+Update `pipeline-drip-send` and `pipeline-batch-drip` to insert into `prospect_email_log` after each successful Resend send, capturing the Resend message ID.
 
----
+**4. Add "Sent" tab + Clear functionality to AdminProspector.tsx**
 
-## Files Changed
+- Add a 5th pipeline stage: `{ key: "sent_complete", label: "Sent", color: "..." }` — or better, add a **"Sent Log" sub-tab** within the Pipeline tab
+- **Sent Log view**: Table showing all emails sent with columns: Business, Email, Subject, Step, Sent Date, Status
+- **Clear Pipeline button**: Bulk action to archive/delete leads from the pipeline (move to a `pipeline_stage = "archived"` state or hard delete)
+- **Clear filters**: "Clear Sent" moves all `outreach_sent` leads to archived, keeping the active pipeline clean
 
-| File | Action |
-|------|--------|
-| `src/lib/domainConfig.ts` | Edit — scrub tagline |
-| `src/pages/AgencyHome.tsx` | Rewrite — new hero, scrubbed copy, cyan palette |
-| `src/pages/ComputerRepair.tsx` | Edit — add "M2 Computer Repair" badge |
-| `src/pages/SeoGuard.tsx` | Edit — scrub 3 AI references |
-| `src/components/layout/AppNavbar.tsx` | Edit — rename 2 labels |
-| `src/index.css` | Edit — add `.font-industrial` utility |
-| `index.html` | Edit — add Rajdhani font link |
+**5. Gmail forwarding note**
 
-Training side: zero files touched.
+For `matt@detroitwebagent.com` to show up in Gmail (both sent and received):
 
+- **Receiving**: Set up email forwarding in the domain provider (or Resend inbound) to forward to `matthewmichels4@gmail.com`
+- **Sending**: In Gmail Settings → Accounts → "Send mail as" → add `matt@detroitwebagent.com` (requires SMTP or alias verification)
+- This is a DNS/Gmail config step outside the codebase — will provide instructions
+- Then we need to test and make sure its working before we stop working.
+
+### Files Modified
+
+
+| File                                              | Change                                            |
+| ------------------------------------------------- | ------------------------------------------------- |
+| New migration                                     | Create `prospect_email_log` table                 |
+| `supabase/functions/pipeline-drip-send/index.ts`  | Change `from` to `detroitwebagent.com`, log sends |
+| `supabase/functions/pipeline-batch-drip/index.ts` | Change `from` to `detroitwebagent.com`, log sends |
+| `supabase/functions/neo-outreach/index.ts`        | Change `from` to `detroitwebagent.com`            |
+| `src/components/admin/AdminProspector.tsx`        | Add Sent Log tab, Clear/Archive actions           |
+
+
+### No Impact On
+
+- M² Training email flows (newsletter, welcome emails, etc.) — those stay on `mattmichelstraining.com`
+- Lovable Email infrastructure (notify.mattmichelstraining.com) — unaffected
