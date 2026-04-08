@@ -402,38 +402,59 @@ export default function AdminSandbox() {
       </CardHeader>
       <CardContent className="space-y-3">
         <p className="text-slate-400 text-xs leading-relaxed">{p.description}</p>
-        <div className="flex items-center gap-2">
-          {hasCustomFields(p.id) ? (
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            {hasCustomFields(p.id) ? (
+              <Button
+                onClick={() => openCustomize(p)}
+                disabled={statuses[p.id] === "loading"}
+                className={`flex-1 text-sm h-8 ${btnClass}`}
+              >
+                {statuses[p.id] === "loading" ? (
+                  <><Loader2 className="h-3 w-3 animate-spin mr-1" /> Opening...</>
+                ) : (
+                  <><Settings2 className="h-3 w-3 mr-1" /> Customize &amp; Test</>
+                )}
+              </Button>
+            ) : (
+              <Button
+                onClick={() => runTest(p)}
+                disabled={statuses[p.id] === "loading"}
+                className={`flex-1 text-sm h-8 ${btnClass}`}
+              >
+                {statuses[p.id] === "loading" ? (
+                  <><Loader2 className="h-3 w-3 animate-spin mr-1" /> Opening...</>
+                ) : (
+                  <><ExternalLink className="h-3 w-3 mr-1" /> Test $0</>
+                )}
+              </Button>
+            )}
+            {statuses[p.id] && statuses[p.id] !== "loading" && (
+              <button onClick={() => resetStatus(p.id)} className="text-slate-500 hover:text-slate-300">
+                <RefreshCw className="h-3 w-3" />
+              </button>
+            )}
+            <StatusIcon status={statuses[p.id] || "idle"} />
+          </div>
+          {PREVIEWABLE.includes(p.id) && (
             <Button
-              onClick={() => openCustomize(p)}
-              disabled={statuses[p.id] === "loading"}
-              className={`flex-1 text-sm h-8 ${btnClass}`}
+              onClick={() => {
+                const fields = PRODUCT_FIELDS[p.id] || [];
+                const defaults: Record<string, string> = {};
+                fields.forEach(f => { defaults[f.key] = f.default; });
+                runPreview(p, defaults);
+              }}
+              disabled={previewLoading}
+              variant="outline"
+              className="w-full text-sm h-8 border-emerald-600/50 text-emerald-400 hover:bg-emerald-900/30"
             >
-              {statuses[p.id] === "loading" ? (
-                <><Loader2 className="h-3 w-3 animate-spin mr-1" /> Opening...</>
+              {previewLoading ? (
+                <><Loader2 className="h-3 w-3 animate-spin mr-1" /> Generating...</>
               ) : (
-                <><Settings2 className="h-3 w-3 mr-1" /> Customize &amp; Test</>
-              )}
-            </Button>
-          ) : (
-            <Button
-              onClick={() => runTest(p)}
-              disabled={statuses[p.id] === "loading"}
-              className={`flex-1 text-sm h-8 ${btnClass}`}
-            >
-              {statuses[p.id] === "loading" ? (
-                <><Loader2 className="h-3 w-3 animate-spin mr-1" /> Opening...</>
-              ) : (
-                <><ExternalLink className="h-3 w-3 mr-1" /> Test $0</>
+                <><Eye className="h-3 w-3 mr-1" /> Preview Sample</>
               )}
             </Button>
           )}
-          {statuses[p.id] && statuses[p.id] !== "loading" && (
-            <button onClick={() => resetStatus(p.id)} className="text-slate-500 hover:text-slate-300">
-              <RefreshCw className="h-3 w-3" />
-            </button>
-          )}
-          <StatusIcon status={statuses[p.id] || "idle"} />
         </div>
       </CardContent>
     </Card>
