@@ -81,6 +81,20 @@ serve(async (req) => {
     const stepConfig = DRIP_STEPS[currentStep - 1];
     const gapAnalysis = lead.gap_analysis || lead.deep_research?.summary || "";
 
+    // Map industry to demo page
+    const DEMO_MAP: Record<string, string> = {
+      roofing: "/demo-roofing", plumber: "/demo-plumber", plumbing: "/demo-plumber",
+      electrician: "/demo-electrician", electrical: "/demo-electrician",
+      lawyer: "/demo-lawyer", attorney: "/demo-lawyer", "law firm": "/demo-lawyer",
+      dental: "/demo-dental", dentist: "/demo-dental",
+      clinic: "/demo-clinic", medical: "/demo-clinic", healthcare: "/demo-clinic",
+      landscaping: "/demo-landscaping", "lawn care": "/demo-landscaping",
+      "real estate": "/demo-real-estate", realtor: "/demo-real-estate",
+    };
+    const industryLower = (lead.industry || "").toLowerCase();
+    const demoSlug = Object.entries(DEMO_MAP).find(([k]) => industryLower.includes(k))?.[1] || "/demo-home";
+    const demoUrl = `https://www.detroitwebagent.com${demoSlug}`;
+
     // If action is "draft" — generate but don't send
     // If action is "send" — generate and send
     // If action is "send_existing" — send the already-drafted email
@@ -100,11 +114,14 @@ Industry: ${lead.industry || "local business"}
 City: ${lead.city || "Metro Detroit"}
 Website: ${lead.website || "none found"}
 Gap Analysis: "${gapAnalysis}"
+Demo Link: ${demoUrl}
 Drip Step: ${currentStep} of 4
 ${currentStep > 1 ? "This is a FOLLOW-UP email. The prospect has already received " + (currentStep - 1) + " email(s)." : "This is the FIRST cold email."}
 
 RULES:
 ${stepConfig.prompt_suffix}
+- In Step 1, you MUST include the demo link (${demoUrl}) — say something like "I put together a quick sample of what your site could look like: ${demoUrl}"
+- In Step 2, reference the demo link again and ask if they checked it out
 - NEVER say "Hope this finds you well" or "Dear Business Owner"
 - NEVER use: AI, Synergy, Algorithm, Digital Transformation, Leverage, Game-Changer
 - Talk like a local Detroit guy, not a marketing agency
