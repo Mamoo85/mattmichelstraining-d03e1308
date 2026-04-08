@@ -101,6 +101,7 @@ const AppNavbar = () => {
 
   const trainActive = trainLinks.some((l) => location.pathname === l.to);
   const appActive = appLinks.some((l) => location.pathname === l.to);
+  const businessActive = businessLinks.some((l) => location.pathname === l.to);
 
   return (
     <nav aria-label="Main navigation" className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50 pt-[env(safe-area-inset-top)]">
@@ -125,6 +126,7 @@ const AppNavbar = () => {
         <div className="hidden md:flex items-center gap-0.5">
           <NavDropdown label="Train" items={trainLinks} active={trainActive} />
           <NavDropdown label="The App" items={appLinks} active={appActive} />
+          <NavDropdown label="For Business" items={businessLinks} active={businessActive} />
 
           <Link
             to="/results"
