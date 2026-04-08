@@ -9,6 +9,30 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY");
+const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
+
+async function sonarResearch(query: string): Promise<string> {
+  if (!OPENROUTER_API_KEY) return "";
+  try {
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://mattmichelstraining.com",
+        "X-Title": "M2 Market Intel",
+      },
+      body: JSON.stringify({
+        model: "perplexity/sonar",
+        messages: [{ role: "user", content: query }],
+        max_tokens: 800,
+      }),
+    });
+    if (!res.ok) return "";
+    const data = await res.json();
+    return data?.choices?.[0]?.message?.content || "";
+  } catch { return ""; }
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -26,8 +50,16 @@ Deno.serve(async (req) => {
     for (const client of clients) {
       try {
         let newsContext = "";
+
+        // Step 1: Live web research via Perplexity Sonar
+        const sonarQuery = `Latest ${client.industry || "business"} industry news and market developments in ${client.location || "Michigan"} this week. Focus on: ${(client.focus_topics || []).join(", ") || "general industry trends"}. Include competitor activity for: ${(client.competitors || []).join(", ") || "local competitors"}.`;
+        const sonarIntel = await sonarResearch(sonarQuery);
+        if (sonarIntel) {
+          newsContext += `\n\n--- Live Web Research (Perplexity Sonar) ---\n${sonarIntel}`;
+        }
+
+        // Step 2: Firecrawl search for additional context
         if (FIRECRAWL_API_KEY) {
-          // Search industry news
           const searchRes = await fetch("https://api.firecrawl.dev/v1/search", {
             method: "POST",
             headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
@@ -38,7 +70,7 @@ Deno.serve(async (req) => {
               scrapeOptions: { formats: ["markdown"] } }) });
           const searchData = await searchRes.json();
           if (searchData?.data) {
-            newsContext = searchData.data.map((r: any) => `**${r.title || ""}**\n${(r.markdown || r.description || "").slice(0, 800)}`).join("\n\n---\n\n");
+            newsContext += "\n\n--- Additional Web Sources ---\n" + searchData.data.map((r: any) => `**${r.title || ""}**\n${(r.markdown || r.description || "").slice(0, 800)}`).join("\n\n---\n\n");
           }
 
           // Search competitor moves
@@ -62,7 +94,7 @@ Deno.serve(async (req) => {
           method: "POST",
           headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: "google/gemini-2.5-flash-lite", 
+            model: "google/gemini-2.5-flash-lite",
             messages: [{
               role: "user",
               content: `Create a weekly market intelligence brief for ${client.business_name} (${client.industry || "general"} industry, ${client.location || "Michigan"}).
@@ -70,7 +102,7 @@ Deno.serve(async (req) => {
 Focus topics: ${(client.focus_topics || []).join(", ") || "general industry trends"}
 Competitors to watch: ${(client.competitors || []).join(", ") || "local competitors"}
 
-News and data gathered this week:
+News and data gathered this week (includes live web research):
 ${newsContext || "Use general industry knowledge for current trends."}
 
 Format as a 2-minute-read HTML email:
@@ -90,9 +122,9 @@ Dark-themed professional HTML. Concise, scannable, executive-friendly.` }] }) })
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
             from: "M² Development <matt@mattmichelstraining.com>",
-            to: [client.email], bcc: ["matthewmichels4@gmail.com"],
+            to: [client.email],
+            bcc: ["matthewmichels4@gmail.com"],
             subject: `${client.business_name} — Weekly Market Intelligence Brief`,
-        bcc: ["matthewmichels@gmail.com"],
             html: `<div style="font-family:Arial,sans-serif;max-width:700px;margin:0 auto;background:#1a1a2e;color:#e0e0e0;padding:32px;border-radius:12px;">
               <h1 style="color:#e8621a;text-align:center;">Weekly Market Intelligence</h1>
               <p style="color:#888;text-align:center;font-size:13px;">Week of ${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</p>

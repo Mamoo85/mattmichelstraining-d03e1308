@@ -46,6 +46,7 @@ serve(async (req) => {
       google_rating: lead.google_rating || null,
       review_count: lead.review_count || null,
       pain_points: pain_points || [],
+      deep_research: lead.deep_research || null,
       pipeline_id: lead.id,
     };
 
