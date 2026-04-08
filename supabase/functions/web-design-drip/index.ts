@@ -58,8 +58,8 @@ const DRIP_SEQUENCE = [
     subject: (biz: string, industry: string) => `${biz} — your competitors are getting calls you're not`,
     body: (biz: string, industry: string) => {
       const page = getIndustryPage(industry);
-      const siteUrl = `mattmichelstraining.com${page.path}`;
-      return `Hey —\n\nI was looking up ${industry.toLowerCase()} businesses in your area and noticed ${biz} doesn't have a website pulling in leads.\n\nI build sites for local businesses — ${page.price} flat, professional design, no agency markup. Just a site that ranks on Google and makes your phone ring.\n\nWant to see what I'd build for you? Check out what I've done: ${siteUrl}\n\nStart here: mattmichelstraining.com/get-started — I'll reach out the same day.\n\n— Matt Michels, Grosse Pointe\n(313) 806-4952`;
+      const siteUrl = `detroitwebagent.com${page.path}`;
+      return `Hey —\n\nI was looking up ${industry.toLowerCase()} businesses in your area and noticed ${biz} doesn't have a website pulling in leads.\n\nI build sites for local businesses — ${page.price} flat, professional design, no agency markup. Just a site that ranks on Google and makes your phone ring.\n\nWant to see what I'd build for you? Check out what I've done: ${siteUrl}\n\nStart here: detroitwebagent.com/get-started — I'll reach out the same day.\n\n— Matt Michels, Grosse Pointe\n(313) 806-4952`;
     },
   },
   {
@@ -68,7 +68,7 @@ const DRIP_SEQUENCE = [
     subject: (biz: string, industry: string) => `Quick follow-up for ${biz}`,
     body: (biz: string, industry: string) => {
       const page = getIndustryPage(industry);
-      const siteUrl = `mattmichelstraining.com${page.path}`;
+      const siteUrl = `detroitwebagent.com${page.path}`;
       return `Hey —\n\nCircling back from a few days ago. I build websites specifically for ${industry.toLowerCase()} businesses — here's what you get:\n\n- Ranked on Google for "${industry.toLowerCase()} + your city"\n- Click-to-call button front and center\n- Contact form that actually gets filled out\n- ${page.price} flat. ${page.monthly} after. No contract.\n\nSee examples: ${siteUrl}\n\nIf the timing's not right, no hard feelings. But if you're tired of watching competitors get the calls you should be getting — let's talk.\n\n— Matt\n(313) 806-4952`;
     },
   },
@@ -78,7 +78,7 @@ const DRIP_SEQUENCE = [
     subject: (biz: string, industry: string) => `I ran a quick check on ${biz}'s online presence`,
     body: (biz: string, industry: string) => {
       const page = getIndustryPage(industry);
-      const siteUrl = `mattmichelstraining.com${page.path}`;
+      const siteUrl = `detroitwebagent.com${page.path}`;
       return `Hey —\n\nI did a quick audit of ${biz}'s online presence. Here's what I found:\n\n→ Google ranking for "${industry.toLowerCase()} [your area]": Not in top 10\n→ Website: Missing or not converting\n→ Google Business Profile: Needs optimization\n→ Opportunity: HIGH\n\nThis is fixable. ${page.price} to build. ${page.monthly} to run. That's it.\n\nI'm a local business owner in Grosse Pointe — you get my direct cell, not a support ticket.\n\nSee what I've built for ${industry.toLowerCase()} businesses: ${siteUrl}\n\n— Matt\n(313) 806-4952`;
     },
   },
@@ -88,7 +88,7 @@ const DRIP_SEQUENCE = [
     subject: (biz: string, industry: string) => `Last message from me, ${biz}`,
     body: (biz: string, industry: string) => {
       const page = getIndustryPage(industry);
-      const siteUrl = `mattmichelstraining.com${page.path}`;
+      const siteUrl = `detroitwebagent.com${page.path}`;
       return `Hey —\n\nLast email, I promise.\n\nI've reached out a few times about building a website for ${biz}. If the timing's off or you're not interested — completely understood, no hard feelings.\n\nBut if you ever want a professional site built specifically for ${industry.toLowerCase()} businesses — ${page.price} flat, ${page.monthly} after — reach out anytime.\n\nSee what I've built: ${siteUrl}\n\n— Matt Michels, Grosse Pointe\n(313) 806-4952`;
     },
   },
@@ -108,15 +108,15 @@ function buildDripEmailHtml(subject: string, body: string): string {
       ${htmlBody}
       <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;">
         <table cellpadding="0" cellspacing="0"><tr>
-          <td style="vertical-align:middle;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Matt Michels"></td>
-          <td style="padding-left:12px;font-size:13px;color:#334155;vertical-align:middle;"><strong>Matt Michels</strong><br>Grosse Pointe, MI · (313) 806-4952</td>
+          <td style="vertical-align:middle;"><img src="https://www.detroitwebagent.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Matt Michels"></td>
+          <td style="padding-left:12px;font-size:13px;color:#334155;vertical-align:middle;"><strong>Matt Michels</strong><br>Detroit Web Agency · Grosse Pointe, MI · (313) 806-4952</td>
         </tr></table>
       </div>
       <p style="font-size:12px;color:#94a3b8;margin-top:8px;">Prefer to just text? (313) 806-4952</p>
     </td></tr>
     <tr><td style="background:#f8fafc;padding:16px 24px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;">
-      Matt Michels Web Design · Grosse Pointe, MI · (313) 806-4952<br>
-      <a href="https://www.mattmichelstraining.com/detroit-web-design" style="color:#94a3b8;">See my work</a>
+      Detroit Web Agency · Grosse Pointe, MI · (313) 806-4952<br>
+      <a href="https://www.detroitwebagent.com/detroit-web-design" style="color:#94a3b8;">See my work</a>
     </td></tr>
   </table>
 </td></tr>
@@ -241,7 +241,7 @@ serve(async (req) => {
             Authorization: `Bearer ${RESEND_API_KEY}`,
           },
           body: JSON.stringify({
-            from: "Matt Michels <matt@mattmichelstraining.com>",
+            from: "Matt Michels <matt@detroitwebagent.com>",
             to: [email],
             bcc: ["matthewmichels4@gmail.com"],
             subject,
