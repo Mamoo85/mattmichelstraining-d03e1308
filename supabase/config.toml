@@ -1383,6 +1383,12 @@ verify_jwt = false
 [functions.yoda-retain]
 verify_jwt = false
 
+[functions.create-seo-guard-checkout]
+verify_jwt = false
+
+[functions.seo-guard-runner]
+verify_jwt = false
+
 
 [functions.create-commercial-lease-checkout]
 verify_jwt = false
