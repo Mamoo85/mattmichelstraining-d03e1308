@@ -609,6 +609,7 @@ const App = () => (
                     <Route path="/hiring-assistant" element={<HiringAssistant />} />
                     <Route path="/kpi-email" element={<KPIEmail />} />
                     <Route path="/all-services" element={<AllServices />} />
+                    <Route path="/revenue-suite" element={<BundleRevenueSuite />} />
                     <Route path="/refer" element={<ReferralPage />} />
                     <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                     <Route path="/terms" element={<TermsOfService />} />
