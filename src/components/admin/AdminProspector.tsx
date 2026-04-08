@@ -454,6 +454,11 @@ export default function AdminProspector() {
   const [selectedPipelineIds, setSelectedPipelineIds] = useState<Set<string>>(new Set());
   const [batchProcessing, setBatchProcessing] = useState(false);
 
+  // ── Sent Log State ──
+  const [sentEmails, setSentEmails] = useState<any[]>([]);
+  const [loadingSent, setLoadingSent] = useState(false);
+  const [archiving, setArchiving] = useState(false);
+
   // ── All Leads Tab State ──
   const [activeLeadTab, setActiveLeadTab] = useState("all");
   const [leads, setLeads] = useState<UnifiedLead[]>([]);
