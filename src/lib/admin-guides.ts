@@ -33,12 +33,12 @@ export const ADMIN_GUIDES: Record<string, GuideContent> = {
   "lead-command": {
     id: "lead-command",
     title: "Lead Command Center",
-    body: "Your prospecting pipeline. See every lead that's been discovered, contacted, or replied. This is where you find new customers.",
+    body: "Your prospecting pipeline. See every lead that's been discovered, contacted, or replied. Uses a hybrid DataForSEO + Sonar AI engine — if DataForSEO Maps API isn't available, Sonar automatically searches the live web for real businesses.",
     tips: [
-      "Leads are auto-discovered daily from Google Maps across 45+ industries",
-      "Lead scores (0-100) are calculated by Scout AI based on website quality, GBP presence, review count",
-      "Click a lead to see their full profile, then use Sniper AI to generate a personalized cold email",
-      "Hot leads (score 70+) should be prioritized — they're most likely to buy",
+      "Search tab: Find businesses by industry + location (DataForSEO or Sonar fallback)",
+      "Pipeline tab: Kanban board to track leads through New → Audited → Outreach → Call Booked",
+      "Hybrid Search runs gap analysis on each business website automatically",
+      "Hot leads with specific pain points (no chat, outdated site) are your best targets",
     ],
     scenarios: [
       {
@@ -228,24 +228,34 @@ export const ADMIN_GUIDES: Record<string, GuideContent> = {
   prospector: {
     id: "prospector",
     title: "Prospector — Find New Clients",
-    body: "AI-powered lead discovery. The system searches Google Maps daily for local businesses that need web design, GBP, or digital marketing. Results are scored and ranked.",
+    body: "Hybrid lead discovery using two engines: DataForSEO Google Maps API (structured data) with automatic Sonar AI fallback (live web research). If your DataForSEO plan doesn't include Maps SERP, the system seamlessly switches to OpenRouter's Sonar model to find real businesses via live web search.",
     tips: [
-      "Runs daily across 45+ industries and 100+ Michigan cities",
-      "Lead Score: 80+ = excellent prospect, 50-79 = good, below 50 = low priority",
-      "Click 'Generate Email' to have Sniper AI write a personalized cold email",
-      "Click 'Start Drip' to begin the 4-email automated sequence",
-      "Filter by industry, city, or score to focus your outreach",
+      "Two search modes: 'Quick Search' (business list only) and 'Hybrid Search' (businesses + gap analysis)",
+      "DataForSEO → Sonar fallback: if DataForSEO returns error 40501, Sonar takes over automatically",
+      "Gap Analysis uses Sonar to visit each website and identify automation failures (no chat widget, outdated design, no booking form)",
+      "Click 'Add All to Pipeline' to move results into your Kanban board for outreach",
+      "Businesses with no website are auto-flagged as prime web design candidates",
+      "Troubleshooting: if both engines return 0 results, check that OPENROUTER_API_KEY is set in your secrets",
     ],
     scenarios: [
       {
         trigger: "You want to find new web design clients",
         steps: [
-          "Open Prospector — new leads appear daily",
-          "Sort by lead score (highest first)",
-          "Click the best leads to review their website and GBP",
-          "Click 'Generate Email' for a personalized cold email",
-          "Click 'Start Drip' to begin the 4-email sequence",
-          "Tom Agent monitors for replies — you'll be notified",
+          "Select an industry (e.g. 'Plumbing') and location (e.g. 'Detroit, MI')",
+          "Click 'Hybrid Search + Gap Analysis' for the full pipeline",
+          "Wait for Sonar to find businesses and analyze their websites",
+          "Review the Gap Analysis column for specific pain points",
+          "Click 'Add All to Pipeline' to move leads to Kanban",
+          "Use the Pipeline tab to audit websites and send outreach",
+        ],
+      },
+      {
+        trigger: "Search returns 0 results",
+        steps: [
+          "Check edge function logs — look for 'task_status=40501' (DataForSEO plan issue)",
+          "Verify OPENROUTER_API_KEY is set in your secrets (needed for Sonar fallback)",
+          "Try a broader location (e.g. 'Detroit, MI' instead of 'Grosse Pointe, MI')",
+          "Try a more common industry term (e.g. 'Plumbing' instead of 'Plumber')",
         ],
       },
     ],
