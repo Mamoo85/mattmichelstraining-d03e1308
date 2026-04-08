@@ -10,50 +10,63 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders });
 
   try {
-    const { businessName, ownerName, city, industry, website, issues, leadId } = await req.json();
+    const { businessName, ownerName, city, industry, website, issues, leadId, gapAnalysis } = await req.json();
     if (!businessName || !industry) {
       return new Response(JSON.stringify({ error: "businessName and industry are required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    // ── Quality Control: If no gap analysis, flag for manual review ──
+    if (!gapAnalysis || gapAnalysis.trim() === "" || gapAnalysis === "Analysis failed — site may be blocking requests") {
+      if (leadId) {
+        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+        const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        await supabase
+          .from("outreach_leads")
+          .update({ status: "needs_manual_review" })
+          .eq("id", leadId);
+      }
+
+      return new Response(JSON.stringify({
+        error: "no_gap_analysis",
+        message: "Gap analysis missing or failed — lead flagged for manual review. No generic email sent.",
+      }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("Missing LOVABLE_API_KEY");
 
-    const issueList = (issues as string[])?.length
-      ? (issues as string[]).map((i: string) => `- ${i}`).join("\n")
-      : "- Weak online presence";
+    const firstName = ownerName ? ownerName.split(" ")[0] : "there";
 
-    const greeting = ownerName ? `Hi ${ownerName.split(" ")[0]},` : "Hi there,";
-    const websiteLine = website
-      ? `I came across ${website} while researching ${industry} businesses in ${city || "your area"}.`
-      : `I was looking up ${industry} businesses in ${city || "your area"} and came across your listing.`;
+    const prompt = `You are a cold outreach copywriter for Detroit Web Agency — a no-nonsense digital systems shop in Grosse Pointe, MI.
 
-    const prompt = `You are a direct-response copywriter writing a cold outreach email for a digital marketing agency.
+Write a hyper-personalized cold email from Matt Michels (Lead Web Agent, Detroit Web Agency) to a local business prospect.
 
-Write a personalized cold email from Matt Michels (M2 Performance Training, Grosse Pointe MI) to a prospect.
-
+CONTEXT:
 Business: ${businessName}
 Owner: ${ownerName || "the owner"}
 Industry: ${industry}
-City: ${city || ""}
+City: ${city || "Metro Detroit"}
 Website: ${website || "none found"}
 
-Specific issues found with their web presence:
-${issueList}
+LIVE GAP ANALYSIS (from automated site audit):
+"${gapAnalysis}"
 
-Requirements:
-- Start with: ${greeting}
-- Second sentence: ${websiteLine}
-- 150-200 words total
-- Mention 2-3 of the specific issues naturally in the body (not as a list)
-- Offer a free audit or quick call
-- Sign off as Matt Michels, mattmichelstraining.com, (313) 806-4952
-- Conversational, direct, NOT salesy or corporate
-- Do NOT use buzzwords like "synergy", "leverage", "game-changer"
+STRICT RULES:
+1. NO GENERIC INTROS. Never say "Hope this finds you well" or "Dear Business Owner." Start immediately with the business name and a specific observation from the gap analysis above.
+2. THE AUDIT HOOK: The first sentence MUST reference the specific technical gap found. Example: "I was looking at the ${businessName} site today and noticed you don't have a way to capture leads after hours."
+3. THE PRE-BUILT DEMO PITCH: Instead of asking for a meeting, offer a custom asset. Include a line like: "I actually went ahead and built a quick demo of what an Automated Lead System looks like specifically for ${businessName}. Do you have 2 minutes for me to send the link over?"
+4. ZERO BUZZWORDS: Do NOT use "AI", "Synergy", "Algorithm", "Digital Transformation", "Leverage", "Game-Changer", or "Cutting-Edge." Talk like a local Detroit contractor talking to another local business owner.
+5. Keep it under 4 sentences total.
+6. Sign off: Matt Michels | Lead Web Agent | Detroit Web Agency | (313) 806-4952
 
 Return a JSON object with two keys:
-- "subject": a compelling email subject line (under 50 chars)
+- "subject": a compelling email subject line (under 50 chars, reference the specific gap)
 - "body": the full email text
 
 Return ONLY valid JSON, no markdown fences.`;
@@ -65,9 +78,9 @@ Return ONLY valid JSON, no markdown fences.`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash-lite",
+        model: "google/gemini-2.5-flash",
         messages: [{ role: "user", content: prompt }],
-        temperature: 0.8,
+        temperature: 0.7,
       }),
     });
 
@@ -92,7 +105,7 @@ Return ONLY valid JSON, no markdown fences.`;
       // If JSON parse fails, use raw as body
     }
 
-    // If leadId provided, save to DB and set status
+    // Save to DB and set status
     if (leadId) {
       const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
       const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;

@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-type KanbanStatus = "lead_found" | "ai_audited" | "awaiting_approval" | "contacted" | "negotiating" | "won";
+type KanbanStatus = "lead_found" | "ai_audited" | "awaiting_approval" | "contacted" | "negotiating" | "won" | "needs_manual_review";
 
 interface Lead {
   id: string;
@@ -50,6 +50,7 @@ const COLUMNS: { key: KanbanStatus; label: string; color: string }[] = [
   { key: "contacted",         label: "Contacted",          color: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30" },
   { key: "negotiating",       label: "Negotiating",        color: "bg-purple-500/20 text-purple-300 border-purple-500/30" },
   { key: "won",               label: "Won",                color: "bg-green-500/20 text-green-300 border-green-500/30" },
+  { key: "needs_manual_review", label: "Manual Review",    color: "bg-red-500/20 text-red-300 border-red-500/30" },
 ];
 
 const ISSUES = [
@@ -153,11 +154,17 @@ const AdminOutreach = memo(() => {
           industry: pitchLead.industry,
           website: pitchLead.website,
           issues: checkedIssues,
+          gapAnalysis: (pitchLead as any).gap_analysis || checkedIssues.join("; ") || "",
           leadId: pitchLead.id,
         },
       });
       if (error) throw error;
-      const result = data as { subject: string; email: string };
+      const result = data as { subject?: string; email?: string; error?: string; message?: string };
+      if (result.error === "no_gap_analysis") {
+        qc.invalidateQueries({ queryKey: ["outreach-leads-kanban"] });
+        toast.warning("No gap analysis available — lead flagged for Manual Review. No generic email sent.");
+        return;
+      }
       setPitchSubject(result.subject || "");
       setPitchEmail(result.email || "");
       qc.invalidateQueries({ queryKey: ["outreach-leads-kanban"] });
