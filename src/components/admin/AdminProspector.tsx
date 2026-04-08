@@ -114,6 +114,8 @@ interface MapResult {
 interface HybridResult extends MapResult {
   gap_analysis: string | null;
   gap_status: "pending" | "analyzing" | "done" | "skipped" | "error";
+  email: string | null;
+  email_status: "found" | "not_found" | "skipped" | "error";
 }
 
 // ── Shared Lead Interface ──
@@ -527,6 +529,7 @@ export default function AdminProspector() {
           pipeline_stage: "new_lead",
           source: isHybrid ? "hybrid" : "dataforseo",
           gap_analysis: isHybrid ? (r as HybridResult).gap_analysis : null,
+          email: isHybrid ? (r as HybridResult).email : null,
         });
         if (error) {
           console.error("Insert error:", error);
@@ -1100,6 +1103,7 @@ export default function AdminProspector() {
                       <tr className="border-b border-cyan-500/20 text-muted-foreground">
                         <th className="text-left py-2 font-semibold">Business Name</th>
                         <th className="text-left py-2 font-semibold">Phone</th>
+                        <th className="text-left py-2 font-semibold">Email</th>
                         <th className="text-left py-2 font-semibold">Website</th>
                         <th className="text-left py-2 font-semibold">Gap Analysis</th>
                         <th className="text-left py-2 font-semibold w-16">Status</th>
@@ -1125,6 +1129,17 @@ export default function AdminProspector() {
                                 <Phone size={9} /> {r.phone}
                               </a>
                             ) : <span className="text-destructive/60">—</span>}
+                          </td>
+                          <td className="py-2.5">
+                            {r.email ? (
+                              <a href={`mailto:${r.email}`} className="text-green-400 hover:text-green-300 hover:underline flex items-center gap-1 max-w-[180px] truncate">
+                                <Mail size={9} className="shrink-0" /> {r.email}
+                              </a>
+                            ) : (
+                              <span className="text-destructive/60 text-[10px]">
+                                {r.email_status === "not_found" ? "Not found" : r.email_status === "error" ? "Error" : "—"}
+                              </span>
+                            )}
                           </td>
                           <td className="py-2.5">
                             {r.website ? (
