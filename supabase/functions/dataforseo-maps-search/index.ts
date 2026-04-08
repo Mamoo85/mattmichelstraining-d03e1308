@@ -23,7 +23,7 @@ async function sonarSearch(industry: string, location: string, limit: number) {
       "X-Title": "Detroit Web Agency Prospector",
     },
     body: JSON.stringify({
-      model: "perplexity/sonar-reasoning",
+      model: "perplexity/sonar-pro",
       messages: [
         {
           role: "system",

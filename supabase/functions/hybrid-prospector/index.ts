@@ -38,7 +38,7 @@ async function sonarFindBusinesses(industry: string, location: string, limit: nu
       "X-Title": "Detroit Web Agency Prospector",
     },
     body: JSON.stringify({
-      model: "perplexity/sonar-reasoning",
+      model: "perplexity/sonar-pro",
       messages: [
         {
           role: "system",
@@ -105,7 +105,7 @@ async function analyzeGap(url: string, businessName: string): Promise<string> {
       "X-Title": "Detroit Web Agency Prospector",
     },
     body: JSON.stringify({
-      model: "perplexity/sonar-reasoning",
+      model: "perplexity/sonar-pro",
       messages: [
         {
           role: "system",
