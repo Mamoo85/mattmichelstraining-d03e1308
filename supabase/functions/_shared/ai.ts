@@ -1,26 +1,26 @@
 /**
- * Shared Claude Haiku AI generation utility.
- * Drop-in replacement for Lovable's AI gateway — uses ANTHROPIC_API_KEY directly.
+ * Shared AI generation utility — Lovable AI Gateway.
+ * Uses LOVABLE_API_KEY (auto-provisioned) to call the gateway.
  */
 
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
-const MODEL = "claude-haiku-4-5";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
+const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
+const MODEL = "google/gemini-2.5-flash-lite";
 
 export async function generateText(
   prompt: string,
   maxTokens = 1024
 ): Promise<string> {
-  if (!ANTHROPIC_API_KEY) {
-    console.error("[AI] ANTHROPIC_API_KEY not set");
+  if (!LOVABLE_API_KEY) {
+    console.error("[AI] LOVABLE_API_KEY not set");
     return "";
   }
 
   try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
+    const res = await fetch(GATEWAY_URL, {
       method: "POST",
       headers: {
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -32,12 +32,12 @@ export async function generateText(
 
     if (!res.ok) {
       const err = await res.text();
-      console.error(`[AI] Anthropic error: ${err}`);
+      console.error(`[AI] Gateway error ${res.status}: ${err}`);
       return "";
     }
 
     const data = await res.json();
-    return data?.content?.[0]?.text?.trim() || "";
+    return data?.choices?.[0]?.message?.content?.trim() || "";
   } catch (e) {
     console.error("[AI] Exception:", e);
     return "";

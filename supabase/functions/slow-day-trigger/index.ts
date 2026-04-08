@@ -8,7 +8,7 @@ import { sendSMS } from "../_shared/twilio.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const TWILIO_FROM_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 
 async function generatePromo(businessName: string, businessType: string, promoOffer: string): Promise<string> {
   if (!promoOffer) {
@@ -22,13 +22,16 @@ Rules: 1-2 sentences, urgent but friendly, ends with a call-to-action. Under 140
 Just write the SMS text, nothing else.`;
 
   try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: { "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "Content-Type": "application/json" },
-      body: JSON.stringify({ model: "claude-haiku-4-5-20251001", max_tokens: 200, messages: [{ role: "user", content: prompt }] }),
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ model: "google/gemini-2.5-flash-lite", max_tokens: 200, messages: [{ role: "user", content: prompt }] }),
     });
     const data = await res.json();
-    const msg = data?.content?.[0]?.text?.trim() || `${businessName}: ${promoOffer} — call now!`;
+    const msg = data?.choices?.[0]?.message?.content?.trim() || `${businessName}: ${promoOffer} — call now!`;
     return `${msg}\n\nReply STOP to unsubscribe.`;
   } catch {
     return `${businessName} here — we have an opening TODAY and want to take care of you. ${promoOffer} Reply STOP to unsubscribe.`;

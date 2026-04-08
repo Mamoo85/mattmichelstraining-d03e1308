@@ -5,7 +5,7 @@ import { sendSMS } from "../_shared/twilio.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const MATT_EMAIL = "matt@mattmichelstraining.com";
 const FROM_EMAIL = "Matt Michels <matt@mattmichelstraining.com>";
 
@@ -28,19 +28,22 @@ interface HolidayContact {
 const EMAIL_SIGNATURE = `<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 806-4952</div><img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div>`;
 
 async function generateHolidayMessage(client: HolidayClient, holiday: string): Promise<string> {
-  if (!ANTHROPIC_API_KEY) return `Happy ${holiday} from ${client.business_name}! Reply STOP to opt out.`;
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  if (!LOVABLE_API_KEY) return `Happy ${holiday} from ${client.business_name}! Reply STOP to opt out.`;
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
-    headers: { "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "Content-Type": "application/json" },
+    headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
     body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
+      model: "google/gemini-2.5-flash-lite",
       max_tokens: 200,
       messages: [{ role: "user", content: `Write a warm, festive ${holiday} SMS message for ${client.business_name} (${client.industry}). Should feel personal and genuine, not spammy. Under 160 characters. End with 'Reply STOP to opt out.'` }],
     }),
   });
   if (!res.ok) throw new Error(`AI error: ${await res.text()}`);
   const data = await res.json();
-  const text = (data?.content?.[0]?.text || "").trim();
+  const text = (data?.choices?.[0]?.message?.content || "").trim();
   return text.length <= 160 ? text : text.slice(0, 157) + "...";
 }
 

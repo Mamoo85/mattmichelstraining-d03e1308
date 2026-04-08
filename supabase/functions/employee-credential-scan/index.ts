@@ -4,7 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const HIBP_API_KEY = Deno.env.get("HIBP_API_KEY") || "";
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 
 interface BreachResult {
@@ -313,15 +313,14 @@ Be direct, professional, and actionable. Format with clear sections.`;
     // Call Claude Haiku
     let aiSummary = `${totalBreached} of ${totalChecked} employee email addresses were found in known data breaches. Risk level: ${riskScore}.`;
     try {
-      const claudeRes = await fetch("https://api.anthropic.com/v1/messages", {
+      const claudeRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: {
-          "x-api-key": ANTHROPIC_API_KEY,
-          "anthropic-version": "2023-06-01",
-          "content-type": "application/json",
-        },
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
         body: JSON.stringify({
-          model: "claude-haiku-4-5-20251001",
+          model: "google/gemini-2.5-flash-lite",
           max_tokens: 1500,
           messages: [{ role: "user", content: prompt }],
         }),
@@ -329,7 +328,7 @@ Be direct, professional, and actionable. Format with clear sections.`;
 
       if (claudeRes.ok) {
         const claudeData = await claudeRes.json();
-        aiSummary = claudeData.content?.[0]?.text || aiSummary;
+        aiSummary = claudeData.choices?.[0]?.message?.content || aiSummary;
       } else {
         console.error("[EMPLOYEE-CREDENTIAL-SCAN] Claude error:", await claudeRes.text());
       }

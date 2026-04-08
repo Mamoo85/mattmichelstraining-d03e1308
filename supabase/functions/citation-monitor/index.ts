@@ -8,7 +8,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY") || "";
 const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY") || "";
 
@@ -134,22 +134,21 @@ FORMAT AS JSON:
   "reportHtml": "Full HTML weekly citation health report with color-coded status indicators and priority fix list"
 }`;
 
-        const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
+        const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
           headers: {
-            "x-api-key": ANTHROPIC_API_KEY,
-            "anthropic-version": "2023-06-01",
-            "content-type": "application/json",
-          },
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
           body: JSON.stringify({
-            model: "claude-haiku-4-5-20251001",
+            model: "google/gemini-2.5-flash-lite",
             max_tokens: 1200,
             messages: [{ role: "user", content: prompt }],
           }),
         });
 
         const aiJson = await aiRes.json();
-        const rawText = aiJson.content?.[0]?.text || "{}";
+        const rawText = aiJson.choices?.[0]?.message?.content || "{}";
 
         let parsed: {
           napAnalysis?: Array<{

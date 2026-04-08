@@ -18,7 +18,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 
 const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 const DAILY_SEND_LIMIT = 20;
@@ -130,7 +130,7 @@ async function writePersonalizedEmail(business: {
   const demo = getDemoLink(business.industry);
   const demoLine = demo ? `\n\nHere's what I built for a ${demo.label} — takes 10 seconds to look: ${demo.url}` : "";
 
-  if (!ANTHROPIC_API_KEY) {
+  if (!LOVABLE_API_KEY) {
     return {
       subject: `Quick question about ${business.business_name}`,
       body: `Hey, my name's Matt Michels — I'm based out of Grosse Pointe and I do web work for local businesses.\n\nI was looking at your Google listing for ${business.business_name} and had a quick question — are you happy with the leads your website is currently bringing in?\n\nIf not, I can do ${business.pitch.cta} for ${business.pitch.price}.${demoLine}\n\n— Matt\n(313) 806-4952`,
@@ -141,11 +141,14 @@ async function writePersonalizedEmail(business: {
     ? `\n- MUST include this demo link naturally in the email: ${demo.url} — say something like "Here's one I built for a ${demo.label}" or "Check out what I did for a similar business: ${demo.url}"`
     : "";
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
-    headers: { "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "Content-Type": "application/json" },
+    headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
     body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
+      model: "google/gemini-2.5-flash-lite",
       max_tokens: 400,
       system: `You write cold outreach emails for Matt Michels — Grosse Pointe, MI. B2B background, no-BS, Michigan local.
 
@@ -177,7 +180,7 @@ Subject should be under 45 chars, conversational, not salesy.`,
   });
 
   const data = await res.json();
-  const raw = data?.content?.[0]?.text || "";
+  const raw = data?.choices?.[0]?.message?.content || "";
   try {
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
     return JSON.parse(jsonMatch?.[0] || raw);

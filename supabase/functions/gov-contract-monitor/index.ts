@@ -3,7 +3,7 @@
 //
 // REQUIRED SECRETS (add via Supabase Dashboard > Project Settings > Edge Functions > Secrets):
 //   SAM_GOV_API_KEY  — free API key from https://api.data.gov/signup
-//   ANTHROPIC_API_KEY — Claude API key for AI scoring
+//   LOVABLE_API_KEY — Claude API key for AI scoring
 //   RESEND_API_KEY    — for sending email digests
 //   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY — standard Supabase secrets
 
@@ -13,7 +13,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const SAM_GOV_API_KEY = Deno.env.get("SAM_GOV_API_KEY") || "";
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
 
@@ -123,7 +123,7 @@ async function scoreOpportunity(
   opp: SamOpportunity,
   client: { company_name: string; naics_codes: string; keywords: string; set_aside_types: string }
 ): Promise<ScoringResult> {
-  if (!ANTHROPIC_API_KEY) {
+  if (!LOVABLE_API_KEY) {
     return { score: 50, recommendation: "review", summary: "AI scoring unavailable — manual review required." };
   }
 
@@ -177,15 +177,14 @@ Respond with ONLY a JSON object (no markdown, no explanation):
 }`;
 
   try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "claude-haiku-4-5",
+        model: "google/gemini-2.5-flash-lite",
         max_tokens: 256,
         messages: [{ role: "user", content: fullPrompt }],
       }),
@@ -197,7 +196,7 @@ Respond with ONLY a JSON object (no markdown, no explanation):
     }
 
     const json = await res.json();
-    const text = json.content?.[0]?.text || "{}";
+    const text = json.choices?.[0]?.message?.content || "{}";
     const parsed = JSON.parse(text);
     return {
       score: Math.min(100, Math.max(0, parseInt(parsed.score) || 50)),
