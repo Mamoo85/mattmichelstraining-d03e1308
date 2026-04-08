@@ -268,6 +268,7 @@ const ChildrensStories = lazyRetry(() => import("./pages/ChildrensStories"));
 const LuxuryRealEstate = lazyRetry(() => import("./pages/LuxuryRealEstate"));
 const TechSupportServices = lazyRetry(() => import("./pages/TechSupportServices"));
 const RevenuePreventer = lazyRetry(() => import("./pages/RevenuePreventer"));
+const BundleRevenueSuite = lazyRetry(() => import("./pages/BundleRevenueSuite"));
 const FreeComplianceScan = lazyRetry(() => import("./pages/FreeComplianceScan"));
 const FreeBidReport = lazyRetry(() => import("./pages/FreeBidReport"));
 const LegalPage = lazyRetry(() => import("./pages/LegalPage"));
@@ -608,6 +609,7 @@ const App = () => (
                     <Route path="/hiring-assistant" element={<HiringAssistant />} />
                     <Route path="/kpi-email" element={<KPIEmail />} />
                     <Route path="/all-services" element={<AllServices />} />
+                    <Route path="/revenue-suite" element={<BundleRevenueSuite />} />
                     <Route path="/refer" element={<ReferralPage />} />
                     <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                     <Route path="/terms" element={<TermsOfService />} />

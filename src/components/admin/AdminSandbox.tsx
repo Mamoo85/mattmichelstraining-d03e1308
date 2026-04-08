@@ -255,7 +255,7 @@ const PRODUCT_FIELDS: Record<string, CustomField[]> = {
 
 const PRODUCTS: Product[] = [
   { id: "website_audit", name: "Website Audit", price: "$9", description: "Full audit delivered within minutes.", type: "instant", category: "One-Time" },
-  { id: "gbp_post_pack", name: "GBP Post Pack", price: "$49", description: "30 Google posts delivered to inbox.", type: "instant", category: "One-Time" },
+  { id: "gbp_post_pack", name: "GBP Post Pack", price: "$19", description: "30 Google posts delivered to inbox.", type: "instant", category: "One-Time" },
   { id: "competitor_report", name: "Competitor Report", price: "$9", description: "Full competitor analysis.", type: "instant", category: "One-Time" },
   { id: "gbp_saas_subscription", name: "GBP SaaS", price: "$49/mo", description: "AI posts 3x/week to Google Business Profile.", type: "subscription", category: "Subscription" },
   { id: "social_media_subscription", name: "Social Media AI", price: "$99/mo", description: "3 posts/week to Facebook, Instagram, LinkedIn.", type: "subscription", category: "Subscription" },

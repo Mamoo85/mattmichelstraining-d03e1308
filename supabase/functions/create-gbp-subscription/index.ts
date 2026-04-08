@@ -42,7 +42,7 @@ serve(async (req: Request) => {
               name: "Google Business Profile Management",
               description: `Monthly GBP management for ${business_name}`,
             },
-            unit_amount: 4900,
+            unit_amount: 19900,
             recurring: { interval: "month" },
           },
           quantity: 1,

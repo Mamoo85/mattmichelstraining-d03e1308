@@ -5932,6 +5932,72 @@ export type Database = {
           },
         ]
       }
+      prospect_pipeline: {
+        Row: {
+          business_name: string
+          city: string | null
+          contact_name: string | null
+          created_at: string | null
+          email: string | null
+          gbp_claimed: boolean | null
+          google_place_id: string | null
+          google_rating: number | null
+          id: string
+          industry: string | null
+          n8n_sent_at: string | null
+          pain_points: Json | null
+          phone: string | null
+          pipeline_stage: string
+          review_count: number | null
+          source: string | null
+          state: string | null
+          updated_at: string | null
+          website: string | null
+        }
+        Insert: {
+          business_name: string
+          city?: string | null
+          contact_name?: string | null
+          created_at?: string | null
+          email?: string | null
+          gbp_claimed?: boolean | null
+          google_place_id?: string | null
+          google_rating?: number | null
+          id?: string
+          industry?: string | null
+          n8n_sent_at?: string | null
+          pain_points?: Json | null
+          phone?: string | null
+          pipeline_stage?: string
+          review_count?: number | null
+          source?: string | null
+          state?: string | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Update: {
+          business_name?: string
+          city?: string | null
+          contact_name?: string | null
+          created_at?: string | null
+          email?: string | null
+          gbp_claimed?: boolean | null
+          google_place_id?: string | null
+          google_rating?: number | null
+          id?: string
+          industry?: string | null
+          n8n_sent_at?: string | null
+          pain_points?: Json | null
+          phone?: string | null
+          pipeline_stage?: string
+          review_count?: number | null
+          source?: string | null
+          state?: string | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
       protocol_exercise_flags: {
         Row: {
           admin_response: string | null
