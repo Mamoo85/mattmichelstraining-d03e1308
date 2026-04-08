@@ -88,8 +88,7 @@ serve(async (req) => {
       .select()
       .single();
 
-    // Apply 25% launch coupon for first 3 months (standard plan only)
-    const discounts = plan === "standard" ? [{ coupon: "Hw4anw4U" }] : [];
+    const discounts: any[] = [];
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",

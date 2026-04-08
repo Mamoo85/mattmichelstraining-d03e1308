@@ -28,6 +28,13 @@ const appLinks: DropdownItem[] = [
   { to: "/the-edge", label: "Features" },
 ];
 
+const businessLinks: DropdownItem[] = [
+  { to: "/all-services", label: "All Services" },
+  { to: "/revenue-suite", label: "Revenue Suite" },
+  { to: "/digital-foundation", label: "Digital Foundation" },
+  { to: "/ai-website-audit", label: "Free Website Audit" },
+];
+
 const NavDropdown = ({
   label,
   items,
