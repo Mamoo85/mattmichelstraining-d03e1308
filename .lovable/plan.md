@@ -1,72 +1,125 @@
 
 
-# OpenRouter + Perplexity Sonar Integration
+# Combined Plan: Multi-Tenant Architecture + Prospector Upgrade + Reference Sites
 
 ## Summary
 
-Create a centralized OpenRouter edge function using `perplexity/sonar` for live web research, then wire it into the Prospector pipeline, competitor tools, and market intel functions. Add a "Deep Research" button to the Prospector UI that returns real-time business intelligence.
+Three workstreams: (1) Add HADO SEO to reference sites, (2) upgrade OpenRouter to `sonar-reasoning` model, (3) implement domain-based multi-tenant "One Brain, Two Faces" architecture.
 
 ---
 
-## Technical Details
+## 1. Add HADO SEO Reference Site
 
-### 1. New Edge Function: `openrouter-research/index.ts`
+**File:** `src/lib/siteTemplates.ts`
 
-Centralized utility that hits `https://openrouter.ai/api/v1/chat/completions` with model `perplexity/sonar`. Accepts `{ query, system_prompt?, max_tokens? }` and returns `{ content, citations }`. Uses existing `OPENROUTER_API_KEY` secret (already configured). Standard CORS headers. This becomes the single entry point for all live web research across the platform.
-
-### 2. Upgrade `prospect-website-audit/index.ts`
-
-Add a second research step: after the existing Firecrawl scrape + Lovable AI pain-point analysis, call `openrouter-research` internally (or inline the OpenRouter call) with the prompt: "Search the web for recent news, services, and business pain points for {business_name} in {industry}." Return both `pain_points` (existing) and new `deep_research` field (3-bullet live intel summary) in the response.
-
-### 3. Upgrade `competitor-watch-weekly-sender/index.ts`
-
-Before the existing Firecrawl scrape loop, add an OpenRouter Sonar call per competitor: "What are the latest changes, promotions, and news for {competitor_url}?" Prepend the live research results to `competitorData` so the final AI analysis is grounded in real-time web data rather than just scraped page content.
-
-### 4. Upgrade `competitor-pricing-scan/index.ts`
-
-After detecting a pricing page change, add an OpenRouter Sonar call: "What are {competitor_name}'s current publicly listed prices and any recent pricing announcements?" Append this live context to the Claude diff prompt for more accurate change analysis.
-
-### 5. Upgrade `market-intel-sender/index.ts`
-
-Replace or supplement the Firecrawl search step with an OpenRouter Sonar call: "Latest {industry} industry news and market developments in {location} this week." This gives factual, cited results instead of Firecrawl search (which is less reliable for news).
-
-### 6. Upgrade `gov-contract-monitor/index.ts`
-
-Add an optional OpenRouter enrichment step: after SAM.gov fetch, for the top 5 scored opportunities, call Sonar with "Recent news about {awarding_agency} {solicitation_title}" to add real-time context to the AI scoring prompt.
-
-### 7. Frontend: AdminProspector.tsx — "Deep Research" Button
-
-- Add a **"Deep Research"** toggle/button on each Kanban lead card (next to existing "Audit" button)
-- When clicked: calls `openrouter-research` with the business name + industry + city
-- Shows `Loader2` spinner with "Scouring the live web..." text
-- Displays results as a new `deep_research` section on the card (below pain points)
-- Add `deep_research` column to `prospect_pipeline` table (JSONB, nullable) via migration
-- Include `deep_research` data in the n8n payload sent by `send-lead-to-n8n`
-
-### 8. Update `send-lead-to-n8n/index.ts`
-
-Add `deep_research` field to the JSON payload so n8n workflows receive the live intel alongside pain points for automated outreach.
+Add a new `techSeo` template inspired by HADO SEO's dark-mode, score-comparison layout. This gives the site builder a 5th template option for tech/SaaS clients.
 
 ---
 
-## Database Migration
+## 2. Upgrade Prospector to `sonar-reasoning`
 
-```sql
-ALTER TABLE public.prospect_pipeline 
-  ADD COLUMN IF NOT EXISTS deep_research JSONB;
+**Files:**
+- `supabase/functions/openrouter-research/index.ts` — change model from `perplexity/sonar` → `perplexity/sonar-reasoning`, increase `max_tokens` to 1200
+- `supabase/functions/prospect-website-audit/index.ts` — change inline `sonarResearch()` model from `perplexity/sonar` → `perplexity/sonar-reasoning`
+
+`sonar-reasoning` uses chain-of-thought reasoning with real-time search — better for analyzing business pain points and competitive intel than basic `sonar`.
+
+---
+
+## 3. Multi-Tenant "One Brain, Two Faces" Architecture
+
+This is the big one. The site will detect which domain it's on and swap branding, navigation, homepage, and contact info accordingly.
+
+### 3A. Domain Detection Utility
+
+**New file:** `src/lib/domainConfig.ts`
+
+```text
+Exports:
+- getDomainBrand(): returns "training" | "agency"
+- Training domains: mattmichelstraining.com, www.mattmichelstraining.com, *.lovable.app (default)
+- Agency domains: detroitwebagent.com, www.detroitwebagent.com
+- getBrandConfig(): returns { siteName, tagline, primaryColor, logo, contactPhone, contactEmail, navLinks[], footerInfo }
 ```
+
+Training config:
+- Name: "Matt Michels Training"
+- Color: `#e8621a` (orange)
+- Nav: Train, App, Store, Schedule (current links)
+- Hides: Prospector, SEO tools, web dev, computer repair
+
+Agency config:
+- Name: "M2 Web Development"
+- Color: Deep blue/slate (`#1e40af`)
+- Nav: Services, AI Prospector, SEO Audit, Computer Repair, For Business dropdown
+- Shows: All tech/agency products
+- Hides: Fitness, training, workout tools
+
+### 3B. Update AppNavbar.tsx
+
+- Import `getBrandConfig()`
+- Swap logo, site name, primary color, and nav links based on domain
+- Training: current navbar (unchanged)
+- Agency: new links — All Services, AI Prospector, SEO Guard, Website Audit, Computer Repair
+
+### 3C. Update Footer
+
+- Swap contact info and company name based on domain
+- Training: "Matt Michels Training · Grosse Pointe, MI"
+- Agency: "M2 Web Development · Grosse Pointe, MI" with tech-focused contact
+
+### 3D. Agency Homepage
+
+**New file:** `src/pages/AgencyHome.tsx`
+
+High-converting landing page for M2 Web Development:
+- Hero: "AI-Powered Web Design & Automation for Michigan Businesses"
+- Services grid: Web Design, AI Receptionist, SEO Guard, Prospector, Computer Repair
+- Social proof / testimonials section
+- CTA: Free Website Audit
+- Dark/blue theme matching agency brand
+
+### 3E. Computer Repair Section
+
+**New file:** `src/pages/ComputerRepair.tsx`
+
+- Route: `/computer-repair`
+- Local Grosse Pointe/Detroit hardware + remote repair services
+- Simple service list + contact form
+- Targets local SEO
+
+### 3F. Routing Logic in App.tsx
+
+- Import `getDomainBrand()`
+- Wrap the root route (`/`) in a conditional:
+  - If `getDomainBrand() === "agency"` → render `AgencyHome`
+  - If `getDomainBrand() === "training"` → render current `LandingPage`
+- `/admin` and `/dashboard` remain accessible from BOTH domains (shared admin)
+- Add routes: `/computer-repair`, `/agency` (direct access fallback)
+
+### 3G. Shared Admin
+
+No changes needed — `/admin` already works via auth + `useIsAdmin()`. Both domains share the same Supabase project, so all data is unified.
+
+---
 
 ## Files Changed
 
 | File | Action |
 |------|--------|
-| `supabase/functions/openrouter-research/index.ts` | NEW — centralized Sonar utility |
-| `supabase/functions/prospect-website-audit/index.ts` | Edit — add deep research call |
-| `supabase/functions/competitor-watch-weekly-sender/index.ts` | Edit — add Sonar pre-research |
-| `supabase/functions/competitor-pricing-scan/index.ts` | Edit — add Sonar enrichment |
-| `supabase/functions/market-intel-sender/index.ts` | Edit — add Sonar news search |
-| `supabase/functions/gov-contract-monitor/index.ts` | Edit — add Sonar context for top opps |
-| `supabase/functions/send-lead-to-n8n/index.ts` | Edit — include deep_research in payload |
-| `src/components/admin/AdminProspector.tsx` | Edit — add Deep Research button + UI |
-| Migration: add `deep_research` column | NEW |
+| `src/lib/domainConfig.ts` | NEW — domain detection + brand config |
+| `src/lib/siteTemplates.ts` | Edit — add HADO-inspired tech/SaaS template |
+| `src/pages/AgencyHome.tsx` | NEW — M2 Web Development landing page |
+| `src/pages/ComputerRepair.tsx` | NEW — local repair service page |
+| `src/App.tsx` | Edit — conditional homepage routing + new routes |
+| `src/components/layout/AppNavbar.tsx` | Edit — domain-aware branding swap |
+| `src/components/layout/Footer.tsx` (or inline) | Edit — domain-aware contact info |
+| `supabase/functions/openrouter-research/index.ts` | Edit — model → `sonar-reasoning` |
+| `supabase/functions/prospect-website-audit/index.ts` | Edit — model → `sonar-reasoning` |
+
+---
+
+## DNS Prerequisite
+
+After implementation, Matt needs to point `detroitwebagent.com` DNS to the same IP as `mattmichelstraining.com` (185.158.133.1) and add it as a custom domain in the Lovable project settings.
 
