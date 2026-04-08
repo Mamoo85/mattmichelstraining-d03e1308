@@ -317,7 +317,33 @@ export default function AdminSandbox() {
   const [statuses, setStatuses] = useState<Record<string, TestStatus>>({});
   const [modalProduct, setModalProduct] = useState<Product | null>(null);
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
+  const [previewData, setPreviewData] = useState<any>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
   const { toast } = useToast();
+
+  const PREVIEWABLE = ["pet_memorial_subscription", "employee_credential_audit"];
+
+  const runPreview = async (product: Product, overrides?: Record<string, string>) => {
+    setModalProduct(null);
+    setPreviewLoading(true);
+    setPreviewData(null);
+    try {
+      const body: Record<string, unknown> = { product: product.id };
+      if (overrides) {
+        const filtered: Record<string, string> = {};
+        Object.entries(overrides).forEach(([k, v]) => { if (v.trim()) filtered[k] = v.trim(); });
+        if (Object.keys(filtered).length > 0) body.overrides = filtered;
+      }
+      const { data, error } = await supabase.functions.invoke("generate-sample-preview", { body });
+      if (error) throw error;
+      setPreviewData(data);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      toast({ title: "Preview failed", description: msg, variant: "destructive" });
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
 
   const hasCustomFields = (productId: string) => !!PRODUCT_FIELDS[productId]?.length;
 
