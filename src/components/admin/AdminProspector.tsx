@@ -802,9 +802,16 @@ export default function AdminProspector() {
                   </Select>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Button onClick={runMapsSearch} disabled={searching} className="text-xs" size="sm">
-                  {searching ? <><Loader2 size={12} className="animate-spin mr-1.5" /> Searching...</> : <><Search size={12} className="mr-1.5" /> Search Google Maps</>}
+              <div className="flex items-center gap-2 flex-wrap">
+                <Button onClick={runMapsSearch} disabled={searching || hybridSearching} className="text-xs" size="sm">
+                  {searching ? <><Loader2 size={12} className="animate-spin mr-1.5" /> Searching...</> : <><Search size={12} className="mr-1.5" /> Quick Search</>}
+                </Button>
+                <Button onClick={runHybridSearch} disabled={hybridSearching || searching} size="sm" className="text-xs bg-cyan-600 hover:bg-cyan-700 text-white gap-1.5">
+                  {hybridSearching ? (
+                    <><Loader2 size={12} className="animate-spin" /> Scanning & Analyzing...</>
+                  ) : (
+                    <><Zap size={12} /> Hybrid Search + Gap Analysis</>
+                  )}
                 </Button>
                 {mapResults.length > 0 && (
                   <Button
@@ -824,6 +831,14 @@ export default function AdminProspector() {
                   </Button>
                 )}
               </div>
+              {hybridSearching && (
+                <div className="flex items-center gap-2 p-2 rounded-md bg-cyan-500/10 border border-cyan-500/20">
+                  <Loader2 size={14} className="animate-spin text-cyan-400" />
+                  <span className="text-[11px] text-cyan-400 font-medium">
+                    Step 1: Finding businesses via Google Maps → Step 2: Running gap analysis on each website...
+                  </span>
+                </div>
+              )
             </CardContent>
           </Card>
 
