@@ -846,6 +846,7 @@ export default function AdminProspector() {
 
   useEffect(() => { if (mainTab === "leads") fetchLeads(); }, [activeLeadTab, mainTab]);
   useEffect(() => { if (mainTab === "pipeline") fetchPipeline(); }, [mainTab, fetchPipeline]);
+  useEffect(() => { if (mainTab === "sent") fetchSentEmails(); }, [mainTab, fetchSentEmails]);
 
   // ── Filtering + Sorting ──
   const filtered = useMemo(() => {
