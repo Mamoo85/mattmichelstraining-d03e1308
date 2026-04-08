@@ -3,10 +3,12 @@ import { Link, useLocation } from "react-router-dom";
 import {
   Dumbbell, ShoppingBag, Home, LogIn, LogOut, Shield,
   CalendarClock, ChevronDown, User, Download, Timer, Instagram, Facebook,
+  Globe, Search, Wrench,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useTimer } from "@/hooks/useTimer";
+import { getDomainBrand } from "@/lib/domainConfig";
 import m2Logo from "@/assets/m2-logo.jpg";
 const NotificationBell = lazy(() => import("./NotificationBell"));
 const IntervalTimer = lazy(() => import("@/components/workout/IntervalTimer"));
@@ -33,6 +35,19 @@ const businessLinks: DropdownItem[] = [
   { to: "/revenue-suite", label: "Revenue Suite" },
   { to: "/digital-foundation", label: "Digital Foundation" },
   { to: "/ai-website-audit", label: "Free Website Audit" },
+];
+
+const agencyServicesLinks: DropdownItem[] = [
+  { to: "/all-services", label: "All Services" },
+  { to: "/web-design-services", label: "Web Design" },
+  { to: "/ai-website-audit", label: "Free Website Audit" },
+  { to: "/seo-guard", label: "SEO Guard" },
+];
+
+const agencyToolsLinks: DropdownItem[] = [
+  { to: "/revenue-suite", label: "Revenue Suite" },
+  { to: "/digital-foundation", label: "Digital Foundation" },
+  { to: "/computer-repair", label: "Computer Repair" },
 ];
 
 const NavDropdown = ({
