@@ -64,6 +64,21 @@ export const SITE_TEMPLATES: Record<string, SiteTemplate> = {
       { key: "contact", type: "contact", label: "Contact", promptHint: "Office address, phone, email, office hours. Mention virtual consultation availability." },
     ],
   },
+  techSeo: {
+    key: "techSeo",
+    name: "Tech / SaaS / SEO",
+    description: "Inspired by HADO SEO — dark-mode, score-comparison hero, feature grids, and trust badges for tech and SaaS companies.",
+    defaultColors: { primary: "#3b82f6", secondary: "#0f172a", accent: "#22d3ee" },
+    sections: [
+      { key: "hero", type: "hero", label: "Hero Banner", promptHint: "Dark-mode hero with a bold score comparison (before/after). Headline about visibility, indexation, or performance. CTA for a free scan or trial." },
+      { key: "services", type: "services", label: "Features", promptHint: "6 product features with icon suggestions. Focus on monitoring, alerts, automation, and AI-powered insights. Each needs a title and one-line value prop." },
+      { key: "about", type: "about", label: "How It Works", promptHint: "3-step process explanation. Step 1: Connect/scan. Step 2: Monitor automatically. Step 3: Get alerts and reports. Keep it simple and technical." },
+      { key: "testimonials", type: "testimonials", label: "Case Studies", promptHint: "3 client results with metrics (e.g., '47% more indexed pages in 30 days'). Include company type and specific outcomes." },
+      { key: "faq", type: "faq", label: "FAQ", promptHint: "5 technical questions potential SaaS customers ask. Cover pricing, integrations, data security, and onboarding time." },
+      { key: "cta", type: "cta", label: "Call to Action", promptHint: "Free trial or freemium CTA. Emphasize no credit card required, instant setup, and time-to-value." },
+      { key: "contact", type: "contact", label: "Contact", promptHint: "Support email, documentation link, and enterprise sales contact. Mention uptime SLA and response time." },
+    ],
+  },
 };
 
 export const getTemplate = (key: string): SiteTemplate | undefined => SITE_TEMPLATES[key];
