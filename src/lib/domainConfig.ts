@@ -33,7 +33,7 @@ const TRAINING_CONFIG: BrandConfig = {
 const AGENCY_CONFIG: BrandConfig = {
   key: "agency",
   siteName: "Detroit Web Agency",
-  tagline: "AI-Powered Web Design & Automation for Michigan Businesses",
+  tagline: "High-Performance Websites & Automated Systems for Michigan Businesses",
   contactPhone: "(313) 806-4952",
   contactEmail: "matt@detroitwebagent.com",
   footerCompany: "Detroit Web Agency",

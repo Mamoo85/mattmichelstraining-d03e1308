@@ -20,7 +20,10 @@ const ComputerRepair = () => (
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-green-500/15 border border-green-500/25 text-green-300 text-xs font-bold uppercase tracking-widest mb-6">
           <MapPin className="h-3.5 w-3.5" /> Grosse Pointe & Detroit
         </div>
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white leading-tight mb-6">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-[10px] font-bold uppercase tracking-widest mb-4">
+          M2 Computer Repair
+        </div>
+        <h1 className="font-industrial text-3xl sm:text-4xl md:text-5xl text-white leading-tight mb-6">
           Local Computer Repair<br />& Remote Tech Support
         </h1>
         <p className="text-lg text-slate-300 max-w-xl mx-auto mb-8">
@@ -39,7 +42,7 @@ const ComputerRepair = () => (
 
     {/* Services */}
     <section className="container max-w-5xl mx-auto px-4 py-16">
-      <h2 className="text-2xl md:text-3xl font-black text-center mb-3">What We Fix</h2>
+      <h2 className="font-industrial text-2xl md:text-3xl text-center mb-3">What We Fix</h2>
       <p className="text-muted-foreground text-center mb-10 max-w-xl mx-auto">
         From hardware to software — we handle it all. Most repairs completed same-day.
       </p>
