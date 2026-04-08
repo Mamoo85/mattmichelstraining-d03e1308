@@ -15,6 +15,7 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const SAM_GOV_API_KEY = Deno.env.get("SAM_GOV_API_KEY") || "";
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
+const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -129,6 +130,51 @@ async function scoreOpportunity(
   const prompt = `You are a federal contracting business development analyst. Score this SAM.gov opportunity for this company.
 
 COMPANY PROFILE:
+- Company: ${client.company_name}
+- NAICS codes they work in: ${client.naics_codes || "not specified"}
+- Keywords/capabilities: ${client.keywords || "not specified"}
+- Set-aside types they qualify for: ${client.set_aside_types || "not specified"}
+
+OPPORTUNITY:
+- Title: ${opp.title}
+- Agency: ${opp.fullParentPathName || "Unknown Agency"}
+- NAICS Code: ${opp.naicsCode || "N/A"}
+- Set-Aside Type: ${opp.typeOfSetAside || "Full and Open"}
+- Response Deadline: ${opp.responseDeadLine || "N/A"}`;
+
+  // Enrich top opportunities with live Sonar research
+  let sonarContext = "";
+  if (OPENROUTER_API_KEY) {
+    try {
+      const sonarRes = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "https://mattmichelstraining.com",
+          "X-Title": "M2 Gov Contract Intel",
+        },
+        body: JSON.stringify({
+          model: "perplexity/sonar",
+          messages: [{ role: "user", content: `Recent news about ${opp.fullParentPathName || "this agency"} related to "${opp.title}". Any relevant contract awards, incumbent info, or agency priorities?` }],
+          max_tokens: 300,
+        }),
+      });
+      if (sonarRes.ok) {
+        const sonarData = await sonarRes.json();
+        sonarContext = sonarData?.choices?.[0]?.message?.content || "";
+      }
+    } catch { /* optional enrichment */ }
+  }
+
+  const fullPrompt = prompt + (sonarContext ? `\n\nLIVE WEB RESEARCH:\n${sonarContext.slice(0, 500)}` : "") + `
+
+Respond with ONLY a JSON object (no markdown, no explanation):
+{
+  "score": <integer 0-100, how well this matches the company>,
+  "recommendation": <"bid" | "review" | "no-bid">,
+  "summary": <2 sentences: why this is or isn't a good fit>
+}`;
 - Company: ${client.company_name}
 - NAICS codes they work in: ${client.naics_codes || "not specified"}
 - Keywords/capabilities: ${client.keywords || "not specified"}
