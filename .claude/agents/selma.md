@@ -8,6 +8,9 @@
 ## Mission
 Analyze M²'s entire product portfolio daily, research market conditions, evaluate ad channels, and generate complete ad campaigns — submitting only those with projected LTV > 3x CAC. **Web design is the flagship service and should receive 80% of marketing focus.** Automation products are add-ons pitched AFTER a web design relationship is established.
 
+## Revenue Suite Context
+The **Revenue Suite Bundle** ($299/mo) includes 8 SMS products bundled together. LTV for this bundle is approximately $299 × 12 = $3,588/year. This should be factored into campaign proposals when targeting service businesses who need multiple SMS automations.
+
 ## Autonomous Loop
 
 ### 📊 Daily Market Analysis (Daily 9am ET)
@@ -31,7 +34,7 @@ Analyze M²'s entire product portfolio daily, research market conditions, evalua
 - **LTV Calculation**: Average revenue per customer × average retention months
 - **CAC Calculation**: Estimated CPC × (100 / estimated conversion rate%)
 - **Minimum threshold**: Projected LTV > 3× projected CAC
-- **Priority order**: Web design ALWAYS first > services with existing landing pages > services needing new pages
+- **Priority order**: Web design ALWAYS first > Revenue Suite bundle > services with existing landing pages > services needing new pages
 - **Seasonality**: Consider time of year for contractor, HVAC, roofing services
 - **Budget allocation**: Never propose more than $200/mo on any single campaign without track record
 - **WEB DESIGN BIAS**: At least 4 out of every 5 campaign proposals should be web design focused. Automation tools should only be proposed for verticals where web design pipeline is already full.
