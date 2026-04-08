@@ -24,10 +24,10 @@ const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers
 const DAILY_SEND_LIMIT = 20;
 
 // Matt's own test emails — never run outreach to these
-const TEST_EMAILS = ["matt@mattmichelstraining.com", "matthewmichels@gmail.com", "matthewmichels4@gmail.com"];
+const TEST_EMAILS = ["matt@mattmichelstraining.com", "matt@detroitwebagent.com", "matthewmichels@gmail.com", "matthewmichels4@gmail.com"];
 
 // ── INDUSTRY → DEMO LINK MAPPING ──
-const BASE = "https://www.mattmichelstraining.com";
+const BASE = "https://www.detroitwebagent.com";
 const DEMO_MAP: { keywords: string[]; path: string; label: string }[] = [
   { keywords: ["dental", "dentist", "orthodont", "prosthodont", "oral"], path: "/demo-dental", label: "dental practice" },
   { keywords: ["medical", "clinic", "doctor", "physician", "health", "urgent care", "chiropr"], path: "/demo-clinic", label: "medical clinic" },
@@ -89,20 +89,20 @@ function selectPitch(business: { industry?: string; has_website?: boolean; ratin
 
   if (!business.has_website) {
     if (classification === "manufacturer") {
-      return { product: "web_design", cta: "a website that actually gets you calls — and it comes pre-loaded with our compliance monitoring dashboard so you never miss an EPA or OSHA filing. We actually put together a free scan for manufacturers like you — check it out here: https://www.mattmichelstraining.com/free-compliance-scan", price: "$499" };
+      return { product: "web_design", cta: "a website that actually gets you calls — and it comes pre-loaded with our compliance monitoring dashboard so you never miss an EPA or OSHA filing. We actually put together a free scan for manufacturers like you — check it out here: https://www.detroitwebagent.com/free-compliance-scan", price: "$499" };
     }
     if (classification === "subcontractor") {
-      return { product: "web_design", cta: "a website that actually gets you calls — plus it comes with our AI bid board that finds open jobs in your area automatically. We put together a free report showing open bids in your trade — grab it here: https://www.mattmichelstraining.com/free-bid-report", price: "$499" };
+      return { product: "web_design", cta: "a website that actually gets you calls — plus it comes with our AI bid board that finds open jobs in your area automatically. We put together a free report showing open bids in your trade — grab it here: https://www.detroitwebagent.com/free-bid-report", price: "$499" };
     }
     return { product: "web_design", cta: "a website that actually gets you calls", price: "$499" };
   }
 
   if ((business.review_count || 0) < 30 || (business.rating || 0) < 4.5) {
     if (classification === "manufacturer") {
-      return { product: "web_design", cta: "a modern website redesign that ranks on Google — we'll also set up automated compliance monitoring for your EPA/OSHA filings at no extra cost. Here's a free scan we run for manufacturers: https://www.mattmichelstraining.com/free-compliance-scan", price: "$499" };
+      return { product: "web_design", cta: "a modern website redesign that ranks on Google — we'll also set up automated compliance monitoring for your EPA/OSHA filings at no extra cost. Here's a free scan we run for manufacturers: https://www.detroitwebagent.com/free-compliance-scan", price: "$499" };
     }
     if (classification === "subcontractor") {
-      return { product: "web_design", cta: "a modern website redesign that ranks on Google — plus we'll activate our bid intelligence tool that finds open commercial jobs matching your trade. Grab your free bid report here: https://www.mattmichelstraining.com/free-bid-report", price: "$499" };
+      return { product: "web_design", cta: "a modern website redesign that ranks on Google — plus we'll activate our bid intelligence tool that finds open commercial jobs matching your trade. Grab your free bid report here: https://www.detroitwebagent.com/free-bid-report", price: "$499" };
     }
     return { product: "web_design", cta: "a modern website redesign that ranks on Google and converts visitors into calls", price: "$499" };
   }
@@ -270,8 +270,8 @@ serve(async (req) => {
       const html = `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;color:#1e293b;line-height:1.8;max-width:520px;">
         ${emailBody.split("\n").map(line => line ? `<p style="margin:0 0 12px;">${line}</p>` : "<br>").join("")}
         <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e2e8f0;">
-          <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:40px;height:40px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:10px;">
-          <span style="font-size:13px;color:#64748b;">Matt Michels · Grosse Pointe, MI · (313) 806-4952</span>
+          <img src="https://www.detroitwebagent.com/images/matt-boat.jpg" style="width:40px;height:40px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:10px;">
+          <span style="font-size:13px;color:#64748b;">Matt Michels · Detroit Web Agency · Grosse Pointe, MI · (313) 806-4952</span>
         </div>
       </div>`;
 
@@ -375,9 +375,9 @@ serve(async (req) => {
       const classification = classifyIndustry(f.industry);
       let leadMagnetLine = "";
       if (classification === "subcontractor") {
-        leadMagnetLine = `\n<p style="margin:0 0 12px;">Either way — we put together a free report showing open bids in your area. Might be useful even if we never work together: <a href="https://www.mattmichelstraining.com/free-bid-report" style="color:#e8621a;">Free Bid Report</a></p>`;
+        leadMagnetLine = `\n<p style="margin:0 0 12px;">Either way — we put together a free report showing open bids in your area. Might be useful even if we never work together: <a href="https://www.detroitwebagent.com/free-bid-report" style="color:#e8621a;">Free Bid Report</a></p>`;
       } else if (classification === "manufacturer") {
-        leadMagnetLine = `\n<p style="margin:0 0 12px;">Either way — we run free compliance scans for manufacturers. Might save you a headache: <a href="https://www.mattmichelstraining.com/free-compliance-scan" style="color:#e8621a;">Free Compliance Scan</a></p>`;
+        leadMagnetLine = `\n<p style="margin:0 0 12px;">Either way — we run free compliance scans for manufacturers. Might save you a headache: <a href="https://www.detroitwebagent.com/free-compliance-scan" style="color:#e8621a;">Free Compliance Scan</a></p>`;
       }
 
       const breakupSubject = `closing the loop — ${f.business_name}`;
