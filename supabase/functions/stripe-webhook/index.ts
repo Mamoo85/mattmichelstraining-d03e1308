@@ -5011,6 +5011,47 @@ ${fwdInstructions}`,
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // ── Revenue Suite Bundle ──────────────────────────────────────────
+      if (meta.type === "bundle_revenue_suite") {
+        try {
+          const tables = [
+            "review_monitor_clients", "sms_blast_clients", "noshow_clients",
+            "estimate_drip_clients", "invoice_chaser_clients", "afterjob_drip_clients",
+            "promo_blaster_clients", "slow_day_clients",
+          ];
+          await Promise.all(
+            tables.map((t) =>
+              sb.from(t).upsert(
+                { email, business_name: meta.business_name || "", phone: meta.phone || "", active: true },
+                { onConflict: "email" }
+              )
+            )
+          );
+          await sendM2Email(
+            email,
+            "Welcome to the Revenue Suite — All 8 Tools Are Live",
+            m2Email({
+              greeting: `Hey ${meta.business_name ? meta.business_name : "there"},`,
+              headline: "Your Revenue Suite is active",
+              body: `<p>All 8 automated revenue tools are now live for your business:</p>
+<ul style="padding-left:20px;margin:12px 0">
+<li>Review Monitor</li><li>Weekly SMS Blast</li><li>No-Show Re-Booker</li>
+<li>Estimate Follow-Up Drip</li><li>Invoice Chaser</li><li>After-Job Drip</li>
+<li>Seasonal Promo Blaster</li><li>Slow Day SMS</li>
+</ul>
+<p>I'll reach out within 24 hours to get everything configured for your business. In the meantime, feel free to text me anytime.</p>`,
+              cta: { text: "Text Matt Now", url: "sms:+13138064952" },
+            })
+          );
+          await notifyMatt(
+            `🔥 Revenue Suite sold — ${meta.business_name || email}`,
+            `<p><strong>Revenue Suite ($299/mo)</strong> purchased!<br>Email: ${email}<br>Business: ${meta.business_name || "n/a"}<br>Phone: ${meta.phone || "n/a"}<br>City: ${meta.city || "n/a"}</p><p>All 8 tables upserted. Welcome email sent.</p>`
+          );
+          console.log(`[WEBHOOK] Revenue Suite: ${email} — all 8 products activated`);
+        } catch (e) { console.error("[WEBHOOK] Revenue Suite error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
     return new Response(JSON.stringify({ received: true }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
