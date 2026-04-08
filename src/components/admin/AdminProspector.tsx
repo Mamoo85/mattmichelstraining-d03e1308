@@ -665,6 +665,27 @@ export default function AdminProspector() {
     finally { setDrippingId(null); }
   };
 
+  // ── Batch Drip ──
+  const runBatchDrip = async (action: "draft_all" | "send_all" | "send_drafted") => {
+    const ids = selectedPipelineIds.size > 0
+      ? Array.from(selectedPipelineIds)
+      : filteredPipelineLeads.filter(l => !!l.email).map(l => l.id);
+    if (ids.length === 0) { toast.error("No emailable leads selected"); return; }
+    setBatchProcessing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("pipeline-batch-drip", {
+        body: { leadIds: ids, action },
+      });
+      if (error) throw error;
+      if (data?.error) { toast.error(data.error); return; }
+      const label = action === "draft_all" ? "drafted" : "sent";
+      toast.success(`Batch complete: ${data.drafted || data.sent || 0} ${label}, ${data.errors || 0} errors`);
+      setSelectedPipelineIds(new Set());
+      fetchPipeline();
+    } catch (err) { toast.error(err instanceof Error ? err.message : "Batch failed"); }
+    finally { setBatchProcessing(false); }
+  };
+
   // ── Send to n8n ──
   const sendToN8n = async (lead: PipelineLead) => {
     setSendingId(lead.id);
