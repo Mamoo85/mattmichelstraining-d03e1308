@@ -17,7 +17,7 @@ export default function AdFreeAudit() {
           <h1 className="text-3xl font-black mb-3">Check Your Inbox!</h1>
           <p className="text-slate-300 mb-6">Your website audit is being generated and will arrive within 60 seconds.</p>
           <p className="text-sm text-slate-400">
-            Want help fixing what the audit finds? <a href="tel:+13138064952" className="text-[#e8621a] font-bold">(313) 806-4952</a>
+            Want help fixing what the audit finds? <a href="tel:+13138064952" className="text-[#22d3ee] font-bold">(313) 806-4952</a>
           </p>
         </div>
       </div>
@@ -44,13 +44,13 @@ export default function AdFreeAudit() {
   return (
     <>
       <SEOHead
-        title="Free Website Audit — Instant Report | M² Development"
+        title="Free Website Audit — Instant Report | Detroit Web Agency"
         description="Get a free AI website audit in 60 seconds. SEO, mobile, speed, and actionable fixes. No credit card."
         path="/ad/free-audit"
       />
       <div className="min-h-screen bg-[#1e293b]">
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
-          <p className="text-[#e8621a] font-black text-sm tracking-wider uppercase">M² Development</p>
+          <p className="text-[#22d3ee] font-black text-sm tracking-wider uppercase">Detroit Web Agency</p>
           <a href="tel:+13138064952" className="text-white/70 text-sm flex items-center gap-1.5 hover:text-white">
             <Phone size={12} /> (313) 806-4952
           </a>
@@ -58,14 +58,14 @@ export default function AdFreeAudit() {
 
         <div className="max-w-lg mx-auto px-4 py-16">
           <div className="text-center text-white mb-10">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#e8621a]/20 text-[#e8621a] text-[11px] font-bold tracking-widest uppercase mb-5">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#22d3ee]/20 text-[#22d3ee] text-[11px] font-bold tracking-widest uppercase mb-5">
               <Clock size={11} /> 60-Second Delivery
             </div>
             <h1 className="text-3xl sm:text-4xl font-black leading-tight mb-4">
-              Is Your Website <span className="text-[#e8621a]">Costing You Customers?</span>
+              Is Your Website <span className="text-[#22d3ee]">Costing You Customers?</span>
             </h1>
             <p className="text-slate-300">
-              Enter your URL. Get a full professional audit — SEO, mobile, speed, trust signals, and the 3 fixes that will actually move the needle. <strong className="text-[#e8621a]">100% Free.</strong>
+              Enter your URL. Get a full professional audit — SEO, mobile, speed, trust signals, and the 3 fixes that will actually move the needle. <strong className="text-[#22d3ee]">100% Free.</strong>
             </p>
           </div>
 
@@ -73,17 +73,17 @@ export default function AdFreeAudit() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-1.5">Email <span className="text-red-500">*</span></label>
-                <input type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="you@business.com" className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#e8621a]/30" />
+                <input type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="you@business.com" className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#22d3ee]/30" />
               </div>
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-1.5">Business Name</label>
-                <input type="text" value={form.business_name} onChange={(e) => setForm({ ...form, business_name: e.target.value })} placeholder="Smith Roofing" className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#e8621a]/30" />
+                <input type="text" value={form.business_name} onChange={(e) => setForm({ ...form, business_name: e.target.value })} placeholder="Smith Roofing" className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#22d3ee]/30" />
               </div>
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-1.5">Website URL <span className="text-red-500">*</span></label>
-                <input type="text" required value={form.business_url} onChange={(e) => setForm({ ...form, business_url: e.target.value })} placeholder="www.smithroofing.com" className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#e8621a]/30" />
+                <input type="text" required value={form.business_url} onChange={(e) => setForm({ ...form, business_url: e.target.value })} placeholder="www.smithroofing.com" className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#22d3ee]/30" />
               </div>
-              <button type="submit" disabled={submitting} className="w-full flex items-center justify-center gap-2 bg-[#e8621a] hover:bg-[#d4570f] text-white py-4 rounded-lg font-bold text-base transition">
+              <button type="submit" disabled={submitting} className="w-full flex items-center justify-center gap-2 bg-[#22d3ee] hover:bg-[#06b6d4] text-white py-4 rounded-lg font-bold text-base transition">
                 {submitting ? <><Loader2 size={16} className="animate-spin" /> Generating...</> : <><FileText size={16} /> Get My Free Audit</>}
               </button>
               <p className="text-[10px] text-center text-slate-400">Free. No credit card. No phone call. Just the report.</p>
@@ -91,9 +91,9 @@ export default function AdFreeAudit() {
           </div>
 
           <div className="mt-10 grid grid-cols-3 gap-4 text-center text-white">
-            <div><p className="text-xl font-black text-[#e8621a]">6</p><p className="text-[10px] text-slate-400 uppercase tracking-wider">Categories checked</p></div>
-            <div><p className="text-xl font-black text-[#e8621a]">60s</p><p className="text-[10px] text-slate-400 uppercase tracking-wider">Delivery time</p></div>
-            <div><p className="text-xl font-black text-[#e8621a]">$0</p><p className="text-[10px] text-slate-400 uppercase tracking-wider">Cost</p></div>
+            <div><p className="text-xl font-black text-[#22d3ee]">6</p><p className="text-[10px] text-slate-400 uppercase tracking-wider">Categories checked</p></div>
+            <div><p className="text-xl font-black text-[#22d3ee]">60s</p><p className="text-[10px] text-slate-400 uppercase tracking-wider">Delivery time</p></div>
+            <div><p className="text-xl font-black text-[#22d3ee]">$0</p><p className="text-[10px] text-slate-400 uppercase tracking-wider">Cost</p></div>
           </div>
         </div>
       </div>

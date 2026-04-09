@@ -37,7 +37,7 @@ export default function Portfolio() {
   return (
     <>
       <SEOHead
-        title="Portfolio — M² Development | Grosse Pointe Web Design"
+        title="Portfolio — Detroit Web Agency | Grosse Pointe Web Design"
         description="Websites and digital tools built for local service businesses. See our work."
         path="/portfolio"
       />
@@ -46,11 +46,11 @@ export default function Portfolio() {
         {/* Hero */}
         <section className="pt-20 pb-16 px-4 bg-[#1e293b] text-white">
           <div className="max-w-3xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#e8621a]/20 text-[#e8621a] text-[11px] font-bold tracking-widest uppercase mb-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#22d3ee]/20 text-[#22d3ee] text-[11px] font-bold tracking-widest uppercase mb-6">
               <Globe size={11} /> Our Work
             </div>
             <h1 className="text-3xl sm:text-5xl font-black leading-tight mb-5">
-              Built for <span className="text-[#e8621a]">Local Businesses</span>
+              Built for <span className="text-[#22d3ee]">Local Businesses</span>
             </h1>
             <p className="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto">
               Real websites and digital tools for contractors, medical practices,
@@ -69,7 +69,7 @@ export default function Portfolio() {
                   <CardContent className="p-6 sm:p-8">
                     <div className="flex items-start justify-between flex-wrap gap-4">
                       <div>
-                        <p className="text-xs font-bold uppercase tracking-wider text-[#e8621a] mb-1">
+                        <p className="text-xs font-bold uppercase tracking-wider text-[#22d3ee] mb-1">
                           {project.industry}
                         </p>
                         <h3 className="text-xl font-black mb-2">
@@ -82,7 +82,7 @@ export default function Portfolio() {
                           {project.services.map((s) => (
                             <span
                               key={s}
-                              className="px-2 py-1 rounded-md bg-[#e8621a]/10 text-[#e8621a] text-xs font-medium"
+                              className="px-2 py-1 rounded-md bg-[#22d3ee]/10 text-[#22d3ee] text-xs font-medium"
                             >
                               {s}
                             </span>
@@ -115,7 +115,7 @@ export default function Portfolio() {
               {CAPABILITIES.map((cap) => (
                 <Card key={cap.title} className="border-border/40 bg-card/60">
                   <CardContent className="p-6 text-center">
-                    <cap.icon className="mx-auto text-[#e8621a] mb-3" size={28} />
+                    <cap.icon className="mx-auto text-[#22d3ee] mb-3" size={28} />
                     <h3 className="font-bold mb-2">{cap.title}</h3>
                     <p className="text-sm text-muted-foreground">{cap.desc}</p>
                   </CardContent>
@@ -134,7 +134,7 @@ export default function Portfolio() {
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link to="/digital-foundation">
-              <Button className="bg-[#e8621a] hover:bg-[#d4570f] text-white px-6 py-3 font-bold">
+              <Button className="bg-[#22d3ee] hover:bg-[#06b6d4] text-white px-6 py-3 font-bold">
                 See Our Packages <ArrowRight size={16} className="ml-2" />
               </Button>
             </Link>

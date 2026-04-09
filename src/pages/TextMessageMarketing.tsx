@@ -6,7 +6,7 @@ export default function TextMessageMarketing() {
 
   if (status === "success") {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-4">
         <div className="max-w-md w-full bg-slate-800 border border-slate-700 rounded-xl text-center p-8">
           <div className="text-5xl mb-4">📱</div>
           <h2 className="text-2xl font-bold text-white mb-3">Welcome aboard!</h2>
@@ -21,11 +21,11 @@ export default function TextMessageMarketing() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="min-h-screen bg-[#0a0a0f]">
       {/* Hero */}
       <section className="py-20 px-4 text-center">
         <div className="max-w-3xl mx-auto">
-          <div className="inline-block bg-orange-500/10 text-orange-400 text-sm font-semibold px-4 py-2 rounded-full mb-6">
+          <div className="inline-block bg-cyan-500/10 text-cyan-400 text-sm font-semibold px-4 py-2 rounded-full mb-6">
             Text Message Marketing
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">
@@ -35,7 +35,7 @@ export default function TextMessageMarketing() {
             We write it. We send it. Every month, AI crafts a personalized SMS campaign for your customer
             list and sends it automatically. 98% open rates. Zero effort on your end.
           </p>
-          <div className="text-3xl font-bold text-orange-400 mb-2">$79/mo</div>
+          <div className="text-3xl font-bold text-cyan-400 mb-2">$79/mo</div>
           <p className="text-slate-400 mb-8">7-day free trial — cancel anytime</p>
         </div>
       </section>
@@ -49,7 +49,7 @@ export default function TextMessageMarketing() {
             { stat: "3×", label: "More revenue per customer with SMS" },
           ].map((s) => (
             <div key={s.stat}>
-              <div className="text-4xl font-bold text-orange-400 mb-2">{s.stat}</div>
+              <div className="text-4xl font-bold text-cyan-400 mb-2">{s.stat}</div>
               <p className="text-slate-300">{s.label}</p>
             </div>
           ))}

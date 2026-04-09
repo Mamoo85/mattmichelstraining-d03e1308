@@ -63,7 +63,7 @@ export default function NewHireCheck() {
             Payment confirmed. We're running the credential check now — your report will arrive in your inbox within 5 minutes.
           </p>
           {isTest && (
-            <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30 mb-4">
+            <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/30 mb-4">
               Test mode — check matt@mattmichelstraining.com
             </Badge>
           )}
@@ -98,7 +98,7 @@ export default function NewHireCheck() {
 
       {/* Form Card */}
       <div className="max-w-lg mx-auto px-4 pb-16">
-        <Card className="bg-slate-900 border-slate-700 shadow-2xl">
+        <Card className="bg-[#0a0a0f] border-slate-700 shadow-2xl">
           <CardContent className="p-8">
             <h2 className="text-lg font-bold text-white mb-6">Run a Credential Check</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -206,7 +206,7 @@ export default function NewHireCheck() {
               desc: "A plain-English recommendation from our AI — what it means and what to do next.",
             },
           ].map(({ icon: Icon, title, desc }) => (
-            <div key={title} className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+            <div key={title} className="bg-[#0a0a0f] border border-slate-800 rounded-xl p-5">
               <Icon size={18} className="text-primary mb-3" />
               <p className="text-white font-semibold text-sm mb-1.5">{title}</p>
               <p className="text-slate-500 text-xs leading-relaxed">{desc}</p>

@@ -38,7 +38,7 @@ export default function AIProposalGenerator() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center px-6">
+      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-6">
         <div className="text-center max-w-sm">
           <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle size={32} className="text-green-400" />
@@ -48,7 +48,7 @@ export default function AIProposalGenerator() {
             Your AI Proposal Generator account is being set up. Check your email for login instructions within the next few minutes.
           </p>
           <p className="mt-6 text-sm text-slate-400">
-            Questions? <a href="tel:+13138064952" className="text-orange-500 hover:underline">(313) 806-4952</a>
+            Questions? <a href="tel:+13138064952" className="text-cyan-500 hover:underline">(313) 806-4952</a>
           </p>
         </div>
       </div>
@@ -83,15 +83,15 @@ export default function AIProposalGenerator() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
+    <div className="min-h-screen bg-[#0a0a0f] text-white">
       {/* Hero */}
       <section className="px-6 py-20 text-center max-w-3xl mx-auto">
-        <div className="inline-flex items-center gap-2 bg-orange-500/10 text-orange-400 text-sm font-semibold px-4 py-1.5 rounded-full mb-6 border border-orange-500/20">
+        <div className="inline-flex items-center gap-2 bg-cyan-500/10 text-cyan-400 text-sm font-semibold px-4 py-1.5 rounded-full mb-6 border border-cyan-500/20">
           <FileText size={14} />
           AI Proposal Generator
         </div>
         <h1 className="text-4xl sm:text-5xl font-black leading-tight mb-4">
-          Professional Proposals <span className="text-orange-500">in 2 Minutes</span>
+          Professional Proposals <span className="text-cyan-500">in 2 Minutes</span>
         </h1>
         <p className="text-slate-300 text-lg sm:text-xl leading-relaxed max-w-2xl mx-auto mb-8">
           Submit your project details and AI generates a polished, client-ready proposal — complete
@@ -111,7 +111,7 @@ export default function AIProposalGenerator() {
           {STEPS.map(({ num, title, desc }, idx) => (
             <div key={num} className="flex-1 flex sm:flex-col items-start sm:items-center sm:text-center gap-4">
               <div className="flex items-center gap-2 shrink-0">
-                <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-white font-black">{num}</div>
+                <div className="w-10 h-10 bg-cyan-500 rounded-full flex items-center justify-center text-white font-black">{num}</div>
                 {idx < STEPS.length - 1 && (
                   <ArrowRight size={20} className="text-slate-600 hidden sm:hidden" />
                 )}
@@ -130,7 +130,7 @@ export default function AIProposalGenerator() {
         <h2 className="text-2xl font-black text-center mb-3">Sample Output</h2>
         <p className="text-slate-400 text-center text-sm mb-8">What your clients receive — clean, professional, ready to sign.</p>
         <div className="bg-white rounded-2xl overflow-hidden shadow-2xl">
-          <div className="bg-slate-900 px-6 py-4 flex items-center gap-3">
+          <div className="bg-[#0a0a0f] px-6 py-4 flex items-center gap-3">
             <div className="w-3 h-3 rounded-full bg-red-400" />
             <div className="w-3 h-3 rounded-full bg-yellow-400" />
             <div className="w-3 h-3 rounded-full bg-green-400" />
@@ -159,7 +159,7 @@ export default function AIProposalGenerator() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-slate-50 rounded-lg p-3">
                   <p className="font-bold text-slate-700 text-xs mb-1">Investment</p>
-                  <p className="text-lg font-black text-orange-600">$1,499</p>
+                  <p className="text-lg font-black text-cyan-600">$1,499</p>
                 </div>
                 <div className="bg-slate-50 rounded-lg p-3">
                   <p className="font-bold text-slate-700 text-xs mb-1">Timeline</p>
@@ -176,7 +176,7 @@ export default function AIProposalGenerator() {
         <div className="grid sm:grid-cols-3 gap-6">
           {FEATURES.map(({ icon: Icon, title, desc }) => (
             <div key={title} className="bg-slate-800 rounded-xl p-6 border border-slate-700">
-              <Icon size={28} className="text-orange-500 mb-4" />
+              <Icon size={28} className="text-cyan-500 mb-4" />
               <h3 className="font-bold text-white mb-2">{title}</h3>
               <p className="text-slate-400 text-sm leading-relaxed">{desc}</p>
             </div>
@@ -186,8 +186,8 @@ export default function AIProposalGenerator() {
 
       {/* Timer callout */}
       <section className="px-6 pb-16 max-w-3xl mx-auto">
-        <div className="bg-orange-500/10 border border-orange-500/30 rounded-2xl px-8 py-6 flex items-center gap-6 flex-wrap">
-          <Clock size={36} className="text-orange-500 shrink-0" />
+        <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-2xl px-8 py-6 flex items-center gap-6 flex-wrap">
+          <Clock size={36} className="text-cyan-500 shrink-0" />
           <div>
             <p className="text-white font-bold text-lg mb-1">From submission to sent — under 2 minutes</p>
             <p className="text-slate-300 text-sm">The average contractor spends 45–90 minutes writing a proposal. AI cuts that to 2 minutes and produces a better result every time.</p>
@@ -212,11 +212,11 @@ export default function AIProposalGenerator() {
                   value={form.name}
                   onChange={handleChange}
                   placeholder="John Smith"
-                  className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-500 focus:border-orange-500"
+                  className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-500 focus:border-cyan-500"
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="businessName" className="text-slate-300 text-sm">Business Name <span className="text-orange-500">*</span></Label>
+                <Label htmlFor="businessName" className="text-slate-300 text-sm">Business Name <span className="text-cyan-500">*</span></Label>
                 <Input
                   id="businessName"
                   name="businessName"
@@ -224,11 +224,11 @@ export default function AIProposalGenerator() {
                   onChange={handleChange}
                   placeholder="Smith HVAC LLC"
                   required
-                  className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-500 focus:border-orange-500"
+                  className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-500 focus:border-cyan-500"
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="email" className="text-slate-300 text-sm">Email <span className="text-orange-500">*</span></Label>
+                <Label htmlFor="email" className="text-slate-300 text-sm">Email <span className="text-cyan-500">*</span></Label>
                 <Input
                   id="email"
                   name="email"
@@ -237,7 +237,7 @@ export default function AIProposalGenerator() {
                   onChange={handleChange}
                   placeholder="john@smithhvac.com"
                   required
-                  className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-500 focus:border-orange-500"
+                  className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-500 focus:border-cyan-500"
                 />
               </div>
               <div className="space-y-1">
@@ -247,7 +247,7 @@ export default function AIProposalGenerator() {
                   name="industry"
                   value={form.industry}
                   onChange={handleChange}
-                  className="w-full rounded-md bg-slate-700 border border-slate-600 text-white px-3 py-2 text-sm focus:outline-none focus:border-orange-500"
+                  className="w-full rounded-md bg-slate-700 border border-slate-600 text-white px-3 py-2 text-sm focus:outline-none focus:border-cyan-500"
                 >
                   <option value="">Select your industry</option>
                   {INDUSTRIES.map(i => <option key={i} value={i}>{i}</option>)}
@@ -259,7 +259,7 @@ export default function AIProposalGenerator() {
               <Button
                 type="submit"
                 disabled={submitting}
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 text-base"
+                className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 text-base"
               >
                 {submitting ? <Loader2 size={18} className="animate-spin mr-2" /> : null}
                 {submitting ? "Processing…" : "Start Writing Proposals Free →"}
@@ -273,10 +273,10 @@ export default function AIProposalGenerator() {
       {/* Footer */}
       <section className="border-t border-slate-800 py-10 px-6 text-center">
         <div className="flex items-center justify-center gap-3 mb-3">
-          <Users size={18} className="text-orange-500" />
+          <Users size={18} className="text-cyan-500" />
           <span className="text-slate-400 text-sm">Built by Matt Michels — Grosse Pointe, MI</span>
         </div>
-        <p className="text-slate-500 text-xs">Questions? <a href="tel:+13138064952" className="text-orange-500 hover:underline">(313) 806-4952</a> · <a href="mailto:matt@mattmichelstraining.com" className="text-orange-500 hover:underline">matt@mattmichelstraining.com</a></p>
+        <p className="text-slate-500 text-xs">Questions? <a href="tel:+13138064952" className="text-cyan-500 hover:underline">(313) 806-4952</a> · <a href="mailto:matt@mattmichelstraining.com" className="text-cyan-500 hover:underline">matt@mattmichelstraining.com</a></p>
       </section>
     </div>
   );

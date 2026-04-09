@@ -77,7 +77,7 @@ function RouteBadge({ route }: { route: string }) {
     route === "Training"
       ? { label: "Training", cls: "bg-blue-500/20 text-blue-400" }
       : route === "Web_Dev"
-      ? { label: "Web Dev", cls: "bg-orange-500/20 text-[#e8621a]" }
+      ? { label: "Web Dev", cls: "bg-cyan-500/20 text-[#22d3ee]" }
       : { label: "Uncategorized", cls: "bg-slate-500/20 text-slate-400" };
   return (
     <span
@@ -104,7 +104,7 @@ function InboxPanel({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <Loader2 size={20} className="animate-spin text-[#e8621a]" />
+        <Loader2 size={20} className="animate-spin text-[#22d3ee]" />
       </div>
     );
   }
@@ -127,7 +127,7 @@ function InboxPanel({
             onClick={() => onSelectLead(lead)}
             className={`w-full text-left px-4 py-3.5 transition-colors hover:bg-slate-800/60 focus:outline-none ${
               activeLead?.id === lead.id
-                ? "border-l-2 border-[#e8621a] bg-slate-800/40"
+                ? "border-l-2 border-[#22d3ee] bg-slate-800/40"
                 : "border-l-2 border-transparent"
             }`}
           >
@@ -197,7 +197,7 @@ function ChatPanel({
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-700 bg-slate-900/80 backdrop-blur-sm shrink-0">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-700 bg-[#0a0a0f]/80 backdrop-blur-sm shrink-0">
         <button
           onClick={onBack}
           className="md:hidden flex items-center gap-1 text-slate-400 hover:text-white transition-colors mr-1"
@@ -251,7 +251,7 @@ function ChatPanel({
             <div
               className={`max-w-[75%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
                 msg.direction === "outbound"
-                  ? "bg-[#e8621a] text-white rounded-br-sm"
+                  ? "bg-[#22d3ee] text-white rounded-br-sm"
                   : "bg-slate-800 text-slate-200 rounded-bl-sm"
               }`}
             >
@@ -273,7 +273,7 @@ function ChatPanel({
       </div>
 
       {/* Footer */}
-      <div className="px-3 py-3 border-t border-slate-700 bg-slate-900/80 backdrop-blur-sm shrink-0">
+      <div className="px-3 py-3 border-t border-slate-700 bg-[#0a0a0f]/80 backdrop-blur-sm shrink-0">
         {!webhookUrl && (
           <p className="text-[11px] text-amber-400 mb-2 px-1">
             ⚠ Set your n8n webhook URL in Diagnostics to enable sending.
@@ -292,12 +292,12 @@ function ChatPanel({
             placeholder={webhookUrl ? "Type a message… (Enter to send)" : "Configure webhook to send"}
             disabled={!webhookUrl}
             rows={2}
-            className="flex-1 min-h-[48px] resize-none rounded-xl bg-slate-800 border border-slate-600 text-sm text-slate-100 placeholder:text-slate-500 px-3.5 py-2.5 focus:outline-none focus:ring-1 focus:ring-[#e8621a] disabled:opacity-40"
+            className="flex-1 min-h-[48px] resize-none rounded-xl bg-slate-800 border border-slate-600 text-sm text-slate-100 placeholder:text-slate-500 px-3.5 py-2.5 focus:outline-none focus:ring-1 focus:ring-[#22d3ee] disabled:opacity-40"
           />
           <button
             onClick={onSend}
             disabled={!replyText.trim() || !webhookUrl || isSending}
-            className="min-h-[48px] min-w-[56px] flex items-center justify-center rounded-xl bg-[#e8621a] text-white font-bold disabled:opacity-40 hover:bg-[#d4571a] transition-colors"
+            className="min-h-[48px] min-w-[56px] flex items-center justify-center rounded-xl bg-[#22d3ee] text-white font-bold disabled:opacity-40 hover:bg-[#d4571a] transition-colors"
           >
             {isSending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
           </button>
@@ -418,7 +418,7 @@ function DiagnosticsPanel({
             type="checkbox"
             checked={tdlcApproved}
             onChange={(e) => handleToggleTdlc(e.target.checked)}
-            className="w-4 h-4 accent-[#e8621a] cursor-pointer"
+            className="w-4 h-4 accent-[#22d3ee] cursor-pointer"
           />
           <span className="text-xs text-slate-300 group-hover:text-white transition-colors">
             I've confirmed 10DLC is approved in Twilio Console
@@ -429,7 +429,7 @@ function DiagnosticsPanel({
       {/* n8n Webhook tester */}
       <div className="bg-slate-800/60 border border-slate-700 rounded-2xl p-5">
         <div className="flex items-center gap-2 mb-4">
-          <Zap size={16} className="text-[#e8621a]" />
+          <Zap size={16} className="text-[#22d3ee]" />
           <h3 className="text-sm font-bold uppercase tracking-widest text-slate-200">
             n8n Webhook Tester
           </h3>
@@ -446,7 +446,7 @@ function DiagnosticsPanel({
               value={urlDraft}
               onChange={(e) => setUrlDraft(e.target.value)}
               placeholder="https://your-n8n.app/webhook/..."
-              className="flex-1 bg-slate-900 border border-slate-600 rounded-xl px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-[#e8621a]"
+              className="flex-1 bg-[#0a0a0f] border border-slate-600 rounded-xl px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-[#22d3ee]"
             />
             <button
               onClick={handleSaveUrl}
@@ -471,7 +471,7 @@ function DiagnosticsPanel({
             type="tel"
             value={mockFrom}
             onChange={(e) => setMockFrom(e.target.value)}
-            className="w-full bg-slate-900 border border-slate-600 rounded-xl px-3 py-2.5 text-sm text-slate-100 font-mono focus:outline-none focus:ring-1 focus:ring-[#e8621a]"
+            className="w-full bg-[#0a0a0f] border border-slate-600 rounded-xl px-3 py-2.5 text-sm text-slate-100 font-mono focus:outline-none focus:ring-1 focus:ring-[#22d3ee]"
           />
         </div>
 
@@ -484,7 +484,7 @@ function DiagnosticsPanel({
             value={mockMsg}
             onChange={(e) => setMockMsg(e.target.value)}
             rows={3}
-            className="w-full bg-slate-900 border border-slate-600 rounded-xl px-3 py-2.5 text-sm text-slate-100 resize-none focus:outline-none focus:ring-1 focus:ring-[#e8621a]"
+            className="w-full bg-[#0a0a0f] border border-slate-600 rounded-xl px-3 py-2.5 text-sm text-slate-100 resize-none focus:outline-none focus:ring-1 focus:ring-[#22d3ee]"
           />
           <p className="text-[10px] text-slate-500 mt-1">
             Tip: include "website" or "design" to route to Web Dev; "training" or "workout" to route to M² Training.
@@ -496,7 +496,7 @@ function DiagnosticsPanel({
           <button
             onClick={handleSimulate}
             disabled={simStatus === "loading" || !webhookUrl}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#e8621a] text-white font-bold text-xs uppercase tracking-widest hover:bg-[#d4571a] disabled:opacity-50 transition-colors"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#22d3ee] text-white font-bold text-xs uppercase tracking-widest hover:bg-[#d4571a] disabled:opacity-50 transition-colors"
           >
             {simStatus === "loading" ? (
               <Loader2 size={13} className="animate-spin" />
@@ -561,14 +561,14 @@ function BottomNav({
   ];
 
   return (
-    <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 h-16 bg-slate-900/95 backdrop-blur-md border-t border-slate-700 flex">
+    <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 h-16 bg-[#0a0a0f]/95 backdrop-blur-md border-t border-slate-700 flex">
       {tabs.map((tab) => {
         const active = activeTab === tab.key;
         const accentColor =
           tab.key === "Training"
             ? "text-blue-400"
             : tab.key === "Web_Dev"
-            ? "text-[#e8621a]"
+            ? "text-[#22d3ee]"
             : "text-purple-400";
         return (
           <button
@@ -612,8 +612,8 @@ function LeftIconRail({
   ];
 
   return (
-    <aside className="hidden md:flex flex-col items-center py-4 gap-2 w-16 bg-slate-900/90 border-r border-slate-700 shrink-0">
-      <div className="mb-4 text-[#e8621a]">
+    <aside className="hidden md:flex flex-col items-center py-4 gap-2 w-16 bg-[#0a0a0f]/90 border-r border-slate-700 shrink-0">
+      <div className="mb-4 text-[#22d3ee]">
         <MessageSquare size={22} />
       </div>
       {tabs.map((tab) => {
@@ -622,7 +622,7 @@ function LeftIconRail({
           tab.key === "Training"
             ? "text-blue-400 bg-blue-500/10"
             : tab.key === "Web_Dev"
-            ? "text-[#e8621a] bg-orange-500/10"
+            ? "text-[#22d3ee] bg-cyan-500/10"
             : "text-purple-400 bg-purple-500/10";
         return (
           <button
@@ -804,7 +804,7 @@ export default function CommunicationsCenter() {
           /* ─ Diagnostics replaces inbox+chat ─ */
           <div className="flex-1 overflow-hidden">
             {/* Mobile top bar */}
-            <div className="md:hidden flex items-center gap-2 px-4 py-3.5 border-b border-slate-700 bg-slate-900/80 shrink-0">
+            <div className="md:hidden flex items-center gap-2 px-4 py-3.5 border-b border-slate-700 bg-[#0a0a0f]/80 shrink-0">
               <Activity size={16} className="text-purple-400" />
               <span className="text-sm font-bold uppercase tracking-widest text-slate-200">
                 Integration Health
@@ -829,12 +829,12 @@ export default function CommunicationsCenter() {
               `}
             >
               {/* Column header */}
-              <div className="flex items-center justify-between px-4 py-3.5 border-b border-slate-700 bg-slate-900/80 shrink-0">
+              <div className="flex items-center justify-between px-4 py-3.5 border-b border-slate-700 bg-[#0a0a0f]/80 shrink-0">
                 <div className="flex items-center gap-2">
                   {activeTab === "Training" ? (
                     <Dumbbell size={15} className="text-blue-400" />
                   ) : (
-                    <Wrench size={15} className="text-[#e8621a]" />
+                    <Wrench size={15} className="text-[#22d3ee]" />
                   )}
                   <span className="text-sm font-bold uppercase tracking-widest text-slate-200">
                     {activeTab === "Training" ? "M² Training" : "Motor City Machine Dev"}

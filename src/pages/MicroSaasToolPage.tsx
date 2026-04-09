@@ -77,9 +77,9 @@ const MicroSaasToolPage = () => {
       <div className="min-h-screen bg-[#0f172a] text-white">
         {/* Hero */}
         <section className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#e8621a]/20 via-transparent to-[#1e293b]" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#22d3ee]/20 via-transparent to-[#1e293b]" />
           <div className="relative max-w-4xl mx-auto px-4 py-20 md:py-28 text-center">
-            <div className="inline-flex items-center gap-2 bg-[#e8621a]/10 border border-[#e8621a]/30 text-[#e8621a] px-4 py-1.5 rounded-full text-sm font-medium mb-6">
+            <div className="inline-flex items-center gap-2 bg-[#22d3ee]/10 border border-[#22d3ee]/30 text-[#22d3ee] px-4 py-1.5 rounded-full text-sm font-medium mb-6">
               <Zap className="w-4 h-4" />
               {tool.category.replace(/_/g, " ").toUpperCase()}
             </div>
@@ -95,7 +95,7 @@ const MicroSaasToolPage = () => {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <Button size="lg" className="bg-[#e8621a] hover:bg-[#d4570f] text-white text-lg px-8 py-6 rounded-xl shadow-lg shadow-[#e8621a]/25">
+                <Button size="lg" className="bg-[#22d3ee] hover:bg-[#06b6d4] text-white text-lg px-8 py-6 rounded-xl shadow-lg shadow-[#22d3ee]/25">
                   Start for {priceDisplay} <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </a>
@@ -122,7 +122,7 @@ const MicroSaasToolPage = () => {
                   key={i}
                   className="flex items-start gap-4 bg-slate-800/50 border border-slate-700/50 rounded-xl p-5"
                 >
-                  <CheckCircle className="w-6 h-6 text-[#e8621a] flex-shrink-0 mt-0.5" />
+                  <CheckCircle className="w-6 h-6 text-[#22d3ee] flex-shrink-0 mt-0.5" />
                   <span className="text-lg text-slate-200">{String(feature)}</span>
                 </div>
               ))}
@@ -134,17 +134,17 @@ const MicroSaasToolPage = () => {
         <section className="bg-[#1e293b] py-12 border-y border-slate-700/50">
           <div className="max-w-4xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
             <div className="flex flex-col items-center gap-2">
-              <Shield className="w-8 h-8 text-[#e8621a]" />
+              <Shield className="w-8 h-8 text-[#22d3ee]" />
               <span className="font-semibold">No Contracts</span>
               <span className="text-sm text-slate-400">Cancel with one click</span>
             </div>
             <div className="flex flex-col items-center gap-2">
-              <Clock className="w-8 h-8 text-[#e8621a]" />
+              <Clock className="w-8 h-8 text-[#22d3ee]" />
               <span className="font-semibold">Live in 24 Hours</span>
               <span className="text-sm text-slate-400">We set everything up for you</span>
             </div>
             <div className="flex flex-col items-center gap-2">
-              <Zap className="w-8 h-8 text-[#e8621a]" />
+              <Zap className="w-8 h-8 text-[#22d3ee]" />
               <span className="font-semibold">Fully Automated</span>
               <span className="text-sm text-slate-400">Zero manual work required</span>
             </div>
@@ -163,7 +163,7 @@ const MicroSaasToolPage = () => {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <Button size="lg" className="bg-[#e8621a] hover:bg-[#d4570f] text-white text-lg px-10 py-6 rounded-xl shadow-lg shadow-[#e8621a]/25">
+              <Button size="lg" className="bg-[#22d3ee] hover:bg-[#06b6d4] text-white text-lg px-10 py-6 rounded-xl shadow-lg shadow-[#22d3ee]/25">
                 Start for {priceDisplay} <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </a>
@@ -173,7 +173,7 @@ const MicroSaasToolPage = () => {
         {/* Footer */}
         <footer className="bg-[#0f172a] border-t border-slate-800 py-8">
           <div className="max-w-4xl mx-auto px-4 text-center text-sm text-slate-500">
-            <p>M2 Development · Matt Michels · Grosse Pointe, MI · (313) 806-4952</p>
+            <p>Detroit Web Agency · Matt Michels · Grosse Pointe, MI · (313) 806-4952</p>
             <p className="mt-2">
               <Link to="/" className="text-slate-400 hover:text-white">Home</Link>
               {" · "}

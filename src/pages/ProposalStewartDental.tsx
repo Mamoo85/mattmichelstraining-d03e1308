@@ -2,7 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { CheckCircle2, Download, PenLine, RotateCcw, Phone, Mail, MapPin } from "lucide-react";
 
-const ORANGE = "#e8621a";
+const ORANGE = "#22d3ee";
 const DARK = "#1e293b";
 const LIGHT = "#f8fafc";
 const BORDER = "#e2e8f0";

@@ -35,7 +35,7 @@ const DirectoryCard = memo(({ listing }: { listing: Listing }) => {
   return (
     <div className={`rounded-xl border p-5 transition-all hover:shadow-lg ${
       isPremium
-        ? "border-[#e8621a]/40 bg-gradient-to-br from-card to-[#e8621a]/5 shadow-md ring-1 ring-[#e8621a]/20"
+        ? "border-[#22d3ee]/40 bg-gradient-to-br from-card to-[#22d3ee]/5 shadow-md ring-1 ring-[#22d3ee]/20"
         : "border-border bg-card"
     }`}>
       <div className="flex items-start justify-between gap-3 mb-3">
@@ -43,7 +43,7 @@ const DirectoryCard = memo(({ listing }: { listing: Listing }) => {
           <div className="flex items-center gap-2 mb-1">
             <h3 className="font-bold text-foreground text-base truncate">{listing.business_name}</h3>
             {isPremium && (
-              <Badge className="bg-[#e8621a] text-white text-[10px] px-1.5 py-0 shrink-0">
+              <Badge className="bg-[#22d3ee] text-white text-[10px] px-1.5 py-0 shrink-0">
                 <Crown className="h-3 w-3 mr-0.5" /> Featured
               </Badge>
             )}
@@ -68,7 +68,7 @@ const DirectoryCard = memo(({ listing }: { listing: Listing }) => {
           </span>
         )}
         {listing.website && (
-          <a href={listing.website.startsWith("http") ? listing.website : `https://${listing.website}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-[#e8621a] transition-colors">
+          <a href={listing.website.startsWith("http") ? listing.website : `https://${listing.website}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-[#22d3ee] transition-colors">
             <Globe className="h-3 w-3" /> Website <ExternalLink className="h-2.5 w-2.5" />
           </a>
         )}
@@ -112,7 +112,7 @@ const BusinessDirectory = () => {
   return (
     <>
       <SEOHead
-        title="Local Business Directory | M2 Development"
+        title="Local Business Directory | Detroit Web Agency"
         description="Find trusted local businesses in Michigan and beyond. Free listings for all businesses, premium featured placement available."
         path="/business-directory"
         jsonLd={{
@@ -120,7 +120,7 @@ const BusinessDirectory = () => {
           "@type": "WebPage",
           name: "Local Business Directory",
           description: "Find trusted local businesses. Free listings with premium featured placement.",
-          provider: { "@type": "Organization", name: "M2 Development" },
+          provider: { "@type": "Organization", name: "Detroit Web Agency" },
         }}
       />
 
@@ -128,8 +128,8 @@ const BusinessDirectory = () => {
         {/* Hero */}
         <section className="relative bg-gradient-to-br from-[#1e293b] to-[#0f172a] text-white py-16 px-4">
           <div className="max-w-5xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 bg-[#e8621a]/20 rounded-full px-4 py-1.5 text-sm mb-5">
-              <Star className="h-4 w-4 text-[#e8621a]" /> Local Business Marketplace
+            <div className="inline-flex items-center gap-2 bg-[#22d3ee]/20 rounded-full px-4 py-1.5 text-sm mb-5">
+              <Star className="h-4 w-4 text-[#22d3ee]" /> Local Business Marketplace
             </div>
             <h1 className="text-3xl md:text-5xl font-bold mb-4">Find Trusted Local Businesses</h1>
             <p className="text-lg text-white/70 max-w-2xl mx-auto mb-8">
@@ -157,7 +157,7 @@ const BusinessDirectory = () => {
                   onClick={() => setIndustry(ind)}
                   className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                     industry === ind
-                      ? "bg-[#e8621a] text-white"
+                      ? "bg-[#22d3ee] text-white"
                       : "bg-white/10 text-white/70 hover:bg-white/20"
                   }`}
                 >
@@ -169,7 +169,7 @@ const BusinessDirectory = () => {
         </section>
 
         {/* CTA Banner */}
-        <section className="bg-[#e8621a] py-4 px-4">
+        <section className="bg-[#22d3ee] py-4 px-4">
           <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
             <p className="text-white text-sm font-medium">
               Own a business? Get listed for <strong>FREE</strong> — or go premium for <strong>$29/mo</strong> with featured placement.
@@ -188,7 +188,7 @@ const BusinessDirectory = () => {
             <div className="flex items-center justify-between mb-6">
               <p className="text-sm text-muted-foreground">
                 <strong className="text-foreground">{filtered.length}</strong> businesses found
-                {premiumCount > 0 && <> · <span className="text-[#e8621a]">{premiumCount} featured</span></>}
+                {premiumCount > 0 && <> · <span className="text-[#22d3ee]">{premiumCount} featured</span></>}
               </p>
             </div>
 
@@ -216,13 +216,13 @@ const BusinessDirectory = () => {
         {/* Premium Upsell */}
         <section className="py-16 px-4 bg-gradient-to-br from-[#1e293b] to-[#0f172a] text-white">
           <div className="max-w-3xl mx-auto text-center">
-            <Crown className="h-10 w-10 text-[#e8621a] mx-auto mb-4" />
+            <Crown className="h-10 w-10 text-[#22d3ee] mx-auto mb-4" />
             <h2 className="text-2xl md:text-3xl font-bold mb-4">Get Premium Featured Placement</h2>
             <p className="text-white/70 mb-6 max-w-xl mx-auto">
               Stand out from the crowd with a premium listing. Featured badge, top positioning, enhanced profile with logo and description.
             </p>
             <div className="inline-flex items-baseline gap-1 mb-6">
-              <span className="text-4xl font-bold text-[#e8621a]">$29</span>
+              <span className="text-4xl font-bold text-[#22d3ee]">$29</span>
               <span className="text-white/60">/month</span>
             </div>
             <div className="grid gap-3 sm:grid-cols-3 text-sm text-left max-w-lg mx-auto mb-8">
@@ -238,7 +238,7 @@ const BusinessDirectory = () => {
               ))}
             </div>
             <a href="mailto:matt@mattmichelstraining.com?subject=Premium%20Business%20Listing&body=I'd%20like%20to%20upgrade%20to%20a%20premium%20listing.%20Business%20name:">
-              <Button size="lg" className="bg-[#e8621a] hover:bg-[#d4570f] text-white text-lg px-8 py-6">
+              <Button size="lg" className="bg-[#22d3ee] hover:bg-[#06b6d4] text-white text-lg px-8 py-6">
                 Get Premium Listing
               </Button>
             </a>
@@ -247,13 +247,13 @@ const BusinessDirectory = () => {
 
         {/* Footer */}
         <footer className="py-6 px-4 text-center text-xs text-muted-foreground bg-muted/20">
-          <p>© {new Date().getFullYear()} M2 Development — Local Business Directory</p>
+          <p>© {new Date().getFullYear()} Detroit Web Agency — Local Business Directory</p>
           <p className="mt-1">
-            <Link to="/web-design-services" className="text-[#e8621a] hover:underline">Web Design</Link>
+            <Link to="/web-design-services" className="text-[#22d3ee] hover:underline">Web Design</Link>
             {" · "}
-            <Link to="/all-services" className="text-[#e8621a] hover:underline">All Services</Link>
+            <Link to="/all-services" className="text-[#22d3ee] hover:underline">All Services</Link>
             {" · "}
-            <Link to="/" className="text-[#e8621a] hover:underline">Home</Link>
+            <Link to="/" className="text-[#22d3ee] hover:underline">Home</Link>
           </p>
         </footer>
       </div>

@@ -65,17 +65,17 @@ export default function ReviewRequestSMS() {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center px-4">
+      <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center px-4">
         <div className="text-center max-w-md">
-          <div className="w-20 h-20 rounded-full bg-orange-500/15 flex items-center justify-center mx-auto mb-6">
-            <CheckCircle size={36} className="text-orange-500" />
+          <div className="w-20 h-20 rounded-full bg-cyan-500/15 flex items-center justify-center mx-auto mb-6">
+            <CheckCircle size={36} className="text-cyan-500" />
           </div>
           <h1 className="text-3xl font-black mb-3">You're Live!</h1>
           <p className="text-slate-400 leading-relaxed mb-4">
             Matt will reach out within 24 hours to set up your review request portal and confirm your Google review link.
           </p>
           <p className="text-sm text-slate-500">
-            Questions? <a href="mailto:matt@mattmichelstraining.com" className="text-orange-500">matt@mattmichelstraining.com</a>
+            Questions? <a href="mailto:matt@mattmichelstraining.com" className="text-cyan-500">matt@mattmichelstraining.com</a>
           </p>
         </div>
       </div>
@@ -83,10 +83,10 @@ export default function ReviewRequestSMS() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
+    <div className="min-h-screen bg-[#0a0a0f] text-white">
       {/* Hero */}
       <section className="px-4 pt-20 pb-16 text-center max-w-3xl mx-auto">
-        <div className="inline-block bg-orange-500/10 text-orange-400 text-xs font-semibold uppercase tracking-widest px-4 py-1.5 rounded-full mb-6 border border-orange-500/20">
+        <div className="inline-block bg-cyan-500/10 text-cyan-400 text-xs font-semibold uppercase tracking-widest px-4 py-1.5 rounded-full mb-6 border border-cyan-500/20">
           Automated Review Requests
         </div>
         <h1 className="text-4xl sm:text-5xl font-black leading-tight mb-4">
@@ -99,7 +99,7 @@ export default function ReviewRequestSMS() {
           <span className="text-5xl font-black text-white">$39</span>
           <div className="text-left">
             <div className="text-slate-400 text-sm">/month</div>
-            <div className="text-orange-400 text-xs font-semibold">7-day free trial</div>
+            <div className="text-cyan-400 text-xs font-semibold">7-day free trial</div>
           </div>
         </div>
         <p className="text-slate-500 text-sm">No contracts. Cancel anytime.</p>
@@ -115,7 +115,7 @@ export default function ReviewRequestSMS() {
             { step: "3", label: "Review request text goes out automatically" },
           ].map(({ step, label }) => (
             <div key={step} className="flex-1 bg-slate-800 border border-slate-700 rounded-xl p-5">
-              <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-3 text-sm font-black text-white">
+              <div className="w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center mx-auto mb-3 text-sm font-black text-white">
                 {step}
               </div>
               <p className="text-slate-300 text-sm">{label}</p>
@@ -130,8 +130,8 @@ export default function ReviewRequestSMS() {
           {FEATURES.map(({ icon: Icon, title, desc }) => (
             <Card key={title} className="bg-slate-800 border-slate-700">
               <CardHeader className="pb-2">
-                <div className="w-10 h-10 bg-orange-500/10 rounded-lg flex items-center justify-center mb-3">
-                  <Icon size={20} className="text-orange-500" />
+                <div className="w-10 h-10 bg-cyan-500/10 rounded-lg flex items-center justify-center mb-3">
+                  <Icon size={20} className="text-cyan-500" />
                 </div>
                 <CardTitle className="text-white text-base">{title}</CardTitle>
               </CardHeader>
@@ -163,7 +163,7 @@ export default function ReviewRequestSMS() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-slate-300 text-sm">Business Name <span className="text-orange-500">*</span></Label>
+                <Label className="text-slate-300 text-sm">Business Name <span className="text-cyan-500">*</span></Label>
                 <Input
                   name="businessName"
                   value={form.businessName}
@@ -174,7 +174,7 @@ export default function ReviewRequestSMS() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-slate-300 text-sm">Email <span className="text-orange-500">*</span></Label>
+                <Label className="text-slate-300 text-sm">Email <span className="text-cyan-500">*</span></Label>
                 <Input
                   name="email"
                   type="email"
@@ -198,7 +198,7 @@ export default function ReviewRequestSMS() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold h-12 text-base mt-2"
+                className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold h-12 text-base mt-2"
               >
                 {loading ? (
                   <><Loader2 size={16} className="animate-spin mr-2" /> Processing...</>

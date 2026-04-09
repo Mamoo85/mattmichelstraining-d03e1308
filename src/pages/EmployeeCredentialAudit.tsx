@@ -70,7 +70,7 @@ export default function EmployeeCredentialAudit() {
   if (isSuccess) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-        <Card className="max-w-lg w-full bg-slate-900 border-slate-700 text-center">
+        <Card className="max-w-lg w-full bg-[#0a0a0f] border-slate-700 text-center">
           <CardContent className="pt-12 pb-10 px-8">
             <div className="flex justify-center mb-6">
               <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center">
@@ -91,7 +91,7 @@ export default function EmployeeCredentialAudit() {
                 AI generating executive summary &amp; per-person recommendations
               </div>
               <div className="flex items-center gap-2 text-sm text-slate-300">
-                <Mail size={14} className="text-orange-400 shrink-0" />
+                <Mail size={14} className="text-cyan-400 shrink-0" />
                 Full color-coded report delivered to your inbox within minutes
               </div>
             </div>
@@ -108,11 +108,11 @@ export default function EmployeeCredentialAudit() {
       <div className="bg-gradient-to-b from-slate-900 to-slate-950 border-b border-slate-800 py-16 px-4">
         <div className="max-w-3xl mx-auto text-center">
           <div className="flex justify-center mb-6">
-            <div className="w-16 h-16 rounded-full bg-orange-500/10 border border-orange-500/30 flex items-center justify-center">
-              <Shield className="text-orange-400" size={30} />
+            <div className="w-16 h-16 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center">
+              <Shield className="text-cyan-400" size={30} />
             </div>
           </div>
-          <Badge className="bg-orange-500/10 text-orange-400 border-orange-500/30 text-xs mb-4">
+          <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/30 text-xs mb-4">
             $149 one-time · Results in minutes
           </Badge>
           <h1 className="text-4xl md:text-5xl font-black text-white mb-4 leading-tight">
@@ -129,7 +129,7 @@ export default function EmployeeCredentialAudit() {
               { icon: Lock, title: "Actionable Next Steps", desc: "AI-generated recommendations for each exposed employee" },
             ].map(({ icon: Icon, title, desc }) => (
               <div key={title} className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
-                <Icon size={18} className="text-orange-400 mb-2" />
+                <Icon size={18} className="text-cyan-400 mb-2" />
                 <p className="text-sm font-bold text-white mb-1">{title}</p>
                 <p className="text-xs text-slate-400 leading-relaxed">{desc}</p>
               </div>
@@ -140,7 +140,7 @@ export default function EmployeeCredentialAudit() {
 
       {/* Form */}
       <div className="max-w-2xl mx-auto px-4 py-12">
-        <Card className="bg-slate-900 border-slate-700">
+        <Card className="bg-[#0a0a0f] border-slate-700">
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
               <CardTitle className="text-white text-xl">Run Your Credential Audit</CardTitle>
@@ -152,34 +152,34 @@ export default function EmployeeCredentialAudit() {
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                  Company Name <span className="text-orange-400">*</span>
+                  Company Name <span className="text-cyan-400">*</span>
                 </label>
                 <Input
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
                   placeholder="Acme Corp"
-                  className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 focus:border-orange-500"
+                  className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 focus:border-cyan-500"
                   disabled={loading}
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                  Your Email (report delivered here) <span className="text-orange-400">*</span>
+                  Your Email (report delivered here) <span className="text-cyan-400">*</span>
                 </label>
                 <Input
                   type="email"
                   value={customerEmail}
                   onChange={(e) => setCustomerEmail(e.target.value)}
                   placeholder="you@company.com"
-                  className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 focus:border-orange-500"
+                  className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 focus:border-cyan-500"
                   disabled={loading}
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                  Employee Email Addresses <span className="text-orange-400">*</span>
+                  Employee Email Addresses <span className="text-cyan-400">*</span>
                   {emailList.length > 0 && (
                     <span className="ml-2 text-xs text-slate-500">({emailList.length} / 100 emails)</span>
                   )}
@@ -188,7 +188,7 @@ export default function EmployeeCredentialAudit() {
                   value={emailsText}
                   onChange={(e) => setEmailsText(e.target.value)}
                   placeholder={"john.smith@company.com\njane.doe@company.com\nbob.jones@company.com"}
-                  className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 focus:border-orange-500 font-mono text-sm min-h-[180px]"
+                  className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 focus:border-cyan-500 font-mono text-sm min-h-[180px]"
                   disabled={loading}
                 />
                 <p className="text-xs text-slate-500 mt-1.5">One email per line. Up to 100 employees per audit.</p>
@@ -204,7 +204,7 @@ export default function EmployeeCredentialAudit() {
               <Button
                 type="submit"
                 disabled={loading || emailList.length === 0 || !companyName.trim() || !customerEmail.trim()}
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold text-base h-12 disabled:opacity-50"
+                className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold text-base h-12 disabled:opacity-50"
               >
                 {loading ? (
                   <>
@@ -247,7 +247,7 @@ export default function EmployeeCredentialAudit() {
               a: "Email addresses are only used to check against HIBP's API. We do not store, sell, or share employee email lists after the audit completes.",
             },
           ].map(({ q, a }) => (
-            <div key={q} className="bg-slate-900 border border-slate-800 rounded-lg p-5">
+            <div key={q} className="bg-[#0a0a0f] border border-slate-800 rounded-lg p-5">
               <p className="text-sm font-bold text-white mb-2">{q}</p>
               <p className="text-sm text-slate-400 leading-relaxed">{a}</p>
             </div>

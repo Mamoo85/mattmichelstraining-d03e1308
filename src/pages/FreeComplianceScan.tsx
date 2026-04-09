@@ -62,8 +62,8 @@ export default function FreeComplianceScan() {
     return (
       <div className="min-h-screen bg-[#0f0f1a] text-white flex items-center justify-center px-4">
         <div className="text-center max-w-md">
-          <div className="w-20 h-20 rounded-full bg-[#e8621a]/15 flex items-center justify-center mx-auto mb-6">
-            <CheckCircle size={36} className="text-[#e8621a]" />
+          <div className="w-20 h-20 rounded-full bg-[#22d3ee]/15 flex items-center justify-center mx-auto mb-6">
+            <CheckCircle size={36} className="text-[#22d3ee]" />
           </div>
           <h1 className="text-3xl font-bold mb-3">Scan Submitted!</h1>
           <p className="text-gray-400 mb-4">
@@ -91,12 +91,12 @@ export default function FreeComplianceScan() {
             </div>
             <h1 className="text-4xl md:text-5xl font-bold mb-5 leading-tight">
               Is Your Plant<br />
-              <span className="text-[#e8621a]">Audit-Ready Right Now?</span>
+              <span className="text-[#22d3ee]">Audit-Ready Right Now?</span>
             </h1>
             <p className="text-lg text-gray-400 max-w-2xl mx-auto mb-8">
               We'll scan federal and state registers for your specific industry and tell you exactly which filings you might be missing — before an inspector does.
             </p>
-            <a href="#scan" className="inline-flex items-center gap-2 bg-[#e8621a] text-white px-8 py-3.5 rounded-lg font-semibold text-lg hover:bg-[#d45a17] transition-colors">
+            <a href="#scan" className="inline-flex items-center gap-2 bg-[#22d3ee] text-white px-8 py-3.5 rounded-lg font-semibold text-lg hover:bg-[#06b6d4] transition-colors">
               Get My Free Scan <ArrowRight size={18} />
             </a>
           </div>
@@ -131,7 +131,7 @@ export default function FreeComplianceScan() {
                 "Recommended next steps (no obligation)",
               ].map((item) => (
                 <div key={item} className="flex items-start gap-3">
-                  <CheckCircle size={16} className="text-[#e8621a] mt-0.5 flex-shrink-0" />
+                  <CheckCircle size={16} className="text-[#22d3ee] mt-0.5 flex-shrink-0" />
                   <span className="text-gray-300 text-sm">{item}</span>
                 </div>
               ))}
@@ -161,7 +161,7 @@ export default function FreeComplianceScan() {
                 <Label className="text-gray-300">State</Label>
                 <Input value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} className="bg-white/5 border-white/10 text-white" placeholder="MI" />
               </div>
-              <Button type="submit" disabled={loading} className="w-full bg-[#e8621a] hover:bg-[#d45a17] text-white py-3 text-base font-semibold">
+              <Button type="submit" disabled={loading} className="w-full bg-[#22d3ee] hover:bg-[#06b6d4] text-white py-3 text-base font-semibold">
                 {loading ? <Loader2 className="animate-spin" size={18} /> : "Run My Free Compliance Scan →"}
               </Button>
               <p className="text-center text-xs text-gray-500">No credit card. No obligation. Just answers.</p>
@@ -170,7 +170,7 @@ export default function FreeComplianceScan() {
         </section>
 
         <footer className="py-8 px-4 border-t border-white/10 text-center">
-          <p className="text-gray-500 text-sm">M² Development · Grosse Pointe, MI · <a href="mailto:matt@mattmichelstraining.com" className="text-[#e8621a]">matt@mattmichelstraining.com</a></p>
+          <p className="text-gray-500 text-sm">Detroit Web Agency · Grosse Pointe, MI · <a href="mailto:matt@mattmichelstraining.com" className="text-[#22d3ee]">matt@mattmichelstraining.com</a></p>
         </footer>
       </div>
     </>
