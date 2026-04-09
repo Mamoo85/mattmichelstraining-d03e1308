@@ -52,7 +52,16 @@ const TerminalAnimation = () => {
           <p style={{ color: "#64748b" }}>This is what happens behind the scenes when we scan a website.</p>
         </div>
 
-        <div className="rounded-xl overflow-hidden" style={{ background: "#0c0c14", border: "1px solid rgba(148,163,184,0.1)" }}>
+        <div className="relative rounded-xl overflow-hidden" style={{ background: "#0c0c14", border: "1px solid rgba(148,163,184,0.1)" }}>
+          {/* CRT scanline overlay */}
+          <div
+            className="pointer-events-none absolute inset-0 z-10"
+            style={{
+              backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.05) 2px, rgba(0,0,0,0.05) 4px)",
+              mixBlendMode: "multiply",
+            }}
+          />
+
           {/* Title bar */}
           <div className="flex items-center gap-2 px-4 py-3" style={{ background: "rgba(15,23,42,0.8)", borderBottom: "1px solid rgba(148,163,184,0.08)" }}>
             <div className="w-3 h-3 rounded-full" style={{ background: "#ef4444" }} />
@@ -68,6 +77,7 @@ const TerminalAnimation = () => {
                 color: line.error ? "#f87171" : line.warn ? "#facc15" : line.highlight ? "#22d3ee" : "#94a3b8",
                 fontWeight: line.highlight ? 800 : 400,
                 textAlign: line.highlight ? "center" : undefined,
+                textShadow: line.highlight ? "0 0 20px rgba(34,211,238,0.4)" : undefined,
               }}>
                 {line.text}
               </div>

@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Shield, Trophy, Clock, MapPin, Star, Quote } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-import m2Logo from "@/assets/m2-logo.jpg";
+import m2Logo from "@/assets/m2-logo-official.png";
 import { useSectionVisible } from "@/hooks/useSiteContent";
 
 const AudienceSelector = lazy(() => import("@/components/landing/AudienceSelector"));
@@ -49,23 +49,27 @@ const HeroSection = () => {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Subtle radial glow behind hero */}
       <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-card/60" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full opacity-30 blur-[100px]" style={{ background: "radial-gradient(circle, hsl(var(--primary) / 0.15), transparent 70%)" }} />
 
       <div className="container relative z-10 pt-20 pb-12">
         {showHero && (
           <div className="py-8 md:py-16 animate-fadeIn">
-            <div className="relative rounded-lg overflow-hidden bg-card/50 ring-1 ring-white/5 p-6 md:p-10 mb-6">
+            {/* Glassmorphism hero card */}
+            <div className="relative rounded-2xl overflow-hidden bg-card/30 backdrop-blur-xl ring-1 ring-white/10 p-6 md:p-10 mb-6 shadow-2xl">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent" />
               <div className="relative flex flex-col items-center text-center">
+                {/* Clean PNG logo — no mixBlendMode */}
                 <img
                   src={m2Logo}
-                  alt="M2 Training"
+                  alt="M2 Performance Training"
                   width={256}
                   height={256}
                   fetchPriority="high"
                   decoding="sync"
-                  className="w-28 md:w-40 lg:w-48 h-auto object-contain mb-5"
-                  style={{ mixBlendMode: "lighten", aspectRatio: "1/1" }}
+                  className="w-28 md:w-40 lg:w-48 h-auto object-contain mb-6 drop-shadow-lg"
+                  style={{ aspectRatio: "1/1" }}
                 />
 
                 {/* Specialty chips */}
@@ -73,17 +77,17 @@ const HeroSection = () => {
                   {SPECIALTIES.map((s) => (
                     <span
                       key={s}
-                      className="px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-full bg-card border border-border text-muted-foreground"
+                      className="px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-full bg-card/60 backdrop-blur-sm border border-border/50 text-muted-foreground"
                     >
                       {s}
                     </span>
                   ))}
                 </div>
 
-                <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold tracking-display text-foreground leading-snug mb-2">
+                <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold tracking-tight text-foreground leading-snug mb-2">
                   Real strength. Zero gimmicks.
                 </h1>
-                <div className="text-xl md:text-3xl lg:text-4xl font-bold tracking-display mb-4">
+                <div className="text-xl md:text-3xl lg:text-4xl font-bold tracking-tight mb-4">
                   <WheelSlogan />
                 </div>
                 <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto leading-relaxed mb-6">
@@ -120,7 +124,7 @@ const HeroSection = () => {
             {/* Social proof — inline testimonials above CTA */}
             <div className="flex flex-col sm:flex-row gap-3 w-full max-w-2xl mx-auto mb-5">
               {HERO_TESTIMONIALS.map((t) => (
-                <div key={t.name} className="flex-1 bg-card/60 border border-border rounded-xl p-4 text-left">
+                <div key={t.name} className="flex-1 bg-card/40 backdrop-blur-sm border border-border/40 rounded-xl p-4 text-left">
                   <Quote size={14} className="text-primary/50 mb-1.5" />
                   <p className="text-xs text-muted-foreground leading-relaxed italic mb-2">"{t.quote}"</p>
                   <div className="flex items-center gap-1 mb-1">

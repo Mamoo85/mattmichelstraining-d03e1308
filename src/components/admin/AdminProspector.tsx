@@ -147,7 +147,7 @@ type SortDir = "asc" | "desc";
 
 // Pipeline filter/sort types
 type PipelineFilter = "all" | "has_email" | "no_email" | "has_website" | "no_website" | "has_reviews" | "no_facebook" | "no_instagram";
-type PipelineSort = "reviews_desc" | "rating_desc" | "name_asc" | "newest" | "drip_status";
+type PipelineSort = "reviews_desc" | "rating_desc" | "name_asc" | "newest" | "drip_status" | "score_desc";
 
 // ── Normalize functions per table ──
 function normalizeOutreach(r: any): UnifiedLead {
@@ -202,7 +202,7 @@ function DripBadge({ step, status }: { step: number; status: string }) {
 }
 
 // ── Kanban Lead Card ──
-function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onDrip, onPreviewDrip, auditing, sending, researching, dripping }: {
+function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onDrip, onPreviewDrip, onDelete, auditing, sending, researching, dripping }: {
   lead: PipelineLead;
   onAudit: (lead: PipelineLead) => void;
   onSendN8n: (lead: PipelineLead) => void;
@@ -210,6 +210,7 @@ function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onD
   onDeepResearch: (lead: PipelineLead) => void;
   onDrip: (lead: PipelineLead, action: "draft" | "send" | "send_existing") => void;
   onPreviewDrip: (lead: PipelineLead) => void;
+  onDelete: (lead: PipelineLead) => void;
   auditing: boolean;
   sending: boolean;
   researching: boolean;
@@ -386,6 +387,9 @@ function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onD
             <ExternalLink size={10} className="text-muted-foreground hover:text-foreground" />
           </a>
         )}
+        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-destructive/60 hover:text-destructive" onClick={() => { if (confirm(`Delete ${lead.business_name}?`)) onDelete(lead); }}>
+          <Trash2 size={10} />
+        </Button>
       </div>
       {lead.n8n_sent_at && <Badge className="text-[8px] bg-green-500/20 text-green-400 border-0">n8n sent</Badge>}
     </div>
@@ -393,7 +397,7 @@ function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onD
 }
 
 // ── Kanban Column ──
-function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, onDeepResearch, onDrip, onPreviewDrip, auditingId, sendingId, researchingId, drippingId }: {
+function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, onDeepResearch, onDrip, onPreviewDrip, onDelete, auditingId, sendingId, researchingId, drippingId }: {
   stage: typeof PIPELINE_STAGES[0];
   leads: PipelineLead[];
   onAudit: (lead: PipelineLead) => void;
@@ -402,6 +406,7 @@ function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, onDeepRes
   onDeepResearch: (lead: PipelineLead) => void;
   onDrip: (lead: PipelineLead, action: "draft" | "send" | "send_existing") => void;
   onPreviewDrip: (lead: PipelineLead) => void;
+  onDelete: (lead: PipelineLead) => void;
   auditingId: string | null;
   sendingId: string | null;
   researchingId: string | null;
@@ -425,6 +430,7 @@ function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, onDeepRes
               onDeepResearch={onDeepResearch}
               onDrip={onDrip}
               onPreviewDrip={onPreviewDrip}
+              onDelete={onDelete}
               auditing={auditingId === lead.id}
               sending={sendingId === lead.id}
               researching={researchingId === lead.id}
@@ -595,6 +601,54 @@ export default function AdminProspector() {
     const { error } = await (supabase as any).from("prospect_pipeline").update({ pipeline_stage: stage, updated_at: new Date().toISOString() }).eq("id", leadId);
     if (error) { toast.error("Failed to update stage"); return; }
     setPipelineLeads(prev => prev.map(l => l.id === leadId ? { ...l, pipeline_stage: stage } : l));
+  };
+
+  const deletePipelineLead = async (lead: PipelineLead) => {
+    const { error } = await (supabase as any).from("prospect_pipeline").delete().eq("id", lead.id);
+    if (error) { toast.error("Failed to delete lead"); return; }
+    setPipelineLeads(prev => prev.filter(l => l.id !== lead.id));
+    toast.success(`Deleted ${lead.business_name}`);
+  };
+
+  const bulkDeletePipeline = async () => {
+    if (selectedPipelineIds.size === 0) { toast.error("No leads selected"); return; }
+    if (!confirm(`Delete ${selectedPipelineIds.size} leads permanently?`)) return;
+    setBatchProcessing(true);
+    try {
+      const ids = Array.from(selectedPipelineIds);
+      const { error } = await (supabase as any).from("prospect_pipeline").delete().in("id", ids);
+      if (error) throw error;
+      setPipelineLeads(prev => prev.filter(l => !selectedPipelineIds.has(l.id)));
+      setSelectedPipelineIds(new Set());
+      toast.success(`Deleted ${ids.length} leads`);
+    } catch { toast.error("Bulk delete failed"); }
+    finally { setBatchProcessing(false); }
+  };
+
+  const clearDuplicates = async () => {
+    const seen = new Map<string, PipelineLead>();
+    const dupeIds: string[] = [];
+    for (const l of pipelineLeads) {
+      const key = `${l.business_name.toLowerCase().trim()}|${(l.city || "").toLowerCase().trim()}`;
+      if (seen.has(key)) {
+        const existing = seen.get(key)!;
+        const keepNew = (l.created_at || "") > (existing.created_at || "");
+        dupeIds.push(keepNew ? existing.id : l.id);
+        if (keepNew) seen.set(key, l);
+      } else {
+        seen.set(key, l);
+      }
+    }
+    if (dupeIds.length === 0) { toast.info("No duplicates found"); return; }
+    if (!confirm(`Found ${dupeIds.length} duplicate leads. Delete them?`)) return;
+    setBatchProcessing(true);
+    try {
+      const { error } = await (supabase as any).from("prospect_pipeline").delete().in("id", dupeIds);
+      if (error) throw error;
+      setPipelineLeads(prev => prev.filter(l => !dupeIds.includes(l.id)));
+      toast.success(`Removed ${dupeIds.length} duplicates`);
+    } catch { toast.error("Dedupe failed"); }
+    finally { setBatchProcessing(false); }
   };
 
   // ── Website Audit ──
@@ -795,6 +849,7 @@ export default function AdminProspector() {
       case "no_instagram": result = result.filter(l => !l.has_instagram); break;
     }
     switch (pipelineSort) {
+      case "score_desc": result.sort((a, b) => (b.lead_score || 0) - (a.lead_score || 0)); break;
       case "reviews_desc": result.sort((a, b) => (b.review_count || 0) - (a.review_count || 0)); break;
       case "rating_desc": result.sort((a, b) => (b.google_rating || 0) - (a.google_rating || 0)); break;
       case "name_asc": result.sort((a, b) => a.business_name.localeCompare(b.business_name)); break;
@@ -1345,6 +1400,7 @@ export default function AdminProspector() {
               <SelectTrigger className="text-xs h-7 w-32"><ArrowUpDown size={10} className="mr-1" /><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="newest" className="text-xs">Newest First</SelectItem>
+                <SelectItem value="score_desc" className="text-xs">Lead Score ↓</SelectItem>
                 <SelectItem value="reviews_desc" className="text-xs">Most Reviews</SelectItem>
                 <SelectItem value="rating_desc" className="text-xs">Highest Rating</SelectItem>
                 <SelectItem value="name_asc" className="text-xs">Name A→Z</SelectItem>
@@ -1399,15 +1455,31 @@ export default function AdminProspector() {
               {batchProcessing ? <Loader2 size={10} className="animate-spin" /> : <Mail size={10} />}
               Generate & Send {selectedPipelineIds.size > 0 ? selectedPipelineIds.size : "All"}
             </Button>
-            <div className="ml-auto">
+            <div className="ml-auto flex items-center gap-1.5">
+              <Button
+                variant="outline" size="sm" className="text-xs h-7 gap-1 border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
+                disabled={batchProcessing}
+                onClick={clearDuplicates}
+              >
+                Clear Dupes
+              </Button>
               <Button
                 variant="outline" size="sm" className="text-xs h-7 gap-1 border-red-500/30 text-red-400 hover:bg-red-500/10"
                 disabled={archiving}
                 onClick={archiveSentLeads}
               >
                 {archiving ? <Loader2 size={10} className="animate-spin" /> : <Trash2 size={10} />}
-                Clear Sent ({pipelineLeads.filter(l => l.pipeline_stage === "outreach_sent").length})
+                Archive Sent ({pipelineLeads.filter(l => l.pipeline_stage === "outreach_sent").length})
               </Button>
+              {selectedPipelineIds.size > 0 && (
+                <Button
+                  variant="outline" size="sm" className="text-xs h-7 gap-1 border-red-500/30 text-red-400 hover:bg-red-500/10"
+                  disabled={batchProcessing}
+                  onClick={bulkDeletePipeline}
+                >
+                  <Trash2 size={10} /> Delete {selectedPipelineIds.size}
+                </Button>
+              )}
             </div>
           </div>
 
@@ -1424,6 +1496,7 @@ export default function AdminProspector() {
                     onDeepResearch={deepResearch}
                     onDrip={runPipelineDrip}
                     onPreviewDrip={setPreviewLead}
+                    onDelete={deletePipelineLead}
                     auditingId={auditingId}
                     sendingId={sendingId}
                     researchingId={researchingId}
