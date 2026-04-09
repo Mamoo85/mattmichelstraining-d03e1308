@@ -95,6 +95,8 @@ interface PipelineLead {
   drip_body: string | null;
   has_facebook: boolean;
   has_instagram: boolean;
+  lead_score: number | null;
+  breach_count: number | null;
 }
 
 // ── DataForSEO Result ──
