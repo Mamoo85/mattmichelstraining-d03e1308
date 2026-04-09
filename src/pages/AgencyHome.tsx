@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Globe, PhoneForwarded, ShieldCheck, Search, Monitor, Wrench, ArrowRight, CheckCircle, Zap, BarChart3, Clock, Phone, Star } from "lucide-react";
-import dwaLogo from "@/assets/DWA_Dark_Logo.png";
+import dwaLogo from "@/assets/detroit-web-agency-logo.png";
 import { Button } from "@/components/ui/button";
 import MissedRevenueCalculator from "@/components/agency/MissedRevenueCalculator";
 import HowItWorks from "@/components/agency/HowItWorks";
