@@ -217,10 +217,7 @@ async function guessEmail(domain: string, name: string | null, businessName: str
   log("Email pattern guess (unverified)", { email: bestGuess });
   return bestGuess;
 }
-    }
-  }
-  return null;
-}
+
 
 function extractDomain(url: string): string {
   try {
