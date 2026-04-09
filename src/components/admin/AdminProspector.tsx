@@ -195,9 +195,20 @@ function normalizeDripConversion(r: any): UnifiedLead {
 }
 
 // ── Drip Status Badge ──
+const DRIP_LABELS: Record<number, string> = {
+  1: "Day 1 Sent",
+  2: "Day 4 Sent",
+  3: "Day 8 Sent",
+  4: "Day 15 Sent",
+};
 function DripBadge({ step, status }: { step: number; status: string }) {
   if (status === "completed") return <Badge className="text-[8px] bg-green-500/20 text-green-400 border-0">Drip Done ✓</Badge>;
-  if (status === "active") return <Badge className="text-[8px] bg-purple-500/20 text-purple-400 border-0">Step {step}/4</Badge>;
+  if (status === "active" && step > 0) return (
+    <Badge className="text-[8px] bg-purple-500/20 text-purple-400 border-0">
+      {DRIP_LABELS[step] || `Step ${step}/4`}
+    </Badge>
+  );
+  if (status === "queued") return <Badge className="text-[8px] bg-blue-500/20 text-blue-400 border-0">Queued</Badge>;
   if (status === "drafted") return <Badge className="text-[8px] bg-amber-500/20 text-amber-400 border-0">Draft Ready</Badge>;
   return null;
 }
