@@ -17,16 +17,26 @@ const EmbedCapture = () => {
     setError("");
 
     try {
-      const { error: insertError } = await supabase
+      const { data: inserted, error: insertError } = await supabase
         .from("capture_submissions")
         .insert({
           tenant_id: tenantId,
           email: email.trim(),
           name: name.trim() || null,
           source_url: window.location.href,
-        });
+        })
+        .select("id")
+        .single();
 
       if (insertError) throw insertError;
+
+      // Fire enrichment in background — don't block the UI
+      if (inserted?.id) {
+        supabase.functions.invoke("capture-enrich", {
+          body: { submission_id: inserted.id },
+        }).catch(console.error);
+      }
+
       setSubmitted(true);
     } catch (err: unknown) {
       setError("Something went wrong. Please try again.");

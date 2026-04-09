@@ -9548,6 +9548,47 @@ export type Database = {
         }
         Relationships: []
       }
+      unenriched_leads: {
+        Row: {
+          created_at: string
+          failure_reason: string | null
+          id: string
+          raw_domain: string | null
+          raw_email: string | null
+          raw_payload: Json | null
+          source: string
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          failure_reason?: string | null
+          id?: string
+          raw_domain?: string | null
+          raw_email?: string | null
+          raw_payload?: Json | null
+          source?: string
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          failure_reason?: string | null
+          id?: string
+          raw_domain?: string | null
+          raw_email?: string | null
+          raw_payload?: Json | null
+          source?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "unenriched_leads_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       upsell_emails_sent: {
         Row: {
           client_email: string
