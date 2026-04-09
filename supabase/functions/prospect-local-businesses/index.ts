@@ -723,23 +723,67 @@ serve(async (req) => {
 
         if (existing && existing.length > 0) { skipped++; continue; }
 
-        // Try to scrape email from their website
+        // ── ENHANCED AI EXTRACTION PIPELINE ──
         let contactEmail: string | null = null;
-        let enrichmentSource = "scrape";
+        let enrichmentSource = "ai_extraction";
         let decisionMakerName: string | null = null;
         let decisionMakerTitle: string | null = null;
         let directPhone: string | null = null;
         let verifiedEmail = false;
+        let extractedFirstName: string | null = null;
+        let extractedLastName: string | null = null;
+        let extractedCompany: string | null = null;
+        let dripCampaignStatus: any = { current_stage: "0_New_Extracted_Lead", email_opened: false, last_engagement_timestamp: null };
+        let leadScoreIndicators: string[] = [];
 
         if (website) {
-          contactEmail = await scrapeEmailFromWebsite(website);
+          // Step 1: Scrape HTML from main page + /contact + /about
+          const pagesToScrape = [
+            website,
+            website.replace(/\/$/, "") + "/contact",
+            website.replace(/\/$/, "") + "/about",
+          ];
+          let combinedHtml = "";
+          for (const pageUrl of pagesToScrape) {
+            const html = await scrapeWebsiteHtml(pageUrl);
+            if (html) combinedHtml += `\n<!-- PAGE: ${pageUrl} -->\n${html}`;
+          }
+
+          // Step 2: AI Extraction with the elite prompt
+          if (combinedHtml.length > 100) {
+            const extraction = await aiExtractLeads(combinedHtml, businessName, industry || query);
+            log("AI extraction", { business: businessName, status: extraction.extraction_status, leadCount: extraction.leads?.length || 0 });
+
+            if (extraction.extraction_status === "success" && extraction.leads?.length > 0) {
+              const bestLead = extraction.leads[0];
+              contactEmail = bestLead.validated_email;
+              extractedFirstName = bestLead.first_name;
+              extractedLastName = bestLead.last_name;
+              decisionMakerName = `${bestLead.first_name} ${bestLead.last_name}`.trim();
+              decisionMakerTitle = bestLead.job_title;
+              extractedCompany = bestLead.company_name;
+              if (bestLead.phone_number) directPhone = bestLead.phone_number;
+              dripCampaignStatus = bestLead.drip_campaign_status || dripCampaignStatus;
+              leadScoreIndicators = bestLead.lead_score_indicators || [];
+              enrichmentSource = "ai_extraction";
+            } else if (extraction.extraction_status === "failed_no_email") {
+              // AI found data but no email — discard unless we try waterfall
+              log("AI extraction: no email found, trying waterfall", { business: businessName });
+            }
+          }
+
+          // Step 3: Fallback to simple regex scrape if AI found nothing
+          if (!contactEmail) {
+            contactEmail = await scrapeEmailFromWebsite(website);
+            if (contactEmail) enrichmentSource = "regex_scrape";
+          }
           if (!contactEmail) {
             const contactUrl = website.replace(/\/$/, "") + "/contact";
             contactEmail = await scrapeEmailFromWebsite(contactUrl);
+            if (contactEmail) enrichmentSource = "regex_scrape_contact";
           }
-          log("Email scrape", { business: businessName, email: contactEmail || "NOT_FOUND" });
 
-          // ── WATERFALL ENRICHMENT: If scrape failed OR for enriching contact info ──
+          // Step 4: Waterfall enrichment APIs as final fallback
           if (!contactEmail || !phone) {
             try {
               const enrichRes = await fetch(`${SUPABASE_URL}/functions/v1/lead-enrichment-waterfall`, {
@@ -757,20 +801,21 @@ serve(async (req) => {
                   enrichmentSource = enrichData.enrichment_source || "waterfall";
                 }
                 if (enrichData.verified_email) verifiedEmail = true;
-                if (enrichData.decision_maker_name) decisionMakerName = enrichData.decision_maker_name;
-                if (enrichData.decision_maker_title) decisionMakerTitle = enrichData.decision_maker_title;
-                if (enrichData.direct_phone) directPhone = enrichData.direct_phone;
+                if (enrichData.decision_maker_name && !decisionMakerName) decisionMakerName = enrichData.decision_maker_name;
+                if (enrichData.decision_maker_title && !decisionMakerTitle) decisionMakerTitle = enrichData.decision_maker_title;
+                if (enrichData.direct_phone && !directPhone) directPhone = enrichData.direct_phone;
                 log("Waterfall enrichment", {
                   business: businessName,
                   source: enrichData.enrichment_source,
                   email: enrichData.email || "none",
-                  phone: enrichData.direct_phone || "none",
                 });
               }
             } catch (enrichErr) {
               log("Waterfall enrichment failed (non-blocking)", { error: String(enrichErr) });
             }
           }
+
+          log("Final extraction result", { business: businessName, email: contactEmail || "NOT_FOUND", source: enrichmentSource, decisionMaker: decisionMakerName });
         }
 
         // Dedup against email_send_log if we have an email
@@ -816,6 +861,7 @@ serve(async (req) => {
           if (sent) {
             emailStatus = "sent";
             emailed++;
+            dripCampaignStatus.current_stage = "1_Initial_Email_Sent";
             await serviceClient.from("email_send_log").insert({
               recipient_email: contactEmail,
               template_name: "cold_outreach",
@@ -830,12 +876,12 @@ serve(async (req) => {
               .limit(1);
             if (!existingWdl || existingWdl.length === 0) {
               await serviceClient.from("web_design_leads" as any).insert({
-                name: businessName,
+                name: decisionMakerName || businessName,
                 business: businessName,
                 email: contactEmail,
-                phone: phone || null,
+                phone: directPhone || phone || null,
                 status: "new",
-                description: `SOURCE: auto_prospected | INDUSTRY: ${industry || query} | LOCATION: ${location} | LANDING_PAGE: ${landingPage.path}`,
+                description: `SOURCE: auto_prospected | INDUSTRY: ${industry || query} | LOCATION: ${location} | LANDING_PAGE: ${landingPage.path} | DECISION_MAKER: ${decisionMakerName || "unknown"} (${decisionMakerTitle || "unknown"})`,
               });
               log("Bridged into web_design_leads for drip", { email: contactEmail, industry: industry || query });
             }
@@ -848,23 +894,31 @@ serve(async (req) => {
           log("Lead below threshold", { business: businessName, score: scoutResult.lead_score });
         }
 
-        // Store lead in CRM with agent data
+        // Store lead in CRM with enhanced agent data + new columns
         const leadStatus = emailStatus === "sent" ? "Emailed" : "new";
         const { data: newLead, error: insertErr } = await serviceClient
           .from("outreach_leads")
-          .insert({
+          .upsert({
             business_name: businessName,
             email: contactEmail,
+            validated_email: contactEmail,
+            first_name: extractedFirstName,
+            last_name: extractedLastName,
+            job_title: decisionMakerTitle,
+            company_name: extractedCompany || businessName,
+            owner_name: decisionMakerName,
             industry: industry || query,
             city: location,
-            phone,
+            phone: directPhone || phone,
             website_status: website ? "has_website" : "no_website",
             lead_score: scoutResult.lead_score,
             target_service: scoutResult.target_service_to_pitch,
             custom_flaw: scoutResult.custom_flaw_observation,
-            notes: `Auto-prospected ${new Date().toLocaleDateString()}. Gap score: ${gapScore}/100. Lead score: ${scoutResult.lead_score}/10. Target: ${scoutResult.target_service_to_pitch}. Flaw: ${scoutResult.custom_flaw_observation}. Rating: ${rating} (${reviewCount} reviews). Website: ${website || "NONE"}. Address: ${address}. Email: ${contactEmail || "NOT FOUND"} (${enrichmentSource}). Email status: ${emailStatus}. Decision maker: ${decisionMakerName || "unknown"}${decisionMakerTitle ? ` (${decisionMakerTitle})` : ""}. Direct phone: ${directPhone || "none"}.${subjectLine ? `\n\nSubject: ${subjectLine}\n\n${emailBody}` : ""}`,
+            drip_campaign_status: dripCampaignStatus,
+            lead_score_indicators: leadScoreIndicators,
+            notes: `Auto-prospected ${new Date().toLocaleDateString()}. Gap score: ${gapScore}/100. Lead score: ${scoutResult.lead_score}/10. Target: ${scoutResult.target_service_to_pitch}. Flaw: ${scoutResult.custom_flaw_observation}. Rating: ${rating} (${reviewCount} reviews). Website: ${website || "NONE"}. Address: ${address}. Enrichment: ${enrichmentSource}. Email status: ${emailStatus}.${subjectLine ? `\n\nSubject: ${subjectLine}\n\n${emailBody}` : ""}`,
             status: leadStatus,
-          })
+          }, { onConflict: "email", ignoreDuplicates: false })
           .select("id")
           .single();
 
