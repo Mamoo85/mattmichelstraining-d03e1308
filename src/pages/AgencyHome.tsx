@@ -139,11 +139,11 @@ const AgencyHome = () => {
             <img
               src={dwaLogo}
               alt="Detroit Web Agency"
-              width={180}
-              height={180}
+              width={400}
+              height={400}
               fetchPriority="high"
               decoding="sync"
-              className="relative w-28 md:w-36 h-auto object-contain drop-shadow-[0_0_30px_rgba(6,182,212,0.25)]"
+              className="relative w-52 md:w-72 lg:w-80 h-auto object-contain drop-shadow-[0_0_40px_rgba(6,182,212,0.3)]"
             />
           </div>
 
