@@ -2658,6 +2658,33 @@ export type Database = {
         }
         Relationships: []
       }
+      free_tool_leads: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          input_url: string | null
+          results_summary: Json | null
+          tool_used: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          input_url?: string | null
+          results_summary?: Json | null
+          tool_used: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          input_url?: string | null
+          results_summary?: Json | null
+          tool_used?: string
+        }
+        Relationships: []
+      }
       gbp_saas_clients: {
         Row: {
           active: boolean | null
