@@ -316,14 +316,14 @@ async function runWaterfall(domain: string, businessName: string): Promise<Enric
     }
   }
 
-  // Step 6: AI email guess fallback — try Hunter email-finder or common patterns
+  // Step 6: Email pattern guess fallback
   if (!result.email) {
     log("Step 6: Email guess fallback", { domain, name: result.decision_maker_name });
-    const guessed = await guessAndVerifyEmail(domain, result.decision_maker_name);
+    const guessed = await guessEmail(domain, result.decision_maker_name, businessName);
     if (guessed) {
       result.email = guessed;
       result.enrichment_source = "email_guess";
-      result.verified_email = true; // We verified it before returning
+      // Only mark as verified if Hunter actually verified it
       log("Fallback email found", { email: guessed });
     }
   }
