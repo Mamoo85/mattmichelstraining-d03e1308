@@ -83,6 +83,7 @@ const AdminEmailLog           = lazyRetry(() => import("@/components/admin/Admin
 const AdminMigrations         = lazyRetry(() => import("@/components/admin/AdminMigrations"));
 const AdminB2BPipeline        = lazyRetry(() => import("@/components/admin/AdminB2BPipeline"));
 const AdminSocialMediaOnboarding = lazyRetry(() => import("@/components/admin/AdminSocialMediaOnboarding"));
+const AdminEnrichmentPanel    = lazyRetry(() => import("@/components/admin/AdminEnrichmentPanel"));
 
 // Marketing & Content domain
 const AdminFrontPage          = lazyRetry(() => import("@/components/admin/AdminFrontPage"));
@@ -365,6 +366,7 @@ const Admin = () => {
         { key: "fulfillment", label: "🔔 Fulfillment", component: <AdminFulfillment /> },
         { key: "ops", label: "Ops Center", component: <AdminOpsCenter /> },
         { key: "pipeline", label: "B2B Pipeline", component: <AdminB2BPipeline /> },
+        { key: "enrichment", label: "⚡ Enrichment", component: <AdminEnrichmentPanel /> },
         { key: "referrals", label: "Referrals", component: <AdminReferrals /> },
         { key: "sandbox", label: "🧪 Sandbox", component: <AdminSandbox /> },
         { key: "orders", label: "Orders", component: <AdminOrders /> },
