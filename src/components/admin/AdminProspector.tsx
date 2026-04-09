@@ -849,6 +849,7 @@ export default function AdminProspector() {
       case "no_instagram": result = result.filter(l => !l.has_instagram); break;
     }
     switch (pipelineSort) {
+      case "score_desc": result.sort((a, b) => (b.lead_score || 0) - (a.lead_score || 0)); break;
       case "reviews_desc": result.sort((a, b) => (b.review_count || 0) - (a.review_count || 0)); break;
       case "rating_desc": result.sort((a, b) => (b.google_rating || 0) - (a.google_rating || 0)); break;
       case "name_asc": result.sort((a, b) => a.business_name.localeCompare(b.business_name)); break;
