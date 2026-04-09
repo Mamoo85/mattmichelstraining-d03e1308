@@ -430,6 +430,7 @@ function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, onDeepRes
               onDeepResearch={onDeepResearch}
               onDrip={onDrip}
               onPreviewDrip={onPreviewDrip}
+              onDelete={onDelete}
               auditing={auditingId === lead.id}
               sending={sendingId === lead.id}
               researching={researchingId === lead.id}
