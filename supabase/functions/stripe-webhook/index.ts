@@ -250,12 +250,11 @@ serve(async (req) => {
     const sig = req.headers.get("stripe-signature");
     const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
 
-    let event: Stripe.Event;
     if (!webhookSecret || !sig) {
       console.error("Missing STRIPE_WEBHOOK_SECRET or stripe-signature header");
       return new Response("Webhook signature verification failed", { status: 400 });
     }
-    event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
+    const event: Stripe.Event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
 
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
