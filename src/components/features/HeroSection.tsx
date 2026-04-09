@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Shield, Trophy, Clock, MapPin, Star, Quote } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-import m2Logo from "@/assets/m2-logo-gemini.png";
+import m2Logo from "@/assets/m2-logo-official.png";
 import { useSectionVisible } from "@/hooks/useSiteContent";
 
 const AudienceSelector = lazy(() => import("@/components/landing/AudienceSelector"));
@@ -62,16 +62,23 @@ const HeroSection = () => {
             <div className="relative rounded-2xl overflow-hidden bg-card/40 backdrop-blur-xl border border-white/[0.06] shadow-[0_8px_48px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.06)] p-6 md:p-10 mb-6">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent" />
               <div className="relative flex flex-col items-center text-center">
-                <div className="relative mb-5">
-                  <div className="absolute inset-0 rounded-full blur-2xl bg-primary/20 scale-110" />
+                <div className="relative mb-6">
+                  {/* Multi-layer glow */}
+                  <div className="absolute inset-0 rounded-full blur-3xl bg-primary/30 scale-150" />
+                  <div className="absolute inset-0 rounded-full blur-xl bg-primary/20 scale-125" />
+                  {/* Dark badge ring */}
+                  <div className="absolute inset-0 rounded-full scale-110" style={{ background: "radial-gradient(circle, rgba(232,98,26,0.08) 0%, transparent 70%)" }} />
                   <img
                     src={m2Logo}
                     alt="M2 Performance Training"
-                    width={256}
-                    height={256}
+                    width={320}
+                    height={320}
                     fetchPriority="high"
                     decoding="sync"
-                    className="w-28 md:w-40 lg:w-48 h-auto object-contain drop-shadow-lg shadow-[0_0_40px_rgba(232,98,26,0.25)]"
+                    className="relative w-44 md:w-60 lg:w-72 h-auto object-contain"
+                    style={{
+                      filter: "drop-shadow(0 0 24px rgba(232,98,26,0.7)) drop-shadow(0 0 60px rgba(232,98,26,0.35)) drop-shadow(0 4px 16px rgba(0,0,0,0.6))",
+                    }}
                   />
                 </div>
 
