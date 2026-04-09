@@ -1,3 +1,50 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Commands
+
+```bash
+npm run dev          # start Vite dev server
+npm run build        # production build (includes prerender-routes.js)
+npm run lint         # ESLint
+npm run test         # Vitest (single run)
+npm run test:watch   # Vitest in watch mode
+npm run db:push      # push local migrations to Supabase
+npm run db:diff      # diff local schema vs remote
+```
+
+Run a single test file: `npx vitest run src/path/to/file.test.ts`
+
+Tests live in `src/**/*.{test,spec}.{ts,tsx}`, use Vitest + jsdom + `@testing-library/react`. Setup file: `src/test/setup.ts`.
+
+## Code Architecture
+
+The repo serves two distinct purposes in one codebase:
+
+1. **Fitness Training App** — the core consumer product. React SPA with auth (`useAuth`), subscription gating (`SubscriptionGuard`), workout tracking, AI coaching, nutrition, progress.
+2. **B2B Revenue Machine** — ~100+ marketing/SaaS landing pages under `src/pages/` (AI*, Contractor*, Social*, Web*, etc.) each paired with Supabase Edge Functions and Stripe checkout flows.
+
+### Frontend Patterns
+- All pages are lazy-loaded via `lazyRetry()` (in `App.tsx`) — a retry wrapper around `React.lazy` for chunk-load resilience.
+- Path alias `@` → `src/`. Import as `import { supabase } from "@/integrations/supabase/client"`.
+- Supabase client: `src/integrations/supabase/client.ts`. TypeScript types auto-generated at `src/integrations/supabase/types.ts` — do not edit types.ts manually.
+- Auth state: `useAuth` hook (`src/hooks/useAuth.tsx`). Admin check: `useIsAdmin`.
+- React Query is used for all data fetching with a persisted cache (survives page refresh).
+
+### Edge Function Patterns
+- Every function lives at `supabase/functions/<name>/index.ts` and runs on Deno.
+- Each product's checkout function is named `create-<product>-checkout/index.ts`.
+- Stripe webhooks are routed by `metadata.type` — always set this on checkout sessions.
+- Service key (not anon key) is used inside edge functions for DB writes.
+
+### Migrations
+- Files: `supabase/migrations/YYYYMMDDHHMMSS_description.sql`
+- All new tables must have `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` + a `service_role` bypass policy.
+- **No manual SQL** — GitHub Actions runs `supabase db push` on every merge to main.
+
+---
+
 # M² Performance Training — Claude Code Context
 
 ## Knowledge Base
