@@ -1,207 +1,160 @@
 
-## Plan: 15 Upgrades for Detroit Web Agency — Conversion-First Architecture
 
-The market research exposed a critical structural gap: the current AgencyHome jumps from Hero → Trust → Stats → Services — skipping the **Problem agitation** and **Process clarity** that drive conversions. This plan restructures the page into a psychological "Grease Slide" flow and layers the 15 features into that framework.
+## Plan: 15 Upgrades for Detroit Web Agency — Conversion-First "Grease Slide" Architecture
+
+The market research validates the overall direction and highlights one critical structural gap: the current AgencyHome skips from Hero → Trust → Stats → Services — missing the **Problem agitation** and **Process clarity** sections that drive conversions. This refined plan restructures the page into a proven psychological flow and layers all 15 features into that framework.
 
 ---
 
-### PHASE 1: Restructure AgencyHome.tsx (Grease Slide Flow)
+### Key Refinements From Market Research
 
-The page sections will be reordered to match the proven conversion sequence:
+1. **Hero copy rewrite**: Replace vague "Building Digital Engines" with clear who/what/result: "Your Website Should Be Your Best Salesperson"
+2. **Add "Problem" section**: The Missed Revenue Calculator becomes the centerpiece pain-agitator before any solution is presented
+3. **Add "Process" section**: Simple 3-step "How It Works" after services (Scan → Build → Get Jobs)
+4. **Add FAQ/Objection Handling**: Categorized accordion near bottom to clear final doubts
+5. **Sticky Mobile CTA**: Fixed bottom bar on mobile that's always visible while scrolling
+6. **Click-to-call emphasis**: Secondary CTA becomes a phone call button on mobile
+7. **Minimal form fields**: All lead capture forms use 2 fields max (URL + email)
+
+---
+
+### AgencyHome.tsx New Section Order (Grease Slide Flow)
 
 ```text
-1. Hero (refined copy + sticky mobile CTA)
-2. Immediate Social Proof (trust bar + stats combined)
-3. THE PROBLEM — "Missed Revenue Calculator" (new)
-4. THE SOLUTION — Services Grid (existing, reframed)
-5. THE PROCESS — 3-Step "How It Works" (new)
-6. Terminal Animation — "See It In Action" (new)
-7. Before/After Slider (new)
-8. Case Study Audit Trail (new)
-9. "Bare Metal DNA" / Why Us (existing, upgraded)
+1.  Hero (refined copy + click-to-call secondary CTA)
+2.  Trust Bar + Stats (combined social proof strip)
+3.  Missed Revenue Calculator — THE PROBLEM (new)
+4.  Services Grid — THE SOLUTION (existing, reframed)
+5.  How It Works — 3-step process (new)
+6.  Terminal Animation — "See It In Action" (new)
+7.  Before/After Slider (new)
+8.  Case Study Audit Trail (new)
+9.  Bare Metal DNA + Why Us (existing, upgraded)
 10. Local Footprint Map (new)
 11. Local Guarantee Block (new)
 12. FAQ / Objection Handling (new)
 13. Final CTA (existing, high-contrast)
 14. Uptime Bar (new, above footer)
-15. Footer
+15. Footer (existing)
 ```
 
-**Exit-Intent Modal** renders globally on agency pages only.
-
----
-
-### Hero Refinements (based on research)
-
-**Current**: "Building Digital Engines for Michigan Businesses" — too vague.
-
-**New**: Clear who/what/result statement:
-- H1: "Your Website Should Be Your Best Salesperson"
-- Sub: "We build automated websites and lead systems for Michigan contractors. You get booked jobs — we handle the tech."
-- Primary CTA: "Get a Free Site Diagnostic" (keeps existing audit link)
-- Secondary CTA: "Call (313) 806-4952" (click-to-call on mobile)
-- **Sticky mobile CTA**: Fixed bottom bar on mobile with "Get Free Diagnostic" button — always visible while scrolling
+Exit-Intent Modal renders globally on agency pages only.
+Sticky Mobile CTA bar fixed at bottom on mobile.
 
 ---
 
 ### Category 1: 5 API-Powered Features
 
-#### 1.1 Live "Lead Magnet" Scanner (`/free-site-scanner`)
-- Visitor enters URL → 15-second scan via DataForSEO (PageSpeed + On-Page)
-- OpenRouter generates plain-English "Top 3 Issues" summary
-- Mini-report shown on screen; email required to unlock full report (Resend)
-- **Form design**: Single URL field + email field only (2 fields max per research)
-- New Edge Function: `live-site-scanner`
+**1.1 Live "Lead Magnet" Scanner** — New page `/free-site-scanner`, new Edge Function `live-site-scanner`
+- DataForSEO (PageSpeed + On-Page) → OpenRouter plain-English summary → mini-report on screen
+- Email capture to unlock full report (Resend). **2 fields only**: URL + email
 - DB: `site_scanner_leads` table
 
-#### 1.2 Competitor Threat Alerts (weekly cron)
-- Scans paying clients' top 3 competitors via DataForSEO SERP API
-- If competitor outranks client → Resend email with keyword, position delta, and Stripe "SEO Sprint" payment link
-- New Edge Function: `competitor-threat-alerts`
+**1.2 Competitor Threat Alerts** — New Edge Function `competitor-threat-alerts` (weekly cron)
+- DataForSEO SERP API checks client keywords vs competitors
+- If outranked → Resend email with Stripe "SEO Sprint" payment link
 - DB: `competitor_threat_log` table
 
-#### 1.3 Hardware-to-Software Cross-Sell Engine
-- Stripe webhook listens for `meta.type === "computer_repair"` payments
-- 3-day delayed email via Resend pitching "Digital Infrastructure Audit"
-- New Edge Function: `cross-sell-drip` (daily cron)
+**1.3 Hardware-to-Software Cross-Sell** — Edit `stripe-webhook` + new Edge Function `cross-sell-drip`
+- Listen for `meta.type === "computer_repair"` → queue 3-day delayed agency pitch email
 - DB: `cross_sell_queue` table
 
-#### 1.4 Client "Command Center" Dashboard (`/command-center`)
-- Protected route for retainer clients
-- Live keyword ranking charts (Recharts) pulled from DataForSEO
-- Position changes with up/down arrows, local pack presence
-- New Edge Function: `client-rankings-fetch`
+**1.4 Client Command Center** — New page `/command-center` (protected), new Edge Function `client-rankings-fetch`
+- Live keyword ranking charts (Recharts) from DataForSEO
 - DB: `client_ranking_snapshots` table
 
-#### 1.5 Hyper-Local Content Generator (admin tool)
-- OpenRouter/Sonar researches Metro Detroit zoning changes, code updates by trade
-- Outputs draft blog posts tagged by industry
-- New Edge Function: `local-content-generator`
+**1.5 Hyper-Local Content Generator** — Admin tool, new Edge Function `local-content-generator`
+- OpenRouter/Sonar researches Metro Detroit zoning/code changes by trade
+- Outputs draft blog posts
 - DB: `generated_content_drafts` table
 
 ---
 
 ### Category 2: 5 Design/Conversion Components
 
-#### 2.1 "Missed Revenue" Calculator (THE PROBLEM section)
-- **Purpose**: Agitate pain before showing solutions (research: "prove you understand their struggles")
-- Two sliders: "Missed Calls/Week" (1-20) + "Average Ticket Size" ($100-$5000)
-- Animated output: weekly/monthly/annual loss in bold red
-- "Plug the Leak" CTA → `/ai-phone-answering`
-- Component: `src/components/agency/MissedRevenueCalculator.tsx`
+**2.1 Missed Revenue Calculator** — `MissedRevenueCalculator.tsx`
+- Sliders for missed calls + ticket size → animated red loss numbers → "Plug the Leak" CTA
 
-#### 2.2 Terminal "Live Audit" Illusion
-- Dark terminal UI typing animation: DNS lookup → SSL check → mobile score → SEO crawl → competitor scan
-- Intersection Observer triggers on scroll
-- Ends with "ANALYSIS COMPLETE — 4 Critical Issues Found" + CTA
-- Component: `src/components/agency/TerminalAnimation.tsx`
+**2.2 Terminal Animation** — `TerminalAnimation.tsx`
+- Dark terminal typing simulation (DNS, SSL, mobile score, SEO, competitor scan)
+- Intersection Observer trigger, ends with "4 Critical Issues Found" + CTA
 
-#### 2.3 Dynamic Industry Routing
-- `?industry=roofing` (or plumbing, dental, hvac, etc.) swaps hero H1, subtext, testimonials from `INDUSTRY_CONTENT` config
-- Default content if no param — enables ad-specific landing variations
-- Edit: `AgencyHome.tsx` reads URL params
+**2.3 Dynamic Industry Routing** — URL param `?industry=roofing` swaps hero content
+- `INDUSTRY_CONTENT` config map for roofing, plumbing, dental, hvac, landscaping, restaurant, salon
 
-#### 2.4 Exit-Intent "Custom Build" Interceptor
-- Detects mouse leaving viewport (desktop) / back intent (mobile)
-- "Enter your URL — our Lead Agent will build a custom demo in 24 hours. No cost."
-- **Minimal form**: URL + email only (2 fields per research guidelines)
-- Fires once per session (sessionStorage)
-- Component: `src/components/agency/ExitIntentModal.tsx`
+**2.4 Exit-Intent Modal** — `ExitIntentModal.tsx`
+- Mouse-leave detection, 2-field form (URL + email), once per session
 - DB: `exit_intent_leads` table
 
-#### 2.5 Before/After Infrastructure Slider
-- Draggable divider: old broken mobile site ↔ new agency-built site
-- Touch-friendly
-- Component: `src/components/agency/BeforeAfterSlider.tsx`
+**2.5 Before/After Slider** — `BeforeAfterSlider.tsx`
+- Draggable divider showing old broken site vs new agency build, touch-friendly
 
 ---
 
 ### Category 3: 5 Credibility & Trust Builders
 
-#### 3.1 "Local Footprint" Map
-- Interactive SVG focused on Metro Detroit / Grosse Pointe
-- Color-coded pins by service type (hardware, web, automation)
-- Hover shows business type + service
-- Component: `src/components/agency/LocalFootprintMap.tsx`
+**3.1 Local Footprint Map** — `LocalFootprintMap.tsx`
+- SVG grid map of Metro Detroit with color-coded pins (web, automation, hardware)
 
-#### 3.2 Live System Uptime Monitor
-- Subtle dark footer bar: "99.99% Uptime" with green status dots
-- Static metrics initially (industrial clients respect uptime over flash)
-- Component: `src/components/agency/UptimeBar.tsx`
+**3.2 Uptime Bar** — `UptimeBar.tsx`
+- Subtle footer bar: "99.99% Uptime" with green status dots
 
-#### 3.3 "Bare Metal" Hardware Roots ("Our DNA")
-- Split layout: progression icons (Motherboard → Server → Cloud → Lead Engine)
-- Copy: "We started fixing motherboards. Today we engineer the same reliability into your digital infrastructure."
-- Component: `src/components/agency/BareMetalDNA.tsx`
+**3.3 Bare Metal DNA** — `BareMetalDNA.tsx`
+- "Our DNA" section: Motherboard → Server → Cloud → Lead Engine progression
 
-#### 3.4 Transparent Audit Trail (Case Studies)
-- Terminal-style display of real (anonymized) gap analysis: Problem → Fix → Result
-- Before/after scores, lead increase metrics
-- 2-3 hardcoded case studies
-- Component: `src/components/agency/CaseStudyAuditTrail.tsx`
+**3.4 Case Study Audit Trail** — `CaseStudyAuditTrail.tsx`
+- 3 anonymized case studies showing raw audit output → fix → measurable result
 
-#### 3.5 "No-BS Local Guarantee"
-- Matt's photo (matt-boat.jpg), direct quote guarantee
-- "I'm not an overseas agency. I'm a local engineer in Grosse Pointe. If it doesn't work, I fix it — in person."
-- Signature-style design
-- Component: `src/components/agency/LocalGuaranteeBlock.tsx`
+**3.5 Local Guarantee Block** — `LocalGuaranteeBlock.tsx`
+- Matt's photo, direct quote guarantee, contact info
 
 ---
 
-### NEW: Sections Added From Research
+### New Sections From Research
 
-#### "How It Works" — 3-Step Process Section
-- Step 1: "We Scan Your Site" (free diagnostic)
-- Step 2: "We Build Your System" (custom site + automation)
-- Step 3: "You Get Booked Jobs" (leads flow in)
-- Simple numbered cards, keeps it non-intimidating
-- Component: `src/components/agency/HowItWorks.tsx`
+**How It Works** — `HowItWorks.tsx`
+- 3 cards: Scan → Build → Get Jobs
 
-#### FAQ / Objection Handling Section
-- Categorized accordion: Pricing, Timeline, Effort Required, Technical
-- Questions like: "How much does it cost?", "How long until I see results?", "Do I need to do anything?"
-- Component: `src/components/agency/AgencyFAQ.tsx`
+**Agency FAQ** — `AgencyFAQ.tsx`
+- 8 categorized questions (Pricing, Timeline, Effort, Technical, General)
 
-#### Sticky Mobile CTA
-- Fixed bottom bar on mobile (agency domain only): "Get Free Diagnostic →"
-- Hides when user is at the hero CTA (Intersection Observer)
-- Component: `src/components/agency/StickyMobileCTA.tsx`
+**Sticky Mobile CTA** — `StickyMobileCTA.tsx`
+- Fixed bottom bar on mobile, appears after scrolling past hero
 
 ---
 
-### Database Migration (single migration)
+### Database (single migration, 6 tables)
 
-New tables (all with RLS + service_role policy):
-- `site_scanner_leads` (email, url, scores jsonb, report_sent boolean)
-- `competitor_threat_log` (client_id, keyword, competitor, positions, alerted_at)
-- `cross_sell_queue` (stripe_payment_id, email, business_name, send_at, sent boolean)
-- `client_ranking_snapshots` (client_id, keyword, position, local_pack, checked_at)
-- `generated_content_drafts` (industry, title, body, status, client_id)
-- `exit_intent_leads` (email, url, created_at)
+| Table | Purpose |
+|---|---|
+| `site_scanner_leads` | Lead magnet email capture |
+| `competitor_threat_log` | Weekly competitor alert tracking |
+| `cross_sell_queue` | Hardware → agency cross-sell pipeline |
+| `client_ranking_snapshots` | Keyword ranking cache |
+| `generated_content_drafts` | AI-generated blog drafts |
+| `exit_intent_leads` | Exit-intent form submissions |
+
+All with RLS enabled, service_role access. `site_scanner_leads` and `exit_intent_leads` also allow anon insert.
 
 ---
 
 ### New Routes
-- `/free-site-scanner` — Lead Magnet Scanner page
-- `/command-center` — Client Command Center (protected)
 
-### Edge Functions (5 new)
-- `live-site-scanner`
-- `competitor-threat-alerts`
-- `cross-sell-drip`
-- `client-rankings-fetch`
-- `local-content-generator`
+- `/free-site-scanner` → `FreeSiteScanner.tsx`
+- `/command-center` → `ClientCommandCenter.tsx` (protected)
 
 ### Files Summary
 
-| Area | Files |
-|---|---|
-| Pages | `AgencyHome.tsx` (full restructure), new `FreeSiteScanner.tsx`, new `ClientCommandCenter.tsx` |
-| Components | 13 new in `src/components/agency/` (10 original + HowItWorks, AgencyFAQ, StickyMobileCTA) |
-| Edge Functions | 5 new |
-| DB | 1 migration with 6 tables |
-| Routes | `App.tsx` — 2 new routes |
-| Existing | `stripe-webhook/index.ts` — add computer_repair cross-sell handler |
+| Area | Count | Details |
+|---|---|---|
+| Components | 13 new | All in `src/components/agency/` |
+| Pages | 2 new | `FreeSiteScanner.tsx`, `ClientCommandCenter.tsx` |
+| Edge Functions | 5 new | `live-site-scanner`, `competitor-threat-alerts`, `cross-sell-drip`, `client-rankings-fetch`, `local-content-generator` |
+| Restructure | 1 | `AgencyHome.tsx` full section reorder |
+| Routes | 2 new | In `App.tsx` |
+| DB | 1 migration | 6 tables |
+| Edit | 1 | `stripe-webhook/index.ts` (cross-sell handler) |
 
 ### Zero Bleed Guarantee
-All components render exclusively on agency domain. `AgencyHome.tsx` is only served when hostname includes `detroitwebagent`. No CSS, layout, or component changes touch M² Training.
+All components render exclusively on the agency domain. No CSS, layout, or component changes touch M² Training.
+
