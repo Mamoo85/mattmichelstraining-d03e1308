@@ -80,7 +80,9 @@ serve(async (req) => {
 
     const stepConfig = DRIP_STEPS[currentStep - 1];
     const gapAnalysis = lead.gap_analysis || lead.deep_research?.summary || "";
-
+    const coreService = lead.core_service || "";
+    const specificSiteFlaw = lead.specific_site_flaw || "";
+    const recentActivity = lead.recent_activity || "";
     // Map industry to demo page
     const DEMO_MAP: Record<string, string> = {
       roofing: "/demo-roofing", plumber: "/demo-plumber", plumbing: "/demo-plumber",
@@ -106,25 +108,37 @@ serve(async (req) => {
       // Generate with AI
       if (!LOVABLE_API_KEY) throw new Error("Missing LOVABLE_API_KEY");
 
-      const prompt = `You are writing on behalf of Matt Michels, Lead Web Agent at Detroit Web Agency (Grosse Pointe, MI).
+      const prompt = `You are writing a cold email on behalf of Matt Michels, Lead Web Agent at Detroit Web Agency (Grosse Pointe, MI).
 
-CONTEXT:
+LEAD INTEL:
 Business: ${lead.business_name}
 Industry: ${lead.industry || "local business"}
 City: ${lead.city || "Metro Detroit"}
 Website: ${lead.website || "none found"}
-Gap Analysis: "${gapAnalysis}"
+Core Service: "${coreService}"
+Specific Site Flaw: "${specificSiteFlaw}"
+Recent Activity: "${recentActivity}"
+Gap Summary: "${gapAnalysis}"
 Demo Link: ${demoUrl}
 Drip Step: ${currentStep} of 4
 ${currentStep > 1 ? "This is a FOLLOW-UP email. The prospect has already received " + (currentStep - 1) + " email(s)." : "This is the FIRST cold email."}
 
-RULES:
+EMAIL FRAMEWORK (follow this EXACTLY for Step 1):
+1. HOOK: Start with a compliment or observation about their specific business. Reference their "${recentActivity || coreService}" to prove you actually looked at them.
+2. THE PROBLEM: Casually mention you noticed "${specificSiteFlaw}" while browsing their site.
+3. THE UNREASONABLE OFFER: Say something like "Because I focus specifically on helping Michigan ${lead.industry || "local"} businesses, I actually went ahead and built a live demo of a new, automated site specifically for ${lead.business_name}. It fixes that [flaw] and includes a 24/7 lead-routing engine."
+4. CTA: "Do you have 2 minutes for me to send the private link over so you can see it?"
+
+For Steps 2-4:
 ${stepConfig.prompt_suffix}
-- In Step 1, you MUST include the demo link (${demoUrl}) — say something like "I put together a quick sample of what your site could look like: ${demoUrl}"
-- In Step 2, reference the demo link again and ask if they checked it out
-- NEVER say "Hope this finds you well" or "Dear Business Owner"
-- NEVER use: AI, Synergy, Algorithm, Digital Transformation, Leverage, Game-Changer
-- Talk like a local Detroit guy, not a marketing agency
+${currentStep === 2 ? `- Reference the demo link (${demoUrl}) again and ask if they had a chance to look at it.` : ""}
+
+TONE RULES:
+- Speak like Matt Michels — a local Detroit guy, not a marketing agency
+- Keep it under 5 sentences total
+- NEVER say "Hope this finds you well" or "Dear Business Owner"  
+- NEVER use: AI, Synergy, Algorithm, Digital Transformation, Leverage, Game-Changer, "cutting edge"
+- In Step 1, you MUST include the demo link: ${demoUrl}
 - Sign off: Matt Michels | Lead Web Agent | Detroit Web Agency
 
 Return JSON: {"subject": "...", "body": "..."}

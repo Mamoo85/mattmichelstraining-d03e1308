@@ -5987,6 +5987,7 @@ export type Database = {
           business_name: string
           city: string | null
           contact_name: string | null
+          core_service: string | null
           created_at: string | null
           deep_research: Json | null
           drip_body: string | null
@@ -6007,8 +6008,10 @@ export type Database = {
           pain_points: Json | null
           phone: string | null
           pipeline_stage: string
+          recent_activity: string | null
           review_count: number | null
           source: string | null
+          specific_site_flaw: string | null
           state: string | null
           updated_at: string | null
           website: string | null
@@ -6017,6 +6020,7 @@ export type Database = {
           business_name: string
           city?: string | null
           contact_name?: string | null
+          core_service?: string | null
           created_at?: string | null
           deep_research?: Json | null
           drip_body?: string | null
@@ -6037,8 +6041,10 @@ export type Database = {
           pain_points?: Json | null
           phone?: string | null
           pipeline_stage?: string
+          recent_activity?: string | null
           review_count?: number | null
           source?: string | null
+          specific_site_flaw?: string | null
           state?: string | null
           updated_at?: string | null
           website?: string | null
@@ -6047,6 +6053,7 @@ export type Database = {
           business_name?: string
           city?: string | null
           contact_name?: string | null
+          core_service?: string | null
           created_at?: string | null
           deep_research?: Json | null
           drip_body?: string | null
@@ -6067,8 +6074,10 @@ export type Database = {
           pain_points?: Json | null
           phone?: string | null
           pipeline_stage?: string
+          recent_activity?: string | null
           review_count?: number | null
           source?: string | null
+          specific_site_flaw?: string | null
           state?: string | null
           updated_at?: string | null
           website?: string | null
