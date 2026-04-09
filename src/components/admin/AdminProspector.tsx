@@ -1400,6 +1400,7 @@ export default function AdminProspector() {
               <SelectTrigger className="text-xs h-7 w-32"><ArrowUpDown size={10} className="mr-1" /><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="newest" className="text-xs">Newest First</SelectItem>
+                <SelectItem value="score_desc" className="text-xs">Lead Score ↓</SelectItem>
                 <SelectItem value="reviews_desc" className="text-xs">Most Reviews</SelectItem>
                 <SelectItem value="rating_desc" className="text-xs">Highest Rating</SelectItem>
                 <SelectItem value="name_asc" className="text-xs">Name A→Z</SelectItem>
