@@ -51,7 +51,7 @@ export default function AINewsletterService() {
     return (
       <div className="min-h-screen bg-[#0f0f1a] text-white flex items-center justify-center px-4">
         <div className="text-center max-w-md">
-          <div className="w-20 h-20 rounded-full bg-[#f97316]/15 flex items-center justify-center mx-auto mb-6"><CheckCircle size={36} className="text-[#f97316]" /></div>
+          <div className="w-20 h-20 rounded-full bg-[#22d3ee]/15 flex items-center justify-center mx-auto mb-6"><CheckCircle size={36} className="text-[#22d3ee]" /></div>
           <h1 className="text-2xl font-black mb-3">You're In — Trial Started!</h1>
           <p className="text-[#aaa] text-sm leading-relaxed mb-4">Matt will reach out within 24 hours to get your brand details and subscriber list. Your first AI newsletter will go out within the week.</p>
           <p className="text-xs text-[#666]">Questions? Email matt@mattmichelstraining.com</p>
@@ -66,11 +66,11 @@ export default function AINewsletterService() {
       <div className="min-h-screen bg-[#0f0f1a] text-white">
         <section className="pt-20 pb-16 px-4">
           <div className="max-w-3xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#f97316]/15 text-[#f97316] text-[11px] font-bold tracking-widest uppercase mb-6"><Mail size={11} /> AI Newsletter Service</div>
-            <h1 className="text-3xl sm:text-5xl font-black leading-tight mb-5">Your Customers Forget You.<br /><span className="text-[#f97316]">Fix That on Autopilot.</span></h1>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#22d3ee]/15 text-[#22d3ee] text-[11px] font-bold tracking-widest uppercase mb-6"><Mail size={11} /> AI Newsletter Service</div>
+            <h1 className="text-3xl sm:text-5xl font-black leading-tight mb-5">Your Customers Forget You.<br /><span className="text-[#22d3ee]">Fix That on Autopilot.</span></h1>
             <p className="text-base sm:text-lg text-[#aaa] max-w-2xl mx-auto mb-8 leading-relaxed">AI writes a professional monthly newsletter for your business. We send it to your customer list. You stay top of mind — without lifting a finger.</p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-              <Button size="lg" className="bg-[#f97316] hover:bg-[#ea6c10] text-white text-base px-8 py-5 font-bold rounded-xl" onClick={() => document.getElementById("signup-form")?.scrollIntoView({ behavior: "smooth" })}>Start Free 7-Day Trial <ArrowRight className="ml-2 h-4 w-4" /></Button>
+              <Button size="lg" className="bg-[#22d3ee] hover:bg-[#06b6d4] text-white text-base px-8 py-5 font-bold rounded-xl" onClick={() => document.getElementById("signup-form")?.scrollIntoView({ behavior: "smooth" })}>Start Free 7-Day Trial <ArrowRight className="ml-2 h-4 w-4" /></Button>
               <div className="flex items-center gap-2 text-[#888] text-sm"><Clock size={14} /><span>Setup takes 5 minutes</span></div>
             </div>
             <p className="text-xs text-[#666] mt-4">$99/mo after trial · Month-to-month · Cancel anytime</p>
@@ -83,8 +83,8 @@ export default function AINewsletterService() {
             <div className="grid sm:grid-cols-3 gap-6">
               {HOW_IT_WORKS.map((s) => (
                 <div key={s.step} className="bg-[#1a1a2e] border border-white/8 rounded-xl p-6 text-center">
-                  <div className="text-[10px] font-bold text-[#f97316] tracking-widest mb-3">STEP {s.step}</div>
-                  <div className="w-12 h-12 rounded-xl bg-[#f97316]/15 flex items-center justify-center mx-auto mb-4"><s.icon size={20} className="text-[#f97316]" /></div>
+                  <div className="text-[10px] font-bold text-[#22d3ee] tracking-widest mb-3">STEP {s.step}</div>
+                  <div className="w-12 h-12 rounded-xl bg-[#22d3ee]/15 flex items-center justify-center mx-auto mb-4"><s.icon size={20} className="text-[#22d3ee]" /></div>
                   <h3 className="font-bold text-sm mb-2">{s.title}</h3>
                   <p className="text-xs text-[#888] leading-relaxed">{s.desc}</p>
                 </div>
@@ -95,12 +95,12 @@ export default function AINewsletterService() {
 
         <section className="px-4 pb-16">
           <div className="max-w-lg mx-auto">
-            <div className="bg-[#1a1a2e] border border-[#f97316]/30 rounded-xl p-6 text-center">
-              <div className="inline-flex items-center gap-1 bg-[#f97316]/15 text-[#f97316] text-[11px] font-bold px-3 py-1 rounded-full mb-3"><DollarSign size={10} /> 7-DAY FREE TRIAL</div>
-              <div className="text-4xl font-black text-[#f97316] mb-1">$99<span className="text-xl text-[#888] font-normal">/mo</span></div>
+            <div className="bg-[#1a1a2e] border border-[#22d3ee]/30 rounded-xl p-6 text-center">
+              <div className="inline-flex items-center gap-1 bg-[#22d3ee]/15 text-[#22d3ee] text-[11px] font-bold px-3 py-1 rounded-full mb-3"><DollarSign size={10} /> 7-DAY FREE TRIAL</div>
+              <div className="text-4xl font-black text-[#22d3ee] mb-1">$99<span className="text-xl text-[#888] font-normal">/mo</span></div>
               <p className="text-sm text-[#aaa] mb-4">after trial · cancel anytime</p>
               <ul className="text-xs text-[#888] space-y-2 text-left max-w-xs mx-auto">
-                {INCLUDED.map((item) => (<li key={item} className="flex items-start gap-2"><CheckCircle size={11} className="text-[#f97316] shrink-0 mt-0.5" />{item}</li>))}
+                {INCLUDED.map((item) => (<li key={item} className="flex items-start gap-2"><CheckCircle size={11} className="text-[#22d3ee] shrink-0 mt-0.5" />{item}</li>))}
               </ul>
             </div>
           </div>
@@ -118,7 +118,7 @@ export default function AINewsletterService() {
                 </div>
                 <div><Label className="text-[#aaa] text-xs">Industry</Label><Input value={form.industry} onChange={e => setForm(f => ({ ...f, industry: e.target.value }))} placeholder="Salon, Restaurant, Dentist..." className="bg-white/5 border-white/15 text-white placeholder:text-[#555]" /></div>
                 <div><Label className="text-[#aaa] text-xs">Email Address *</Label><Input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="jane@mainstreetsalon.com" className="bg-white/5 border-white/15 text-white placeholder:text-[#555]" required /></div>
-                <Button type="submit" className="w-full bg-[#f97316] hover:bg-[#ea6c10] text-white font-bold py-5 text-base rounded-xl" disabled={loading}>
+                <Button type="submit" className="w-full bg-[#22d3ee] hover:bg-[#06b6d4] text-white font-bold py-5 text-base rounded-xl" disabled={loading}>
                   {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : "Start Free 7-Day Trial →"}
                 </Button>
                 <p className="text-[10px] text-center text-[#555]">Secure payment via Stripe. $99/mo after 7 days. Cancel before trial ends and you're never charged.</p>

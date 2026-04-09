@@ -62,8 +62,8 @@ export default function GbpManagement() {
     return (
       <div className="min-h-screen bg-[#0f0f1a] text-white flex items-center justify-center px-4">
         <div className="text-center max-w-md">
-          <div className="w-20 h-20 rounded-full bg-[#f97316]/15 flex items-center justify-center mx-auto mb-6">
-            <CheckCircle size={36} className="text-[#f97316]" />
+          <div className="w-20 h-20 rounded-full bg-[#22d3ee]/15 flex items-center justify-center mx-auto mb-6">
+            <CheckCircle size={36} className="text-[#22d3ee]" />
           </div>
           <h1 className="text-2xl font-black mb-3">You're Signed Up!</h1>
           <p className="text-[#aaa] text-sm leading-relaxed mb-6">
@@ -91,19 +91,19 @@ export default function GbpManagement() {
         {/* Hero */}
         <section className="pt-20 pb-16 px-4">
           <div className="max-w-3xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#f97316]/15 text-[#f97316] text-[11px] font-bold tracking-widest uppercase mb-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#22d3ee]/15 text-[#22d3ee] text-[11px] font-bold tracking-widest uppercase mb-6">
               <MapPin size={11} /> GBP Management · Nationwide
             </div>
             <h1 className="text-3xl sm:text-5xl font-black leading-tight mb-5">
               Your Google Business Profile,<br />
-              <span className="text-[#f97316]">Handled Every Week.</span>
+              <span className="text-[#22d3ee]">Handled Every Week.</span>
             </h1>
             <p className="text-base sm:text-lg text-[#aaa] max-w-2xl mx-auto mb-4 leading-relaxed">
               Businesses with active, optimized GBP profiles show up higher on Google Maps — and get more calls. Our system actively manages your profile for $49/month.
             </p>
             <div className="bg-[#1a1a2e] border border-white/10 p-5 mb-8 rounded-xl flex items-start gap-4 max-w-2xl mx-auto text-left">
-              <div className="w-[52px] h-[52px] rounded-full bg-[#f97316]/15 border border-[#f97316]/30 flex items-center justify-center flex-shrink-0">
-                <TrendingUp size={24} className="text-[#f97316]" />
+              <div className="w-[52px] h-[52px] rounded-full bg-[#22d3ee]/15 border border-[#22d3ee]/30 flex items-center justify-center flex-shrink-0">
+                <TrendingUp size={24} className="text-[#22d3ee]" />
               </div>
               <p className="text-[13px] text-[#aaa] leading-relaxed">
                 <span className="font-bold text-white">The Local Growth Engine.</span> We built this system specifically for local trades businesses who are too busy on the jobsite to manage their Google presence. Our proprietary setup ensures your profile stays active, optimized, and ranking above the competition. We handle the algorithm, you handle the calls.
@@ -112,7 +112,7 @@ export default function GbpManagement() {
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button
                 size="lg"
-                className="bg-[#f97316] hover:bg-[#ea6c10] text-white text-base px-8 py-5 font-bold rounded-xl"
+                className="bg-[#22d3ee] hover:bg-[#06b6d4] text-white text-base px-8 py-5 font-bold rounded-xl"
                 onClick={() => document.getElementById("gbp-form")?.scrollIntoView({ behavior: "smooth" })}
               >
                 Start for $49/mo <ArrowRight className="ml-2 h-4 w-4" />
@@ -134,8 +134,8 @@ export default function GbpManagement() {
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {INCLUDED.map((item) => (
                 <div key={item.title} className="bg-[#1a1a2e] border border-white/8 rounded-xl p-5">
-                  <div className="w-9 h-9 rounded-lg bg-[#f97316]/15 flex items-center justify-center mb-3">
-                    <item.icon size={16} className="text-[#f97316]" />
+                  <div className="w-9 h-9 rounded-lg bg-[#22d3ee]/15 flex items-center justify-center mb-3">
+                    <item.icon size={16} className="text-[#22d3ee]" />
                   </div>
                   <h3 className="font-bold text-sm mb-1.5">{item.title}</h3>
                   <p className="text-xs text-[#888] leading-relaxed">{item.desc}</p>
@@ -148,12 +148,12 @@ export default function GbpManagement() {
         {/* Pricing callout */}
         <section className="px-4 pb-16">
           <div className="max-w-lg mx-auto">
-            <div className="bg-[#1a1a2e] border border-[#f97316]/30 rounded-xl p-6 text-center">
-              <div className="text-4xl font-black text-[#f97316] mb-1">$49<span className="text-xl text-[#888] font-normal">/mo</span></div>
+            <div className="bg-[#1a1a2e] border border-[#22d3ee]/30 rounded-xl p-6 text-center">
+              <div className="text-4xl font-black text-[#22d3ee] mb-1">$49<span className="text-xl text-[#888] font-normal">/mo</span></div>
               <p className="text-sm text-[#aaa] mb-3">No contracts. Cancel anytime.</p>
               <ul className="text-xs text-[#888] space-y-1 text-left max-w-xs mx-auto">
                 {["4 posts per month", "Profile optimization included", "Review monitoring", "Monthly summary", "Direct line to Matt"].map(i => (
-                  <li key={i} className="flex items-center gap-2"><CheckCircle size={11} className="text-[#f97316] shrink-0" />{i}</li>
+                  <li key={i} className="flex items-center gap-2"><CheckCircle size={11} className="text-[#22d3ee] shrink-0" />{i}</li>
                 ))}
               </ul>
             </div>
@@ -225,7 +225,7 @@ export default function GbpManagement() {
                   </div>
                   <Button
                     type="submit"
-                    className="w-full bg-[#f97316] hover:bg-[#ea6c10] text-white font-bold py-5 text-base rounded-xl"
+                    className="w-full bg-[#22d3ee] hover:bg-[#06b6d4] text-white font-bold py-5 text-base rounded-xl"
                     disabled={loading}
                   >
                     {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : "Start GBP Management — $49/mo →"}

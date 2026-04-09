@@ -23,7 +23,7 @@ const TIERS = [
   {
     name: "Feature",
     price: "$199/issue",
-    color: "#f97316",
+    color: "#22d3ee",
     what: "Full paragraph dedicated to your business — what you offer, your location, a special offer or CTA, and a link. Positioned in the body of the newsletter.",
     best: "Direct response, offer promotion",
     popular: true,
@@ -88,19 +88,19 @@ export default function NewsletterSponsor() {
         {/* Hero */}
         <section className="pt-20 pb-16 px-4">
           <div className="max-w-3xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#f97316]/15 text-[#f97316] text-[11px] font-bold tracking-widest uppercase mb-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#22d3ee]/15 text-[#22d3ee] text-[11px] font-bold tracking-widest uppercase mb-6">
               <Mail size={11} /> Newsletter Sponsorships
             </div>
             <h1 className="text-3xl sm:text-5xl font-black leading-tight mb-5">
               Reach 500+ Youth Sports Families<br />
-              <span className="text-[#f97316]">Every Week.</span>
+              <span className="text-[#22d3ee]">Every Week.</span>
             </h1>
             <p className="text-base sm:text-lg text-[#aaa] max-w-2xl mx-auto mb-8 leading-relaxed">
               The M2 weekly newsletter goes to parents of youth athletes across Metro Detroit — families actively looking for training, gear, camps, and services for their kids.
             </p>
             <Button
               size="lg"
-              className="bg-[#f97316] hover:bg-[#ea6c10] text-white text-base px-8 py-5 font-bold rounded-xl"
+              className="bg-[#22d3ee] hover:bg-[#06b6d4] text-white text-base px-8 py-5 font-bold rounded-xl"
               onClick={() => document.getElementById("sponsor-form")?.scrollIntoView({ behavior: "smooth" })}
             >
               Reserve a Sponsor Spot <ArrowRight className="ml-2 h-4 w-4" />
@@ -114,7 +114,7 @@ export default function NewsletterSponsor() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {AUDIENCE.map(({ stat, label }) => (
                 <div key={label} className="bg-[#1a1a2e] border border-white/8 rounded-xl p-4 text-center">
-                  <div className="text-2xl font-black text-[#f97316] mb-1">{stat}</div>
+                  <div className="text-2xl font-black text-[#22d3ee] mb-1">{stat}</div>
                   <div className="text-xs text-[#888]">{label}</div>
                 </div>
               ))}
@@ -128,11 +128,11 @@ export default function NewsletterSponsor() {
             <h2 className="text-lg font-bold text-center mb-6 text-[#aaa]">What a Sponsored Mention Looks Like</h2>
             <div className="bg-white text-[#1a1a1a] rounded-xl p-5 shadow-xl">
               <div className="flex items-center gap-2 mb-3">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-[#f97316] bg-[#f97316]/10 px-2 py-0.5 rounded">Sponsored</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#22d3ee] bg-[#22d3ee]/10 px-2 py-0.5 rounded">Sponsored</span>
               </div>
               <p className="text-sm leading-relaxed text-[#444]">
                 <strong className="text-[#1a1a1a]">Looking for custom team gear this season?</strong> Grosse Pointe Sports Supply has everything from jerseys to training bags — and they offer team discounts for orders of 10+. Tell them Matt sent you.{" "}
-                <span className="text-[#f97316] underline font-medium">→ grossepointesportssupply.com</span>
+                <span className="text-[#22d3ee] underline font-medium">→ grossepointesportssupply.com</span>
               </p>
             </div>
             <p className="text-xs text-[#555] text-center mt-3">Feature-tier example. Spotlight and Presenting Sponsor placements vary.</p>
@@ -147,10 +147,10 @@ export default function NewsletterSponsor() {
               {TIERS.map((tier) => (
                 <div
                   key={tier.name}
-                  className={`bg-[#1a1a2e] rounded-xl p-6 border ${tier.popular ? "border-[#f97316]/50 shadow-lg shadow-[#f97316]/10" : "border-white/8"}`}
+                  className={`bg-[#1a1a2e] rounded-xl p-6 border ${tier.popular ? "border-[#22d3ee]/50 shadow-lg shadow-[#22d3ee]/10" : "border-white/8"}`}
                 >
                   {tier.popular && (
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-[#f97316] mb-3 flex items-center gap-1">
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-[#22d3ee] mb-3 flex items-center gap-1">
                       <Star size={10} /> Most Popular
                     </div>
                   )}
@@ -170,8 +170,8 @@ export default function NewsletterSponsor() {
           <div className="max-w-lg mx-auto">
             {sent ? (
               <div className="text-center py-10">
-                <div className="w-16 h-16 rounded-full bg-[#f97316]/15 flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle size={28} className="text-[#f97316]" />
+                <div className="w-16 h-16 rounded-full bg-[#22d3ee]/15 flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle size={28} className="text-[#22d3ee]" />
                 </div>
                 <h2 className="text-xl font-bold mb-3">Inquiry Received</h2>
                 <p className="text-[#888] text-sm">Matt will reach out within 24 hours to confirm your spot and collect payment. Looking forward to working with you.</p>
@@ -251,7 +251,7 @@ export default function NewsletterSponsor() {
                     </div>
                     <Button
                       type="submit"
-                      className="w-full bg-[#f97316] hover:bg-[#ea6c10] text-white font-bold py-5 text-base rounded-xl"
+                      className="w-full bg-[#22d3ee] hover:bg-[#06b6d4] text-white font-bold py-5 text-base rounded-xl"
                       disabled={loading}
                     >
                       {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sending...</> : "Submit Sponsor Inquiry →"}
@@ -264,7 +264,7 @@ export default function NewsletterSponsor() {
             <div className="mt-6 text-center">
               <p className="text-xs text-[#666]">
                 Not a sponsor yet?{" "}
-                <Link to="/newsletter" className="text-[#f97316] hover:underline">
+                <Link to="/newsletter" className="text-[#22d3ee] hover:underline">
                   Subscribe to the free newsletter first →
                 </Link>
               </p>

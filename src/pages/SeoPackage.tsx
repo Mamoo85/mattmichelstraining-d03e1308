@@ -131,13 +131,13 @@ const SeoPackage = () => {
       <div className="min-h-screen bg-[#0f0f1a] text-white">
         {/* Hero */}
         <section className="px-4 py-20 text-center max-w-4xl mx-auto">
-          <div className="inline-flex items-center gap-2 bg-[#f97316]/10 border border-[#f97316]/30 rounded-full px-4 py-1.5 text-[#f97316] text-sm font-semibold mb-6">
+          <div className="inline-flex items-center gap-2 bg-[#22d3ee]/10 border border-[#22d3ee]/30 rounded-full px-4 py-1.5 text-[#22d3ee] text-sm font-semibold mb-6">
             <Star size={14} />
             One-time purchase — no subscription
           </div>
           <h1 className="text-4xl sm:text-5xl font-black leading-tight mb-6">
             10 local SEO pages built for your business —{" "}
-            <span className="text-[#f97316]">$299 one-time</span>
+            <span className="text-[#22d3ee]">$299 one-time</span>
           </h1>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed mb-8">
             Matt researches your local keywords and builds 10 dedicated pages targeting the exact
@@ -153,7 +153,7 @@ const SeoPackage = () => {
         {/* What's included */}
         <section className="px-4 py-16 max-w-5xl mx-auto">
           <h2 className="text-2xl font-black text-center mb-10">
-            What's included in your <span className="text-[#f97316]">10-page SEO package</span>
+            What's included in your <span className="text-[#22d3ee]">10-page SEO package</span>
           </h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {FEATURES.map((f) => {
@@ -161,8 +161,8 @@ const SeoPackage = () => {
               return (
                 <Card key={f.title} className="bg-white/5 border-white/10">
                   <CardContent className="p-6">
-                    <div className="w-10 h-10 rounded-lg bg-[#f97316]/15 flex items-center justify-center mb-4">
-                      <Icon size={18} className="text-[#f97316]" />
+                    <div className="w-10 h-10 rounded-lg bg-[#22d3ee]/15 flex items-center justify-center mb-4">
+                      <Icon size={18} className="text-[#22d3ee]" />
                     </div>
                     <h3 className="font-bold text-white mb-2">{f.title}</h3>
                     <p className="text-sm text-gray-400 leading-relaxed">{f.desc}</p>
@@ -180,7 +180,7 @@ const SeoPackage = () => {
             <div className="grid sm:grid-cols-2 gap-6">
               {HOW.map((h) => (
                 <div key={h.step} className="flex gap-4">
-                  <div className="shrink-0 text-3xl font-black text-[#f97316]/30">{h.step}</div>
+                  <div className="shrink-0 text-3xl font-black text-[#22d3ee]/30">{h.step}</div>
                   <div>
                     <h3 className="font-bold text-white mb-1">{h.title}</h3>
                     <p className="text-sm text-gray-400 leading-relaxed">{h.desc}</p>
@@ -205,7 +205,7 @@ const SeoPackage = () => {
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
                   <Label htmlFor="business_name" className="text-white text-sm font-semibold mb-1.5 block">
-                    Business Name <span className="text-[#f97316]">*</span>
+                    Business Name <span className="text-[#22d3ee]">*</span>
                   </Label>
                   <Input
                     id="business_name"
@@ -214,13 +214,13 @@ const SeoPackage = () => {
                     onChange={handleChange}
                     placeholder="e.g. Metro Detroit Plumbing"
                     required
-                    className="bg-white/10 border-white/20 text-white placeholder:text-gray-500 focus:border-[#f97316]"
+                    className="bg-white/10 border-white/20 text-white placeholder:text-gray-500 focus:border-[#22d3ee]"
                   />
                 </div>
 
                 <div>
                   <Label htmlFor="city" className="text-white text-sm font-semibold mb-1.5 block">
-                    City / Service Area <span className="text-[#f97316]">*</span>
+                    City / Service Area <span className="text-[#22d3ee]">*</span>
                   </Label>
                   <Input
                     id="city"
@@ -229,13 +229,13 @@ const SeoPackage = () => {
                     onChange={handleChange}
                     placeholder="e.g. Grosse Pointe, Sterling Heights"
                     required
-                    className="bg-white/10 border-white/20 text-white placeholder:text-gray-500 focus:border-[#f97316]"
+                    className="bg-white/10 border-white/20 text-white placeholder:text-gray-500 focus:border-[#22d3ee]"
                   />
                 </div>
 
                 <div>
                   <Label htmlFor="industry" className="text-white text-sm font-semibold mb-1.5 block">
-                    Industry / Type of Business <span className="text-[#f97316]">*</span>
+                    Industry / Type of Business <span className="text-[#22d3ee]">*</span>
                   </Label>
                   <Input
                     id="industry"
@@ -244,13 +244,13 @@ const SeoPackage = () => {
                     onChange={handleChange}
                     placeholder="e.g. HVAC, Dentist, Law Firm, Restaurant"
                     required
-                    className="bg-white/10 border-white/20 text-white placeholder:text-gray-500 focus:border-[#f97316]"
+                    className="bg-white/10 border-white/20 text-white placeholder:text-gray-500 focus:border-[#22d3ee]"
                   />
                 </div>
 
                 <div>
                   <Label htmlFor="email" className="text-white text-sm font-semibold mb-1.5 block">
-                    Email Address <span className="text-[#f97316]">*</span>
+                    Email Address <span className="text-[#22d3ee]">*</span>
                   </Label>
                   <Input
                     id="email"
@@ -260,14 +260,14 @@ const SeoPackage = () => {
                     onChange={handleChange}
                     placeholder="you@yourbusiness.com"
                     required
-                    className="bg-white/10 border-white/20 text-white placeholder:text-gray-500 focus:border-[#f97316]"
+                    className="bg-white/10 border-white/20 text-white placeholder:text-gray-500 focus:border-[#22d3ee]"
                   />
                 </div>
 
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-[#f97316] hover:bg-[#ea6c0c] text-white font-black text-base py-6"
+                  className="w-full bg-[#22d3ee] hover:bg-[#ea6c0c] text-white font-black text-base py-6"
                 >
                   {loading ? (
                     <>
@@ -291,7 +291,7 @@ const SeoPackage = () => {
 
           <p className="text-center text-sm text-gray-500 mt-6">
             Looking for a full website instead?{" "}
-            <Link to="/web-design-services" className="text-[#f97316] hover:underline">
+            <Link to="/web-design-services" className="text-[#22d3ee] hover:underline">
               View web design services →
             </Link>
           </p>

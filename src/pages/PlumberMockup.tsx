@@ -11,7 +11,7 @@ const RED = "#dc2626";
 
 const services = [
   { title: "Emergency Leak Repair", desc: "Burst pipe at 2 AM? We answer the phone and show up fast—every single time.", Icon: Droplets, color: RED },
-  { title: "Water Heater Installation", desc: "Tank or tankless, we size it right and install it the same day. No cold showers.", Icon: Flame, color: "#f97316" },
+  { title: "Water Heater Installation", desc: "Tank or tankless, we size it right and install it the same day. No cold showers.", Icon: Flame, color: "#22d3ee" },
   { title: "Sewer & Drain Cleaning", desc: "Camera inspections, hydro-jetting, and root removal to keep everything flowing.", Icon: Wrench, color: "#3b82f6" },
 ];
 

@@ -94,7 +94,7 @@ export default function CampDirectory() {
     return (
       <div className="min-h-screen bg-[#0f0f1a] text-white flex items-center justify-center px-4">
         <div className="text-center max-w-md">
-          <CheckCircle size={48} className="text-[#f97316] mx-auto mb-4" />
+          <CheckCircle size={48} className="text-[#22d3ee] mx-auto mb-4" />
           <h1 className="text-2xl font-black mb-3">Listing Submitted!</h1>
           <p className="text-[#aaa] text-sm leading-relaxed">Your camp listing is under review and will go live within 24 hours after confirmation.</p>
         </div>
@@ -114,12 +114,12 @@ export default function CampDirectory() {
         {/* Hero */}
         <section className="pt-20 pb-12 px-4">
           <div className="max-w-3xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#f97316]/15 text-[#f97316] text-[11px] font-bold tracking-widest uppercase mb-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#22d3ee]/15 text-[#22d3ee] text-[11px] font-bold tracking-widest uppercase mb-6">
               <MapPin size={11} /> Michigan Youth Sports Camps
             </div>
             <h1 className="text-3xl sm:text-4xl font-black leading-tight mb-4">
               Find Youth Sports Camps<br />
-              <span className="text-[#f97316]">in Michigan</span>
+              <span className="text-[#22d3ee]">in Michigan</span>
             </h1>
             <p className="text-base text-[#aaa] max-w-xl mx-auto">
               Football, basketball, wrestling, lacrosse and more. Camps updated weekly. Ages 8–18.
@@ -136,7 +136,7 @@ export default function CampDirectory() {
                 onClick={() => setSelectedSport(sport)}
                 className={`px-4 py-1.5 rounded-full text-xs font-bold transition-colors ${
                   selectedSport === sport
-                    ? "bg-[#f97316] text-white"
+                    ? "bg-[#22d3ee] text-white"
                     : "bg-white/8 text-[#aaa] hover:bg-white/15"
                 }`}
               >
@@ -178,14 +178,14 @@ export default function CampDirectory() {
                       </div>
                     )}
                     {camp.price_description && (
-                      <div className="text-xs font-semibold text-[#f97316]">{camp.price_description}</div>
+                      <div className="text-xs font-semibold text-[#22d3ee]">{camp.price_description}</div>
                     )}
                     {camp.website_url && camp.website_url !== "#" && (
                       <a
                         href={camp.website_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs text-[#f97316] hover:underline mt-auto"
+                        className="inline-flex items-center gap-1 text-xs text-[#22d3ee] hover:underline mt-auto"
                       >
                         <Globe size={11} /> Visit Website
                       </a>
@@ -208,7 +208,7 @@ export default function CampDirectory() {
             {!showForm ? (
               <div className="text-center">
                 <Button
-                  className="bg-[#f97316] hover:bg-[#ea6c10] text-white font-bold px-8 py-5 text-base rounded-xl"
+                  className="bg-[#22d3ee] hover:bg-[#06b6d4] text-white font-bold px-8 py-5 text-base rounded-xl"
                   onClick={() => setShowForm(true)}
                 >
                   <Plus size={16} className="mr-2" /> List My Camp — $49/mo
@@ -263,7 +263,7 @@ export default function CampDirectory() {
                       <Label className="text-[#aaa] text-xs">Contact Email *</Label>
                       <Input type="email" value={form.contact_email} onChange={e => setForm(f => ({...f, contact_email: e.target.value}))} placeholder="coach@yourcamp.com" className="bg-white/5 border-white/15 text-white placeholder:text-[#555]" required />
                     </div>
-                    <Button type="submit" className="w-full bg-[#f97316] hover:bg-[#ea6c10] text-white font-bold py-5 text-base rounded-xl" disabled={loading}>
+                    <Button type="submit" className="w-full bg-[#22d3ee] hover:bg-[#06b6d4] text-white font-bold py-5 text-base rounded-xl" disabled={loading}>
                       {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : "List My Camp — $49/mo →"}
                     </Button>
                     <p className="text-[10px] text-center text-[#555]">Secure payment via Stripe. Cancel anytime.</p>

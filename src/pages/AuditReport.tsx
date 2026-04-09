@@ -55,8 +55,8 @@ export default function AuditReport() {
     return (
       <div className="min-h-screen bg-[#0f0f1a] text-white flex items-center justify-center px-4">
         <div className="text-center max-w-md">
-          <div className="w-20 h-20 rounded-full bg-[#f97316]/15 flex items-center justify-center mx-auto mb-6">
-            <CheckCircle size={36} className="text-[#f97316]" />
+          <div className="w-20 h-20 rounded-full bg-[#22d3ee]/15 flex items-center justify-center mx-auto mb-6">
+            <CheckCircle size={36} className="text-[#22d3ee]" />
           </div>
           <h1 className="text-2xl font-black mb-3">Audit Report Ordered</h1>
           <p className="text-[#aaa] text-sm leading-relaxed mb-6">
@@ -84,19 +84,19 @@ export default function AuditReport() {
         {/* Hero */}
         <section className="pt-20 pb-16 px-4">
           <div className="max-w-3xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#f97316]/15 text-[#f97316] text-[11px] font-bold tracking-widest uppercase mb-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#22d3ee]/15 text-[#22d3ee] text-[11px] font-bold tracking-widest uppercase mb-6">
               <BarChart3 size={11} /> Website Audit · Metro Detroit
             </div>
             <h1 className="text-3xl sm:text-5xl font-black leading-tight mb-5">
               Find Out Exactly<br />
-              <span className="text-[#f97316]">Why Your Site Isn't Working.</span>
+              <span className="text-[#22d3ee]">Why Your Site Isn't Working.</span>
             </h1>
             <p className="text-base sm:text-lg text-[#aaa] max-w-2xl mx-auto mb-8 leading-relaxed">
               For $9, Matt Michels runs a full website audit and emails you a plain-English report with exactly what's wrong and how to fix it. Used by 50+ Metro Detroit businesses.
             </p>
             <Button
               size="lg"
-              className="bg-[#f97316] hover:bg-[#ea6c10] text-white text-base px-8 py-5 font-bold rounded-xl"
+              className="bg-[#22d3ee] hover:bg-[#06b6d4] text-white text-base px-8 py-5 font-bold rounded-xl"
               onClick={() => document.getElementById("audit-form")?.scrollIntoView({ behavior: "smooth" })}
             >
               Get My Audit — $9 <ArrowRight className="ml-2 h-4 w-4" />
@@ -112,16 +112,16 @@ export default function AuditReport() {
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {WHAT_YOU_GET.map((item) => (
                 <div key={item.title} className="bg-[#1a1a2e] border border-white/8 rounded-xl p-5">
-                  <div className="w-9 h-9 rounded-lg bg-[#f97316]/15 flex items-center justify-center mb-3">
-                    <item.icon size={16} className="text-[#f97316]" />
+                  <div className="w-9 h-9 rounded-lg bg-[#22d3ee]/15 flex items-center justify-center mb-3">
+                    <item.icon size={16} className="text-[#22d3ee]" />
                   </div>
                   <h3 className="font-bold text-sm mb-1.5">{item.title}</h3>
                   <p className="text-xs text-[#888] leading-relaxed">{item.desc}</p>
                 </div>
               ))}
-              <div className="bg-[#1a1a2e] border border-[#f97316]/30 rounded-xl p-5">
-                <div className="w-9 h-9 rounded-lg bg-[#f97316]/15 flex items-center justify-center mb-3">
-                  <Star size={16} className="text-[#f97316]" />
+              <div className="bg-[#1a1a2e] border border-[#22d3ee]/30 rounded-xl p-5">
+                <div className="w-9 h-9 rounded-lg bg-[#22d3ee]/15 flex items-center justify-center mb-3">
+                  <Star size={16} className="text-[#22d3ee]" />
                 </div>
                 <h3 className="font-bold text-sm mb-1.5">Delivered in 24 Hours</h3>
                 <p className="text-xs text-[#888] leading-relaxed">Plain-English report emailed to you. No jargon, no fluff — just what to fix.</p>
@@ -183,7 +183,7 @@ export default function AuditReport() {
                   </div>
                   <Button
                     type="submit"
-                    className="w-full bg-[#f97316] hover:bg-[#ea6c10] text-white font-bold py-5 text-base rounded-xl"
+                    className="w-full bg-[#22d3ee] hover:bg-[#06b6d4] text-white font-bold py-5 text-base rounded-xl"
                     disabled={loading}
                   >
                     {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : "Get My Audit Report — $9 →"}
@@ -196,7 +196,7 @@ export default function AuditReport() {
             <div className="mt-6 text-center">
               <p className="text-xs text-[#666]">
                 Want to check your score for free first?{" "}
-                <Link to="/local-business-score" className="text-[#f97316] hover:underline">
+                <Link to="/local-business-score" className="text-[#22d3ee] hover:underline">
                   Try the free Business Score Tool →
                 </Link>
               </p>

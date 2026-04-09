@@ -35,7 +35,7 @@ const ZonePortal = () => {
     {
       label: "Submit PR",
       icon: Trophy,
-      accent: "#f97316",
+      accent: "#22d3ee",
       event: "open-prove-it-zone",
     },
   ];
@@ -45,7 +45,7 @@ const ZonePortal = () => {
       {/* Zone Header */}
       <header className="sticky top-0 z-50 flex items-center justify-between px-5 py-4" style={{ background: "rgba(10,10,10,0.85)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm" style={{ background: "linear-gradient(135deg, #f97316, #ea580c)", color: "#fff" }}>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm" style={{ background: "linear-gradient(135deg, #22d3ee, #ea580c)", color: "#fff" }}>
             M2
           </div>
           <div>
@@ -83,7 +83,7 @@ const ZonePortal = () => {
         <div
           className="relative rounded-2xl p-[1px] overflow-hidden"
           style={{
-            background: "linear-gradient(135deg, #f97316, #00f0ff, #a855f7)",
+            background: "linear-gradient(135deg, #22d3ee, #00f0ff, #a855f7)",
           }}
         >
           <div
@@ -103,7 +103,7 @@ const ZonePortal = () => {
               onClick={() => window.dispatchEvent(new CustomEvent("open-workout-zone"))}
               className="w-full py-3.5 rounded-xl font-bold text-sm uppercase tracking-wider transition-all active:scale-[0.97]"
               style={{
-                background: "linear-gradient(135deg, #f97316, #ea580c)",
+                background: "linear-gradient(135deg, #22d3ee, #ea580c)",
                 color: "#fff",
                 boxShadow: "0 0 24px rgba(249,115,22,0.3)",
               }}
@@ -143,7 +143,7 @@ const ZonePortal = () => {
         >
           <div className="relative">
             <div className="w-11 h-11 rounded-full flex items-center justify-center" style={{ background: "rgba(249,115,22,0.15)" }}>
-              <MessageCircle size={20} style={{ color: "#f97316" }} />
+              <MessageCircle size={20} style={{ color: "#22d3ee" }} />
             </div>
             <div className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full animate-pulse" style={{ background: "#22c55e", border: "2px solid #0a0a0a" }} />
           </div>
@@ -162,7 +162,7 @@ const ZonePortal = () => {
           <div className="rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
             {[
               { text: "Completed Lower Body Strength", time: "Yesterday", dot: "#22c55e" },
-              { text: "PR: Trap Bar Deadlift — 315 lbs", time: "2 days ago", dot: "#f97316" },
+              { text: "PR: Trap Bar Deadlift — 315 lbs", time: "2 days ago", dot: "#22d3ee" },
               { text: "Coach Matt left feedback", time: "3 days ago", dot: "#00f0ff" },
               { text: "Completed Upper Body Hypertrophy", time: "4 days ago", dot: "#22c55e" },
             ].map((item, i) => (
@@ -207,11 +207,11 @@ const ZonePortal = () => {
           >
             <tab.icon
               size={22}
-              style={{ color: activeTab === tab.id ? "#f97316" : "#525252" }}
+              style={{ color: activeTab === tab.id ? "#22d3ee" : "#525252" }}
             />
             <span
               className="text-[10px] font-medium"
-              style={{ color: activeTab === tab.id ? "#f97316" : "#525252" }}
+              style={{ color: activeTab === tab.id ? "#22d3ee" : "#525252" }}
             >
               {tab.label}
             </span>

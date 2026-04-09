@@ -155,7 +155,7 @@ const AiInsights = () => {
   const CARDS = [
     { key: "recovery", title: "Recovery", subtitle: "What your body needs right now", icon: Heart, color: "#22c55e", content: insights?.recovery },
     { key: "mobility", title: "Mobility & Rolling", subtitle: "Stay loose and injury-free", icon: Zap, color: "#00f0ff", content: insights?.mobility },
-    { key: "liftTips", title: "Lift Tips & Load", subtitle: "Form cues and training balance", icon: Dumbbell, color: "#f97316", content: insights?.liftTips },
+    { key: "liftTips", title: "Lift Tips & Load", subtitle: "Form cues and training balance", icon: Dumbbell, color: "#22d3ee", content: insights?.liftTips },
   ];
 
   return (
@@ -226,7 +226,7 @@ const AiInsights = () => {
                 <div className="divide-y" style={{ borderColor: "rgba(255,255,255,0.04)" }}>
                   {insights.recentActivities.slice(0, 5).map((a, i) => (
                     <div key={i} className="px-4 py-2.5 flex items-center gap-3">
-                      <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase" style={{ background: "rgba(249,115,22,0.1)", color: "#f97316" }}>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase" style={{ background: "rgba(249,115,22,0.1)", color: "#22d3ee" }}>
                         {a.activity_type}
                       </span>
                       <p className="text-[11px] flex-1 truncate" style={{ color: "#e5e5e5" }}>{a.description}</p>

@@ -31,7 +31,7 @@ export default function AdDigitalFoundation() {
           <p className="text-slate-300 mb-6">
             Matt will reach out today to start building your site. 7-day free trial — no charge until day 8.
           </p>
-          <a href="tel:+13138064952" className="inline-flex items-center gap-2 text-[#e8621a] font-bold text-lg">
+          <a href="tel:+13138064952" className="inline-flex items-center gap-2 text-[#22d3ee] font-bold text-lg">
             <Phone size={18} /> (313) 806-4952
           </a>
         </div>
@@ -62,7 +62,7 @@ export default function AdDigitalFoundation() {
   return (
     <>
       <SEOHead
-        title="Website + Google Posts + Missed Call Text-Back | M² Development"
+        title="Website + Google Posts + Missed Call Text-Back | Detroit Web Agency"
         description="Custom website, automatic Google posts 3x/week, and instant text-back for missed calls. $99/mo. 7-day free trial."
         path="/ad/digital-foundation"
       />
@@ -71,7 +71,7 @@ export default function AdDigitalFoundation() {
       <div className="min-h-screen bg-[#1e293b]">
         {/* Floating header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
-          <p className="text-[#e8621a] font-black text-sm tracking-wider uppercase">M² Development</p>
+          <p className="text-[#22d3ee] font-black text-sm tracking-wider uppercase">Detroit Web Agency</p>
           <a href="tel:+13138064952" className="text-white/70 text-sm flex items-center gap-1.5 hover:text-white">
             <Phone size={12} /> (313) 806-4952
           </a>
@@ -80,11 +80,11 @@ export default function AdDigitalFoundation() {
         <div className="max-w-5xl mx-auto px-4 py-12 grid lg:grid-cols-2 gap-12 items-start">
           {/* Left — Value prop */}
           <div className="text-white">
-            <p className="text-[#e8621a] text-xs font-bold uppercase tracking-widest mb-4">
+            <p className="text-[#22d3ee] text-xs font-bold uppercase tracking-widest mb-4">
               Stop losing customers
             </p>
             <h1 className="text-3xl sm:text-4xl font-black leading-tight mb-5">
-              Your website, Google presence, and missed calls — <span className="text-[#e8621a]">handled.</span>
+              Your website, Google presence, and missed calls — <span className="text-[#22d3ee]">handled.</span>
             </h1>
             <p className="text-slate-300 text-lg mb-8 leading-relaxed">
               One package. One monthly price. Zero manual work from you.
@@ -98,8 +98,8 @@ export default function AdDigitalFoundation() {
                 { icon: Shield, title: "Hosting & Maintenance", desc: "SSL, updates, edits. Your site stays live and sharp." },
               ].map((item) => (
                 <div key={item.title} className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-[#e8621a]/20 flex items-center justify-center shrink-0">
-                    <item.icon size={18} className="text-[#e8621a]" />
+                  <div className="w-10 h-10 rounded-lg bg-[#22d3ee]/20 flex items-center justify-center shrink-0">
+                    <item.icon size={18} className="text-[#22d3ee]" />
                   </div>
                   <div>
                     <p className="font-bold text-sm">{item.title}</p>
@@ -122,7 +122,7 @@ export default function AdDigitalFoundation() {
           {/* Right — Form */}
           <div className="bg-white rounded-2xl p-8 shadow-2xl">
             <div className="text-center mb-6">
-              <p className="text-xs font-bold uppercase tracking-widest text-[#e8621a] mb-1">7-Day Free Trial</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-[#22d3ee] mb-1">7-Day Free Trial</p>
               <p className="text-3xl font-black text-[#1e293b]">$1,500 setup + $99/mo</p>
               <p className="text-sm text-slate-500 mt-1">Everything included. Cancel anytime.</p>
             </div>
@@ -149,7 +149,7 @@ export default function AdDigitalFoundation() {
                 <Input id="website" value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} placeholder="www.mybusiness.com" className="border-slate-200" />
               </div>
 
-              <Button type="submit" disabled={submitting} className="w-full bg-[#e8621a] hover:bg-[#d4570f] text-white py-6 text-base font-bold mt-2">
+              <Button type="submit" disabled={submitting} className="w-full bg-[#22d3ee] hover:bg-[#06b6d4] text-white py-6 text-base font-bold mt-2">
                 {submitting ? "Setting up..." : "Start Free Trial"}
                 {!submitting && <ArrowRight size={16} className="ml-2" />}
               </Button>
@@ -161,7 +161,7 @@ export default function AdDigitalFoundation() {
 
             <div className="mt-6 pt-4 border-t border-slate-100 text-center">
               <p className="text-xs text-slate-500">
-                Or call now: <a href="tel:+13138064952" className="font-bold text-[#e8621a]">(313) 806-4952</a>
+                Or call now: <a href="tel:+13138064952" className="font-bold text-[#22d3ee]">(313) 806-4952</a>
               </p>
             </div>
           </div>
@@ -171,15 +171,15 @@ export default function AdDigitalFoundation() {
         <div className="border-t border-white/10 px-4 py-8">
           <div className="max-w-3xl mx-auto grid grid-cols-3 gap-4 text-center text-white">
             <div>
-              <p className="text-2xl font-black text-[#e8621a]">62%</p>
+              <p className="text-2xl font-black text-[#22d3ee]">62%</p>
               <p className="text-xs text-slate-400">of contractor calls go unanswered</p>
             </div>
             <div>
-              <p className="text-2xl font-black text-[#e8621a]">3x</p>
+              <p className="text-2xl font-black text-[#22d3ee]">3x</p>
               <p className="text-xs text-slate-400">more leads from weekly Google posts</p>
             </div>
             <div>
-              <p className="text-2xl font-black text-[#e8621a]">78%</p>
+              <p className="text-2xl font-black text-[#22d3ee]">78%</p>
               <p className="text-xs text-slate-400">call the first business that responds</p>
             </div>
           </div>
