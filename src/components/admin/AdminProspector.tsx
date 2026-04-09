@@ -1478,6 +1478,7 @@ export default function AdminProspector() {
                     onDeepResearch={deepResearch}
                     onDrip={runPipelineDrip}
                     onPreviewDrip={setPreviewLead}
+                    onDelete={deletePipelineLead}
                     auditingId={auditingId}
                     sendingId={sendingId}
                     researchingId={researchingId}
