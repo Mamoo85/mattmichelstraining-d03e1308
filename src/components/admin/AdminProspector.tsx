@@ -382,14 +382,16 @@ function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onD
             <CheckCircle size={10} /> Booked
           </Button>
         )}
-        {lead.website && (
-          <a href={lead.website.startsWith("http") ? lead.website : `https://${lead.website}`} target="_blank" rel="noopener noreferrer" className="ml-auto">
-            <ExternalLink size={10} className="text-muted-foreground hover:text-foreground" />
-          </a>
-        )}
-        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-destructive/60 hover:text-destructive" onClick={() => { if (confirm(`Delete ${lead.business_name}?`)) onDelete(lead); }}>
-          <Trash2 size={10} />
-        </Button>
+        <div className="ml-auto flex items-center gap-1">
+          {lead.website && (
+            <a href={lead.website.startsWith("http") ? lead.website : `https://${lead.website}`} target="_blank" rel="noopener noreferrer">
+              <ExternalLink size={10} className="text-muted-foreground hover:text-foreground" />
+            </a>
+          )}
+          <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-destructive/50 hover:text-destructive hover:bg-destructive/10" onClick={() => { if (confirm(`Delete ${lead.business_name}?`)) onDelete(lead); }}>
+            <Trash2 size={10} />
+          </Button>
+        </div>
       </div>
       {lead.n8n_sent_at && <Badge className="text-[8px] bg-green-500/20 text-green-400 border-0">n8n sent</Badge>}
     </div>
