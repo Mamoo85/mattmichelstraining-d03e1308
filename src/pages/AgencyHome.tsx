@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Globe, PhoneForwarded, ShieldCheck, Search, Monitor, Wrench, ArrowRight, CheckCircle, Zap, BarChart3, Clock, Phone } from "lucide-react";
+import { Globe, PhoneForwarded, ShieldCheck, Search, Monitor, Wrench, ArrowRight, CheckCircle, Zap, BarChart3, Clock, Phone, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import MissedRevenueCalculator from "@/components/agency/MissedRevenueCalculator";
 import HowItWorks from "@/components/agency/HowItWorks";
@@ -35,6 +35,14 @@ const trustItems = [
   "Built with modern server-side rendering",
   "Enterprise-grade security & uptime",
   "GDPR & CCPA compliant infrastructure",
+];
+
+const SOCIAL_PROOF_AVATARS = [
+  { initials: "MR", color: "#2563eb" },
+  { initials: "JK", color: "#16a34a" },
+  { initials: "AB", color: "#d97706" },
+  { initials: "TS", color: "#9333ea" },
+  { initials: "KL", color: "#dc2626" },
 ];
 
 const AgencyHome = () => (
@@ -78,16 +86,16 @@ const AgencyHome = () => (
         {/* Social proof strip */}
         <div className="flex items-center justify-center gap-3 mt-8">
           <div className="flex -space-x-2">
-            {["#2563eb", "#16a34a", "#d97706", "#9333ea", "#dc2626"].map((color, i) => (
-              <div key={i} className="w-8 h-8 rounded-full border-2 flex items-center justify-center text-[10px] font-bold text-white" style={{ borderColor: "#0a0a0f", background: color }}>
-                {["MR", "JK", "AB", "TS", "KL"][i]}
+            {SOCIAL_PROOF_AVATARS.map((a) => (
+              <div key={a.initials} className="w-8 h-8 rounded-full border-2 flex items-center justify-center text-[10px] font-bold text-white" style={{ borderColor: "#0a0a0f", background: a.color }}>
+                {a.initials}
               </div>
             ))}
           </div>
           <div className="text-left">
-            <div className="flex items-center gap-1 mb-0.5">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <svg key={i} className="w-3 h-3" fill="#facc15" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+            <div className="flex items-center gap-0.5 mb-0.5">
+              {SOCIAL_PROOF_AVATARS.map((a) => (
+                <Star key={a.initials} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
               ))}
             </div>
             <p className="text-xs font-medium" style={{ color: "#94a3b8" }}>
@@ -245,15 +253,9 @@ const AgencyHome = () => (
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.15em] mb-4" style={{ color: "#475569" }}>Services</p>
             <ul className="space-y-2">
-              {[
-                { label: "Web Design", to: "/web-design-services" },
-                { label: "Free Site Diagnostic", to: "/ai-website-audit" },
-                { label: "Review Monitor", to: "/ai-reputation-dashboard" },
-                { label: "24/7 Call Routing", to: "/ai-phone-answering" },
-                { label: "Computer Repair", to: "/computer-repair" },
-              ].map(l => (
-                <li key={l.label}>
-                  <Link to={l.to} className="text-xs transition-colors hover:text-cyan-400" style={{ color: "#64748b" }}>{l.label}</Link>
+              {services.map(s => (
+                <li key={s.title}>
+                  <Link to={s.link} className="text-xs transition-colors hover:text-cyan-400" style={{ color: "#64748b" }}>{s.title}</Link>
                 </li>
               ))}
             </ul>

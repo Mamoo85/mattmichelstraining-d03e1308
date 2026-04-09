@@ -647,7 +647,8 @@ export default function AdminProspector() {
     try {
       const { error } = await (supabase as any).from("prospect_pipeline").delete().in("id", dupeIds);
       if (error) throw error;
-      setPipelineLeads(prev => prev.filter(l => !dupeIds.includes(l.id)));
+      const dupeSet = new Set(dupeIds);
+      setPipelineLeads(prev => prev.filter(l => !dupeSet.has(l.id)));
       toast.success(`Removed ${dupeIds.length} duplicates`);
     } catch { toast.error("Dedupe failed"); }
     finally { setBatchProcessing(false); }

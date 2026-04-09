@@ -28,6 +28,8 @@ const SPECIALTIES = [
   "📱 Online Coaching",
 ];
 
+const FIVE_STARS = [0, 1, 2, 3, 4];
+
 const HERO_TESTIMONIALS = [
   {
     quote: "Matt actually watches my videos, replies the same day, and adjusts my program. It's not even close to other online coaches.",
@@ -69,7 +71,7 @@ const HeroSection = () => {
                     height={256}
                     fetchPriority="high"
                     decoding="sync"
-                    className="relative w-28 md:w-40 lg:w-48 h-auto object-contain drop-shadow-lg shadow-[0_0_40px_rgba(232,98,26,0.25)]"
+                    className="w-28 md:w-40 lg:w-48 h-auto object-contain drop-shadow-lg shadow-[0_0_40px_rgba(232,98,26,0.25)]"
                   />
                 </div>
 
@@ -130,7 +132,7 @@ const HeroSection = () => {
                   <Quote size={14} className="text-primary/50 mb-1.5" />
                   <p className="text-xs text-muted-foreground leading-relaxed italic mb-2">"{t.quote}"</p>
                   <div className="flex items-center gap-1 mb-1">
-                    {Array.from({ length: 5 }).map((_, i) => (
+                    {FIVE_STARS.map((i) => (
                       <Star key={i} size={9} className="text-primary fill-primary" />
                     ))}
                   </div>
