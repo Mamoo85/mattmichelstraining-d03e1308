@@ -1,67 +1,93 @@
 
 
-## Updated Plan: LinkedIn Rebrand + Critical Supabase URL Migration
+# White-Label Lead Generation SaaS — Build Plan
 
-### Phase 0: CRITICAL — Supabase Project Reference Migration
+## Overview
+Build a multi-tenant "Lead Gen as a Service" dashboard where your agency clients log in and see only their own enriched B2B leads. Includes an embeddable capture widget and webhook edge functions.
 
-The old project ref `zmyczlfuufhngzovkjdh` is hardcoded in **25+ locations across 4 runtime files and 4+ migration files**. This is breaking OAuth, storage, and webhook pipelines.
+## Architecture
 
-#### Runtime Files to Fix (4 files, immediate)
+```text
+┌─────────────────────────────────────────────┐
+│  Supabase Database                          │
+│                                             │
+│  tenants (id, user_id, company, branding)   │
+│       ↕ RLS: user_id = auth.uid()           │
+│                                             │
+│  tenant_leads (id, tenant_id FK, name,      │
+│    company, job_title, email, validated_email│
+│    enrichment_data JSONB,                   │
+│    drip_campaign_status JSONB, ...)         │
+│       ↕ RLS: tenant_id via tenants.user_id  │
+│                                             │
+│  capture_submissions (id, tenant_id,        │
+│    email, source_url, ...)                  │
+│       ↕ RLS: anon INSERT, tenant SELECT     │
+└─────────────────────────────────────────────┘
 
-| File | Line(s) | What's Broken | Fix |
-|---|---|---|---|
-| `supabase/functions/post-to-linkedin/index.ts` | 107 | LinkedIn OAuth redirect URL in re-auth email | Replace with `${SUPABASE_URL}` |
-| `supabase/functions/stripe-webhook/index.ts` | 3603, 3683 | Voicemail + Phone Answering setup URLs in onboarding emails | Replace with `${SUPABASE_URL}` |
-| `src/components/admin/AdminImageMatcher.tsx` | 7 | Storage bucket base URL | Use `import.meta.env.VITE_SUPABASE_URL` |
-| `src/integrations/supabase/client.ts` | 5-6 | **DO NOT EDIT** — auto-generated, but currently has old fallback. Env vars override it at runtime. No action needed. |
+┌───────────────┐  ┌──────────────────────┐
+│ /client-dash  │  │ /embed/capture/:tid  │
+│ (Protected)   │  │ (Public, no nav,     │
+│ Lead table +  │  │  transparent bg,     │
+│ expand modal  │  │  iframe-ready)       │
+└───────────────┘  └──────────────────────┘
 
-#### Migration Files (4+ files, ~300+ refs)
+Edge Functions:
+  • rb2b-webhook — receives RB2B visitor data, maps to tenant, inserts lead
+  • capture-enrich — triggered on capture submission, placeholder for enrichment
+```
 
-These are SQL cron jobs calling `http_post` with hardcoded old URLs:
-- `20260329120000_automate_revenue_crons.sql` (~12 cron URLs)
-- `20260330000001_agent_smith_cron.sql` (1 URL)
-- `20260330210005_social_captions_clients.sql` (1 URL)
-- `20260403010000_new_product_crons.sql` (many URLs)
+## Step-by-Step Execution
 
-**Fix**: Create a new migration that drops and recreates all affected cron jobs with `eauvubfpanpeuxsrqesu` URLs. Old migration files are historical and won't re-run.
+### Step 1: Database Schema & RLS
 
-#### URL Architecture Audit
+**Migration SQL:**
+1. Create `tenants` table — `id (uuid PK)`, `user_id (uuid, references auth.users, unique)`, `company_name`, `domain`, `branding JSONB`, `created_at`. RLS: users can only SELECT/UPDATE their own row. Service role bypass.
 
-Also found `public/chatbot.js` with a placeholder `YOUR_PROJECT.supabase.co` — will update to use the widget's `data-supabase-url` attribute properly (no hardcode needed).
+2. Create `tenant_leads` table — `id`, `tenant_id (FK tenants)`, `first_name`, `last_name`, `company_name`, `job_title`, `email`, `validated_email`, `phone`, `website`, `linkedin_url`, `enrichment_data JSONB`, `drip_campaign_status JSONB DEFAULT '{}'`, `source`, `created_at`, `updated_at`. RLS: SELECT/UPDATE/DELETE only where `tenant_id` matches the authenticated user's tenant. Service role full access.
 
-### Phase 1: LinkedIn System Rebrand (from previous plan)
+3. Create `capture_submissions` table — `id`, `tenant_id`, `email`, `name`, `source_url`, `processed BOOLEAN DEFAULT false`, `created_at`. RLS: anon/public INSERT allowed (for iframe widget), SELECT restricted to tenant owner.
 
-- Rebrand `post-to-linkedin` topics from M2 Training to Detroit Web Agency
-- Update `linkedin-auth-callback` success page branding
-- Update `linkedin-ghostwriter` email templates to DWA cyan theme
-- Update email senders from `matt@mattmichelstraining.com` to `matt@detroitwebagent.com`
+4. Security-definer helper function `get_tenant_id(_user_id uuid)` to avoid recursive RLS lookups.
 
-### Phase 2: LinkedIn Banner Generation
+### Step 2: Client Dashboard UI
 
-Generate a 1584x396px LinkedIn banner with DWA branding for manual upload.
+- **New page**: `src/pages/ClientDashboard.tsx` at route `/client-dash`
+- Dark theme, minimal layout — no existing site chrome (separate from M2 training nav)
+- Components:
+  - `LeadTable` — columns: Name, Company, Job Title, Email. Pagination. Search filter.
+  - `LeadDetailModal` — full enrichment data + drip campaign status timeline
+  - Top stats bar: Total Leads, Verified Emails, Active Drips
+- Data fetched via Supabase client; RLS ensures tenant isolation automatically
+- Protected by `ProtectedRoute`
+- Seeded with ~10 dummy rows per tenant for demo purposes
 
-### Phase 3: Verification
+### Step 3: Embeddable Capture Widget
 
-- Provide curl commands to test LinkedIn OAuth callback and Stripe webhook endpoints
-- List every file modified
+- **New page**: `src/pages/EmbedCapture.tsx` at route `/embed/capture/:tenantId`
+- Completely isolated: no `<BottomTabBar>`, no nav, transparent `body` background
+- Minimal form: Name + Email + Submit button
+- On submit: inserts into `capture_submissions` with the `tenantId` from URL params
+- Styled as a floating card with dark glass aesthetic
+- Provides embed instructions snippet: `<iframe src="https://m2training.lovable.app/embed/capture/TENANT_ID" ...>`
 
-### Execution Order
+### Step 4: Edge Function Webhooks
 
-1. New migration to fix all cron job URLs (old ref -> new ref)
-2. Fix 3 runtime files (post-to-linkedin, stripe-webhook, AdminImageMatcher)
-3. Rebrand LinkedIn edge functions (topics, emails, branding)
-4. Generate LinkedIn banner image
-5. Output full file manifest + test commands
+1. **`rb2b-webhook`** (`supabase/functions/rb2b-webhook/index.ts`)
+   - POST endpoint, `verify_jwt = false`
+   - Receives RB2B visitor payload (email, name, company, job title, LinkedIn)
+   - Looks up tenant by domain mapping
+   - Upserts into `tenant_leads`
+   - Returns 200 OK
 
-### Files Modified
+2. **`capture-enrich`** (`supabase/functions/capture-enrich/index.ts`)
+   - POST endpoint, accepts `{ submission_id }`
+   - Reads from `capture_submissions`, placeholder logic to call enrichment APIs
+   - Upserts enriched data into `tenant_leads`
+   - Marks submission as `processed = true`
 
-| File | Changes |
-|---|---|
-| `supabase/functions/post-to-linkedin/index.ts` | URL fix + full DWA rebrand (topics, emails, signature) |
-| `supabase/functions/stripe-webhook/index.ts` | Replace 2 hardcoded old URLs with `${SUPABASE_URL}` |
-| `src/components/admin/AdminImageMatcher.tsx` | Dynamic storage URL from env var |
-| `supabase/functions/linkedin-auth-callback/index.ts` | Success page DWA rebrand |
-| `supabase/functions/linkedin-ghostwriter/index.ts` | Email template DWA rebrand |
-| New DB migration | Drop/recreate all cron jobs with new project ref |
-| Generated asset | LinkedIn banner (1584x396px) |
+## Technical Notes
+- The existing `prospect_pipeline` table is for Matt's internal use and will NOT be modified. This is a separate, isolated multi-tenant system.
+- Auth uses the existing Supabase auth system. New clients sign up via the standard Auth page. A `tenants` row is auto-created via a database trigger on signup (or manually by admin).
+- The `get_tenant_id` security-definer function prevents RLS recursion when `tenant_leads` policies reference the `tenants` table.
 
