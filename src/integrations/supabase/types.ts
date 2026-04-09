@@ -5990,7 +5990,14 @@ export type Database = {
           business_name: string
           city: string | null
           created_at: string | null
+          decision_maker_name: string | null
+          decision_maker_title: string | null
+          direct_phone: string | null
           email: string | null
+          enriched_at: string | null
+          enrichment_data: Json | null
+          enrichment_source: string | null
+          enrichment_status: string | null
           google_place_id: string | null
           has_website: boolean | null
           id: string
@@ -6004,6 +6011,7 @@ export type Database = {
           state: string | null
           tier: string | null
           updated_at: string | null
+          verified_email: boolean | null
           website: string | null
         }
         Insert: {
@@ -6011,7 +6019,14 @@ export type Database = {
           business_name: string
           city?: string | null
           created_at?: string | null
+          decision_maker_name?: string | null
+          decision_maker_title?: string | null
+          direct_phone?: string | null
           email?: string | null
+          enriched_at?: string | null
+          enrichment_data?: Json | null
+          enrichment_source?: string | null
+          enrichment_status?: string | null
           google_place_id?: string | null
           has_website?: boolean | null
           id?: string
@@ -6025,6 +6040,7 @@ export type Database = {
           state?: string | null
           tier?: string | null
           updated_at?: string | null
+          verified_email?: boolean | null
           website?: string | null
         }
         Update: {
@@ -6032,7 +6048,14 @@ export type Database = {
           business_name?: string
           city?: string | null
           created_at?: string | null
+          decision_maker_name?: string | null
+          decision_maker_title?: string | null
+          direct_phone?: string | null
           email?: string | null
+          enriched_at?: string | null
+          enrichment_data?: Json | null
+          enrichment_source?: string | null
+          enrichment_status?: string | null
           google_place_id?: string | null
           has_website?: boolean | null
           id?: string
@@ -6046,6 +6069,7 @@ export type Database = {
           state?: string | null
           tier?: string | null
           updated_at?: string | null
+          verified_email?: boolean | null
           website?: string | null
         }
         Relationships: []
