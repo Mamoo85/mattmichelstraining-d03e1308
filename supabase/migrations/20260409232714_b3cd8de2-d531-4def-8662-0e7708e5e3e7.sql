@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX idx_tenant_leads_tenant_email ON public.tenant_leads(tenant_id, email);
