@@ -460,7 +460,7 @@ async function runWaterfall(domain: string, businessName: string): Promise<Enric
     const scraped = await directScrapeLLMFallback(domain, businessName);
     if (scraped?.email) {
       result.email = scraped.email;
-      result.enrichment_source = "firecrawl_llm";
+      result.enrichment_source = "direct_scrape";
       if (!result.decision_maker_name && scraped.name) result.decision_maker_name = scraped.name;
       if (!result.decision_maker_title && scraped.title) result.decision_maker_title = scraped.title;
       result.enrichment_data.firecrawl_llm = scraped;
