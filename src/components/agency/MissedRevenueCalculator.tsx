@@ -57,14 +57,14 @@ const MissedRevenueCalculator = () => {
           </div>
 
           {/* Results */}
-          <div className="grid grid-cols-3 gap-4 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
             {[
               { label: "Weekly Loss", value: weeklyLoss },
               { label: "Monthly Loss", value: monthlyLoss },
               { label: "Annual Loss", value: annualLoss },
             ].map((item) => (
-              <div key={item.label} className="text-center p-4 rounded-xl" style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)" }}>
-                <div className="text-2xl md:text-3xl font-black" style={{ color: "#f87171" }}>{fmt(item.value)}</div>
+              <div key={item.label} className="text-center p-3 sm:p-4 rounded-xl overflow-hidden" style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)" }}>
+                <div className="text-xl sm:text-2xl md:text-3xl font-black truncate" style={{ color: "#f87171" }}>{fmt(item.value)}</div>
                 <div className="text-[10px] font-bold uppercase tracking-[0.15em] mt-1" style={{ color: "#94a3b8" }}>{item.label}</div>
               </div>
             ))}

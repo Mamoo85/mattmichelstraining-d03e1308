@@ -123,7 +123,7 @@ const AgencyHome = () => {
   const [showForm, setShowForm] = useState(false);
 
   return (
-    <div className="min-h-screen" style={{ background: "#0a0a0f" }}>
+    <div className="min-h-screen overflow-x-hidden" style={{ background: "#0a0a0f" }}>
       {/* ═══════════════════════════════════════════════
           1. HERO — Clear, contractor-focused, no jargon
           ═══════════════════════════════════════════════ */}
