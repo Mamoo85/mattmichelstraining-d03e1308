@@ -456,8 +456,8 @@ async function runWaterfall(domain: string, businessName: string): Promise<Enric
 
   // Step 5: Firecrawl + LLM fallback (if all APIs failed or Hunter was rate-limited)
   if (!result.email) {
-    log("Step 5: Firecrawl + LLM fallback", { domain, hunterRateLimited });
-    const scraped = await firecrawlLLMFallback(domain, businessName);
+    log("Step 5: Direct scrape + LLM fallback", { domain, hunterRateLimited });
+    const scraped = await directScrapeLLMFallback(domain, businessName);
     if (scraped?.email) {
       result.email = scraped.email;
       result.enrichment_source = "firecrawl_llm";
