@@ -236,15 +236,16 @@ const AgencyHome = () => (
             { quote: "The automation they implemented is flawless. We handle the work, they handle the technology.", name: "Tom L.", role: "Michigan Business Owner", verified: true },
             { quote: "Zero gimmicks, just results. The most reliable and effective web team we've worked with.", name: "Rand S.", role: "Grosse Pointe Contractor", verified: true },
           ].map((t) => (
-            <div key={t.name} className="relative rounded-xl p-6 flex flex-col" style={{ background: "rgba(6,182,212,0.03)", border: "1px solid rgba(6,182,212,0.12)" }}>
-              <div className="text-4xl font-serif mb-3" style={{ color: "rgba(34,211,238,0.2)", lineHeight: 1 }}>"</div>
-              <p className="text-sm leading-relaxed flex-1 mb-4" style={{ color: "#94a3b8" }}>{t.quote}</p>
-              <div>
-                <p className="text-sm font-bold" style={{ color: "#e2e8f0" }}>{t.name}</p>
-                <p className="text-xs" style={{ color: "#475569" }}>{t.role}</p>
-                {t.verified && <span className="inline-block mt-2 text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded" style={{ background: "rgba(34,211,238,0.08)", color: "#22d3ee", border: "1px solid rgba(34,211,238,0.2)" }}>Verified Results</span>}
-              </div>
-            </div>
+             <div key={t.name} className="relative rounded-xl p-6 flex flex-col overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(30,41,59,0.8), rgba(15,23,42,0.9))", border: "1px solid rgba(6,182,212,0.15)", boxShadow: "0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(148,163,184,0.06)" }}>
+               <div className="absolute top-0 left-0 right-0 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(34,211,238,0.3), transparent)" }} />
+               <div className="text-4xl font-serif mb-3" style={{ color: "rgba(34,211,238,0.25)", lineHeight: 1 }}>"</div>
+               <p className="text-sm leading-relaxed flex-1 mb-4" style={{ color: "#94a3b8" }}>{t.quote}</p>
+               <div>
+                 <p className="text-sm font-bold" style={{ color: "#e2e8f0" }}>{t.name}</p>
+                 <p className="text-xs" style={{ color: "#475569" }}>{t.role}</p>
+                 {t.verified && <span className="inline-block mt-2 text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded" style={{ background: "rgba(34,211,238,0.06)", color: "#22d3ee", border: "1px solid rgba(34,211,238,0.25)" }}>[VERIFIED INTEL]</span>}
+               </div>
+             </div>
           ))}
         </div>
         <div className="text-center mt-8">
@@ -283,19 +284,22 @@ const AgencyHome = () => (
     </section>
 
     {/* 15. Final CTA — Initiate Secured Partnership */}
-    <section className="relative overflow-hidden py-24" style={{ background: "#0a0a0f" }}>
-      <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 70% 50% at 50% 100%, rgba(6,182,212,0.07) 0%, transparent 70%)" }} />
+    <section className="relative overflow-hidden py-28" style={{ background: "#0a0a0f" }}>
+      <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 80% 60% at 50% 80%, rgba(6,182,212,0.1) 0%, transparent 70%)" }} />
+      <div className="absolute inset-0" style={{ background: "radial-gradient(circle at 50% 50%, rgba(6,182,212,0.04) 0%, transparent 50%)" }} />
       <div className="container max-w-3xl mx-auto px-4 text-center relative">
-        <p className="text-xs font-bold uppercase tracking-[0.3em] mb-6" style={{ color: "#22d3ee" }}>Initiate Secured Partnership</p>
-        <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-6 uppercase leading-tight" style={{ color: "#f8fafc", letterSpacing: "-0.01em" }}>
+        <div className="inline-block mb-6 px-4 py-1.5 rounded-full" style={{ background: "rgba(34,211,238,0.06)", border: "1px solid rgba(34,211,238,0.2)" }}>
+          <p className="text-xs font-bold uppercase tracking-[0.3em]" style={{ color: "#22d3ee" }}>Initiate Secured Partnership</p>
+        </div>
+        <h2 className="text-4xl sm:text-5xl md:text-6xl font-black mb-6 uppercase leading-[1.05]" style={{ color: "#f8fafc", letterSpacing: "-0.02em", textShadow: "0 0 80px rgba(6,182,212,0.15)" }}>
           Ready to Secure<br />Your Digital Future?
         </h2>
-        <p className="mb-10" style={{ color: "#64748b" }}>
+        <p className="text-lg mb-12" style={{ color: "#64748b" }}>
           Direct Line: (313) 806-4952 · Secure HQ: Grosse Pointe Park, MI
         </p>
-        <Button asChild size="lg" className="px-12 py-6 text-base font-bold rounded-lg transition-all duration-300 uppercase tracking-widest" style={{ background: "linear-gradient(135deg, #06b6d4, #22d3ee)", color: "#020617", boxShadow: "0 0 40px rgba(6,182,212,0.35), 0 4px 24px rgba(0,0,0,0.5)" }}>
+        <Button asChild size="lg" className="px-14 py-7 text-lg font-bold rounded-lg transition-all duration-300 uppercase tracking-widest" style={{ background: "linear-gradient(135deg, #06b6d4, #22d3ee)", color: "#020617", boxShadow: "0 0 60px rgba(6,182,212,0.4), 0 0 120px rgba(6,182,212,0.15), 0 4px 24px rgba(0,0,0,0.5)" }}>
           <Link to="/ai-website-audit">
-            Grant Secured Access &amp; Start Project <ArrowRight className="ml-2 h-4 w-4" />
+            Grant Secured Access &amp; Start Project <ArrowRight className="ml-2 h-5 w-5" />
           </Link>
         </Button>
       </div>
@@ -348,9 +352,9 @@ const AgencyHome = () => (
                 </a>
               </li>
               <li>
-                <a href="mailto:matt@mattmichelstraining.com" className="text-xs flex items-center gap-2 transition-colors hover:text-cyan-400" style={{ color: "#64748b" }}>
+              <a href="mailto:matt@detroitwebagent.com" className="text-xs flex items-center gap-2 transition-colors hover:text-cyan-400" style={{ color: "#64748b" }}>
                   <svg className="h-3.5 w-3.5 shrink-0" fill="none" stroke="#22d3ee" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                  matt@mattmichelstraining.com
+                  matt@detroitwebagent.com
                 </a>
               </li>
               <li className="text-xs" style={{ color: "#64748b" }}>Grosse Pointe Park, MI</li>
