@@ -58,17 +58,17 @@ const AgencyHome = () => (
 
       <div className="relative container max-w-5xl mx-auto px-4 text-center">
         {/* DWA coin badge logo */}
-        <div className="relative inline-block mb-6">
-          <div className="absolute inset-0 rounded-full blur-2xl" style={{ background: "rgba(6,182,212,0.18)", transform: "scale(1.2)" }} />
+        <div className="relative inline-block mb-8">
+          <div className="absolute inset-0 rounded-full" style={{ background: "rgba(6,182,212,0.12)", transform: "scale(1.3)", filter: "blur(40px)" }} />
           <img
             src={dwaLogo}
             alt="Detroit Web Agency"
-            width={160}
-            height={160}
+            width={200}
+            height={200}
             fetchPriority="high"
             decoding="sync"
-            className="relative w-32 md:w-40 h-auto object-contain drop-shadow-2xl"
-            style={{ filter: "drop-shadow(0 0 32px rgba(6,182,212,0.25))" }}
+            className="relative w-40 md:w-52 h-auto rounded-full object-cover"
+            style={{ boxShadow: "0 0 40px rgba(6,182,212,0.2), 0 8px 32px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(148,163,184,0.1)" }}
           />
         </div>
 
