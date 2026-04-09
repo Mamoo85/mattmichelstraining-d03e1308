@@ -11,13 +11,14 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { Switch } from "@/components/ui/switch";
 import {
   Search, Mail, Zap, Users, TrendingUp, Play, RefreshCw, Loader2,
   Pencil, Send, Trash2, Filter, ArrowUpDown, ArrowDown, ArrowUp,
   Building2, Wrench, Stethoscope, Globe, Phone, MapPin, Star,
   Expand, Minimize, Megaphone, Rss, MessageSquare, Receipt, CalendarX,
   Hammer, Home, UserPlus, Plus, CheckCircle, ExternalLink, GripVertical,
-  Crosshair, BarChart3, Kanban, FileText, Eye, EyeOff
+  Crosshair, BarChart3, Kanban, FileText, Eye, EyeOff, Info, X, ShieldCheck
 } from "lucide-react";
 import {
   DndContext,
