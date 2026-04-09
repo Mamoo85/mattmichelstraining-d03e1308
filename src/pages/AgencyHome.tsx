@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Globe, PhoneForwarded, ShieldCheck, Search, Monitor, Wrench, ArrowRight, CheckCircle, Zap, BarChart3, Clock, Phone, Star } from "lucide-react";
+import dwaLogo from "@/assets/DWA_Dark_Logo.png";
 import { Button } from "@/components/ui/button";
 import MissedRevenueCalculator from "@/components/agency/MissedRevenueCalculator";
 import HowItWorks from "@/components/agency/HowItWorks";
@@ -56,8 +57,19 @@ const AgencyHome = () => (
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] rounded-full" style={{ background: "radial-gradient(circle, rgba(6,182,212,0.06) 0%, transparent 70%)", filter: "blur(80px)" }} />
 
       <div className="relative container max-w-5xl mx-auto px-4 text-center">
-        <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-xs font-bold uppercase tracking-[0.2em] mb-8" style={{ background: "rgba(6,182,212,0.08)", border: "1px solid rgba(6,182,212,0.2)", color: "#22d3ee" }}>
-          Detroit Web Agency
+        {/* DWA coin badge logo */}
+        <div className="relative inline-block mb-6">
+          <div className="absolute inset-0 rounded-full blur-2xl" style={{ background: "rgba(6,182,212,0.18)", transform: "scale(1.2)" }} />
+          <img
+            src={dwaLogo}
+            alt="Detroit Web Agency"
+            width={160}
+            height={160}
+            fetchPriority="high"
+            decoding="sync"
+            className="relative w-32 md:w-40 h-auto object-contain drop-shadow-2xl"
+            style={{ filter: "drop-shadow(0 0 32px rgba(6,182,212,0.25))" }}
+          />
         </div>
 
         <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-[1.05] tracking-tight mb-6" style={{ color: "#f8fafc" }}>

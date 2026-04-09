@@ -108,7 +108,14 @@ const M2Development = () => (
         backgroundSize: "60px 60px"
       }} />
       <div className="container max-w-4xl mx-auto text-center relative z-10 px-4">
-        <img src="/images/m2-development-logo.png" alt="M2 Development" className="mx-auto w-64 sm:w-80 mb-6 drop-shadow-2xl" />
+        <img
+          src="/images/DWA_Dark_Logo.png"
+          alt="Detroit Web Agency"
+          width={320}
+          height={320}
+          className="mx-auto w-40 sm:w-52 h-auto object-contain mb-6"
+          style={{ filter: "drop-shadow(0 0 32px rgba(6,182,212,0.2))" }}
+        />
         <p className="text-cyan-400 text-xs font-bold uppercase tracking-[0.3em] mb-3">
           Web Design · SEO · Local Marketing
         </p>
