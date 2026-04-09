@@ -192,91 +192,97 @@ async function clayEnrich(_domain: string, _businessName: string) {
   return null;
 }
 
-// ── DIRECT SCRAPE + LLM FALLBACK (no Firecrawl credits needed) ──
+// ── JINA AI READER + LLM FALLBACK (clean markdown, no credits needed) ──
 async function directScrapeLLMFallback(domain: string, businessName: string): Promise<{ email: string | null; name: string | null; title: string | null } | null> {
   try {
-    const urls = [`https://${domain}`, `https://${domain}/contact`, `https://${domain}/about`, `https://www.${domain}`];
-    let scrapedText = "";
+    const pagePaths = ["", "/contact", "/about"];
+    let markdown = "";
 
-    // First try Firecrawl if credits available
-    if (FIRECRAWL_API_KEY) {
-      for (const url of urls.slice(0, 2)) {
+    // Step A: Use Jina AI Reader to get clean markdown (free, no API key)
+    for (const path of pagePaths) {
+      if (markdown.length > 200) break;
+      const targetUrl = `https://${domain}${path}`;
+      const jinaUrl = `https://r.jina.ai/${targetUrl}`;
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
+        const res = await fetch(jinaUrl, {
+          headers: {
+            "Accept": "text/markdown",
+            "User-Agent": "Mozilla/5.0 (compatible; M2Bot/1.0)",
+          },
+          signal: controller.signal,
+        });
+        clearTimeout(timeout);
+        if (res.ok) {
+          const text = await res.text();
+          if (text.length > 100) {
+            markdown += `\n--- ${targetUrl} ---\n${text.slice(0, 4000)}`;
+            log("Jina Reader success", { url: targetUrl, len: text.length });
+          }
+        } else {
+          log("Jina Reader non-ok", { url: targetUrl, status: res.status });
+          await res.text(); // consume
+        }
+      } catch (e) { log("Jina Reader error", { url: targetUrl, error: String(e) }); }
+    }
+
+    // Step B: If Jina failed, try Firecrawl as secondary fallback
+    if (markdown.length < 100 && FIRECRAWL_API_KEY) {
+      for (const path of pagePaths.slice(0, 2)) {
         try {
           const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
             method: "POST",
             headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
-            body: JSON.stringify({ url, formats: ["markdown"], onlyMainContent: true, timeout: 15000 }),
+            body: JSON.stringify({ url: `https://${domain}${path}`, formats: ["markdown"], onlyMainContent: true, timeout: 15000 }),
           });
           const body = await res.text();
           if (res.ok) {
             const data = JSON.parse(body);
             const md = data?.data?.markdown || "";
-            if (md.length > 50) { scrapedText += md.slice(0, 3000); break; }
+            if (md.length > 50) { markdown += md.slice(0, 3000); break; }
           } else if (res.status === 402) {
-            log("Firecrawl credits exhausted, falling back to direct fetch");
-            break;
+            log("Firecrawl credits exhausted"); break;
           }
         } catch { /* continue */ }
       }
     }
 
-    // Direct fetch fallback — works without any API
-    if (scrapedText.length < 50) {
-      log("Using direct fetch for scraping", { domain });
-      for (const url of urls.slice(0, 2)) { // Only try 2 URLs to save time
-        try {
-          const controller = new AbortController();
-          const timeout = setTimeout(() => controller.abort(), 8000);
-          const res = await fetch(url, {
-            headers: {
-              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-              "Accept": "text/html,application/xhtml+xml",
-            },
-            redirect: "follow",
-            signal: controller.signal,
-          });
-          clearTimeout(timeout);
-          if (!res.ok) { await res.text(); continue; }
-          const html = await res.text();
-          const cleaned = html
-            .replace(/<script[\s\S]*?<\/script>/gi, "")
-            .replace(/<style[\s\S]*?<\/style>/gi, "")
-            .replace(/<[^>]+>/g, " ")
-            .replace(/&nbsp;/gi, " ")
-            .replace(/\s+/g, " ")
-            .trim();
-          if (cleaned.length > 100) {
-            scrapedText += `\n${cleaned.slice(0, 4000)}`;
-            log("Direct fetch success", { url, contentLength: cleaned.length });
-            break; // One good page is enough
-          }
-        } catch (e) { log("Direct fetch failed", { url, error: String(e) }); }
-      }
-    }
+    if (markdown.length < 50) { log("Scrape fallback — no usable content from Jina or Firecrawl"); return null; }
 
-    if (scrapedText.length < 50) { log("Scrape fallback — no usable content"); return null; }
-
-    // Also try to find emails directly via regex before LLM
+    // Step C: Regex email extraction first (fast path)
     const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
-    const foundEmails = [...new Set(scrapedText.match(emailRegex) || [])];
-    // Filter out common junk emails
+    const foundEmails = [...new Set(markdown.match(emailRegex) || [])];
     const junkPatterns = ["example.com", "sentry.io", "wixpress", "wordpress", "google.com", "facebook.com", "schema.org", "w3.org"];
     const cleanEmails = foundEmails.filter(e => !junkPatterns.some(j => e.includes(j)) && e.includes(domain));
 
     if (cleanEmails.length > 0) {
-      log("Found email via regex in scraped content", { emails: cleanEmails });
+      log("Found email via regex in Jina markdown", { emails: cleanEmails });
       return { email: cleanEmails[0], name: null, title: null };
     }
 
-    // If no emails found on the domain, try LLM extraction
+    // Step D: LLM extraction from clean markdown
     if (!LOVABLE_API_KEY) { log("LLM fallback skipped — no LOVABLE_API_KEY"); return null; }
 
-    const prompt = `Extract the business owner or primary contact's email address, full name, and job title from this website content for "${businessName}" (domain: ${domain}).
+    const prompt = `<task>Extract the business owner or primary decision-maker contact from this website content.</task>
 
-Website content:
-${scrapedText.slice(0, 4000)}
+<business>
+  <name>${businessName}</name>
+  <domain>${domain}</domain>
+</business>
 
-Respond with ONLY valid JSON:
+<website_content>
+${markdown.slice(0, 5000)}
+</website_content>
+
+<rules>
+- Find the OWNER, FOUNDER, PRESIDENT, or primary decision-maker.
+- Extract their email address, full name, and job title.
+- If no individual email found, look for a general business email (info@, contact@, etc).
+- Return ONLY valid JSON, no other text.
+</rules>
+
+Respond with ONLY this JSON structure:
 {"email": "found@email.com or null", "name": "Full Name or null", "title": "Job Title or null"}`;
 
     const llmRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -296,18 +302,21 @@ Respond with ONLY valid JSON:
     if (!match) return null;
     const parsed = JSON.parse(match[0]);
     if (parsed.email && parsed.email !== "null" && parsed.email.includes("@")) {
-      log("LLM extraction found", parsed);
+      log("LLM extraction found from Jina markdown", parsed);
       return { email: parsed.email, name: parsed.name === "null" ? null : parsed.name, title: parsed.title === "null" ? null : parsed.title };
     }
 
-    // Check if LLM found any non-domain emails
+    // Last resort: any non-junk email from regex
     if (foundEmails.length > 0) {
-      log("Using non-domain email from regex", { email: foundEmails[0] });
-      return { email: foundEmails[0], name: null, title: null };
+      const nonJunk = foundEmails.filter(e => !junkPatterns.some(j => e.includes(j)));
+      if (nonJunk.length > 0) {
+        log("Using non-domain email from regex", { email: nonJunk[0] });
+        return { email: nonJunk[0], name: null, title: null };
+      }
     }
 
     return null;
-  } catch (e) { log("Scrape+LLM exception", { error: String(e) }); return null; }
+  } catch (e) { log("Jina+LLM exception", { error: String(e) }); return null; }
 }
 
 // ── Email Pattern Guess (last resort) ──
