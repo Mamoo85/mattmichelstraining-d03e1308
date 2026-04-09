@@ -377,7 +377,6 @@ serve(async (req) => {
 
     // ── Step 3: Gap Analysis via Lovable AI Gateway ──
     const results: HybridResult[] = [];
-    const { industry: searchIndustry, location } = await (() => ({ industry, location }))();
 
     if (!LOVABLE_API_KEY && !OPENROUTER_API_KEY) {
       console.warn("[HYBRID] No AI keys — skipping gap analysis");
