@@ -31,6 +31,7 @@ interface HybridResult extends MapBusiness {
   core_service: string | null;
   specific_site_flaw: string | null;
   recent_activity: string | null;
+  lead_score: number | null;
   gap_status: "pending" | "analyzing" | "done" | "skipped" | "error";
   email_status: "found" | "not_found" | "skipped" | "error";
 }
@@ -391,7 +392,7 @@ serve(async (req) => {
       for (let i = 0; i < withWebsites.length; i += batchSize) {
         const batch = withWebsites.slice(i, i + batchSize);
         const analyses = await Promise.allSettled(
-          batch.map(b => analyzeGap(b.website!, b.title))
+          batch.map(b => analyzeGap(b.website!, b.title, { rating: b.rating, reviews: b.reviews, email: b.email, industry: searchIndustry || b.category, city: location?.split(",")[0]?.trim() }))
         );
 
         for (let j = 0; j < batch.length; j++) {
@@ -404,6 +405,7 @@ serve(async (req) => {
               core_service: gap.core_service,
               specific_site_flaw: gap.specific_site_flaw,
               recent_activity: gap.recent_activity,
+              lead_score: gap.lead_score,
               gap_status: "done",
               email_status: batch[j].email ? "found" : "not_found",
             });
@@ -414,6 +416,7 @@ serve(async (req) => {
               core_service: null,
               specific_site_flaw: null,
               recent_activity: null,
+              lead_score: null,
               gap_status: "error",
               email_status: batch[j].email ? "found" : "not_found",
             });
