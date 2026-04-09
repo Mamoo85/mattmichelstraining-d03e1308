@@ -202,7 +202,7 @@ function DripBadge({ step, status }: { step: number; status: string }) {
 }
 
 // ── Kanban Lead Card ──
-function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onDrip, onPreviewDrip, auditing, sending, researching, dripping }: {
+function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onDrip, onPreviewDrip, onDelete, auditing, sending, researching, dripping }: {
   lead: PipelineLead;
   onAudit: (lead: PipelineLead) => void;
   onSendN8n: (lead: PipelineLead) => void;
@@ -210,6 +210,7 @@ function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onD
   onDeepResearch: (lead: PipelineLead) => void;
   onDrip: (lead: PipelineLead, action: "draft" | "send" | "send_existing") => void;
   onPreviewDrip: (lead: PipelineLead) => void;
+  onDelete: (lead: PipelineLead) => void;
   auditing: boolean;
   sending: boolean;
   researching: boolean;
