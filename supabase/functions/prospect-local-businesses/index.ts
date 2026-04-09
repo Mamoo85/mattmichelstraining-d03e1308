@@ -626,6 +626,12 @@ serve(async (req) => {
 
         // Try to scrape email from their website
         let contactEmail: string | null = null;
+        let enrichmentSource = "scrape";
+        let decisionMakerName: string | null = null;
+        let decisionMakerTitle: string | null = null;
+        let directPhone: string | null = null;
+        let verifiedEmail = false;
+
         if (website) {
           contactEmail = await scrapeEmailFromWebsite(website);
           if (!contactEmail) {
@@ -633,6 +639,39 @@ serve(async (req) => {
             contactEmail = await scrapeEmailFromWebsite(contactUrl);
           }
           log("Email scrape", { business: businessName, email: contactEmail || "NOT_FOUND" });
+
+          // ── WATERFALL ENRICHMENT: If scrape failed OR for enriching contact info ──
+          if (!contactEmail || !phone) {
+            try {
+              const enrichRes = await fetch(`${SUPABASE_URL}/functions/v1/lead-enrichment-waterfall`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+                },
+                body: JSON.stringify({ website, business_name: businessName }),
+              });
+              if (enrichRes.ok) {
+                const enrichData = await enrichRes.json();
+                if (enrichData.email && !contactEmail) {
+                  contactEmail = enrichData.email;
+                  enrichmentSource = enrichData.enrichment_source || "waterfall";
+                }
+                if (enrichData.verified_email) verifiedEmail = true;
+                if (enrichData.decision_maker_name) decisionMakerName = enrichData.decision_maker_name;
+                if (enrichData.decision_maker_title) decisionMakerTitle = enrichData.decision_maker_title;
+                if (enrichData.direct_phone) directPhone = enrichData.direct_phone;
+                log("Waterfall enrichment", {
+                  business: businessName,
+                  source: enrichData.enrichment_source,
+                  email: enrichData.email || "none",
+                  phone: enrichData.direct_phone || "none",
+                });
+              }
+            } catch (enrichErr) {
+              log("Waterfall enrichment failed (non-blocking)", { error: String(enrichErr) });
+            }
+          }
         }
 
         // Dedup against email_send_log if we have an email
