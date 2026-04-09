@@ -226,28 +226,31 @@ async function clayEnrich(domain: string, businessName: string) {
 async function firecrawlLLMFallback(domain: string, businessName: string): Promise<{ email: string | null; name: string | null; title: string | null } | null> {
   if (!FIRECRAWL_API_KEY) { log("Firecrawl fallback skipped — no API key"); return null; }
   try {
-    // Scrape the website contact page
-    const urls = [`https://${domain}/contact`, `https://${domain}/about`, `https://${domain}`];
+    // Scrape the website — try root first (most reliable), then contact/about
+    const urls = [`https://${domain}`, `https://${domain}/contact`, `https://${domain}/about`, `https://www.${domain}`];
     let scrapedText = "";
 
     for (const url of urls) {
       try {
+        log("Firecrawl scraping", { url });
         const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
           method: "POST",
           headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ url, formats: ["markdown"], onlyMainContent: true, timeout: 15000 }),
+          body: JSON.stringify({ url, formats: ["markdown"], onlyMainContent: true, timeout: 20000 }),
         });
+        const body = await res.text();
         if (res.ok) {
-          const data = await res.json();
-          const md = data?.data?.markdown || "";
+          const data = JSON.parse(body);
+          const md = data?.data?.markdown || data?.markdown || "";
+          log("Firecrawl response", { url, contentLength: md.length, status: res.status });
           if (md.length > 50) {
             scrapedText += `\n--- ${url} ---\n${md.slice(0, 3000)}`;
             if (scrapedText.length > 5000) break;
           }
         } else {
-          await res.text(); // consume
+          log("Firecrawl scrape failed", { url, status: res.status, body: body.slice(0, 300) });
         }
-      } catch { /* skip failed URL */ }
+      } catch (e) { log("Firecrawl scrape exception", { url, error: String(e) }); }
     }
 
     if (scrapedText.length < 50) { log("Firecrawl fallback — no usable content scraped"); return null; }
