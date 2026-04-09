@@ -102,39 +102,42 @@ const M2Development = () => (
     />
 
     {/* Hero */}
-    <section className="relative overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-background pt-20 pb-16">
-      <div className="absolute inset-0 opacity-[0.04]" style={{
-        backgroundImage: "linear-gradient(hsl(var(--primary)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary)) 1px, transparent 1px)",
-        backgroundSize: "60px 60px"
-      }} />
+    <section className="relative overflow-hidden pt-20 pb-16" style={{ background: "#0a0a0f" }}>
+      <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, #0a0a0f 0%, #0d1117 40%, #0a0a0f 100%)" }} />
+      <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "radial-gradient(circle, #22d3ee 1px, transparent 1px)", backgroundSize: "32px 32px" }} />
+      <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 80% 60% at 50% 20%, rgba(6,182,212,0.07) 0%, transparent 70%)" }} />
       <div className="container max-w-4xl mx-auto text-center relative z-10 px-4">
-        <img
-          src="/images/DWA_Dark_Logo.png"
-          alt="Detroit Web Agency"
-          width={320}
-          height={320}
-          className="mx-auto w-40 sm:w-52 h-auto object-contain mb-6"
-          style={{ filter: "drop-shadow(0 0 32px rgba(6,182,212,0.2))" }}
-        />
-        <p className="text-cyan-400 text-xs font-bold uppercase tracking-[0.3em] mb-3">
+        <div className="relative inline-block mb-6">
+          <div className="absolute inset-0 rounded-full blur-2xl" style={{ background: "rgba(6,182,212,0.15)", transform: "scale(1.3)" }} />
+          <img
+            src="/images/DWA_Dark_Logo.png"
+            alt="Detroit Web Agency"
+            width={200}
+            height={200}
+            className="relative mx-auto w-36 sm:w-44 h-auto object-contain"
+            style={{ filter: "drop-shadow(0 0 32px rgba(6,182,212,0.25))" }}
+          />
+        </div>
+        <p className="text-xs font-bold uppercase tracking-[0.3em] mb-4" style={{ color: "#22d3ee" }}>
           Web Design · SEO · Local Marketing
         </p>
-        <h1 className="text-2xl sm:text-4xl font-black text-white leading-tight mb-4">
-          Websites That Actually<br />
-          <span className="text-primary">Get You Customers.</span>
+        <h1 className="text-3xl sm:text-5xl font-black leading-tight mb-3 uppercase" style={{ color: "#f8fafc", letterSpacing: "-0.02em" }}>
+          We Handle<br />
+          <span style={{ color: "#22d3ee", textShadow: "0 0 40px rgba(6,182,212,0.4)" }}>The Tech.</span>
         </h1>
-        <p className="text-sm sm:text-base text-slate-400 max-w-xl mx-auto mb-8 leading-relaxed">
-          Custom-built, mobile-first websites with SEO baked in. 16+ industry templates. 
+        <p className="text-lg font-semibold mb-4" style={{ color: "#94a3b8" }}>Detroit's Secure Web Agency.</p>
+        <p className="text-sm sm:text-base max-w-xl mx-auto mb-8 leading-relaxed" style={{ color: "#64748b" }}>
+          Custom-built, mobile-first websites with SEO baked in. 16+ industry templates.
           Most sites delivered in under a week. No ongoing contracts required.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold uppercase tracking-wider text-sm">
+          <Button asChild size="lg" className="font-bold uppercase tracking-wider text-sm" style={{ background: "linear-gradient(135deg, #06b6d4, #22d3ee)", color: "#020617", boxShadow: "0 0 24px rgba(6,182,212,0.3)" }}>
             <a href={`tel:${PHONE.replace(/\D/g, "")}`}>
               <Phone size={16} className="mr-2" />
-              Free Consultation
+              Start Secured Consultation
             </a>
           </Button>
-          <Button asChild variant="outline" size="lg" className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 font-bold uppercase tracking-wider text-sm">
+          <Button asChild variant="outline" size="lg" className="font-bold uppercase tracking-wider text-sm" style={{ background: "transparent", border: "1px solid rgba(34,211,238,0.3)", color: "#22d3ee" }}>
             <Link to="/ai-website-audit">
               <Search size={16} className="mr-2" />
               Get a Free Audit First
@@ -145,7 +148,7 @@ const M2Development = () => (
     </section>
 
     {/* Stats */}
-    <div className="border-y border-border/50 bg-card/30 backdrop-blur-sm">
+    <div style={{ borderTop: "1px solid rgba(34,211,238,0.08)", borderBottom: "1px solid rgba(34,211,238,0.08)", background: "rgba(6,182,212,0.02)" }}>
       <div className="container max-w-4xl mx-auto py-6 px-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
         {[
           { val: "16+", label: "Industry Templates" },
@@ -154,8 +157,8 @@ const M2Development = () => (
           { val: "100%", label: "Done For You" },
         ].map(s => (
           <div key={s.label}>
-            <div className="text-xl sm:text-2xl font-black text-primary">{s.val}</div>
-            <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mt-1">{s.label}</div>
+            <div className="text-xl sm:text-2xl font-black" style={{ color: "#22d3ee" }}>{s.val}</div>
+            <div className="text-[10px] font-bold uppercase tracking-widest mt-1" style={{ color: "#475569" }}>{s.label}</div>
           </div>
         ))}
       </div>

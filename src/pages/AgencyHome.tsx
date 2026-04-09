@@ -72,20 +72,22 @@ const AgencyHome = () => (
           />
         </div>
 
-        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-[1.05] tracking-tight mb-6" style={{ color: "#f8fafc" }}>
-          Your Website Should Be
-          <br className="hidden sm:block" />
-          <span style={{ color: "#22d3ee" }}> Your Best Salesperson.</span>
+        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-[1.05] tracking-tight mb-4 uppercase" style={{ color: "#f8fafc", letterSpacing: "-0.02em" }}>
+          Your Tech,{" "}
+          <span style={{ color: "#22d3ee", textShadow: "0 0 40px rgba(6,182,212,0.4)" }}>Handled.</span>
         </h1>
+        <p className="text-xl sm:text-2xl font-semibold mb-4 tracking-wide" style={{ color: "#94a3b8" }}>
+          Detroit's Secure Web Agency.
+        </p>
 
-        <p className="text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed" style={{ color: "#94a3b8" }}>
-          We build automated websites and lead systems for Michigan contractors. You get booked jobs — we handle the tech.
+        <p className="text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed" style={{ color: "#64748b" }}>
+          Elite web development, automation, and lead systems for Michigan contractors and businesses.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Button asChild size="lg" className="px-10 py-6 text-base font-bold rounded-lg transition-all duration-300" style={{ background: "linear-gradient(135deg, #06b6d4, #22d3ee)", color: "#020617", boxShadow: "0 0 30px rgba(6,182,212,0.3), 0 4px 20px rgba(0,0,0,0.4)" }}>
+          <Button asChild size="lg" className="px-10 py-6 text-base font-bold rounded-lg transition-all duration-300 uppercase tracking-widest" style={{ background: "linear-gradient(135deg, #06b6d4, #22d3ee)", color: "#020617", boxShadow: "0 0 30px rgba(6,182,212,0.3), 0 4px 20px rgba(0,0,0,0.4)" }}>
             <Link to="/ai-website-audit">
-              Get a Free Site Diagnostic <ArrowRight className="ml-2 h-4 w-4" />
+              Start Secured Consultation <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
           <Button asChild variant="outline" size="lg" className="px-10 py-6 text-base font-semibold rounded-lg transition-all duration-300 hover:bg-white/5" style={{ background: "transparent", border: "1px solid rgba(148,163,184,0.25)", color: "#e2e8f0" }}>
@@ -221,19 +223,82 @@ const AgencyHome = () => (
     {/* 12. FAQ */}
     <AgencyFAQ />
 
-    {/* 13. Final CTA */}
-    <section className="container max-w-3xl mx-auto px-4 py-20 text-center">
-      <h2 className="text-3xl md:text-4xl font-black mb-5 tracking-tight" style={{ color: "#f1f5f9" }}>
-        Ready to Stop Losing Leads?
-      </h2>
-      <p className="mb-10" style={{ color: "#64748b" }}>
-        Get a free automated audit of your website in under 60 seconds. No signup required.
-      </p>
-      <Button asChild size="lg" className="px-12 py-6 text-base font-bold rounded-lg transition-all duration-300" style={{ background: "linear-gradient(135deg, #06b6d4, #22d3ee)", color: "#020617", boxShadow: "0 0 30px rgba(6,182,212,0.3), 0 4px 20px rgba(0,0,0,0.4)" }}>
-        <Link to="/ai-website-audit">
-          Get Your Free Diagnostic <ArrowRight className="ml-2 h-4 w-4" />
-        </Link>
-      </Button>
+    {/* 13. Client Testimonials */}
+    <section className="py-20" style={{ background: "#0d1117" }}>
+      <div className="container max-w-5xl mx-auto px-4">
+        <div className="text-center mb-12">
+          <p className="text-xs font-bold uppercase tracking-[0.25em] mb-3" style={{ color: "#22d3ee" }}>Client Intel &amp; Proven Results</p>
+          <h2 className="text-3xl md:text-4xl font-black tracking-tight" style={{ color: "#f1f5f9" }}>What Michigan Businesses Say</h2>
+        </div>
+        <div className="grid sm:grid-cols-3 gap-5">
+          {[
+            { quote: "Detroit Web Agency built a lead system that figures out booked jobs. They code the work — I show up and close.", name: "Jim T.", role: "Senior Forms Contractor", verified: true },
+            { quote: "The automation they implemented is flawless. We handle the work, they handle the technology.", name: "Tom L.", role: "Michigan Business Owner", verified: true },
+            { quote: "Zero gimmicks, just results. The most reliable and effective web team we've worked with.", name: "Rand S.", role: "Grosse Pointe Contractor", verified: true },
+          ].map((t) => (
+            <div key={t.name} className="relative rounded-xl p-6 flex flex-col" style={{ background: "rgba(6,182,212,0.03)", border: "1px solid rgba(6,182,212,0.12)" }}>
+              <div className="text-4xl font-serif mb-3" style={{ color: "rgba(34,211,238,0.2)", lineHeight: 1 }}>"</div>
+              <p className="text-sm leading-relaxed flex-1 mb-4" style={{ color: "#94a3b8" }}>{t.quote}</p>
+              <div>
+                <p className="text-sm font-bold" style={{ color: "#e2e8f0" }}>{t.name}</p>
+                <p className="text-xs" style={{ color: "#475569" }}>{t.role}</p>
+                {t.verified && <span className="inline-block mt-2 text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded" style={{ background: "rgba(34,211,238,0.08)", color: "#22d3ee", border: "1px solid rgba(34,211,238,0.2)" }}>Verified Results</span>}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="text-center mt-8">
+          <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "#334155" }}>Total Secured Clients: 50+ · Satisfaction Rating: 100%</span>
+        </div>
+      </div>
+    </section>
+
+    {/* 14. Secure Development Lifecycle */}
+    <section className="py-20 relative overflow-hidden" style={{ background: "#080810" }}>
+      <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: "radial-gradient(circle, #22d3ee 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
+      <div className="container max-w-5xl mx-auto px-4 relative">
+        <div className="text-center mb-14">
+          <p className="text-xs font-bold uppercase tracking-[0.25em] mb-3" style={{ color: "#22d3ee" }}>The Secure Development Lifecycle</p>
+          <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-3" style={{ color: "#f1f5f9" }}>How We Build</h2>
+          <p className="text-sm" style={{ color: "#475569" }}>OUR METHODOLOGY: Precision, Security, and Scalability.</p>
+        </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[
+            { step: "01", label: "Consult & Strategize", desc: "Map your digital architecture and identify every leak in your lead pipeline." },
+            { step: "02", label: "Build & Code", desc: "Encrypted frameworks, robust programming, mobile-first — built to convert." },
+            { step: "03", label: "Automate & Optimize", desc: "Intelligent front-end systems running 24/7 at maximum efficiency." },
+            { step: "04", label: "Secure & Deploy", desc: "Hand-off with monitoring, uptime guarantees, and hard-off support." },
+          ].map((s, i) => (
+            <div key={s.step} className="relative">
+              {i < 3 && <div className="hidden lg:block absolute top-8 left-full w-full h-px z-10" style={{ background: "linear-gradient(90deg, rgba(34,211,238,0.3), transparent)" }} />}
+              <div className="rounded-xl p-6 h-full" style={{ background: "rgba(6,182,212,0.04)", border: "1px solid rgba(6,182,212,0.1)" }}>
+                <div className="font-mono text-3xl font-black mb-4" style={{ color: "rgba(34,211,238,0.25)" }}>{s.step}</div>
+                <h3 className="text-sm font-bold uppercase tracking-wide mb-3" style={{ color: "#22d3ee" }}>{s.label}</h3>
+                <p className="text-xs leading-relaxed" style={{ color: "#64748b" }}>{s.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    {/* 15. Final CTA — Initiate Secured Partnership */}
+    <section className="relative overflow-hidden py-24" style={{ background: "#0a0a0f" }}>
+      <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 70% 50% at 50% 100%, rgba(6,182,212,0.07) 0%, transparent 70%)" }} />
+      <div className="container max-w-3xl mx-auto px-4 text-center relative">
+        <p className="text-xs font-bold uppercase tracking-[0.3em] mb-6" style={{ color: "#22d3ee" }}>Initiate Secured Partnership</p>
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-6 uppercase leading-tight" style={{ color: "#f8fafc", letterSpacing: "-0.01em" }}>
+          Ready to Secure<br />Your Digital Future?
+        </h2>
+        <p className="mb-10" style={{ color: "#64748b" }}>
+          Direct Line: (313) 806-4952 · Secure HQ: Grosse Pointe Park, MI
+        </p>
+        <Button asChild size="lg" className="px-12 py-6 text-base font-bold rounded-lg transition-all duration-300 uppercase tracking-widest" style={{ background: "linear-gradient(135deg, #06b6d4, #22d3ee)", color: "#020617", boxShadow: "0 0 40px rgba(6,182,212,0.35), 0 4px 24px rgba(0,0,0,0.5)" }}>
+          <Link to="/ai-website-audit">
+            Grant Secured Access &amp; Start Project <ArrowRight className="ml-2 h-4 w-4" />
+          </Link>
+        </Button>
+      </div>
     </section>
 
     {/* 14. Uptime Bar */}

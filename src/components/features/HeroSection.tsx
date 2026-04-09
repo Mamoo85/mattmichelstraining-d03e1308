@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Shield, Trophy, Clock, MapPin, Star, Quote } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-import m2Logo from "@/assets/m2-logo-official.png";
+import m2Logo from "@/assets/m2-logo-gemini.png";
 import { useSectionVisible } from "@/hooks/useSiteContent";
 
 const AudienceSelector = lazy(() => import("@/components/landing/AudienceSelector"));
