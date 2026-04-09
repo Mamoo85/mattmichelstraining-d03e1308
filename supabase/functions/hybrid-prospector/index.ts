@@ -4,6 +4,8 @@ const DATAFORSEO_LOGIN = Deno.env.get("DATAFORSEO_LOGIN") || "";
 const DATAFORSEO_PASSWORD = Deno.env.get("DATAFORSEO_PASSWORD") || "";
 const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
 const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY") || "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
+const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
