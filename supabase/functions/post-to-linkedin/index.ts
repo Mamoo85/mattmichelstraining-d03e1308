@@ -1,4 +1,4 @@
-// Posts M² promotional content to Matt's personal LinkedIn 3x/week
+// Posts Detroit Web Agency content to Matt's LinkedIn 3x/week
 // Cron: Mon/Wed/Fri 9am ET (13:00 UTC)
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
@@ -9,14 +9,16 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 
+const DWA_SIGNATURE = `<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.detroitwebagent.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Lead Web Agent · Detroit Web Agency<br/>Grosse Pointe, MI · (313) 806-4952</div></div>`;
+
 const TOPICS = [
-  "Write a 2-3 sentence LinkedIn post from Matt Michels, a Metro Detroit local marketing consultant, about why local contractors lose jobs by missing calls — and how automated text-back solves it. Conversational, no corporate speak.",
-  "Write a 2-3 sentence LinkedIn post from Matt Michels about why Google Business Profile is the most underutilized tool for local trade businesses (roofing, HVAC, plumbing). Mention his $49/mo management service casually.",
-  "Write a 2-3 sentence LinkedIn post from Matt Michels about how exclusive contractor leads (not shared Angi leads) change a contractor's close rate. Local Detroit angle.",
-  "Write a 2-3 sentence LinkedIn post from Matt Michels about the power of automated systems for small local businesses — the owner should be doing the work, not managing marketing. Practical and direct.",
-  "Write a 2-3 sentence LinkedIn post from Matt Michels about why most contractor websites don't convert visitors into calls — and what actually works. Metro Detroit focus.",
-  "Write a 2-3 sentence LinkedIn post from Matt Michels sharing a quick B2B sales tip for field reps. Something tactical like handling objections or voicemail scripts. He writes the Field Rep Weekly newsletter.",
-  "Write a 2-3 sentence LinkedIn post from Matt Michels about how local businesses that respond to Google reviews within 2 hours get significantly more calls. Mention automated review response.",
+  "Write a 2-3 sentence LinkedIn post from Matt Michels, owner of Detroit Web Agency, about why local contractors lose jobs by not having a fast, mobile-optimized website. Conversational, no corporate speak. Mention detroitwebagent.com casually.",
+  "Write a 2-3 sentence LinkedIn post from Matt Michels about why custom-built websites outperform templates for local service businesses (roofing, HVAC, plumbing). Mention his agency Detroit Web Agent.",
+  "Write a 2-3 sentence LinkedIn post from Matt Michels about how automated lead capture systems on contractor websites convert 3x more visitors into booked jobs. Metro Detroit angle.",
+  "Write a 2-3 sentence LinkedIn post from Matt Michels about the power of automated text-back and missed call systems for local businesses — the owner should be doing the work, not chasing leads manually. Practical and direct.",
+  "Write a 2-3 sentence LinkedIn post from Matt Michels about why most contractor websites don't convert visitors into calls — and how Detroit Web Agency builds sites that actually generate leads.",
+  "Write a 2-3 sentence LinkedIn post from Matt Michels about how Google Business Profile optimization combined with a great website is the #1 growth strategy for local contractors. He runs Detroit Web Agency.",
+  "Write a 2-3 sentence LinkedIn post from Matt Michels about how local businesses that respond to leads within 5 minutes close significantly more jobs — and how automated systems make that possible.",
 ];
 
 async function getLinkedInToken(sb: any): Promise<{ token: string; personId: string } | null> {
@@ -28,19 +30,17 @@ async function getLinkedInToken(sb: any): Promise<{ token: string; personId: str
 
   if (!data?.access_token) return null;
 
-  // Check if expired
   if (data.expires_at && new Date(data.expires_at) < new Date()) {
     console.error("[LINKEDIN-POSTER] Token expired");
     return null;
   }
 
-  // Get LinkedIn person ID
   const profileRes = await fetch("https://api.linkedin.com/v2/userinfo", {
     headers: { Authorization: `Bearer ${data.access_token}` } });
 
   if (!profileRes.ok) return null;
   const profile = await profileRes.json();
-  const personId = profile.sub; // OpenID Connect subject = LinkedIn member ID
+  const personId = profile.sub;
 
   return { token: data.access_token, personId };
 }
@@ -49,7 +49,7 @@ async function generatePost(): Promise<string> {
   const topic = TOPICS[Math.floor(Date.now() / 86400000) % TOPICS.length];
 
   if (!LOVABLE_API_KEY) {
-    return "Local businesses — if you're missing calls, you're missing jobs. Automated text-back sends an instant reply to every missed caller. Simple, effective, $99/mo. #Detroit #LocalBusiness";
+    return "Local businesses — if your website isn't generating leads, it's costing you money. Custom sites built to convert. detroitwebagent.com #Detroit #WebDesign";
   }
 
   const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -62,7 +62,7 @@ async function generatePost(): Promise<string> {
       messages: [{ role: "user", content: topic }] }) });
 
   const data = await res.json();
-  return data?.choices?.[0]?.message?.content?.trim() || "Local businesses — automated systems = more calls, more jobs. mattmichelstraining.com";
+  return data?.choices?.[0]?.message?.content?.trim() || "Local businesses — your website should be your best salesperson. Custom web design + automated lead systems. detroitwebagent.com";
 }
 
 async function postToLinkedIn(personId: string, token: string, text: string): Promise<boolean> {
@@ -101,10 +101,10 @@ serve(async () => {
           method: "POST",
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            from: "M² System <matt@mattmichelstraining.com>",
-            to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"],
+            from: "Detroit Web Agency <matt@detroitwebagent.com>",
+            to: ["matt@detroitwebagent.com"], bcc: ["matthewmichels4@gmail.com"],
             subject: "⚠️ LinkedIn token expired — re-auth needed",
-            html: `<p>Your LinkedIn auto-posting stopped because the token expired.</p><p><a href="https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${Deno.env.get("LINKEDIN_CLIENT_ID")}&redirect_uri=https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/linkedin-auth-callback&scope=openid%20profile%20w_member_social&state=m2linkedin">Click here to reconnect LinkedIn →</a><div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI \u00b7 (313) 806-4952</div><img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div></p>` }) });
+            html: `<p>Your LinkedIn auto-posting stopped because the token expired.</p><p><a href="https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${Deno.env.get("LINKEDIN_CLIENT_ID")}&redirect_uri=${SUPABASE_URL}/functions/v1/linkedin-auth-callback&scope=openid%20profile%20w_member_social&state=dwalinkedin">Click here to reconnect LinkedIn →</a>${DWA_SIGNATURE}</p>` }) });
       }
       return new Response(JSON.stringify({ error: "No valid token" }), { status: 200 });
     }

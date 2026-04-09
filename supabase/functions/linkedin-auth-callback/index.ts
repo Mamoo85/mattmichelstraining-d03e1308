@@ -27,7 +27,6 @@ serve(async (req) => {
   }
 
   try {
-    // Exchange code for access token
     const tokenRes = await fetch("https://www.linkedin.com/oauth/v2/accessToken", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -52,7 +51,6 @@ serve(async (req) => {
 
     const expiresAt = new Date(Date.now() + (tokenData.expires_in || 5184000) * 1000);
 
-    // Store token in oauth_tokens table
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
     await sb.from("oauth_tokens").upsert({
       provider: "linkedin",
@@ -64,17 +62,20 @@ serve(async (req) => {
     }, { onConflict: "provider" });
 
     return new Response(`
-      <html><body style="font-family:sans-serif;max-width:500px;margin:80px auto;text-align:center;">
-        <h2 style="color:#0a66c2;">✅ LinkedIn Connected!</h2>
-        <p>Your LinkedIn account is now linked to M². Auto-posting is active.</p>
-        <p style="color:#888;font-size:13px;">Token expires: ${expiresAt.toLocaleDateString()}</p>
-        <p style="color:#888;font-size:13px;">You can close this window.</p>
+      <html><body style="font-family:sans-serif;max-width:500px;margin:80px auto;text-align:center;background:#0a0f1a;color:#e2e8f0;">
+        <div style="padding:40px;border:1px solid #22d3ee33;border-radius:12px;background:#0d1117;">
+          <h2 style="color:#22d3ee;">✅ LinkedIn Connected!</h2>
+          <p>Your LinkedIn account is now linked to <strong>Detroit Web Agency</strong>. Auto-posting is active.</p>
+          <p style="color:#64748b;font-size:13px;">Token expires: ${expiresAt.toLocaleDateString()}</p>
+          <p style="color:#64748b;font-size:13px;">You can close this window.</p>
+        </div>
       </body></html>
     `, { headers: { "Content-Type": "text/html" } });
 
-  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
     console.error("[LINKEDIN-AUTH] Error:", e);
-    return new Response(`<h2>Error: ${e.message}</h2>`, {
+    return new Response(`<h2>Error: ${msg}</h2>`, {
       headers: { "Content-Type": "text/html" },
       status: 500,
     });
