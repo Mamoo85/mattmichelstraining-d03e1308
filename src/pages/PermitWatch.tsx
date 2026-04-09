@@ -211,7 +211,7 @@ export default function PermitWatch() {
                         type="checkbox"
                         checked={form.trades.includes(trade)}
                         onChange={() => toggleTrade(trade)}
-                        className="accent-orange-500 w-4 h-4"
+                        className="accent-cyan-500 w-4 h-4"
                       />
                       <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">{trade}</span>
                     </label>

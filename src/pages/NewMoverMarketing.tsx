@@ -36,7 +36,7 @@ export default function NewMoverMarketing() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center px-6">
+      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-6">
         <div className="text-center max-w-sm">
           <CheckCircle size={48} className="text-green-500 mx-auto mb-4" />
           <h1 className="text-2xl font-black text-white mb-3">You're live!</h1>
@@ -47,16 +47,16 @@ export default function NewMoverMarketing() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
+    <div className="min-h-screen bg-[#0a0a0f] text-white">
       <div className="px-6 py-16 text-center border-b border-slate-800">
-        <span className="text-[11px] font-bold uppercase tracking-widest text-orange-500">New Mover Marketing</span>
+        <span className="text-[11px] font-bold uppercase tracking-widest text-cyan-500">New Mover Marketing</span>
         <h1 className="text-3xl md:text-4xl font-black mt-3 mb-4 leading-tight">
           Target New Homeowners Before Your Competitors Do
         </h1>
         <p className="text-slate-400 max-w-xl mx-auto text-sm leading-relaxed mb-6">
           Every week, get AI-written direct mail, door hangers, welcome letters, and text scripts targeting new movers in your area.
         </p>
-        <p className="text-3xl font-black text-orange-500">$59<span className="text-sm font-normal text-slate-400">/mo</span></p>
+        <p className="text-3xl font-black text-cyan-500">$59<span className="text-sm font-normal text-slate-400">/mo</span></p>
         <p className="text-slate-500 text-sm mt-1">Cancel anytime</p>
       </div>
 
@@ -64,7 +64,7 @@ export default function NewMoverMarketing() {
         <div className="mb-12 space-y-3">
           {FEATURES.map((f) => (
             <div key={f} className="flex items-center gap-3">
-              <CheckCircle size={16} className="text-orange-500 flex-shrink-0" />
+              <CheckCircle size={16} className="text-cyan-500 flex-shrink-0" />
               <span className="text-sm text-slate-300">{f}</span>
             </div>
           ))}
@@ -93,12 +93,12 @@ export default function NewMoverMarketing() {
                       value={form[key as keyof typeof form]}
                       onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
                       placeholder={placeholder}
-                      className="bg-slate-900 border-slate-700 text-white mt-1"
+                      className="bg-[#0a0a0f] border-slate-700 text-white mt-1"
                     />
                   </div>
                 ))}
               </div>
-              <Button type="submit" disabled={loading} className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 font-bold text-sm uppercase tracking-widest">
+              <Button type="submit" disabled={loading} className="w-full bg-cyan-500 hover:bg-cyan-600 text-white py-3 font-bold text-sm uppercase tracking-widest">
                 {loading ? <Loader2 size={14} className="animate-spin mr-2" /> : <ArrowRight size={14} className="mr-2" />}
                 {loading ? "Redirecting..." : "Subscribe — $59/mo"}
               </Button>
@@ -108,7 +108,7 @@ export default function NewMoverMarketing() {
         </Card>
 
         <p className="text-[12px] text-slate-500 text-center">
-          Questions? (313) 806-4952 &middot; <a href="mailto:matt@mattmichelstraining.com" className="text-orange-500">matt@mattmichelstraining.com</a>
+          Questions? (313) 806-4952 &middot; <a href="mailto:matt@mattmichelstraining.com" className="text-cyan-500">matt@mattmichelstraining.com</a>
         </p>
       </div>
     </div>

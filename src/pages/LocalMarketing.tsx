@@ -127,7 +127,7 @@ export default function LocalMarketing() {
                 className={`text-left p-5 border-2 transition-all ${selectedPlan === plan.key ? "border-primary bg-primary/5" : "border-border bg-card hover:border-primary/50"}`}
               >
                 {plan.badge && (
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-orange-400 bg-orange-400/10 px-2 py-0.5 rounded mb-2 inline-block">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-cyan-400 bg-cyan-400/10 px-2 py-0.5 rounded mb-2 inline-block">
                     {plan.badge}
                   </span>
                 )}

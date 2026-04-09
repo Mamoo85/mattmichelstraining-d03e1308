@@ -30,14 +30,14 @@ export default function PromoPlanner() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center px-6">
+      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-6">
         <div className="text-center max-w-sm">
           <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle size={32} className="text-green-500" />
           </div>
           <h1 className="text-2xl font-black text-white mb-3">You're all set!</h1>
           <p className="text-slate-400 leading-relaxed">Your 7-day free trial is active. Your first promo calendar will be delivered shortly.</p>
-          <p className="mt-4 text-sm text-slate-500">Questions? <a href="mailto:matt@mattmichelstraining.com" className="text-orange-500">matt@mattmichelstraining.com</a></p>
+          <p className="mt-4 text-sm text-slate-500">Questions? <a href="mailto:matt@mattmichelstraining.com" className="text-cyan-500">matt@mattmichelstraining.com</a></p>
         </div>
       </div>
     );
@@ -66,16 +66,16 @@ export default function PromoPlanner() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
+    <div className="min-h-screen bg-[#0a0a0f] text-white">
       {/* Hero */}
-      <div className="bg-slate-900 px-6 py-16 text-center border-b border-slate-800">
-        <span className="inline-block text-[11px] font-bold uppercase tracking-widest text-orange-500 bg-orange-500/10 px-3 py-1 rounded-full mb-4">
+      <div className="bg-[#0a0a0f] px-6 py-16 text-center border-b border-slate-800">
+        <span className="inline-block text-[11px] font-bold uppercase tracking-widest text-cyan-500 bg-cyan-500/10 px-3 py-1 rounded-full mb-4">
           Seasonal Promo Planner
         </span>
         <h1 className="text-3xl md:text-4xl font-black mb-4 leading-tight">
           Never run a last-minute promo again.
         </h1>
-        <p className="text-2xl font-black text-orange-500 mb-2">$39<span className="text-sm font-normal text-slate-400">/mo</span></p>
+        <p className="text-2xl font-black text-cyan-500 mb-2">$39<span className="text-sm font-normal text-slate-400">/mo</span></p>
         <p className="text-slate-400 text-sm">7-day free trial — cancel anytime</p>
       </div>
 
@@ -84,7 +84,7 @@ export default function PromoPlanner() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-12">
           {BENEFITS.map(({ icon: Icon, title, desc }) => (
             <Card key={title} className="bg-slate-800/50 border-slate-700 p-5">
-              <Icon size={20} className="text-orange-500 mb-3" />
+              <Icon size={20} className="text-cyan-500 mb-3" />
               <p className="font-bold text-sm text-white mb-1">{title}</p>
               <p className="text-[12px] text-slate-400">{desc}</p>
             </Card>
@@ -101,7 +101,7 @@ export default function PromoPlanner() {
               { step: "3", title: "Run the Promos", desc: "Copy is ready — just post it, email it, or hand it to your team." },
             ].map((s) => (
               <div key={s.step} className="text-center">
-                <div className="w-10 h-10 rounded-full bg-orange-500 text-white font-black flex items-center justify-center mx-auto mb-3">{s.step}</div>
+                <div className="w-10 h-10 rounded-full bg-cyan-500 text-white font-black flex items-center justify-center mx-auto mb-3">{s.step}</div>
                 <p className="font-bold text-sm text-white mb-1">{s.title}</p>
                 <p className="text-[12px] text-slate-400">{s.desc}</p>
               </div>
@@ -117,20 +117,20 @@ export default function PromoPlanner() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Your Name</Label>
-                <Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Matt Michels" className="bg-slate-900 border-slate-700 text-white mt-1" />
+                <Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Matt Michels" className="bg-[#0a0a0f] border-slate-700 text-white mt-1" />
               </div>
               <div>
                 <Label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Business Name *</Label>
-                <Input required value={form.businessName} onChange={(e) => setForm((f) => ({ ...f, businessName: e.target.value }))} placeholder="Smith Plumbing Co." className="bg-slate-900 border-slate-700 text-white mt-1" />
+                <Input required value={form.businessName} onChange={(e) => setForm((f) => ({ ...f, businessName: e.target.value }))} placeholder="Smith Plumbing Co." className="bg-[#0a0a0f] border-slate-700 text-white mt-1" />
               </div>
               <div>
                 <Label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Email *</Label>
-                <Input type="email" required value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder="you@business.com" className="bg-slate-900 border-slate-700 text-white mt-1" />
+                <Input type="email" required value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder="you@business.com" className="bg-[#0a0a0f] border-slate-700 text-white mt-1" />
               </div>
               <div>
                 <Label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Industry</Label>
                 <Select value={form.industry} onValueChange={(v) => setForm((f) => ({ ...f, industry: v }))}>
-                  <SelectTrigger className="bg-slate-900 border-slate-700 text-white mt-1">
+                  <SelectTrigger className="bg-[#0a0a0f] border-slate-700 text-white mt-1">
                     <SelectValue placeholder="Select industry" />
                   </SelectTrigger>
                   <SelectContent>
@@ -142,10 +142,10 @@ export default function PromoPlanner() {
               </div>
               <div className="sm:col-span-2">
                 <Label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">City</Label>
-                <Input value={form.city} onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))} placeholder="Detroit, Warren, Troy..." className="bg-slate-900 border-slate-700 text-white mt-1" />
+                <Input value={form.city} onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))} placeholder="Detroit, Warren, Troy..." className="bg-[#0a0a0f] border-slate-700 text-white mt-1" />
               </div>
             </div>
-            <Button type="submit" disabled={loading} className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 font-bold text-sm uppercase tracking-widest">
+            <Button type="submit" disabled={loading} className="w-full bg-cyan-500 hover:bg-cyan-600 text-white py-3 font-bold text-sm uppercase tracking-widest">
               {loading ? <Loader2 size={14} className="animate-spin mr-2" /> : <ArrowRight size={14} className="mr-2" />}
               {loading ? "Redirecting to checkout..." : "Start Free Trial — $39/mo"}
             </Button>
@@ -155,7 +155,7 @@ export default function PromoPlanner() {
 
         {/* Footer */}
         <p className="text-[12px] text-slate-500 text-center">
-          Questions? Email <a href="mailto:matt@mattmichelstraining.com" className="text-orange-500">matt@mattmichelstraining.com</a> or text <a href="tel:+13138064952" className="text-orange-500">(313) 806-4952</a>
+          Questions? Email <a href="mailto:matt@mattmichelstraining.com" className="text-cyan-500">matt@mattmichelstraining.com</a> or text <a href="tel:+13138064952" className="text-cyan-500">(313) 806-4952</a>
         </p>
       </div>
     </div>

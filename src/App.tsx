@@ -37,6 +37,11 @@ const BottomTabBar = lazyRetry(() => import("@/components/layout/BottomTabBar"))
 const Index = lazyRetry(() => import("./pages/Index"));
 const AgencyHome = lazyRetry(() => import("./pages/AgencyHome"));
 const FreeSiteScanner = lazyRetry(() => import("./pages/FreeSiteScanner"));
+const FreeToolsHub = lazyRetry(() => import("./pages/FreeToolsHub"));
+const FreeSeoHealth = lazyRetry(() => import("./pages/FreeSeoHealth"));
+const FreeBreachScanner = lazyRetry(() => import("./pages/FreeBreachScanner"));
+const FreeRankChecker = lazyRetry(() => import("./pages/FreeRankChecker"));
+const FreeMetaAnalyzer = lazyRetry(() => import("./pages/FreeMetaAnalyzer"));
 const ClientCommandCenter = lazyRetry(() => import("./pages/ClientCommandCenter"));
 const ComputerRepair = lazyRetry(() => import("./pages/ComputerRepair"));
 
@@ -418,6 +423,11 @@ const App = () => (
                     <Route path="/" element={getDomainBrand() === "agency" ? <AgencyHome /> : <Index />} />
                     <Route path="/agency" element={<AgencyHome />} />
                     <Route path="/free-site-scanner" element={<FreeSiteScanner />} />
+                    <Route path="/free-tools" element={<FreeToolsHub />} />
+                    <Route path="/free-tools/seo-health" element={<FreeSeoHealth />} />
+                    <Route path="/free-tools/breach-scan" element={<FreeBreachScanner />} />
+                    <Route path="/free-tools/rank-check" element={<FreeRankChecker />} />
+                    <Route path="/free-tools/meta-tags" element={<FreeMetaAnalyzer />} />
                     <Route path="/command-center" element={<ProtectedRoute><ClientCommandCenter /></ProtectedRoute>} />
                     <Route path="/computer-repair" element={<ComputerRepair />} />
                     <Route path="/unsubscribe" element={<Unsubscribe />} />

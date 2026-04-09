@@ -51,7 +51,7 @@ export default function ClientReportGenerator() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center px-6">
+      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-6">
         <div className="text-center max-w-sm">
           <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle size={32} className="text-green-500" />
@@ -63,7 +63,7 @@ export default function ClientReportGenerator() {
           </p>
           <p className="mt-4 text-sm text-slate-500">
             Questions?{" "}
-            <a href="mailto:matt@mattmichelstraining.com" className="text-orange-500">
+            <a href="mailto:matt@mattmichelstraining.com" className="text-cyan-500">
               matt@mattmichelstraining.com
             </a>
           </p>
@@ -73,12 +73,12 @@ export default function ClientReportGenerator() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
+    <div className="min-h-screen bg-[#0a0a0f] text-white">
       {/* Hero */}
-      <div className="bg-slate-900 px-6 py-16 text-center border-b border-slate-800">
+      <div className="bg-[#0a0a0f] px-6 py-16 text-center border-b border-slate-800">
         <div className="flex items-center justify-center gap-2 mb-4">
-          <FileText size={16} className="text-orange-500" />
-          <span className="text-[11px] font-bold uppercase tracking-widest text-orange-500">
+          <FileText size={16} className="text-cyan-500" />
+          <span className="text-[11px] font-bold uppercase tracking-widest text-cyan-500">
             AI Client Report Generator
           </span>
         </div>
@@ -89,7 +89,7 @@ export default function ClientReportGenerator() {
           Every month, get a polished, professional report template ready to customize and send to
           your agency clients.
         </p>
-        <p className="text-3xl font-black text-orange-500">
+        <p className="text-3xl font-black text-cyan-500">
           $59<span className="text-sm font-normal text-slate-400">/mo</span>
         </p>
         <p className="text-slate-500 text-sm mt-1">Cancel anytime</p>
@@ -104,7 +104,7 @@ export default function ClientReportGenerator() {
           <div className="space-y-3">
             {FEATURES.map((f) => (
               <div key={f} className="flex items-center gap-3">
-                <CheckCircle size={16} className="text-orange-500 flex-shrink-0" />
+                <CheckCircle size={16} className="text-cyan-500 flex-shrink-0" />
                 <span className="text-sm text-slate-300">{f}</span>
               </div>
             ))}
@@ -135,7 +135,7 @@ export default function ClientReportGenerator() {
               },
             ].map((s) => (
               <div key={s.step} className="text-center">
-                <div className="w-10 h-10 rounded-full bg-orange-500 text-white font-black flex items-center justify-center mx-auto mb-3">
+                <div className="w-10 h-10 rounded-full bg-cyan-500 text-white font-black flex items-center justify-center mx-auto mb-3">
                   {s.step}
                 </div>
                 <p className="font-bold text-sm text-white mb-1">{s.title}</p>
@@ -168,7 +168,7 @@ export default function ClientReportGenerator() {
                     value={form.name}
                     onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                     placeholder="Jane Smith"
-                    className="bg-slate-900 border-slate-700 text-white mt-1"
+                    className="bg-[#0a0a0f] border-slate-700 text-white mt-1"
                   />
                 </div>
                 <div>
@@ -180,7 +180,7 @@ export default function ClientReportGenerator() {
                     value={form.businessName}
                     onChange={(e) => setForm((f) => ({ ...f, businessName: e.target.value }))}
                     placeholder="Smith Digital Agency"
-                    className="bg-slate-900 border-slate-700 text-white mt-1"
+                    className="bg-[#0a0a0f] border-slate-700 text-white mt-1"
                   />
                 </div>
                 <div>
@@ -193,7 +193,7 @@ export default function ClientReportGenerator() {
                     value={form.email}
                     onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
                     placeholder="you@agency.com"
-                    className="bg-slate-900 border-slate-700 text-white mt-1"
+                    className="bg-[#0a0a0f] border-slate-700 text-white mt-1"
                   />
                 </div>
                 <div>
@@ -204,14 +204,14 @@ export default function ClientReportGenerator() {
                     value={form.agencyType}
                     onChange={(e) => setForm((f) => ({ ...f, agencyType: e.target.value }))}
                     placeholder="e.g. SEO Agency, PPC Agency, Web Design"
-                    className="bg-slate-900 border-slate-700 text-white mt-1"
+                    className="bg-[#0a0a0f] border-slate-700 text-white mt-1"
                   />
                 </div>
               </div>
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 font-bold text-sm uppercase tracking-widest"
+                className="w-full bg-cyan-500 hover:bg-cyan-600 text-white py-3 font-bold text-sm uppercase tracking-widest"
               >
                 {loading ? (
                   <Loader2 size={14} className="animate-spin mr-2" />
@@ -230,7 +230,7 @@ export default function ClientReportGenerator() {
         {/* Footer */}
         <p className="text-[12px] text-slate-500 text-center">
           Questions? (313) 806-4952 &middot;{" "}
-          <a href="mailto:matt@mattmichelstraining.com" className="text-orange-500">
+          <a href="mailto:matt@mattmichelstraining.com" className="text-cyan-500">
             matt@mattmichelstraining.com
           </a>
         </p>

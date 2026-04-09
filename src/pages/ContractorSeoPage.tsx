@@ -102,7 +102,7 @@ const ContractorSeoPage = () => {
           description: d.metaDescription,
           provider: {
             "@type": "Organization",
-            name: "M2 Development",
+            name: "Detroit Web Agency",
             url: "https://www.mattmichelstraining.com",
             telephone: phoneNumber,
             email: emailAddress,
@@ -117,14 +117,14 @@ const ContractorSeoPage = () => {
         <section className="relative bg-gradient-to-br from-[#1e293b] to-[#0f172a] text-white py-20 px-4">
           <div className="max-w-4xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-1.5 text-sm mb-6">
-              <MapPin className="h-4 w-4 text-[#e8621a]" />
+              <MapPin className="h-4 w-4 text-[#22d3ee]" />
               <span>{page.city}</span>
             </div>
             <h1 className="text-3xl md:text-5xl font-bold mb-6 leading-tight">{d.heroHeadline}</h1>
             <p className="text-lg md:text-xl text-white/80 mb-8 max-w-2xl mx-auto">{d.heroSubtext}</p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <a href={`tel:${phoneNumber.replace(/\D/g, "")}`}>
-                <Button size="lg" className="bg-[#e8621a] hover:bg-[#d4570f] text-white text-lg px-8 py-6 w-full sm:w-auto">
+                <Button size="lg" className="bg-[#22d3ee] hover:bg-[#06b6d4] text-white text-lg px-8 py-6 w-full sm:w-auto">
                   <Phone className="h-5 w-5 mr-2" /> {d.ctaText || "Get a Free Quote"}
                 </Button>
               </a>
@@ -138,7 +138,7 @@ const ContractorSeoPage = () => {
         </section>
 
         {/* Trust Bar */}
-        <section className="bg-[#e8621a] py-4">
+        <section className="bg-[#22d3ee] py-4">
           <div className="max-w-5xl mx-auto flex flex-wrap justify-center gap-6 md:gap-12 text-white text-sm font-medium px-4">
             <div className="flex items-center gap-2"><Shield className="h-4 w-4" /> Licensed & Insured</div>
             <div className="flex items-center gap-2"><Clock className="h-4 w-4" /> Fast Turnaround</div>
@@ -161,7 +161,7 @@ const ContractorSeoPage = () => {
                 {d.serviceBullets.map((bullet, i) => (
                   <div key={i} className="bg-card rounded-xl p-6 border border-border shadow-sm hover:shadow-md transition-shadow">
                     <div className="flex items-start gap-3">
-                      <ArrowRight className="h-5 w-5 text-[#e8621a] mt-0.5 shrink-0" />
+                      <ArrowRight className="h-5 w-5 text-[#22d3ee] mt-0.5 shrink-0" />
                       <span className="text-foreground">{bullet}</span>
                     </div>
                   </div>
@@ -234,7 +234,7 @@ const ContractorSeoPage = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <a href={`tel:${phoneNumber.replace(/\D/g, "")}`}>
-                <Button size="lg" className="bg-[#e8621a] hover:bg-[#d4570f] text-white text-lg px-8 py-6 w-full sm:w-auto">
+                <Button size="lg" className="bg-[#22d3ee] hover:bg-[#06b6d4] text-white text-lg px-8 py-6 w-full sm:w-auto">
                   <Phone className="h-5 w-5 mr-2" /> Call {phoneNumber}
                 </Button>
               </a>
@@ -249,13 +249,13 @@ const ContractorSeoPage = () => {
 
         {/* Footer */}
         <footer className="py-6 px-4 text-center text-xs text-muted-foreground bg-muted/20">
-          <p>© {new Date().getFullYear()} M2 Development — Web Design & AI Marketing for Local Businesses</p>
+          <p>© {new Date().getFullYear()} Detroit Web Agency — Web Design & AI Marketing for Local Businesses</p>
           <p className="mt-1">
-            <Link to="/web-design-services" className="text-[#e8621a] hover:underline">Web Design Services</Link>
+            <Link to="/web-design-services" className="text-[#22d3ee] hover:underline">Web Design Services</Link>
             {" · "}
-            <Link to="/all-services" className="text-[#e8621a] hover:underline">All Services</Link>
+            <Link to="/all-services" className="text-[#22d3ee] hover:underline">All Services</Link>
             {" · "}
-            <Link to="/" className="text-[#e8621a] hover:underline">Home</Link>
+            <Link to="/" className="text-[#22d3ee] hover:underline">Home</Link>
           </p>
         </footer>
       </div>

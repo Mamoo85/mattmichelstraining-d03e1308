@@ -77,9 +77,9 @@ export default function SeoGuard() {
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-orange-500/10 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-cyan-500/10 via-transparent to-transparent" />
         <div className="relative max-w-5xl mx-auto px-4 py-20 md:py-28 text-center">
-          <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30 mb-6 text-sm">
+          <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/30 mb-6 text-sm">
             7-Day Free Trial · No Credit Card to Start
           </Badge>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
@@ -101,9 +101,9 @@ export default function SeoGuard() {
         <h2 className="text-3xl font-bold text-center text-foreground mb-12">Everything We Monitor</h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {FEATURES.map((f) => (
-            <Card key={f.title} className="bg-card border-border hover:border-orange-500/30 transition-colors">
+            <Card key={f.title} className="bg-card border-border hover:border-cyan-500/30 transition-colors">
               <CardContent className="pt-6 space-y-3">
-                <f.icon className="h-8 w-8 text-orange-500" />
+                <f.icon className="h-8 w-8 text-cyan-500" />
                 <h3 className="text-lg font-semibold text-foreground">{f.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
               </CardContent>
@@ -114,7 +114,7 @@ export default function SeoGuard() {
 
       {/* Signup Form */}
       <section className="max-w-lg mx-auto px-4 py-16">
-        <Card className="border-orange-500/20">
+        <Card className="border-cyan-500/20">
           <CardContent className="pt-8 pb-6">
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold text-foreground mb-2">Start Your Free Trial</h2>
@@ -141,7 +141,7 @@ export default function SeoGuard() {
                 <Label htmlFor="phone">Phone (for SMS alerts)</Label>
                 <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(313) 555-1234" />
               </div>
-              <Button type="submit" disabled={loading} className="w-full h-12 text-base bg-orange-500 hover:bg-orange-600 text-white">
+              <Button type="submit" disabled={loading} className="w-full h-12 text-base bg-cyan-500 hover:bg-cyan-600 text-white">
                 {loading ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Processing...</> : "Start Free 7-Day Trial → $29/mo after"}
               </Button>
               <p className="text-center text-xs text-muted-foreground">No contracts. Cancel anytime. First report arrives Monday.</p>
@@ -152,7 +152,7 @@ export default function SeoGuard() {
 
       {/* Footer */}
       <footer className="text-center py-8 text-sm text-muted-foreground border-t border-border">
-        <p>Detroit Web Agency · Grosse Pointe, MI · <a href="tel:+13138064952" className="text-orange-500">(313) 806-4952</a></p>
+        <p>Detroit Web Agency · Grosse Pointe, MI · <a href="tel:+13138064952" className="text-cyan-500">(313) 806-4952</a></p>
       </footer>
     </div>
   );

@@ -32,7 +32,7 @@ export default function WinBackSMS() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center px-6">
+      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-6">
         <div className="text-center max-w-sm">
           <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle size={32} className="text-green-400" />
@@ -42,7 +42,7 @@ export default function WinBackSMS() {
             Your Win-Back campaign is being set up. Matt will reach out within 24 hours to import your first customer list.
           </p>
           <p className="mt-6 text-sm text-slate-400">
-            Questions? <a href="tel:+13138064952" className="text-orange-500 hover:underline">(313) 806-4952</a>
+            Questions? <a href="tel:+13138064952" className="text-cyan-500 hover:underline">(313) 806-4952</a>
           </p>
         </div>
       </div>
@@ -77,15 +77,15 @@ export default function WinBackSMS() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
+    <div className="min-h-screen bg-[#0a0a0f] text-white">
       {/* Hero */}
       <section className="px-6 py-20 text-center max-w-3xl mx-auto">
-        <div className="inline-flex items-center gap-2 bg-orange-500/10 text-orange-400 text-sm font-semibold px-4 py-1.5 rounded-full mb-6 border border-orange-500/20">
+        <div className="inline-flex items-center gap-2 bg-cyan-500/10 text-cyan-400 text-sm font-semibold px-4 py-1.5 rounded-full mb-6 border border-cyan-500/20">
           <MessageSquare size={14} />
           AI-Powered Win-Back SMS
         </div>
         <h1 className="text-4xl sm:text-5xl font-black leading-tight mb-4">
-          Reactivate Sleeping Customers <span className="text-orange-500">Every Month</span>
+          Reactivate Sleeping Customers <span className="text-cyan-500">Every Month</span>
         </h1>
         <p className="text-slate-300 text-lg sm:text-xl leading-relaxed max-w-2xl mx-auto mb-8">
           AI sends a personalized "we miss you" text to your lapsed customers on the 5th of every month.
@@ -103,7 +103,7 @@ export default function WinBackSMS() {
         <div className="max-w-3xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-6">
           {STATS.map(({ icon: Icon, value, label }) => (
             <div key={label} className="bg-slate-800 rounded-xl p-6 text-center border border-slate-700">
-              <Icon size={28} className="text-orange-500 mx-auto mb-3" />
+              <Icon size={28} className="text-cyan-500 mx-auto mb-3" />
               <div className="text-3xl font-black text-white mb-1">{value}</div>
               <div className="text-slate-400 text-sm">{label}</div>
             </div>
@@ -121,7 +121,7 @@ export default function WinBackSMS() {
             { step: "3", title: "Customers come back", desc: "15–20% reply and book. You make money without lifting a finger." },
           ].map(({ step, title, desc }) => (
             <div key={step} className="bg-slate-800 rounded-xl p-6 border border-slate-700">
-              <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white font-black text-sm mb-4">{step}</div>
+              <div className="w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center text-white font-black text-sm mb-4">{step}</div>
               <h3 className="font-bold text-white mb-2">{title}</h3>
               <p className="text-slate-400 text-sm leading-relaxed">{desc}</p>
             </div>
@@ -146,11 +146,11 @@ export default function WinBackSMS() {
                   value={form.name}
                   onChange={handleChange}
                   placeholder="John Smith"
-                  className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-500 focus:border-orange-500"
+                  className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-500 focus:border-cyan-500"
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="businessName" className="text-slate-300 text-sm">Business Name <span className="text-orange-500">*</span></Label>
+                <Label htmlFor="businessName" className="text-slate-300 text-sm">Business Name <span className="text-cyan-500">*</span></Label>
                 <Input
                   id="businessName"
                   name="businessName"
@@ -158,11 +158,11 @@ export default function WinBackSMS() {
                   onChange={handleChange}
                   placeholder="Smith HVAC LLC"
                   required
-                  className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-500 focus:border-orange-500"
+                  className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-500 focus:border-cyan-500"
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="email" className="text-slate-300 text-sm">Email <span className="text-orange-500">*</span></Label>
+                <Label htmlFor="email" className="text-slate-300 text-sm">Email <span className="text-cyan-500">*</span></Label>
                 <Input
                   id="email"
                   name="email"
@@ -171,7 +171,7 @@ export default function WinBackSMS() {
                   onChange={handleChange}
                   placeholder="john@smithhvac.com"
                   required
-                  className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-500 focus:border-orange-500"
+                  className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-500 focus:border-cyan-500"
                 />
               </div>
               <div className="space-y-1">
@@ -183,7 +183,7 @@ export default function WinBackSMS() {
                   value={form.phone}
                   onChange={handleChange}
                   placeholder="(313) 555-0100"
-                  className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-500 focus:border-orange-500"
+                  className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-500 focus:border-cyan-500"
                 />
               </div>
               <div className="space-y-1">
@@ -193,7 +193,7 @@ export default function WinBackSMS() {
                   name="industry"
                   value={form.industry}
                   onChange={handleChange}
-                  className="w-full rounded-md bg-slate-700 border border-slate-600 text-white px-3 py-2 text-sm focus:outline-none focus:border-orange-500"
+                  className="w-full rounded-md bg-slate-700 border border-slate-600 text-white px-3 py-2 text-sm focus:outline-none focus:border-cyan-500"
                 >
                   <option value="">Select your industry</option>
                   {INDUSTRIES.map(i => <option key={i} value={i}>{i}</option>)}
@@ -205,7 +205,7 @@ export default function WinBackSMS() {
               <Button
                 type="submit"
                 disabled={submitting}
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 text-base"
+                className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 text-base"
               >
                 {submitting ? <Loader2 size={18} className="animate-spin mr-2" /> : null}
                 {submitting ? "Processing…" : "Start My Free Trial →"}
@@ -219,10 +219,10 @@ export default function WinBackSMS() {
       {/* Social proof */}
       <section className="border-t border-slate-800 py-10 px-6 text-center">
         <div className="flex items-center justify-center gap-3 mb-3">
-          <Users size={18} className="text-orange-500" />
+          <Users size={18} className="text-cyan-500" />
           <span className="text-slate-400 text-sm">Built by Matt Michels — Grosse Pointe, MI</span>
         </div>
-        <p className="text-slate-500 text-xs">Questions? <a href="tel:+13138064952" className="text-orange-500 hover:underline">(313) 806-4952</a> · <a href="mailto:matt@mattmichelstraining.com" className="text-orange-500 hover:underline">matt@mattmichelstraining.com</a></p>
+        <p className="text-slate-500 text-xs">Questions? <a href="tel:+13138064952" className="text-cyan-500 hover:underline">(313) 806-4952</a> · <a href="mailto:matt@mattmichelstraining.com" className="text-cyan-500 hover:underline">matt@mattmichelstraining.com</a></p>
       </section>
     </div>
   );

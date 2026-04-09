@@ -42,7 +42,7 @@ const GRADE_COLORS: Record<string, string> = {
   A: "text-green-500",
   B: "text-blue-500",
   C: "text-yellow-500",
-  D: "text-orange-500",
+  D: "text-cyan-500",
   F: "text-red-500",
 };
 
@@ -88,7 +88,7 @@ export default function VisibilityScore() {
   return (
     <>
       <SEOHead
-        title="Free Visibility Score — How Visible Is Your Business Online? | M² Development"
+        title="Free Visibility Score — How Visible Is Your Business Online? | Detroit Web Agency"
         description="Instant audit of your Google Business Profile, website, and lead capture. See your score in 30 seconds."
         path="/visibility-score"
       />
@@ -97,11 +97,11 @@ export default function VisibilityScore() {
         {/* Hero */}
         <section className="pt-16 pb-12 px-4 bg-[#1e293b] text-white">
           <div className="max-w-2xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#e8621a]/20 text-[#e8621a] text-[11px] font-bold tracking-widest uppercase mb-5">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#22d3ee]/20 text-[#22d3ee] text-[11px] font-bold tracking-widest uppercase mb-5">
               <Eye size={11} /> Free Visibility Scan
             </div>
             <h1 className="text-3xl sm:text-4xl font-black leading-tight mb-4">
-              Can Customers <span className="text-[#e8621a]">Find You</span> Online?
+              Can Customers <span className="text-[#22d3ee]">Find You</span> Online?
             </h1>
             <p className="text-slate-300 max-w-lg mx-auto">
               Enter your business name. We'll check your Google presence, website, and lead capture — and show you exactly where you're invisible.
@@ -153,7 +153,7 @@ export default function VisibilityScore() {
                   <Button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-[#e8621a] hover:bg-[#d4570f] text-white py-5 font-bold"
+                    className="w-full bg-[#22d3ee] hover:bg-[#06b6d4] text-white py-5 font-bold"
                   >
                     {loading ? (
                       <>
@@ -239,9 +239,9 @@ export default function VisibilityScore() {
 
               {/* CTA */}
               {result.score < 80 && (
-                <Card className="border-[#e8621a]/30 bg-[#e8621a]/5 mt-8">
+                <Card className="border-[#22d3ee]/30 bg-[#22d3ee]/5 mt-8">
                   <CardContent className="p-6 text-center">
-                    <TrendingUp className="mx-auto text-[#e8621a] mb-3" size={28} />
+                    <TrendingUp className="mx-auto text-[#22d3ee] mb-3" size={28} />
                     <h3 className="font-black text-lg mb-2">
                       {result.score < 40
                         ? "You're basically invisible online."
@@ -254,7 +254,7 @@ export default function VisibilityScore() {
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
                       <a href="/digital-foundation">
-                        <Button className="bg-[#e8621a] hover:bg-[#d4570f] text-white font-bold">
+                        <Button className="bg-[#22d3ee] hover:bg-[#06b6d4] text-white font-bold">
                           Fix My Visibility <ArrowRight size={16} className="ml-2" />
                         </Button>
                       </a>

@@ -76,7 +76,7 @@ export default function IndustrialNewsletter() {
               Manufacturing plant openings, procurement shifts, competitor moves — delivered before your workweek starts. 5 actionable insights you can use to prospect and close deals that week.
             </p>
             <div className="flex items-center justify-center gap-3 flex-wrap">
-              <span className="text-3xl font-black text-[#e8621a]">$19</span>
+              <span className="text-3xl font-black text-[#22d3ee]">$19</span>
               <span className="text-slate-400 text-lg">/month</span>
               <span className="text-slate-500">·</span>
               <span className="text-slate-400 text-sm">Cancel anytime</span>
@@ -117,7 +117,7 @@ export default function IndustrialNewsletter() {
         {/* Who it's for */}
         <section className="px-6 pb-12 max-w-3xl mx-auto">
           <div className="bg-[#1e293b] rounded-xl p-7 text-white">
-            <p className="text-xs font-bold text-[#e8621a] uppercase tracking-widest mb-4">Who this is for</p>
+            <p className="text-xs font-bold text-[#22d3ee] uppercase tracking-widest mb-4">Who this is for</p>
             <ul className="space-y-2 text-sm text-slate-300 leading-relaxed">
               <li>Industrial equipment and machinery reps</li>
               <li>MRO and safety supply reps</li>

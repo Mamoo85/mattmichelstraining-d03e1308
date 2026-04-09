@@ -90,7 +90,7 @@ export default function AdWebsiteAudit() {
       {/* Above fold */}
       <div className="max-w-lg mx-auto px-5 pt-10 pb-6">
         <div className="text-center mb-6">
-          <span className="inline-block text-xs font-bold uppercase tracking-widest text-orange-400 mb-3">Instant · AI-Powered · $9</span>
+          <span className="inline-block text-xs font-bold uppercase tracking-widest text-cyan-400 mb-3">Instant · AI-Powered · $9</span>
           <h1 className="text-3xl font-black text-white leading-tight mb-3">
             Is Your Website<br />Costing You Customers?
           </h1>
@@ -107,7 +107,7 @@ export default function AdWebsiteAudit() {
             { icon: <Star size={15} />, text: "Prioritized fix list — biggest impact first" },
           ].map(({ icon, text }) => (
             <div key={text} className="flex items-center gap-3 text-sm text-slate-200">
-              <span className="text-orange-400 shrink-0">{icon}</span>
+              <span className="text-cyan-400 shrink-0">{icon}</span>
               {text}
             </div>
           ))}
@@ -121,7 +121,7 @@ export default function AdWebsiteAudit() {
             placeholder="Your email address"
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
-            className="w-full rounded-lg px-4 py-3 text-sm bg-white/10 border border-white/20 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-400"
+            className="w-full rounded-lg px-4 py-3 text-sm bg-white/10 border border-white/20 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
           />
           <div className="relative">
             <Globe size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
@@ -131,7 +131,7 @@ export default function AdWebsiteAudit() {
               placeholder="yourwebsite.com"
               value={form.business_url}
               onChange={(e) => setForm({ ...form, business_url: e.target.value })}
-              className="w-full rounded-lg pl-9 pr-4 py-3 text-sm bg-white/10 border border-white/20 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-400"
+              className="w-full rounded-lg pl-9 pr-4 py-3 text-sm bg-white/10 border border-white/20 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
             />
           </div>
           <input
@@ -139,13 +139,13 @@ export default function AdWebsiteAudit() {
             placeholder="Business name (optional)"
             value={form.business_name}
             onChange={(e) => setForm({ ...form, business_name: e.target.value })}
-            className="w-full rounded-lg px-4 py-3 text-sm bg-white/10 border border-white/20 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-400"
+            className="w-full rounded-lg px-4 py-3 text-sm bg-white/10 border border-white/20 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
           />
           <button
             type="submit"
             disabled={submitting}
             className="w-full flex items-center justify-center gap-2 py-4 rounded-xl font-black text-sm uppercase tracking-wider text-white transition-opacity hover:opacity-90 disabled:opacity-60"
-            style={{ background: "#e8621a" }}
+            style={{ background: "#22d3ee" }}
           >
             {submitting ? <Loader2 size={16} className="animate-spin" /> : <Globe size={16} />}
             {submitting ? "Processing…" : "Get My Website Audit — $9"}
@@ -171,7 +171,7 @@ export default function AdWebsiteAudit() {
           <div className="bg-gradient-to-t from-slate-800 to-transparent h-8 -mt-8 relative pointer-events-none" />
         </div>
         <p className="text-center text-xs text-slate-600 mt-4">
-          M2 Development · mattmichelstraining.com · (313) 806-4952
+          Detroit Web Agency · mattmichelstraining.com · (313) 806-4952
         </p>
       </div>
     </div>

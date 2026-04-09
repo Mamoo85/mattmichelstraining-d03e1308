@@ -64,8 +64,8 @@ export default function FreeBidReport() {
     return (
       <div className="min-h-screen bg-[#0f0f1a] text-white flex items-center justify-center px-4">
         <div className="text-center max-w-md">
-          <div className="w-20 h-20 rounded-full bg-[#e8621a]/15 flex items-center justify-center mx-auto mb-6">
-            <CheckCircle size={36} className="text-[#e8621a]" />
+          <div className="w-20 h-20 rounded-full bg-[#22d3ee]/15 flex items-center justify-center mx-auto mb-6">
+            <CheckCircle size={36} className="text-[#22d3ee]" />
           </div>
           <h1 className="text-3xl font-bold mb-3">Report Requested!</h1>
           <p className="text-gray-400 mb-4">
@@ -87,18 +87,18 @@ export default function FreeBidReport() {
         {/* Hero */}
         <section className="pt-20 pb-16 px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 bg-[#e8621a]/10 border border-[#e8621a]/30 rounded-full px-4 py-1.5 mb-6">
-              <Hammer size={14} className="text-[#e8621a]" />
-              <span className="text-sm text-[#e8621a] font-medium">100% Free — Built for Subcontractors</span>
+            <div className="inline-flex items-center gap-2 bg-[#22d3ee]/10 border border-[#22d3ee]/30 rounded-full px-4 py-1.5 mb-6">
+              <Hammer size={14} className="text-[#22d3ee]" />
+              <span className="text-sm text-[#22d3ee] font-medium">100% Free — Built for Subcontractors</span>
             </div>
             <h1 className="text-4xl md:text-5xl font-bold mb-5 leading-tight">
               How Many Jobs Are You<br />
-              <span className="text-[#e8621a]">Not Bidding On?</span>
+              <span className="text-[#22d3ee]">Not Bidding On?</span>
             </h1>
             <p className="text-lg text-gray-400 max-w-2xl mx-auto mb-8">
               We'll scan public bid boards, state procurement portals, and commercial listings — then send you a report of every open job matching your trade and area. Free.
             </p>
-            <a href="#report" className="inline-flex items-center gap-2 bg-[#e8621a] text-white px-8 py-3.5 rounded-lg font-semibold text-lg hover:bg-[#d45a17] transition-colors">
+            <a href="#report" className="inline-flex items-center gap-2 bg-[#22d3ee] text-white px-8 py-3.5 rounded-lg font-semibold text-lg hover:bg-[#06b6d4] transition-colors">
               Get My Free Report <ArrowRight size={18} />
             </a>
           </div>
@@ -109,8 +109,8 @@ export default function FreeBidReport() {
           <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
             {BENEFITS.map((b) => (
               <div key={b.title} className="bg-white/5 border border-white/10 rounded-xl p-6">
-                <div className="w-12 h-12 rounded-lg bg-[#e8621a]/15 flex items-center justify-center mb-4">
-                  <b.icon size={22} className="text-[#e8621a]" />
+                <div className="w-12 h-12 rounded-lg bg-[#22d3ee]/15 flex items-center justify-center mb-4">
+                  <b.icon size={22} className="text-[#22d3ee]" />
                 </div>
                 <h3 className="text-lg font-semibold mb-2">{b.title}</h3>
                 <p className="text-gray-400 text-sm leading-relaxed">{b.desc}</p>
@@ -133,7 +133,7 @@ export default function FreeBidReport() {
                 "Competitive density score (how many subs are bidding)",
               ].map((item) => (
                 <div key={item} className="flex items-start gap-3">
-                  <CheckCircle size={16} className="text-[#e8621a] mt-0.5 flex-shrink-0" />
+                  <CheckCircle size={16} className="text-[#22d3ee] mt-0.5 flex-shrink-0" />
                   <span className="text-gray-300 text-sm">{item}</span>
                 </div>
               ))}
@@ -169,7 +169,7 @@ export default function FreeBidReport() {
                   <Input value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} className="bg-white/5 border-white/10 text-white" placeholder="MI" />
                 </div>
               </div>
-              <Button type="submit" disabled={loading} className="w-full bg-[#e8621a] hover:bg-[#d45a17] text-white py-3 text-base font-semibold">
+              <Button type="submit" disabled={loading} className="w-full bg-[#22d3ee] hover:bg-[#06b6d4] text-white py-3 text-base font-semibold">
                 {loading ? <Loader2 className="animate-spin" size={18} /> : "Send Me My Free Bid Report →"}
               </Button>
               <p className="text-center text-xs text-gray-500">No credit card. No sales call. Just a list of jobs you can bid on today.</p>
@@ -178,7 +178,7 @@ export default function FreeBidReport() {
         </section>
 
         <footer className="py-8 px-4 border-t border-white/10 text-center">
-          <p className="text-gray-500 text-sm">M² Development · Grosse Pointe, MI · <a href="mailto:matt@mattmichelstraining.com" className="text-[#e8621a]">matt@mattmichelstraining.com</a></p>
+          <p className="text-gray-500 text-sm">Detroit Web Agency · Grosse Pointe, MI · <a href="mailto:matt@mattmichelstraining.com" className="text-[#22d3ee]">matt@mattmichelstraining.com</a></p>
         </footer>
       </div>
     </>

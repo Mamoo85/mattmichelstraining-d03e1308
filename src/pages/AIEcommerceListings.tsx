@@ -20,9 +20,9 @@ export default function AIEcommerceListings() {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen bg-[#0f0f1a] text-white flex items-center justify-center px-4">
+      <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center px-4">
         <div className="text-center max-w-md">
-          <CheckCircle size={48} className="text-[#f97316] mx-auto mb-4" />
+          <CheckCircle size={48} className="text-[#22d3ee] mx-auto mb-4" />
           <h1 className="text-2xl font-black mb-3">You're In!</h1>
           <p className="text-[#aaa] text-sm">Send us your product info and we'll have listings written within 48 hours.</p>
         </div>
@@ -32,14 +32,14 @@ export default function AIEcommerceListings() {
 
   return (
     <>
-      <SEOHead title="AI E-commerce Product Listings — $79/mo | M2 Development" description="AI writes SEO-optimized product titles, descriptions, and bullet points for Amazon, Shopify, Etsy, and more. Up to 20 listings/month for $79." path="/ai-ecommerce-listings" />
-      <div className="min-h-screen bg-[#0f0f1a] text-white">
+      <SEOHead title="AI E-commerce Product Listings — $79/mo | Detroit Web Agency" description="AI writes SEO-optimized product titles, descriptions, and bullet points for Amazon, Shopify, Etsy, and more. Up to 20 listings/month for $79." path="/ai-ecommerce-listings" />
+      <div className="min-h-screen bg-[#0a0a0f] text-white">
         <section className="pt-20 pb-16 px-4">
           <div className="max-w-3xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#f97316]/15 text-[#f97316] text-[11px] font-bold tracking-widest uppercase mb-6"><ShoppingBag size={11} /> AI Product Listings</div>
-            <h1 className="text-3xl sm:text-5xl font-black leading-tight mb-5">Product Listings That<br /><span className="text-[#f97316]">Actually Get Found.</span></h1>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#22d3ee]/15 text-[#22d3ee] text-[11px] font-bold tracking-widest uppercase mb-6"><ShoppingBag size={11} /> AI Product Listings</div>
+            <h1 className="text-3xl sm:text-5xl font-black leading-tight mb-5">Product Listings That<br /><span className="text-[#22d3ee]">Actually Get Found.</span></h1>
             <p className="text-[#aaa] max-w-2xl mx-auto mb-8 text-base leading-relaxed">AI writes SEO-optimized titles, bullet points, and descriptions for your Amazon, Shopify, or Etsy store. Better copy = more clicks = more sales. Up to 20 listings/month.</p>
-            <button onClick={() => document.getElementById("signup-form")?.scrollIntoView({ behavior: "smooth" })} className="bg-[#f97316] hover:bg-[#ea6c10] text-white px-8 py-4 font-bold rounded-xl flex items-center gap-2 mx-auto">Start Free Trial <ArrowRight size={16} /></button>
+            <button onClick={() => document.getElementById("signup-form")?.scrollIntoView({ behavior: "smooth" })} className="bg-[#22d3ee] hover:bg-[#06b6d4] text-white px-8 py-4 font-bold rounded-xl flex items-center gap-2 mx-auto">Start Free Trial <ArrowRight size={16} /></button>
             <p className="text-xs text-[#666] mt-4">$79/mo after trial · Up to 20 listings/mo · Cancel anytime</p>
           </div>
         </section>
@@ -48,7 +48,7 @@ export default function AIEcommerceListings() {
           <div className="max-w-3xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-3">
             {INCLUDED.map(item => (
               <div key={item} className="flex items-start gap-3 bg-white/5 border border-white/10 rounded-xl p-4">
-                <CheckCircle size={15} className="text-[#f97316] flex-shrink-0 mt-0.5" />
+                <CheckCircle size={15} className="text-[#22d3ee] flex-shrink-0 mt-0.5" />
                 <p className="text-sm text-[#ccc]">{item}</p>
               </div>
             ))}

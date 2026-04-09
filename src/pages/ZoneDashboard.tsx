@@ -47,7 +47,7 @@ const markSeen = (key: string) => safeLocalStorage.setItem(key, "1");
 
 const OverlayLoader = () => (
   <div className="flex justify-center py-20">
-    <Loader2 size={24} className="animate-spin" style={{ color: "#f97316" }} />
+    <Loader2 size={24} className="animate-spin" style={{ color: "#22d3ee" }} />
   </div>
 );
 
@@ -239,7 +239,7 @@ const ZoneDashboard = () => {
     {
       label: "Coach",
       icon: <MessageCircle size={18} />,
-      color: "#f97316",
+      color: "#22d3ee",
       action: () => setChatOpen(true),
     },
     {
@@ -254,7 +254,7 @@ const ZoneDashboard = () => {
     {
       label: "Programs",
       icon: <Target size={22} />,
-      color: "#f97316",
+      color: "#22d3ee",
       action: () => openOverlay("programs"),
     },
     {
@@ -321,7 +321,7 @@ const ZoneDashboard = () => {
             <img src={logoImg} alt="M2" className="h-8 w-8 object-contain" />
           </button>
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.25em]" style={{ color: "#f97316" }}>THE ZONE</p>
+            <p className="text-xs font-bold uppercase tracking-[0.25em]" style={{ color: "#22d3ee" }}>THE ZONE</p>
             <p className="text-sm font-semibold leading-tight" style={{ color: "#fafafa" }}>{displayName}</p>
           </div>
         </div>
@@ -527,7 +527,7 @@ const ZoneDashboard = () => {
               className="w-full flex items-center justify-center gap-2 rounded-xl py-3 mt-2 transition-all active:scale-[0.98]"
               style={{ background: "rgba(249,115,22,0.08)", border: "1px solid rgba(249,115,22,0.15)" }}
             >
-              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "#f97316" }}>
+              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "#22d3ee" }}>
                 📲 Install the M2 App
               </span>
             </button>

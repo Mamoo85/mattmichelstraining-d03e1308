@@ -130,17 +130,17 @@ export default function ReferralPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
+    <div className="min-h-screen bg-[#0a0a0f] text-white">
       {/* Hero */}
       <section className="py-16 px-4 text-center border-b border-slate-800">
         <div className="max-w-2xl mx-auto">
-          <div className="inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/30 rounded-full px-4 py-1 text-orange-400 text-sm font-medium mb-6">
+          <div className="inline-flex items-center gap-2 bg-cyan-500/10 border border-cyan-500/30 rounded-full px-4 py-1 text-cyan-400 text-sm font-medium mb-6">
             <Gift className="w-4 h-4" />
             Referral Program
           </div>
           <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4">
             Send a friend.<br />
-            <span className="text-orange-500">Get $50.</span>
+            <span className="text-cyan-500">Get $50.</span>
           </h1>
           <p className="text-slate-400 text-lg max-w-lg mx-auto">
             Know a business owner who could use any of these services? Send them Matt's way. When they sign up, you both get $50 off your next month.
@@ -153,13 +153,13 @@ export default function ReferralPage() {
         {submitted ? (
           <Card className="bg-slate-800 border-slate-700">
             <CardContent className="pt-8 pb-8 text-center space-y-4">
-              <div className="w-14 h-14 rounded-full bg-orange-500/10 border border-orange-500/30 flex items-center justify-center mx-auto">
-                <Gift className="w-7 h-7 text-orange-400" />
+              <div className="w-14 h-14 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center mx-auto">
+                <Gift className="w-7 h-7 text-cyan-400" />
               </div>
               <h2 className="text-2xl font-bold text-white">You're all set!</h2>
               <p className="text-slate-300 max-w-sm mx-auto">
                 Done! We'll reach out to{" "}
-                <span className="text-orange-400 font-semibold">{submittedFriendName}</span> and
+                <span className="text-cyan-400 font-semibold">{submittedFriendName}</span> and
                 credit both of you $50 when they sign up.
               </p>
               <div className="pt-4 flex flex-col sm:flex-row gap-3 justify-center">
@@ -172,7 +172,7 @@ export default function ReferralPage() {
                   Refer someone else
                 </Button>
                 <Link to="/all-services">
-                  <Button className="bg-orange-500 hover:bg-orange-600 text-white w-full sm:w-auto">
+                  <Button className="bg-cyan-500 hover:bg-cyan-600 text-white w-full sm:w-auto">
                     Browse all services
                   </Button>
                 </Link>
@@ -195,7 +195,7 @@ export default function ReferralPage() {
                       placeholder="Jane Smith"
                       value={form.yourName}
                       onChange={(e) => handleChange("yourName", e.target.value)}
-                      className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-500 focus:border-orange-500"
+                      className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-500 focus:border-cyan-500"
                       required
                     />
                   </div>
@@ -207,7 +207,7 @@ export default function ReferralPage() {
                       placeholder="jane@example.com"
                       value={form.yourEmail}
                       onChange={(e) => handleChange("yourEmail", e.target.value)}
-                      className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-500 focus:border-orange-500"
+                      className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-500 focus:border-cyan-500"
                       required
                     />
                   </div>
@@ -223,7 +223,7 @@ export default function ReferralPage() {
                         placeholder="John Doe"
                         value={form.friendName}
                         onChange={(e) => handleChange("friendName", e.target.value)}
-                        className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-500 focus:border-orange-500"
+                        className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-500 focus:border-cyan-500"
                         required
                       />
                     </div>
@@ -234,7 +234,7 @@ export default function ReferralPage() {
                         placeholder="Doe Roofing LLC"
                         value={form.friendBusiness}
                         onChange={(e) => handleChange("friendBusiness", e.target.value)}
-                        className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-500 focus:border-orange-500"
+                        className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-500 focus:border-cyan-500"
                         required
                       />
                     </div>
@@ -247,7 +247,7 @@ export default function ReferralPage() {
                       placeholder="john@doeroofing.com"
                       value={form.friendEmail}
                       onChange={(e) => handleChange("friendEmail", e.target.value)}
-                      className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-500 focus:border-orange-500"
+                      className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-500 focus:border-cyan-500"
                       required
                     />
                   </div>
@@ -256,7 +256,7 @@ export default function ReferralPage() {
                     <Select value={form.service} onValueChange={(val) => handleChange("service", val)}>
                       <SelectTrigger
                         id="service"
-                        className="bg-slate-700 border-slate-600 text-white focus:border-orange-500 data-[placeholder]:text-slate-500"
+                        className="bg-slate-700 border-slate-600 text-white focus:border-cyan-500 data-[placeholder]:text-slate-500"
                       >
                         <SelectValue placeholder="Select a service..." />
                       </SelectTrigger>
@@ -284,7 +284,7 @@ export default function ReferralPage() {
                 <Button
                   type="submit"
                   disabled={submitting}
-                  className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 text-base disabled:opacity-60"
+                  className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-3 text-base disabled:opacity-60"
                 >
                   {submitting ? "Sending..." : "Send Referral — Get $50"}
                 </Button>
@@ -344,7 +344,7 @@ export default function ReferralPage() {
             { step: "3", title: "You both get $50", desc: "$50 off your next month, automatically." },
           ].map((item) => (
             <div key={item.step} className="bg-slate-800 border border-slate-700 rounded-xl p-5 text-center">
-              <div className="w-8 h-8 rounded-full bg-orange-500 text-white text-sm font-bold flex items-center justify-center mx-auto mb-3">
+              <div className="w-8 h-8 rounded-full bg-cyan-500 text-white text-sm font-bold flex items-center justify-center mx-auto mb-3">
                 {item.step}
               </div>
               <h3 className="text-white font-semibold text-sm mb-1">{item.title}</h3>
@@ -356,7 +356,7 @@ export default function ReferralPage() {
         {/* Bottom note */}
         <p className="text-center text-slate-500 text-sm pb-4">
           Questions? Text Matt directly at{" "}
-          <a href="sms:3138064952" className="text-orange-400 hover:text-orange-300">
+          <a href="sms:3138064952" className="text-cyan-400 hover:text-cyan-300">
             (313) 806-4952
           </a>
         </p>

@@ -175,7 +175,7 @@ export default function GetStarted() {
 
   const labelCls = "block text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1";
   const inputCls =
-    "w-full bg-[#0f1a26] border border-slate-700 text-white text-sm px-3 py-2.5 rounded focus:outline-none focus:border-[#e8621a] transition-colors placeholder:text-slate-600";
+    "w-full bg-[#0f1a26] border border-slate-700 text-white text-sm px-3 py-2.5 rounded focus:outline-none focus:border-[#22d3ee] transition-colors placeholder:text-slate-600";
 
   if (submitted) {
     return (
@@ -192,7 +192,7 @@ export default function GetStarted() {
           </p>
           <p className="mt-5 text-sm text-muted-foreground">
             Or reach out directly:{" "}
-            <a href="tel:+13138064952" className="text-[#e8621a] font-semibold">
+            <a href="tel:+13138064952" className="text-[#22d3ee] font-semibold">
               (313) 806-4952
             </a>
           </p>
@@ -211,8 +211,8 @@ export default function GetStarted() {
       <div className="min-h-screen bg-background text-foreground">
         {/* Hero */}
         <div className="bg-[#1e293b] text-white px-6 py-14 text-center">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-[#e8621a] mb-3">
-            M2 Development
+          <p className="text-[11px] font-bold uppercase tracking-widest text-[#22d3ee] mb-3">
+            Detroit Web Agency
           </p>
           <h1 className="text-3xl font-black mb-4 leading-tight">
             40+ tools to grow your business.<br/>Pick one. We'll handle the rest.
@@ -228,7 +228,7 @@ export default function GetStarted() {
             <img
               src="https://www.mattmichelstraining.com/images/matt-boat.jpg"
               alt="Matt Michels"
-              className="w-12 h-12 rounded-full object-cover flex-shrink-0 border-2 border-[#e8621a]"
+              className="w-12 h-12 rounded-full object-cover flex-shrink-0 border-2 border-[#22d3ee]"
             />
             <div>
               <p className="font-bold text-sm text-foreground">Matt Michels — Grosse Pointe, MI</p>
@@ -337,7 +337,7 @@ export default function GetStarted() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full bg-[#e8621a] hover:bg-[#d45616] disabled:opacity-60 text-white font-black text-sm uppercase tracking-widest py-3.5 rounded transition-colors flex items-center justify-center gap-2"
+              className="w-full bg-[#22d3ee] hover:bg-[#d45616] disabled:opacity-60 text-white font-black text-sm uppercase tracking-widest py-3.5 rounded transition-colors flex items-center justify-center gap-2"
             >
               {submitting ? (
                 <>
@@ -351,7 +351,7 @@ export default function GetStarted() {
 
             <p className="text-center text-xs text-muted-foreground">
               Or call/text Matt directly:{" "}
-              <a href="tel:+13138064952" className="text-[#e8621a] font-semibold">
+              <a href="tel:+13138064952" className="text-[#22d3ee] font-semibold">
                 (313) 806-4952
               </a>
             </p>

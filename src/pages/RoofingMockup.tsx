@@ -12,7 +12,7 @@ const ACCENT = "#2563eb";
 const services = [
   { title: "Storm Damage & Insurance", desc: "We handle the entire insurance claim process for you. Most homeowners pay $0 out of pocket.", Icon: CloudRain, color: ACCENT },
   { title: "Full Roof Replacement", desc: "Tear-off and full replacement completed in a single day. All materials, cleanup, and permits included.", Icon: Home, color: "#16a34a" },
-  { title: "Gutters & Fascia", desc: "Seamless gutters, fascia board repair, and downspout work done right alongside any roofing project.", Icon: Wrench, color: "#f97316" },
+  { title: "Gutters & Fascia", desc: "Seamless gutters, fascia board repair, and downspout work done right alongside any roofing project.", Icon: Wrench, color: "#22d3ee" },
 ];
 
 const stats = [

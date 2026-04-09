@@ -138,7 +138,7 @@ export default function SocialConnect() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-cyan-500" />
       </div>
     );
   }
@@ -151,7 +151,7 @@ export default function SocialConnect() {
           <p className="text-gray-600 text-sm">{loadError}</p>
           <p className="text-gray-500 text-sm mt-4">
             Questions? Text or call Matt at{" "}
-            <a href="tel:+13138064952" className="text-orange-600 font-medium">(313) 806-4952</a>
+            <a href="tel:+13138064952" className="text-cyan-600 font-medium">(313) 806-4952</a>
           </p>
         </div>
       </div>
@@ -170,7 +170,7 @@ export default function SocialConnect() {
           </p>
           <p className="text-gray-500 text-sm">
             Questions? Text Matt at{" "}
-            <a href="tel:+13138064952" className="text-orange-600 font-medium">(313) 806-4952</a>
+            <a href="tel:+13138064952" className="text-cyan-600 font-medium">(313) 806-4952</a>
           </p>
           <div className="mt-6 flex items-center justify-center gap-3">
             <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" className="w-10 h-10 rounded-full object-cover" />
@@ -207,11 +207,11 @@ export default function SocialConnect() {
             <span>Almost done</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
-            <div className="bg-orange-500 h-2 rounded-full" style={{ width: "100%" }} />
+            <div className="bg-cyan-500 h-2 rounded-full" style={{ width: "100%" }} />
           </div>
           <div className="flex mt-1 text-xs text-gray-400">
             <div className="flex-1 text-center">Payment ✓</div>
-            <div className="flex-1 text-center font-semibold text-orange-600">Account setup</div>
+            <div className="flex-1 text-center font-semibold text-cyan-600">Account setup</div>
           </div>
         </div>
 
@@ -283,7 +283,7 @@ export default function SocialConnect() {
               value={form.brand_voice}
               onChange={handleChange}
               placeholder="e.g. professional, friendly, local"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400"
               required
             />
             <p className="text-xs text-gray-400 mt-1">How would you describe your brand's personality in 3 words?</p>
@@ -300,7 +300,7 @@ export default function SocialConnect() {
               onChange={handleChange}
               placeholder="e.g. Homeowners in Southeast Michigan, ages 35–65"
               rows={3}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400 resize-none"
               required
             />
           </div>
@@ -316,7 +316,7 @@ export default function SocialConnect() {
               onChange={handleChange}
               placeholder="e.g. roofing tips, before/after photos, seasonal offers, 5-star reviews"
               rows={3}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400 resize-none"
               required
             />
             <p className="text-xs text-gray-400 mt-1">What kinds of content do you want the AI to create?</p>
@@ -333,7 +333,7 @@ export default function SocialConnect() {
               onChange={handleChange}
               placeholder="e.g. competitor names, pricing, political topics"
               rows={2}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400 resize-none"
             />
           </div>
 
@@ -344,7 +344,7 @@ export default function SocialConnect() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-semibold rounded-lg py-3 text-sm transition-colors flex items-center justify-center gap-2"
+            className="w-full bg-cyan-500 hover:bg-cyan-600 disabled:opacity-60 text-white font-semibold rounded-lg py-3 text-sm transition-colors flex items-center justify-center gap-2"
           >
             {submitting ? (
               <>
@@ -358,7 +358,7 @@ export default function SocialConnect() {
 
           <p className="text-xs text-gray-400 text-center">
             Questions? Text Matt at{" "}
-            <a href="tel:+13138064952" className="text-orange-500">(313) 806-4952</a>
+            <a href="tel:+13138064952" className="text-cyan-500">(313) 806-4952</a>
           </p>
         </form>
       </div>
