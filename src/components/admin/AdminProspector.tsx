@@ -1168,12 +1168,13 @@ export default function AdminProspector() {
               <CardContent>
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
-                    <thead>
+                     <thead>
                       <tr className="border-b border-cyan-500/20 text-muted-foreground">
                         <th className="text-left py-2 font-semibold">Business Name</th>
                         <th className="text-left py-2 font-semibold">Phone</th>
                         <th className="text-left py-2 font-semibold">Email</th>
-                        <th className="text-left py-2 font-semibold">Website</th>
+                        <th className="text-left py-2 font-semibold">Core Service</th>
+                        <th className="text-left py-2 font-semibold">Site Flaw</th>
                         <th className="text-left py-2 font-semibold">Gap Analysis</th>
                         <th className="text-left py-2 font-semibold w-16">Status</th>
                       </tr>
@@ -1210,12 +1211,15 @@ export default function AdminProspector() {
                               </span>
                             )}
                           </td>
-                          <td className="py-2.5">
-                            {r.website ? (
-                              <a href={r.website.startsWith("http") ? r.website : `https://${r.website}`} target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:text-cyan-300 hover:underline flex items-center gap-1 max-w-[180px] truncate">
-                                <ExternalLink size={9} className="shrink-0" /> {r.website.replace(/^https?:\/\//, "").slice(0, 30)}
-                              </a>
-                            ) : <span className="text-destructive/60">No site</span>}
+                          <td className="py-2.5 max-w-[160px]">
+                            {r.core_service ? (
+                              <p className="text-[11px] text-foreground/80 leading-snug truncate" title={r.core_service}>🎯 {r.core_service}</p>
+                            ) : <span className="text-muted-foreground text-[10px]">—</span>}
+                          </td>
+                          <td className="py-2.5 max-w-[200px]">
+                            {r.specific_site_flaw ? (
+                              <p className="text-[11px] text-red-400/90 leading-snug" title={r.specific_site_flaw}>🔴 {r.specific_site_flaw.slice(0, 60)}{r.specific_site_flaw.length > 60 ? "..." : ""}</p>
+                            ) : <span className="text-muted-foreground text-[10px]">—</span>}
                           </td>
                           <td className="py-2.5 max-w-[350px]">
                             {r.gap_status === "done" && r.gap_analysis ? (
