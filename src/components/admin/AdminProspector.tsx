@@ -958,26 +958,31 @@ export default function AdminProspector() {
     else { setSortField(field); setSortDir("desc"); }
   };
 
-  // ── Legacy Actions ──
-  const runProspecting = async () => {
-    setRunning(true);
+  // ── Omni-Channel Lead Engine Search ──
+  const runOmniSearch = async () => {
+    if (!searchIndustry) { toast.error("Select an industry"); return; }
+    setOmniSearching(true);
+    setOmniResults(null);
     try {
-      const { data, error } = await supabase.functions.invoke("prospect-local-businesses", { body: { query: query || undefined, location, radius: 10, limit: 10 } });
+      const { data, error } = await supabase.functions.invoke("omni-lead-engine", {
+        body: {
+          industry: searchIndustry,
+          location: searchLocation,
+          limit: parseInt(searchLimit),
+          strict_email_filter: strictEmailFilter,
+        },
+      });
       if (error) throw error;
-      toast.success(`Prospecting complete: ${data?.queued || 0} leads added`);
-      fetchLeads();
-    } catch (err) { toast.error(err instanceof Error ? err.message : "Prospecting failed"); }
-    finally { setRunning(false); }
-  };
-
-  const runDrip = async () => {
-    setDripRunning(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("web-design-drip", { body: {} });
-      if (error) throw error;
-      toast.success(`Drip complete: ${data?.sent || 0} emails sent`);
-    } catch (err) { toast.error(err instanceof Error ? err.message : "Drip failed"); }
-    finally { setDripRunning(false); }
+      if (data?.error) throw new Error(data.error);
+      setOmniResults(data);
+      toast.success(`Engine complete: ${data?.saved || 0} leads saved, ${data?.discarded || 0} discarded`);
+      // Auto-refresh pipeline
+      fetchPipeline();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Omni engine failed");
+    } finally {
+      setOmniSearching(false);
+    }
   };
 
   const sendOneEmail = async (lead: UnifiedLead) => {
