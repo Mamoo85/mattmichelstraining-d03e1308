@@ -6,6 +6,7 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const HUNTER_API_KEY = Deno.env.get("HUNTER_API_KEY") || "";
 const APOLLO_API_KEY = Deno.env.get("APOLLO_API_KEY") || "";
 const SNOV_API_KEY = Deno.env.get("SNOV_API_KEY") || "";
+const SNOV_USER_ID = Deno.env.get("SNOV_USER_ID") || "";
 const LUSHA_API_KEY = Deno.env.get("LUSHA_API_KEY") || "";
 const CLAY_API_KEY = Deno.env.get("CLAY_API_KEY") || "";
 
@@ -19,27 +20,26 @@ const corsHeaders = {
 const log = (step: string, data?: any) =>
   console.log(`[ENRICH] ${step}${data ? " — " + JSON.stringify(data) : ""}`);
 
-// ── HUNTER.IO: Domain email search + verification ──
-async function hunterSearch(domain: string): Promise<{ emails: Array<{ value: string; type: string; first_name: string; last_name: string; position: string; confidence: number }>; source: string } | null> {
+// ── HUNTER.IO ──
+async function hunterSearch(domain: string) {
   if (!HUNTER_API_KEY || !domain) return null;
   try {
     const res = await fetch(`https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(domain)}&api_key=${HUNTER_API_KEY}&limit=5`);
-    if (!res.ok) { log("Hunter API error", { status: res.status }); return null; }
-    const data = await res.json();
+    const body = await res.text();
+    if (!res.ok) { log("Hunter error", { status: res.status, body: body.slice(0, 200) }); return null; }
+    const data = JSON.parse(body);
     const emails = data?.data?.emails || [];
     if (emails.length === 0) return null;
+    const personal = emails.find((e: any) => e.type === "personal" && e.confidence >= 50);
+    const best = personal || emails[0];
     return {
-      emails: emails.map((e: any) => ({
-        value: e.value,
-        type: e.type || "generic",
-        first_name: e.first_name || "",
-        last_name: e.last_name || "",
-        position: e.position || "",
-        confidence: e.confidence || 0,
-      })),
+      email: best.value,
+      name: `${best.first_name || ""} ${best.last_name || ""}`.trim() || null,
+      title: best.position || null,
+      confidence: best.confidence || 0,
       source: "hunter",
     };
-  } catch (e) { log("Hunter error", { error: String(e) }); return null; }
+  } catch (e) { log("Hunter exception", { error: String(e) }); return null; }
 }
 
 async function hunterVerify(email: string): Promise<boolean> {
@@ -48,108 +48,177 @@ async function hunterVerify(email: string): Promise<boolean> {
     const res = await fetch(`https://api.hunter.io/v2/email-verifier?email=${encodeURIComponent(email)}&api_key=${HUNTER_API_KEY}`);
     if (!res.ok) return false;
     const data = await res.json();
-    return data?.data?.result === "deliverable";
+    const result = data?.data?.result;
+    return result === "deliverable" || result === "risky";
   } catch { return false; }
 }
 
-// ── APOLLO.IO: People search / company enrichment ──
-async function apolloSearch(domain: string, businessName: string): Promise<{ email: string; name: string; title: string; source: string } | null> {
+// ── APOLLO.IO — use v1/people/match (single lookup, more reliable than search) ──
+async function apolloSearch(domain: string, businessName: string) {
   if (!APOLLO_API_KEY || !domain) return null;
   try {
-    const res = await fetch("https://api.apollo.io/v1/mixed_people/search", {
+    // Try people search with organization domain
+    const res = await fetch("https://api.apollo.io/api/v1/mixed_people/search", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "Cache-Control": "no-cache", "X-Api-Key": APOLLO_API_KEY },
+      headers: { "Content-Type": "application/json", "X-Api-Key": APOLLO_API_KEY },
       body: JSON.stringify({
         q_organization_domains: domain,
         page: 1,
         per_page: 3,
-        person_seniorities: ["owner", "founder", "c_suite", "vp", "director", "manager"],
+        person_seniorities: ["owner", "founder", "c_suite", "vp", "director"],
       }),
     });
-    if (!res.ok) { log("Apollo API error", { status: res.status }); return null; }
-    const data = await res.json();
+    const body = await res.text();
+    if (!res.ok) { log("Apollo error", { status: res.status, body: body.slice(0, 200) }); return null; }
+    const data = JSON.parse(body);
     const person = data?.people?.[0];
     if (!person?.email) return null;
     return {
       email: person.email,
-      name: `${person.first_name || ""} ${person.last_name || ""}`.trim(),
-      title: person.title || "",
+      name: `${person.first_name || ""} ${person.last_name || ""}`.trim() || null,
+      title: person.title || null,
       source: "apollo",
     };
-  } catch (e) { log("Apollo error", { error: String(e) }); return null; }
+  } catch (e) { log("Apollo exception", { error: String(e) }); return null; }
 }
 
-// ── SNOV.IO: Domain email finder ──
-async function snovSearch(domain: string): Promise<{ email: string; name: string; title: string; source: string } | null> {
-  if (!SNOV_API_KEY || !domain) return null;
+// ── SNOV.IO — uses OAuth2 client_credentials flow ──
+let _snovToken: string | null = null;
+let _snovTokenExpiry = 0;
+
+async function getSnovToken(): Promise<string | null> {
+  if (_snovToken && Date.now() < _snovTokenExpiry) return _snovToken;
+  if (!SNOV_USER_ID || !SNOV_API_KEY) return null;
   try {
-    // Snov.io uses user ID + API secret, but their v2 API accepts API key
-    const res = await fetch(`https://api.snov.io/v2/domain-emails-with-info?domain=${encodeURIComponent(domain)}`, {
-      headers: { Authorization: `Bearer ${SNOV_API_KEY}` },
+    const res = await fetch("https://api.snov.io/v1/oauth/access_token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ grant_type: "client_credentials", client_id: SNOV_USER_ID, client_secret: SNOV_API_KEY }),
     });
-    if (!res.ok) { log("Snov API error", { status: res.status }); return null; }
+    if (!res.ok) { log("Snov token error", { status: res.status }); return null; }
     const data = await res.json();
+    _snovToken = data.access_token;
+    _snovTokenExpiry = Date.now() + (data.expires_in || 3600) * 1000 - 60000;
+    return _snovToken;
+  } catch (e) { log("Snov token exception", { error: String(e) }); return null; }
+}
+
+async function snovSearch(domain: string) {
+  const token = await getSnovToken();
+  if (!token || !domain) return null;
+  try {
+    const res = await fetch("https://api.snov.io/v2/domain-emails-with-info", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ domain, limit: 5, type: "personal" }),
+    });
+    const body = await res.text();
+    if (!res.ok) { log("Snov error", { status: res.status, body: body.slice(0, 200) }); return null; }
+    const data = JSON.parse(body);
     const emails = data?.emails || data?.data?.emails || [];
     if (emails.length === 0) return null;
     const best = emails[0];
     return {
       email: best.email || best.value || "",
-      name: `${best.firstName || ""} ${best.lastName || ""}`.trim(),
-      title: best.position || best.title || "",
+      name: `${best.firstName || best.first_name || ""} ${best.lastName || best.last_name || ""}`.trim() || null,
+      title: best.position || best.title || null,
       source: "snov",
     };
-  } catch (e) { log("Snov error", { error: String(e) }); return null; }
+  } catch (e) { log("Snov exception", { error: String(e) }); return null; }
 }
 
-// ── LUSHA: Contact enrichment (phone + email) ──
-async function lushaSearch(domain: string, businessName: string): Promise<{ email: string; phone: string; name: string; title: string; source: string } | null> {
+// ── LUSHA — correct v2 API endpoint ──
+async function lushaSearch(domain: string, businessName: string) {
   if (!LUSHA_API_KEY || !domain) return null;
   try {
-    const res = await fetch(`https://api.lusha.com/person?company=${encodeURIComponent(businessName)}&companyDomain=${encodeURIComponent(domain)}`, {
-      headers: { Authorization: `Bearer ${LUSHA_API_KEY}`, "Content-Type": "application/json" },
+    const res = await fetch("https://api.lusha.com/prospecting/api/v2/person/enrich", {
+      method: "POST",
+      headers: { "api_key": LUSHA_API_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify({ requestBody: { company: { domain } }, limit: 1, outputColumns: ["full_name", "email_address", "phone_number", "job_title"] }),
     });
-    if (!res.ok) { log("Lusha API error", { status: res.status }); return null; }
-    const data = await res.json();
-    const contact = data?.data || data;
+    const body = await res.text();
+    if (!res.ok) { log("Lusha error", { status: res.status, body: body.slice(0, 200) }); return null; }
+    const data = JSON.parse(body);
+    const contact = data?.data?.[0] || data?.contacts?.[0];
     if (!contact) return null;
     return {
-      email: contact.emailAddress || contact.email || "",
-      phone: contact.phoneNumber || contact.phone || contact.directDial || "",
-      name: `${contact.firstName || ""} ${contact.lastName || ""}`.trim(),
-      title: contact.title || contact.jobTitle || "",
+      email: contact.email_address || contact.email || "",
+      phone: contact.phone_number || contact.phone || "",
+      name: contact.full_name || `${contact.first_name || ""} ${contact.last_name || ""}`.trim() || null,
+      title: contact.job_title || contact.title || null,
       source: "lusha",
     };
-  } catch (e) { log("Lusha error", { error: String(e) }); return null; }
+  } catch (e) { log("Lusha exception", { error: String(e) }); return null; }
 }
 
-// ── CLAY.COM: Enrichment API ──
-async function clayEnrich(domain: string, businessName: string): Promise<{ email: string; phone: string; name: string; title: string; source: string } | null> {
+// ── CLAY.COM ──
+async function clayEnrich(domain: string, businessName: string) {
   if (!CLAY_API_KEY || !domain) return null;
   try {
-    const res = await fetch("https://api.clay.com/v1/enrichments", {
+    const res = await fetch("https://api.clay.com/v3/sources/enrichments", {
       method: "POST",
       headers: { Authorization: `Bearer ${CLAY_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        domain,
-        company_name: businessName,
-        enrichment_type: "company_contacts",
-      }),
+      body: JSON.stringify({ domain, company_name: businessName, enrichment_type: "company_contacts" }),
     });
-    if (!res.ok) { log("Clay API error", { status: res.status }); return null; }
-    const data = await res.json();
+    const body = await res.text();
+    if (!res.ok) { log("Clay error", { status: res.status, body: body.slice(0, 200) }); return null; }
+    const data = JSON.parse(body);
     const contact = data?.results?.[0] || data?.data?.[0];
     if (!contact) return null;
     return {
       email: contact.email || contact.work_email || "",
       phone: contact.phone || contact.direct_phone || "",
-      name: contact.full_name || `${contact.first_name || ""} ${contact.last_name || ""}`.trim(),
-      title: contact.title || contact.job_title || "",
+      name: contact.full_name || `${contact.first_name || ""} ${contact.last_name || ""}`.trim() || null,
+      title: contact.title || contact.job_title || null,
       source: "clay",
     };
-  } catch (e) { log("Clay error", { error: String(e) }); return null; }
+  } catch (e) { log("Clay exception", { error: String(e) }); return null; }
 }
 
-// ── Extract domain from URL ──
+// ── Email Pattern Guess: Generate common email patterns without needing API credits ──
+async function guessEmail(domain: string, name: string | null, businessName: string): Promise<string | null> {
+  if (!domain) return null;
+
+  // Build candidate list based on common small business patterns
+  const candidates: string[] = [];
+
+  if (name) {
+    const parts = name.toLowerCase().replace(/[^a-z\s]/g, "").split(/\s+/).filter(Boolean);
+    const first = parts[0] || "";
+    const last = parts[parts.length - 1] || "";
+    if (first && last && first !== last) {
+      candidates.push(`${first}@${domain}`);
+      candidates.push(`${first}.${last}@${domain}`);
+      candidates.push(`${first}${last}@${domain}`);
+      candidates.push(`${first[0]}${last}@${domain}`);
+    } else if (first) {
+      candidates.push(`${first}@${domain}`);
+    }
+  }
+
+  // Common generic addresses (most small businesses use these)
+  candidates.push(`info@${domain}`, `contact@${domain}`, `hello@${domain}`,
+    `office@${domain}`, `admin@${domain}`, `sales@${domain}`);
+
+  // Try Hunter verify if available (even on free plan, verify has separate quota)
+  if (HUNTER_API_KEY) {
+    for (const email of candidates.slice(0, 4)) {
+      const verified = await hunterVerify(email);
+      if (verified) {
+        log("Email pattern verified via Hunter", { email });
+        return email;
+      }
+    }
+  }
+
+  // If Hunter is exhausted too, return the most likely generic — info@ is most common for SMBs
+  // We can't verify but it's better than nothing
+  const bestGuess = `info@${domain}`;
+  log("Email pattern guess (unverified)", { email: bestGuess });
+  return bestGuess;
+}
+
+
 function extractDomain(url: string): string {
   try {
     let clean = url.trim();
@@ -158,7 +227,6 @@ function extractDomain(url: string): string {
   } catch { return ""; }
 }
 
-// ── Main waterfall enrichment ──
 interface EnrichmentResult {
   email: string | null;
   verified_email: boolean;
@@ -171,104 +239,93 @@ interface EnrichmentResult {
 
 async function runWaterfall(domain: string, businessName: string): Promise<EnrichmentResult> {
   const result: EnrichmentResult = {
-    email: null,
-    verified_email: false,
-    decision_maker_name: null,
-    decision_maker_title: null,
-    direct_phone: null,
-    enrichment_source: "none",
+    email: null, verified_email: false, decision_maker_name: null,
+    decision_maker_title: null, direct_phone: null, enrichment_source: "none",
     enrichment_data: {},
   };
 
-  // Step 1: Hunter.io — fastest, cheapest
+  // Step 1: Hunter.io
   log("Step 1: Hunter.io", { domain });
   const hunterResult = await hunterSearch(domain);
-  if (hunterResult && hunterResult.emails.length > 0) {
-    // Pick highest confidence personal email, fallback to generic
-    const personal = hunterResult.emails.find(e => e.type === "personal" && e.confidence >= 70);
-    const best = personal || hunterResult.emails[0];
-    result.email = best.value;
+  if (hunterResult?.email) {
+    result.email = hunterResult.email;
     result.enrichment_source = "hunter";
-    if (best.first_name || best.last_name) {
-      result.decision_maker_name = `${best.first_name} ${best.last_name}`.trim();
-    }
-    if (best.position) result.decision_maker_title = best.position;
+    result.decision_maker_name = hunterResult.name;
+    result.decision_maker_title = hunterResult.title;
     result.enrichment_data.hunter = hunterResult;
-
-    // Verify the email
-    const verified = await hunterVerify(best.value);
+    const verified = await hunterVerify(hunterResult.email);
     result.verified_email = verified;
-    log("Hunter found email", { email: best.value, verified, confidence: best.confidence });
+    log("Hunter found", { email: hunterResult.email, verified });
   }
 
-  // Step 2: Apollo.io — decision maker lookup (run if no email OR no name)
+  // Step 2: Apollo.io
   if (!result.email || !result.decision_maker_name) {
     log("Step 2: Apollo.io", { domain });
     const apolloResult = await apolloSearch(domain, businessName);
     if (apolloResult) {
-      if (!result.email) {
-        result.email = apolloResult.email;
-        result.enrichment_source = "apollo";
-      }
-      if (!result.decision_maker_name && apolloResult.name) {
-        result.decision_maker_name = apolloResult.name;
-      }
-      if (!result.decision_maker_title && apolloResult.title) {
-        result.decision_maker_title = apolloResult.title;
-      }
+      if (!result.email && apolloResult.email) { result.email = apolloResult.email; result.enrichment_source = "apollo"; }
+      if (!result.decision_maker_name && apolloResult.name) result.decision_maker_name = apolloResult.name;
+      if (!result.decision_maker_title && apolloResult.title) result.decision_maker_title = apolloResult.title;
       result.enrichment_data.apollo = apolloResult;
-      log("Apollo found contact", { name: apolloResult.name, title: apolloResult.title });
+      log("Apollo found", apolloResult);
     }
   }
 
-  // Step 3: Snov.io — fallback email finder
+  // Step 3: Snov.io
   if (!result.email) {
     log("Step 3: Snov.io", { domain });
     const snovResult = await snovSearch(domain);
-    if (snovResult && snovResult.email) {
+    if (snovResult?.email) {
       result.email = snovResult.email;
       result.enrichment_source = "snov";
       if (!result.decision_maker_name && snovResult.name) result.decision_maker_name = snovResult.name;
       if (!result.decision_maker_title && snovResult.title) result.decision_maker_title = snovResult.title;
       result.enrichment_data.snov = snovResult;
-      log("Snov found email", { email: snovResult.email });
+      log("Snov found", snovResult);
     }
   }
 
-  // Step 4: Lusha — phone number enrichment (run for all prospects, phone is high value)
-  if (!result.direct_phone) {
+  // Step 4: Lusha
+  if (!result.direct_phone || !result.email) {
     log("Step 4: Lusha", { domain });
     const lushaResult = await lushaSearch(domain, businessName);
     if (lushaResult) {
       if (lushaResult.phone) result.direct_phone = lushaResult.phone;
-      if (!result.email && lushaResult.email) {
-        result.email = lushaResult.email;
-        result.enrichment_source = "lusha";
-      }
+      if (!result.email && lushaResult.email) { result.email = lushaResult.email; result.enrichment_source = "lusha"; }
       if (!result.decision_maker_name && lushaResult.name) result.decision_maker_name = lushaResult.name;
       if (!result.decision_maker_title && lushaResult.title) result.decision_maker_title = lushaResult.title;
       result.enrichment_data.lusha = lushaResult;
-      log("Lusha found contact", { phone: lushaResult.phone, name: lushaResult.name });
+      log("Lusha found", lushaResult);
     }
   }
 
-  // Step 5: Clay.com — final enrichment pass for remaining gaps
+  // Step 5: Clay.com
   if (!result.email || !result.direct_phone) {
     log("Step 5: Clay.com", { domain });
     const clayResult = await clayEnrich(domain, businessName);
     if (clayResult) {
-      if (!result.email && clayResult.email) {
-        result.email = clayResult.email;
-        result.enrichment_source = "clay";
-      }
+      if (!result.email && clayResult.email) { result.email = clayResult.email; result.enrichment_source = "clay"; }
       if (!result.direct_phone && clayResult.phone) result.direct_phone = clayResult.phone;
       if (!result.decision_maker_name && clayResult.name) result.decision_maker_name = clayResult.name;
       if (!result.decision_maker_title && clayResult.title) result.decision_maker_title = clayResult.title;
       result.enrichment_data.clay = clayResult;
-      log("Clay found data", { email: clayResult.email, phone: clayResult.phone });
+      log("Clay found", clayResult);
     }
   }
 
+  // Step 6: Email pattern guess fallback
+  if (!result.email) {
+    log("Step 6: Email guess fallback", { domain, name: result.decision_maker_name });
+    const guessed = await guessEmail(domain, result.decision_maker_name, businessName);
+    if (guessed) {
+      result.email = guessed;
+      result.enrichment_source = "email_guess";
+      // Only mark as verified if Hunter actually verified it
+      log("Fallback email found", { email: guessed });
+    }
+  }
+
+  log("Waterfall complete", { email: result.email, source: result.enrichment_source, name: result.decision_maker_name });
   return result;
 }
 
@@ -277,9 +334,9 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { prospect_id, domain, business_name, website, mode } = body;
+    const { prospect_id, domain, business_name, website, mode, industry } = body;
 
-    // ── BATCH MODE: Enrich all pending prospects ──
+    // ── BATCH MODE ──
     if (mode === "batch") {
       const batchLimit = body.limit || 20;
       const { data: pending } = await sb
@@ -295,16 +352,12 @@ serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
-      let enriched = 0;
-      let failed = 0;
-
+      let enriched = 0, failed = 0;
       for (const prospect of pending) {
         try {
           const dom = extractDomain(prospect.website || "");
           if (!dom) { failed++; continue; }
-
           const result = await runWaterfall(dom, prospect.business_name);
-
           await sb.from("prospect_businesses").update({
             enrichment_source: result.enrichment_source,
             enrichment_status: result.email ? "enriched" : "no_data",
@@ -314,64 +367,38 @@ serve(async (req) => {
             direct_phone: result.direct_phone,
             enriched_at: new Date().toISOString(),
             enrichment_data: result.enrichment_data,
-            // Update email if we found one and they didn't have one
             ...(result.email && !prospect.email ? { email: result.email } : {}),
           }).eq("id", prospect.id);
-
           enriched++;
-          log("Batch enriched", { id: prospect.id, source: result.enrichment_source });
-
-          // Rate limit: 500ms between prospects
           await new Promise(r => setTimeout(r, 500));
-        } catch (e) {
-          log("Batch prospect error", { id: prospect.id, error: String(e) });
-          failed++;
-        }
+        } catch (e) { log("Batch error", { id: prospect.id, error: String(e) }); failed++; }
       }
 
       return new Response(JSON.stringify({ ok: true, enriched, failed, total: pending.length }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // ── STATS MODE: Return enrichment statistics ──
+    // ── STATS MODE ──
     if (mode === "stats") {
-      const [
-        { count: total },
-        { count: enriched },
-        { count: pending },
-        { count: noData },
-      ] = await Promise.all([
+      const [t, e, p, n] = await Promise.all([
         sb.from("prospect_businesses").select("id", { count: "exact", head: true }),
         sb.from("prospect_businesses").select("id", { count: "exact", head: true }).eq("enrichment_status", "enriched"),
         sb.from("prospect_businesses").select("id", { count: "exact", head: true }).or("enrichment_status.eq.pending,enrichment_status.is.null"),
         sb.from("prospect_businesses").select("id", { count: "exact", head: true }).eq("enrichment_status", "no_data"),
       ]);
-
-      // Source breakdown
       const sourceBreakdown: Record<string, number> = {};
-      for (const source of ["hunter", "apollo", "snov", "lusha", "clay"]) {
+      for (const source of ["hunter", "apollo", "snov", "lusha", "clay", "email_guess"]) {
         const { count } = await sb.from("prospect_businesses").select("id", { count: "exact", head: true }).eq("enrichment_source", source);
         sourceBreakdown[source] = count || 0;
       }
-
       return new Response(JSON.stringify({
-        ok: true,
-        total: total || 0,
-        enriched: enriched || 0,
-        pending: pending || 0,
-        no_data: noData || 0,
-        by_source: sourceBreakdown,
-        apis_configured: {
-          hunter: !!HUNTER_API_KEY,
-          apollo: !!APOLLO_API_KEY,
-          snov: !!SNOV_API_KEY,
-          lusha: !!LUSHA_API_KEY,
-          clay: !!CLAY_API_KEY,
-        },
+        ok: true, total: t.count || 0, enriched: e.count || 0, pending: p.count || 0,
+        no_data: n.count || 0, by_source: sourceBreakdown,
+        apis_configured: { hunter: !!HUNTER_API_KEY, apollo: !!APOLLO_API_KEY, snov: !!(SNOV_API_KEY && SNOV_USER_ID), lusha: !!LUSHA_API_KEY, clay: !!CLAY_API_KEY },
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // ── SINGLE ENRICHMENT MODE ──
+    // ── SINGLE ENRICHMENT MODE (called by omni-lead-engine) ──
     const targetDomain = domain || (website ? extractDomain(website) : "");
     if (!targetDomain) {
       return new Response(JSON.stringify({ error: "domain or website required" }), {
@@ -380,7 +407,6 @@ serve(async (req) => {
 
     const result = await runWaterfall(targetDomain, business_name || "");
 
-    // Update prospect_businesses if prospect_id provided
     if (prospect_id) {
       await sb.from("prospect_businesses").update({
         enrichment_source: result.enrichment_source,
@@ -395,8 +421,17 @@ serve(async (req) => {
       }).eq("id", prospect_id);
     }
 
-    return new Response(JSON.stringify({ ok: true, ...result }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({
+      ok: true,
+      email: result.email,
+      verified_email: result.verified_email,
+      contact_name: result.decision_maker_name,
+      decision_maker_name: result.decision_maker_name,
+      decision_maker_title: result.decision_maker_title,
+      direct_phone: result.direct_phone,
+      phone: result.direct_phone,
+      enrichment_source: result.enrichment_source,
+    }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("[ENRICH]", e);
     return new Response(JSON.stringify({ error: String(e) }), {

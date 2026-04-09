@@ -224,20 +224,38 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ─── Save to Pipeline ───
+    // ─── Save to Pipeline & Auto-Trigger Drip ───
     let savedCount = 0;
+    const dripTriggered: string[] = [];
     for (const lead of processedLeads) {
       const { site_content_preview, ...dbLead } = lead;
-      const { error } = await serviceClient.from("prospect_pipeline").upsert(
+      const { data: upserted, error } = await serviceClient.from("prospect_pipeline").upsert(
         dbLead,
         { onConflict: "business_name,city" }
-      );
-      if (!error) savedCount++;
-      else console.error("[OmniEngine] Insert error:", error.message);
+      ).select("id, email, drip_step");
+      if (!error && upserted?.[0]) {
+        savedCount++;
+        // Auto-trigger Day 1 drip for new leads with email
+        const row = upserted[0];
+        if (row.email && (!row.drip_step || row.drip_step === 0)) {
+          try {
+            await fetch(`${SUPABASE_URL}/functions/v1/pipeline-auto-drip`, {
+              method: "POST",
+              headers: { Authorization: `Bearer ${SERVICE_ROLE_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({ mode: "trigger", lead_id: row.id }),
+            });
+            dripTriggered.push(row.id);
+          } catch (e) {
+            console.error("[OmniEngine] Drip trigger error:", e);
+          }
+        }
+      } else if (error) {
+        console.error("[OmniEngine] Insert error:", error.message);
+      }
     }
 
     console.log(
-      `[OmniEngine] Complete: ${savedCount} saved, ${discarded.length} discarded (no email)`
+      `[OmniEngine] Complete: ${savedCount} saved, ${discarded.length} discarded, ${dripTriggered.length} drips triggered`
     );
 
     return json({
@@ -246,6 +264,7 @@ Deno.serve(async (req) => {
       saved: savedCount,
       discarded: discarded.length,
       discarded_names: discarded,
+      drip_triggered: dripTriggered.length,
       results: processedLeads,
     });
   } catch (err) {
