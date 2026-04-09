@@ -200,7 +200,7 @@ function DripBadge({ step, status }: { step: number; status: string }) {
 }
 
 // ── Kanban Lead Card ──
-function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onDrip, onPreviewDrip, auditing, sending, researching, dripping }: {
+function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onDrip, onPreviewDrip, onDelete, auditing, sending, researching, dripping }: {
   lead: PipelineLead;
   onAudit: (lead: PipelineLead) => void;
   onSendN8n: (lead: PipelineLead) => void;
@@ -208,6 +208,7 @@ function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onD
   onDeepResearch: (lead: PipelineLead) => void;
   onDrip: (lead: PipelineLead, action: "draft" | "send" | "send_existing") => void;
   onPreviewDrip: (lead: PipelineLead) => void;
+  onDelete: (leadId: string) => void;
   auditing: boolean;
   sending: boolean;
   researching: boolean;
@@ -368,11 +369,16 @@ function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onD
             <CheckCircle size={10} /> Booked
           </Button>
         )}
-        {lead.website && (
-          <a href={lead.website.startsWith("http") ? lead.website : `https://${lead.website}`} target="_blank" rel="noopener noreferrer" className="ml-auto">
-            <ExternalLink size={10} className="text-muted-foreground hover:text-foreground" />
-          </a>
-        )}
+        <div className="ml-auto flex items-center gap-1">
+          {lead.website && (
+            <a href={lead.website.startsWith("http") ? lead.website : `https://${lead.website}`} target="_blank" rel="noopener noreferrer">
+              <ExternalLink size={10} className="text-muted-foreground hover:text-foreground" />
+            </a>
+          )}
+          <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-destructive/50 hover:text-destructive hover:bg-destructive/10" onClick={() => onDelete(lead.id)}>
+            <Trash2 size={10} />
+          </Button>
+        </div>
       </div>
       {lead.n8n_sent_at && <Badge className="text-[8px] bg-green-500/20 text-green-400 border-0">n8n sent</Badge>}
     </div>
@@ -380,7 +386,7 @@ function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onD
 }
 
 // ── Kanban Column ──
-function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, onDeepResearch, onDrip, onPreviewDrip, auditingId, sendingId, researchingId, drippingId }: {
+function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, onDeepResearch, onDrip, onPreviewDrip, onDelete, auditingId, sendingId, researchingId, drippingId }: {
   stage: typeof PIPELINE_STAGES[0];
   leads: PipelineLead[];
   onAudit: (lead: PipelineLead) => void;
@@ -389,6 +395,7 @@ function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, onDeepRes
   onDeepResearch: (lead: PipelineLead) => void;
   onDrip: (lead: PipelineLead, action: "draft" | "send" | "send_existing") => void;
   onPreviewDrip: (lead: PipelineLead) => void;
+  onDelete: (leadId: string) => void;
   auditingId: string | null;
   sendingId: string | null;
   researchingId: string | null;
@@ -412,6 +419,7 @@ function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, onDeepRes
               onDeepResearch={onDeepResearch}
               onDrip={onDrip}
               onPreviewDrip={onPreviewDrip}
+              onDelete={onDelete}
               auditing={auditingId === lead.id}
               sending={sendingId === lead.id}
               researching={researchingId === lead.id}
@@ -582,6 +590,25 @@ export default function AdminProspector() {
     const { error } = await (supabase as any).from("prospect_pipeline").update({ pipeline_stage: stage, updated_at: new Date().toISOString() }).eq("id", leadId);
     if (error) { toast.error("Failed to update stage"); return; }
     setPipelineLeads(prev => prev.map(l => l.id === leadId ? { ...l, pipeline_stage: stage } : l));
+  };
+
+  const deletePipelineLead = async (leadId: string) => {
+    if (!confirm("Remove this lead from the pipeline?")) return;
+    const { error } = await (supabase as any).from("prospect_pipeline").delete().eq("id", leadId);
+    if (error) { toast.error("Delete failed"); return; }
+    toast.success("Lead removed");
+    setPipelineLeads(prev => prev.filter(l => l.id !== leadId));
+  };
+
+  const deleteSelectedPipelineLeads = async () => {
+    if (selectedPipelineIds.size === 0) { toast.error("No leads selected"); return; }
+    if (!confirm(`Delete ${selectedPipelineIds.size} selected leads?`)) return;
+    const ids = Array.from(selectedPipelineIds);
+    const { error } = await (supabase as any).from("prospect_pipeline").delete().in("id", ids);
+    if (error) { toast.error("Batch delete failed"); return; }
+    toast.success(`Deleted ${ids.length} leads`);
+    setPipelineLeads(prev => prev.filter(l => !selectedPipelineIds.has(l.id)));
+    setSelectedPipelineIds(new Set());
   };
 
   // ── Website Audit ──
@@ -1386,7 +1413,15 @@ export default function AdminProspector() {
               {batchProcessing ? <Loader2 size={10} className="animate-spin" /> : <Mail size={10} />}
               Generate & Send {selectedPipelineIds.size > 0 ? selectedPipelineIds.size : "All"}
             </Button>
-            <div className="ml-auto">
+            <div className="ml-auto flex items-center gap-2">
+              {selectedPipelineIds.size > 0 && (
+                <Button
+                  variant="outline" size="sm" className="text-xs h-7 gap-1 border-red-500/40 text-red-400 hover:bg-red-500/10"
+                  onClick={deleteSelectedPipelineLeads}
+                >
+                  <Trash2 size={10} /> Delete Selected ({selectedPipelineIds.size})
+                </Button>
+              )}
               <Button
                 variant="outline" size="sm" className="text-xs h-7 gap-1 border-red-500/30 text-red-400 hover:bg-red-500/10"
                 disabled={archiving}
@@ -1411,6 +1446,7 @@ export default function AdminProspector() {
                     onDeepResearch={deepResearch}
                     onDrip={runPipelineDrip}
                     onPreviewDrip={setPreviewLead}
+                    onDelete={deletePipelineLead}
                     auditingId={auditingId}
                     sendingId={sendingId}
                     researchingId={researchingId}

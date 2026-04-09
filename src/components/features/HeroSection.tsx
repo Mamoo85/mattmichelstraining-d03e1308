@@ -54,19 +54,21 @@ const HeroSection = () => {
       <div className="container relative z-10 pt-20 pb-12">
         {showHero && (
           <div className="py-8 md:py-16 animate-fadeIn">
-            <div className="relative rounded-lg overflow-hidden bg-card/50 ring-1 ring-white/5 p-6 md:p-10 mb-6">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent" />
+            <div className="relative rounded-2xl overflow-hidden bg-card/40 backdrop-blur-xl border border-white/[0.06] shadow-[0_8px_48px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.06)] p-6 md:p-10 mb-6">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/8 via-transparent to-transparent" />
               <div className="relative flex flex-col items-center text-center">
-                <img
-                  src={m2Logo}
-                  alt="M2 Training"
-                  width={256}
-                  height={256}
-                  fetchPriority="high"
-                  decoding="sync"
-                  className="w-28 md:w-40 lg:w-48 h-auto object-contain mb-5"
-                  style={{ mixBlendMode: "lighten", aspectRatio: "1/1" }}
-                />
+                <div className="relative mb-5">
+                  <div className="absolute inset-0 rounded-full blur-2xl bg-primary/20 scale-110" />
+                  <img
+                    src={m2Logo}
+                    alt="M2 Training"
+                    width={256}
+                    height={256}
+                    fetchPriority="high"
+                    decoding="sync"
+                    className="relative w-28 md:w-40 lg:w-48 h-auto object-contain rounded-full shadow-[0_0_40px_rgba(232,98,26,0.25)]"
+                  />
+                </div>
 
                 {/* Specialty chips */}
                 <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
@@ -80,8 +82,9 @@ const HeroSection = () => {
                   ))}
                 </div>
 
-                <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold tracking-display text-foreground leading-snug mb-2">
-                  Real strength. Zero gimmicks.
+                <h1 className="text-2xl md:text-4xl lg:text-5xl font-black tracking-tight text-foreground leading-[1.1] mb-2">
+                  Real strength.{" "}
+                  <span className="text-primary drop-shadow-[0_0_24px_rgba(232,98,26,0.5)]">Zero gimmicks.</span>
                 </h1>
                 <div className="text-xl md:text-3xl lg:text-4xl font-bold tracking-display mb-4">
                   <WheelSlogan />
@@ -120,7 +123,7 @@ const HeroSection = () => {
             {/* Social proof — inline testimonials above CTA */}
             <div className="flex flex-col sm:flex-row gap-3 w-full max-w-2xl mx-auto mb-5">
               {HERO_TESTIMONIALS.map((t) => (
-                <div key={t.name} className="flex-1 bg-card/60 border border-border rounded-xl p-4 text-left">
+                <div key={t.name} className="flex-1 bg-card/50 backdrop-blur-sm border border-border/50 border-l-2 border-l-primary rounded-xl p-4 text-left shadow-[0_2px_16px_rgba(0,0,0,0.2)]">
                   <Quote size={14} className="text-primary/50 mb-1.5" />
                   <p className="text-xs text-muted-foreground leading-relaxed italic mb-2">"{t.quote}"</p>
                   <div className="flex items-center gap-1 mb-1">

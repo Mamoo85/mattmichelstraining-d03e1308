@@ -52,9 +52,12 @@ const TerminalAnimation = () => {
           <p style={{ color: "#64748b" }}>This is what happens behind the scenes when we scan a website.</p>
         </div>
 
-        <div className="rounded-xl overflow-hidden" style={{ background: "#0c0c14", border: "1px solid rgba(148,163,184,0.1)" }}>
+        <div className="rounded-xl overflow-hidden relative" style={{ background: "#0c0c14", border: "1px solid rgba(148,163,184,0.1)" }}>
+          {/* Scanline overlay */}
+          <div className="pointer-events-none absolute inset-0 z-10 rounded-xl" style={{ background: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px)", opacity: 0.5 }} />
+
           {/* Title bar */}
-          <div className="flex items-center gap-2 px-4 py-3" style={{ background: "rgba(15,23,42,0.8)", borderBottom: "1px solid rgba(148,163,184,0.08)" }}>
+          <div className="flex items-center gap-2 px-4 py-3 relative" style={{ background: "rgba(15,23,42,0.8)", borderBottom: "1px solid rgba(148,163,184,0.08)" }}>
             <div className="w-3 h-3 rounded-full" style={{ background: "#ef4444" }} />
             <div className="w-3 h-3 rounded-full" style={{ background: "#eab308" }} />
             <div className="w-3 h-3 rounded-full" style={{ background: "#22c55e" }} />
@@ -62,7 +65,7 @@ const TerminalAnimation = () => {
           </div>
 
           {/* Terminal body */}
-          <div className="p-5 md:p-6 font-mono text-sm leading-7 min-h-[320px]" style={{ color: "#94a3b8" }}>
+          <div className="p-5 md:p-6 font-mono text-sm leading-7 min-h-[320px] relative" style={{ color: "#94a3b8" }}>
             {LINES.slice(0, visibleLines).map((line, i) => (
               <div key={i} style={{
                 color: line.error ? "#f87171" : line.warn ? "#facc15" : line.highlight ? "#22d3ee" : "#94a3b8",
@@ -72,9 +75,24 @@ const TerminalAnimation = () => {
                 {line.text}
               </div>
             ))}
-            {!done && <span className="inline-block w-2 h-4 animate-pulse" style={{ background: "#22d3ee" }} />}
+            {!done && (
+              <span
+                className="inline-block w-2 h-4"
+                style={{
+                  background: "#22d3ee",
+                  animation: "terminal-cursor 0.7s step-start infinite",
+                }}
+              />
+            )}
           </div>
         </div>
+
+        <style>{`
+          @keyframes terminal-cursor {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+          }
+        `}</style>
 
         {done && (
           <div className="text-center mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
