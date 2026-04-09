@@ -6122,6 +6122,7 @@ export type Database = {
       }
       prospect_pipeline: {
         Row: {
+          breach_count: number | null
           business_name: string
           city: string | null
           contact_name: string | null
@@ -6142,6 +6143,7 @@ export type Database = {
           id: string
           industry: string | null
           last_drip_at: string | null
+          lead_score: number | null
           n8n_sent_at: string | null
           pain_points: Json | null
           phone: string | null
@@ -6155,6 +6157,7 @@ export type Database = {
           website: string | null
         }
         Insert: {
+          breach_count?: number | null
           business_name: string
           city?: string | null
           contact_name?: string | null
@@ -6175,6 +6178,7 @@ export type Database = {
           id?: string
           industry?: string | null
           last_drip_at?: string | null
+          lead_score?: number | null
           n8n_sent_at?: string | null
           pain_points?: Json | null
           phone?: string | null
@@ -6188,6 +6192,7 @@ export type Database = {
           website?: string | null
         }
         Update: {
+          breach_count?: number | null
           business_name?: string
           city?: string | null
           contact_name?: string | null
@@ -6208,6 +6213,7 @@ export type Database = {
           id?: string
           industry?: string | null
           last_drip_at?: string | null
+          lead_score?: number | null
           n8n_sent_at?: string | null
           pain_points?: Json | null
           phone?: string | null
