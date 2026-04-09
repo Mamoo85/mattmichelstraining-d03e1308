@@ -60,7 +60,7 @@ const CaseStudyAuditTrail = () => (
                 <p className="text-sm font-mono" style={{ color: "#94a3b8" }}>{cs.fix}</p>
               </div>
               {/* Results */}
-              <div className="grid grid-cols-3 gap-3 pt-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
                 {cs.results.map((r) => (
                   <div key={r.label} className="text-center p-3 rounded-lg" style={{ background: "rgba(34,211,238,0.04)", border: "1px solid rgba(34,211,238,0.1)" }}>
                     <div className="text-[10px] font-bold uppercase tracking-[0.1em] mb-2" style={{ color: "#475569" }}>{r.label}</div>
