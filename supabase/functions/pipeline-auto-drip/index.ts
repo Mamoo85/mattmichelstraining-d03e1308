@@ -135,10 +135,10 @@ Deno.serve(async (req) => {
 
         // Log the email
         await sb.from("prospect_email_log").insert({
-          prospect_id: lead.id,
-          email: lead.email,
+          pipeline_lead_id: lead.id, business_name: lead.business_name,
+          recipient_email: lead.email,
           subject,
-          body: html,
+          
           drip_step: 1,
           status: "sent",
           resend_id: result.resendId || null,
@@ -172,7 +172,7 @@ Deno.serve(async (req) => {
             last_drip_at: now.toISOString(), pipeline_stage: "outreach_sent",
           }).eq("id", lead.id);
           await sb.from("prospect_email_log").insert({
-            prospect_id: lead.id, email: lead.email, subject, body: html,
+            pipeline_lead_id: lead.id, business_name: lead.business_name, recipient_email: lead.email, subject, 
             drip_step: 1, status: "sent", resend_id: result.resendId || null,
           }).catch(() => {});
           sent++;
@@ -210,7 +210,7 @@ Deno.serve(async (req) => {
               last_drip_at: now.toISOString(),
             }).eq("id", lead.id);
             await sb.from("prospect_email_log").insert({
-              prospect_id: lead.id, email: lead.email, subject, body: html,
+              pipeline_lead_id: lead.id, business_name: lead.business_name, recipient_email: lead.email, subject, 
               drip_step: nextStep, status: "sent", resend_id: result.resendId || null,
             }).catch(() => {});
             sent++;
