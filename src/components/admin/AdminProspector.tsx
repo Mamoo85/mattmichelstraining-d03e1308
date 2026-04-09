@@ -113,6 +113,9 @@ interface MapResult {
 // ── Hybrid Result ──
 interface HybridResult extends MapResult {
   gap_analysis: string | null;
+  core_service: string | null;
+  specific_site_flaw: string | null;
+  recent_activity: string | null;
   gap_status: "pending" | "analyzing" | "done" | "skipped" | "error";
   email: string | null;
   email_status: "found" | "not_found" | "skipped" | "error";
@@ -536,6 +539,9 @@ export default function AdminProspector() {
           pipeline_stage: "new_lead",
           source: isHybrid ? "hybrid" : "dataforseo",
           gap_analysis: isHybrid ? (r as HybridResult).gap_analysis : null,
+          core_service: isHybrid ? (r as HybridResult).core_service : null,
+          specific_site_flaw: isHybrid ? (r as HybridResult).specific_site_flaw : null,
+          recent_activity: isHybrid ? (r as HybridResult).recent_activity : null,
           email: isHybrid ? (r as HybridResult).email : null,
         });
         if (error) {
