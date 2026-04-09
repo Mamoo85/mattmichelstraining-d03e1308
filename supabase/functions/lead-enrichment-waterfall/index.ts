@@ -222,40 +222,79 @@ async function clayEnrich(domain: string, businessName: string) {
   } catch (e) { log("Clay exception", { error: String(e) }); return null; }
 }
 
-// ── FIRECRAWL + LLM FALLBACK ──
-async function firecrawlLLMFallback(domain: string, businessName: string): Promise<{ email: string | null; name: string | null; title: string | null } | null> {
-  if (!FIRECRAWL_API_KEY) { log("Firecrawl fallback skipped — no API key"); return null; }
+// ── DIRECT SCRAPE + LLM FALLBACK (no Firecrawl credits needed) ──
+async function directScrapeLLMFallback(domain: string, businessName: string): Promise<{ email: string | null; name: string | null; title: string | null } | null> {
   try {
-    // Scrape the website — try root first (most reliable), then contact/about
     const urls = [`https://${domain}`, `https://${domain}/contact`, `https://${domain}/about`, `https://www.${domain}`];
     let scrapedText = "";
 
-    for (const url of urls) {
-      try {
-        log("Firecrawl scraping", { url });
-        const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ url, formats: ["markdown"], onlyMainContent: true, timeout: 20000 }),
-        });
-        const body = await res.text();
-        if (res.ok) {
-          const data = JSON.parse(body);
-          const md = data?.data?.markdown || data?.markdown || "";
-          log("Firecrawl response", { url, contentLength: md.length, status: res.status });
-          if (md.length > 50) {
-            scrapedText += `\n--- ${url} ---\n${md.slice(0, 3000)}`;
-            if (scrapedText.length > 5000) break;
+    // First try Firecrawl if credits available
+    if (FIRECRAWL_API_KEY) {
+      for (const url of urls.slice(0, 2)) {
+        try {
+          const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ url, formats: ["markdown"], onlyMainContent: true, timeout: 15000 }),
+          });
+          const body = await res.text();
+          if (res.ok) {
+            const data = JSON.parse(body);
+            const md = data?.data?.markdown || "";
+            if (md.length > 50) { scrapedText += md.slice(0, 3000); break; }
+          } else if (res.status === 402) {
+            log("Firecrawl credits exhausted, falling back to direct fetch");
+            break;
           }
-        } else {
-          log("Firecrawl scrape failed", { url, status: res.status, body: body.slice(0, 300) });
-        }
-      } catch (e) { log("Firecrawl scrape exception", { url, error: String(e) }); }
+        } catch { /* continue */ }
+      }
     }
 
-    if (scrapedText.length < 50) { log("Firecrawl fallback — no usable content scraped"); return null; }
+    // Direct fetch fallback — works without any API
+    if (scrapedText.length < 50) {
+      log("Using direct fetch for scraping", { domain });
+      for (const url of urls) {
+        try {
+          const res = await fetch(url, {
+            headers: {
+              "User-Agent": "Mozilla/5.0 (compatible; M2Bot/1.0)",
+              "Accept": "text/html",
+            },
+            redirect: "follow",
+          });
+          if (!res.ok) { await res.text(); continue; }
+          const html = await res.text();
+          // Extract text content — strip tags, scripts, styles
+          const cleaned = html
+            .replace(/<script[\s\S]*?<\/script>/gi, "")
+            .replace(/<style[\s\S]*?<\/style>/gi, "")
+            .replace(/<[^>]+>/g, " ")
+            .replace(/\s+/g, " ")
+            .trim();
+          if (cleaned.length > 100) {
+            scrapedText += `\n${cleaned.slice(0, 4000)}`;
+            log("Direct fetch success", { url, contentLength: cleaned.length });
+            if (scrapedText.length > 5000) break;
+          }
+        } catch (e) { log("Direct fetch failed", { url, error: String(e) }); }
+      }
+    }
 
-    // Use LLM to extract contact info
+    if (scrapedText.length < 50) { log("Scrape fallback — no usable content"); return null; }
+
+    // Also try to find emails directly via regex before LLM
+    const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+    const foundEmails = [...new Set(scrapedText.match(emailRegex) || [])];
+    // Filter out common junk emails
+    const junkPatterns = ["example.com", "sentry.io", "wixpress", "wordpress", "google.com", "facebook.com", "schema.org", "w3.org"];
+    const cleanEmails = foundEmails.filter(e => !junkPatterns.some(j => e.includes(j)) && e.includes(domain));
+
+    if (cleanEmails.length > 0) {
+      log("Found email via regex in scraped content", { emails: cleanEmails });
+      return { email: cleanEmails[0], name: null, title: null };
+    }
+
+    // If no emails found on the domain, try LLM extraction
     if (!LOVABLE_API_KEY) { log("LLM fallback skipped — no LOVABLE_API_KEY"); return null; }
 
     const prompt = `Extract the business owner or primary contact's email address, full name, and job title from this website content for "${businessName}" (domain: ${domain}).
@@ -283,11 +322,18 @@ Respond with ONLY valid JSON:
     if (!match) return null;
     const parsed = JSON.parse(match[0]);
     if (parsed.email && parsed.email !== "null" && parsed.email.includes("@")) {
-      log("Firecrawl+LLM fallback found", parsed);
+      log("LLM extraction found", parsed);
       return { email: parsed.email, name: parsed.name === "null" ? null : parsed.name, title: parsed.title === "null" ? null : parsed.title };
     }
+
+    // Check if LLM found any non-domain emails
+    if (foundEmails.length > 0) {
+      log("Using non-domain email from regex", { email: foundEmails[0] });
+      return { email: foundEmails[0], name: null, title: null };
+    }
+
     return null;
-  } catch (e) { log("Firecrawl+LLM exception", { error: String(e) }); return null; }
+  } catch (e) { log("Scrape+LLM exception", { error: String(e) }); return null; }
 }
 
 // ── Email Pattern Guess (last resort) ──
