@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Shield, Trophy, Clock, MapPin, Star, Quote } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-import m2Logo from "@/assets/m2-logo-official.png";
+import m2Logo from "@/assets/m2-logo-transparent.png";
 import { useSectionVisible } from "@/hooks/useSiteContent";
 
 const AudienceSelector = lazy(() => import("@/components/landing/AudienceSelector"));
@@ -62,8 +62,9 @@ const HeroSection = () => {
             <div className="relative rounded-2xl overflow-hidden bg-card/40 backdrop-blur-xl border border-white/[0.06] shadow-[0_8px_48px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.06)] p-6 md:p-10 mb-6">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent" />
               <div className="relative flex flex-col items-center text-center">
-                <div className="relative mb-6 flex items-center justify-center">
-                  <div className="relative w-36 md:w-48 lg:w-56 aspect-square rounded-full overflow-hidden border-2 border-primary/20 bg-white" style={{ boxShadow: "0 0 60px rgba(232,98,26,0.15), 0 0 120px rgba(232,98,26,0.06)" }}>
+                <div className="relative mb-6 flex items-center justify-center overflow-visible">
+                  <div className="absolute h-36 w-36 md:h-48 md:w-48 lg:h-56 lg:w-56 rounded-full bg-primary/15 blur-3xl" />
+                  <div className="relative w-40 md:w-52 lg:w-60 aspect-square flex items-center justify-center overflow-visible">
                     <img
                       src={m2Logo}
                       alt="M² Performance Training"
@@ -71,7 +72,7 @@ const HeroSection = () => {
                       height={320}
                       fetchPriority="high"
                       decoding="sync"
-                      className="w-full h-full object-contain p-3"
+                      className="w-full h-full object-contain drop-shadow-[0_18px_54px_hsl(var(--primary)/0.28)]"
                     />
                   </div>
                 </div>
@@ -90,7 +91,7 @@ const HeroSection = () => {
 
                 <h1 className="text-2xl md:text-4xl lg:text-5xl font-black tracking-tight text-foreground leading-[1.1] mb-2">
                   Real strength.{" "}
-                  <span className="text-primary drop-shadow-[0_0_24px_rgba(232,98,26,0.5)]">Zero gimmicks.</span>
+                  <span className="text-primary drop-shadow-[0_0_24px_hsl(var(--primary)/0.35)]">Zero gimmicks.</span>
                 </h1>
                 <div className="text-xl md:text-3xl lg:text-4xl font-bold tracking-tight mb-4">
                   <WheelSlogan />
@@ -147,7 +148,7 @@ const HeroSection = () => {
             <div className="w-full max-w-sm mx-auto mb-4">
               <Link
                 to="/auth?redirect=/trial-welcome"
-                className="flex flex-col items-center gap-1 bg-primary text-primary-foreground px-6 py-4 rounded-xl hover:opacity-90 transition-all w-full shadow-[0_0_24px_rgba(249,115,22,0.4)]"
+                className="flex flex-col items-center gap-1 bg-primary text-primary-foreground px-6 py-4 rounded-xl hover:opacity-90 transition-all w-full shadow-[0_0_24px_hsl(var(--primary)/0.35)]"
               >
                 <span className="text-base font-black uppercase tracking-widest">Start for $4.99 →</span>
                 <span className="text-[10px] font-medium opacity-80">then $19.99/mo · Cancel anytime · No contracts</span>
