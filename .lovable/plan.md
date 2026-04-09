@@ -1,105 +1,67 @@
 
 
-## Plan: Agency Brand Reskin + Free SEO Tools Suite
+## Updated Plan: LinkedIn Rebrand + Critical Supabase URL Migration
 
-### Scope Assessment
+### Phase 0: CRITICAL — Supabase Project Reference Migration
 
-**58 pages** still use orange branding (`#e8621a`, `orange-500/400/600`). Reskinning all 58 in one pass is feasible — most follow the same template pattern (hero badge, price, step circles, CTA button, footer links). The changes are mechanical find-and-replace operations per file.
+The old project ref `zmyczlfuufhngzovkjdh` is hardcoded in **25+ locations across 4 runtime files and 4+ migration files**. This is breaking OAuth, storage, and webhook pipelines.
 
-**However**, not all 58 pages are agency pages. Many are standalone SaaS product pages (BedtimeStories, Nutrition, ParentView, AthleteBlueprint) that belong to the M2 Training brand and should KEEP orange. Only pages linked from or related to the agency domain should get the cyan treatment.
+#### Runtime Files to Fix (4 files, immediate)
 
----
+| File | Line(s) | What's Broken | Fix |
+|---|---|---|---|
+| `supabase/functions/post-to-linkedin/index.ts` | 107 | LinkedIn OAuth redirect URL in re-auth email | Replace with `${SUPABASE_URL}` |
+| `supabase/functions/stripe-webhook/index.ts` | 3603, 3683 | Voicemail + Phone Answering setup URLs in onboarding emails | Replace with `${SUPABASE_URL}` |
+| `src/components/admin/AdminImageMatcher.tsx` | 7 | Storage bucket base URL | Use `import.meta.env.VITE_SUPABASE_URL` |
+| `src/integrations/supabase/client.ts` | 5-6 | **DO NOT EDIT** — auto-generated, but currently has old fallback. Env vars override it at runtime. No action needed. |
 
-### Part 1: Classify Pages — Agency vs Training
+#### Migration Files (4+ files, ~300+ refs)
 
-**Agency pages to reskin (linked from agency landing or B2B products):**
-- `Portfolio.tsx`, `ContractorSeoPage.tsx`, `RevenuePreventer.tsx`
-- `SeoGuard.tsx`, `VisibilityScore.tsx`, `FreeBidReport.tsx`, `FreeComplianceScan.tsx`
-- `SpeedToLead.tsx`, `ReviewAlerts.tsx`, `ReviewRequestSMS.tsx`
-- `LinkedInOutreach.tsx`, `DirectMail.tsx`, `TestimonialHarvester.tsx`
-- `SocialMediaAI.tsx`, `SocialConnect.tsx`, `LocalMarketing.tsx`
-- `AISocialCaptionPack.tsx`, `AIBlogPostService.tsx`, `AIPressRelease.tsx`
-- `AIProposalGenerator.tsx`, `AIWebsiteCopy.tsx`, `AdGbpPosts.tsx`
-- `AdCompetitorReport.tsx`, `AdFreeAudit.tsx`, `AdWebsiteAudit.tsx`
-- `ClientReportGenerator.tsx`, `BusinessDirectory.tsx`, `MicroSaasToolPage.tsx`
-- `KPIEmail.tsx`, `WeeklyBusinessDigest.tsx`, `IndustrialNewsletter.tsx`
-- `InsuranceFollowUpDrip.tsx`, `PodcastPitchService.tsx`
-- `AbandonedCartRecovery.tsx`, `QuoteFollowupSMS.tsx`, `WinBackSMS.tsx`
-- `WelcomeDrip.tsx`, `ReactivationEmails.tsx`, `HolidaySMSBlast.tsx`
-- `TextMessageMarketing.tsx`, `WarrantyReminders.tsx`, `NewMoverMarketing.tsx`
-- `PromoPlanner.tsx`, `SalesScripts.tsx`, `TradeShowFollowUp.tsx`
-- `RestaurantMenuCopy.tsx`, `HiringAssistant.tsx`, `AnnualBusinessReview.tsx`
-- `EmployeeCredentialAudit.tsx`, `NewHireCheck.tsx`, `PermitWatch.tsx`
-- `CommunicationsCenter.tsx`, `GetStarted.tsx`, `ProposalStewartDental.tsx`
-- `ReferralPage.tsx`
+These are SQL cron jobs calling `http_post` with hardcoded old URLs:
+- `20260329120000_automate_revenue_crons.sql` (~12 cron URLs)
+- `20260330000001_agent_smith_cron.sql` (1 URL)
+- `20260330210005_social_captions_clients.sql` (1 URL)
+- `20260403010000_new_product_crons.sql` (many URLs)
 
-**Training pages to KEEP orange:**
-- `Nutrition.tsx`, `ParentView.tsx`, `AthleteBlueprint.tsx`, `BedtimeStories.tsx`
+**Fix**: Create a new migration that drops and recreates all affected cron jobs with `eauvubfpanpeuxsrqesu` URLs. Old migration files are historical and won't re-run.
 
----
+#### URL Architecture Audit
 
-### Part 2: Mechanical Reskin (Per File)
+Also found `public/chatbot.js` with a placeholder `YOUR_PROJECT.supabase.co` — will update to use the widget's `data-supabase-url` attribute properly (no hardcode needed).
 
-Each file gets the same set of replacements:
-| Find | Replace |
-|---|---|
-| `#e8621a` | `#22d3ee` |
-| `#d4570f` / `#d45a17` | `#06b6d4` |
-| `orange-500` | `cyan-500` |
-| `orange-400` | `cyan-400` |
-| `orange-600` | `cyan-600` |
-| `orange-300` | `cyan-300` |
-| `bg-slate-900` (hero bg) | Keep or change to `bg-[#0a0a0f]` for consistency |
-| `matt@mattmichelstraining.com` | `matt@detroitwebagent.com` (on agency pages only) |
-| `M² Development` / `M2 Development` | `Detroit Web Agency` |
+### Phase 1: LinkedIn System Rebrand (from previous plan)
 
-This is ~54 files with purely mechanical color/text swaps.
+- Rebrand `post-to-linkedin` topics from M2 Training to Detroit Web Agency
+- Update `linkedin-auth-callback` success page branding
+- Update `linkedin-ghostwriter` email templates to DWA cyan theme
+- Update email senders from `matt@mattmichelstraining.com` to `matt@detroitwebagent.com`
 
----
+### Phase 2: LinkedIn Banner Generation
 
-### Part 3: Free SEO Tools Suite (`/free-tools`)
+Generate a 1584x396px LinkedIn banner with DWA branding for manual upload.
 
-Build a hub page at `/free-tools` with 5 tool cards, each linking to a dedicated tool page. All tools capture email before showing results (lead magnet).
+### Phase 3: Verification
 
-**Tools:**
-
-1. **Site Speed Audit** (`/free-tools/speed`) — Already exists as `/free-site-scanner`. Wrap the existing `FreeSiteScanner` component or redirect.
-
-2. **SEO Health Check** (`/free-tools/seo-health`) — New page + edge function `free-seo-health-check`. Calls DataForSEO On-Page API (`/v3/on_page/instant_pages`) for a single URL. Returns: title tag, meta description, H1 count, image alt coverage, word count, schema markup presence. Displays pass/fail scorecard.
-
-3. **Domain Breach Scanner** (`/free-tools/breach-scan`) — New page + edge function `free-breach-scanner`. Calls HIBP API (`/api/v3/breaches?domain=`) to check if a domain has been in known data breaches. Returns breach names, dates, and compromised data types.
-
-4. **Competitor Rank Checker** (`/free-tools/rank-check`) — New page + edge function `free-rank-checker`. Calls DataForSEO SERP API (`/v3/serp/google/organic/live/regular`) for a keyword + location. Returns top 10 results with positions.
-
-5. **Meta Tag Analyzer** (`/free-tools/meta-tags`) — New page + edge function `free-meta-analyzer`. Calls DataForSEO On-Page API to extract and grade meta tags (title length, description length, OG tags, canonical, robots).
-
-**Hub page design**: Matches agency obsidian theme. Each tool card has an icon, title, one-line description, and "Run Free Scan →" CTA. Header: "Free Digital Infrastructure Tools" with agency branding.
-
-**Lead capture flow**: Email input required before results display. Email + URL stored in a `free_tool_leads` table for follow-up.
-
----
-
-### Part 4: Link Audit
-
-Verify all AgencyHome links route correctly (already audited — all confirmed working). Update Facebook link to actual business page or remove.
-
----
-
-### Files Created/Modified
-
-| Category | Count | Files |
-|---|---|---|
-| Reskin (orange → cyan) | ~54 | All agency product pages listed in Part 1 |
-| New pages | 6 | `FreeToolsHub.tsx`, `FreeSpeedAudit.tsx` (redirect), `FreeSeoHealth.tsx`, `FreeBreachScanner.tsx`, `FreeRankChecker.tsx`, `FreeMetaAnalyzer.tsx` |
-| New edge functions | 4 | `free-seo-health-check`, `free-breach-scanner`, `free-rank-checker`, `free-meta-analyzer` |
-| Routes | 6 new | In `App.tsx` |
-| DB migration | 1 | `free_tool_leads` table |
+- Provide curl commands to test LinkedIn OAuth callback and Stripe webhook endpoints
+- List every file modified
 
 ### Execution Order
 
-1. Batch reskin all 54 agency pages (mechanical, no logic changes)
-2. Create `free_tool_leads` table migration
-3. Build 4 new edge functions
-4. Build 6 new pages (hub + 5 tools)
-5. Add routes to App.tsx
+1. New migration to fix all cron job URLs (old ref -> new ref)
+2. Fix 3 runtime files (post-to-linkedin, stripe-webhook, AdminImageMatcher)
+3. Rebrand LinkedIn edge functions (topics, emails, branding)
+4. Generate LinkedIn banner image
+5. Output full file manifest + test commands
+
+### Files Modified
+
+| File | Changes |
+|---|---|
+| `supabase/functions/post-to-linkedin/index.ts` | URL fix + full DWA rebrand (topics, emails, signature) |
+| `supabase/functions/stripe-webhook/index.ts` | Replace 2 hardcoded old URLs with `${SUPABASE_URL}` |
+| `src/components/admin/AdminImageMatcher.tsx` | Dynamic storage URL from env var |
+| `supabase/functions/linkedin-auth-callback/index.ts` | Success page DWA rebrand |
+| `supabase/functions/linkedin-ghostwriter/index.ts` | Email template DWA rebrand |
+| New DB migration | Drop/recreate all cron jobs with new project ref |
+| Generated asset | LinkedIn banner (1584x396px) |
 
