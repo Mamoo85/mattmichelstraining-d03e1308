@@ -1088,10 +1088,46 @@ export default function AdminProspector() {
       {/* ═══════════ SEARCH TAB ═══════════ */}
       {mainTab === "search" && (
         <div className="space-y-4">
+          {/* How It Works Card */}
+          {showHowItWorks && (
+            <Card className="border-primary/30 bg-primary/5 relative">
+              <button
+                onClick={() => { setShowHowItWorks(false); try { localStorage.setItem("omni-how-it-works-dismissed", "true"); } catch {} }}
+                className="absolute top-2 right-2 p-1 rounded-full hover:bg-muted/40 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X size={14} />
+              </button>
+              <CardContent className="py-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center shrink-0 mt-0.5">
+                    <Info size={16} className="text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold mb-2">How the Omni-Channel Lead Engine Works</p>
+                    <div className="grid sm:grid-cols-5 gap-2">
+                      {[
+                        { step: "1", label: "Enter industry & location" },
+                        { step: "2", label: "We scan Maps for businesses" },
+                        { step: "3", label: "We read their website via Firecrawl" },
+                        { step: "4", label: "Our API waterfall hunts the decision-maker's email" },
+                        { step: "5", label: "Only complete profiles are saved to your pipeline" },
+                      ].map((s) => (
+                        <div key={s.step} className="flex items-start gap-1.5 p-2 rounded-lg bg-background/50 border border-border/30">
+                          <span className="w-5 h-5 rounded-full bg-primary/20 text-primary text-[10px] font-bold flex items-center justify-center shrink-0">{s.step}</span>
+                          <p className="text-[10px] text-muted-foreground leading-snug">{s.label}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <Card className="border-border/40">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Search size={14} className="text-primary" /> Google Maps Lead Extraction
+                <Zap size={14} className="text-primary" /> Omni-Channel Lead Engine
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -1119,16 +1155,29 @@ export default function AdminProspector() {
                   </Select>
                 </div>
               </div>
+
+              {/* Strict Email Filter Toggle */}
+              <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/20 border border-border/30">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck size={14} className={strictEmailFilter ? "text-green-400" : "text-muted-foreground"} />
+                  <div>
+                    <p className="text-xs font-semibold">Strict Email Filter</p>
+                    <p className="text-[10px] text-muted-foreground">Only save leads with verified emails</p>
+                  </div>
+                </div>
+                <Switch checked={strictEmailFilter} onCheckedChange={setStrictEmailFilter} />
+              </div>
+
               <div className="flex items-center gap-2 flex-wrap">
-                <Button onClick={runMapsSearch} disabled={searching || hybridSearching} className="text-xs" size="sm">
-                  {searching ? <><Loader2 size={12} className="animate-spin mr-1.5" /> Searching...</> : <><Search size={12} className="mr-1.5" /> Quick Search</>}
-                </Button>
-                <Button onClick={runHybridSearch} disabled={hybridSearching || searching} size="sm" className="text-xs bg-cyan-600 hover:bg-cyan-700 text-white gap-1.5">
-                  {hybridSearching ? (
-                    <><Loader2 size={12} className="animate-spin" /> Scanning & Analyzing...</>
+                <Button onClick={runOmniSearch} disabled={omniSearching || searching || hybridSearching} className="text-xs gap-1.5" size="sm">
+                  {omniSearching ? (
+                    <><Loader2 size={12} className="animate-spin" /> Maps → Scrape → Enrich...</>
                   ) : (
-                    <><Zap size={12} /> Hybrid Search + Gap Analysis</>
+                    <><Zap size={12} /> Search (Full Pipeline)</>
                   )}
+                </Button>
+                <Button onClick={runMapsSearch} disabled={searching || omniSearching || hybridSearching} variant="outline" className="text-xs" size="sm">
+                  {searching ? <><Loader2 size={12} className="animate-spin mr-1.5" /> Searching...</> : <><Search size={12} className="mr-1.5" /> Quick Maps Only</>}
                 </Button>
                 {mapResults.length > 0 && (
                   <Button
@@ -1143,11 +1192,11 @@ export default function AdminProspector() {
                   </Button>
                 )}
               </div>
-              {hybridSearching && (
-                <div className="flex items-center gap-2 p-2 rounded-md bg-cyan-500/10 border border-cyan-500/20">
-                  <Loader2 size={14} className="animate-spin text-cyan-400" />
-                  <span className="text-[11px] text-cyan-400 font-medium">
-                    Step 1: Finding businesses → Step 2: Running gap analysis...
+              {omniSearching && (
+                <div className="flex items-center gap-2 p-2 rounded-md bg-primary/10 border border-primary/20">
+                  <Loader2 size={14} className="animate-spin text-primary" />
+                  <span className="text-[11px] text-primary font-medium">
+                    Step 1: Google Maps → Step 2: Firecrawl Scrape → Step 3: Enrichment Waterfall → Step 4: Filter & Save
                   </span>
                 </div>
               )}
