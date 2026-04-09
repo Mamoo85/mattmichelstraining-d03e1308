@@ -11,13 +11,14 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { Switch } from "@/components/ui/switch";
 import {
   Search, Mail, Zap, Users, TrendingUp, Play, RefreshCw, Loader2,
   Pencil, Send, Trash2, Filter, ArrowUpDown, ArrowDown, ArrowUp,
   Building2, Wrench, Stethoscope, Globe, Phone, MapPin, Star,
   Expand, Minimize, Megaphone, Rss, MessageSquare, Receipt, CalendarX,
   Hammer, Home, UserPlus, Plus, CheckCircle, ExternalLink, GripVertical,
-  Crosshair, BarChart3, Kanban, FileText, Eye, EyeOff
+  Crosshair, BarChart3, Kanban, FileText, Eye, EyeOff, Info, X, ShieldCheck
 } from "lucide-react";
 import {
   DndContext,
@@ -459,6 +460,14 @@ export default function AdminProspector() {
   const [searching, setSearching] = useState(false);
   const [mapResults, setMapResults] = useState<MapResult[]>([]);
   const [selectedResults, setSelectedResults] = useState<Set<number>>(new Set());
+  const [strictEmailFilter, setStrictEmailFilter] = useState(true);
+  const [showHowItWorks, setShowHowItWorks] = useState(() => {
+    try { return localStorage.getItem("omni-how-it-works-dismissed") !== "true"; } catch { return true; }
+  });
+
+  // ── Omni Engine State ──
+  const [omniSearching, setOmniSearching] = useState(false);
+  const [omniResults, setOmniResults] = useState<any>(null);
 
   // ── Hybrid Search State ──
   const [hybridSearching, setHybridSearching] = useState(false);
@@ -497,12 +506,6 @@ export default function AdminProspector() {
   const [editingLead, setEditingLead] = useState<UnifiedLead | null>(null);
   const [leadSendingId, setLeadSendingId] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
-
-  // Legacy prospecting
-  const [query, setQuery] = useState("");
-  const [location, setLocation] = useState("Grosse Pointe, MI");
-  const [running, setRunning] = useState(false);
-  const [dripRunning, setDripRunning] = useState(false);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
@@ -955,26 +958,31 @@ export default function AdminProspector() {
     else { setSortField(field); setSortDir("desc"); }
   };
 
-  // ── Legacy Actions ──
-  const runProspecting = async () => {
-    setRunning(true);
+  // ── Omni-Channel Lead Engine Search ──
+  const runOmniSearch = async () => {
+    if (!searchIndustry) { toast.error("Select an industry"); return; }
+    setOmniSearching(true);
+    setOmniResults(null);
     try {
-      const { data, error } = await supabase.functions.invoke("prospect-local-businesses", { body: { query: query || undefined, location, radius: 10, limit: 10 } });
+      const { data, error } = await supabase.functions.invoke("omni-lead-engine", {
+        body: {
+          industry: searchIndustry,
+          location: searchLocation,
+          limit: parseInt(searchLimit),
+          strict_email_filter: strictEmailFilter,
+        },
+      });
       if (error) throw error;
-      toast.success(`Prospecting complete: ${data?.queued || 0} leads added`);
-      fetchLeads();
-    } catch (err) { toast.error(err instanceof Error ? err.message : "Prospecting failed"); }
-    finally { setRunning(false); }
-  };
-
-  const runDrip = async () => {
-    setDripRunning(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("web-design-drip", { body: {} });
-      if (error) throw error;
-      toast.success(`Drip complete: ${data?.sent || 0} emails sent`);
-    } catch (err) { toast.error(err instanceof Error ? err.message : "Drip failed"); }
-    finally { setDripRunning(false); }
+      if (data?.error) throw new Error(data.error);
+      setOmniResults(data);
+      toast.success(`Engine complete: ${data?.saved || 0} leads saved, ${data?.discarded || 0} discarded`);
+      // Auto-refresh pipeline
+      fetchPipeline();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Omni engine failed");
+    } finally {
+      setOmniSearching(false);
+    }
   };
 
   const sendOneEmail = async (lead: UnifiedLead) => {
@@ -1047,8 +1055,8 @@ export default function AdminProspector() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-bold">Lead Generation & Pipeline Manager</h2>
-          <p className="text-xs text-muted-foreground">Search, audit, drip & track leads</p>
+          <h2 className="text-lg font-bold">Omni-Channel Lead Engine</h2>
+          <p className="text-xs text-muted-foreground">Maps → Scrape → Enrich → Pipeline</p>
         </div>
         <Badge variant="outline" className="text-xs">Unified CRM</Badge>
       </div>
@@ -1080,10 +1088,46 @@ export default function AdminProspector() {
       {/* ═══════════ SEARCH TAB ═══════════ */}
       {mainTab === "search" && (
         <div className="space-y-4">
+          {/* How It Works Card */}
+          {showHowItWorks && (
+            <Card className="border-primary/30 bg-primary/5 relative">
+              <button
+                onClick={() => { setShowHowItWorks(false); try { localStorage.setItem("omni-how-it-works-dismissed", "true"); } catch {} }}
+                className="absolute top-2 right-2 p-1 rounded-full hover:bg-muted/40 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X size={14} />
+              </button>
+              <CardContent className="py-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center shrink-0 mt-0.5">
+                    <Info size={16} className="text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold mb-2">How the Omni-Channel Lead Engine Works</p>
+                    <div className="grid sm:grid-cols-5 gap-2">
+                      {[
+                        { step: "1", label: "Enter industry & location" },
+                        { step: "2", label: "We scan Maps for businesses" },
+                        { step: "3", label: "We read their website via Firecrawl" },
+                        { step: "4", label: "Our API waterfall hunts the decision-maker's email" },
+                        { step: "5", label: "Only complete profiles are saved to your pipeline" },
+                      ].map((s) => (
+                        <div key={s.step} className="flex items-start gap-1.5 p-2 rounded-lg bg-background/50 border border-border/30">
+                          <span className="w-5 h-5 rounded-full bg-primary/20 text-primary text-[10px] font-bold flex items-center justify-center shrink-0">{s.step}</span>
+                          <p className="text-[10px] text-muted-foreground leading-snug">{s.label}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <Card className="border-border/40">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Search size={14} className="text-primary" /> Google Maps Lead Extraction
+                <Zap size={14} className="text-primary" /> Omni-Channel Lead Engine
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -1111,16 +1155,29 @@ export default function AdminProspector() {
                   </Select>
                 </div>
               </div>
+
+              {/* Strict Email Filter Toggle */}
+              <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/20 border border-border/30">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck size={14} className={strictEmailFilter ? "text-green-400" : "text-muted-foreground"} />
+                  <div>
+                    <p className="text-xs font-semibold">Strict Email Filter</p>
+                    <p className="text-[10px] text-muted-foreground">Only save leads with verified emails</p>
+                  </div>
+                </div>
+                <Switch checked={strictEmailFilter} onCheckedChange={setStrictEmailFilter} />
+              </div>
+
               <div className="flex items-center gap-2 flex-wrap">
-                <Button onClick={runMapsSearch} disabled={searching || hybridSearching} className="text-xs" size="sm">
-                  {searching ? <><Loader2 size={12} className="animate-spin mr-1.5" /> Searching...</> : <><Search size={12} className="mr-1.5" /> Quick Search</>}
-                </Button>
-                <Button onClick={runHybridSearch} disabled={hybridSearching || searching} size="sm" className="text-xs bg-cyan-600 hover:bg-cyan-700 text-white gap-1.5">
-                  {hybridSearching ? (
-                    <><Loader2 size={12} className="animate-spin" /> Scanning & Analyzing...</>
+                <Button onClick={runOmniSearch} disabled={omniSearching || searching || hybridSearching} className="text-xs gap-1.5" size="sm">
+                  {omniSearching ? (
+                    <><Loader2 size={12} className="animate-spin" /> Maps → Scrape → Enrich...</>
                   ) : (
-                    <><Zap size={12} /> Hybrid Search + Gap Analysis</>
+                    <><Zap size={12} /> Search (Full Pipeline)</>
                   )}
+                </Button>
+                <Button onClick={runMapsSearch} disabled={searching || omniSearching || hybridSearching} variant="outline" className="text-xs" size="sm">
+                  {searching ? <><Loader2 size={12} className="animate-spin mr-1.5" /> Searching...</> : <><Search size={12} className="mr-1.5" /> Quick Maps Only</>}
                 </Button>
                 {mapResults.length > 0 && (
                   <Button
@@ -1135,11 +1192,11 @@ export default function AdminProspector() {
                   </Button>
                 )}
               </div>
-              {hybridSearching && (
-                <div className="flex items-center gap-2 p-2 rounded-md bg-cyan-500/10 border border-cyan-500/20">
-                  <Loader2 size={14} className="animate-spin text-cyan-400" />
-                  <span className="text-[11px] text-cyan-400 font-medium">
-                    Step 1: Finding businesses → Step 2: Running gap analysis...
+              {omniSearching && (
+                <div className="flex items-center gap-2 p-2 rounded-md bg-primary/10 border border-primary/20">
+                  <Loader2 size={14} className="animate-spin text-primary" />
+                  <span className="text-[11px] text-primary font-medium">
+                    Step 1: Google Maps → Step 2: Firecrawl Scrape → Step 3: Enrichment Waterfall → Step 4: Filter & Save
                   </span>
                 </div>
               )}
@@ -1328,39 +1385,43 @@ export default function AdminProspector() {
             </Card>
           )}
 
-          <div className="grid sm:grid-cols-2 gap-4">
-            <Card className="border-border/40">
-              <CardHeader className="pb-3">
+          {/* Omni Engine Results */}
+          {omniResults && (
+            <Card className="border-green-500/30 bg-green-500/5">
+              <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <Zap size={14} className="text-primary" /> Legacy Prospector (Firecrawl)
+                  <ShieldCheck size={14} className="text-green-400" />
+                  <span className="text-green-400">Omni-Channel Results</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <Input value={query} onChange={e => setQuery(e.target.value)} placeholder="e.g. plumber, dentist..." className="text-xs h-8" />
-                <Input value={location} onChange={e => setLocation(e.target.value)} placeholder="City, ST" className="text-xs h-8" />
-                <Button onClick={runProspecting} disabled={running} className="w-full text-xs" size="sm">
-                  {running ? <><Loader2 size={12} className="animate-spin mr-1.5" /> Prospecting...</> : <><Play size={12} className="mr-1.5" /> Run</>}
-                </Button>
-              </CardContent>
-            </Card>
-            <Card className="border-border/40">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Mail size={14} className="text-primary" /> Legacy Drip Sequence
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="space-y-1 text-[10px] text-muted-foreground">
-                  {["Day 1: Competitors getting calls you're not", "Day 4: Quick follow-up + demo", "Day 8: Quick online presence check", "Day 15: Last message from me"].map(s => (
-                    <p key={s} className="p-1 bg-muted/30 rounded">• {s}</p>
-                  ))}
+              <CardContent className="space-y-2">
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="text-center p-2 bg-muted/20 rounded-lg">
+                    <p className="text-lg font-bold text-foreground">{omniResults.total}</p>
+                    <p className="text-[9px] text-muted-foreground">Found</p>
+                  </div>
+                  <div className="text-center p-2 bg-green-500/10 rounded-lg">
+                    <p className="text-lg font-bold text-green-400">{omniResults.saved}</p>
+                    <p className="text-[9px] text-muted-foreground">Saved</p>
+                  </div>
+                  <div className="text-center p-2 bg-red-500/10 rounded-lg">
+                    <p className="text-lg font-bold text-red-400">{omniResults.discarded}</p>
+                    <p className="text-[9px] text-muted-foreground">Discarded</p>
+                  </div>
                 </div>
-                <Button onClick={runDrip} disabled={dripRunning} variant="outline" className="w-full text-xs" size="sm">
-                  {dripRunning ? <><Loader2 size={12} className="animate-spin mr-1.5" /> Processing...</> : <><RefreshCw size={12} className="mr-1.5" /> Process Drip</>}
-                </Button>
+                {omniResults.discarded_names?.length > 0 && (
+                  <details className="text-[10px] text-muted-foreground">
+                    <summary className="cursor-pointer hover:text-foreground">Show discarded ({omniResults.discarded_names.length})</summary>
+                    <div className="mt-1 space-y-0.5 pl-2">
+                      {omniResults.discarded_names.map((n: string, i: number) => (
+                        <p key={i}>• {n} — no verified email</p>
+                      ))}
+                    </div>
+                  </details>
+                )}
               </CardContent>
             </Card>
-          </div>
+          )}
         </div>
       )}
 
