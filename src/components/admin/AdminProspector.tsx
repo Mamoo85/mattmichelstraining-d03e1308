@@ -1336,39 +1336,43 @@ export default function AdminProspector() {
             </Card>
           )}
 
-          <div className="grid sm:grid-cols-2 gap-4">
-            <Card className="border-border/40">
-              <CardHeader className="pb-3">
+          {/* Omni Engine Results */}
+          {omniResults && (
+            <Card className="border-green-500/30 bg-green-500/5">
+              <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <Zap size={14} className="text-primary" /> Legacy Prospector (Firecrawl)
+                  <ShieldCheck size={14} className="text-green-400" />
+                  <span className="text-green-400">Omni-Channel Results</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <Input value={query} onChange={e => setQuery(e.target.value)} placeholder="e.g. plumber, dentist..." className="text-xs h-8" />
-                <Input value={location} onChange={e => setLocation(e.target.value)} placeholder="City, ST" className="text-xs h-8" />
-                <Button onClick={runProspecting} disabled={running} className="w-full text-xs" size="sm">
-                  {running ? <><Loader2 size={12} className="animate-spin mr-1.5" /> Prospecting...</> : <><Play size={12} className="mr-1.5" /> Run</>}
-                </Button>
-              </CardContent>
-            </Card>
-            <Card className="border-border/40">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Mail size={14} className="text-primary" /> Legacy Drip Sequence
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="space-y-1 text-[10px] text-muted-foreground">
-                  {["Day 1: Competitors getting calls you're not", "Day 4: Quick follow-up + demo", "Day 8: Quick online presence check", "Day 15: Last message from me"].map(s => (
-                    <p key={s} className="p-1 bg-muted/30 rounded">• {s}</p>
-                  ))}
+              <CardContent className="space-y-2">
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="text-center p-2 bg-muted/20 rounded-lg">
+                    <p className="text-lg font-bold text-foreground">{omniResults.total}</p>
+                    <p className="text-[9px] text-muted-foreground">Found</p>
+                  </div>
+                  <div className="text-center p-2 bg-green-500/10 rounded-lg">
+                    <p className="text-lg font-bold text-green-400">{omniResults.saved}</p>
+                    <p className="text-[9px] text-muted-foreground">Saved</p>
+                  </div>
+                  <div className="text-center p-2 bg-red-500/10 rounded-lg">
+                    <p className="text-lg font-bold text-red-400">{omniResults.discarded}</p>
+                    <p className="text-[9px] text-muted-foreground">Discarded</p>
+                  </div>
                 </div>
-                <Button onClick={runDrip} disabled={dripRunning} variant="outline" className="w-full text-xs" size="sm">
-                  {dripRunning ? <><Loader2 size={12} className="animate-spin mr-1.5" /> Processing...</> : <><RefreshCw size={12} className="mr-1.5" /> Process Drip</>}
-                </Button>
+                {omniResults.discarded_names?.length > 0 && (
+                  <details className="text-[10px] text-muted-foreground">
+                    <summary className="cursor-pointer hover:text-foreground">Show discarded ({omniResults.discarded_names.length})</summary>
+                    <div className="mt-1 space-y-0.5 pl-2">
+                      {omniResults.discarded_names.map((n: string, i: number) => (
+                        <p key={i}>• {n} — no verified email</p>
+                      ))}
+                    </div>
+                  </details>
+                )}
               </CardContent>
             </Card>
-          </div>
+          )}
         </div>
       )}
 
