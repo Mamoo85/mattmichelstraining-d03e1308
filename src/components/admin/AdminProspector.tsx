@@ -460,6 +460,14 @@ export default function AdminProspector() {
   const [searching, setSearching] = useState(false);
   const [mapResults, setMapResults] = useState<MapResult[]>([]);
   const [selectedResults, setSelectedResults] = useState<Set<number>>(new Set());
+  const [strictEmailFilter, setStrictEmailFilter] = useState(true);
+  const [showHowItWorks, setShowHowItWorks] = useState(() => {
+    try { return localStorage.getItem("omni-how-it-works-dismissed") !== "true"; } catch { return true; }
+  });
+
+  // ── Omni Engine State ──
+  const [omniSearching, setOmniSearching] = useState(false);
+  const [omniResults, setOmniResults] = useState<any>(null);
 
   // ── Hybrid Search State ──
   const [hybridSearching, setHybridSearching] = useState(false);
@@ -498,12 +506,6 @@ export default function AdminProspector() {
   const [editingLead, setEditingLead] = useState<UnifiedLead | null>(null);
   const [leadSendingId, setLeadSendingId] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
-
-  // Legacy prospecting
-  const [query, setQuery] = useState("");
-  const [location, setLocation] = useState("Grosse Pointe, MI");
-  const [running, setRunning] = useState(false);
-  const [dripRunning, setDripRunning] = useState(false);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
