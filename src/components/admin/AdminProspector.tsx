@@ -1055,8 +1055,8 @@ export default function AdminProspector() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-bold">Lead Generation & Pipeline Manager</h2>
-          <p className="text-xs text-muted-foreground">Search, audit, drip & track leads</p>
+          <h2 className="text-lg font-bold">Omni-Channel Lead Engine</h2>
+          <p className="text-xs text-muted-foreground">Maps → Scrape → Enrich → Pipeline</p>
         </div>
         <Badge variant="outline" className="text-xs">Unified CRM</Badge>
       </div>
