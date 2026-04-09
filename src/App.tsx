@@ -417,6 +417,8 @@ const App = () => (
                     <Routes>
                     <Route path="/" element={getDomainBrand() === "agency" ? <AgencyHome /> : <Index />} />
                     <Route path="/agency" element={<AgencyHome />} />
+                    <Route path="/free-site-scanner" element={<FreeSiteScanner />} />
+                    <Route path="/command-center" element={<ProtectedRoute><ClientCommandCenter /></ProtectedRoute>} />
                     <Route path="/computer-repair" element={<ComputerRepair />} />
                     <Route path="/unsubscribe" element={<Unsubscribe />} />
                     <Route path="/auth" element={<Auth />} />
