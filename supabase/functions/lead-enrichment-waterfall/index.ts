@@ -520,7 +520,7 @@ serve(async (req) => {
         sb.from("prospect_businesses").select("id", { count: "exact", head: true }).eq("enrichment_status", "no_data"),
       ]);
       const sourceBreakdown: Record<string, number> = {};
-      for (const source of ["hunter", "apollo", "lusha", "clay", "firecrawl_llm", "email_guess"]) {
+      for (const source of ["hunter", "apollo", "lusha", "clay", "direct_scrape", "firecrawl_llm", "email_guess"]) {
         const { count } = await sb.from("prospect_businesses").select("id", { count: "exact", head: true }).eq("enrichment_source", source);
         sourceBreakdown[source] = count || 0;
       }
