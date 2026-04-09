@@ -5,10 +5,10 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const HUNTER_API_KEY = Deno.env.get("HUNTER_API_KEY") || "";
 const APOLLO_API_KEY = Deno.env.get("APOLLO_API_KEY") || "";
-const SNOV_API_KEY = Deno.env.get("SNOV_API_KEY") || "";
-const SNOV_USER_ID = Deno.env.get("SNOV_USER_ID") || "";
 const LUSHA_API_KEY = Deno.env.get("LUSHA_API_KEY") || "";
 const CLAY_API_KEY = Deno.env.get("CLAY_API_KEY") || "";
+const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY") || "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 
 const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
@@ -26,7 +26,11 @@ async function hunterSearch(domain: string) {
   try {
     const res = await fetch(`https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(domain)}&api_key=${HUNTER_API_KEY}&limit=5`);
     const body = await res.text();
-    if (!res.ok) { log("Hunter error", { status: res.status, body: body.slice(0, 200) }); return null; }
+    if (!res.ok) {
+      log("Hunter error", { status: res.status, body: body.slice(0, 200) });
+      if (res.status === 429) return { _rateLimited: true } as any;
+      return null;
+    }
     const data = JSON.parse(body);
     const emails = data?.data?.emails || [];
     if (emails.length === 0) return null;
@@ -46,33 +50,42 @@ async function hunterVerify(email: string): Promise<boolean> {
   if (!HUNTER_API_KEY || !email) return false;
   try {
     const res = await fetch(`https://api.hunter.io/v2/email-verifier?email=${encodeURIComponent(email)}&api_key=${HUNTER_API_KEY}`);
-    if (!res.ok) return false;
+    if (!res.ok) { await res.text(); return false; }
     const data = await res.json();
     const result = data?.data?.result;
     return result === "deliverable" || result === "risky";
   } catch { return false; }
 }
 
-// ── APOLLO.IO — use v1/people/match (single lookup, more reliable than search) ──
+// ── APOLLO.IO — use /v1/people/match (enrichment, works on free tier) ──
 async function apolloSearch(domain: string, businessName: string) {
   if (!APOLLO_API_KEY || !domain) return null;
   try {
-    // Try people search with organization domain
-    const res = await fetch("https://api.apollo.io/api/v1/mixed_people/search", {
+    // Use the people/match enrichment endpoint (free-tier accessible)
+    const res = await fetch("https://api.apollo.io/api/v1/people/match", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "X-Api-Key": APOLLO_API_KEY },
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-cache",
+        "X-Api-Key": APOLLO_API_KEY,
+      },
       body: JSON.stringify({
-        q_organization_domains: domain,
-        page: 1,
-        per_page: 3,
-        person_seniorities: ["owner", "founder", "c_suite", "vp", "director"],
+        organization_name: businessName,
+        domain: domain,
+        reveal_personal_emails: false,
       }),
     });
     const body = await res.text();
-    if (!res.ok) { log("Apollo error", { status: res.status, body: body.slice(0, 200) }); return null; }
+    if (!res.ok) {
+      log("Apollo people/match error", { status: res.status, body: body.slice(0, 200) });
+      // Fallback: try organization enrich for company-level data
+      return await apolloOrgEnrich(domain, businessName);
+    }
     const data = JSON.parse(body);
-    const person = data?.people?.[0];
-    if (!person?.email) return null;
+    const person = data?.person;
+    if (!person?.email) {
+      return await apolloOrgEnrich(domain, businessName);
+    }
     return {
       email: person.email,
       name: `${person.first_name || ""} ${person.last_name || ""}`.trim() || null,
@@ -82,125 +95,238 @@ async function apolloSearch(domain: string, businessName: string) {
   } catch (e) { log("Apollo exception", { error: String(e) }); return null; }
 }
 
-// ── SNOV.IO — uses OAuth2 client_credentials flow ──
-let _snovToken: string | null = null;
-let _snovTokenExpiry = 0;
-
-async function getSnovToken(): Promise<string | null> {
-  if (_snovToken && Date.now() < _snovTokenExpiry) return _snovToken;
-  if (!SNOV_USER_ID || !SNOV_API_KEY) return null;
+async function apolloOrgEnrich(domain: string, businessName: string) {
+  if (!APOLLO_API_KEY || !domain) return null;
   try {
-    const res = await fetch("https://api.snov.io/v1/oauth/access_token", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ grant_type: "client_credentials", client_id: SNOV_USER_ID, client_secret: SNOV_API_KEY }),
+    const res = await fetch("https://api.apollo.io/api/v1/organizations/enrich", {
+      method: "GET",
+      headers: {
+        "Cache-Control": "no-cache",
+        "X-Api-Key": APOLLO_API_KEY,
+      },
     });
-    if (!res.ok) { log("Snov token error", { status: res.status }); return null; }
-    const data = await res.json();
-    _snovToken = data.access_token;
-    _snovTokenExpiry = Date.now() + (data.expires_in || 3600) * 1000 - 60000;
-    return _snovToken;
-  } catch (e) { log("Snov token exception", { error: String(e) }); return null; }
-}
-
-async function snovSearch(domain: string) {
-  const token = await getSnovToken();
-  if (!token || !domain) return null;
-  try {
-    const res = await fetch("https://api.snov.io/v2/domain-emails-with-info", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ domain, limit: 5, type: "personal" }),
+    // Apollo org enrich uses query params
+    const url = `https://api.apollo.io/api/v1/organizations/enrich?domain=${encodeURIComponent(domain)}`;
+    const res2 = await fetch(url, {
+      headers: { "Cache-Control": "no-cache", "X-Api-Key": APOLLO_API_KEY },
     });
-    const body = await res.text();
-    if (!res.ok) { log("Snov error", { status: res.status, body: body.slice(0, 200) }); return null; }
+    const body = await res2.text();
+    await res.text(); // consume first response
+    if (!res2.ok) { log("Apollo org enrich error", { status: res2.status, body: body.slice(0, 200) }); return null; }
     const data = JSON.parse(body);
-    const emails = data?.emails || data?.data?.emails || [];
-    if (emails.length === 0) return null;
-    const best = emails[0];
+    const org = data?.organization;
+    if (!org) return null;
+    // Org enrich doesn't return emails directly but can give useful data
     return {
-      email: best.email || best.value || "",
-      name: `${best.firstName || best.first_name || ""} ${best.lastName || best.last_name || ""}`.trim() || null,
-      title: best.position || best.title || null,
-      source: "snov",
+      email: null,
+      name: null,
+      title: null,
+      phone: org.phone || null,
+      source: "apollo_org",
+      orgData: { name: org.name, industry: org.industry, employees: org.estimated_num_employees },
     };
-  } catch (e) { log("Snov exception", { error: String(e) }); return null; }
+  } catch (e) { log("Apollo org exception", { error: String(e) }); return null; }
 }
 
-// ── LUSHA — correct v2 API endpoint ──
+// ── LUSHA — correct v2 API: GET /v2/person with query params ──
 async function lushaSearch(domain: string, businessName: string) {
   if (!LUSHA_API_KEY || !domain) return null;
   try {
-    const res = await fetch("https://api.lusha.com/prospecting/api/v2/person/enrich", {
-      method: "POST",
-      headers: { "api_key": LUSHA_API_KEY, "Content-Type": "application/json" },
-      body: JSON.stringify({ requestBody: { company: { domain } }, limit: 1, outputColumns: ["full_name", "email_address", "phone_number", "job_title"] }),
+    // Lusha v2 person endpoint uses GET with query params
+    const url = `https://api.lusha.com/v2/person?companyDomain=${encodeURIComponent(domain)}`;
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        "api_key": LUSHA_API_KEY,
+        "Accept": "application/json",
+      },
     });
     const body = await res.text();
-    if (!res.ok) { log("Lusha error", { status: res.status, body: body.slice(0, 200) }); return null; }
+    if (!res.ok) {
+      log("Lusha error", { status: res.status, body: body.slice(0, 200) });
+      // Try company endpoint as fallback
+      return await lushaCompany(domain);
+    }
     const data = JSON.parse(body);
-    const contact = data?.data?.[0] || data?.contacts?.[0];
+    const contact = data?.data || data;
     if (!contact) return null;
+    // Handle both single and array responses
+    const person = Array.isArray(contact) ? contact[0] : contact;
+    if (!person) return null;
     return {
-      email: contact.email_address || contact.email || "",
-      phone: contact.phone_number || contact.phone || "",
-      name: contact.full_name || `${contact.first_name || ""} ${contact.last_name || ""}`.trim() || null,
-      title: contact.job_title || contact.title || null,
+      email: person.emailAddresses?.[0]?.value || person.email_address || person.email || "",
+      phone: person.phoneNumbers?.[0]?.value || person.phone_number || person.phone || "",
+      name: person.fullName || person.full_name || `${person.firstName || ""} ${person.lastName || ""}`.trim() || null,
+      title: person.jobTitle || person.job_title || person.title || null,
       source: "lusha",
     };
   } catch (e) { log("Lusha exception", { error: String(e) }); return null; }
 }
 
-// ── CLAY.COM ──
-async function clayEnrich(domain: string, businessName: string) {
-  if (!CLAY_API_KEY || !domain) return null;
+async function lushaCompany(domain: string) {
+  if (!LUSHA_API_KEY || !domain) return null;
   try {
-    const res = await fetch("https://api.clay.com/v3/sources/enrichments", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${CLAY_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ domain, company_name: businessName, enrichment_type: "company_contacts" }),
+    const url = `https://api.lusha.com/v2/company?domain=${encodeURIComponent(domain)}`;
+    const res = await fetch(url, {
+      method: "GET",
+      headers: { "api_key": LUSHA_API_KEY, "Accept": "application/json" },
     });
     const body = await res.text();
-    if (!res.ok) { log("Clay error", { status: res.status, body: body.slice(0, 200) }); return null; }
+    if (!res.ok) { log("Lusha company error", { status: res.status, body: body.slice(0, 200) }); return null; }
     const data = JSON.parse(body);
-    const contact = data?.results?.[0] || data?.data?.[0];
-    if (!contact) return null;
+    const company = data?.data || data;
+    if (!company) return null;
     return {
-      email: contact.email || contact.work_email || "",
-      phone: contact.phone || contact.direct_phone || "",
-      name: contact.full_name || `${contact.first_name || ""} ${contact.last_name || ""}`.trim() || null,
-      title: contact.title || contact.job_title || null,
-      source: "clay",
+      email: null,
+      phone: company.phone || company.phoneNumber || "",
+      name: null,
+      title: null,
+      source: "lusha_company",
     };
-  } catch (e) { log("Clay exception", { error: String(e) }); return null; }
+  } catch (e) { log("Lusha company exception", { error: String(e) }); return null; }
 }
 
-// ── Email Pattern Guess: Generate common email patterns without needing API credits ──
-async function guessEmail(domain: string, name: string | null, businessName: string): Promise<string | null> {
+// ── CLAY.COM — API deprecated as of 2026. Disabled to save time. ──
+async function clayEnrich(_domain: string, _businessName: string) {
+  log("Clay skipped — API deprecated");
+  return null;
+}
+
+// ── DIRECT SCRAPE + LLM FALLBACK (no Firecrawl credits needed) ──
+async function directScrapeLLMFallback(domain: string, businessName: string): Promise<{ email: string | null; name: string | null; title: string | null } | null> {
+  try {
+    const urls = [`https://${domain}`, `https://${domain}/contact`, `https://${domain}/about`, `https://www.${domain}`];
+    let scrapedText = "";
+
+    // First try Firecrawl if credits available
+    if (FIRECRAWL_API_KEY) {
+      for (const url of urls.slice(0, 2)) {
+        try {
+          const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ url, formats: ["markdown"], onlyMainContent: true, timeout: 15000 }),
+          });
+          const body = await res.text();
+          if (res.ok) {
+            const data = JSON.parse(body);
+            const md = data?.data?.markdown || "";
+            if (md.length > 50) { scrapedText += md.slice(0, 3000); break; }
+          } else if (res.status === 402) {
+            log("Firecrawl credits exhausted, falling back to direct fetch");
+            break;
+          }
+        } catch { /* continue */ }
+      }
+    }
+
+    // Direct fetch fallback — works without any API
+    if (scrapedText.length < 50) {
+      log("Using direct fetch for scraping", { domain });
+      for (const url of urls.slice(0, 2)) { // Only try 2 URLs to save time
+        try {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 8000);
+          const res = await fetch(url, {
+            headers: {
+              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+              "Accept": "text/html,application/xhtml+xml",
+            },
+            redirect: "follow",
+            signal: controller.signal,
+          });
+          clearTimeout(timeout);
+          if (!res.ok) { await res.text(); continue; }
+          const html = await res.text();
+          const cleaned = html
+            .replace(/<script[\s\S]*?<\/script>/gi, "")
+            .replace(/<style[\s\S]*?<\/style>/gi, "")
+            .replace(/<[^>]+>/g, " ")
+            .replace(/&nbsp;/gi, " ")
+            .replace(/\s+/g, " ")
+            .trim();
+          if (cleaned.length > 100) {
+            scrapedText += `\n${cleaned.slice(0, 4000)}`;
+            log("Direct fetch success", { url, contentLength: cleaned.length });
+            break; // One good page is enough
+          }
+        } catch (e) { log("Direct fetch failed", { url, error: String(e) }); }
+      }
+    }
+
+    if (scrapedText.length < 50) { log("Scrape fallback — no usable content"); return null; }
+
+    // Also try to find emails directly via regex before LLM
+    const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+    const foundEmails = [...new Set(scrapedText.match(emailRegex) || [])];
+    // Filter out common junk emails
+    const junkPatterns = ["example.com", "sentry.io", "wixpress", "wordpress", "google.com", "facebook.com", "schema.org", "w3.org"];
+    const cleanEmails = foundEmails.filter(e => !junkPatterns.some(j => e.includes(j)) && e.includes(domain));
+
+    if (cleanEmails.length > 0) {
+      log("Found email via regex in scraped content", { emails: cleanEmails });
+      return { email: cleanEmails[0], name: null, title: null };
+    }
+
+    // If no emails found on the domain, try LLM extraction
+    if (!LOVABLE_API_KEY) { log("LLM fallback skipped — no LOVABLE_API_KEY"); return null; }
+
+    const prompt = `Extract the business owner or primary contact's email address, full name, and job title from this website content for "${businessName}" (domain: ${domain}).
+
+Website content:
+${scrapedText.slice(0, 4000)}
+
+Respond with ONLY valid JSON:
+{"email": "found@email.com or null", "name": "Full Name or null", "title": "Job Title or null"}`;
+
+    const llmRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash-lite",
+        max_tokens: 256,
+        messages: [{ role: "user", content: prompt }],
+      }),
+    });
+
+    if (!llmRes.ok) { const t = await llmRes.text(); log("LLM error", { status: llmRes.status, body: t.slice(0, 200) }); return null; }
+    const llmData = await llmRes.json();
+    const text = llmData?.choices?.[0]?.message?.content?.trim() || "";
+    const match = text.match(/\{[\s\S]*\}/);
+    if (!match) return null;
+    const parsed = JSON.parse(match[0]);
+    if (parsed.email && parsed.email !== "null" && parsed.email.includes("@")) {
+      log("LLM extraction found", parsed);
+      return { email: parsed.email, name: parsed.name === "null" ? null : parsed.name, title: parsed.title === "null" ? null : parsed.title };
+    }
+
+    // Check if LLM found any non-domain emails
+    if (foundEmails.length > 0) {
+      log("Using non-domain email from regex", { email: foundEmails[0] });
+      return { email: foundEmails[0], name: null, title: null };
+    }
+
+    return null;
+  } catch (e) { log("Scrape+LLM exception", { error: String(e) }); return null; }
+}
+
+// ── Email Pattern Guess (last resort) ──
+async function guessEmail(domain: string, name: string | null): Promise<string | null> {
   if (!domain) return null;
 
-  // Build candidate list based on common small business patterns
   const candidates: string[] = [];
-
   if (name) {
     const parts = name.toLowerCase().replace(/[^a-z\s]/g, "").split(/\s+/).filter(Boolean);
     const first = parts[0] || "";
     const last = parts[parts.length - 1] || "";
     if (first && last && first !== last) {
-      candidates.push(`${first}@${domain}`);
-      candidates.push(`${first}.${last}@${domain}`);
-      candidates.push(`${first}${last}@${domain}`);
-      candidates.push(`${first[0]}${last}@${domain}`);
+      candidates.push(`${first}@${domain}`, `${first}.${last}@${domain}`, `${first}${last}@${domain}`, `${first[0]}${last}@${domain}`);
     } else if (first) {
       candidates.push(`${first}@${domain}`);
     }
   }
+  candidates.push(`info@${domain}`, `contact@${domain}`, `hello@${domain}`, `office@${domain}`);
 
-  // Common generic addresses (most small businesses use these)
-  candidates.push(`info@${domain}`, `contact@${domain}`, `hello@${domain}`,
-    `office@${domain}`, `admin@${domain}`, `sales@${domain}`);
-
-  // Try Hunter verify if available (even on free plan, verify has separate quota)
   if (HUNTER_API_KEY) {
     for (const email of candidates.slice(0, 4)) {
       const verified = await hunterVerify(email);
@@ -211,13 +337,11 @@ async function guessEmail(domain: string, name: string | null, businessName: str
     }
   }
 
-  // If Hunter is exhausted too, return the most likely generic — info@ is most common for SMBs
-  // We can't verify but it's better than nothing
+  // Return best guess unverified
   const bestGuess = `info@${domain}`;
   log("Email pattern guess (unverified)", { email: bestGuess });
   return bestGuess;
 }
-
 
 function extractDomain(url: string): string {
   try {
@@ -243,11 +367,15 @@ async function runWaterfall(domain: string, businessName: string): Promise<Enric
     decision_maker_title: null, direct_phone: null, enrichment_source: "none",
     enrichment_data: {},
   };
+  let hunterRateLimited = false;
 
   // Step 1: Hunter.io
   log("Step 1: Hunter.io", { domain });
   const hunterResult = await hunterSearch(domain);
-  if (hunterResult?.email) {
+  if (hunterResult?._rateLimited) {
+    hunterRateLimited = true;
+    log("Hunter rate-limited, skipping to next provider");
+  } else if (hunterResult?.email) {
     result.email = hunterResult.email;
     result.enrichment_source = "hunter";
     result.decision_maker_name = hunterResult.name;
@@ -258,7 +386,7 @@ async function runWaterfall(domain: string, businessName: string): Promise<Enric
     log("Hunter found", { email: hunterResult.email, verified });
   }
 
-  // Step 2: Apollo.io
+  // Step 2: Apollo.io (using /v1/people/match — free-tier accessible)
   if (!result.email || !result.decision_maker_name) {
     log("Step 2: Apollo.io", { domain });
     const apolloResult = await apolloSearch(domain, businessName);
@@ -266,28 +394,15 @@ async function runWaterfall(domain: string, businessName: string): Promise<Enric
       if (!result.email && apolloResult.email) { result.email = apolloResult.email; result.enrichment_source = "apollo"; }
       if (!result.decision_maker_name && apolloResult.name) result.decision_maker_name = apolloResult.name;
       if (!result.decision_maker_title && apolloResult.title) result.decision_maker_title = apolloResult.title;
+      if ((apolloResult as any).phone && !result.direct_phone) result.direct_phone = (apolloResult as any).phone;
       result.enrichment_data.apollo = apolloResult;
       log("Apollo found", apolloResult);
     }
   }
 
-  // Step 3: Snov.io
-  if (!result.email) {
-    log("Step 3: Snov.io", { domain });
-    const snovResult = await snovSearch(domain);
-    if (snovResult?.email) {
-      result.email = snovResult.email;
-      result.enrichment_source = "snov";
-      if (!result.decision_maker_name && snovResult.name) result.decision_maker_name = snovResult.name;
-      if (!result.decision_maker_title && snovResult.title) result.decision_maker_title = snovResult.title;
-      result.enrichment_data.snov = snovResult;
-      log("Snov found", snovResult);
-    }
-  }
-
-  // Step 4: Lusha
+  // Step 3: Lusha (using GET /v2/person — correct endpoint)
   if (!result.direct_phone || !result.email) {
-    log("Step 4: Lusha", { domain });
+    log("Step 3: Lusha", { domain });
     const lushaResult = await lushaSearch(domain, businessName);
     if (lushaResult) {
       if (lushaResult.phone) result.direct_phone = lushaResult.phone;
@@ -299,9 +414,9 @@ async function runWaterfall(domain: string, businessName: string): Promise<Enric
     }
   }
 
-  // Step 5: Clay.com
+  // Step 4: Clay.com
   if (!result.email || !result.direct_phone) {
-    log("Step 5: Clay.com", { domain });
+    log("Step 4: Clay.com", { domain });
     const clayResult = await clayEnrich(domain, businessName);
     if (clayResult) {
       if (!result.email && clayResult.email) { result.email = clayResult.email; result.enrichment_source = "clay"; }
@@ -313,14 +428,32 @@ async function runWaterfall(domain: string, businessName: string): Promise<Enric
     }
   }
 
-  // Step 6: Email pattern guess fallback
+  // Step 5: Firecrawl + LLM fallback (if all APIs failed or Hunter was rate-limited)
+  if (!result.email) {
+    log("Step 5: Direct scrape + LLM fallback", { domain, hunterRateLimited });
+    const scraped = await directScrapeLLMFallback(domain, businessName);
+    if (scraped?.email) {
+      result.email = scraped.email;
+      result.enrichment_source = "direct_scrape";
+      if (!result.decision_maker_name && scraped.name) result.decision_maker_name = scraped.name;
+      if (!result.decision_maker_title && scraped.title) result.decision_maker_title = scraped.title;
+      result.enrichment_data.firecrawl_llm = scraped;
+
+      // Try to verify the scraped email
+      if (HUNTER_API_KEY && !hunterRateLimited) {
+        result.verified_email = await hunterVerify(scraped.email);
+      }
+      log("Firecrawl+LLM found", scraped);
+    }
+  }
+
+  // Step 6: Email pattern guess (absolute last resort)
   if (!result.email) {
     log("Step 6: Email guess fallback", { domain, name: result.decision_maker_name });
-    const guessed = await guessEmail(domain, result.decision_maker_name, businessName);
+    const guessed = await guessEmail(domain, result.decision_maker_name);
     if (guessed) {
       result.email = guessed;
       result.enrichment_source = "email_guess";
-      // Only mark as verified if Hunter actually verified it
       log("Fallback email found", { email: guessed });
     }
   }
@@ -387,14 +520,14 @@ serve(async (req) => {
         sb.from("prospect_businesses").select("id", { count: "exact", head: true }).eq("enrichment_status", "no_data"),
       ]);
       const sourceBreakdown: Record<string, number> = {};
-      for (const source of ["hunter", "apollo", "snov", "lusha", "clay", "email_guess"]) {
+      for (const source of ["hunter", "apollo", "lusha", "clay", "direct_scrape", "firecrawl_llm", "email_guess"]) {
         const { count } = await sb.from("prospect_businesses").select("id", { count: "exact", head: true }).eq("enrichment_source", source);
         sourceBreakdown[source] = count || 0;
       }
       return new Response(JSON.stringify({
         ok: true, total: t.count || 0, enriched: e.count || 0, pending: p.count || 0,
         no_data: n.count || 0, by_source: sourceBreakdown,
-        apis_configured: { hunter: !!HUNTER_API_KEY, apollo: !!APOLLO_API_KEY, snov: !!(SNOV_API_KEY && SNOV_USER_ID), lusha: !!LUSHA_API_KEY, clay: !!CLAY_API_KEY },
+        apis_configured: { hunter: !!HUNTER_API_KEY, apollo: !!APOLLO_API_KEY, lusha: !!LUSHA_API_KEY, clay: !!CLAY_API_KEY, firecrawl: !!FIRECRAWL_API_KEY },
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
