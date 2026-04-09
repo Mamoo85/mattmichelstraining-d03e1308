@@ -937,6 +937,44 @@ export type Database = {
         }
         Relationships: []
       }
+      capture_submissions: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string | null
+          processed: boolean
+          source_url: string | null
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          name?: string | null
+          processed?: boolean
+          source_url?: string | null
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string | null
+          processed?: boolean
+          source_url?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "capture_submissions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       challenge_entries: {
         Row: {
           id: string
@@ -8811,6 +8849,98 @@ export type Database = {
           },
         ]
       }
+      tenant_leads: {
+        Row: {
+          company_name: string | null
+          created_at: string
+          drip_campaign_status: Json | null
+          email: string | null
+          enrichment_data: Json | null
+          first_name: string | null
+          id: string
+          job_title: string | null
+          last_name: string | null
+          linkedin_url: string | null
+          phone: string | null
+          source: string | null
+          tenant_id: string
+          updated_at: string
+          validated_email: boolean | null
+          website: string | null
+        }
+        Insert: {
+          company_name?: string | null
+          created_at?: string
+          drip_campaign_status?: Json | null
+          email?: string | null
+          enrichment_data?: Json | null
+          first_name?: string | null
+          id?: string
+          job_title?: string | null
+          last_name?: string | null
+          linkedin_url?: string | null
+          phone?: string | null
+          source?: string | null
+          tenant_id: string
+          updated_at?: string
+          validated_email?: boolean | null
+          website?: string | null
+        }
+        Update: {
+          company_name?: string | null
+          created_at?: string
+          drip_campaign_status?: Json | null
+          email?: string | null
+          enrichment_data?: Json | null
+          first_name?: string | null
+          id?: string
+          job_title?: string | null
+          last_name?: string | null
+          linkedin_url?: string | null
+          phone?: string | null
+          source?: string | null
+          tenant_id?: string
+          updated_at?: string
+          validated_email?: boolean | null
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_leads_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenants: {
+        Row: {
+          branding: Json | null
+          company_name: string
+          created_at: string
+          domain: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          branding?: Json | null
+          company_name?: string
+          created_at?: string
+          domain?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          branding?: Json | null
+          company_name?: string
+          created_at?: string
+          domain?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       testimonial_harvester_clients: {
         Row: {
           active: boolean | null
@@ -10427,6 +10557,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_tenant_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
