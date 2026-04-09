@@ -4875,13 +4875,19 @@ export type Database = {
           ai_drafted_subject: string | null
           business_name: string
           city: string | null
+          company_name: string | null
           created_at: string | null
           custom_flaw: string | null
+          drip_campaign_status: Json | null
           email: string | null
+          first_name: string | null
           id: string
           industry: string | null
+          job_title: string | null
           last_contact_date: string | null
+          last_name: string | null
           lead_score: number | null
+          lead_score_indicators: string[] | null
           notes: string | null
           offer_pitched: string | null
           owner_name: string | null
@@ -4892,6 +4898,7 @@ export type Database = {
           sms_sent_at: string | null
           status: string | null
           target_service: string | null
+          validated_email: string | null
           website: string | null
           website_status: string | null
         }
@@ -4901,13 +4908,19 @@ export type Database = {
           ai_drafted_subject?: string | null
           business_name: string
           city?: string | null
+          company_name?: string | null
           created_at?: string | null
           custom_flaw?: string | null
+          drip_campaign_status?: Json | null
           email?: string | null
+          first_name?: string | null
           id?: string
           industry?: string | null
+          job_title?: string | null
           last_contact_date?: string | null
+          last_name?: string | null
           lead_score?: number | null
+          lead_score_indicators?: string[] | null
           notes?: string | null
           offer_pitched?: string | null
           owner_name?: string | null
@@ -4918,6 +4931,7 @@ export type Database = {
           sms_sent_at?: string | null
           status?: string | null
           target_service?: string | null
+          validated_email?: string | null
           website?: string | null
           website_status?: string | null
         }
@@ -4927,13 +4941,19 @@ export type Database = {
           ai_drafted_subject?: string | null
           business_name?: string
           city?: string | null
+          company_name?: string | null
           created_at?: string | null
           custom_flaw?: string | null
+          drip_campaign_status?: Json | null
           email?: string | null
+          first_name?: string | null
           id?: string
           industry?: string | null
+          job_title?: string | null
           last_contact_date?: string | null
+          last_name?: string | null
           lead_score?: number | null
+          lead_score_indicators?: string[] | null
           notes?: string | null
           offer_pitched?: string | null
           owner_name?: string | null
@@ -4944,6 +4964,7 @@ export type Database = {
           sms_sent_at?: string | null
           status?: string | null
           target_service?: string | null
+          validated_email?: string | null
           website?: string | null
           website_status?: string | null
         }
