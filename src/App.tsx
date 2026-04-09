@@ -36,6 +36,8 @@ const BottomTabBar = lazyRetry(() => import("@/components/layout/BottomTabBar"))
 // Lazy-load ALL pages including Index for faster initial JS parse
 const Index = lazyRetry(() => import("./pages/Index"));
 const AgencyHome = lazyRetry(() => import("./pages/AgencyHome"));
+const ClientDashboard = lazyRetry(() => import("./pages/ClientDashboard"));
+const EmbedCapture = lazyRetry(() => import("./pages/EmbedCapture"));
 const FreeSiteScanner = lazyRetry(() => import("./pages/FreeSiteScanner"));
 const FreeToolsHub = lazyRetry(() => import("./pages/FreeToolsHub"));
 const FreeSeoHealth = lazyRetry(() => import("./pages/FreeSeoHealth"));
@@ -729,6 +731,8 @@ const App = () => (
                     <Route path="/join/:code" element={<JoinTeam />} />
                     <Route path="/coach-hub" element={<ProtectedRoute><CoachHub /></ProtectedRoute>} />
                     <Route path="/my-team" element={<ProtectedRoute><MyTeam /></ProtectedRoute>} />
+                    <Route path="/client-dash" element={<ProtectedRoute><ClientDashboard /></ProtectedRoute>} />
+                    <Route path="/embed/capture/:tenantId" element={<EmbedCapture />} />
                     <Route path="*" element={<NotFound />} />
                     </Routes>
                   </div>
