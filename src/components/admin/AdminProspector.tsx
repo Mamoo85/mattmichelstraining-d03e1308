@@ -387,6 +387,9 @@ function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onD
             <ExternalLink size={10} className="text-muted-foreground hover:text-foreground" />
           </a>
         )}
+        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-destructive/60 hover:text-destructive" onClick={() => { if (confirm(`Delete ${lead.business_name}?`)) onDelete(lead); }}>
+          <Trash2 size={10} />
+        </Button>
       </div>
       {lead.n8n_sent_at && <Badge className="text-[8px] bg-green-500/20 text-green-400 border-0">n8n sent</Badge>}
     </div>
@@ -394,7 +397,7 @@ function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onD
 }
 
 // ── Kanban Column ──
-function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, onDeepResearch, onDrip, onPreviewDrip, auditingId, sendingId, researchingId, drippingId }: {
+function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, onDeepResearch, onDrip, onPreviewDrip, onDelete, auditingId, sendingId, researchingId, drippingId }: {
   stage: typeof PIPELINE_STAGES[0];
   leads: PipelineLead[];
   onAudit: (lead: PipelineLead) => void;
@@ -403,6 +406,7 @@ function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, onDeepRes
   onDeepResearch: (lead: PipelineLead) => void;
   onDrip: (lead: PipelineLead, action: "draft" | "send" | "send_existing") => void;
   onPreviewDrip: (lead: PipelineLead) => void;
+  onDelete: (lead: PipelineLead) => void;
   auditingId: string | null;
   sendingId: string | null;
   researchingId: string | null;
