@@ -423,6 +423,11 @@ const App = () => (
                     <Route path="/" element={getDomainBrand() === "agency" ? <AgencyHome /> : <Index />} />
                     <Route path="/agency" element={<AgencyHome />} />
                     <Route path="/free-site-scanner" element={<FreeSiteScanner />} />
+                    <Route path="/free-tools" element={<FreeToolsHub />} />
+                    <Route path="/free-tools/seo-health" element={<FreeSeoHealth />} />
+                    <Route path="/free-tools/breach-scan" element={<FreeBreachScanner />} />
+                    <Route path="/free-tools/rank-check" element={<FreeRankChecker />} />
+                    <Route path="/free-tools/meta-tags" element={<FreeMetaAnalyzer />} />
                     <Route path="/command-center" element={<ProtectedRoute><ClientCommandCenter /></ProtectedRoute>} />
                     <Route path="/computer-repair" element={<ComputerRepair />} />
                     <Route path="/unsubscribe" element={<Unsubscribe />} />
