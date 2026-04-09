@@ -233,16 +233,20 @@ function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onD
           <GripVertical size={12} />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold truncate">{lead.business_name}</p>
-          {lead.lead_score != null && (
-            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
-              lead.lead_score >= 8 ? "bg-green-500/20 text-green-400" :
-              lead.lead_score >= 5 ? "bg-amber-500/20 text-amber-400" :
-              "bg-muted text-muted-foreground"
-            }`}>
-              {lead.lead_score}/10
-            </span>
-          )}
+          <div className="flex items-center gap-1.5">
+            <p className="text-xs font-semibold truncate">{lead.business_name}</p>
+            {lead.lead_score != null && (
+              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                lead.lead_score >= 8 ? "bg-green-500/20 text-green-400" :
+                lead.lead_score >= 5 ? "bg-amber-500/20 text-amber-400" :
+                "bg-muted text-muted-foreground"
+              }`}>
+                {lead.lead_score}/10
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+            {lead.google_rating && (
               <span className="text-[10px] flex items-center gap-0.5 text-yellow-400">
                 <Star size={9} className="fill-yellow-400" /> {lead.google_rating}
               </span>
