@@ -375,13 +375,14 @@ serve(async (req) => {
     const emailsFound = businesses.filter(b => b.email).length;
     console.log(`[HYBRID] Step 2 complete: ${emailsFound}/${businesses.length} emails discovered`);
 
-    // ── Step 3: Gap Analysis via OpenRouter (only for businesses with websites) ──
+    // ── Step 3: Gap Analysis via Lovable AI Gateway ──
     const results: HybridResult[] = [];
+    const { industry: searchIndustry, location } = await (() => ({ industry, location }))();
 
-    if (!OPENROUTER_API_KEY) {
-      console.warn("[HYBRID] No OPENROUTER_API_KEY — skipping gap analysis");
+    if (!LOVABLE_API_KEY && !OPENROUTER_API_KEY) {
+      console.warn("[HYBRID] No AI keys — skipping gap analysis");
       for (const b of businesses) {
-        results.push({ ...b, gap_analysis: null, core_service: null, specific_site_flaw: null, recent_activity: null, gap_status: "skipped", email_status: b.email ? "found" : "not_found" });
+        results.push({ ...b, gap_analysis: null, core_service: null, specific_site_flaw: null, recent_activity: null, lead_score: null, gap_status: "skipped", email_status: b.email ? "found" : "not_found" });
       }
     } else {
       const withoutSites = businesses.filter(b => !b.website);
@@ -392,7 +393,7 @@ serve(async (req) => {
       for (let i = 0; i < withWebsites.length; i += batchSize) {
         const batch = withWebsites.slice(i, i + batchSize);
         const analyses = await Promise.allSettled(
-          batch.map(b => analyzeGap(b.website!, b.title, { rating: b.rating, reviews: b.reviews, email: b.email, industry: searchIndustry || b.category, city: location?.split(",")[0]?.trim() }))
+          batch.map(b => analyzeGap(b.website!, b.title, { rating: b.rating, reviews: b.reviews, email: b.email, industry: industry || b.category, city: location?.split(",")[0]?.trim() }))
         );
 
         for (let j = 0; j < batch.length; j++) {
@@ -431,6 +432,7 @@ serve(async (req) => {
           core_service: null,
           specific_site_flaw: "No website exists",
           recent_activity: null,
+          lead_score: 9,
           gap_status: "done",
           email_status: b.email ? "found" : "not_found",
         });
