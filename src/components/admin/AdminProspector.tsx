@@ -147,7 +147,7 @@ type SortDir = "asc" | "desc";
 
 // Pipeline filter/sort types
 type PipelineFilter = "all" | "has_email" | "no_email" | "has_website" | "no_website" | "has_reviews" | "no_facebook" | "no_instagram";
-type PipelineSort = "reviews_desc" | "rating_desc" | "name_asc" | "newest" | "drip_status";
+type PipelineSort = "reviews_desc" | "rating_desc" | "name_asc" | "newest" | "drip_status" | "score_desc";
 
 // ── Normalize functions per table ──
 function normalizeOutreach(r: any): UnifiedLead {
@@ -1453,15 +1453,31 @@ export default function AdminProspector() {
               {batchProcessing ? <Loader2 size={10} className="animate-spin" /> : <Mail size={10} />}
               Generate & Send {selectedPipelineIds.size > 0 ? selectedPipelineIds.size : "All"}
             </Button>
-            <div className="ml-auto">
+            <div className="ml-auto flex items-center gap-1.5">
+              <Button
+                variant="outline" size="sm" className="text-xs h-7 gap-1 border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
+                disabled={batchProcessing}
+                onClick={clearDuplicates}
+              >
+                Clear Dupes
+              </Button>
               <Button
                 variant="outline" size="sm" className="text-xs h-7 gap-1 border-red-500/30 text-red-400 hover:bg-red-500/10"
                 disabled={archiving}
                 onClick={archiveSentLeads}
               >
                 {archiving ? <Loader2 size={10} className="animate-spin" /> : <Trash2 size={10} />}
-                Clear Sent ({pipelineLeads.filter(l => l.pipeline_stage === "outreach_sent").length})
+                Archive Sent ({pipelineLeads.filter(l => l.pipeline_stage === "outreach_sent").length})
               </Button>
+              {selectedPipelineIds.size > 0 && (
+                <Button
+                  variant="outline" size="sm" className="text-xs h-7 gap-1 border-red-500/30 text-red-400 hover:bg-red-500/10"
+                  disabled={batchProcessing}
+                  onClick={bulkDeletePipeline}
+                >
+                  <Trash2 size={10} /> Delete {selectedPipelineIds.size}
+                </Button>
+              )}
             </div>
           </div>
 
