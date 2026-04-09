@@ -3600,7 +3600,7 @@ ${fwdInstructions}`,
                 from: "M² Notifications <matt@mattmichelstraining.com>",
                 to: ["matthewmichels@mattmichelstraining.com", "matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"],
                 subject: `💰 New Voicemail client — ${meta.businessName || email} ($49/mo)`,
-                html: `<p>New voicemail transcription subscriber:</p><p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Phone: ${meta.phone || "n/a"}</p><p>Setup steps:<ol><li>Buy a Twilio number matching their area code</li><li>Configure the Twilio number's voicemail webhook to: <code>https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/voicemail-transcriber</code></li><li>Update <strong>voicemail_clients</strong> row: add twilio_number, set active=true</li><li>Have them forward voicemail to the Twilio number</li></ol></p>`,
+                html: `<p>New voicemail transcription subscriber:</p><p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Phone: ${meta.phone || "n/a"}</p><p>Setup steps:<ol><li>Buy a Twilio number matching their area code</li><li>Configure the Twilio number's voicemail webhook to: <code>${SUPABASE_URL}/functions/v1/voicemail-transcriber</code></li><li>Update <strong>voicemail_clients</strong> row: add twilio_number, set active=true</li><li>Have them forward voicemail to the Twilio number</li></ol></p>`,
               }),
             });
           }
@@ -3680,7 +3680,7 @@ ${fwdInstructions}`,
                 from: "M² Notifications <matt@mattmichelstraining.com>",
                 to: ["matthewmichels@mattmichelstraining.com", "matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"],
                 subject: `💰 New AI Phone Answering client — ${meta.businessName || email} ($149/mo)`,
-                html: `<p>New phone answering subscriber:</p><p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Phone: ${meta.phone || "n/a"}</p><p>Setup steps:<ol><li>Buy a Twilio number matching their area code</li><li>Configure the Twilio number's voice webhook: <code>https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/ai-phone-answering</code></li><li>Update <strong>phone_answering_clients</strong> row: add twilio_number + greeting_script, set active=true</li><li>Have them forward calls to the Twilio number</li></ol></p>`,
+                html: `<p>New phone answering subscriber:</p><p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Phone: ${meta.phone || "n/a"}</p><p>Setup steps:<ol><li>Buy a Twilio number matching their area code</li><li>Configure the Twilio number's voice webhook: <code>${SUPABASE_URL}/functions/v1/ai-phone-answering</code></li><li>Update <strong>phone_answering_clients</strong> row: add twilio_number + greeting_script, set active=true</li><li>Have them forward calls to the Twilio number</li></ol></p>`,
               }),
             });
           }
