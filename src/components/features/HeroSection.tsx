@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Shield, Trophy, Clock, MapPin, Star, Quote } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-import m2Logo from "@/assets/m2-logo.jpg";
+import m2Logo from "@/assets/m2-logo-official.png";
 import { useSectionVisible } from "@/hooks/useSiteContent";
 
 const AudienceSelector = lazy(() => import("@/components/landing/AudienceSelector"));
@@ -49,24 +49,27 @@ const HeroSection = () => {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Subtle radial glow behind hero */}
       <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-card/60" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full opacity-30 blur-[100px]" style={{ background: "radial-gradient(circle, hsl(var(--primary) / 0.15), transparent 70%)" }} />
 
       <div className="container relative z-10 pt-20 pb-12">
         {showHero && (
           <div className="py-8 md:py-16 animate-fadeIn">
+            {/* Glassmorphism hero card */}
             <div className="relative rounded-2xl overflow-hidden bg-card/40 backdrop-blur-xl border border-white/[0.06] shadow-[0_8px_48px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.06)] p-6 md:p-10 mb-6">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/8 via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent" />
               <div className="relative flex flex-col items-center text-center">
                 <div className="relative mb-5">
                   <div className="absolute inset-0 rounded-full blur-2xl bg-primary/20 scale-110" />
                   <img
                     src={m2Logo}
-                    alt="M2 Training"
+                    alt="M2 Performance Training"
                     width={256}
                     height={256}
                     fetchPriority="high"
                     decoding="sync"
-                    className="relative w-28 md:w-40 lg:w-48 h-auto object-contain rounded-full shadow-[0_0_40px_rgba(232,98,26,0.25)]"
+                    className="relative w-28 md:w-40 lg:w-48 h-auto object-contain drop-shadow-lg shadow-[0_0_40px_rgba(232,98,26,0.25)]"
                   />
                 </div>
 
@@ -75,7 +78,7 @@ const HeroSection = () => {
                   {SPECIALTIES.map((s) => (
                     <span
                       key={s}
-                      className="px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-full bg-card border border-border text-muted-foreground"
+                      className="px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-full bg-card/60 backdrop-blur-sm border border-border/50 text-muted-foreground"
                     >
                       {s}
                     </span>
@@ -86,7 +89,7 @@ const HeroSection = () => {
                   Real strength.{" "}
                   <span className="text-primary drop-shadow-[0_0_24px_rgba(232,98,26,0.5)]">Zero gimmicks.</span>
                 </h1>
-                <div className="text-xl md:text-3xl lg:text-4xl font-bold tracking-display mb-4">
+                <div className="text-xl md:text-3xl lg:text-4xl font-bold tracking-tight mb-4">
                   <WheelSlogan />
                 </div>
                 <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto leading-relaxed mb-6">

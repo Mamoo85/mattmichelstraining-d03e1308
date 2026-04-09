@@ -4,6 +4,8 @@ const DATAFORSEO_LOGIN = Deno.env.get("DATAFORSEO_LOGIN") || "";
 const DATAFORSEO_PASSWORD = Deno.env.get("DATAFORSEO_PASSWORD") || "";
 const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
 const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY") || "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
+const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -29,6 +31,7 @@ interface HybridResult extends MapBusiness {
   core_service: string | null;
   specific_site_flaw: string | null;
   recent_activity: string | null;
+  lead_score: number | null;
   gap_status: "pending" | "analyzing" | "done" | "skipped" | "error";
   email_status: "found" | "not_found" | "skipped" | "error";
 }
@@ -194,53 +197,56 @@ async function basicScrapeEmail(websiteUrl: string): Promise<string | null> {
   } catch { return null; }
 }
 
-// ── Structured Gap Analysis via OpenRouter (sonar-reasoning) ──
+// ── Structured Gap Analysis via Lovable AI Gateway ──
 interface GapResult {
   gap_summary: string;
   core_service: string | null;
   specific_site_flaw: string | null;
   recent_activity: string | null;
+  lead_score: number | null;
 }
 
-async function analyzeGap(url: string, businessName: string): Promise<GapResult> {
-  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${OPENROUTER_API_KEY}`,
-      "Content-Type": "application/json",
-      "HTTP-Referer": "https://detroitwebagent.com",
-      "X-Title": "Detroit Web Agency Prospector",
-    },
-    body: JSON.stringify({
-      model: "perplexity/sonar-reasoning",
-      messages: [
-        {
-          role: "system",
-          content: `You are an expert B2B sales researcher for Detroit Web Agency. Analyze the business website and return a structured JSON object. Be highly specific — reference actual elements you can see (or NOT see) on their site.
+async function analyzeGap(url: string, businessName: string, meta?: { rating?: number | null; reviews?: number | null; email?: string | null; industry?: string | null; city?: string | null }): Promise<GapResult> {
+  if (!LOVABLE_API_KEY) {
+    console.error("[HYBRID] No LOVABLE_API_KEY — cannot run gap analysis");
+    return { gap_summary: "API key not configured", core_service: null, specific_site_flaw: null, recent_activity: null, lead_score: null };
+  }
+
+  const systemPrompt = `You are an expert B2B sales researcher for Detroit Web Agency. Analyze the business website and return a structured JSON object. Be highly specific — reference actual elements you can see (or NOT see) on their site.
 
 Return ONLY valid JSON with these keys:
 {
   "core_service": "Their main money-making service (e.g., 'Emergency Plumbing', 'Commercial Roofing')",
   "specific_site_flaw": "A highly specific technical or UX failure (e.g., 'Contact form buried on 3rd page', 'No click-to-call on mobile', 'No chat widget for after-hours traffic')",
   "recent_activity": "A recent blog post, project, Google review, or news item — proof you actually looked. Return null if nothing found.",
-  "gap_summary": "One sentence describing the biggest automation/revenue gap."
+  "gap_summary": "One sentence describing the biggest automation/revenue gap.",
+  "lead_score": "Integer 1-10. Score based on: no website=10, outdated site=7-8, modern but flawed=4-6, already good=1-3. Weight higher if they have lots of reviews (established business that can afford services), are in a core vertical (HVAC/roofing/plumbing/dental), or have a specific fixable flaw."
 }
 
-No markdown, no code fences, ONLY the JSON object.`,
-        },
-        {
-          role: "user",
-          content: `Research this business website thoroughly: ${url} (Business: ${businessName}). Extract their core service, a specific site flaw, any recent activity, and the biggest gap.`,
-        },
+Business metadata: Rating=${meta?.rating ?? "unknown"}, Reviews=${meta?.reviews ?? 0}, Email=${meta?.email ? "found" : "none"}, Industry=${meta?.industry ?? "unknown"}, City=${meta?.city ?? "unknown"}.
+
+No markdown, no code fences, ONLY the JSON object.`;
+
+  const res = await fetch(GATEWAY_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${LOVABLE_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: `Research this business website thoroughly: ${url} (Business: ${businessName}). Extract their core service, a specific site flaw, any recent activity, the biggest gap, and a lead score 1-10.` },
       ],
-      max_tokens: 400,
+      max_tokens: 500,
     }),
   });
 
   if (!res.ok) {
     const errText = await res.text();
-    console.error(`[HYBRID] Sonar gap error for ${url}: ${res.status} ${errText.slice(0, 200)}`);
-    throw new Error(`Sonar returned ${res.status}`);
+    console.error(`[HYBRID] Gateway gap error for ${url}: ${res.status} ${errText.slice(0, 200)}`);
+    throw new Error(`Gateway returned ${res.status}`);
   }
 
   const data = await res.json();
@@ -258,10 +264,11 @@ No markdown, no code fences, ONLY the JSON object.`,
       core_service: parsed.core_service || null,
       specific_site_flaw: parsed.specific_site_flaw || null,
       recent_activity: parsed.recent_activity || null,
+      lead_score: typeof parsed.lead_score === "number" ? Math.min(10, Math.max(1, parsed.lead_score)) : null,
     };
   } catch {
     console.warn(`[HYBRID] Failed to parse structured gap for ${businessName}, using raw`);
-    return { gap_summary: content.slice(0, 200), core_service: null, specific_site_flaw: null, recent_activity: null };
+    return { gap_summary: content.slice(0, 200), core_service: null, specific_site_flaw: null, recent_activity: null, lead_score: null };
   }
 }
 
@@ -368,13 +375,13 @@ serve(async (req) => {
     const emailsFound = businesses.filter(b => b.email).length;
     console.log(`[HYBRID] Step 2 complete: ${emailsFound}/${businesses.length} emails discovered`);
 
-    // ── Step 3: Gap Analysis via OpenRouter (only for businesses with websites) ──
+    // ── Step 3: Gap Analysis via Lovable AI Gateway ──
     const results: HybridResult[] = [];
 
-    if (!OPENROUTER_API_KEY) {
-      console.warn("[HYBRID] No OPENROUTER_API_KEY — skipping gap analysis");
+    if (!LOVABLE_API_KEY && !OPENROUTER_API_KEY) {
+      console.warn("[HYBRID] No AI keys — skipping gap analysis");
       for (const b of businesses) {
-        results.push({ ...b, gap_analysis: null, core_service: null, specific_site_flaw: null, recent_activity: null, gap_status: "skipped", email_status: b.email ? "found" : "not_found" });
+        results.push({ ...b, gap_analysis: null, core_service: null, specific_site_flaw: null, recent_activity: null, lead_score: null, gap_status: "skipped", email_status: b.email ? "found" : "not_found" });
       }
     } else {
       const withoutSites = businesses.filter(b => !b.website);
@@ -385,7 +392,7 @@ serve(async (req) => {
       for (let i = 0; i < withWebsites.length; i += batchSize) {
         const batch = withWebsites.slice(i, i + batchSize);
         const analyses = await Promise.allSettled(
-          batch.map(b => analyzeGap(b.website!, b.title))
+          batch.map(b => analyzeGap(b.website!, b.title, { rating: b.rating, reviews: b.reviews, email: b.email, industry: industry || b.category, city: location?.split(",")[0]?.trim() }))
         );
 
         for (let j = 0; j < batch.length; j++) {
@@ -398,6 +405,7 @@ serve(async (req) => {
               core_service: gap.core_service,
               specific_site_flaw: gap.specific_site_flaw,
               recent_activity: gap.recent_activity,
+              lead_score: gap.lead_score,
               gap_status: "done",
               email_status: batch[j].email ? "found" : "not_found",
             });
@@ -408,6 +416,7 @@ serve(async (req) => {
               core_service: null,
               specific_site_flaw: null,
               recent_activity: null,
+              lead_score: null,
               gap_status: "error",
               email_status: batch[j].email ? "found" : "not_found",
             });
@@ -422,6 +431,7 @@ serve(async (req) => {
           core_service: null,
           specific_site_flaw: "No website exists",
           recent_activity: null,
+          lead_score: 9,
           gap_status: "done",
           email_status: b.email ? "found" : "not_found",
         });
