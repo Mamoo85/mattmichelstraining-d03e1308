@@ -763,7 +763,7 @@ serve(async (req) => {
             lead_score: scoutResult.lead_score,
             target_service: scoutResult.target_service_to_pitch,
             custom_flaw: scoutResult.custom_flaw_observation,
-            notes: `Auto-prospected ${new Date().toLocaleDateString()}. Gap score: ${gapScore}/100. Lead score: ${scoutResult.lead_score}/10. Target: ${scoutResult.target_service_to_pitch}. Flaw: ${scoutResult.custom_flaw_observation}. Rating: ${rating} (${reviewCount} reviews). Website: ${website || "NONE"}. Address: ${address}. Email: ${contactEmail || "NOT FOUND"}. Email status: ${emailStatus}${subjectLine ? `\n\nSubject: ${subjectLine}\n\n${emailBody}` : ""}`,
+            notes: `Auto-prospected ${new Date().toLocaleDateString()}. Gap score: ${gapScore}/100. Lead score: ${scoutResult.lead_score}/10. Target: ${scoutResult.target_service_to_pitch}. Flaw: ${scoutResult.custom_flaw_observation}. Rating: ${rating} (${reviewCount} reviews). Website: ${website || "NONE"}. Address: ${address}. Email: ${contactEmail || "NOT FOUND"} (${enrichmentSource}). Email status: ${emailStatus}. Decision maker: ${decisionMakerName || "unknown"}${decisionMakerTitle ? ` (${decisionMakerTitle})` : ""}. Direct phone: ${directPhone || "none"}.${subjectLine ? `\n\nSubject: ${subjectLine}\n\n${emailBody}` : ""}`,
             status: leadStatus,
           })
           .select("id")
