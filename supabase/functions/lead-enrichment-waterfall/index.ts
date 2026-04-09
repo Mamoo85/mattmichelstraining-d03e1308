@@ -253,28 +253,32 @@ async function directScrapeLLMFallback(domain: string, businessName: string): Pr
     // Direct fetch fallback — works without any API
     if (scrapedText.length < 50) {
       log("Using direct fetch for scraping", { domain });
-      for (const url of urls) {
+      for (const url of urls.slice(0, 2)) { // Only try 2 URLs to save time
         try {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 8000);
           const res = await fetch(url, {
             headers: {
-              "User-Agent": "Mozilla/5.0 (compatible; M2Bot/1.0)",
-              "Accept": "text/html",
+              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+              "Accept": "text/html,application/xhtml+xml",
             },
             redirect: "follow",
+            signal: controller.signal,
           });
+          clearTimeout(timeout);
           if (!res.ok) { await res.text(); continue; }
           const html = await res.text();
-          // Extract text content — strip tags, scripts, styles
           const cleaned = html
             .replace(/<script[\s\S]*?<\/script>/gi, "")
             .replace(/<style[\s\S]*?<\/style>/gi, "")
             .replace(/<[^>]+>/g, " ")
+            .replace(/&nbsp;/gi, " ")
             .replace(/\s+/g, " ")
             .trim();
           if (cleaned.length > 100) {
             scrapedText += `\n${cleaned.slice(0, 4000)}`;
             log("Direct fetch success", { url, contentLength: cleaned.length });
-            if (scrapedText.length > 5000) break;
+            break; // One good page is enough
           }
         } catch (e) { log("Direct fetch failed", { url, error: String(e) }); }
       }
