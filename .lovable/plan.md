@@ -1,85 +1,105 @@
 
 
-## Plan: Agency Brand Consistency Pass + Banner Integration + Link Audit
+## Plan: Agency Brand Reskin + Free SEO Tools Suite
 
-### What's Happening
+### Scope Assessment
 
-Three pages linked from the agency landing page still use the old M2 Training orange palette (#e8621a / orange-500), and the landing page footer shows the wrong email (matt@mattmichelstraining.com instead of matt@detroitwebagent.com). The uploaded banners are reference images showing the desired "secure agency" aesthetic — they won't be embedded directly but will inform styling decisions.
+**58 pages** still use orange branding (`#e8621a`, `orange-500/400/600`). Reskinning all 58 in one pass is feasible — most follow the same template pattern (hero badge, price, step circles, CTA button, footer links). The changes are mechanical find-and-replace operations per file.
 
----
-
-### Part 1: Re-skin 3 Orange Pages to Agency Cyan Theme
-
-These pages are directly linked from the agency landing page and break brand continuity when visited:
-
-**`src/pages/AllServices.tsx`** (7 orange references):
-- Replace all `orange-500`, `orange-400`, `orange-600` with cyan equivalents (`cyan-400`, `cyan-500`)
-- Update background from `bg-slate-900` to the agency obsidian `#0a0a0f`
-- Replace `border-l-orange-500` card accents with `border-l-cyan-500`
-- Update CTA buttons to cyan gradient matching agency hero style
-- Add dot-grid background pattern to hero section for consistency
-
-**`src/pages/AIPhoneAnswering.tsx`** (3 orange references):
-- Replace `bg-orange-500/10 text-orange-400` badge with cyan
-- Replace `text-orange-400` price with cyan
-- Replace `bg-orange-500` step circles with cyan
-- Rename product label from "AI Phone Answering" to "24/7 Call Routing Engine" (per brand guidelines)
-
-**`src/pages/DigitalFoundation.tsx`** (14 `#e8621a` references):
-- Global find/replace `#e8621a` → `#22d3ee` (electric cyan)
-- Replace `#d4570f` hover states → `#06b6d4`
-- Update SEO title from "M² Development" to "Detroit Web Agency"
-- Fix success page phone link color
+**However**, not all 58 pages are agency pages. Many are standalone SaaS product pages (BedtimeStories, Nutrition, ParentView, AthleteBlueprint) that belong to the M2 Training brand and should KEEP orange. Only pages linked from or related to the agency domain should get the cyan treatment.
 
 ---
 
-### Part 2: Landing Page Link Audit + Footer Fix
+### Part 1: Classify Pages — Agency vs Training
 
-**Footer email fix in `AgencyHome.tsx` (line 351)**:
-- Change `matt@mattmichelstraining.com` → `matt@detroitwebagent.com`
+**Agency pages to reskin (linked from agency landing or B2B products):**
+- `Portfolio.tsx`, `ContractorSeoPage.tsx`, `RevenuePreventer.tsx`
+- `SeoGuard.tsx`, `VisibilityScore.tsx`, `FreeBidReport.tsx`, `FreeComplianceScan.tsx`
+- `SpeedToLead.tsx`, `ReviewAlerts.tsx`, `ReviewRequestSMS.tsx`
+- `LinkedInOutreach.tsx`, `DirectMail.tsx`, `TestimonialHarvester.tsx`
+- `SocialMediaAI.tsx`, `SocialConnect.tsx`, `LocalMarketing.tsx`
+- `AISocialCaptionPack.tsx`, `AIBlogPostService.tsx`, `AIPressRelease.tsx`
+- `AIProposalGenerator.tsx`, `AIWebsiteCopy.tsx`, `AdGbpPosts.tsx`
+- `AdCompetitorReport.tsx`, `AdFreeAudit.tsx`, `AdWebsiteAudit.tsx`
+- `ClientReportGenerator.tsx`, `BusinessDirectory.tsx`, `MicroSaasToolPage.tsx`
+- `KPIEmail.tsx`, `WeeklyBusinessDigest.tsx`, `IndustrialNewsletter.tsx`
+- `InsuranceFollowUpDrip.tsx`, `PodcastPitchService.tsx`
+- `AbandonedCartRecovery.tsx`, `QuoteFollowupSMS.tsx`, `WinBackSMS.tsx`
+- `WelcomeDrip.tsx`, `ReactivationEmails.tsx`, `HolidaySMSBlast.tsx`
+- `TextMessageMarketing.tsx`, `WarrantyReminders.tsx`, `NewMoverMarketing.tsx`
+- `PromoPlanner.tsx`, `SalesScripts.tsx`, `TradeShowFollowUp.tsx`
+- `RestaurantMenuCopy.tsx`, `HiringAssistant.tsx`, `AnnualBusinessReview.tsx`
+- `EmployeeCredentialAudit.tsx`, `NewHireCheck.tsx`, `PermitWatch.tsx`
+- `CommunicationsCenter.tsx`, `GetStarted.tsx`, `ProposalStewartDental.tsx`
+- `ReferralPage.tsx`
 
-**Link verification** — every link on AgencyHome currently points to:
-| Link | Target | Status |
-|---|---|---|
-| Hero CTA | `/ai-website-audit` | OK — page exists |
-| Phone CTA | `tel:+13138064952` | OK |
-| Web Design card | `/web-design-services` | OK |
-| Call Routing card | `/ai-phone-answering` | OK — needs reskin (Part 1) |
-| SEO Guard card | `/seo-guard` | OK |
-| Free Diagnostic card | `/ai-website-audit` | OK |
-| Review Command card | `/ai-reputation-dashboard` | OK |
-| Computer Repair card | `/computer-repair` | OK |
-| Footer service links | Same as above | OK |
-| Final CTA | `/ai-website-audit` | OK |
-| LinkedIn | External | OK |
-| Facebook | `facebook.com` (generic) | Should update to actual page or remove |
-
----
-
-### Part 3: Banner-Inspired Aesthetic Upgrades
-
-The uploaded banners show a "secure tech agency" visual language: brushed metal testimonial cards, gear/cog process icons, vault-door CTAs, and suited agent imagery. These will be translated into CSS/Tailwind — not embedded as images.
-
-**Testimonials section (AgencyHome.tsx lines 227-253)**:
-- Add brushed-metal card effect: `bg-gradient-to-br from-slate-800/80 to-slate-900/80` with metallic border shimmer
-- Add `[VERIFIED INTEL]` badge styling matching banner
-- Increase card visual weight with stronger borders
-
-**Secure Development Lifecycle section (lines 257-283)**:
-- Already matches the banner's 4-step numbered flow — just refine with gear/cog-style icon backgrounds and connecting arrow lines between steps
-
-**Final CTA section (lines 286-301)**:
-- Add vault-door inspired styling: stronger radial glow, more dramatic typography
-- Update copy to "Initiate Secured Partnership" (already there) with bolder visual treatment
+**Training pages to KEEP orange:**
+- `Nutrition.tsx`, `ParentView.tsx`, `AthleteBlueprint.tsx`, `BedtimeStories.tsx`
 
 ---
 
-### Files Modified
+### Part 2: Mechanical Reskin (Per File)
 
-| File | Changes |
+Each file gets the same set of replacements:
+| Find | Replace |
 |---|---|
-| `src/pages/AllServices.tsx` | Full orange → cyan reskin, agency dark theme |
-| `src/pages/AIPhoneAnswering.tsx` | Orange → cyan, rename to Call Routing Engine |
-| `src/pages/DigitalFoundation.tsx` | `#e8621a` → `#22d3ee` throughout, update branding |
-| `src/pages/AgencyHome.tsx` | Fix footer email, polish testimonials + CTA sections |
+| `#e8621a` | `#22d3ee` |
+| `#d4570f` / `#d45a17` | `#06b6d4` |
+| `orange-500` | `cyan-500` |
+| `orange-400` | `cyan-400` |
+| `orange-600` | `cyan-600` |
+| `orange-300` | `cyan-300` |
+| `bg-slate-900` (hero bg) | Keep or change to `bg-[#0a0a0f]` for consistency |
+| `matt@mattmichelstraining.com` | `matt@detroitwebagent.com` (on agency pages only) |
+| `M² Development` / `M2 Development` | `Detroit Web Agency` |
+
+This is ~54 files with purely mechanical color/text swaps.
+
+---
+
+### Part 3: Free SEO Tools Suite (`/free-tools`)
+
+Build a hub page at `/free-tools` with 5 tool cards, each linking to a dedicated tool page. All tools capture email before showing results (lead magnet).
+
+**Tools:**
+
+1. **Site Speed Audit** (`/free-tools/speed`) — Already exists as `/free-site-scanner`. Wrap the existing `FreeSiteScanner` component or redirect.
+
+2. **SEO Health Check** (`/free-tools/seo-health`) — New page + edge function `free-seo-health-check`. Calls DataForSEO On-Page API (`/v3/on_page/instant_pages`) for a single URL. Returns: title tag, meta description, H1 count, image alt coverage, word count, schema markup presence. Displays pass/fail scorecard.
+
+3. **Domain Breach Scanner** (`/free-tools/breach-scan`) — New page + edge function `free-breach-scanner`. Calls HIBP API (`/api/v3/breaches?domain=`) to check if a domain has been in known data breaches. Returns breach names, dates, and compromised data types.
+
+4. **Competitor Rank Checker** (`/free-tools/rank-check`) — New page + edge function `free-rank-checker`. Calls DataForSEO SERP API (`/v3/serp/google/organic/live/regular`) for a keyword + location. Returns top 10 results with positions.
+
+5. **Meta Tag Analyzer** (`/free-tools/meta-tags`) — New page + edge function `free-meta-analyzer`. Calls DataForSEO On-Page API to extract and grade meta tags (title length, description length, OG tags, canonical, robots).
+
+**Hub page design**: Matches agency obsidian theme. Each tool card has an icon, title, one-line description, and "Run Free Scan →" CTA. Header: "Free Digital Infrastructure Tools" with agency branding.
+
+**Lead capture flow**: Email input required before results display. Email + URL stored in a `free_tool_leads` table for follow-up.
+
+---
+
+### Part 4: Link Audit
+
+Verify all AgencyHome links route correctly (already audited — all confirmed working). Update Facebook link to actual business page or remove.
+
+---
+
+### Files Created/Modified
+
+| Category | Count | Files |
+|---|---|---|
+| Reskin (orange → cyan) | ~54 | All agency product pages listed in Part 1 |
+| New pages | 6 | `FreeToolsHub.tsx`, `FreeSpeedAudit.tsx` (redirect), `FreeSeoHealth.tsx`, `FreeBreachScanner.tsx`, `FreeRankChecker.tsx`, `FreeMetaAnalyzer.tsx` |
+| New edge functions | 4 | `free-seo-health-check`, `free-breach-scanner`, `free-rank-checker`, `free-meta-analyzer` |
+| Routes | 6 new | In `App.tsx` |
+| DB migration | 1 | `free_tool_leads` table |
+
+### Execution Order
+
+1. Batch reskin all 54 agency pages (mechanical, no logic changes)
+2. Create `free_tool_leads` table migration
+3. Build 4 new edge functions
+4. Build 6 new pages (hub + 5 tools)
+5. Add routes to App.tsx
 
