@@ -175,39 +175,48 @@ async function clayEnrich(domain: string, businessName: string) {
   } catch (e) { log("Clay exception", { error: String(e) }); return null; }
 }
 
-// ── AI Email Guess: Use common patterns when domain is known ──
-async function guessAndVerifyEmail(domain: string, name: string | null): Promise<string | null> {
-  if (!HUNTER_API_KEY || !domain) return null;
-  // Use Hunter email-finder which guesses from name + domain
+// ── Email Pattern Guess: Generate common email patterns without needing API credits ──
+async function guessEmail(domain: string, name: string | null, businessName: string): Promise<string | null> {
+  if (!domain) return null;
+
+  // Build candidate list based on common small business patterns
+  const candidates: string[] = [];
+
   if (name) {
-    const parts = name.split(" ");
-    const firstName = parts[0] || "";
-    const lastName = parts[parts.length - 1] || "";
-    if (firstName && lastName) {
-      try {
-        const res = await fetch(
-          `https://api.hunter.io/v2/email-finder?domain=${encodeURIComponent(domain)}&first_name=${encodeURIComponent(firstName)}&last_name=${encodeURIComponent(lastName)}&api_key=${HUNTER_API_KEY}`
-        );
-        if (res.ok) {
-          const data = await res.json();
-          const email = data?.data?.email;
-          if (email && data?.data?.score >= 50) {
-            log("Hunter email-finder hit", { email, score: data.data.score });
-            return email;
-          }
-        }
-      } catch { /* continue */ }
+    const parts = name.toLowerCase().replace(/[^a-z\s]/g, "").split(/\s+/).filter(Boolean);
+    const first = parts[0] || "";
+    const last = parts[parts.length - 1] || "";
+    if (first && last && first !== last) {
+      candidates.push(`${first}@${domain}`);
+      candidates.push(`${first}.${last}@${domain}`);
+      candidates.push(`${first}${last}@${domain}`);
+      candidates.push(`${first[0]}${last}@${domain}`);
+    } else if (first) {
+      candidates.push(`${first}@${domain}`);
     }
   }
 
-  // Try common patterns: info@, contact@, hello@
-  const prefixes = ["info", "contact", "hello", "office"];
-  for (const prefix of prefixes) {
-    const candidateEmail = `${prefix}@${domain}`;
-    const verified = await hunterVerify(candidateEmail);
-    if (verified) {
-      log("Generic email verified", { email: candidateEmail });
-      return candidateEmail;
+  // Common generic addresses (most small businesses use these)
+  candidates.push(`info@${domain}`, `contact@${domain}`, `hello@${domain}`,
+    `office@${domain}`, `admin@${domain}`, `sales@${domain}`);
+
+  // Try Hunter verify if available (even on free plan, verify has separate quota)
+  if (HUNTER_API_KEY) {
+    for (const email of candidates.slice(0, 4)) {
+      const verified = await hunterVerify(email);
+      if (verified) {
+        log("Email pattern verified via Hunter", { email });
+        return email;
+      }
+    }
+  }
+
+  // If Hunter is exhausted too, return the most likely generic — info@ is most common for SMBs
+  // We can't verify but it's better than nothing
+  const bestGuess = `info@${domain}`;
+  log("Email pattern guess (unverified)", { email: bestGuess });
+  return bestGuess;
+}
     }
   }
   return null;
