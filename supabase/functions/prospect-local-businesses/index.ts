@@ -191,45 +191,144 @@ function scoreDigitalGap(place: any): number {
   return Math.min(score, 95);
 }
 
-// ── Extract email from a website ──
-async function scrapeEmailFromWebsite(websiteUrl: string): Promise<string | null> {
+// ── Snov.io User ID for API calls ──
+const SNOV_USER_ID = "f6d756243ea40f113dbb9946740ea111";
+
+// ── Enhanced AI Lead Extraction ──
+interface ExtractedLead {
+  first_name: string;
+  last_name: string;
+  job_title: string;
+  company_name: string;
+  validated_email: string;
+  phone_number: string | null;
+  drip_campaign_status: {
+    current_stage: string;
+    email_opened: boolean;
+    last_engagement_timestamp: string | null;
+  };
+  lead_score_indicators: string[];
+}
+
+interface ExtractionResult {
+  extraction_status: "success" | "failed_no_email" | "no_data_found";
+  leads: ExtractedLead[];
+}
+
+const AI_EXTRACTION_PROMPT = `<Role>
+You are an elite Revenue Operations AI assigned to the Detroit Web Agency. Your objective is to extract, validate, and enrich high-value B2B leads specifically within the Michigan contractor and construction industry (e.g., HVAC, plumbing, general contractors, roofing). You operate with absolute precision and strict adherence to data schemas.
+</Role>
+
+<Task>
+Analyze the provided scraped HTML/text payload. Execute a deep search to identify key decision-makers (Owners, Founders, Presidents, Project Managers) and extract their contact information. You must bypass basic obfuscation to reconstruct emails.
+</Task>
+
+<Rules_of_Engagement>
+1. THE EMAIL MANDATE: An email address is the absolute primary key. If you cannot extract or definitively reconstruct a valid email address for a contact, YOU MUST DISCARD THE LEAD ENTIRELY unless the system flag allow_no_email is explicitly passed as true. Do not return partial profiles.
+2. DEEP SEARCH TARGETING: Ignore generic contacts (e.g., "info@", "sales@"). Aggressively scan the DOM for personal identifiers associated with leadership or management roles within the contracting business.
+3. OBFUSCATION BYPASS: Reconstruct hidden emails. Translate formats like "matt [at] detroitwebagent [dot] com" or "matt(at)detroitwebagent.com" into standard syntax.
+4. CRM PARAMETER INITIALIZATION: For every valid lead successfully extracted, you must initialize their CRM tracking parameters exactly as defined in the schema.
+</Rules_of_Engagement>
+
+<Formatting_Schema>
+You must output ONLY a valid, minified JSON object matching this exact schema. Do not include markdown formatting or conversational filler.
+
+{
+  "extraction_status": "success" | "failed_no_email" | "no_data_found",
+  "leads": [
+    {
+      "first_name": "string",
+      "last_name": "string",
+      "job_title": "string (MUST prioritize Owner/Founder/Manager)",
+      "company_name": "string",
+      "validated_email": "string (MUST be present)",
+      "phone_number": "string | null",
+      "drip_campaign_status": {
+        "current_stage": "0_New_Extracted_Lead",
+        "email_opened": false,
+        "last_engagement_timestamp": null
+      },
+      "lead_score_indicators": [
+        "Array of strings detailing why this is a good candidate"
+      ]
+    }
+  ]
+}
+</Formatting_Schema>`;
+
+async function aiExtractLeads(
+  htmlText: string,
+  businessName: string,
+  industry: string,
+  allowNoEmail = false,
+): Promise<ExtractionResult> {
+  const prompt = `${AI_EXTRACTION_PROMPT}
+
+<Input>
+Business Name: ${businessName}
+Industry: ${industry}
+System Flag: allow_no_email=${allowNoEmail}
+
+--- SCRAPED PAYLOAD START ---
+${htmlText.slice(0, 12000)}
+--- SCRAPED PAYLOAD END ---
+</Input>`;
+
+  const raw = await generateText(prompt, 1200);
+  try {
+    const cleaned = raw.replace(/```json\s*/g, "").replace(/```/g, "").trim();
+    const match = cleaned.match(/\{[\s\S]*\}/);
+    if (!match) return { extraction_status: "no_data_found", leads: [] };
+    const parsed = JSON.parse(match[0]) as ExtractionResult;
+    // Filter out leads without email unless allow_no_email
+    if (!allowNoEmail) {
+      parsed.leads = (parsed.leads || []).filter(l => l.validated_email && l.validated_email.includes("@"));
+    }
+    return parsed;
+  } catch {
+    return { extraction_status: "no_data_found", leads: [] };
+  }
+}
+
+// ── Scrape website HTML for AI extraction ──
+async function scrapeWebsiteHtml(websiteUrl: string): Promise<string | null> {
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
+    const timeout = setTimeout(() => controller.abort(), 8000);
     const res = await fetch(websiteUrl, {
       signal: controller.signal,
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; M2Bot/1.0)" },
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; DetroitWebAgentBot/1.0)" },
     });
     clearTimeout(timeout);
     if (!res.ok) return null;
-    const html = await res.text();
-    // Find email addresses in HTML
-    const emailRegex = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
-    const emails = html.match(emailRegex) || [];
-    // Filter out common junk emails
-    const validEmails = emails.filter(e => {
-      const lower = e.toLowerCase();
-      // Filter out junk: fonts, CDNs, tracking, generic platforms
-      const junkDomains = [
-        "example.com", "sentry.io", "wixpress.com", "schema.org",
-        "googleapis.com", "google.com", "facebook.com", "twitter.com",
-        "instagram.com", "w3.org", "jquery.com", "wordpress.org",
-        "wordpress.com", "gravatar.com", "cloudflare.com", "amazonaws.com",
-        "indiantypefoundry.com", "fontawesome.com", "bootstrapcdn.com",
-        "typekit.net", "fonts.com", "monotype.com", "myfonts.com",
-        "squarespace.com", "shopify.com", "godaddy.com",
-      ];
-      if (junkDomains.some(d => lower.includes(d))) return false;
-      if (/\.(png|jpg|jpeg|svg|gif|css|js|woff|ttf|eot)$/i.test(lower)) return false;
-      if (lower.length > 60 || lower.length < 5) return false;
-      // Must have a real TLD
-      if (!/\.(com|net|org|biz|info|us|co|io)$/.test(lower)) return false;
-      return true;
-    });
-    return validEmails[0] || null;
+    return await res.text();
   } catch {
     return null;
   }
+}
+
+// ── Legacy simple email scraper (fallback) ──
+async function scrapeEmailFromWebsite(websiteUrl: string): Promise<string | null> {
+  const html = await scrapeWebsiteHtml(websiteUrl);
+  if (!html) return null;
+  const emailRegex = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
+  const emails = html.match(emailRegex) || [];
+  const junkDomains = [
+    "example.com", "sentry.io", "wixpress.com", "schema.org",
+    "googleapis.com", "google.com", "facebook.com", "twitter.com",
+    "instagram.com", "w3.org", "jquery.com", "wordpress.org",
+    "wordpress.com", "gravatar.com", "cloudflare.com", "amazonaws.com",
+    "squarespace.com", "shopify.com", "godaddy.com",
+  ];
+  const validEmails = emails.filter(e => {
+    const lower = e.toLowerCase();
+    if (junkDomains.some(d => lower.includes(d))) return false;
+    if (/\.(png|jpg|jpeg|svg|gif|css|js|woff|ttf|eot)$/i.test(lower)) return false;
+    if (lower.length > 60 || lower.length < 5) return false;
+    if (!/\.(com|net|org|biz|info|us|co|io)$/.test(lower)) return false;
+    return true;
+  });
+  return validEmails[0] || null;
 }
 
 // ── Geocode an address to lat/lng ──
