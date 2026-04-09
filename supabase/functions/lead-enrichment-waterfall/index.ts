@@ -186,40 +186,10 @@ async function lushaCompany(domain: string) {
   } catch (e) { log("Lusha company exception", { error: String(e) }); return null; }
 }
 
-// ── CLAY.COM — Clay's public API uses tables/webhooks, not a REST enrichment endpoint.
-// Use their "Enrich Person" via HTTP API pattern ──
-async function clayEnrich(domain: string, businessName: string) {
-  if (!CLAY_API_KEY || !domain) return null;
-  try {
-    // Clay's API works via table webhooks. Try their v1/sources endpoint
-    const res = await fetch("https://api.clay.com/v1/sources", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${CLAY_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        source_type: "api",
-        domain,
-        company_name: businessName,
-      }),
-    });
-    const body = await res.text();
-    if (!res.ok) {
-      log("Clay error", { status: res.status, body: body.slice(0, 200) });
-      return null;
-    }
-    const data = JSON.parse(body);
-    const contact = data?.results?.[0] || data?.data?.[0];
-    if (!contact) return null;
-    return {
-      email: contact.email || contact.work_email || "",
-      phone: contact.phone || contact.direct_phone || "",
-      name: contact.full_name || `${contact.first_name || ""} ${contact.last_name || ""}`.trim() || null,
-      title: contact.title || contact.job_title || null,
-      source: "clay",
-    };
-  } catch (e) { log("Clay exception", { error: String(e) }); return null; }
+// ── CLAY.COM — API deprecated as of 2026. Disabled to save time. ──
+async function clayEnrich(_domain: string, _businessName: string) {
+  log("Clay skipped — API deprecated");
+  return null;
 }
 
 // ── DIRECT SCRAPE + LLM FALLBACK (no Firecrawl credits needed) ──
