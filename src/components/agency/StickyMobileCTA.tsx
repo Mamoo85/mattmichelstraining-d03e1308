@@ -1,0 +1,34 @@
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+const StickyMobileCTA = () => {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const hero = document.getElementById("agency-hero");
+    if (!hero) { setVisible(true); return; }
+
+    const obs = new IntersectionObserver(
+      ([entry]) => setVisible(!entry.isIntersecting),
+      { threshold: 0.1 }
+    );
+    obs.observe(hero);
+    return () => obs.disconnect();
+  }, []);
+
+  if (!visible) return null;
+
+  return (
+    <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden p-3" style={{ background: "rgba(10,10,15,0.95)", backdropFilter: "blur(12px)", borderTop: "1px solid rgba(34,211,238,0.15)" }}>
+      <Button asChild className="w-full py-5 font-bold text-sm rounded-lg" style={{ background: "linear-gradient(135deg, #06b6d4, #22d3ee)", color: "#020617" }}>
+        <Link to="/ai-website-audit">
+          Get Free Diagnostic <ArrowRight className="ml-2 h-4 w-4" />
+        </Link>
+      </Button>
+    </div>
+  );
+};
+
+export default StickyMobileCTA;

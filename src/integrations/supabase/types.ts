@@ -1168,6 +1168,33 @@ export type Database = {
         }
         Relationships: []
       }
+      client_ranking_snapshots: {
+        Row: {
+          checked_at: string | null
+          client_id: string | null
+          id: string
+          keyword: string
+          local_pack: boolean | null
+          position: number | null
+        }
+        Insert: {
+          checked_at?: string | null
+          client_id?: string | null
+          id?: string
+          keyword: string
+          local_pack?: boolean | null
+          position?: number | null
+        }
+        Update: {
+          checked_at?: string | null
+          client_id?: string | null
+          id?: string
+          keyword?: string
+          local_pack?: boolean | null
+          position?: number | null
+        }
+        Relationships: []
+      }
       client_report_clients: {
         Row: {
           active: boolean | null
@@ -1612,6 +1639,36 @@ export type Database = {
           },
         ]
       }
+      competitor_threat_log: {
+        Row: {
+          alerted_at: string | null
+          client_id: string | null
+          client_position: number | null
+          competitor: string | null
+          competitor_position: number | null
+          id: string
+          keyword: string
+        }
+        Insert: {
+          alerted_at?: string | null
+          client_id?: string | null
+          client_position?: number | null
+          competitor?: string | null
+          competitor_position?: number | null
+          id?: string
+          keyword: string
+        }
+        Update: {
+          alerted_at?: string | null
+          client_id?: string | null
+          client_position?: number | null
+          competitor?: string | null
+          competitor_position?: number | null
+          id?: string
+          keyword?: string
+        }
+        Relationships: []
+      }
       competitor_watch_clients: {
         Row: {
           active: boolean | null
@@ -1820,6 +1877,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      cross_sell_queue: {
+        Row: {
+          business_name: string | null
+          created_at: string | null
+          email: string
+          id: string
+          send_at: string
+          sent: boolean | null
+          stripe_payment_id: string | null
+        }
+        Insert: {
+          business_name?: string | null
+          created_at?: string | null
+          email: string
+          id?: string
+          send_at: string
+          sent?: boolean | null
+          stripe_payment_id?: string | null
+        }
+        Update: {
+          business_name?: string | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          send_at?: string
+          sent?: boolean | null
+          stripe_payment_id?: string | null
+        }
+        Relationships: []
       }
       custom_program_requests: {
         Row: {
@@ -2350,6 +2437,27 @@ export type Database = {
           },
         ]
       }
+      exit_intent_leads: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          url: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          url?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
       family_subscription_items: {
         Row: {
           created_at: string
@@ -2598,6 +2706,36 @@ export type Database = {
           post_count?: number | null
           post_tone?: string | null
           stripe_customer_id?: string | null
+        }
+        Relationships: []
+      }
+      generated_content_drafts: {
+        Row: {
+          body: string | null
+          client_id: string | null
+          created_at: string | null
+          id: string
+          industry: string | null
+          status: string | null
+          title: string
+        }
+        Insert: {
+          body?: string | null
+          client_id?: string | null
+          created_at?: string | null
+          id?: string
+          industry?: string | null
+          status?: string | null
+          title: string
+        }
+        Update: {
+          body?: string | null
+          client_id?: string | null
+          created_at?: string | null
+          id?: string
+          industry?: string | null
+          status?: string | null
+          title?: string
         }
         Relationships: []
       }
@@ -7796,6 +7934,33 @@ export type Database = {
           sort_order?: number
           updated_at?: string
           updated_by?: string | null
+        }
+        Relationships: []
+      }
+      site_scanner_leads: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          report_sent: boolean | null
+          scores: Json | null
+          url: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          report_sent?: boolean | null
+          scores?: Json | null
+          url: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          report_sent?: boolean | null
+          scores?: Json | null
+          url?: string
         }
         Relationships: []
       }
