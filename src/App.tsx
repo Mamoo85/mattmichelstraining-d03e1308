@@ -37,6 +37,11 @@ const BottomTabBar = lazyRetry(() => import("@/components/layout/BottomTabBar"))
 const Index = lazyRetry(() => import("./pages/Index"));
 const AgencyHome = lazyRetry(() => import("./pages/AgencyHome"));
 const FreeSiteScanner = lazyRetry(() => import("./pages/FreeSiteScanner"));
+const FreeToolsHub = lazyRetry(() => import("./pages/FreeToolsHub"));
+const FreeSeoHealth = lazyRetry(() => import("./pages/FreeSeoHealth"));
+const FreeBreachScanner = lazyRetry(() => import("./pages/FreeBreachScanner"));
+const FreeRankChecker = lazyRetry(() => import("./pages/FreeRankChecker"));
+const FreeMetaAnalyzer = lazyRetry(() => import("./pages/FreeMetaAnalyzer"));
 const ClientCommandCenter = lazyRetry(() => import("./pages/ClientCommandCenter"));
 const ComputerRepair = lazyRetry(() => import("./pages/ComputerRepair"));
 
