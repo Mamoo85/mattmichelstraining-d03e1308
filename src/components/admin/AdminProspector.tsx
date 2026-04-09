@@ -603,6 +603,54 @@ export default function AdminProspector() {
     setPipelineLeads(prev => prev.map(l => l.id === leadId ? { ...l, pipeline_stage: stage } : l));
   };
 
+  const deletePipelineLead = async (lead: PipelineLead) => {
+    const { error } = await (supabase as any).from("prospect_pipeline").delete().eq("id", lead.id);
+    if (error) { toast.error("Failed to delete lead"); return; }
+    setPipelineLeads(prev => prev.filter(l => l.id !== lead.id));
+    toast.success(`Deleted ${lead.business_name}`);
+  };
+
+  const bulkDeletePipeline = async () => {
+    if (selectedPipelineIds.size === 0) { toast.error("No leads selected"); return; }
+    if (!confirm(`Delete ${selectedPipelineIds.size} leads permanently?`)) return;
+    setBatchProcessing(true);
+    try {
+      const ids = Array.from(selectedPipelineIds);
+      const { error } = await (supabase as any).from("prospect_pipeline").delete().in("id", ids);
+      if (error) throw error;
+      setPipelineLeads(prev => prev.filter(l => !selectedPipelineIds.has(l.id)));
+      setSelectedPipelineIds(new Set());
+      toast.success(`Deleted ${ids.length} leads`);
+    } catch { toast.error("Bulk delete failed"); }
+    finally { setBatchProcessing(false); }
+  };
+
+  const clearDuplicates = async () => {
+    const seen = new Map<string, PipelineLead>();
+    const dupeIds: string[] = [];
+    for (const l of pipelineLeads) {
+      const key = `${l.business_name.toLowerCase().trim()}|${(l.city || "").toLowerCase().trim()}`;
+      if (seen.has(key)) {
+        const existing = seen.get(key)!;
+        const keepNew = (l.created_at || "") > (existing.created_at || "");
+        dupeIds.push(keepNew ? existing.id : l.id);
+        if (keepNew) seen.set(key, l);
+      } else {
+        seen.set(key, l);
+      }
+    }
+    if (dupeIds.length === 0) { toast.info("No duplicates found"); return; }
+    if (!confirm(`Found ${dupeIds.length} duplicate leads. Delete them?`)) return;
+    setBatchProcessing(true);
+    try {
+      const { error } = await (supabase as any).from("prospect_pipeline").delete().in("id", dupeIds);
+      if (error) throw error;
+      setPipelineLeads(prev => prev.filter(l => !dupeIds.includes(l.id)));
+      toast.success(`Removed ${dupeIds.length} duplicates`);
+    } catch { toast.error("Dedupe failed"); }
+    finally { setBatchProcessing(false); }
+  };
+
   // ── Website Audit ──
   const auditWebsite = async (lead: PipelineLead) => {
     if (!lead.website) { toast.error("No website to audit"); return; }
