@@ -63,15 +63,15 @@ const HeroSection = () => {
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent" />
               <div className="relative flex flex-col items-center text-center">
                 <div className="relative mb-6 flex items-center justify-center">
-                  <div className="relative w-36 md:w-48 lg:w-56 aspect-square rounded-full overflow-hidden border-2 border-primary/20" style={{ background: "radial-gradient(circle at 50% 40%, hsl(var(--card)), hsl(var(--background)))", boxShadow: "0 0 60px rgba(232,98,26,0.15), 0 0 120px rgba(232,98,26,0.06)" }}>
+                  <div className="relative w-36 md:w-48 lg:w-56 aspect-square rounded-full overflow-hidden border-2 border-primary/20 bg-white" style={{ boxShadow: "0 0 60px rgba(232,98,26,0.15), 0 0 120px rgba(232,98,26,0.06)" }}>
                     <img
                       src={m2Logo}
-                      alt="M2 Performance Training"
+                      alt="M² Performance Training"
                       width={320}
                       height={320}
                       fetchPriority="high"
                       decoding="sync"
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain p-3"
                     />
                   </div>
                 </div>
