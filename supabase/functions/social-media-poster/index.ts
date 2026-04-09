@@ -276,7 +276,7 @@ serve(async () => {
       // Post to LinkedIn
       if (hasLinkedIn) {
         try {
-          let authorUrn: string | null = liOrgId ? `urn:li:organization:${liOrgId}` : await getLinkedInPersonUrn(liToken);
+          const authorUrn: string | null = liOrgId ? `urn:li:organization:${liOrgId}` : await getLinkedInPersonUrn(liToken);
           if (authorUrn) {
             const message = await generatePost(client.business_name, businessType, location, "linkedin");
             const ok = await postToLinkedIn(authorUrn, liToken, message);

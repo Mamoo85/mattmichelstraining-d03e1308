@@ -39,7 +39,7 @@ interface ExecutionRecord {
 }
 
 const MAX_HISTORY = 15;
-let executionHistory: ExecutionRecord[] = [];
+const executionHistory: ExecutionRecord[] = [];
 
 // ─── Confirmation Modal ────────────────────────────────────────────────────────
 function ConfirmDialog({ open, onConfirm, onCancel, label }: { open: boolean; onConfirm: () => void; onCancel: () => void; label: string }) {

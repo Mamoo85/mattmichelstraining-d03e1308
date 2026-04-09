@@ -171,7 +171,7 @@ serve(async (req) => {
         console.log(`[DARK-WEB-SCAN] Scanning domain: ${domain} for client ${client.id}`);
 
         // Call HIBP breached domain API
-        let breaches: any[] = [];
+        const breaches: any[] = [];
         if (HIBP_API_KEY) {
           const hibpRes = await fetch(
             `https://haveibeenpwned.com/api/v3/breacheddomain/${encodeURIComponent(domain)}`,

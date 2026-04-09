@@ -83,7 +83,7 @@ const WorkoutDataCenter = () => {
 
   const printBlankWorksheet = useCallback(() => {
     const rows = Array.from({ length: 9 }, (_, i) => i + 1);
-    let html = `
+    const html = `
       <html><head>
       <style>
         @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }

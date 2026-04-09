@@ -104,7 +104,7 @@ serve(async (req) => {
       tierDiscountCents = Math.round(originalAmountCents * discountPct / 100);
     }
 
-    let amountAfterTierCents = originalAmountCents - tierDiscountCents;
+    const amountAfterTierCents = originalAmountCents - tierDiscountCents;
 
     // Apply gift card
     let giftCardAppliedCents = 0;

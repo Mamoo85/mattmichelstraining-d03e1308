@@ -235,7 +235,7 @@ const ActiveWorkoutZone = ({ onFinish, onPause, initialContext }: ActiveWorkoutZ
 
         if (libData) {
           const altIds = (libData as any[]).filter(e => e.barbell_alternative_id).map(e => e.barbell_alternative_id);
-          let altMap: Record<string, any> = {};
+          const altMap: Record<string, any> = {};
           if (altIds.length > 0) {
             const { data: alts } = await supabase
               .from("exercise_library")
