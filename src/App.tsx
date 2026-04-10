@@ -121,6 +121,7 @@ const ContractorLeads = lazyRetry(() => import("./pages/ContractorLeads"));
 const FieldServiceManagement = lazyRetry(() => import("./pages/FieldServiceManagement"));
 const FieldServiceDispatch = lazyRetry(() => import("./pages/FieldServiceDispatch"));
 const FieldServiceTechApp = lazyRetry(() => import("./pages/FieldServiceTechApp"));
+const FieldServiceIndustry = lazyRetry(() => import("./pages/FieldServiceIndustry"));
 const LeadCapturePage = lazyRetry(() => import("./pages/LeadCapturePage"));
 const B2BLeads = lazyRetry(() => import("./pages/B2BLeads"));
 const IndustrialDatabase = lazyRetry(() => import("./pages/IndustrialDatabase"));
