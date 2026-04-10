@@ -290,13 +290,40 @@ const AppNavbar = () => {
         {/* Mobile: bell + avatar / agency mobile CTA */}
         <div className="md:hidden flex items-center gap-2">
           {isAgency ? (
-            <Link
-              to="/ai-website-audit"
-              className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest rounded-md"
-              style={{ background: "linear-gradient(135deg, #06b6d4, #22d3ee)", color: "#020617" }}
-            >
-              Free Audit
-            </Link>
+            <>
+              {user ? (
+                <>
+                  {isAdmin && (
+                    <Link
+                      to="/admin"
+                      className="px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-widest text-cyan-400"
+                    >
+                      <Shield size={14} />
+                    </Link>
+                  )}
+                  <button
+                    onClick={signOut}
+                    className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400"
+                  >
+                    <LogOut size={14} />
+                  </button>
+                </>
+              ) : (
+                <Link
+                  to="/auth?redirect=/admin"
+                  className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-cyan-400"
+                >
+                  <LogIn size={14} />
+                </Link>
+              )}
+              <Link
+                to="/ai-website-audit"
+                className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest rounded-md"
+                style={{ background: "linear-gradient(135deg, #06b6d4, #22d3ee)", color: "#020617" }}
+              >
+                Free Audit
+              </Link>
+            </>
           ) : (
             <>
               {user && <Suspense fallback={null}><NotificationBell /></Suspense>}
