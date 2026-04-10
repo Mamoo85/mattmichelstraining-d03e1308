@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { FieldJob } from "./TechJobList";
+import JobParts from "./JobParts";
 
 interface TechJobDetailProps {
   job: FieldJob;
@@ -248,6 +249,12 @@ const TechJobDetail: React.FC<TechJobDetailProps> = ({ job, techId, onBack, onSt
               className="hidden"
             />
           </label>
+        </div>
+
+        {/* Parts Used */}
+        <div className="bg-[#0f1f35] rounded-2xl p-4 border border-[#1e3a5f] space-y-3">
+          <p className="text-gray-400 text-xs uppercase tracking-wide">Parts Used</p>
+          <JobParts jobId={job.id} />
         </div>
 
         {/* Description */}
