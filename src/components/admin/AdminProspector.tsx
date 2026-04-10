@@ -1613,6 +1613,9 @@ export default function AdminProspector() {
                 <SelectItem value="all" className="text-xs">All Leads</SelectItem>
                 <SelectItem value="has_email" className="text-xs">✓ Has Email</SelectItem>
                 <SelectItem value="no_email" className="text-xs">✗ No Email</SelectItem>
+                <SelectItem value="sent" className="text-xs">📤 Sent / Contacted</SelectItem>
+                <SelectItem value="dripping" className="text-xs">💧 Active Drip</SelectItem>
+                <SelectItem value="no_contact" className="text-xs">🔴 No Contact Yet</SelectItem>
                 <SelectItem value="has_website" className="text-xs">✓ Has Website</SelectItem>
                 <SelectItem value="no_website" className="text-xs">✗ No Website</SelectItem>
                 <SelectItem value="has_reviews" className="text-xs">⭐ Has Reviews</SelectItem>
@@ -1693,8 +1696,29 @@ export default function AdminProspector() {
                 onClick={archiveSentLeads}
               >
                 {archiving ? <Loader2 size={10} className="animate-spin" /> : <Trash2 size={10} />}
-                Archive Sent ({pipelineLeads.filter(l => l.pipeline_stage === "outreach_sent").length})
+                Archive Contacted ({pipelineLeads.filter(l => l.pipeline_stage === "outreach_sent" || l.drip_step > 0).length})
               </Button>
+              {/* Bulk delete filtered leads */}
+              {pipelineFilter !== "all" && filteredPipelineLeads.length > 0 && (
+                <Button
+                  variant="outline" size="sm" className="text-xs h-7 gap-1 border-red-500/30 text-red-400 hover:bg-red-500/10"
+                  disabled={batchProcessing}
+                  onClick={async () => {
+                    const ids = filteredPipelineLeads.map(l => l.id);
+                    if (!confirm(`Delete all ${ids.length} filtered leads?`)) return;
+                    setBatchProcessing(true);
+                    try {
+                      const { error } = await (supabase as any).from("prospect_pipeline").delete().in("id", ids);
+                      if (error) throw error;
+                      toast.success(`Deleted ${ids.length} leads`);
+                      fetchPipeline();
+                    } catch { toast.error("Bulk delete failed"); }
+                    finally { setBatchProcessing(false); }
+                  }}
+                >
+                  <Trash2 size={10} /> Delete Filtered ({filteredPipelineLeads.length})
+                </Button>
+              )}
               {selectedPipelineIds.size > 0 && (
                 <Button
                   variant="outline" size="sm" className="text-xs h-7 gap-1 border-red-500/30 text-red-400 hover:bg-red-500/10"
