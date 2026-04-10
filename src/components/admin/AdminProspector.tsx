@@ -997,10 +997,11 @@ export default function AdminProspector() {
     if (omniSearching) return; // double-click guard
     setOmniSearching(true);
     setOmniResults(null);
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 90000); // 90s hard timeout
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 90_000);
+
+    try {
       const { data, error } = await supabase.functions.invoke("omni-lead-engine", {
         body: {
           industry: searchIndustry,
@@ -1009,41 +1010,20 @@ export default function AdminProspector() {
           strict_email_filter: strictEmailFilter,
         },
       });
-
-      clearTimeout(timeout);
-
+      clearTimeout(timeoutId);
       if (error) throw error;
-
-      // The engine always returns 200 — check for logical failure
-      if (data?.success === false) {
-        toast.error(data?.message || "Engine returned no results");
-        setOmniResults(data);
-        return;
-      }
-
       if (data?.error) throw new Error(data.error);
       setOmniResults(data);
-
-      const saved = data?.saved || 0;
-      const discarded = data?.discarded || 0;
-      const failed = data?.failed || 0;
-
-      if (saved > 0) {
-        toast.success(`Engine complete: ${saved} leads saved, ${discarded} discarded${failed > 0 ? `, ${failed} failed` : ""}`);
-      } else if (discarded > 0) {
-        toast.warning(`No leads saved — ${discarded} discarded by strict email filter`);
-      } else {
-        toast.info("Search complete — no new leads found in this area");
-      }
-
+      const failMsg = data?.failed ? `, ${data.failed} failed` : "";
+      toast.success(`Engine complete: ${data?.saved || 0} leads saved, ${data?.discarded || 0} discarded${failMsg}`);
       fetchPipeline();
     } catch (err: any) {
-      const msg = err?.name === "AbortError"
-        ? "Search timed out. Try a smaller batch or different location."
-        : err?.message?.includes("FunctionsFetchError") || err?.message?.includes("Failed to send")
-          ? "Edge Function timed out. Reduce batch size or try again in a moment."
-          : err instanceof Error ? err.message : "Omni engine failed";
-      toast.error(msg);
+      clearTimeout(timeoutId);
+      if (err?.name === "AbortError" || err?.message?.includes("abort")) {
+        toast.error("Search timed out. Try a smaller batch.");
+      } else {
+        toast.error(err instanceof Error ? err.message : "Omni engine failed");
+      }
     } finally {
       setOmniSearching(false);
     }

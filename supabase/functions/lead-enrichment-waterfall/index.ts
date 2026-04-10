@@ -348,7 +348,7 @@ async function directScrapeLLMFallback(
       const targetUrl = path ? new URL(path, baseUrl).toString() : baseUrl;
       const markdown = await fetchJinaMarkdown(targetUrl);
       if (markdown.length > 80) {
-        markdownParts.push(`--- ${targetUrl} ---\n${markdown.slice(0, 4000)}`);
+        markdownParts.push("--- " + targetUrl + " ---\n" + markdown.slice(0, 4000));
       }
     }
 
