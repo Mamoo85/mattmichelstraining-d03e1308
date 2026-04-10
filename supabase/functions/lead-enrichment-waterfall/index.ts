@@ -218,7 +218,7 @@ async function fetchFirecrawlMarkdown(targetUrl: string): Promise<string> {
     if (!res.ok) {
       const body = await res.text();
       log("Firecrawl non-ok", { url: targetUrl, status: res.status, body: body.slice(0, 120) });
-      return "";
+      return res.status === 402 ? "__402__" : "";
     }
     const data = await res.json();
     return data?.data?.markdown || data?.markdown || "";
