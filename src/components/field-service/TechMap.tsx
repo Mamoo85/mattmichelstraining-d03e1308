@@ -22,7 +22,7 @@ export default function TechMap({ clientId }: TechMapProps) {
   const fetchLocations = useCallback(async () => {
     try {
       const { data: techs, error: techError } = await supabase
-        .from("field_service_techs")
+        .from("field_service_techs" as any)
         .select("id, name")
         .eq("client_id", clientId)
         .eq("active", true);

@@ -46,7 +46,7 @@ const DispatchBoard: React.FC<DispatchBoardProps> = ({ clientId }) => {
     queryKey: ["field-jobs", clientId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("field_service_jobs")
+        .from("field_service_jobs" as any)
         .select(
           "id, title, priority, status, scheduled_date, scheduled_time, field_service_customers(company_name, phone), field_service_techs:assigned_tech_id(name)"
         )

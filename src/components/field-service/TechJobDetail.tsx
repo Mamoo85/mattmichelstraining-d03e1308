@@ -75,7 +75,7 @@ const TechJobDetail: React.FC<TechJobDetailProps> = ({ job, techId, onBack, onSt
         updates.completed_at = new Date().toISOString();
       }
       const { error } = await supabase
-        .from("field_service_jobs")
+        .from("field_service_jobs" as any)
         .update(updates)
         .eq("id", job.id);
       if (error) throw error;

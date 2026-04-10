@@ -35,12 +35,12 @@ const JobCreateModal: React.FC<JobCreateModalProps> = ({ clientId, onClose, onCr
     const loadData = async () => {
       const [custRes, techRes] = await Promise.all([
         supabase
-          .from("field_service_customers")
+          .from("field_service_customers" as any)
           .select("id, company_name, city")
           .eq("client_id", clientId)
           .order("company_name"),
         supabase
-          .from("field_service_techs")
+          .from("field_service_techs" as any)
           .select("id, name")
           .eq("client_id", clientId)
           .eq("active", true)
@@ -60,7 +60,7 @@ const JobCreateModal: React.FC<JobCreateModalProps> = ({ clientId, onClose, onCr
     }
     setSubmitting(true);
     try {
-      const { error } = await supabase.from("field_service_jobs").insert({
+      const { error } = await supabase.from("field_service_jobs" as any).insert({
         client_id: clientId,
         title: title.trim(),
         description: description.trim() || null,

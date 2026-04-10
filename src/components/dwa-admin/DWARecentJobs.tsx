@@ -67,7 +67,7 @@ export default function DWARecentJobs({ limit = 20 }: Props) {
     queryKey: ["dwa-recent-jobs", limit],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("field_service_jobs")
+        .from("field_service_jobs" as any)
         .select(
           `
           id,

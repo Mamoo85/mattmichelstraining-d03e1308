@@ -53,7 +53,7 @@ function AssetJobHistory({ assetId }: { assetId: string }) {
     queryKey: ["asset-jobs", assetId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("field_service_jobs")
+        .from("field_service_jobs" as any)
         .select("id, title, status, completed_at")
         .eq("asset_id", assetId)
         .order("created_at", { ascending: false })
@@ -109,7 +109,7 @@ export default function AssetManager({ clientId, customerId }: AssetManagerProps
     queryKey,
     queryFn: async () => {
       let q = supabase
-        .from("field_service_assets")
+        .from("field_service_assets" as any)
         .select("*")
         .order("name", { ascending: true });
       if (clientId) q = q.eq("client_id", clientId);
@@ -124,7 +124,7 @@ export default function AssetManager({ clientId, customerId }: AssetManagerProps
     queryKey: ["field-customers-for-assets", clientId ?? ""],
     queryFn: async () => {
       let q = supabase
-        .from("field_service_customers")
+        .from("field_service_customers" as any)
         .select("id, company_name")
         .order("company_name", { ascending: true });
       if (clientId) q = q.eq("client_id", clientId);
@@ -160,7 +160,7 @@ export default function AssetManager({ clientId, customerId }: AssetManagerProps
     }
     setSaving(true);
     try {
-      const { error } = await supabase.from("field_service_assets").insert({
+      const { error } = await supabase.from("field_service_assets" as any).insert({
         client_id: clientId,
         customer_id: form.customer_id || null,
         name: form.name.trim(),

@@ -81,7 +81,7 @@ export default function ContractManager({ clientId }: ContractManagerProps) {
     queryKey,
     queryFn: async () => {
       let q = supabase
-        .from("field_service_contracts")
+        .from("field_service_contracts" as any)
         .select(
           "*, field_service_customers(company_name), field_service_assets(name), field_service_techs(name)"
         )
@@ -117,7 +117,7 @@ export default function ContractManager({ clientId }: ContractManagerProps) {
     queryKey: ["field-customers-for-contracts", clientId ?? ""],
     queryFn: async () => {
       let q = supabase
-        .from("field_service_customers")
+        .from("field_service_customers" as any)
         .select("id, company_name")
         .order("company_name", { ascending: true });
       if (clientId) q = q.eq("client_id", clientId);
@@ -131,7 +131,7 @@ export default function ContractManager({ clientId }: ContractManagerProps) {
     queryKey: ["field-assets-for-contracts", clientId ?? ""],
     queryFn: async () => {
       let q = supabase
-        .from("field_service_assets")
+        .from("field_service_assets" as any)
         .select("id, name, customer_id")
         .eq("active", true)
         .order("name", { ascending: true });
@@ -146,7 +146,7 @@ export default function ContractManager({ clientId }: ContractManagerProps) {
     queryKey: ["field-techs-for-contracts", clientId ?? ""],
     queryFn: async () => {
       let q = supabase
-        .from("field_service_techs")
+        .from("field_service_techs" as any)
         .select("id, name")
         .eq("active", true)
         .order("name", { ascending: true });
@@ -181,7 +181,7 @@ export default function ContractManager({ clientId }: ContractManagerProps) {
 
     setSaving(true);
     try {
-      const { error } = await supabase.from("field_service_contracts").insert({
+      const { error } = await supabase.from("field_service_contracts" as any).insert({
         client_id: clientId,
         customer_id: form.customer_id || null,
         asset_id: form.asset_id || null,
