@@ -148,7 +148,7 @@ type SortField = "lead_score" | "email" | "created_at" | "business_name";
 type SortDir = "asc" | "desc";
 
 // Pipeline filter/sort types
-type PipelineFilter = "all" | "has_email" | "no_email" | "has_website" | "no_website" | "has_reviews" | "no_facebook" | "no_instagram";
+type PipelineFilter = "all" | "has_email" | "no_email" | "has_website" | "no_website" | "has_reviews" | "no_facebook" | "no_instagram" | "dripping" | "sent" | "no_contact";
 type PipelineSort = "reviews_desc" | "rating_desc" | "name_asc" | "newest" | "drip_status" | "score_desc";
 
 // ── Normalize functions per table ──
