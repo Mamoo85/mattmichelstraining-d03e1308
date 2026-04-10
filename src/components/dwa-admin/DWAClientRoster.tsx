@@ -67,6 +67,7 @@ function AddClientModal({
     owner_email: "",
     owner_phone: "",
     plan: "standalone",
+    industry: "hvac",
   });
   const [loading, setLoading] = useState(false);
 
