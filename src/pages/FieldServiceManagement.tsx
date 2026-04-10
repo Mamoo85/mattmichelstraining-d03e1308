@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 const COMPARE = [
   { name: "FieldServio", price: "$1,400/mo", users: "10 users", note: "Built for forklift rental companies", bad: true },
-  { name: "ServiceTitan", price: "$2,000+/mo", users: "Enterprise only", note: "Overkill. Sales team required.", bad: true },
+  { name: "ServiceTitan", price: "$2,000+/mo", users: "Enterprise only", note: "Requires a sales call just to get pricing.", bad: true },
   { name: "Jobber", price: "$349/mo", users: "10 users", note: "No ERP, no dispatch map, no SMS", bad: true },
   { name: "Detroit Web Agency", price: "$199/mo", users: "Unlimited users", note: "Built for your crew. Syncs to QuickBooks.", bad: false },
 ];
