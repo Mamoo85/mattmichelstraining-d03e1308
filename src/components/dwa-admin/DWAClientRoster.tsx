@@ -10,10 +10,18 @@ interface Client {
   owner_email: string | null;
   owner_phone: string | null;
   plan: string | null;
+  industry: string | null;
   active: boolean;
   created_at: string;
   tech_count?: number;
   job_count?: number;
+}
+
+function formatIndustry(industry: string | null): string {
+  if (!industry) return '—';
+  return industry
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, c => c.toUpperCase());
 }
 
 function PlanBadge({ plan }: { plan: string | null }) {
