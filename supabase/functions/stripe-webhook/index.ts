@@ -1256,25 +1256,40 @@ serve(async (req) => {
           const supabaseUrl = SUPABASE_URL;
           const snippet = `<!-- M² Field CRM by Detroit Web Agency -->\n<script>\n(function(){\n  var d={page:window.location.href,ref:document.referrer,key:"${scriptKey}"};\n  fetch("${supabaseUrl}/functions/v1/visitor-identify",{\n    method:"POST",headers:{"Content-Type":"application/json"},\n    body:JSON.stringify({script_key:d.key,page:d.page,referrer:d.ref})\n  });\n})();\n</script>`;
 
-          // Welcome email to client with snippet
+          // Welcome email to client with snippet + WordPress install instructions
           await sendM2Email(
             customerEmail,
-            `Welcome to M² Field CRM — Your Visitor Tracking Snippet is Ready`,
+            `Welcome to M² Field CRM — Install Your Tracking Snippet (2 min)`,
             m2Email({
               greeting: `Hey ${meta.name || "there"} — welcome to M² Field CRM.`,
-              headline: "Your CRM is Live. Here's Your Tracking Snippet.",
-              body: `<p style="margin:0 0 12px">You're all set. Here's everything that's now running for <strong>${meta.business_name}</strong>:</p>
-<p style="margin:0 0 8px">👁 <strong>Visitor Intelligence</strong> — see which companies visit your website before they call</p>
-<p style="margin:0 0 8px">🗺 <strong>Dispatch Map</strong> — track your field techs in real time</p>
-<p style="margin:0 0 8px">⭐ <strong>Review Engine</strong> — auto-text customers after jobs to collect Google reviews</p>
+              headline: "Your CRM is Live. Let's Get Your Tracker Installed.",
+              body: `<p style="margin:0 0 12px">You're all set. Here's what's now running for <strong>${meta.business_name}</strong>:</p>
+<p style="margin:0 0 6px">👁 <strong>Visitor Intelligence</strong> — see which companies visit your site before they call</p>
+<p style="margin:0 0 6px">🗺 <strong>Dispatch Map</strong> — track your field techs in real time</p>
+<p style="margin:0 0 6px">⭐ <strong>Review Engine</strong> — auto-text customers after jobs for Google reviews</p>
 <p style="margin:0 0 16px">📊 <strong>Pipeline CRM</strong> — manage leads, log calls, track deals</p>
 
-<p style="margin:0 0 8px"><strong>Step 1 — Install your tracking snippet:</strong></p>
-<p style="margin:0 0 8px">Paste this code just before the <code>&lt;/body&gt;</code> tag on your website. Works on WordPress, Squarespace, Wix — any site. Takes 2 minutes.</p>
-<pre style="background:#0f172a;color:#34d399;padding:16px;border-radius:8px;font-size:12px;overflow:auto;margin:0 0 16px;white-space:pre-wrap;word-break:break-all">${snippet.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>
-<p style="margin:0 0 8px"><strong>Step 2 — Log into your dashboard:</strong></p>
-<p style="margin:0 0 16px">Your full CRM dashboard is live. I'll send you the login link separately.</p>
-<p style="margin:0;color:#64748b;font-size:13px">Questions? Reply to this email or text me directly. I'll get you set up today.</p>`,
+<p style="margin:0 0 8px"><strong>Step 1 — Install your tracking snippet on your website</strong></p>
+<p style="margin:0 0 4px;color:#475569">This is what lets us identify which businesses visit your site. Takes 2 minutes.</p>
+
+<p style="margin:12px 0 6px"><strong>If you have WordPress (easiest method):</strong></p>
+<ol style="margin:0 0 12px;padding-left:20px;color:#475569;font-size:14px;line-height:1.8">
+  <li>In your WordPress admin, go to <strong>Plugins → Add New</strong></li>
+  <li>Search for <strong>"WPCode"</strong> → Install → Activate (it's free)</li>
+  <li>Go to <strong>Code Snippets → Header &amp; Footer</strong></li>
+  <li>Paste your snippet (below) into the <strong>Footer</strong> box</li>
+  <li>Click <strong>Save Changes</strong> — done</li>
+</ol>
+
+<p style="margin:0 0 6px"><strong>Any other website (Squarespace, Wix, custom, etc.):</strong></p>
+<p style="margin:0 0 12px;color:#475569;font-size:14px">Paste the snippet just before the closing <code>&lt;/body&gt;</code> tag in your site's footer or HTML settings.</p>
+
+<p style="margin:0 0 8px"><strong>Your unique tracking snippet:</strong></p>
+<pre style="background:#0f172a;color:#34d399;padding:16px;border-radius:8px;font-size:11px;overflow:auto;margin:0 0 16px;white-space:pre-wrap;word-break:break-all">${snippet.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>
+
+<p style="margin:0 0 8px"><strong>Step 2 — Log into your dashboard</strong></p>
+<p style="margin:0 0 16px;color:#475569;font-size:14px">Once your snippet is installed, visitors will start appearing in your Visitor Intel feed within minutes. I'll send your dashboard login separately.</p>
+<p style="margin:0;color:#64748b;font-size:13px">Stuck on the install? Reply to this email or text me at (313) 806-4952 — I'll walk you through it in 5 minutes.</p>`,
               cta: { text: "View My Dashboard", url: "https://www.detroitwebagent.com/admin" },
             })
           );
