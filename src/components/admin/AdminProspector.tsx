@@ -1012,6 +1012,8 @@ export default function AdminProspector() {
           location: searchLocation,
           limit: parseInt(searchLimit),
           strict_email_filter: strictEmailFilter,
+          allow_email_guess: allowEmailGuess,
+          scan_mode: scanMode,
         },
       });
       clearTimeout(timeoutId);
