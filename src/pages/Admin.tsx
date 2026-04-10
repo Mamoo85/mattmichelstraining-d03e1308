@@ -118,6 +118,9 @@ const AdminAutomationHub      = lazyRetry(() => import("@/components/admin/Admin
 const AdminSiteBuilder        = lazyRetry(() => import("@/components/admin/AdminSiteBuilder"));
 const AdminWebDesignAutomations = lazyRetry(() => import("@/components/admin/AdminWebDesignAutomations"));
 const AdminCRMDashboard       = lazyRetry(() => import("@/components/admin/AdminCRMDashboard"));
+const VisitorIntelFeed        = lazyRetry(() => import("@/components/admin/VisitorIntelFeed"));
+const TechDispatchMap         = lazyRetry(() => import("@/components/admin/TechDispatchMap"));
+const ReviewLeaderboard       = lazyRetry(() => import("@/components/admin/ReviewLeaderboard"));
 
 // Command Deck
 const AdminCommandDeck        = lazyRetry(() => import("@/components/admin/AdminCommandDeck"));
@@ -422,6 +425,9 @@ const Admin = () => {
       color: "#06b6d4",
       tools: [
         { key: "crm-dashboard", label: "📊 CRM Intelligence", component: <AdminCRMDashboard /> },
+        { key: "visitor-intel", label: "👁 Visitor Intel", component: <VisitorIntelFeed /> },
+        { key: "dispatch-map", label: "🗺 Dispatch Map", component: <TechDispatchMap /> },
+        { key: "review-engine", label: "⭐ Review Engine", component: <ReviewLeaderboard /> },
         { key: "crm", label: "🏗️ Web Design CRM", component: <AdminWebDesignCRM /> },
         { key: "prospector", label: "🔍 Prospector", component: <AdminProspector /> },
         { key: "scouting", label: "📊 Scouting Dashboard", component: <AdminScoutingDashboard /> },

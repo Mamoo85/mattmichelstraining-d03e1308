@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,74 +9,41 @@ import { toast } from "sonner";
 import {
   TrendingUp, Mail, Phone, AlertTriangle, CheckCircle, Clock,
   DollarSign, BarChart3, Zap, Target, Users, MessageSquare,
-  RefreshCw, Loader2, Star, Plus, Trash2, Calendar,
+  RefreshCw, Loader2, Star, Plus, Calendar, Eye,
+  ArrowUpRight, Flame, Trophy,
 } from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-interface PipelineStageCount {
-  stage: string;
-  count: number;
-  value: number;
-}
+interface PipelineStageCount { stage: string; count: number; value: number }
+interface EmailStats { total_sent: number; sent_this_week: number; replied: number; reply_rate: number }
+interface StaleLeadRow { id: string; business_name: string; pipeline_stage: string; email: string | null; last_drip_at: string | null; created_at: string; industry: string | null; days_stale: number }
+interface ActivityRow { id: string; lead_id: string; type: string; content: string | null; metadata: Record<string, any>; created_at: string; business_name?: string }
+interface IndustryRow { industry: string; count: number; with_email: number; booked: number }
 
-interface EmailStats {
-  total_sent: number;
-  sent_this_week: number;
-  replied: number;
-  reply_rate: number;
-}
+// ── Stage config ───────────────────────────────────────────────────────────────
 
-interface StaleLeadRow {
-  id: string;
-  business_name: string;
-  pipeline_stage: string;
-  email: string | null;
-  last_drip_at: string | null;
-  created_at: string;
-  industry: string | null;
-  days_stale: number;
-}
-
-interface ActivityRow {
-  id: string;
-  lead_id: string;
-  type: string;
-  content: string | null;
-  metadata: Record<string, any>;
-  created_at: string;
-  business_name?: string;
-}
-
-interface IndustryRow {
-  industry: string;
-  count: number;
-  with_email: number;
-  booked: number;
-}
-
-// ── Helpers ────────────────────────────────────────────────────────────────────
-
-const STAGE_LABELS: Record<string, { label: string; color: string }> = {
-  new_lead:        { label: "New Lead",  color: "bg-blue-500/20 text-blue-400" },
-  website_audited: { label: "Audited",   color: "bg-amber-500/20 text-amber-400" },
-  outreach_sent:   { label: "Outreach",  color: "bg-purple-500/20 text-purple-400" },
-  call_booked:     { label: "Booked",    color: "bg-green-500/20 text-green-400" },
-  archived:        { label: "Archived",  color: "bg-slate-500/20 text-slate-400" },
-};
+const STAGES = [
+  { key: "new_lead",        label: "New Leads",  color: "#3b82f6", icon: "🎯" },
+  { key: "website_audited", label: "Audited",    color: "#f59e0b", icon: "🔍" },
+  { key: "outreach_sent",   label: "Outreach",   color: "#a855f7", icon: "✉️" },
+  { key: "call_booked",     label: "Booked",     color: "#10b981", icon: "📞" },
+];
 
 const ACTIVITY_ICONS: Record<string, { icon: React.ElementType; color: string; label: string }> = {
-  email_sent:      { icon: Mail,          color: "text-blue-400",   label: "Email Sent" },
-  reply_received:  { icon: MessageSquare, color: "text-green-400",  label: "Replied" },
-  call_logged:     { icon: Phone,         color: "text-amber-400",  label: "Call Logged" },
-  note:            { icon: MessageSquare, color: "text-slate-400",  label: "Note" },
-  meeting_booked:  { icon: Calendar,      color: "text-primary",    label: "Meeting" },
-  stage_changed:   { icon: Zap,           color: "text-purple-400", label: "Stage Changed" },
-  audited:         { icon: Target,        color: "text-cyan-400",   label: "Audited" },
-  researched:      { icon: Star,          color: "text-cyan-400",   label: "Researched" },
-  deal_won:        { icon: CheckCircle,   color: "text-green-400",  label: "Deal Won" },
-  deal_lost:       { icon: AlertTriangle, color: "text-red-400",    label: "Deal Lost" },
+  email_sent:     { icon: Mail,          color: "#3b82f6", label: "Email Sent" },
+  reply_received: { icon: MessageSquare, color: "#10b981", label: "Replied" },
+  call_logged:    { icon: Phone,         color: "#f59e0b", label: "Call" },
+  note:           { icon: MessageSquare, color: "#6b7280", label: "Note" },
+  meeting_booked: { icon: Calendar,      color: "#e8621a", label: "Meeting" },
+  stage_changed:  { icon: Zap,           color: "#a855f7", label: "Stage" },
+  audited:        { icon: Target,        color: "#06b6d4", label: "Audited" },
+  researched:     { icon: Eye,           color: "#06b6d4", label: "Visitor ID" },
+  deal_won:       { icon: Trophy,        color: "#10b981", label: "Won 🎉" },
+  deal_lost:      { icon: AlertTriangle, color: "#ef4444", label: "Lost" },
 };
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
 
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -86,41 +53,73 @@ function timeAgo(iso: string): string {
   if (hrs < 24) return `${hrs}h ago`;
   return `${Math.floor(hrs / 24)}d ago`;
 }
-
 function daysSince(iso: string | null): number {
   if (!iso) return 999;
   return Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
 }
 
-// ── Stat Card ──────────────────────────────────────────────────────────────────
+// ── Big Stat Card ──────────────────────────────────────────────────────────────
 
-function StatCard({ icon: Icon, label, value, sub, color = "text-primary" }: {
-  icon: React.ElementType; label: string; value: string | number; sub?: string; color?: string;
-}) {
-  return (
-    <Card className="border-border/40">
-      <CardContent className="p-4">
-        <div className="flex items-center gap-3">
-          <div className={`p-2 rounded-lg bg-muted/40 ${color}`}>
-            <Icon size={16} />
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">{label}</p>
-            <p className="text-xl font-black">{value}</p>
-            {sub && <p className="text-[10px] text-muted-foreground">{sub}</p>}
-          </div>
+const StatCard = ({ icon: Icon, label, value, sub, color, trend }: {
+  icon: React.ElementType; label: string; value: string | number;
+  sub?: string; color: string; trend?: string;
+}) => (
+  <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+    className="rounded-2xl border p-5 relative overflow-hidden"
+    style={{ background: `${color}0d`, borderColor: `${color}30` }}>
+    {/* Glow */}
+    <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full blur-2xl opacity-20" style={{ background: color }} />
+    <div className="flex items-start justify-between mb-3 relative">
+      <div className="p-2 rounded-xl" style={{ background: `${color}20` }}>
+        <Icon size={16} style={{ color }} />
+      </div>
+      {trend && (
+        <div className="flex items-center gap-1 text-xs font-semibold" style={{ color }}>
+          <ArrowUpRight size={12} />{trend}
         </div>
-      </CardContent>
-    </Card>
+      )}
+    </div>
+    <div className="relative">
+      <div className="text-3xl font-black text-white tracking-tight">{value}</div>
+      <div className="text-xs font-semibold mt-0.5" style={{ color }}>{label}</div>
+      {sub && <div className="text-xs text-white/35 mt-0.5">{sub}</div>}
+    </div>
+  </motion.div>
+);
+
+// ── Pipeline Bar ───────────────────────────────────────────────────────────────
+
+const PipelineBar = ({ stage, count, total, value }: { stage: typeof STAGES[0]; count: number; total: number; value: number }) => {
+  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between text-xs">
+        <span className="flex items-center gap-1.5 font-semibold text-white/80">
+          <span>{stage.icon}</span>
+          {stage.label}
+        </span>
+        <div className="flex items-center gap-3">
+          {value > 0 && <span className="text-white/30 text-[10px]">${value.toLocaleString()}</span>}
+          <span className="font-bold" style={{ color: stage.color }}>{count} · {pct}%</span>
+        </div>
+      </div>
+      <div className="h-2.5 bg-white/5 rounded-full overflow-hidden">
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${pct}%` }}
+          transition={{ duration: 0.7, ease: "easeOut" }}
+          className="h-full rounded-full"
+          style={{ background: `linear-gradient(90deg, ${stage.color}99, ${stage.color})`, boxShadow: `0 0 8px ${stage.color}60` }}
+        />
+      </div>
+    </div>
   );
-}
+};
 
 // ── Log Activity Modal ─────────────────────────────────────────────────────────
 
-function LogActivityModal({ leadId, leadName, onLogged }: {
-  leadId: string;
-  leadName: string;
-  onLogged: () => void;
+function LogActivityModal({ leadId, leadName, onLogged, onClose }: {
+  leadId: string; leadName: string; onLogged: () => void; onClose: () => void;
 }) {
   const [type, setType] = useState("call_logged");
   const [content, setContent] = useState("");
@@ -129,22 +128,15 @@ function LogActivityModal({ leadId, leadName, onLogged }: {
   const save = async () => {
     setSaving(true);
     try {
-      const { error } = await (supabase as any).from("lead_activities").insert({
-        lead_id: leadId,
-        lead_table: "prospect_pipeline",
-        type,
-        content: content.trim() || null,
-        metadata: { business_name: leadName },
+      await (supabase as any).from("lead_activities").insert({
+        lead_id: leadId, lead_table: "prospect_pipeline", type,
+        content: content.trim() || null, metadata: { business_name: leadName },
       });
-      if (error) throw error;
-      // Update last_activity_at on the lead
       await (supabase as any).from("prospect_pipeline")
-        .update({ last_activity_at: new Date().toISOString() })
-        .eq("id", leadId);
+        .update({ last_activity_at: new Date().toISOString() }).eq("id", leadId);
       toast.success("Activity logged");
-      setContent("");
       onLogged();
-    } catch (e) {
+    } catch {
       toast.error("Failed to log activity");
     } finally {
       setSaving(false);
@@ -152,31 +144,32 @@ function LogActivityModal({ leadId, leadName, onLogged }: {
   };
 
   return (
-    <div className="space-y-3 p-3 border border-border/40 rounded-lg bg-muted/10">
-      <p className="text-xs font-semibold text-muted-foreground">Log activity for {leadName}</p>
-      <Select value={type} onValueChange={setType}>
-        <SelectTrigger className="h-7 text-xs">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="call_logged">📞 Call Logged</SelectItem>
-          <SelectItem value="meeting_booked">📅 Meeting Booked</SelectItem>
-          <SelectItem value="reply_received">💬 Reply Received</SelectItem>
-          <SelectItem value="note">📝 Note</SelectItem>
-          <SelectItem value="deal_won">✅ Deal Won</SelectItem>
-          <SelectItem value="deal_lost">❌ Deal Lost</SelectItem>
-        </SelectContent>
-      </Select>
-      <Textarea
-        placeholder="Notes... (optional)"
-        value={content}
-        onChange={e => setContent(e.target.value)}
-        className="text-xs min-h-[60px]"
-      />
-      <Button size="sm" className="w-full h-7 text-xs" onClick={save} disabled={saving}>
-        {saving ? <Loader2 size={12} className="animate-spin mr-1" /> : <Plus size={12} className="mr-1" />}
-        Log Activity
-      </Button>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-[#0f172a] border border-white/10 rounded-2xl p-5 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
+        <p className="text-white font-bold mb-3">Log: <span className="text-orange-400">{leadName}</span></p>
+        <Select value={type} onValueChange={setType}>
+          <SelectTrigger className="bg-white/5 border-white/10 text-white mb-3">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="bg-[#1e293b] border-white/10">
+            <SelectItem value="call_logged" className="text-white">📞 Call Logged</SelectItem>
+            <SelectItem value="meeting_booked" className="text-white">📅 Meeting Booked</SelectItem>
+            <SelectItem value="reply_received" className="text-white">💬 Reply Received</SelectItem>
+            <SelectItem value="note" className="text-white">📝 Note</SelectItem>
+            <SelectItem value="deal_won" className="text-white">✅ Deal Won</SelectItem>
+            <SelectItem value="deal_lost" className="text-white">❌ Deal Lost</SelectItem>
+          </SelectContent>
+        </Select>
+        <Textarea placeholder="Notes... (optional)" value={content} onChange={e => setContent(e.target.value)}
+          className="bg-white/5 border-white/10 text-white placeholder:text-white/30 text-sm min-h-[70px] mb-3" />
+        <div className="flex gap-2">
+          <Button onClick={save} disabled={saving} className="bg-orange-500 hover:bg-orange-600 flex-1">
+            {saving ? <Loader2 size={13} className="animate-spin mr-1" /> : <Plus size={13} className="mr-1" />}
+            Log Activity
+          </Button>
+          <Button variant="outline" onClick={onClose} className="border-white/15 text-white/60">Cancel</Button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -191,20 +184,34 @@ export default function AdminCRMDashboard() {
   const [hotLeads, setHotLeads] = useState<any[]>([]);
   const [recentActivity, setRecentActivity] = useState<ActivityRow[]>([]);
   const [industryData, setIndustryData] = useState<IndustryRow[]>([]);
-  const [logModalLeadId, setLogModalLeadId] = useState<string | null>(null);
-  const [logModalLeadName, setLogModalLeadName] = useState("");
+  const [logModal, setLogModal] = useState<{ id: string; name: string } | null>(null);
   const [totalPipelineValue, setTotalPipelineValue] = useState(0);
   const [wonDeals, setWonDeals] = useState(0);
 
   const load = async () => {
     setLoading(true);
     try {
-      // 1. Pipeline stage counts + values
-      const { data: pipelineData } = await (supabase as any)
-        .from("prospect_pipeline")
-        .select("pipeline_stage, deal_value, lead_score")
-        .neq("pipeline_stage", "archived");
+      const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
 
+      const [
+        { data: pipelineData },
+        { data: emailData },
+        { data: staleData },
+        { data: hotData },
+        { data: activityData },
+        { data: industryRaw },
+        { count: wonCount },
+      ] = await Promise.all([
+        (supabase as any).from("prospect_pipeline").select("pipeline_stage, deal_value, lead_score").neq("pipeline_stage", "archived"),
+        (supabase as any).from("prospect_email_log").select("sent_at, replied_at").order("sent_at", { ascending: false }).limit(2000),
+        (supabase as any).from("prospect_pipeline").select("id, business_name, pipeline_stage, email, last_drip_at, created_at, industry, last_activity_at").eq("pipeline_stage", "outreach_sent").order("last_drip_at", { ascending: true }).limit(20),
+        (supabase as any).from("prospect_pipeline").select("id, business_name, lead_score, industry, city, email, pipeline_stage").gte("lead_score", 8).in("pipeline_stage", ["new_lead", "website_audited"]).order("lead_score", { ascending: false }).limit(10),
+        (supabase as any).from("lead_activities").select("*").order("created_at", { ascending: false }).limit(30),
+        (supabase as any).from("prospect_pipeline").select("industry, email, pipeline_stage").neq("pipeline_stage", "archived"),
+        (supabase as any).from("lead_activities").select("id", { count: "exact", head: true }).eq("type", "deal_won"),
+      ]);
+
+      // Pipeline
       if (pipelineData) {
         const counts: Record<string, { count: number; value: number }> = {};
         let totalVal = 0;
@@ -219,106 +226,47 @@ export default function AdminCRMDashboard() {
         setStageCounts(Object.entries(counts).map(([stage, v]) => ({ stage, ...v })));
       }
 
-      // 2. Email stats
-      const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
-      const { data: emailData } = await (supabase as any)
-        .from("prospect_email_log")
-        .select("sent_at, replied_at")
-        .order("sent_at", { ascending: false })
-        .limit(2000);
-
+      // Email
       if (emailData) {
         const total = emailData.length;
         const thisWeek = emailData.filter((e: any) => e.sent_at >= weekAgo).length;
         const replied = emailData.filter((e: any) => !!e.replied_at).length;
-        setEmailStats({
-          total_sent: total,
-          sent_this_week: thisWeek,
-          replied,
-          reply_rate: total > 0 ? Math.round((replied / total) * 100) : 0,
-        });
+        setEmailStats({ total_sent: total, sent_this_week: thisWeek, replied, reply_rate: total > 0 ? Math.round((replied / total) * 100) : 0 });
       }
 
-      // 3. Stale leads (in outreach_sent with no activity in 7+ days)
-      const { data: staleData } = await (supabase as any)
-        .from("prospect_pipeline")
-        .select("id, business_name, pipeline_stage, email, last_drip_at, created_at, industry, last_activity_at")
-        .eq("pipeline_stage", "outreach_sent")
-        .order("last_drip_at", { ascending: true })
-        .limit(20);
-
+      // Stale
       if (staleData) {
-        const stale: StaleLeadRow[] = staleData
-          .map((l: any) => ({
-            ...l,
-            days_stale: daysSince(l.last_activity_at || l.last_drip_at),
-          }))
-          .filter((l: StaleLeadRow) => l.days_stale >= 7)
-          .sort((a: StaleLeadRow, b: StaleLeadRow) => b.days_stale - a.days_stale);
-        setStaleLeads(stale);
-      }
-
-      // 4. Hot leads (score >= 8, not yet contacted)
-      const { data: hotData } = await (supabase as any)
-        .from("prospect_pipeline")
-        .select("id, business_name, lead_score, industry, city, email, pipeline_stage")
-        .gte("lead_score", 8)
-        .in("pipeline_stage", ["new_lead", "website_audited"])
-        .order("lead_score", { ascending: false })
-        .limit(10);
-      setHotLeads(hotData || []);
-
-      // 5. Recent activities
-      const { data: activityData } = await (supabase as any)
-        .from("lead_activities")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(25);
-
-      if (activityData) {
-        // Enrich with business names
-        const leadIds = [...new Set(activityData.map((a: any) => a.lead_id))];
-        const { data: leadNames } = await (supabase as any)
-          .from("prospect_pipeline")
-          .select("id, business_name")
-          .in("id", leadIds);
-        const nameMap = Object.fromEntries((leadNames || []).map((l: any) => [l.id, l.business_name]));
-        setRecentActivity(activityData.map((a: any) => ({
-          ...a,
-          business_name: nameMap[a.lead_id] || (a.metadata?.business_name) || "Unknown",
-        })));
-      }
-
-      // 6. Industry breakdown
-      const { data: industryRaw } = await (supabase as any)
-        .from("prospect_pipeline")
-        .select("industry, email, pipeline_stage")
-        .neq("pipeline_stage", "archived");
-
-      if (industryRaw) {
-        const byIndustry: Record<string, { count: number; with_email: number; booked: number }> = {};
-        for (const row of industryRaw) {
-          const ind = row.industry || "Unknown";
-          if (!byIndustry[ind]) byIndustry[ind] = { count: 0, with_email: 0, booked: 0 };
-          byIndustry[ind].count++;
-          if (row.email) byIndustry[ind].with_email++;
-          if (row.pipeline_stage === "call_booked") byIndustry[ind].booked++;
-        }
-        setIndustryData(
-          Object.entries(byIndustry)
-            .map(([industry, v]) => ({ industry, ...v }))
-            .sort((a, b) => b.count - a.count)
-            .slice(0, 10)
+        setStaleLeads(
+          staleData.map((l: any) => ({ ...l, days_stale: daysSince(l.last_activity_at || l.last_drip_at) }))
+            .filter((l: StaleLeadRow) => l.days_stale >= 7)
+            .sort((a: StaleLeadRow, b: StaleLeadRow) => b.days_stale - a.days_stale)
         );
       }
 
-      // 7. Won deals count
-      const { count: wonCount } = await (supabase as any)
-        .from("lead_activities")
-        .select("id", { count: "exact", head: true })
-        .eq("type", "deal_won");
-      setWonDeals(wonCount || 0);
+      setHotLeads(hotData || []);
 
+      // Activities with names
+      if (activityData) {
+        const leadIds = [...new Set(activityData.map((a: any) => a.lead_id))];
+        const { data: leadNames } = await (supabase as any).from("prospect_pipeline").select("id, business_name").in("id", leadIds);
+        const nameMap = Object.fromEntries((leadNames || []).map((l: any) => [l.id, l.business_name]));
+        setRecentActivity(activityData.map((a: any) => ({ ...a, business_name: nameMap[a.lead_id] || a.metadata?.business_name || "Unknown" })));
+      }
+
+      // Industry
+      if (industryRaw) {
+        const byInd: Record<string, { count: number; with_email: number; booked: number }> = {};
+        for (const row of industryRaw) {
+          const ind = row.industry || "Unknown";
+          if (!byInd[ind]) byInd[ind] = { count: 0, with_email: 0, booked: 0 };
+          byInd[ind].count++;
+          if (row.email) byInd[ind].with_email++;
+          if (row.pipeline_stage === "call_booked") byInd[ind].booked++;
+        }
+        setIndustryData(Object.entries(byInd).map(([industry, v]) => ({ industry, ...v })).sort((a, b) => b.count - a.count).slice(0, 10));
+      }
+
+      setWonDeals(wonCount || 0);
     } catch (e) {
       console.error(e);
       toast.error("Failed to load CRM data");
@@ -332,257 +280,235 @@ export default function AdminCRMDashboard() {
   const totalLeads = stageCounts.reduce((s, c) => s + c.count, 0);
   const bookedCount = stageCounts.find(s => s.stage === "call_booked")?.count || 0;
   const conversionRate = totalLeads > 0 ? Math.round((bookedCount / totalLeads) * 100) : 0;
+  const maxIndustryCount = Math.max(...industryData.map(r => r.count), 1);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-80">
+        <div className="text-center">
+          <div className="w-12 h-12 rounded-full border-2 border-orange-500/30 border-t-orange-500 animate-spin mx-auto mb-4" />
+          <p className="text-white/40 text-sm">Loading command center...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6 pb-8">
+    <div className="space-y-6 pb-8 p-1">
+      {logModal && (
+        <LogActivityModal leadId={logModal.id} leadName={logModal.name}
+          onLogged={() => { setLogModal(null); load(); }} onClose={() => setLogModal(null)} />
+      )}
+
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h2 className="text-base font-bold">CRM Intelligence</h2>
-          <p className="text-xs text-muted-foreground">AI-first pipeline analytics — eWay-CRM can't do this</p>
+          <h2 className="text-white text-xl font-black flex items-center gap-2">
+            <BarChart3 size={20} className="text-orange-400" />
+            CRM Intelligence
+          </h2>
+          <p className="text-white/40 text-sm mt-0.5">Pipeline command center — live data, zero lag</p>
         </div>
-        <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={load} disabled={loading}>
-          {loading ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
-          Refresh
+        <Button variant="outline" size="sm" onClick={load}
+          className="border-white/15 text-white/60 hover:text-white hover:border-white/30">
+          <RefreshCw size={13} className="mr-1.5" /> Refresh
         </Button>
       </div>
 
       {/* Top Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard icon={Users}       label="Total Leads"       value={totalLeads}         sub="active pipeline" />
-        <StatCard icon={DollarSign}  label="Pipeline Value"    value={`$${(totalPipelineValue).toLocaleString()}`} sub="estimated" color="text-green-400" />
-        <StatCard icon={CheckCircle} label="Booked"            value={`${bookedCount} (${conversionRate}%)`} sub="conversion rate" color="text-green-400" />
-        <StatCard icon={TrendingUp}  label="Reply Rate"        value={`${emailStats.reply_rate}%`} sub={`${emailStats.replied} / ${emailStats.total_sent} emails`} color="text-primary" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <StatCard icon={Users}       label="Active Leads"     value={totalLeads}                                          color="#3b82f6" sub="in pipeline" />
+        <StatCard icon={DollarSign}  label="Pipeline Value"   value={`$${totalPipelineValue.toLocaleString()}`}           color="#10b981" sub="estimated revenue" />
+        <StatCard icon={CheckCircle} label="Booked"           value={`${bookedCount}`}                                    color="#10b981" sub={`${conversionRate}% conversion`} trend={`${conversionRate}%`} />
+        <StatCard icon={TrendingUp}  label="Reply Rate"       value={`${emailStats.reply_rate}%`}                         color="#e8621a" sub={`${emailStats.replied}/${emailStats.total_sent} emails`} />
       </div>
 
-      <div className="grid sm:grid-cols-3 gap-3">
-        <StatCard icon={Mail}        label="Sent This Week"    value={emailStats.sent_this_week} sub="cold outreach emails" />
-        <StatCard icon={AlertTriangle} label="Stale Leads"     value={staleLeads.length}     sub="7+ days no activity" color="text-amber-400" />
-        <StatCard icon={CheckCircle} label="Deals Won"         value={wonDeals}               sub="all time" color="text-green-400" />
+      <div className="grid grid-cols-3 gap-3">
+        <StatCard icon={Mail}          label="Sent This Week" value={emailStats.sent_this_week} color="#a855f7" sub="cold outreach" />
+        <StatCard icon={AlertTriangle} label="Stale Leads"    value={staleLeads.length}          color="#f59e0b" sub="7+ days quiet" />
+        <StatCard icon={Trophy}        label="Deals Won"      value={wonDeals}                   color="#10b981" sub="all time" />
       </div>
 
       {/* Pipeline Funnel */}
-      <Card className="border-border/40">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <BarChart3 size={14} className="text-primary" /> Pipeline Funnel
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {loading ? (
-            <div className="flex justify-center py-6"><Loader2 size={16} className="animate-spin text-muted-foreground" /></div>
-          ) : stageCounts.length === 0 ? (
-            <p className="text-xs text-muted-foreground text-center py-4">No pipeline data yet</p>
-          ) : (
-            ["new_lead", "website_audited", "outreach_sent", "call_booked"].map(stage => {
-              const sc = stageCounts.find(s => s.stage === stage);
-              const count = sc?.count || 0;
-              const pct = totalLeads > 0 ? Math.round((count / totalLeads) * 100) : 0;
-              const meta = STAGE_LABELS[stage];
-              return (
-                <div key={stage} className="space-y-1">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className={`font-medium ${meta?.color.split(" ")[1] || ""}`}>{meta?.label || stage}</span>
-                    <span className="text-muted-foreground">{count} leads · {pct}%</span>
-                  </div>
-                  <div className="h-1.5 bg-muted/30 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all ${
-                        stage === "call_booked" ? "bg-green-500" :
-                        stage === "outreach_sent" ? "bg-purple-500" :
-                        stage === "website_audited" ? "bg-amber-500" : "bg-blue-500"
-                      }`}
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </CardContent>
-      </Card>
-
-      <div className="grid sm:grid-cols-2 gap-4">
-        {/* Hot Leads */}
-        <Card className="border-border/40">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Zap size={14} className="text-primary" /> Hot Leads
-              <Badge className="text-[9px] bg-primary/10 text-primary border-0 ml-auto">Score ≥ 8, not contacted</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="flex justify-center py-4"><Loader2 size={14} className="animate-spin text-muted-foreground" /></div>
-            ) : hotLeads.length === 0 ? (
-              <p className="text-xs text-muted-foreground text-center py-4">No hot leads — prospect more</p>
-            ) : (
-              <div className="space-y-2">
-                {hotLeads.map(lead => (
-                  <div key={lead.id} className="flex items-center justify-between py-1.5 border-b border-border/30 last:border-0">
-                    <div className="min-w-0">
-                      <p className="text-xs font-medium truncate">{lead.business_name}</p>
-                      <p className="text-[10px] text-muted-foreground">{lead.industry} · {lead.city}</p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {lead.email && <Mail size={10} className="text-green-400" />}
-                      <span className="text-[10px] font-bold text-green-400">{lead.lead_score}/10</span>
-                      <Button
-                        variant="ghost" size="sm"
-                        className="h-5 text-[9px] px-1.5 text-primary hover:bg-primary/10"
-                        onClick={() => { setLogModalLeadId(lead.id); setLogModalLeadName(lead.business_name); }}
-                      >
-                        + Log
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Stale Leads */}
-        <Card className="border-border/40">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Clock size={14} className="text-amber-400" /> Needs Attention
-              <Badge className="text-[9px] bg-amber-500/10 text-amber-400 border-0 ml-auto">Outreach sent, gone quiet</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="flex justify-center py-4"><Loader2 size={14} className="animate-spin text-muted-foreground" /></div>
-            ) : staleLeads.length === 0 ? (
-              <p className="text-xs text-muted-foreground text-center py-4">All outreach is fresh</p>
-            ) : (
-              <div className="space-y-2">
-                {staleLeads.slice(0, 8).map(lead => (
-                  <div key={lead.id} className="flex items-center justify-between py-1.5 border-b border-border/30 last:border-0">
-                    <div className="min-w-0">
-                      <p className="text-xs font-medium truncate">{lead.business_name}</p>
-                      <p className="text-[10px] text-muted-foreground">{lead.industry}</p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Badge className="text-[8px] bg-amber-500/10 text-amber-400 border-0">
-                        {lead.days_stale}d stale
-                      </Badge>
-                      <Button
-                        variant="ghost" size="sm"
-                        className="h-5 text-[9px] px-1.5 text-amber-400 hover:bg-amber-500/10"
-                        onClick={() => { setLogModalLeadId(lead.id); setLogModalLeadName(lead.business_name); }}
-                      >
-                        + Log
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      <div className="rounded-2xl border border-white/10 bg-white/3 p-5">
+        <div className="flex items-center gap-2 mb-5">
+          <BarChart3 size={15} className="text-orange-400" />
+          <span className="text-white font-bold">Pipeline Funnel</span>
+          <span className="text-white/30 text-xs ml-auto">{totalLeads} total leads</span>
+        </div>
+        <div className="space-y-4">
+          {STAGES.map((stage) => {
+            const sc = stageCounts.find(s => s.stage === stage.key);
+            return <PipelineBar key={stage.key} stage={stage} count={sc?.count || 0} total={totalLeads} value={sc?.value || 0} />;
+          })}
+        </div>
       </div>
 
-      {/* Log Activity Panel */}
-      {logModalLeadId && (
-        <LogActivityModal
-          leadId={logModalLeadId}
-          leadName={logModalLeadName}
-          onLogged={() => { setLogModalLeadId(null); load(); }}
-        />
-      )}
-
-      {/* Recent Activity Feed */}
-      <Card className="border-border/40">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <MessageSquare size={14} className="text-primary" /> Activity Feed
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="flex justify-center py-6"><Loader2 size={16} className="animate-spin text-muted-foreground" /></div>
-          ) : recentActivity.length === 0 ? (
-            <p className="text-xs text-muted-foreground text-center py-4">No activities logged yet — start logging calls and notes</p>
+      {/* Hot Leads + Stale Leads */}
+      <div className="grid md:grid-cols-2 gap-4">
+        {/* Hot Leads */}
+        <div className="rounded-2xl border border-white/10 bg-white/3 p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <Flame size={15} className="text-orange-400" />
+            <span className="text-white font-bold">Hot Leads</span>
+            <Badge className="ml-auto text-[9px] bg-orange-500/15 text-orange-400 border-orange-500/25">Score ≥ 8</Badge>
+          </div>
+          {hotLeads.length === 0 ? (
+            <p className="text-white/30 text-sm text-center py-8">No hot leads — keep prospecting</p>
           ) : (
-            <div className="space-y-0">
-              {recentActivity.map((a, i) => {
-                const meta = ACTIVITY_ICONS[a.type] || ACTIVITY_ICONS["note"];
-                const Icon = meta.icon;
-                return (
-                  <div key={a.id} className={`flex items-start gap-3 py-2.5 ${i < recentActivity.length - 1 ? "border-b border-border/30" : ""}`}>
-                    <div className={`mt-0.5 shrink-0 ${meta.color}`}><Icon size={12} /></div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium truncate">{a.business_name}</span>
-                        <Badge className={`text-[8px] border-0 shrink-0 ${
-                          a.type === "deal_won" ? "bg-green-500/20 text-green-400" :
-                          a.type === "reply_received" ? "bg-green-500/10 text-green-400" :
-                          a.type === "call_logged" ? "bg-amber-500/10 text-amber-400" :
-                          "bg-muted text-muted-foreground"
-                        }`}>{meta.label}</Badge>
+            <div className="space-y-2">
+              {hotLeads.map((lead) => (
+                <div key={lead.id} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-white text-xs font-semibold truncate">{lead.business_name}</p>
+                    <p className="text-white/40 text-[10px]">{lead.industry} · {lead.city}</p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0 ml-2">
+                    {lead.email && <Mail size={10} className="text-emerald-400" />}
+                    <span className="text-emerald-400 text-xs font-black">{lead.lead_score}/10</span>
+                    <button
+                      onClick={() => setLogModal({ id: lead.id, name: lead.business_name })}
+                      className="text-[10px] px-2 py-0.5 rounded-lg bg-orange-500/15 text-orange-400 hover:bg-orange-500/25 transition-colors font-semibold">
+                      + Log
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Stale Leads */}
+        <div className="rounded-2xl border border-amber-500/20 bg-amber-500/4 p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <Clock size={15} className="text-amber-400" />
+            <span className="text-white font-bold">Needs Attention</span>
+            <Badge className="ml-auto text-[9px] bg-amber-500/15 text-amber-400 border-amber-500/25">Gone quiet</Badge>
+          </div>
+          {staleLeads.length === 0 ? (
+            <p className="text-white/30 text-sm text-center py-8">All outreach is fresh ✓</p>
+          ) : (
+            <div className="space-y-2">
+              {staleLeads.slice(0, 8).map((lead) => (
+                <div key={lead.id} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-white text-xs font-semibold truncate">{lead.business_name}</p>
+                    <p className="text-white/40 text-[10px]">{lead.industry}</p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0 ml-2">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 font-bold">
+                      {lead.days_stale}d
+                    </span>
+                    <button
+                      onClick={() => setLogModal({ id: lead.id, name: lead.business_name })}
+                      className="text-[10px] px-2 py-0.5 rounded-lg bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 transition-colors font-semibold">
+                      + Log
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Activity Feed + Industry */}
+      <div className="grid md:grid-cols-2 gap-4">
+        {/* Activity Feed */}
+        <div className="rounded-2xl border border-white/10 bg-white/3 p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <MessageSquare size={15} className="text-blue-400" />
+            <span className="text-white font-bold">Activity Feed</span>
+          </div>
+          {recentActivity.length === 0 ? (
+            <p className="text-white/30 text-sm text-center py-8">No activities logged yet</p>
+          ) : (
+            <AnimatePresence initial={false}>
+              <div className="space-y-0 max-h-80 overflow-y-auto">
+                {recentActivity.map((a, i) => {
+                  const meta = ACTIVITY_ICONS[a.type] || ACTIVITY_ICONS["note"];
+                  const Icon = meta.icon;
+                  return (
+                    <motion.div key={a.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                      className={`flex items-start gap-3 py-2.5 ${i < recentActivity.length - 1 ? "border-b border-white/5" : ""}`}>
+                      <div className="mt-0.5 shrink-0 p-1.5 rounded-lg" style={{ background: `${meta.color}18` }}>
+                        <Icon size={11} style={{ color: meta.color }} />
                       </div>
-                      {a.content && <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug">{a.content}</p>}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-white text-xs font-semibold truncate">{a.business_name}</span>
+                          <span className="text-[10px] font-medium" style={{ color: meta.color }}>{meta.label}</span>
+                        </div>
+                        {a.content && <p className="text-white/40 text-[10px] mt-0.5 leading-snug line-clamp-2">{a.content}</p>}
+                      </div>
+                      <span className="text-white/25 text-[10px] shrink-0">{timeAgo(a.created_at)}</span>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </AnimatePresence>
+          )}
+        </div>
+
+        {/* Industry Breakdown */}
+        <div className="rounded-2xl border border-white/10 bg-white/3 p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <Target size={15} className="text-purple-400" />
+            <span className="text-white font-bold">Industry Breakdown</span>
+          </div>
+          {industryData.length === 0 ? (
+            <p className="text-white/30 text-sm text-center py-8">No data yet</p>
+          ) : (
+            <div className="space-y-3">
+              {industryData.map((row) => {
+                const barPct = Math.round((row.count / maxIndustryCount) * 100);
+                const bookRate = row.count > 0 ? Math.round((row.booked / row.count) * 100) : 0;
+                return (
+                  <div key={row.industry}>
+                    <div className="flex items-center justify-between text-xs mb-1">
+                      <span className="text-white/80 font-medium truncate">{row.industry}</span>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <span className="text-white/40">{row.count} leads</span>
+                        {row.booked > 0 && (
+                          <span className="text-emerald-400 font-bold">{bookRate}% booked</span>
+                        )}
+                      </div>
                     </div>
-                    <span className="text-[9px] text-muted-foreground shrink-0">{timeAgo(a.created_at)}</span>
+                    <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full bg-gradient-to-r from-purple-500/60 to-purple-400 transition-all"
+                        style={{ width: `${barPct}%` }} />
+                    </div>
                   </div>
                 );
               })}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      {/* Industry Breakdown */}
-      <Card className="border-border/40">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <Target size={14} className="text-primary" /> Industry Leaderboard
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="flex justify-center py-4"><Loader2 size={14} className="animate-spin text-muted-foreground" /></div>
-          ) : (
-            <div className="space-y-0">
-              <div className="grid grid-cols-4 gap-2 text-[9px] font-bold uppercase tracking-widest text-muted-foreground pb-1.5 border-b border-border/30">
-                <span>Industry</span><span className="text-right">Leads</span><span className="text-right">W/ Email</span><span className="text-right">Booked</span>
-              </div>
-              {industryData.map((row, i) => (
-                <div key={i} className="grid grid-cols-4 gap-2 text-xs py-1.5 border-b border-border/30 last:border-0">
-                  <span className="truncate text-foreground/80">{row.industry}</span>
-                  <span className="text-right font-medium">{row.count}</span>
-                  <span className={`text-right ${row.with_email > 0 ? "text-green-400" : "text-muted-foreground"}`}>
-                    {row.with_email}
-                  </span>
-                  <span className={`text-right font-bold ${row.booked > 0 ? "text-primary" : "text-muted-foreground"}`}>
-                    {row.booked}
-                  </span>
-                </div>
-              ))}
+      {/* vs eWay-CRM */}
+      <div className="rounded-2xl border border-orange-500/20 p-5 relative overflow-hidden"
+        style={{ background: "linear-gradient(135deg, #e8621a08 0%, #a855f708 100%)" }}>
+        <div className="absolute top-0 right-0 w-40 h-40 rounded-full blur-3xl opacity-10"
+          style={{ background: "radial-gradient(#e8621a, transparent)" }} />
+        <p className="text-white font-black mb-4 text-sm flex items-center gap-2">
+          <Star size={14} className="text-orange-400" />
+          Why This Destroys eWay-CRM
+        </p>
+        <div className="grid sm:grid-cols-3 gap-4 relative">
+          {[
+            { emoji: "🎯", label: "AI Lead Scoring", desc: "Every lead scored 1–10 automatically. eWay-CRM doesn't score — you manually evaluate every single one." },
+            { emoji: "📧", label: "Waterfall Email Finding", desc: "Hunter → Apollo → Lusha finds emails automatically. eWay stores what you manually type. Big difference." },
+            { emoji: "👁", label: "Visitor Intelligence", desc: "See who visits your site before they call. eWay-CRM is blind to anonymous traffic. We identify companies by IP." },
+          ].map((item) => (
+            <div key={item.label} className="rounded-xl border border-white/8 bg-white/3 p-4">
+              <div className="text-2xl mb-2">{item.emoji}</div>
+              <p className="text-white font-bold text-xs mb-1">{item.label}</p>
+              <p className="text-white/45 text-[11px] leading-relaxed">{item.desc}</p>
             </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* eWay-CRM Comparison */}
-      <Card className="border-border/40 bg-primary/5">
-        <CardContent className="p-4">
-          <p className="text-xs font-bold text-primary mb-3">Why This Beats eWay-CRM</p>
-          <div className="grid sm:grid-cols-3 gap-3">
-            {[
-              { label: "AI Lead Scoring", desc: "Scores every lead 1-10 before you touch it. eWay-CRM doesn't score." },
-              { label: "Auto Enrichment", desc: "Hunter → Apollo → Lusha waterfall finds emails automatically. eWay just stores what you type." },
-              { label: "Cold Email Automation", desc: "AI writes & sends personalized outreach. eWay just logs emails you send manually." },
-            ].map((item) => (
-              <div key={item.label} className="space-y-1">
-                <p className="text-xs font-semibold text-foreground">{item.label}</p>
-                <p className="text-[10px] text-muted-foreground leading-relaxed">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
