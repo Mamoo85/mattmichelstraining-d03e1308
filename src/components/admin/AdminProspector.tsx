@@ -1686,10 +1686,12 @@ export default function AdminProspector() {
                     onDrip={runPipelineDrip}
                     onPreviewDrip={setPreviewLead}
                     onDelete={deletePipelineLead}
+                    onReEnrich={reEnrichLead}
                     auditingId={auditingId}
                     sendingId={sendingId}
                     researchingId={researchingId}
                     drippingId={drippingId}
+                    reEnrichingId={reEnrichingId}
                   />
                 </SortableContext>
               ))}
