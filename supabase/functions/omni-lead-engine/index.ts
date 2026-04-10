@@ -50,7 +50,7 @@ interface PreparedLead {
   google_place_id: string | null;
   pipeline_stage: string;
   source: string;
-  notes: string | null;
+  gap_analysis?: string | null;
 }
 
 type ProcessResult =
@@ -312,11 +312,9 @@ async function processBusiness(
         google_place_id: business.place_id,
         pipeline_stage: "new_lead",
         source: "omni_engine",
-        notes: sitePreview
-          ? `Source preview captured during Omni pass. Enrichment source: ${enrichment.source || "none"}.
-
-${sitePreview}`
-          : `Enrichment source: ${enrichment.source || "none"}.`,
+        gap_analysis: sitePreview
+          ? `Website context preview (${enrichment.source || "none"}):\n\n${sitePreview}`
+          : null,
       },
     };
   } catch (error) {
