@@ -20,6 +20,33 @@ const FEATURES = [
   { icon: <FileText size={20} />, title: "Invoicing → QuickBooks", body: "Generate and send invoices. Syncs to QuickBooks so your accountant is happy." },
 ];
 
+const INDUSTRIES = [
+  { name: "HVAC", desc: "Equipment history per unit, seasonal maintenance contracts, auto-dispatch to service calls" },
+  { name: "Plumbing", desc: "Emergency dispatch, in-field invoicing, job photos before/after every call" },
+  { name: "Electrical", desc: "Permit tracking, in-field estimates, schedule recurring inspections" },
+  { name: "Boiler / Industrial", desc: "Asset history per boiler unit, service contracts, EPA compliance records" },
+  { name: "Appliance Repair", desc: "Parts tracking per job, warranty management, route optimization" },
+  { name: "IT Support / MSP", desc: "Remote + on-site jobs, SLA tracking, recurring maintenance contracts" },
+  { name: "Pest Control", desc: "Chemical/treatment logs per property, license expiration alerts, recurring routes" },
+  { name: "Landscaping", desc: "Seasonal contracts, crew dispatch, route optimization by neighborhood" },
+  { name: "Fire Protection", desc: "Inspection scheduling, compliance records, equipment certification tracking" },
+];
+
+const CSV_COLUMNS = [
+  {
+    label: "Customers",
+    cols: "first_name, last_name, company_name, email, phone, mobile, address, city, state, zip, notes",
+  },
+  {
+    label: "Assets",
+    cols: "name, asset_type, manufacturer, model, serial_number, install_date, location_notes, notes",
+  },
+  {
+    label: "Jobs",
+    cols: "title, description, status, scheduled_date, completed_at, tech_name, customer_name, notes",
+  },
+];
+
 const ADDONS = [
   { name: "Review Monitor", price: "+$25/mo", desc: "Get alerted on every new Google review" },
   { name: "Weekly SMS Blast", price: "+$19/mo", desc: "Promote slow weeks with one-click SMS campaigns" },
@@ -231,6 +258,41 @@ export default function FieldServiceManagement() {
                 {loading ? "Loading..." : "Get the Bundle →"}
               </button>
             </div>
+          </div>
+        </div>
+
+        {/* Industries */}
+        <div className="py-16 px-6 max-w-4xl mx-auto">
+          <h2 className="text-center text-xl font-black mb-2 uppercase tracking-wide">Built for your trade</h2>
+          <p className="text-center text-white/50 text-sm mb-10">Workflows tuned for how your crew actually works.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {INDUSTRIES.map((ind) => (
+              <div key={ind.name} className="bg-[#0f1f35] border border-white/10 p-5">
+                <h3 className="font-black text-sm text-[#00d4ff] mb-2">{ind.name}</h3>
+                <p className="text-white/60 text-xs leading-relaxed">{ind.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* CSV Import */}
+        <div className="bg-[#0f1f35] py-14 px-6 border-t border-white/10">
+          <div className="max-w-3xl mx-auto">
+            <h2 className="text-center text-xl font-black mb-2 uppercase tracking-wide">Migrate from Jobber or FieldServio in minutes</h2>
+            <p className="text-center text-white/50 text-sm mb-10">
+              Export your data from any FSM tool and import it with a single CSV upload. We match the industry-standard column headers you already have.
+            </p>
+            <div className="space-y-4">
+              {CSV_COLUMNS.map((section) => (
+                <div key={section.label} className="bg-[#0a1628] border border-white/10 p-5">
+                  <div className="text-[#00d4ff] text-xs font-black uppercase tracking-widest mb-2">{section.label}</div>
+                  <code className="text-white/60 text-xs font-mono leading-relaxed break-all">{section.cols}</code>
+                </div>
+              ))}
+            </div>
+            <p className="text-center text-white/30 text-xs mt-6">
+              These column names match what Jobber, FieldServio, and ServiceTitan export by default — no reformatting needed.
+            </p>
           </div>
         </div>
 
