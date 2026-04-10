@@ -8969,6 +8969,7 @@ export type Database = {
           created_at: string
           domain: string | null
           id: string
+          role: string
           user_id: string
         }
         Insert: {
@@ -8977,6 +8978,7 @@ export type Database = {
           created_at?: string
           domain?: string | null
           id?: string
+          role?: string
           user_id: string
         }
         Update: {
@@ -8985,6 +8987,7 @@ export type Database = {
           created_at?: string
           domain?: string | null
           id?: string
+          role?: string
           user_id?: string
         }
         Relationships: []
@@ -10626,6 +10629,7 @@ export type Database = {
           total_weeks: number
         }[]
       }
+      get_agency_role: { Args: { _user_id: string }; Returns: string }
       get_my_pending_actions: {
         Args: never
         Returns: {
@@ -10717,7 +10721,15 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user" | "parent" | "child" | "coach"
+      app_role:
+        | "admin"
+        | "moderator"
+        | "user"
+        | "parent"
+        | "child"
+        | "coach"
+        | "agency_admin"
+        | "client"
       lift_video_status: "pending_review" | "approved" | "rejected" | "archived"
     }
     CompositeTypes: {
@@ -10846,7 +10858,16 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user", "parent", "child", "coach"],
+      app_role: [
+        "admin",
+        "moderator",
+        "user",
+        "parent",
+        "child",
+        "coach",
+        "agency_admin",
+        "client",
+      ],
       lift_video_status: ["pending_review", "approved", "rejected", "archived"],
     },
   },
