@@ -54,6 +54,7 @@ const ForParents = lazyRetry(() => import("./pages/ForParents"));
 const Welcome = lazyRetry(() => import("./pages/Welcome"));
 const Auth = lazyRetry(() => import("./pages/Auth"));
 const Admin = lazyRetry(() => import("./pages/Admin"));
+const DWAAdmin = lazyRetry(() => import("./pages/DWAAdmin"));
 const Pricing = lazyRetry(() => import("./pages/Pricing"));
 const About = lazyRetry(() => import("./pages/About"));
 const Profile = lazyRetry(() => import("./pages/Profile"));
@@ -710,7 +711,8 @@ const App = () => (
                      <Route path="/coach" element={<BlurGate requireSubscription><Coach /></BlurGate>} />
                      <Route path="/trial-welcome" element={<ProtectedRoute><TrialWelcome /></ProtectedRoute>} />
                      <Route path="/assessment" element={<ProtectedRoute><Assessment /></ProtectedRoute>} />
-                     <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
+                     <Route path="/admin" element={<ProtectedRoute>{getDomainBrand() === "agency" ? <DWAAdmin /> : <Admin />}</ProtectedRoute>} />
+                     <Route path="/dwa-admin" element={<ProtectedRoute><DWAAdmin /></ProtectedRoute>} />
                      <Route path="/admin/view-user/:userId" element={<ProtectedRoute><AdminViewUser /></ProtectedRoute>} />
                      <Route path="/comms-center" element={<ProtectedRoute><CommunicationsCenter /></ProtectedRoute>} />
                      <Route path="/dashboard" element={<ZoneDashboard />} />
