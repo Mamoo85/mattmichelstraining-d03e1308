@@ -161,6 +161,27 @@ function AddClientModal({
               <option value="bundle">Bundle ($199/mo)</option>
             </select>
           </div>
+          <div>
+            <label className="block text-xs text-white/50 mb-1 uppercase tracking-wide">
+              Industry
+            </label>
+            <select
+              className="w-full bg-[#0a1628] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#00d4ff]/50"
+              value={form.industry}
+              onChange={(e) => setForm((f) => ({ ...f, industry: e.target.value }))}
+            >
+              <option value="hvac">HVAC</option>
+              <option value="plumbing">Plumbing</option>
+              <option value="electrical">Electrical</option>
+              <option value="boiler_industrial">Boiler / Industrial</option>
+              <option value="appliance_repair">Appliance Repair</option>
+              <option value="it_support">IT Support</option>
+              <option value="pest_control">Pest Control</option>
+              <option value="landscaping">Landscaping</option>
+              <option value="fire_protection">Fire Protection</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
           <div className="flex gap-3 pt-2">
             <button
               type="button"
