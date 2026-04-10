@@ -325,6 +325,13 @@ function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onD
             {!lead.has_instagram && <Badge className="text-[7px] h-3.5 px-1 bg-red-500/20 text-red-400 border-0">No IG</Badge>}
           </div>
           {lead.industry && <span className="text-[9px] text-muted-foreground block mt-0.5">{lead.industry}</span>}
+          {/* Enrichment source badge */}
+          {(() => {
+            const src = parseEnrichmentSource(lead.notes);
+            if (!src || src === "none") return null;
+            const color = ENRICH_SOURCE_COLORS[src] || "bg-muted text-muted-foreground";
+            return <Badge className={`text-[7px] h-3.5 px-1 border-0 mt-1 ${color}`}>{src}</Badge>;
+          })()}
         </div>
       </div>
 
