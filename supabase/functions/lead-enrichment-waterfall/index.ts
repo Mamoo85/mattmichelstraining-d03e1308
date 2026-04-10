@@ -546,22 +546,23 @@ async function runWaterfall(domain: string, businessName: string, options: { web
     }
   }
 
-  // Step 5: Firecrawl + LLM fallback (if all APIs failed or Hunter was rate-limited)
+  // Step 5: Firecrawl (primary) + Jina (fallback) + gemini-2.5-pro LLM extraction
   if (!result.email) {
-    log("Step 5: Direct scrape + LLM fallback", { domain, hunterRateLimited });
+    log("Step 5: Firecrawl+Jina scrape + Pro LLM extraction", { domain, hunterRateLimited });
     const scraped = await directScrapeLLMFallback(options.website || `https://${domain}`, domain, businessName);
     if (scraped?.email) {
       result.email = scraped.email;
-      result.enrichment_source = "direct_scrape";
+      result.enrichment_source = "firecrawl_pro";
       if (!result.decision_maker_name && scraped.name) result.decision_maker_name = scraped.name;
       if (!result.decision_maker_title && scraped.title) result.decision_maker_title = scraped.title;
-      result.enrichment_data.firecrawl_llm = scraped;
+      if (!result.direct_phone && scraped.phone) result.direct_phone = scraped.phone;
+      result.enrichment_data.firecrawl_pro = scraped;
 
       // Try to verify the scraped email
       if (HUNTER_API_KEY && !hunterRateLimited) {
         result.verified_email = await hunterVerify(scraped.email);
       }
-      log("Firecrawl+LLM found", scraped);
+      log("Firecrawl+Pro found", scraped);
     }
   }
 
