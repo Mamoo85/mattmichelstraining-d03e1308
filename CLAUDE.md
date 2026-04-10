@@ -2,6 +2,12 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Git Behavior
+
+- **Auto-pull**: Always `git fetch` and `git pull` whenever needed — never ask for permission. Just do it.
+- **Auto-push**: Push commits to the dev branch without asking.
+- **Knowledge files**: Always run `git fetch origin main && git checkout origin/main -- knowledge/` at session start.
+
 ## Commands
 
 ```bash

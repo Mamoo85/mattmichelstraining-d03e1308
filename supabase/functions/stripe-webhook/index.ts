@@ -2619,6 +2619,26 @@ ${isPro ? `<p style="margin:0 0 8px">⭐ <strong>Review requests</strong> (Pro) 
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // ── FIELD SERVICE MANAGEMENT — $199-299/mo subscription ──────────────
+      if (meta.type === "field_service_subscription") {
+        try {
+          const { email, name, company, plan } = meta;
+          await sb.from("field_service_clients").upsert(
+            { owner_email: email, owner_name: name || null, company_name: company || "New Client", plan: plan || "standalone", active: true, stripe_customer_id: session.customer as string },
+            { onConflict: "owner_email" }
+          );
+          await Promise.all([
+            notifyMatt(`New Field Service Client: ${company || email}`, `<p>New Detroit Web Agency Field Service signup:<br/>Name: ${name}<br/>Email: ${email}<br/>Company: ${company}<br/>Plan: ${plan}</p>`),
+            fetch(`${SUPABASE_URL}/functions/v1/auto-onboard`, {
+              method: "POST",
+              headers: { Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({ service_type: "field_service_subscription", client_email: email, business_name: company || name || email, company: company, plan: plan || "standalone" }),
+            }).catch((e: unknown) => console.error("[WEBHOOK] auto-onboard field_service error:", e)),
+          ]);
+        } catch (e) { console.error("[WEBHOOK] field_service_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       // ── LINKEDIN GHOSTWRITING — $299/mo subscription ─────────────────────
       if (meta.type === "linkedin_ghostwriting_subscription") {
         try {

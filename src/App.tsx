@@ -59,6 +59,7 @@ const ForParents = lazyRetry(() => import("./pages/ForParents"));
 const Welcome = lazyRetry(() => import("./pages/Welcome"));
 const Auth = lazyRetry(() => import("./pages/Auth"));
 const Admin = lazyRetry(() => import("./pages/Admin"));
+const DWAAdmin = lazyRetry(() => import("./pages/DWAAdmin"));
 const Pricing = lazyRetry(() => import("./pages/Pricing"));
 const About = lazyRetry(() => import("./pages/About"));
 const Profile = lazyRetry(() => import("./pages/Profile"));
@@ -122,6 +123,10 @@ const GbpManagement = lazyRetry(() => import("./pages/GbpManagement"));
 const NewsletterSponsor = lazyRetry(() => import("./pages/NewsletterSponsor"));
 const CampDirectory = lazyRetry(() => import("./pages/CampDirectory"));
 const ContractorLeads = lazyRetry(() => import("./pages/ContractorLeads"));
+const FieldServiceManagement = lazyRetry(() => import("./pages/FieldServiceManagement"));
+const FieldServiceDispatch = lazyRetry(() => import("./pages/FieldServiceDispatch"));
+const FieldServiceTechApp = lazyRetry(() => import("./pages/FieldServiceTechApp"));
+const FieldServiceIndustry = lazyRetry(() => import("./pages/FieldServiceIndustry"));
 const LeadCapturePage = lazyRetry(() => import("./pages/LeadCapturePage"));
 const B2BLeads = lazyRetry(() => import("./pages/B2BLeads"));
 const IndustrialDatabase = lazyRetry(() => import("./pages/IndustrialDatabase"));
@@ -529,6 +534,10 @@ const App = () => (
                     <Route path="/gbp-management" element={<GbpManagement />} />
                     <Route path="/sponsor" element={<NewsletterSponsor />} />
                     <Route path="/contractor-leads" element={<ContractorLeads />} />
+                    <Route path="/field-service" element={<FieldServiceManagement />} />
+                    <Route path="/field-service/dispatch" element={<FieldServiceDispatch />} />
+                    <Route path="/field-service/tech" element={<FieldServiceTechApp />} />
+                    <Route path="/field-service/:industry" element={<FieldServiceIndustry />} />
                     <Route path="/leads/:slug" element={<LeadCapturePage />} />
                     <Route path="/b2b-leads" element={<B2BLeads />} />
                     <Route path="/industrial-database" element={<IndustrialDatabase />} />
@@ -710,6 +719,7 @@ const App = () => (
                      <Route path="/trial-welcome" element={<ProtectedRoute><TrialWelcome /></ProtectedRoute>} />
                      <Route path="/assessment" element={<ProtectedRoute><Assessment /></ProtectedRoute>} />
                      <Route path="/admin" element={<AgencyAdminRoute><Admin /></AgencyAdminRoute>} />
+                     <Route path="/dwa-admin" element={<ProtectedRoute><DWAAdmin /></ProtectedRoute>} />
                      <Route path="/admin/view-user/:userId" element={<ProtectedRoute><AdminViewUser /></ProtectedRoute>} />
                      <Route path="/comms-center" element={<ProtectedRoute><CommunicationsCenter /></ProtectedRoute>} />
                      <Route path="/dashboard" element={<ZoneDashboard />} />

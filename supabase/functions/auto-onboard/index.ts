@@ -359,6 +359,11 @@ const TEMPLATES: Record<string, OnboardTemplate> = {
       <p>First weekly briefing arrives Monday.</p>
       <p>Reply with your market details!</p>`,
   },
+  field_service_subscription: {
+    subject: "Your Field Service App is Live — Click Here to Log In",
+    nextStage: "📧 Welcome Email Sent",
+    body: (name) => `<p>Hey ${name} — your dispatch board is live. Reply with your tech list and I'll have everything set up within 24 hours. — Matt</p>`,
+  },
 };
 
 // Generic SMS product template
@@ -403,24 +408,150 @@ function m2Email(bodyHtml: string): string {
 </div></body></html>`;
 }
 
+function dwaEmail(bodyHtml: string): string {
+  return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0a1628;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+<div style="max-width:600px;margin:0 auto;background:#0a1628">
+  <div style="padding:28px 32px 20px;text-align:center;border-bottom:2px solid #00d4ff">
+    <img src="https://mattmichelstraining.com/images/dwa-coin.jpg" alt="Detroit Web Agency" width="90" height="90" style="display:block;margin:0 auto 14px;border-radius:50%;border:2px solid #00d4ff33" onerror="this.style.display='none'" />
+    <div style="color:#ffffff;font-size:20px;font-weight:900;letter-spacing:3px">DETROIT <span style="color:#00d4ff">WEB AGENCY</span></div>
+    <div style="color:#00d4ff;font-size:10px;letter-spacing:4px;margin-top:5px;font-weight:600">WE HANDLE THE TECH</div>
+  </div>
+  <div style="padding:32px;color:#e2e8f0;font-size:15px;line-height:1.8">${bodyHtml}</div>
+  <div style="padding:20px 32px;border-top:1px solid #1e3a5f;text-align:center">
+    <p style="margin:0;color:#4a6fa5;font-size:12px">Detroit Web Agency · Grosse Pointe Park, MI · (313) 806-4952</p>
+    <p style="margin:6px 0 0;font-size:11px"><a href="https://detroitwebagency.com" style="color:#00d4ff;text-decoration:none">detroitwebagency.com</a>&nbsp;·&nbsp;<a href="mailto:matt@mattmichelstraining.com?subject=Unsubscribe" style="color:#4a6fa5;text-decoration:none">Unsubscribe</a></p>
+  </div>
+</div></body></html>`;
+}
+
+function buildFieldServiceBody(
+  name: string,
+  company: string,
+  magicLink: string,
+  dispatchUrl: string,
+  techAppUrl: string,
+  plan: string
+): string {
+  const planLabel = plan === "bundle" ? "Website Bundle Plan" : "Standalone Plan";
+  return `
+    <p style="font-size:24px;font-weight:800;color:#ffffff;margin:0 0 6px;line-height:1.2">Your dispatch board is live, ${name}.</p>
+    <p style="color:#4a6fa5;font-size:13px;margin:0 0 28px">${company} &nbsp;·&nbsp; ${planLabel}</p>
+
+    <div style="background:#0d1f3c;border:1px solid #00d4ff33;border-radius:12px;padding:24px;margin:0 0 28px;text-align:center">
+      <p style="color:#94a3b8;font-size:13px;margin:0 0 6px">Click the button below to go straight to your account.</p>
+      <p style="color:#4a6fa5;font-size:12px;margin:0 0 18px">No password needed — just click and you're in.</p>
+      <a href="${magicLink}" style="display:inline-block;background:#00d4ff;color:#0a1628;font-weight:900;font-size:15px;padding:14px 36px;border-radius:8px;text-decoration:none;letter-spacing:0.5px">LOG INTO YOUR DISPATCH BOARD →</a>
+      <p style="color:#4a6fa5;font-size:11px;margin:14px 0 0">This link is one-time use and expires in 24 hours. Need a new one? Just reply to this email.</p>
+    </div>
+
+    <div style="background:#0d1f3c;border-left:3px solid #00d4ff;padding:20px 24px;border-radius:0 8px 8px 0;margin:0 0 24px">
+      <p style="color:#ffffff;font-weight:700;font-size:14px;margin:0 0 12px;letter-spacing:0.5px">WHAT DID YOU JUST SIGN UP FOR? (plain English)</p>
+      <p style="color:#94a3b8;font-size:13px;margin:0 0 10px">You signed up for Detroit Web Agency Field Service. Here's what that means in simple terms:</p>
+      <p style="margin:0 0 10px"><span style="color:#00d4ff;font-weight:700">The Dispatch Board</span> <span style="color:#94a3b8;font-size:13px">is YOUR screen — you'll use it on a computer or phone. You can see all your jobs, assign them to your techs, and watch your crew in real time on a map. Think of it like a command center for your whole operation.</span></p>
+      <p style="margin:0"><span style="color:#00d4ff;font-weight:700">The Tech App</span> <span style="color:#94a3b8;font-size:13px">is what your crew uses on their phones. They log in with a 4-digit PIN — no email, no password, nothing complicated. They see their jobs for the day, tap "On My Way" when they leave, snap a photo when they're done, and tap "Complete." That's it. Your guys can learn it in five minutes.</span></p>
+    </div>
+
+    <div style="background:#0d1f3c;border:1px solid #1e3a5f;border-radius:12px;padding:24px;margin:0 0 24px">
+      <p style="color:#ffffff;font-weight:700;font-size:14px;margin:0 0 16px;letter-spacing:0.5px">HERE'S WHAT TO DO FIRST:</p>
+      <p style="margin:0 0 14px;color:#e2e8f0;font-size:14px"><span style="display:inline-block;background:#00d4ff;color:#0a1628;font-weight:800;font-size:12px;padding:2px 8px;border-radius:4px;margin-right:10px">STEP 1</span><strong>Reply to this email</strong> with a list of your techs — just their name and cell number for each person. I'll add them to your account within a few hours.</p>
+      <p style="margin:0 0 14px;color:#e2e8f0;font-size:14px"><span style="display:inline-block;background:#00d4ff;color:#0a1628;font-weight:800;font-size:12px;padding:2px 8px;border-radius:4px;margin-right:10px">STEP 2</span><strong>Send your crew this link</strong> — this is the app they'll use on their phones:<br/><a href="${techAppUrl}" style="color:#00d4ff;font-size:12px;word-break:break-all">${techAppUrl}</a></p>
+      <p style="margin:0;color:#e2e8f0;font-size:14px"><span style="display:inline-block;background:#00d4ff;color:#0a1628;font-weight:800;font-size:12px;padding:2px 8px;border-radius:4px;margin-right:10px">STEP 3</span><strong>Send your customer list</strong> (even a messy spreadsheet or just a list of names is fine). I'll import them so you can start creating jobs right away.</p>
+    </div>
+
+    <div style="margin:0 0 24px">
+      <p style="color:#94a3b8;font-size:12px;margin:0 0 4px">Your personal dispatch board link (save this or bookmark it):</p>
+      <a href="${dispatchUrl}" style="color:#00d4ff;font-size:12px;word-break:break-all">${dispatchUrl}</a>
+    </div>
+
+    <div style="border-top:1px solid #1e3a5f;padding-top:20px">
+      <p style="color:#e2e8f0;font-size:14px;margin:0">— Matt Michels</p>
+      <p style="color:#4a6fa5;font-size:12px;margin:5px 0 0">Detroit Web Agency &nbsp;·&nbsp; (313) 806-4952 &nbsp;·&nbsp; <a href="mailto:matt@mattmichelstraining.com" style="color:#00d4ff;text-decoration:none">matt@mattmichelstraining.com</a></p>
+    </div>`;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" } });
   }
 
   try {
-    const { service_type, client_email, business_name, subscription_id } = await req.json();
+    const { service_type, client_email, business_name, company, plan, subscription_id } = await req.json();
 
     if (!service_type || !client_email) {
       return new Response(JSON.stringify({ error: "service_type and client_email required" }), { status: 400, headers: JSON_HEADERS });
     }
 
+    const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+    const name = business_name || company || client_email.split("@")[0];
+
+    // ── FIELD SERVICE: DWA-branded email with magic link ────────────────────
+    if (service_type === "field_service_subscription") {
+      // Look up the client record to get UUID and company name
+      const { data: fsClient } = await sb
+        .from("field_service_clients")
+        .select("id, plan, company_name")
+        .eq("owner_email", client_email)
+        .maybeSingle();
+
+      const clientId = fsClient?.id || "";
+      const clientPlan = plan || fsClient?.plan || "standalone";
+      const companyDisplay = fsClient?.company_name || company || name;
+      const dispatchUrl = clientId
+        ? `https://detroitwebagency.com/field-service/dispatch?client=${clientId}`
+        : "https://detroitwebagency.com/field-service/dispatch";
+      const techAppUrl = "https://detroitwebagency.com/field-service/tech";
+
+      // Generate one-click magic link (passwordless login)
+      let magicLink = dispatchUrl;
+      try {
+        const { data: linkData } = await sb.auth.admin.generateLink({
+          type: "magiclink",
+          email: client_email,
+          options: { redirectTo: dispatchUrl },
+        });
+        if ((linkData as any)?.properties?.action_link) {
+          magicLink = (linkData as any).properties.action_link;
+        }
+      } catch (e) {
+        console.error("[auto-onboard] Magic link generation failed:", e);
+      }
+
+      await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          from: "Matt Michels — Detroit Web Agency <matt@mattmichelstraining.com>",
+          to: [client_email],
+          bcc: ["matthewmichels4@gmail.com"],
+          subject: "Your Field Service App is Live — Click Here to Log In",
+          html: dwaEmail(buildFieldServiceBody(name, companyDisplay, magicLink, dispatchUrl, techAppUrl, clientPlan)),
+        }),
+      });
+
+      await Promise.all([
+        subscription_id
+          ? sb.from("service_subscriptions" as any)
+              .update({ fulfillment_stage: "📧 Welcome Email Sent", updated_at: new Date().toISOString() })
+              .eq("id", subscription_id)
+          : Promise.resolve(),
+        sb.from("notifications" as any).insert({
+          type: "auto_onboard",
+          title: `DWA Field Service welcome sent: ${companyDisplay}`,
+          body: `Magic-link welcome email sent to ${client_email}. Dispatch: ${dispatchUrl}`,
+          link: "/dwa-admin",
+          urgency: "fyi",
+          category: "onboarding",
+        }),
+      ]);
+
+      return new Response(JSON.stringify({ sent: true, nextStage: "📧 Welcome Email Sent" }), { headers: JSON_HEADERS });
+    }
+
+    // ── ALL OTHER PRODUCTS ────────────────────────────────────────────────────
     const template = getTemplate(service_type);
     if (!template) {
       return new Response(JSON.stringify({ skipped: true, reason: "no template for service type" }), { headers: JSON_HEADERS });
     }
-
-    const name = business_name || client_email.split("@")[0];
 
     // Send onboarding email
     await fetch("https://api.resend.com/emails", {
@@ -436,7 +567,6 @@ serve(async (req) => {
     });
 
     // Update fulfillment_stage
-    const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
     if (subscription_id) {
       await sb.from("service_subscriptions" as any)
         .update({ fulfillment_stage: template.nextStage, updated_at: new Date().toISOString() })
