@@ -5,6 +5,7 @@ import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/hooks/useAuth";
 import { isStaleJWTError } from "@/lib/jwtErrors";
 import { useToast } from "@/hooks/use-toast";
+import { isAgencyDomain } from "@/lib/domainConfig";
 import m2Logo from "@/assets/m2-logo.jpg";
 import { ArrowRight, Loader2, Gift, Users, Mail, User, UserPlus, AlertTriangle } from "lucide-react";
 import NutritionSneakPeek from "@/components/auth/NutritionSneakPeek";
@@ -18,6 +19,7 @@ const Auth = () => {
   const { toast } = useToast();
   const inviteToken = searchParams.get("invite");
   const ipToken = searchParams.get("ip");
+  const isAgency = isAgencyDomain();
 
   const redeemInvite = async (token: string) => {
     try {

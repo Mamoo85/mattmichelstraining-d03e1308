@@ -158,14 +158,24 @@ const AppNavbar = () => {
               >
                 Pricing
               </Link>
-              <Link
-                to="/auth"
-                className={`flex items-center gap-1 px-2.5 py-2 text-[11px] font-bold uppercase tracking-widest transition-m2 ${
-                  location.pathname === "/auth" ? "text-cyan-400 bg-cyan-400/10" : "text-slate-400 hover:text-white"
-                }`}
-              >
-                Prospector Login
-              </Link>
+              {user ? (
+                <button
+                  onClick={signOut}
+                  className="flex items-center gap-1 px-2.5 py-2 text-[11px] font-bold uppercase tracking-widest text-slate-400 hover:text-white transition-m2"
+                >
+                  <LogOut size={14} />
+                  Sign Out
+                </button>
+              ) : (
+                <Link
+                  to="/auth?redirect=/admin"
+                  className={`flex items-center gap-1 px-2.5 py-2 text-[11px] font-bold uppercase tracking-widest transition-m2 ${
+                    location.pathname === "/auth" ? "text-cyan-400 bg-cyan-400/10" : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  Login
+                </Link>
+              )}
             </>
           ) : (
             <>
