@@ -503,6 +503,7 @@ export default function AdminProspector() {
   const [sendingId, setSendingId] = useState<string | null>(null);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [researchingId, setResearchingId] = useState<string | null>(null);
+  const [reEnrichingId, setReEnrichingId] = useState<string | null>(null);
   const [drippingId, setDrippingId] = useState<string | null>(null);
   const [pipelineFilter, setPipelineFilter] = useState<PipelineFilter>("all");
   const [pipelineSort, setPipelineSort] = useState<PipelineSort>("newest");
