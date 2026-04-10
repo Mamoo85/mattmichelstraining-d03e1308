@@ -205,7 +205,7 @@ export default function FieldServiceManagement() {
           <h2 className="text-center text-xl font-black mb-2 uppercase tracking-wide">Simple Pricing</h2>
           <p className="text-center text-white/50 text-sm mb-10">No per-user fees. No setup traps. Cancel anytime.</p>
 
-          {/* Email form */}
+          {/* Signup form */}
           <div className="max-w-sm mx-auto mb-8 space-y-3">
             <input
               className="w-full bg-white/5 border border-white/20 text-white px-4 py-2.5 text-sm placeholder-white/30 focus:outline-none focus:border-[#00d4ff]"
@@ -226,6 +226,22 @@ export default function FieldServiceManagement() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
+            <select
+              className="w-full bg-white/5 border border-white/20 text-white px-4 py-2.5 text-sm focus:outline-none focus:border-[#00d4ff]"
+              value={industry}
+              onChange={(e) => setIndustry(e.target.value)}
+            >
+              <option value="hvac" className="bg-[#0a1628]">HVAC</option>
+              <option value="plumbing" className="bg-[#0a1628]">Plumbing</option>
+              <option value="electrical" className="bg-[#0a1628]">Electrical</option>
+              <option value="boiler_industrial" className="bg-[#0a1628]">Boiler / Industrial</option>
+              <option value="appliance_repair" className="bg-[#0a1628]">Appliance Repair</option>
+              <option value="it_support" className="bg-[#0a1628]">IT Support</option>
+              <option value="pest_control" className="bg-[#0a1628]">Pest Control</option>
+              <option value="landscaping" className="bg-[#0a1628]">Landscaping</option>
+              <option value="fire_protection" className="bg-[#0a1628]">Fire Protection</option>
+              <option value="other" className="bg-[#0a1628]">Other</option>
+            </select>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-2xl mx-auto">
