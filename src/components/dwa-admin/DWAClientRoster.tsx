@@ -315,7 +315,7 @@ export default function DWAClientRoster() {
               {isLoading ? (
                 Array.from({ length: 4 }).map((_, i) => (
                   <tr key={i} className="border-b border-white/5">
-                    {Array.from({ length: 9 }).map((_, j) => (
+                    {Array.from({ length: 10 }).map((_, j) => (
                       <td key={j} className="px-4 py-3">
                         <div className="h-4 bg-white/5 rounded animate-pulse" />
                       </td>
@@ -324,7 +324,7 @@ export default function DWAClientRoster() {
                 ))
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-8 text-center text-white/30">
+                  <td colSpan={10} className="px-4 py-8 text-center text-white/30">
                     {search ? "No clients match your search." : "No clients yet."}
                   </td>
                 </tr>
@@ -339,6 +339,9 @@ export default function DWAClientRoster() {
                     </td>
                     <td className="px-4 py-3">
                       <PlanBadge plan={client.plan} />
+                    </td>
+                    <td className="px-4 py-3 text-white/60 text-xs">
+                      {formatIndustry(client.industry)}
                     </td>
                     <td className="px-4 py-3 text-white/60">
                       {client.owner_email ?? "—"}
