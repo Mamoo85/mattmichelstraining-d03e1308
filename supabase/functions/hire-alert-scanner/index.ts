@@ -444,8 +444,8 @@ serve(async () => {
   const allAlertWorthy = scored.filter((c) => c.availability_score >= 5);
 
   // Update alerted candidates
-  if (alertWorthy.length && alertsSent > 0) {
-    const alertedNames = alertWorthy.map((c) => c.full_name);
+  if (allAlertWorthy.length && alertsSent > 0) {
+    const alertedNames = allAlertWorthy.map((c) => c.full_name);
     await sb
       .from("hire_alert_candidates")
       .update({ status: "alerted" })
