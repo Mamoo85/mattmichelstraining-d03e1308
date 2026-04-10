@@ -338,17 +338,15 @@ function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onD
         </div>
       </div>
 
-      {/* Drip status */}
-      {(lead.drip_step > 0 || lead.drip_status !== "not_started") && (
-        <div className="border-t border-border/30 pt-1.5">
-          <DripBadge step={lead.drip_step} status={lead.drip_status} />
-          {lead.last_drip_at && (
-            <p className="text-[8px] text-muted-foreground mt-0.5">
-              Last sent: {new Date(lead.last_drip_at).toLocaleDateString()}
-            </p>
-          )}
-        </div>
-      )}
+      {/* Drip status — always shown */}
+      <div className="border-t border-border/30 pt-1.5">
+        <DripBadge step={lead.drip_step} status={lead.drip_status} />
+        {lead.last_drip_at && (
+          <p className="text-[8px] text-muted-foreground mt-0.5">
+            Last sent: {new Date(lead.last_drip_at).toLocaleDateString()}
+          </p>
+        )}
+      </div>
 
       {/* Pain points */}
       {lead.pain_points && lead.pain_points.length > 0 && (
