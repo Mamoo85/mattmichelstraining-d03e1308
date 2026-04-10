@@ -412,7 +412,7 @@ function dwaEmail(bodyHtml: string): string {
   return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0a1628;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
 <div style="max-width:600px;margin:0 auto;background:#0a1628">
   <div style="padding:28px 32px 20px;text-align:center;border-bottom:2px solid #00d4ff">
-    <img src="https://mattmichelstraining.com/images/DWA_Dark_Logo.png" alt="Detroit Web Agency" width="80" height="80" style="display:block;margin:0 auto 14px;border-radius:50%" onerror="this.style.display='none'" />
+    <img src="https://mattmichelstraining.com/images/dwa-coin.jpg" alt="Detroit Web Agency" width="90" height="90" style="display:block;margin:0 auto 14px;border-radius:50%;border:2px solid #00d4ff33" onerror="this.style.display='none'" />
     <div style="color:#ffffff;font-size:20px;font-weight:900;letter-spacing:3px">DETROIT <span style="color:#00d4ff">WEB AGENCY</span></div>
     <div style="color:#00d4ff;font-size:10px;letter-spacing:4px;margin-top:5px;font-weight:600">WE HANDLE THE TECH</div>
   </div>
