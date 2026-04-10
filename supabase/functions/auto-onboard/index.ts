@@ -475,18 +475,83 @@ serve(async (req) => {
   }
 
   try {
-    const { service_type, client_email, business_name, subscription_id } = await req.json();
+    const { service_type, client_email, business_name, company, plan, subscription_id } = await req.json();
 
     if (!service_type || !client_email) {
       return new Response(JSON.stringify({ error: "service_type and client_email required" }), { status: 400, headers: JSON_HEADERS });
     }
 
+    const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+    const name = business_name || company || client_email.split("@")[0];
+
+    // ── FIELD SERVICE: DWA-branded email with magic link ────────────────────
+    if (service_type === "field_service_subscription") {
+      // Look up the client record to get UUID and company name
+      const { data: fsClient } = await sb
+        .from("field_service_clients")
+        .select("id, plan, company_name")
+        .eq("owner_email", client_email)
+        .maybeSingle();
+
+      const clientId = fsClient?.id || "";
+      const clientPlan = plan || fsClient?.plan || "standalone";
+      const companyDisplay = fsClient?.company_name || company || name;
+      const dispatchUrl = clientId
+        ? `https://detroitwebagency.com/field-service/dispatch?client=${clientId}`
+        : "https://detroitwebagency.com/field-service/dispatch";
+      const techAppUrl = "https://detroitwebagency.com/field-service/tech";
+
+      // Generate one-click magic link (passwordless login)
+      let magicLink = dispatchUrl;
+      try {
+        const { data: linkData } = await sb.auth.admin.generateLink({
+          type: "magiclink",
+          email: client_email,
+          options: { redirectTo: dispatchUrl },
+        });
+        if ((linkData as any)?.properties?.action_link) {
+          magicLink = (linkData as any).properties.action_link;
+        }
+      } catch (e) {
+        console.error("[auto-onboard] Magic link generation failed:", e);
+      }
+
+      await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          from: "Matt Michels — Detroit Web Agency <matt@mattmichelstraining.com>",
+          to: [client_email],
+          bcc: ["matthewmichels4@gmail.com"],
+          subject: "Your Field Service App is Live — Click Here to Log In",
+          html: dwaEmail(buildFieldServiceBody(name, companyDisplay, magicLink, dispatchUrl, techAppUrl, clientPlan)),
+        }),
+      });
+
+      await Promise.all([
+        subscription_id
+          ? sb.from("service_subscriptions" as any)
+              .update({ fulfillment_stage: "📧 Welcome Email Sent", updated_at: new Date().toISOString() })
+              .eq("id", subscription_id)
+          : Promise.resolve(),
+        sb.from("notifications" as any).insert({
+          type: "auto_onboard",
+          title: `DWA Field Service welcome sent: ${companyDisplay}`,
+          body: `Magic-link welcome email sent to ${client_email}. Dispatch: ${dispatchUrl}`,
+          link: "/dwa-admin",
+          urgency: "fyi",
+          category: "onboarding",
+        }),
+      ]);
+
+      return new Response(JSON.stringify({ sent: true, nextStage: "📧 Welcome Email Sent" }), { headers: JSON_HEADERS });
+    }
+
+    // ── ALL OTHER PRODUCTS ────────────────────────────────────────────────────
     const template = getTemplate(service_type);
     if (!template) {
       return new Response(JSON.stringify({ skipped: true, reason: "no template for service type" }), { headers: JSON_HEADERS });
     }
-
-    const name = business_name || client_email.split("@")[0];
 
     // Send onboarding email
     await fetch("https://api.resend.com/emails", {
@@ -502,7 +567,6 @@ serve(async (req) => {
     });
 
     // Update fulfillment_stage
-    const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
     if (subscription_id) {
       await sb.from("service_subscriptions" as any)
         .update({ fulfillment_stage: template.nextStage, updated_at: new Date().toISOString() })
