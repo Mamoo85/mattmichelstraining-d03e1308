@@ -55,6 +55,10 @@ serve(async (req) => {
         email,
         company_name: company_name || "",
         owner_phone: phone || "",
+        // Stripe metadata values must be strings — join array as comma-separated
+        target_roles: Array.isArray(target_roles) && target_roles.length
+          ? target_roles.join(",")
+          : "boiler_operator,hvac_tech",
       },
       success_url: `${origin}/hire-alert?success=1`,
       cancel_url: `${origin}/hire-alert`,
