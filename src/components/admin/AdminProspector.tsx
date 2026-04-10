@@ -1095,14 +1095,12 @@ export default function AdminProspector() {
       await (supabase as any).from("prospect_pipeline").update({
         ...(newEmail ? { email: newEmail } : {}),
         ...(newName && !lead.contact_name ? { contact_name: newName } : {}),
-        notes: `Enrichment source: ${source}.`,
         updated_at: new Date().toISOString(),
       }).eq("id", lead.id);
       setPipelineLeads(prev => prev.map(l => l.id === lead.id ? {
         ...l,
         email: newEmail || l.email,
         contact_name: newName && !l.contact_name ? newName : l.contact_name,
-        notes: `Enrichment source: ${source}.`,
       } : l));
       if (newEmail) toast.success(`Found email via ${source}: ${newEmail}`);
       else toast.info(`No email found (tried ${source}) — lead kept in pipeline`);
