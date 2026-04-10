@@ -77,8 +77,10 @@ const Auth = () => {
   }, []);
   const [termsAccepted, setTermsAccepted] = useState(false);
 
+  const defaultRedirect = isAgency ? "/admin" : "/dashboard";
+
   const buildAuthRedirectUrl = useCallback((fallbackPath: string) => {
-    const redirect = searchParams.get("redirect") || fallbackPath;
+    const redirect = searchParams.get("redirect") || (isAgency ? "/admin" : fallbackPath);
     const url = new URL("/auth", window.location.origin);
 
     url.searchParams.set("redirect", redirect);
@@ -207,7 +209,7 @@ const Auth = () => {
         } catch (err: any) {
           console.warn("[IP-INVITE] Redeem error:", err.message);
         }
-        navigate("/dashboard", { replace: true });
+        navigate(defaultRedirect, { replace: true });
         return;
       }
 
@@ -216,7 +218,7 @@ const Auth = () => {
         return;
       }
 
-      const redirect = searchParams.get("redirect") || "/dashboard";
+      const redirect = searchParams.get("redirect") || defaultRedirect;
       navigate(redirect, { replace: true });
     };
 
