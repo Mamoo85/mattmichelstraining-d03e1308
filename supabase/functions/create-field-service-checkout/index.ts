@@ -19,11 +19,12 @@ serve(async (req: Request) => {
   }
 
   try {
-    const { email, name, company, plan } = await req.json() as {
+    const { email, name, company, plan, industry } = await req.json() as {
       email: string;
       name?: string;
       company?: string;
       plan: "standalone" | "bundle";
+      industry?: string;
     };
 
     const origin = req.headers.get("origin") ?? "https://mattmichelstraining.com";
