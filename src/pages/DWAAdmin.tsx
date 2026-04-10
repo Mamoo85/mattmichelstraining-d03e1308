@@ -3,10 +3,11 @@ import DWAStats from "@/components/dwa-admin/DWAStats";
 import DWAClientRoster from "@/components/dwa-admin/DWAClientRoster";
 import DWARecentJobs from "@/components/dwa-admin/DWARecentJobs";
 import DWACommandDeck from "@/components/dwa-admin/DWACommandDeck";
+import DWADataImport from "@/components/dwa-admin/DWADataImport";
 import AssetManager from "@/components/field-service/AssetManager";
 import ContractManager from "@/components/field-service/ContractManager";
 
-type Tab = "overview" | "clients" | "jobs" | "assets" | "contracts" | "command";
+type Tab = "overview" | "clients" | "jobs" | "assets" | "contracts" | "import" | "command";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "overview", label: "Overview" },
@@ -14,6 +15,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "jobs", label: "Jobs" },
   { id: "assets", label: "Assets" },
   { id: "contracts", label: "Contracts" },
+  { id: "import", label: "Import" },
   { id: "command", label: "Command Deck" },
 ];
 
