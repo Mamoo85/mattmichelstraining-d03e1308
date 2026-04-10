@@ -262,16 +262,25 @@ async function scrapeMultiplePages(
 ): Promise<string> {
   const baseUrl = normalizeWebsite(websiteOrDomain || domain);
   const markdownParts: string[] = [];
+  let firecrawlExhausted = false; // Short-circuit if credits are gone
 
   for (const path of SCRAPE_PATHS) {
     const targetUrl = path ? new URL(path, baseUrl).toString() : baseUrl;
 
-    // Try Firecrawl first (primary)
-    let markdown = await fetchFirecrawlMarkdown(targetUrl);
+    let markdown = "";
 
-    // Fallback to Jina if Firecrawl returned nothing
+    // Try Firecrawl first (primary) — skip if credits exhausted
+    if (!firecrawlExhausted) {
+      markdown = await fetchFirecrawlMarkdown(targetUrl);
+      if (markdown === "__402__") {
+        firecrawlExhausted = true;
+        markdown = "";
+        log("Firecrawl credits exhausted, switching to Jina-only", {});
+      }
+    }
+
+    // Fallback to Jina
     if (markdown.length < 80) {
-      log("Firecrawl empty, trying Jina", { url: targetUrl });
       markdown = await fetchJinaMarkdown(targetUrl);
     }
 
@@ -279,7 +288,7 @@ async function scrapeMultiplePages(
       markdownParts.push("--- " + targetUrl + " ---\n" + markdown.slice(0, 5000));
     }
 
-    // If we already have substantial content from homepage + contact, don't burn credits on all pages
+    // If we already have substantial content, don't burn time on all pages
     if (markdownParts.length >= 3) break;
   }
 
