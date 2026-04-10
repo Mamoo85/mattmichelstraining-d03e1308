@@ -733,6 +733,10 @@ serve(async (req) => {
         try {
           const email = meta.email || customerEmail;
           if (email) {
+            // Parse target_roles from comma-separated string back to array
+            const targetRoles = meta.target_roles
+              ? meta.target_roles.split(",").map((r: string) => r.trim()).filter(Boolean)
+              : ["boiler_operator", "hvac_tech"];
             await (sb.from as any)("hire_alert_clients").insert({
               company_name: meta.company_name || email,
               owner_email: email,
@@ -741,6 +745,7 @@ serve(async (req) => {
               stripe_subscription_id: session.subscription as string || null,
               active: true,
               plan: meta.plan || "standalone",
+              target_roles: targetRoles,
             });
           }
           if (RESEND_API_KEY && email) {
