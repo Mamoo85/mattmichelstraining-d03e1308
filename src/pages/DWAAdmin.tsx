@@ -155,6 +155,13 @@ export default function DWAAdmin() {
           </div>
         )}
 
+        {activeTab === "import" && (
+          <div>
+            <h2 className="text-white/40 text-xs uppercase tracking-wide mb-4">Data Import</h2>
+            <DWADataImport />
+          </div>
+        )}
+
         {activeTab === "command" && (
           <div>
             <h2 className="text-white/40 text-xs uppercase tracking-wide mb-4">Command Deck</h2>
