@@ -994,9 +994,13 @@ export default function AdminProspector() {
   // ── Omni-Channel Lead Engine Search ──
   const runOmniSearch = async () => {
     if (!searchIndustry) { toast.error("Select an industry"); return; }
+    if (omniSearching) return; // double-click guard
     setOmniSearching(true);
     setOmniResults(null);
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 90000); // 90s hard timeout
+
       const { data, error } = await supabase.functions.invoke("omni-lead-engine", {
         body: {
           industry: searchIndustry,
@@ -1005,14 +1009,41 @@ export default function AdminProspector() {
           strict_email_filter: strictEmailFilter,
         },
       });
+
+      clearTimeout(timeout);
+
       if (error) throw error;
+
+      // The engine always returns 200 — check for logical failure
+      if (data?.success === false) {
+        toast.error(data?.message || "Engine returned no results");
+        setOmniResults(data);
+        return;
+      }
+
       if (data?.error) throw new Error(data.error);
       setOmniResults(data);
-      toast.success(`Engine complete: ${data?.saved || 0} leads saved, ${data?.discarded || 0} discarded`);
-      // Auto-refresh pipeline
+
+      const saved = data?.saved || 0;
+      const discarded = data?.discarded || 0;
+      const failed = data?.failed || 0;
+
+      if (saved > 0) {
+        toast.success(`Engine complete: ${saved} leads saved, ${discarded} discarded${failed > 0 ? `, ${failed} failed` : ""}`);
+      } else if (discarded > 0) {
+        toast.warning(`No leads saved — ${discarded} discarded by strict email filter`);
+      } else {
+        toast.info("Search complete — no new leads found in this area");
+      }
+
       fetchPipeline();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Omni engine failed");
+    } catch (err: any) {
+      const msg = err?.name === "AbortError"
+        ? "Search timed out. Try a smaller batch or different location."
+        : err?.message?.includes("FunctionsFetchError") || err?.message?.includes("Failed to send")
+          ? "Edge Function timed out. Reduce batch size or try again in a moment."
+          : err instanceof Error ? err.message : "Omni engine failed";
+      toast.error(msg);
     } finally {
       setOmniSearching(false);
     }
@@ -1204,7 +1235,7 @@ export default function AdminProspector() {
               <div className="flex items-center gap-2 flex-wrap">
                 <Button onClick={runOmniSearch} disabled={omniSearching || searching || hybridSearching} className="text-xs gap-1.5" size="sm">
                   {omniSearching ? (
-                    <><Loader2 size={12} className="animate-spin" /> Maps → Scrape → Enrich...</>
+                    <><Loader2 size={12} className="animate-spin" /> Engine Running… Do Not Click Again</>
                   ) : (
                     <><Zap size={12} /> Search (Full Pipeline)</>
                   )}
