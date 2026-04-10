@@ -4,6 +4,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY") ?? "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") ?? "";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,6 +13,9 @@ const corsHeaders = {
 };
 
 const CHUNK_SIZE = 5;
+const EMAIL_REGEX = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+const SCRAPE_PATHS = ["/", "/contact", "/about", "/contact-us"];
+const FIRECRAWL_TIMEOUT = 8000;
 
 type JsonRecord = Record<string, unknown>;
 
@@ -104,11 +108,7 @@ function parseLocation(location: string | null | undefined) {
     .split(",")
     .map((value) => value.trim())
     .filter(Boolean);
-
-  return {
-    city: cityPart || null,
-    state: statePart || null,
-  };
+  return { city: cityPart || null, state: statePart || null };
 }
 
 function createEmptyResponse(overrides: JsonRecord = {}) {
@@ -129,6 +129,171 @@ function createEmptyResponse(overrides: JsonRecord = {}) {
   };
 }
 
+// ─── PHASE 1: Deep Crawl (concurrent multi-page scrape) ───
+async function deepCrawl(baseUrl: string): Promise<{ combinedText: string; pageTexts: string[] }> {
+  if (!FIRECRAWL_API_KEY) return { combinedText: "", pageTexts: [] };
+
+  const urls = SCRAPE_PATHS.map((path) => {
+    try {
+      return new URL(path, baseUrl).toString();
+    } catch {
+      return null;
+    }
+  }).filter(Boolean) as string[];
+
+  const results = await Promise.allSettled(
+    urls.map(async (url) => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), FIRECRAWL_TIMEOUT);
+      try {
+        const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${FIRECRAWL_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            url,
+            formats: ["markdown"],
+            onlyMainContent: false,
+            timeout: FIRECRAWL_TIMEOUT,
+          }),
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+        if (!res.ok) { await res.text(); return ""; }
+        const data = await res.json();
+        return (data?.data?.markdown || data?.markdown || "").slice(0, 5000);
+      } catch {
+        clearTimeout(timeoutId);
+        return "";
+      }
+    }),
+  );
+
+  const pageTexts = results
+    .map((r) => (r.status === "fulfilled" ? r.value : ""))
+    .filter((t) => t.length > 50);
+
+  return {
+    combinedText: pageTexts.join("\n\n---PAGE BREAK---\n\n"),
+    pageTexts,
+  };
+}
+
+// ─── PHASE 2: Regex Hard Extraction (before any AI) ───
+function regexExtractEmails(text: string, domain: string | null): string[] {
+  const allMatches = Array.from(new Set(text.match(EMAIL_REGEX) || []));
+  // Filter out generic noreply/support/spam and non-domain emails
+  const dominated = domain
+    ? allMatches.filter((e) => {
+        const d = e.split("@")[1]?.toLowerCase();
+        return d === domain.toLowerCase();
+      })
+    : allMatches;
+  // Exclude generic addresses, prefer personal
+  const junk = ["noreply", "no-reply", "support", "sales", "billing", "privacy", "abuse", "spam", "webmaster", "postmaster"];
+  const personal = dominated.filter((e) => !junk.some((j) => e.toLowerCase().startsWith(j)));
+  // Return personal first, then generic domain emails, then any
+  if (personal.length > 0) return personal;
+  if (dominated.length > 0) return dominated;
+  // Fallback: return any email found (even off-domain)
+  const offDomain = allMatches.filter((e) => !junk.some((j) => e.toLowerCase().startsWith(j)));
+  return offDomain.slice(0, 5);
+}
+
+// ─── PHASE 3: Auto-Audit Loop (AI extraction + waterfall fallback) ───
+async function aiExtractEmail(
+  combinedText: string,
+  businessName: string,
+  domain: string,
+): Promise<{ email: string | null; name: string | null; phone: string | null }> {
+  if (!LOVABLE_API_KEY || !combinedText.trim()) return { email: null, name: null, phone: null };
+
+  const prompt = `You are extracting the owner/decision-maker contact from "${businessName}" (domain: ${domain}).
+
+Analyze this website content and find:
+1. The owner/founder/CEO's email address (MUST use @${domain})
+2. Their full name
+3. Their direct phone number
+
+If you see a person's name but no email, RECONSTRUCT it: first@${domain}, first.last@${domain}, etc.
+
+Website content:
+${combinedText.slice(0, 12000)}
+
+Return JSON only: {"email":"...","name":"...","phone":"..."}
+If nothing found, return {"email":null,"name":null,"phone":null}`;
+
+  try {
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        max_tokens: 300,
+        messages: [{ role: "user", content: prompt }],
+      }),
+    });
+    if (!res.ok) { await res.text(); return { email: null, name: null, phone: null }; }
+    const data = await res.json();
+    const raw = data?.choices?.[0]?.message?.content?.trim() || "";
+    const match = raw.match(/\{[\s\S]*\}/);
+    if (!match) return { email: null, name: null, phone: null };
+    const parsed = JSON.parse(match[0]);
+    return {
+      email: parsed.email && parsed.email.includes("@") ? parsed.email : null,
+      name: parsed.name || null,
+      phone: parsed.phone || null,
+    };
+  } catch {
+    return { email: null, name: null, phone: null };
+  }
+}
+
+async function enrichViaWaterfall(params: {
+  domain: string;
+  businessName: string;
+  industry: string;
+  website: string | null;
+  allowEmailGuess: boolean;
+}): Promise<EnrichmentData> {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/lead-enrichment-waterfall`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        domain: params.domain,
+        business_name: params.businessName,
+        industry: params.industry,
+        website: params.website,
+        allow_email_guess: params.allowEmailGuess,
+      }),
+    });
+    if (!res.ok) {
+      await res.text();
+      return { email: null, name: null, phone: null, verifiedEmail: false, source: null };
+    }
+    const data = await res.json();
+    return {
+      email: typeof data?.email === "string" ? data.email : null,
+      name: data?.decision_maker_name || data?.contact_name || null,
+      phone: data?.direct_phone || data?.phone || null,
+      verifiedEmail: Boolean(data?.verified_email),
+      source: data?.enrichment_source || null,
+    };
+  } catch {
+    return { email: null, name: null, phone: null, verifiedEmail: false, source: null };
+  }
+}
+
+// ─── DataForSEO Maps Search ───
 async function mapsSearch(industry: string, location: string, limit: number): Promise<MapBusiness[]> {
   const login = Deno.env.get("DATAFORSEO_LOGIN") ?? "";
   const password = Deno.env.get("DATAFORSEO_PASSWORD") ?? "";
@@ -140,14 +305,12 @@ async function mapsSearch(industry: string, location: string, limit: number): Pr
       Authorization: "Basic " + btoa(`${login}:${password}`),
       "Content-Type": "application/json",
     },
-    body: JSON.stringify([
-      {
-        keyword: `${industry} near ${location}`,
-        location_name: "United States",
-        language_name: "English",
-        depth: Math.min(limit, 100),
-      },
-    ]),
+    body: JSON.stringify([{
+      keyword: `${industry} near ${location}`,
+      location_name: "United States",
+      language_name: "English",
+      depth: Math.min(limit, 100),
+    }]),
   });
 
   const data = await res.json();
@@ -173,90 +336,12 @@ async function mapsSearch(industry: string, location: string, limit: number): Pr
     }));
 }
 
-async function scrapeUrl(url: string): Promise<string> {
-  if (!FIRECRAWL_API_KEY) return "";
-  const formatted = normalizeWebsite(url);
-  if (!formatted) return "";
-
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
-    const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${FIRECRAWL_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        url: formatted,
-        formats: ["markdown"],
-        onlyMainContent: true,
-        timeout: 8000,
-      }),
-      signal: controller.signal,
-    });
-    clearTimeout(timeoutId);
-    if (!res.ok) {
-      await res.text();
-      return "";
-    }
-    const data = await res.json();
-    return (data?.data?.markdown || data?.markdown || "").slice(0, 1500);
-  } catch (error) {
-    console.error("[OmniEngine] Firecrawl scrape failed:", error);
-    return "";
-  }
-}
-
-async function enrichLead(params: {
-  domain: string;
-  businessName: string;
-  industry: string;
-  website: string | null;
-  allowEmailGuess: boolean;
-}): Promise<EnrichmentData> {
-  try {
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/lead-enrichment-waterfall`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        domain: params.domain,
-        business_name: params.businessName,
-        industry: params.industry,
-        website: params.website,
-        allow_email_guess: params.allowEmailGuess,
-      }),
-    });
-
-    if (!res.ok) {
-      const body = await res.text();
-      console.error("[OmniEngine] Waterfall non-OK:", res.status, body.slice(0, 200));
-      return { email: null, name: null, phone: null, verifiedEmail: false, source: null };
-    }
-
-    const data = await res.json();
-    return {
-      email: typeof data?.email === "string" ? data.email : null,
-      name: data?.decision_maker_name || data?.contact_name || null,
-      phone: data?.direct_phone || data?.phone || null,
-      verifiedEmail: Boolean(data?.verified_email),
-      source: data?.enrichment_source || null,
-    };
-  } catch (error) {
-    console.error("[OmniEngine] Waterfall request failed:", error);
-    return { email: null, name: null, phone: null, verifiedEmail: false, source: null };
-  }
-}
-
+// ─── CORE: Process a single business through the 4-phase pipeline ───
 async function processBusiness(
   business: MapBusiness,
   industry: string,
   location: string,
   strictEmailFilter: boolean,
-  skipScrape: boolean,
   allowEmailGuess: boolean,
 ): Promise<ProcessResult> {
   try {
@@ -264,44 +349,91 @@ async function processBusiness(
     const domain = extractDomain(website);
     const { city, state } = parseLocation(location);
 
-    const [scrapeResult, enrichmentResult] = await Promise.allSettled([
-      website && !skipScrape ? scrapeUrl(website) : Promise.resolve(""),
-      domain
-        ? enrichLead({ domain, businessName: business.title, industry, website, allowEmailGuess })
-        : Promise.resolve({ email: null, name: null, phone: null, verifiedEmail: false, source: null }),
-    ]);
+    let foundEmail: string | null = null;
+    let contactName: string | null = null;
+    let contactPhone: string | null = business.phone;
+    let enrichSource = "none";
+    let gapText = "";
 
-    if (scrapeResult.status === "rejected") {
-      console.error(`[OmniEngine] Scrape failed for ${business.title}:`, scrapeResult.reason);
+    // ═══════════════════════════════════════════
+    // PHASE 1: Deep Crawl — scrape /, /contact, /about, /contact-us concurrently
+    // ═══════════════════════════════════════════
+    let crawlResult = { combinedText: "", pageTexts: [] as string[] };
+    if (website) {
+      console.log(`[OmniEngine] Phase 1: Deep crawl ${business.title} (${website})`);
+      crawlResult = await deepCrawl(website);
+      gapText = crawlResult.combinedText.slice(0, 2000);
     }
 
-    if (enrichmentResult.status === "rejected") {
-      console.error(`[OmniEngine] Enrichment failed for ${business.title}:`, enrichmentResult.reason);
+    // ═══════════════════════════════════════════
+    // PHASE 2: Regex Hard Extraction — scan raw text BEFORE any AI
+    // ═══════════════════════════════════════════
+    if (crawlResult.combinedText.length > 50) {
+      console.log(`[OmniEngine] Phase 2: Regex scan ${business.title} (${crawlResult.combinedText.length} chars)`);
+      const regexEmails = regexExtractEmails(crawlResult.combinedText, domain);
+      if (regexEmails.length > 0) {
+        foundEmail = regexEmails[0];
+        enrichSource = "regex_direct";
+        console.log(`[OmniEngine] ✅ Regex found email for ${business.title}: ${foundEmail}`);
+      }
     }
 
-    const enrichment =
-      enrichmentResult.status === "fulfilled"
-        ? enrichmentResult.value
-        : { email: null, name: null, phone: null, verifiedEmail: false, source: null };
+    // ═══════════════════════════════════════════
+    // PHASE 3A: If regex failed → AI extraction from scraped content
+    // ═══════════════════════════════════════════
+    if (!foundEmail && crawlResult.combinedText.length > 100 && domain) {
+      console.log(`[OmniEngine] Phase 3A: AI extraction for ${business.title}`);
+      const aiResult = await aiExtractEmail(crawlResult.combinedText, business.title, domain);
+      if (aiResult.email) {
+        foundEmail = aiResult.email;
+        enrichSource = "ai_extraction";
+        console.log(`[OmniEngine] ✅ AI found email for ${business.title}: ${foundEmail}`);
+      }
+      if (aiResult.name) contactName = aiResult.name;
+      if (aiResult.phone) contactPhone = aiResult.phone;
+    }
 
-    const sitePreview = scrapeResult.status === "fulfilled" ? scrapeResult.value : "";
+    // ═══════════════════════════════════════════
+    // PHASE 3B: If still no email → full enrichment waterfall (Hunter/Apollo/Lusha/etc)
+    // ═══════════════════════════════════════════
+    if (!foundEmail && domain) {
+      console.log(`[OmniEngine] Phase 3B: Waterfall enrichment for ${business.title}`);
+      const enrichment = await enrichViaWaterfall({
+        domain,
+        businessName: business.title,
+        industry,
+        website,
+        allowEmailGuess,
+      });
+      if (enrichment.email) {
+        foundEmail = enrichment.email;
+        enrichSource = `waterfall_${enrichment.source || "unknown"}`;
+        console.log(`[OmniEngine] ✅ Waterfall found email for ${business.title}: ${foundEmail}`);
+      }
+      if (enrichment.name && !contactName) contactName = enrichment.name;
+      if (enrichment.phone && !contactPhone) contactPhone = enrichment.phone;
+    }
 
-    // Strict filter: only save if email found (admin can disable this)
-    if (strictEmailFilter && !enrichment.email) {
+    // ═══════════════════════════════════════════
+    // PHASE 4: Strict Upsert — determine pipeline_stage based on outcome
+    // ═══════════════════════════════════════════
+    if (strictEmailFilter && !foundEmail) {
       return {
         kind: "discarded",
         business_name: business.title,
-        reason: domain ? "No validated email recovered" : "No usable website/domain",
+        reason: "No email found after deep crawl + regex + AI + waterfall",
       };
     }
+
+    const pipelineStage = foundEmail ? "new_lead" : "email_missing";
 
     return {
       kind: "ready",
       lead: {
         business_name: business.title,
-        contact_name: enrichment.name,
-        email: enrichment.email,
-        phone: enrichment.phone || business.phone,
+        contact_name: contactName,
+        email: foundEmail,
+        phone: contactPhone,
         website,
         city,
         state,
@@ -310,10 +442,10 @@ async function processBusiness(
         review_count: business.reviews,
         gbp_claimed: business.claimed,
         google_place_id: business.place_id,
-        pipeline_stage: "new_lead",
+        pipeline_stage: pipelineStage,
         source: "omni_engine",
-        gap_analysis: sitePreview
-          ? `Website context preview (${enrichment.source || "none"}):\n\n${sitePreview}`
+        gap_analysis: gapText
+          ? `[${enrichSource}] Website context:\n\n${gapText}`
           : null,
       },
     };
@@ -353,7 +485,10 @@ async function saveLead(
           body: JSON.stringify({ mode: "trigger", lead_id: upserted.id }),
         });
         if (dripRes.ok) dripTriggered = true;
-        else console.error("[OmniEngine] Drip trigger non-OK:", dripRes.status, await dripRes.text());
+        else {
+          const t = await dripRes.text();
+          console.error("[OmniEngine] Drip trigger non-OK:", dripRes.status, t.slice(0, 200));
+        }
       } catch (error) {
         console.error("[OmniEngine] Drip trigger error:", error);
       }
@@ -387,12 +522,8 @@ Deno.serve(async (req) => {
     const location = typeof body?.location === "string" ? body.location.trim() : "Michigan";
     const requestedLimit = Number(body?.limit ?? 10);
     const limit = Number.isFinite(requestedLimit) ? Math.max(1, Math.min(50, Math.floor(requestedLimit))) : 10;
-    // Default OFF — save all leads even without email. Enable via admin toggle to filter.
     const strictEmailFilter = body?.strict_email_filter === true;
-    // Default ON — try guessing info@/contact@ as last resort. Admin can disable.
     const allowEmailGuess = body?.allow_email_guess !== false;
-    // Quick scan skips Firecrawl scrape for speed. Deep scan (default) scrapes + enriches.
-    const skipScrape = body?.scan_mode === "quick";
 
     if (!industry) {
       return json(
@@ -404,7 +535,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`[OmniEngine] Starting ${industry} in ${location} limit=${limit} strict=${strictEmailFilter} guess=${allowEmailGuess} mode=${skipScrape ? "quick" : "deep"}`);
+    console.log(`[OmniEngine] ═══ STARTING 4-PHASE PIPELINE ═══ ${industry} in ${location} limit=${limit} strict=${strictEmailFilter}`);
 
     const mapResults = await mapsSearch(industry, location, limit);
     if (mapResults.length === 0) {
@@ -418,7 +549,9 @@ Deno.serve(async (req) => {
 
     for (const chunk of chunkArray(mapResults, CHUNK_SIZE)) {
       const settledChunk = await Promise.allSettled(
-        chunk.map((business) => processBusiness(business, industry, location, strictEmailFilter, skipScrape, allowEmailGuess)),
+        chunk.map((business) =>
+          processBusiness(business, industry, location, strictEmailFilter, allowEmailGuess),
+        ),
       );
 
       settledChunk.forEach((settled, index) => {
@@ -484,6 +617,9 @@ Deno.serve(async (req) => {
       await sleep(150);
     }
 
+    const withEmail = savedLeads.filter((l) => l.email).length;
+    const withoutEmail = savedLeads.filter((l) => !l.email).length;
+
     const response = createEmptyResponse({
       total: mapResults.length,
       processed: savedLeads.length + discardedNames.length + failedCount,
@@ -494,10 +630,12 @@ Deno.serve(async (req) => {
       successful_leads: savedLeads,
       results: savedLeads,
       drip_triggered: dripTriggered,
+      with_email: withEmail,
+      without_email: withoutEmail,
       errors,
     });
 
-    console.log(`[OmniEngine] Complete saved=${response.saved} discarded=${response.discarded} failed=${response.failed}`);
+    console.log(`[OmniEngine] ═══ COMPLETE ═══ saved=${response.saved} (email=${withEmail}, no_email=${withoutEmail}) discarded=${response.discarded} failed=${response.failed} drips=${dripTriggered}`);
     return json(response);
   } catch (error) {
     console.error("[OmniEngine] Fatal error:", error);
@@ -507,12 +645,7 @@ Deno.serve(async (req) => {
         message: error instanceof Error ? error.message : "Engine failed",
         failed: 1,
         processed: 1,
-        errors: [
-          {
-            stage: "fatal",
-            message: error instanceof Error ? error.message : String(error),
-          },
-        ],
+        errors: [{ stage: "fatal", message: error instanceof Error ? error.message : String(error) }],
       }),
     );
   }
