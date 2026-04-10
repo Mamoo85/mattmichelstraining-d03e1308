@@ -252,6 +252,22 @@ export default function HireAlert() {
               onChange={(e) => setPhone(e.target.value)}
               style={{ background: "#001a33", border: "1px solid #1e3a5f", color: "#fff", padding: "12px 14px" }}
             />
+            <div>
+              <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 600, color: "#94a3b8" }}>Which trades do you want to monitor? *</p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                {ROLE_OPTIONS.map((r) => (
+                  <label key={r.key} style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", padding: "8px 10px", borderRadius: 6, background: selectedRoles.includes(r.key) ? "#00d4ff22" : "#001a33", border: `1px solid ${selectedRoles.includes(r.key) ? "#00d4ff" : "#1e3a5f"}`, fontSize: 13, color: selectedRoles.includes(r.key) ? "#fff" : "#94a3b8" }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedRoles.includes(r.key)}
+                      onChange={() => toggleRole(r.key)}
+                      style={{ accentColor: "#00d4ff", width: 14, height: 14, flexShrink: 0 }}
+                    />
+                    {r.label}
+                  </label>
+                ))}
+              </div>
+            </div>
             <Button
               onClick={handleCheckout}
               disabled={loading}
