@@ -1443,3 +1443,6 @@ verify_jwt = false
 
 [functions.field-service-sms]
 verify_jwt = false
+
+[functions.field-service-contract-scheduler]
+verify_jwt = false
