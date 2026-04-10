@@ -214,8 +214,25 @@ function DripBadge({ step, status }: { step: number; status: string }) {
   return null;
 }
 
+// ── Enrichment source color map ──
+const ENRICH_SOURCE_COLORS: Record<string, string> = {
+  hunter: "bg-green-500/20 text-green-400",
+  apollo: "bg-blue-500/20 text-blue-400",
+  lusha: "bg-purple-500/20 text-purple-400",
+  direct_scrape: "bg-cyan-500/20 text-cyan-400",
+  firecrawl_llm: "bg-cyan-500/20 text-cyan-400",
+  email_guess: "bg-amber-500/20 text-amber-400",
+  none: "bg-muted text-muted-foreground",
+};
+
+function parseEnrichmentSource(notes: string | null): string | null {
+  if (!notes) return null;
+  const match = notes.match(/Enrichment source: ([^.]+)\./);
+  return match ? match[1].trim() : null;
+}
+
 // ── Kanban Lead Card ──
-function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onDrip, onPreviewDrip, onDelete, auditing, sending, researching, dripping }: {
+function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onDrip, onPreviewDrip, onDelete, onReEnrich, auditing, sending, researching, dripping, reEnriching }: {
   lead: PipelineLead;
   onAudit: (lead: PipelineLead) => void;
   onSendN8n: (lead: PipelineLead) => void;
@@ -224,10 +241,12 @@ function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onD
   onDrip: (lead: PipelineLead, action: "draft" | "send" | "send_existing") => void;
   onPreviewDrip: (lead: PipelineLead) => void;
   onDelete: (lead: PipelineLead) => void;
+  onReEnrich: (lead: PipelineLead) => void;
   auditing: boolean;
   sending: boolean;
   researching: boolean;
   dripping: boolean;
+  reEnriching: boolean;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: lead.id,
