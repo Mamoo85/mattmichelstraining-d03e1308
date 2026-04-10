@@ -361,6 +361,20 @@ export default function FieldServiceManagement() {
           </div>
         </div>
 
+        {/* Metro Detroit Local Section */}
+        <div className="bg-[#0f1f35] py-10 px-6 border-t border-white/10">
+          <div className="max-w-3xl mx-auto text-center">
+            <p className="text-[#00d4ff] text-xs uppercase tracking-widest font-bold mb-2">Local & On Call</p>
+            <h2 className="text-xl font-black mb-3">Proudly serving Metro Detroit &amp; Southeast Michigan</h2>
+            <p className="text-white/50 text-sm mb-4">
+              Wayne County · Oakland County · Macomb County · Grosse Pointe · Warren · Sterling Heights · Troy · Livonia · Dearborn · Birmingham · Royal Oak
+            </p>
+            <p className="text-white/40 text-sm">
+              Detroit Web Agency — Grosse Pointe, MI · (313) 806-4952
+            </p>
+          </div>
+        </div>
+
         {/* CTA */}
         <div className="py-16 px-6 text-center">
           <p className="text-white/40 text-xs uppercase tracking-widest mb-3">Ready to make the switch?</p>
