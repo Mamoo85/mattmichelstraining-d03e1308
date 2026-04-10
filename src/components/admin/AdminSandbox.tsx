@@ -309,6 +309,7 @@ const PRODUCTS: Product[] = [
   { id: "employee_credential_audit", name: "Employee Credential Audit", price: "$149 one-time", description: "HIBP breach report for employees.", type: "instant", category: "One-Time" },
   { id: "new_hire_breach_check", name: "New Hire Breach Screen", price: "$9.99/check", description: "Check candidate email against HIBP.", type: "instant", category: "One-Time" },
   { id: "seo_guard_subscription", name: "SEO Guard", price: "$29/mo (7-day trial)", description: "Weekly JS visibility, keyword rank tracking, citation health, SMS alerts.", type: "subscription", category: "Subscription" },
+  { id: "field_service_subscription", name: "Field Service Management", price: "$199-299/mo", description: "Detroit Web Agency dispatch board, mobile tech app, GPS, auto-SMS, QuickBooks sync.", type: "subscription", category: "Detroit Web Agency" },
 ];
 
 type TestStatus = "idle" | "loading" | "success" | "error";
