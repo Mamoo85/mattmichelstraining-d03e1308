@@ -343,14 +343,24 @@ const Auth = () => {
 
 
   return (
-    <div className="min-h-[100dvh] bg-background flex items-center justify-center px-4 overflow-y-auto pb-safe">
+    <div className={`min-h-[100dvh] flex items-center justify-center px-4 overflow-y-auto pb-safe ${isAgency ? "bg-[#0a0a0f]" : "bg-background"}`}>
       <div className="max-w-sm w-full my-8">
         <div className="text-center mb-8">
-          <img src={m2Logo} alt="M2 Training" className="w-20 h-20 object-contain rounded-md mx-auto mb-4" />
-          <h1 className="text-xl font-bold tracking-display text-foreground">
-            {mode === "signup" ? "JOIN M2 TRAINING" : "ATHLETE LOGIN"}
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">Real training. Real results.</p>
+          {isAgency ? (
+            <>
+              <div className="text-xl font-black uppercase tracking-wider text-white mb-2">Detroit <span className="text-cyan-400">Web</span> Agency</div>
+              <h1 className="text-lg font-bold tracking-display text-foreground">ADMIN LOGIN</h1>
+              <p className="text-sm text-muted-foreground mt-1">Access your agency command center.</p>
+            </>
+          ) : (
+            <>
+              <img src={m2Logo} alt="M2 Training" className="w-20 h-20 object-contain rounded-md mx-auto mb-4" />
+              <h1 className="text-xl font-bold tracking-display text-foreground">
+                {mode === "signup" ? "JOIN M2 TRAINING" : "ATHLETE LOGIN"}
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1">Real training. Real results.</p>
+            </>
+          )}
         </div>
 
         {inviteToken && (
