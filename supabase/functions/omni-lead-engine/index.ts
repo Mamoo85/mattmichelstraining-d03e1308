@@ -213,6 +213,7 @@ async function enrichLead(params: {
   businessName: string;
   industry: string;
   website: string | null;
+  allowEmailGuess: boolean;
 }): Promise<EnrichmentData> {
   try {
     const res = await fetch(`${SUPABASE_URL}/functions/v1/lead-enrichment-waterfall`, {
@@ -226,7 +227,7 @@ async function enrichLead(params: {
         business_name: params.businessName,
         industry: params.industry,
         website: params.website,
-        allow_email_guess: false,
+        allow_email_guess: params.allowEmailGuess,
       }),
     });
 
@@ -255,6 +256,8 @@ async function processBusiness(
   industry: string,
   location: string,
   strictEmailFilter: boolean,
+  skipScrape: boolean,
+  allowEmailGuess: boolean,
 ): Promise<ProcessResult> {
   try {
     const website = normalizeWebsite(business.website);
@@ -262,9 +265,9 @@ async function processBusiness(
     const { city, state } = parseLocation(location);
 
     const [scrapeResult, enrichmentResult] = await Promise.allSettled([
-      website ? scrapeUrl(website) : Promise.resolve(""),
+      website && !skipScrape ? scrapeUrl(website) : Promise.resolve(""),
       domain
-        ? enrichLead({ domain, businessName: business.title, industry, website })
+        ? enrichLead({ domain, businessName: business.title, industry, website, allowEmailGuess })
         : Promise.resolve({ email: null, name: null, phone: null, verifiedEmail: false, source: null }),
     ]);
 
@@ -283,6 +286,7 @@ async function processBusiness(
 
     const sitePreview = scrapeResult.status === "fulfilled" ? scrapeResult.value : "";
 
+    // Strict filter: only save if email found (admin can disable this)
     if (strictEmailFilter && !enrichment.email) {
       return {
         kind: "discarded",
@@ -385,7 +389,12 @@ Deno.serve(async (req) => {
     const location = typeof body?.location === "string" ? body.location.trim() : "Michigan";
     const requestedLimit = Number(body?.limit ?? 10);
     const limit = Number.isFinite(requestedLimit) ? Math.max(1, Math.min(50, Math.floor(requestedLimit))) : 10;
-    const strictEmailFilter = body?.strict_email_filter !== false;
+    // Default OFF — save all leads even without email. Enable via admin toggle to filter.
+    const strictEmailFilter = body?.strict_email_filter === true;
+    // Default ON — try guessing info@/contact@ as last resort. Admin can disable.
+    const allowEmailGuess = body?.allow_email_guess !== false;
+    // Quick scan skips Firecrawl scrape for speed. Deep scan (default) scrapes + enriches.
+    const skipScrape = body?.scan_mode === "quick";
 
     if (!industry) {
       return json(
@@ -397,7 +406,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`[OmniEngine] Starting ${industry} in ${location} with limit=${limit} strict=${strictEmailFilter}`);
+    console.log(`[OmniEngine] Starting ${industry} in ${location} limit=${limit} strict=${strictEmailFilter} guess=${allowEmailGuess} mode=${skipScrape ? "quick" : "deep"}`);
 
     const mapResults = await mapsSearch(industry, location, limit);
     if (mapResults.length === 0) {
@@ -411,7 +420,7 @@ Deno.serve(async (req) => {
 
     for (const chunk of chunkArray(mapResults, CHUNK_SIZE)) {
       const settledChunk = await Promise.allSettled(
-        chunk.map((business) => processBusiness(business, industry, location, strictEmailFilter)),
+        chunk.map((business) => processBusiness(business, industry, location, strictEmailFilter, skipScrape, allowEmailGuess)),
       );
 
       settledChunk.forEach((settled, index) => {
