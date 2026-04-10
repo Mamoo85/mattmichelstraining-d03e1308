@@ -1281,16 +1281,47 @@ export default function AdminProspector() {
                 </div>
               </div>
 
-              {/* Strict Email Filter Toggle */}
-              <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/20 border border-border/30">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck size={14} className={strictEmailFilter ? "text-green-400" : "text-muted-foreground"} />
-                  <div>
-                    <p className="text-xs font-semibold">Strict Email Filter</p>
-                    <p className="text-[10px] text-muted-foreground">Only save leads with verified emails</p>
+              {/* Scan Mode + Email Controls */}
+              <div className="grid sm:grid-cols-2 gap-2">
+                <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/20 border border-border/30">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck size={14} className={strictEmailFilter ? "text-green-400" : "text-muted-foreground"} />
+                    <div>
+                      <p className="text-xs font-semibold">Email Required</p>
+                      <p className="text-[10px] text-muted-foreground">Discard leads with no email</p>
+                    </div>
                   </div>
+                  <Switch checked={strictEmailFilter} onCheckedChange={setStrictEmailFilter} />
                 </div>
-                <Switch checked={strictEmailFilter} onCheckedChange={setStrictEmailFilter} />
+                <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/20 border border-border/30">
+                  <div className="flex items-center gap-2">
+                    <Mail size={14} className={allowEmailGuess ? "text-amber-400" : "text-muted-foreground"} />
+                    <div>
+                      <p className="text-xs font-semibold">Guess Email</p>
+                      <p className="text-[10px] text-muted-foreground">Try info@/contact@ as last resort</p>
+                    </div>
+                  </div>
+                  <Switch checked={allowEmailGuess} onCheckedChange={setAllowEmailGuess} />
+                </div>
+              </div>
+              {/* Scan Mode Selector */}
+              <div className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/20 border border-border/30">
+                <Zap size={14} className="text-primary shrink-0" />
+                <div className="flex-1">
+                  <p className="text-xs font-semibold">Scan Mode</p>
+                  <p className="text-[10px] text-muted-foreground">Quick = APIs only (faster). Deep = APIs + website scrape (more emails).</p>
+                </div>
+                <div className="flex gap-1">
+                  {(["quick", "deep"] as const).map(m => (
+                    <button
+                      key={m}
+                      onClick={() => setScanMode(m)}
+                      className={`text-[10px] px-2.5 py-1 rounded-md font-semibold transition-colors ${scanMode === m ? "bg-primary text-primary-foreground" : "bg-muted/40 text-muted-foreground hover:bg-muted/60"}`}
+                    >
+                      {m === "quick" ? "⚡ Quick" : "🔍 Deep"}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div className="flex items-center gap-2 flex-wrap">
