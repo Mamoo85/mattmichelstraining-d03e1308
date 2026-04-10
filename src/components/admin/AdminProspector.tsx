@@ -204,14 +204,17 @@ const DRIP_LABELS: Record<number, string> = {
 };
 function DripBadge({ step, status }: { step: number; status: string }) {
   if (status === "completed") return <Badge className="text-[8px] bg-green-500/20 text-green-400 border-0">Drip Done ✓</Badge>;
-  if (status === "active" && step > 0) return (
-    <Badge className="text-[8px] bg-purple-500/20 text-purple-400 border-0">
-      {DRIP_LABELS[step] || `Step ${step}/4`}
-    </Badge>
-  );
+  if (status === "active" || status === "sent" || (step > 0 && status !== "completed")) {
+    return (
+      <Badge className="text-[8px] bg-purple-500/20 text-purple-400 border-0">
+        {DRIP_LABELS[step] || `Step ${step}/4`}
+      </Badge>
+    );
+  }
   if (status === "queued") return <Badge className="text-[8px] bg-blue-500/20 text-blue-400 border-0">Queued</Badge>;
   if (status === "drafted") return <Badge className="text-[8px] bg-amber-500/20 text-amber-400 border-0">Draft Ready</Badge>;
-  return null;
+  // No email / not started
+  return <Badge className="text-[8px] bg-red-500/15 text-red-400/60 border-0">No Contact</Badge>;
 }
 
 // ── Enrichment source color map ──
@@ -859,19 +862,19 @@ export default function AdminProspector() {
     finally { setLoadingSent(false); }
   }, []);
 
-  // ── Archive Outreach-Sent Leads ──
+  // ── Archive Contacted Leads (sent outreach OR drip_step > 0) ──
   const archiveSentLeads = async () => {
-    const sentLeads = pipelineLeads.filter(l => l.pipeline_stage === "outreach_sent");
-    if (sentLeads.length === 0) { toast.info("No outreach-sent leads to archive"); return; }
+    const contactedLeads = pipelineLeads.filter(l => l.pipeline_stage === "outreach_sent" || l.drip_step > 0);
+    if (contactedLeads.length === 0) { toast.info("No contacted leads to archive"); return; }
     setArchiving(true);
     try {
-      const ids = sentLeads.map(l => l.id);
+      const ids = contactedLeads.map(l => l.id);
       const { error } = await (supabase as any)
         .from("prospect_pipeline")
         .update({ pipeline_stage: "archived" })
         .in("id", ids);
       if (error) throw error;
-      toast.success(`Archived ${ids.length} leads`);
+      toast.success(`Archived ${ids.length} contacted leads`);
       fetchPipeline();
     } catch { toast.error("Archive failed"); }
     finally { setArchiving(false); }
