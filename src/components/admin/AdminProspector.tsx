@@ -1235,7 +1235,7 @@ export default function AdminProspector() {
                         { step: "2", label: "We scan Maps for businesses" },
                         { step: "3", label: "We read their website via Firecrawl" },
                         { step: "4", label: "Our API waterfall hunts the decision-maker's email" },
-                        { step: "5", label: "Only complete profiles are saved to your pipeline" },
+                        { step: "5", label: "All leads saved — email found or not. Re-Enrich any time." },
                       ].map((s) => (
                         <div key={s.step} className="flex items-start gap-1.5 p-2 rounded-lg bg-background/50 border border-border/30">
                           <span className="w-5 h-5 rounded-full bg-primary/20 text-primary text-[10px] font-bold flex items-center justify-center shrink-0">{s.step}</span>
