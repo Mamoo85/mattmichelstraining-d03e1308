@@ -79,12 +79,12 @@ async function apolloSearch(domain: string, businessName: string) {
     if (!res.ok) {
       log("Apollo people/match error", { status: res.status, body: body.slice(0, 200) });
       // Fallback: try organization enrich for company-level data
-      return await apolloOrgEnrich(domain, businessName);
+      return await apolloOrgEnrich(domain);
     }
     const data = JSON.parse(body);
     const person = data?.person;
     if (!person?.email) {
-      return await apolloOrgEnrich(domain, businessName);
+      return await apolloOrgEnrich(domain);
     }
     return {
       email: person.email,
@@ -95,28 +95,20 @@ async function apolloSearch(domain: string, businessName: string) {
   } catch (e) { log("Apollo exception", { error: String(e) }); return null; }
 }
 
-async function apolloOrgEnrich(domain: string, businessName: string) {
+// Apollo org enrich — only returns company metadata, never email
+async function apolloOrgEnrich(domain: string) {
   if (!APOLLO_API_KEY || !domain) return null;
   try {
-    const res = await fetch("https://api.apollo.io/api/v1/organizations/enrich", {
-      method: "GET",
-      headers: {
-        "Cache-Control": "no-cache",
-        "X-Api-Key": APOLLO_API_KEY,
-      },
-    });
-    // Apollo org enrich uses query params
     const url = `https://api.apollo.io/api/v1/organizations/enrich?domain=${encodeURIComponent(domain)}`;
-    const res2 = await fetch(url, {
+    const res = await fetch(url, {
       headers: { "Cache-Control": "no-cache", "X-Api-Key": APOLLO_API_KEY },
     });
-    const body = await res2.text();
-    await res.text(); // consume first response
-    if (!res2.ok) { log("Apollo org enrich error", { status: res2.status, body: body.slice(0, 200) }); return null; }
+    const body = await res.text();
+    if (!res.ok) { log("Apollo org enrich error", { status: res.status, body: body.slice(0, 200) }); return null; }
     const data = JSON.parse(body);
     const org = data?.organization;
     if (!org) return null;
-    // Org enrich doesn't return emails directly but can give useful data
+    // Org enrich doesn't return emails — only useful for phone/company metadata
     return {
       email: null,
       name: null,
@@ -193,7 +185,7 @@ async function clayEnrich(_domain: string, _businessName: string) {
 }
 
 // ── JINA AI READER + STRICT XML LLM FALLBACK ──
-const JINA_TIMEOUT_MS = 8000;
+const JINA_TIMEOUT_MS = 15000; // Increased from 8s — websites need more time to respond
 const JINA_PATHS = ["", "/contact", "/about"];
 
 function normalizeWebsite(url: string): string {
@@ -475,7 +467,7 @@ async function runWaterfall(domain: string, businessName: string, options: { web
     }
   }
 
-  // Step 4: Clay.com
+  // Step 4: Clay.com (disabled — API deprecated)
   if (!result.email || !result.direct_phone) {
     log("Step 4: Clay.com", { domain });
     const clayResult = await clayEnrich(domain, businessName);
@@ -508,8 +500,8 @@ async function runWaterfall(domain: string, businessName: string, options: { web
     }
   }
 
-  // Step 6: Email pattern guess (absolute last resort)
-  if (!result.email && options.allowEmailGuess) {
+  // Step 6: Email pattern guess (absolute last resort — enabled by default)
+  if (!result.email && options.allowEmailGuess !== false) {
     log("Step 6: Email guess fallback", { domain, name: result.decision_maker_name });
     const guessed = await guessEmail(domain, result.decision_maker_name);
     if (guessed) {
@@ -528,7 +520,9 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { prospect_id, domain, business_name, businessName, website, mode, industry, allow_email_guess = false } = body;
+    const { prospect_id, domain, business_name, businessName, website, mode, industry, allow_email_guess } = body;
+    // Default allow_email_guess to true — guess info@/contact@ as last resort
+    const allowEmailGuessResolved = allow_email_guess !== false;
     const resolvedBusinessName = business_name || businessName || "";
 
     // ── BATCH MODE ──
@@ -552,7 +546,8 @@ serve(async (req) => {
         try {
           const dom = extractDomain(prospect.website || "");
           if (!dom) { failed++; continue; }
-          const result = await runWaterfall(dom, prospect.business_name, { website: prospect.website, allowEmailGuess: false });
+          // Enable email guessing in batch mode — maximize leads found
+          const result = await runWaterfall(dom, prospect.business_name, { website: prospect.website, allowEmailGuess: true });
           await sb.from("prospect_businesses").update({
             enrichment_source: result.enrichment_source,
             enrichment_status: result.email ? "enriched" : "no_data",
@@ -600,7 +595,7 @@ serve(async (req) => {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const result = await runWaterfall(targetDomain, resolvedBusinessName, { website, allowEmailGuess: Boolean(allow_email_guess) });
+    const result = await runWaterfall(targetDomain, resolvedBusinessName, { website, allowEmailGuess: allowEmailGuessResolved });
 
     if (prospect_id) {
       await sb.from("prospect_businesses").update({
