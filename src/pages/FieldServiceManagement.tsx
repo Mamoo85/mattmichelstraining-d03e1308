@@ -21,15 +21,15 @@ const FEATURES = [
 ];
 
 const INDUSTRIES = [
-  { name: "HVAC", desc: "Equipment history per unit, seasonal maintenance contracts, auto-dispatch to service calls" },
-  { name: "Plumbing", desc: "Emergency dispatch, in-field invoicing, job photos before/after every call" },
-  { name: "Electrical", desc: "Permit tracking, in-field estimates, schedule recurring inspections" },
-  { name: "Boiler / Industrial", desc: "Asset history per boiler unit, service contracts, EPA compliance records" },
-  { name: "Appliance Repair", desc: "Parts tracking per job, warranty management, route optimization" },
-  { name: "IT Support / MSP", desc: "Remote + on-site jobs, SLA tracking, recurring maintenance contracts" },
-  { name: "Pest Control", desc: "Chemical/treatment logs per property, license expiration alerts, recurring routes" },
-  { name: "Landscaping", desc: "Seasonal contracts, crew dispatch, route optimization by neighborhood" },
-  { name: "Fire Protection", desc: "Inspection scheduling, compliance records, equipment certification tracking" },
+  { name: "HVAC", slug: "hvac", desc: "Equipment history per unit, seasonal maintenance contracts, auto-dispatch to service calls" },
+  { name: "Plumbing", slug: "plumbing", desc: "Emergency dispatch, in-field invoicing, job photos before/after every call" },
+  { name: "Electrical", slug: "electrical", desc: "Permit tracking, in-field estimates, schedule recurring inspections" },
+  { name: "Boiler / Industrial", slug: "boiler-industrial", desc: "Asset history per boiler unit, service contracts, EPA compliance records" },
+  { name: "Appliance Repair", slug: null, desc: "Parts tracking per job, warranty management, route optimization" },
+  { name: "IT Support / MSP", slug: null, desc: "Remote + on-site jobs, SLA tracking, recurring maintenance contracts" },
+  { name: "Pest Control", slug: "pest-control", desc: "Chemical/treatment logs per property, license expiration alerts, recurring routes" },
+  { name: "Landscaping", slug: "landscaping", desc: "Seasonal contracts, crew dispatch, route optimization by neighborhood" },
+  { name: "Fire Protection", slug: null, desc: "Inspection scheduling, compliance records, equipment certification tracking" },
 ];
 
 const CSV_COLUMNS = [
