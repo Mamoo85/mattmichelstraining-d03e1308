@@ -82,7 +82,7 @@ $10k+/mo fully automated income. Matt's only job: return calls, texts, and email
 - **AI**: Claude Haiku (`claude-haiku-4-5-20251001`) via Anthropic API
 - **Domain**: mattmichelstraining.com
 - **Repo**: `mamoo85/m2training` (GitHub)
-- **Supabase Project**: `zmyczlfuufhngzovkjdh`
+- **Supabase Project**: Managed by Lovable (primary — starts with 'e'). Secondary ref `zmyczlfuufhngzovkjdh` exists for GitHub Actions but migrations deploy automatically via Lovable on merge to main. Do NOT apply migrations manually via MCP to the secondary project.
 - **Dev branch**: `claude/add-claude-documentation-0AKHd`
 
 ## Brand
