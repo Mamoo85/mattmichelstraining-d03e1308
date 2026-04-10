@@ -139,7 +139,7 @@ export default function FieldServiceManagement() {
         {/* Competitor Comparison */}
         <div className="max-w-4xl mx-auto px-6 pb-16">
           <h2 className="text-center text-xl font-black mb-8 uppercase tracking-wide text-white/80">
-            The math that makes the decision easy
+            What field service software actually costs
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {COMPARE.map((c) => (
