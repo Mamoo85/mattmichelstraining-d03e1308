@@ -117,6 +117,9 @@ const GbpManagement = lazyRetry(() => import("./pages/GbpManagement"));
 const NewsletterSponsor = lazyRetry(() => import("./pages/NewsletterSponsor"));
 const CampDirectory = lazyRetry(() => import("./pages/CampDirectory"));
 const ContractorLeads = lazyRetry(() => import("./pages/ContractorLeads"));
+const FieldServiceManagement = lazyRetry(() => import("./pages/FieldServiceManagement"));
+const FieldServiceDispatch = lazyRetry(() => import("./pages/FieldServiceDispatch"));
+const FieldServiceTechApp = lazyRetry(() => import("./pages/FieldServiceTechApp"));
 const LeadCapturePage = lazyRetry(() => import("./pages/LeadCapturePage"));
 const B2BLeads = lazyRetry(() => import("./pages/B2BLeads"));
 const IndustrialDatabase = lazyRetry(() => import("./pages/IndustrialDatabase"));
@@ -524,6 +527,9 @@ const App = () => (
                     <Route path="/gbp-management" element={<GbpManagement />} />
                     <Route path="/sponsor" element={<NewsletterSponsor />} />
                     <Route path="/contractor-leads" element={<ContractorLeads />} />
+                    <Route path="/field-service" element={<FieldServiceManagement />} />
+                    <Route path="/field-service/dispatch" element={<FieldServiceDispatch />} />
+                    <Route path="/field-service/tech" element={<FieldServiceTechApp />} />
                     <Route path="/leads/:slug" element={<LeadCapturePage />} />
                     <Route path="/b2b-leads" element={<B2BLeads />} />
                     <Route path="/industrial-database" element={<IndustrialDatabase />} />
