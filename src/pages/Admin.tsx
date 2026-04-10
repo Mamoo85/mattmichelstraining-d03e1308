@@ -117,6 +117,7 @@ const AdminProspector         = lazyRetry(() => import("@/components/admin/Admin
 const AdminAutomationHub      = lazyRetry(() => import("@/components/admin/AdminAutomationHub"));
 const AdminSiteBuilder        = lazyRetry(() => import("@/components/admin/AdminSiteBuilder"));
 const AdminWebDesignAutomations = lazyRetry(() => import("@/components/admin/AdminWebDesignAutomations"));
+const AdminCRMDashboard       = lazyRetry(() => import("@/components/admin/AdminCRMDashboard"));
 
 // Command Deck
 const AdminCommandDeck        = lazyRetry(() => import("@/components/admin/AdminCommandDeck"));
@@ -420,6 +421,7 @@ const Admin = () => {
       icon: Globe,
       color: "#06b6d4",
       tools: [
+        { key: "crm-dashboard", label: "📊 CRM Intelligence", component: <AdminCRMDashboard /> },
         { key: "crm", label: "🏗️ Web Design CRM", component: <AdminWebDesignCRM /> },
         { key: "prospector", label: "🔍 Prospector", component: <AdminProspector /> },
         { key: "scouting", label: "📊 Scouting Dashboard", component: <AdminScoutingDashboard /> },

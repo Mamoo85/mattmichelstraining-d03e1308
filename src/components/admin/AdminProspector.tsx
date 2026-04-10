@@ -406,6 +406,15 @@ function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onD
         </div>
       </div>
       {lead.n8n_sent_at && <Badge className="text-[8px] bg-green-500/20 text-green-400 border-0">n8n sent</Badge>}
+      {/* Stale indicator: in outreach_sent with no activity for 7+ days */}
+      {lead.pipeline_stage === "outreach_sent" && lead.last_drip_at && (() => {
+        const days = Math.floor((Date.now() - new Date(lead.last_drip_at).getTime()) / 86400000);
+        return days >= 7 ? (
+          <Badge className="text-[7px] bg-amber-500/15 text-amber-400 border border-amber-500/20">
+            ⚠ {days}d no reply
+          </Badge>
+        ) : null;
+      })()}
     </div>
   );
 }
@@ -613,10 +622,21 @@ export default function AdminProspector() {
     finally { setLoadingPipeline(false); }
   }, []);
 
+  const logActivity = async (leadId: string, type: string, content?: string, metadata?: Record<string, any>) => {
+    try {
+      await (supabase as any).from("lead_activities").insert({
+        lead_id: leadId, lead_table: "prospect_pipeline", type, content: content || null, metadata: metadata || {},
+      });
+      await (supabase as any).from("prospect_pipeline").update({ last_activity_at: new Date().toISOString() }).eq("id", leadId);
+    } catch { /* non-blocking */ }
+  };
+
   const updatePipelineStage = async (leadId: string, stage: string) => {
     const { error } = await (supabase as any).from("prospect_pipeline").update({ pipeline_stage: stage, updated_at: new Date().toISOString() }).eq("id", leadId);
     if (error) { toast.error("Failed to update stage"); return; }
     setPipelineLeads(prev => prev.map(l => l.id === leadId ? { ...l, pipeline_stage: stage } : l));
+    const lead = pipelineLeads.find(l => l.id === leadId);
+    logActivity(leadId, "stage_changed", `Moved to ${stage}`, { business_name: lead?.business_name });
   };
 
   const deletePipelineLead = async (lead: PipelineLead) => {
@@ -692,6 +712,7 @@ export default function AdminProspector() {
           gap_analysis: data.gap_analysis || data.pain_points?.join("; ") || null,
           pipeline_stage: "website_audited",
         } : l));
+        logActivity(lead.id, "audited", `Pain points: ${data.pain_points?.slice(0, 2).join("; ")}`, { business_name: lead.business_name });
         toast.success("Audit complete — pain points captured");
       }
     } catch (err) { toast.error(err instanceof Error ? err.message : "Audit failed"); }
@@ -745,6 +766,7 @@ export default function AdminProspector() {
           drip_status: "drafted",
         } : l));
       } else {
+        logActivity(lead.id, "email_sent", `Drip step ${data.step}/4: ${data.subject || ""}`, { business_name: lead.business_name });
         toast.success(`Email sent to ${lead.business_name} (Step ${data.step}/4)`);
         setPipelineLeads(prev => prev.map(l => l.id === lead.id ? {
           ...l,
