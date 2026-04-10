@@ -2560,7 +2560,7 @@ ${isPro ? `<p style="margin:0 0 8px">⭐ <strong>Review requests</strong> (Pro) 
             fetch(`${SUPABASE_URL}/functions/v1/auto-onboard`, {
               method: "POST",
               headers: { Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`, "Content-Type": "application/json" },
-              body: JSON.stringify({ service_type: "field_service_subscription", client_email: email, business_name: name || email }),
+              body: JSON.stringify({ service_type: "field_service_subscription", client_email: email, business_name: company || name || email, company: company, plan: plan || "standalone" }),
             }).catch((e: unknown) => console.error("[WEBHOOK] auto-onboard field_service error:", e)),
           ]);
         } catch (e) { console.error("[WEBHOOK] field_service_subscription error:", e); }
