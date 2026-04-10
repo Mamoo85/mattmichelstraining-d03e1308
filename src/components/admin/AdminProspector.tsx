@@ -481,7 +481,9 @@ export default function AdminProspector() {
   const [searching, setSearching] = useState(false);
   const [mapResults, setMapResults] = useState<MapResult[]>([]);
   const [selectedResults, setSelectedResults] = useState<Set<number>>(new Set());
-  const [strictEmailFilter, setStrictEmailFilter] = useState(true);
+  const [strictEmailFilter, setStrictEmailFilter] = useState(false);
+  const [allowEmailGuess, setAllowEmailGuess] = useState(true);
+  const [scanMode, setScanMode] = useState<"quick" | "deep">("deep");
   const [showHowItWorks, setShowHowItWorks] = useState(() => {
     try { return localStorage.getItem("omni-how-it-works-dismissed") !== "true"; } catch { return true; }
   });
