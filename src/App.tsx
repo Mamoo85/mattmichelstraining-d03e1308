@@ -37,7 +37,10 @@ const BottomTabBar = lazyRetry(() => import("@/components/layout/BottomTabBar"))
 const Index = lazyRetry(() => import("./pages/Index"));
 const AgencyHome = lazyRetry(() => import("./pages/AgencyHome"));
 const ClientDashboard = lazyRetry(() => import("./pages/ClientDashboard"));
+const AgencyClientPortal = lazyRetry(() => import("./pages/AgencyClientPortal"));
 const EmbedCapture = lazyRetry(() => import("./pages/EmbedCapture"));
+const AgencyAdminRoute = lazyRetry(() => import("./components/layout/AgencyAdminRoute"));
+const ClientRoute = lazyRetry(() => import("./components/layout/ClientRoute"));
 const FreeSiteScanner = lazyRetry(() => import("./pages/FreeSiteScanner"));
 const FreeToolsHub = lazyRetry(() => import("./pages/FreeToolsHub"));
 const FreeSeoHealth = lazyRetry(() => import("./pages/FreeSeoHealth"));
@@ -706,7 +709,7 @@ const App = () => (
                      <Route path="/coach" element={<BlurGate requireSubscription><Coach /></BlurGate>} />
                      <Route path="/trial-welcome" element={<ProtectedRoute><TrialWelcome /></ProtectedRoute>} />
                      <Route path="/assessment" element={<ProtectedRoute><Assessment /></ProtectedRoute>} />
-                     <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
+                     <Route path="/admin" element={<AgencyAdminRoute><Admin /></AgencyAdminRoute>} />
                      <Route path="/admin/view-user/:userId" element={<ProtectedRoute><AdminViewUser /></ProtectedRoute>} />
                      <Route path="/comms-center" element={<ProtectedRoute><CommunicationsCenter /></ProtectedRoute>} />
                      <Route path="/dashboard" element={<ZoneDashboard />} />
@@ -732,6 +735,7 @@ const App = () => (
                     <Route path="/coach-hub" element={<ProtectedRoute><CoachHub /></ProtectedRoute>} />
                     <Route path="/my-team" element={<ProtectedRoute><MyTeam /></ProtectedRoute>} />
                     <Route path="/client-dash" element={<ProtectedRoute><ClientDashboard /></ProtectedRoute>} />
+                    <Route path="/agency-portal" element={<ClientRoute><AgencyClientPortal /></ClientRoute>} />
                     <Route path="/embed/capture/:tenantId" element={<EmbedCapture />} />
                     <Route path="*" element={<NotFound />} />
                     </Routes>

@@ -3780,6 +3780,36 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_activities: {
+        Row: {
+          content: string | null
+          created_at: string | null
+          id: string
+          lead_id: string
+          lead_table: string
+          metadata: Json | null
+          type: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          lead_id: string
+          lead_table?: string
+          metadata?: Json | null
+          type: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          lead_id?: string
+          lead_table?: string
+          metadata?: Json | null
+          type?: string
+        }
+        Relationships: []
+      }
       learn_articles: {
         Row: {
           author: string
@@ -6235,9 +6265,11 @@ export type Database = {
           breach_count: number | null
           business_name: string
           city: string | null
+          close_probability: number | null
           contact_name: string | null
           core_service: string | null
           created_at: string | null
+          deal_value: number | null
           deep_research: Json | null
           drip_body: string | null
           drip_status: string | null
@@ -6252,13 +6284,17 @@ export type Database = {
           has_instagram: boolean | null
           id: string
           industry: string | null
+          last_activity_at: string | null
           last_drip_at: string | null
           lead_score: number | null
           n8n_sent_at: string | null
+          next_action: string | null
+          next_action_date: string | null
           pain_points: Json | null
           phone: string | null
           pipeline_stage: string
           recent_activity: string | null
+          reply_received_at: string | null
           review_count: number | null
           source: string | null
           specific_site_flaw: string | null
@@ -6270,9 +6306,11 @@ export type Database = {
           breach_count?: number | null
           business_name: string
           city?: string | null
+          close_probability?: number | null
           contact_name?: string | null
           core_service?: string | null
           created_at?: string | null
+          deal_value?: number | null
           deep_research?: Json | null
           drip_body?: string | null
           drip_status?: string | null
@@ -6287,13 +6325,17 @@ export type Database = {
           has_instagram?: boolean | null
           id?: string
           industry?: string | null
+          last_activity_at?: string | null
           last_drip_at?: string | null
           lead_score?: number | null
           n8n_sent_at?: string | null
+          next_action?: string | null
+          next_action_date?: string | null
           pain_points?: Json | null
           phone?: string | null
           pipeline_stage?: string
           recent_activity?: string | null
+          reply_received_at?: string | null
           review_count?: number | null
           source?: string | null
           specific_site_flaw?: string | null
@@ -6305,9 +6347,11 @@ export type Database = {
           breach_count?: number | null
           business_name?: string
           city?: string | null
+          close_probability?: number | null
           contact_name?: string | null
           core_service?: string | null
           created_at?: string | null
+          deal_value?: number | null
           deep_research?: Json | null
           drip_body?: string | null
           drip_status?: string | null
@@ -6322,13 +6366,17 @@ export type Database = {
           has_instagram?: boolean | null
           id?: string
           industry?: string | null
+          last_activity_at?: string | null
           last_drip_at?: string | null
           lead_score?: number | null
           n8n_sent_at?: string | null
+          next_action?: string | null
+          next_action_date?: string | null
           pain_points?: Json | null
           phone?: string | null
           pipeline_stage?: string
           recent_activity?: string | null
+          reply_received_at?: string | null
           review_count?: number | null
           source?: string | null
           specific_site_flaw?: string | null
@@ -8921,6 +8969,7 @@ export type Database = {
           created_at: string
           domain: string | null
           id: string
+          role: string
           user_id: string
         }
         Insert: {
@@ -8929,6 +8978,7 @@ export type Database = {
           created_at?: string
           domain?: string | null
           id?: string
+          role?: string
           user_id: string
         }
         Update: {
@@ -8937,6 +8987,7 @@ export type Database = {
           created_at?: string
           domain?: string | null
           id?: string
+          role?: string
           user_id?: string
         }
         Relationships: []
@@ -10578,6 +10629,7 @@ export type Database = {
           total_weeks: number
         }[]
       }
+      get_agency_role: { Args: { _user_id: string }; Returns: string }
       get_my_pending_actions: {
         Args: never
         Returns: {
@@ -10669,7 +10721,15 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user" | "parent" | "child" | "coach"
+      app_role:
+        | "admin"
+        | "moderator"
+        | "user"
+        | "parent"
+        | "child"
+        | "coach"
+        | "agency_admin"
+        | "client"
       lift_video_status: "pending_review" | "approved" | "rejected" | "archived"
     }
     CompositeTypes: {
@@ -10798,7 +10858,16 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user", "parent", "child", "coach"],
+      app_role: [
+        "admin",
+        "moderator",
+        "user",
+        "parent",
+        "child",
+        "coach",
+        "agency_admin",
+        "client",
+      ],
       lift_video_status: ["pending_review", "approved", "rejected", "archived"],
     },
   },
