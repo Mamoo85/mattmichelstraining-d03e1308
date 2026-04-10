@@ -416,6 +416,13 @@ function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onD
             )}
           </>
         )}
+        {/* Re-Enrich: try waterfall again to find email */}
+        {!lead.email && lead.website && (
+          <Button variant="outline" size="sm" className="h-6 text-[9px] px-2 gap-1 border-amber-500/30 text-amber-400 hover:bg-amber-500/10" disabled={reEnriching} onClick={() => onReEnrich(lead)}>
+            {reEnriching ? <Loader2 size={10} className="animate-spin" /> : <RefreshCw size={10} />}
+            Re-Enrich
+          </Button>
+        )}
         {lead.pipeline_stage !== "call_booked" && (
           <Button variant="ghost" size="sm" className="h-6 text-[9px] px-2 gap-1 text-green-400" onClick={() => onMoveStage(lead, "call_booked")}>
             <CheckCircle size={10} /> Booked
