@@ -184,9 +184,10 @@ async function clayEnrich(_domain: string, _businessName: string) {
   return null;
 }
 
-// ── JINA AI READER + STRICT XML LLM FALLBACK ──
-const JINA_TIMEOUT_MS = 15000; // Increased from 8s — websites need more time to respond
-const JINA_PATHS = ["", "/contact", "/about", "/team", "/our-team", "/staff", "/people", "/about-us"];
+// ── FIRECRAWL PRIMARY + JINA FALLBACK + PRO LLM EXTRACTION ──
+const JINA_TIMEOUT_MS = 15000;
+const FIRECRAWL_TIMEOUT_MS = 20000;
+const SCRAPE_PATHS = ["", "/contact", "/about", "/team", "/our-team", "/staff", "/people", "/about-us", "/leadership", "/management"];
 
 function normalizeWebsite(url: string): string {
   let clean = url.trim();
@@ -194,25 +195,57 @@ function normalizeWebsite(url: string): string {
   return new URL(clean).toString();
 }
 
+// ── FIRECRAWL SCRAPER (Primary — best JS rendering + anti-bot bypass) ──
+async function fetchFirecrawlMarkdown(targetUrl: string): Promise<string> {
+  if (!FIRECRAWL_API_KEY) return "";
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), FIRECRAWL_TIMEOUT_MS);
+  try {
+    const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${FIRECRAWL_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        url: targetUrl,
+        formats: ["markdown"],
+        onlyMainContent: false,
+        waitFor: 3000,
+      }),
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      const body = await res.text();
+      log("Firecrawl non-ok", { url: targetUrl, status: res.status, body: body.slice(0, 120) });
+      return "";
+    }
+    const data = await res.json();
+    return data?.data?.markdown || data?.markdown || "";
+  } catch (e) {
+    log("Firecrawl error", { url: targetUrl, error: String(e) });
+    return "";
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+// ── JINA AI READER (Fallback — free, no API key needed) ──
 async function fetchJinaMarkdown(targetUrl: string): Promise<string> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), JINA_TIMEOUT_MS);
-
   try {
     const res = await fetch(`https://r.jina.ai/${targetUrl}`, {
       headers: {
-        "Accept": "text/markdown",
+        Accept: "text/markdown",
         "User-Agent": "Mozilla/5.0 (compatible; M2Bot/1.0)",
       },
       signal: controller.signal,
     });
-
     if (!res.ok) {
-      const body = await res.text();
-      log("Jina Reader non-ok", { url: targetUrl, status: res.status, body: body.slice(0, 120) });
+      await res.text();
       return "";
     }
-
     return await res.text();
   } catch (e) {
     log("Jina Reader error", { url: targetUrl, error: String(e) });
@@ -222,40 +255,77 @@ async function fetchJinaMarkdown(targetUrl: string): Promise<string> {
   }
 }
 
+// ── MULTI-PAGE SCRAPER: tries Firecrawl first, falls back to Jina ──
+async function scrapeMultiplePages(
+  websiteOrDomain: string,
+  domain: string,
+): Promise<string> {
+  const baseUrl = normalizeWebsite(websiteOrDomain || domain);
+  const markdownParts: string[] = [];
+
+  for (const path of SCRAPE_PATHS) {
+    const targetUrl = path ? new URL(path, baseUrl).toString() : baseUrl;
+
+    // Try Firecrawl first (primary)
+    let markdown = await fetchFirecrawlMarkdown(targetUrl);
+
+    // Fallback to Jina if Firecrawl returned nothing
+    if (markdown.length < 80) {
+      log("Firecrawl empty, trying Jina", { url: targetUrl });
+      markdown = await fetchJinaMarkdown(targetUrl);
+    }
+
+    if (markdown.length > 80) {
+      markdownParts.push("--- " + targetUrl + " ---\n" + markdown.slice(0, 5000));
+    }
+
+    // If we already have substantial content from homepage + contact, don't burn credits on all pages
+    if (markdownParts.length >= 3) break;
+  }
+
+  return markdownParts.join("\n\n").trim();
+}
+
+// ── PRO LLM EXTRACTION (gemini-2.5-pro — our secret weapon) ──
 async function extractLeadFromMarkdown(
   markdown: string,
   businessName: string,
   domain: string,
-): Promise<{ email: string | null; name: string | null; title: string | null } | null> {
-  if (!LOVABLE_API_KEY || !markdown.trim()) {
-    log("LLM fallback skipped", { hasKey: !!LOVABLE_API_KEY, hasMarkdown: !!markdown.trim() });
-    return null;
-  }
+): Promise<{ email: string | null; name: string | null; title: string | null; phone: string | null } | null> {
+  if (!LOVABLE_API_KEY || !markdown.trim()) return null;
 
   const emailCandidates = Array.from(
     new Set(markdown.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g) || []),
-  ).slice(0, 10);
+  ).slice(0, 15);
+
+  const phoneCandidates = Array.from(
+    new Set(markdown.match(/(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g) || []),
+  ).slice(0, 8);
 
   const prompt = `<Role>
-You are a precision B2B lead extraction engine.
+You are a world-class B2B intelligence extraction engine. You find decision-makers that other tools miss.
 </Role>
 
 <Task>
-Analyze the provided website markdown, identify the highest-value decision-maker, and extract or reconstruct their email address.
+Analyze the provided website content for "${businessName}" (domain: ${domain}).
+Find the highest-authority decision-maker and extract their complete contact information.
 </Task>
 
-<Rules_of_Engagement>
-1. THE EMAIL MANDATE: An email address is the absolute primary key. If you cannot extract or definitively reconstruct a valid email address for a contact, you MUST return extraction_status="failed_no_email" with an empty leads array. System Flag: allow_no_email=false.
-2. DEEP SEARCH TARGETING: Prioritize Owners, Founders, Presidents, Partners, and senior operators over generic inboxes.
-3. OBFUSCATION BYPASS: Reconstruct hidden emails such as "name [at] company [dot] com".
-4. DOMAIN SAFETY: Only return an email that clearly belongs to ${domain}.
-5. GENERIC EMAIL RULE: A generic inbox may only be used if no named leader email exists and the inbox is clearly displayed on the site.
-6. OUTPUT FORMAT: Return only valid minified JSON matching the schema.
-</Rules_of_Engagement>
+<Advanced_Extraction_Rules>
+1. DEEP PATTERN MATCHING: Look for email patterns like firstname@, first.last@, initials@, even in mailto: links, JavaScript, or obfuscated formats like "name [at] domain [dot] com" or "name(at)domain.com".
+2. EMAIL RECONSTRUCTION: If you find a person's name but no direct email, RECONSTRUCT it using common patterns: first@${domain}, first.last@${domain}, firstlast@${domain}, f.last@${domain}.
+3. PHONE INTELLIGENCE: Extract direct lines, cell phones, and office numbers. Prefer direct/cell over main office lines.
+4. TITLE HIERARCHY: Owner > Founder > CEO > President > Partner > Managing Director > VP > Director > Manager. Skip receptionists, assistants, and junior staff.
+5. CONTACT PAGE PRIORITY: If you see a contact form email or general inbox AND a named person's email, ALWAYS prefer the named person.
+6. HIDDEN SIGNALS: Check for "Meet the Team", "Our Staff", "About the Owner", staff bios, LinkedIn links, or footer contact info.
+7. DOMAIN VALIDATION: The email MUST use ${domain} — reject emails from gmail.com, yahoo.com, etc.
+8. CONFIDENCE: If you find a name and can reconstruct email@${domain}, DO IT. A reconstructed email > no email.
+</Advanced_Extraction_Rules>
 
-<Formatting_Schema>
+<Output_Schema>
 {
   "extraction_status": "success" | "failed_no_email" | "no_data_found",
+  "confidence": "high" | "medium" | "low",
   "leads": [
     {
       "first_name": "string",
@@ -263,22 +333,25 @@ Analyze the provided website markdown, identify the highest-value decision-maker
       "job_title": "string",
       "company_name": "string",
       "validated_email": "string",
-      "phone_number": "string | null"
+      "phone_number": "string | null",
+      "email_source": "found_on_page" | "reconstructed" | "mailto_link"
     }
   ]
 }
-</Formatting_Schema>
+</Output_Schema>
 
 <Input>
 Business Name: ${businessName}
 Domain: ${domain}
-System Flag: allow_no_email=false
-Regex Candidates: ${emailCandidates.join(", ") || "none"}
+Email Candidates Found by Regex: ${emailCandidates.join(", ") || "none"}
+Phone Candidates Found by Regex: ${phoneCandidates.join(", ") || "none"}
 
---- WEBSITE MARKDOWN START ---
-${markdown.slice(0, 12000)}
---- WEBSITE MARKDOWN END ---
-</Input>`;
+--- WEBSITE CONTENT START ---
+${markdown.slice(0, 15000)}
+--- WEBSITE CONTENT END ---
+</Input>
+
+Return ONLY valid minified JSON. No markdown fences.`;
 
   const llmRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
@@ -287,15 +360,15 @@ ${markdown.slice(0, 12000)}
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
-      max_tokens: 500,
+      model: "google/gemini-2.5-pro",
+      max_tokens: 600,
       messages: [{ role: "user", content: prompt }],
     }),
   });
 
   if (!llmRes.ok) {
     const body = await llmRes.text();
-    log("LLM error", { status: llmRes.status, body: body.slice(0, 200) });
+    log("Pro LLM error", { status: llmRes.status, body: body.slice(0, 200) });
     return null;
   }
 
@@ -304,7 +377,7 @@ ${markdown.slice(0, 12000)}
   const cleaned = raw.replace(/```json\s*/g, "").replace(/```/g, "").trim();
   const match = cleaned.match(/\{[\s\S]*\}/);
   if (!match) {
-    log("LLM returned no JSON", { preview: cleaned.slice(0, 160) });
+    log("Pro LLM returned no JSON", { preview: cleaned.slice(0, 160) });
     return null;
   }
 
@@ -312,53 +385,45 @@ ${markdown.slice(0, 12000)}
     const parsed = JSON.parse(match[0]);
     const lead = Array.isArray(parsed?.leads) ? parsed.leads.find((item: any) => item?.validated_email?.includes("@")) : null;
     if (!lead) {
-      log("LLM found no valid email", { extraction_status: parsed?.extraction_status || null });
+      log("Pro LLM found no valid email", { extraction_status: parsed?.extraction_status || null });
       return null;
     }
 
+    log("Pro LLM extraction success", { email: lead.validated_email, confidence: parsed.confidence, source: lead.email_source });
     return {
       email: lead.validated_email,
       name: [lead.first_name, lead.last_name].filter(Boolean).join(" ") || null,
       title: lead.job_title || null,
+      phone: lead.phone_number || null,
     };
   } catch (e) {
-    log("LLM JSON parse error", { error: String(e), preview: cleaned.slice(0, 160) });
+    log("Pro LLM JSON parse error", { error: String(e), preview: cleaned.slice(0, 160) });
     return null;
   }
 }
 
+// ── COMBINED SCRAPE + LLM PIPELINE ──
 async function directScrapeLLMFallback(
   websiteOrDomain: string,
   domain: string,
   businessName: string,
-): Promise<{ email: string | null; name: string | null; title: string | null } | null> {
+): Promise<{ email: string | null; name: string | null; title: string | null; phone?: string | null } | null> {
   try {
-    const baseUrl = normalizeWebsite(websiteOrDomain || domain);
-    const markdownParts: string[] = [];
-
-    for (const path of JINA_PATHS) {
-      const targetUrl = path ? new URL(path, baseUrl).toString() : baseUrl;
-      const markdown = await fetchJinaMarkdown(targetUrl);
-      if (markdown.length > 80) {
-        markdownParts.push("--- " + targetUrl + " ---\n" + markdown.slice(0, 4000));
-      }
-    }
-
-    const combinedMarkdown = markdownParts.join("\n\n").trim();
+    const combinedMarkdown = await scrapeMultiplePages(websiteOrDomain, domain);
     if (!combinedMarkdown) {
-      log("Jina fallback produced no markdown", { domain, businessName });
+      log("All scrapers returned empty", { domain, businessName });
       return null;
     }
 
     const extracted = await extractLeadFromMarkdown(combinedMarkdown, businessName, domain);
     if (extracted?.email) {
-      log("LLM extraction found from Jina markdown", extracted);
+      log("Firecrawl+Pro LLM extraction found", extracted);
       return extracted;
     }
 
     return null;
   } catch (e) {
-    log("Jina+LLM exception", { error: String(e) });
+    log("Scrape+LLM exception", { error: String(e) });
     return null;
   }
 }
