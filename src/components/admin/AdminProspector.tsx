@@ -930,6 +930,9 @@ export default function AdminProspector() {
       case "has_reviews": result = result.filter(l => (l.review_count || 0) > 0); break;
       case "no_facebook": result = result.filter(l => !l.has_facebook); break;
       case "no_instagram": result = result.filter(l => !l.has_instagram); break;
+      case "dripping": result = result.filter(l => l.drip_step > 0 && l.drip_status !== "completed"); break;
+      case "sent": result = result.filter(l => l.drip_step > 0 || l.pipeline_stage === "outreach_sent"); break;
+      case "no_contact": result = result.filter(l => l.drip_step === 0 && l.drip_status === "not_started"); break;
     }
     switch (pipelineSort) {
       case "score_desc": result.sort((a, b) => (b.lead_score || 0) - (a.lead_score || 0)); break;
