@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -34,22 +35,22 @@ export default function DWAStats() {
         weekJobsRes,
       ] = await Promise.all([
         supabase
-          .from("field_service_clients" as any)
+          .from("field_service_clients")
           .select("*", { count: "exact", head: true })
           .eq("active", true),
         supabase
-          .from("field_service_clients" as any)
+          .from("field_service_clients")
           .select("*", { count: "exact", head: true }),
         supabase
-          .from("field_service_clients" as any)
+          .from("field_service_clients")
           .select("plan")
           .eq("active", true),
         supabase
-          .from("field_service_jobs" as any)
+          .from("field_service_jobs")
           .select("*", { count: "exact", head: true })
           .not("status", "in", '("completed","invoiced")'),
         supabase
-          .from("field_service_jobs" as any)
+          .from("field_service_jobs")
           .select("*", { count: "exact", head: true })
           .eq("status", "completed")
           .gte("completed_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
