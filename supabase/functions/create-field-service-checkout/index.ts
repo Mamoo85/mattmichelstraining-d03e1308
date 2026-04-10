@@ -67,6 +67,7 @@ serve(async (req: Request) => {
         name: name ?? "",
         company: company ?? "",
         plan: plan ?? "standalone",
+        industry: industry || "other",
       },
       success_url: `${origin}/field-service?success=1`,
       cancel_url: `${origin}/field-service`,
