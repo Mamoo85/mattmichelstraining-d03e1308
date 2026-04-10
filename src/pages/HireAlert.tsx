@@ -4,17 +4,39 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
+const ROLE_OPTIONS = [
+  { key: "boiler_operator", label: "Boiler Operator (1st/2nd Class)" },
+  { key: "steam_engineer", label: "Steam Engineer" },
+  { key: "pressure_vessel", label: "Pressure Vessel Inspector" },
+  { key: "hvac_tech", label: "HVAC Technician" },
+  { key: "plumber", label: "Plumber / Master Plumber" },
+  { key: "pipefitter", label: "Pipefitter / Steamfitter (UA 636)" },
+  { key: "electrician", label: "Electrician" },
+  { key: "industrial_mechanic", label: "Industrial Mechanic" },
+];
+
 export default function HireAlert() {
   const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [company, setCompany] = useState("");
   const [phone, setPhone] = useState("");
   const [plan, setPlan] = useState<"standalone" | "bundle">("standalone");
+  const [selectedRoles, setSelectedRoles] = useState<string[]>(["boiler_operator", "hvac_tech"]);
   const [loading, setLoading] = useState(false);
+
+  const toggleRole = (key: string) => {
+    setSelectedRoles((prev) =>
+      prev.includes(key) ? prev.filter((r) => r !== key) : [...prev, key]
+    );
+  };
 
   const handleCheckout = async () => {
     if (!email) {
       toast({ title: "Email required", variant: "destructive" });
+      return;
+    }
+    if (!selectedRoles.length) {
+      toast({ title: "Select at least one trade to monitor", variant: "destructive" });
       return;
     }
     setLoading(true);
