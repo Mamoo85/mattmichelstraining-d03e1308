@@ -53,6 +53,8 @@
     "cockroachdb@claude-plugins-official": true,
     "ai-firstify@claude-plugins-official": true,
     "helius@claude-plugins-official": true,
-    "autofix-bot@claude-plugins-official": true
+    "autofix-bot@claude-plugins-official": true,
+    "stagehand@claude-plugins-official": true,
+    "stripe@claude-plugins-official": true
   }
 }
