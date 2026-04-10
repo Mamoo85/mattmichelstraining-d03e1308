@@ -5,6 +5,7 @@ import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/hooks/useAuth";
 import { isStaleJWTError } from "@/lib/jwtErrors";
 import { useToast } from "@/hooks/use-toast";
+import { isAgencyDomain } from "@/lib/domainConfig";
 import m2Logo from "@/assets/m2-logo.jpg";
 import { ArrowRight, Loader2, Gift, Users, Mail, User, UserPlus, AlertTriangle } from "lucide-react";
 import NutritionSneakPeek from "@/components/auth/NutritionSneakPeek";
@@ -18,6 +19,7 @@ const Auth = () => {
   const { toast } = useToast();
   const inviteToken = searchParams.get("invite");
   const ipToken = searchParams.get("ip");
+  const isAgency = isAgencyDomain();
 
   const redeemInvite = async (token: string) => {
     try {
@@ -75,8 +77,10 @@ const Auth = () => {
   }, []);
   const [termsAccepted, setTermsAccepted] = useState(false);
 
+  const defaultRedirect = isAgency ? "/admin" : "/dashboard";
+
   const buildAuthRedirectUrl = useCallback((fallbackPath: string) => {
-    const redirect = searchParams.get("redirect") || fallbackPath;
+    const redirect = searchParams.get("redirect") || (isAgency ? "/admin" : fallbackPath);
     const url = new URL("/auth", window.location.origin);
 
     url.searchParams.set("redirect", redirect);
@@ -205,7 +209,7 @@ const Auth = () => {
         } catch (err: any) {
           console.warn("[IP-INVITE] Redeem error:", err.message);
         }
-        navigate("/dashboard", { replace: true });
+        navigate(defaultRedirect, { replace: true });
         return;
       }
 
@@ -214,7 +218,7 @@ const Auth = () => {
         return;
       }
 
-      const redirect = searchParams.get("redirect") || "/dashboard";
+      const redirect = searchParams.get("redirect") || defaultRedirect;
       navigate(redirect, { replace: true });
     };
 
@@ -339,14 +343,24 @@ const Auth = () => {
 
 
   return (
-    <div className="min-h-[100dvh] bg-background flex items-center justify-center px-4 overflow-y-auto pb-safe">
+    <div className={`min-h-[100dvh] flex items-center justify-center px-4 overflow-y-auto pb-safe ${isAgency ? "bg-[#0a0a0f]" : "bg-background"}`}>
       <div className="max-w-sm w-full my-8">
         <div className="text-center mb-8">
-          <img src={m2Logo} alt="M2 Training" className="w-20 h-20 object-contain rounded-md mx-auto mb-4" />
-          <h1 className="text-xl font-bold tracking-display text-foreground">
-            {mode === "signup" ? "JOIN M2 TRAINING" : "ATHLETE LOGIN"}
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">Real training. Real results.</p>
+          {isAgency ? (
+            <>
+              <div className="text-xl font-black uppercase tracking-wider text-white mb-2">Detroit <span className="text-cyan-400">Web</span> Agency</div>
+              <h1 className="text-lg font-bold tracking-display text-foreground">ADMIN LOGIN</h1>
+              <p className="text-sm text-muted-foreground mt-1">Access your agency command center.</p>
+            </>
+          ) : (
+            <>
+              <img src={m2Logo} alt="M2 Training" className="w-20 h-20 object-contain rounded-md mx-auto mb-4" />
+              <h1 className="text-xl font-bold tracking-display text-foreground">
+                {mode === "signup" ? "JOIN M2 TRAINING" : "ATHLETE LOGIN"}
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1">Real training. Real results.</p>
+            </>
+          )}
         </div>
 
         {inviteToken && (
@@ -363,8 +377,8 @@ const Auth = () => {
           </div>
         )}
 
-        {/* Signup Role Toggle — only on signup, not invite flow */}
-        {mode === "signup" && !inviteToken && (
+        {/* Signup Role Toggle — only on signup, not invite flow, not agency */}
+        {mode === "signup" && !inviteToken && !isAgency && (
           <>
             <div className="grid grid-cols-2 gap-2 mb-4">
               <button
@@ -642,7 +656,7 @@ const Auth = () => {
               onClick={() => { setMode(mode === "signup" ? "login" : "signup"); setError(""); setSuccess(""); }}
               className="text-sm text-muted-foreground hover:text-primary transition-m2"
             >
-              {mode === "signup" ? "Already have an account? Sign in" : "New athlete? Create a free account"}
+              {mode === "signup" ? "Already have an account? Sign in" : (isAgency ? "" : "New athlete? Create a free account")}
             </button>
           )}
         </div>
@@ -663,8 +677,8 @@ const Auth = () => {
           </div>
         )}
 
-        {/* Nutrition AI Sneak Peek */}
-        <NutritionSneakPeek />
+        {/* Nutrition AI Sneak Peek — training only */}
+        {!isAgency && <NutritionSneakPeek />}
       </div>
     </div>
   );

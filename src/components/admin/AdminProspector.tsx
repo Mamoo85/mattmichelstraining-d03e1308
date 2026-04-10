@@ -148,7 +148,7 @@ type SortField = "lead_score" | "email" | "created_at" | "business_name";
 type SortDir = "asc" | "desc";
 
 // Pipeline filter/sort types
-type PipelineFilter = "all" | "has_email" | "no_email" | "has_website" | "no_website" | "has_reviews" | "no_facebook" | "no_instagram";
+type PipelineFilter = "all" | "has_email" | "no_email" | "has_website" | "no_website" | "has_reviews" | "no_facebook" | "no_instagram" | "dripping" | "sent" | "no_contact";
 type PipelineSort = "reviews_desc" | "rating_desc" | "name_asc" | "newest" | "drip_status" | "score_desc";
 
 // ── Normalize functions per table ──
@@ -204,14 +204,17 @@ const DRIP_LABELS: Record<number, string> = {
 };
 function DripBadge({ step, status }: { step: number; status: string }) {
   if (status === "completed") return <Badge className="text-[8px] bg-green-500/20 text-green-400 border-0">Drip Done ✓</Badge>;
-  if (status === "active" && step > 0) return (
-    <Badge className="text-[8px] bg-purple-500/20 text-purple-400 border-0">
-      {DRIP_LABELS[step] || `Step ${step}/4`}
-    </Badge>
-  );
+  if (status === "active" || status === "sent" || (step > 0 && status !== "completed")) {
+    return (
+      <Badge className="text-[8px] bg-purple-500/20 text-purple-400 border-0">
+        {DRIP_LABELS[step] || `Step ${step}/4`}
+      </Badge>
+    );
+  }
   if (status === "queued") return <Badge className="text-[8px] bg-blue-500/20 text-blue-400 border-0">Queued</Badge>;
   if (status === "drafted") return <Badge className="text-[8px] bg-amber-500/20 text-amber-400 border-0">Draft Ready</Badge>;
-  return null;
+  // No email / not started
+  return <Badge className="text-[8px] bg-red-500/15 text-red-400/60 border-0">No Contact</Badge>;
 }
 
 // ── Enrichment source color map ──
@@ -335,17 +338,15 @@ function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onD
         </div>
       </div>
 
-      {/* Drip status */}
-      {(lead.drip_step > 0 || lead.drip_status !== "not_started") && (
-        <div className="border-t border-border/30 pt-1.5">
-          <DripBadge step={lead.drip_step} status={lead.drip_status} />
-          {lead.last_drip_at && (
-            <p className="text-[8px] text-muted-foreground mt-0.5">
-              Last sent: {new Date(lead.last_drip_at).toLocaleDateString()}
-            </p>
-          )}
-        </div>
-      )}
+      {/* Drip status — always shown */}
+      <div className="border-t border-border/30 pt-1.5">
+        <DripBadge step={lead.drip_step} status={lead.drip_status} />
+        {lead.last_drip_at && (
+          <p className="text-[8px] text-muted-foreground mt-0.5">
+            Last sent: {new Date(lead.last_drip_at).toLocaleDateString()}
+          </p>
+        )}
+      </div>
 
       {/* Pain points */}
       {lead.pain_points && lead.pain_points.length > 0 && (
@@ -859,19 +860,19 @@ export default function AdminProspector() {
     finally { setLoadingSent(false); }
   }, []);
 
-  // ── Archive Outreach-Sent Leads ──
+  // ── Archive Contacted Leads (sent outreach OR drip_step > 0) ──
   const archiveSentLeads = async () => {
-    const sentLeads = pipelineLeads.filter(l => l.pipeline_stage === "outreach_sent");
-    if (sentLeads.length === 0) { toast.info("No outreach-sent leads to archive"); return; }
+    const contactedLeads = pipelineLeads.filter(l => l.pipeline_stage === "outreach_sent" || l.drip_step > 0);
+    if (contactedLeads.length === 0) { toast.info("No contacted leads to archive"); return; }
     setArchiving(true);
     try {
-      const ids = sentLeads.map(l => l.id);
+      const ids = contactedLeads.map(l => l.id);
       const { error } = await (supabase as any)
         .from("prospect_pipeline")
         .update({ pipeline_stage: "archived" })
         .in("id", ids);
       if (error) throw error;
-      toast.success(`Archived ${ids.length} leads`);
+      toast.success(`Archived ${ids.length} contacted leads`);
       fetchPipeline();
     } catch { toast.error("Archive failed"); }
     finally { setArchiving(false); }
@@ -927,6 +928,9 @@ export default function AdminProspector() {
       case "has_reviews": result = result.filter(l => (l.review_count || 0) > 0); break;
       case "no_facebook": result = result.filter(l => !l.has_facebook); break;
       case "no_instagram": result = result.filter(l => !l.has_instagram); break;
+      case "dripping": result = result.filter(l => l.drip_step > 0 && l.drip_status !== "completed"); break;
+      case "sent": result = result.filter(l => l.drip_step > 0 || l.pipeline_stage === "outreach_sent"); break;
+      case "no_contact": result = result.filter(l => l.drip_step === 0 && l.drip_status === "not_started"); break;
     }
     switch (pipelineSort) {
       case "score_desc": result.sort((a, b) => (b.lead_score || 0) - (a.lead_score || 0)); break;
@@ -1607,6 +1611,9 @@ export default function AdminProspector() {
                 <SelectItem value="all" className="text-xs">All Leads</SelectItem>
                 <SelectItem value="has_email" className="text-xs">✓ Has Email</SelectItem>
                 <SelectItem value="no_email" className="text-xs">✗ No Email</SelectItem>
+                <SelectItem value="sent" className="text-xs">📤 Sent / Contacted</SelectItem>
+                <SelectItem value="dripping" className="text-xs">💧 Active Drip</SelectItem>
+                <SelectItem value="no_contact" className="text-xs">🔴 No Contact Yet</SelectItem>
                 <SelectItem value="has_website" className="text-xs">✓ Has Website</SelectItem>
                 <SelectItem value="no_website" className="text-xs">✗ No Website</SelectItem>
                 <SelectItem value="has_reviews" className="text-xs">⭐ Has Reviews</SelectItem>
@@ -1687,8 +1694,29 @@ export default function AdminProspector() {
                 onClick={archiveSentLeads}
               >
                 {archiving ? <Loader2 size={10} className="animate-spin" /> : <Trash2 size={10} />}
-                Archive Sent ({pipelineLeads.filter(l => l.pipeline_stage === "outreach_sent").length})
+                Archive Contacted ({pipelineLeads.filter(l => l.pipeline_stage === "outreach_sent" || l.drip_step > 0).length})
               </Button>
+              {/* Bulk delete filtered leads */}
+              {pipelineFilter !== "all" && filteredPipelineLeads.length > 0 && (
+                <Button
+                  variant="outline" size="sm" className="text-xs h-7 gap-1 border-red-500/30 text-red-400 hover:bg-red-500/10"
+                  disabled={batchProcessing}
+                  onClick={async () => {
+                    const ids = filteredPipelineLeads.map(l => l.id);
+                    if (!confirm(`Delete all ${ids.length} filtered leads?`)) return;
+                    setBatchProcessing(true);
+                    try {
+                      const { error } = await (supabase as any).from("prospect_pipeline").delete().in("id", ids);
+                      if (error) throw error;
+                      toast.success(`Deleted ${ids.length} leads`);
+                      fetchPipeline();
+                    } catch { toast.error("Bulk delete failed"); }
+                    finally { setBatchProcessing(false); }
+                  }}
+                >
+                  <Trash2 size={10} /> Delete Filtered ({filteredPipelineLeads.length})
+                </Button>
+              )}
               {selectedPipelineIds.size > 0 && (
                 <Button
                   variant="outline" size="sm" className="text-xs h-7 gap-1 border-red-500/30 text-red-400 hover:bg-red-500/10"
