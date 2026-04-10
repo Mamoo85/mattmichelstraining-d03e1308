@@ -377,8 +377,8 @@ const Auth = () => {
           </div>
         )}
 
-        {/* Signup Role Toggle — only on signup, not invite flow */}
-        {mode === "signup" && !inviteToken && (
+        {/* Signup Role Toggle — only on signup, not invite flow, not agency */}
+        {mode === "signup" && !inviteToken && !isAgency && (
           <>
             <div className="grid grid-cols-2 gap-2 mb-4">
               <button
@@ -656,7 +656,7 @@ const Auth = () => {
               onClick={() => { setMode(mode === "signup" ? "login" : "signup"); setError(""); setSuccess(""); }}
               className="text-sm text-muted-foreground hover:text-primary transition-m2"
             >
-              {mode === "signup" ? "Already have an account? Sign in" : "New athlete? Create a free account"}
+              {mode === "signup" ? "Already have an account? Sign in" : (isAgency ? "" : "New athlete? Create a free account")}
             </button>
           )}
         </div>
@@ -677,8 +677,8 @@ const Auth = () => {
           </div>
         )}
 
-        {/* Nutrition AI Sneak Peek */}
-        <NutritionSneakPeek />
+        {/* Nutrition AI Sneak Peek — training only */}
+        {!isAgency && <NutritionSneakPeek />}
       </div>
     </div>
   );
