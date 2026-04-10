@@ -42,7 +42,7 @@ export default function HireAlert() {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("create-hire-alert-checkout", {
-        body: { email, company_name: company, phone, plan },
+        body: { email, company_name: company, phone, plan, target_roles: selectedRoles },
       });
       if (error || !data?.url) throw new Error(error?.message || "Checkout failed");
       window.location.href = data.url;
