@@ -102,13 +102,24 @@ export default function FieldServiceManagement() {
             Detroit Web Agency — Field Service Platform
           </div>
           <h1 className="text-4xl sm:text-5xl font-black leading-tight mb-5">
-            FieldServio charges <span className="text-red-400 line-through">$1,400/mo</span>.<br />
-            We charge <span className="text-[#00d4ff]">$199/mo</span>. For everyone.
+            Your techs are in the field,<br />not a cubicle. Give them{" "}
+            <span className="text-[#00d4ff]">tools that work.</span>
           </h1>
-          <p className="text-white/70 text-lg max-w-2xl mx-auto leading-relaxed mb-8">
-            Built for HVAC, boiler, plumbing, and electrical crews. We build your website.
-            We run your operations. You just run your crew.
+          <p className="text-white/70 text-lg max-w-2xl mx-auto leading-relaxed mb-6">
+            Detroit Web Agency Field Service replaces bloated ERPs for any company with field technicians.
+            Dispatch board, mobile tech app, GPS tracking, auto-SMS, and QuickBooks sync.{" "}
+            <strong className="text-white">$199/mo.</strong>
           </p>
+
+          {/* Industry badges */}
+          <div className="flex flex-wrap justify-center gap-2 mb-8">
+            {["HVAC", "Plumbing", "Electrical", "Boiler Service", "Appliance Repair", "IT Support", "Pest Control", "Landscaping", "Fire Protection", "Elevator Service", "And more..."].map((badge) => (
+              <span key={badge} className="bg-white/5 border border-white/10 text-white/60 text-xs px-3 py-1">
+                {badge}
+              </span>
+            ))}
+          </div>
+
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <a
               href="#pricing"
