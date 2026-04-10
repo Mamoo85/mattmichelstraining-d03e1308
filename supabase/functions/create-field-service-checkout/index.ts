@@ -43,6 +43,7 @@ serve(async (req: Request) => {
       owner_name: name ?? null,
       owner_email: email,
       plan: plan ?? "standalone",
+      industry: industry || "field_service",
       active: false,
     });
 
