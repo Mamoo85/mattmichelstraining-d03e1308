@@ -310,6 +310,7 @@ const PRODUCTS: Product[] = [
   { id: "new_hire_breach_check", name: "New Hire Breach Screen", price: "$9.99/check", description: "Check candidate email against HIBP.", type: "instant", category: "One-Time" },
   { id: "seo_guard_subscription", name: "SEO Guard", price: "$29/mo (7-day trial)", description: "Weekly JS visibility, keyword rank tracking, citation health, SMS alerts.", type: "subscription", category: "Subscription" },
   { id: "field_service_subscription", name: "Field Service Management", price: "$199-299/mo", description: "Detroit Web Agency dispatch board, mobile tech app, GPS, auto-SMS, QuickBooks sync.", type: "subscription", category: "Detroit Web Agency" },
+  { id: "hire_alert_subscription", name: "TechAlert Hiring Monitor", price: "$49-99/mo", description: "Daily MIOSHA license DB + Apollo + job board scan for available licensed tradespeople.", type: "subscription", category: "Detroit Web Agency" },
 ];
 
 type TestStatus = "idle" | "loading" | "success" | "error";
