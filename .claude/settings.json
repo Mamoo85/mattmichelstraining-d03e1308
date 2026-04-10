@@ -1,5 +1,4 @@
 {
-  "model": "claude-sonnet-4-6",
   "permissions": {
     "allow": [
       "Bash(git:*)",
@@ -33,6 +32,7 @@
     ],
     "deny": []
   },
+  "model": "claude-sonnet-4-6",
   "hooks": {
     "PostToolUse": [
       {
@@ -45,5 +45,14 @@
         ]
       }
     ]
+  },
+  "enabledPlugins": {
+    "ruby-lsp@claude-plugins-official": true,
+    "pagerduty@claude-plugins-official": true,
+    "railway@claude-plugins-official": true,
+    "cockroachdb@claude-plugins-official": true,
+    "ai-firstify@claude-plugins-official": true,
+    "helius@claude-plugins-official": true,
+    "autofix-bot@claude-plugins-official": true
   }
 }
