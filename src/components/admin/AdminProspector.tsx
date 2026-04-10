@@ -994,8 +994,13 @@ export default function AdminProspector() {
   // ── Omni-Channel Lead Engine Search ──
   const runOmniSearch = async () => {
     if (!searchIndustry) { toast.error("Select an industry"); return; }
+    if (omniSearching) return; // double-click guard
     setOmniSearching(true);
     setOmniResults(null);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 90_000);
+
     try {
       const { data, error } = await supabase.functions.invoke("omni-lead-engine", {
         body: {
@@ -1005,14 +1010,20 @@ export default function AdminProspector() {
           strict_email_filter: strictEmailFilter,
         },
       });
+      clearTimeout(timeoutId);
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setOmniResults(data);
-      toast.success(`Engine complete: ${data?.saved || 0} leads saved, ${data?.discarded || 0} discarded`);
-      // Auto-refresh pipeline
+      const failMsg = data?.failed ? `, ${data.failed} failed` : "";
+      toast.success(`Engine complete: ${data?.saved || 0} leads saved, ${data?.discarded || 0} discarded${failMsg}`);
       fetchPipeline();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Omni engine failed");
+    } catch (err: any) {
+      clearTimeout(timeoutId);
+      if (err?.name === "AbortError" || err?.message?.includes("abort")) {
+        toast.error("Search timed out. Try a smaller batch.");
+      } else {
+        toast.error(err instanceof Error ? err.message : "Omni engine failed");
+      }
     } finally {
       setOmniSearching(false);
     }
