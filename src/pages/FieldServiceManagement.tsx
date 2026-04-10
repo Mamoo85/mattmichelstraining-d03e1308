@@ -294,12 +294,24 @@ export default function FieldServiceManagement() {
           <h2 className="text-center text-xl font-black mb-2 uppercase tracking-wide">Built for your trade</h2>
           <p className="text-center text-white/50 text-sm mb-10">Workflows tuned for how your crew actually works.</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {INDUSTRIES.map((ind) => (
-              <div key={ind.name} className="bg-[#0f1f35] border border-white/10 p-5">
-                <h3 className="font-black text-sm text-[#00d4ff] mb-2">{ind.name}</h3>
-                <p className="text-white/60 text-xs leading-relaxed">{ind.desc}</p>
-              </div>
-            ))}
+            {INDUSTRIES.map((ind) =>
+              ind.slug ? (
+                <a
+                  key={ind.name}
+                  href={`/field-service/${ind.slug}`}
+                  className="bg-[#0f1f35] border border-white/10 p-5 flex flex-col hover:border-[#00d4ff]/50 hover:bg-[#00d4ff]/5 cursor-pointer transition-all"
+                >
+                  <h3 className="font-black text-sm text-[#00d4ff] mb-2">{ind.name}</h3>
+                  <p className="text-white/60 text-xs leading-relaxed flex-1">{ind.desc}</p>
+                  <p className="text-[#00d4ff] text-[11px] font-bold mt-3">View {ind.name} Package →</p>
+                </a>
+              ) : (
+                <div key={ind.name} className="bg-[#0f1f35] border border-white/10 p-5">
+                  <h3 className="font-black text-sm text-[#00d4ff] mb-2">{ind.name}</h3>
+                  <p className="text-white/60 text-xs leading-relaxed">{ind.desc}</p>
+                </div>
+              )
+            )}
           </div>
         </div>
 
