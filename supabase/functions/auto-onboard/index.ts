@@ -364,6 +364,20 @@ const TEMPLATES: Record<string, OnboardTemplate> = {
     nextStage: "📧 Welcome Email Sent",
     body: (name) => `<p>Hey ${name} — your dispatch board is live. Reply with your tech list and I'll have everything set up within 24 hours. — Matt</p>`,
   },
+  hire_alert_subscription: {
+    subject: "TechAlert is Active — We'll Alert You When Licensed Techs Go Available",
+    nextStage: "📧 Welcome Email Sent",
+    body: (name) => `
+      <p>Hey ${name}!</p>
+      <p>Welcome to TechAlert. Starting tomorrow morning, we'll scan three sources every day looking for licensed tradespeople available in Metro Detroit:</p>
+      <ul>
+        <li><strong>Michigan MIOSHA License Database</strong> — public records of every licensed boiler operator and steam engineer in the state</li>
+        <li><strong>Apollo Professional Database</strong> — HVAC techs, plumbers, pipefitters, and electricians by location and title</li>
+        <li><strong>Job Board Monitoring</strong> — tradespeople actively posting their availability</li>
+      </ul>
+      <p><strong>Hot candidates (score 7+)</strong> trigger an immediate SMS to your phone. <strong>All other candidates (score 5+)</strong> appear in your daily morning email digest.</p>
+      <p>Want to adjust your target roles or zip codes? Just reply to this email and let me know.</p>`,
+  },
 };
 
 // Generic SMS product template

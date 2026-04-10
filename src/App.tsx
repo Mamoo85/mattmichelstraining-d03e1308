@@ -270,6 +270,7 @@ const PodcastDashboard = lazyRetry(() => import("./pages/PodcastDashboard"));
 const StormDamageLeads = lazyRetry(() => import("./pages/StormDamageLeads"));
 const RecallAlertService = lazyRetry(() => import("./pages/RecallAlertService"));
 const PermitWatch = lazyRetry(() => import("./pages/PermitWatch"));
+const HireAlert = lazyRetry(() => import("./pages/HireAlert"));
 const WebsiteSpeedAudits = lazyRetry(() => import("./pages/WebsiteSpeedAudits"));
 const BedtimeStories = lazyRetry(() => import("./pages/BedtimeStories"));
 const CrimeDigest = lazyRetry(() => import("./pages/CrimeDigest"));
@@ -681,6 +682,7 @@ const App = () => (
                     <Route path="/storm-leads" element={<StormDamageLeads />} />
                     <Route path="/recall-alerts" element={<RecallAlertService />} />
                     <Route path="/permit-watch" element={<PermitWatch />} />
+                    <Route path="/hire-alert" element={<HireAlert />} />
                     <Route path="/website-speed-audit" element={<WebsiteSpeedAudits />} />
                     <Route path="/bedtime-stories" element={<BedtimeStories />} />
                     <Route path="/crime-digest" element={<CrimeDigest />} />

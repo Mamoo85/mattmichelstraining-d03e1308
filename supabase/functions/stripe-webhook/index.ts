@@ -729,6 +729,50 @@ serve(async (req) => {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      if (meta.type === "hire_alert_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            // Parse target_roles from comma-separated string back to array
+            const targetRoles = meta.target_roles
+              ? meta.target_roles.split(",").map((r: string) => r.trim()).filter(Boolean)
+              : ["boiler_operator", "hvac_tech"];
+            await (sb.from as any)("hire_alert_clients").insert({
+              company_name: meta.company_name || email,
+              owner_email: email,
+              owner_phone: meta.owner_phone || null,
+              stripe_customer_id: session.customer as string || null,
+              stripe_subscription_id: session.subscription as string || null,
+              active: true,
+              plan: meta.plan || "standalone",
+              target_roles: targetRoles,
+            });
+          }
+          if (RESEND_API_KEY && email) {
+            await sendM2Email(email, "TechAlert is Active — You'll Hear About Available Techs Before Anyone Else", m2Email({
+              greeting: `Hey${meta.company_name ? " " + meta.company_name : ""} —`,
+              headline: "TechAlert Hiring Monitor is Live",
+              body: `<p style="margin:0 0 12px">Starting tomorrow, we'll scan three sources daily and alert you when licensed tradespeople become available in Metro Detroit:</p>
+<p style="margin:0 0 8px">🏛️ <strong>Michigan MIOSHA License Database</strong> — public records of every licensed boiler operator, steam engineer, and pressure vessel inspector in the state</p>
+<p style="margin:0 0 8px">🔍 <strong>Apollo Professional Database</strong> — HVAC techs, plumbers, pipefitters, and electricians in your area</p>
+<p style="margin:0 0 16px">📋 <strong>Job Board Monitoring</strong> — tradespeople actively posting their availability</p>
+<p style="margin:0 0 8px"><strong>How alerts work:</strong></p>
+<ul style="margin:0 0 16px;padding-left:20px;color:#475569">
+<li>Score 7-10: Instant SMS + email alert (hot candidates)</li>
+<li>Score 5-6: Daily email digest</li>
+<li>Each candidate includes name, trade, city, license info, and availability score</li>
+</ul>
+<p style="margin:0;color:#64748b;font-size:13px">Reply to adjust your target roles or zip codes. Questions? Call Matt: (313) 806-4952</p>`,
+            }));
+            await notifyMatt(
+              `💰 New TechAlert Client — ${meta.company_name || email} ($${meta.plan === "bundle" ? "49" : "99"}/mo)`,
+              `<p><strong>${meta.company_name || email}</strong><br>Email: ${email}<br>Phone: ${meta.owner_phone || "n/a"}<br>Plan: ${meta.plan || "standalone"}</p>`
+            );
+          }
+        } catch (e) { console.error("[WEBHOOK] hire_alert_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       if (meta.type === "grant_finder_subscription") {
         try {
           const email = meta.email || customerEmail;
