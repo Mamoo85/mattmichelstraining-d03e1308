@@ -389,32 +389,59 @@ serve(async () => {
     );
   }
 
-  // Alert clients: 7+ = SMS + email, 5-6 = email only
-  const alertWorthy = scored.filter((c) => c.availability_score >= 5);
-  const hotCandidates = scored.filter((c) => c.availability_score >= 7);
+  // Role keyword map — matches candidate license_type text to client target_roles keys
+  const ROLE_KEYWORDS: Record<string, string[]> = {
+    boiler_operator: ["boiler", "boiler operator"],
+    steam_engineer: ["steam engineer"],
+    pressure_vessel: ["pressure vessel", "pvi", "inspector"],
+    hvac_tech: ["hvac", "air conditioning", "refrigeration", "heating"],
+    plumber: ["plumber", "plumbing", "master plumber"],
+    pipefitter: ["pipefitter", "steamfitter", "ua local", "ua 636"],
+    electrician: ["electrician", "electrical"],
+    industrial_mechanic: ["industrial mechanic", "maintenance mechanic"],
+  };
+
+  function candidateMatchesRoles(licenseType: string | undefined, targetRoles: string[]): boolean {
+    if (!licenseType || !targetRoles?.length) return true; // no filter = match all
+    const lower = licenseType.toLowerCase();
+    return targetRoles.some((role) =>
+      (ROLE_KEYWORDS[role] || [role]).some((kw) => lower.includes(kw))
+    );
+  }
 
   let alertsSent = 0;
 
   for (const client of clients) {
-    if (!alertWorthy.length) continue;
+    const clientRoles: string[] = client.target_roles || [];
+
+    // Filter scored candidates to only those matching this client's target roles
+    const clientAlertWorthy = scored.filter(
+      (c) => c.availability_score >= 5 && candidateMatchesRoles(c.license_type, clientRoles)
+    );
+    const clientHotCandidates = clientAlertWorthy.filter((c) => c.availability_score >= 7);
+
+    if (!clientAlertWorthy.length) continue;
 
     try {
-      // Email digest for all 5+ candidates
+      // Email digest for all 5+ matching candidates
       if (client.notify_email && client.owner_email) {
-        await sendAlertEmail(client, alertWorthy, dateStr);
+        await sendAlertEmail(client, clientAlertWorthy, dateStr);
         alertsSent++;
       }
 
-      // SMS for hot candidates (7+)
-      if (client.notify_sms && client.owner_phone && hotCandidates.length) {
-        const top = hotCandidates[0];
-        const smsBody = `TechAlert: ${hotCandidates.length} hot licensed ${hotCandidates.length === 1 ? "tech" : "techs"} in Metro Detroit!\n\nTop: ${top.full_name} — ${top.license_type || "tradesperson"} (${top.city || "local"})\nScore: ${top.availability_score}/10\n\nCheck your email for full details. Reply STOP to opt out.`;
+      // SMS for hot candidates (7+) matching this client's roles
+      if (client.notify_sms && client.owner_phone && clientHotCandidates.length) {
+        const top = clientHotCandidates[0];
+        const smsBody = `TechAlert: ${clientHotCandidates.length} hot licensed ${clientHotCandidates.length === 1 ? "tech" : "techs"} in Metro Detroit!\n\nTop: ${top.full_name} — ${top.license_type || "tradesperson"} (${top.city || "local"})\nScore: ${top.availability_score}/10\n\nCheck your email for full details. Reply STOP to opt out.`;
         await sendSMS(client.owner_phone, TWILIO_PHONE_NUMBER, smsBody, "hire_alert");
       }
     } catch (e) {
       console.error(`[hire-alert-scanner] Alert error for ${client.company_name}:`, e);
     }
   }
+
+  // For DB status update, use all alerted candidates across all clients
+  const allAlertWorthy = scored.filter((c) => c.availability_score >= 5);
 
   // Update alerted candidates
   if (alertWorthy.length && alertsSent > 0) {
