@@ -59,6 +59,7 @@ export default function FieldServiceManagement() {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [company, setCompany] = useState("");
+  const [industry, setIndustry] = useState("hvac");
   const [loading, setLoading] = useState(false);
 
   async function handleCheckout(plan: "standalone" | "bundle") {
@@ -66,7 +67,7 @@ export default function FieldServiceManagement() {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("create-field-service-checkout", {
-        body: { email, name, company, plan },
+        body: { email, name, company, plan, industry },
       });
       if (error || !data?.url) throw new Error(error?.message || "Checkout failed");
       window.location.href = data.url;
