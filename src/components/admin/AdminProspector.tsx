@@ -1215,7 +1215,7 @@ export default function AdminProspector() {
               <div className="flex items-center gap-2 flex-wrap">
                 <Button onClick={runOmniSearch} disabled={omniSearching || searching || hybridSearching} className="text-xs gap-1.5" size="sm">
                   {omniSearching ? (
-                    <><Loader2 size={12} className="animate-spin" /> Maps → Scrape → Enrich...</>
+                    <><Loader2 size={12} className="animate-spin" /> Engine Running… Do Not Click Again</>
                   ) : (
                     <><Zap size={12} /> Search (Full Pipeline)</>
                   )}
