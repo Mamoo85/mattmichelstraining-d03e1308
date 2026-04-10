@@ -291,28 +291,57 @@ ${htmlText.slice(0, 12000)}
 }
 
 // ── Scrape website HTML for AI extraction ──
-async function scrapeWebsiteHtml(websiteUrl: string): Promise<string | null> {
+async function scrapeWebsiteHtml(websiteUrl: string, firecrawlKey?: string): Promise<string | null> {
+  // Pass 1: raw fetch (fast, free, works for static sites)
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 8000);
     const res = await fetch(websiteUrl, {
       signal: controller.signal,
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; DetroitWebAgentBot/1.0)" },
+      headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36" },
     });
     clearTimeout(timeout);
-    if (!res.ok) return null;
-    return await res.text();
-  } catch {
-    return null;
+    if (res.ok) {
+      const html = await res.text();
+      // If HTML has real content (not a JS-only shell), return it
+      if (html.length > 2000) return html;
+    }
+  } catch { /* fall through */ }
+
+  // Pass 2: Firecrawl — renders JS, bypasses Cloudflare
+  if (firecrawlKey) {
+    try {
+      const fcRes = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${firecrawlKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ url: websiteUrl, formats: ["html"], onlyMainContent: false }),
+      });
+      if (fcRes.ok) {
+        const fcData = await fcRes.json();
+        const html = fcData?.data?.html || fcData?.html || "";
+        if (html) return html;
+      }
+    } catch { /* no content */ }
   }
+
+  return null;
 }
 
 // ── Legacy simple email scraper (fallback) ──
-async function scrapeEmailFromWebsite(websiteUrl: string): Promise<string | null> {
-  const html = await scrapeWebsiteHtml(websiteUrl);
+async function scrapeEmailFromWebsite(websiteUrl: string, firecrawlKey?: string): Promise<string | null> {
+  const html = await scrapeWebsiteHtml(websiteUrl, firecrawlKey);
   if (!html) return null;
+
+  const found: string[] = [];
+  // 1. mailto: hrefs — most reliable (many sites hide text but keep the href)
+  const mailtoRegex = /href=["']mailto:([^"'?\s]+)/gi;
+  let m: RegExpExecArray | null;
+  while ((m = mailtoRegex.exec(html)) !== null) found.push(m[1].trim());
+
+  // 2. Bare email pattern
   const emailRegex = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
-  const emails = html.match(emailRegex) || [];
+  found.push(...(html.match(emailRegex) || []));
+
   const junkDomains = [
     "example.com", "sentry.io", "wixpress.com", "schema.org",
     "googleapis.com", "google.com", "facebook.com", "twitter.com",
@@ -320,12 +349,12 @@ async function scrapeEmailFromWebsite(websiteUrl: string): Promise<string | null
     "wordpress.com", "gravatar.com", "cloudflare.com", "amazonaws.com",
     "squarespace.com", "shopify.com", "godaddy.com",
   ];
-  const validEmails = emails.filter(e => {
+  const validEmails = found.filter(e => {
     const lower = e.toLowerCase();
     if (junkDomains.some(d => lower.includes(d))) return false;
     if (/\.(png|jpg|jpeg|svg|gif|css|js|woff|ttf|eot)$/i.test(lower)) return false;
-    if (lower.length > 60 || lower.length < 5) return false;
-    if (!/\.(com|net|org|biz|info|us|co|io)$/.test(lower)) return false;
+    if (lower.length > 80 || lower.length < 5) return false;
+    if (!/\.[a-z]{2,}$/.test(lower)) return false; // any valid TLD
     return true;
   });
   return validEmails[0] || null;
@@ -499,6 +528,7 @@ serve(async (req) => {
 
   try {
     const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY");
+    const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_PUBLISHABLE_KEY") || Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -745,7 +775,7 @@ serve(async (req) => {
           ];
           let combinedHtml = "";
           for (const pageUrl of pagesToScrape) {
-            const html = await scrapeWebsiteHtml(pageUrl);
+            const html = await scrapeWebsiteHtml(pageUrl, FIRECRAWL_API_KEY);
             if (html) combinedHtml += `\n<!-- PAGE: ${pageUrl} -->\n${html}`;
           }
 
@@ -772,15 +802,20 @@ serve(async (req) => {
             }
           }
 
-          // Step 3: Fallback to simple regex scrape if AI found nothing
+          // Step 3: Fallback to simple regex scrape (+ Firecrawl) if AI found nothing
           if (!contactEmail) {
-            contactEmail = await scrapeEmailFromWebsite(website);
+            contactEmail = await scrapeEmailFromWebsite(website, FIRECRAWL_API_KEY);
             if (contactEmail) enrichmentSource = "regex_scrape";
           }
           if (!contactEmail) {
             const contactUrl = website.replace(/\/$/, "") + "/contact";
-            contactEmail = await scrapeEmailFromWebsite(contactUrl);
+            contactEmail = await scrapeEmailFromWebsite(contactUrl, FIRECRAWL_API_KEY);
             if (contactEmail) enrichmentSource = "regex_scrape_contact";
+          }
+          if (!contactEmail) {
+            const contactUrl2 = website.replace(/\/$/, "") + "/contact-us";
+            contactEmail = await scrapeEmailFromWebsite(contactUrl2, FIRECRAWL_API_KEY);
+            if (contactEmail) enrichmentSource = "regex_scrape_contact_us";
           }
 
           // Step 4: Waterfall enrichment APIs as final fallback
