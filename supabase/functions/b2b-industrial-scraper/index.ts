@@ -85,14 +85,14 @@ serve(async (req) => {
   const maxPages = 3; // Top 60 results per city
 
   do {
-    const params = new URLSearchParams({
+    const params: URLSearchParams = new URLSearchParams({
       query: `${searchQuery} in ${city}`,
       key: GOOGLE_MAPS_API_KEY,
       ...(nextPageToken ? { pagetoken: nextPageToken } : {}),
     });
 
-    const res = await fetch(`https://maps.googleapis.com/maps/api/place/textsearch/json?${params}`);
-    const data = await res.json();
+    const res: Response = await fetch(`https://maps.googleapis.com/maps/api/place/textsearch/json?${params}`);
+    const data: any = await res.json();
 
     if (data.status !== "OK" && data.status !== "ZERO_RESULTS") {
       console.error("[INDUSTRIAL-SCRAPER] API error:", data.status, data.error_message);

@@ -53,14 +53,14 @@ serve(async (req) => {
   let page = 0;
 
   do {
-    const params = new URLSearchParams({
+    const params: URLSearchParams = new URLSearchParams({
       query: `${searchType} in ${city}`,
       key: GOOGLE_MAPS_API_KEY,
       ...(nextPageToken ? { pagetoken: nextPageToken } : {}),
     });
 
-    const res = await fetch(`https://maps.googleapis.com/maps/api/place/textsearch/json?${params}`);
-    const data = await res.json();
+    const res: Response = await fetch(`https://maps.googleapis.com/maps/api/place/textsearch/json?${params}`);
+    const data: any = await res.json();
 
     if (data.status !== "OK" && data.status !== "ZERO_RESULTS") {
       console.error("[B2B-SCRAPER] API error:", data.status, data.error_message);

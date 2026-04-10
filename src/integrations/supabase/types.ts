@@ -1677,6 +1677,59 @@ export type Database = {
           },
         ]
       }
+      competitor_review_alerts: {
+        Row: {
+          client_id: string
+          competitor_name: string
+          competitor_place_id: string | null
+          created_at: string | null
+          id: string
+          outreach_phone: string | null
+          outreach_sent: boolean | null
+          outreach_sent_at: string | null
+          platform: string | null
+          review_text: string | null
+          reviewer_name: string | null
+          star_rating: number | null
+        }
+        Insert: {
+          client_id: string
+          competitor_name: string
+          competitor_place_id?: string | null
+          created_at?: string | null
+          id?: string
+          outreach_phone?: string | null
+          outreach_sent?: boolean | null
+          outreach_sent_at?: string | null
+          platform?: string | null
+          review_text?: string | null
+          reviewer_name?: string | null
+          star_rating?: number | null
+        }
+        Update: {
+          client_id?: string
+          competitor_name?: string
+          competitor_place_id?: string | null
+          created_at?: string | null
+          id?: string
+          outreach_phone?: string | null
+          outreach_sent?: boolean | null
+          outreach_sent_at?: string | null
+          platform?: string | null
+          review_text?: string | null
+          reviewer_name?: string | null
+          star_rating?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competitor_review_alerts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "field_crm_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       competitor_threat_log: {
         Row: {
           alerted_at: string | null
@@ -1912,6 +1965,80 @@ export type Database = {
             columns: ["site_id"]
             isOneToOne: false
             referencedRelation: "contractor_lead_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_visitor_events: {
+        Row: {
+          city: string | null
+          client_id: string
+          company_name: string | null
+          country: string | null
+          created_at: string | null
+          enrichment_data: Json | null
+          id: string
+          ip_address: string | null
+          is_business: boolean | null
+          isp: string | null
+          last_seen_at: string | null
+          lead_auto_created: boolean | null
+          org: string | null
+          page_visited: string | null
+          pipeline_lead_id: string | null
+          referrer: string | null
+          region: string | null
+          visit_count: number | null
+          visitor_script_key: string
+        }
+        Insert: {
+          city?: string | null
+          client_id: string
+          company_name?: string | null
+          country?: string | null
+          created_at?: string | null
+          enrichment_data?: Json | null
+          id?: string
+          ip_address?: string | null
+          is_business?: boolean | null
+          isp?: string | null
+          last_seen_at?: string | null
+          lead_auto_created?: boolean | null
+          org?: string | null
+          page_visited?: string | null
+          pipeline_lead_id?: string | null
+          referrer?: string | null
+          region?: string | null
+          visit_count?: number | null
+          visitor_script_key: string
+        }
+        Update: {
+          city?: string | null
+          client_id?: string
+          company_name?: string | null
+          country?: string | null
+          created_at?: string | null
+          enrichment_data?: Json | null
+          id?: string
+          ip_address?: string | null
+          is_business?: boolean | null
+          isp?: string | null
+          last_seen_at?: string | null
+          lead_auto_created?: boolean | null
+          org?: string | null
+          page_visited?: string | null
+          pipeline_lead_id?: string | null
+          referrer?: string | null
+          region?: string | null
+          visit_count?: number | null
+          visitor_script_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_visitor_events_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "field_crm_clients"
             referencedColumns: ["id"]
           },
         ]
@@ -2568,6 +2695,60 @@ export type Database = {
           refresh_count?: number | null
           stripe_customer_id?: string | null
           website_url?: string | null
+        }
+        Relationships: []
+      }
+      field_crm_clients: {
+        Row: {
+          business_name: string
+          created_at: string | null
+          email: string | null
+          google_review_url: string | null
+          id: string
+          industry: string | null
+          monthly_price: number | null
+          owner_name: string | null
+          phone: string | null
+          plan: string | null
+          status: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          visitor_script_key: string | null
+          website: string | null
+        }
+        Insert: {
+          business_name: string
+          created_at?: string | null
+          email?: string | null
+          google_review_url?: string | null
+          id?: string
+          industry?: string | null
+          monthly_price?: number | null
+          owner_name?: string | null
+          phone?: string | null
+          plan?: string | null
+          status?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          visitor_script_key?: string | null
+          website?: string | null
+        }
+        Update: {
+          business_name?: string
+          created_at?: string | null
+          email?: string | null
+          google_review_url?: string | null
+          id?: string
+          industry?: string | null
+          monthly_price?: number | null
+          owner_name?: string | null
+          phone?: string | null
+          plan?: string | null
+          status?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          visitor_script_key?: string | null
+          website?: string | null
         }
         Relationships: []
       }
@@ -7241,6 +7422,53 @@ export type Database = {
           },
         ]
       }
+      review_blast_log: {
+        Row: {
+          clicked_at: string | null
+          client_id: string
+          customer_name: string | null
+          customer_phone: string
+          id: string
+          job_description: string | null
+          reviewed_at: string | null
+          sent_at: string | null
+          status: string | null
+          tech_name: string | null
+        }
+        Insert: {
+          clicked_at?: string | null
+          client_id: string
+          customer_name?: string | null
+          customer_phone: string
+          id?: string
+          job_description?: string | null
+          reviewed_at?: string | null
+          sent_at?: string | null
+          status?: string | null
+          tech_name?: string | null
+        }
+        Update: {
+          clicked_at?: string | null
+          client_id?: string
+          customer_name?: string | null
+          customer_phone?: string
+          id?: string
+          job_description?: string | null
+          reviewed_at?: string | null
+          sent_at?: string | null
+          status?: string | null
+          tech_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_blast_log_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "field_crm_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       review_request_clients: {
         Row: {
           active: boolean | null
@@ -8893,6 +9121,59 @@ export type Database = {
             columns: ["roster_id"]
             isOneToOne: false
             referencedRelation: "team_rosters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tech_locations: {
+        Row: {
+          address: string | null
+          client_id: string
+          clocked_in_at: string | null
+          clocked_out_at: string | null
+          current_job: string | null
+          id: string
+          lat: number | null
+          lng: number | null
+          status: string | null
+          tech_name: string
+          tech_phone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          client_id: string
+          clocked_in_at?: string | null
+          clocked_out_at?: string | null
+          current_job?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          status?: string | null
+          tech_name: string
+          tech_phone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          client_id?: string
+          clocked_in_at?: string | null
+          clocked_out_at?: string | null
+          current_job?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          status?: string | null
+          tech_name?: string
+          tech_phone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tech_locations_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "field_crm_clients"
             referencedColumns: ["id"]
           },
         ]

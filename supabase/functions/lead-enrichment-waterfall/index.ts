@@ -192,131 +192,186 @@ async function clayEnrich(_domain: string, _businessName: string) {
   return null;
 }
 
-// ── JINA AI READER + LLM FALLBACK (clean markdown, no credits needed) ──
-async function directScrapeLLMFallback(domain: string, businessName: string): Promise<{ email: string | null; name: string | null; title: string | null } | null> {
+// ── JINA AI READER + STRICT XML LLM FALLBACK ──
+const JINA_TIMEOUT_MS = 8000;
+const JINA_PATHS = ["", "/contact", "/about"];
+
+function normalizeWebsite(url: string): string {
+  let clean = url.trim();
+  if (!clean.startsWith("http")) clean = `https://${clean}`;
+  return new URL(clean).toString();
+}
+
+async function fetchJinaMarkdown(targetUrl: string): Promise<string> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), JINA_TIMEOUT_MS);
+
   try {
-    const pagePaths = ["", "/contact", "/about"];
-    let markdown = "";
-
-    // Step A: Use Jina AI Reader to get clean markdown (free, no API key)
-    for (const path of pagePaths) {
-      if (markdown.length > 200) break;
-      const targetUrl = `https://${domain}${path}`;
-      const jinaUrl = `https://r.jina.ai/${targetUrl}`;
-      try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 10000);
-        const res = await fetch(jinaUrl, {
-          headers: {
-            "Accept": "text/markdown",
-            "User-Agent": "Mozilla/5.0 (compatible; M2Bot/1.0)",
-          },
-          signal: controller.signal,
-        });
-        clearTimeout(timeout);
-        if (res.ok) {
-          const text = await res.text();
-          if (text.length > 100) {
-            markdown += `\n--- ${targetUrl} ---\n${text.slice(0, 4000)}`;
-            log("Jina Reader success", { url: targetUrl, len: text.length });
-          }
-        } else {
-          log("Jina Reader non-ok", { url: targetUrl, status: res.status });
-          await res.text(); // consume
-        }
-      } catch (e) { log("Jina Reader error", { url: targetUrl, error: String(e) }); }
-    }
-
-    // Step B: If Jina failed, try Firecrawl as secondary fallback
-    if (markdown.length < 100 && FIRECRAWL_API_KEY) {
-      for (const path of pagePaths.slice(0, 2)) {
-        try {
-          const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
-            method: "POST",
-            headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
-            body: JSON.stringify({ url: `https://${domain}${path}`, formats: ["markdown"], onlyMainContent: true, timeout: 15000 }),
-          });
-          const body = await res.text();
-          if (res.ok) {
-            const data = JSON.parse(body);
-            const md = data?.data?.markdown || "";
-            if (md.length > 50) { markdown += md.slice(0, 3000); break; }
-          } else if (res.status === 402) {
-            log("Firecrawl credits exhausted"); break;
-          }
-        } catch { /* continue */ }
-      }
-    }
-
-    if (markdown.length < 50) { log("Scrape fallback — no usable content from Jina or Firecrawl"); return null; }
-
-    // Step C: Regex email extraction first (fast path)
-    const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
-    const foundEmails = [...new Set(markdown.match(emailRegex) || [])];
-    const junkPatterns = ["example.com", "sentry.io", "wixpress", "wordpress", "google.com", "facebook.com", "schema.org", "w3.org"];
-    const cleanEmails = foundEmails.filter(e => !junkPatterns.some(j => e.includes(j)) && e.includes(domain));
-
-    if (cleanEmails.length > 0) {
-      log("Found email via regex in Jina markdown", { emails: cleanEmails });
-      return { email: cleanEmails[0], name: null, title: null };
-    }
-
-    // Step D: LLM extraction from clean markdown
-    if (!LOVABLE_API_KEY) { log("LLM fallback skipped — no LOVABLE_API_KEY"); return null; }
-
-    const prompt = `<task>Extract the business owner or primary decision-maker contact from this website content.</task>
-
-<business>
-  <name>${businessName}</name>
-  <domain>${domain}</domain>
-</business>
-
-<website_content>
-${markdown.slice(0, 5000)}
-</website_content>
-
-<rules>
-- Find the OWNER, FOUNDER, PRESIDENT, or primary decision-maker.
-- Extract their email address, full name, and job title.
-- If no individual email found, look for a general business email (info@, contact@, etc).
-- Return ONLY valid JSON, no other text.
-</rules>
-
-Respond with ONLY this JSON structure:
-{"email": "found@email.com or null", "name": "Full Name or null", "title": "Job Title or null"}`;
-
-    const llmRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash-lite",
-        max_tokens: 256,
-        messages: [{ role: "user", content: prompt }],
-      }),
+    const res = await fetch(`https://r.jina.ai/${targetUrl}`, {
+      headers: {
+        "Accept": "text/markdown",
+        "User-Agent": "Mozilla/5.0 (compatible; M2Bot/1.0)",
+      },
+      signal: controller.signal,
     });
 
-    if (!llmRes.ok) { const t = await llmRes.text(); log("LLM error", { status: llmRes.status, body: t.slice(0, 200) }); return null; }
-    const llmData = await llmRes.json();
-    const text = llmData?.choices?.[0]?.message?.content?.trim() || "";
-    const match = text.match(/\{[\s\S]*\}/);
-    if (!match) return null;
-    const parsed = JSON.parse(match[0]);
-    if (parsed.email && parsed.email !== "null" && parsed.email.includes("@")) {
-      log("LLM extraction found from Jina markdown", parsed);
-      return { email: parsed.email, name: parsed.name === "null" ? null : parsed.name, title: parsed.title === "null" ? null : parsed.title };
+    if (!res.ok) {
+      const body = await res.text();
+      log("Jina Reader non-ok", { url: targetUrl, status: res.status, body: body.slice(0, 120) });
+      return "";
     }
 
-    // Last resort: any non-junk email from regex
-    if (foundEmails.length > 0) {
-      const nonJunk = foundEmails.filter(e => !junkPatterns.some(j => e.includes(j)));
-      if (nonJunk.length > 0) {
-        log("Using non-domain email from regex", { email: nonJunk[0] });
-        return { email: nonJunk[0], name: null, title: null };
+    return await res.text();
+  } catch (e) {
+    log("Jina Reader error", { url: targetUrl, error: String(e) });
+    return "";
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+async function extractLeadFromMarkdown(
+  markdown: string,
+  businessName: string,
+  domain: string,
+): Promise<{ email: string | null; name: string | null; title: string | null } | null> {
+  if (!LOVABLE_API_KEY || !markdown.trim()) {
+    log("LLM fallback skipped", { hasKey: !!LOVABLE_API_KEY, hasMarkdown: !!markdown.trim() });
+    return null;
+  }
+
+  const emailCandidates = Array.from(
+    new Set(markdown.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g) || []),
+  ).slice(0, 10);
+
+  const prompt = `<Role>
+You are a precision B2B lead extraction engine.
+</Role>
+
+<Task>
+Analyze the provided website markdown, identify the highest-value decision-maker, and extract or reconstruct their email address.
+</Task>
+
+<Rules_of_Engagement>
+1. THE EMAIL MANDATE: An email address is the absolute primary key. If you cannot extract or definitively reconstruct a valid email address for a contact, you MUST return extraction_status="failed_no_email" with an empty leads array. System Flag: allow_no_email=false.
+2. DEEP SEARCH TARGETING: Prioritize Owners, Founders, Presidents, Partners, and senior operators over generic inboxes.
+3. OBFUSCATION BYPASS: Reconstruct hidden emails such as "name [at] company [dot] com".
+4. DOMAIN SAFETY: Only return an email that clearly belongs to ${domain}.
+5. GENERIC EMAIL RULE: A generic inbox may only be used if no named leader email exists and the inbox is clearly displayed on the site.
+6. OUTPUT FORMAT: Return only valid minified JSON matching the schema.
+</Rules_of_Engagement>
+
+<Formatting_Schema>
+{
+  "extraction_status": "success" | "failed_no_email" | "no_data_found",
+  "leads": [
+    {
+      "first_name": "string",
+      "last_name": "string",
+      "job_title": "string",
+      "company_name": "string",
+      "validated_email": "string",
+      "phone_number": "string | null"
+    }
+  ]
+}
+</Formatting_Schema>
+
+<Input>
+Business Name: ${businessName}
+Domain: ${domain}
+System Flag: allow_no_email=false
+Regex Candidates: ${emailCandidates.join(", ") || "none"}
+
+--- WEBSITE MARKDOWN START ---
+${markdown.slice(0, 12000)}
+--- WEBSITE MARKDOWN END ---
+</Input>`;
+
+  const llmRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${LOVABLE_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash-lite",
+      max_tokens: 500,
+      messages: [{ role: "user", content: prompt }],
+    }),
+  });
+
+  if (!llmRes.ok) {
+    const body = await llmRes.text();
+    log("LLM error", { status: llmRes.status, body: body.slice(0, 200) });
+    return null;
+  }
+
+  const llmData = await llmRes.json();
+  const raw = llmData?.choices?.[0]?.message?.content?.trim() || "";
+  const cleaned = raw.replace(/```json\s*/g, "").replace(/```/g, "").trim();
+  const match = cleaned.match(/\{[\s\S]*\}/);
+  if (!match) {
+    log("LLM returned no JSON", { preview: cleaned.slice(0, 160) });
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(match[0]);
+    const lead = Array.isArray(parsed?.leads) ? parsed.leads.find((item: any) => item?.validated_email?.includes("@")) : null;
+    if (!lead) {
+      log("LLM found no valid email", { extraction_status: parsed?.extraction_status || null });
+      return null;
+    }
+
+    return {
+      email: lead.validated_email,
+      name: [lead.first_name, lead.last_name].filter(Boolean).join(" ") || null,
+      title: lead.job_title || null,
+    };
+  } catch (e) {
+    log("LLM JSON parse error", { error: String(e), preview: cleaned.slice(0, 160) });
+    return null;
+  }
+}
+
+async function directScrapeLLMFallback(
+  websiteOrDomain: string,
+  domain: string,
+  businessName: string,
+): Promise<{ email: string | null; name: string | null; title: string | null } | null> {
+  try {
+    const baseUrl = normalizeWebsite(websiteOrDomain || domain);
+    const markdownParts: string[] = [];
+
+    for (const path of JINA_PATHS) {
+      const targetUrl = path ? new URL(path, baseUrl).toString() : baseUrl;
+      const markdown = await fetchJinaMarkdown(targetUrl);
+      if (markdown.length > 80) {
+        markdownParts.push(`--- ${targetUrl} ---
+${markdown.slice(0, 4000)}`);
       }
+    }
+
+    const combinedMarkdown = markdownParts.join("
+
+").trim();
+    if (!combinedMarkdown) {
+      log("Jina fallback produced no markdown", { domain, businessName });
+      return null;
+    }
+
+    const extracted = await extractLeadFromMarkdown(combinedMarkdown, businessName, domain);
+    if (extracted?.email) {
+      log("LLM extraction found from Jina markdown", extracted);
+      return extracted;
     }
 
     return null;
-  } catch (e) { log("Jina+LLM exception", { error: String(e) }); return null; }
+  } catch (e) {
+    log("Jina+LLM exception", { error: String(e) });
+    return null;
+  }
 }
 
 // ── Email Pattern Guess (last resort) ──
@@ -370,7 +425,7 @@ interface EnrichmentResult {
   enrichment_data: Record<string, any>;
 }
 
-async function runWaterfall(domain: string, businessName: string): Promise<EnrichmentResult> {
+async function runWaterfall(domain: string, businessName: string, options: { website?: string | null; allowEmailGuess?: boolean } = {}): Promise<EnrichmentResult> {
   const result: EnrichmentResult = {
     email: null, verified_email: false, decision_maker_name: null,
     decision_maker_title: null, direct_phone: null, enrichment_source: "none",
@@ -440,7 +495,7 @@ async function runWaterfall(domain: string, businessName: string): Promise<Enric
   // Step 5: Firecrawl + LLM fallback (if all APIs failed or Hunter was rate-limited)
   if (!result.email) {
     log("Step 5: Direct scrape + LLM fallback", { domain, hunterRateLimited });
-    const scraped = await directScrapeLLMFallback(domain, businessName);
+    const scraped = await directScrapeLLMFallback(options.website || `https://${domain}`, domain, businessName);
     if (scraped?.email) {
       result.email = scraped.email;
       result.enrichment_source = "direct_scrape";
@@ -457,7 +512,7 @@ async function runWaterfall(domain: string, businessName: string): Promise<Enric
   }
 
   // Step 6: Email pattern guess (absolute last resort)
-  if (!result.email) {
+  if (!result.email && options.allowEmailGuess) {
     log("Step 6: Email guess fallback", { domain, name: result.decision_maker_name });
     const guessed = await guessEmail(domain, result.decision_maker_name);
     if (guessed) {
@@ -476,7 +531,8 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { prospect_id, domain, business_name, website, mode, industry } = body;
+    const { prospect_id, domain, business_name, businessName, website, mode, industry, allow_email_guess = false } = body;
+    const resolvedBusinessName = business_name || businessName || "";
 
     // ── BATCH MODE ──
     if (mode === "batch") {
@@ -499,7 +555,7 @@ serve(async (req) => {
         try {
           const dom = extractDomain(prospect.website || "");
           if (!dom) { failed++; continue; }
-          const result = await runWaterfall(dom, prospect.business_name);
+          const result = await runWaterfall(dom, prospect.business_name, { website: prospect.website, allowEmailGuess: false });
           await sb.from("prospect_businesses").update({
             enrichment_source: result.enrichment_source,
             enrichment_status: result.email ? "enriched" : "no_data",
@@ -547,7 +603,7 @@ serve(async (req) => {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const result = await runWaterfall(targetDomain, business_name || "");
+    const result = await runWaterfall(targetDomain, resolvedBusinessName, { website, allowEmailGuess: Boolean(allow_email_guess) });
 
     if (prospect_id) {
       await sb.from("prospect_businesses").update({
