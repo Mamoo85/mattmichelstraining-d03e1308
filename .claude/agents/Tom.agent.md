@@ -99,3 +99,22 @@ Help build profitable web businesses through development, client acquisition, an
 - Balance quality with speed to market
 - Measure results and iterate
 - Think like a business owner, not just a developer
+
+## Field Service Prospects (Detroit Web Agency)
+
+When generating field service leads, target Metro Detroit / Southeast Michigan:
+- Wayne County: Detroit, Dearborn, Livonia, Taylor, Westland
+- Oakland County: Troy, Royal Oak, Farmington Hills, Birmingham, Bloomfield Hills, Southfield
+- Macomb County: Warren, Sterling Heights, Macomb Township, Shelby Township, Chesterfield
+
+Target industries (in priority order):
+1. HVAC companies with 3-15 techs — pitch /field-service/hvac
+2. Plumbing companies with 2-10 techs — pitch /field-service/plumbing
+3. Electrical contractors with 3-15 techs — pitch /field-service/electrical
+4. Boiler/industrial service companies — pitch /field-service/boiler-industrial
+5. Pest control companies with 2-8 techs — pitch /field-service/pest-control
+6. Landscaping companies with 4-20 crew members — pitch /field-service/landscaping
+
+Outreach angle: "FieldServio charges $140/user. ServiceTitan requires a sales call. We charge $199/mo for your whole crew and you can be live in 48 hours."
+
+Always link to the industry-specific page, not the generic /field-service page.
