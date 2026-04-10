@@ -121,6 +121,7 @@ const AdminCRMDashboard       = lazyRetry(() => import("@/components/admin/Admin
 const VisitorIntelFeed        = lazyRetry(() => import("@/components/admin/VisitorIntelFeed"));
 const TechDispatchMap         = lazyRetry(() => import("@/components/admin/TechDispatchMap"));
 const ReviewLeaderboard       = lazyRetry(() => import("@/components/admin/ReviewLeaderboard"));
+const AdminFieldCRMClients    = lazyRetry(() => import("@/components/admin/AdminFieldCRMClients"));
 
 // Command Deck
 const AdminCommandDeck        = lazyRetry(() => import("@/components/admin/AdminCommandDeck"));
@@ -425,6 +426,7 @@ const Admin = () => {
       color: "#06b6d4",
       tools: [
         { key: "crm-dashboard", label: "📊 CRM Intelligence", component: <AdminCRMDashboard /> },
+        { key: "field-crm-clients", label: "🏢 Field CRM Clients", component: <AdminFieldCRMClients /> },
         { key: "visitor-intel", label: "👁 Visitor Intel", component: <VisitorIntelFeed /> },
         { key: "dispatch-map", label: "🗺 Dispatch Map", component: <TechDispatchMap /> },
         { key: "review-engine", label: "⭐ Review Engine", component: <ReviewLeaderboard /> },
