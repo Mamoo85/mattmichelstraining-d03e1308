@@ -360,20 +360,9 @@ const TEMPLATES: Record<string, OnboardTemplate> = {
       <p>Reply with your market details!</p>`,
   },
   field_service_subscription: {
-    subject: "Welcome to Detroit Web Agency Field Service — Let's Get Your Crew Set Up",
+    subject: "Your Field Service App is Live — Click Here to Log In",
     nextStage: "📧 Welcome Email Sent",
-    body: (name) => `
-      <p>Hey ${name}!</p>
-      <p>Welcome to Detroit Web Agency Field Service! Your dispatch board and tech app are ready to go.</p>
-      <p><strong>Here's how to get started:</strong></p>
-      <ol>
-        <li>Reply to this email with your technician names and phone numbers — I'll add them to your account</li>
-        <li>Send me your customer list (even a spreadsheet is fine) and I'll import them</li>
-        <li>Your tech app URL: <strong>detroitwebagent.com/field-service/tech</strong> — share this with your crew</li>
-        <li>Your dispatcher URL: <strong>detroitwebagent.com/field-service/dispatch?client=YOUR_ID</strong></li>
-      </ol>
-      <p>I'll have everything configured within 24 hours of receiving your tech list. Questions? Reply here or call (313) 806-4952.</p>
-      <p>— Matt, Detroit Web Agency</p>`,
+    body: (name) => `<p>Hey ${name} — your dispatch board is live. Reply with your tech list and I'll have everything set up within 24 hours. — Matt</p>`,
   },
 };
 
