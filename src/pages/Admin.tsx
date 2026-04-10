@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Loader2, Users, Dumbbell, DollarSign, Megaphone, Globe,
   Activity, AlertTriangle, CheckCircle, Mail, Zap, Search,
-  ChevronRight, X, ArrowLeft,
+  ChevronRight, X, ArrowLeft, Wrench,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -108,6 +108,10 @@ const AdminSearchConsole      = lazyRetry(() => import("@/components/admin/Admin
 const AdminGbpPosts           = lazyRetry(() => import("@/components/admin/AdminGbpPosts"));
 const AdminInstagramPosts     = lazyRetry(() => import("@/components/admin/AdminInstagramPosts"));
 const AdminContentGenerator   = lazyRetry(() => import("@/components/admin/AdminContentGenerator"));
+
+// DWA domain
+const AdminDWAOverview        = lazyRetry(() => import("@/components/admin/AdminDWAOverview"));
+const AdminHireAlertClients   = lazyRetry(() => import("@/components/admin/AdminHireAlertClients"));
 
 // Agency domain
 const AdminWebDesignCRM       = lazyRetry(() => import("@/components/admin/AdminWebDesignCRM"));
@@ -417,6 +421,24 @@ const Admin = () => {
         { key: "training-newsletter", label: "Training Newsletter", component: <AdminTrainingNewsletter /> },
         { key: "history", label: "Send History", component: <AdminSendHistory /> },
         { key: "learn", label: "Learn Hub", component: <AdminLearnEditor /> },
+      ],
+    },
+    {
+      key: "dwa",
+      label: "Detroit Web Agency",
+      icon: Wrench,
+      color: "#00d4ff",
+      tools: [
+        { key: "dwa-overview", label: "🏗 DWA Overview", component: <AdminDWAOverview /> },
+        { key: "field-crm-clients", label: "🏢 FieldDesk Clients", component: <AdminFieldCRMClients /> },
+        { key: "hire-alert-clients", label: "🔔 TechAlert Clients", component: <AdminHireAlertClients /> },
+        { key: "dwa-visitor-intel", label: "👁 SiteRadar (Visitor Intel)", component: <VisitorIntelFeed /> },
+        { key: "dwa-dispatch-map", label: "🗺 Dispatch Map", component: <TechDispatchMap /> },
+        { key: "dwa-review-engine", label: "⭐ Review Engine", component: <ReviewLeaderboard /> },
+        { key: "dwa-crm", label: "🏗️ Web Design CRM", component: <AdminWebDesignCRM /> },
+        { key: "dwa-prospector", label: "🔍 Prospector", component: <AdminProspector /> },
+        { key: "dwa-demo-links", label: "🔗 Demo Links", component: <AdminDemoLinkGenerator /> },
+        { key: "dwa-scouting", label: "📊 Scouting Dashboard", component: <AdminScoutingDashboard /> },
       ],
     },
     {
