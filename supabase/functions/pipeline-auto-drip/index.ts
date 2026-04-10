@@ -21,16 +21,33 @@ const DRIP_SCHEDULE = [
   { step: 4, delayDays: 14, subject: "Last message from me", label: "4_Day_15_Sent" },
 ];
 
+const BANNER_URL = "https://mattmichelstraining.com/images/dwa-email-banner.png";
+const BOAT_PHOTO_URL = "https://mattmichelstraining.com/images/matt-boat.jpg";
+
+const EMAIL_SIGNATURE = `
+<div style="margin-top:32px;padding-top:20px;border-top:1px solid #1e293b;">
+  <table cellpadding="0" cellspacing="0" border="0"><tr>
+    <td style="padding-right:14px;vertical-align:top;">
+      <img src="${BOAT_PHOTO_URL}" alt="Matt Michels" width="56" height="56" style="border-radius:50%;object-fit:cover;display:block;" />
+    </td>
+    <td style="vertical-align:top;font-size:13px;color:#94a3b8;font-family:Arial,sans-serif;">
+      <strong style="color:#22d3ee;">Matt Michels</strong> | Lead Web Agent<br/>
+      <span style="color:#64748b;">Detroit Web Agency · (313) 806-4952</span><br/>
+      <a href="https://detroitwebagent.com" style="color:#22d3ee;text-decoration:none;font-size:12px;">detroitwebagent.com</a>
+    </td>
+  </tr></table>
+</div>`;
+
 async function generateDripEmail(step: number, businessName: string, industry: string, siteFlaw: string | null, contactName: string | null): Promise<{ subject: string; html: string }> {
   const scheduleItem = DRIP_SCHEDULE[step - 1];
   const subject = scheduleItem.subject.replace("{{business}}", businessName);
   const firstName = contactName?.split(" ")[0] || "there";
 
   const prompts: Record<number, string> = {
-    1: `Write a cold outreach email from Matt at M² Digital (a web design & digital marketing agency). Recipient: ${firstName} at ${businessName} (${industry}). Subject: "${subject}". The hook: their competitors are showing up on Google and getting the calls they're not. ${siteFlaw ? `Mention this specific issue: "${siteFlaw}".` : ""} Include a soft CTA to check out a quick demo. Keep it under 150 words, conversational, not salesy. Sign off as Matt Michels. Output ONLY the email body HTML (no subject line).`,
-    2: `Write a short follow-up email (step 2 of 4) from Matt at M² Digital to ${firstName} at ${businessName}. Reference the previous email about their online presence. Mention a demo link. Keep it under 100 words, casual. Sign off as Matt. Output ONLY the email body HTML.`,
-    3: `Write a value-add email (step 3 of 4) from Matt at M² Digital to ${firstName} at ${businessName} (${industry}). Do a quick "online presence check" — mention things like Google Business Profile, mobile speed, and local SEO. Keep it helpful, not pushy. Under 120 words. Sign off as Matt. Output ONLY the email body HTML.`,
-    4: `Write a breakup email (final step) from Matt at M² Digital to ${firstName} at ${businessName}. Keep it short, respectful, and leave the door open. Mention you won't email again but they can reach out anytime. Under 80 words. Sign off as Matt Michels. Output ONLY the email body HTML.`,
+    1: `Write a cold outreach email from Matt at Detroit Web Agency (a web design & digital marketing agency in Grosse Pointe, MI). Recipient: ${firstName} at ${businessName} (${industry}). Subject: "${subject}". The hook: their competitors are showing up on Google and getting the calls they're not. ${siteFlaw ? `Mention this specific issue: "${siteFlaw}".` : ""} Include a soft CTA to check out a quick demo. Keep it under 150 words, conversational, not salesy. Do NOT include any signature — just the email body. Output ONLY the email body HTML (no subject line, no signature).`,
+    2: `Write a short follow-up email (step 2 of 4) from Matt at Detroit Web Agency to ${firstName} at ${businessName}. Reference the previous email about their online presence. Mention a demo link. Keep it under 100 words, casual. Do NOT include any signature. Output ONLY the email body HTML.`,
+    3: `Write a value-add email (step 3 of 4) from Matt at Detroit Web Agency to ${firstName} at ${businessName} (${industry}). Do a quick "online presence check" — mention things like Google Business Profile, mobile speed, and local SEO. Keep it helpful, not pushy. Under 120 words. Do NOT include any signature. Output ONLY the email body HTML.`,
+    4: `Write a breakup email (final step) from Matt at Detroit Web Agency to ${firstName} at ${businessName}. Keep it short, respectful, and leave the door open. Mention you won't email again but they can reach out anytime. Under 80 words. Do NOT include any signature. Output ONLY the email body HTML.`,
   };
 
   try {
@@ -56,10 +73,10 @@ async function generateDripEmail(step: number, businessName: string, industry: s
 
   // Fallback templates
   const fallbacks: Record<number, string> = {
-    1: `<p>Hi ${firstName},</p><p>I was looking at businesses in the ${industry} space near you, and I noticed something — your competitors are showing up ahead of you on Google.</p>${siteFlaw ? `<p>I also spotted this on your site: <em>${siteFlaw}</em></p>` : ""}<p>If you're curious how they're getting those calls, I put together a quick breakdown. Happy to share — no strings attached.</p><p>Best,<br/>Matt Michels<br/>M² Digital</p>`,
-    2: `<p>Hi ${firstName},</p><p>Just following up on my note from a few days ago. I put together a quick demo showing what your online presence could look like with a few tweaks.</p><p>Worth a 2-minute look?</p><p>— Matt</p>`,
-    3: `<p>Hi ${firstName},</p><p>Did a quick online presence check for ${businessName} — looked at your Google Business Profile, mobile site speed, and local search visibility.</p><p>There are a few quick wins that could help you show up more. Happy to share what I found.</p><p>— Matt</p>`,
-    4: `<p>Hi ${firstName},</p><p>This is my last note — I don't want to be that guy who keeps emailing. If you ever want to chat about getting more visibility online, I'm here.</p><p>Wishing you and ${businessName} all the best.</p><p>— Matt Michels<br/>M² Digital</p>`,
+    1: `<p>Hi ${firstName},</p><p>I was looking at businesses in the ${industry} space near you, and I noticed something — your competitors are showing up ahead of you on Google.</p>${siteFlaw ? `<p>I also spotted this on your site: <em>${siteFlaw}</em></p>` : ""}<p>If you're curious how they're getting those calls, I put together a quick breakdown. Happy to share — no strings attached.</p>`,
+    2: `<p>Hi ${firstName},</p><p>Just following up on my note from a few days ago. I put together a quick demo showing what your online presence could look like with a few tweaks.</p><p>Worth a 2-minute look?</p>`,
+    3: `<p>Hi ${firstName},</p><p>Did a quick online presence check for ${businessName} — looked at your Google Business Profile, mobile site speed, and local search visibility.</p><p>There are a few quick wins that could help you show up more. Happy to share what I found.</p>`,
+    4: `<p>Hi ${firstName},</p><p>This is my last note — I don't want to be that guy who keeps emailing. If you ever want to chat about getting more visibility online, I'm here.</p><p>Wishing you and ${businessName} all the best.</p>`,
   };
 
   return { subject, html: wrapEmailHtml(fallbacks[step] || fallbacks[1]) };
@@ -67,8 +84,14 @@ async function generateDripEmail(step: number, businessName: string, industry: s
 
 function wrapEmailHtml(body: string): string {
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.6;max-width:600px;margin:0 auto;padding:20px;">
+<body style="font-family:Arial,sans-serif;font-size:14px;color:#e2e8f0;line-height:1.6;max-width:600px;margin:0 auto;padding:0;background:#0f172a;">
+<div style="background:#0a0a0f;padding:0;">
+  <img src="${BANNER_URL}" alt="Detroit Web Agency" width="600" style="width:100%;max-width:600px;display:block;height:auto;" />
+</div>
+<div style="padding:24px 20px;background:#0f172a;">
 ${body}
+${EMAIL_SIGNATURE}
+</div>
 </body></html>`;
 }
 
@@ -84,11 +107,12 @@ async function sendEmail(to: string, subject: string, html: string): Promise<{ s
         "X-Connection-Api-Key": RESEND_API_KEY,
       },
       body: JSON.stringify({
-        from: "Matt Michels <matt@mattmichelstraining.com>",
+        from: "Matt Michels | Detroit Web Agency <matt@detroitwebagent.com>",
         to: [to],
+        bcc: ["matthewmichels4@gmail.com"],
         subject,
         html,
-        reply_to: "matt@mattmichelstraining.com",
+        reply_to: "matt@detroitwebagent.com",
       }),
     });
     const data = await res.json();
