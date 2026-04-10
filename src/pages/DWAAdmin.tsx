@@ -3,13 +3,17 @@ import DWAStats from "@/components/dwa-admin/DWAStats";
 import DWAClientRoster from "@/components/dwa-admin/DWAClientRoster";
 import DWARecentJobs from "@/components/dwa-admin/DWARecentJobs";
 import DWACommandDeck from "@/components/dwa-admin/DWACommandDeck";
+import AssetManager from "@/components/field-service/AssetManager";
+import ContractManager from "@/components/field-service/ContractManager";
 
-type Tab = "overview" | "clients" | "jobs" | "command";
+type Tab = "overview" | "clients" | "jobs" | "assets" | "contracts" | "command";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "overview", label: "Overview" },
   { id: "clients", label: "Clients" },
   { id: "jobs", label: "Jobs" },
+  { id: "assets", label: "Assets" },
+  { id: "contracts", label: "Contracts" },
   { id: "command", label: "Command Deck" },
 ];
 
@@ -132,6 +136,20 @@ export default function DWAAdmin() {
           <div>
             <h2 className="text-white/40 text-xs uppercase tracking-wide mb-4">All Jobs</h2>
             <DWARecentJobs limit={50} />
+          </div>
+        )}
+
+        {activeTab === "assets" && (
+          <div>
+            <h2 className="text-white/40 text-xs uppercase tracking-wide mb-4">All Assets</h2>
+            <AssetManager />
+          </div>
+        )}
+
+        {activeTab === "contracts" && (
+          <div>
+            <h2 className="text-white/40 text-xs uppercase tracking-wide mb-4">All Contracts</h2>
+            <ContractManager />
           </div>
         )}
 
