@@ -186,7 +186,7 @@ async function clayEnrich(_domain: string, _businessName: string) {
 
 // ── JINA AI READER + STRICT XML LLM FALLBACK ──
 const JINA_TIMEOUT_MS = 15000; // Increased from 8s — websites need more time to respond
-const JINA_PATHS = ["", "/contact", "/about"];
+const JINA_PATHS = ["", "/contact", "/about", "/team", "/our-team", "/staff", "/people", "/about-us"];
 
 function normalizeWebsite(url: string): string {
   let clean = url.trim();
@@ -287,7 +287,7 @@ ${markdown.slice(0, 12000)}
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash-lite",
+      model: "google/gemini-2.5-flash",
       max_tokens: 500,
       messages: [{ role: "user", content: prompt }],
     }),
