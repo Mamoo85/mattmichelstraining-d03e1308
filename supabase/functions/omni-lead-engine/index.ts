@@ -11,6 +11,57 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const CHUNK_SIZE = 5;
+
+type JsonRecord = Record<string, unknown>;
+
+interface MapBusiness {
+  title: string;
+  rating: number | null;
+  reviews: number | null;
+  address: string | null;
+  phone: string | null;
+  website: string | null;
+  category: string | null;
+  place_id: string | null;
+  claimed: boolean | null;
+}
+
+interface EnrichmentData {
+  email: string | null;
+  name: string | null;
+  phone: string | null;
+  verifiedEmail: boolean;
+  source: string | null;
+}
+
+interface PreparedLead {
+  business_name: string;
+  contact_name: string | null;
+  email: string | null;
+  phone: string | null;
+  website: string | null;
+  city: string | null;
+  state: string | null;
+  industry: string;
+  google_rating: number | null;
+  review_count: number | null;
+  gbp_claimed: boolean | null;
+  google_place_id: string | null;
+  pipeline_stage: string;
+  source: string;
+  notes: string | null;
+}
+
+type ProcessResult =
+  | { kind: "ready"; lead: PreparedLead }
+  | { kind: "discarded"; business_name: string; reason: string }
+  | { kind: "failed"; business_name: string; error: string };
+
+type SaveResult =
+  | { kind: "saved"; lead: PreparedLead; id: string | null; dripTriggered: boolean }
+  | { kind: "failed"; business_name: string; error: string };
+
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -18,8 +69,67 @@ function json(body: unknown, status = 200) {
   });
 }
 
-// Step A: Google Maps via DataForSEO
-async function mapsSearch(industry: string, location: string, limit: number) {
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function chunkArray<T>(items: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < items.length; i += size) chunks.push(items.slice(i, i + size));
+  return chunks;
+}
+
+function normalizeWebsite(url: string | null | undefined): string | null {
+  if (!url) return null;
+  try {
+    const formatted = url.startsWith("http") ? url : `https://${url}`;
+    return new URL(formatted).toString();
+  } catch {
+    return null;
+  }
+}
+
+function extractDomain(url: string | null | undefined): string | null {
+  const normalized = normalizeWebsite(url);
+  if (!normalized) return null;
+  try {
+    return new URL(normalized).hostname.replace(/^www\./, "");
+  } catch {
+    return null;
+  }
+}
+
+function parseLocation(location: string | null | undefined) {
+  const [cityPart, statePart] = (location || "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  return {
+    city: cityPart || null,
+    state: statePart || null,
+  };
+}
+
+function createEmptyResponse(overrides: JsonRecord = {}) {
+  return {
+    success: true,
+    total: 0,
+    processed: 0,
+    saved: 0,
+    discarded: 0,
+    failed: 0,
+    discarded_names: [] as string[],
+    successful_leads: [] as PreparedLead[],
+    results: [] as PreparedLead[],
+    drip_triggered: 0,
+    chunk_size: CHUNK_SIZE,
+    errors: [] as Array<{ stage: string; business_name?: string; message: string }>,
+    ...overrides,
+  };
+}
+
+async function mapsSearch(industry: string, location: string, limit: number): Promise<MapBusiness[]> {
   const login = Deno.env.get("DATAFORSEO_LOGIN") ?? "";
   const password = Deno.env.get("DATAFORSEO_PASSWORD") ?? "";
   if (!login || !password) throw new Error("DataForSEO credentials not configured");
@@ -42,34 +152,35 @@ async function mapsSearch(industry: string, location: string, limit: number) {
 
   const data = await res.json();
   if (data?.status_code !== 20000) {
-    console.error("DataForSEO error:", JSON.stringify(data?.status_message));
-    // Fallback: return empty and let caller handle
+    console.error("[OmniEngine] DataForSEO error:", JSON.stringify(data?.status_message ?? data));
     return [];
   }
 
   const items = data?.tasks?.[0]?.result?.[0]?.items ?? [];
   return items
-    .filter((i: any) => i.type === "maps_search")
+    .filter((item: any) => item.type === "maps_search")
     .slice(0, limit)
-    .map((i: any) => ({
-      title: i.title || "Unknown",
-      rating: i.rating?.value ?? null,
-      reviews: i.rating?.votes_count ?? null,
-      address: i.address || null,
-      phone: i.phone || null,
-      website: i.url || i.domain || null,
-      category: i.category || null,
-      place_id: i.place_id || null,
-      claimed: i.is_claimed ?? null,
+    .map((item: any) => ({
+      title: item.title || "Unknown",
+      rating: item.rating?.value ?? null,
+      reviews: item.rating?.votes_count ?? null,
+      address: item.address || null,
+      phone: item.phone || null,
+      website: item.url || item.domain || null,
+      category: item.category || null,
+      place_id: item.place_id || null,
+      claimed: item.is_claimed ?? null,
     }));
 }
 
-// Step B: Firecrawl scrape a single URL
 async function scrapeUrl(url: string): Promise<string> {
-  if (!FIRECRAWL_API_KEY || !url) return "";
+  if (!FIRECRAWL_API_KEY) return "";
+  const formatted = normalizeWebsite(url);
+  if (!formatted) return "";
+
   try {
-    let formatted = url.trim();
-    if (!formatted.startsWith("http")) formatted = `https://${formatted}`;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
     const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
       method: "POST",
       headers: {
@@ -80,24 +191,29 @@ async function scrapeUrl(url: string): Promise<string> {
         url: formatted,
         formats: ["markdown"],
         onlyMainContent: true,
-        timeout: 15000,
+        timeout: 8000,
       }),
+      signal: controller.signal,
     });
-    if (!res.ok) return "";
+    clearTimeout(timeoutId);
+    if (!res.ok) {
+      await res.text();
+      return "";
+    }
     const data = await res.json();
-    const md = data?.data?.markdown || data?.markdown || "";
-    return md.slice(0, 3000); // Keep it manageable for enrichment
-  } catch {
+    return (data?.data?.markdown || data?.markdown || "").slice(0, 1500);
+  } catch (error) {
+    console.error("[OmniEngine] Firecrawl scrape failed:", error);
     return "";
   }
 }
 
-// Step C: Call the enrichment waterfall
-async function enrichLead(
-  domain: string,
-  businessName: string,
-  industry: string
-): Promise<{ email: string | null; name: string | null; phone: string | null }> {
+async function enrichLead(params: {
+  domain: string;
+  businessName: string;
+  industry: string;
+  website: string | null;
+}): Promise<EnrichmentData> {
   try {
     const res = await fetch(`${SUPABASE_URL}/functions/v1/lead-enrichment-waterfall`, {
       method: "POST",
@@ -105,170 +221,292 @@ async function enrichLead(
         Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ domain, businessName, industry }),
+      body: JSON.stringify({
+        domain: params.domain,
+        business_name: params.businessName,
+        industry: params.industry,
+        website: params.website,
+        allow_email_guess: false,
+      }),
     });
-    if (!res.ok) return { email: null, name: null, phone: null };
+
+    if (!res.ok) {
+      const body = await res.text();
+      console.error("[OmniEngine] Waterfall non-OK:", res.status, body.slice(0, 200));
+      return { email: null, name: null, phone: null, verifiedEmail: false, source: null };
+    }
+
     const data = await res.json();
     return {
-      email: data?.email || data?.verified_email || null,
+      email: typeof data?.email === "string" ? data.email : null,
       name: data?.decision_maker_name || data?.contact_name || null,
       phone: data?.direct_phone || data?.phone || null,
+      verifiedEmail: Boolean(data?.verified_email),
+      source: data?.enrichment_source || null,
     };
-  } catch {
-    return { email: null, name: null, phone: null };
+  } catch (error) {
+    console.error("[OmniEngine] Waterfall request failed:", error);
+    return { email: null, name: null, phone: null, verifiedEmail: false, source: null };
+  }
+}
+
+async function processBusiness(
+  business: MapBusiness,
+  industry: string,
+  location: string,
+  strictEmailFilter: boolean,
+): Promise<ProcessResult> {
+  try {
+    const website = normalizeWebsite(business.website);
+    const domain = extractDomain(website);
+    const { city, state } = parseLocation(location);
+
+    const [scrapeResult, enrichmentResult] = await Promise.allSettled([
+      website ? scrapeUrl(website) : Promise.resolve(""),
+      domain
+        ? enrichLead({ domain, businessName: business.title, industry, website })
+        : Promise.resolve({ email: null, name: null, phone: null, verifiedEmail: false, source: null }),
+    ]);
+
+    if (scrapeResult.status === "rejected") {
+      console.error(`[OmniEngine] Scrape failed for ${business.title}:`, scrapeResult.reason);
+    }
+
+    if (enrichmentResult.status === "rejected") {
+      console.error(`[OmniEngine] Enrichment failed for ${business.title}:`, enrichmentResult.reason);
+    }
+
+    const enrichment =
+      enrichmentResult.status === "fulfilled"
+        ? enrichmentResult.value
+        : { email: null, name: null, phone: null, verifiedEmail: false, source: null };
+
+    const sitePreview = scrapeResult.status === "fulfilled" ? scrapeResult.value : "";
+
+    if (strictEmailFilter && !enrichment.email) {
+      return {
+        kind: "discarded",
+        business_name: business.title,
+        reason: domain ? "No validated email recovered" : "No usable website/domain",
+      };
+    }
+
+    return {
+      kind: "ready",
+      lead: {
+        business_name: business.title,
+        contact_name: enrichment.name,
+        email: enrichment.email,
+        phone: enrichment.phone || business.phone,
+        website,
+        city,
+        state,
+        industry,
+        google_rating: business.rating,
+        review_count: business.reviews,
+        gbp_claimed: business.claimed,
+        google_place_id: business.place_id,
+        pipeline_stage: "new_lead",
+        source: "omni_engine",
+        notes: sitePreview
+          ? `Source preview captured during Omni pass. Enrichment source: ${enrichment.source || "none"}.
+
+${sitePreview}`
+          : `Enrichment source: ${enrichment.source || "none"}.`,
+      },
+    };
+  } catch (error) {
+    return {
+      kind: "failed",
+      business_name: business.title,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
+async function saveLead(
+  serviceClient: ReturnType<typeof createClient>,
+  lead: PreparedLead,
+): Promise<SaveResult> {
+  try {
+    const { data: upserted, error } = await serviceClient
+      .from("prospect_pipeline")
+      .upsert(lead, { onConflict: "business_name,city" })
+      .select("id, email, drip_step")
+      .maybeSingle();
+
+    if (error) {
+      return { kind: "failed", business_name: lead.business_name, error: error.message };
+    }
+
+    let dripTriggered = false;
+    if (upserted?.id && upserted?.email && (!upserted.drip_step || upserted.drip_step === 0)) {
+      try {
+        const dripRes = await fetch(`${SUPABASE_URL}/functions/v1/pipeline-auto-drip`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ mode: "trigger", lead_id: upserted.id }),
+        });
+        if (dripRes.ok) dripTriggered = true;
+        else console.error("[OmniEngine] Drip trigger non-OK:", dripRes.status, await dripRes.text());
+      } catch (error) {
+        console.error("[OmniEngine] Drip trigger error:", error);
+      }
+    }
+
+    return { kind: "saved", lead, id: upserted?.id ?? null, dripTriggered };
+  } catch (error) {
+    return {
+      kind: "failed",
+      business_name: lead.business_name,
+      error: error instanceof Error ? error.message : String(error),
+    };
   }
 }
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) return json({ error: "Not authenticated" }, 401);
+
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    global: { headers: { Authorization: authHeader } },
+  });
+  const { data: { user }, error: authErr } = await supabase.auth.getUser();
+  if (authErr || !user) return json({ error: "Auth failed" }, 401);
+
   try {
-    // Auth check
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) return json({ error: "Not authenticated" }, 401);
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: { user }, error: authErr } = await supabase.auth.getUser();
-    if (authErr || !user) return json({ error: "Auth failed" }, 401);
-
-    const serviceClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
-
     const body = await req.json();
-    const { industry, location, limit = 10, strict_email_filter = true } = body;
+    const industry = typeof body?.industry === "string" ? body.industry.trim() : "";
+    const location = typeof body?.location === "string" ? body.location.trim() : "Michigan";
+    const requestedLimit = Number(body?.limit ?? 10);
+    const limit = Number.isFinite(requestedLimit) ? Math.max(1, Math.min(50, Math.floor(requestedLimit))) : 10;
+    const strictEmailFilter = body?.strict_email_filter !== false;
 
-    if (!industry) return json({ error: "Industry is required" }, 400);
-
-    console.log(`[OmniEngine] Starting: ${industry} in ${location}, limit=${limit}, strict=${strict_email_filter}`);
-
-    // ─── Step A: Maps Search ───
-    console.log("[OmniEngine] Step A: Google Maps search...");
-    const mapResults = await mapsSearch(industry, location || "Michigan", limit);
-    console.log(`[OmniEngine] Step A complete: ${mapResults.length} businesses found`);
-
-    if (mapResults.length === 0) {
-      return json({ success: true, results: [], total: 0, message: "No businesses found" });
+    if (!industry) {
+      return json(
+        createEmptyResponse({
+          success: false,
+          message: "Industry is required",
+          errors: [{ stage: "validation", message: "Industry is required" }],
+        }),
+      );
     }
 
-    // ─── Process each lead through Steps B, C, D ───
-    const processedLeads: any[] = [];
-    const discarded: string[] = [];
+    console.log(`[OmniEngine] Starting ${industry} in ${location} with limit=${limit} strict=${strictEmailFilter}`);
 
-    // Process in parallel batches of 3
-    const batchSize = 3;
-    for (let i = 0; i < mapResults.length; i += batchSize) {
-      const batch = mapResults.slice(i, i + batchSize);
-      const batchResults = await Promise.all(
-        batch.map(async (biz: any) => {
-          const domain = biz.website
-            ? new URL(biz.website.startsWith("http") ? biz.website : `https://${biz.website}`).hostname
-            : null;
+    const mapResults = await mapsSearch(industry, location, limit);
+    if (mapResults.length === 0) {
+      return json(createEmptyResponse({ message: "No businesses found" }));
+    }
 
-          // ─── Step B: Firecrawl scrape ───
-          let siteContent = "";
-          if (biz.website) {
-            siteContent = await scrapeUrl(biz.website);
-          }
+    const preparedLeads: PreparedLead[] = [];
+    const discardedNames: string[] = [];
+    const errors: Array<{ stage: string; business_name?: string; message: string }> = [];
+    let failedCount = 0;
 
-          // ─── Step C: Enrichment Waterfall ───
-          let enrichedEmail = null;
-          let enrichedName = null;
-          let enrichedPhone = null;
-
-          if (domain) {
-            const enrichment = await enrichLead(domain, biz.title, industry);
-            enrichedEmail = enrichment.email;
-            enrichedName = enrichment.name;
-            enrichedPhone = enrichment.phone;
-          }
-
-          // Use enriched data, fallback to map data
-          const finalEmail = enrichedEmail;
-          const finalPhone = enrichedPhone || biz.phone;
-          const finalContact = enrichedName;
-
-          // ─── Step D: Strict Email Filter ───
-          if (strict_email_filter && !finalEmail) {
-            return { discarded: true, name: biz.title };
-          }
-
-          return {
-            discarded: false,
-            lead: {
-              business_name: biz.title,
-              contact_name: finalContact,
-              email: finalEmail,
-              phone: finalPhone,
-              website: biz.website,
-              city: (location || "").split(",")[0]?.trim() || null,
-              state: (location || "").split(",")[1]?.trim() || null,
-              industry,
-              google_rating: biz.rating,
-              review_count: biz.reviews,
-              gbp_claimed: biz.claimed,
-              google_place_id: biz.place_id,
-              pipeline_stage: "new_lead",
-              source: "omni_engine",
-              site_content_preview: siteContent.slice(0, 500),
-            },
-          };
-        })
+    for (const chunk of chunkArray(mapResults, CHUNK_SIZE)) {
+      const settledChunk = await Promise.allSettled(
+        chunk.map((business) => processBusiness(business, industry, location, strictEmailFilter)),
       );
 
-      for (const result of batchResults) {
-        if (result.discarded) {
-          discarded.push(result.name);
-        } else {
-          processedLeads.push(result.lead);
+      settledChunk.forEach((settled, index) => {
+        const businessName = chunk[index]?.title || "Unknown";
+        if (settled.status === "rejected") {
+          failedCount += 1;
+          errors.push({
+            stage: "prepare",
+            business_name: businessName,
+            message: settled.reason instanceof Error ? settled.reason.message : String(settled.reason),
+          });
+          return;
         }
-      }
+
+        const result = settled.value;
+        if (result.kind === "ready") {
+          preparedLeads.push(result.lead);
+          return;
+        }
+
+        if (result.kind === "discarded") {
+          discardedNames.push(result.business_name);
+          return;
+        }
+
+        failedCount += 1;
+        errors.push({ stage: "prepare", business_name: result.business_name, message: result.error });
+      });
+
+      await sleep(150);
     }
 
-    // ─── Save to Pipeline & Auto-Trigger Drip ───
-    let savedCount = 0;
-    const dripTriggered: string[] = [];
-    for (const lead of processedLeads) {
-      const { site_content_preview, ...dbLead } = lead;
-      const { data: upserted, error } = await serviceClient.from("prospect_pipeline").upsert(
-        dbLead,
-        { onConflict: "business_name,city" }
-      ).select("id, email, drip_step");
-      if (!error && upserted?.[0]) {
-        savedCount++;
-        // Auto-trigger Day 1 drip for new leads with email
-        const row = upserted[0];
-        if (row.email && (!row.drip_step || row.drip_step === 0)) {
-          try {
-            await fetch(`${SUPABASE_URL}/functions/v1/pipeline-auto-drip`, {
-              method: "POST",
-              headers: { Authorization: `Bearer ${SERVICE_ROLE_KEY}`, "Content-Type": "application/json" },
-              body: JSON.stringify({ mode: "trigger", lead_id: row.id }),
-            });
-            dripTriggered.push(row.id);
-          } catch (e) {
-            console.error("[OmniEngine] Drip trigger error:", e);
-          }
+    const serviceClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+    const savedLeads: PreparedLead[] = [];
+    let dripTriggered = 0;
+
+    for (const chunk of chunkArray(preparedLeads, CHUNK_SIZE)) {
+      const settledSaves = await Promise.allSettled(chunk.map((lead) => saveLead(serviceClient, lead)));
+
+      settledSaves.forEach((settled, index) => {
+        const businessName = chunk[index]?.business_name || "Unknown";
+        if (settled.status === "rejected") {
+          failedCount += 1;
+          errors.push({
+            stage: "save",
+            business_name: businessName,
+            message: settled.reason instanceof Error ? settled.reason.message : String(settled.reason),
+          });
+          return;
         }
-      } else if (error) {
-        console.error("[OmniEngine] Insert error:", error.message);
-      }
+
+        const result = settled.value;
+        if (result.kind === "failed") {
+          failedCount += 1;
+          errors.push({ stage: "save", business_name: result.business_name, message: result.error });
+          return;
+        }
+
+        savedLeads.push(result.lead);
+        if (result.dripTriggered) dripTriggered += 1;
+      });
+
+      await sleep(150);
     }
 
-    console.log(
-      `[OmniEngine] Complete: ${savedCount} saved, ${discarded.length} discarded, ${dripTriggered.length} drips triggered`
-    );
-
-    return json({
-      success: true,
+    const response = createEmptyResponse({
       total: mapResults.length,
-      saved: savedCount,
-      discarded: discarded.length,
-      discarded_names: discarded,
-      drip_triggered: dripTriggered.length,
-      results: processedLeads,
+      processed: savedLeads.length + discardedNames.length + failedCount,
+      saved: savedLeads.length,
+      discarded: discardedNames.length,
+      failed: failedCount,
+      discarded_names: discardedNames,
+      successful_leads: savedLeads,
+      results: savedLeads,
+      drip_triggered: dripTriggered,
+      errors,
     });
-  } catch (err) {
-    console.error("[OmniEngine] Fatal error:", err);
-    return json({ error: err instanceof Error ? err.message : "Engine failed" }, 500);
+
+    console.log(`[OmniEngine] Complete saved=${response.saved} discarded=${response.discarded} failed=${response.failed}`);
+    return json(response);
+  } catch (error) {
+    console.error("[OmniEngine] Fatal error:", error);
+    return json(
+      createEmptyResponse({
+        success: false,
+        message: error instanceof Error ? error.message : "Engine failed",
+        failed: 1,
+        processed: 1,
+        errors: [
+          {
+            stage: "fatal",
+            message: error instanceof Error ? error.message : String(error),
+          },
+        ],
+      }),
+    );
   }
 });
