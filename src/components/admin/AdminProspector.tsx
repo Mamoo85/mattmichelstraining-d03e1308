@@ -1035,6 +1035,44 @@ export default function AdminProspector() {
     }
   };
 
+  // ── Re-Enrich a pipeline lead (run waterfall again to find email) ──
+  const reEnrichLead = async (lead: PipelineLead) => {
+    if (!lead.website && !lead.google_place_id) { toast.error("No website to enrich from"); return; }
+    setReEnrichingId(lead.id);
+    try {
+      let domain = "";
+      if (lead.website) {
+        try {
+          const url = lead.website.startsWith("http") ? lead.website : `https://${lead.website}`;
+          domain = new URL(url).hostname.replace(/^www\./, "");
+        } catch { domain = ""; }
+      }
+      if (!domain) { toast.error("Could not extract domain from website"); return; }
+      const { data, error } = await supabase.functions.invoke("lead-enrichment-waterfall", {
+        body: { domain, business_name: lead.business_name, website: lead.website, allow_email_guess: true },
+      });
+      if (error) throw error;
+      const newEmail = data?.email || null;
+      const newName = data?.decision_maker_name || data?.contact_name || null;
+      const source = data?.enrichment_source || "none";
+      await (supabase as any).from("prospect_pipeline").update({
+        ...(newEmail ? { email: newEmail } : {}),
+        ...(newName && !lead.contact_name ? { contact_name: newName } : {}),
+        notes: `Enrichment source: ${source}.`,
+        updated_at: new Date().toISOString(),
+      }).eq("id", lead.id);
+      setPipelineLeads(prev => prev.map(l => l.id === lead.id ? {
+        ...l,
+        email: newEmail || l.email,
+        contact_name: newName && !l.contact_name ? newName : l.contact_name,
+        notes: `Enrichment source: ${source}.`,
+      } : l));
+      if (newEmail) toast.success(`Found email via ${source}: ${newEmail}`);
+      else toast.info(`No email found (tried ${source}) — lead kept in pipeline`);
+    } catch (err) { toast.error(err instanceof Error ? err.message : "Re-enrich failed"); }
+    finally { setReEnrichingId(null); }
+  };
+
   const sendOneEmail = async (lead: UnifiedLead) => {
     if (!lead.email) return;
     setLeadSendingId(lead.id);
