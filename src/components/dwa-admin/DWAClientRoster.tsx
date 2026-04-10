@@ -84,6 +84,7 @@ function AddClientModal({
       owner_email: form.owner_email.trim() || null,
       owner_phone: form.owner_phone.trim() || null,
       plan: form.plan,
+      industry: form.industry,
       active: true,
     });
     setLoading(false);
