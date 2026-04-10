@@ -442,6 +442,7 @@ serve(async () => {
 
   // For DB status update, use all alerted candidates across all clients
   const allAlertWorthy = scored.filter((c) => c.availability_score >= 5);
+  const allHotCandidates = scored.filter((c) => c.availability_score >= 7);
 
   // Update alerted candidates
   if (allAlertWorthy.length && alertsSent > 0) {
@@ -462,25 +463,77 @@ serve(async () => {
     errors: null,
   });
 
-  // Notify Matt
+  // Founder daily report — Matt sees every candidate found today with full scores
+  const candidateRows = scored.length
+    ? scored
+        .sort((a, b) => b.availability_score - a.availability_score)
+        .map(
+          (c) =>
+            `<tr style="border-bottom:1px solid #e2e8f0;">
+              <td style="padding:10px 8px;font-size:13px;color:#1e293b;font-weight:${c.availability_score >= 7 ? "700" : "400"};">${c.full_name}</td>
+              <td style="padding:10px 8px;font-size:13px;color:#64748b;">${c.license_type || "—"}</td>
+              <td style="padding:10px 8px;font-size:13px;color:#64748b;">${c.city || "—"}</td>
+              <td style="padding:10px 8px;font-size:13px;text-align:center;">
+                <span style="background:${c.availability_score >= 7 ? "#e8621a" : c.availability_score >= 5 ? "#f59e0b" : "#94a3b8"};color:#fff;padding:2px 8px;border-radius:12px;font-weight:700;">${c.availability_score}/10</span>
+              </td>
+              <td style="padding:10px 8px;font-size:12px;color:#94a3b8;">${c.source}</td>
+              <td style="padding:10px 8px;font-size:12px;color:#334155;">${c.score_reason}</td>
+            </tr>`
+        )
+        .join("")
+    : `<tr><td colspan="6" style="padding:16px;text-align:center;color:#94a3b8;font-size:13px;">No new candidates found today.</td></tr>`;
+
   await notifyMatt(
-    `TechAlert Daily Scan — ${dateStr} (${newCandidates.length} new, ${alertsSent} alerts)`,
-    `<div style="font-family:sans-serif;max-width:500px;padding:24px;">
-<h2 style="color:#00d4ff;">TechAlert Daily Scan</h2>
-<p><strong>Date:</strong> ${dateStr}</p>
-<p><strong>Total candidates found:</strong> ${allRaw.length}</p>
-<p><strong>New (not in DB):</strong> ${newCandidates.length}</p>
-<p><strong>Hot (7+):</strong> ${hotCandidates.length}</p>
-<p><strong>Active clients:</strong> ${clients.length}</p>
-<p><strong>Alert emails sent:</strong> ${alertsSent}</p>
-</div>`
+    `TechAlert Founder Report — ${dateStr} (${newCandidates.length} new, ${allHotCandidates.length} hot 🔥)`,
+    `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 16px;">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:680px;">
+
+<tr><td style="background:#0a1628;padding:24px 28px;border-radius:10px 10px 0 0;">
+  <p style="margin:0;color:#00d4ff;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">TechAlert — Founder Daily Report</p>
+  <p style="margin:6px 0 0;color:#fff;font-size:20px;font-weight:700;">${dateStr}</p>
+</td></tr>
+
+<tr><td style="background:#fff;padding:20px 28px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+    <tr>
+      <td style="text-align:center;padding:12px;background:#f1f5f9;border-radius:8px;"><p style="margin:0;font-size:22px;font-weight:700;color:#1e293b;">${allRaw.length}</p><p style="margin:4px 0 0;font-size:11px;color:#64748b;text-transform:uppercase;">Total Found</p></td>
+      <td width="12"></td>
+      <td style="text-align:center;padding:12px;background:#f1f5f9;border-radius:8px;"><p style="margin:0;font-size:22px;font-weight:700;color:#1e293b;">${newCandidates.length}</p><p style="margin:4px 0 0;font-size:11px;color:#64748b;text-transform:uppercase;">New to DB</p></td>
+      <td width="12"></td>
+      <td style="text-align:center;padding:12px;background:${allHotCandidates.length > 0 ? "#fff7ed" : "#f1f5f9"};border-radius:8px;border:${allHotCandidates.length > 0 ? "2px solid #e8621a" : "none"};"><p style="margin:0;font-size:22px;font-weight:700;color:${allHotCandidates.length > 0 ? "#e8621a" : "#1e293b"};">${allHotCandidates.length}</p><p style="margin:4px 0 0;font-size:11px;color:#64748b;text-transform:uppercase;">Hot (7+) 🔥</p></td>
+      <td width="12"></td>
+      <td style="text-align:center;padding:12px;background:#f1f5f9;border-radius:8px;"><p style="margin:0;font-size:22px;font-weight:700;color:#1e293b;">${clients.length}</p><p style="margin:4px 0 0;font-size:11px;color:#64748b;text-transform:uppercase;">Clients Alerted</p></td>
+    </tr>
+  </table>
+
+  <p style="margin:0 0 12px;font-size:14px;font-weight:700;color:#1e293b;">All Scored Candidates Today</p>
+  <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
+    <tr style="background:#f8fafc;">
+      <th style="padding:10px 8px;font-size:11px;color:#64748b;text-align:left;text-transform:uppercase;letter-spacing:1px;">Name</th>
+      <th style="padding:10px 8px;font-size:11px;color:#64748b;text-align:left;text-transform:uppercase;letter-spacing:1px;">Trade</th>
+      <th style="padding:10px 8px;font-size:11px;color:#64748b;text-align:left;text-transform:uppercase;letter-spacing:1px;">City</th>
+      <th style="padding:10px 8px;font-size:11px;color:#64748b;text-align:center;text-transform:uppercase;letter-spacing:1px;">Score</th>
+      <th style="padding:10px 8px;font-size:11px;color:#64748b;text-align:left;text-transform:uppercase;letter-spacing:1px;">Source</th>
+      <th style="padding:10px 8px;font-size:11px;color:#64748b;text-align:left;text-transform:uppercase;letter-spacing:1px;">Reason</th>
+    </tr>
+    ${candidateRows}
+  </table>
+</td></tr>
+
+<tr><td style="padding:16px 28px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 10px 10px;background:#f8fafc;">
+  <p style="margin:0;font-size:12px;color:#94a3b8;">Scores: 🔥 7+ = alert sent to clients · ⚡ 5-6 = digest only · Gray = stored, no alert. Sources: MIOSHA (MI public license DB), Apollo, job boards.</p>
+</td></tr>
+
+</table></td></tr></table>
+</body></html>`
   );
 
   return new Response(
     JSON.stringify({
       candidates_found: allRaw.length,
       new_candidates: newCandidates.length,
-      hot_candidates: hotCandidates.length,
+      hot_candidates: allHotCandidates.length,
       alerts_sent: alertsSent,
     }),
     { status: 200 }
