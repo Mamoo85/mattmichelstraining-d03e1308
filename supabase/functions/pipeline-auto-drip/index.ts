@@ -34,18 +34,18 @@ async function generateDripEmail(step: number, businessName: string, industry: s
   };
 
   try {
-    const res = await fetch("https://ai.lovable.dev/api/generate-text", {
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${LOVABLE_API_KEY}` },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
-        prompt: prompts[step] || prompts[1],
+        messages: [{ role: "user", content: prompts[step] || prompts[1] }],
         max_tokens: 600,
       }),
     });
     if (res.ok) {
       const data = await res.json();
-      const body = data?.text || data?.content || "";
+      const body = data?.choices?.[0]?.message?.content || "";
       if (body.length > 50) {
         return { subject, html: wrapEmailHtml(body) };
       }
