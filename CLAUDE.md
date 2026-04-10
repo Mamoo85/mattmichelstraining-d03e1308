@@ -190,13 +190,54 @@ Products: Commercial Lease Abstractor, Patent Watch Intelligence, PE/Investor Se
 - **Morning Digest** — `supabase/functions/morning-digest/` (daily 6:30am ET consolidated approval email to Matt)
 - **Crons**: `20260405140002_new_product_crons.sql` — reg-filing-scan 6am ET, deadline check 8am ET, bid-intel-scan 7am ET, morning-digest 6:30am ET
 
+### Detroit Web Agency Products (April 2026 — `20260410300000_hire_alert_tables.sql`)
+
+**Brand**: Detroit Web Agency — "We Handle The Tech." Dark teal (`#00d4ff`) on near-black (`#0a1628`). Domain: detroitwebagency.com
+
+**Named Product Suite (3 products + add-ons):**
+
+- **FieldDesk** ($199/mo standalone → $159/mo with website) — Field service CRM replacing eWay CRM ($27-40/user/mo). Dispatch board, GPS tech map, mobile tech app (PIN login, job status, photo upload), auto-SMS on status changes. Target: HVAC/plumbing/boiler/electrical companies 3-15 techs.
+  - Tables: `field_crm_clients`, `field_service_jobs`, `tech_locations`, etc.
+  - Route: `/field-service`, `/field-service/dispatch`, `/field-service/tech`
+  - Stripe webhook: `field_service_subscription`
+  - Key pitch: "eWay is an Outlook plugin. FieldDesk works in a boiler room."
+
+- **SiteRadar** ($49/mo standalone → $39/mo with website) — Visitor intelligence. Identifies businesses visiting client website by IP reverse lookup. Company name + page visited appears in real-time feed.
+  - Tables: `field_crm_clients` (visitor_script_key), `crm_visitor_events`
+  - Admin: `VisitorIntelFeed.tsx`, `AdminFieldCRMClients.tsx` (snippet generator)
+
+- **TechAlert** ($99/mo standalone → $49/mo bundle) — Hiring monitor. Daily cron scans Michigan MIOSHA public license DB + Apollo people search + job boards for available licensed tradespeople. Scores candidates 1-10 via Claude Haiku. Score 7+ = immediate SMS+email alert to matching clients. Score 5-6 = daily digest. Below 5 = stored only.
+  - Tables: `hire_alert_clients` (target_roles text[]), `hire_alert_candidates`, `hire_alert_runs`
+  - Functions: `supabase/functions/hire-alert-scanner/index.ts` (cron 7am ET), `supabase/functions/create-hire-alert-checkout/index.ts`
+  - Route: `/hire-alert`
+  - Stripe webhook: `hire_alert_subscription`
+  - Migration: `supabase/migrations/20260410300000_hire_alert_tables.sql`
+  - Founder daily report: emails matt@mattmichelstraining.com each morning with orange/amber/gray candidate summary
+  - Secret weapon: Michigan MIOSHA publishes every licensed boiler operator. New license issued = new talent entering market. No other recruiting tool monitors this.
+
+**DWA Add-Ons (20% off for website clients):**
+- Seasonal Promo Blaster: $29/mo → $23/mo bundled *(replaced GBP AI Posts in add-on list — GBP AI Posts still runs, folded into $99/mo management retainer silently)*
+- Review Monitor: $25/mo → $20/mo
+- After-Job Drip: $29/mo → $23/mo
+- No-Show Re-Booker: $25/mo → $20/mo
+- Estimate Follow-Up: $39/mo → $31/mo
+- Weekly SMS Blast: $19/mo → $15/mo
+
+**DWA Admin Tab** (`/admin` → "Detroit Web Agency" tab):
+- `AdminDWAOverview.tsx` — stats, $0 test checkout buttons, scanner invoke, quick links
+- `AdminHireAlertClients.tsx` — TechAlert client management + scanner run history + candidate table
+- `AdminFieldCRMClients.tsx` — FieldDesk clients + snippet generator
+- Plus: SiteRadar feed, Dispatch Map, Review Engine, Web Design CRM, Prospector, Demo Links, Scouting
+
+**Key marketing brief**: `knowledge/field-service-brief.md` — cold email angles, bundle math, eWay replacement talking points, MIOSHA hook, Pat demo sequence
+
 ## Codebase Scale
-- **270** frontend pages in `src/pages/`
-- **472** Supabase Edge Functions in `supabase/functions/`
-- **357** migration files (all dated 2026)
+- **271** frontend pages in `src/pages/`
+- **474** Supabase Edge Functions in `supabase/functions/`
+- **358** migration files (all dated 2026)
 - **31** AI agents in `.claude/agents/`
-- **64+** product lines across 4 waves
-- **297** routes in `src/App.tsx`
+- **67+** product lines across 5 waves + DWA suite
+- **298** routes in `src/App.tsx`
 
 This is a large codebase. Navigate by product name patterns in this document — don't scan all files. New product checklist: 1 migration, 1–2 edge functions, 1 page, 1 admin CRM entry (AdminOpsCenter + AdminClientHealth).
 

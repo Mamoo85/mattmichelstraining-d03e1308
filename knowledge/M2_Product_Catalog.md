@@ -328,6 +328,86 @@ Free (revenue from affiliate commissions)
 
 ---
 
+# Detroit Web Agency Product Suite {#dwa-products}
+## Brand: Detroit Web Agency — "We Handle The Tech" | detroitwebagency.com
+## Colors: Teal `#00d4ff` on near-black `#0a1628`
+## Target: HVAC, plumbing, boiler, electrical companies 3–15 techs, Metro Detroit
+
+---
+
+## FieldDesk — Field Service CRM
+
+| | |
+|---|---|
+| **Price** | $199/mo standalone → $159/mo with website (20% bundle discount) |
+| **Replaces** | eWay CRM ($27-40/user/mo Outlook plugin) |
+| **Tables** | `field_crm_clients`, `field_service_jobs`, `tech_locations`, `crm_visitor_events` |
+| **Functions** | `create-field-service-checkout/`, `field-service-sms/` |
+| **Routes** | `/field-service`, `/field-service/dispatch`, `/field-service/tech` |
+| **Webhook type** | `field_service_subscription` |
+| **Margin** | ~99% |
+
+**What it does**: Dispatch board (Kanban), live GPS tech map, mobile tech app (PIN login, job status tap, photo upload, voice notes), auto-SMS on every status change (assigned → en route → on site → complete → review request).
+
+**Key pitch**: "eWay is an Outlook plugin. Your techs are in boiler rooms — they can't use Outlook. FieldDesk works from their phone."
+
+---
+
+## SiteRadar — Visitor Intelligence
+
+| | |
+|---|---|
+| **Price** | $49/mo standalone → $39/mo with website |
+| **Tables** | `field_crm_clients` (visitor_script_key), `crm_visitor_events` |
+| **Admin** | `AdminFieldCRMClients.tsx` (snippet generator), `VisitorIntelFeed.tsx` |
+| **Margin** | ~99% |
+
+**What it does**: One JS snippet in site footer. Every business visitor's IP is reverse-looked up. Company name + page visited appears in real-time feed. Not anonymous analytics — actual company names.
+
+---
+
+## TechAlert — Hiring Monitor
+
+| | |
+|---|---|
+| **Price** | $99/mo standalone → $49/mo bundle (hard price, not 20% calc) |
+| **Tables** | `hire_alert_clients` (target_roles text[]), `hire_alert_candidates`, `hire_alert_runs` |
+| **Functions** | `hire-alert-scanner/` (cron 7am ET daily), `create-hire-alert-checkout/` |
+| **Migration** | `20260410300000_hire_alert_tables.sql` |
+| **Route** | `/hire-alert` |
+| **Webhook type** | `hire_alert_subscription` |
+| **Margin** | ~99% |
+
+**What it does**: Daily cron scans 3 sources for available licensed tradespeople in Metro Detroit:
+1. **Michigan MIOSHA public license DB** (secret weapon — new license = new talent entering market, no other tool monitors this)
+2. **Apollo people search** — finds tradespeople by title + location
+3. **Job boards via Firecrawl** — active job-seekers posting availability
+
+Claude Haiku scores each candidate 1-10. Score 7+ = immediate SMS + email alert to matching clients. Score 5-6 = daily digest only. Below 5 = stored, no alert.
+
+**Client config**: Each client sets `target_roles[]` (8 trade options: boiler_operator, hvac_tech, plumber, electrician, pipefitter, steam_engineer, refrigeration_tech, fire_suppression). Scanner filters alerts per client's chosen roles.
+
+**Founder report**: Daily email to matt@mattmichelstraining.com with orange (hot 7+) / amber (5-6) / gray (<5) candidate summary.
+
+---
+
+## DWA Add-On Stack (field service clients, 20% off with website)
+
+| Add-On | Standalone | Bundled |
+|--------|-----------|---------|
+| Seasonal Promo Blaster | $29/mo | $23/mo |
+| Review Monitor | $25/mo | $20/mo |
+| After-Job Drip | $29/mo | $23/mo |
+| No-Show Re-Booker | $25/mo | $20/mo |
+| Estimate Follow-Up | $39/mo | $31/mo |
+| Weekly SMS Blast | $19/mo | $15/mo |
+
+**Note**: GBP AI Posts removed from visible add-on list (client AI skepticism). Functionality still runs, folded silently into $99/mo management retainer.
+
+**Full stack DWA client**: $1,499 website (one-time) + $99/mo management + $159 FieldDesk + $49 TechAlert + $112 add-ons = **$419/mo recurring**
+
+---
+
 # Cost Summary
 
 ## Fixed Monthly Costs (Pre-Revenue)
