@@ -1434,3 +1434,6 @@ verify_jwt = false
 
 [functions.drill-content-monitor]
 verify_jwt = false
+
+[functions.remote-control]
+verify_jwt = false
