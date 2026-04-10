@@ -454,7 +454,7 @@ function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onD
 }
 
 // ── Kanban Column ──
-function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, onDeepResearch, onDrip, onPreviewDrip, onDelete, auditingId, sendingId, researchingId, drippingId }: {
+function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, onDeepResearch, onDrip, onPreviewDrip, onDelete, onReEnrich, auditingId, sendingId, researchingId, drippingId, reEnrichingId }: {
   stage: typeof PIPELINE_STAGES[0];
   leads: PipelineLead[];
   onAudit: (lead: PipelineLead) => void;
@@ -464,10 +464,12 @@ function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, onDeepRes
   onDrip: (lead: PipelineLead, action: "draft" | "send" | "send_existing") => void;
   onPreviewDrip: (lead: PipelineLead) => void;
   onDelete: (lead: PipelineLead) => void;
+  onReEnrich: (lead: PipelineLead) => void;
   auditingId: string | null;
   sendingId: string | null;
   researchingId: string | null;
   drippingId: string | null;
+  reEnrichingId: string | null;
 }) {
   return (
     <div className="flex-1 min-w-[220px] max-w-[300px]">
@@ -488,10 +490,12 @@ function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, onDeepRes
               onDrip={onDrip}
               onPreviewDrip={onPreviewDrip}
               onDelete={onDelete}
+              onReEnrich={onReEnrich}
               auditing={auditingId === lead.id}
               sending={sendingId === lead.id}
               researching={researchingId === lead.id}
               dripping={drippingId === lead.id}
+              reEnriching={reEnrichingId === lead.id}
             />
           ))}
         </SortableContext>
