@@ -587,6 +587,21 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
     },
     success_url: `${SITE}/seo-guard?status=success&test=true`,
   },
+  hire_alert_subscription: {
+    name: "TEST — TechAlert Hiring Monitor ($99/mo)",
+    description: "Daily MIOSHA license DB + Apollo + job board scan for available licensed tradespeople. $0 test.",
+    mode: "subscription" as const,
+    metadata: {
+      type: "hire_alert_subscription",
+      email: MATT,
+      company_name: "D.J. Conley Associates",
+      owner_phone: "3138064952",
+      plan: "standalone",
+      target_roles: "boiler_operator,hvac_tech,plumber",
+      is_test: "true",
+    },
+    success_url: `${SITE}/hire-alert?success=1&test=true`,
+  },
 };
 
 serve(async (req) => {
