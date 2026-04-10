@@ -286,6 +286,9 @@ export default function DWAClientRoster() {
                   Plan
                 </th>
                 <th className="text-left px-4 py-3 text-white/40 font-medium uppercase tracking-wide text-xs">
+                  Industry
+                </th>
+                <th className="text-left px-4 py-3 text-white/40 font-medium uppercase tracking-wide text-xs">
                   Email
                 </th>
                 <th className="text-left px-4 py-3 text-white/40 font-medium uppercase tracking-wide text-xs">
