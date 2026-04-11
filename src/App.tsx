@@ -124,6 +124,9 @@ const NewsletterSponsor = lazyRetry(() => import("./pages/NewsletterSponsor"));
 const CampDirectory = lazyRetry(() => import("./pages/CampDirectory"));
 const ContractorLeads = lazyRetry(() => import("./pages/ContractorLeads"));
 const ContractorTerritory = lazyRetry(() => import("./pages/ContractorTerritory"));
+const ClaimLead = lazyRetry(() => import("./pages/ClaimLead"));
+const LeadUnlocked = lazyRetry(() => import("./pages/LeadUnlocked"));
+const LeadClaimed = lazyRetry(() => import("./pages/LeadClaimed"));
 const FieldServiceManagement = lazyRetry(() => import("./pages/FieldServiceManagement"));
 const FieldServiceDispatch = lazyRetry(() => import("./pages/FieldServiceDispatch"));
 const FieldServiceTechApp = lazyRetry(() => import("./pages/FieldServiceTechApp"));
@@ -530,6 +533,9 @@ const App = () => (
                     <Route path="/sponsor" element={<NewsletterSponsor />} />
                     <Route path="/contractor-leads" element={<ContractorLeads />} />
                     <Route path="/contractors/:slug" element={<ContractorTerritory />} />
+                    <Route path="/claim-lead" element={<ClaimLead />} />
+                    <Route path="/lead-unlocked" element={<LeadUnlocked />} />
+                    <Route path="/lead-claimed" element={<LeadClaimed />} />
                     <Route path="/field-service" element={<FieldServiceManagement />} />
                     <Route path="/field-service/dispatch" element={<FieldServiceDispatch />} />
                     <Route path="/field-service/tech" element={<FieldServiceTechApp />} />
