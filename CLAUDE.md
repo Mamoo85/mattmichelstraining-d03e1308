@@ -65,6 +65,7 @@ git fetch origin main && git checkout origin/main -- knowledge/
 - `knowledge/M2_Product_Catalog.md` — All 36 products, pricing, margins, edge functions, flows
 - `knowledge/M2_Ad_Strategy_Action_Plan.md` — Paid ads roadmap and campaign blueprints
 - `knowledge/M2_Project_Hierarchy.mmd` — System architecture diagram (Mermaid)
+- `knowledge/TechAlert_Value_Proposition.md` — TechAlert pitch angles, objection handling, ROI math, market gap analysis, legal status
 
 ## Owner
 **Matt Michels** — Grosse Pointe, MI | matt@mattmichelstraining.com | (313) 806-4952
@@ -83,7 +84,7 @@ $10k+/mo fully automated income. Matt's only job: return calls, texts, and email
 - **Domain**: mattmichelstraining.com
 - **Repo**: `mamoo85/m2training` (GitHub)
 - **Supabase Project**: Managed by Lovable (primary — starts with 'e'). Secondary ref `zmyczlfuufhngzovkjdh` exists for GitHub Actions but migrations deploy automatically via Lovable on merge to main. Do NOT apply migrations manually via MCP to the secondary project.
-- **Dev branch**: `claude/add-claude-documentation-0AKHd`
+- **Dev branch**: `claude/remote-control-setup-EuTWO`
 
 ## Brand
 - Primary orange: `#e8621a`
@@ -210,9 +211,11 @@ Products: Commercial Lease Abstractor, Patent Watch Intelligence, PE/Investor Se
   - Tables: `hire_alert_clients` (target_roles text[]), `hire_alert_candidates`, `hire_alert_runs`
   - Functions: `supabase/functions/hire-alert-scanner/index.ts` (cron 7am ET), `supabase/functions/create-hire-alert-checkout/index.ts`
   - Route: `/hire-alert`
-  - Stripe webhook: `hire_alert_subscription`
+  - Stripe webhook: `hire_alert_subscription` (wired — self-serve checkout LIVE at `/hire-alert`)
   - Migration: `supabase/migrations/20260410300000_hire_alert_tables.sql`
-  - Founder daily report: emails matt@mattmichelstraining.com each morning with orange/amber/gray candidate summary
+  - Founder daily report: emails matt@mattmichelstraining.com each morning with dark navy/teal premium HTML email — KPI dashboard (scanned/new/hot/alerted), source breakdown, full candidate table
+  - Client alert emails: score-colored candidate cards, clickable contact links, urgency bar when hot candidates found
+  - Welcome email: premium HTML with three source cards (MIOSHA/Apollo/Job Boards) and tiered alert explainer
   - Secret weapon: Michigan MIOSHA publishes every licensed boiler operator. New license issued = new talent entering market. No other recruiting tool monitors this.
 
 **DWA Add-Ons (20% off for website clients):**
@@ -286,9 +289,13 @@ TanStack Query v5 with localStorage persistence via `PersistQueryClientProvider`
 
 ## Deployment
 - **Primary**: Lovable Cloud — runs edge functions, hosts frontend, all secrets configured there
-- **Secondary**: Supabase project `zmyczlfuufhngzovkjdh` — deployed via GitHub Actions on merge to main (migrations + edge functions). Only relevant if using this project directly.
+- **Secondary**: Supabase project `zmyczlfuufhngzovkjdh` — deployed via GitHub Actions on merge to main. Only relevant if using this project directly.
 - Claude commits to dev branch → Matt merges to main → Lovable auto-deploys frontend + edge functions
-- GitHub Actions also deploys to the secondary Supabase project (requires `SUPABASE_ACCESS_TOKEN` GitHub secret)
+- GitHub Actions (`.github/workflows/deploy-supabase.yml`) deploys to the secondary project:
+  - Deploys `missed-call-handler` (with `continue-on-error: true` — function doesn't exist on secondary, silently skipped)
+  - Deploys `contractor-lead-notify` — the 15-min cron that SMS-notifies contractors of new leads
+  - Syncs all secrets (Twilio, Resend, Stripe, etc.) to the secondary project
+- **Secondary project function limit**: The secondary project is at its Supabase free-tier function limit (~25). Adding new functions via MCP `deploy_edge_function` will fail with "Max number of functions reached." Only update existing functions via GitHub Actions. To add a new function to secondary, remove an unused one first or upgrade the plan.
 
 ## Secrets (all configured in Lovable Cloud)
 All secrets below are already set in Lovable Cloud and working. Do NOT add secrets to the secondary Supabase project unless specifically needed there.
@@ -308,7 +315,7 @@ All secrets below are already set in Lovable Cloud and working. Do NOT add secre
 - `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`, `TWILIO_API_KEY`
 - **Approved phone number**: `+13139921219` — A2P 10DLC registered (Low Volume Mixed messaging service), approved April 2026
 - **Twilio webhook URL** (voice/missed call): `https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/missed-call-handler`
-- **CRITICAL**: The secondary Supabase project `zmyczlfuufhngzovkjdh` (where Twilio webhooks point) is deployed via GitHub Actions and is SEPARATE from the Lovable primary project. Secrets are NOT shared between them. If Twilio webhook-triggered SMS is failing silently, it means `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_PHONE_NUMBER` need to be added to the secondary project's Edge Function secrets in the Supabase dashboard (`zmyczlfuufhngzovkjdh`). The Lovable project handles all Stripe/checkout/scheduled functions — the secondary handles webhook endpoints only.
+- **Secondary project secrets**: Secrets are synced automatically to `zmyczlfuufhngzovkjdh` via the GitHub Actions workflow on every merge to main — no manual secret management needed. The secondary project handles webhook endpoints (`missed-call-handler`) and the contractor lead cron (`contractor-lead-notify`). All other functions run on the Lovable primary project.
 
 ### Social Media
 - `META_ACCESS_TOKEN`, `META_APP_ID`, `META_APP_SECRET`, `META_PAGE_ID` — Facebook/Instagram

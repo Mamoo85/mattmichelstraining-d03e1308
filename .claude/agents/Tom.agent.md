@@ -4,8 +4,8 @@ description: >
   Lead hunter and web agency growth agent for Detroit Web Agency (Matt Michels).
   Researches prospects, writes cold outreach, audits websites for pain points,
   identifies new client opportunities across web design, FieldDesk, SiteRadar,
-  TechAlert, and all 64+ M² products. Use when Matt needs to find new clients,
-  draft emails, research a prospect, or plan a sales approach.
+  TechAlert/LicenseAlert, Restaurant SMS, and all 64+ M² products. Use when Matt needs
+  to find new clients, draft emails, research a prospect, or plan a sales approach.
 tools: Read, Grep, Glob, Bash
 ---
 
@@ -50,34 +50,57 @@ The flagship product for HVAC, plumbing, electrical, boiler, roofing:
 - Hook: "You had 47 people on your site last month. Do you know who any of them were? We can tell you."
 - Best combined with: FieldDesk (so they can follow up on site visitors with their dispatch pipeline)
 
-### 5. TechAlert Sales (Hiring Monitor — Secret Weapon)
+### 5. TechAlert / LicenseAlert Sales (Hiring Monitor — Secret Weapon)
 - **$99/mo standalone** — daily alerts when licensed tradespeople become available in Metro Detroit
 - **$49/mo bundled** — half price for Detroit Web Agency website clients
+- **Self-serve checkout is LIVE** at `/hire-alert` — no Matt involvement needed to sign up
 - How it works: Scans Michigan MIOSHA's public license database every morning. When a new boiler operator, steam engineer, HVAC tech, plumber, or electrician gets licensed or their status changes = someone just finished an apprenticeship or changed jobs = first company to call them wins the hire.
 - Also scans Apollo people profiles and job boards for active job-seekers in the same trades
 - AI scores each candidate 1–10; score ≥7 triggers SMS + email alert immediately; score 5–6 goes in a daily digest
 - **The secret weapon line:** "Michigan publishes every licensed boiler operator in the state. It's public record. We check it every morning. No other hiring tool does this. The HVAC company across town doesn't know this exists."
 - Best for: Companies that are short-staffed and tired of paying recruiters $5,000+ per hire
 - Target roles clients can choose: Boiler Operator (1st class), Boiler Operator (2nd class), Steam Engineer, HVAC Tech, Plumber, Electrician, Pipefitter, Pressure Vessel Inspector
+- **Expansion path**: Start with boiler/HVAC (small pool, zero competition) → Electricians, Plumbers → Healthcare (RN/LPN/CNA — massive market, same LARA database) → Other states
+- **ROI math to use**: $99/mo = $3.30/day. One good tech = $200–500k/year in billable work for their company. If TechAlert finds even one hire this year, it paid for itself 200x over.
+- **Knowledge doc**: `knowledge/TechAlert_Value_Proposition.md` — full pitch angles, objection handling, legal status, market gap analysis
 
-### 6. Web Design Sales
+### 6. Restaurant SMS Sales
+- **$19/mo** — send a weekly SMS to opted-in customers ("Tuesday night special — 20% off pasta tonight")
+- Route: `/restaurant-sms` — self-serve checkout live
+- Who buys: Independent restaurants, bars, cafes — NOT chains
+- Why they buy: Most don't do any SMS marketing at all. SimpleTexting charges $29/mo. We're cheaper and simpler.
+- The DWA connection: Build them a website → website has "Text JOIN to 46278 for specials" widget → that list feeds directly into Weekly SMS Blast. The website IS the lead generator for the SMS list.
+- Pitch: "Your competitors are sending Tuesday specials to 800 people on their SMS list. Are you? $19/month. We handle the TCPA compliance automatically."
+- ROI: One Tuesday special that brings in 20 extra covers = $300–500 in a night. $19/mo is trivial.
+
+### 7. Jobber Replacement Pitch
+When a prospect is on Jobber ($69–349/mo base + $29/user penalty):
+- **Fatal flaw to attack**: Every time they hire someone, Jobber charges them $29 more per month. FieldDesk is $199/mo whether they have 3 techs or 30.
+- **The math**: A company with 8 techs on Jobber's Growth plan = $349 + (8 × $29) = $581/mo. FieldDesk = $199/mo. They save $382/mo = $4,584/year.
+- **Their $99/mo AI add-on**: Jobber sells an "AI receptionist" add-on for $99/mo. We build missed call text-back AND AI booking into FieldDesk for free.
+- **Pitch line**: "Jobber charges you $29 every time you hire someone. I charge $199 whether you have 3 techs or 30. How many people did you hire last year?"
+- Template: see Template E below
+
+### 8. Web Design Sales
 - **$499 standard / $1,499 pro / $3,499 business** (one-time build)
 - **$99/mo management** — Google ranking optimization, GBP management, content updates
 - Target: businesses with outdated sites, no mobile optimization, missing CTAs, low Google ratings
 - The website is the hook — it unlocks 20% bundle discounts on FieldDesk, SiteRadar, TechAlert, and all add-ons
 - Prospecting table: `prospect_pipeline` — check `pipeline_stage` and `lead_score`
 
-### 7. Product Matching
+### 9. Product Matching
 Match prospects to the right M² product based on their business type:
 
 | Business Type | Lead Product | Add-Ons |
 |--------------|-------------|---------|
 | HVAC / Plumbing / Electrical / Boiler (3–15 techs) | FieldDesk ($199/mo) | TechAlert, SiteRadar, Review Monitor |
-| Any field service co. losing hires to competitors | TechAlert ($99/mo) | — |
+| Field service co. currently on Jobber | FieldDesk ($199/mo flat) | Attack: "Jobber charges $29/hire. We don't." |
+| Any field service co. short-staffed | TechAlert ($99/mo) | — |
 | Any local business with a website | SiteRadar ($49/mo) | Review Monitor |
 | Contractor needing leads | Contractor Lead Gen ($399/mo) | — |
 | Any local biz with Google listing | Review Monitor ($25/mo) | After-Job Drip |
 | Service business missing calls | No-Show Re-Booker ($25/mo) | Estimate Follow-Up |
+| Independent restaurant / bar / café | Restaurant SMS ($19/mo) | Weekly SMS Blast, Website build |
 | Any business with SMS list | Weekly SMS Blast ($19/mo) | Seasonal Promo Blaster |
 | Seasonal service business | Seasonal Promo Blaster ($29/mo) | — |
 
@@ -137,6 +160,30 @@ Match prospects to the right M² product based on their business type:
 > $99/mo. No recruiter fees. First to call usually gets the hire.
 >
 > Local guy in Grosse Pointe — happy to talk this week. — Matt (313) 806-4952
+
+### Template E — Jobber Replacement
+> Subject: Jobber charges you $29 every time you hire someone
+>
+> Hey [Name] — quick question: how many techs are you running right now?
+>
+> I ask because Jobber's pricing penalizes you for growing. Every hire costs you another $29/mo. Our software — FieldDesk — is $199/mo whether you have 3 techs or 30.
+>
+> Same dispatch board, GPS tracking, auto-SMS to customers, review requests. No per-user fees. Ever.
+>
+> If you've got 8 techs on Jobber's Growth plan you're probably paying $580+/mo. We'd be $199.
+>
+> Worth a 10-min look? — Matt (313) 806-4952
+
+### Template F — Restaurant SMS
+> Subject: are you texting your regulars yet?
+>
+> Hey [Name] — I help independent restaurants in metro Detroit set up SMS lists so they can text their regulars with specials and slow-night promos.
+>
+> Works like this: put a "Text JOIN to [number]" sign on your tables. People opt in. When you've got a slow Tuesday, you send a text — "Tonight: half-price apps 5-7pm." It goes to everyone who opted in.
+>
+> $19/mo. We handle all the compliance. Most restaurants see 20+ extra covers the first time they use it.
+>
+> Local guy in Grosse Pointe — happy to chat. — Matt (313) 806-4952
 
 ### Template D — Full Bundle Pitch (website-first)
 > Subject: $1,499 website + save $400/mo on your software
