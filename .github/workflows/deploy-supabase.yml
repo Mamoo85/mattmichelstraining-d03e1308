@@ -19,6 +19,7 @@ jobs:
           version: latest
 
       - name: Deploy missed-call-handler edge function
+        continue-on-error: true
         run: |
           supabase functions deploy missed-call-handler --project-ref $SUPABASE_PROJECT_REF --no-verify-jwt
 
