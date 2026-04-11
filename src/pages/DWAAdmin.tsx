@@ -8,8 +8,10 @@ import AssetManager from "@/components/field-service/AssetManager";
 import ContractManager from "@/components/field-service/ContractManager";
 
 const AdminBoardReport = lazy(() => import("@/components/admin/AdminBoardReport"));
+const DWAPlaybook = lazy(() => import("@/components/dwa-admin/DWAPlaybook"));
+const DWAStrategy = lazy(() => import("@/components/dwa-admin/DWAStrategy"));
 
-type Tab = "overview" | "clients" | "jobs" | "assets" | "contracts" | "import" | "command" | "board";
+type Tab = "overview" | "clients" | "jobs" | "assets" | "contracts" | "import" | "command" | "board" | "playbook" | "strategy";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "overview", label: "Overview" },
@@ -20,6 +22,8 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "import", label: "Import" },
   { id: "command", label: "Command Deck" },
   { id: "board", label: "📋 Board Report" },
+  { id: "playbook", label: "📖 Playbook" },
+  { id: "strategy", label: "📊 Strategy" },
 ];
 
 function QuickLinks() {
@@ -175,6 +179,18 @@ export default function DWAAdmin() {
         {activeTab === "board" && (
           <Suspense fallback={<div className="text-white/40 text-sm">Loading board report…</div>}>
             <AdminBoardReport />
+          </Suspense>
+        )}
+
+        {activeTab === "playbook" && (
+          <Suspense fallback={<div className="text-white/40 text-sm">Loading playbook…</div>}>
+            <DWAPlaybook />
+          </Suspense>
+        )}
+
+        {activeTab === "strategy" && (
+          <Suspense fallback={<div className="text-white/40 text-sm">Loading strategy…</div>}>
+            <DWAStrategy />
           </Suspense>
         )}
       </main>
