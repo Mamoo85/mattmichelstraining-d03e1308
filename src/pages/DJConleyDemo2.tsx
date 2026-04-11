@@ -4,9 +4,23 @@ import DispatchBoard from "@/components/field-service/DispatchBoard";
 
 // ── Fake SiteRadar visitor data for demo ──────────────────────────────────────
 const DEMO_VISITORS = [
-  { company: "Stellantis Facilities Mgmt", page: "Boiler Tune-Up Services", time: "14 min ago", badge: "🏭" },
-  { company: "Detroit Medical Center", page: "Service Contracts", time: "1h 22m ago", badge: "🏥" },
-  { company: "Wayne County Schools", page: "Homepage", time: "2h 51m ago", badge: "🏫" },
+  { company: "Stellantis Facilities Mgmt", page: "Boiler Tune-Up Services", time: "14 min ago", badge: "🏭", value: "$40k–$120k contract" },
+  { company: "Detroit Medical Center", page: "Service Contracts", time: "1h 22m ago", badge: "🏥", value: "$25k–$60k contract" },
+  { company: "Wayne County Schools", page: "Homepage", time: "2h 51m ago", badge: "🏫", value: "$15k–$35k contract" },
+];
+
+// ── Problems solved ────────────────────────────────────────────────────────────
+const PROBLEMS_SOLVED = [
+  { problem: '"Where is my tech right now?"', solution: "Live GPS map. See all 4 techs from your phone in 2 seconds." },
+  { problem: "Missed call → lost job", solution: "Auto-text fires within 30 seconds. Customer stays yours." },
+  { problem: "Customer calling for ETA updates", solution: "Auto-text fires the moment tech hits 'En Route.'" },
+  { problem: "Job done, zero reviews collected", solution: "Review request texts 2 hours after completion. Automatic." },
+  { problem: "Estimate sent — client gone silent", solution: "5-step follow-up sequence starts itself. No awkward calls." },
+  { problem: "Seasonal blast = calling 200 people", solution: "One SMS blast. Every customer. 30 seconds." },
+  { problem: "Tech wrote nothing down on site", solution: "Mobile app: notes, photos, time on site. All logged." },
+  { problem: "Invoice #3 unpaid 30 days later", solution: "Day 7, 14, 21 automated chasers. Zero confrontation." },
+  { problem: "Dispatch chaos when 2 emergencies hit", solution: "Board shows every job, every tech, real-time." },
+  { problem: "New office admin can't manage schedule", solution: "Kanban board. Anyone with a browser can run dispatch." },
 ];
 
 // ── Fake tech alert candidates ────────────────────────────────────────────────
