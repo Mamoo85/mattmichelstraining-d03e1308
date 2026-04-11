@@ -2549,6 +2549,26 @@ serve(async (req) => {
                 })
               : Promise.resolve(),
           ]);
+        // 3-lead territory lock upsell — fires when contractor hits 3 paid leads this week
+        if (meta.contractor_id && contractor?.phone) {
+          try {
+            const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+            const { count: weekCount } = await pplSb
+              .from("contractor_lead_purchases")
+              .select("id", { count: "exact", head: true })
+              .eq("contractor_id", meta.contractor_id)
+              .gte("purchased_at", sevenDaysAgo);
+            if (weekCount === 3) {
+              const upgradeUrl = `https://detroitwebagent.com/contractor-leads?upgrade=1&prefilled_email=${encodeURIComponent(customerEmail || "")}`;
+              await sendSMS(
+                contractor.phone,
+                Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219",
+                `You've grabbed 3 leads this week — clearly closing them. Stop paying per lead. Lock your territory for a flat $399/mo and get all future leads automatically. Upgrade: ${upgradeUrl}`,
+                "contractor_leads"
+              );
+            }
+          } catch (e) { console.error("[WEBHOOK] 3-lead upsell error:", e); }
+        }
         } catch (e) { console.error("[WEBHOOK] contractor_lead_payment error:", e); }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
