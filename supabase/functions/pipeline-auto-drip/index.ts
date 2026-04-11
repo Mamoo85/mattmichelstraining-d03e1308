@@ -14,6 +14,62 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// ── Master Niche Smoother: 50+ trades ──
+const NICHE_MAP: [RegExp, string][] = [
+  [/hvac|heating|cooling|furnace|air.?condition/i, "HVAC"],
+  [/plumb|pipe|drain|water.?heater/i, "plumbing"],
+  [/roof|shingle|gutter/i, "roofing"],
+  [/electric|wiring|lighting/i, "electrical"],
+  [/concrete|paving|asphalt|cement|driveway|foundation/i, "concrete"],
+  [/landscape|lawn|hardscape|irrigation|sprinkler/i, "landscaping"],
+  [/tree|arborist|stump/i, "tree service"],
+  [/paint|stain|coating/i, "painting"],
+  [/floor|epoxy|carpet|tile|hardwood/i, "flooring"],
+  [/remodel|renovat|kitchen|bath|addition/i, "remodeling"],
+  [/fence|fencing|gate/i, "fencing"],
+  [/deck|patio|porch/i, "decking"],
+  [/pest|exterminat|bug|rodent/i, "pest control"],
+  [/mason|brick|stone|chimney/i, "masonry"],
+  [/carpenter|woodwork|cabinet|framing/i, "carpentry"],
+  [/siding|exterior|stucco/i, "siding"],
+  [/window|door|glass|glazing/i, "window and door"],
+  [/clean|janitor|power.?wash|pressure.?wash|maid/i, "cleaning"],
+  [/pool|spa|hot.?tub/i, "pool service"],
+  [/drywall|sheetrock|plaster|insulation/i, "drywall"],
+  [/excavat|grading|trench|dirt|site.?prep/i, "excavation"],
+  [/weld|fabrication|metal/i, "welding"],
+  [/garage|overhead.?door/i, "garage door"],
+  [/security|alarm|cctv|av|home.?theater/i, "A/V and security"],
+  [/solar|panel/i, "solar"],
+  [/mold|water.?damage|fire.?damage|mitigation|restoration/i, "restoration"],
+  [/septic|sewer/i, "septic"],
+  [/moving|mover|storage/i, "moving"],
+  [/locksmith|key|safe/i, "locksmith"],
+  [/sign|awning/i, "signage"],
+  [/appliance|repair/i, "appliance repair"],
+  [/wrecker|tow/i, "towing"],
+  [/snow|plow|ice/i, "snow removal"],
+  [/junk|dumpster|hauling|waste/i, "junk removal"],
+  [/wrought.?iron/i, "ironwork"],
+  [/boiler|steam/i, "boiler service"],
+  [/auto|mechanic|body.?shop|collision/i, "auto repair"],
+  [/demol/i, "demolition"],
+  [/asbestos|abatement|lead.?removal|hazmat/i, "environmental remediation"],
+  [/fire.?protect|sprinkler.?system/i, "fire protection"],
+  [/elevator|escalator/i, "elevator service"],
+  [/marine|boat|dock/i, "marine service"],
+  [/pav|striping|seal.?coat/i, "paving"],
+];
+
+function normalizeIndustry(raw: string | null | undefined): string {
+  if (!raw) return "contracting";
+  const input = raw.toLowerCase();
+  for (const [regex, label] of NICHE_MAP) {
+    if (regex.test(input)) return label;
+  }
+  return "contracting";
+}
+
 const DRIP_SCHEDULE = [
   { step: 1, delayDays: 0, subject: "Competitors getting calls you're not", label: "1_Day_1_Sent" },
   { step: 2, delayDays: 3, subject: "Quick follow-up — saw something on your site", label: "2_Day_4_Sent" },
