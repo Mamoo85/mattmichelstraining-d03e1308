@@ -389,6 +389,33 @@ export default function ContractorLeads() {
             </div>
           )}
 
+          {/* Pay-Per-Lead Option */}
+          <div className="bg-blue-950/20 border border-blue-900/30 p-5 rounded-lg mb-10">
+            <h3 className="font-bold text-sm text-foreground mb-2 flex items-center gap-2">
+              <Zap size={16} className="text-blue-400" /> Not ready to commit? Try pay-per-lead.
+            </h3>
+            <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+              We get it — you've never heard of us. So let us prove it first. We'll send you <strong className="text-foreground">5 free exclusive leads</strong> this week. No credit card. No contract. Just real homeowners who need your trade in your city.
+            </p>
+            <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+              If they're good, we move to <strong className="text-foreground">$50 per lead</strong> — still exclusive, still yours only. One closed job at $1,500–$5,000 pays for dozens of leads.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <a
+                href="mailto:matt@mattmichelstraining.com?subject=I%20want%205%20free%20leads&body=My%20trade%3A%0AMy%20city%3A%0AMy%20phone%3A%0A"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 font-bold text-sm transition-all inline-flex items-center gap-2 rounded"
+              >
+                Get 5 Free Leads <ArrowRight size={14} />
+              </a>
+              <a href="tel:+13138064952" className="border border-blue-500/30 text-blue-400 px-5 py-2.5 font-bold text-sm hover:bg-blue-500/10 transition-all inline-flex items-center gap-2 rounded">
+                <Phone size={14} /> Text Matt
+              </a>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-3">
+              Free leads → $50/lead pay-per-lead → $399/mo territory lock when you're ready. Your pace.
+            </p>
+          </div>
+
           {/* Refund Policy */}
           <div className="bg-green-950/20 border border-green-900/30 p-5 rounded-lg mb-10">
             <h3 className="font-bold text-sm text-foreground mb-2 flex items-center gap-2">

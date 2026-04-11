@@ -114,6 +114,39 @@ verify_jwt = false
 [functions.ai-reply-detector]
 verify_jwt = false
 
+[functions.cancel-reply-draft]
+verify_jwt = false
+
+[functions.create-hire-alert-trial]
+verify_jwt = false
+
+[functions.handle-inbound-email]
+verify_jwt = false
+
+[functions.hire-alert-phantom-alert]
+verify_jwt = false
+
+[functions.hire-alert-trial-convert]
+verify_jwt = false
+
+[functions.license-vision-intake]
+verify_jwt = false
+
+[functions.test-license-vision]
+verify_jwt = false
+
+[functions.generate-digital-audit]
+verify_jwt = false
+
+[functions.missed-call-textback]
+verify_jwt = false
+
+[functions.contractor-aged-lead-downsell]
+verify_jwt = false
+
+[functions.release-pending-replies]
+verify_jwt = false
+
 [functions.ai-sales-script-writer]
 verify_jwt = false
 
@@ -352,6 +385,12 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.create-contractor-checkout]
+verify_jwt = false
+
+[functions.create-contractor-ppl-checkout]
+verify_jwt = false
+
+[functions.get-lead-by-session]
 verify_jwt = false
 
 [functions.create-crime-digest-checkout]

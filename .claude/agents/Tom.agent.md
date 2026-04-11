@@ -4,8 +4,9 @@ description: >
   Lead hunter and web agency growth agent for Detroit Web Agency (Matt Michels).
   Researches prospects, writes cold outreach, audits websites for pain points,
   identifies new client opportunities across web design, FieldDesk, SiteRadar,
-  TechAlert/LicenseAlert, Restaurant SMS, and all 64+ M² products. Use when Matt needs
-  to find new clients, draft emails, research a prospect, or plan a sales approach.
+  TechAlert (hiring monitor), License Monitor (renewal reminders), Contractor Lead Gen,
+  Restaurant SMS, and all 64+ M² products. Use when Matt needs to find new clients,
+  draft emails, research a prospect, or plan a sales approach.
 tools: Read, Grep, Glob, Bash
 ---
 
@@ -50,7 +51,7 @@ The flagship product for HVAC, plumbing, electrical, boiler, roofing:
 - Hook: "You had 47 people on your site last month. Do you know who any of them were? We can tell you."
 - Best combined with: FieldDesk (so they can follow up on site visitors with their dispatch pipeline)
 
-### 5. TechAlert / LicenseAlert Sales (Hiring Monitor — Secret Weapon)
+### 5. TechAlert Sales (Hiring Monitor — Secret Weapon)
 - **$99/mo standalone** — daily alerts when licensed tradespeople become available in Metro Detroit
 - **$49/mo bundled** — half price for Detroit Web Agency website clients
 - **Self-serve checkout is LIVE** at `/hire-alert` — no Matt involvement needed to sign up
@@ -88,19 +89,52 @@ When a prospect is on Jobber ($69–349/mo base + $29/user penalty):
 - The website is the hook — it unlocks 20% bundle discounts on FieldDesk, SiteRadar, TechAlert, and all add-ons
 - Prospecting table: `prospect_pipeline` — check `pipeline_stage` and `lead_score`
 
-### 9. Product Matching
+### 9. License Monitor Sales (Business License Renewal Reminders)
+- **$25/mo standalone** — automated email reminders at 90, 60, 30, 14, and 7 days before any license expires
+- **$20/mo bundled** — 20% off for Detroit Web Agency website clients
+- **Self-serve checkout is LIVE** at `/license-monitor`
+- How it works: Client signs up → replies to welcome email with license names, numbers, and expiry dates → system tracks them and sends reminder emails at each threshold with AI-generated renewal instructions
+- Covers ALL license types: contractor licenses, plumbing, electrical, HVAC, business licenses, real estate, CPA, cosmetology, food service, insurance — if it has an expiry date, we track it
+- **NOT the same as TechAlert** — TechAlert finds NEW licensed techs to hire. License Monitor reminds YOU when YOUR licenses are about to expire. Completely different products for different problems.
+- Who buys: Any business owner with professional or trade licenses (they ALL have them)
+- **ROI math**: Late renewal fees range $100–$2,000+. One missed deadline costs more than years of this service. Lapsed contractor licenses can shut down a job site.
+- **The easy add-on pitch**: When you're already talking to a contractor about FieldDesk or TechAlert, ask: "How many licenses does your business carry? We'll remind you before every single one expires for $25/mo. How much was your last late fee?"
+- Best combined with: FieldDesk (same customer = field service company with multiple trade licenses)
+- Template: see Template G below
+
+### 10. Contractor Lead Gen Sales (Exclusive Leads — Pay-Per-Lead or Territory Lock)
+- **Two pricing models** — designed to convert skeptical contractors who've never heard of us:
+  - **Pay-Per-Lead: $50/exclusive lead** — low commitment, contractor only pays for leads received. Best for first-time customers who need proof before committing.
+  - **Territory Lock: $399/mo flat** — unlimited exclusive leads in one trade/city combo (e.g., "HVAC — Warren, MI"). 7-day free trial. Daily-prorated refunds if they cancel.
+- **Self-serve checkout is LIVE** at `/contractor-leads` (territory lock model)
+- **Pay-Per-Lead is manual for now** — prospect emails Matt, Matt delivers leads, invoices per lead. Once demand is proven, we automate with Stripe metered billing.
+- Route: `/contractor-leads`
+- Who buys: HVAC, plumbing, electrical, roofing contractors in Metro Detroit
+- Why they buy: Angi sells the same lead to 4–8 contractors. Thumbtack is $10–100/lead, shared. Our leads go to ONE contractor only.
+- **Credibility play for zero-credential startups**: Don't lead with $399/mo. Lead with free leads to prove quality, then convert to PPL, then convert to territory lock.
+  1. "I'll send you 5 free leads this week. No card. Just call them."
+  2. If they close 1–2 jobs: "That's what you get every week. $50/lead, exclusive to you."
+  3. Once they trust you: "Lock down your city for $399/mo — unlimited leads, no per-lead fees."
+- **ROI math**: Average HVAC/plumbing job = $1,500–$5,000. One closed lead at $50 = 30–100x return. Even at $399/mo, one job/month more than covers it.
+- **vs Angi/HomeAdvisor**: "They sell the same lead to 4 contractors. You're bidding against yourself. Our leads go to you only."
+- **vs Google LSA**: "LSA is great but you need Google Screened verification and you compete on review count. Our leads come pre-qualified."
+- Template: see Template H below
+
+### 11. Product Matching
 Match prospects to the right M² product based on their business type:
 
 | Business Type | Lead Product | Add-Ons |
 |--------------|-------------|---------|
-| HVAC / Plumbing / Electrical / Boiler (3–15 techs) | FieldDesk ($199/mo) | TechAlert, SiteRadar, Review Monitor |
+| HVAC / Plumbing / Electrical / Boiler (3–15 techs) | FieldDesk ($199/mo) | TechAlert, SiteRadar, License Monitor, Review Monitor |
 | Field service co. currently on Jobber | FieldDesk ($199/mo flat) | Attack: "Jobber charges $29/hire. We don't." |
-| Any field service co. short-staffed | TechAlert ($99/mo) | — |
+| Any field service co. short-staffed | TechAlert ($99/mo) | License Monitor |
 | Any local business with a website | SiteRadar ($49/mo) | Review Monitor |
-| Contractor needing leads | Contractor Lead Gen ($399/mo) | — |
+| Contractor needing leads (skeptical, new) | Contractor Lead Gen (5 free → $50/lead PPL) | Convert to $399/mo territory lock after proof |
+| Contractor needing leads (proven/trusted) | Contractor Lead Gen ($399/mo territory) | TechAlert, License Monitor |
+| Any business with trade/professional licenses | License Monitor ($25/mo) | Review Monitor |
 | Any local biz with Google listing | Review Monitor ($25/mo) | After-Job Drip |
 | Service business missing calls | No-Show Re-Booker ($25/mo) | Estimate Follow-Up |
-| Independent restaurant / bar / café | Restaurant SMS ($19/mo) | Weekly SMS Blast, Website build |
+| Independent restaurant / bar / cafe | Restaurant SMS ($19/mo) | Weekly SMS Blast, Website build |
 | Any business with SMS list | Weekly SMS Blast ($19/mo) | Seasonal Promo Blaster |
 | Seasonal service business | Seasonal Promo Blaster ($29/mo) | — |
 
@@ -115,6 +149,7 @@ Match prospects to the right M² product based on their business type:
 | FieldDesk | $199/mo | $159/mo |
 | SiteRadar | $49/mo | $39/mo |
 | TechAlert | $99/mo | $49/mo |
+| License Monitor | $25/mo | $20/mo |
 | Review Monitor | $25/mo | $20/mo |
 | After-Job Drip | $29/mo | $23/mo |
 | No-Show Re-Booker | $25/mo | $20/mo |
@@ -122,7 +157,7 @@ Match prospects to the right M² product based on their business type:
 | Weekly SMS Blast | $19/mo | $15/mo |
 | Seasonal Promo Blaster | $29/mo | $23/mo |
 
-**Fully stacked website client: $1,499 one-time + $412/mo recurring**
+**Fully stacked website client: $1,499 one-time + $437/mo recurring**
 
 ---
 
@@ -161,6 +196,17 @@ Match prospects to the right M² product based on their business type:
 >
 > Local guy in Grosse Pointe — happy to talk this week. — Matt (313) 806-4952
 
+### Template D — Full Bundle Pitch (website-first)
+> Subject: $1,499 website + save $400/mo on your software
+>
+> Hey [Name] — I'm a web agency in Grosse Pointe. We build sites for [HVAC/plumbing/boiler] companies in metro Detroit and then run their tech stack so they don't have to think about it.
+>
+> For $1,499 we build you a professional site. Then $199/mo covers field dispatch, tech tracking, auto-SMS, and Google ranking. That's it.
+>
+> If you're paying eWay right now, you're probably spending that much just for email tagging.
+>
+> Worth a call? — Matt (313) 806-4952
+
 ### Template E — Jobber Replacement
 > Subject: Jobber charges you $29 every time you hire someone
 >
@@ -185,16 +231,31 @@ Match prospects to the right M² product based on their business type:
 >
 > Local guy in Grosse Pointe — happy to chat. — Matt (313) 806-4952
 
-### Template D — Full Bundle Pitch (website-first)
-> Subject: $1,499 website + save $400/mo on your software
+### Template G — License Monitor (easy add-on for any contractor)
+> Subject: when does your contractor license expire?
 >
-> Hey [Name] — I'm a web agency in Grosse Pointe. We build sites for [HVAC/plumbing/boiler] companies in metro Detroit and then run their tech stack so they don't have to think about it.
+> Hey [Name] — quick one: how many licenses does your business carry right now? Contractor license, plumbing, electrical, business registration?
 >
-> For $1,499 we build you a professional site. Then $199/mo covers field dispatch, tech tracking, auto-SMS, and Google ranking. That's it.
+> I ask because most contractors I talk to track renewals on a sticky note or not at all. One missed deadline = late fees, sometimes $500+. Worst case, your license lapses and you can't pull permits.
 >
-> If you're paying eWay right now, you're probably spending that much just for email tagging.
+> We built a simple reminder service — $25/mo. You tell us your licenses and expiry dates, we send you reminders at 90, 60, 30, 14, and 7 days before each one. AI-generated renewal instructions included so you don't have to Google which agency website to use.
 >
-> Worth a call? — Matt (313) 806-4952
+> Set it once, never think about it again.
+>
+> — Matt (313) 806-4952
+
+### Template H — Contractor Lead Gen (free leads first, then PPL)
+> Subject: I want to send you 5 free leads this week
+>
+> Hey [Name] — I run a lead gen service for [HVAC/plumbing/roofing/electrical] contractors in metro Detroit. Exclusive leads — every lead goes to one contractor only. No Angi, no shared bids.
+>
+> I know you've never heard of me, so here's what I want to do: I'll send you 5 leads this week. Free. No credit card. No contract. Just real homeowners who need [trade] work in [city].
+>
+> If they're good and you close a couple jobs from them — great, we'll talk about $50/lead going forward. If they're garbage, you lost nothing.
+>
+> Sound fair? Just reply with your best phone number and I'll start sending leads tomorrow.
+>
+> — Matt (313) 806-4952
 
 ---
 
@@ -249,6 +310,6 @@ Target industries (in priority order):
 5. Pest control companies with 2–8 techs
 6. Landscaping companies with 4–20 crew members
 
-**Primary pain point to probe:** "What software do your techs use in the field right now?" If the answer is eWay, paper, or "just their phone," that's a FieldDesk sale. If they say they can't find good techs, that's TechAlert.
+**Primary pain point to probe:** "What software do your techs use in the field right now?" If the answer is eWay, paper, or "just their phone," that's a FieldDesk sale. If they say they can't find good techs, that's TechAlert. If they mention license renewals or compliance, that's License Monitor.
 
 Always pitch the website first — it unlocks the bundle discounts and builds the relationship before the recurring SaaS.

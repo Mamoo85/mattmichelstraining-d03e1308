@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendSMS } from "../_shared/twilio.ts";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
   apiVersion: "2025-08-27.basil",
@@ -1821,6 +1822,60 @@ serve(async (req) => {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // ── LICENSE MONITOR — welcome SMS with MMS Vision intake instructions ──
+      if (meta.type === "license_monitor_subscription" && customerEmail) {
+        try {
+          const lmSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+          const clientPhone = meta.phone || null;
+          const businessName = meta.business_name || meta.businessName || customerName || customerEmail;
+          const ownerName = meta.name || meta.ownerName || customerName || null;
+          const firstName = ownerName?.split(" ")[0] || businessName || "there";
+
+          await (lmSb.from as any)("license_monitor_clients").insert({
+            business_name: businessName,
+            owner_name: ownerName,
+            owner_email: customerEmail,
+            phone: clientPhone,
+            stripe_customer_id: session.customer as string || null,
+            stripe_subscription_id: session.subscription as string || null,
+            active: true,
+          });
+
+          // Welcome SMS with MMS Vision instructions
+          if (clientPhone) {
+            await sendSMS(
+              clientPhone,
+              Deno.env.get("TWILIO_PHONE_NUMBER") || "",
+              `Welcome to License Monitor, ${firstName}! Reply to this text with a photo of each license card you want us to track. We'll extract the details automatically and remind you before expiry.\n\n— Matt (313) 806-4952`,
+              "license_monitor"
+            );
+          }
+
+          // Welcome email
+          if (RESEND_API_KEY) {
+            await sendM2Email(
+              customerEmail,
+              "License Monitor is Active — Text Us Your License Cards",
+              m2Email({
+                greeting: `Hey ${firstName} —`,
+                headline: "License Monitor is Live",
+                body: `<p style="margin:0 0 12px">Your Business License Monitor is active. Here's how to get started:</p>
+<p style="margin:0 0 8px"><strong>📱 Text a photo of each license card</strong> to <strong>(313) 806-4952</strong>. We'll extract the details automatically using AI vision.</p>
+<p style="margin:0 0 8px"><strong>🔔 You'll get reminders</strong> at 90, 60, 30, 14, and 7 days before each expiry date — SMS + email.</p>
+<p style="margin:0 0 16px"><strong>Works for any license</strong> in any state — contractor licenses, business licenses, professional certifications, and more.</p>
+<p style="margin:0;color:#64748b;font-size:13px">Questions? Reply to this email or text me. I read every message.</p>`,
+              })
+            );
+          }
+
+          await notifyMatt(
+            `💰 New License Monitor Client — ${businessName} ($25/mo)`,
+            `<p><strong>${businessName}</strong><br>Email: ${customerEmail}<br>Phone: ${clientPhone || "n/a"}</p>`
+          );
+        } catch (e) { console.error("[WEBHOOK] license_monitor_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       if (customerEmail && AGENCY_SERVICE_LABELS[meta.type]) {
         try {
           const serviceLabel = AGENCY_SERVICE_LABELS[meta.type];
@@ -2389,6 +2444,134 @@ serve(async (req) => {
         }),
       });
     }
+
+      // ── CONTRACTOR LEAD PPL PAYMENT ($50/lead) ───────────────────────────
+      if (meta.type === "contractor_lead_payment") {
+        try {
+          const pplSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+
+          // Idempotency: if already sold with this exact session, return 200 early
+          const { data: existingLead } = await pplSb
+            .from("contractor_leads")
+            .select("status, payment_session_id")
+            .eq("id", meta.lead_id)
+            .single();
+
+          if (existingLead?.status === "sold" && existingLead?.payment_session_id === session.id) {
+            return new Response(JSON.stringify({ received: true }), { status: 200 });
+          }
+
+          // Atomic: record purchase + mark lead sold in parallel
+          await Promise.all([
+            pplSb.from("contractor_lead_purchases").insert({
+              contractor_id: meta.contractor_id,
+              lead_id: meta.lead_id,
+              amount_cents: session.amount_total || 5000,
+              stripe_session_id: session.id,
+            }),
+            pplSb.from("contractor_leads").update({
+              status: "sold",
+              paid_by_contractor_id: meta.contractor_id,
+              payment_amount_cents: session.amount_total || 5000,
+              payment_session_id: session.id,
+              checkout_locked_by: null,
+              lock_expires_at: null,
+            }).eq("id", meta.lead_id),
+          ]);
+
+          // Fetch lead + contractor details for notifications
+          const [{ data: lead }, { data: contractor }] = await Promise.all([
+            pplSb.from("contractor_leads")
+              .select("name, phone, email, project_type, contractor_lead_sites(trade, city)")
+              .eq("id", meta.lead_id)
+              .single(),
+            pplSb.from("contractor_clients")
+              .select("name, business_name, phone, email")
+              .eq("id", meta.contractor_id)
+              .single(),
+          ]);
+
+          const site = (lead as any)?.contractor_lead_sites;
+          const TWILIO_PHONE = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
+
+          // Send SMS receipt + Matt notification in parallel
+          await Promise.all([
+            // SMS receipt to contractor
+            contractor?.phone
+              ? sendSMS(
+                  contractor.phone,
+                  TWILIO_PHONE,
+                  `LEAD PURCHASED ✓\n${lead?.name}\n📞 ${lead?.phone}${lead?.email ? `\n📧 ${lead.email}` : ""}\nProject: ${lead?.project_type || "Service request"}\nCall them NOW — exclusive to you.\n— Detroit Web Agency`,
+                  "contractor_leads"
+                )
+              : Promise.resolve(),
+            // Email receipt to contractor
+            RESEND_API_KEY && customerEmail
+              ? fetch("https://api.resend.com/emails", {
+                  method: "POST",
+                  headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    from: "Detroit Web Agency <matt@detroitwebagent.com>",
+                    to: [customerEmail],
+                    bcc: ["matt@detroitwebagent.com"],
+                    subject: `Lead Unlocked — ${lead?.name || "New Lead"} (${site?.trade || "Service"} in ${site?.city || "Metro Detroit"})`,
+                    html: `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#f8fafc;padding:32px;">
+<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;">
+  <div style="background:#00d4ff;height:4px;"></div>
+  <div style="padding:28px 32px;color:#1e293b;font-size:15px;line-height:1.9;">
+    <p><strong>✅ Lead Purchased — Call them now.</strong></p>
+    <table style="border-collapse:collapse;width:100%;margin:16px 0;">
+      <tr><td style="padding:8px 0;color:#64748b;font-size:13px;">Name</td><td style="padding:8px 0;font-weight:600;">${lead?.name || "—"}</td></tr>
+      <tr><td style="padding:8px 0;color:#64748b;font-size:13px;">Phone</td><td style="padding:8px 0;font-weight:600;"><a href="tel:${lead?.phone}" style="color:#00d4ff;">${lead?.phone || "—"}</a></td></tr>
+      <tr><td style="padding:8px 0;color:#64748b;font-size:13px;">Email</td><td style="padding:8px 0;">${lead?.email || "—"}</td></tr>
+      <tr><td style="padding:8px 0;color:#64748b;font-size:13px;">Project</td><td style="padding:8px 0;">${lead?.project_type || "—"}</td></tr>
+    </table>
+    <p style="color:#64748b;font-size:13px;">This lead is exclusive to you. No other contractor received this contact info.</p>
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;font-size:13px;color:#334155;">
+      <strong>Matt Michels</strong> · Detroit Web Agency · (313) 806-4952
+    </div>
+  </div>
+</div></body></html>`,
+                  }),
+                })
+              : Promise.resolve(),
+            // Notify Matt
+            RESEND_API_KEY
+              ? fetch("https://api.resend.com/emails", {
+                  method: "POST",
+                  headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    from: "DWA System <matt@detroitwebagent.com>",
+                    to: ["matt@detroitwebagent.com"],
+                    subject: `💰 PPL Sale $50 — ${contractor?.business_name || customerEmail}`,
+                    html: `<p><strong>${contractor?.business_name || "Contractor"}</strong> bought a ${site?.trade || "service"} lead in ${site?.city || "Metro Detroit"} for $50.<br>Lead: ${lead?.name} — ${lead?.phone}<br>Contractor email: ${customerEmail}</p>`,
+                  }),
+                })
+              : Promise.resolve(),
+          ]);
+        // 3-lead territory lock upsell — fires when contractor hits 3 paid leads this week
+        if (meta.contractor_id && contractor?.phone) {
+          try {
+            const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+            const { count: weekCount } = await pplSb
+              .from("contractor_lead_purchases")
+              .select("id", { count: "exact", head: true })
+              .eq("contractor_id", meta.contractor_id)
+              .gte("purchased_at", sevenDaysAgo);
+            if (weekCount === 3) {
+              const upgradeUrl = `https://detroitwebagent.com/contractor-leads?upgrade=1&prefilled_email=${encodeURIComponent(customerEmail || "")}`;
+              await sendSMS(
+                contractor.phone,
+                Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219",
+                `You've grabbed 3 leads this week — clearly closing them. Stop paying per lead. Lock your territory for a flat $399/mo and get all future leads automatically. Upgrade: ${upgradeUrl}`,
+                "contractor_leads"
+              );
+            }
+          } catch (e) { console.error("[WEBHOOK] 3-lead upsell error:", e); }
+        }
+        } catch (e) { console.error("[WEBHOOK] contractor_lead_payment error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
 
       // ── CONTRACTOR LEAD SUBSCRIPTION ─────────────────────────────────────
       if (meta.type === "contractor_lead_subscription") {

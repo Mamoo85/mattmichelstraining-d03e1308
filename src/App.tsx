@@ -124,6 +124,9 @@ const NewsletterSponsor = lazyRetry(() => import("./pages/NewsletterSponsor"));
 const CampDirectory = lazyRetry(() => import("./pages/CampDirectory"));
 const ContractorLeads = lazyRetry(() => import("./pages/ContractorLeads"));
 const ContractorTerritory = lazyRetry(() => import("./pages/ContractorTerritory"));
+const ClaimLead = lazyRetry(() => import("./pages/ClaimLead"));
+const LeadUnlocked = lazyRetry(() => import("./pages/LeadUnlocked"));
+const LeadClaimed = lazyRetry(() => import("./pages/LeadClaimed"));
 const FieldServiceManagement = lazyRetry(() => import("./pages/FieldServiceManagement"));
 const FieldServiceDispatch = lazyRetry(() => import("./pages/FieldServiceDispatch"));
 const FieldServiceTechApp = lazyRetry(() => import("./pages/FieldServiceTechApp"));
@@ -265,6 +268,7 @@ const StormDamageLeads = lazyRetry(() => import("./pages/StormDamageLeads"));
 const RecallAlertService = lazyRetry(() => import("./pages/RecallAlertService"));
 const PermitWatch = lazyRetry(() => import("./pages/PermitWatch"));
 const HireAlert = lazyRetry(() => import("./pages/HireAlert"));
+const HireAlertTrial = lazyRetry(() => import("./pages/HireAlertTrial"));
 const WebsiteSpeedAudits = lazyRetry(() => import("./pages/WebsiteSpeedAudits"));
 const CrimeDigest = lazyRetry(() => import("./pages/CrimeDigest"));
 const LicenseMonitor = lazyRetry(() => import("./pages/LicenseMonitor"));
@@ -530,6 +534,9 @@ const App = () => (
                     <Route path="/sponsor" element={<NewsletterSponsor />} />
                     <Route path="/contractor-leads" element={<ContractorLeads />} />
                     <Route path="/contractors/:slug" element={<ContractorTerritory />} />
+                    <Route path="/claim-lead" element={<ClaimLead />} />
+                    <Route path="/lead-unlocked" element={<LeadUnlocked />} />
+                    <Route path="/lead-claimed" element={<LeadClaimed />} />
                     <Route path="/field-service" element={<FieldServiceManagement />} />
                     <Route path="/field-service/dispatch" element={<FieldServiceDispatch />} />
                     <Route path="/field-service/tech" element={<FieldServiceTechApp />} />
@@ -671,6 +678,7 @@ const App = () => (
                     <Route path="/recall-alerts" element={<RecallAlertService />} />
                     <Route path="/permit-watch" element={<PermitWatch />} />
                     <Route path="/hire-alert" element={<HireAlert />} />
+                    <Route path="/hire-alert-trial" element={<HireAlertTrial />} />
                     <Route path="/website-speed-audit" element={<WebsiteSpeedAudits />} />
                     <Route path="/crime-digest" element={<CrimeDigest />} />
                     <Route path="/license-monitor" element={<LicenseMonitor />} />
