@@ -10,7 +10,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 
-const SITE_URL = "https://detroitwebagent.com";
+const FUNCTIONS_URL = `${Deno.env.get("SUPABASE_URL") || ""}/functions/v1`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -59,8 +59,8 @@ serve(async (req) => {
 
         if (!contractors?.length) continue;
 
-        // Build $15 checkout URL — checkout function handles aged_ppl_lead type
-        const checkoutUrl = `${SITE_URL}/contractor-leads/aged?lead_id=${lead.id}`;
+        // Build $15 checkout URL — direct to Stripe via create-aged-lead-checkout function
+        const checkoutUrl = `${FUNCTIONS_URL}/create-aged-lead-checkout?lead_id=${lead.id}`;
 
         for (const contractor of contractors) {
           if (!contractor.phone) continue;
