@@ -114,6 +114,10 @@ const AdminBoardReport        = lazyRetry(() => import("@/components/admin/Admin
 const AdminDWAOverview        = lazyRetry(() => import("@/components/admin/AdminDWAOverview"));
 const AdminHireAlertClients   = lazyRetry(() => import("@/components/admin/AdminHireAlertClients"));
 const AdminContractorLeads    = lazyRetry(() => import("@/components/admin/AdminContractorLeads"));
+const AdminDWARevenueDashboard = lazyRetry(() => import("@/components/admin/AdminDWARevenueDashboard"));
+const AdminSimulationSuite     = lazyRetry(() => import("@/components/admin/AdminSimulationSuite"));
+const AdminGlobalOutbox        = lazyRetry(() => import("@/components/admin/AdminGlobalOutbox"));
+const AdminGhostDelayManager   = lazyRetry(() => import("@/components/admin/AdminGhostDelayManager"));
 
 // Agency domain
 const AdminWebDesignCRM       = lazyRetry(() => import("@/components/admin/AdminWebDesignCRM"));
@@ -258,7 +262,7 @@ const Admin = () => {
   const { data: badges } = useQuery({
     queryKey: ["admin-badge-counts"],
     queryFn: async () => {
-      const [aiQueue, support, drafts, posture, custom, liftVideos, proveIt, trash] = await Promise.all([
+      const [aiQueue, support, drafts, posture, custom, liftVideos, proveIt, trash, ghostDelayBadge] = await Promise.all([
         supabase.from("ai_action_queue").select("id", { count: "exact", head: true }).eq("status", "pending"),
         supabase.from("support_tickets").select("id", { count: "exact", head: true }).eq("status", "open"),
         supabase.from("coach_ai_drafts").select("id", { count: "exact", head: true }).eq("status", "pending"),
@@ -267,6 +271,8 @@ const Admin = () => {
         supabase.from("lift_videos" as any).select("id", { count: "exact", head: true }).eq("status", "pending_review"),
         supabase.from("pr_submissions" as any).select("id", { count: "exact", head: true }).eq("status", "pending"),
         supabase.from("admin_trash" as any).select("id", { count: "exact", head: true }),
+        (supabase as any).from("email_reply_drafts").select("id", { count: "exact", head: true })
+          .eq("cancelled", false).eq("sent", false),
       ]);
       return {
         aiQueue: aiQueue.count ?? 0,
@@ -277,6 +283,7 @@ const Admin = () => {
         liftVideos: liftVideos.count ?? 0,
         proveIt: proveIt.count ?? 0,
         trash: trash.count ?? 0,
+        ghostDelay: ghostDelayBadge.count ?? 0,
       };
     },
     staleTime: 30000,
@@ -433,6 +440,10 @@ const Admin = () => {
       tools: [
         { key: "board-report", label: "📋 Agent Board Report", component: <AdminBoardReport /> },
         { key: "dwa-overview", label: "🏗 DWA Overview", component: <AdminDWAOverview /> },
+        { key: "dwa-revenue", label: "📊 DWA Revenue", component: <AdminDWARevenueDashboard /> },
+        { key: "dwa-simulation", label: "🧪 Simulation", component: <AdminSimulationSuite /> },
+        { key: "dwa-outbox", label: "📨 Global Outbox", component: <AdminGlobalOutbox /> },
+        { key: "dwa-ghost-delay", label: "👻 Ghost Delay", component: <AdminGhostDelayManager /> },
         { key: "contractor-leads", label: "🏗 Contractor Leads", component: <AdminContractorLeads /> },
         { key: "field-crm-clients", label: "🏢 FieldDesk Clients", component: <AdminFieldCRMClients /> },
         { key: "hire-alert-clients", label: "🔔 TechAlert Clients", component: <AdminHireAlertClients /> },
