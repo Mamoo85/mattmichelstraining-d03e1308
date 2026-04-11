@@ -1,4 +1,5 @@
 import { useState } from "react";
+import SEOHead from "@/components/layout/SEOHead";
 import { Link } from "react-router-dom";
 import { Phone, ArrowRight, CheckCircle, Star, AlertTriangle, PhoneOff, SearchX, Clock, Globe, ShieldCheck, MessageSquare, Zap, BarChart3, Search, Monitor, Users } from "lucide-react";
 import dwaLogo from "@/assets/dwa-logo-clean.png";
