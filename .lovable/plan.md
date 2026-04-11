@@ -1,90 +1,60 @@
 
 
-# DWA Living Command Center — Internal Wiki & Strategy Board
+# Bug Fix Roundup — 9 Issues from Screenshots
 
-## What We're Building
+## Issues Identified
 
-Two new tabs in the DWA Admin dashboard that serve as your internal playbook — a living, searchable, printable knowledge base for running Detroit Web Agency. Everything you need to onboard yourself, hand a client a clean PDF, or look up how any system works.
+1. **Prospector delete confirmation uses browser `confirm()` dialog** — Replace with silent delete (no confirmation prompt) per your request.
 
-## Database (3 new tables)
+2. **Bottom navbar (HOME/PORTAL/SHOP/SCHEDULE) showing on `/dwa-admin`** — The `HIDDEN_PATHS` array in `BottomTabBar.tsx` includes `/admin` but NOT `/dwa-admin` or `/field-service`. Need to add both.
 
-**`product_wiki`** — Your systems encyclopedia
-- `id`, `product_name`, `category` (enum: "core_product" | "add_on" | "system" | "process"), `description` (rich text/markdown), `client_description` (the clean client-facing version), `priority_rank`, `tech_stack` (text[]), `monthly_operating_cost` (numeric), `dev_hours_spent` (numeric), `active_hooks_count` (int), `agent_connections` (text[] — which agents touch this product), `printable_steps` (jsonb — step-by-step array with title/body/image_url), `last_updated` (timestamptz), `updated_by` (text)
-- RLS: service_role + admin only
+3. **"Could not find table 'public.field_service_clients'"** — The table doesn't exist. The actual table is `field_crm_clients`. `DWAClientRoster.tsx` and `DWAStats.tsx` reference `field_service_clients` — need to change all references to `field_crm_clients` and map the column names (e.g., `company_name` → `business_name`).
 
-**`business_strategy`** — Single-row strategy config
-- `id`, `primary_targets` (text[]), `secondary_targets` (text[]), `monthly_overhead_target` (numeric), `monthly_revenue_target` (numeric), `mission_statement` (text), `competitive_advantages` (text[]), `key_risks` (text[]), `quarterly_goals` (jsonb), `updated_at`
-- RLS: service_role + admin only
+4. **Live Map says "Map requires Google Maps API key"** — The `TechMap.tsx` component reads `VITE_GOOGLE_MAPS_API_KEY` but you already have `GOOGLE_MAPS_API_KEY` as a secret (server-side only). Need to either: (a) add `VITE_GOOGLE_MAPS_API_KEY` as a client-side env var, or (b) use an edge function proxy. Since Google Maps JS API keys are public, we can add it as a VITE_ var directly. However, the `.env` file is auto-managed. The simpler fix: hardcode the API key reference or fetch it via an edge function. Will use an edge function to proxy the key.
 
-**`ad_spend_allocation`** — Marketing budget breakdown
-- `id`, `platform` (text — LinkedIn, Local SEO, Direct Mail, etc.), `percentage_allocation` (numeric), `monthly_budget` (numeric), `status` (text — active/paused/planned), `notes` (text), `updated_at`
-- RLS: service_role + admin only
+5. **Google shows "M² Training | Real Strength Coaching" for detroitwebagent.com** — This is a Google indexing/SEO issue with the custom domain. The site likely needs its own `<title>` and meta tags when served on the DWA domain. Need to check if AgencyHome or the field-service pages set proper SEO meta for the DWA domain. This is partially outside our control (Google re-crawl timing), but we should ensure the correct meta tags are in place.
 
-## UI Components (2 new tabs)
+6. **Visitor-identify script test** — Already tested, it works. The script you shared is functional. No code fix needed.
 
-### Tab 1: "📖 Playbook" (Matt's Guide)
+7. **"Failed to log review blast"** — The `review_blast_log` table has RLS enabled but only has a SELECT policy for admin. No INSERT policy exists. Need to add an INSERT policy for admin users.
 
-A searchable wiki with two view modes per entry: **Matt's Copy** (internal — costs, agents, tech debt, real talk) and **Client Copy** (clean, professional, no internals).
+8. **"Failed to send a request to the Edge Function" (Regulatory Change Monitor)** — The edge function exists but may have deployment issues. Will check logs and redeploy.
 
-- **Left sidebar**: Category tree (Core Products, Add-Ons, Systems, Processes) with search filter
-- **Main panel**: Selected wiki entry with:
-  - Editable markdown description (using a textarea with preview toggle — not a heavy WYSIWYG)
-  - "Matt's View" / "Client View" toggle
-  - Step-by-step guide section (ordered steps with title + description + optional image URL)
-  - Metrics card: Priority rank, Tech Stack badges, Monthly Cost, Dev Hours, Active Hooks
-  - **Agent Connections** panel: Which agents (from your 31) touch this product and what they do
-- **Actions bar**:
-  - "Print Matt's Copy" — generates browser print-friendly view (CSS @media print)
-  - "Print Client Copy" — same but only shows client_description + steps, no cost/agent data
-  - "Save as PDF" — uses browser print-to-PDF (no server-side PDF generation needed)
-- **Auto-seed**: On first load, if the table is empty, seed it with entries from the existing `knowledge/M2_Product_Catalog.md` (the 36 products) and `knowledge/field-service-brief.md` (FieldDesk, SiteRadar, TechAlert). This runs client-side via a "Seed from Knowledge Base" button.
+9. **"Failed to add tech"** — Same RLS issue as #7. The `tech_locations` table only has a SELECT policy for admin, no INSERT policy. Need to add INSERT/UPDATE/DELETE policies for admin.
 
-### Tab 2: "📊 Strategy" (Business Plan & Ad Spend)
+## Implementation Plan
 
-- **Top section**: Editable strategy card — primary/secondary targets as tag inputs, revenue/overhead targets as number inputs, mission statement textarea, competitive advantages list
-- **Bottom section**: Ad Spend allocation
-  - Editable table of platforms with percentage + monthly budget + status
-  - **Recharts PieChart** showing allocation breakdown by platform (uses existing recharts dependency)
-  - **Progress bars** showing each platform's spend vs target
-- **Print view**: Clean single-page strategy summary with pie chart for board meetings
+### Migration (1 SQL file)
+Add missing RLS policies to fix issues #7 and #9:
+- `review_blast_log`: INSERT, UPDATE, DELETE for admin
+- `tech_locations`: INSERT, UPDATE, DELETE for admin
+- Also audit `field_crm_clients` for same missing policies (DWAClientRoster inserts there)
 
-## Agent Integration Points (Audit Results)
+### Code Changes
 
-Here are places where agents can be wired into this system:
+**`src/components/layout/BottomTabBar.tsx`** — Add `/dwa-admin` and `/field-service` to `HIDDEN_PATHS`
 
-1. **Oz Agent** — can auto-update `product_wiki.active_hooks_count` and `dev_hours_spent` by scanning the codebase weekly
-2. **Cashier Agent** — can auto-update `product_wiki.monthly_operating_cost` from Stripe/Twilio/Resend usage
-3. **Scout Agent** — can auto-populate `business_strategy.key_risks` from competitive intel scans
-4. **Rev Agent** — can auto-update `ad_spend_allocation` based on actual Stripe revenue by source
-5. **Scarlett Agent** — can auto-generate `product_wiki.client_description` drafts from the internal description
-6. **Trim Agent** — can flag stale wiki entries (last_updated > 30 days) in the morning digest
-7. **Tom Agent** — can reference `product_wiki.client_description` when generating cold emails (instead of hardcoded pitches)
+**`src/components/dwa-admin/DWAClientRoster.tsx`** — Change `field_service_clients` → `field_crm_clients`, map `company_name` → `business_name`
 
-These connections will be stored in `agent_connections` on each wiki entry and displayed in the UI. The actual agent wiring is Phase 2 (separate edge function updates).
+**`src/components/dwa-admin/DWAStats.tsx`** — Same table name fix
 
-## Print/PDF Architecture
+**`src/components/dwa-admin/DWARecentJobs.tsx`** — Fix `field_service_clients` reference
 
-No server-side PDF generation. Instead:
-- CSS `@media print` styles that hide nav, tabs, and non-essential UI
-- A "Print" button that calls `window.print()` with the appropriate view (Matt vs Client)
-- The print stylesheet formats content as a clean document with DWA branding header
-- Works in any browser, saves to PDF via the browser's built-in "Save as PDF" printer
+**`src/components/dwa-admin/DWADataImport.tsx`** — Fix table reference
 
-## Files to Create/Modify
+**`src/components/admin/AdminProspector.tsx`** — Remove `confirm()` calls on delete, just delete immediately
 
-1. **Migration**: `product_wiki`, `business_strategy`, `ad_spend_allocation` tables + RLS
-2. **`src/components/dwa-admin/DWAPlaybook.tsx`** — Wiki tab component
-3. **`src/components/dwa-admin/DWAStrategy.tsx`** — Strategy tab component  
-4. **`src/components/dwa-admin/PlaybookPrintView.tsx`** — Print-optimized layout
-5. **`src/pages/DWAAdmin.tsx`** — Add two new tabs ("📖 Playbook", "📊 Strategy")
-6. **`src/index.css`** — Add `@media print` styles for clean PDF output
+**`src/components/field-service/TechMap.tsx`** — Fix Google Maps API key loading (use edge function or fetch from secrets)
 
-## Implementation Order
+**`src/pages/AgencyHome.tsx`** (or relevant DWA pages) — Ensure correct SEO title/description for detroitwebagent.com domain
 
-1. Run migration (3 tables + RLS)
-2. Build DWAPlaybook.tsx with CRUD, search, Matt/Client toggle, print
-3. Build DWAStrategy.tsx with editable targets + Recharts pie chart + print
-4. Wire both into DWAAdmin.tsx tabs
-5. Add print CSS
-6. Seed initial wiki data from knowledge files
+### Edge Function
+- Redeploy `regulatory-monitor-scan` to fix the failed request
+
+### Order
+1. Run migration (RLS policies)
+2. Fix all `field_service_clients` → `field_crm_clients` references
+3. Fix BottomTabBar hidden paths
+4. Remove confirm() dialogs from Prospector
+5. Fix remaining issues (Maps, SEO, redeploy)
 
