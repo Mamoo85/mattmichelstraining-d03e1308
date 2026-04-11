@@ -430,6 +430,7 @@ const Admin = () => {
       icon: Wrench,
       color: "#00d4ff",
       tools: [
+        { key: "board-report", label: "📋 Agent Board Report", component: <AdminBoardReport /> },
         { key: "dwa-overview", label: "🏗 DWA Overview", component: <AdminDWAOverview /> },
         { key: "field-crm-clients", label: "🏢 FieldDesk Clients", component: <AdminFieldCRMClients /> },
         { key: "hire-alert-clients", label: "🔔 TechAlert Clients", component: <AdminHireAlertClients /> },
