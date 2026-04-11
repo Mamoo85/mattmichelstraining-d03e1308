@@ -23,6 +23,10 @@ jobs:
           supabase functions deploy contractor-lead-notify --project-ref $SUPABASE_PROJECT_REF --no-verify-jwt
 
       - name: Deploy missed-call-handler edge function
+        # continue-on-error: secondary project is at function limit — missed-call-handler cannot be
+        # created as a new function until spend cap is disabled in Supabase dashboard for zmyczlfuufhngzovkjdh.
+        # Fix: Project Settings → Billing → disable spend cap → re-run this workflow.
+        continue-on-error: true
         run: |
           supabase functions deploy missed-call-handler --project-ref $SUPABASE_PROJECT_REF --no-verify-jwt
 
