@@ -40,8 +40,16 @@ serve(async (req) => {
       );
     }
 
-    // Guard 1: Already sold
+    // Guard 1: Already sold — log the miss for FOMO engine
     if (lead.status === "sold") {
+      const site = (lead as any).contractor_lead_sites;
+      sb.from("contractor_lead_views" as any).insert({
+        contractor_id,
+        lead_id,
+        reason: "sold",
+        trade: site?.trade || "",
+        city: site?.city || "",
+      }).then(() => {}).catch(() => {});
       return new Response(
         JSON.stringify({ error: "lead_claimed", redirect: "/lead-claimed" }),
         { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -55,9 +63,17 @@ serve(async (req) => {
       lockExpiry !== null &&
       lockExpiry > now;
 
-    // Guard 2: Soft-locked by another contractor
+    // Guard 2: Soft-locked by another contractor — log the miss for FOMO engine
     if (isLocked) {
       const minutesLeft = Math.ceil((lockExpiry!.getTime() - now.getTime()) / 60000);
+      const site = (lead as any).contractor_lead_sites;
+      sb.from("contractor_lead_views" as any).insert({
+        contractor_id,
+        lead_id,
+        reason: "locked",
+        trade: site?.trade || "",
+        city: site?.city || "",
+      }).then(() => {}).catch(() => {});
       return new Response(
         JSON.stringify({ error: "locked", minutesLeft }),
         { status: 423, headers: { ...corsHeaders, "Content-Type": "application/json" } }

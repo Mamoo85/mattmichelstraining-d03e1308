@@ -14,14 +14,35 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Current Session State
 *Last updated: 2026-04-11. Update this section every session.*
 
+### Phase 4 — Admin Command Center COMPLETE ✅
+All Phase 3+4 work merged to `main`. Lovable auto-deploys on merge.
+
+**Phase 4 shipped:**
+- `system_comms_log` table — unified SMS+email timeline with DB trigger from `email_send_log`
+- `_shared/twilio.ts` — auto-logs every SMS to `system_comms_log`, exports `ADMIN_PHONE` env var
+- Frictionless checkout: `?prefilled_email=` on TechAlert trial-convert + phantom-alert URLs
+- 3-lead territory lock upsell SMS in PPL webhook (7-day filter)
+- `contractor-aged-lead-downsell` — daily 2pm ET cron, blasts $15 cold leads after 48h unclaimed
+- `create-aged-lead-checkout` — GET redirect → Stripe $15 checkout, no frontend page needed
+- `aged_ppl_lead` stripe-webhook handler — delivers contact info on $15 payment
+- `test-license-vision` — admin OCR test (Haiku vision, no DB)
+- `generate-digital-audit` — Firecrawl + Haiku prospect SMS pitch generator
+- `missed-call-textback` — Twilio StatusCallback stub, looks up `missed_call_clients`
+- `missed_call_clients` table (stub — no product page yet)
+- Admin panels: `AdminDWARevenueDashboard`, `AdminSimulationSuite`, `AdminGhostDelayManager`, `AdminGlobalOutbox`
+- All 4 wired into `/admin` DWA tab with ghost delay badge
+
+### Phase 4 Revenue Automations Active
+- Aged lead downsell fires daily — $15 cold leads blasted to all active contractors
+- Territory lock upsell SMS fires on 3rd PPL lead purchase within 7 days
+- Frictionless checkout on all TechAlert conversion emails/SMS
+
 ### April 22nd — DJ Conley / Pat Michels Presentation (READY)
 - **Demo page**: `/demo-djconley-2` (`src/pages/DJConleyDemo2.tsx`) — standalone, no login required
 - **Website mock**: `/demo-djconley-1` (`src/pages/DJConleyDemo1.tsx`) — has pulsing emergency button
 - **Demo flow**: `/demo-djconley-1` (website) → `/demo-djconley-2` (platform) → `/field-service/tech?demo=1` (mobile app)
-- **Competitor being replaced**: eWay-CRM ($300-400/mo Outlook plugin), not FieldServio (Pat needs FieldServio for rental/parts — don't pitch replacing it)
+- **Competitor being replaced**: eWay-CRM ($300-400/mo Outlook plugin), not FieldServio
 - **Price**: FieldDesk $199/mo, saves $14,412 vs FieldServio if they drop it too
-- **Emergency button**: Added to demo1. The $72k/year argument: 4-5 lost emergency jobs/mo × $1,500 avg = ~$72k. Button goes on real site with website build.
-- **Presentation sections in demo2**: Stats → SiteRadar (visitor intel with contract values) → Dispatch/Map → eWay comparison table → Price comparison → Savings banner → **10 Problems Solved** → **Emergency Button analysis** → TechAlert kicker
 
 ### Demo Mode — FieldDesk
 - All field service demo data is hardcoded in components, no DB needed
@@ -30,37 +51,39 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `/field-service/dispatch?demo=1` — dispatcher view with 7 realistic boiler jobs + 4 Metro Detroit tech pins
 
 ### SiteRadar vs RB2B — Two Separate Systems
-- **RB2B** (rb2b.com): Third-party tracker installed on `detroitwebagent.com`. Shows in RB2B dashboard. Better database, LinkedIn enrichment. Matt's DWA tracker.
-- **M² SiteRadar** (`visitor-identify` edge function): Custom system using ipinfo.io (free, 50k req/mo). Data → `crm_visitor_events` table → Admin DWA → Visitor Intel. This is what we SELL to clients like Pat ($49/mo add-on).
-- The snippet is generated per-client from Admin → DWA → Visitor Intel → "Install Tracking Snippets"
-- Adding RB2B to mattmichelstraining.com: minimal perf impact, but low B2B match rate on fitness site
+- **RB2B** (rb2b.com): Third-party tracker on `detroitwebagent.com`. Matt's DWA tracker.
+- **M² SiteRadar** (`visitor-identify` edge function): ipinfo.io → `crm_visitor_events` → Admin DWA. What we SELL ($49/mo).
 
 ### Products Killed (removed from routes + AllServices)
 - AI Blog Post Writing, AI Press Release Engine, AI Social Caption Pack, AI Proposal Generator, AI Sales Script Generator, AI Review Response, AI Bedtime Stories, AI Children's Stories, AI Sermon Prep, AI Obituary Service
-- Reason: ChatGPT does these for free. Standalone products with no defensibility.
 
 ### TechAlert — FULLY AUTONOMOUS ✅
-- Self-serve checkout at `/hire-alert` → Stripe → webhook → DB insert → welcome email → daily scanner → alerts. No manual steps.
-- `hire-alert-scanner-daily` cron fixed via `20260411130000_fix_hire_alert_scanner_cron.sql` (vault approach)
-- Cancellation fix: `customer.subscription.deleted` now sets `active = false` on `hire_alert_clients` (and field_crm, social_media, gbp_saas) — was missing, fixed 2026-04-11
-- Welcome email: premium teal HTML with MIOSHA/Apollo/job board source cards + tiered alert explainer
+- Self-serve checkout at `/hire-alert` → Stripe → webhook → DB insert → welcome email → daily scanner → alerts.
+- `hire-alert-scanner-daily` cron fixed via `20260411130000_fix_hire_alert_scanner_cron.sql`
+- Frictionless checkout URLs on all trial conversion emails/SMS
 
 ### Remote Control — UPGRADED ✅
-- `supabase/functions/remote-control/index.ts` — 12 commands: status, oracle, tom, pulse, revenue, dwa, shield, comply, scout, upsell, launch, help
-- Uses shared `_shared/ai.ts` instead of inline client
-- Logs `source` field (phone/n8n/api) to `remote_control_log`
-- Migration: `20260411155000_remote_control_source_column.sql`
-- Trigger via: `POST /functions/v1/remote-control` with `Authorization: Bearer <REMOTE_CONTROL_SECRET>` and `{ "command": "oracle", "source": "phone" }`
+- `supabase/functions/remote-control/index.ts` — 12 commands
+- Trigger: `POST /functions/v1/remote-control` with `Authorization: Bearer <REMOTE_CONTROL_SECRET>` and `{ "command": "oracle", "source": "phone" }`
 
-### Contractor Leads Dashboard
-- `src/components/admin/AdminContractorLeads.tsx` — 601-line dashboard wired into Admin.tsx DWA tab
-- Contractor-prospector now accepts `{ target_trade, target_city }` POST body for manual targeting
+### Missed-Call Catch — LIVE ✅
+- Product page: `/missed-call-catch` (`src/pages/MissedCallCatch.tsx`)
+- Self-serve checkout → $99/mo subscription → webhook → `missed_call_clients` insert + welcome SMS
+- Edge function: `create-missed-call-checkout`, webhook type: `missed_call_subscription`
+- Twilio StatusCallback: `missed-call-textback` (already deployed) handles the actual text-back
+
+### Missed Lead FOMO Engine — LIVE ✅
+- `contractor_lead_views` table — logs every time a contractor tries to buy a lead that's already sold/locked
+- `contractor-fomo-mailer` — daily 3pm ET cron, emails contractors who missed 3+ leads in 7 days
+- Upgrade URL with `?prefilled_email=` for one-tap territory lock signup
 
 ### Next Priority Items (in order)
-1. ~~**Merge to main**~~ ✅ Done (PR #75)
+1. ~~**Merge to main**~~ ✅ Done
 2. ~~**TechAlert self-serve**~~ ✅ Done — fully autonomous
-3. **Contractor leads — get first client** — $50 Facebook ad proving leads exist → hand 3-5 free leads → convert to $399/mo
-4. **Tom.agent.md update** — Jobber per-user attack angle, restaurant SMS pitch, LicenseAlert hook
+3. ~~**Phase 4 Admin Command Center**~~ ✅ Done
+4. ~~**Tom.agent.md update**~~ ✅ Done (Jobber, Restaurant SMS, License Monitor all added)
+5. **Contractor leads — get first client** — Tom outreach drafts ready (see Tom agent). Hand 3-5 free leads → convert to $50/lead PPL → $399/mo territory lock
+6. **TechAlert first client** — Template C outreach ready via Tom
 
 ---
 
