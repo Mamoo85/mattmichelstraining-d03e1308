@@ -112,7 +112,7 @@ serve(async (req) => {
       .eq("is_published", true)
       .limit(20);
 
-    let landingAuditHtml = "";
+    const landingAuditHtml = "";
     if (sites?.length) {
       const sitesWithoutCta = sites.filter(s => {
         const sections = typeof s.sections === "string" ? JSON.parse(s.sections) : s.sections;

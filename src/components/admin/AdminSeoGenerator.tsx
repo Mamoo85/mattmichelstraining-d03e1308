@@ -167,7 +167,7 @@ const AdminSeoGenerator = () => {
   }, [deleteTarget, queryClient]);
 
   /* ── Use seed keyword ── */
-  const useSeed = (seed: typeof SEED_KEYWORDS[0]) => {
+  const applySeed = (seed: typeof SEED_KEYWORDS[0]) => {
     setForm({ keyword: seed.keyword, location: seed.location, target_audience: seed.audience });
   };
 
@@ -175,7 +175,7 @@ const AdminSeoGenerator = () => {
   const randomizeTopic = () => {
     const available = SEED_KEYWORDS.filter((s) => s.keyword !== form.keyword);
     const pick = available[Math.floor(Math.random() * available.length)] || SEED_KEYWORDS[0];
-    useSeed(pick);
+    applySeed(pick);
   };
 
   /* ── Filtered pages ── */
@@ -255,7 +255,7 @@ const AdminSeoGenerator = () => {
             {SEED_KEYWORDS.map((s) => (
               <button
                 key={s.keyword + s.location}
-                onClick={() => useSeed(s)}
+                onClick={() => applySeed(s)}
                 className="px-2 py-1 text-[9px] font-bold uppercase tracking-widest bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors rounded-full border border-border"
               >
                 {s.keyword}

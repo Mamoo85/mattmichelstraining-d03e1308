@@ -49,7 +49,7 @@ function getEmailContent(step: number, product: string, email: string) {
 async function processSequences() {
   const now = new Date();
   let sent = 0;
-  let won = 0;
+  const won = 0;
 
   // Get all active win-back sequences
   const { data: sequences } = await supabase

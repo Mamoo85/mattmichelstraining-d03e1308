@@ -558,9 +558,11 @@ serve(async (req) => {
 
     let body: any = {};
     try { body = await req.json(); } catch { /* cron may send empty body */ }
-    let { query, location, radius = 10, limit = 10, mode, minGapScore = 30, hasWebsite, maxReviews,
+    let { query, location,
           // legacy support
-          industry, city } = body;
+          industry } = body;
+    const { city } = body;
+    const { radius = 10, limit = 10, mode, minGapScore = 30, hasWebsite, maxReviews } = body;
 
     // Legacy: convert old-style industry/city to new format
     if (!query && industry) query = industry;

@@ -52,7 +52,7 @@ const AdminVideoReview = () => {
 
       // For exercise logs, we need to get user_id from workout_logs
       const logIds = exerciseLogs?.map((e) => e.log_id) || [];
-      let logUserMap: Record<string, string> = {};
+      const logUserMap: Record<string, string> = {};
       if (logIds.length > 0) {
         const { data: logs } = await supabase
           .from("workout_logs")
@@ -76,7 +76,7 @@ const AdminVideoReview = () => {
 
       // Fetch program titles
       const programIds = [...new Set(programMsgs?.map((m) => m.program_id) || [])];
-      let programMap: Record<string, string> = {};
+      const programMap: Record<string, string> = {};
       if (programIds.length > 0) {
         const { data: programs } = await supabase
           .from("training_programs")
@@ -87,7 +87,7 @@ const AdminVideoReview = () => {
 
       // Fetch exercise titles
       const exerciseIds = [...new Set(exerciseLogs?.map((e) => e.exercise_id) || [])];
-      let exerciseMap: Record<string, string> = {};
+      const exerciseMap: Record<string, string> = {};
       if (exerciseIds.length > 0) {
         const { data: exercises } = await supabase
           .from("exercise_library")

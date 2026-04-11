@@ -18,7 +18,7 @@ serve(async (_req) => {
       { name: "local_seo_clients", lastField: "last_generated_at", freq: 30 },
     ];
 
-    let atRisk: any[] = [];
+    const atRisk: any[] = [];
     for (const t of tables) {
       try {
         const { data } = await sb.from(t.name).select("*").eq("active", true);
