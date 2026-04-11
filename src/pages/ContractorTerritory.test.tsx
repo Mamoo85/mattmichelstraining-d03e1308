@@ -3,8 +3,8 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import ContractorTerritory from "./ContractorTerritory";
 
-// Mock Supabase
-const mockInvoke = vi.fn();
+// Mock Supabase — must use vi.hoisted so mockInvoke is available when vi.mock is hoisted
+const mockInvoke = vi.hoisted(() => vi.fn());
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: { functions: { invoke: mockInvoke } },
 }));
