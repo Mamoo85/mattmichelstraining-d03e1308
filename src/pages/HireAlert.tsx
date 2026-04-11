@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,12 +18,32 @@ const ROLE_OPTIONS = [
 
 export default function HireAlert() {
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const isSuccess = searchParams.get("success") === "1";
   const [email, setEmail] = useState("");
   const [company, setCompany] = useState("");
   const [phone, setPhone] = useState("");
   const [plan, setPlan] = useState<"standalone" | "bundle">("standalone");
   const [selectedRoles, setSelectedRoles] = useState<string[]>(["boiler_operator", "hvac_tech"]);
   const [loading, setLoading] = useState(false);
+
+  if (isSuccess) {
+    return (
+      <div style={{ minHeight: "100vh", background: "#0a1628", display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px" }}>
+        <div style={{ maxWidth: 520, textAlign: "center" }}>
+          <div style={{ fontSize: 64, marginBottom: 24 }}>⚡</div>
+          <h1 style={{ color: "#fff", fontSize: 32, fontWeight: 800, margin: "0 0 12px" }}>TechAlert is Live</h1>
+          <p style={{ color: "#00d4ff", fontSize: 18, fontWeight: 700, margin: "0 0 20px" }}>Your hiring advantage starts tomorrow at 7am.</p>
+          <p style={{ color: "#94a3b8", fontSize: 15, lineHeight: 1.7, margin: "0 0 32px" }}>
+            Check your email — we sent your welcome guide with everything you need to know. We'll scan MIOSHA, Apollo, and job boards every morning and alert you the moment a match appears.
+          </p>
+          <a href="/" style={{ background: "#00d4ff", color: "#0a1628", padding: "14px 32px", borderRadius: 8, fontWeight: 800, fontSize: 16, textDecoration: "none", display: "inline-block" }}>
+            Back to Home
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   const toggleRole = (key: string) => {
     setSelectedRoles((prev) =>

@@ -12,31 +12,49 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Normalize trade to title case so it matches contractor_lead_sites DB values
+function normalizeTrade(trade: string): string {
+  const map: Record<string, string> = {
+    hvac: "HVAC",
+    plumbing: "Plumbing",
+    electrical: "Electrical",
+    roofing: "Roofing",
+  };
+  return map[trade.toLowerCase()] || (trade.charAt(0).toUpperCase() + trade.slice(1));
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
   try {
-    const { email, name, business_name, phone, trade, city, state = "MI", plan = "standard" } = await req.json();
+    const { email, name, business_name, phone, trade, city, state = "MI" } = await req.json();
 
     if (!email || !trade || !city) {
       return new Response(JSON.stringify({ error: "email, trade, and city are required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Price: $399/month standard, $299/month for smaller markets
-    const smallMarkets = ["ann arbor", "grand rapids", "lansing", "flint", "kalamazoo"];
-    const isSmall = smallMarkets.some(m => city.toLowerCase().includes(m));
-    const monthlyPrice = isSmall ? 29900 : 39900;
-    const tradeLabel = trade.charAt(0).toUpperCase() + trade.slice(1);
-    const rawOrigin = req.headers.get("origin") || "https://www.detroitwebagent.com";
-    const ALLOWED_ORIGINS = ["https://www.mattmichelstraining.com", "https://mattmichelstraining.com", "http://localhost:5173", "http://localhost:3000", "https://www.detroitwebagent.com", "https://detroitwebagent.com"];
-    const origin = ALLOWED_ORIGINS.includes(rawOrigin) ? rawOrigin : "https://www.detroitwebagent.com";
+    const normalizedTrade = normalizeTrade(trade);
+    const tradeLabel = normalizedTrade;
+    const monthlyPrice = 39900; // $399/mo flat for all Metro Detroit territories
+
+    const rawOrigin = req.headers.get("origin") || "https://www.mattmichelstraining.com";
+    const ALLOWED_ORIGINS = [
+      "https://www.mattmichelstraining.com",
+      "https://mattmichelstraining.com",
+      "http://localhost:5173",
+      "http://localhost:3000",
+      "http://localhost:8080",
+      "https://www.detroitwebagent.com",
+      "https://detroitwebagent.com",
+    ];
+    const origin = ALLOWED_ORIGINS.includes(rawOrigin) ? rawOrigin : "https://www.mattmichelstraining.com";
 
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
     // Insert pending contractor record
     const { data: contractor } = await sb
       .from("contractor_clients")
-      .insert({ name, business_name, email, phone, trade, city, state })
+      .insert({ name, business_name, email, phone, trade: normalizedTrade, city, state })
       .select()
       .single();
 
@@ -45,17 +63,28 @@ serve(async (req) => {
       payment_method_types: ["card"],
       customer_email: email,
       subscription_data: { trial_period_days: 7 },
-      line_items: [{ price: "price_1THQqsD52tPWee46ri58gzXf", quantity: 1 }],
+      line_items: [{
+        price_data: {
+          currency: "usd",
+          unit_amount: monthlyPrice,
+          recurring: { interval: "month" },
+          product_data: {
+            name: `Exclusive ${tradeLabel} Leads — ${city}, ${state}`,
+            description: `Exclusive territory. Every ${tradeLabel.toLowerCase()} lead in ${city} goes only to you. SMS + email delivery within minutes.`,
+          },
+        },
+        quantity: 1,
+      }],
       metadata: {
         type: "contractor_lead_subscription",
-        trade,
+        trade: normalizedTrade,
         city,
         state,
         contractor_id: contractor?.id || "",
         business_name: business_name || name,
       },
-      success_url: `${origin}/contractor-signup?success=1&trade=${encodeURIComponent(trade)}&city=${encodeURIComponent(city)}`,
-      cancel_url: `${origin}/contractor-signup`,
+      success_url: `${origin}/contractor-leads?success=1&trade=${encodeURIComponent(normalizedTrade)}&city=${encodeURIComponent(city)}`,
+      cancel_url: `${origin}/contractor-leads`,
     });
 
     // Email Matt about new contractor signup attempt
@@ -66,14 +95,15 @@ serve(async (req) => {
         body: JSON.stringify({
           from: "M² System <matt@mattmichelstraining.com>",
           to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"],
-          subject: `New contractor checkout — ${tradeLabel} in ${city}`,
-          html: `<p>Contractor started checkout:<br><strong>${business_name || name}</strong><br>${email} | ${phone || "no phone"}<br>Trade: ${trade} | City: ${city}, ${state}<br>Monthly: $${(monthlyPrice / 100).toFixed(0)}/mo<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI \u00b7 (313) 806-4952</div><img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div></p>`,
+          subject: `New contractor checkout started — ${tradeLabel} in ${city}`,
+          html: `<p>Contractor started checkout:<br><strong>${business_name || name}</strong><br>${email} | ${phone || "no phone"}<br>Trade: ${tradeLabel} | City: ${city}, ${state}<br>Monthly: $${(monthlyPrice / 100).toFixed(0)}/mo (7-day free trial)<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 806-4952</div><img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div></p>`,
         }),
       });
     }
 
     return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
     console.error("[CREATE-CONTRACTOR-CHECKOUT] Error:", e);
     return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }

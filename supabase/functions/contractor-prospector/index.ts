@@ -229,7 +229,7 @@ async function getDailySendCount(sb: any): Promise<number> {
   return count || 0;
 }
 
-serve(async () => {
+serve(async (req) => {
   try {
     const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY")!;
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
@@ -246,7 +246,11 @@ serve(async () => {
       );
     }
 
-    const combos = getTodaysCombos();
+    // Optional manual override — allows dashboard to target a specific trade + city
+    const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
+    const manualTrade = body.target_trade as string | undefined;
+    const manualCity = body.target_city as string | undefined;
+    const combos = (manualTrade && manualCity) ? [{ trade: manualTrade, city: manualCity }] : getTodaysCombos();
     let totalEmailed = 0;
     let totalFound = 0;
     let totalSkipped = 0;

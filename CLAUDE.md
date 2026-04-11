@@ -7,6 +7,54 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Auto-pull**: Always `git fetch` and `git pull` whenever needed — never ask for permission. Just do it.
 - **Auto-push**: Push commits to the dev branch without asking.
 - **Knowledge files**: Always run `git fetch origin main && git checkout origin/main -- knowledge/` at session start.
+- **CLAUDE.md updates**: Update the "Current Session State" section below at the end of every session and whenever a significant decision is made. This file is the memory between sessions — keep it current.
+
+---
+
+## Current Session State
+*Last updated: 2026-04-11. Update this section every session.*
+
+### April 22nd — DJ Conley / Pat Michels Presentation (READY)
+- **Demo page**: `/demo-djconley-2` (`src/pages/DJConleyDemo2.tsx`) — standalone, no login required
+- **Website mock**: `/demo-djconley-1` (`src/pages/DJConleyDemo1.tsx`) — has pulsing emergency button
+- **Demo flow**: `/demo-djconley-1` (website) → `/demo-djconley-2` (platform) → `/field-service/tech?demo=1` (mobile app)
+- **Competitor being replaced**: eWay-CRM ($300-400/mo Outlook plugin), not FieldServio (Pat needs FieldServio for rental/parts — don't pitch replacing it)
+- **Price**: FieldDesk $199/mo, saves $14,412 vs FieldServio if they drop it too
+- **Emergency button**: Added to demo1. The $72k/year argument: 4-5 lost emergency jobs/mo × $1,500 avg = ~$72k. Button goes on real site with website build.
+- **Presentation sections in demo2**: Stats → SiteRadar (visitor intel with contract values) → Dispatch/Map → eWay comparison table → Price comparison → Savings banner → **10 Problems Solved** → **Emergency Button analysis** → TechAlert kicker
+
+### Demo Mode — FieldDesk
+- All field service demo data is hardcoded in components, no DB needed
+- `clientId === "demo"` bypasses all Supabase queries in DispatchBoard, TechMap
+- `?demo=1` URL param auto-logs in as "Mike Johnson" in FieldServiceTechApp
+- `/field-service/dispatch?demo=1` — dispatcher view with 7 realistic boiler jobs + 4 Metro Detroit tech pins
+
+### SiteRadar vs RB2B — Two Separate Systems
+- **RB2B** (rb2b.com): Third-party tracker installed on `detroitwebagent.com`. Shows in RB2B dashboard. Better database, LinkedIn enrichment. Matt's DWA tracker.
+- **M² SiteRadar** (`visitor-identify` edge function): Custom system using ipinfo.io (free, 50k req/mo). Data → `crm_visitor_events` table → Admin DWA → Visitor Intel. This is what we SELL to clients like Pat ($49/mo add-on).
+- The snippet is generated per-client from Admin → DWA → Visitor Intel → "Install Tracking Snippets"
+- Adding RB2B to mattmichelstraining.com: minimal perf impact, but low B2B match rate on fitness site
+
+### Products Killed This Session (removed from routes + AllServices)
+- AI Blog Post Writing, AI Press Release Engine, AI Social Caption Pack, AI Proposal Generator, AI Sales Script Generator, AI Review Response, AI Bedtime Stories, AI Children's Stories, AI Sermon Prep, AI Obituary Service
+- Reason: ChatGPT does these for free. Standalone products with no defensibility.
+
+### TechAlert — Cron Fixes Applied
+- `hire-alert-scanner-daily` cron was broken (used `current_setting()` that was never configured)
+- Fixed via `supabase/migrations/20260411130000_fix_hire_alert_scanner_cron.sql` using vault approach
+- Same fix applied to `contractor-lead-health-monitor` cron
+
+### Contractor Leads Dashboard
+- `src/components/admin/AdminContractorLeads.tsx` — 601-line dashboard wired into Admin.tsx DWA tab
+- Contractor-prospector now accepts `{ target_trade, target_city }` POST body for manual targeting
+
+### Next Priority Items (in order)
+1. **Merge to main** — Matt needs to merge `claude/remote-control-setup-EuTWO` → main for Lovable to deploy all these changes
+2. **TechAlert self-serve** — checkout → welcome email → scanner running → fully autonomous
+3. **Contractor leads — get first client** — $50 Facebook ad proving leads exist → hand 3-5 free → convert to $399/mo
+4. **Tom.agent.md update** — Jobber per-user attack angle, restaurant SMS pitch, LicenseAlert hook
+
+---
 
 ## Commands
 

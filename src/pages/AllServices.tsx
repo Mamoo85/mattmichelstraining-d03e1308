@@ -20,12 +20,9 @@ const CATEGORIES: Category[] = [
       { name: "Web Design", price: "from $499", desc: "Custom websites built for local businesses — fast, modern, and conversion-focused.", url: "/get-started" },
       { name: "GBP SaaS (Google Business Posts)", price: "$49–99/mo", desc: "Automated posts 3×/week to your Google Business Profile to keep rankings climbing.", url: "/local-marketing" },
       { name: "Social Media Automation", price: "$149–299/mo", desc: "Done-for-you Facebook, Instagram, and LinkedIn posts — fully automated.", url: "/social-media-ai" },
-      { name: "Blog Post Service", price: "$79/mo", desc: "SEO-optimized blog articles written and published on autopilot every month.", url: "/ai-blog-posts" },
-      { name: "Press Release Engine", price: "$39/mo", desc: "Professional press releases crafted and ready to distribute instantly.", url: "/ai-press-release" },
       { name: "Local SEO Pages", price: "$59/mo", desc: "Hyper-local landing pages generated to capture nearby search traffic.", url: "/local-seo-pages" },
       { name: "Website Copy Refresh", price: "$49/mo", desc: "Fresh, high-converting copy for your existing website — rewritten monthly.", url: "/ai-website-copy" },
       { name: "Ads Copy Generator", price: "$39/mo", desc: "Google and Facebook ad copy that actually converts, generated on demand.", url: "/ai-ads-copy" },
-      { name: "Social Caption Pack", price: "$29/mo", desc: "30 ready-to-post social captions delivered each month — just copy and paste.", url: "/ai-social-captions" },
       { name: "Direct Mail Copy", price: "$49/mo", desc: "Compelling mailer and postcard copy written for offline campaigns.", url: "/direct-mail" },
       { name: "Video Script Writer", price: "$39/mo", desc: "Short-form video scripts for Reels, TikTok, and YouTube Shorts on autopilot.", url: "/ai-video-scripts" },
       { name: "Seasonal Promo Planner", price: "$39/mo", desc: "Automated promotional calendar with copy and ideas for every season.", url: "/promo-planner" },
@@ -61,10 +58,8 @@ const CATEGORIES: Category[] = [
   {
     label: "Business Intelligence & Tools",
     services: [
-      { name: "Proposal Generator", price: "$49/mo", desc: "Generates polished, professional proposals in seconds from a simple job brief.", url: "/ai-proposal" },
       { name: "Estimate Generator", price: "$49/mo", desc: "Produces detailed project estimates instantly — branded and ready to send.", url: "/ai-estimates" },
       { name: "Hiring Assistant", price: "$49/mo", desc: "Writes job postings, screens applicants, and drafts interview questions for you.", url: "/hiring-assistant" },
-      { name: "Sales Script Generator", price: "$29/mo", desc: "Custom sales scripts built around your services and local market.", url: "/sales-scripts" },
       { name: "Weekly Business Digest", price: "$29/mo", desc: "A personalized weekly email summary of your key business metrics and tips.", url: "/weekly-business-digest" },
       { name: "Business KPI Weekly Email", price: "$49/mo", desc: "Auto-pulls your numbers and delivers a clean KPI report to your inbox weekly.", url: "/kpi-email" },
       { name: "Staff Internal Newsletter", price: "$29/mo", desc: "Automated internal newsletter that keeps your team informed and motivated.", url: "/staff-newsletter" },

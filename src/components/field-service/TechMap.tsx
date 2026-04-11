@@ -14,22 +14,32 @@ interface TechLocation {
   recorded_at: string;
 }
 
+const DEMO_LOCATIONS: TechLocation[] = [
+  { tech_id: "t1", tech_name: "Mike Johnson",  lat: 42.3152, lng: -83.1544, recorded_at: new Date(Date.now() - 4  * 60000).toISOString() },
+  { tech_id: "t2", tech_name: "Tony Radke",    lat: 42.2506, lng: -83.1473, recorded_at: new Date(Date.now() - 12 * 60000).toISOString() },
+  { tech_id: "t3", tech_name: "Dan Kowalski",  lat: 42.3557, lng: -83.1767, recorded_at: new Date(Date.now() - 7  * 60000).toISOString() },
+  { tech_id: "t4", tech_name: "Chris Oller",   lat: 42.5014, lng: -83.0144, recorded_at: new Date(Date.now() - 2  * 60000).toISOString() },
+];
+
 export default function TechMap({ clientId }: TechMapProps) {
-  const [locations, setLocations] = useState<TechLocation[]>([]);
-  const [loading, setLoading] = useState(true);
+  const isDemo = clientId === "demo";
+  const [locations, setLocations] = useState<TechLocation[]>(isDemo ? DEMO_LOCATIONS : []);
+  const [loading, setLoading] = useState(!isDemo);
   const [mapsApiKey, setMapsApiKey] = useState("");
 
-  // Fetch API key from edge function
+  // Fetch API key from edge function (skip for demo)
   useEffect(() => {
+    if (isDemo) return;
     (async () => {
       try {
         const { data, error } = await supabase.functions.invoke("get-maps-key");
         if (!error && data?.key) setMapsApiKey(data.key);
       } catch {}
     })();
-  }, []);
+  }, [isDemo]);
 
   const fetchLocations = useCallback(async () => {
+    if (isDemo) return; // demo data already set in initial state
     try {
       const { data: techs, error: techError } = await supabase
         .from("field_service_techs")
