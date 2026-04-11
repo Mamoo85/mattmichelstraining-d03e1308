@@ -602,6 +602,21 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
     },
     success_url: `${SITE}/hire-alert?success=1&test=true`,
   },
+  field_service_subscription: {
+    name: "TEST — FieldDesk Field Service Management ($199/mo)",
+    description: "Dispatch board, GPS tech map, mobile app, auto-SMS workflows. Replaces eWay CRM. $0 test.",
+    mode: "subscription" as const,
+    metadata: {
+      type: "field_service_subscription",
+      email: MATT,
+      company_name: "D.J. Conley Associates",
+      owner_name: "Pat Michels",
+      owner_phone: "3138064952",
+      plan: "bundle",
+      is_test: "true",
+    },
+    success_url: `${SITE}/field-service?success=1&test=true`,
+  },
 };
 
 serve(async (req) => {

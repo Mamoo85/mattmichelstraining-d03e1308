@@ -1,104 +1,81 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+// missed-call-handler — fires on every incoming call to +13139921219
+// Immediately sends an SMS back to the caller and plays a short "I'll call you right back" message.
+// Twilio "A call comes in" webhook → this function → TwiML response.
+// No status tracking needed — simpler and actually works.
 
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
-const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+
 const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
 const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
+const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
+
+const TWIML_HEADERS = { "Content-Type": "text/xml" };
+
+function twiml(body: string): Response {
+  return new Response(`<?xml version="1.0" encoding="UTF-8"?><Response>${body}</Response>`, {
+    headers: TWIML_HEADERS,
+  });
+}
 
 serve(async (req) => {
+  // Twilio sends form-encoded POST data
   if (req.method !== "POST") {
-    return new Response("Method not allowed", { status: 405 });
+    return twiml("<Say>Method not allowed.</Say><Hangup/>");
   }
+
+  let fromNumber = "";
+  let toNumber = TWILIO_PHONE_NUMBER;
 
   try {
     const text = await req.text();
     const params = new URLSearchParams(text);
-
+    fromNumber = params.get("From") || "";
+    toNumber = params.get("To") || TWILIO_PHONE_NUMBER;
     const callStatus = params.get("CallStatus") || "";
-    const toNumber = params.get("To") || "";
-    const fromNumber = params.get("From") || "";
 
-    // Only fire on missed/unanswered calls
-    if (!["no-answer", "busy", "failed"].includes(callStatus)) {
-      return new Response("<Response/>", { headers: { "Content-Type": "text/xml" } });
+    console.log(`[missed-call-handler] Call from=${fromNumber} to=${toNumber} status=${callStatus}`);
+
+    // If no caller number, just hang up
+    if (!fromNumber) {
+      return twiml("<Hangup/>");
     }
 
-    if (!toNumber || !fromNumber) {
-      return new Response("<Response/>", { headers: { "Content-Type": "text/xml" } });
-    }
+    // Send SMS back to caller if we have Twilio credentials
+    if (TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN) {
+      const smsBody = "Hey! I just saw your call and I'll call you right back. — Matt @ Detroit Web Agency (313) 806-4952";
+      const credentials = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
+      const smsRes = await fetch(
+        `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Basic ${credentials}`,
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({
+            To: fromNumber,
+            From: toNumber,
+            Body: smsBody,
+          }),
+        }
+      );
 
-    const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-
-    // Look up the active client for this Twilio number
-    const { data: client } = await sb
-      .from("missed_call_clients")
-      .select("id, business_name, response_message, active, text_count")
-      .eq("twilio_number", toNumber)
-      .eq("active", true)
-      .single();
-
-    if (!client) {
-      console.warn(`[MISSED-CALL] No active client found for twilio_number=${toNumber}`);
-      return new Response("<Response/>", { headers: { "Content-Type": "text/xml" } });
-    }
-
-    // Check SMS opt-out before sending (TCPA compliance)
-    const { data: optOut } = await sb
-      .from("sms_opt_outs")
-      .select("id")
-      .eq("phone", fromNumber)
-      .maybeSingle();
-
-    if (optOut) {
-      console.log(`[MISSED-CALL] ${fromNumber} is opted out — skipping`);
-      return new Response("<Response/>", { headers: { "Content-Type": "text/xml" } });
-    }
-
-    const message = client.response_message ||
-      "Hey! I just missed your call — I'll call you right back. How can I help you?";
-
-    if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) {
-      console.error("[MISSED-CALL] TWILIO_ACCOUNT_SID or TWILIO_AUTH_TOKEN not set");
-      return new Response("<Response/>", { headers: { "Content-Type": "text/xml" } });
-    }
-
-    // Send SMS directly via Twilio REST API (no gateway dependency)
-    const credentials = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
-    const smsRes = await fetch(
-      `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Basic ${credentials}`,
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({
-          To: fromNumber,
-          From: toNumber,
-          Body: message,
-        }),
+      if (smsRes.ok) {
+        const result = await smsRes.json();
+        console.log(`[missed-call-handler] SMS sent to ${fromNumber} — SID: ${result.sid}`);
+      } else {
+        const err = await smsRes.text();
+        console.error(`[missed-call-handler] Twilio SMS error: ${err}`);
       }
-    );
-
-    if (!smsRes.ok) {
-      const errText = await smsRes.text();
-      console.error(`[MISSED-CALL] Twilio error: ${errText}`);
     } else {
-      const result = await smsRes.json();
-      console.log(`[MISSED-CALL] SMS sent to ${fromNumber} for ${client.business_name} — SID: ${result.sid}`);
-
-      // Increment text count
-      await sb
-        .from("missed_call_clients")
-        .update({ text_count: (client.text_count || 0) + 1 })
-        .eq("id", client.id);
+      console.warn("[missed-call-handler] TWILIO_ACCOUNT_SID or TWILIO_AUTH_TOKEN not set — SMS skipped");
     }
-
-    return new Response("<Response/>", { headers: { "Content-Type": "text/xml" } });
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : String(e);
-    console.error("[MISSED-CALL] Error:", msg);
-    return new Response("<Response/>", { headers: { "Content-Type": "text/xml" } });
+    console.error("[missed-call-handler] Error:", e instanceof Error ? e.message : String(e));
   }
+
+  // Always return valid TwiML — play a short message and hang up
+  return twiml(
+    `<Say voice="alice">Thanks for calling Detroit Web Agency. We just texted you and will call right back.</Say><Hangup/>`
+  );
 });
