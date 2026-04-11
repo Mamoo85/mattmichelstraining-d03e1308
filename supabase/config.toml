@@ -144,6 +144,9 @@ verify_jwt = false
 [functions.contractor-aged-lead-downsell]
 verify_jwt = false
 
+[functions.create-aged-lead-checkout]
+verify_jwt = false
+
 [functions.release-pending-replies]
 verify_jwt = false
 
