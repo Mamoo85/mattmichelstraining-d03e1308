@@ -354,6 +354,12 @@ verify_jwt = false
 [functions.create-contractor-checkout]
 verify_jwt = false
 
+[functions.create-contractor-ppl-checkout]
+verify_jwt = false
+
+[functions.get-lead-by-session]
+verify_jwt = false
+
 [functions.create-crime-digest-checkout]
 verify_jwt = false
 
