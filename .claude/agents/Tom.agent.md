@@ -51,7 +51,7 @@ The flagship product for HVAC, plumbing, electrical, boiler, roofing:
 - Hook: "You had 47 people on your site last month. Do you know who any of them were? We can tell you."
 - Best combined with: FieldDesk (so they can follow up on site visitors with their dispatch pipeline)
 
-### 5. TechAlert / LicenseAlert Sales (Hiring Monitor — Secret Weapon)
+### 5. TechAlert Sales (Hiring Monitor — Secret Weapon)
 - **$99/mo standalone** — daily alerts when licensed tradespeople become available in Metro Detroit
 - **$49/mo bundled** — half price for Detroit Web Agency website clients
 - **Self-serve checkout is LIVE** at `/hire-alert` — no Matt involvement needed to sign up
