@@ -8,9 +8,11 @@ export default function FieldServiceDispatch() {
   const [activeTab, setActiveTab] = useState<Tab>("board");
   const [now, setNow] = useState(new Date());
 
-  const clientId =
-    new URLSearchParams(window.location.search).get("client") ||
-    "00000000-0000-0000-0000-000000000000";
+  const params = new URLSearchParams(window.location.search);
+  const rawClient = params.get("client") || "";
+  const clientId = (rawClient === "demo" || params.get("demo") === "1")
+    ? "demo"
+    : rawClient || "00000000-0000-0000-0000-000000000000";
 
   useEffect(() => {
     const interval = setInterval(() => setNow(new Date()), 1000);
