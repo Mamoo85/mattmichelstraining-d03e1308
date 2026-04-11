@@ -232,7 +232,7 @@ export default function DWADataImport() {
         >
           <option value="">— Choose a client —</option>
           {clients.map((c) => (
-            <option key={c.id} value={c.id}>{c.company_name}</option>
+            <option key={c.id} value={c.id}>{c.business_name}</option>
           ))}
         </select>
       </div>
