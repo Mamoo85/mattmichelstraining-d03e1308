@@ -125,6 +125,21 @@ const AgencyHome = () => {
 
   return (
     <div className="min-h-screen overflow-x-hidden" style={{ background: "#0a0a0f" }}>
+      <SEOHead
+        title="Detroit Web Agency — Websites & Lead Systems for Michigan Contractors"
+        description="We build websites and automated lead systems for Michigan contractors. Your phone rings more. Your calendar fills up. You focus on the work."
+        path="/detroit-web-design"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "LocalBusiness",
+          name: "Detroit Web Agency",
+          description: "Websites & automated lead systems for Michigan contractors.",
+          url: "https://www.detroitwebagent.com",
+          telephone: "+13138064952",
+          email: "matt@detroitwebagent.com",
+          address: { "@type": "PostalAddress", addressLocality: "Grosse Pointe Park", addressRegion: "MI" },
+        }}
+      />
       {/* ═══════════════════════════════════════════════
           1. HERO — Clear, contractor-focused, no jargon
           ═══════════════════════════════════════════════ */}

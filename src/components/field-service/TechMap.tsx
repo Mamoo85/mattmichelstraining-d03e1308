@@ -17,8 +17,17 @@ interface TechLocation {
 export default function TechMap({ clientId }: TechMapProps) {
   const [locations, setLocations] = useState<TechLocation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [mapsApiKey, setMapsApiKey] = useState("");
 
-  const mapsApiKey = (import.meta as Record<string, unknown> & { env: Record<string, string> }).env.VITE_GOOGLE_MAPS_API_KEY ?? "";
+  // Fetch API key from edge function
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("get-maps-key");
+        if (!error && data?.key) setMapsApiKey(data.key);
+      } catch {}
+    })();
+  }, []);
 
   const fetchLocations = useCallback(async () => {
     try {
@@ -98,8 +107,8 @@ export default function TechMap({ clientId }: TechMapProps) {
       <div className="px-4 py-6">
         <div className="bg-[#0f1f35] border border-[#1e3a5f] rounded-2xl p-8 text-center">
           <div className="text-4xl mb-4">🗺️</div>
-          <p className="text-white font-semibold text-lg mb-2">Map requires Google Maps API key</p>
-          <p className="text-gray-400 text-sm">Set VITE_GOOGLE_MAPS_API_KEY in your environment to enable the live tech map.</p>
+          <p className="text-white font-semibold text-lg mb-2">Map loading...</p>
+          <p className="text-gray-400 text-sm">If this persists, the Maps API key may not be configured.</p>
         </div>
         {locations.length > 0 && <TechList locations={locations} formatRelativeTime={formatRelativeTime} />}
       </div>
